@@ -1597,84 +1597,93 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     }
   }
 
-  if (hasRepeatAuto) {
-    const auto* const autoRepeatValue = aTrackList.GetRepeatAutoValue();
-    const auto repeatLineNames = autoRepeatValue->line_names.AsSpan();
-    MOZ_ASSERT(repeatLineNames.Length() >= 2);
-    // Number of tracks inside the repeat, not including any repetitions.
-    const uint32_t numRepeatTracks = autoRepeatValue->track_sizes.len;
-    MOZ_ASSERT(repeatLineNames.Length() == numRepeatTracks + 1);
-    // The total of all tracks in all repetitions of the repeat.
-    const uint32_t totalNumRepeatTracks =
-        aTrackInfo.mRemovedRepeatTracks.Length();
-    const uint32_t repeatStart = aTrackInfo.mRepeatFirstTrack;
-    // We need to skip over any track sizes which were resolved to 0 by
-    // collapsed tracks. Keep track of the iteration separately.
-    const auto explicitTrackSizeBegin =
-        trackSizes.cbegin() + numLeadingImplicitTracks;
-    const auto explicitTrackSizeEnd =
-        explicitTrackSizeBegin + numExplicitTracks;
-    auto trackSizeIter = explicitTrackSizeBegin;
-    // Write any leading explicit tracks before the repeat.
-    for (uint32_t i = 0; i < repeatStart; i++) {
-      AppendGridLineNames(valueList, aTrackInfo.mResolvedLineNames[i]);
-      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits(*trackSizeIter++);
-      valueList->AppendCSSValue(val.forget());
+  // Then add any explicit tracks and removed auto-fit tracks.
+  if (numExplicitTracks || hasRepeatAuto) {
+    uint32_t endOfRepeat = 0;  // first index after any repeat() tracks
+    int32_t offsetToLastRepeat = 0;
+    if (hasRepeatAuto) {
+      // offsetToLastRepeat is -1 if all repeat(auto-fit) tracks are empty
+      offsetToLastRepeat =
+          numExplicitTracks + 1 - aTrackInfo.mResolvedLineNames.Length();
+      endOfRepeat = aTrackInfo.mRepeatFirstTrack + offsetToLastRepeat + 1;
     }
-    auto lineNameIter = aTrackInfo.mResolvedLineNames.cbegin() + repeatStart;
-    // Write the track names at the start of the repeat, including the names
-    // at the end of the last non-repeat track. Unlike all later repeat line
-    // name lists, this one needs the resolved line name which includes both
-    // the last non-repeat line names and the leading repeat line names.
-    AppendGridLineNames(valueList, *lineNameIter++);
-    {
-      // Write out the first repeat value, checking for size zero (removed
-      // track).
-      const nscoord firstRepeatTrackSize =
-          (!aTrackInfo.mRemovedRepeatTracks[0]) ? *trackSizeIter++ : 0;
-      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits(firstRepeatTrackSize);
-      valueList->AppendCSSValue(val.forget());
-    }
-    // Write the line names and track sizes inside the repeat, checking for
-    // removed tracks (size 0).
-    for (uint32_t i = 1; i < totalNumRepeatTracks; i++) {
-      const uint32_t repeatIndex = i % numRepeatTracks;
-      // If we are rolling over from one repetition to the next, include track
-      // names from both the end of the previous repeat and the start of the
-      // next.
-      if (repeatIndex == 0) {
-        AppendGridLineNames(valueList,
-                            repeatLineNames[numRepeatTracks].AsSpan(),
-                            repeatLineNames[0].AsSpan());
-      } else {
-        AppendGridLineNames(valueList, repeatLineNames[repeatIndex].AsSpan());
-      }
-      MOZ_ASSERT(aTrackInfo.mRemovedRepeatTracks[i] ||
-                 trackSizeIter != explicitTrackSizeEnd);
-      const nscoord repeatTrackSize =
-          (!aTrackInfo.mRemovedRepeatTracks[i]) ? *trackSizeIter++ : 0;
-      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits(repeatTrackSize);
-      valueList->AppendCSSValue(val.forget());
-    }
-    // The resolved line names include a single repetition of the auto-repeat
-    // line names. Skip over those.
-    lineNameIter += numRepeatTracks - 1;
-    // Write out any more tracks after the repeat.
-    while (trackSizeIter != explicitTrackSizeEnd) {
-      AppendGridLineNames(valueList, *lineNameIter++);
-      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits(*trackSizeIter++);
-      valueList->AppendCSSValue(val.forget());
-    }
-    // Write the final trailing line name.
-    AppendGridLineNames(valueList, *lineNameIter++);
-  } else if (numExplicitTracks > 0) {
-    // If there are explicit tracks but no repeat tracks, just serialize those.
+
+    auto* autoRepeatValue = aTrackList.GetRepeatAutoValue();
+    auto beforeAutoRepeat =
+        autoRepeatValue ? autoRepeatValue->line_names.AsSpan()[0].AsSpan()
+                        : Span<StyleCustomIdent>();
+    auto afterAutoRepeat =
+        autoRepeatValue ? autoRepeatValue->line_names.AsSpan()[1].AsSpan()
+                        : Span<StyleCustomIdent>();
+    uint32_t repeatIndex = 0;
+    uint32_t numRepeatTracks = aTrackInfo.mRemovedRepeatTracks.Length();
+    enum LinePlacement { LinesPrecede, LinesFollow, LinesBetween };
+    auto AppendRemovedAutoFits =
+        [&aTrackInfo, &valueList, aTrackList, beforeAutoRepeat, afterAutoRepeat,
+         &repeatIndex, numRepeatTracks](LinePlacement aPlacement) {
+          // Add in removed auto-fit tracks and lines here, if necessary
+          bool atLeastOneTrackReported = false;
+          while (repeatIndex < numRepeatTracks &&
+                 aTrackInfo.mRemovedRepeatTracks[repeatIndex]) {
+            if ((aPlacement == LinesPrecede) ||
+                ((aPlacement == LinesBetween) && atLeastOneTrackReported)) {
+              // Precede it with the lines between repeats.
+              AppendGridLineNames(valueList, afterAutoRepeat, beforeAutoRepeat);
+            }
+
+            // Removed 'auto-fit' tracks are reported as 0px.
+            RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+            val->SetAppUnits(0);
+            valueList->AppendCSSValue(val.forget());
+            atLeastOneTrackReported = true;
+
+            if (aPlacement == LinesFollow) {
+              // Follow it with the lines between repeats.
+              AppendGridLineNames(valueList, afterAutoRepeat, beforeAutoRepeat);
+            }
+            repeatIndex++;
+          }
+          repeatIndex++;
+        };
+
     for (uint32_t i = 0;; i++) {
-      AppendGridLineNames(valueList, aTrackInfo.mResolvedLineNames[i]);
+      if (hasRepeatAuto) {
+        if (i == aTrackInfo.mRepeatFirstTrack) {
+          const nsTArray<StyleCustomIdent>& lineNames =
+              aTrackInfo.mResolvedLineNames[i];
+          if (i == endOfRepeat) {
+            // All auto-fit tracks are empty, but we report them anyway.
+            AppendGridLineNames(valueList, lineNames);
+
+            AppendRemovedAutoFits(LinesBetween);
+
+            AppendGridLineNames(valueList,
+                                aTrackInfo.mResolvedLineNames[i + 1]);
+          } else {
+            AppendGridLineNames(valueList, lineNames);
+            AppendRemovedAutoFits(LinesFollow);
+          }
+        } else if (i == endOfRepeat) {
+          // Before appending the last line, finish off any removed auto-fits.
+          AppendRemovedAutoFits(LinesPrecede);
+
+          const nsTArray<StyleCustomIdent>& lineNames =
+              aTrackInfo.mResolvedLineNames[aTrackInfo.mRepeatFirstTrack + 1];
+          AppendGridLineNames(valueList, lineNames);
+        } else if (i > aTrackInfo.mRepeatFirstTrack && i < endOfRepeat) {
+          AppendGridLineNames(valueList, afterAutoRepeat, beforeAutoRepeat);
+          AppendRemovedAutoFits(LinesFollow);
+        } else {
+          uint32_t j = i > endOfRepeat ? i - offsetToLastRepeat : i;
+          const nsTArray<StyleCustomIdent>& lineNames =
+              aTrackInfo.mResolvedLineNames[j];
+          AppendGridLineNames(valueList, lineNames);
+        }
+      } else {
+        const nsTArray<StyleCustomIdent>& lineNames =
+            aTrackInfo.mResolvedLineNames[i];
+        AppendGridLineNames(valueList, lineNames);
+      }
       if (i == numExplicitTracks) {
         break;
       }
@@ -1683,6 +1692,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
       valueList->AppendCSSValue(val.forget());
     }
   }
+
   // Add any trailing implicit tracks.
   if (serializeImplicit) {
     for (uint32_t i = numLeadingImplicitTracks + numExplicitTracks;
