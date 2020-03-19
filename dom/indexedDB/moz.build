@@ -41,7 +41,6 @@ EXPORTS.mozilla.dom += [
     'IDBTransaction.h',
     'IndexedDatabase.h',
     'IndexedDatabaseManager.h',
-    'InitializedOnce.h',
     'SafeRefPtr.h',
 ]
 
