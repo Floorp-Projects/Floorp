@@ -2069,8 +2069,8 @@ static void ForceDirect(nsTArray<nsCString>& names,
   NS_NAMED_LITERAL_CSTRING(directAttributeValue, "direct");
   auto wmodeAttributeIndex = names.IndexOf(wmodeAttributeName, 0, comparator);
   if (wmodeAttributeIndex != names.NoIndex) {
-    if (values[wmodeAttributeIndex].EqualsLiteral("window") ||
-        values[wmodeAttributeIndex].EqualsLiteral("gpu")) {
+    if ((!values[wmodeAttributeIndex].EqualsLiteral("transparent")) &&
+        (!values[wmodeAttributeIndex].EqualsLiteral("opaque"))) {
       values[wmodeAttributeIndex].Assign(directAttributeValue);
     }
   } else {
