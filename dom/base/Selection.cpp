@@ -326,15 +326,20 @@ void Selection::ToStringWithFormat(const nsAString& aFormatType,
 }
 
 void Selection::SetInterlinePosition(bool aHintRight, ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
     return;
   }
+
   mFrameSelection->SetHint(aHintRight ? CARET_ASSOCIATE_AFTER
                                       : CARET_ASSOCIATE_BEFORE);
 }
 
 bool Selection::GetInterlinePosition(ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
     return false;
@@ -361,6 +366,8 @@ bool Selection::IsEditorSelection() const {
 
 Nullable<int16_t> Selection::GetCaretBidiLevel(
     mozilla::ErrorResult& aRv) const {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return Nullable<int16_t>();
@@ -373,6 +380,8 @@ Nullable<int16_t> Selection::GetCaretBidiLevel(
 
 void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
                                   mozilla::ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -1237,6 +1246,8 @@ nsresult Selection::GetIndicesForInterval(
 }
 
 nsresult Selection::GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!aReturnFrame) return NS_ERROR_NULL_POINTER;
 
   int32_t frameOffset = 0;
@@ -1661,6 +1672,8 @@ nsresult Selection::GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
 }
 
 nsIContent* Selection::GetAncestorLimiter() const {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (mFrameSelection) {
     return mFrameSelection->GetAncestorLimiter();
   }
@@ -1668,6 +1681,8 @@ nsIContent* Selection::GetAncestorLimiter() const {
 }
 
 void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
     frameSelection->SetAncestorLimiter(aLimiter);
@@ -1696,6 +1711,7 @@ nsresult Selection::StartAutoScrollTimer(nsIFrame* aFrame,
                                          const nsPoint& aPoint,
                                          uint32_t aDelay) {
   MOZ_ASSERT(aFrame, "Need a frame");
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
   nsresult result;
   if (!mFrameSelection) {
