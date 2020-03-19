@@ -176,7 +176,7 @@ var exports2 = wasmEvalText(`(module
     (func $ten (result i32) (i32.const 10))
     (elem (i32.const 1) $ten)
     (func $eleven (result i32) (i32.const 11))
-    (export "tbl" table)
+    (export "tbl" (table 0))
     (export "test" (func $test))
     (export "eleven" (func $eleven))
 )`, {"":{imp:exports1.exp}}).exports;

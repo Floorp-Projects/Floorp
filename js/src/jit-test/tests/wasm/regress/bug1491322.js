@@ -12,7 +12,7 @@ var m = new Module(wasmTextToBinary(`(module
     (import $bar "" "bar" (result i32))
     (func $baz (result i32) (i32.const 13))
     (elem (i32.const 0) $foo $bar $baz)
-    (export "tbl" table)
+    (export "tbl" (table 0))
 )`));
 var jsFun = () => 83;
 var wasmFun = new Instance(
