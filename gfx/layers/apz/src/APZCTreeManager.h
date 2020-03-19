@@ -755,6 +755,19 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                                  Maybe<wr::RenderRoot> aRenderRoot,
                                  const TimeStamp& aSampleTime);
 
+  using ClippedCompositionBoundsMap =
+      std::unordered_map<ScrollableLayerGuid, ParentLayerRect,
+                         ScrollableLayerGuid::HashIgnoringPresShellFn,
+                         ScrollableLayerGuid::EqualIgnoringPresShellFn>;
+  // This is a recursive function that populates `aDestMap` with the clipped
+  // composition bounds for the APZC corresponding to `aGuid` and returns those
+  // bounds as a convenience. It recurses to also populate `aDestMap` with that
+  // APZC's ancestors. In order to do this it needs to access mApzcMap
+  // and therefore requires the caller to hold the map lock.
+  ParentLayerRect ComputeClippedCompositionBounds(
+      const MutexAutoLock& aProofOfMapLock,
+      ClippedCompositionBoundsMap& aDestMap, ScrollableLayerGuid aGuid);
+
  protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.
