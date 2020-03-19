@@ -101,6 +101,7 @@ class WindowProxyHolder;
   FIELD(InRDMPane, bool)                                                     \
   FIELD(Loading, bool)                                                       \
   FIELD(AncestorLoading, bool)                                               \
+  FIELD(AllowPlugins, bool)                                                  \
   /* These field are used to store the states of autoplay media request on   \
    * GeckoView only, and it would only be modified on the top level browsing \
    * context. */                                                             \
@@ -645,6 +646,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_EmbedderElementType>,
               const Maybe<nsString>& aInitiatorType, ContentParent* aSource);
 
+  bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
+              ContentParent* aSource);
+
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
     return true;
@@ -652,6 +656,10 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   template <size_t I>
   void DidSet(FieldIndex<I>) {}
+
+  // True if the process attemping to set field is the same as the owning
+  // process.
+  bool CheckOnlyOwningProcessCanSet(ContentParent* aSource);
 
   // True if the process attempting to set field is the same as the embedder's
   // process.

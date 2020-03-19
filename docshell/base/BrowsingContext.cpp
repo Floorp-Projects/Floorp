@@ -241,6 +241,9 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
   context->mFields.SetWithoutSyncing<IDX_IsActive>(true);
 
+  const bool allowPlugins = inherit ? inherit->GetAllowPlugins() : true;
+  context->mFields.SetWithoutSyncing<IDX_AllowPlugins>(allowPlugins);
+
   return context.forget();
 }
 
@@ -1420,13 +1423,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_UserAgentOverride>) {
   });
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
-                             const nsString& aUserAgent,
-                             ContentParent* aSource) {
-  if (!IsTop()) {
-    return false;
-  }
-
+bool BrowsingContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   if (aSource) {
     MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -1442,6 +1439,22 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
   }
 
   return true;
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
+                             const bool& aAllowPlugins,
+                             ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
+                             const nsString& aUserAgent,
+                             ContentParent* aSource) {
+  if (!IsTop()) {
+    return false;
+  }
+
+  return CheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CheckOnlyEmbedderCanSet(ContentParent* aSource) {
