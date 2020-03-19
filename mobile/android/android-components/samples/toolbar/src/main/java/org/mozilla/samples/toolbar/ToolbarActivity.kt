@@ -40,6 +40,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.tabcounter.TabCounter
+import mozilla.components.support.utils.URLStringUtils
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
@@ -303,6 +304,10 @@ class ToolbarActivity : AppCompatActivity() {
             emptyIcon = 0xFF20123a.toInt(),
             hint = 0x1E15141a.toInt()
         )
+
+        toolbar.display.urlFormatter = { url ->
+            URLStringUtils.toDisplayUrl(url)
+        }
 
         toolbar.display.setUrlBackground(getDrawable(R.drawable.fenix_url_background))
         toolbar.display.hint = "Search or enter address"

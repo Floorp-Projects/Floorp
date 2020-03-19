@@ -160,4 +160,34 @@ class URLStringUtilsTest {
         assertTrue(isSearchTerm("www.c-c-  "))
         assertTrue(isSearchTerm("3-3 "))
     }
+
+    @Test
+    fun stripUrlSchemeUrlWithHttps() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("https://mozilla.com")
+        assertEquals("mozilla.com", testDisplayUrl)
+    }
+
+    @Test
+    fun stripUrlSchemeUrlWithHttp() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("http://mozilla.com")
+        assertEquals("mozilla.com", testDisplayUrl)
+    }
+
+    @Test
+    fun stripUrlSubdomainUrlWithHttps() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("https://www.mozilla.com")
+        assertEquals("mozilla.com", testDisplayUrl)
+    }
+
+    @Test
+    fun stripUrlSubdomainUrlWithHttp() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("http://www.mozilla.com")
+        assertEquals("mozilla.com", testDisplayUrl)
+    }
+
+    @Test
+    fun stripUrlSchemeAndSubdomainUrlNoMatch() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("zzz://www.mozillahttp://.com")
+        assertEquals("zzz://www.mozillahttp://.com", testDisplayUrl)
+    }
 }
