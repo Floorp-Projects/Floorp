@@ -35,6 +35,10 @@ class PointerCaptureInfo final {
 
 class PointerEventHandler final {
  public:
+  // Called in PresShell::Initialize to initialize pointer event related
+  // preferences.
+  static void Initialize();
+
   // Called in nsLayoutStatics::Initialize/Shutdown to initialize pointer event
   // related static variables.
   static void InitializeStatics();

@@ -1329,12 +1329,6 @@
   value: false
   mirror: always
 
-# Checks if offscreen animation throttling is enabled.
-- name: dom.animations.offscreen-throttling
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for automatically removing replaced filling animations enabled?
 - name: dom.animations-api.autoremove.enabled
   type: bool
@@ -1453,14 +1447,6 @@
   value: false
   mirror: always
 
-# Disable moz* APIs in DataTransfer.
-# Should be accessed via DataTransfer::MozAtAPIsEnabled.
-- name: dom.datatransfer.mozAtAPIs
-  type: bool
-  value: false
-  mirror: always
-  do_not_use_directly: true
-
 # Any how many seconds we allow external protocol URLs in iframe when not in
 # single events
 - name: dom.delay.block_external_protocol_in_iframes
@@ -1565,14 +1551,6 @@
   type: bool
   value: false
   mirror: always
-
-# Should only be enabled in tests.
-# Access with Clipboard::IsTestingPrefEnabled().
-- name: dom.events.testing.asyncClipboard
-  type: bool
-  value: false
-  mirror: always
-  do_not_use_directly: true
 
 # This pref controls whether or not the `protected` dataTransfer state is
 # enabled. If the `protected` dataTransfer stae is disabled, then the
@@ -2673,27 +2651,6 @@
   value: 5000
   mirror: always
 
-# Whether to shim a Components object on untrusted windows.
-- name: dom.use_components_shim
-  type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
-  mirror: always
-
-- name: dom.vibrator.enabled
-  type: bool
-  value: true
-  mirror: always
-
-- name: dom.vibrator.max_vibrate_ms
-  type: uint32_t
-  value: 10000
-  mirror: always
-
-- name: dom.vibrator.max_vibrate_list_len
-  type: uint32_t
-  value: 128
-  mirror: always
-
 # Is support for Window.visualViewport enabled?
 - name: dom.visualviewport.enabled
   type: bool
@@ -2939,12 +2896,6 @@
 - name: dom.w3c_pointer_events.multiprocess.android.enabled
   type: bool
   value: true
-  mirror: always
-
-# W3C pointer events draft.
-- name: dom.w3c_pointer_events.implicit_capture
-  type: bool
-  value: false
   mirror: always
 
 # Is support for Navigator.webdriver enabled?
@@ -4463,18 +4414,6 @@
 # composition.
 - name: intl.ime.hack.on_any_apps.fire_key_events_for_composition
   type: bool
-  value: @IS_ANDROID@
-  mirror: always
-
-# Android-specific pref to control if keydown and keyup events are fired even
-# during composition.  Note that those prefs are ignored if
-# dom.keyboardevent.dispatch_during_composition is false.
-- name: intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition
-  type: bool
-# If true and intl.ime.hack.on_any_apps.fire_key_events_for_composition is
-# false, dispatch the keydown and keyup events only on IME-unaware web apps.
-# So, this supports web apps which listen to only keydown or keyup events
-# to get a change to do something at every text input.
   value: @IS_ANDROID@
   mirror: always
 
@@ -8001,16 +7940,6 @@
   value: 40
   mirror: always
 
-# TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
-# If true, data: URIs will be treated as unique opaque origins, hence will use
-# a NullPrincipal as the security context.
-# Otherwise it will inherit the origin from parent node, this is the legacy
-# behavior of Firefox.
-- name: security.data_uri.unique_opaque_origin
-  type: bool
-  value: true
-  mirror: always
-
 # Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
 # not allowed for Firefox Desktop in firefox.js
 - name: security.allow_parent_unrestricted_js_loads
@@ -8030,31 +7959,6 @@
 - name: security.allow_eval_in_parent_process
   type: RelaxedAtomicBool
   value: true
-  mirror: always
-
-# Pref to block mixed scripts (fonts, plugin content, scripts, stylesheets,
-# iframes, websockets, XHR).
-- name: security.mixed_content.block_active_content
-  type: bool
-  value: @IS_ANDROID@
-  mirror: always
-
-# Pref to block sub requests that happen within an object.
-- name: security.mixed_content.block_object_subrequest
-  type: bool
-  value: false
-  mirror: always
-
-# Pref for mixed display content blocking (images, audio, video).
-- name: security.mixed_content.block_display_content
-  type: bool
-  value: false
-  mirror: always
-
-# Pref for mixed display content upgrading (images, audio, video).
-- name: security.mixed_content.upgrade_display_content
-  type: bool
-  value: false
   mirror: always
 
 # Whether strict file origin policy is in effect. "False" is traditional.

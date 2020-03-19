@@ -37,7 +37,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StartupTimeline.h"
@@ -9874,9 +9873,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         true,  // aInheritForAboutBlank
         isSrcdoc);
 
-    bool isURIUniqueOrigin =
-        StaticPrefs::security_data_uri_unique_opaque_origin() &&
-        SchemeIsData(aLoadState->URI());
+    bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
+                             SchemeIsData(aLoadState->URI());
     inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
   }
 
