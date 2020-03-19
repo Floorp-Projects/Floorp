@@ -56,7 +56,7 @@ function checkInvalid(body, errorMessage) {
                 (call $accum (global.get $g)))
 
           (func $accum (param $w (ref $wabbit)) (result i32)
-                (if i32 (ref.is_null (local.get $w))
+                (if (result i32) (ref.is_null (local.get $w))
                     (i32.const 0)
                     (i32.add (struct.get $wabbit 0 (local.get $w))
                              (i32.sub (call $accum (struct.get $wabbit 1 (local.get $w)))
