@@ -18,8 +18,8 @@ for (let i = 15; i --> 0;) {
 }
 
 let code = `(module
-   (func $i64 (result i64)
-     ${params} ${locals}
+   (func $i64
+     ${params} (result i64) ${locals}
      ${tests}
    )
 )`
@@ -29,7 +29,7 @@ wasmEvalText(code);
 // Bounds check elimination.
 assertEq(wasmEvalText(`(module
     (memory 1)
-    (func (param $p i32) (local $l i32) (result i32)
+    (func (param $p i32) (result i32) (local $l i32)
         (local.set $l (i32.const 0))
         (if
             (local.get $p)
