@@ -853,8 +853,6 @@ PresShell::PresShell(Document* aDocument)
   mReflowCountMgr->SetPresShell(this);
 #endif
   mLastOSWake = mLoadBegin = TimeStamp::Now();
-
-  PointerEventHandler::Initialize();
 }
 
 NS_INTERFACE_TABLE_HEAD(PresShell)
