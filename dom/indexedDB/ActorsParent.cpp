@@ -3415,7 +3415,7 @@ nsresult UpgradeSchemaFrom18_0To19_0(mozIStorageConnection* aConnection) {
 }
 
 class UpgradeFileIdsFunction final : public mozIStorageFunction {
-  RefPtr<FileManager> mFileManager;
+  SafeRefPtr<FileManager> mFileManager;
 
  public:
   UpgradeFileIdsFunction() { AssertIsOnIOThread(); }
@@ -4721,7 +4721,7 @@ class DatabaseConnection final {
  private:
   InitializedOnceMustBeTrue<const nsCOMPtr<mozIStorageConnection>>
       mStorageConnection;
-  InitializedOnceMustBeTrue<const RefPtr<FileManager>> mFileManager;
+  InitializedOnceMustBeTrue<const SafeRefPtr<FileManager>> mFileManager;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
   RefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
@@ -4796,8 +4796,8 @@ class DatabaseConnection final {
   void EnableQuotaChecks();
 
  private:
-  DatabaseConnection(mozIStorageConnection* aStorageConnection,
-                     FileManager* aFileManager);
+  DatabaseConnection(nsCOMPtr<mozIStorageConnection> aStorageConnection,
+                     SafeRefPtr<FileManager> aFileManager);
 
   ~DatabaseConnection();
 
@@ -4882,7 +4882,7 @@ class DatabaseConnection::UpdateRefcountFunction final
   enum class UpdateType { Increment, Decrement };
 
   DatabaseConnection* const mConnection;
-  FileManager* const mFileManager;
+  FileManager& mFileManager;
   nsClassHashtable<nsUint64HashKey, FileInfoEntry> mFileInfoEntries;
   nsDataHashtable<nsUint64HashKey, FileInfoEntry*> mSavepointEntriesIndex;
 
@@ -4897,7 +4897,7 @@ class DatabaseConnection::UpdateRefcountFunction final
   NS_DECL_MOZISTORAGEFUNCTION
 
   UpdateRefcountFunction(DatabaseConnection* aConnection,
-                         FileManager* aFileManager);
+                         FileManager& aFileManager);
 
   nsresult WillCommit();
 
@@ -5896,7 +5896,7 @@ class Database final
  private:
   RefPtr<Factory> mFactory;
   SafeRefPtr<FullDatabaseMetadata> mMetadata;
-  RefPtr<FileManager> mFileManager;
+  SafeRefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTHashtable<nsPtrHashKey<TransactionBase>> mTransactions;
   nsTHashtable<nsPtrHashKey<MutableFile>> mMutableFiles;
@@ -5930,7 +5930,7 @@ class Database final
            const Maybe<ContentParentId>& aOptionalContentParentId,
            const nsACString& aGroup, const nsACString& aOrigin,
            uint32_t aTelemetryId, SafeRefPtr<FullDatabaseMetadata> aMetadata,
-           RefPtr<FileManager> aFileManager,
+           SafeRefPtr<FileManager> aFileManager,
            RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
            bool aChromeWriteAccessAllowed);
 
@@ -5970,7 +5970,12 @@ class Database final
 
   const nsString& FilePath() const { return mFilePath; }
 
-  FileManager* GetFileManager() const { return mFileManager; }
+  FileManager& GetFileManager() const { return *mFileManager; }
+
+  SafeRefPtr<FileManager> GetFileManagerPtr() const {
+    MOZ_ASSERT(mFileManager);
+    return mFileManager.clonePtr();
+  }
 
   const FullDatabaseMetadata& Metadata() const {
     MOZ_ASSERT(mMetadata);
@@ -6974,7 +6979,7 @@ class OpenDatabaseOp final : public FactoryOp {
   SafeRefPtr<FullDatabaseMetadata> mMetadata;
 
   uint64_t mRequestedVersion;
-  RefPtr<FileManager> mFileManager;
+  SafeRefPtr<FileManager> mFileManager;
 
   RefPtr<Database> mDatabase;
   RefPtr<VersionChangeTransaction> mVersionChangeTransaction;
@@ -7282,7 +7287,7 @@ class CreateIndexOp final : public VersionChangeTransactionOp {
 
   const IndexMetadata mMetadata;
   Maybe<UniqueIndexTable> mMaybeUniqueIndexTable;
-  const RefPtr<FileManager> mFileManager;
+  const SafeRefPtr<FileManager> mFileManager;
   const nsCString mDatabaseId;
   const IndexOrObjectStoreId mObjectStoreId;
 
@@ -8072,7 +8077,7 @@ class ValueCursorBase {
  protected:
   explicit ValueCursorBase(TransactionBase* const aTransaction)
       : mDatabase(aTransaction->GetDatabase()),
-        mFileManager(mDatabase->GetFileManager()),
+        mFileManager(mDatabase->GetFileManagerPtr()),
         mBackgroundParent(aTransaction->GetBackgroundParent()) {
     MOZ_ASSERT(mDatabase);
     MOZ_ASSERT(mFileManager);
@@ -8083,7 +8088,7 @@ class ValueCursorBase {
   ~ValueCursorBase() { MOZ_ASSERT(!mBackgroundParent); }
 
   const RefPtr<Database> mDatabase;
-  const RefPtr<FileManager> mFileManager;
+  const SafeRefPtr<FileManager> mFileManager;
 
   InitializedOnceMustBeTrue<PBackgroundParent* const> mBackgroundParent;
 };
@@ -8688,7 +8693,7 @@ class DeleteFilesRunnable final : public Runnable,
   };
 
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
-  RefPtr<FileManager> mFileManager;
+  SafeRefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsCOMPtr<nsIFile> mDirectory;
   nsCOMPtr<nsIFile> mJournalDirectory;
@@ -8696,7 +8701,8 @@ class DeleteFilesRunnable final : public Runnable,
   State mState;
 
  public:
-  DeleteFilesRunnable(FileManager* aFileManager, nsTArray<int64_t>&& aFileIds);
+  DeleteFilesRunnable(SafeRefPtr<FileManager> aFileManager,
+                      nsTArray<int64_t>&& aFileIds);
 
   void RunImmediately();
 
@@ -9091,7 +9097,7 @@ class DEBUGThreadSlower final : public nsIThreadObserver {
  ******************************************************************************/
 
 class MOZ_STACK_CLASS FileHelper final {
-  const RefPtr<FileManager> mFileManager;
+  const SafeRefPtr<FileManager> mFileManager;
 
   InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
       mFileDirectory;
@@ -9103,7 +9109,7 @@ class MOZ_STACK_CLASS FileHelper final {
       mReadCallback;
 
  public:
-  explicit FileHelper(RefPtr<FileManager>&& aFileManager)
+  explicit FileHelper(SafeRefPtr<FileManager>&& aFileManager)
       : mFileManager(std::move(aFileManager)) {
     MOZ_ASSERT(mFileManager);
   }
@@ -9249,9 +9255,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     return result;
   }
 
-  FileManager* fileManager = aDatabase->GetFileManager();
-
-  nsCOMPtr<nsIFile> directory = fileManager->GetCheckedDirectory();
+  nsCOMPtr<nsIFile> directory =
+      aDatabase->GetFileManager().GetCheckedDirectory();
   if (NS_WARN_IF(!directory)) {
     IDB_REPORT_INTERNAL_ERR();
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -10227,7 +10232,7 @@ nsresult DispatchAndReturnFileReferences(
       IndexedDatabaseManager* const mgr = IndexedDatabaseManager::Get();
       MOZ_ASSERT(mgr);
 
-      const RefPtr<FileManager> fileManager =
+      const SafeRefPtr<FileManager> fileManager =
           mgr->GetFileManager(aPersistenceType, aOrigin, aDatabaseName);
 
       if (fileManager) {
@@ -10702,9 +10707,10 @@ nsresult FileManager::AsyncDeleteFile(int64_t aFileId) {
  ******************************************************************************/
 
 DatabaseConnection::DatabaseConnection(
-    mozIStorageConnection* aStorageConnection, FileManager* aFileManager)
-    : mStorageConnection(aStorageConnection),
-      mFileManager(aFileManager),
+    nsCOMPtr<mozIStorageConnection> aStorageConnection,
+    SafeRefPtr<FileManager> aFileManager)
+    : mStorageConnection(std::move(aStorageConnection)),
+      mFileManager(std::move(aFileManager)),
       mInReadTransaction(false),
       mInWriteTransaction(false)
 #ifdef DEBUG
@@ -10713,8 +10719,8 @@ DatabaseConnection::DatabaseConnection(
 #endif
 {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aStorageConnection);
-  MOZ_ASSERT(aFileManager);
+  MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(mFileManager);
 }
 
 DatabaseConnection::~DatabaseConnection() {
@@ -10829,7 +10835,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
     MOZ_ASSERT(mFileManager);
 
     RefPtr<UpdateRefcountFunction> function =
-        new UpdateRefcountFunction(this, mFileManager->get());
+        new UpdateRefcountFunction(this, **mFileManager);
 
     rv = (*mStorageConnection)
              ->CreateFunction(NS_LITERAL_CSTRING("update_refcount"),
@@ -11541,13 +11547,12 @@ nsresult DatabaseConnection::AutoSavepoint::Commit() {
 }
 
 DatabaseConnection::UpdateRefcountFunction::UpdateRefcountFunction(
-    DatabaseConnection* const aConnection, FileManager* const aFileManager)
+    DatabaseConnection* const aConnection, FileManager& aFileManager)
     : mConnection(aConnection),
       mFileManager(aFileManager),
       mInSavepoint(false) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT(aFileManager);
 }
 
 nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
@@ -11698,7 +11703,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
     return rv;
   }
 
-  auto filesOrErr = DeserializeStructuredCloneFiles(*mFileManager, ids);
+  auto filesOrErr = DeserializeStructuredCloneFiles(mFileManager, ids);
   if (NS_WARN_IF(filesOrErr.isErr())) {
     return filesOrErr.unwrapErr();
   }
@@ -11738,7 +11743,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::CreateJournals() {
   AUTO_PROFILER_LABEL(
       "DatabaseConnection::UpdateRefcountFunction::CreateJournals", DOM);
 
-  nsCOMPtr<nsIFile> journalDirectory = mFileManager->GetJournalDirectory();
+  nsCOMPtr<nsIFile> journalDirectory = mFileManager.GetJournalDirectory();
   if (NS_WARN_IF(!journalDirectory)) {
     return NS_ERROR_FAILURE;
   }
@@ -11768,7 +11773,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::RemoveJournals(
   AUTO_PROFILER_LABEL(
       "DatabaseConnection::UpdateRefcountFunction::RemoveJournals", DOM);
 
-  nsCOMPtr<nsIFile> journalDirectory = mFileManager->GetJournalDirectory();
+  nsCOMPtr<nsIFile> journalDirectory = mFileManager.GetJournalDirectory();
   if (NS_WARN_IF(!journalDirectory)) {
     return NS_ERROR_FAILURE;
   }
@@ -12083,8 +12088,8 @@ nsresult ConnectionPool::GetOrCreateConnection(
       return rv;
     }
 
-    connection =
-        new DatabaseConnection(storageConnection, aDatabase->GetFileManager());
+    connection = new DatabaseConnection(storageConnection,
+                                        aDatabase->GetFileManagerPtr());
 
     rv = connection->Init();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -13684,7 +13689,7 @@ Database::Database(RefPtr<Factory> aFactory,
                    const nsACString& aGroup, const nsACString& aOrigin,
                    uint32_t aTelemetryId,
                    SafeRefPtr<FullDatabaseMetadata> aMetadata,
-                   RefPtr<FileManager> aFileManager,
+                   SafeRefPtr<FileManager> aFileManager,
                    RefPtr<DirectoryLock> aDirectoryLock,
                    bool aFileHandleDisabled, bool aChromeWriteAccessAllowed)
     : mFactory(std::move(aFactory)),
@@ -16578,8 +16583,10 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     // 0, but the dbRefCnt is non-zero, which will keep the FileInfo object
     // alive.
     MOZ_ASSERT(dbRefCnt > 0);
-    mFileInfos.Put(id, new FileInfo(FileManagerGuard{}, this, id,
-                                    static_cast<nsrefcnt>(dbRefCnt)));
+    mFileInfos.Put(
+        id, new FileInfo(FileManagerGuard{},
+                         SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, id,
+                         static_cast<nsrefcnt>(dbRefCnt)));
 
     mLastFileId = std::max(id, mLastFileId);
   }
@@ -17657,8 +17664,8 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
     const auto& value = pendingDeleteInfoEntry.GetData();
     MOZ_ASSERT(!value->IsEmpty());
 
-    RefPtr<DeleteFilesRunnable> runnable =
-        new DeleteFilesRunnable(key, std::move(*value));
+    RefPtr<DeleteFilesRunnable> runnable = new DeleteFilesRunnable(
+        SafeRefPtr{key, AcquireStrongRefFromRawPtr{}}, std::move(*value));
 
     MOZ_ASSERT(value->IsEmpty());
 
@@ -17904,11 +17911,11 @@ void QuotaClient::ProcessMaintenanceQueue() {
  * DeleteFilesRunnable
  ******************************************************************************/
 
-DeleteFilesRunnable::DeleteFilesRunnable(FileManager* aFileManager,
+DeleteFilesRunnable::DeleteFilesRunnable(SafeRefPtr<FileManager> aFileManager,
                                          nsTArray<int64_t>&& aFileIds)
     : Runnable("dom::indexeddb::DeleteFilesRunnable"),
       mOwningEventTarget(GetCurrentThreadEventTarget()),
-      mFileManager(aFileManager),
+      mFileManager(std::move(aFileManager)),
       mFileIds(std::move(aFileIds)),
       mState(State_Initial) {}
 
@@ -19337,8 +19344,8 @@ nsresult UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
   // This file manager doesn't need real origin info, etc. The only purpose is
   // to store file ids without adding more complexity or code duplication.
   auto fileManager =
-      MakeRefPtr<FileManager>(PERSISTENCE_TYPE_INVALID, EmptyCString(),
-                              EmptyCString(), EmptyString(), false);
+      MakeSafeRefPtr<FileManager>(PERSISTENCE_TYPE_INVALID, EmptyCString(),
+                                  EmptyCString(), EmptyString(), false);
 
   nsresult rv = fileManager->Init(aFMDirectory, aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -21468,18 +21475,18 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   MOZ_ASSERT(mgr);
 
-  RefPtr<FileManager> fileManager =
+  SafeRefPtr<FileManager> fileManager =
       mgr->GetFileManager(persistenceType, mOrigin, databaseName);
   if (!fileManager) {
-    fileManager = new FileManager(persistenceType, mGroup, mOrigin,
-                                  databaseName, mEnforcingQuota);
+    fileManager = MakeSafeRefPtr<FileManager>(persistenceType, mGroup, mOrigin,
+                                              databaseName, mEnforcingQuota);
 
     rv = fileManager->Init(fmDirectory, connection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    mgr->AddFileManager(fileManager);
+    mgr->AddFileManager(fileManager.clonePtr());
   }
 
   mFileManager = std::move(fileManager);
@@ -22291,7 +22298,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   mDatabase = MakeRefPtr<Database>(
       static_cast<Factory*>(Manager()), mCommonParams.principalInfo(),
       mOptionalContentParentId, mGroup, mOrigin, mTelemetryId,
-      mMetadata.clonePtr(), mFileManager, std::move(mDirectoryLock),
+      mMetadata.clonePtr(), mFileManager.clonePtr(), std::move(mDirectoryLock),
       mFileHandleDisabled, mChromeWriteAccessAllowed);
 
   if (info) {
@@ -23649,9 +23656,9 @@ nsresult CreateFileOp::DoDatabaseWork() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  FileManager* fileManager = mDatabase->GetFileManager();
+  FileManager& fileManager = mDatabase->GetFileManager();
 
-  mFileInfo.init(fileManager->CreateFileInfo());
+  mFileInfo.init(fileManager.CreateFileInfo());
   if (NS_WARN_IF(!*mFileInfo)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -23659,13 +23666,13 @@ nsresult CreateFileOp::DoDatabaseWork() {
 
   const int64_t fileId = (*mFileInfo)->Id();
 
-  const auto journalDirectory = fileManager->EnsureJournalDirectory();
+  const auto journalDirectory = fileManager.EnsureJournalDirectory();
   if (NS_WARN_IF(!journalDirectory)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  const auto journalFile = fileManager->GetFileForId(journalDirectory, fileId);
+  const auto journalFile = fileManager.GetFileForId(journalDirectory, fileId);
   if (NS_WARN_IF(!journalFile)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -23676,13 +23683,13 @@ nsresult CreateFileOp::DoDatabaseWork() {
     return rv;
   }
 
-  const auto fileDirectory = fileManager->GetDirectory();
+  const auto fileDirectory = fileManager.GetDirectory();
   if (NS_WARN_IF(!fileDirectory)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  const auto file = fileManager->GetFileForId(fileDirectory, fileId);
+  const auto file = fileManager.GetFileForId(fileDirectory, fileId);
   if (NS_WARN_IF(!file)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -24125,7 +24132,7 @@ CreateIndexOp::CreateIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
                              const IndexMetadata& aMetadata)
     : VersionChangeTransactionOp(std::move(aTransaction)),
       mMetadata(aMetadata),
-      mFileManager(Transaction().GetDatabase()->GetFileManager()),
+      mFileManager(Transaction().GetDatabase()->GetFileManagerPtr()),
       mDatabaseId(Transaction().DatabaseId()),
       mObjectStoreId(aObjectStoreId) {
   MOZ_ASSERT(aObjectStoreId);
@@ -25374,7 +25381,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
 
   if (mDataOverThreshold) {
     mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForStructuredClone(
-        aTransaction->GetDatabase()->GetFileManager()->CreateFileInfo(),
+        aTransaction->GetDatabase()->GetFileManager().CreateFileInfo(),
         MakeRefPtr<SCInputStream>(mParams.cloneInfo().data().data)));
   }
 
@@ -25575,11 +25582,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
       if (inputStream) {
         if (fileHelper.isNothing()) {
-          auto* const fileManager =
-              Transaction().GetDatabase()->GetFileManager();
-          MOZ_ASSERT(fileManager);
-
-          fileHelper.emplace(RefPtr{fileManager});
+          fileHelper.emplace(Transaction().GetDatabase()->GetFileManagerPtr());
           rv = fileHelper->Init();
           if (NS_WARN_IF(NS_FAILED(rv))) {
             IDB_REPORT_INTERNAL_ERR();
@@ -25866,7 +25869,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     auto cloneInfoOrErr = GetStructuredCloneReadInfoFromStatement(
-        &*stmt, 1, 0, *mDatabase->GetFileManager());
+        &*stmt, 1, 0, mDatabase->GetFileManager());
     if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
       return Err(cloneInfoOrErr.unwrapErr());
     }
@@ -26451,7 +26454,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
     auto cloneInfoOrErr = GetStructuredCloneReadInfoFromStatement(
-        &*stmt, 1, 0, *mDatabase->GetFileManager());
+        &*stmt, 1, 0, mDatabase->GetFileManager());
     if (NS_WARN_IF(cloneInfoOrErr.isErr())) {
       return cloneInfoOrErr.unwrapErr();
     }

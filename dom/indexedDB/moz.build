@@ -42,6 +42,7 @@ EXPORTS.mozilla.dom += [
     'IndexedDatabase.h',
     'IndexedDatabaseManager.h',
     'InitializedOnce.h',
+    'SafeRefPtr.h',
 ]
 
 EXPORTS.mozilla.dom.indexedDB += [
