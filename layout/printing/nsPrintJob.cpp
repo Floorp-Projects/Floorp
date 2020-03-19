@@ -1289,8 +1289,7 @@ void nsPrintJob::GetDisplayTitleAndURL(Document& aDoc,
       return;
     }
 
-    textToSubURI->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"), urlCStr,
-                                   aURLStr);
+    textToSubURI->UnEscapeURIForUI(urlCStr, aURLStr);
   }
 }
 
