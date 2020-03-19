@@ -17,6 +17,7 @@
 #include "mozilla/TextEvents.h"
 
 #include "nsChildView.h"
+#include "nsCocoaFeatures.h"
 #include "nsObjCExceptions.h"
 #include "nsBidiUtils.h"
 #include "nsToolkit.h"
@@ -4669,8 +4670,29 @@ bool IMEInputHandler::OnHandleEvent(NSEvent* aEvent) {
   if (!IsFocused()) {
     return false;
   }
+
+  bool allowConsumeEvent = true;
+  if (nsCocoaFeatures::OnCatalinaOrLater() && !IsIMEComposing()) {
+    // Hack for bug of Korean IMEs on Catalina (10.15).
+    // If we are inactivated during composition, active Korean IME keeps
+    // consuming all mousedown events of any mouse buttons.  So, we should
+    // allow Korean IMEs to handle mousedown events only when there is
+    // composition string.
+    // List of ID of Korean IME:
+    // * com.apple.inputmethod.Korean.2SetKorean
+    // * com.apple.inputmethod.Korean.3SetKorean
+    // * com.apple.inputmethod.Korean.390Sebulshik
+    // * com.apple.inputmethod.Korean.GongjinCheongRomaja
+    // * com.apple.inputmethod.Korean.HNCRomaja
+    TISInputSourceWrapper tis;
+    tis.InitByCurrentInputSource();
+    nsAutoString inputSourceID;
+    tis.GetInputSourceID(inputSourceID);
+    allowConsumeEvent =
+        !StringBeginsWith(inputSourceID, NS_LITERAL_STRING("com.apple.inputmethod.Korean."));
+  }
   NSTextInputContext* inputContext = [mView inputContext];
-  return [inputContext handleEvent:aEvent];
+  return [inputContext handleEvent:aEvent] && allowConsumeEvent;
 }
 
 #pragma mark -
