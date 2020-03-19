@@ -3488,37 +3488,7 @@ void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {
   }
 }
 
-#if defined(XP_WIN)
-// Child-side API
-bool SetRemoteExceptionHandler(const nsACString& crashPipe,
-                               uintptr_t aCrashTimeAnnotationFile) {
-  // crash reporting is disabled
-  if (crashPipe.Equals(kNullNotifyPipe)) return true;
-
-  MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-
-  gExceptionHandler = new google_breakpad::ExceptionHandler(
-      L"", ChildFPEFilter,
-      nullptr,  // no minidump callback
-      reinterpret_cast<void*>(aCrashTimeAnnotationFile),
-      google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
-      NS_ConvertASCIItoUTF16(crashPipe).get(), nullptr);
-  gExceptionHandler->set_handle_debug_exceptions(true);
-
-#  if defined(HAVE_64BIT_BUILD)
-  SetJitExceptionHandler();
-#  endif
-
-  mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
-
-  oldTerminateHandler = std::set_terminate(&TerminateHandler);
-
-  // we either do remote or nothing, no fallback to regular crash reporting
-  return gExceptionHandler->IsOutOfProcess();
-}
-
-//--------------------------------------------------
-#elif defined(XP_LINUX)
+#if defined(XP_LINUX)
 
 // Parent-side API for children
 bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
@@ -3536,10 +3506,25 @@ bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
   return true;
 }
 
-// Child-side API
-bool SetRemoteExceptionHandler() {
+#endif  // defined(XP_LINUX)
+
+bool SetRemoteExceptionHandler(const char* aCrashPipe,
+                               uintptr_t aCrashTimeAnnotationFile) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
 
+#if defined(XP_WIN)
+  gExceptionHandler = new google_breakpad::ExceptionHandler(
+      L"", ChildFPEFilter,
+      nullptr,  // no minidump callback
+      reinterpret_cast<void*>(aCrashTimeAnnotationFile),
+      google_breakpad::ExceptionHandler::HANDLER_ALL, GetMinidumpType(),
+      NS_ConvertASCIItoUTF16(aCrashPipe).get(), nullptr);
+  gExceptionHandler->set_handle_debug_exceptions(true);
+
+#  if defined(HAVE_64BIT_BUILD)
+  SetJitExceptionHandler();
+#  endif
+#elif defined(XP_LINUX)
   // MinidumpDescriptor requires a non-empty path.
   google_breakpad::MinidumpDescriptor path(".");
 
@@ -3549,39 +3534,24 @@ bool SetRemoteExceptionHandler() {
                                             nullptr,  // no callback context
                                             true,     // install signal handlers
                                             gMagicChildCrashReportFd);
-
-  mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
-
-  oldTerminateHandler = std::set_terminate(&TerminateHandler);
-
-  // we either do remote or nothing, no fallback to regular crash reporting
-  return gExceptionHandler->IsOutOfProcess();
-}
-
-//--------------------------------------------------
 #elif defined(XP_MACOSX)
-// Child-side API
-bool SetRemoteExceptionHandler(const nsACString& crashPipe) {
-  // crash reporting is disabled
-  if (crashPipe.Equals(kNullNotifyPipe)) return true;
-
-  MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-
   gExceptionHandler =
       new google_breakpad::ExceptionHandler("", ChildFilter,
                                             nullptr,  // no minidump callback
                                             nullptr,  // no callback context
                                             true,     // install signal handlers
-                                            crashPipe.BeginReading());
+                                            aCrashPipe);
+#endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
+  InitThreadAnnotation();
+
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
 }
-#endif  // XP_WIN
 
 void GetAnnotation(uint32_t childPid, Annotation annotation,
                    nsACString& outStr) {
@@ -3903,9 +3873,15 @@ bool CreateAdditionalChildMinidump(ProcessHandle childPid,
 }
 
 bool UnsetRemoteExceptionHandler() {
+  // On Linux we don't unset breakpad's exception handler if the sandbox is
+  // enabled because it requires invoking `sigaltstack` and we don't want to
+  // allow that syscall in the sandbox. See bug 1622452.
+#if !defined(XP_LINUX) || !defined(MOZ_SANDBOX)
   std::set_terminate(oldTerminateHandler);
   delete gExceptionHandler;
   gExceptionHandler = nullptr;
+#endif
+  ShutdownThreadAnnotation();
   return true;
 }
 
