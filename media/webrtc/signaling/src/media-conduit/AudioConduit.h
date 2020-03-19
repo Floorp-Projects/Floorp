@@ -17,6 +17,7 @@
 
 // Audio Engine Includes
 #include "webrtc/common_types.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_packet_observer.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/channel_proxy.h"
@@ -197,7 +198,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mSendChannel(-1),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
-        mRtpSourceObserver(mCall->GetTimestampMaker()),
+        mRtpSourceObserver(new RtpSourceObserver(mCall->GetTimestampMaker())),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
@@ -358,7 +359,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   webrtc::AudioFrame mAudioFrame;  // for output pulls
 
   // Accessed from both main and mStsThread. Uses locks internally.
-  RtpSourceObserver mRtpSourceObserver;
+  RefPtr<RtpSourceObserver> mRtpSourceObserver;
 
   // Socket transport service thread. Any thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
