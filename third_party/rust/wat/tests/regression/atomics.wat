@@ -1,4 +1,0 @@
-(module
-  (func
-    atomic.fence)
-)

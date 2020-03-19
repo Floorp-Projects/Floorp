@@ -7,11 +7,11 @@ var m1 = wasmEvalText(
    (select
      (unreachable)
      (return (nop))
-     (loop (result i32) (i32.const 1))
+     (loop i32 (i32.const 1))
    )
    drop
   )
-  (export "" (func 0)))`).exports[""];
+  (export "" 0))`).exports[""];
 
 try {
     m1();
@@ -31,7 +31,7 @@ var m2 = wasmEvalText(
    )
    drop
   )
-  (export "" (func 0)))`).exports[""];
+  (export "" 0))`).exports[""];
 
 try {
     m2();

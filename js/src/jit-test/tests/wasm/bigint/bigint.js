@@ -111,8 +111,8 @@ function testManyArgs() {
 function testImportExport() {
   var f1 = wasmEvalText(
     `(module
-      (import "i64" "func" (func (param i64)))
-      (export "f" (func 0))
+      (import "i64" "func" (param i64))
+      (export "f" 0)
     )`,
     {
       i64: {
@@ -125,8 +125,8 @@ function testImportExport() {
 
   var f2 = wasmEvalText(
     `(module
-      (import "i64" "func" (func (param i64) (result i64)))
-      (export "f" (func 0))
+      (import "i64" "func" (param i64) (result i64))
+      (export "f" 0)
     )`,
     {
       i64: {
@@ -139,7 +139,7 @@ function testImportExport() {
 
   var f3 = wasmEvalText(
     `(module
-      (import "" "i64" (func $i64 (param i64) (result i64)))
+      (import $i64 "" "i64" (param i64) (result i64))
       (func (export "f") (param i64) (result i64)
         (get_local 0)
         (call $i64))
@@ -155,8 +155,8 @@ function testImportExport() {
 
   var f4 = wasmEvalText(
     `(module
-      (import "i64" "func" (func (result i64)))
-      (export "f" (func 0))
+      (import "i64" "func" (result i64))
+      (export "f" 0)
     )`,
     { i64: { func() {} } }
   ).exports.f;
