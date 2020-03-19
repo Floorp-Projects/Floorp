@@ -12,7 +12,7 @@ dbg.onNewScript = (script) => {
   s = script;
 }
 
-g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func) (export "" 0))')));`);
+g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func) (export "" (func 0)))')));`);
 assertEq(s.format, "wasm");
 
 var source = s.source;
