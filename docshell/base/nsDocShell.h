@@ -1293,7 +1293,6 @@ class nsDocShell final : public nsDocLoader,
 
   bool mCreated : 1;
   bool mAllowSubframes : 1;
-  bool mAllowPlugins : 1;
   bool mAllowJavascript : 1;
   bool mAllowMetaRedirects : 1;
   bool mAllowImages : 1;
