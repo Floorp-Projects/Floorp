@@ -304,15 +304,6 @@ class PeerConnectionImpl final
     rv = GetDTMFToneBuffer(sender, outToneBuffer);
   }
 
-  NS_IMETHODIMP_TO_ERRORRESULT(
-      GetRtpSources, ErrorResult& rv, dom::MediaStreamTrack& aRecvTrack,
-      DOMHighResTimeStamp aRtpSourceNow,
-      nsTArray<dom::RTCRtpSourceEntry>& outRtpSources) {
-    rv = GetRtpSources(aRecvTrack, aRtpSourceNow, outRtpSources);
-  }
-
-  DOMHighResTimeStamp GetNowInRtpSourceReferenceTime();
-
   NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrackNoRenegotiation, ErrorResult& rv,
                                TransceiverImpl& aTransceiver,
                                mozilla::dom::MediaStreamTrack* aWithTrack) {

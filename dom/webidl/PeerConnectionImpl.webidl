@@ -51,10 +51,6 @@ interface PeerConnectionImpl  {
                   optional unsigned long interToneGap = 70);
   [Throws]
   DOMString getDTMFToneBuffer(RTCRtpSender sender);
-  [Throws]
-  sequence<RTCRtpSourceEntry> getRtpSources(MediaStreamTrack track,
-                                            DOMHighResTimeStamp rtpSourceNow);
-  DOMHighResTimeStamp getNowInRtpSourceReferenceTime();
 
   [Throws]
   void replaceTrackNoRenegotiation(TransceiverImpl transceiverImpl,
