@@ -150,7 +150,7 @@ class SmooshScriptStencil : public ScriptStencil {
 
  private:
   bool createAtoms(JSContext* cx) {
-    size_t numAtoms = result_.all_atoms.len;
+    size_t numAtoms = result_.all_atoms_len;
 
     auto& alloc = compilationInfo_.allocScope.alloc();
 
@@ -161,8 +161,9 @@ class SmooshScriptStencil : public ScriptStencil {
     }
 
     for (size_t i = 0; i < numAtoms; i++) {
-      const CVec<uint8_t>& string = result_.all_atoms.data[i];
-      JSAtom* atom = AtomizeUTF8Chars(cx, (const char*)string.data, string.len);
+      auto s = smoosh_get_atom_at(result_, i);
+      auto len = smoosh_get_atom_len_at(result_, i);
+      JSAtom* atom = AtomizeUTF8Chars(cx, s, len);
       if (!atom) {
         return false;
       }
