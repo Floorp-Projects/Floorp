@@ -1267,6 +1267,21 @@ WidgetNodeType nsNativeThemeGTK::NativeThemeToGtkTheme(
   return gtkWidgetType;
 }
 
+static void FixupForVerticalWritingMode(WritingMode aWritingMode,
+                                        LayoutDeviceIntMargin* aResult) {
+  if (aWritingMode.IsVertical()) {
+    bool rtl = aWritingMode.IsBidiRTL();
+    LogicalMargin logical(aWritingMode, aResult->top,
+                          rtl ? aResult->left : aResult->right, aResult->bottom,
+                          rtl ? aResult->right : aResult->left);
+    nsMargin physical = logical.GetPhysicalMargin(aWritingMode);
+    aResult->top = physical.top;
+    aResult->right = physical.right;
+    aResult->bottom = physical.bottom;
+    aResult->left = physical.left;
+  }
+}
+
 void nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
                                              StyleAppearance aAppearance,
                                              GtkTextDirection aDirection,
@@ -1292,6 +1307,7 @@ void nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame,
       }
     }
   }
+  FixupForVerticalWritingMode(aFrame->GetWritingMode(), aResult);
 }
 
 LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
@@ -1644,7 +1660,9 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield: {
-      moz_gtk_get_entry_min_height(&aResult->height);
+      moz_gtk_get_entry_min_height(aFrame->GetWritingMode().IsVertical()
+                                       ? &aResult->width
+                                       : &aResult->height);
     } break;
 #endif
     case StyleAppearance::Separator: {
