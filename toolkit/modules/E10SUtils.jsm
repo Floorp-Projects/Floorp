@@ -678,6 +678,52 @@ var E10SUtils = {
     return fallbackPrincipalCallback();
   },
 
+  /**
+   * Returns whether or not a URI is supposed to load in a particular
+   * browser given its current remote type.
+   *
+   * @param browser (<xul:browser>)
+   *   The browser to check.
+   * @param uri (String)
+   *   The URI that will be checked to see if it can load in the
+   *   browser.
+   * @param multiProcess (boolean, optional)
+   *   Whether or not multi-process tabs are enabled. Defaults to true.
+   * @param remoteSubframes (boolean, optional)
+   *   Whether or not multi-process subframes are enabled. Defaults to
+   *   false.
+   * @param flags (Number, optional)
+   *   nsIWebNavigation flags used to clean up the URL in the event that
+   *   it needs fixing ia the URI fixup service. Defaults to
+   *   nsIWebNavigation.LOAD_FLAGS_NONE.
+   *
+   * @return (Object)
+   *   An object with the following properties:
+   *
+   *   uriObject (nsIURI)
+   *     The fixed-up URI that was generated for the check.
+   *
+   *   requiredRemoteType (String)
+   *     The remoteType that was computed for the browser that
+   *     is required to load the URI.
+   *
+   *   mustChangeProcess (boolean)
+   *     Whether or not the front-end will be required to flip
+   *     the process in order to view the URI.
+   *
+   *     NOTE:
+   *       mustChangeProcess might be false even if a process
+   *       flip will occur. In this case, DocumentChannel is taking
+   *       care of the process flip for us rather than the front-end
+   *       code.
+   *
+   *   newFrameloader (boolean)
+   *     Whether or not a new frameloader will need to be created
+   *     in order to browse to this URI. For non-Fission, this is
+   *     important if we're transition from a web content process
+   *     to another web content process, but want to force the
+   *     creation of a _new_ web content process.
+   */
   shouldLoadURIInBrowser(
     browser,
     uri,
