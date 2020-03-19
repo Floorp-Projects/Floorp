@@ -507,22 +507,6 @@ RefPtr<MediaPipelineReceive> TransceiverImpl::GetReceivePipeline() {
   return mReceivePipeline;
 }
 
-void TransceiverImpl::AddRIDExtension(unsigned short aExtensionId) {
-  if (mJsepTransceiver->IsStopped()) {
-    return;
-  }
-
-  mReceivePipeline->AddRIDExtension_m(aExtensionId);
-}
-
-void TransceiverImpl::AddRIDFilter(const nsAString& aRid) {
-  if (mJsepTransceiver->IsStopped()) {
-    return;
-  }
-
-  mReceivePipeline->AddRIDFilter_m(NS_ConvertUTF16toUTF8(aRid).get());
-}
-
 static nsresult JsepCodecDescToAudioCodecConfig(
     const JsepCodecDescription& aCodec, UniquePtr<AudioCodecConfig>* aConfig) {
   MOZ_ASSERT(aCodec.mType == SdpMediaSection::kAudio);
@@ -821,18 +805,6 @@ void TransceiverImpl::Stop() {
 
 bool TransceiverImpl::IsVideo() const {
   return mJsepTransceiver->GetMediaType() == SdpMediaSection::MediaType::kVideo;
-}
-
-void TransceiverImpl::InsertAudioLevelForContributingSource(
-    const uint32_t aSource, const int64_t aTimestamp,
-    const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel) {
-  if (!IsValid() || IsVideo()) {
-    return;
-  }
-  WebrtcAudioConduit* audio_conduit =
-      static_cast<WebrtcAudioConduit*>(mConduit.get());
-  audio_conduit->InsertAudioLevelForContributingSource(
-      aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
 }
 
 }  // namespace mozilla

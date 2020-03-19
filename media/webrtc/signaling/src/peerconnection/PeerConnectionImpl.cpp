@@ -1693,35 +1693,6 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
   mPCObserver->OnPacket(level, type, sending, arrayBuffer, jrv);
 }
 
-// test-only: adds fake CSRCs and audio data
-nsresult PeerConnectionImpl::InsertAudioLevelForContributingSource(
-    const dom::MediaStreamTrack& aRecvTrack, const unsigned long aSource,
-    const DOMHighResTimeStamp aTimestamp, const unsigned long aRtpTimestamp,
-    const bool aHasLevel, const uint8_t aLevel) {
-  PC_AUTO_ENTER_API_CALL(true);
-  std::vector<RefPtr<TransceiverImpl>>& transceivers =
-      mMedia->GetTransceivers();
-  for (RefPtr<TransceiverImpl>& transceiver : transceivers) {
-    if (transceiver->HasReceiveTrack(&aRecvTrack)) {
-      transceiver->InsertAudioLevelForContributingSource(
-          aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult PeerConnectionImpl::AddRIDExtension(MediaStreamTrack& aRecvTrack,
-                                             unsigned short aExtensionId) {
-  return mMedia->AddRIDExtension(aRecvTrack, aExtensionId);
-}
-
-nsresult PeerConnectionImpl::AddRIDFilter(MediaStreamTrack& aRecvTrack,
-                                          const nsAString& aRid) {
-  return mMedia->AddRIDFilter(aRecvTrack, aRid);
-}
-
 nsresult PeerConnectionImpl::EnablePacketDump(unsigned long level,
                                               dom::mozPacketDumpType type,
                                               bool sending) {

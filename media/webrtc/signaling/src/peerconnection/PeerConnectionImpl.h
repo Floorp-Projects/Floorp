@@ -306,32 +306,6 @@ class PeerConnectionImpl final
     rv = ReplaceTrackNoRenegotiation(aTransceiver, aWithTrack);
   }
 
-  // test-only: called from contributing sources mochitests.
-  NS_IMETHODIMP_TO_ERRORRESULT(InsertAudioLevelForContributingSource,
-                               ErrorResult& rv,
-                               const dom::MediaStreamTrack& aRecvTrack,
-                               const unsigned long aSource,
-                               const DOMHighResTimeStamp aTimestamp,
-                               const unsigned long aRtpTimestamp,
-                               const bool aHasLevel, const uint8_t aLevel) {
-    rv = InsertAudioLevelForContributingSource(
-        aRecvTrack, aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
-  }
-
-  // test-only: called from simulcast mochitests.
-  NS_IMETHODIMP_TO_ERRORRESULT(AddRIDExtension, ErrorResult& rv,
-                               dom::MediaStreamTrack& aRecvTrack,
-                               unsigned short aExtensionId) {
-    rv = AddRIDExtension(aRecvTrack, aExtensionId);
-  }
-
-  // test-only: called from simulcast mochitests.
-  NS_IMETHODIMP_TO_ERRORRESULT(AddRIDFilter, ErrorResult& rv,
-                               dom::MediaStreamTrack& aRecvTrack,
-                               const nsAString& aRid) {
-    rv = AddRIDFilter(aRecvTrack, aRid);
-  }
-
   // test-only
   NS_IMETHODIMP_TO_ERRORRESULT(EnablePacketDump, ErrorResult& rv,
                                unsigned long level, dom::mozPacketDumpType type,

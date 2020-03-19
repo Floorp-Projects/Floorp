@@ -1547,33 +1547,6 @@ class RTCPeerConnection {
       .map(transceiver => transceiver.receiver);
   }
 
-  // test-only: insert a contributing source entry for a track
-  mozInsertAudioLevelForContributingSource(
-    receiver,
-    source,
-    timestamp,
-    rtpTimestamp,
-    hasLevel,
-    level
-  ) {
-    this._impl.insertAudioLevelForContributingSource(
-      receiver.track,
-      source,
-      timestamp,
-      rtpTimestamp,
-      hasLevel,
-      level
-    );
-  }
-
-  mozAddRIDExtension(receiver, extensionId) {
-    this._impl.addRIDExtension(receiver.track, extensionId);
-  }
-
-  mozAddRIDFilter(receiver, rid) {
-    this._impl.addRIDFilter(receiver.track, rid);
-  }
-
   mozSetPacketCallback(callback) {
     this._onPacket = callback;
   }
