@@ -377,8 +377,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowMedia(true),
       mAllowDNSPrefetch(true),
       mAllowWindowControl(true),
-      mAllowContentRetargeting(true),
-      mAllowContentRetargetingOnChildren(true),
       mUseErrorPages(false),
       mObserveErrorPages(true),
       mCSSErrorReportingEnabled(false),
@@ -1809,28 +1807,29 @@ nsDocShell::SetAllowWindowControl(bool aAllowWindowControl) {
 
 NS_IMETHODIMP
 nsDocShell::GetAllowContentRetargeting(bool* aAllowContentRetargeting) {
-  *aAllowContentRetargeting = mAllowContentRetargeting;
+  *aAllowContentRetargeting = mBrowsingContext->GetAllowContentRetargeting();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetAllowContentRetargeting(bool aAllowContentRetargeting) {
-  mAllowContentRetargetingOnChildren = aAllowContentRetargeting;
-  mAllowContentRetargeting = aAllowContentRetargeting;
+  mBrowsingContext->SetAllowContentRetargeting(aAllowContentRetargeting);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::GetAllowContentRetargetingOnChildren(
     bool* aAllowContentRetargetingOnChildren) {
-  *aAllowContentRetargetingOnChildren = mAllowContentRetargetingOnChildren;
+  *aAllowContentRetargetingOnChildren =
+      mBrowsingContext->GetAllowContentRetargetingOnChildren();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetAllowContentRetargetingOnChildren(
     bool aAllowContentRetargetingOnChildren) {
-  mAllowContentRetargetingOnChildren = aAllowContentRetargetingOnChildren;
+  mBrowsingContext->SetAllowContentRetargetingOnChildren(
+      aAllowContentRetargetingOnChildren);
   return NS_OK;
 }
 
@@ -2666,9 +2665,6 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
         NS_SUCCEEDED(parentAsDocShell->GetAllowWindowControl(&value))) {
       SetAllowWindowControl(value);
     }
-    SetAllowContentRetargeting(
-        mAllowContentRetargeting &&
-        parentAsDocShell->GetAllowContentRetargetingOnChildren());
     if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
       SetIsActive(value);
     }
@@ -10174,7 +10170,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
   if (mLoadType == LOAD_LINK) {
     openFlags |= nsIURILoader::IS_CONTENT_PREFERRED;
   }
-  if (!mAllowContentRetargeting) {
+  if (!mBrowsingContext->GetAllowContentRetargeting()) {
     openFlags |= nsIURILoader::DONT_RETARGET;
   }
 

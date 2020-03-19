@@ -102,6 +102,8 @@ class WindowProxyHolder;
   FIELD(Loading, bool)                                                       \
   FIELD(AncestorLoading, bool)                                               \
   FIELD(AllowPlugins, bool)                                                  \
+  FIELD(AllowContentRetargeting, bool)                                       \
+  FIELD(AllowContentRetargetingOnChildren, bool)                             \
   /* These field are used to store the states of autoplay media request on   \
    * GeckoView only, and it would only be modified on the top level browsing \
    * context. */                                                             \
@@ -355,6 +357,8 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
       SetCurrentOrientation(aType, aAngle);
     }
   }
+
+  void SetAllowContentRetargeting(bool aAllowContentRetargeting);
 
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
@@ -646,6 +650,11 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_EmbedderElementType>,
               const Maybe<nsString>& aInitiatorType, ContentParent* aSource);
 
+  bool CanSet(FieldIndex<IDX_AllowContentRetargeting>,
+              const bool& aAllowContentRetargeting, ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
+              const bool& aAllowContentRetargetingOnChildren,
+              ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
               ContentParent* aSource);
 

@@ -1299,8 +1299,6 @@ class nsDocShell final : public nsDocLoader,
   bool mAllowMedia : 1;
   bool mAllowDNSPrefetch : 1;
   bool mAllowWindowControl : 1;
-  bool mAllowContentRetargeting : 1;
-  bool mAllowContentRetargetingOnChildren : 1;
   bool mUseErrorPages : 1;
   bool mObserveErrorPages : 1;
   bool mCSSErrorReportingEnabled : 1;

@@ -241,6 +241,13 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
   context->mFields.SetWithoutSyncing<IDX_IsActive>(true);
 
+  const bool allowContentRetargeting =
+      inherit ? inherit->GetAllowContentRetargetingOnChildren() : true;
+  context->mFields.SetWithoutSyncing<IDX_AllowContentRetargeting>(
+      allowContentRetargeting);
+  context->mFields.SetWithoutSyncing<IDX_AllowContentRetargetingOnChildren>(
+      allowContentRetargeting);
+
   const bool allowPlugins = inherit ? inherit->GetAllowPlugins() : true;
   context->mFields.SetWithoutSyncing<IDX_AllowPlugins>(allowPlugins);
 
@@ -1408,6 +1415,14 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
   });
 }
 
+void BrowsingContext::SetAllowContentRetargeting(
+    bool aAllowContentRetargeting) {
+  Transaction txn;
+  txn.SetAllowContentRetargeting(aAllowContentRetargeting);
+  txn.SetAllowContentRetargetingOnChildren(aAllowContentRetargeting);
+  txn.Commit(this);
+}
+
 void BrowsingContext::SetCustomUserAgent(const nsAString& aUserAgent) {
   Top()->SetUserAgentOverride(aUserAgent);
 }
@@ -1439,6 +1454,18 @@ bool BrowsingContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   }
 
   return true;
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargeting>,
+                             const bool& aAllowContentRetargeting,
+                             ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
+                             const bool& aAllowContentRetargetingOnChildren,
+                             ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
