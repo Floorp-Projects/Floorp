@@ -2,11 +2,11 @@ function testConst(type, str, expected) {
     if (type === 'i64')
         wasmFullPassI64(`(module (func $run (result i64) (i64.const ${str})))`, expected);
     else
-        wasmFullPass(`(module (func (result ${type}) (${type}.const ${str})) (export "run" 0))`, expected);
+        wasmFullPass(`(module (func (result ${type}) (${type}.const ${str})) (export "run" (func 0)))`, expected);
 }
 
 function testConstError(type, str) {
-  assertErrorMessage(() => wasmEvalText(`(module (func (result ${type}) (${type}.const ${str})) (export "" 0))`).exports[""](), Error, /parsing wasm text/);
+  assertErrorMessage(() => wasmEvalText(`(module (func (result ${type}) (${type}.const ${str})) (export "" (func 0)))`).exports[""](), Error, /parsing wasm text/);
 }
 
 testConst('i32', '0', 0);

@@ -21,7 +21,7 @@ processModule(mod);
 processModule(mod);
 
 mod = new WebAssembly.Module(wasmTextToBinary(`
-(module (export "func_0" $func1) (func $func1))
+(module (export "func_0" (func $func1)) (func $func1))
 `));
 
 processModule(mod);
