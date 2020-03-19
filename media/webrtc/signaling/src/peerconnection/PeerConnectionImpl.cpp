@@ -2649,19 +2649,20 @@ void PeerConnectionImpl::RecordConduitTelemetry() {
     return;
   }
 
-  nsTArray<RefPtr<MediaPipelineReceive>> pipelines;
+  nsTArray<RefPtr<VideoSessionConduit>> conduits;
   for (const auto& transceiver : mMedia->GetTransceivers()) {
-    if (transceiver->IsValid()) {
-      pipelines.AppendElement(transceiver->GetReceivePipeline());
+    RefPtr<MediaSessionConduit> conduit = transceiver->GetConduit();
+    if (conduit) {
+      auto asVideo = conduit->AsVideoSessionConduit();
+      if (asVideo) {
+        conduits.AppendElement(asVideo.value());
+      }
     }
   }
 
-  mSTSThread->Dispatch(NS_NewRunnableFunction(__func__, [pipelines]() {
-    for (const auto& pipeline : pipelines) {
-      auto asVideo = pipeline->Conduit()->AsVideoSessionConduit();
-      if (asVideo) {
-        asVideo.value()->RecordTelemetry();
-      }
+  mSTSThread->Dispatch(NS_NewRunnableFunction(__func__, [conduits]() {
+    for (const auto& conduit : conduits) {
+      conduit->RecordTelemetry();
     }
   }));
 }
