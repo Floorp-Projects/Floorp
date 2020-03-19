@@ -21,108 +21,88 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-inline StructuredCloneFileChild::StructuredCloneFileChild(
-    StructuredCloneFileChild&& aOther)
-    : StructuredCloneFileBase{std::move(aOther)},
-      mContents{std::move(aOther.mContents)} {
-  MOZ_COUNT_CTOR(StructuredCloneFileChild);
-}
-#endif
-
-inline StructuredCloneFileChild::~StructuredCloneFileChild() {
-  MOZ_COUNT_DTOR(StructuredCloneFileChild);
+inline StructuredCloneFile::StructuredCloneFile(FileType aType)
+    : mContents{Nothing()}, mType{aType} {
+  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
-inline StructuredCloneFileChild::StructuredCloneFileChild(FileType aType)
-    : StructuredCloneFileBase{aType}, mContents{Nothing()} {
-  MOZ_COUNT_CTOR(StructuredCloneFileChild);
-}
-
-inline StructuredCloneFileChild::StructuredCloneFileChild(
-    FileType aType, RefPtr<dom::Blob> aBlob)
-    : StructuredCloneFileBase{aType}, mContents{std::move(aBlob)} {
+inline StructuredCloneFile::StructuredCloneFile(FileType aType,
+                                                RefPtr<dom::Blob> aBlob)
+    : mContents{std::move(aBlob)}, mType{aType} {
   MOZ_ASSERT(eBlob == aType || eStructuredClone == aType);
   MOZ_ASSERT(mContents->as<RefPtr<dom::Blob>>());
-  MOZ_COUNT_CTOR(StructuredCloneFileChild);
+  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
-inline StructuredCloneFileParent::StructuredCloneFileParent(
-    FileType aType, SafeRefPtr<indexedDB::FileInfo> aFileInfo)
-    : StructuredCloneFileBase{aType}, mContents{Some(std::move(aFileInfo))} {
-  MOZ_ASSERT(**mContents);
-  MOZ_COUNT_CTOR(StructuredCloneFileParent);
+inline StructuredCloneFile::StructuredCloneFile(
+    FileType aType, RefPtr<indexedDB::FileInfo> aFileInfo)
+    : mContents{std::move(aFileInfo)}, mType{aType} {
+  MOZ_ASSERT(mContents->as<RefPtr<indexedDB::FileInfo>>());
+  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
-inline StructuredCloneFileChild::StructuredCloneFileChild(
+inline StructuredCloneFile::StructuredCloneFile(
     RefPtr<IDBMutableFile> aMutableFile)
-    : StructuredCloneFileBase{eMutableFile},
-      mContents{std::move(aMutableFile)} {
+    : mContents{std::move(aMutableFile)}, mType{eMutableFile} {
   MOZ_ASSERT(mContents->as<RefPtr<IDBMutableFile>>());
-  MOZ_COUNT_CTOR(StructuredCloneFileChild);
+  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-inline StructuredCloneFileParent::StructuredCloneFileParent(
-    StructuredCloneFileParent&& aOther)
-    : StructuredCloneFileBase{std::move(aOther)},
-      mContents{std::move(aOther.mContents)} {
-  MOZ_COUNT_CTOR(StructuredCloneFileParent);
+inline StructuredCloneFile::StructuredCloneFile(StructuredCloneFile&& aOther)
+    : mContents{std::move(aOther.mContents)}, mType{aOther.mType} {
+  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 #endif
 
-inline StructuredCloneFileParent::~StructuredCloneFileParent() {
-  MOZ_COUNT_DTOR(StructuredCloneFileParent);
+inline StructuredCloneFile::~StructuredCloneFile() {
+  MOZ_COUNT_DTOR(StructuredCloneFile);
 }
 
-inline SafeRefPtr<indexedDB::FileInfo> StructuredCloneFileParent::FileInfoPtr()
-    const {
-  return (*mContents)->clonePtr();
+inline RefPtr<indexedDB::FileInfo> StructuredCloneFile::FileInfoPtr() const {
+  return mContents->as<RefPtr<indexedDB::FileInfo>>();
 }
 
-inline RefPtr<dom::Blob> StructuredCloneFileChild::BlobPtr() const {
+inline RefPtr<dom::Blob> StructuredCloneFile::BlobPtr() const {
   return mContents->as<RefPtr<dom::Blob>>();
 }
 
-template <typename StructuredCloneFile>
-inline StructuredCloneReadInfo<StructuredCloneFile>::StructuredCloneReadInfo(
+inline bool StructuredCloneFile::operator==(
+    const StructuredCloneFile& aOther) const {
+  return this->mType == aOther.mType && *this->mContents == *aOther.mContents;
+}
+
+inline StructuredCloneReadInfo::StructuredCloneReadInfo(
     JS::StructuredCloneScope aScope)
-    : StructuredCloneReadInfoBase(JSStructuredCloneData{aScope}) {
+    : mData(aScope) {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
 
-template <typename StructuredCloneFile>
-inline StructuredCloneReadInfo<StructuredCloneFile>::StructuredCloneReadInfo()
+inline StructuredCloneReadInfo::StructuredCloneReadInfo()
     : StructuredCloneReadInfo(
           JS::StructuredCloneScope::DifferentProcessForIndexedDB) {}
 
-template <typename StructuredCloneFile>
-inline StructuredCloneReadInfo<StructuredCloneFile>::StructuredCloneReadInfo(
+inline StructuredCloneReadInfo::StructuredCloneReadInfo(
     JSStructuredCloneData&& aData, nsTArray<StructuredCloneFile> aFiles)
-    : StructuredCloneReadInfoBase{std::move(aData)}, mFiles{std::move(aFiles)} {
+    : mData{std::move(aData)}, mFiles{std::move(aFiles)} {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-template <typename StructuredCloneFile>
-inline StructuredCloneReadInfo<StructuredCloneFile>::StructuredCloneReadInfo(
+inline StructuredCloneReadInfo::StructuredCloneReadInfo(
     StructuredCloneReadInfo&& aOther) noexcept
-    : StructuredCloneReadInfoBase{std::move(aOther)},
-      mFiles{std::move(aOther.mFiles)} {
+    : mData{std::move(aOther.mData)}, mFiles{std::move(aOther.mFiles)} {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
 
-template <typename StructuredCloneFile>
-inline StructuredCloneReadInfo<
-    StructuredCloneFile>::~StructuredCloneReadInfo() {
+inline StructuredCloneReadInfo::~StructuredCloneReadInfo() {
   MOZ_COUNT_DTOR(StructuredCloneReadInfo);
 }
 
 #endif
 
-template <typename StructuredCloneFile>
-inline size_t StructuredCloneReadInfo<StructuredCloneFile>::Size() const {
-  size_t size = Data().Size();
+inline size_t StructuredCloneReadInfo::Size() const {
+  size_t size = mData.Size();
 
   for (uint32_t i = 0, count = mFiles.Length(); i < count; ++i) {
     // We don't want to calculate the size of files and so on, because are
@@ -134,7 +114,7 @@ inline size_t StructuredCloneReadInfo<StructuredCloneFile>::Size() const {
 }
 
 inline StructuredCloneReadInfoChild::StructuredCloneReadInfoChild(
-    JSStructuredCloneData&& aData, nsTArray<StructuredCloneFileChild> aFiles,
+    JSStructuredCloneData&& aData, nsTArray<StructuredCloneFile> aFiles,
     IDBDatabase* aDatabase)
     : StructuredCloneReadInfo{std::move(aData), std::move(aFiles)},
       mDatabase{aDatabase} {}
@@ -172,7 +152,7 @@ JSObject* StructuredCloneReadCallback(
   }();
   return CommonStructuredCloneReadCallback(
       aCx, aReader, aCloneDataPolicy, aTag, aData,
-      static_cast<StructuredCloneReadInfoType*>(aClosure), database);
+      static_cast<StructuredCloneReadInfo*>(aClosure), database);
 }
 
 template <typename T>

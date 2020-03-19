@@ -17,11 +17,11 @@
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::dom::indexedDB::StructuredCloneFileBase::FileType>
+struct ParamTraits<mozilla::dom::indexedDB::StructuredCloneFile::FileType>
     : public ContiguousEnumSerializer<
-          mozilla::dom::indexedDB::StructuredCloneFileBase::FileType,
-          mozilla::dom::indexedDB::StructuredCloneFileBase::eBlob,
-          mozilla::dom::indexedDB::StructuredCloneFileBase::eEndGuard> {};
+          mozilla::dom::indexedDB::StructuredCloneFile::FileType,
+          mozilla::dom::indexedDB::StructuredCloneFile::eBlob,
+          mozilla::dom::indexedDB::StructuredCloneFile::eEndGuard> {};
 
 template <>
 struct ParamTraits<mozilla::dom::indexedDB::Key> {

@@ -13,7 +13,6 @@
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-#include "SafeRefPtr.h"
 
 namespace mozilla {
 
@@ -104,11 +103,11 @@ class IndexedDatabaseManager final {
 
   void ClearBackgroundActor();
 
-  MOZ_MUST_USE SafeRefPtr<FileManager> GetFileManager(
+  MOZ_MUST_USE RefPtr<FileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsACString& aOrigin,
       const nsAString& aDatabaseName);
 
-  void AddFileManager(SafeRefPtr<FileManager> aFileManager);
+  void AddFileManager(FileManager* aFileManager);
 
   void InvalidateAllFileManagers();
 
