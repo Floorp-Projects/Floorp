@@ -400,7 +400,7 @@ class RequestListContent extends Component {
                 columns,
                 item,
                 index,
-                isSelected: item.id === (selectedRequest && selectedRequest.id),
+                isSelected: item.id === selectedRequest?.id,
                 isVisible: this.state.onscreenItems.has(item.id),
                 key: item.id,
                 intersectionObserver: this.intersectionObserver,

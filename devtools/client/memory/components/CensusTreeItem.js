@@ -111,7 +111,7 @@ class CensusTreeItem extends Component {
     let pointer;
     if (inverted && depth > 0) {
       pointer = dom.span({ className: "children-pointer" }, "↖");
-    } else if (!inverted && item.children && item.children.length) {
+    } else if (!inverted && item.children?.length) {
       pointer = dom.span({ className: "children-pointer" }, "↘");
     }
 

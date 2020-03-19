@@ -224,7 +224,7 @@ function enumObjectProperties(objectActor, options) {
         // Calling getOwnPropertyDescriptor on wrapped native prototypes is not
         // allowed (bug 560072).
       }
-      if (desc && desc.value && String(desc.value).includes(query)) {
+      if (desc?.value && String(desc.value).includes(query)) {
         return true;
       }
       return false;

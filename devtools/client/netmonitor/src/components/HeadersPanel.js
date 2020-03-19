@@ -137,7 +137,7 @@ class HeadersPanel extends Component {
 
   getHeadersTitle(headers, title) {
     let result;
-    if (headers && headers.headers.length) {
+    if (headers?.headers.length) {
       result = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
     }
 
@@ -147,7 +147,7 @@ class HeadersPanel extends Component {
   getProperties(headers, title) {
     let propertiesResult;
 
-    if (headers && headers.headers.length) {
+    if (headers?.headers.length) {
       const headerKey = this.getHeadersTitle(headers, title);
 
       propertiesResult = {

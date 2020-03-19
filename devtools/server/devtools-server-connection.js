@@ -373,7 +373,7 @@ DevToolsServerConnection.prototype = {
         from: actor.actorID,
         requestTypes: Object.keys(actor.requestTypes),
       };
-    } else if (actor.requestTypes && actor.requestTypes[packet.type]) {
+    } else if (actor.requestTypes?.[packet.type]) {
       // Dispatch the request to the actor.
       try {
         this.currentPacket = packet;
@@ -437,7 +437,7 @@ DevToolsServerConnection.prototype = {
 
     // Dispatch the request to the actor.
     let ret;
-    if (actor.requestTypes && actor.requestTypes[type]) {
+    if (actor.requestTypes?.[type]) {
       try {
         ret = actor.requestTypes[type].call(actor, packet);
       } catch (error) {

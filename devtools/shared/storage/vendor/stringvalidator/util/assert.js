@@ -64,7 +64,7 @@ function _throws(shouldThrow, block, expected, message) {
 
   actual = _tryBlock(block);
 
-  message = (expected && expected.name ? " (" + expected.name + ")." : ".") +
+  message = (expected?.name ? " (" + expected.name + ")." : ".") +
             (message ? " " + message : ".");
 
   if (shouldThrow && !actual) {
@@ -193,7 +193,7 @@ function getName(func) {
   }
   var str = func.toString();
   var match = str.match(regex);
-  return match && match[1];
+  return match?.[1];
 }
 
 function truncate(s, n) {

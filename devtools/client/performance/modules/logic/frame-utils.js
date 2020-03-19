@@ -382,8 +382,7 @@ function isNumeric(c) {
 
 function shouldDemangle(name) {
   return (
-    name &&
-    name.charCodeAt &&
+    name?.charCodeAt &&
     name.charCodeAt(0) === CHAR_CODE_UNDERSCORE &&
     name.charCodeAt(1) === CHAR_CODE_UNDERSCORE &&
     name.charCodeAt(2) === CHAR_CODE_CAP_Z
@@ -451,7 +450,7 @@ function getFrameInfo(node, options) {
   // if it does not.
   const totalSamples = options.root.samples;
   const totalDuration = options.root.duration;
-  if (options && options.root && !data.COSTS_CALCULATED) {
+  if (options?.root && !data.COSTS_CALCULATED) {
     data.selfDuration =
       (node.youngestFrameSamples / totalSamples) * totalDuration;
     data.selfPercentage = (node.youngestFrameSamples / totalSamples) * 100;
@@ -460,7 +459,7 @@ function getFrameInfo(node, options) {
     data.COSTS_CALCULATED = true;
   }
 
-  if (options && options.allocations && !data.ALLOCATION_DATA_CALCULATED) {
+  if (options?.allocations && !data.ALLOCATION_DATA_CALCULATED) {
     const totalBytes = options.root.byteSize;
     data.selfCount = node.youngestFrameSamples;
     data.totalCount = node.samples;

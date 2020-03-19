@@ -49,7 +49,7 @@ GripProvider.prototype = {
       if (!value) {
         return false;
       }
-      const grip = value && value.getGrip ? value.getGrip() : value;
+      const grip = value?.getGrip ? value.getGrip() : value;
 
       let hasChildren = grip.ownPropertyLength > 0;
 
@@ -91,7 +91,7 @@ GripProvider.prototype = {
   },
 
   getType: function(object) {
-    const grip = object && object.getGrip ? object.getGrip() : object;
+    const grip = object?.getGrip ? object.getGrip() : object;
     return grip.class ? grip.class : "";
   },
 };

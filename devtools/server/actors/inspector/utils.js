@@ -129,9 +129,7 @@ function isNodeDead(node) {
 
 function isInXULDocument(el) {
   const doc = nodeDocument(el);
-  return (
-    doc && doc.documentElement && doc.documentElement.namespaceURI === XUL_NS
-  );
+  return doc?.documentElement && doc.documentElement.namespaceURI === XUL_NS;
 }
 
 /**

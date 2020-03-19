@@ -189,7 +189,7 @@ function getNodeInfo(node, elementStyle) {
     classList.contains("ruleview-rule-source-label")
   ) {
     type = VIEW_NODE_LOCATION_TYPE;
-    value = rule.sheet && rule.sheet.href ? rule.sheet.href : rule.title;
+    value = rule.sheet?.href ? rule.sheet.href : rule.title;
   } else {
     return null;
   }
@@ -213,7 +213,7 @@ function getNodeInfo(node, elementStyle) {
  * @return {Object} {name, value}
  */
 function getPropertyNameAndValue(node) {
-  while (node && node.classList) {
+  while (node?.classList) {
     // Check first for ruleview-computed since it's the deepest
     if (
       node.classList.contains("ruleview-computed") ||
@@ -240,7 +240,7 @@ function getPropertyNameAndValue(node) {
  * @returns {DOMNode} The active shape toggle node, if one exists.
  */
 function getShapeToggleActive(node) {
-  while (node && node.classList) {
+  while (node?.classList) {
     // Check first for ruleview-computed since it's the deepest
     if (
       node.classList.contains("ruleview-computed") ||

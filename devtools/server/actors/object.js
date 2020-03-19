@@ -150,7 +150,7 @@ const proto = {
       return g;
     }
 
-    if (unwrapped && unwrapped.isProxy) {
+    if (unwrapped?.isProxy) {
       // Proxy objects can run traps when accessed, so just create a preview with
       // the target and the handler.
       g.class = "Proxy";

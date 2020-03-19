@@ -46,10 +46,9 @@ function onRequestProperties(state, action) {
 function onReceiveProperties(cache, action) {
   const response = action.response;
   const from = response.from;
-  const className =
-    action.grip && action.grip.getGrip
-      ? action.grip.getGrip().class
-      : action.grip.class;
+  const className = action.grip?.getGrip
+    ? action.grip.getGrip().class
+    : action.grip.class;
 
   // Properly deal with getters.
   mergeProperties(response);

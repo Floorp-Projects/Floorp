@@ -750,7 +750,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       rawNode.nodeName === "SLOT" &&
       isDirectShadowHostChild(firstChild);
 
-    const isFlexItem = !!(firstChild && firstChild.parentFlexElement);
+    const isFlexItem = !!firstChild?.parentFlexElement;
 
     if (
       !firstChild ||
@@ -2180,7 +2180,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   onNodeRemoved: function(evt) {
     const mutationBpInfo = this._breakpointInfoForNode(evt.target);
-    const hasNodeRemovalEvent = mutationBpInfo && mutationBpInfo.removal;
+    const hasNodeRemovalEvent = mutationBpInfo?.removal;
 
     this._clearMutationBreakpointsFromSubtree(evt.target);
 
@@ -2193,7 +2193,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   onAttributeModified: function(evt) {
     const mutationBpInfo = this._breakpointInfoForNode(evt.target);
-    if (mutationBpInfo && mutationBpInfo.attribute) {
+    if (mutationBpInfo?.attribute) {
       this._breakOnMutation("attributeModified", evt.target);
     }
   },
@@ -2202,7 +2202,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     let node = evt.target;
     while ((node = node.parentNode) !== null) {
       const mutationBpInfo = this._breakpointInfoForNode(node);
-      if (mutationBpInfo && mutationBpInfo.subtree) {
+      if (mutationBpInfo?.subtree) {
         this._breakOnMutation("subtreeModified", evt.target, node, action);
         break;
       }

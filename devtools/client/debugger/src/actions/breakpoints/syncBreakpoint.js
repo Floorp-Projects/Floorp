@@ -42,7 +42,7 @@ async function findBreakpointPosition(
   );
 
   const position = findPosition(positions, location);
-  return position && position.generatedLocation;
+  return position?.generatedLocation;
 }
 
 async function findNewLocation(

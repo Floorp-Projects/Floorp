@@ -157,11 +157,7 @@ class PropertiesView extends Component {
     /* Hide strings with following conditions
      * - the `value` object has a `value` property (only happens in Cookies panel)
      */
-    if (
-      typeof member.value === "object" &&
-      member.value &&
-      member.value.value
-    ) {
+    if (typeof member.value === "object" && member.value?.value) {
       return null;
     }
 
