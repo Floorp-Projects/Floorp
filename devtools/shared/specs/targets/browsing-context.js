@@ -17,11 +17,6 @@ types.addDictType("browsingContextTarget.attach", {
   traits: "json",
 });
 
-types.addDictType("browsingContextTarget.detach", {
-  error: "nullable:string",
-  type: "nullable:string",
-});
-
 types.addDictType("browsingContextTarget.switchtoframe", {
   error: "nullable:string",
   message: "nullable:string",
@@ -65,7 +60,7 @@ const browsingContextTargetSpecPrototype = {
     },
     detach: {
       request: {},
-      response: RetVal("browsingContextTarget.detach"),
+      response: {},
     },
     ensureCSSErrorReportingEnabled: {
       request: {},
