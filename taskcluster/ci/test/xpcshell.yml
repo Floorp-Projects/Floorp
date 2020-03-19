@@ -6,7 +6,7 @@ job-defaults:
     suite: xpcshell
     variants:
         by-test-platform:
-            linux1804-64/debug: ['fission']
+            linux1804-64/debug: ['fission', 'socketprocess_networking']
             default: ['fission']
     target:
         by-test-platform:
