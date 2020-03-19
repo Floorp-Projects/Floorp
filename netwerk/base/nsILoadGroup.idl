@@ -95,4 +95,11 @@ interface nsILoadGroup : nsIRequest
      * the docShell has created the default request.)
      */
     attribute nsLoadFlags defaultLoadFlags;
+
+    /**
+     * Returns true if the loadGroup belongs to a discarded context, such as, a
+     * terminated private browsing session.
+     */
+    [infallible]
+    readonly attribute boolean isBrowsingContextDiscarded;
 };
