@@ -519,17 +519,16 @@ auto DeserializeStructuredCloneFiles(
   MOZ_ASSERT_IF(aForPreprocess, aSerializedFiles.Length() == 1);
 
   const auto count = aSerializedFiles.Length();
-  auto files = nsTArray<StructuredCloneFileChild>(count);
+  auto files = nsTArray<StructuredCloneFile>(count);
 
   for (const auto& serializedFile : aSerializedFiles) {
-    MOZ_ASSERT_IF(
-        aForPreprocess,
-        serializedFile.type() == StructuredCloneFileBase::eStructuredClone);
+    MOZ_ASSERT_IF(aForPreprocess, serializedFile.type() ==
+                                      StructuredCloneFile::eStructuredClone);
 
     const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
 
     switch (serializedFile.type()) {
-      case StructuredCloneFileBase::eBlob: {
+      case StructuredCloneFile::eBlob: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
         const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
@@ -540,19 +539,19 @@ auto DeserializeStructuredCloneFiles(
         RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
         MOZ_ASSERT(blob);
 
-        files.EmplaceBack(StructuredCloneFileBase::eBlob, std::move(blob));
+        files.EmplaceBack(StructuredCloneFile::eBlob, std::move(blob));
 
         break;
       }
 
-      case StructuredCloneFileBase::eMutableFile: {
+      case StructuredCloneFile::eMutableFile: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
                    blobOrMutableFile.type() ==
                        BlobOrMutableFile::TPBackgroundMutableFileChild);
 
         switch (blobOrMutableFile.type()) {
           case BlobOrMutableFile::Tnull_t: {
-            files.EmplaceBack(StructuredCloneFileBase::eMutableFile);
+            files.EmplaceBack(StructuredCloneFile::eMutableFile);
 
             break;
           }
@@ -582,7 +581,7 @@ auto DeserializeStructuredCloneFiles(
         break;
       }
 
-      case StructuredCloneFileBase::eStructuredClone: {
+      case StructuredCloneFile::eStructuredClone: {
         if (aForPreprocess) {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
@@ -595,19 +594,19 @@ auto DeserializeStructuredCloneFiles(
               Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
           MOZ_ASSERT(blob);
 
-          files.EmplaceBack(StructuredCloneFileBase::eStructuredClone,
+          files.EmplaceBack(StructuredCloneFile::eStructuredClone,
                             std::move(blob));
         } else {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
-          files.EmplaceBack(StructuredCloneFileBase::eStructuredClone);
+          files.EmplaceBack(StructuredCloneFile::eStructuredClone);
         }
 
         break;
       }
 
-      case StructuredCloneFileBase::eWasmBytecode:
-      case StructuredCloneFileBase::eWasmCompiled: {
+      case StructuredCloneFile::eWasmBytecode:
+      case StructuredCloneFile::eWasmCompiled: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
         files.EmplaceBack(serializedFile.type());
@@ -1368,7 +1367,7 @@ class BackgroundRequestChild::PreprocessHelper final
     mActor = nullptr;
   }
 
-  nsresult Init(const StructuredCloneFileChild& aFile);
+  nsresult Init(const StructuredCloneFile& aFile);
 
   nsresult Dispatch();
 
@@ -2942,10 +2941,10 @@ mozilla::ipc::IPCResult BackgroundRequestChild::RecvPreprocess(
 }
 
 nsresult BackgroundRequestChild::PreprocessHelper::Init(
-    const StructuredCloneFileChild& aFile) {
+    const StructuredCloneFile& aFile) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFile.HasBlob());
-  MOZ_ASSERT(aFile.Type() == StructuredCloneFileBase::eStructuredClone);
+  MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eStructuredClone);
   MOZ_ASSERT(mState == State::Initial);
 
   // The stream transport service is used for asynchronous processing. It has a
@@ -3421,12 +3420,12 @@ void BackgroundCursorChild<CursorType>::SendDeleteMeInternal() {
   MOZ_ASSERT(!mStrongRequest);
   MOZ_ASSERT(!mStrongCursor);
 
-  mRequest.destroy();
+  mRequest.reset();
   mTransaction = nullptr;
   // TODO: The things until here could be pulled up to
   // BackgroundCursorChildBase.
 
-  mSource.destroy();
+  mSource.reset();
 
   if (mCursor) {
     mCursor->ClearBackgroundActor();
@@ -3677,9 +3676,9 @@ void BackgroundCursorChild<CursorType>::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
 #ifdef DEBUG
-  mRequest.maybeDestroy();
+  mRequest.maybeReset();
   mTransaction = nullptr;
-  mSource.maybeDestroy();
+  mSource.maybeReset();
 #endif
 }
 
