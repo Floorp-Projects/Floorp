@@ -113,16 +113,7 @@ Finder.prototype = {
     let foundLink = this._fastFind.foundLink;
     let linkURL = null;
     if (foundLink) {
-      let docCharset = null;
-      let ownerDoc = foundLink.ownerDocument;
-      if (ownerDoc) {
-        docCharset = ownerDoc.characterSet;
-      }
-
-      linkURL = Services.textToSubURI.unEscapeURIForUI(
-        docCharset,
-        foundLink.href
-      );
+      linkURL = Services.textToSubURI.unEscapeURIForUI(foundLink.href);
     }
 
     options.linkURL = linkURL;

@@ -101,8 +101,7 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsCString& aCharset,
   return encoding->DecodeWithoutBOMHandlingAndWithoutReplacement(aURI, aOut);
 }
 
-NS_IMETHODIMP nsTextToSubURI::UnEscapeURIForUI(const nsACString& aCharset,
-                                               const nsACString& aURIFragment,
+NS_IMETHODIMP nsTextToSubURI::UnEscapeURIForUI(const nsACString& aURIFragment,
                                                nsAString& _retval) {
   nsAutoCString unescapedSpec;
   // skip control octets (0x00 - 0x1f and 0x7f) when unescaping
@@ -112,7 +111,7 @@ NS_IMETHODIMP nsTextToSubURI::UnEscapeURIForUI(const nsACString& aCharset,
   // in case of failure, return escaped URI
   // Test for != NS_OK rather than NS_FAILED, because incomplete multi-byte
   // sequences are also considered failure in this context
-  if (convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec,
+  if (convertURItoUnicode(NS_LITERAL_CSTRING("UTF-8"), unescapedSpec,
                           _retval) != NS_OK) {
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
     CopyUTF8toUTF16(aURIFragment, _retval);

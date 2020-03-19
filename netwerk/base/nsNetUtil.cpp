@@ -2684,8 +2684,7 @@ nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
         do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsAutoString unescaped;
-      textToSubURI->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"),
-                                     NS_ConvertUTF16toUTF8(aFilename),
+      textToSubURI->UnEscapeURIForUI(NS_ConvertUTF16toUTF8(aFilename),
                                      unescaped);
       aFilename.Assign(unescaped);
     }
