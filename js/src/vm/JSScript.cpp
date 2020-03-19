@@ -315,26 +315,6 @@ XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
   return Ok();
 }
 
-template <XDRMode mode>
-XDRResult JSTryNote::XDR(XDRState<mode>* xdr) {
-  MOZ_TRY(xdr->codeUint32(&kind));
-  MOZ_TRY(xdr->codeUint32(&stackDepth));
-  MOZ_TRY(xdr->codeUint32(&start));
-  MOZ_TRY(xdr->codeUint32(&length));
-
-  return Ok();
-}
-
-template <XDRMode mode>
-XDRResult ScopeNote::XDR(XDRState<mode>* xdr) {
-  MOZ_TRY(xdr->codeUint32(&index));
-  MOZ_TRY(xdr->codeUint32(&start));
-  MOZ_TRY(xdr->codeUint32(&length));
-  MOZ_TRY(xdr->codeUint32(&parent));
-
-  return Ok();
-}
-
 static inline uint32_t FindScopeIndex(mozilla::Span<const JS::GCCellPtr> scopes,
                                       Scope& scope) {
   unsigned length = scopes.size();
@@ -955,11 +935,17 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr,
   }
 
   for (ScopeNote& elem : isd->scopeNotes()) {
-    MOZ_TRY(elem.XDR(xdr));
+    MOZ_TRY(xdr->codeUint32(&elem.index));
+    MOZ_TRY(xdr->codeUint32(&elem.start));
+    MOZ_TRY(xdr->codeUint32(&elem.length));
+    MOZ_TRY(xdr->codeUint32(&elem.parent));
   }
 
   for (JSTryNote& elem : isd->tryNotes()) {
-    MOZ_TRY(elem.XDR(xdr));
+    MOZ_TRY(xdr->codeUint32(&elem.kind));
+    MOZ_TRY(xdr->codeUint32(&elem.stackDepth));
+    MOZ_TRY(xdr->codeUint32(&elem.start));
+    MOZ_TRY(xdr->codeUint32(&elem.length));
   }
 
   return Ok();
