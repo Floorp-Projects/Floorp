@@ -556,6 +556,10 @@ function promiseDelayedStartupFinished(aWindow) {
   return new Promise(resolve => whenDelayedStartupFinished(aWindow, resolve));
 }
 
+function promiseOnHistoryReplaceEntry(tab) {
+  return BrowserTestUtils.waitForEvent(tab, "SSHistoryReplaceEntry");
+}
+
 function promiseTabRestored(tab) {
   return BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
 }

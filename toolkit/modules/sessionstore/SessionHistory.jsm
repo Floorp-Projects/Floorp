@@ -39,8 +39,26 @@ var SessionHistory = Object.freeze({
     return SessionHistoryInternal.collect(docShell, aFromIdx);
   },
 
+  collectFromParent(uri, body, history, userContextId, aFromIdx = -1) {
+    return SessionHistoryInternal.collectCommon(
+      uri,
+      body,
+      history,
+      userContextId,
+      aFromIdx
+    );
+  },
+
   restore(docShell, tabData) {
-    return SessionHistoryInternal.restore(docShell, tabData);
+    return SessionHistoryInternal.restore(
+      docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
+        .legacySHistory,
+      tabData
+    );
+  },
+
+  restoreFromParent(history, tabData) {
+    return SessionHistoryInternal.restore(history, tabData);
   },
 });
 
@@ -81,12 +99,24 @@ var SessionHistoryInternal = {
   collect(docShell, aFromIdx = -1) {
     let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
+    let uri = webNavigation.currentURI.displaySpec;
+    let body = webNavigation.document.body;
     let history = webNavigation.sessionHistory;
+    let userContextId = loadContext.originAttributes.userContextId;
+    return this.collectCommon(
+      uri,
+      body,
+      history.legacySHistory,
+      userContextId,
+      aFromIdx
+    );
+  },
 
+  collectCommon(uri, body, shistory, userContextId, aFromIdx) {
     let data = {
       entries: [],
-      userContextId: loadContext.originAttributes.userContextId,
-      requestedIndex: history.legacySHistory.requestedIndex + 1,
+      userContextId,
+      requestedIndex: shistory.requestedIndex + 1,
     };
 
     // We want to keep track how many entries we *could* have collected and
@@ -95,8 +125,7 @@ var SessionHistoryInternal = {
     let skippedCount = 0,
       entryCount = 0;
 
-    if (history && history.count > 0) {
-      let shistory = history.legacySHistory.QueryInterface(Ci.nsISHistory);
+    if (shistory && shistory.count > 0) {
       let count = shistory.count;
       for (; entryCount < count; entryCount++) {
         let shEntry = shistory.getEntryAtIndex(entryCount);
@@ -109,15 +138,13 @@ var SessionHistoryInternal = {
       }
 
       // Ensure the index isn't out of bounds if an exception was thrown above.
-      data.index = Math.min(history.index + 1, entryCount);
+      data.index = Math.min(shistory.index + 1, entryCount);
     }
 
     // If either the session history isn't available yet or doesn't have any
     // valid entries, make sure we at least include the current page,
     // unless of course we just skipped all entries because aFromIdx was big enough.
     if (!data.entries.length && (skippedCount != entryCount || aFromIdx < 0)) {
-      let uri = webNavigation.currentURI.displaySpec;
-      let body = webNavigation.document.body;
       // We landed here because the history is inaccessible or there are no
       // history entries. In that case we should at least record the docShell's
       // current URL as a single history entry. If the URL is not about:blank
@@ -328,15 +355,13 @@ var SessionHistoryInternal = {
   /**
    * Restores session history data for a given docShell.
    *
-   * @param docShell
-   *        The docShell that owns the session history.
+   * @param history
+   *        The session history object.
    * @param tabData
    *        The tabdata including all history entries.
    * @return A reference to the docShell's nsISHistory interface.
    */
-  restore(docShell, tabData) {
-    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let history = webNavigation.sessionHistory.legacySHistory;
+  restore(history, tabData) {
     if (history.count > 0) {
       history.PurgeHistory(history.count);
     }
