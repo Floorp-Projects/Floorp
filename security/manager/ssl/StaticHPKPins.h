@@ -151,14 +151,6 @@ static const char kGOOGLE_PIN_GeoTrustGlobal2Fingerprint[] =
 static const char kGOOGLE_PIN_GoDaddySecureFingerprint[] =
   "MrZLZnJ6IGPkBm87lYywqu5Xal7O/ZUzmbuIdHMdlYc=";
 
-/* GOOGLE_PIN_GoogleG2 */
-static const char kGOOGLE_PIN_GoogleG2Fingerprint[] =
-  "7HIpactkIAq2Y49orFOOQKurWxmmSFZhBCoQYcRhJ3Y=";
-
-/* GOOGLE_PIN_GoogleG3 */
-static const char kGOOGLE_PIN_GoogleG3Fingerprint[] =
-  "f8NnEFZxQ4ExFOhSN7EiFWtiudZQVD2oY60uauV/n78=";
-
 /* GOOGLE_PIN_RapidSSL */
 static const char kGOOGLE_PIN_RapidSSLFingerprint[] =
   "lT09gPUeQfbYrlxRtpsHrjDblj9Rpz+u7ajfCrg4qDM=";
@@ -206,6 +198,22 @@ static const char kGOOGLE_PIN_VeriSignClass3_G2Fingerprint[] =
 /* GOOGLE_PIN_VeriSignClass4_G3 */
 static const char kGOOGLE_PIN_VeriSignClass4_G3Fingerprint[] =
   "VnuCEf0g09KD7gzXzgZyy52ZvFtIeljJ1U7Gf3fUqPU=";
+
+/* GTS Root R1 */
+static const char kGTS_Root_R1Fingerprint[] =
+  "hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=";
+
+/* GTS Root R2 */
+static const char kGTS_Root_R2Fingerprint[] =
+  "Vfd95BwDeSQo+NUYxVEEIlvkOlWY2SalKK1lPhzOx78=";
+
+/* GTS Root R3 */
+static const char kGTS_Root_R3Fingerprint[] =
+  "QXnt2YHvdHR3tJYmQIr0Paosp6t/nggsEGD4QJZ3Q0g=";
+
+/* GTS Root R4 */
+static const char kGTS_Root_R4Fingerprint[] =
+  "mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=";
 
 /* GeoTrust Global CA */
 static const char kGeoTrust_Global_CAFingerprint[] =
@@ -459,11 +467,13 @@ static const StaticFingerprints kPinset_test = {
 };
 
 static const char* const kPinset_google_Data[] = {
-  kGOOGLE_PIN_GoogleG2Fingerprint,
   kGoogleBackup2048Fingerprint,
+  kGTS_Root_R3Fingerprint,
+  kGTS_Root_R2Fingerprint,
   kGOOGLE_PIN_GTSCA1O1Fingerprint,
-  kGOOGLE_PIN_GoogleG3Fingerprint,
+  kGTS_Root_R1Fingerprint,
   kGlobalSign_Root_CA___R2Fingerprint,
+  kGTS_Root_R4Fingerprint,
 };
 static const StaticFingerprints kPinset_google = {
   sizeof(kPinset_google_Data) / sizeof(const char*),
@@ -1139,4 +1149,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1592833165963000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1593092176123000);
