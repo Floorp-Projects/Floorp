@@ -1296,6 +1296,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
     return NS_ERROR_FAILURE;
   }
 
+  mPresShell->FrameSelectionWillTakeFocus(*this);
+
   // Clear all table selection data
   mTableSelection.mMode = TableSelectionMode::None;
   mTableSelection.mDragSelectingCells = false;

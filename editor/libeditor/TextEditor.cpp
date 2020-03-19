@@ -316,7 +316,7 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   // And also when you add new key handling, you need to change the subclass's
   // HandleKeyPressEvent()'s switch statement.
 
-  if (IsReadonly() || IsDisabled()) {
+  if (IsReadonly()) {
     // When we're not editable, the events handled on EditorBase.
     return EditorBase::HandleKeyPressEvent(aKeyboardEvent);
   }
@@ -1494,7 +1494,7 @@ NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
 }
 
 nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
-  if (aCount == 0 || IsReadonly() || IsDisabled()) {
+  if (aCount == 0 || IsReadonly()) {
     return NS_OK;
   }
 
@@ -1575,7 +1575,7 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
 }
 
 nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
-  if (aCount == 0 || IsReadonly() || IsDisabled()) {
+  if (aCount == 0 || IsReadonly()) {
     return NS_OK;
   }
 
@@ -2016,7 +2016,7 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
     const nsAString& aQuotedText) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (IsReadonly() || IsDisabled()) {
+  if (IsReadonly()) {
     return NS_OK;
   }
 

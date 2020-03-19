@@ -126,6 +126,12 @@
       ];
 
       this.invoke = function changeDOMSelection_invoke() {
+        // HyperTextAccessible::GetSelectionDOMRanges ignores hidden selections.
+        // Here we may be focusing an editable element (and thus hiding the
+        // main document selection), so blur it so that we test what we want to
+        // test.
+        document.activeElement.blur();
+
         var sel = window.getSelection();
         var range = document.createRange();
         range.setStart(getNode(aNodeID1), aNodeOffset1);
