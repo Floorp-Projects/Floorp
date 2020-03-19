@@ -7,5 +7,5 @@ fo_DK{
             "donsk króna",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

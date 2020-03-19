@@ -308,5 +308,5 @@ so{
         SZ{"Iswaasilaan"}
         TL{"Timoor Bari"}
     }
-    Version{"36"}
+    Version{"36.1"}
 }

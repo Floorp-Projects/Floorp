@@ -103,7 +103,7 @@ fr_CA{
             }
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         coptic{
             monthNames{

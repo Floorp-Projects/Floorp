@@ -251,7 +251,7 @@ sv{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         buddhist{
             availableFormats{

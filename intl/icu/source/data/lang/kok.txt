@@ -546,7 +546,7 @@ kok{
             tibt{"तिबेतियन अंक"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         all{"{0} — सगळें"}
         compatibility{"{0} — अनुरुपताय"}

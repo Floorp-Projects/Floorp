@@ -1485,7 +1485,7 @@ nl{
             }
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     calendar{
         buddhist{
             DateTimePatterns{

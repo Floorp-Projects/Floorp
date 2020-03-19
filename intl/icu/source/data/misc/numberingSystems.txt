@@ -72,6 +72,11 @@ numberingSystems:table(nofallback){
             desc{"०१२३४५६७८९"}
             radix:int{10}
         }
+        diak{
+            algorithmic:int{0}
+            desc{"𑥐𑥑𑥒𑥓𑥔𑥕𑥖𑥗𑥘𑥙"}
+            radix:int{10}
+        }
         ethi{
             algorithmic:int{1}
             desc{"%ethiopic"}
@@ -335,6 +340,11 @@ numberingSystems:table(nofallback){
         saur{
             algorithmic:int{0}
             desc{"꣐꣑꣒꣓꣔꣕꣖꣗꣘꣙"}
+            radix:int{10}
+        }
+        segment{
+            algorithmic:int{0}
+            desc{"🯰🯱🯲🯳🯴🯵🯶🯷🯸🯹"}
             radix:int{10}
         }
         shrd{

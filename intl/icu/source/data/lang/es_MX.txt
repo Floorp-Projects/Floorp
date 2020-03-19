@@ -77,7 +77,7 @@ es_MX{
             gujr{"dígitos en gujarati"}
         }
     }
-    Version{"36"}
+    Version{"36.1"}
     characterLabelPattern{
         historic{"{0} — Históricos"}
         miscellaneous{"{0} — Varios"}

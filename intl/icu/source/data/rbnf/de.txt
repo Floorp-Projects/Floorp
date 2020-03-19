@@ -185,5 +185,5 @@ de{
             "0: =%spellout-ordinal=s;",
         }
     }
-    Version{"36"}
+    Version{"36.1"}
 }

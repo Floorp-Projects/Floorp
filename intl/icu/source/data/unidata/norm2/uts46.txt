@@ -1,12 +1,12 @@
 # Original file:
 # IdnaMappingTable.txt
-# Date: 2019-04-01, 09:17:25 GMT
+# Date: 2019-11-07, 13:44:35 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # Unicode IDNA Compatible Preprocessing for UTS #46
-# Version: 12.1.0
+# Version: 13.0.0
 #
 # For documentation and usage, see http://www.unicode.org/reports/tr46
 
@@ -996,7 +996,8 @@
 # 08B3..08B4  valid                     # 8.0  ARABIC LETTER AIN WITH THREE DOTS BELOW..ARABIC LETTER KAF WITH DOT BELOW
 08B5          >FFFD                     # NA   <reserved-08B5>
 # 08B6..08BD  valid                     # 9.0  ARABIC LETTER BEH WITH SMALL MEEM ABOVE..ARABIC LETTER AFRICAN NOON
-08BE..08D2    >FFFD                     # NA   <reserved-08BE>..<reserved-08D2>
+# 08BE..08C7  valid                     # 13.0 ARABIC LETTER PEH WITH SMALL V..ARABIC LETTER LAM WITH SMALL ARABIC LETTER TAH ABOVE
+08C8..08D2    >FFFD                     # NA   <reserved-08C8>..<reserved-08D2>
 # 08D3        valid                     # 11.0 ARABIC SMALL LOW WAW
 # 08D4..08E1  valid                     # 9.0  ARABIC SMALL HIGH WORD AR-RUB..ARABIC SMALL HIGH SIGN SAFHA
 08E2          >FFFD                     # 9.0  ARABIC DISPUTED END OF AYAH
@@ -1168,7 +1169,8 @@
 # 0B47..0B48  valid                     # 1.1  ORIYA VOWEL SIGN E..ORIYA VOWEL SIGN AI
 0B49..0B4A    >FFFD                     # NA   <reserved-0B49>..<reserved-0B4A>
 # 0B4B..0B4D  valid                     # 1.1  ORIYA VOWEL SIGN O..ORIYA SIGN VIRAMA
-0B4E..0B55    >FFFD                     # NA   <reserved-0B4E>..<reserved-0B55>
+0B4E..0B54    >FFFD                     # NA   <reserved-0B4E>..<reserved-0B54>
+# 0B55        valid                     # 13.0 ORIYA SIGN OVERLINE
 # 0B56..0B57  valid                     # 1.1  ORIYA AI LENGTH MARK..ORIYA AU LENGTH MARK
 0B58..0B5B    >FFFD                     # NA   <reserved-0B58>..<reserved-0B5B>
 0B5C          >0B21 0B3C                # 1.1  ORIYA LETTER RRA
@@ -1286,7 +1288,7 @@
 # 0D00        valid                     # 10.0 MALAYALAM SIGN COMBINING ANUSVARA ABOVE
 # 0D01        valid                     # 7.0  MALAYALAM SIGN CANDRABINDU
 # 0D02..0D03  valid                     # 1.1  MALAYALAM SIGN ANUSVARA..MALAYALAM SIGN VISARGA
-0D04          >FFFD                     # NA   <reserved-0D04>
+# 0D04        valid                     # 13.0 MALAYALAM LETTER VEDIC ANUSVARA
 # 0D05..0D0C  valid                     # 1.1  MALAYALAM LETTER A..MALAYALAM LETTER VOCALIC L
 0D0D          >FFFD                     # NA   <reserved-0D0D>
 # 0D0E..0D10  valid                     # 1.1  MALAYALAM LETTER E..MALAYALAM LETTER AI
@@ -1318,7 +1320,8 @@
 # 0D76..0D78  valid                     # 9.0  MALAYALAM FRACTION ONE SIXTEENTH..MALAYALAM FRACTION THREE SIXTEENTHS
 # 0D79        valid                     # 5.1  MALAYALAM DATE MARK
 # 0D7A..0D7F  valid                     # 5.1  MALAYALAM LETTER CHILLU NN..MALAYALAM LETTER CHILLU K
-0D80..0D81    >FFFD                     # NA   <reserved-0D80>..<reserved-0D81>
+0D80          >FFFD                     # NA   <reserved-0D80>
+# 0D81        valid                     # 13.0 SINHALA SIGN CANDRABINDU
 # 0D82..0D83  valid                     # 3.0  SINHALA SIGN ANUSVARAYA..SINHALA SIGN VISARGAYA
 0D84          >FFFD                     # NA   <reserved-0D84>
 # 0D85..0D96  valid                     # 3.0  SINHALA LETTER AYANNA..SINHALA LETTER AUYANNA
@@ -1675,7 +1678,8 @@
 1AAE..1AAF    >FFFD                     # NA   <reserved-1AAE>..<reserved-1AAF>
 # 1AB0..1ABD  valid                     # 7.0  COMBINING DOUBLED CIRCUMFLEX ACCENT..COMBINING PARENTHESES BELOW
 # 1ABE        valid                     # 7.0  COMBINING PARENTHESES OVERLAY
-1ABF..1AFF    >FFFD                     # NA   <reserved-1ABF>..<reserved-1AFF>
+# 1ABF..1AC0  valid                     # 13.0 COMBINING LATIN SMALL LETTER W BELOW..COMBINING LATIN SMALL LETTER TURNED W BELOW
+1AC1..1AFF    >FFFD                     # NA   <reserved-1AC1>..<reserved-1AFF>
 # 1B00..1B4B  valid                     # 5.0  BALINESE SIGN ULU RICEM..BALINESE LETTER ASYURA SASAK
 1B4C..1B4F    >FFFD                     # NA   <reserved-1B4C>..<reserved-1B4F>
 # 1B50..1B59  valid                     # 5.0  BALINESE DIGIT ZERO..BALINESE DIGIT NINE
@@ -2798,7 +2802,8 @@
 # 2B5A..2B73  valid                     # 7.0  SLANTED NORTH ARROW WITH HOOKED HEAD..DOWNWARDS TRIANGLE-HEADED ARROW TO BAR
 2B74..2B75    >FFFD                     # NA   <reserved-2B74>..<reserved-2B75>
 # 2B76..2B95  valid                     # 7.0  NORTH WEST TRIANGLE-HEADED ARROW TO BAR..RIGHTWARDS BLACK ARROW
-2B96..2B97    >FFFD                     # NA   <reserved-2B96>..<reserved-2B97>
+2B96          >FFFD                     # NA   <reserved-2B96>
+# 2B97        valid                     # 13.0 SYMBOL FOR TYPE A ELECTRONICS
 # 2B98..2BB9  valid                     # 7.0  THREE-D TOP-LIGHTED LEFTWARDS EQUILATERAL ARROWHEAD..UP ARROWHEAD IN A RECTANGLE BOX
 # 2BBA..2BBC  valid                     # 11.0 OVERLAPPING WHITE SQUARES..OVERLAPPING BLACK SQUARES
 # 2BBD..2BC8  valid                     # 7.0  BALLOT BOX WITH LIGHT X..BLACK MEDIUM RIGHT-POINTING TRIANGLE CENTRED
@@ -3040,7 +3045,8 @@
 # 2E45..2E49  valid                     # 10.0 INVERTED LOW KAVYKA..DOUBLE STACKED COMMA
 # 2E4A..2E4E  valid                     # 11.0 DOTTED SOLIDUS..PUNCTUS ELEVATUS MARK
 # 2E4F        valid                     # 12.0 CORNISH VERSE DIVIDER
-2E50..2E7F    >FFFD                     # NA   <reserved-2E50>..<reserved-2E7F>
+# 2E50..2E52  valid                     # 13.0 CROSS PATTY WITH RIGHT CROSSBAR..TIRONIAN SIGN CAPITAL ET
+2E53..2E7F    >FFFD                     # NA   <reserved-2E53>..<reserved-2E7F>
 # 2E80..2E99  valid                     # 3.0  CJK RADICAL REPEAT..CJK RADICAL RAP
 2E9A          >FFFD                     # NA   <reserved-2E9A>
 # 2E9B..2E9E  valid                     # 3.0  CJK RADICAL CHOKE..CJK RADICAL DEATH
@@ -3413,7 +3419,7 @@
 319F          >4EBA                     # 1.1  IDEOGRAPHIC ANNOTATION MAN MARK
 # 31A0..31B7  valid                     # 3.0  BOPOMOFO LETTER BU..BOPOMOFO FINAL LETTER H
 # 31B8..31BA  valid                     # 6.0  BOPOMOFO LETTER GH..BOPOMOFO LETTER ZY
-31BB..31BF    >FFFD                     # NA   <reserved-31BB>..<reserved-31BF>
+# 31BB..31BF  valid                     # 13.0 BOPOMOFO FINAL LETTER G..BOPOMOFO LETTER AH
 # 31C0..31CF  valid                     # 4.1  CJK STROKE T..CJK STROKE N
 # 31D0..31E3  valid                     # 5.1  CJK STROKE H..CJK STROKE Q
 31E4..31EF    >FFFD                     # NA   <reserved-31E4>..<reserved-31EF>
@@ -3924,7 +3930,7 @@
 33FE          >0033 0031 65E5           #1.1  IDEOGRAPHIC TELEGRAPH SYMBOL FOR DAY THIRTY-ONE
 33FF          >0067 0061 006C           #4.0  SQUARE GAL
 # 3400..4DB5  valid                     # 3.0  CJK UNIFIED IDEOGRAPH-3400..CJK UNIFIED IDEOGRAPH-4DB5
-4DB6..4DBF    >FFFD                     # NA   <reserved-4DB6>..<reserved-4DBF>
+# 4DB6..4DBF  valid                     # 13.0 CJK UNIFIED IDEOGRAPH-4DB6..CJK UNIFIED IDEOGRAPH-4DBF
 # 4DC0..4DFF  valid                     # 4.0  HEXAGRAM FOR THE CREATIVE HEAVEN..HEXAGRAM FOR BEFORE COMPLETION
 # 4E00..9FA5  valid                     # 1.1  CJK UNIFIED IDEOGRAPH-4E00..CJK UNIFIED IDEOGRAPH-9FA5
 # 9FA6..9FBB  valid                     # 4.1  CJK UNIFIED IDEOGRAPH-9FA6..CJK UNIFIED IDEOGRAPH-9FBB
@@ -3934,7 +3940,8 @@
 # 9FCD..9FD5  valid                     # 8.0  CJK UNIFIED IDEOGRAPH-9FCD..CJK UNIFIED IDEOGRAPH-9FD5
 # 9FD6..9FEA  valid                     # 10.0 CJK UNIFIED IDEOGRAPH-9FD6..CJK UNIFIED IDEOGRAPH-9FEA
 # 9FEB..9FEF  valid                     # 11.0 CJK UNIFIED IDEOGRAPH-9FEB..CJK UNIFIED IDEOGRAPH-9FEF
-9FF0..9FFF    >FFFD                     # NA   <reserved-9FF0>..<reserved-9FFF>
+# 9FF0..9FFC  valid                     # 13.0 CJK UNIFIED IDEOGRAPH-9FF0..CJK UNIFIED IDEOGRAPH-9FFC
+9FFD..9FFF    >FFFD                     # NA   <reserved-9FFD>..<reserved-9FFF>
 # A000..A48C  valid                     # 3.0  YI SYLLABLE IT..YI SYLLABLE YYR
 A48D..A48F    >FFFD                     # NA   <reserved-A48D>..<reserved-A48F>
 # A490..A4A1  valid                     # 3.0  YI RADICAL QOT..YI RADICAL GA
@@ -4197,7 +4204,13 @@ A7C2          >A7C3                     # 12.0 LATIN CAPITAL LETTER ANGLICANA W
 A7C4          >A794                     # 12.0 LATIN CAPITAL LETTER C WITH PALATAL HOOK
 A7C5          >0282                     # 12.0 LATIN CAPITAL LETTER S WITH HOOK
 A7C6          >1D8E                     # 12.0 LATIN CAPITAL LETTER Z WITH PALATAL HOOK
-A7C7..A7F6    >FFFD                     # NA   <reserved-A7C7>..<reserved-A7F6>
+A7C7          >A7C8                     # 13.0 LATIN CAPITAL LETTER D WITH SHORT STROKE OVERLAY
+# A7C8        valid                     # 13.0 LATIN SMALL LETTER D WITH SHORT STROKE OVERLAY
+A7C9          >A7CA                     # 13.0 LATIN CAPITAL LETTER S WITH SHORT STROKE OVERLAY
+# A7CA        valid                     # 13.0 LATIN SMALL LETTER S WITH SHORT STROKE OVERLAY
+A7CB..A7F4    >FFFD                     # NA   <reserved-A7CB>..<reserved-A7F4>
+A7F5          >A7F6                     # 13.0 LATIN CAPITAL LETTER REVERSED HALF H
+# A7F6        valid                     # 13.0 LATIN SMALL LETTER REVERSED HALF H
 # A7F7        valid                     # 7.0  LATIN EPIGRAPHIC LETTER SIDEWAYS I
 A7F8          >0127                     # 6.1  MODIFIER LETTER CAPITAL H WITH STROKE
 A7F9          >0153                     # 6.1  MODIFIER LETTER SMALL LIGATURE OE
@@ -4205,7 +4218,8 @@ A7F9          >0153                     # 6.1  MODIFIER LETTER SMALL LIGATURE OE
 # A7FB..A7FF  valid                     # 5.1  LATIN EPIGRAPHIC LETTER REVERSED F..LATIN EPIGRAPHIC LETTER ARCHAIC M
 # A800..A827  valid                     # 4.1  SYLOTI NAGRI LETTER A..SYLOTI NAGRI VOWEL SIGN OO
 # A828..A82B  valid                     # 4.1  SYLOTI NAGRI POETRY MARK-1..SYLOTI NAGRI POETRY MARK-4
-A82C..A82F    >FFFD                     # NA   <reserved-A82C>..<reserved-A82F>
+# A82C        valid                     # 13.0 SYLOTI NAGRI SIGN ALTERNATE HASANTA
+A82D..A82F    >FFFD                     # NA   <reserved-A82D>..<reserved-A82F>
 # A830..A839  valid                     # 5.2  NORTH INDIC FRACTION ONE QUARTER..NORTH INDIC QUANTITY MARK
 A83A..A83F    >FFFD                     # NA   <reserved-A83A>..<reserved-A83F>
 # A840..A873  valid                     # 5.0  PHAGS-PA LETTER KA..PHAGS-PA LETTER CANDRABINDU
@@ -4276,7 +4290,10 @@ AB5F          >AB52                     # 7.0  MODIFIER LETTER SMALL U WITH LEFT
 # AB60..AB63  valid                     # 8.0  LATIN SMALL LETTER SAKHA YAT..LATIN SMALL LETTER UO
 # AB64..AB65  valid                     # 7.0  LATIN SMALL LETTER INVERTED ALPHA..GREEK LETTER SMALL CAPITAL OMEGA
 # AB66..AB67  valid                     # 12.0 LATIN SMALL LETTER DZ DIGRAPH WITH RETROFLEX HOOK..LATIN SMALL LETTER TS DIGRAPH WITH RETROFLEX HOOK
-AB68..AB6F    >FFFD                     # NA   <reserved-AB68>..<reserved-AB6F>
+# AB68        valid                     # 13.0 LATIN SMALL LETTER TURNED R WITH MIDDLE TILDE
+AB69          >028D                     # 13.0 MODIFIER LETTER SMALL TURNED W
+# AB6A..AB6B  valid                     # 13.0 MODIFIER LETTER LEFT TACK..MODIFIER LETTER RIGHT TACK
+AB6C..AB6F    >FFFD                     # NA   <reserved-AB6C>..<reserved-AB6F>
 AB70          >13A0                     # 8.0  CHEROKEE SMALL LETTER A
 AB71          >13A1                     # 8.0  CHEROKEE SMALL LETTER E
 AB72          >13A2                     # 8.0  CHEROKEE SMALL LETTER I
@@ -5780,7 +5797,8 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1018D..1018Evalid                     # 9.0  GREEK INDICTION SIGN..NOMISMA SIGN
 1018F         >FFFD                     # NA   <reserved-1018F>
 # 10190..1019Bvalid                     # 5.1  ROMAN SEXTANS SIGN..ROMAN CENTURIAL SIGN
-1019C..1019F  >FFFD                     # NA   <reserved-1019C>..<reserved-1019F>
+# 1019C       valid                     # 13.0 ASCIA SYMBOL
+1019D..1019F  >FFFD                     # NA   <reserved-1019D>..<reserved-1019F>
 # 101A0       valid                     # 7.0  GREEK SYMBOL TAU RHO
 101A1..101CF  >FFFD                     # NA   <reserved-101A1>..<reserved-101CF>
 # 101D0..101FCvalid                     # 5.1  PHAISTOS DISC SIGN PEDESTRIAN..PHAISTOS DISC SIGN WAVY BAND
@@ -6057,14 +6075,24 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 10D30..10D39valid                     # 11.0 HANIFI ROHINGYA DIGIT ZERO..HANIFI ROHINGYA DIGIT NINE
 10D3A..10E5F  >FFFD                     # NA   <reserved-10D3A>..<reserved-10E5F>
 # 10E60..10E7Evalid                     # 5.2  RUMI DIGIT ONE..RUMI FRACTION TWO THIRDS
-10E7F..10EFF  >FFFD                     # NA   <reserved-10E7F>..<reserved-10EFF>
+10E7F         >FFFD                     # NA   <reserved-10E7F>
+# 10E80..10EA9valid                     # 13.0 YEZIDI LETTER ELIF..YEZIDI LETTER ET
+10EAA         >FFFD                     # NA   <reserved-10EAA>
+# 10EAB..10EACvalid                     # 13.0 YEZIDI COMBINING HAMZA MARK..YEZIDI COMBINING MADDA MARK
+# 10EAD       valid                     # 13.0 YEZIDI HYPHENATION MARK
+10EAE..10EAF  >FFFD                     # NA   <reserved-10EAE>..<reserved-10EAF>
+# 10EB0..10EB1valid                     # 13.0 YEZIDI LETTER LAM WITH DOT ABOVE..YEZIDI LETTER YOT WITH CIRCUMFLEX ABOVE
+10EB2..10EFF  >FFFD                     # NA   <reserved-10EB2>..<reserved-10EFF>
 # 10F00..10F1Cvalid                     # 11.0 OLD SOGDIAN LETTER ALEPH..OLD SOGDIAN LETTER FINAL TAW WITH VERTICAL TAIL
 # 10F1D..10F26valid                     # 11.0 OLD SOGDIAN NUMBER ONE..OLD SOGDIAN FRACTION ONE HALF
 # 10F27       valid                     # 11.0 OLD SOGDIAN LIGATURE AYIN-DALETH
 10F28..10F2F  >FFFD                     # NA   <reserved-10F28>..<reserved-10F2F>
 # 10F30..10F50valid                     # 11.0 SOGDIAN LETTER ALEPH..SOGDIAN COMBINING STROKE BELOW
 # 10F51..10F59valid                     # 11.0 SOGDIAN NUMBER ONE..SOGDIAN PUNCTUATION HALF CIRCLE WITH DOT
-10F5A..10FDF  >FFFD                     # NA   <reserved-10F5A>..<reserved-10FDF>
+10F5A..10FAF  >FFFD                     # NA   <reserved-10F5A>..<reserved-10FAF>
+# 10FB0..10FC4valid                     # 13.0 CHORASMIAN LETTER ALEPH..CHORASMIAN LETTER TAW
+# 10FC5..10FCBvalid                     # 13.0 CHORASMIAN NUMBER ONE..CHORASMIAN NUMBER ONE HUNDRED
+10FCC..10FDF  >FFFD                     # NA   <reserved-10FCC>..<reserved-10FDF>
 # 10FE0..10FF6valid                     # 12.0 ELYMAIC LETTER ALEPH..ELYMAIC LIGATURE ZAYIN-YODH
 10FF7..10FFF  >FFFD                     # NA   <reserved-10FF7>..<reserved-10FFF>
 # 11000..11046valid                     # 6.0  BRAHMI SIGN CANDRABINDU..BRAHMI VIRAMA
@@ -6090,7 +6118,8 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 11136..1113Fvalid                     # 6.1  CHAKMA DIGIT ZERO..CHAKMA DIGIT NINE
 # 11140..11143valid                     # 6.1  CHAKMA SECTION MARK..CHAKMA QUESTION MARK
 # 11144..11146valid                     # 11.0 CHAKMA LETTER LHAA..CHAKMA VOWEL SIGN EI
-11147..1114F  >FFFD                     # NA   <reserved-11147>..<reserved-1114F>
+# 11147       valid                     # 13.0 CHAKMA LETTER VAA
+11148..1114F  >FFFD                     # NA   <reserved-11148>..<reserved-1114F>
 # 11150..11173valid                     # 7.0  MAHAJANI LETTER A..MAHAJANI SIGN NUKTA
 # 11174..11175valid                     # 7.0  MAHAJANI ABBREVIATION SIGN..MAHAJANI SECTION MARK
 # 11176       valid                     # 7.0  MAHAJANI LIGATURE SHRI
@@ -6099,7 +6128,7 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 111C5..111C8valid                     # 6.1  SHARADA DANDA..SHARADA SEPARATOR
 # 111C9..111CCvalid                     # 8.0  SHARADA SANDHI MARK..SHARADA EXTRA SHORT VOWEL MARK
 # 111CD       valid                     # 7.0  SHARADA SUTRA MARK
-111CE..111CF  >FFFD                     # NA   <reserved-111CE>..<reserved-111CF>
+# 111CE..111CFvalid                     # 13.0 SHARADA VOWEL SIGN PRISHTHAMATRA E..SHARADA SIGN INVERTED CANDRABINDU
 # 111D0..111D9valid                     # 6.1  SHARADA DIGIT ZERO..SHARADA DIGIT NINE
 # 111DA       valid                     # 7.0  SHARADA EKAM
 # 111DB       valid                     # 8.0  SHARADA SIGN SIDDHAM
@@ -6164,13 +6193,14 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 11400..1144Avalid                     # 9.0  NEWA LETTER A..NEWA SIDDHI
 # 1144B..1144Fvalid                     # 9.0  NEWA DANDA..NEWA ABBREVIATION SIGN
 # 11450..11459valid                     # 9.0  NEWA DIGIT ZERO..NEWA DIGIT NINE
-1145A         >FFFD                     # NA   <reserved-1145A>
+# 1145A       valid                     # 13.0 NEWA DOUBLE COMMA
 # 1145B       valid                     # 9.0  NEWA PLACEHOLDER MARK
 1145C         >FFFD                     # NA   <reserved-1145C>
 # 1145D       valid                     # 9.0  NEWA INSERTION SIGN
 # 1145E       valid                     # 11.0 NEWA SANDHI MARK
 # 1145F       valid                     # 12.0 NEWA LETTER VEDIC ANUSVARA
-11460..1147F  >FFFD                     # NA   <reserved-11460>..<reserved-1147F>
+# 11460..11461valid                     # 13.0 NEWA SIGN JIHVAMULIYA..NEWA SIGN UPADHMANIYA
+11462..1147F  >FFFD                     # NA   <reserved-11462>..<reserved-1147F>
 # 11480..114C5valid                     # 7.0  TIRHUTA ANJI..TIRHUTA GVANG
 # 114C6       valid                     # 7.0  TIRHUTA ABBREVIATION SIGN
 # 114C7       valid                     # 7.0  TIRHUTA OM
@@ -6244,7 +6274,23 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 118EA..118F2valid                     # 7.0  WARANG CITI NUMBER TEN..WARANG CITI NUMBER NINETY
 118F3..118FE  >FFFD                     # NA   <reserved-118F3>..<reserved-118FE>
 # 118FF       valid                     # 7.0  WARANG CITI OM
-11900..1199F  >FFFD                     # NA   <reserved-11900>..<reserved-1199F>
+# 11900..11906valid                     # 13.0 DIVES AKURU LETTER A..DIVES AKURU LETTER E
+11907..11908  >FFFD                     # NA   <reserved-11907>..<reserved-11908>
+# 11909       valid                     # 13.0 DIVES AKURU LETTER O
+1190A..1190B  >FFFD                     # NA   <reserved-1190A>..<reserved-1190B>
+# 1190C..11913valid                     # 13.0 DIVES AKURU LETTER KA..DIVES AKURU LETTER JA
+11914         >FFFD                     # NA   <reserved-11914>
+# 11915..11916valid                     # 13.0 DIVES AKURU LETTER NYA..DIVES AKURU LETTER TTA
+11917         >FFFD                     # NA   <reserved-11917>
+# 11918..11935valid                     # 13.0 DIVES AKURU LETTER DDA..DIVES AKURU VOWEL SIGN E
+11936         >FFFD                     # NA   <reserved-11936>
+# 11937..11938valid                     # 13.0 DIVES AKURU VOWEL SIGN AI..DIVES AKURU VOWEL SIGN O
+11939..1193A  >FFFD                     # NA   <reserved-11939>..<reserved-1193A>
+# 1193B..11943valid                     # 13.0 DIVES AKURU SIGN ANUSVARA..DIVES AKURU SIGN NUKTA
+# 11944..11946valid                     # 13.0 DIVES AKURU DOUBLE DANDA..DIVES AKURU END OF TEXT MARK
+11947..1194F  >FFFD                     # NA   <reserved-11947>..<reserved-1194F>
+# 11950..11959valid                     # 13.0 DIVES AKURU DIGIT ZERO..DIVES AKURU DIGIT NINE
+1195A..1199F  >FFFD                     # NA   <reserved-1195A>..<reserved-1199F>
 # 119A0..119A7valid                     # 12.0 NANDINAGARI LETTER A..NANDINAGARI LETTER VOCALIC RR
 119A8..119A9  >FFFD                     # NA   <reserved-119A8>..<reserved-119A9>
 # 119AA..119D7valid                     # 12.0 NANDINAGARI LETTER E..NANDINAGARI VOWEL SIGN VOCALIC RR
@@ -6311,7 +6357,9 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 11DAA..11EDF  >FFFD                     # NA   <reserved-11DAA>..<reserved-11EDF>
 # 11EE0..11EF6valid                     # 11.0 MAKASAR LETTER KA..MAKASAR VOWEL SIGN O
 # 11EF7..11EF8valid                     # 11.0 MAKASAR PASSIMBANG..MAKASAR END OF SECTION
-11EF9..11FBF  >FFFD                     # NA   <reserved-11EF9>..<reserved-11FBF>
+11EF9..11FAF  >FFFD                     # NA   <reserved-11EF9>..<reserved-11FAF>
+# 11FB0       valid                     # 13.0 LISU LETTER YHA
+11FB1..11FBF  >FFFD                     # NA   <reserved-11FB1>..<reserved-11FBF>
 # 11FC0..11FF1valid                     # 12.0 TAMIL FRACTION ONE THREE-HUNDRED-AND-TWENTIETH..TAMIL SIGN VAKAIYARAA
 11FF2..11FFE  >FFFD                     # NA   <reserved-11FF2>..<reserved-11FFE>
 # 11FFF       valid                     # 12.0 TAMIL PUNCTUATION END OF TEXT
@@ -6407,13 +6455,19 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 16FE1       valid                     # 10.0 NUSHU ITERATION MARK
 # 16FE2       valid                     # 12.0 OLD CHINESE HOOK MARK
 # 16FE3       valid                     # 12.0 OLD CHINESE ITERATION MARK
-16FE4..16FFF  >FFFD                     # NA   <reserved-16FE4>..<reserved-16FFF>
+# 16FE4       valid                     # 13.0 KHITAN SMALL SCRIPT FILLER
+16FE5..16FEF  >FFFD                     # NA   <reserved-16FE5>..<reserved-16FEF>
+# 16FF0..16FF1valid                     # 13.0 VIETNAMESE ALTERNATE READING MARK CA..VIETNAMESE ALTERNATE READING MARK NHAY
+16FF2..16FFF  >FFFD                     # NA   <reserved-16FF2>..<reserved-16FFF>
 # 17000..187ECvalid                     # 9.0  TANGUT IDEOGRAPH-17000..TANGUT IDEOGRAPH-187EC
 # 187ED..187F1valid                     # 11.0 TANGUT IDEOGRAPH-187ED..TANGUT IDEOGRAPH-187F1
 # 187F2..187F7valid                     # 12.0 TANGUT IDEOGRAPH-187F2..TANGUT IDEOGRAPH-187F7
 187F8..187FF  >FFFD                     # NA   <reserved-187F8>..<reserved-187FF>
 # 18800..18AF2valid                     # 9.0  TANGUT COMPONENT-001..TANGUT COMPONENT-755
-18AF3..1AFFF  >FFFD                     # NA   <reserved-18AF3>..<reserved-1AFFF>
+# 18AF3..18CD5valid                     # 13.0 TANGUT COMPONENT-756..KHITAN SMALL SCRIPT CHARACTER-18CD5
+18CD6..18CFF  >FFFD                     # NA   <reserved-18CD6>..<reserved-18CFF>
+# 18D00..18D08valid                     # 13.0 TANGUT IDEOGRAPH-18D00..TANGUT IDEOGRAPH-18D08
+18D09..1AFFF  >FFFD                     # NA   <reserved-18D09>..<reserved-1AFFF>
 # 1B000..1B001valid                     # 6.0  KATAKANA LETTER ARCHAIC E..HIRAGANA LETTER ARCHAIC YE
 # 1B002..1B11Evalid                     # 10.0 HENTAIGANA LETTER A-1..HENTAIGANA LETTER N-MU-MO-2
 1B11F..1B14F  >FFFD                     # NA   <reserved-1B11F>..<reserved-1B14F>
@@ -7769,7 +7823,7 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 1F109         >0038 002C                # 5.2  DIGIT EIGHT COMMA
 1F10A         >0039 002C                # 5.2  DIGIT NINE COMMA
 # 1F10B..1F10Cvalid                     # 7.0  DINGBAT CIRCLED SANS-SERIF DIGIT ZERO..DINGBAT NEGATIVE CIRCLED SANS-SERIF DIGIT ZERO
-1F10D..1F10F  >FFFD                     # NA   <reserved-1F10D>..<reserved-1F10F>
+# 1F10D..1F10Fvalid                     # 13.0 CIRCLED ZERO WITH SLASH..CIRCLED DOLLAR SIGN WITH OVERLAID BACKSLASH
 1F110         >0028 0061 0029           #5.2  PARENTHESIZED LATIN CAPITAL LETTER A
 1F111         >0028 0062 0029           #5.2  PARENTHESIZED LATIN CAPITAL LETTER B
 1F112         >0028 0063 0029           #5.2  PARENTHESIZED LATIN CAPITAL LETTER C
@@ -7842,7 +7896,7 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 1F16A         >006D 0063                # 6.1  RAISED MC SIGN
 1F16B         >006D 0064                # 6.1  RAISED MD SIGN
 1F16C         >006D 0072                # 12.0 RAISED MR SIGN
-1F16D..1F16F  >FFFD                     # NA   <reserved-1F16D>..<reserved-1F16F>
+# 1F16D..1F16Fvalid                     # 13.0 CIRCLED CC..CIRCLED HUMAN FIGURE
 # 1F170..1F178valid                     # 6.0  NEGATIVE SQUARED LATIN CAPITAL LETTER A..NEGATIVE SQUARED LATIN CAPITAL LETTER I
 # 1F179       valid                     # 5.2  NEGATIVE SQUARED LATIN CAPITAL LETTER J
 # 1F17A       valid                     # 6.0  NEGATIVE SQUARED LATIN CAPITAL LETTER K
@@ -7855,7 +7909,8 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 1F190         >0064 006A                # 5.2  SQUARE DJ
 # 1F191..1F19Avalid                     # 6.0  SQUARED CL..SQUARED VS
 # 1F19B..1F1ACvalid                     # 9.0  SQUARED THREE D..SQUARED VOD
-1F1AD..1F1E5  >FFFD                     # NA   <reserved-1F1AD>..<reserved-1F1E5>
+# 1F1AD       valid                     # 13.0 MASK WORK SYMBOL
+1F1AE..1F1E5  >FFFD                     # NA   <reserved-1F1AE>..<reserved-1F1E5>
 # 1F1E6..1F1FFvalid                     # 6.0  REGIONAL INDICATOR SYMBOL LETTER A..REGIONAL INDICATOR SYMBOL LETTER Z
 1F200         >307B 304B                # 5.2  SQUARE HIRAGANA HOKA
 1F201         >30B3 30B3                # 6.0  SQUARED KATAKANA KOKO
@@ -7993,7 +8048,8 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1F6D1..1F6D2valid                     # 9.0  OCTAGONAL SIGN..SHOPPING TROLLEY
 # 1F6D3..1F6D4valid                     # 10.0 STUPA..PAGODA
 # 1F6D5       valid                     # 12.0 HINDU TEMPLE
-1F6D6..1F6DF  >FFFD                     # NA   <reserved-1F6D6>..<reserved-1F6DF>
+# 1F6D6..1F6D7valid                     # 13.0 HUT..ELEVATOR
+1F6D8..1F6DF  >FFFD                     # NA   <reserved-1F6D8>..<reserved-1F6DF>
 # 1F6E0..1F6ECvalid                     # 7.0  HAMMER AND WRENCH..AIRPLANE ARRIVING
 1F6ED..1F6EF  >FFFD                     # NA   <reserved-1F6ED>..<reserved-1F6EF>
 # 1F6F0..1F6F3valid                     # 7.0  SATELLITE..PASSENGER SHIP
@@ -8001,7 +8057,8 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1F6F7..1F6F8valid                     # 10.0 SLED..FLYING SAUCER
 # 1F6F9       valid                     # 11.0 SKATEBOARD
 # 1F6FA       valid                     # 12.0 AUTO RICKSHAW
-1F6FB..1F6FF  >FFFD                     # NA   <reserved-1F6FB>..<reserved-1F6FF>
+# 1F6FB..1F6FCvalid                     # 13.0 PICKUP TRUCK..ROLLER SKATE
+1F6FD..1F6FF  >FFFD                     # NA   <reserved-1F6FD>..<reserved-1F6FF>
 # 1F700..1F773valid                     # 6.0  ALCHEMICAL SYMBOL FOR QUINTESSENCE..ALCHEMICAL SYMBOL FOR HALF OUNCE
 1F774..1F77F  >FFFD                     # NA   <reserved-1F774>..<reserved-1F77F>
 # 1F780..1F7D4valid                     # 7.0  BLACK LEFT-POINTING ISOSCELES RIGHT TRIANGLE..HEAVY TWELVE POINTED PINWHEEL STAR
@@ -8018,9 +8075,11 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1F860..1F887valid                     # 7.0  WIDE-HEADED LEFTWARDS LIGHT BARB ARROW..WIDE-HEADED SOUTH WEST VERY HEAVY BARB ARROW
 1F888..1F88F  >FFFD                     # NA   <reserved-1F888>..<reserved-1F88F>
 # 1F890..1F8ADvalid                     # 7.0  LEFTWARDS TRIANGLE ARROWHEAD..WHITE ARROW SHAFT WIDTH TWO THIRDS
-1F8AE..1F8FF  >FFFD                     # NA   <reserved-1F8AE>..<reserved-1F8FF>
+1F8AE..1F8AF  >FFFD                     # NA   <reserved-1F8AE>..<reserved-1F8AF>
+# 1F8B0..1F8B1valid                     # 13.0 ARROW POINTING UPWARDS THEN NORTH WEST..ARROW POINTING RIGHTWARDS THEN CURVING SOUTH WEST
+1F8B2..1F8FF  >FFFD                     # NA   <reserved-1F8B2>..<reserved-1F8FF>
 # 1F900..1F90Bvalid                     # 10.0 CIRCLED CROSS FORMEE WITH FOUR DOTS..DOWNWARD FACING NOTCHED HOOK WITH DOT
-1F90C         >FFFD                     # NA   <reserved-1F90C>
+# 1F90C       valid                     # 13.0 PINCHED FINGERS
 # 1F90D..1F90Fvalid                     # 12.0 WHITE HEART..PINCHING HAND
 # 1F910..1F918valid                     # 8.0  ZIPPER-MOUTH FACE..SIGN OF THE HORNS
 # 1F919..1F91Evalid                     # 9.0  CALL ME HAND..HAND WITH INDEX AND MIDDLE FINGERS CROSSED
@@ -8038,9 +8097,10 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1F95F..1F96Bvalid                     # 10.0 DUMPLING..CANNED FOOD
 # 1F96C..1F970valid                     # 11.0 LEAFY GREEN..SMILING FACE WITH SMILING EYES AND THREE HEARTS
 # 1F971       valid                     # 12.0 YAWNING FACE
-1F972         >FFFD                     # NA   <reserved-1F972>
+# 1F972       valid                     # 13.0 SMILING FACE WITH TEAR
 # 1F973..1F976valid                     # 11.0 FACE WITH PARTY HORN AND PARTY HAT..FREEZING FACE
-1F977..1F979  >FFFD                     # NA   <reserved-1F977>..<reserved-1F979>
+# 1F977..1F978valid                     # 13.0 NINJA..DISGUISED FACE
+1F979         >FFFD                     # NA   <reserved-1F979>
 # 1F97A       valid                     # 11.0 FACE WITH PLEADING EYES
 # 1F97B       valid                     # 12.0 SARI
 # 1F97C..1F97Fvalid                     # 11.0 LAB COAT..FLAT SHOE
@@ -8048,16 +8108,17 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1F985..1F991valid                     # 9.0  EAGLE..SQUID
 # 1F992..1F997valid                     # 10.0 GIRAFFE FACE..CRICKET
 # 1F998..1F9A2valid                     # 11.0 KANGAROO..SWAN
-1F9A3..1F9A4  >FFFD                     # NA   <reserved-1F9A3>..<reserved-1F9A4>
+# 1F9A3..1F9A4valid                     # 13.0 MAMMOTH..DODO
 # 1F9A5..1F9AAvalid                     # 12.0 SLOTH..OYSTER
-1F9AB..1F9AD  >FFFD                     # NA   <reserved-1F9AB>..<reserved-1F9AD>
+# 1F9AB..1F9ADvalid                     # 13.0 BEAVER..SEAL
 # 1F9AE..1F9AFvalid                     # 12.0 GUIDE DOG..PROBING CANE
 # 1F9B0..1F9B9valid                     # 11.0 EMOJI COMPONENT RED HAIR..SUPERVILLAIN
 # 1F9BA..1F9BFvalid                     # 12.0 SAFETY VEST..MECHANICAL LEG
 # 1F9C0       valid                     # 8.0  CHEESE WEDGE
 # 1F9C1..1F9C2valid                     # 11.0 CUPCAKE..SALT SHAKER
 # 1F9C3..1F9CAvalid                     # 12.0 BEVERAGE BOX..ICE CUBE
-1F9CB..1F9CC  >FFFD                     # NA   <reserved-1F9CB>..<reserved-1F9CC>
+# 1F9CB       valid                     # 13.0 BUBBLE TEA
+1F9CC         >FFFD                     # NA   <reserved-1F9CC>
 # 1F9CD..1F9CFvalid                     # 12.0 STANDING PERSON..DEAF PERSON
 # 1F9D0..1F9E6valid                     # 10.0 FACE WITH MONOCLE..SOCKS
 # 1F9E7..1F9FFvalid                     # 11.0 RED GIFT ENVELOPE..NAZAR AMULET
@@ -8066,16 +8127,41 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 1FA60..1FA6Dvalid                     # 11.0 XIANGQI RED GENERAL..XIANGQI BLACK SOLDIER
 1FA6E..1FA6F  >FFFD                     # NA   <reserved-1FA6E>..<reserved-1FA6F>
 # 1FA70..1FA73valid                     # 12.0 BALLET SHOES..SHORTS
-1FA74..1FA77  >FFFD                     # NA   <reserved-1FA74>..<reserved-1FA77>
+# 1FA74       valid                     # 13.0 THONG SANDAL
+1FA75..1FA77  >FFFD                     # NA   <reserved-1FA75>..<reserved-1FA77>
 # 1FA78..1FA7Avalid                     # 12.0 DROP OF BLOOD..STETHOSCOPE
 1FA7B..1FA7F  >FFFD                     # NA   <reserved-1FA7B>..<reserved-1FA7F>
 # 1FA80..1FA82valid                     # 12.0 YO-YO..PARACHUTE
-1FA83..1FA8F  >FFFD                     # NA   <reserved-1FA83>..<reserved-1FA8F>
+# 1FA83..1FA86valid                     # 13.0 BOOMERANG..NESTING DOLLS
+1FA87..1FA8F  >FFFD                     # NA   <reserved-1FA87>..<reserved-1FA8F>
 # 1FA90..1FA95valid                     # 12.0 RINGED PLANET..BANJO
-1FA96..1FFFD  >FFFD                     # NA   <reserved-1FA96>..<reserved-1FFFD>
+# 1FA96..1FAA8valid                     # 13.0 MILITARY HELMET..ROCK
+1FAA9..1FAAF  >FFFD                     # NA   <reserved-1FAA9>..<reserved-1FAAF>
+# 1FAB0..1FAB6valid                     # 13.0 FLY..FEATHER
+1FAB7..1FABF  >FFFD                     # NA   <reserved-1FAB7>..<reserved-1FABF>
+# 1FAC0..1FAC2valid                     # 13.0 ANATOMICAL HEART..PEOPLE HUGGING
+1FAC3..1FACF  >FFFD                     # NA   <reserved-1FAC3>..<reserved-1FACF>
+# 1FAD0..1FAD6valid                     # 13.0 BLUEBERRIES..TEAPOT
+1FAD7..1FAFF  >FFFD                     # NA   <reserved-1FAD7>..<reserved-1FAFF>
+# 1FB00..1FB92valid                     # 13.0 BLOCK SEXTANT-1..UPPER HALF INVERSE MEDIUM SHADE AND LOWER HALF BLOCK
+1FB93         >FFFD                     # NA   <reserved-1FB93>
+# 1FB94..1FBCAvalid                     # 13.0 LEFT HALF INVERSE MEDIUM SHADE AND RIGHT HALF BLOCK..WHITE UP-POINTING CHEVRON
+1FBCB..1FBEF  >FFFD                     # NA   <reserved-1FBCB>..<reserved-1FBEF>
+1FBF0         >0030                     # 13.0 SEGMENTED DIGIT ZERO
+1FBF1         >0031                     # 13.0 SEGMENTED DIGIT ONE
+1FBF2         >0032                     # 13.0 SEGMENTED DIGIT TWO
+1FBF3         >0033                     # 13.0 SEGMENTED DIGIT THREE
+1FBF4         >0034                     # 13.0 SEGMENTED DIGIT FOUR
+1FBF5         >0035                     # 13.0 SEGMENTED DIGIT FIVE
+1FBF6         >0036                     # 13.0 SEGMENTED DIGIT SIX
+1FBF7         >0037                     # 13.0 SEGMENTED DIGIT SEVEN
+1FBF8         >0038                     # 13.0 SEGMENTED DIGIT EIGHT
+1FBF9         >0039                     # 13.0 SEGMENTED DIGIT NINE
+1FBFA..1FFFD  >FFFD                     # NA   <reserved-1FBFA>..<reserved-1FFFD>
 1FFFE..1FFFF  >FFFD                     # 2.0  <noncharacter-1FFFE>..<noncharacter-1FFFF>
 # 20000..2A6D6valid                     # 3.1  CJK UNIFIED IDEOGRAPH-20000..CJK UNIFIED IDEOGRAPH-2A6D6
-2A6D7..2A6FF  >FFFD                     # NA   <reserved-2A6D7>..<reserved-2A6FF>
+# 2A6D7..2A6DDvalid                     # 13.0 CJK UNIFIED IDEOGRAPH-2A6D7..CJK UNIFIED IDEOGRAPH-2A6DD
+2A6DE..2A6FF  >FFFD                     # NA   <reserved-2A6DE>..<reserved-2A6FF>
 # 2A700..2B734valid                     # 5.2  CJK UNIFIED IDEOGRAPH-2A700..CJK UNIFIED IDEOGRAPH-2B734
 2B735..2B73F  >FFFD                     # NA   <reserved-2B735>..<reserved-2B73F>
 # 2B740..2B81Dvalid                     # 6.0  CJK UNIFIED IDEOGRAPH-2B740..CJK UNIFIED IDEOGRAPH-2B81D
@@ -8618,7 +8704,8 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 2FA1D         >2A600                    # 3.1  CJK COMPATIBILITY IDEOGRAPH-2FA1D
 2FA1E..2FFFD  >FFFD                     # NA   <reserved-2FA1E>..<reserved-2FFFD>
 2FFFE..2FFFF  >FFFD                     # 2.0  <noncharacter-2FFFE>..<noncharacter-2FFFF>
-30000..3FFFD  >FFFD                     # NA   <reserved-30000>..<reserved-3FFFD>
+# 30000..3134Avalid                     # 13.0 CJK UNIFIED IDEOGRAPH-30000..CJK UNIFIED IDEOGRAPH-3134A
+3134B..3FFFD  >FFFD                     # NA   <reserved-3134B>..<reserved-3FFFD>
 3FFFE..3FFFF  >FFFD                     # 2.0  <noncharacter-3FFFE>..<noncharacter-3FFFF>
 40000..4FFFD  >FFFD                     # NA   <reserved-40000>..<reserved-4FFFD>
 4FFFE..4FFFF  >FFFD                     # 2.0  <noncharacter-4FFFE>..<noncharacter-4FFFF>
