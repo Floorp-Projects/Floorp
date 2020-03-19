@@ -7,9 +7,9 @@ var evalInFrame = (function(global) {
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 var m = new Module(wasmTextToBinary(`(module
+    (import "" "foo" (func $foo (result i32)))
+    (import "" "bar" (func $bar (result i32)))
     (table 3 funcref)
-    (import $foo "" "foo" (result i32))
-    (import $bar "" "bar" (result i32))
     (func $baz (result i32) (i32.const 13))
     (elem (i32.const 0) $foo $bar $baz)
     (export "tbl" (table 0))
