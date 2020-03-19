@@ -8683,8 +8683,6 @@ class DeleteFilesRunnable final : public Runnable,
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
-  nsCOMPtr<nsIFile> mDirectory;
-  nsCOMPtr<nsIFile> mJournalDirectory;
   nsTArray<int64_t> mFileIds;
   State mState;
 
@@ -8697,8 +8695,6 @@ class DeleteFilesRunnable final : public Runnable,
   ~DeleteFilesRunnable() = default;
 
   nsresult Open();
-
-  nsresult DeleteFile(int64_t aFileId);
 
   nsresult DoDatabaseWork();
 
@@ -9083,6 +9079,9 @@ class DEBUGThreadSlower final : public nsIThreadObserver {
  * Helper classes
  ******************************************************************************/
 
+// XXX Get rid of FileHelper and move the functions into FileManager.
+// Then, FileManager::Get(Journal)Directory and FileManager::GetFileForId might
+// eventually be made private.
 class MOZ_STACK_CLASS FileHelper final {
   const RefPtr<FileManager> mFileManager;
 
@@ -9109,8 +9108,6 @@ class MOZ_STACK_CLASS FileHelper final {
 
   nsresult CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
                                 nsIInputStream& aInputStream, bool aCompress);
-
-  nsresult RemoveFile(nsIFile& aFile, nsIFile& aJournalFile);
 
  private:
   nsresult SyncCopy(nsIInputStream& aInputStream,
@@ -9366,36 +9363,28 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
   return std::move(result);
 }
 
-// Idempotently delete a file, decreasing the quota usage as appropriate. If the
-// file no longer exists, success is returned, although quota usage can't be
-// decreased. (With the assumption being that the file was already deleted prior
-// to this logic running, and the non-existent file was no longer tracked by
-// quota because it didn't exist at initialization time or a previous deletion
-// call updated the usage.)
-nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
-                    QuotaManager* aQuotaManager,
+enum struct Idempotency { Yes, No };
+
+// Delete a file, decreasing the quota usage as appropriate. If the file no
+// longer exists but aIdempotent is true, success is returned, although quota
+// usage can't be decreased. (With the assumption being that the file was
+// already deleted prior to this logic running, and the non-existent file was no
+// longer tracked by quota because it didn't exist at initialization time or a
+// previous deletion call updated the usage.)
+nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,
-                    const nsACString& aGroup, const nsACString& aOrigin) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(!aFilename.IsEmpty());
+                    const nsACString& aGroup, const nsACString& aOrigin,
+                    const Idempotency aIdempotent) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->Append(aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  nsresult rv;
   int64_t fileSize;
   if (aQuotaManager) {
-    rv = file->GetFileSize(&fileSize);
-    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    rv = aFile.GetFileSize(&fileSize);
+    if (aIdempotent == Idempotency::Yes &&
+        (rv == NS_ERROR_FILE_NOT_FOUND ||
+         rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
       return NS_OK;
     }
 
@@ -9406,9 +9395,10 @@ nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
     MOZ_ASSERT(fileSize >= 0);
   }
 
-  rv = file->Remove(false);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+  rv = aFile.Remove(false);
+  if (aIdempotent == Idempotency::Yes &&
+      (rv == NS_ERROR_FILE_NOT_FOUND ||
+       rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
     return NS_OK;
   }
 
@@ -9424,12 +9414,35 @@ nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
   return NS_OK;
 }
 
+nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
+                    QuotaManager* const aQuotaManager,
+                    const PersistenceType aPersistenceType,
+                    const nsACString& aGroup, const nsACString& aOrigin,
+                    const Idempotency aIdempotent) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aFilename.IsEmpty());
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDirectory.Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->Append(aFilename);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return DeleteFile(*file, aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                    aIdempotent);
+}
+
 nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(!aFilename.IsEmpty());
 
-  // The current using function hasn't initialzed the origin, so in here we
+  // The current using function hasn't initialized the origin, so in here we
   // don't update the size of origin. Adding this assertion for preventing from
   // misusing.
   DebugOnly<QuotaManager*> quotaManager = QuotaManager::Get();
@@ -9462,15 +9475,14 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
 // whether having removed all the files successfully. The marker file should
 // be checked before executing the next operation or initialization.
-nsresult CreateMarkerFile(nsIFile* aBaseDirectory,
+nsresult CreateMarkerFile(nsIFile& aBaseDirectory,
                           const nsAString& aDatabaseNameBase,
                           nsCOMPtr<nsIFile>* aMarkerFileOut) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aBaseDirectory);
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
   nsCOMPtr<nsIFile> markerFile;
-  nsresult rv = aBaseDirectory->Clone(getter_AddRefs(markerFile));
+  nsresult rv = aBaseDirectory.Clone(getter_AddRefs(markerFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9514,7 +9526,7 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
 // called on a partially deleted database, this method uses DeleteFile which
 // succeeds when the file we ask it to delete does not actually exist. The
 // marker file is removed once deletion has successfully completed.
-nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
+nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
                                          const nsAString& aFilenameBase,
                                          QuotaManager* aQuotaManager,
                                          const PersistenceType aPersistenceType,
@@ -9522,7 +9534,6 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
                                          const nsACString& aOrigin,
                                          const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aBaseDirectory);
   MOZ_ASSERT(!aFilenameBase.IsEmpty());
 
   AUTO_PROFILER_LABEL("RemoveDatabaseFilesAndDirectory", DOM);
@@ -9535,7 +9546,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
 
   // The database file counts towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSuffix, aQuotaManager,
-                  aPersistenceType, aGroup, aOrigin);
+                  aPersistenceType, aGroup, aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9543,7 +9554,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   // .sqlite-journal files don't count towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteJournalSuffix,
                   /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                  aOrigin);
+                  aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9551,20 +9562,21 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   // .sqlite-shm files don't count towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSHMSuffix,
                   /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                  aOrigin);
+                  aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // .sqlite-wal files do count towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteWALSuffix,
-                  aQuotaManager, aPersistenceType, aGroup, aOrigin);
+                  aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                  Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsCOMPtr<nsIFile> fmDirectory;
-  rv = aBaseDirectory->Clone(getter_AddRefs(fmDirectory));
+  rv = aBaseDirectory.Clone(getter_AddRefs(fmDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -16954,35 +16966,26 @@ nsresult FileManager::SyncDeleteFile(const int64_t aId) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-  int64_t fileSize;
-
-  if (EnforcingQuota()) {
-    rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  nsCOMPtr<nsIFile> journalFile = GetFileForId(journalDirectory, aId);
+  if (NS_WARN_IF(!journalFile)) {
+    return NS_ERROR_FAILURE;
   }
 
-  rv = file->Remove(false);
+  return SyncDeleteFile(*file, *journalFile);
+}
+
+nsresult FileManager::SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile) {
+  QuotaManager* const quotaManager =
+      EnforcingQuota() ? QuotaManager::Get() : nullptr;
+  MOZ_ASSERT_IF(EnforcingQuota(), quotaManager);
+
+  nsresult rv = DeleteFile(aFile, quotaManager, Type(), Group(), Origin(),
+                           Idempotency::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (EnforcingQuota()) {
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    quotaManager->DecreaseUsageForOrigin(Type(), Group(), Origin(), Client::IDB,
-                                         fileSize);
-  }
-
-  file = GetFileForId(journalDirectory, aId);
-  if (NS_WARN_IF(!file)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = file->Remove(false);
+  rv = aJournalFile.Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -17291,7 +17294,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
 
     if (obsoleteFilenames.Contains(subdirNameBase)) {
-      rv = RemoveDatabaseFilesAndDirectory(directory, subdirNameBase, nullptr,
+      rv = RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase, nullptr,
                                            aPersistenceType, aGroup, aOrigin,
                                            EmptyString());
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17933,59 +17936,13 @@ nsresult DeleteFilesRunnable::Open() {
   return NS_OK;
 }
 
-nsresult DeleteFilesRunnable::DeleteFile(int64_t aFileId) {
-  MOZ_ASSERT(mDirectory);
-  MOZ_ASSERT(mJournalDirectory);
-
-  nsCOMPtr<nsIFile> file = mFileManager->GetFileForId(mDirectory, aFileId);
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-  nsresult rv;
-  int64_t fileSize;
-
-  if (mFileManager->EnforcingQuota()) {
-    rv = file->GetFileSize(&fileSize);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  }
-
-  rv = file->Remove(false);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  if (mFileManager->EnforcingQuota()) {
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    NS_ASSERTION(quotaManager, "Shouldn't be null!");
-
-    quotaManager->DecreaseUsageForOrigin(
-        mFileManager->Type(), mFileManager->Group(), mFileManager->Origin(),
-        Client::IDB, fileSize);
-  }
-
-  file = mFileManager->GetFileForId(mJournalDirectory, aFileId);
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-  rv = file->Remove(false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult DeleteFilesRunnable::DoDatabaseWork() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mState == State_DatabaseWorkOpen);
 
   if (!mFileManager->Invalidated()) {
-    mDirectory = mFileManager->GetDirectory();
-    if (NS_WARN_IF(!mDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mJournalDirectory = mFileManager->GetJournalDirectory();
-    if (NS_WARN_IF(!mJournalDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-
     for (int64_t fileId : mFileIds) {
-      if (NS_FAILED(DeleteFile(fileId))) {
+      if (NS_FAILED(mFileManager->SyncDeleteFile(fileId))) {
         NS_WARNING("Failed to delete file!");
       }
     }
@@ -21379,7 +21336,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     // previous operation.
     // Note: only update usage to the QuotaManager when mEnforcingQuota == true
     rv = RemoveDatabaseFilesAndDirectory(
-        dbDirectory, filename, mEnforcingQuota ? quotaManager : nullptr,
+        *dbDirectory, filename, mEnforcingQuota ? quotaManager : nullptr,
         persistenceType, mGroup, mOrigin, databaseName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -22894,7 +22851,7 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
   }
 
   nsresult rv = RemoveDatabaseFilesAndDirectory(
-      directory, mDeleteDatabaseOp->mDatabaseFilenameBase, quotaManager,
+      *directory, mDeleteDatabaseOp->mDatabaseFilenameBase, quotaManager,
       persistenceType, mDeleteDatabaseOp->mGroup, mDeleteDatabaseOp->mOrigin,
       mDeleteDatabaseOp->mCommonParams.metadata().name());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -25570,12 +25527,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
       const auto inputStream = inputStreamOrErr.unwrap();
 
+      auto* const fileManager = Transaction().GetDatabase()->GetFileManager();
+      MOZ_ASSERT(fileManager);
+
       if (inputStream) {
         if (fileHelper.isNothing()) {
-          auto* const fileManager =
-              Transaction().GetDatabase()->GetFileManager();
-          MOZ_ASSERT(fileManager);
-
           fileHelper.emplace(RefPtr{fileManager});
           rv = fileHelper->Init();
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -25609,7 +25565,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           // Try to remove the file if the copy failed.
-          nsresult rv2 = fileHelper->RemoveFile(*file, *journalFile);
+          nsresult rv2 = fileManager->SyncDeleteFile(*file, *journalFile);
           if (NS_WARN_IF(NS_FAILED(rv2))) {
             return rv;
           }
@@ -27833,7 +27789,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
 
     IDB_WARNING("Deleting orphaned file!");
 
-    rv = RemoveFile(aFile, aJournalFile);
+    rv = mFileManager->SyncDeleteFile(aFile, aJournalFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27871,40 +27827,6 @@ nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
 
   rv = SyncCopy(aInputStream, *actualOutputStream, buffer.Elements(),
                 buffer.Length());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult FileHelper::RemoveFile(nsIFile& aFile, nsIFile& aJournalFile) {
-  nsresult rv;
-
-  int64_t fileSize;
-
-  if (mFileManager->EnforcingQuota()) {
-    rv = aFile.GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  rv = aFile.Remove(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (mFileManager->EnforcingQuota()) {
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    quotaManager->DecreaseUsageForOrigin(
-        mFileManager->Type(), mFileManager->Group(), mFileManager->Origin(),
-        Client::IDB, fileSize);
-  }
-
-  rv = aJournalFile.Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
