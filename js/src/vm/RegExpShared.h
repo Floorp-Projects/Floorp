@@ -170,6 +170,7 @@ class RegExpShared : public gc::TenuredCell {
   bool global() const { return flags.global(); }
   bool ignoreCase() const { return flags.ignoreCase(); }
   bool multiline() const { return flags.multiline(); }
+  bool dotAll() const { return flags.dotAll(); }
   bool unicode() const { return flags.unicode(); }
   bool sticky() const { return flags.sticky(); }
 

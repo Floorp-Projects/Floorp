@@ -177,6 +177,9 @@ class JSAPITest {
     if (flags.multiline()) {
       str += "m";
     }
+    if (flags.dotAll()) {
+      str += "s";
+    }
     if (flags.unicode()) {
       str += "u";
     }
