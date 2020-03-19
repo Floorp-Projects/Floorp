@@ -12,6 +12,7 @@ import types
 
 
 SEARCH_PATHS = [
+    'gtest',
     'marionette/client',
     'marionette/harness',
     'mochitest',
@@ -46,6 +47,7 @@ SEARCH_PATHS = [
 
 # Individual files providing mach commands.
 MACH_MODULES = [
+    'gtest/mach_test_package_commands.py',
     'marionette/mach_test_package_commands.py',
     'mochitest/mach_test_package_commands.py',
     'reftest/mach_test_package_commands.py',
