@@ -3,9 +3,22 @@
 
 const kSelectedEnginePref = "browser.search.selectedEngine";
 
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+  await useTestEngines("data1");
+  Assert.ok(!Services.search.isInitialized);
+
+  let engineDummyFile = do_get_profile().clone();
+  engineDummyFile.append("searchplugins");
+  engineDummyFile.append("test-search-engine.xml");
+  let engineDir = engineDummyFile.parent;
+  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
+  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
+});
+
 // Check that the default engine matches the defaultenginename pref
 add_task(async function test_defaultEngine() {
-  await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
   await installTestEngine();
 
@@ -157,17 +170,3 @@ add_task(async function test_fallback_kept_after_restart() {
   await Services.search.init(true);
   Assert.equal(Services.search.defaultEngine.name, defaultName);
 });
-
-function run_test() {
-  Assert.ok(!Services.search.isInitialized);
-
-  let engineDummyFile = do_get_profile().clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
-
-  run_next_test();
-}
