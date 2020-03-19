@@ -11,7 +11,9 @@ import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
-import kotlinx.android.synthetic.main.delete_browsing_data_item.view.*
+import kotlinx.android.synthetic.main.delete_browsing_data_item.view.checkbox
+import kotlinx.android.synthetic.main.delete_browsing_data_item.view.subtitle
+import kotlinx.android.synthetic.main.delete_browsing_data_item.view.title
 import org.mozilla.fenix.R
 
 class DeleteBrowsingDataItem @JvmOverloads constructor(
@@ -51,7 +53,7 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.DeleteBrowsingDataItem, defStyleAttr, 0) {
             val titleId = getResourceId(
                 R.styleable.DeleteBrowsingDataItem_deleteBrowsingDataItemTitle,
-                R.string.browser_menu_your_library
+                R.string.browser_menu_library
             )
             val subtitleId = getResourceId(
                 R.styleable.DeleteBrowsingDataItem_deleteBrowsingDataItemSubtitle,

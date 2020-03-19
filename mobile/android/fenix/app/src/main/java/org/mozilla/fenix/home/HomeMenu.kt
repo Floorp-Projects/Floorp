@@ -116,7 +116,7 @@ class HomeMenu(
             whatsNewItem,
             BrowserMenuDivider(),
             BrowserMenuCategory(
-                context.getString(R.string.browser_menu_your_library),
+                context.getString(R.string.browser_menu_library),
                 textColorResource = menuCategoryTextColor
             ),
             bookmarksItem,

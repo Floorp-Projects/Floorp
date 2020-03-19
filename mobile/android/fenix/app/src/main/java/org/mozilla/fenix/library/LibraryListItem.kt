@@ -9,7 +9,8 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
-import kotlinx.android.synthetic.main.library_list_item.view.*
+import kotlinx.android.synthetic.main.library_list_item.view.libraryIcon
+import kotlinx.android.synthetic.main.library_list_item.view.libraryItemTitle
 import org.mozilla.fenix.R
 
 class LibraryListItem @JvmOverloads constructor(
@@ -29,7 +30,7 @@ class LibraryListItem @JvmOverloads constructor(
             libraryItemTitle?.text = resources.getString(
                 getResourceId(
                     R.styleable.LibraryListItem_listItemTitle,
-                    R.string.browser_menu_your_library
+                    R.string.browser_menu_library
                 )
             )
         }
