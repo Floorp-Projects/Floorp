@@ -8,6 +8,7 @@
 
 #include "nsILoadGroup.h"
 #include "nsILoadGroupChild.h"
+#include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsISupportsPriority.h"
@@ -23,6 +24,7 @@ namespace net {
 
 class nsLoadGroup : public nsILoadGroup,
                     public nsILoadGroupChild,
+                    public nsIObserver,
                     public nsISupportsPriority,
                     public nsSupportsWeakReference {
  public:
@@ -43,6 +45,10 @@ class nsLoadGroup : public nsILoadGroup,
   ////////////////////////////////////////////////////////////////////////////
   // nsISupportsPriority methods:
   NS_DECL_NSISUPPORTSPRIORITY
+
+  ////////////////////////////////////////////////////////////////////////////
+  // nsIObserver methods:
+  NS_DECL_NSIOBSERVER
 
   ////////////////////////////////////////////////////////////////////////////
   // nsLoadGroup methods:
@@ -85,6 +91,7 @@ class nsLoadGroup : public nsILoadGroup,
   nsresult mStatus;
   bool mIsCanceling;
   bool mDefaultLoadIsTimed;
+  bool mBrowsingContextDiscarded;
 
   /* Telemetry */
   mozilla::TimeStamp mDefaultRequestCreationTime;
