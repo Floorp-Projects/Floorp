@@ -289,7 +289,7 @@ wasmFullPass(`(module (import "" "evalcx" (param i32) (result i32)) (func (resul
 if (typeof evaluate === 'function')
     evaluate(`new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module)'))) `, { fileName: null });
 
-wasmFailValidateText(`(module (type $t (func)) (func (call_indirect $t (i32.const 0))))`, /can't call_indirect without a table/);
+wasmFailValidateText(`(module (type $t (func)) (func (call_indirect (type $t) (i32.const 0))))`, /can't call_indirect without a table/);
 
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type (func (result i32)))
@@ -302,9 +302,9 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
     (func (type 1) (i32.add (local.get 0) (i32.const 3)))
     (func (type 1) (i32.add (local.get 0) (i32.const 4)))
     (table funcref (elem 0 1 2 3 4 5))
-    (func (param i32) (result i32) (call_indirect 0 (local.get 0)))
-    (func (param i32) (param i32) (result i32) (call_indirect 1 (local.get 1) (local.get 0)))
-    (func (param i32) (call_indirect 2 (i32.const 0) (local.get 0)))
+    (func (param i32) (result i32) (call_indirect (type 0) (local.get 0)))
+    (func (param i32) (param i32) (result i32) (call_indirect (type 1) (local.get 1) (local.get 0)))
+    (func (param i32) (call_indirect (type 2) (i32.const 0) (local.get 0)))
     (export "v2i" 6)
     (export "i2i" 7)
     (export "i2v" 8)
@@ -344,7 +344,7 @@ assertErrorMessage(() => i2v(5), Error, signatureMismatch);
             (func $a (call $foo))
             (func $b (result i32) (i32.const 0))
             (table funcref (elem $a $b))
-            (func $bar (call_indirect $v2v (i32.const 0)))
+            (func $bar (call_indirect (type $v2v) (i32.const 0)))
             (export "run" $bar)
         )`,
         undefined,
