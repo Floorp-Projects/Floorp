@@ -52,11 +52,11 @@
 
   ex = wasmEvalText(
     `(module
-        (import $ffi "a" "ffi" (param i64) (result i64))
-        (import $ffi2 "a" "ffi2"
+        (import "a" "ffi" (func $ffi (param i64) (result i64)))
+        (import "a" "ffi2" (func $ffi2
           (param i64 i32 i32 i32 i32 i32 i32)
-          (result i64))
-        (import $ffi3 "a" "ffi3" (param i64 i64 i64 i64) (result i64))
+          (result i64)))
+        (import "a" "ffi3" (func $ffi3 (param i64 i64 i64 i64) (result i64)))
 
         (func (export "callffi") (param i64) (result i64)
          local.get 0
