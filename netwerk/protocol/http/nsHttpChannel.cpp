@@ -8238,7 +8238,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     // Browser upgrading is disabled and the content is already HTTPS
     upgradeKey = NS_LITERAL_CSTRING("disabledNoReason");
     // Checks "security.mixed_content.upgrade_display_content" is true
-    if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
+    if (StaticPrefs::security_mixed_content_upgrade_display_content()) {
       if (mLoadInfo->GetBrowserUpgradeInsecureRequests()) {
         // HTTP content the browser has upgraded to HTTPS
         upgradeKey = NS_LITERAL_CSTRING("enabledUpgrade");
@@ -8256,7 +8256,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     upgradeKey = NS_LITERAL_CSTRING("disabledUpgrade");
   } else {
     // HTTP content that wouldn't upgrade
-    upgradeKey = nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()
+    upgradeKey = StaticPrefs::security_mixed_content_upgrade_display_content()
                      ? NS_LITERAL_CSTRING("enabledWont")
                      : NS_LITERAL_CSTRING("disabledWont");
   }

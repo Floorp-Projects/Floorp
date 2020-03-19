@@ -8034,6 +8034,31 @@
   value: true
   mirror: always
 
+# Pref to block mixed scripts (fonts, plugin content, scripts, stylesheets,
+# iframes, websockets, XHR).
+- name: security.mixed_content.block_active_content
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
+
+# Pref to block sub requests that happen within an object.
+- name: security.mixed_content.block_object_subrequest
+  type: bool
+  value: false
+  mirror: always
+
+# Pref for mixed display content blocking (images, audio, video).
+- name: security.mixed_content.block_display_content
+  type: bool
+  value: false
+  mirror: always
+
+# Pref for mixed display content upgrading (images, audio, video).
+- name: security.mixed_content.upgrade_display_content
+  type: bool
+  value: false
+  mirror: always
+
 # Whether strict file origin policy is in effect. "False" is traditional.
 - name: security.fileuri.strict_origin_policy
   type: RelaxedAtomicBool
