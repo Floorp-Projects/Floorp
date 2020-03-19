@@ -22,6 +22,10 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">У приватној сесији сте</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s брише вашу историју претраживања и прегледања кад изађете из апликације или кад затворите све приватне језичке. Ово вас не чини анонимним на веб страницама или интернет провајдеру, већ само
+        олакшава да оно што радите на вебу задржите приватним од стране других корисника овог уређаја.</string>
     <string name="private_browsing_common_myths">Чести митови о приватном прегледању</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Обриши сесију</string>
@@ -131,6 +135,10 @@
     <string name="search_suggestions_onboarding_allow_button">Дозволи</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Не дозволи</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Дозовлити предлоге за претрагу у приватним сесијама?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s ће поделити све што унесете у адресну траку са подразумеваним претраживачем.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Сазнајте више</string>
 
@@ -173,6 +181,8 @@
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Постави као подразумевани прегледач</string>
 
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Напредно</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Приватност</string>
     <!-- Preference category for privacy and security settings -->
@@ -222,6 +232,8 @@
     <string name="preferences_show_search_suggestions">Предлози претраге</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Прикажи у приватним сесијама</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Прикажи предлоге из оставе</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Претражи историјат прегледања</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -289,8 +301,13 @@
     <string name="preferences_tracking_protection_exceptions_description">Заштита од праћења је искључена за ове веб странице</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Укључи за све странице</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Изузеци омогућавају деактивацију заштите од праћења за одабране странице.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Сазнајте више</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Искључено је глобално, за укључивање идите на Подешавања.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Телеметрија</string>
@@ -569,9 +586,112 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">Ваше збирке биће приказане овде.</string>
 
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Изабери све</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Поништи избор</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Затвори</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Сачувај</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Сачувај и подели</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Подели</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Подели</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Подели везу</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Пошаљи на уређај</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Све радње</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Недавно затворено</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Пријави се на Sync</string>
+
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Пошаљи на све уређаје</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Поново се повежи на Sync</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Ван мреже</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Повежи други уређај</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Важи</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Пошаљи на уређај</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Нема повезаних уређаја</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Сазнајте више о слању језичака…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Повежи други уређај…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Сесија за приватно прегледање</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Затвори приватне језичке</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Отвори</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Обриши и отвори</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Покреће</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">ОПОЗОВИ</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Страница је уклоњена</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Опозови</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Потврди</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">ДОЗВОЛИ</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ОДБИЈ</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Обриши</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Откажи</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Адреса копирана</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Величина фонта</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Отворени језичци</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Колачићи</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Дозволе на страници</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Историјат прегледања</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Изађи</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Откажи</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Обриши</string>
+
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Погледајте шта је ново</string>
+
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Тамна тема</string>
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Светла тема</string>
+
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Прекини везу</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Откажи</string>
 
     </resources>

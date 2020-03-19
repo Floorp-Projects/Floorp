@@ -139,6 +139,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">ခွင့်မပြုပါနှင့်</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">သီးသန့်အစည်းအဝေးများတွင်ရှာဖွေရေးအကြံပြုချက်များကိုခွင့်ပြုပါ။</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s သည် သင့်သတ်မှတ်ထားသည့်ရှာဖွေရေးအင်ဂျင်နှင့် လိပ်စာဘားတွင် သင်ရိုက်ထည့်သမျှအားလုံးကိုမျှဝေပါလိမ့်မည်။</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ပိုမိုလေ့လာရန်</string>
 
@@ -814,6 +816,8 @@
     <string name="onboarding_firefox_account_signing_in">၀င်ပါ …</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Firefox သို့ဆိုင်းအင်လုပ်ပါ</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">ထွက်လက်မှတ်ရေးထိုးခဲ့ပါ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ထပ်တူပြုခြင်းဖွင့်ထားသည်</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -947,6 +951,8 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">သင့်လုပ်ပိုင်ခွင့်များ</string>
 
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">ကျွန်ုပ်တို့သုံးသောလိုင်စင်များ</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">%s တွင်ဘာအသစ်ထွက်လဲ</string>
     <!-- Open source licenses page title

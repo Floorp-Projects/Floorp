@@ -859,7 +859,7 @@
     <string name="onboarding_whats_new_header1">Katso, mikä on uutta</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Kysymyksiä liittyen uudistettuun %siin? Haluatko tietää mikä kaikki on muuttunut?</string>
+    <string name="onboarding_whats_new_description">Kysymyksiä liittyen uudistettuun %siin? Haluatko tietää, mikä kaikki on muuttunut?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Vastauksia on tarjolla täällä</string>
     <!-- text for the firefox account onboarding card header
@@ -878,7 +878,7 @@
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Pysy uloskirjautuneena</string>
     <!-- text to display in the snackbar once account is signed-in -->
-    <string name="onboarding_firefox_account_sync_is_on">Sync on päällä</string>
+    <string name="onboarding_firefox_account_sync_is_on">Sync on käytössä</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Sisäänkirjautuminen epäonnistui</string>
     <!-- text for the tracking protection onboarding card header -->
