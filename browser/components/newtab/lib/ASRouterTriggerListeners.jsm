@@ -370,6 +370,7 @@ this.ASRouterTriggerListeners = new Map([
           this._initialized = false;
           this._triggerHandler = null;
           this._hosts = null;
+          this._matchPatternSet = null;
         }
       },
 
