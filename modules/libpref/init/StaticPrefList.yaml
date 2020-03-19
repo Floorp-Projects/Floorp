@@ -1565,6 +1565,14 @@
   value: false
   mirror: always
 
+# Should only be enabled in tests.
+# Access with Clipboard::IsTestingPrefEnabled().
+- name: dom.events.testing.asyncClipboard
+  type: bool
+  value: false
+  mirror: always
+  do_not_use_directly: true
+
 # This pref controls whether or not the `protected` dataTransfer state is
 # enabled. If the `protected` dataTransfer stae is disabled, then the
 # DataTransfer will be read-only whenever it should be protected, and will not
