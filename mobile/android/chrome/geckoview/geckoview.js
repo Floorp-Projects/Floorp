@@ -165,10 +165,12 @@ var ModuleManager = {
     // to collect it and restore it in the other process when switching.
     // TODO: This should go away when we migrate the history to the main
     // process Bug 1507287.
-    const sessionState = await this.getActor("GeckoViewContent").sendQuery(
+    const { history } = await this.getActor("GeckoViewContent").sendQuery(
       "CollectSessionState"
     );
-    const { history } = sessionState;
+    // Ignore scroll and form data since we're navigating away from this page
+    // anyway
+    const sessionState = { history };
 
     // If the navigation is from history we don't need to load the page again
     // so we ignore loadOptions
