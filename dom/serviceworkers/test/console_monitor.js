@@ -26,7 +26,6 @@ ConsoleListener.prototype = {
       innerWindowID: aMsg.innerWindowID,
       isScriptError: true,
       isWarning: (aMsg.flags & Ci.nsIScriptError.warningFlag) === 1,
-      isException: (aMsg.flags & Ci.nsIScriptError.exceptionFlag) === 1,
     };
 
     sendAsyncMessage("monitor", msg);
