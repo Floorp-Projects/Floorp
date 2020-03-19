@@ -132,11 +132,11 @@ try {
     assertEq(String(e).indexOf("out of memory") !== -1, true);
 }
 
-var buf = wasmEvalText('(module (memory 1) (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(buf instanceof ArrayBuffer, true);
 assertEq(buf.byteLength, 65536);
 
-var obj = wasmEvalText('(module (memory 1) (func (result i32) (i32.const 42)) (func (nop)) (export "memory" memory) (export "b" (func 0)) (export "c" (func 1)))').exports;
+var obj = wasmEvalText('(module (memory 1) (func (result i32) (i32.const 42)) (func (nop)) (export "memory" (memory 0)) (export "b" (func 0)) (export "c" (func 1)))').exports;
 assertEq(obj.memory.buffer instanceof ArrayBuffer, true);
 assertEq(obj.b instanceof Function, true);
 assertEq(obj.c instanceof Function, true);
@@ -144,21 +144,21 @@ assertEq(obj.memory.buffer.byteLength, 65536);
 assertEq(obj.b(), 42);
 assertEq(obj.c(), undefined);
 
-var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "") (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 0);
 
-var buf = wasmEvalText('(module (memory 1) (data (i32.const 65536) "") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 65536) "") (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 0);
 
-var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "a") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "a") (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
 
-var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "a") (data (i32.const 2) "b") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 0) "a") (data (i32.const 2) "b") (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 'a'.charCodeAt(0));
 assertEq(new Uint8Array(buf)[1], 0);
 assertEq(new Uint8Array(buf)[2], 'b'.charCodeAt(0));
 
-var buf = wasmEvalText('(module (memory 1) (data (i32.const 65535) "c") (export "memory" memory))').exports.memory.buffer;
+var buf = wasmEvalText('(module (memory 1) (data (i32.const 65535) "c") (export "memory" (memory 0)))').exports.memory.buffer;
 assertEq(new Uint8Array(buf)[0], 0);
 assertEq(new Uint8Array(buf)[65535], 'c'.charCodeAt(0));
 
