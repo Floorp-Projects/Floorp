@@ -109,6 +109,16 @@ fn test_str() {
 }
 
 #[test]
+fn test_emoji() {
+    // Example from the README.
+    use super::UnicodeWidthStr;
+
+    assert_eq!(UnicodeWidthStr::width("👩"), 2); // Woman
+    assert_eq!(UnicodeWidthStr::width("🔬"), 2); // Microscope
+    assert_eq!(UnicodeWidthStr::width("👩‍🔬"), 4); // Woman scientist
+}
+
+#[test]
 fn test_char() {
     use super::UnicodeWidthChar;
     #[cfg(feature = "no_std")]
@@ -153,4 +163,13 @@ fn test_char2() {
 
     assert_eq!(UnicodeWidthChar::width('\u{300}'),Some(0));
     assert_eq!('\u{300}'.width_cjk(),Some(0));
+}
+
+#[test]
+fn unicode_12() {
+    use super::UnicodeWidthChar;
+    #[cfg(feature = "no_std")]
+    use core::option::Option::{Some, None};
+
+    assert_eq!(UnicodeWidthChar::width('\u{1F971}'), Some(2));
 }
