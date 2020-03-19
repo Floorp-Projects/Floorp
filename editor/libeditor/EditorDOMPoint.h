@@ -831,7 +831,19 @@ class EditorDOMPointBase final {
   }
 
   template <typename A, typename B>
+  bool operator==(const RangeBoundaryBase<A, B>& aOther) const {
+    // TODO: Optimize this with directly comparing with RangeBoundaryBase
+    //       members.
+    return *this == SelfType(aOther);
+  }
+
+  template <typename A, typename B>
   bool operator!=(const EditorDOMPointBase<A, B>& aOther) const {
+    return !(*this == aOther);
+  }
+
+  template <typename A, typename B>
+  bool operator!=(const RangeBoundaryBase<A, B>& aOther) const {
     return !(*this == aOther);
   }
 
