@@ -24,16 +24,16 @@ const DEBUG = false;
 
 let t =
   `(module
-     (import $mkCons "" "mkCons" (func (result anyref)
-                                       (param anyref) (param anyref)))
-     (import $mkBoxedInt "" "mkBoxedInt" (func (result anyref)))
+     (import "" "mkCons" (func $mkCons (param anyref) (param anyref) (result anyref)))
+     (import "" "mkBoxedInt" (func $mkBoxedInt (result anyref)))
 
      (func $mkNil (result anyref)
        ref.null
      )
 
-     (func $mkConsIgnoringScalar (result anyref)
+     (func $mkConsIgnoringScalar
               (param $hd anyref) (param i32) (param $tl anyref)
+              (result anyref)
         (local.get $hd)
         (local.get $tl)
         call $mkCons
