@@ -20,7 +20,7 @@ import org.json.JSONObject
  * Entry point for interacting with the engine implementation.
  */
 @Suppress("TooManyFunctions")
-interface Engine : WebExtensionRuntime {
+interface Engine : WebExtensionRuntime, DataCleanable {
 
     /**
      * Describes a combination of browsing data types stored by the engine.
@@ -143,23 +143,6 @@ interface Engine : WebExtensionRuntime {
     fun registerWebPushDelegate(
         webPushDelegate: WebPushDelegate
     ): WebPushHandler = throw UnsupportedOperationException("Web Push support is not available in this engine")
-
-    /**
-     * Clears browsing data stored by the engine.
-     *
-     * @param data the type of data that should be cleared, defaults to all.
-     * @param host (optional) name of the host for which data should be cleared. If
-     * omitted data will be cleared for all hosts.
-     * @param onSuccess (optional) callback invoked if the data was cleared successfully.
-     * @param onError (optional) callback invoked if clearing the data caused an exception.
-     */
-    fun clearData(
-        data: BrowsingData = BrowsingData.all(),
-        host: String? = null,
-        onSuccess: (() -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
-    ): Unit = onError(UnsupportedOperationException("Clearing browsing data is not supported by this engine. " +
-            "Check both the engine and engine session implementation."))
 
     /**
      * Fetch a list of trackers logged for a given [session] .

@@ -28,7 +28,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 @Suppress("TooManyFunctions")
 abstract class EngineSession(
     private val delegate: Observable<EngineSession.Observer> = ObserverRegistry()
-) : Observable<EngineSession.Observer> by delegate {
+) : Observable<EngineSession.Observer> by delegate, DataCleanable {
     /**
      * Interface to be implemented by classes that want to observe this engine session.
      */
@@ -483,23 +483,6 @@ abstract class EngineSession(
      * Enables/disables Desktop Mode with an optional ability to reload the session right after.
      */
     abstract fun toggleDesktopMode(enable: Boolean, reload: Boolean = false)
-
-    /**
-     * Clears browsing data stored by the engine.
-     *
-     * @param data the type of data that should be cleared.
-     * @param host (optional) name of the host for which data should be cleared. If
-     * omitted data will be cleared for all hosts.
-     * @param onSuccess (optional) callback invoked if the data was cleared successfully.
-     * @param onError (optional) callback invoked if clearing the data caused an exception.
-     */
-    open fun clearData(
-        data: Engine.BrowsingData = Engine.BrowsingData.all(),
-        host: String? = null,
-        onSuccess: (() -> Unit) = { },
-        onError: ((Throwable) -> Unit) = { }
-    ): Unit = onError(UnsupportedOperationException("Clearing browsing data is not supported by this engine. " +
-            "Check both the engine and engine session implementation."))
 
     /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.
