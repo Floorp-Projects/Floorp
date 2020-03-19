@@ -153,7 +153,7 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_Invalidate)
     const auto fileManager = MakeRefPtr<TestFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
-    auto fileInfos = nsTArray<RefPtr<TestFileInfo>>{};
+    auto fileInfos = nsTArray<SafeRefPtr<TestFileInfo>>{};
     for (const auto id : TestFileManager::kDBOnlyFileInfoIds) {
       fileInfos.EmplaceBack(fileManager->GetFileInfo(id));
     }

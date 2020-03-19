@@ -4954,12 +4954,12 @@ class DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction final {
 };
 
 class DatabaseConnection::UpdateRefcountFunction::FileInfoEntry final {
-  RefPtr<FileInfo> mFileInfo;
+  SafeRefPtr<FileInfo> mFileInfo;
   int32_t mDelta;
   int32_t mSavepointDelta;
 
  public:
-  explicit FileInfoEntry(RefPtr<FileInfo> aFileInfo)
+  explicit FileInfoEntry(SafeRefPtr<FileInfo> aFileInfo)
       : mFileInfo(std::move(aFileInfo)), mDelta(0), mSavepointDelta(0) {
     MOZ_COUNT_CTOR(DatabaseConnection::UpdateRefcountFunction::FileInfoEntry);
   }
@@ -4977,7 +4977,7 @@ class DatabaseConnection::UpdateRefcountFunction::FileInfoEntry final {
     }
   }
   void DecBySavepointDelta() { mDelta -= mSavepointDelta; }
-  RefPtr<FileInfo> ReleaseFileInfo() { return std::move(mFileInfo); }
+  SafeRefPtr<FileInfo> ReleaseFileInfo() { return std::move(mFileInfo); }
   void MaybeUpdateDBRefs() {
     if (mDelta) {
       mFileInfo->UpdateDBRefs(mDelta);
@@ -6021,7 +6021,7 @@ class Database final
 
   void SetActorAlive();
 
-  void MapBlob(const IPCBlob& aIPCBlob, RefPtr<FileInfo> aFileInfo);
+  void MapBlob(const IPCBlob& aIPCBlob, SafeRefPtr<FileInfo> aFileInfo);
 
   bool IsActorAlive() const {
     AssertIsOnBackgroundThread();
@@ -6071,7 +6071,7 @@ class Database final
                     mFactory.forget());
   }
 
-  MOZ_MUST_USE RefPtr<FileInfo> GetBlob(const IPCBlob& aID);
+  MOZ_MUST_USE SafeRefPtr<FileInfo> GetBlob(const IPCBlob& aID);
 
   void UnmapBlob(const nsID& aID);
 
@@ -6224,15 +6224,21 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   // - Cleared on the connection thread once the file has successfully been
   //   written to disk.
   InitializedOnce<const RefPtr<BlobImpl>> mBlobImpl;
-  const RefPtr<FileInfo> mFileInfo;
+  const SafeRefPtr<FileInfo> mFileInfo;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::DatabaseFile);
 
-  const RefPtr<FileInfo>& GetFileInfo() const {
+  const FileInfo& GetFileInfo() const {
     AssertIsOnBackgroundThread();
 
-    return mFileInfo;
+    return *mFileInfo;
+  }
+
+  SafeRefPtr<FileInfo> GetFileInfoPtr() const {
+    AssertIsOnBackgroundThread();
+
+    return mFileInfo.clonePtr();
   }
 
   /**
@@ -6258,15 +6264,15 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
 
  public:
   // Called when sending to the child.
-  explicit DatabaseFile(FileInfo* aFileInfo)
-      : mBlobImpl{nullptr}, mFileInfo(aFileInfo) {
+  explicit DatabaseFile(SafeRefPtr<FileInfo> aFileInfo)
+      : mBlobImpl{nullptr}, mFileInfo(std::move(aFileInfo)) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(mFileInfo);
   }
 
   // Called when receiving from the child.
-  DatabaseFile(RefPtr<BlobImpl> aBlobImpl, FileInfo* aFileInfo)
-      : mBlobImpl(std::move(aBlobImpl)), mFileInfo(aFileInfo) {
+  DatabaseFile(RefPtr<BlobImpl> aBlobImpl, SafeRefPtr<FileInfo> aFileInfo)
+      : mBlobImpl(std::move(aBlobImpl)), mFileInfo(std::move(aFileInfo)) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(*mBlobImpl);
     MOZ_ASSERT(mFileInfo);
@@ -6679,12 +6685,11 @@ class VersionChangeTransaction final
 
 class MutableFile : public BackgroundMutableFileParentBase {
   const RefPtr<Database> mDatabase;
-  const RefPtr<FileInfo> mFileInfo;
+  const SafeRefPtr<FileInfo> mFileInfo;
 
  public:
-  static MOZ_MUST_USE RefPtr<MutableFile> Create(nsIFile* aFile,
-                                                 Database* aDatabase,
-                                                 RefPtr<FileInfo> aFileInfo);
+  static MOZ_MUST_USE RefPtr<MutableFile> Create(
+      nsIFile* aFile, Database* aDatabase, SafeRefPtr<FileInfo> aFileInfo);
 
   const Database& GetDatabase() const {
     AssertIsOnBackgroundThread();
@@ -6692,10 +6697,10 @@ class MutableFile : public BackgroundMutableFileParentBase {
     return *mDatabase;
   }
 
-  const RefPtr<FileInfo>& GetFileInfo() const {
+  SafeRefPtr<FileInfo> GetFileInfoPtr() const {
     AssertIsOnBackgroundThread();
 
-    return mFileInfo;
+    return mFileInfo.clonePtr();
   }
 
   void NoteActiveState() override;
@@ -6710,7 +6715,7 @@ class MutableFile : public BackgroundMutableFileParentBase {
 
  private:
   MutableFile(nsIFile* aFile, RefPtr<Database> aDatabase,
-              RefPtr<FileInfo> aFileInfo);
+              SafeRefPtr<FileInfo> aFileInfo);
 
   ~MutableFile() override;
 
@@ -7186,7 +7191,7 @@ class DatabaseOp : public DatabaseOperationBase,
 class CreateFileOp final : public DatabaseOp {
   const CreateFileParams mParams;
 
-  InitializedOnce<const RefPtr<FileInfo>, LazyInit::Allow> mFileInfo;
+  InitializedOnce<const SafeRefPtr<FileInfo>, LazyInit::Allow> mFileInfo;
 
  public:
   CreateFileOp(Database* aDatabase, const DatabaseRequestParams& aParams);
@@ -7471,7 +7476,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 };
 
 class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
-  InitializedOnceMustBeTrue<const RefPtr<FileInfo>> mFileInfo;
+  InitializedOnceMustBeTrue<const SafeRefPtr<FileInfo>> mFileInfo;
   // Either nothing, a file actor or a non-Blob-backed inputstream to write to
   // disk.
   using FileActorOrInputStream =
@@ -7520,7 +7525,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     }
   }
 
-  explicit StoredFileInfo(RefPtr<FileInfo> aFileInfo)
+  explicit StoredFileInfo(SafeRefPtr<FileInfo> aFileInfo)
       : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
     Nothing {}
   }
@@ -7534,7 +7539,8 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
 
-  StoredFileInfo(RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
+  StoredFileInfo(SafeRefPtr<FileInfo> aFileInfo,
+                 RefPtr<DatabaseFile> aFileActor)
       : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
     std::move(aFileActor)
   }
@@ -7548,7 +7554,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
   }
 
-  StoredFileInfo(RefPtr<FileInfo> aFileInfo,
+  StoredFileInfo(SafeRefPtr<FileInfo> aFileInfo,
                  nsCOMPtr<nsIInputStream> aInputStream)
       : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
     std::move(aInputStream)
@@ -7578,15 +7584,15 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
   StoredFileInfo(StoredFileInfo&&) = default;
 #endif
 
-  static StoredFileInfo CreateForMutableFile(RefPtr<FileInfo> aFileInfo) {
+  static StoredFileInfo CreateForMutableFile(SafeRefPtr<FileInfo> aFileInfo) {
     return StoredFileInfo{std::move(aFileInfo)};
   }
-  static StoredFileInfo CreateForBlob(RefPtr<FileInfo> aFileInfo,
+  static StoredFileInfo CreateForBlob(SafeRefPtr<FileInfo> aFileInfo,
                                       RefPtr<DatabaseFile> aFileActor) {
     return {std::move(aFileInfo), std::move(aFileActor)};
   }
   static StoredFileInfo CreateForStructuredClone(
-      RefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream) {
+      SafeRefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream) {
     return {std::move(aFileInfo), std::move(aInputStream)};
   }
 
@@ -9181,7 +9187,7 @@ Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
     return Err(rv);
   }
 
-  RefPtr<FileInfo> fileInfo = aFileManager.GetFileInfo(id);
+  SafeRefPtr<FileInfo> fileInfo = aFileManager.GetFileInfo(id);
   MOZ_ASSERT(fileInfo);
   // XXX In bug 1432133, for some reasons FileInfo object cannot be got. This
   // is just a short-term fix, and we are working on finding the real cause
@@ -10236,7 +10242,7 @@ nsresult DispatchAndReturnFileReferences(
           mgr->GetFileManager(aPersistenceType, aOrigin, aDatabaseName);
 
       if (fileManager) {
-        const RefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(aFileId);
+        const SafeRefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(aFileId);
 
         if (fileInfo) {
           fileInfo->GetReferences(aMemRefCnt, aDBRefCnt);
@@ -13893,7 +13899,8 @@ void Database::SetActorAlive() {
   AddRef();
 }
 
-void Database::MapBlob(const IPCBlob& aIPCBlob, RefPtr<FileInfo> aFileInfo) {
+void Database::MapBlob(const IPCBlob& aIPCBlob,
+                       SafeRefPtr<FileInfo> aFileInfo) {
   AssertIsOnBackgroundThread();
 
   const IPCBlobStream& stream = aIPCBlob.inputStream();
@@ -13903,7 +13910,7 @@ void Database::MapBlob(const IPCBlob& aIPCBlob, RefPtr<FileInfo> aFileInfo) {
       stream.get_PIPCBlobInputStreamParent());
 
   MOZ_ASSERT(!mMappedBlobs.GetWeak(actor->ID()));
-  mMappedBlobs.Put(actor->ID(), std::move(aFileInfo));
+  mMappedBlobs.Put(actor->ID(), AsRefPtr(std::move(aFileInfo)));
 
   RefPtr<UnmapBlobCallback> callback = new UnmapBlobCallback(this);
   actor->SetCallback(callback);
@@ -13949,7 +13956,7 @@ void Database::Stringify(nsACString& aResult) const {
   aResult.AppendInt(mActorDestroyed);
 }
 
-RefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
+SafeRefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
   const IPCBlobStream& stream = aIPCBlob.inputStream();
@@ -13970,7 +13977,7 @@ RefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
     return nullptr;
   }
 
-  return fileInfo;
+  return SafeRefPtr{std::move(fileInfo)};
 }
 
 void Database::UnmapBlob(const nsID& aID) {
@@ -14119,17 +14126,18 @@ PBackgroundIDBDatabaseFileParent*
 Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
-  RefPtr<FileInfo> fileInfo = GetBlob(aIPCBlob);
+  SafeRefPtr<FileInfo> fileInfo = GetBlob(aIPCBlob);
   RefPtr<DatabaseFile> actor;
 
   if (fileInfo) {
-    actor = new DatabaseFile(fileInfo);
+    actor = new DatabaseFile(std::move(fileInfo));
   } else {
     // This is a blob we haven't seen before.
     fileInfo = mFileManager->CreateFileInfo();
     MOZ_ASSERT(fileInfo);
 
-    actor = new DatabaseFile(IPCBlobUtils::Deserialize(aIPCBlob), fileInfo);
+    actor = new DatabaseFile(IPCBlobUtils::Deserialize(aIPCBlob),
+                             std::move(fileInfo));
   }
 
   MOZ_ASSERT(actor);
@@ -20326,7 +20334,7 @@ void DatabaseOperationBase::AutoSetProgressHandler::Unregister() {
 }
 
 MutableFile::MutableFile(nsIFile* aFile, RefPtr<Database> aDatabase,
-                         RefPtr<FileInfo> aFileInfo)
+                         SafeRefPtr<FileInfo> aFileInfo)
     : BackgroundMutableFileParentBase(FILE_HANDLE_STORAGE_IDB, aDatabase->Id(),
                                       IntString(aFileInfo->Id()), aFile),
       mDatabase(std::move(aDatabase)),
@@ -20339,7 +20347,7 @@ MutableFile::MutableFile(nsIFile* aFile, RefPtr<Database> aDatabase,
 MutableFile::~MutableFile() { mDatabase->UnregisterMutableFile(this); }
 
 RefPtr<MutableFile> MutableFile::Create(nsIFile* aFile, Database* aDatabase,
-                                        RefPtr<FileInfo> aFileInfo) {
+                                        SafeRefPtr<FileInfo> aFileInfo) {
   AssertIsOnBackgroundThread();
 
   RefPtr<MutableFile> newMutableFile =
@@ -23626,7 +23634,7 @@ nsresult CreateFileOp::CreateMutableFile(RefPtr<MutableFile>* aMutableFile) {
   }
 
   RefPtr<MutableFile> mutableFile =
-      MutableFile::Create(file, mDatabase, *mFileInfo);
+      MutableFile::Create(file, mDatabase, mFileInfo->clonePtr());
   if (NS_WARN_IF(!mutableFile)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -25355,7 +25363,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
           MOZ_ASSERT(fileActor);
 
           mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForBlob(
-              fileActor->GetFileInfo(), fileActor));
+              fileActor->GetFileInfoPtr(), fileActor));
           break;
         }
 
@@ -25368,7 +25376,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
           MOZ_ASSERT(mutableFileActor);
 
           mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForMutableFile(
-              mutableFileActor->GetFileInfo()));
+              mutableFileActor->GetFileInfoPtr()));
 
           break;
         }
