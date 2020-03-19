@@ -1490,8 +1490,7 @@ bool AsyncCompositionManager::TransformShadowTree(
 
     bool apzAnimating = false;
     if (RefPtr<APZSampler> apz = mCompositorBridge->GetAPZSampler()) {
-      apzAnimating =
-          apz->SampleAnimations(LayerMetricsWrapper(root), nextFrame);
+      apzAnimating = apz->AdvanceAnimations(nextFrame);
     }
     wantNextFrame |= apzAnimating;
   }
