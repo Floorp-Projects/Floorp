@@ -62,9 +62,6 @@ struct JSTryNote {
                           to script->code() */
   uint32_t length;     /* length of the try statement or loop */
 
-  template <js::XDRMode mode>
-  js::XDRResult XDR(js::XDRState<mode>* xdr);
-
   bool isLoop() const {
     switch (kind) {
       case JSTRY_LOOP:
@@ -82,7 +79,6 @@ struct JSTryNote {
 };
 
 namespace js {
-
 // A block scope has a range in bytecode: it is entered at some offset, and left
 // at some later offset.  Scopes can be nested.  Given an offset, the
 // ScopeNote containing that offset whose with the highest start value
@@ -115,9 +111,6 @@ struct ScopeNote {
 
   // Index of parent block scope in notes, or NoScopeNote.
   uint32_t parent = 0;
-
-  template <js::XDRMode mode>
-  js::XDRResult XDR(js::XDRState<mode>* xdr);
 };
 
 template <typename EnumType>
