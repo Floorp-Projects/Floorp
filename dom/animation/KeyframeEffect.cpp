@@ -1838,7 +1838,7 @@ void KeyframeEffect::SetAnimation(Animation* aAnimation) {
 }
 
 bool KeyframeEffect::CanIgnoreIfNotVisible() const {
-  if (StaticPrefs::dom_animations_offscreen_throttling()) {
+  if (!AnimationUtils::IsOffscreenThrottlingEnabled()) {
     return false;
   }
 

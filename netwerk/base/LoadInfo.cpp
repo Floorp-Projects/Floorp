@@ -20,7 +20,6 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/StaticPrefs_security.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
@@ -279,7 +278,7 @@ LoadInfo::LoadInfo(
 
     if (nsContentUtils::IsUpgradableDisplayType(externalType)) {
       if (mLoadingPrincipal->SchemeIs("https")) {
-        if (StaticPrefs::security_mixed_content_upgrade_display_content()) {
+        if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
           mBrowserUpgradeInsecureRequests = true;
         } else {
           mBrowserWouldUpgradeInsecureRequests = true;

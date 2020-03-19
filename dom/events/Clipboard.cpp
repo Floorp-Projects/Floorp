@@ -12,7 +12,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/DataTransferItem.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "nsIClipboard.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITransferable.h"
@@ -191,11 +190,17 @@ bool Clipboard::ReadTextEnabled(JSContext* aCx, JSObject* aGlobal) {
 
 /* static */
 bool Clipboard::IsTestingPrefEnabled() {
-  bool clipboardTestingEnabled =
-      StaticPrefs::dom_events_testing_asyncClipboard_DoNotUseDirectly();
+  static bool sPrefCached = false;
+  static bool sPrefCacheValue = false;
+
+  if (!sPrefCached) {
+    sPrefCached = true;
+    Preferences::AddBoolVarCache(&sPrefCacheValue,
+                                 "dom.events.testing.asyncClipboard");
+  }
   MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
-          ("Clipboard, Is testing enabled? %d\n", clipboardTestingEnabled));
-  return clipboardTestingEnabled;
+          ("Clipboard, Is testing enabled? %d\n", sPrefCacheValue));
+  return sPrefCacheValue;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Clipboard)
