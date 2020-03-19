@@ -105,8 +105,9 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
 
   for (auto iter = mMediaSessionInfoMap.ConstIter(); !iter.Done();
        iter.Next()) {
-    if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(iter.Key());
-        bc->IsTopContent()) {
+    RefPtr<BrowsingContext> bc = BrowsingContext::Get(iter.Key());
+    MOZ_ASSERT(bc);
+    if (bc->IsTopContent()) {
       candidateId = iter.Key();
       break;
     }
