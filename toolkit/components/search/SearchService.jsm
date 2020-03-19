@@ -88,6 +88,10 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 // from the server doesn't specify an interval.
 const SEARCH_GEO_DEFAULT_UPDATE_INTERVAL = 2592000; // 30 days.
 
+// This is the amount of time we'll be idle for before applying any configuration
+// changes.
+const REINIT_IDLE_TIME_SEC = 5 * 60;
+
 // Some extensions package multiple locales into a single extension, for those
 // engines we use engine-locale to address the engine.
 // This is to be removed in https://bugzilla.mozilla.org/show_bug.cgi?id=1532246
@@ -539,6 +543,9 @@ SearchService.prototype = {
   // The boolean indicates that the initialization has started or not.
   _initStarted: null,
 
+  // The engine selector singleton that is managing the engine configuration.
+  _engineSelector: null,
+
   _ensureKnownRegionPromise: null,
 
   // Reading the JSON cache file is the first thing done during initialization.
@@ -715,6 +722,13 @@ SearchService.prototype = {
     );
 
     try {
+      if (gModernConfig) {
+        // Create the search engine selector.
+        this._engineSelector = new SearchEngineSelector(
+          this._handleConfigurationUpdated.bind(this)
+        );
+      }
+
       // See if we have a cache file so we don't have to parse a bunch of XML.
       let cache = await this._readCacheFile();
 
@@ -866,6 +880,20 @@ SearchService.prototype = {
       return true;
     }
     return false;
+  },
+
+  /**
+   * Handles the search configuration being - adds a wait on the user
+   * being idle, before the search engine update gets handled.
+   */
+  _handleConfigurationUpdated() {
+    if (this._queuedIdle) {
+      return;
+    }
+
+    this._queuedIdle = true;
+
+    this.idleService.addIdleObserver(this, REINIT_IDLE_TIME_SEC);
   },
 
   setGlobalAttr(name, val) {
@@ -1459,7 +1487,7 @@ SearchService.prototype = {
       this.defaultPrivateEngine !== prevPrivateEngine
     ) {
       SearchUtils.notifyAction(
-        this._currentEngine,
+        this._currentPrivateEngine,
         SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
       );
     }
@@ -1482,8 +1510,23 @@ SearchService.prototype = {
     // Start by clearing the initialized state, so we don't abort early.
     gInitialized = false;
 
+    // Tests want to know when we've started.
+    Services.obs.notifyObservers(
+      null,
+      SearchUtils.TOPIC_SEARCH_SERVICE,
+      "reinit-started"
+    );
+
     (async () => {
       try {
+        // This echos what we do in init() and is only here to support
+        // dynamically switching to and from modern config.
+        if (gModernConfig && !this._engineSelector) {
+          this._engineSelector = new SearchEngineSelector(
+            this._handleConfigurationUpdated.bind(this)
+          );
+        }
+
         this._initObservers = PromiseUtils.defer();
         if (this._batchTask) {
           SearchUtils.log("finalizing batch task");
@@ -1847,15 +1890,16 @@ SearchService.prototype = {
   async _findEngineSelectorEngines() {
     SearchUtils.log("_findEngineSelectorEngines: init");
 
-    let engineSelector = new SearchEngineSelector();
     let locale = Services.locale.appLocaleAsBCP47;
     let region = Services.prefs.getCharPref("browser.search.region", "default");
 
-    await engineSelector.init();
     let channel = AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
       ? "esr"
       : AppConstants.MOZ_UPDATE_CHANNEL;
-    let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
+    let {
+      engines,
+      privateDefault,
+    } = await this._engineSelector.fetchEngineConfiguration(
       locale,
       region,
       channel,
@@ -3542,6 +3586,13 @@ SearchService.prototype = {
         }
         break;
 
+      case "idle": {
+        this.idleService.removeIdleObserver(this, REINIT_IDLE_TIME_SEC);
+        this._queuedIdle = false;
+        this._maybeReloadEngines().catch(Cu.reportError);
+        break;
+      }
+
       case QUIT_APPLICATION_TOPIC:
         this._removeObservers();
         break;
@@ -3689,6 +3740,10 @@ SearchService.prototype = {
       IgnoreLists.unsubscribe(this._ignoreListListener);
       delete this._ignoreListListener;
     }
+    if (this._queuedIdle) {
+      this.idleService.removeIdleObserver(this, REINIT_IDLE_TIME_SEC);
+      this._queuedIdle = false;
+    }
 
     Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
@@ -3771,5 +3826,12 @@ var engineUpdateService = {
     }
   },
 };
+
+XPCOMUtils.defineLazyServiceGetter(
+  SearchService.prototype,
+  "idleService",
+  "@mozilla.org/widget/idleservice;1",
+  "nsIIdleService"
+);
 
 var EXPORTED_SYMBOLS = ["SearchService"];
