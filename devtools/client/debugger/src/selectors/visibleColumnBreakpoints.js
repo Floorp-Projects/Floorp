@@ -70,7 +70,7 @@ function groupBreakpoints(breakpoints, selectedSource) {
 
 function findBreakpoint(location, breakpointMap) {
   const { line, column } = location;
-  const breakpoints = breakpointMap[line] && breakpointMap[line][column];
+  const breakpoints = breakpointMap[line]?.[column];
 
   if (breakpoints) {
     return breakpoints[0];

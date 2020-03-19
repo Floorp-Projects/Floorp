@@ -313,19 +313,14 @@ class FontEditor extends PureComponent {
     const { fonts, axes, instance, properties, warning } = fontEditor;
     // Pick the first font to show editor controls regardless of how many fonts are used.
     const font = fonts[0];
-    const hasFontAxes = font && font.variationAxes;
-    const hasFontInstances =
-      font && font.variationInstances && font.variationInstances.length > 0;
-    const hasSlantOrItalicAxis =
-      hasFontAxes &&
-      font.variationAxes.find(axis => {
-        return axis.tag === "slnt" || axis.tag === "ital";
-      });
-    const hasWeightAxis =
-      hasFontAxes &&
-      font.variationAxes.find(axis => {
-        return axis.tag === "wght";
-      });
+    const hasFontAxes = font?.variationAxes;
+    const hasFontInstances = font?.variationInstances?.length > 0;
+    const hasSlantOrItalicAxis = font?.variationAxes?.find(axis => {
+      return axis.tag === "slnt" || axis.tag === "ital";
+    });
+    const hasWeightAxis = font?.variationAxes?.find(axis => {
+      return axis.tag === "wght";
+    });
 
     // Show the empty state with a warning message when a used font was not found.
     if (!font) {

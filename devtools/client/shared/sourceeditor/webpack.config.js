@@ -42,9 +42,7 @@ module.exports = (env, argv) => {
     ],
     optimization: {
       minimize: !(
-        argv &&
-        argv.optimization &&
-        argv.optimization.minimizer === "false"
+        argv?.optimization && argv.optimization.minimizer === "false"
       ),
     },
     output: {

@@ -157,7 +157,7 @@ ConsoleServiceListener.prototype = {
         ) {
           return false;
         }
-      } else if (ids && ids[0]) {
+      } else if (ids?.[0]) {
         // If this is not an nsIScriptError and we need to do window-based
         // filtering we skip this message.
         return false;

@@ -56,8 +56,7 @@ function getClosestMessage(visibleMessages, messages, executionPoint) {
 
   const precedingMessages = messageList.filter(m => {
     return (
-      m &&
-      m.executionPoint &&
+      m?.executionPoint &&
       (pointPrecedes(m.executionPoint, executionPoint) ||
         !pointPrecedes(executionPoint, m.executionPoint))
     );
@@ -70,7 +69,7 @@ function getClosestMessage(visibleMessages, messages, executionPoint) {
   }
 
   return messageList
-    .filter(m => m && m.executionPoint)
+    .filter(m => m?.executionPoint)
     .sort((a, b) => {
       return pointPrecedes(b.executionPoint, a.executionPoint);
     })[0];

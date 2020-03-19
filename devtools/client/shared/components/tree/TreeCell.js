@@ -96,7 +96,7 @@ define(function(require, exports, module) {
       // Render value using a default render function or custom
       // provided function from props or a decorator.
       renderValue = renderValue || defaultRenderValue;
-      if (decorator && decorator.renderValue) {
+      if (decorator?.renderValue) {
         renderValue = decorator.renderValue(member.object, id) || renderValue;
       }
 

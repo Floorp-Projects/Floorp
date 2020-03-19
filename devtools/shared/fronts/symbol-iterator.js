@@ -39,7 +39,7 @@ class SymbolIteratorFront extends FrontClassWithSpec(symbolIteratorSpec) {
     }
 
     result.ownSymbols.forEach((item, i) => {
-      if (item && item.descriptor) {
+      if (item?.descriptor) {
         result.ownSymbols[i].descriptor.value = getAdHocFrontOrPrimitiveGrip(
           item.descriptor.value,
           this

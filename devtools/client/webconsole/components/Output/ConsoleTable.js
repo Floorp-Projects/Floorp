@@ -104,10 +104,9 @@ class ConsoleTable extends Component {
     const { parameters } = this.props;
     const { valueGrip, headersGrip } = getValueAndHeadersGrip(parameters);
 
-    const headers =
-      headersGrip && headersGrip.preview ? headersGrip.preview.items : null;
+    const headers = headersGrip?.preview ? headersGrip.preview.items : null;
 
-    const data = valueGrip && valueGrip.ownProperties;
+    const data = valueGrip?.ownProperties;
 
     // if we don't have any data, don't show anything.
     if (!data) {
@@ -134,13 +133,11 @@ class ConsoleTable extends Component {
 function getValueAndHeadersGrip(parameters) {
   const [valueFront, headersFront] = parameters;
 
-  const headersGrip =
-    headersFront && headersFront.getGrip
-      ? headersFront.getGrip()
-      : headersFront;
+  const headersGrip = headersFront?.getGrip
+    ? headersFront.getGrip()
+    : headersFront;
 
-  const valueGrip =
-    valueFront && valueFront.getGrip ? valueFront.getGrip() : valueFront;
+  const valueGrip = valueFront?.getGrip ? valueFront.getGrip() : valueFront;
 
   return { valueGrip, headersGrip };
 }
@@ -219,19 +216,17 @@ function getTableItems(data = {}, type, headers = null) {
     };
 
     const propertyValue = getDescriptorValue(property);
-    const propertyValueGrip =
-      propertyValue && propertyValue.getGrip
-        ? propertyValue.getGrip()
-        : propertyValue;
+    const propertyValueGrip = propertyValue?.getGrip
+      ? propertyValue.getGrip()
+      : propertyValue;
 
-    if (propertyValueGrip && propertyValueGrip.ownProperties) {
+    if (propertyValueGrip?.ownProperties) {
       const entries = propertyValueGrip.ownProperties;
       for (const [key, entry] of Object.entries(entries)) {
         item[key] = getDescriptorValue(entry);
       }
     } else if (
-      propertyValueGrip &&
-      propertyValueGrip.preview &&
+      propertyValueGrip?.preview &&
       (type === "Map" || type === "WeakMap")
     ) {
       item.key = propertyValueGrip.preview.key;

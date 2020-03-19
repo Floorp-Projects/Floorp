@@ -18,7 +18,7 @@ export function isVisible() {
 export function getLineNumberWidth(editor: Object) {
   const gutters = editor.display.gutters;
   const lineNumbers = gutters.querySelector(".CodeMirror-linenumbers");
-  return lineNumbers && lineNumbers.clientWidth;
+  return lineNumbers?.clientWidth;
 }
 
 /**

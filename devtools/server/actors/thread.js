@@ -1062,7 +1062,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   _clearSteppingHooks: function() {
     let frame = this.youngestFrame;
-    if (frame && frame.onStack) {
+    if (frame?.onStack) {
       while (frame) {
         frame.onStep = undefined;
         frame.onPop = undefined;

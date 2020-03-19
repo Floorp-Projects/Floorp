@@ -56,8 +56,7 @@ export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
     );
 
     let scopes: ?OriginalScope | Scope | null =
-      (originalFrameScopes && originalFrameScopes.scope) ||
-      (generatedFrameScopes && generatedFrameScopes.scope);
+      originalFrameScopes?.scope || generatedFrameScopes?.scope;
 
     if (!scopes || !scopes.bindings) {
       return;
@@ -145,8 +144,7 @@ function getBindingValues(
 ): Array<Preview> {
   const previews = [];
 
-  const binding =
-    originalAstScopes[curLevel] && originalAstScopes[curLevel].bindings[name];
+  const binding = originalAstScopes[curLevel]?.bindings[name];
   if (!binding) {
     return previews;
   }
@@ -212,13 +210,9 @@ function getExpressionNameAndValue(
         const property: Object = properties.find(
           prop => prop.name === meta.property
         );
-        displayValue = property && property.contents.value;
+        displayValue = property?.contents.value;
         displayName += `.${meta.property}`;
-      } else if (
-        displayValue &&
-        displayValue.preview &&
-        displayValue.preview.ownProperties
-      ) {
+      } else if (displayValue?.preview?.ownProperties) {
         const { ownProperties } = displayValue.preview;
         Object.keys(ownProperties).forEach(prop => {
           if (prop === meta.property) {

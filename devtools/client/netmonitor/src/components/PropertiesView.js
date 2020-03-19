@@ -209,7 +209,7 @@ class PropertiesView extends Component {
       }
     };
 
-    if (value && value.text && value.text.length > limit) {
+    if (value?.text && value.text.length > limit) {
       responseTextComponent = div(
         { className: "responseTextContainer" },
         pre(

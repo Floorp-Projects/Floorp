@@ -178,7 +178,7 @@ function isReliableScope(scope: OriginalScope): boolean {
   let unknownBindings = 0;
 
   for (let s = scope; s; s = s.parent) {
-    const vars = (s.bindings && s.bindings.variables) || {};
+    const vars = s.bindings?.variables || {};
     for (const key of Object.keys(vars)) {
       const binding = vars[key];
 
@@ -452,7 +452,7 @@ async function findGeneratedBinding(
       // because it can have multiple bindings, but we do want to make sure
       // that all of the bindings that match the range are part of the same
       // import declaration.
-      if (declRange && declRange.singleDeclaration) {
+      if (declRange?.singleDeclaration) {
         const applicableDeclBindings = await loadApplicableBindings(
           pos.declaration,
           pos.type

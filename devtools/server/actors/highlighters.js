@@ -622,7 +622,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
         return null;
       }
 
-      const rawNode = node && node.rawNode;
+      const rawNode = node?.rawNode;
 
       return this._highlighter.show(rawNode, options);
     },

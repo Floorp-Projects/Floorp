@@ -1537,7 +1537,7 @@ SelectorView.prototype = {
    */
   destroy: function() {
     const rule = this.selectorInfo.rule;
-    if (rule && rule.parentStyleSheet && rule.type != ELEMENT_STYLE) {
+    if (rule?.parentStyleSheet && rule.type != ELEMENT_STYLE) {
       const url = rule.parentStyleSheet.href || rule.parentStyleSheet.nodeHref;
       this.sourceMapURLService.unsubscribe(
         url,

@@ -121,7 +121,7 @@ StackTraceCollector.prototype = {
         // Convert the nsIStackFrame XPCOM objects to a nice JSON that can be
         // passed around through message managers etc.
         let frame = components.stack;
-        if (frame && frame.caller) {
+        if (frame?.caller) {
           frame = frame.caller;
           while (frame) {
             stacktrace.push({

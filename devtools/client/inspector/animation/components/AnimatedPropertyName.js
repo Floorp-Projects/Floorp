@@ -23,8 +23,8 @@ class AnimatedPropertyName extends PureComponent {
       {
         className:
           "animated-property-name" +
-          (state && state.runningOnCompositor ? " compositor" : "") +
-          (state && state.warning ? " warning" : ""),
+          (state?.runningOnCompositor ? " compositor" : "") +
+          (state?.warning ? " warning" : ""),
         title: state ? state.warning : "",
       },
       dom.span({}, name)

@@ -9183,7 +9183,11 @@ function getSpecifiers(specifiers) {
     return [];
   }
 
-  return specifiers.map(specifier => specifier.local && specifier.local.name);
+  return specifiers.map(specifier => {
+    var _specifier$local;
+
+    return (_specifier$local = specifier.local) === null || _specifier$local === void 0 ? void 0 : _specifier$local.name;
+  });
 }
 
 function isComputedExpression(expression) {
@@ -9226,10 +9230,14 @@ function getVariables(dec) {
     // e.g. const [{a, b }] = 2
 
 
-    return dec.id.elements.filter(element => element).map(element => ({
-      name: t.isAssignmentPattern(element) ? element.left.name : element.name || element.argument && element.argument.name,
-      location: element.loc
-    })).filter(({
+    return dec.id.elements.filter(element => element).map(element => {
+      var _element$argument;
+
+      return {
+        name: t.isAssignmentPattern(element) ? element.left.name : element.name || ((_element$argument = element.argument) === null || _element$argument === void 0 ? void 0 : _element$argument.name),
+        location: element.loc
+      };
+    }).filter(({
       name
     }) => name);
   }
@@ -15823,11 +15831,13 @@ function extractSymbols(sourceId) {
 }
 
 function extendSnippet(name, expression, path, prevPath) {
-  const computed = path && path.node.computed;
-  const prevComputed = prevPath && prevPath.node.computed;
+  var _path$node$property, _path$node$property$e;
+
+  const computed = path === null || path === void 0 ? void 0 : path.node.computed;
+  const prevComputed = prevPath === null || prevPath === void 0 ? void 0 : prevPath.node.computed;
   const prevArray = t.isArrayExpression(prevPath);
   const array = t.isArrayExpression(path);
-  const value = path && path.node.property && path.node.property.extra && path.node.property.extra.raw || "";
+  const value = (path === null || path === void 0 ? void 0 : (_path$node$property = path.node.property) === null || _path$node$property === void 0 ? void 0 : (_path$node$property$e = _path$node$property.extra) === null || _path$node$property$e === void 0 ? void 0 : _path$node$property$e.raw) || "";
 
   if (expression === "") {
     if (computed) {
@@ -15885,6 +15895,8 @@ function getMemberSnippet(node, expression = "") {
 }
 
 function getObjectSnippet(path, prevPath, expression = "") {
+  var _path$parentPath;
+
   if (!path) {
     return expression;
   }
@@ -15892,11 +15904,13 @@ function getObjectSnippet(path, prevPath, expression = "") {
   const name = path.node.key.name;
   const extendedExpression = extendSnippet(name, expression, path, prevPath);
   const nextPrevPath = path;
-  const nextPath = path.parentPath && path.parentPath.parentPath;
+  const nextPath = (_path$parentPath = path.parentPath) === null || _path$parentPath === void 0 ? void 0 : _path$parentPath.parentPath;
   return getSnippet(nextPath, nextPrevPath, extendedExpression);
 }
 
 function getArraySnippet(path, prevPath, expression) {
+  var _path$parentPath2;
+
   if (!prevPath.parentPath) {
     throw new Error("Assertion failure - path should exist");
   }
@@ -15904,7 +15918,7 @@ function getArraySnippet(path, prevPath, expression) {
   const index = `${prevPath.parentPath.containerIndex}`;
   const extendedExpression = extendSnippet(index, expression, path, prevPath);
   const nextPrevPath = path;
-  const nextPath = path.parentPath && path.parentPath.parentPath;
+  const nextPath = (_path$parentPath2 = path.parentPath) === null || _path$parentPath2 === void 0 ? void 0 : _path$parentPath2.parentPath;
   return getSnippet(nextPath, nextPrevPath, extendedExpression);
 }
 
@@ -15950,7 +15964,7 @@ function getSnippet(path, prevPath, expression = "") {
   }
 
   if (t.isObjectExpression(path)) {
-    const parentPath = prevPath && prevPath.parentPath;
+    const parentPath = prevPath === null || prevPath === void 0 ? void 0 : prevPath.parentPath;
     return getObjectSnippet(parentPath, prevPath, expression);
   }
 
@@ -42490,8 +42504,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _get = _interopRequireDefault(__webpack_require__(161));
-
 var _findIndex = _interopRequireDefault(__webpack_require__(354));
 
 var _findLastIndex = _interopRequireDefault(__webpack_require__(371));
@@ -42523,11 +42535,13 @@ function findSymbols(source) {
 
 
 function getLocation(func) {
+  var _func$identifier, _func$identifier$loc;
+
   const location = { ...func.location
   }; // if the function has an identifier, start the block after it so the
   // identifier is included in the "scope" of its parent
 
-  const identifierEnd = (0, _get.default)(func, "identifier.loc.end");
+  const identifierEnd = func === null || func === void 0 ? void 0 : (_func$identifier = func.identifier) === null || _func$identifier === void 0 ? void 0 : (_func$identifier$loc = _func$identifier.loc) === null || _func$identifier$loc === void 0 ? void 0 : _func$identifier$loc.end;
 
   if (identifierEnd) {
     location.start = identifierEnd;
