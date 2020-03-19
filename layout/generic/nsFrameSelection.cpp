@@ -212,6 +212,9 @@ struct MOZ_RAII AutoPrepareFocusRange {
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
+    MOZ_ASSERT(aSelection);
+    MOZ_ASSERT(aSelection->GetType() == SelectionType::eNormal);
+
     if (aSelection->mRanges.Length() <= 1) {
       return;
     }
