@@ -133,8 +133,6 @@ class SearchConfigTest {
       Services.search.wrappedJSObject._engineSelector ||
       new SearchEngineSelector();
 
-    await engineSelector.init();
-
     // Note: we don't use the helper function here, so that we have at least
     // one message output per process.
     Assert.ok(

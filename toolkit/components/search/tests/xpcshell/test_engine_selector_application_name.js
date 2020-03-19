@@ -110,7 +110,8 @@ add_task(async function setup() {
   await useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
 
-  await engineSelector.init();
+  let confUrl = `data:application/json,${JSON.stringify(CONFIG)}`;
+  Services.prefs.setStringPref("search.config.url", confUrl);
 });
 
 add_task(async function test_application_name() {

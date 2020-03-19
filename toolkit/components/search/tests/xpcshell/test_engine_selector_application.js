@@ -7,67 +7,63 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
 });
 
-const CONFIG_URL =
-  "data:application/json," +
-  JSON.stringify({
-    data: [
+const TEST_CONFIG = [
+  {
+    webExtension: {
+      id: "aol@example.com",
+    },
+    appliesTo: [
       {
-        webExtension: {
-          id: "aol@example.com",
-        },
-        appliesTo: [
-          {
-            included: { everywhere: true },
-          },
-        ],
-        default: "yes-if-no-other",
-      },
-      {
-        webExtension: {
-          id: "lycos@example.com",
-        },
-        appliesTo: [
-          {
-            included: { everywhere: true },
-            application: {
-              channel: ["nightly"],
-            },
-          },
-        ],
-        default: "yes",
-      },
-      {
-        webExtension: {
-          id: "altavista@example.com",
-        },
-        appliesTo: [
-          {
-            included: { everywhere: true },
-            application: {
-              channel: ["nightly", "esr"],
-            },
-          },
-        ],
-      },
-      {
-        webExtension: {
-          id: "excite@example.com",
-        },
-        appliesTo: [
-          {
-            included: { everywhere: true },
-          },
-          {
-            included: { everywhere: true },
-            application: {
-              channel: ["release"],
-            },
-            default: "yes",
-          },
-        ],
+        included: { everywhere: true },
       },
     ],
-  });
+    default: "yes-if-no-other",
+  },
+  {
+    webExtension: {
+      id: "lycos@example.com",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        application: {
+          channel: ["nightly"],
+        },
+      },
+    ],
+    default: "yes",
+  },
+  {
+    webExtension: {
+      id: "altavista@example.com",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+        application: {
+          channel: ["nightly", "esr"],
+        },
+      },
+    ],
+  },
+  {
+    webExtension: {
+      id: "excite@example.com",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+      },
+      {
+        included: { everywhere: true },
+        application: {
+          channel: ["release"],
+        },
+        default: "yes",
+      },
+    ],
+  },
+];
 
 const expectedEnginesPerChannel = {
   default: ["aol@example.com", "excite@example.com"],
@@ -93,10 +89,11 @@ const expectedDefaultEngine = {
 const engineSelector = new SearchEngineSelector();
 
 add_task(async function test_engine_selector_channels() {
-  await engineSelector.init(CONFIG_URL);
+  const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+  sinon.stub(settings, "get").returns(TEST_CONFIG);
 
   for (let [channel, expected] of Object.entries(expectedEnginesPerChannel)) {
-    const { engines } = engineSelector.fetchEngineConfiguration(
+    const { engines } = await engineSelector.fetchEngineConfiguration(
       "en-US",
       "us",
       channel
