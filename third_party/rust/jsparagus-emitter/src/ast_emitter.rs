@@ -23,7 +23,7 @@ pub fn emit_program<'alloc>(
     options: &EmitOptions,
     atoms: SourceAtomSet<'alloc>,
     scope_data_map: ScopeDataMap,
-) -> Result<EmitResult, EmitError> {
+) -> Result<EmitResult<'alloc>, EmitError> {
     let mut emitter = AstEmitter::new(options, atoms, scope_data_map);
 
     match ast {

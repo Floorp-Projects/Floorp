@@ -268,7 +268,8 @@ pub unsafe extern "C" fn run_smoosh(
     options: &SmooshCompileOptions,
 ) -> SmooshResult {
     let text = str::from_utf8(slice::from_raw_parts(text, text_len)).expect("Invalid UTF8");
-    match smoosh(text, options) {
+    let allocator = bumpalo::Bump::new();
+    match smoosh(&allocator, text, options) {
         Ok(mut result) => SmooshResult {
             unimplemented: false,
             error: CVec::empty(),
@@ -278,7 +279,11 @@ pub unsafe extern "C" fn run_smoosh(
                 result
                     .all_atoms
                     .drain(..)
-                    .map(|a| CVec::from(a.into_bytes()))
+                    // FIXME: Instead of allocating extra buffer,
+                    //        pass raw pointer to the str (either held by
+                    //        `Bump`, or static), and relase non-static str
+                    //        in the later step.
+                    .map(|a| CVec::from(a.to_string().into_bytes()))
                     .collect(),
             ),
             gcthings: CVec::from(result.gcthings.drain(..).map(|x| x.into()).collect()),
@@ -391,8 +396,11 @@ pub unsafe extern "C" fn free_smoosh(result: SmooshResult) {
     //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
 }
 
-fn smoosh(text: &str, options: &SmooshCompileOptions) -> Result<EmitResult, SmooshError> {
-    let allocator = bumpalo::Bump::new();
+fn smoosh<'alloc>(
+    allocator: &'alloc bumpalo::Bump,
+    text: &'alloc str,
+    options: &SmooshCompileOptions,
+) -> Result<EmitResult<'alloc>, SmooshError> {
     let parse_options = ParseOptions::new();
     let atoms = Rc::new(RefCell::new(SourceAtomSet::new()));
     let parse_result = match parse_script(&allocator, text, &parse_options, atoms.clone()) {
