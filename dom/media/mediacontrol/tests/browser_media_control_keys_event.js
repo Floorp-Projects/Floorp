@@ -17,7 +17,7 @@ add_task(async function setupTestingPref() {
 add_task(async function testPlayPauseAndStop() {
   info(`open page and start media`);
   const tab = await createTabAndLoad(PAGE);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`pressing 'pause' key`);
   ChromeUtils.generateMediaControlKeysTestEvent("pause");
@@ -38,7 +38,7 @@ add_task(async function testPlayPauseAndStop() {
 add_task(async function testPlayPause() {
   info(`open page and start media`);
   const tab = await createTabAndLoad(PAGE);
-  await playMedia(tab);
+  await playMedia(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should stop`);
   ChromeUtils.generateMediaControlKeysTestEvent("playPause");
@@ -65,24 +65,6 @@ function waitUntilPlaybackStarts(tab) {
 function waitUntilPlaybackStops(tab) {
   return Promise.all([
     checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId),
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
-}
-
-function playMedia(tab) {
-  const playPromise = SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [testVideoId],
-    Id => {
-      const video = content.document.getElementById(Id);
-      if (!video) {
-        ok(false, `can't get the media element!`);
-      }
-      return video.play();
-    }
-  );
-  return Promise.all([
-    playPromise,
     waitUntilMainMediaControllerPlaybackChanged(),
   ]);
 }
