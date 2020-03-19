@@ -1107,8 +1107,7 @@ void js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei) {
 //
 // will have no pc location distinguishing the try block scope from the inner
 // let block scope.
-jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
-                                         const JSTryNote* tn) {
+jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script, const TryNote* tn) {
   jsbytecode* pc = script->offsetToPC(tn->start);
   if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
     pc -= JSOpLength_Try;
@@ -1120,7 +1119,7 @@ jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
   return pc;
 }
 
-static void SettleOnTryNote(JSContext* cx, const JSTryNote* tn,
+static void SettleOnTryNote(JSContext* cx, const TryNote* tn,
                             EnvironmentIter& ei, InterpreterRegs& regs) {
   // Unwind the environment to the beginning of the JSOp::Try.
   UnwindEnvironment(cx, ei, UnwindEnvironmentToTryPc(regs.fp()->script(), tn));
@@ -1137,7 +1136,7 @@ class InterpreterTryNoteFilter {
  public:
   explicit InterpreterTryNoteFilter(const InterpreterRegs& regs)
       : regs_(regs) {}
-  bool operator()(const JSTryNote* note) {
+  bool operator()(const TryNote* note) {
     return note->stackDepth <= regs_.stackDepth();
   }
 };
@@ -1154,7 +1153,7 @@ static void UnwindIteratorsForUncatchableException(
   // c.f. the regular (catchable) TryNoteIterInterpreter loop in
   // ProcessTryNotes.
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
-    const JSTryNote* tn = *tni;
+    const TryNote* tn = *tni;
     switch (tn->kind) {
       case JSTRY_FOR_IN: {
         Value* sp = regs.spForStackDepth(tn->stackDepth);
@@ -1178,7 +1177,7 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
                                                EnvironmentIter& ei,
                                                InterpreterRegs& regs) {
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
-    const JSTryNote* tn = *tni;
+    const TryNote* tn = *tni;
 
     switch (tn->kind) {
       case JSTRY_CATCH:

@@ -115,12 +115,12 @@ MOZ_MUST_USE bool EmitScriptThingsVector(JSContext* cx,
                                          mozilla::Span<JS::GCCellPtr> output);
 
 struct CGTryNoteList {
-  Vector<JSTryNote> list;
+  Vector<TryNote> list;
   explicit CGTryNoteList(JSContext* cx) : list(cx) {}
 
-  MOZ_MUST_USE bool append(JSTryNoteKind kind, uint32_t stackDepth,
+  MOZ_MUST_USE bool append(TryNoteKind kind, uint32_t stackDepth,
                            BytecodeOffset start, BytecodeOffset end);
-  mozilla::Span<const JSTryNote> span() const {
+  mozilla::Span<const TryNote> span() const {
     return {list.begin(), list.length()};
   }
   size_t length() const { return list.length(); }

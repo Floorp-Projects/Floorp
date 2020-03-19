@@ -83,7 +83,7 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
 }
 
 bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op,
-                              JSTryNoteKind tryNoteKind) {
+                              TryNoteKind tryNoteKind) {
   JumpList jump;
   if (!bce->emitJumpNoFallthrough(op, &jump)) {
     return false;

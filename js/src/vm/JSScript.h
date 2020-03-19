@@ -2551,7 +2551,7 @@ class JSScript : public js::BaseScript {
                           size_t* sizeOfJitScript,
                           size_t* sizeOfBaselineFallbackStubs) const;
 
-  mozilla::Span<const JSTryNote> trynotes() const {
+  mozilla::Span<const js::TryNote> trynotes() const {
     return immutableScriptData()->tryNotes();
   }
 
