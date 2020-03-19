@@ -11,7 +11,6 @@ const {
 } = require("devtools/shared/protocol");
 
 types.addDictType("browsingContextTarget.attach", {
-  type: "string",
   threadActor: "number",
   cacheDisabled: "boolean",
   javascriptEnabled: "boolean",
