@@ -371,7 +371,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
 #endif
       mCreated(false),
       mAllowSubframes(true),
-      mAllowPlugins(true),
       mAllowJavascript(true),
       mAllowMetaRedirects(true),
       mAllowImages(true),
@@ -1478,13 +1477,13 @@ NS_IMETHODIMP
 nsDocShell::GetAllowPlugins(bool* aAllowPlugins) {
   NS_ENSURE_ARG_POINTER(aAllowPlugins);
 
-  *aAllowPlugins = mAllowPlugins;
+  *aAllowPlugins = mBrowsingContext->GetAllowPlugins();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetAllowPlugins(bool aAllowPlugins) {
-  mAllowPlugins = aAllowPlugins;
+  mBrowsingContext->SetAllowPlugins(aAllowPlugins);
   // XXX should enable or disable a plugin host
   return NS_OK;
 }
@@ -2646,10 +2645,6 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
 
   if (parentAsDocShell) {
-    if (mAllowPlugins &&
-        NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value))) {
-      SetAllowPlugins(value);
-    }
     if (mAllowJavascript &&
         NS_SUCCEEDED(parentAsDocShell->GetAllowJavascript(&value))) {
       SetAllowJavascript(value);
@@ -7393,9 +7388,6 @@ nsresult nsDocShell::RestoreFromHistory() {
 
     // Make sure to not clobber the state of the child.  Since AddChild
     // always clobbers it, save it off first.
-    bool allowPlugins;
-    childShell->GetAllowPlugins(&allowPlugins);
-
     bool allowJavascript;
     childShell->GetAllowJavascript(&allowJavascript);
 
@@ -7427,7 +7419,6 @@ nsresult nsDocShell::RestoreFromHistory() {
 
     contexts.AppendElement(childShell->GetBrowsingContext());
 
-    childShell->SetAllowPlugins(allowPlugins);
     childShell->SetAllowJavascript(allowJavascript);
     childShell->SetAllowMetaRedirects(allowRedirects);
     childShell->SetAllowSubframes(allowSubframes);
@@ -11391,7 +11382,8 @@ void nsDocShell::SetHistoryEntryAndUpdateBC(const Maybe<nsISHEntry*>& aLSHE,
   // Do not update the BC if the SH pref is off and we are not a parent process
   // or if it is discarded
   if ((!StaticPrefs::fission_sessionHistoryInParent() &&
-      XRE_IsContentProcess()) || mBrowsingContext->IsDiscarded()) {
+       XRE_IsContentProcess()) ||
+      mBrowsingContext->IsDiscarded()) {
     return;
   }
   if (XRE_IsParentProcess()) {
