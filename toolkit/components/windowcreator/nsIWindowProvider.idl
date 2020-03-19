@@ -49,11 +49,8 @@ interface nsIWindowProvider : nsISupports
    *        window if this provider returns null.  See nsIWebBrowserChrome for
    *        the possible values of this field.
    *
-   * @param aPositionSpecified Whether the attempt to create a window is trying
-   *        to specify a position for the new window.
-   *
-   * @param aSizeSpecified Whether the attempt to create a window is trying to
-   *        specify a size for the new window.
+   * @param aWidthSpecified Whether the attempt to create a window is trying
+   *        to specify the width for the new window.
    *
    * @param aURI The URI to be loaded in the new window (may be NULL).  The
    *        nsIWindowProvider implementation must not load this URI into the
@@ -101,8 +98,7 @@ interface nsIWindowProvider : nsISupports
   BrowsingContext provideWindow(in mozIDOMWindowProxy aParent,
                                 in unsigned long aChromeFlags,
                                 in boolean aCalledFromJS,
-                                in boolean aPositionSpecified,
-                                in boolean aSizeSpecified,
+                                in boolean aWidthSpecified,
                                 in nsIURI aURI,
                                 in AString aName,
                                 in AUTF8String aFeatures,
