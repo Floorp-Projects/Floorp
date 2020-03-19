@@ -91,14 +91,37 @@ TERMINAL_NAMES_FOR_SYNTACTIC_GRAMMAR = ECMASCRIPT_TOKEN_NAMES + [
 ]
 
 
-def load_syntactic_grammar(filename):
+def load_syntactic_grammar(filename, extensions):
     """Load the ECMAScript syntactic grammar."""
     with open(filename) as f:
         grammar_text = f.read()
 
+    extensions_content = []
+    for ext_filename in extensions:
+        # Extract grammar_extension! macro content, and store in a list.
+        with open(ext_filename) as ext_file:
+            content = None
+            start_line = 0
+            for lineno, line in enumerate(ext_file):
+                if line.startswith("grammar_extension!"):
+                    assert line.endswith("{\n")
+                    content = ""
+                    # +2: enumerate starts at 0, while the first line is 1.
+                    # Also, the first line added to the content variable is the
+                    # next one.
+                    start_line = lineno + 2
+                    continue
+                if line.startswith("}") and content:
+                    extensions_content.append((ext_filename, start_line, content))
+                    content = None
+                    continue
+                if content is not None:
+                    content += line
+
     g = parse_esgrammar(
         grammar_text,
         filename=filename,
+        extensions=extensions_content,
         goals=ECMASCRIPT_SYNTACTIC_GOAL_NTS,
         synthetic_terminals=ECMASCRIPT_SYNTHETIC_TERMINALS,
         terminal_names=TERMINAL_NAMES_FOR_SYNTACTIC_GRAMMAR)

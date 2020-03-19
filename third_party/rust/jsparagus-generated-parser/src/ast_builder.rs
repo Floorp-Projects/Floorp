@@ -757,10 +757,12 @@ impl<'alloc> AstBuilder<'alloc> {
         token: arena::Box<'alloc, Token>,
     ) -> Result<arena::Box<'alloc, Expression<'alloc>>> {
         let loc = token.loc;
-        Ok(self.alloc(Expression::LiteralNumericExpression {
-            value: Self::numeric_literal_value(token),
-            loc,
-        }))
+        Ok(
+            self.alloc(Expression::LiteralNumericExpression(NumericLiteral {
+                value: Self::numeric_literal_value(token),
+                loc,
+            })),
+        )
     }
 
     // Literal : NumericLiteral
@@ -1084,10 +1086,9 @@ impl<'alloc> AstBuilder<'alloc> {
         token: arena::Box<'alloc, Token>,
     ) -> Result<arena::Box<'alloc, PropertyName<'alloc>>> {
         let loc = token.loc;
-        let s = self.alloc_str(&format!("{:?}", Self::numeric_literal_value(token)));
-        let value = self.atoms.borrow_mut().insert(s);
+        let value = Self::numeric_literal_value(token);
         Ok(
-            self.alloc(PropertyName::StaticPropertyName(StaticPropertyName {
+            self.alloc(PropertyName::StaticNumericPropertyName(NumericLiteral {
                 value,
                 loc,
             })),
@@ -4017,6 +4018,9 @@ impl<'alloc> AstBuilder<'alloc> {
         self.alloc(match name.unbox() {
             PropertyName::ComputedPropertyName(cpn) => ClassElementName::ComputedPropertyName(cpn),
             PropertyName::StaticPropertyName(spn) => ClassElementName::StaticPropertyName(spn),
+            PropertyName::StaticNumericPropertyName(snpn) => {
+                ClassElementName::StaticNumericPropertyName(snpn)
+            }
         })
     }
 
@@ -4065,6 +4069,15 @@ impl<'alloc> AstBuilder<'alloc> {
                 loc: SourceLocation::from_parts(static_token.loc, method_loc),
             })),
         )
+    }
+
+    // ClassElement : `static` MethodDefinition
+    pub fn class_element_static_field(
+        &self,
+        _static_token: arena::Box<'alloc, Token>,
+        _field: arena::Box<'alloc, ClassElement<'alloc>>,
+    ) -> Result<arena::Box<'alloc, Void>> {
+        Err(ParseError::NotImplemented("class static field"))
     }
 
     // ClassElement : `;`

@@ -9,9 +9,11 @@ impl SourceAtomSetIndex {
     fn new(index: usize) -> Self {
         Self { index }
     }
+}
 
-    pub fn into_raw(self) -> usize {
-        self.index
+impl From<SourceAtomSetIndex> for usize {
+    fn from(index: SourceAtomSetIndex) -> usize {
+        index.index
     }
 }
 
@@ -216,10 +218,12 @@ impl<'alloc> SourceAtomSet<'alloc> {
     }
 
     pub fn get(&self, index: SourceAtomSetIndex) -> String {
-        self.atoms[index.into_raw()].clone()
+        self.atoms[usize::from(index)].clone()
     }
+}
 
-    pub fn into_vec(self) -> Vec<String> {
-        self.atoms
+impl<'alloc> From<SourceAtomSet<'alloc>> for Vec<String> {
+    fn from(set: SourceAtomSet<'alloc>) -> Vec<String> {
+        set.atoms
     }
 }

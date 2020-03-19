@@ -426,6 +426,7 @@ impl<'alloc> Lexer<'alloc> {
                 "delete" => TerminalId::Delete,
                 "do" => TerminalId::Do,
                 "else" => TerminalId::Else,
+                "enum" => TerminalId::Enum,
                 "export" => TerminalId::Export,
                 "extends" => TerminalId::Extends,
                 "finally" => TerminalId::Finally,

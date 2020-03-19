@@ -45,15 +45,8 @@ from .actions import (Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag,
                       PushFlag, PopFlag, FunCall, Seq)
 from . import emit
 from .runtime import ACCEPT, ErrorToken
-
-def keep_until(iterable, pred):
-    """Filter an iterable generator or list and keep all elements until the first
-    time the predicate becomes true, including the element where the predicate
-    is true. All elements after are skipped."""
-    for e in iterable:
-        yield e
-        if pred(e):
-            return
+from .utils import keep_until
+from . import types
 
 # *** Operations on grammars **************************************************
 
@@ -99,7 +92,10 @@ def empty_nt_set(grammar):
             elif isinstance(expr, CallMethod):
                 return CallMethod(
                     expr.method,
-                    tuple(eval(arg_expr) for arg_expr in expr.args))
+                    tuple(eval(arg_expr) for arg_expr in expr.args),
+                    expr.trait,
+                    expr.fallible
+                )
             elif isinstance(expr, int):
                 e = stack[expr]
                 if isinstance(e, Optional):
@@ -195,6 +191,10 @@ def check_cycle_free(grammar):
                         # even if this character is expect to be produced
                         # infinitely once the end is reached.
                         break
+                    elif isinstance(e, CallMethod):
+                        # This production execute code, but does not consume
+                        # any input.
+                        pass
                     else:
                         # Optional is not possible because we called
                         # expand_optional_symbols_in_rhs. ErrorSymbol
@@ -643,7 +643,10 @@ def expand_all_optional_elements(grammar):
                         return Some(adjust_reduce_expr(expr.inner))
                     elif isinstance(expr, CallMethod):
                         return CallMethod(expr.method, [adjust_reduce_expr(arg)
-                                                        for arg in expr.args])
+                                                        for arg in expr.args],
+                                          expr.trait,
+                                          expr.fallible
+                        )
                     elif expr == 'accept':
                         # doesn't need to be adjusted because 'accept' isn't
                         # turned into code downstream.
@@ -1811,6 +1814,8 @@ def on_stack(grammar, term):
         # is implemented as an action which once shifted past the next term,
         # will check whether the previous term shifted is on a new line.
         return False
+    elif isinstance(term, CallMethod):
+        return False
     raise ValueError(term)
 
 def callmethods_to_funcalls(expr, pop, ret, depth, funcalls):
@@ -1819,7 +1824,9 @@ def callmethods_to_funcalls(expr, pop, ret, depth, funcalls):
     if isinstance(expr, int):
         stack_index = pop - expr
         if depth == 0:
-            expr = FunCall("id", alias_set, alias_set, (stack_index,), ret)
+            expr = FunCall("id", (stack_index,), fallible = False,
+                           trait = types.Type("AstBuilder"), set_to = ret,
+                           alias_read = alias_set, alias_write = alias_set)
             funcalls.append(expr)
             return ret
         else:
@@ -1834,11 +1841,21 @@ def callmethods_to_funcalls(expr, pop, ret, depth, funcalls):
             for i, arg in enumerate(args):
                 yield callmethods_to_funcalls(arg, pop, ret + "_{}".format(i), depth + 1, funcalls)
         args = tuple(convert_args(expr.args))
-        expr = FunCall(expr.method, alias_set, alias_set, args, ret)
+        expr = FunCall(expr.method, args,
+                       trait = expr.trait,
+                       fallible = expr.fallible,
+                       set_to = ret,
+                       alias_read = alias_set,
+                       alias_write = alias_set)
         funcalls.append(expr)
         return ret
     elif expr == "accept":
-        expr = FunCall("accept", alias_set, alias_set, (), ret)
+        expr = FunCall("accept", (),
+                       trait = types.Type("ParserTrait"),
+                       fallible = False,
+                       set_to = ret,
+                       alias_read = alias_set,
+                       alias_write = alias_set)
         funcalls.append(expr)
         return ret
     else:
@@ -1952,6 +1969,11 @@ class LR0Generator:
                 # not, this would produce a syntax error. The argument is the
                 # terminal offset.
                 term = CheckNotOnNewLine()
+            elif isinstance(term, CallMethod):
+                funcalls = []
+                pop = sum(1 for e in prod.rhs[:lr_item.offset] if on_stack(self.grammar.grammar, e))
+                callmethods_to_funcalls(term, pop, "expr", 0, funcalls)
+                term = Seq(funcalls)
 
         elif lr_item.offset == len(prod.rhs):
             # Add the reduce operation as a state transition in the generated
@@ -2104,6 +2126,12 @@ class ParseTable:
         # Carry the info to be used when generating debug_context. If False,
         # then no debug_context is ever produced.
         "debug_info",
+        # Execution modes are used by the code generator to decide which
+        # function is executed when. This is a dictionary of OrderedSet, where
+        # the keys are the various parsing modes, and the mapped set contains
+        # the list of traits which have to be implemented, and consequently
+        # which functions would be encoded.
+        "exec_modes"
     ]
 
     def __init__(self, grammar, verbose = False, progress = False, debug = False):
@@ -2114,6 +2142,7 @@ class ParseTable:
         self.terminals = grammar.grammar.terminals
         self.nonterminals = list(grammar.grammar.nonterminals.keys())
         self.debug_info = debug
+        self.exec_modes = grammar.grammar.exec_modes
         self.create_lr0_table(grammar, verbose, progress)
         self.fix_inconsistent_table(verbose, progress)
         # TODO: Optimize chains of actions into sequences.
@@ -3265,7 +3294,8 @@ def generate_parser_states(grammar, *, verbose=False, progress=False, debug=Fals
     return parse_table
 
 
-def generate_parser(out, source, *, verbose=False, progress=False, debug=False, target='python', handler_info=None):
+def generate_parser(out, source, *, verbose=False, progress=False, debug=False,
+                    target='python', handler_info=None):
     assert target in ('python', 'rust')
 
     if isinstance(source, Grammar):

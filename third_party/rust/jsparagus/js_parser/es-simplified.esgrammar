@@ -1224,6 +1224,8 @@ ClassElement[Yield, Await] :
     => class_element_static($0, $1)
   FieldDefinition[?Yield, ?Await] `;`
     => class_element_to_vec($0)
+  `static` FieldDefinition[?Yield, ?Await] `;`
+    => class_element_static_field($0, $1)
   `;`
     => class_element_empty()
 

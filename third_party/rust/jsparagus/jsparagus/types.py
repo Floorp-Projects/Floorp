@@ -17,6 +17,17 @@ import collections
 from . import grammar
 
 
+class Lifetime(collections.namedtuple('Lifetime', 'name')):
+    def __new__(cls, name):
+        self = super(Lifetime, cls).__new__(cls, name)
+        return self
+    def __eq__(self, other):
+        return isinstance(other, Lifetime) and super(Lifetime, self).__eq__(other)
+    def __hash__(self):
+        return super(Lifetime, self).__hash__()
+    def __str__(self):
+        return "'" + self.name
+
 TypeBase = collections.namedtuple('Type', 'name args')
 
 _all_types = {}
@@ -29,7 +40,7 @@ class Type(TypeBase):
             raise TypeError("Type() first argument must be a str, not {!r}".format(name))
         args = tuple(args)
         for arg in args:
-            if not isinstance(arg, (Type, TypeVar)):
+            if not isinstance(arg, (Type, TypeVar, Lifetime)):
                 raise TypeError("Type parameters must be types, not {!r}".format(arg))
 
         # caching
@@ -39,7 +50,7 @@ class Type(TypeBase):
         return _all_types[key]
 
     def __eq__(self, other):
-        return self.name == other.name and self.args == other.args
+        return isinstance(other, Type) and super(Type, self).__eq__(other)
 
     def __hash__(self):
         return hash((self.name, self.args))
