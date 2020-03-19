@@ -140,10 +140,6 @@ async function addTestTab(url) {
       state.details.accessible.role === "document"
   );
 
-  // Wait for inspector load here to avoid protocol errors on shutdown, since
-  // accessibility panel test can be too fast.
-  await panel._toolbox.loadTool("inspector");
-
   return {
     tab,
     browser: tab.linkedBrowser,
