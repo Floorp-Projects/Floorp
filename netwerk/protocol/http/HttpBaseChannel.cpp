@@ -2144,6 +2144,10 @@ NS_IMETHODIMP
 HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   if (mLoadFlags & LOAD_ANONYMOUS) return NS_OK;
 
+  if (IsBrowsingContextDiscarded()) {
+    return NS_OK;
+  }
+
   // empty header isn't an error
   if (aCookieHeader.IsEmpty()) {
     return NS_OK;
