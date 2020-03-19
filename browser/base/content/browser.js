@@ -1936,14 +1936,6 @@ var gBrowserInit = {
     Services.appShell.hiddenDOMWindow;
 
     gBrowser.addEventListener(
-      "InsecureLoginFormsStateChange",
-      function() {
-        gIdentityHandler.refreshForInsecureLoginForms();
-      },
-      true
-    );
-
-    gBrowser.addEventListener(
       "PermissionStateChange",
       function() {
         gIdentityHandler.refreshIdentityBlock();

@@ -1364,9 +1364,6 @@ pref("security.app_menu.recordEventTelemetry", true);
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
-// Show degraded UI for http pages with password fields.
-pref("security.insecure_password.ui.enabled", true);
-
 // Show in-content login form warning UI for insecure login fields
 pref("security.insecure_field_warning.contextual.enabled", true);
 
