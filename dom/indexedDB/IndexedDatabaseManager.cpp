@@ -60,10 +60,10 @@ using namespace mozilla::ipc;
 
 class FileManagerInfo {
  public:
-  MOZ_MUST_USE SafeRefPtr<FileManager> GetFileManager(
+  MOZ_MUST_USE RefPtr<FileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsAString& aName) const;
 
-  void AddFileManager(SafeRefPtr<FileManager> aFileManager);
+  void AddFileManager(FileManager* aFileManager);
 
   bool HasFileManagers() const {
     AssertIsOnIOThread();
@@ -81,17 +81,16 @@ class FileManagerInfo {
                                       const nsAString& aName);
 
  private:
-  nsTArray<SafeRefPtr<FileManager> >& GetArray(
-      PersistenceType aPersistenceType);
+  nsTArray<RefPtr<FileManager> >& GetArray(PersistenceType aPersistenceType);
 
-  const nsTArray<SafeRefPtr<FileManager> >& GetImmutableArray(
+  const nsTArray<RefPtr<FileManager> >& GetImmutableArray(
       PersistenceType aPersistenceType) const {
     return const_cast<FileManagerInfo*>(this)->GetArray(aPersistenceType);
   }
 
-  nsTArray<SafeRefPtr<FileManager> > mPersistentStorageFileManagers;
-  nsTArray<SafeRefPtr<FileManager> > mTemporaryStorageFileManagers;
-  nsTArray<SafeRefPtr<FileManager> > mDefaultStorageFileManagers;
+  nsTArray<RefPtr<FileManager> > mPersistentStorageFileManagers;
+  nsTArray<RefPtr<FileManager> > mTemporaryStorageFileManagers;
+  nsTArray<RefPtr<FileManager> > mDefaultStorageFileManagers;
 };
 
 }  // namespace indexedDB
@@ -680,7 +679,7 @@ void IndexedDatabaseManager::ClearBackgroundActor() {
   mBackgroundActor = nullptr;
 }
 
-SafeRefPtr<FileManager> IndexedDatabaseManager::GetFileManager(
+RefPtr<FileManager> IndexedDatabaseManager::GetFileManager(
     PersistenceType aPersistenceType, const nsACString& aOrigin,
     const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
@@ -693,8 +692,7 @@ SafeRefPtr<FileManager> IndexedDatabaseManager::GetFileManager(
   return info->GetFileManager(aPersistenceType, aDatabaseName);
 }
 
-void IndexedDatabaseManager::AddFileManager(
-    SafeRefPtr<FileManager> aFileManager) {
+void IndexedDatabaseManager::AddFileManager(FileManager* aFileManager) {
   AssertIsOnIOThread();
   NS_ASSERTION(aFileManager, "Null file manager!");
 
@@ -704,7 +702,7 @@ void IndexedDatabaseManager::AddFileManager(
     mFileManagerInfos.Put(aFileManager->Origin(), info);
   }
 
-  info->AddFileManager(std::move(aFileManager));
+  info->AddFileManager(aFileManager);
 }
 
 void IndexedDatabaseManager::InvalidateAllFileManagers() {
@@ -857,7 +855,7 @@ const nsCString& IndexedDatabaseManager::GetLocale() {
   return idbManager->mLocale;
 }
 
-SafeRefPtr<FileManager> FileManagerInfo::GetFileManager(
+RefPtr<FileManager> FileManagerInfo::GetFileManager(
     PersistenceType aPersistenceType, const nsAString& aName) const {
   AssertIsOnIOThread();
 
@@ -867,17 +865,17 @@ SafeRefPtr<FileManager> FileManagerInfo::GetFileManager(
   const auto foundIt =
       std::find_if(managers.cbegin(), end, DatabaseNameMatchPredicate(&aName));
 
-  return foundIt != end ? foundIt->clonePtr() : nullptr;
+  return foundIt != end ? *foundIt : nullptr;
 }
 
-void FileManagerInfo::AddFileManager(SafeRefPtr<FileManager> aFileManager) {
+void FileManagerInfo::AddFileManager(FileManager* aFileManager) {
   AssertIsOnIOThread();
 
-  nsTArray<SafeRefPtr<FileManager> >& managers = GetArray(aFileManager->Type());
+  nsTArray<RefPtr<FileManager> >& managers = GetArray(aFileManager->Type());
 
   NS_ASSERTION(!managers.Contains(aFileManager), "Adding more than once?!");
 
-  managers.AppendElement(std::move(aFileManager));
+  managers.AppendElement(aFileManager);
 }
 
 void FileManagerInfo::InvalidateAllFileManagers() const {
@@ -902,7 +900,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManagers(
     PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  nsTArray<SafeRefPtr<FileManager> >& managers = GetArray(aPersistenceType);
+  nsTArray<RefPtr<FileManager> >& managers = GetArray(aPersistenceType);
 
   for (uint32_t i = 0; i < managers.Length(); i++) {
     managers[i]->Invalidate();
@@ -926,7 +924,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManager(
   }
 }
 
-nsTArray<SafeRefPtr<FileManager> >& FileManagerInfo::GetArray(
+nsTArray<RefPtr<FileManager> >& FileManagerInfo::GetArray(
     PersistenceType aPersistenceType) {
   switch (aPersistenceType) {
     case PERSISTENCE_TYPE_PERSISTENT:

@@ -9,7 +9,6 @@
 
 #include "nsISupportsImpl.h"
 #include "nsCOMPtr.h"
-#include "SafeRefPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +20,7 @@ class FileInfoT final {
   using AutoLock = typename FileManager::AutoLock;
 
   FileInfoT(const typename FileManager::FileManagerGuard& aGuard,
-            SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
+            RefPtr<FileManager> aFileManager, const int64_t aFileId,
             const nsrefcnt aInitialDBRefCnt = 0);
 
   void AddRef();
@@ -31,7 +30,7 @@ class FileInfoT final {
 
   void GetReferences(int32_t* aRefCnt, int32_t* aDBRefCnt);
 
-  FileManager& Manager() const;
+  FileManager* Manager() const;
 
   int64_t Id() const;
 
@@ -50,7 +49,7 @@ class FileInfoT final {
   ThreadSafeAutoRefCnt mRefCnt;
   ThreadSafeAutoRefCnt mDBRefCnt;
 
-  const SafeRefPtr<FileManager> mFileManager;
+  const RefPtr<FileManager> mFileManager;
 };
 
 }  // namespace indexedDB

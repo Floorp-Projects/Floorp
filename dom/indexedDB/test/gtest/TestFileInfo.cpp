@@ -57,10 +57,8 @@ class TestFileManager final : public FileManagerBase<TestFileManager> {
     for (const auto id : kDBOnlyFileInfoIds) {
       // Copied from within FileManager::Init.
 
-      mFileInfos.Put(
-          id, new FileInfo(FileManagerGuard{},
-                           SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, id,
-                           static_cast<nsrefcnt>(1)));
+      mFileInfos.Put(id, new FileInfo(FileManagerGuard{}, this, id,
+                                      static_cast<nsrefcnt>(1)));
 
       mLastFileId = std::max(id, mLastFileId);
     }
@@ -108,7 +106,7 @@ TEST(DOM_IndexedDB_FileInfo, Create)
     int32_t memRefCnt, dbRefCnt;
     fileInfo->GetReferences(&memRefCnt, &dbRefCnt);
 
-    ASSERT_EQ(fileManager, &fileInfo->Manager());
+    ASSERT_EQ(fileManager, fileInfo->Manager());
 
     ASSERT_EQ(1, memRefCnt);
     ASSERT_EQ(0, dbRefCnt);
@@ -133,7 +131,7 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt)
       int32_t memRefCnt, dbRefCnt;
       fileInfo->GetReferences(&memRefCnt, &dbRefCnt);
 
-      ASSERT_EQ(fileManager, &fileInfo->Manager());
+      ASSERT_EQ(fileManager, fileInfo->Manager());
 
       ASSERT_EQ(1, memRefCnt);  // we hold one in fileInfo ourselves
       ASSERT_EQ(1, dbRefCnt);
@@ -153,7 +151,7 @@ TEST(DOM_IndexedDB_FileInfo, CreateWithInitialDBRefCnt_Invalidate)
     const auto fileManager = MakeRefPtr<TestFileManager>(&stats);
     fileManager->CreateDBOnlyFileInfos();
 
-    auto fileInfos = nsTArray<SafeRefPtr<TestFileInfo>>{};
+    auto fileInfos = nsTArray<RefPtr<TestFileInfo>>{};
     for (const auto id : TestFileManager::kDBOnlyFileInfoIds) {
       fileInfos.EmplaceBack(fileManager->GetFileInfo(id));
     }
