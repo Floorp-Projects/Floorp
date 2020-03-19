@@ -1012,7 +1012,7 @@ const browsingContextTargetPrototype = {
       return { error: "wrongState" };
     }
 
-    return { type: "detached" };
+    return {};
   },
 
   /**

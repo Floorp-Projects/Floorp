@@ -30,8 +30,7 @@ add_task(async function test() {
   await tabFront.attach();
 
   const previousActorID = tabFront.actorID;
-  let response = await tabFront.detach();
-  is(response.type, "detached", "Should have detached");
+  await tabFront.detach();
 
   tabs = await client.mainRoot.listTabs();
   const newFront = tabs.find(a => a.url == TAB1_URL);
@@ -43,8 +42,7 @@ add_task(async function test() {
   isnot(newFront, tabFront, "But the front should be a new one");
 
   await newFront.attach();
-  response = await newFront.detach();
-  is(response.type, "detached", "Should have detached");
+  await newFront.detach();
 
   await removeTab(tab);
   await client.close();

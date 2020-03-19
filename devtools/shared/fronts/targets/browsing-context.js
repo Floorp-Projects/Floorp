@@ -132,9 +132,8 @@ class BrowsingContextTargetFront extends TargetMixin(
   }
 
   async detach() {
-    let response;
     try {
-      response = await super.detach();
+      await super.detach();
     } catch (e) {
       console.warn(
         "Error while detaching the browsing context target front:",
@@ -145,8 +144,6 @@ class BrowsingContextTargetFront extends TargetMixin(
     // Remove listeners set in attach
     this.off("tabNavigated", this._onTabNavigated);
     this.off("frameUpdate", this._onFrameUpdate);
-
-    return response;
   }
 
   destroy() {
