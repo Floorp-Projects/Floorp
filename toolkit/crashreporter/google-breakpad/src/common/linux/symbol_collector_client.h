@@ -1,4 +1,4 @@
-// Copyright (c) 2012, Google Inc.
+// Copyright (c) 2019, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,62 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_SIGNAL_H
-#define GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_SIGNAL_H
+#ifndef COMMON_LINUX_SYMBOL_COLLECTOR_CLIENT_H_
+#define COMMON_LINUX_SYMBOL_COLLECTOR_CLIENT_H_
 
-#include <signal.h>
+#include <string>
 
-#endif  // GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_SYS_SIGNAL_H
+#include "common/linux/libcurl_wrapper.h"
+#include "common/using_std_string.h"
+
+namespace google_breakpad {
+namespace sym_upload {
+
+struct UploadUrlResponse {
+  string upload_url;
+  string upload_key;
+};
+
+enum SymbolStatus {
+  Found,
+  Missing,
+  Unknown
+};
+
+enum CompleteUploadResult {
+  Ok,
+  DuplicateData,
+  Error
+};
+
+// Helper class to communicate with a sym-upload-v2 service over HTTP/REST,
+// via libcurl.
+class SymbolCollectorClient {
+ public:
+  static bool CreateUploadUrl(
+      LibcurlWrapper* libcurl_wrapper,
+      const string& api_url,
+      const string& api_key,
+      UploadUrlResponse* uploadUrlResponse);
+
+  static CompleteUploadResult CompleteUpload(
+      LibcurlWrapper* libcurl_wrapper,
+      const string& api_url,
+      const string& api_key,
+      const string& upload_key,
+      const string& debug_file,
+      const string& debug_id,
+      const string& type);
+
+  static SymbolStatus CheckSymbolStatus(
+      LibcurlWrapper* libcurl_wrapper,
+      const string& api_url,
+      const string& api_key,
+      const string& debug_file,
+      const string& debug_id);
+};
+
+}  // namespace sym_upload
+}  // namespace google_breakpad
+
+#endif  // COMMON_LINUX_SYMBOL_COLLECTOR_CLIENT_H_

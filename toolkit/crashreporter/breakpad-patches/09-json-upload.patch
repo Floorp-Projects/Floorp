@@ -1,0 +1,333 @@
+diff --git a/src/common/linux/http_upload.cc b/src/common/linux/http_upload.cc
+index 702526af..0a1019dd 100644
+--- a/src/common/linux/http_upload.cc
++++ b/src/common/linux/http_upload.cc
+@@ -55,7 +55,7 @@ static const char kUserAgent[] = "Breakpad/1.0 (Linux)";
+ 
+ // static
+ bool HTTPUpload::SendRequest(const string &url,
+-                             const map<string, string> &parameters,
++                             const string &parameters,
+                              const map<string, string> &files,
+                              const string &proxy,
+                              const string &proxy_user_pwd,
+@@ -66,9 +66,6 @@ bool HTTPUpload::SendRequest(const string &url,
+   if (response_code != NULL)
+     *response_code = 0;
+ 
+-  if (!CheckParameters(parameters))
+-    return false;
+-
+   // We may have been linked statically; if curl_easy_init is in the
+   // current binary, no need to search for a dynamic version.
+   void* curl_lib = dlopen(NULL, RTLD_NOW);
+@@ -133,14 +130,14 @@ bool HTTPUpload::SendRequest(const string &url,
+   // Add form data.
+   CURLFORMcode (*curl_formadd)(struct curl_httppost **, struct curl_httppost **, ...);
+   *(void**) (&curl_formadd) = dlsym(curl_lib, "curl_formadd");
+-  map<string, string>::const_iterator iter = parameters.begin();
+-  for (; iter != parameters.end(); ++iter)
+-    (*curl_formadd)(&formpost, &lastptr,
+-                 CURLFORM_COPYNAME, iter->first.c_str(),
+-                 CURLFORM_COPYCONTENTS, iter->second.c_str(),
+-                 CURLFORM_END);
++  (*curl_formadd)(&formpost, &lastptr, CURLFORM_COPYNAME, "extra",
++                  CURLFORM_BUFFER, "extra.json", CURLFORM_BUFFERPTR,
++                  parameters.c_str(), CURLFORM_BUFFERLENGTH,
++                  parameters.length(), CURLFORM_CONTENTTYPE, "application/json",
++                  CURLFORM_END);
+ 
+   // Add form files.
++  map<string, string>::const_iterator iter = files.begin();
+   for (iter = files.begin(); iter != files.end(); ++iter) {
+     (*curl_formadd)(&formpost, &lastptr,
+                  CURLFORM_COPYNAME, iter->first.c_str(),
+@@ -210,21 +207,4 @@ bool HTTPUpload::CheckCurlLib(void* curl_lib) {
+       dlsym(curl_lib, "curl_easy_setopt");
+ }
+ 
+-// static
+-bool HTTPUpload::CheckParameters(const map<string, string> &parameters) {
+-  for (map<string, string>::const_iterator pos = parameters.begin();
+-       pos != parameters.end(); ++pos) {
+-    const string &str = pos->first;
+-    if (str.size() == 0)
+-      return false;  // disallow empty parameter names
+-    for (unsigned int i = 0; i < str.size(); ++i) {
+-      int c = str[i];
+-      if (c < 32 || c == '"' || c > 127) {
+-        return false;
+-      }
+-    }
+-  }
+-  return true;
+-}
+-
+ }  // namespace google_breakpad
+diff --git a/src/common/linux/http_upload.h b/src/common/linux/http_upload.h
+index bc1d5d57..95dedebc 100644
+--- a/src/common/linux/http_upload.h
++++ b/src/common/linux/http_upload.h
+@@ -29,7 +29,7 @@
+ 
+ // HTTPUpload provides a "nice" API to send a multipart HTTP(S) POST
+ // request using libcurl.  It currently supports requests that contain
+-// a set of string parameters (key/value pairs), and a file to upload.
++// parameters encoded in a JSON string, and a file to upload.
+ 
+ #ifndef COMMON_LINUX_HTTP_UPLOAD_H__
+ #define COMMON_LINUX_HTTP_UPLOAD_H__
+@@ -49,8 +49,7 @@ class HTTPUpload {
+   // request to the given URL.
+   // Each key in |files| is the name of the file part of the request
+   // (i.e. it corresponds to the name= attribute on an <input type="file">.
+-  // Parameter names must contain only printable ASCII characters,
+-  // and may not contain a quote (") character.
++  // Parameters are specified as a JSON-encoded string in |parameters|.
+   // Only HTTP(S) URLs are currently supported.  Returns true on success.
+   // If the request is successful and response_body is non-NULL,
+   // the response body will be returned in response_body.
+@@ -59,7 +58,7 @@ class HTTPUpload {
+   // If the send fails, a description of the error will be
+   // returned in error_description.
+   static bool SendRequest(const string &url,
+-                          const map<string, string> &parameters,
++                          const string &parameters,
+                           const map<string, string> &files,
+                           const string &proxy,
+                           const string &proxy_user_pwd,
+@@ -69,11 +68,6 @@ class HTTPUpload {
+                           string *error_description);
+ 
+  private:
+-  // Checks that the given list of parameters has only printable
+-  // ASCII characters in the parameter name, and does not contain
+-  // any quote (") characters.  Returns true if so.
+-  static bool CheckParameters(const map<string, string> &parameters);
+-
+   // Checks the curl_lib parameter points to a valid curl lib.
+   static bool CheckCurlLib(void* curl_lib);
+ 
+diff --git a/src/common/mac/HTTPMultipartUpload.h b/src/common/mac/HTTPMultipartUpload.h
+index 42e8fed3..0cea733e 100644
+--- a/src/common/mac/HTTPMultipartUpload.h
++++ b/src/common/mac/HTTPMultipartUpload.h
+@@ -37,7 +37,7 @@
+ @interface HTTPMultipartUpload : NSObject {
+  @protected
+   NSURL *url_;                  // The destination URL (STRONG)
+-  NSDictionary *parameters_;    // The key/value pairs for sending data (STRONG)
++  NSMutableString *parameters_;  // The JSON payload for sending data (STRONG)
+   NSMutableDictionary *files_;  // Dictionary of name/file-path (STRONG)
+   NSString *boundary_;          // The boundary string (STRONG)
+   NSHTTPURLResponse *response_; // The response from the send (STRONG)
+@@ -47,8 +47,8 @@
+ 
+ - (NSURL *)URL;
+ 
+-- (void)setParameters:(NSDictionary *)parameters;
+-- (NSDictionary *)parameters;
++- (void)setParameters:(NSMutableString *)parameters;
++- (NSMutableString *)parameters;
+ 
+ - (void)addFileAtPath:(NSString *)path name:(NSString *)name;
+ - (void)addFileContents:(NSData *)data name:(NSString *)name;
+diff --git a/src/common/mac/HTTPMultipartUpload.m b/src/common/mac/HTTPMultipartUpload.m
+index a3677f25..d2480493 100644
+--- a/src/common/mac/HTTPMultipartUpload.m
++++ b/src/common/mac/HTTPMultipartUpload.m
+@@ -93,7 +93,7 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
+ - (NSString *)multipartBoundary;
+ // Each of the following methods will append the starting multipart boundary,
+ // but not the ending one.
+-- (NSData *)formDataForKey:(NSString *)key value:(NSString *)value;
++- (NSData *)formDataForJSON:(NSString *)json;
+ - (NSData *)formDataForFileContents:(NSData *)contents name:(NSString *)name;
+ - (NSData *)formDataForFile:(NSString *)file name:(NSString *)name;
+ @end
+@@ -110,13 +110,16 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
+ }
+ 
+ //=============================================================================
+-- (NSData *)formDataForKey:(NSString *)key value:(NSString *)value {
+-  NSString *escaped = PercentEncodeNSString(key);
+-  NSString *fmt =
+-    @"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n";
+-  NSString *form = [NSString stringWithFormat:fmt, boundary_, escaped, value];
++- (NSData *)formDataForJSON:(NSString *)json {
++  NSMutableData *data = [NSMutableData data];
++  NSString *fmt = @"--%@\r\nContent-Disposition: form-data; name=\"extra\"; "
++                   "filename=\"extra.json\"\r\nContent-Type: application/json\r\n\r\n";
++  NSString *form = [NSString stringWithFormat:fmt, boundary_];
++
++  [data appendData:[form dataUsingEncoding:NSUTF8StringEncoding]];
++  [data appendData:[json dataUsingEncoding:NSUTF8StringEncoding]];
+ 
+-  return [form dataUsingEncoding:NSUTF8StringEncoding];
++  return data;
+ }
+ 
+ //=============================================================================
+@@ -171,15 +174,15 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
+ }
+ 
+ //=============================================================================
+-- (void)setParameters:(NSDictionary *)parameters {
++- (void)setParameters:(NSMutableString *)parameters {
+   if (parameters != parameters_) {
+     [parameters_ release];
+-    parameters_ = [parameters copy];
++    parameters_ = [parameters mutableCopy];
+   }
+ }
+ 
+ //=============================================================================
+-- (NSDictionary *)parameters {
++- (NSMutableString *)parameters {
+   return parameters_;
+ }
+ 
+@@ -210,16 +213,8 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
+   [req setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@",
+     boundary_] forHTTPHeaderField:@"Content-type"];
+ 
+-  // Add any parameters to the message
+-  NSArray *parameterKeys = [parameters_ allKeys];
+-  NSString *key;
+-
+-  NSInteger count = [parameterKeys count];
+-  for (NSInteger i = 0; i < count; ++i) {
+-    key = [parameterKeys objectAtIndex:i];
+-    [postBody appendData:[self formDataForKey:key
+-                                        value:[parameters_ objectForKey:key]]];
+-  }
++  // Add JSON parameters to the message
++  [postBody appendData:[self formDataForJSON:parameters_]];
+ 
+   // Add any files to the message
+   NSArray *fileNames = [files_ allKeys];
+diff --git a/src/common/windows/http_upload.cc b/src/common/windows/http_upload.cc
+index b0cc9078..5df17e1a 100644
+--- a/src/common/windows/http_upload.cc
++++ b/src/common/windows/http_upload.cc
+@@ -141,23 +141,6 @@ namespace {
+     return rv;
+   }
+ 
+-  bool CheckParameters(const map<wstring, wstring> &parameters) {
+-    for (map<wstring, wstring>::const_iterator pos = parameters.begin();
+-          pos != parameters.end(); ++pos) {
+-      const wstring &str = pos->first;
+-      if (str.size() == 0) {
+-        return false;  // disallow empty parameter names
+-      }
+-      for (unsigned int i = 0; i < str.size(); ++i) {
+-        wchar_t c = str[i];
+-        if (c < 32 || c == '"' || c > 127) {
+-          return false;
+-        }
+-      }
+-    }
+-    return true;
+-  }
+-
+   // Converts a UTF16 string to UTF8.
+   string WideToUTF8(const wstring &wide) {
+     return WideToMBCP(wide, CP_UTF8);
+@@ -390,7 +373,7 @@ namespace {
+     return true;
+   }
+ 
+-  bool GenerateRequestBody(const map<wstring, wstring> &parameters,
++  bool GenerateRequestBody(const string &parameters,
+       const map<wstring, wstring> &files,
+       const wstring &boundary,
+       string *request_body) {
+@@ -401,14 +384,19 @@ namespace {
+ 
+     request_body->clear();
+ 
+-    // Append each of the parameter pairs as a form-data part
+-    for (map<wstring, wstring>::const_iterator pos = parameters.begin();
+-        pos != parameters.end(); ++pos) {
+-      request_body->append("--" + boundary_str + "\r\n");
+-      request_body->append("Content-Disposition: form-data; name=\"" +
+-          WideToUTF8(pos->first) + "\"\r\n\r\n" +
+-          WideToUTF8(pos->second) + "\r\n");
++    // Append the extra data as a single JSON form entry
++    request_body->append("--" + boundary_str + "\r\n");
++    request_body->append(
++        "Content-Disposition: form-data; "
++        "name=\"extra\"; "
++        "filename=\"extra.json\"\r\n");
++    request_body->append("Content-Type: application/json\r\n");
++    request_body->append("\r\n");
++
++    if (!parameters.empty()) {
++      request_body->append(parameters);
+     }
++    request_body->append("\r\n");
+ 
+     // Now append each upload file as a binary (octet-stream) part
+     for (map<wstring, wstring>::const_iterator pos = files.begin();
+@@ -463,16 +451,11 @@ namespace google_breakpad {
+ 
+   bool HTTPUpload::SendMultipartPostRequest(
+       const wstring& url,
+-      const map<wstring, wstring>& parameters,
++      const string& parameters,
+       const map<wstring, wstring>& files,
+       int* timeout_ms,
+       wstring* response_body,
+       int* response_code) {
+-    // TODO(bryner): support non-ASCII parameter names
+-    if (!CheckParameters(parameters)) {
+-      return false;
+-    }
+-
+     wstring boundary = GenerateMultipartBoundary();
+     wstring content_type_header = GenerateMultipartPostRequestHeader(boundary);
+ 
+diff --git a/src/common/windows/http_upload.h b/src/common/windows/http_upload.h
+index 57e526e3..1e47f582 100644
+--- a/src/common/windows/http_upload.h
++++ b/src/common/windows/http_upload.h
+@@ -29,7 +29,7 @@
+ 
+ // HTTPUpload provides a "nice" API to send a multipart HTTP(S) POST
+ // request using wininet.  It currently supports requests that contain
+-// a set of string parameters (key/value pairs), and a file to upload.
++// parameters encoded in a JSON string, and a file to upload.
+ 
+ #ifndef COMMON_WINDOWS_HTTP_UPLOAD_H_
+ #define COMMON_WINDOWS_HTTP_UPLOAD_H_
+@@ -45,9 +45,9 @@
+ 
+ namespace google_breakpad {
+ 
++using std::map;
+ using std::string;
+ using std::wstring;
+-using std::map;
+ 
+ class HTTPUpload {
+  public:
+@@ -81,8 +81,7 @@ class HTTPUpload {
+   // request to the given URL.
+   // Each key in |files| is the name of the file part of the request
+   // (i.e. it corresponds to the name= attribute on an <input type="file">.
+-  // Parameter names must contain only printable ASCII characters,
+-  // and may not contain a quote (") character.
++  // Parameters are specified as a JSON-encoded string in |parameters|.
+   // Only HTTP(S) URLs are currently supported.  Returns true on success.
+   // If the request is successful and response_body is non-NULL,
+   // the response body will be returned in response_body.
+@@ -90,7 +89,7 @@ class HTTPUpload {
+   // received (or 0 if the request failed before getting an HTTP response).
+   static bool SendMultipartPostRequest(
+       const wstring& url,
+-      const map<wstring, wstring>& parameters,
++      const string& parameters,
+       const map<wstring, wstring>& files,
+       int *timeout_ms,
+       wstring *response_body,

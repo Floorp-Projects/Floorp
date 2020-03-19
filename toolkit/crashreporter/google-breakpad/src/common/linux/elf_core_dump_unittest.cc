@@ -244,9 +244,18 @@ TEST(ElfCoreDumpTest, ValidCoreFile) {
     note = note.GetNextNote();
   }
 
-  EXPECT_TRUE(expected_thread_ids == actual_thread_ids);
+#if defined(THREAD_SANITIZER)
+  for (std::set<pid_t>::const_iterator expected = expected_thread_ids.begin();
+       expected != expected_thread_ids.end();
+       ++expected) {
+    EXPECT_NE(actual_thread_ids.find(*expected), actual_thread_ids.end());
+  }
+  EXPECT_GE(num_nt_prstatus, kNumOfThreads);
+#else
+  EXPECT_EQ(actual_thread_ids, expected_thread_ids);
+  EXPECT_EQ(num_nt_prstatus, kNumOfThreads);
+#endif
   EXPECT_EQ(1U, num_nt_prpsinfo);
-  EXPECT_EQ(kNumOfThreads, num_nt_prstatus);
 #if defined(__i386__) || defined(__x86_64__)
   EXPECT_EQ(num_pr_fpvalid, num_nt_fpregset);
 #endif

@@ -49,12 +49,12 @@ using std::stringstream;
 using std::vector;
 using testing::ContainerEq;
 
-static Module::Function *generate_duplicate_function(const string &name) {
-  const Module::Address DUP_ADDRESS = 0xd35402aac7a7ad5cLL;
-  const Module::Address DUP_SIZE = 0x200b26e605f99071LL;
-  const Module::Address DUP_PARAMETER_SIZE = 0xf14ac4fed48c4a99LL;
+static Module::Function* generate_duplicate_function(const string &name) {
+  const Module::Address DUP_ADDRESS = 0xd35402aac7a7ad5cULL;
+  const Module::Address DUP_SIZE = 0x200b26e605f99071ULL;
+  const Module::Address DUP_PARAMETER_SIZE = 0xf14ac4fed48c4a99ULL;
 
-  Module::Function *function = new Module::Function(name, DUP_ADDRESS);
+  Module::Function* function = new Module::Function(name, DUP_ADDRESS);
   Module::Range range(DUP_ADDRESS, DUP_SIZE);
   function->ranges.push_back(range);
   function->parameter_size = DUP_PARAMETER_SIZE;
@@ -90,13 +90,13 @@ TEST(Write, OneLineFunc) {
   stringstream s;
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
-  Module::File *file = m.FindFile("file_name.cc");
-  Module::Function *function = new Module::Function(
-      "function_name", 0xe165bf8023b9d9abLL);
-  Module::Range range(0xe165bf8023b9d9abLL, 0x1e4bb0eb1cbf5b09LL);
+  Module::File* file = m.FindFile("file_name.cc");
+  Module::Function* function = new Module::Function(
+      "function_name", 0xe165bf8023b9d9abULL);
+  Module::Range range(0xe165bf8023b9d9abULL, 0x1e4bb0eb1cbf5b09ULL);
   function->ranges.push_back(range);
-  function->parameter_size = 0x772beee89114358aLL;
-  Module::Line line = { 0xe165bf8023b9d9abLL, 0x1e4bb0eb1cbf5b09LL,
+  function->parameter_size = 0x772beee89114358aULL;
+  Module::Line line = { 0xe165bf8023b9d9abULL, 0x1e4bb0eb1cbf5b09ULL,
                         file, 67519080 };
   function->lines.push_back(line);
   m.AddFunction(function);
@@ -116,20 +116,20 @@ TEST(Write, RelativeLoadAddress) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Some source files.  We will expect to see them in lexicographic order.
-  Module::File *file1 = m.FindFile("filename-b.cc");
-  Module::File *file2 = m.FindFile("filename-a.cc");
+  Module::File* file1 = m.FindFile("filename-b.cc");
+  Module::File* file2 = m.FindFile("filename-a.cc");
 
   // A function.
-  Module::Function *function = new Module::Function(
-      "A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)", 0xbec774ea5dd935f3LL);
-  Module::Range range(0xbec774ea5dd935f3LL, 0x2922088f98d3f6fcLL);
+  Module::Function* function = new Module::Function(
+      "A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)", 0xbec774ea5dd935f3ULL);
+  Module::Range range(0xbec774ea5dd935f3ULL, 0x2922088f98d3f6fcULL);
   function->ranges.push_back(range);
-  function->parameter_size = 0xe5e9aa008bd5f0d0LL;
+  function->parameter_size = 0xe5e9aa008bd5f0d0ULL;
 
   // Some source lines.  The module should not sort these.
-  Module::Line line1 = { 0xbec774ea5dd935f3LL, 0x1c2be6d6c5af2611LL,
+  Module::Line line1 = { 0xbec774ea5dd935f3ULL, 0x1c2be6d6c5af2611ULL,
                          file1, 41676901 };
-  Module::Line line2 = { 0xdaf35bc123885c04LL, 0xcf621b8d324d0ebLL,
+  Module::Line line2 = { 0xdaf35bc123885c04ULL, 0xcf621b8d324d0ebULL,
                          file2, 67519080 };
   function->lines.push_back(line2);
   function->lines.push_back(line1);
@@ -137,7 +137,7 @@ TEST(Write, RelativeLoadAddress) {
   m.AddFunction(function);
 
   // Some stack information.
-  Module::StackFrameEntry *entry = new Module::StackFrameEntry();
+  Module::StackFrameEntry* entry = new Module::StackFrameEntry();
   entry->address = 0x30f9e5c83323973dULL;
   entry->size = 0x49fc9ca7c7c13dc2ULL;
   entry->initial_rules[".cfa"] = "he was a handsome man";
@@ -149,7 +149,7 @@ TEST(Write, RelativeLoadAddress) {
 
   // Set the load address.  Doing this after adding all the data to
   // the module must work fine.
-  m.SetLoadAddress(0x2ab698b0b6407073LL);
+  m.SetLoadAddress(0x2ab698b0b6407073ULL);
 
   m.Write(s, ALL_SYMBOL_DATA);
   string contents = s.str();
@@ -173,21 +173,21 @@ TEST(Write, OmitUnusedFiles) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Create some source files.
-  Module::File *file1 = m.FindFile("filename1");
+  Module::File* file1 = m.FindFile("filename1");
   m.FindFile("filename2");  // not used by any line
-  Module::File *file3 = m.FindFile("filename3");
+  Module::File* file3 = m.FindFile("filename3");
 
   // Create a function.
-  Module::Function *function = new Module::Function(
-      "function_name", 0x9b926d464f0b9384LL);
-  Module::Range range(0x9b926d464f0b9384LL, 0x4f524a4ba795e6a6LL);
+  Module::Function* function = new Module::Function(
+      "function_name", 0x9b926d464f0b9384ULL);
+  Module::Range range(0x9b926d464f0b9384ULL, 0x4f524a4ba795e6a6ULL);
   function->ranges.push_back(range);
-  function->parameter_size = 0xbbe8133a6641c9b7LL;
+  function->parameter_size = 0xbbe8133a6641c9b7ULL;
 
   // Source files that refer to some files, but not others.
-  Module::Line line1 = { 0xab415089485e1a20LL, 0x126e3124979291f2LL,
+  Module::Line line1 = { 0xab415089485e1a20ULL, 0x126e3124979291f2ULL,
                          file1, 137850127 };
-  Module::Line line2 = { 0xb2675b5c3c2ed33fLL, 0x1df77f5551dbd68cLL,
+  Module::Line line2 = { 0xb2675b5c3c2ed33fULL, 0x1df77f5551dbd68cULL,
                          file3, 28113549 };
   function->lines.push_back(line1);
   function->lines.push_back(line2);
@@ -195,7 +195,7 @@ TEST(Write, OmitUnusedFiles) {
 
   m.AssignSourceIds();
 
-  vector<Module::File *> vec;
+  vector<Module::File*> vec;
   m.GetFiles(&vec);
   EXPECT_EQ((size_t) 3, vec.size());
   EXPECT_STREQ("filename1", vec[0]->name.c_str());
@@ -224,24 +224,24 @@ TEST(Write, NoCFI) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Some source files.  We will expect to see them in lexicographic order.
-  Module::File *file1 = m.FindFile("filename.cc");
+  Module::File* file1 = m.FindFile("filename.cc");
 
   // A function.
-  Module::Function *function = new Module::Function(
-      "A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)", 0xbec774ea5dd935f3LL);
-  Module::Range range(0xbec774ea5dd935f3LL, 0x2922088f98d3f6fcLL);
+  Module::Function* function = new Module::Function(
+      "A_FLIBBERTIJIBBET::a_will_o_the_wisp(a clown)", 0xbec774ea5dd935f3ULL);
+  Module::Range range(0xbec774ea5dd935f3ULL, 0x2922088f98d3f6fcULL);
   function->ranges.push_back(range);
-  function->parameter_size = 0xe5e9aa008bd5f0d0LL;
+  function->parameter_size = 0xe5e9aa008bd5f0d0ULL;
 
   // Some source lines.  The module should not sort these.
-  Module::Line line1 = { 0xbec774ea5dd935f3LL, 0x1c2be6d6c5af2611LL,
+  Module::Line line1 = { 0xbec774ea5dd935f3ULL, 0x1c2be6d6c5af2611ULL,
                          file1, 41676901 };
   function->lines.push_back(line1);
 
   m.AddFunction(function);
 
   // Some stack information.
-  Module::StackFrameEntry *entry = new Module::StackFrameEntry();
+  Module::StackFrameEntry* entry = new Module::StackFrameEntry();
   entry->address = 0x30f9e5c83323973dULL;
   entry->size = 0x49fc9ca7c7c13dc2ULL;
   entry->initial_rules[".cfa"] = "he was a handsome man";
@@ -253,7 +253,7 @@ TEST(Write, NoCFI) {
 
   // Set the load address.  Doing this after adding all the data to
   // the module must work fine.
-  m.SetLoadAddress(0x2ab698b0b6407073LL);
+  m.SetLoadAddress(0x2ab698b0b6407073ULL);
 
   m.Write(s, NO_CFI);
   string contents = s.str();
@@ -270,20 +270,20 @@ TEST(Construct, AddFunctions) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Two functions.
-  Module::Function *function1 = new Module::Function(
-      "_without_form", 0xd35024aa7ca7da5cLL);
-  Module::Range r1(0xd35024aa7ca7da5cLL, 0x200b26e605f99071LL);
+  Module::Function* function1 = new Module::Function(
+      "_without_form", 0xd35024aa7ca7da5cULL);
+  Module::Range r1(0xd35024aa7ca7da5cULL, 0x200b26e605f99071ULL);
   function1->ranges.push_back(r1);
-  function1->parameter_size = 0xf14ac4fed48c4a99LL;
+  function1->parameter_size = 0xf14ac4fed48c4a99ULL;
 
-  Module::Function *function2 = new Module::Function(
-      "_and_void", 0x2987743d0b35b13fLL);
-  Module::Range r2(0x2987743d0b35b13fLL, 0xb369db048deb3010LL);
+  Module::Function* function2 = new Module::Function(
+      "_and_void", 0x2987743d0b35b13fULL);
+  Module::Range r2(0x2987743d0b35b13fULL, 0xb369db048deb3010ULL);
   function2->ranges.push_back(r2);
-  function2->parameter_size = 0x938e556cb5a79988LL;
+  function2->parameter_size = 0x938e556cb5a79988ULL;
 
   // Put them in a vector.
-  vector<Module::Function *> vec;
+  vector<Module::Function*> vec;
   vec.push_back(function1);
   vec.push_back(function2);
 
@@ -311,13 +311,13 @@ TEST(Construct, AddFrames) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // First STACK CFI entry, with no initial rules or deltas.
-  Module::StackFrameEntry *entry1 = new Module::StackFrameEntry();
+  Module::StackFrameEntry* entry1 = new Module::StackFrameEntry();
   entry1->address = 0xddb5f41285aa7757ULL;
   entry1->size = 0x1486493370dc5073ULL;
   m.AddStackFrameEntry(entry1);
 
   // Second STACK CFI entry, with initial rules but no deltas.
-  Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
+  Module::StackFrameEntry* entry2 = new Module::StackFrameEntry();
   entry2->address = 0x8064f3af5e067e38ULL;
   entry2->size = 0x0de2a5ee55509407ULL;
   entry2->initial_rules[".cfa"] = "I think that I shall never see";
@@ -326,7 +326,7 @@ TEST(Construct, AddFrames) {
   m.AddStackFrameEntry(entry2);
 
   // Third STACK CFI entry, with initial rules and deltas.
-  Module::StackFrameEntry *entry3 = new Module::StackFrameEntry();
+  Module::StackFrameEntry* entry3 = new Module::StackFrameEntry();
   entry3->address = 0x5e8d0db0a7075c6cULL;
   entry3->size = 0x1c7edb12a7aea229ULL;
   entry3->initial_rules[".cfa"] = "Whose woods are these";
@@ -360,7 +360,7 @@ TEST(Construct, AddFrames) {
                contents.c_str());
 
   // Check that GetStackFrameEntries works.
-  vector<Module::StackFrameEntry *> entries;
+  vector<Module::StackFrameEntry*> entries;
   m.GetStackFrameEntries(&entries);
   ASSERT_EQ(3U, entries.size());
   // Check first entry.
@@ -395,10 +395,10 @@ TEST(Construct, AddFrames) {
 
 TEST(Construct, UniqueFiles) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
-  Module::File *file1 = m.FindFile("foo");
-  Module::File *file2 = m.FindFile(string("bar"));
-  Module::File *file3 = m.FindFile(string("foo"));
-  Module::File *file4 = m.FindFile("bar");
+  Module::File* file1 = m.FindFile("foo");
+  Module::File* file2 = m.FindFile(string("bar"));
+  Module::File* file3 = m.FindFile(string("foo"));
+  Module::File* file4 = m.FindFile("bar");
   EXPECT_NE(file1, file2);
   EXPECT_EQ(file1, file3);
   EXPECT_EQ(file2, file4);
@@ -411,8 +411,8 @@ TEST(Construct, DuplicateFunctions) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Two functions.
-  Module::Function *function1 = generate_duplicate_function("_without_form");
-  Module::Function *function2 = generate_duplicate_function("_without_form");
+  Module::Function* function1 = generate_duplicate_function("_without_form");
+  Module::Function* function2 = generate_duplicate_function("_without_form");
 
   m.AddFunction(function1);
   m.AddFunction(function2);
@@ -430,8 +430,8 @@ TEST(Construct, FunctionsWithSameAddress) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Two functions.
-  Module::Function *function1 = generate_duplicate_function("_without_form");
-  Module::Function *function2 = generate_duplicate_function("_and_void");
+  Module::Function* function1 = generate_duplicate_function("_without_form");
+  Module::Function* function2 = generate_duplicate_function("_and_void");
 
   m.AddFunction(function1);
   m.AddFunction(function2);
@@ -453,9 +453,9 @@ TEST(Construct, Externs) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Two externs.
-  Module::Extern *extern1 = new Module::Extern(0xffff);
+  Module::Extern* extern1 = new Module::Extern(0xffff);
   extern1->name = "_abc";
-  Module::Extern *extern2 = new Module::Extern(0xaaaa);
+  Module::Extern* extern2 = new Module::Extern(0xaaaa);
   extern2->name = "_xyz";
 
   m.AddExtern(extern1);
@@ -478,9 +478,9 @@ TEST(Construct, DuplicateExterns) {
   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
 
   // Two externs.
-  Module::Extern *extern1 = new Module::Extern(0xffff);
+  Module::Extern* extern1 = new Module::Extern(0xffff);
   extern1->name = "_xyz";
-  Module::Extern *extern2 = new Module::Extern(0xffff);
+  Module::Extern* extern2 = new Module::Extern(0xffff);
   extern2->name = "_abc";
 
   m.AddExtern(extern1);
@@ -563,6 +563,55 @@ TEST(Construct, FunctionsAndThumbExternsWithSameAddress) {
                "PUBLIC abc1 0 thumb_abc\n"
                "PUBLIC cc00 0 arm_func\n",
                contents.c_str());
+}
+
+TEST(Write, OutOfRangeAddresses) {
+  stringstream s;
+  Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
+
+  // Specify an allowed address range, representing a PT_LOAD segment in a
+  // module.
+  vector<Module::Range> address_ranges = {
+    Module::Range(0x2000ULL, 0x1000ULL),
+  };
+  m.SetAddressRanges(address_ranges);
+
+  // Add three stack frames (one lower, one in, and one higher than the allowed
+  // address range).  Only the middle frame should be captured.
+  Module::StackFrameEntry* entry1 = new Module::StackFrameEntry();
+  entry1->address = 0x1000ULL;
+  entry1->size = 0x100ULL;
+  m.AddStackFrameEntry(entry1);
+  Module::StackFrameEntry* entry2 = new Module::StackFrameEntry();
+  entry2->address = 0x2000ULL;
+  entry2->size = 0x100ULL;
+  m.AddStackFrameEntry(entry2);
+  Module::StackFrameEntry* entry3 = new Module::StackFrameEntry();
+  entry3->address = 0x3000ULL;
+  entry3->size = 0x100ULL;
+  m.AddStackFrameEntry(entry3);
+
+  // Add a function outside the allowed range.
+  Module::File* file = m.FindFile("file_name.cc");
+  Module::Function* function = new Module::Function(
+      "function_name", 0x4000ULL);
+  Module::Range range(0x4000ULL, 0x1000ULL);
+  function->ranges.push_back(range);
+  function->parameter_size = 0x100ULL;
+  Module::Line line = { 0x4000ULL, 0x100ULL, file, 67519080 };
+  function->lines.push_back(line);
+  m.AddFunction(function);
+
+  // Add an extern outside the allowed range.
+  Module::Extern* extern1 = new Module::Extern(0x5000ULL);
+  extern1->name = "_xyz";
+  m.AddExtern(extern1);
+
+  m.Write(s, ALL_SYMBOL_DATA);
+
+  EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+               "STACK CFI INIT 2000 100 \n",
+               s.str().c_str());
 }
 
 TEST(Lookup, StackFrameEntries) {

@@ -101,9 +101,6 @@ class CodeModules {
   // down due to address range conflicts with other modules.
   virtual std::vector<linked_ptr<const CodeModule> >
   GetShrunkRangeModules() const = 0;
-
-  // Returns true, if module address range shrink is enabled.
-  virtual bool IsModuleShrinkEnabled() const = 0;
 };
 
 }  // namespace google_breakpad

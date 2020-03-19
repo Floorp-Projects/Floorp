@@ -2028,6 +2028,15 @@ option('--disable-new-cert-storage', env='MOZ_NEW_CERT_STORAGE',
 set_config('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
 set_define('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
 
+# Crash Reporter
+# ==============================================================
+
+with only_when(compile_environment & target_is_linux):
+    # Check if we need to use the breakpad_getcontext fallback.
+    getcontext = check_symbol('getcontext')
+    set_config('HAVE_GETCONTEXT', getcontext)
+    set_define('HAVE_GETCONTEXT', getcontext)
+
 
 # Enable or disable the default browser agent, which monitors the user's default
 # browser setting on Windows.

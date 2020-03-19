@@ -141,9 +141,8 @@ class DumpSymbols {
   bool CreateEmptyModule(scoped_ptr<Module>& module);
 
   // Read debugging information from |dwarf_sections|, which was taken from
-  // |macho_reader|, and add it to |module|. On success, return true;
-  // on failure, report the problem and return false.
-  bool ReadDwarf(google_breakpad::Module *module,
+  // |macho_reader|, and add it to |module|.
+  void ReadDwarf(google_breakpad::Module *module,
                  const mach_o::Reader &macho_reader,
                  const mach_o::SectionMap &dwarf_sections,
                  bool handle_inter_cu_refs) const;

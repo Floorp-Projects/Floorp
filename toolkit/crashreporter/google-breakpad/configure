@@ -634,10 +634,8 @@ SELFTEST_FALSE
 SELFTEST_TRUE
 GTEST_LIBS
 GTEST_CFLAGS
-GTEST_CONFIG
 GMOCK_LIBS
 GMOCK_CFLAGS
-GMOCK_CONFIG
 SYSTEM_TEST_LIBS_FALSE
 SYSTEM_TEST_LIBS_TRUE
 DISABLE_TOOLS_FALSE
@@ -652,6 +650,8 @@ LINUX_HOST_FALSE
 LINUX_HOST_TRUE
 WARN_CXXFLAGS
 HAVE_CXX11
+HAVE_GETCONTEXT_FALSE
+HAVE_GETCONTEXT_TRUE
 PTHREAD_CFLAGS
 PTHREAD_LIBS
 PTHREAD_CC
@@ -795,10 +795,8 @@ CPP
 CXX
 CXXFLAGS
 CCC
-GMOCK_CONFIG
 GMOCK_CFLAGS
 GMOCK_LIBS
-GTEST_CONFIG
 GTEST_CFLAGS
 GTEST_LIBS
 RUST_DEMANGLE_CFLAGS
@@ -1464,13 +1462,9 @@ Some influential environment variables:
   CPP         C preprocessor
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
-  GMOCK_CONFIG
-              Path to gmock-config script
   GMOCK_CFLAGS
               Compiler flags for gmock
   GMOCK_LIBS  Linker flags for gmock
-  GTEST_CONFIG
-              Path to gtest-config script
   GTEST_CFLAGS
               Compiler flags for gtest
   GTEST_LIBS  Linker flags for gtest
@@ -6658,7 +6652,7 @@ fi
 
 done
 
-for ac_func in arc4random getrandom
+for ac_func in arc4random getcontext getrandom
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
@@ -6669,6 +6663,14 @@ _ACEOF
 
 fi
 done
+
+ if test "x$ac_cv_func_getcontext" = xyes; then
+  HAVE_GETCONTEXT_TRUE=
+  HAVE_GETCONTEXT_FALSE='#'
+else
+  HAVE_GETCONTEXT_TRUE='#'
+  HAVE_GETCONTEXT_FALSE=
+fi
 
 
 
@@ -7632,197 +7634,11 @@ fi
 
 
 
-
-
 if test x$system_test_libs = xtrue; then
-  if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}gmock-config", so it can be a program name with args.
-set dummy ${ac_tool_prefix}gmock-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_GMOCK_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$GMOCK_CONFIG"; then
-  ac_cv_prog_GMOCK_CONFIG="$GMOCK_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_GMOCK_CONFIG="${ac_tool_prefix}gmock-config"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-GMOCK_CONFIG=$ac_cv_prog_GMOCK_CONFIG
-if test -n "$GMOCK_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $GMOCK_CONFIG" >&5
-$as_echo "$GMOCK_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_GMOCK_CONFIG"; then
-  ac_ct_GMOCK_CONFIG=$GMOCK_CONFIG
-  # Extract the first word of "gmock-config", so it can be a program name with args.
-set dummy gmock-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_GMOCK_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$ac_ct_GMOCK_CONFIG"; then
-  ac_cv_prog_ac_ct_GMOCK_CONFIG="$ac_ct_GMOCK_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_GMOCK_CONFIG="gmock-config"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_GMOCK_CONFIG=$ac_cv_prog_ac_ct_GMOCK_CONFIG
-if test -n "$ac_ct_GMOCK_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_GMOCK_CONFIG" >&5
-$as_echo "$ac_ct_GMOCK_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-  if test "x$ac_ct_GMOCK_CONFIG" = x; then
-    GMOCK_CONFIG=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    GMOCK_CONFIG=$ac_ct_GMOCK_CONFIG
-  fi
-else
-  GMOCK_CONFIG="$ac_cv_prog_GMOCK_CONFIG"
-fi
-
-  if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}gtest-config", so it can be a program name with args.
-set dummy ${ac_tool_prefix}gtest-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_GTEST_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$GTEST_CONFIG"; then
-  ac_cv_prog_GTEST_CONFIG="$GTEST_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_GTEST_CONFIG="${ac_tool_prefix}gtest-config"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-GTEST_CONFIG=$ac_cv_prog_GTEST_CONFIG
-if test -n "$GTEST_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $GTEST_CONFIG" >&5
-$as_echo "$GTEST_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_GTEST_CONFIG"; then
-  ac_ct_GTEST_CONFIG=$GTEST_CONFIG
-  # Extract the first word of "gtest-config", so it can be a program name with args.
-set dummy gtest-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_GTEST_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$ac_ct_GTEST_CONFIG"; then
-  ac_cv_prog_ac_ct_GTEST_CONFIG="$ac_ct_GTEST_CONFIG" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_GTEST_CONFIG="gtest-config"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_GTEST_CONFIG=$ac_cv_prog_ac_ct_GTEST_CONFIG
-if test -n "$ac_ct_GTEST_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_GTEST_CONFIG" >&5
-$as_echo "$ac_ct_GTEST_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-  if test "x$ac_ct_GTEST_CONFIG" = x; then
-    GTEST_CONFIG=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    GTEST_CONFIG=$ac_ct_GTEST_CONFIG
-  fi
-else
-  GTEST_CONFIG="$ac_cv_prog_GTEST_CONFIG"
-fi
-
-  GMOCK_CFLAGS=`$GMOCK_CONFIG --cppflags --cxxflags`
-  GMOCK_LIBS=`$GMOCK_CONFIG --ldflags --libs`
-  GTEST_CFLAGS=`$GTEST_CONFIG --cppflags --cxxflags`
-  GTEST_LIBS=`$GTEST_CONFIG --ldflags --libs`
+  : "${GMOCK_CFLAGS:=-pthread}"
+  : "${GMOCK_LIBS:=-lgmock -lgtest -pthread -lpthread}"
+  : "${GTEST_CFLAGS:=-pthread}"
+  : "${GTEST_LIBS:=-lgtest -pthread -lpthread}"
 fi
 
 # Check whether --enable-selftest was given.
@@ -8052,6 +7868,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_GETCONTEXT_TRUE}" && test -z "${HAVE_GETCONTEXT_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_GETCONTEXT\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${LINUX_HOST_TRUE}" && test -z "${LINUX_HOST_FALSE}"; then

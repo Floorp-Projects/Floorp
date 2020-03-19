@@ -173,4 +173,65 @@ bool FindElfSegments(const void* elf_mapped_base,
   return false;
 }
 
+template <typename ElfClass>
+bool FindElfSoNameFromDynamicSection(const void* section_start,
+                                     size_t section_size,
+                                     const void* dynstr_start,
+                                     size_t dynstr_size,
+                                     char* soname,
+                                     size_t soname_size) {
+  typedef typename ElfClass::Dyn Dyn;
+
+  auto* dynamic = static_cast<const Dyn*>(section_start);
+  size_t dcount = section_size / sizeof(Dyn);
+  for (const Dyn* dyn = dynamic; dyn < dynamic + dcount; ++dyn) {
+    if (dyn->d_tag == DT_SONAME) {
+      const char* dynstr = static_cast<const char*>(dynstr_start);
+      if (dyn->d_un.d_val >= dynstr_size) {
+        // Beyond the end of the dynstr section
+        return false;
+      }
+      const char* str = dynstr + dyn->d_un.d_val;
+      const size_t maxsize = dynstr_size - dyn->d_un.d_val;
+      my_strlcpy(soname, str, maxsize < soname_size ? maxsize : soname_size);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool ElfFileSoNameFromMappedFile(const void* elf_base,
+                                 char* soname,
+                                 size_t soname_size) {
+  if (!IsValidElf(elf_base)) {
+    // Not ELF
+    return false;
+  }
+
+  const void* segment_start;
+  size_t segment_size;
+  if (!FindElfSection(elf_base, ".dynamic", SHT_DYNAMIC, &segment_start,
+                      &segment_size)) {
+    // No dynamic section
+    return false;
+  }
+
+  const void* dynstr_start;
+  size_t dynstr_size;
+  if (!FindElfSection(elf_base, ".dynstr", SHT_STRTAB, &dynstr_start,
+                      &dynstr_size)) {
+    // No dynstr section
+    return false;
+  }
+
+  int cls = ElfClass(elf_base);
+  return cls == ELFCLASS32 ? FindElfSoNameFromDynamicSection<ElfClass32>(
+                                 segment_start, segment_size, dynstr_start,
+                                 dynstr_size, soname, soname_size)
+                           : FindElfSoNameFromDynamicSection<ElfClass64>(
+                                 segment_start, segment_size, dynstr_start,
+                                 dynstr_size, soname, soname_size);
+}
+
 }  // namespace google_breakpad

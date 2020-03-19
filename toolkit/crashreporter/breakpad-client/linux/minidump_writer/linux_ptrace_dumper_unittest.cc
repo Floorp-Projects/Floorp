@@ -36,13 +36,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <poll.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
-#include <sys/poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -144,8 +144,8 @@ class LinuxPtraceDumperChildTest : public testing::Test {
     if (child_pid_ == 0) {
       // child process
       RealTestBody();
-      exit(HasFatalFailure() ? kFatalFailure :
-           (HasNonfatalFailure() ? kNonFatalFailure : 0));
+      _exit(HasFatalFailure() ? kFatalFailure :
+            (HasNonfatalFailure() ? kNonFatalFailure : 0));
     }
 
     ASSERT_TRUE(child_pid_ > 0);
@@ -250,7 +250,7 @@ void LinuxPtraceDumperMappingsTest::SetUp() {
   helper_path_ = GetHelperBinary();
   if (helper_path_.empty()) {
     FAIL() << "Couldn't find helper binary";
-    exit(1);
+    _exit(1);
   }
 
   // mmap two segments out of the helper binary, one
@@ -426,7 +426,7 @@ TEST_F(LinuxPtraceDumperChildTest, FileIDsMatch) {
 #undef TestBody
 
 TEST(LinuxPtraceDumperTest, VerifyStackReadWithMultipleThreads) {
-  static const int kNumberOfThreadsInHelperProgram = 5;
+  static const size_t kNumberOfThreadsInHelperProgram = 5;
 
   pid_t child_pid = SetupChildProcess(kNumberOfThreadsInHelperProgram);
   ASSERT_NE(child_pid, -1);
@@ -434,10 +434,15 @@ TEST(LinuxPtraceDumperTest, VerifyStackReadWithMultipleThreads) {
   // Children are ready now.
   LinuxPtraceDumper dumper(child_pid);
   ASSERT_TRUE(dumper.Init());
-  EXPECT_EQ((size_t)kNumberOfThreadsInHelperProgram, dumper.threads().size());
+#if defined(THREAD_SANITIZER)
+  EXPECT_GE(dumper.threads().size(), (size_t)kNumberOfThreadsInHelperProgram);
+#else
+  EXPECT_EQ(dumper.threads().size(), (size_t)kNumberOfThreadsInHelperProgram);
+#endif
   EXPECT_TRUE(dumper.ThreadsSuspend());
 
   ThreadInfo one_thread;
+  size_t matching_threads = 0;
   for (size_t i = 0; i < dumper.threads().size(); ++i) {
     EXPECT_TRUE(dumper.GetThreadInfoByIndex(i, &one_thread));
     const void* stack;
@@ -465,8 +470,9 @@ TEST(LinuxPtraceDumperTest, VerifyStackReadWithMultipleThreads) {
                            dumper.threads()[i],
                            process_tid_location,
                            4);
-    EXPECT_EQ(dumper.threads()[i], one_thread_id);
+    matching_threads += (dumper.threads()[i] == one_thread_id) ? 1 : 0;
   }
+  EXPECT_EQ(matching_threads, kNumberOfThreadsInHelperProgram);
   EXPECT_TRUE(dumper.ThreadsResume());
   kill(child_pid, SIGKILL);
 
@@ -478,7 +484,7 @@ TEST(LinuxPtraceDumperTest, VerifyStackReadWithMultipleThreads) {
 }
 
 TEST_F(LinuxPtraceDumperTest, SanitizeStackCopy) {
-  static const int kNumberOfThreadsInHelperProgram = 1;
+  static const size_t kNumberOfThreadsInHelperProgram = 1;
 
   pid_t child_pid = SetupChildProcess(kNumberOfThreadsInHelperProgram);
   ASSERT_NE(child_pid, -1);

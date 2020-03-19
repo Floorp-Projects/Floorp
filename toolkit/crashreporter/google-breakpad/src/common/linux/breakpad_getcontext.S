@@ -28,9 +28,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // A minimalistic implementation of getcontext() to be used by
-// Google Breakpad on Android.
+// Google Breakpad when getcontext() is not available in libc.
 
-#include "common/android/ucontext_constants.h"
+#include "common/linux/ucontext_constants.h"
 
 /* int getcontext (ucontext_t *ucp) */
 

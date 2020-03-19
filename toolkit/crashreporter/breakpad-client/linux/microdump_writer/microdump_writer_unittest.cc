@@ -40,6 +40,7 @@
 #include "linux/handler/exception_handler.h"
 #include "linux/handler/microdump_extra_info.h"
 #include "linux/microdump_writer/microdump_writer.h"
+#include "common/linux/breakpad_getcontext.h"
 #include "common/linux/eintr_wrapper.h"
 #include "common/linux/ignore_ret.h"
 #include "common/scoped_ptr.h"
@@ -209,14 +210,14 @@ void CheckMicrodumpContents(const string& microdump_content,
       string token;
       unsigned crash_reason;
       string crash_reason_str;
-      intptr_t crash_address;
+      uintptr_t crash_address;
       crash_reason_tokens.ignore(2); // Ignore the "R " preamble.
       crash_reason_tokens >> std::hex >> crash_reason >> crash_reason_str >>
           crash_address;
       ASSERT_FALSE(crash_reason_tokens.fail());
       ASSERT_EQ(MD_EXCEPTION_CODE_LIN_DUMP_REQUESTED, crash_reason);
       ASSERT_EQ("DUMP_REQUESTED", crash_reason_str);
-      ASSERT_EQ(0xDEADDEADu, kCrashAddress);
+      ASSERT_EQ(kCrashAddress, crash_address);
       did_find_crash_reason = true;
     } else if (line.find("V ") == 0) {
       if (expected_info.product_info)

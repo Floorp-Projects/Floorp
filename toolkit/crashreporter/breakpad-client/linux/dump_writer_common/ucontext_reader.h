@@ -34,6 +34,7 @@
 #include <sys/user.h>
 
 #include "linux/dump_writer_common/raw_context_cpu.h"
+#include "linux/minidump_writer/minidump_writer.h"
 #include "common/memory_allocator.h"
 #include "google_breakpad/common/minidump_format.h"
 
@@ -50,7 +51,7 @@ struct UContextReader {
   //   info: the collection of register structures.
 #if defined(__i386__) || defined(__x86_64)
   static void FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
-                             const struct _libc_fpstate* fp);
+                             const fpstate_t* fp);
 #elif defined(__aarch64__)
   static void FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
                              const struct fpsimd_context* fpregs);
