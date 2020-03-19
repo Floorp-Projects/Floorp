@@ -24,7 +24,6 @@ const startId          = 8;
 const elemId           = 9;
 const codeId           = 10;
 const dataId           = 11;
-const dataCountId      = 12;
 const gcFeatureOptInId = 42;
 
 // User-defined section names
@@ -340,12 +339,6 @@ function dataSection(segmentArrays) {
             body.push(...varU32(elem));
     }
     return { name: dataId, body };
-}
-
-function dataCountSection(count) {
-    var body = [];
-    body.push(...varU32(count));
-    return { name: dataCountId, body };
 }
 
 function elemSection(elemArrays) {

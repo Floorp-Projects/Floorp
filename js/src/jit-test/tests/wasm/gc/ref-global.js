@@ -88,7 +88,7 @@
     let bin = wasmTextToBinary(
         `(module
           (gc_feature_opt_in 3)
-          (import "" "g" (global $g anyref))
+          (import $g "" "g" (global anyref))
           (global $glob anyref (global.get $g))
           (func (export "get") (result anyref)
            (global.get $glob)))`);

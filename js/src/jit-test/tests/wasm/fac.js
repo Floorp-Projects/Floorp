@@ -15,5 +15,5 @@ assertEq(wasmEvalText(`(module
     (local.get 1)
   )
 
-  (export "" (func 0))
+  (export "" 0)
 )`).exports[""](10), 3628800);

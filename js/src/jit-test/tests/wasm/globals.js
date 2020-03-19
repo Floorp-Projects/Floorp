@@ -1,10 +1,9 @@
 const { Instance, Module, LinkError } = WebAssembly;
 
 // Locally-defined globals
-assertErrorMessage(() => wasmEvalText(`(module (global))`), SyntaxError, /wasm text error/);
-// A global field in the text format is valid with an empty expression, but this produces an invalid module
-assertErrorMessage(() => wasmEvalText(`(module (global i32))`), WebAssembly.CompileError, /unexpected initializer expression/);
-assertErrorMessage(() => wasmEvalText(`(module (global (mut i32)))`), WebAssembly.CompileError, /unexpected initializer expression/);
+assertErrorMessage(() => wasmEvalText(`(module (global))`), SyntaxError, /parsing/);
+assertErrorMessage(() => wasmEvalText(`(module (global i32))`), SyntaxError, /parsing/);
+assertErrorMessage(() => wasmEvalText(`(module (global (mut i32)))`), SyntaxError, /parsing/);
 
 // Initializer expressions.
 wasmFailValidateText(`(module (global i32 (f32.const 13.37)))`, /type mismatch/);
@@ -26,10 +25,10 @@ function testInner(type, initialValue, nextValue, coercion)
 
         (func $get_cst (result ${type}) (global.get 1))
 
-        (export "get" (func $get))
-        (export "get_cst" (func $get_cst))
+        (export "get" $get)
+        (export "get_cst" $get_cst)
 
-        (export "set" (func $set))
+        (export "set" $set)
     )`).exports;
 
     assertEq(module.get(), coercion(initialValue));
@@ -69,11 +68,11 @@ var module = wasmEvalText(`(module
     ${get_set(3, 'f64')}
     ${get_set(4, 'i32')}
 
-    (export "get0" (func $get_0)) (export "set0" (func $set_0))
-    (export "get1" (func $get_1)) (export "set1" (func $set_1))
-    (export "get2" (func $get_2)) (export "set2" (func $set_2))
-    (export "get3" (func $get_3)) (export "set3" (func $set_3))
-    (export "get4" (func $get_4)) (export "set4" (func $set_4))
+    (export "get0" $get_0) (export "set0" $set_0)
+    (export "get1" $get_1) (export "set1" $set_1)
+    (export "get2" $get_2) (export "set2" $set_2)
+    (export "get3" $get_3) (export "set3" $set_3)
+    (export "get4" $get_4) (export "set4" $set_4)
 )`).exports;
 
 let values = [42, 10, Math.fround(13.37), 13.37, -18];
@@ -99,7 +98,7 @@ module = wasmEvalText(`(module
     (table (export "tbl") 4 funcref)
     (elem (global.get 0) $f)
     (func $f)
-    (export "f" (func $f))
+    (export "f" $f)
 )`, {
     globals: {
         a: 1
@@ -109,10 +108,10 @@ assertEq(module.f, module.tbl.get(1));
 
 // Import/export semantics.
 module = wasmEvalText(`(module
- (import "globals" "x" (global $g i32))
+ (import $g "globals" "x" (global i32))
  (func $get (result i32) (global.get $g))
- (export "getter" (func $get))
- (export "value" (global 0))
+ (export "getter" $get)
+ (export "value" global 0)
 )`, { globals: {x: 42} }).exports;
 
 assertEq(module.getter(), 42);
@@ -169,8 +168,8 @@ for (let v of [
 module = wasmEvalText(`(module
  (import "globals" "x" (global i32))
  (global i32 (i32.const 1337))
- (export "imported" (global 0))
- (export "defined" (global 1))
+ (export "imported" global 0)
+ (export "defined" global 1)
 )`, { globals: {x: 42} }).exports;
 
 assertEq(Number(module.imported), 42);
@@ -197,11 +196,11 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
 
         (func $get_cst (result ${type}) (global.get 2))
 
-        (export "get0" (func $get0))
-        (export "get1" (func $get1))
-        (export "get_cst" (func $get_cst))
+        (export "get0" $get0)
+        (export "get1" $get1)
+        (export "get_cst" $get_cst)
 
-        (export "set1" (func $set1))
+        (export "set1" $set1)
         (export "global_imm" (global $glob_imm))
     )`, {
         globals: {
@@ -238,9 +237,9 @@ wasmAssert(`(module
     (func $get (result i64) (global.get 0))
     (func $set (param i64) (global.set 0 (local.get 0)))
     (func $get_cst (result i64) (global.get 1))
-    (export "get" (func $get))
-    (export "get_cst" (func $get_cst))
-    (export "set" (func $set))
+    (export "get" $get)
+    (export "get_cst" $get_cst)
+    (export "set" $set)
 )`, [
     {type: 'i64', func: '$get', expected: initialValue},
     {type: 'i64', func: '$set', args: [`i64.const ${nextValue}`]},
@@ -353,15 +352,15 @@ wasmAssert(`(module
         // When a global is exported twice, the two objects are the same.
         let i = wasmEvalText(`(module
                                (global i32 (i32.const 0))
-                               (export "a" (global 0))
-                               (export "b" (global 0)))`);
+                               (export "a" global 0)
+                               (export "b" global 0))`);
         assertEq(i.exports.a, i.exports.b);
 
         // When a global is imported and then exported, the exported object is
         // the same as the imported object.
         let j = wasmEvalText(`(module
                                (import "" "a" (global i32))
-                               (export "x" (global 0)))`,
+                               (export "x" global 0))`,
                              { "": {a: i.exports.a}});
 
         assertEq(i.exports.a, j.exports.x);
@@ -372,8 +371,8 @@ wasmAssert(`(module
         let k = wasmEvalText(`(module
                                (import "" "a" (global i32))
                                (import "" "b" (global i32))
-                               (export "x" (global 0))
-                               (export "y" (global 1)))`,
+                               (export "x" global 0)
+                               (export "y" global 1))`,
                              { "": {a: i.exports.a,
                                     b: i.exports.a}});
 

@@ -1,7 +1,7 @@
 var code = `(module
-  (import "env" "test" (func $i))
+  (import $i "env" "test")
   (func $t (call $i))
-  (export "test" (func $t))
+  (export "test" $t)
 )`;
 var mod = wasmEvalText(code, {
   env: {
