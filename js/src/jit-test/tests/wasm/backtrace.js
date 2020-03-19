@@ -1,5 +1,5 @@
 var code = `(module
-  (import $i "env" "test")
+  (import "env" "test" (func $i))
   (func $t (call $i))
   (export "test" (func $t))
 )`;

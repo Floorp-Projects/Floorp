@@ -192,7 +192,7 @@ function runTest() {
 }
 var i = wasmEvalText(
     `(module
-        (import $imp "a" "b" (result i32))
+        (import "a" "b" (func $imp (result i32)))
         (func $f (param i32) (result i32) (call $imp))
         (export "f" (func $f))
     )`,

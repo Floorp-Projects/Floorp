@@ -11,10 +11,10 @@ function accum(...args) {
 }
 
 var e = wasmEvalText(`(module
-    (import $a "" "a" (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32))
-    (import $b "" "b" (param f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32) (result f32))
-    (import $c "" "c" (param f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64) (result f64))
-    (import $d "" "d" (param i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32) (result f64))
+    (import "" "a" (func $a (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32)))
+    (import "" "b" (func $b (param f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32 f32) (result f32)))
+    (import "" "c" (func $c (param f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64 f64) (result f64)))
+    (import "" "d" (func $d (param i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32 f64 i32 f32) (result f64)))
     (func (export "a") (result i32)
         i32.const 1 i32.const 2 i32.const 3 i32.const 4 i32.const 5
         i32.const 6 i32.const 7 i32.const 8 i32.const 9 i32.const 10
@@ -55,7 +55,7 @@ setJitCompilerOption("baseline.warmup.trigger", 5);
 setJitCompilerOption("ion.warmup.trigger", 10);
 
 var e = wasmEvalText(`(module
-    (import $a "" "a" (param i32 f64) (result f64))
+    (import "" "a" (func $a (param i32 f64) (result f64)))
     (export "a" (func $a))
 )`, {"":{a:(a,b)=>a+b}}).exports;
 for (var i = 0; i < 100; i++)
