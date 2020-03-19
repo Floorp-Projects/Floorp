@@ -25,7 +25,7 @@ using struct mozilla::void_t
 using mozilla::dom::IDBCursor::Direction
   from "mozilla/dom/IDBCursor.h";
 
-using mozilla::dom::indexedDB::StructuredCloneFile::FileType
+using mozilla::dom::indexedDB::StructuredCloneFileBase::FileType
   from "mozilla/dom/IndexedDatabase.h";
 
 using class mozilla::dom::indexedDB::Key
