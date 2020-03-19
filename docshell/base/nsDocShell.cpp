@@ -8804,7 +8804,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // delegate may want to intercept that load.
   SameDocumentNavigationState sameDocumentNavigationState;
   bool sameDocument =
-      IsSameDocumentNavigation(aLoadState, sameDocumentNavigationState);
+      IsSameDocumentNavigation(aLoadState, sameDocumentNavigationState) &&
+      !aLoadState->GetPendingRedirectedChannel();
   // LoadDelegate has already had chance to delegate loads which ended up to
   // session history, so no need to re-delegate here, and we don't want fragment
   // navigations to go through load delegate.
@@ -8971,7 +8972,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // Check if the webbrowser chrome wants the load to proceed; this can be
   // used to cancel attempts to load URIs in the wrong process.
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
-  if (browserChrome3) {
+  if (browserChrome3 && !aLoadState->GetPendingRedirectedChannel()) {
     bool shouldLoad;
     rv = browserChrome3->ShouldLoadURI(
         this, aLoadState->URI(), aLoadState->GetReferrerInfo(),
@@ -12751,9 +12752,10 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
         MOZ_ASSERT(aLoadState->GetPendingRedirectedChannel());
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
           aLoadState->GetPendingRedirectedChannel()->Cancel(NS_BINDING_ABORTED);
-          return;
+          return NS_BINDING_ABORTED;
         }
 
+        self->mLoadType = aLoadState->LoadType();
         nsCOMPtr<nsIURI> previousURI;
         uint32_t previousFlags = 0;
         ExtractLastVisit(aLoadState->GetPendingRedirectedChannel(),
@@ -12785,6 +12787,17 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
         }
 
         self->InternalLoad(aLoadState, nullptr, nullptr);
+
+        // If the channel isn't pending, then it means that InternalLoad
+        // never connected it, and we shouldn't try to continue. This
+        // can happen even if InternalLoad returned NS_OK.
+        bool pending = false;
+        aLoadState->GetPendingRedirectedChannel()->IsPending(&pending);
+        NS_ASSERTION(pending, "We should have connected the pending channel!");
+        if (!pending) {
+          return NS_BINDING_ABORTED;
+        }
+        return NS_OK;
       });
   return NS_OK;
 }
