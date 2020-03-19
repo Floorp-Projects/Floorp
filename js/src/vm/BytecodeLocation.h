@@ -12,14 +12,14 @@
 #include "vm/BytecodeUtil.h"
 #include "vm/StringType.h"
 
-enum class FunctionPrefixKind;
-
 namespace js {
 
 using RawBytecodeLocationOffset = uint32_t;
 
 class PropertyName;
 class RegExpObject;
+
+enum class FunctionPrefixKind;
 
 class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset_;
