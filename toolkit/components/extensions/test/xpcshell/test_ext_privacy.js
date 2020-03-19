@@ -279,7 +279,7 @@ add_task(async function test_privacy_other_prefs() {
       "media.peerconnection.ice.proxy_only": false,
     },
     "network.tlsVersionRestriction": {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": 1,
       "security.tls.version.max": 4,
     },
     "network.peerConnectionEnabled": {
@@ -586,28 +586,12 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.1",
     },
     {
-      "security.tls.version.min": 3,
-      "security.tls.version.max": 4,
+      "security.tls.version.min": 1,
+      "security.tls.version.max": 2,
     },
     {
-      minimum: "TLSv1.2",
-      maximum: "TLSv1.3",
-    }
-  );
-
-  await testSetting(
-    "network.tlsVersionRestriction",
-    {
-      minimum: "invalid",
-      maximum: "TLSv1.2",
-    },
-    {
-      "security.tls.version.min": 3,
-      "security.tls.version.max": 3,
-    },
-    {
-      minimum: "TLSv1.2",
-      maximum: "TLSv1.2",
+      minimum: "TLSv1",
+      maximum: "TLSv1.1",
     }
   );
 
@@ -618,11 +602,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "invalid",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": 1,
       "security.tls.version.max": 4,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: "TLSv1",
       maximum: "TLSv1.3",
     }
   );
@@ -664,11 +648,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.2",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": 1,
       "security.tls.version.max": 3,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: "TLSv1",
       maximum: "TLSv1.2",
     }
   );
