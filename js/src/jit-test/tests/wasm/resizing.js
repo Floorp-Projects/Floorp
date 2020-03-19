@@ -23,7 +23,7 @@ wasmFullPass(`(module
             (i32.add
                 (i32.load (i32.const 65532))
                 (i32.load (i32.const 6553596)))))
-    (export "run" $test)
+    (export "run" (func $test))
 )`, 111);
 
 // Grow during import call:
@@ -31,7 +31,7 @@ var exports = wasmEvalText(`(module
     (import $imp "" "imp")
     (memory 1)
     (func $grow (drop (memory.grow (i32.const 99))))
-    (export "grow" $grow)
+    (export "grow" (func $grow))
     (func $test (result i32)
         (i32.store (i32.const 0) (i32.const 1))
         (i32.store (i32.const 65532) (i32.const 10))
@@ -42,7 +42,7 @@ var exports = wasmEvalText(`(module
             (i32.add
                 (i32.load (i32.const 65532))
                 (i32.load (i32.const 6553596)))))
-    (export "test" $test)
+    (export "test" (func $test))
 )`, {"":{imp() { exports.grow() }}}).exports;
 
 setJitCompilerOption("baseline.warmup.trigger", 2);
@@ -59,7 +59,7 @@ var exports1 = wasmEvalText(`(module
         (i32.store (i32.const 65532) (i32.const 10))
         (drop (memory.grow (i32.const 99)))
         (i32.store (i32.const 6553596) (i32.const 100)))
-    (export "grow" $grow)
+    (export "grow" (func $grow))
 )`, {"":{mem}}).exports;
 var exports2 = wasmEvalText(`(module
     (import "" "tbl" (table 1 funcref))
@@ -73,7 +73,7 @@ var exports2 = wasmEvalText(`(module
             (i32.add
                 (i32.load (i32.const 65532))
                 (i32.load (i32.const 6553596)))))
-    (export "test" $test)
+    (export "test" (func $test))
 )`, {"":{tbl, mem}}).exports;
 tbl.set(0, exports1.grow);
 assertEq(exports2.test(), 111);
@@ -85,13 +85,13 @@ new Int32Array(mem.buffer)[0] = 42;
 var mod = new Module(wasmTextToBinary(`(module
     (import "" "mem" (memory 1))
     (func $gm (param i32) (result i32) (memory.grow (local.get 0)))
-    (export "grow_memory" $gm)
+    (export "grow_memory" (func $gm))
     (func $cm (result i32) (memory.size))
-    (export "current_memory" $cm)
+    (export "current_memory" (func $cm))
     (func $ld (param i32) (result i32) (i32.load (local.get 0)))
-    (export "load" $ld)
+    (export "load" (func $ld))
     (func $st (param i32) (param i32) (i32.store (local.get 0) (local.get 1)))
-    (export "store" $st)
+    (export "store" (func $st))
 )`));
 var exp1 = new Instance(mod, {"":{mem}}).exports;
 var exp2 = new Instance(mod, {"":{mem}}).exports;
@@ -145,8 +145,8 @@ var exports = wasmEvalText(`(module
     (func $one (result i32) (i32.const 1))
     (elem (i32.const 0) $one)
     (func $two (result i32) (i32.const 2))
-    (export "test" $test)
-    (export "two" $two)
+    (export "test" (func $test))
+    (export "two" (func $two))
 )`, {"":{grow() { exports.tbl.grow(1); exports.tbl.set(1, exports.two) }}}).exports;
 
 setJitCompilerOption("baseline.warmup.trigger", 2);
@@ -159,7 +159,7 @@ assertEq(exports.tbl.length, 11);
 var exports1 = wasmEvalText(`(module
     (import $grow "" "grow")
     (func $exp (call $grow))
-    (export "exp" $exp)
+    (export "exp" (func $exp))
 )`, {"":{grow() { exports2.tbl.grow(1); exports2.tbl.set(2, exports2.eleven) }}}).exports;
 var exports2 = wasmEvalText(`(module
     (type $v2v (func))
@@ -177,8 +177,8 @@ var exports2 = wasmEvalText(`(module
     (elem (i32.const 1) $ten)
     (func $eleven (result i32) (i32.const 11))
     (export "tbl" table)
-    (export "test" $test)
-    (export "eleven" $eleven)
+    (export "test" (func $test))
+    (export "eleven" (func $eleven))
 )`, {"":{imp:exports1.exp}}).exports;
 assertEq(exports2.test(), 21);
 
@@ -186,11 +186,11 @@ assertEq(exports2.test(), 21);
 
 var src = wasmEvalText(`(module
     (func $one (result i32) (i32.const 1))
-    (export "one" $one)
+    (export "one" (func $one))
     (func $two (result i32) (i32.const 2))
-    (export "two" $two)
+    (export "two" (func $two))
     (func $three (result i32) (i32.const 3))
-    (export "three" $three)
+    (export "three" (func $three))
 )`).exports;
 var tbl = new Table({element:"funcref", initial:1});
 tbl.set(0, src.one);
@@ -199,7 +199,7 @@ var mod = new Module(wasmTextToBinary(`(module
     (type $v2i (func (result i32)))
     (table (import "" "tbl") 1 funcref)
     (func $ci (param i32) (result i32) (call_indirect (type $v2i) (local.get 0)))
-    (export "call_indirect" $ci)
+    (export "call_indirect" (func $ci))
 )`));
 var exp1 = new Instance(mod, {"":{tbl}}).exports;
 var exp2 = new Instance(mod, {"":{tbl}}).exports;

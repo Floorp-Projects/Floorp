@@ -13,4 +13,4 @@ wasmEvalText(
 		(local.set $var0 (i64.mul (i64.const 2) (local.get $var0))))
 	   (tee_local $var0 (i64.add (i64.const 4) (local.get $var0))))
 	  (i64.const 1))))
-  (export "" 0))`);
+  (export "" (func 0)))`);

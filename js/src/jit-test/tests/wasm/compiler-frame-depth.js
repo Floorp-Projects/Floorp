@@ -12,7 +12,7 @@ var code = `(module
   (param f32)
   ${expr}
  )
- (export "run" 0)
+ (export "run" (func 0))
 )`;
 
 try {

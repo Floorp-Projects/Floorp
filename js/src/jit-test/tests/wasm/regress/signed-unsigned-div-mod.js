@@ -11,7 +11,7 @@ assertEq(wasmEvalText(
        i32.shr_u
        (i32.const 10000)
        i32.rem_s)
-      (export "f" 0))`).exports.f(), -1);
+      (export "f" (func 0)))`).exports.f(), -1);
 
 // Ditto for int64
 
@@ -36,7 +36,7 @@ assertEq(wasmEvalText(
        i32.shl
        (i32.const 10000)
        i32.rem_u)
-      (export "f" 0))`).exports.f(), 7295);
+      (export "f" (func 0)))`).exports.f(), 7295);
 
 // 0x80000000 is really -0x80000000 so the result of signed division shall be
 // negative.
@@ -49,7 +49,7 @@ assertEq(wasmEvalText(
        i32.shr_u
        (i32.const 10000)
        i32.div_s)
-      (export "f" 0))`).exports.f(), -214748);
+      (export "f" (func 0)))`).exports.f(), -214748);
 
 assertEq(wasmEvalText(
     `(module
@@ -59,7 +59,7 @@ assertEq(wasmEvalText(
        i32.shr_u
        (i32.const -10000)
        i32.div_s)
-      (export "f" 0))`).exports.f(), 214748);
+      (export "f" (func 0)))`).exports.f(), 214748);
 
 // And the result of unsigned division shall be positive.
 
@@ -71,5 +71,5 @@ assertEq(wasmEvalText(
        i32.shr_u
        (i32.const 10000)
        i32.div_u)
-      (export "f" 0))`).exports.f(), 214748);
+      (export "f" (func 0)))`).exports.f(), 214748);
 
