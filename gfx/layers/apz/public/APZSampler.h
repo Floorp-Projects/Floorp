@@ -67,8 +67,7 @@ class APZSampler {
                           wr::RenderRoot aRenderRoot,
                           const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 
-  bool SampleAnimations(const LayerMetricsWrapper& aLayer,
-                        const TimeStamp& aSampleTime);
+  bool AdvanceAnimations(const TimeStamp& aSampleTime);
 
   /**
    * Compute the updated shadow transform for a scroll thumb layer that

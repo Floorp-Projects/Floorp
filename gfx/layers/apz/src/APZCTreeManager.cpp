@@ -788,8 +788,6 @@ void APZCTreeManager::SampleForWebRender(
                               apzc->GetGuid().mScrollId,
                               wr::ToLayoutPoint(asyncScrollDelta));
 
-    apzc->ReportCheckerboard(aSampleTime);
-
 #if defined(MOZ_WIDGET_ANDROID)
     // Send the root frame metrics to java through the UIController
     RefPtr<UiCompositorControllerParent> uiController =
@@ -866,15 +864,8 @@ void APZCTreeManager::SampleForWebRender(
   // sampling all async transforms, because AdvanceAnimations() updates
   // the effective scroll offset to the value it should have for the *next*
   // composite after this one (if the APZ frame delay is enabled).
-  bool activeAnimations = false;
-  for (const auto& mapping : mApzcMap) {
-    AsyncPanZoomController* apzc = mapping.second;
-    if (apzc->GetRenderRoot() != aRenderRoot) {
-      // If this APZC belongs to a different render root, skip over it
-      continue;
-    }
-    activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
-  }
+  bool activeAnimations =
+      AdvanceAnimationsInternal(lock, Some(aRenderRoot), aSampleTime);
   if (activeAnimations) {
     RefPtr<CompositorController> controller;
     CompositorBridgeParent::CallWithIndirectShadowTree(
@@ -886,6 +877,28 @@ void APZCTreeManager::SampleForWebRender(
           wr::RenderRootSet(aRenderRoot));
     }
   }
+}
+
+bool APZCTreeManager::AdvanceAnimations(Maybe<wr::RenderRoot> aRenderRoot,
+                                        const TimeStamp& aSampleTime) {
+  MutexAutoLock lock(mMapLock);
+  return AdvanceAnimationsInternal(lock, std::move(aRenderRoot), aSampleTime);
+}
+
+bool APZCTreeManager::AdvanceAnimationsInternal(
+    const MutexAutoLock& aProofOfMapLock, Maybe<wr::RenderRoot> aRenderRoot,
+    const TimeStamp& aSampleTime) {
+  bool activeAnimations = false;
+  for (const auto& mapping : mApzcMap) {
+    AsyncPanZoomController* apzc = mapping.second;
+    if (aRenderRoot && apzc->GetRenderRoot() != *aRenderRoot) {
+      // If this APZC belongs to a different render root, skip over it
+      continue;
+    }
+    apzc->ReportCheckerboard(aSampleTime);
+    activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+  }
+  return activeAnimations;
 }
 
 // Compute the clip region to be used for a layer with an APZC. This function

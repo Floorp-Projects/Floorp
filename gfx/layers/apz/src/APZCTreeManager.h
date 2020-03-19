@@ -205,6 +205,14 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                           const wr::WrPipelineIdEpochs* aEpochsBeingRendered);
 
   /**
+   * Walk through all the APZCs and do the sampling steps needed when
+   * advancing to the next frame. The APZCs walked can be restricted to a
+   * specific render root by providing that as the first argument.
+   */
+  bool AdvanceAnimations(Maybe<wr::RenderRoot> aRenderRoot,
+                         const TimeStamp& aSampleTime);
+
+  /**
    * Refer to the documentation of APZInputBridge::ReceiveInputEvent() and
    * APZEventResult.
    */
@@ -742,6 +750,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   // Look up the GeckoContentController for the given layers id.
   static already_AddRefed<GeckoContentController> GetContentController(
       LayersId aLayersId);
+
+  bool AdvanceAnimationsInternal(const MutexAutoLock& aProofOfMapLock,
+                                 Maybe<wr::RenderRoot> aRenderRoot,
+                                 const TimeStamp& aSampleTime);
 
  protected:
   /* The input queue where input events are held until we know enough to
