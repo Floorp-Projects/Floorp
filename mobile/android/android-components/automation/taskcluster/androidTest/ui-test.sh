@@ -83,16 +83,16 @@ samples=${component//samples-}
 # If tests are for components, the path is different than for samples
 if [[ "${component}" != samples-* ]]
 then
-    # Tests for any component, NOT sample and NOT real UI tests
+    # Case 1: tests for any component (but NOT samples, NOT real UI tests)
     APK_APP="./samples/${component}/build/outputs/apk/geckoNightly/debug/samples-${component}-geckoNightly-debug.apk"
     APK_TEST="./components/${component}/engine-gecko-nightly/build/outputs/apk/androidTest/debug/browser-engine-gecko-nightly-debug-androidTest.apk"
 elif [[ "${component}" == "samples-browser" ]]
 then
-    # Tests for browser sample, the only sample with geckoNightly
+    # Case 2: tests for browser sample (geckoNightly sample only)
     APK_APP="./samples/${samples}/build/outputs/apk/geckoNightly/debug/samples-${samples}-geckoNightly-debug.apk"
     APK_TEST="./samples/${samples}/build/outputs/apk/androidTest/geckoNightly/debug/samples-{$samples}-geckoNightly-debug-androidTest.apk"
 else
-    # Tests for samples different than browser, like samples-glean
+    # Case 3: tests for non-browser samples (i.e.  samples-glean)
     APK_APP="./samples/${samples}/build/outputs/apk/debug/samples-${samples}-debug.apk"
     APK_TEST="./samples/${samples}/build/outputs/apk/androidTest/debug/samples-${samples}-debug-androidTest.apk"
 fi

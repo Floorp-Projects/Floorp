@@ -47,16 +47,15 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'browser', 'arm', '1']
         treeherder:
             symbol: 'ui-components'
-        #run-on-tasks-for: [github-push]
     ui-browser:
-        description: 'Run ui tests for browser component'
+        description: 'Run ui tests for browser sample'
         run:
             post-gradlew:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-browser', 'arm', '1']
         treeherder:
             symbol: 'ui-samples-browser'
     ui-glean:
-        description: 'Run ui tests for browser component'
+        description: 'Run ui tests for glean sample'
         run:
             post-gradlew:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-glean', 'arm', '1']
