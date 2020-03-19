@@ -63,12 +63,11 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
                                             public nsIMultiPartChannelListener {
  public:
   ParentProcessDocumentOpenInfo(ParentChannelListener* aListener,
-                                bool aPluginsAllowed, uint32_t aFlags,
+                                uint32_t aFlags,
                                 mozilla::dom::BrowsingContext* aBrowsingContext)
       : nsDocumentOpenInfo(aFlags, false),
         mBrowsingContext(aBrowsingContext),
-        mListener(aListener),
-        mPluginsAllowed(aPluginsAllowed) {
+        mListener(aListener) {
     LOG(("ParentProcessDocumentOpenInfo ctor [this=%p]", this));
   }
 
@@ -140,7 +139,7 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
 
   nsDocumentOpenInfo* Clone() override {
     mCloned = true;
-    return new ParentProcessDocumentOpenInfo(mListener, mPluginsAllowed, mFlags,
+    return new ParentProcessDocumentOpenInfo(mListener, mFlags,
                                              mBrowsingContext);
   }
 
@@ -206,7 +205,6 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
 
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
   RefPtr<ParentChannelListener> mListener;
-  bool mPluginsAllowed;
 
   /**
    * Set to true if we got cloned to create a chained listener.
@@ -337,8 +335,8 @@ bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, uint32_t aCacheKey, const uint64_t& aChannelId,
     const TimeStamp& aAsyncOpenTime, const Maybe<uint32_t>& aDocumentOpenFlags,
-    bool aPluginsAllowed, nsDOMNavigationTiming* aTiming,
-    Maybe<ClientInfo>&& aInfo, uint64_t aOuterWindowId, nsresult* aRv) {
+    nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
+    uint64_t aOuterWindowId, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -451,8 +449,7 @@ bool DocumentLoadListener::Open(
   if (aDocumentOpenFlags) {
     RefPtr<ParentProcessDocumentOpenInfo> openInfo =
         new ParentProcessDocumentOpenInfo(mParentChannelListener,
-                                          aPluginsAllowed, *aDocumentOpenFlags,
-                                          browsingContext);
+                                          *aDocumentOpenFlags, browsingContext);
     openInfo->Prepare();
 
     *aRv = mChannel->AsyncOpen(openInfo);

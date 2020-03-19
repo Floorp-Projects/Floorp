@@ -10210,9 +10210,7 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
   // since redirects get handled in the parent process in that case.
   RefPtr<net::DocumentChannel> docChannel = do_QueryObject(aChannel);
   if (docChannel && XRE_IsContentProcess()) {
-    bool pluginsAllowed = true;
-    GetAllowPlugins(&pluginsAllowed);
-    docChannel->SetDocumentOpenFlags(aOpenFlags, pluginsAllowed);
+    docChannel->SetDocumentOpenFlags(aOpenFlags);
     // Now that we've sent the real flags across to be run on the parent,
     // tell the content process nsDocumentOpenInfo to not try to do
     // any sort of targeting.
