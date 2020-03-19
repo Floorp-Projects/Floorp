@@ -177,4 +177,4 @@ function testCompileError(opcode, text) {
 
 testCompileError(CallCode, '(module (func $f (param i32)) (func $g call $f))');
 testCompileError(I32AddCode, '(module (func (i32.add (i32.const 1) (f32.const 1))))');
-testCompileError(EndCode, '(module (func (block i32)))');
+testCompileError(EndCode, '(module (func (block (result i32))))');

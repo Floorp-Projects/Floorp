@@ -12,11 +12,11 @@ let mt = `
   (func (export "f") (result i32)
     (local i32)
     (local i32)
-    (block i32
+    (block (result i32)
       (local.set 0 (global.get 0))
-      (block i32
+      (block (result i32)
         (global.set 1 (i32.const 37))
-        (block i32
+        (block (result i32)
           (local.set 1 (global.get 0))
           (i32.add (local.get 0) (local.get 1)))))))
 `;
