@@ -15,10 +15,12 @@ import mozilla.components.lib.state.State
  * @property extensions A map of extension ids and web extensions of all installed web extensions.
  * The extensions here represent the default values for all [BrowserState.extensions] and can
  * be overridden per [SessionState].
+ * @property media The state of all media elements and playback states for all tabs.
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
     val selectedTabId: String? = null,
     val customTabs: List<CustomTabSessionState> = emptyList(),
-    val extensions: Map<String, WebExtensionState> = emptyMap()
+    val extensions: Map<String, WebExtensionState> = emptyMap(),
+    val media: MediaState = MediaState()
 ) : State

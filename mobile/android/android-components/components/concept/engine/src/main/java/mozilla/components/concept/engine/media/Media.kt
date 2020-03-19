@@ -38,7 +38,7 @@ abstract class Media(
     abstract val controller: Controller
 
     /**
-     * The [Metadata]
+     * The [Metadata] for this media element.
      */
     abstract val metadata: Metadata
 

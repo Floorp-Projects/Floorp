@@ -6,12 +6,12 @@ package mozilla.components.feature.media.focus
 
 import android.media.AudioManager
 import android.os.Build
-import mozilla.components.feature.media.ext.getMedia
+import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.media.ext.getActiveElements
 import mozilla.components.feature.media.ext.pause
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
-import mozilla.components.feature.media.state.MediaState
-import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -20,7 +20,8 @@ import mozilla.components.support.base.log.logger.Logger
  * https://developer.android.com/guide/topics/media-apps/audio-focus
  */
 internal class AudioFocus(
-    val audioManager: AudioManager
+    audioManager: AudioManager,
+    val store: BrowserStore
 ) : AudioManager.OnAudioFocusChangeListener {
     private val logger = Logger("AudioFocus")
     private var playDelayed = false
@@ -56,13 +57,13 @@ internal class AudioFocus(
             }
             AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
                 // Failed: Pause media since we didn't get audio focus.
-                state.getMedia().pause()
+                state.getActiveElements().pause()
                 playDelayed = false
                 resumeOnFocusGain = false
             }
             AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
                 // Delayed: Pause media until we gain focus via callback
-                state.getMedia().pause()
+                state.getActiveElements().pause()
                 playDelayed = true
                 resumeOnFocusGain = false
             }
@@ -74,7 +75,7 @@ internal class AudioFocus(
     override fun onAudioFocusChange(focusChange: Int) {
         logger.debug("onAudioFocusChange($focusChange)")
 
-        val state = MediaStateMachine.state
+        val state = store.state.media
 
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {

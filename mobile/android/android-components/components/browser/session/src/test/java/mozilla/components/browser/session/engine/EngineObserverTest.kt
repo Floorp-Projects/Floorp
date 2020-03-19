@@ -7,6 +7,7 @@ package mozilla.components.browser.session.engine
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -23,6 +24,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -32,6 +34,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -479,50 +482,92 @@ class EngineObserverTest {
     }
 
     @Test
-    fun `onMediaAdded will add media to session`() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+    fun `onMediaAdded will subscribe to media and add it to store`() {
+        val store = BrowserStore()
 
-        val media1: Media = mock()
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+        assertEquals(0, store.state.media.elements.size)
+
+        val media1: Media = spy(object : Media() {
+            override val controller: Controller = mock()
+            override val metadata: Metadata = mock()
+        })
         observer.onMediaAdded(media1)
 
-        assertEquals(listOf(media1), session.media)
+        store.waitUntilIdle()
 
-        val media2: Media = mock()
+        verify(media1).register(any())
+        assertEquals(1, store.state.media.elements["test-tab"]?.size)
+
+        val media2: Media = spy(object : Media() {
+            override val controller: Controller = mock()
+            override val metadata: Metadata = mock()
+        })
         observer.onMediaAdded(media2)
 
-        assertEquals(listOf(media1, media2), session.media)
+        store.waitUntilIdle()
 
-        val media3: Media = mock()
+        verify(media2).register(any())
+        assertEquals(2, store.state.media.elements["test-tab"]?.size)
+
+        val media3: Media = spy(object : Media() {
+            override val controller: Controller = mock()
+            override val metadata: Metadata = mock()
+        })
         observer.onMediaAdded(media3)
 
-        assertEquals(listOf(media1, media2, media3), session.media)
+        store.waitUntilIdle()
+
+        verify(media3).register(any())
+        assertEquals(3, store.state.media.elements["test-tab"]?.size)
     }
 
     @Test
-    fun `onMediaRemoved will remove media from session`() {
-        val session = Session("https://www.mozilla.org")
-        val observer = EngineObserver(session)
+    fun `onMediaRemoved will unsubscribe and remove it from store`() {
+        val store = BrowserStore()
 
-        val media1: Media = mock()
-        val media2: Media = mock()
-        val media3: Media = mock()
+        val sessionManager = SessionManager(engine = mock(), store = store)
 
-        session.media = listOf(media1)
-        session.media = listOf(media1, media2)
-        session.media = listOf(media1, media2, media3)
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
 
-        observer.onMediaRemoved(media2)
+        val media1: Media = spy(object : Media() {
+            override val controller: Controller = mock()
+            override val metadata: Metadata = mock()
+        })
+        observer.onMediaAdded(media1)
 
-        assertEquals(listOf(media1, media3), session.media)
+        val media2: Media = spy(object : Media() {
+            override val controller: Controller = mock()
+            override val metadata: Metadata = mock()
+        })
+        observer.onMediaAdded(media2)
+
+        store.waitUntilIdle()
+
+        assertEquals(2, store.state.media.elements["test-tab"]?.size)
+        verify(media1, never()).unregister(any())
+        verify(media2, never()).unregister(any())
 
         observer.onMediaRemoved(media1)
+        store.waitUntilIdle()
 
-        assertEquals(listOf(media3), session.media)
+        assertEquals(1, store.state.media.elements["test-tab"]?.size)
+        verify(media1).unregister(any())
+        verify(media2, never()).unregister(any())
 
-        observer.onMediaRemoved(media3)
+        observer.onMediaRemoved(media2)
+        store.waitUntilIdle()
 
-        assertEquals(emptyList<Media>(), session.media)
+        assertNull(store.state.media.elements["test-tab"])
+        verify(media2).unregister(any())
     }
 
     @Test

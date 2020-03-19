@@ -46,9 +46,8 @@ import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.intent.processing.TabIntentProcessor
-import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
-import mozilla.components.feature.media.state.MediaStateMachine
+import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
@@ -63,6 +62,7 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
+import org.mozilla.samples.browser.media.MediaService
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
@@ -106,7 +106,11 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
-    val store by lazy { BrowserStore() }
+    val store by lazy {
+        BrowserStore(middleware = listOf(
+            MediaMiddleware(applicationContext, MediaService::class.java)
+        ))
+    }
 
     val customTabsStore by lazy { CustomTabsServiceStore() }
 
@@ -127,11 +131,6 @@ open class DefaultComponents(private val applicationContext: Context) {
 
             RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
                 .enable()
-
-            MediaFeature(applicationContext)
-                .enable()
-
-            MediaStateMachine.start(this)
 
             WebNotificationFeature(applicationContext, engine, icons, R.drawable.ic_notification,
                 BrowserActivity::class.java)
