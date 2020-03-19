@@ -4322,7 +4322,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
   if (aReport) {
     report->AssignErrorReport(aReport);
   } else {
-    report->mFlags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
+    report->mFlags = nsIScriptError::errorFlag;
   }
 
   JS::RootedObject stack(aCx), stackGlobal(aCx);
