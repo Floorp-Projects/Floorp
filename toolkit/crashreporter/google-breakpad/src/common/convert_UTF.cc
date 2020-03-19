@@ -60,22 +60,23 @@ See the header file "ConvertUTF.h" for complete documentation.
 #include <stdio.h>
 #endif
 
-static const int halfShift  = 10; /* used for shifting by 10 bits */
+#include "common/macros.h"
 
-static const UTF32 halfBase = 0x0010000UL;
-static const UTF32 halfMask = 0x3FFUL;
+namespace google_breakpad {
+
+namespace {
+
+const int halfShift  = 10; /* used for shifting by 10 bits */
+
+const UTF32 halfBase = 0x0010000UL;
+const UTF32 halfMask = 0x3FFUL;
+
+}  // namespace
 
 #define UNI_SUR_HIGH_START  (UTF32)0xD800
 #define UNI_SUR_HIGH_END    (UTF32)0xDBFF
 #define UNI_SUR_LOW_START   (UTF32)0xDC00
 #define UNI_SUR_LOW_END     (UTF32)0xDFFF
-
-#ifndef false
-#define false	   0
-#endif
-#ifndef true
-#define true	    1
-#endif
 
 /* --------------------------------------------------------------------- */
 
@@ -183,6 +184,8 @@ ConversionResult ConvertUTF16toUTF32 (const UTF16** sourceStart, const UTF16* so
 
 /* --------------------------------------------------------------------- */
 
+namespace {
+
 /*
  * Index into the table below with the first byte of a UTF-8 sequence to
  * get the number of trailing bytes that are supposed to follow it.
@@ -190,7 +193,7 @@ ConversionResult ConvertUTF16toUTF32 (const UTF16** sourceStart, const UTF16* so
  * left as-is for anyone who may want to do such conversion, which was
  * allowed in earlier algorithms.
  */
-static const char trailingBytesForUTF8[256] = {
+const char trailingBytesForUTF8[256] = {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -206,7 +209,7 @@ static const char trailingBytesForUTF8[256] = {
  * This table contains as many values as there might be trailing bytes
  * in a UTF-8 sequence.
  */
-static const UTF32 offsetsFromUTF8[6] = { 0x00000000UL, 0x00003080UL, 0x000E2080UL,
+const UTF32 offsetsFromUTF8[6] = { 0x00000000UL, 0x00003080UL, 0x000E2080UL,
   0x03C82080UL, 0xFA082080UL, 0x82082080UL };
 
 /*
@@ -216,7 +219,7 @@ static const UTF32 offsetsFromUTF8[6] = { 0x00000000UL, 0x00003080UL, 0x000E2080
  * (I.e., one byte sequence, two byte... etc.). Remember that sequencs
  * for *legal* UTF-8 will be 4 or fewer bytes total.
  */
-static const UTF8 firstByteMark[7] = { 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
+const UTF8 firstByteMark[7] = { 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
 
 /* --------------------------------------------------------------------- */
 
@@ -227,6 +230,8 @@ static const UTF8 firstByteMark[7] = { 0x00, 0x00, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC 
 * If your compiler supports it, the "isLegalUTF8" call can be turned
 * into an inline function.
 */
+
+}  // namespace
 
 /* --------------------------------------------------------------------- */
 
@@ -285,10 +290,20 @@ ConversionResult ConvertUTF16toUTF8 (const UTF16** sourceStart, const UTF16* sou
 	    target -= bytesToWrite; result = targetExhausted; break;
     }
     switch (bytesToWrite) { /* note: everything falls through. */
-	    case 4: *--target = (UTF8)((ch | byteMark) & byteMask); ch >>= 6;
-	    case 3: *--target = (UTF8)((ch | byteMark) & byteMask); ch >>= 6;
-	    case 2: *--target = (UTF8)((ch | byteMark) & byteMask); ch >>= 6;
-	    case 1: *--target =  (UTF8)(ch | firstByteMark[bytesToWrite]);
+      case 4:
+        *--target = (UTF8)((ch | byteMark) & byteMask);
+        ch >>= 6;
+        BP_FALLTHROUGH;
+      case 3:
+        *--target = (UTF8)((ch | byteMark) & byteMask);
+        ch >>= 6;
+        BP_FALLTHROUGH;
+      case 2:
+        *--target = (UTF8)((ch | byteMark) & byteMask);
+        ch >>= 6;
+        BP_FALLTHROUGH;
+      case 1:
+        *--target =  (UTF8)(ch | firstByteMark[bytesToWrite]);
     }
     target += bytesToWrite;
   }
@@ -298,6 +313,8 @@ return result;
 }
 
 /* --------------------------------------------------------------------- */
+
+namespace {
 
 /*
  * Utility routine to tell whether a sequence of bytes is legal UTF-8.
@@ -309,16 +326,20 @@ return result;
  * If presented with a length > 4, this returns false.  The Unicode
  * definition of UTF-8 goes up to 4-byte sequences.
  */
-
-static Boolean isLegalUTF8(const UTF8 *source, int length) {
+Boolean isLegalUTF8(const UTF8 *source, int length) {
   UTF8 a;
   const UTF8 *srcptr = source+length;
   switch (length) {
     default: return false;
       /* Everything else falls through when "true"... */
-    case 4: if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
-    case 3: if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
-    case 2: if ((a = (*--srcptr)) > 0xBF) return false;
+    case 4:
+      if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+      BP_FALLTHROUGH;
+    case 3:
+      if ((a = (*--srcptr)) < 0x80 || a > 0xBF) return false;
+      BP_FALLTHROUGH;
+    case 2:
+      if ((a = (*--srcptr)) > 0xBF) return false;
 
       switch (*source) {
         /* no fall-through in this inner switch */
@@ -328,12 +349,14 @@ static Boolean isLegalUTF8(const UTF8 *source, int length) {
         case 0xF4: if (a > 0x8F) return false; break;
         default:   if (a < 0x80) return false;
       }
-
-      case 1: if (*source >= 0x80 && *source < 0xC2) return false;
+      BP_FALLTHROUGH;
+    case 1: if (*source >= 0x80 && *source < 0xC2) return false;
   }
   if (*source > 0xF4) return false;
   return true;
 }
+
+}  // namespace
 
 /* --------------------------------------------------------------------- */
 
@@ -371,12 +394,14 @@ ConversionResult ConvertUTF8toUTF16 (const UTF8** sourceStart, const UTF8* sourc
      * The cases all fall through. See "Note A" below.
      */
     switch (extraBytesToRead) {
-	    case 5: ch += *source++; ch <<= 6; /* remember, illegal UTF-8 */
-	    case 4: ch += *source++; ch <<= 6; /* remember, illegal UTF-8 */
-	    case 3: ch += *source++; ch <<= 6;
-	    case 2: ch += *source++; ch <<= 6;
-	    case 1: ch += *source++; ch <<= 6;
-	    case 0: ch += *source++;
+      /* remember, illegal UTF-8 */
+      case 5: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      /* remember, illegal UTF-8 */
+      case 4: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 3: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 2: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 1: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 0: ch += *source++;
     }
     ch -= offsetsFromUTF8[extraBytesToRead];
 
@@ -461,10 +486,20 @@ ConversionResult ConvertUTF32toUTF8 (const UTF32** sourceStart, const UTF32* sou
 	    target -= bytesToWrite; result = targetExhausted; break;
     }
     switch (bytesToWrite) { /* note: everything falls through. */
-	    case 4: *--target = (UTF8)((ch | byteMark) & byteMask); ch >>= 6;
-	    case 3: *--target = (UTF8)((ch | byteMark) & byteMask); ch >>= 6;
-	    case 2: *--target = (UTF8)((ch | byteMark) & byteMask); ch >>= 6;
-	    case 1: *--target = (UTF8) (ch | firstByteMark[bytesToWrite]);
+      case 4:
+        *--target = (UTF8)((ch | byteMark) & byteMask);
+        ch >>= 6;
+        BP_FALLTHROUGH;
+      case 3:
+        *--target = (UTF8)((ch | byteMark) & byteMask);
+        ch >>= 6;
+        BP_FALLTHROUGH;
+      case 2:
+        *--target = (UTF8)((ch | byteMark) & byteMask);
+        ch >>= 6;
+        BP_FALLTHROUGH;
+      case 1:
+        *--target = (UTF8) (ch | firstByteMark[bytesToWrite]);
     }
     target += bytesToWrite;
   }
@@ -495,12 +530,12 @@ ConversionResult ConvertUTF8toUTF32 (const UTF8** sourceStart, const UTF8* sourc
      * The cases all fall through. See "Note A" below.
      */
     switch (extraBytesToRead) {
-	    case 5: ch += *source++; ch <<= 6;
-	    case 4: ch += *source++; ch <<= 6;
-	    case 3: ch += *source++; ch <<= 6;
-	    case 2: ch += *source++; ch <<= 6;
-	    case 1: ch += *source++; ch <<= 6;
-	    case 0: ch += *source++;
+      case 5: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 4: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 3: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 2: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 1: ch += *source++; ch <<= 6; BP_FALLTHROUGH;
+      case 0: ch += *source++;
     }
     ch -= offsetsFromUTF8[extraBytesToRead];
 
@@ -552,3 +587,5 @@ In UTF-8 writing code, the switches on "bytesToWrite" are
 similarly unrolled loops.
 
 --------------------------------------------------------------------- */
+
+}  // namespace google_breakpad

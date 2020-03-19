@@ -76,10 +76,18 @@ void Module::SetLoadAddress(Address address) {
   load_address_ = address;
 }
 
+void Module::SetAddressRanges(const vector<Range>& ranges) {
+  address_ranges_ = ranges;
+}
+
 void Module::AddFunction(Function *function) {
   // FUNC lines must not hold an empty name, so catch the problem early if
   // callers try to add one.
   assert(!function->name.empty());
+
+  if (!AddressIsInModule(function->address)) {
+    return;
+  }
 
   // FUNCs are better than PUBLICs as they come with sizes, so remove an extern
   // with the same address if present.
@@ -123,6 +131,10 @@ void Module::AddFunctions(vector<Function *>::iterator begin,
 }
 
 void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
+  if (!AddressIsInModule(stack_frame_entry->address)) {
+    return;
+  }
+
   std::pair<StackFrameEntrySet::iterator,bool> ret =
       stack_frame_entries_.insert(stack_frame_entry);
   if (!ret.second) {
@@ -133,6 +145,10 @@ void Module::AddStackFrameEntry(StackFrameEntry* stack_frame_entry) {
 }
 
 void Module::AddExtern(Extern *ext) {
+  if (!AddressIsInModule(ext->address)) {
+    return;
+  }
+
   std::pair<ExternSet::iterator,bool> ret = externs_.insert(ext);
   if (!ret.second) {
     // Free the duplicate that was not inserted because this Module
@@ -253,6 +269,19 @@ bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
     stream << it->first << ": " << it->second;
   }
   return stream.good();
+}
+
+bool Module::AddressIsInModule(Address address) const {
+  if (address_ranges_.empty()) {
+    return true;
+  }
+  for (const auto& segment : address_ranges_) {
+    if (address >= segment.address &&
+        address < segment.address + segment.size) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Module::Write(std::ostream &stream, SymbolData symbol_data) {

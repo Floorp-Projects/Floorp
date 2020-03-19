@@ -54,6 +54,7 @@
 
 #include "processor/range_map-inl.h"
 
+#include "common/macros.h"
 #include "common/scoped_ptr.h"
 #include "common/stdio_wrapper.h"
 #include "google_breakpad/processor/dump_context.h"
@@ -61,22 +62,6 @@
 #include "processor/basic_code_modules.h"
 #include "processor/convert_old_arm64_context.h"
 #include "processor/logging.h"
-
-// All intentional fallthroughs in breakpad are in this file, so define
-// this macro locally.
-// If you ever move this to a .h file, make sure it's defined in a
-// private header file: clang suggests the first macro expanding to
-// [[clang::fallthrough]] in its diagnostics, so if BP_FALLTHROUGH
-// is visible in code depending on breakpad, clang would suggest
-// BP_FALLTHROUGH for code depending on breakpad, instead of the
-// client code's own fallthrough macro.
-// TODO(thakis): Once everyone uses C++17, use its [[fallthrough]] instead.
-#if defined(__clang__)
-#define BP_FALLTHROUGH [[clang::fallthrough]]
-#else
-#define BP_FALLTHROUGH
-#endif
-
 
 namespace google_breakpad {
 
@@ -2016,6 +2001,7 @@ string MinidumpModule::code_identifier() const {
     }
 
     case MD_OS_ANDROID:
+    case MD_OS_FUCHSIA:
     case MD_OS_LINUX: {
       // If ELF CodeView data is present, return the debug id.
       if (cv_record_ && cv_record_signature_ == MD_CVINFOELF_SIGNATURE) {
@@ -2667,7 +2653,11 @@ MinidumpModuleList::MinidumpModuleList(Minidump* minidump)
       range_map_(new RangeMap<uint64_t, unsigned int>()),
       modules_(NULL),
       module_count_(0) {
-  range_map_->SetEnableShrinkDown(minidump_->IsAndroid());
+  MDOSPlatform platform;
+  if (minidump_->GetPlatform(&platform) &&
+      (platform == MD_OS_ANDROID || platform == MD_OS_LINUX)) {
+    range_map_->SetMergeStrategy(MergeRangeStrategy::kTruncateLower);
+  }
 }
 
 
@@ -2931,16 +2921,12 @@ const MinidumpModule* MinidumpModuleList::GetModuleAtIndex(
 
 
 const CodeModules* MinidumpModuleList::Copy() const {
-  return new BasicCodeModules(this);
+  return new BasicCodeModules(this, range_map_->GetMergeStrategy());
 }
 
 vector<linked_ptr<const CodeModule> >
 MinidumpModuleList::GetShrunkRangeModules() const {
   return vector<linked_ptr<const CodeModule> >();
-}
-
-bool MinidumpModuleList::IsModuleShrinkEnabled() const {
-  return range_map_->IsShrinkDownEnabled();
 }
 
 void MinidumpModuleList::Print() {
@@ -3499,6 +3485,10 @@ string MinidumpSystemInfo::GetOS() {
       os = "nacl";
       break;
 
+    case MD_OS_FUCHSIA:
+      os = "fuchsia";
+      break;
+
     default:
       BPLOG(ERROR) << "MinidumpSystemInfo unknown OS for platform " <<
                       HexString(system_info_.platform_id);
@@ -3870,7 +3860,7 @@ MinidumpUnloadedModuleList::MinidumpUnloadedModuleList(Minidump* minidump)
     range_map_(new RangeMap<uint64_t, unsigned int>()),
     unloaded_modules_(NULL),
     module_count_(0) {
-  range_map_->SetEnableShrinkDown(true);
+  range_map_->SetMergeStrategy(MergeRangeStrategy::kTruncateLower);
 }
 
 MinidumpUnloadedModuleList::~MinidumpUnloadedModuleList() {
@@ -4048,16 +4038,12 @@ MinidumpUnloadedModuleList::GetModuleAtIndex(
 }
 
 const CodeModules* MinidumpUnloadedModuleList::Copy() const {
-  return new BasicCodeModules(this);
+  return new BasicCodeModules(this, range_map_->GetMergeStrategy());
 }
 
 vector<linked_ptr<const CodeModule>>
 MinidumpUnloadedModuleList::GetShrunkRangeModules() const {
   return vector<linked_ptr<const CodeModule> >();
-}
-
-bool MinidumpUnloadedModuleList::IsModuleShrinkEnabled() const {
-  return range_map_->IsShrinkDownEnabled();
 }
 
 
@@ -5386,6 +5372,11 @@ MinidumpLinuxMapsList *Minidump::GetLinuxMapsList() {
 }
 
 bool Minidump::IsAndroid() {
+  MDOSPlatform platform;
+  return GetPlatform(&platform) && platform == MD_OS_ANDROID;
+}
+
+bool Minidump::GetPlatform(MDOSPlatform* platform) {
   // Save the current stream position
   off_t saved_position = Tell();
   if (saved_position == -1) {
@@ -5400,7 +5391,11 @@ bool Minidump::IsAndroid() {
     return false;
   }
 
-  return system_info && system_info->platform_id == MD_OS_ANDROID;
+  if (!system_info) {
+    return false;
+  }
+  *platform = static_cast<MDOSPlatform>(system_info->platform_id);
+  return true;
 }
 
 MinidumpCrashpadInfo* Minidump::GetCrashpadInfo() {

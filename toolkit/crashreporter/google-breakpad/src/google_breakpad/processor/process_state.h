@@ -40,6 +40,7 @@
 #include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/processor/code_modules.h"
+#include "google_breakpad/processor/exception_record.h"
 #include "google_breakpad/processor/minidump.h"
 #include "google_breakpad/processor/system_info.h"
 #include "processor/linked_ptr.h"
@@ -105,6 +106,7 @@ class ProcessState {
   uint64_t crash_address() const { return crash_address_; }
   string assertion() const { return assertion_; }
   int requesting_thread() const { return requesting_thread_; }
+  const ExceptionRecord* exception_record() const { return &exception_record_; }
   const vector<CallStack*>* threads() const { return &threads_; }
   const vector<MemoryRegion*>* thread_memory_regions() const {
     return &thread_memory_regions_;
@@ -165,6 +167,9 @@ class ProcessState {
   // extended Breakpad information is present, this field will be set to -1,
   // indicating that the dump thread is not available.
   int requesting_thread_;
+
+  // Exception record details: code, flags, address, parameters.
+  ExceptionRecord exception_record_;
 
   // Stacks for each thread (except possibly the exception handler
   // thread) at the time of the crash.

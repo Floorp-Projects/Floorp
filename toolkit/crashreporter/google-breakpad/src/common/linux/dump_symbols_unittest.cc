@@ -51,6 +51,7 @@ namespace google_breakpad {
 
 bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const string& obj_filename,
+                            const string& obj_os,
                             const std::vector<string>& debug_dir,
                             const DumpOptions& options,
                             Module** module);
@@ -94,6 +95,7 @@ TYPED_TEST(DumpSymbols, Invalid) {
   DumpOptions options(ALL_SYMBOL_DATA, true);
   EXPECT_FALSE(ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(&header),
                                       "foo",
+                                      "Linux",
                                       vector<string>(),
                                       options,
                                       &module));
@@ -130,6 +132,7 @@ TYPED_TEST(DumpSymbols, SimplePublic) {
   DumpOptions options(ALL_SYMBOL_DATA, true);
   EXPECT_TRUE(ReadSymbolDataInternal(this->elfdata,
                                      "foo",
+                                     "Linux",
                                      vector<string>(),
                                      options,
                                      &module));
@@ -186,6 +189,7 @@ TYPED_TEST(DumpSymbols, SimpleBuildID) {
   DumpOptions options(ALL_SYMBOL_DATA, true);
   EXPECT_TRUE(ReadSymbolDataInternal(this->elfdata,
                                      "foo",
+                                     "Linux",
                                      vector<string>(),
                                      options,
                                      &module));

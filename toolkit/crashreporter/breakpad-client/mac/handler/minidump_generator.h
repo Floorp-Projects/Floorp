@@ -63,14 +63,31 @@ using std::string;
 
 // Use the REGISTER_FROM_THREADSTATE to access a register name from the
 // breakpad_thread_state_t structure.
-#if __DARWIN_UNIX03 || TARGET_CPU_X86_64 || TARGET_CPU_PPC64 || TARGET_CPU_ARM
+#if __DARWIN_OPAQUE_ARM_THREAD_STATE64
+#define ARRAY_REGISTER_FROM_THREADSTATE(a, b, i) ((a)->__##b[i])
+#define GET_REGISTER_FROM_THREADSTATE_fp(a)                                    \
+  (reinterpret_cast<uintptr_t>((a)->__opaque_fp))
+#define GET_REGISTER_FROM_THREADSTATE_lr(a)                                    \
+  (reinterpret_cast<uintptr_t>((a)->__opaque_lr))
+#define GET_REGISTER_FROM_THREADSTATE_sp(a)                                    \
+  (reinterpret_cast<uintptr_t>((a)->__opaque_sp))
+#define GET_REGISTER_FROM_THREADSTATE_pc(a)                                    \
+  (reinterpret_cast<uintptr_t>((a)->__opaque_pc))
+#define GET_REGISTER_FROM_THREADSTATE_cpsr(a) ((a)->__cpsr)
+#define GET_REGISTER_FROM_THREADSTATE_flags(a) ((a)->__opaque_flags)
+#define REGISTER_FROM_THREADSTATE(a, b) (GET_REGISTER_FROM_THREADSTATE_##b(a))
+#elif __DARWIN_UNIX03 || TARGET_CPU_X86_64 || TARGET_CPU_PPC64 || TARGET_CPU_ARM
 // In The 10.5 SDK Headers Apple prepended __ to the variable names in the
 // i386_thread_state_t structure.  There's no good way to tell what version of
 // the SDK we're compiling against so we just toggle on the same preprocessor
 // symbol Apple's headers use.
 #define REGISTER_FROM_THREADSTATE(a, b) ((a)->__ ## b)
+#define ARRAY_REGISTER_FROM_THREADSTATE(a, b, i)                               \
+  REGISTER_FROM_THREADSTATE(a, b[i])
 #else
 #define REGISTER_FROM_THREADSTATE(a, b) (a->b)
+#define ARRAY_REGISTER_FROM_THREADSTATE(a, b, i)                               \
+  REGISTER_FROM_THREADSTATE(a, b[i])
 #endif
 
 // Creates a minidump file of the current process.  If there is exception data,

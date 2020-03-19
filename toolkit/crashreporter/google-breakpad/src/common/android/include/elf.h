@@ -109,17 +109,6 @@ typedef struct {
 } Elf64_Dyn;
 
 
-// __WORDSIZE is GLibc-specific and used by Google Breakpad on Linux.
-#ifndef __WORDSIZE
-#if defined(__i386__) ||  defined(__ARM_EABI__) || defined(__mips__)
-#define __WORDSIZE 32
-#elif defined(__x86_64__) || defined(__aarch64__)
-#define __WORDSIZE 64
-#else
-#error "Unsupported Android CPU ABI"
-#endif
-#endif
-
 // The Android headers don't always define this constant.
 #ifndef EM_X86_64
 #define EM_X86_64  62

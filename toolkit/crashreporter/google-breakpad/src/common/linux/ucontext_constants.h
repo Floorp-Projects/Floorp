@@ -31,14 +31,15 @@
 // Its purpose is to contain constants that must match the offsets of
 // various fields in ucontext_t.
 //
-// They should match the definitions from
-// src/common/android/include/sys/ucontext.h
+// They should match the definitions from signal.h.
 //
-// Used by src/common/android/breakpad_getcontext.S
-// Tested by src/common/android/testing/breakpad_getcontext_unittest.cc
+// Used by src/common/linux/breakpad_getcontext.S
+// Tested by src/common/linux/breakpad_getcontext_unittest.cc
+//
+// This header should not be used by anything else.
 
-#ifndef GOOGLEBREAKPAD_COMMON_ANDROID_UCONTEXT_CONSTANTS_H
-#define GOOGLEBREAKPAD_COMMON_ANDROID_UCONTEXT_CONSTANTS_H
+#ifndef GOOGLEBREAKPAD_COMMON_LINUX_UCONTEXT_CONSTANTS_H
+#define GOOGLEBREAKPAD_COMMON_LINUX_UCONTEXT_CONSTANTS_H
 
 #if defined(__arm__)
 
@@ -93,7 +94,11 @@
 #define  UCONTEXT_SIGMASK_OFFSET   108
 
 #define  UCONTEXT_FPREGS_OFFSET       96
+#if defined(__BIONIC__)
 #define  UCONTEXT_FPREGS_MEM_OFFSET   116
+#else
+#define  UCONTEXT_FPREGS_MEM_OFFSET   236
+#endif
 
 #elif defined(__mips__)
 
@@ -134,7 +139,11 @@
 #define MCONTEXT_GREGS_RSP   160
 #define MCONTEXT_GREGS_RIP   168
 #define MCONTEXT_FPREGS_PTR  224
+#if defined(__BIONIC__)
 #define MCONTEXT_FPREGS_MEM  304
+#else
+#define MCONTEXT_FPREGS_MEM  424
+#endif
 #define FPREGS_OFFSET_MXCSR  24
 
 #else

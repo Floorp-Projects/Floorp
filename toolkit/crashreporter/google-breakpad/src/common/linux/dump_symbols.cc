@@ -38,6 +38,7 @@
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <link.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -185,6 +186,23 @@ typename ElfClass::Addr GetLoadingAddress(
       return header.p_vaddr;
   }
   return 0;
+}
+
+// Find the set of address ranges for all PT_LOAD segments.
+template <typename ElfClass>
+vector<Module::Range> GetPtLoadSegmentRanges(
+    const typename ElfClass::Phdr* program_headers,
+    int nheader) {
+  typedef typename ElfClass::Phdr Phdr;
+  vector<Module::Range> ranges;
+
+  for (int i = 0; i < nheader; ++i) {
+    const Phdr& header = program_headers[i];
+    if (header.p_type == PT_LOAD) {
+      ranges.push_back(Module::Range(header.p_vaddr, header.p_memsz));
+    }
+  }
+  return ranges;
 }
 
 #ifndef NO_STABS_SUPPORT
@@ -701,6 +719,14 @@ bool LoadSymbols(const string& obj_file,
   module->SetLoadAddress(loading_addr);
   info->set_loading_addr(loading_addr, obj_file);
 
+  // Allow filtering of extraneous debug information in partitioned libraries.
+  // Such libraries contain debug information for all libraries extracted from
+  // the same combined library, implying extensive duplication.
+  vector<Module::Range> address_ranges = GetPtLoadSegmentRanges<ElfClass>(
+      GetOffset<ElfClass, Phdr>(elf_header, elf_header->e_phoff),
+      elf_header->e_phnum);
+  module->SetAddressRanges(address_ranges);
+
   const Shdr* sections =
       GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
   const Shdr* section_names = sections + elf_header->e_shstrndx;
@@ -1000,6 +1026,7 @@ bool SanitizeDebugFile(const typename ElfClass::Ehdr* debug_elf_header,
 template<typename ElfClass>
 bool InitModuleForElfClass(const typename ElfClass::Ehdr* elf_header,
                            const string& obj_filename,
+                           const string& obj_os,
                            scoped_ptr<Module>& module) {
   PageAllocator allocator;
   wasteful_vector<uint8_t> identifier(&allocator, kDefaultBuildIdSize);
@@ -1016,8 +1043,12 @@ bool InitModuleForElfClass(const typename ElfClass::Ehdr* elf_header,
     return false;
   }
 
-  string name = google_breakpad::BaseName(obj_filename);
-  string os = "Linux";
+  char name_buf[NAME_MAX] = {};
+  std::string name = google_breakpad::ElfFileSoNameFromMappedFile(
+                         elf_header, name_buf, sizeof(name_buf))
+                         ? name_buf
+                         : google_breakpad::BaseName(obj_filename);
+
   // Add an extra "0" at the end.  PDB files on Windows have an 'age'
   // number appended to the end of the file identifier; this isn't
   // really used or necessary on other platforms, but be consistent.
@@ -1025,7 +1056,7 @@ bool InitModuleForElfClass(const typename ElfClass::Ehdr* elf_header,
   // This is just the raw Build ID in hex.
   string code_id = FileID::ConvertIdentifierToString(identifier);
 
-  module.reset(new Module(name, os, architecture, id, code_id));
+  module.reset(new Module(name, obj_os, architecture, id, code_id));
 
   return true;
 }
@@ -1033,6 +1064,7 @@ bool InitModuleForElfClass(const typename ElfClass::Ehdr* elf_header,
 template<typename ElfClass>
 bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
                             const string& obj_filename,
+                            const string& obj_os,
                             const std::vector<string>& debug_dirs,
                             const DumpOptions& options,
                             Module** out_module) {
@@ -1041,7 +1073,8 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
   *out_module = NULL;
 
   scoped_ptr<Module> module;
-  if (!InitModuleForElfClass<ElfClass>(elf_header, obj_filename, module)) {
+  if (!InitModuleForElfClass<ElfClass>(elf_header, obj_filename, obj_os,
+                                       module)) {
     return false;
   }
 
@@ -1089,6 +1122,7 @@ namespace google_breakpad {
 // Not explicitly exported, but not static so it can be used in unit tests.
 bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const string& obj_filename,
+                            const string& obj_os,
                             const std::vector<string>& debug_dirs,
                             const DumpOptions& options,
                             Module** module) {
@@ -1100,24 +1134,27 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
   int elfclass = ElfClass(obj_file);
   if (elfclass == ELFCLASS32) {
     return ReadSymbolDataElfClass<ElfClass32>(
-        reinterpret_cast<const Elf32_Ehdr*>(obj_file), obj_filename, debug_dirs,
-        options, module);
+        reinterpret_cast<const Elf32_Ehdr*>(obj_file), obj_filename, obj_os,
+        debug_dirs, options, module);
   }
   if (elfclass == ELFCLASS64) {
     return ReadSymbolDataElfClass<ElfClass64>(
-        reinterpret_cast<const Elf64_Ehdr*>(obj_file), obj_filename, debug_dirs,
-        options, module);
+        reinterpret_cast<const Elf64_Ehdr*>(obj_file), obj_filename, obj_os,
+        debug_dirs, options, module);
   }
 
   return false;
 }
 
-bool WriteSymbolFile(const string &obj_file,
+bool WriteSymbolFile(const string &load_path,
+                     const string &obj_file,
+                     const string &obj_os,
                      const std::vector<string>& debug_dirs,
                      const DumpOptions& options,
                      std::ostream &sym_stream) {
   Module* module;
-  if (!ReadSymbolData(obj_file, debug_dirs, options, &module))
+  if (!ReadSymbolData(load_path, obj_file, obj_os, debug_dirs, options,
+                      &module))
     return false;
 
   bool result = module->Write(sym_stream, options.symbol_data);
@@ -1128,11 +1165,13 @@ bool WriteSymbolFile(const string &obj_file,
 // Read the selected object file's debugging information, and write out the
 // header only to |stream|. Return true on success; if an error occurs, report
 // it and return false.
-bool WriteSymbolFileHeader(const string& obj_file,
+bool WriteSymbolFileHeader(const string& load_path,
+                           const string& obj_file,
+                           const string& obj_os,
                            std::ostream &sym_stream) {
   MmapWrapper map_wrapper;
   void* elf_header = NULL;
-  if (!LoadELF(obj_file, &map_wrapper, &elf_header)) {
+  if (!LoadELF(load_path, &map_wrapper, &elf_header)) {
     fprintf(stderr, "Could not load ELF file: %s\n", obj_file.c_str());
     return false;
   }
@@ -1146,13 +1185,15 @@ bool WriteSymbolFileHeader(const string& obj_file,
   scoped_ptr<Module> module;
   if (elfclass == ELFCLASS32) {
     if (!InitModuleForElfClass<ElfClass32>(
-        reinterpret_cast<const Elf32_Ehdr*>(elf_header), obj_file, module)) {
+        reinterpret_cast<const Elf32_Ehdr*>(elf_header), obj_file, obj_os,
+        module)) {
       fprintf(stderr, "Failed to load ELF module: %s\n", obj_file.c_str());
       return false;
     }
   } else if (elfclass == ELFCLASS64) {
     if (!InitModuleForElfClass<ElfClass64>(
-        reinterpret_cast<const Elf64_Ehdr*>(elf_header), obj_file, module)) {
+        reinterpret_cast<const Elf64_Ehdr*>(elf_header), obj_file, obj_os,
+        module)) {
       fprintf(stderr, "Failed to load ELF module: %s\n", obj_file.c_str());
       return false;
     }
@@ -1164,17 +1205,19 @@ bool WriteSymbolFileHeader(const string& obj_file,
   return module->Write(sym_stream, ALL_SYMBOL_DATA);
 }
 
-bool ReadSymbolData(const string& obj_file,
+bool ReadSymbolData(const string& load_path,
+                    const string& obj_file,
+                    const string& obj_os,
                     const std::vector<string>& debug_dirs,
                     const DumpOptions& options,
                     Module** module) {
   MmapWrapper map_wrapper;
   void* elf_header = NULL;
-  if (!LoadELF(obj_file, &map_wrapper, &elf_header))
+  if (!LoadELF(load_path, &map_wrapper, &elf_header))
     return false;
 
   return ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(elf_header),
-                                obj_file, debug_dirs, options, module);
+                                obj_file, obj_os, debug_dirs, options, module);
 }
 
 }  // namespace google_breakpad

@@ -46,6 +46,12 @@ if CONFIG['OS_TARGET'] == 'Android':
         '-I%s/toolkit/crashreporter/google-breakpad/src/common/android/include' % TOPSRCDIR,
     ]
 
+if not CONFIG['HAVE_GETCONTEXT']:
+    # We don't support unifying assembly files.
+    SOURCES += [
+        'breakpad_getcontext.S',
+    ]
+
 Library('breakpad_linux_common_s')
 
 HOST_DEFINES['NO_STABS_SUPPORT'] = True

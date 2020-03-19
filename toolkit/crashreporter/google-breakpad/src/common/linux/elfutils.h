@@ -45,6 +45,7 @@ namespace google_breakpad {
 // with specific ELF bits.
 struct ElfClass32 {
   typedef Elf32_Addr Addr;
+  typedef Elf32_Dyn Dyn;
   typedef Elf32_Ehdr Ehdr;
   typedef Elf32_Nhdr Nhdr;
   typedef Elf32_Phdr Phdr;
@@ -62,6 +63,7 @@ struct ElfClass32 {
 
 struct ElfClass64 {
   typedef Elf64_Addr Addr;
+  typedef Elf64_Dyn Dyn;
   typedef Elf64_Ehdr Ehdr;
   typedef Elf64_Nhdr Nhdr;
   typedef Elf64_Phdr Phdr;
@@ -121,6 +123,12 @@ template<typename ElfClass, typename T>
 const T*
 GetOffset(const typename ElfClass::Ehdr* elf_header,
           typename ElfClass::Off offset);
+
+// Read the value of DT_SONAME from the elf file mapped at |elf_base|. Returns
+// true and fills |soname| with the result if found.
+bool ElfFileSoNameFromMappedFile(const void* elf_base,
+                                 char* soname,
+                                 size_t soname_size);
 
 }  // namespace google_breakpad
 

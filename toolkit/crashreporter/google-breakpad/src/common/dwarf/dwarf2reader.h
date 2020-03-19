@@ -999,6 +999,11 @@ class CallFrameInfo {
     // or not we saw a 'z' augmentation string; its default value is
     // DW_EH_PE_absptr, which is what normal DWARF CFI uses.
     DwarfPointerEncoding pointer_encoding;
+
+    // These were only introduced in DWARF4, so will not be set in older
+    // versions.
+    uint8 address_size;
+    uint8 segment_size;
   };
 
   // A frame description entry (FDE).
