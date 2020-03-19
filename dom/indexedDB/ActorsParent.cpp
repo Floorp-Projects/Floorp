@@ -7467,14 +7467,14 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
       Variant<Nothing, RefPtr<DatabaseFile>, nsCOMPtr<nsIInputStream>>;
   InitializedOnce<const FileActorOrInputStream> mFileActorOrInputStream;
 #ifdef DEBUG
-  const StructuredCloneFile::FileType mType;
+  const StructuredCloneFileBase::FileType mType;
 #endif
 
   void AssertInvariants() const {
     // The only allowed types are eStructuredClone, eBlob and eMutableFile.
-    MOZ_ASSERT(StructuredCloneFile::eStructuredClone == mType ||
-               StructuredCloneFile::eBlob == mType ||
-               StructuredCloneFile::eMutableFile == mType);
+    MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType ||
+               StructuredCloneFileBase::eBlob == mType ||
+               StructuredCloneFileBase::eMutableFile == mType);
 
     // mFileInfo and a file actor in mFileActorOrInputStream are present until
     // the object is moved away, but an inputStream in mFileActorOrInputStream
@@ -7489,7 +7489,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
       //   storedFileInfo.mFileActorOrInputStream CAN be a non-nullptr input
       //   stream (but that might have been release by ReleaseInputStream).
       MOZ_ASSERT_IF(
-          StructuredCloneFile::eStructuredClone == mType,
+          StructuredCloneFileBase::eStructuredClone == mType,
           !mFileActorOrInputStream ||
               (mFileActorOrInputStream->is<nsCOMPtr<nsIInputStream>>() &&
                mFileActorOrInputStream->as<nsCOMPtr<nsIInputStream>>()));
@@ -7498,13 +7498,13 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
       //   already been written to disk.  storedFileInfo.mFileActorOrInputStream
       //   MUST be a non-null file actor, but its GetInputStream may return
       //   nullptr (so don't assert on that).
-      MOZ_ASSERT_IF(StructuredCloneFile::eBlob == mType,
+      MOZ_ASSERT_IF(StructuredCloneFileBase::eBlob == mType,
                     mFileActorOrInputStream->is<RefPtr<DatabaseFile>>() &&
                         mFileActorOrInputStream->as<RefPtr<DatabaseFile>>());
 
       // - It's a mutable file (eMutableFile).  No writing will be performed,
       // and storedFileInfo.mFileActorOrInputStream is Nothing.
-      MOZ_ASSERT_IF(StructuredCloneFile::eMutableFile == mType,
+      MOZ_ASSERT_IF(StructuredCloneFileBase::eMutableFile == mType,
                     mFileActorOrInputStream->is<Nothing>());
     }
   }
@@ -7514,7 +7514,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     Nothing {}
   }
 #ifdef DEBUG
-  , mType { StructuredCloneFile::eMutableFile }
+  , mType { StructuredCloneFileBase::eMutableFile }
 #endif
   {
     AssertIsOnBackgroundThread();
@@ -7528,7 +7528,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     std::move(aFileActor)
   }
 #ifdef DEBUG
-  , mType { StructuredCloneFile::eBlob }
+  , mType { StructuredCloneFileBase::eBlob }
 #endif
   {
     AssertIsOnBackgroundThread();
@@ -7543,7 +7543,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     std::move(aInputStream)
   }
 #ifdef DEBUG
-  , mType { StructuredCloneFile::eStructuredClone }
+  , mType { StructuredCloneFileBase::eStructuredClone }
 #endif
   {
     AssertIsOnBackgroundThread();
@@ -7601,7 +7601,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     // called after GetInputStream, when mFileActorOrInputStream has been
     // cleared, which is only possible for this type.
     const bool res = !mFileActorOrInputStream;
-    MOZ_ASSERT(res == (StructuredCloneFile::eStructuredClone == mType));
+    MOZ_ASSERT(res == (StructuredCloneFileBase::eStructuredClone == mType));
     return res;
   }
 
@@ -7621,7 +7621,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
   using InputStreamResult = mozilla::Result<nsCOMPtr<nsIInputStream>, nsresult>;
   InputStreamResult GetInputStream() {
     if (!mFileActorOrInputStream) {
-      MOZ_ASSERT(StructuredCloneFile::eStructuredClone == mType);
+      MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType);
       return nsCOMPtr<nsIInputStream>{};
     }
 
@@ -7836,7 +7836,7 @@ class IndexGetRequestOp final : public IndexRequestOpBase {
 
   RefPtr<Database> mDatabase;
   const Maybe<SerializedKeyRange> mOptionalKeyRange;
-  AutoTArray<StructuredCloneReadInfo, 1> mResponse;
+  AutoTArray<StructuredCloneReadInfoParent, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
   const uint32_t mLimit;
   const bool mGetAll;
@@ -8046,7 +8046,7 @@ class ObjectStoreCursorBase : public CursorBase {
   };
 };
 
-using FilesArray = nsTArray<FallibleTArray<StructuredCloneFile>>;
+using FilesArray = nsTArray<FallibleTArray<StructuredCloneFileParent>>;
 
 struct PseudoFilesArray {
   static constexpr bool IsEmpty() { return true; }
@@ -9127,37 +9127,37 @@ class MOZ_STACK_CLASS FileHelper final {
 
 bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
 
-Result<StructuredCloneFile, nsresult> DeserializeStructuredCloneFile(
+Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
     const FileManager& aFileManager, const nsDependentSubstring& aText) {
   MOZ_ASSERT(!aText.IsEmpty());
 
-  StructuredCloneFile::FileType type;
+  StructuredCloneFileBase::FileType type;
 
   switch (aText.First()) {
     case char16_t('-'):
-      type = StructuredCloneFile::eMutableFile;
+      type = StructuredCloneFileBase::eMutableFile;
       break;
 
     case char16_t('.'):
-      type = StructuredCloneFile::eStructuredClone;
+      type = StructuredCloneFileBase::eStructuredClone;
       break;
 
     case char16_t('/'):
-      type = StructuredCloneFile::eWasmBytecode;
+      type = StructuredCloneFileBase::eWasmBytecode;
       break;
 
     case char16_t('\\'):
-      type = StructuredCloneFile::eWasmCompiled;
+      type = StructuredCloneFileBase::eWasmCompiled;
       break;
 
     default:
-      type = StructuredCloneFile::eBlob;
+      type = StructuredCloneFileBase::eBlob;
   }
 
   nsresult rv;
   int32_t id;
 
-  if (type == StructuredCloneFile::eBlob) {
+  if (type == StructuredCloneFileBase::eBlob) {
     id = aText.ToInteger(&rv);
   } else {
     nsString text(Substring(aText, 1));
@@ -9182,17 +9182,18 @@ Result<StructuredCloneFile, nsresult> DeserializeStructuredCloneFile(
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  return StructuredCloneFile{type, std::move(fileInfo)};
+  return StructuredCloneFileParent{type, std::move(fileInfo)};
 }
 
-Result<nsTArray<StructuredCloneFile>, nsresult> DeserializeStructuredCloneFiles(
-    const FileManager& aFileManager, const nsAString& aText) {
+Result<nsTArray<StructuredCloneFileParent>, nsresult>
+DeserializeStructuredCloneFiles(const FileManager& aFileManager,
+                                const nsAString& aText) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing> tokenizer(aText,
                                                                      ' ');
 
-  nsTArray<StructuredCloneFile> result;
+  nsTArray<StructuredCloneFileParent> result;
   while (tokenizer.hasMoreTokens()) {
     const auto& token = tokenizer.nextToken();
     MOZ_ASSERT(!token.IsEmpty());
@@ -9229,7 +9230,7 @@ bool GetBaseFilename(const nsAString& aFilename, const nsAString& aSuffix,
 mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
 SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                               Database* aDatabase,
-                              const nsTArray<StructuredCloneFile>& aFiles,
+                              const nsTArray<StructuredCloneFileParent>& aFiles,
                               bool aForPreprocess) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
@@ -9255,9 +9256,9 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
-  for (const StructuredCloneFile& file : aFiles) {
+  for (const StructuredCloneFileParent& file : aFiles) {
     if (aForPreprocess &&
-        file.Type() != StructuredCloneFile::eStructuredClone) {
+        file.Type() != StructuredCloneFileBase::eStructuredClone) {
       continue;
     }
 
@@ -9273,7 +9274,7 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     }
 
     switch (file.Type()) {
-      case StructuredCloneFile::eBlob: {
+      case StructuredCloneFileBase::eBlob: {
         RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
         impl->SetFileId(file.FileInfo().Id());
 
@@ -9285,15 +9286,15 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
           return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         }
 
-        result.EmplaceBack(ipcBlob, StructuredCloneFile::eBlob);
+        result.EmplaceBack(ipcBlob, StructuredCloneFileBase::eBlob);
 
         aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
         break;
       }
 
-      case StructuredCloneFile::eMutableFile: {
+      case StructuredCloneFileBase::eMutableFile: {
         if (aDatabase->IsFileHandleDisabled()) {
-          result.EmplaceBack(null_t(), StructuredCloneFile::eMutableFile);
+          result.EmplaceBack(null_t(), StructuredCloneFileBase::eMutableFile);
         } else {
           RefPtr<MutableFile> actor =
               MutableFile::Create(nativeFile, aDatabase, file.FileInfoPtr());
@@ -9312,15 +9313,17 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
-          result.EmplaceBack(actor.get(), StructuredCloneFile::eMutableFile);
+          result.EmplaceBack(actor.get(),
+                             StructuredCloneFileBase::eMutableFile);
         }
 
         break;
       }
 
-      case StructuredCloneFile::eStructuredClone: {
+      case StructuredCloneFileBase::eStructuredClone: {
         if (!aForPreprocess) {
-          result.EmplaceBack(null_t(), StructuredCloneFile::eStructuredClone);
+          result.EmplaceBack(null_t(),
+                             StructuredCloneFileBase::eStructuredClone);
         } else {
           RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
           impl->SetFileId(file.FileInfo().Id());
@@ -9334,7 +9337,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
-          result.EmplaceBack(ipcBlob, StructuredCloneFile::eStructuredClone);
+          result.EmplaceBack(ipcBlob,
+                             StructuredCloneFileBase::eStructuredClone);
 
           aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
         }
@@ -9342,8 +9346,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
         break;
       }
 
-      case StructuredCloneFile::eWasmBytecode:
-      case StructuredCloneFile::eWasmCompiled: {
+      case StructuredCloneFileBase::eWasmBytecode:
+      case StructuredCloneFileBase::eWasmCompiled: {
         // Set file() to null, support for storing WebAssembly.Modules has been
         // removed in bug 1469395. Support for de-serialization of
         // WebAssembly.Modules modules has been removed in bug 1561876. Full
@@ -10137,7 +10141,7 @@ struct ValuePopulateResponseHelper {
     // so we construct a FallibleTArray and swap the elements...
 
     auto files = cloneInfo.ReleaseFiles();
-    FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFile> temp;
+    FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFileParent> temp;
     temp.SwapElements(files);
     aFiles->AppendElement(std::move(temp));
   }
@@ -10529,14 +10533,15 @@ class DeserializeUpgradeValueHelper final : public Runnable {
   void PopulateFileIds(nsAString& aFileIds) {
     for (uint32_t count = mCloneReadInfo.Files().Length(), index = 0;
          index < count; index++) {
-      const StructuredCloneFile& file = mCloneReadInfo.Files()[index];
+      const StructuredCloneFileParent& file = mCloneReadInfo.Files()[index];
 
       const int64_t id = file.FileInfo().Id();
 
       if (index) {
         aFileIds.Append(' ');
       }
-      aFileIds.AppendInt(file.Type() == StructuredCloneFile::eBlob ? id : -id);
+      aFileIds.AppendInt(file.Type() == StructuredCloneFileBase::eBlob ? id
+                                                                       : -id);
     }
   }
 
@@ -11690,7 +11695,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
   if (NS_WARN_IF(filesOrErr.isErr())) {
     return filesOrErr.unwrapErr();
   }
-  for (const StructuredCloneFile& file : filesOrErr.inspect()) {
+  for (const StructuredCloneFileParent& file : filesOrErr.inspect()) {
     const int64_t id = file.FileInfo().Id();
     MOZ_ASSERT(id > 0);
 
@@ -14994,7 +14999,7 @@ bool TransactionBase::VerifyRequestParams(
     MOZ_ASSERT(file.type() != DatabaseOrMutableFile::T__None);
 
     switch (fileAddInfo.type()) {
-      case StructuredCloneFile::eBlob:
+      case StructuredCloneFileBase::eBlob:
         if (NS_WARN_IF(
                 file.type() !=
                 DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
@@ -15007,7 +15012,7 @@ bool TransactionBase::VerifyRequestParams(
         }
         break;
 
-      case StructuredCloneFile::eMutableFile: {
+      case StructuredCloneFileBase::eMutableFile: {
         if (NS_WARN_IF(file.type() !=
                        DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
           ASSERT_UNLESS_FUZZING();
@@ -15036,10 +15041,10 @@ bool TransactionBase::VerifyRequestParams(
         break;
       }
 
-      case StructuredCloneFile::eStructuredClone:
-      case StructuredCloneFile::eWasmBytecode:
-      case StructuredCloneFile::eWasmCompiled:
-      case StructuredCloneFile::eEndGuard:
+      case StructuredCloneFileBase::eStructuredClone:
+      case StructuredCloneFileBase::eWasmBytecode:
+      case StructuredCloneFileBase::eWasmCompiled:
+      case StructuredCloneFileBase::eEndGuard:
         ASSERT_UNLESS_FUZZING();
         return false;
 
@@ -19534,7 +19539,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
-  nsTArray<StructuredCloneFile> files;
+  nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
@@ -19560,7 +19565,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
 
   nsresult rv;
 
-  nsTArray<StructuredCloneFile> files;
+  nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
@@ -19586,8 +19591,8 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   }
 
   // XXX Why can there be multiple files, but we use only a single one here?
-  const StructuredCloneFile& file = files[index];
-  MOZ_ASSERT(file.Type() == StructuredCloneFile::eStructuredClone);
+  const StructuredCloneFileParent& file = files[index];
+  MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eStructuredClone);
 
   const nsCOMPtr<nsIFile> nativeFile = file.FileInfo().GetFileForFileInfo();
   if (NS_WARN_IF(!nativeFile)) {
@@ -25325,13 +25330,13 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
     }
 
     for (const auto& fileAddInfo : fileAddInfos) {
-      MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFile::eBlob ||
-                 fileAddInfo.type() == StructuredCloneFile::eMutableFile);
+      MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFileBase::eBlob ||
+                 fileAddInfo.type() == StructuredCloneFileBase::eMutableFile);
 
       const DatabaseOrMutableFile& file = fileAddInfo.file();
 
       switch (fileAddInfo.type()) {
-        case StructuredCloneFile::eBlob: {
+        case StructuredCloneFileBase::eBlob: {
           MOZ_ASSERT(file.type() ==
                      DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
 
@@ -25344,7 +25349,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
           break;
         }
 
-        case StructuredCloneFile::eMutableFile: {
+        case StructuredCloneFileBase::eMutableFile: {
           MOZ_ASSERT(file.type() ==
                      DatabaseOrMutableFile::TPBackgroundMutableFileParent);
 
@@ -26485,7 +26490,7 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
 
       for (uint32_t count = mResponse.Length(), index = 0; index < count;
            index++) {
-        StructuredCloneReadInfo& info = mResponse[index];
+        StructuredCloneReadInfoParent& info = mResponse[index];
         *aResponseSize += info.Size();
 
         SerializedStructuredCloneReadInfo& serializedInfo =
@@ -26519,7 +26524,7 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
   *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
-    StructuredCloneReadInfo& info = mResponse[0];
+    StructuredCloneReadInfoParent& info = mResponse[0];
     *aResponseSize += info.Size();
 
     SerializedStructuredCloneReadInfo& serializedInfo =
