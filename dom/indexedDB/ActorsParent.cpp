@@ -9084,16 +9084,22 @@ class DEBUGThreadSlower final : public nsIThreadObserver {
  ******************************************************************************/
 
 class MOZ_STACK_CLASS FileHelper final {
-  RefPtr<FileManager> mFileManager;
+  const RefPtr<FileManager> mFileManager;
 
-  nsCOMPtr<nsIFile> mFileDirectory;
-  nsCOMPtr<nsIFile> mJournalDirectory;
+  InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
+      mFileDirectory;
+  InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
+      mJournalDirectory;
 
   class ReadCallback;
-  RefPtr<ReadCallback> mReadCallback;
+  InitializedOnceMustBeTrue<const RefPtr<ReadCallback>, LazyInit::Allow>
+      mReadCallback;
 
  public:
-  explicit FileHelper(FileManager* aFileManager) : mFileManager(aFileManager) {}
+  explicit FileHelper(RefPtr<FileManager>&& aFileManager)
+      : mFileManager(std::move(aFileManager)) {
+    MOZ_ASSERT(mFileManager);
+  }
 
   nsresult Init();
 
@@ -9101,17 +9107,17 @@ class MOZ_STACK_CLASS FileHelper final {
 
   MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalFile(const FileInfo& aFileInfo);
 
-  nsresult CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
-                                nsIInputStream* aInputStream, bool aCompress);
+  nsresult CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
+                                nsIInputStream& aInputStream, bool aCompress);
 
-  nsresult RemoveFile(nsIFile* aFile, nsIFile* aJournalFile);
+  nsresult RemoveFile(nsIFile& aFile, nsIFile& aJournalFile);
 
  private:
-  nsresult SyncCopy(nsIInputStream* aInputStream,
-                    nsIOutputStream* aOutputStream, char* aBuffer,
+  nsresult SyncCopy(nsIInputStream& aInputStream,
+                    nsIOutputStream& aOutputStream, char* aBuffer,
                     uint32_t aBufferSize);
 
-  nsresult SyncRead(nsIInputStream* aInputStream, char* aBuffer,
+  nsresult SyncRead(nsIInputStream& aInputStream, char* aBuffer,
                     uint32_t aBufferSize, uint32_t* aRead);
 };
 
@@ -25564,11 +25570,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
       if (inputStream) {
         if (fileHelper.isNothing()) {
-          RefPtr<FileManager> fileManager =
+          auto* const fileManager =
               Transaction().GetDatabase()->GetFileManager();
           MOZ_ASSERT(fileManager);
 
-          fileHelper.emplace(fileManager);
+          fileHelper.emplace(RefPtr{fileManager});
           rv = fileHelper->Init();
           if (NS_WARN_IF(NS_FAILED(rv))) {
             IDB_REPORT_INTERNAL_ERR();
@@ -25592,7 +25598,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
         const bool compress = storedFileInfo.ShouldCompress();
 
-        rv = fileHelper->CreateFileFromStream(file, journalFile, inputStream,
+        rv = fileHelper->CreateFileFromStream(*file, *journalFile, *inputStream,
                                               compress);
         if (NS_FAILED(rv) &&
             NS_ERROR_GET_MODULE(rv) != NS_ERROR_MODULE_DOM_INDEXEDDB) {
@@ -25601,7 +25607,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           // Try to remove the file if the copy failed.
-          nsresult rv2 = fileHelper->RemoveFile(file, journalFile);
+          nsresult rv2 = fileHelper->RemoveFile(*file, *journalFile);
           if (NS_WARN_IF(NS_FAILED(rv2))) {
             return rv;
           }
@@ -27734,7 +27740,6 @@ DEBUGThreadSlower::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
 
 nsresult FileHelper::Init() {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mFileManager);
 
   auto fileDirectory = mFileManager->GetCheckedDirectory();
   if (NS_WARN_IF(!fileDirectory)) {
@@ -27754,47 +27759,31 @@ nsresult FileHelper::Init() {
   MOZ_ASSERT(NS_SUCCEEDED(journalDirectory->IsDirectory(&isDirectory)));
   MOZ_ASSERT(isDirectory);
 
-  mFileDirectory = std::move(fileDirectory);
-  mJournalDirectory = std::move(journalDirectory);
+  mFileDirectory.init(std::move(fileDirectory));
+  mJournalDirectory.init(std::move(journalDirectory));
 
   return NS_OK;
 }
 
 nsCOMPtr<nsIFile> FileHelper::GetFile(const FileInfo& aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mFileDirectory);
 
-  const int64_t fileId = aFileInfo.Id();
-  MOZ_ASSERT(fileId > 0);
-
-  return mFileManager->GetFileForId(mFileDirectory, fileId);
+  return mFileManager->GetFileForId(*mFileDirectory, aFileInfo.Id());
 }
 
 nsCOMPtr<nsIFile> FileHelper::GetJournalFile(const FileInfo& aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mJournalDirectory);
 
-  const int64_t fileId = aFileInfo.Id();
-  MOZ_ASSERT(fileId > 0);
-
-  return mFileManager->GetFileForId(mJournalDirectory, fileId);
+  return mFileManager->GetFileForId(*mJournalDirectory, aFileInfo.Id());
 }
 
-nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
-                                          nsIInputStream* aInputStream,
+nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
+                                          nsIInputStream& aInputStream,
                                           bool aCompress) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aFile);
-  MOZ_ASSERT(aJournalFile);
-  MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mFileDirectory);
-  MOZ_ASSERT(mJournalDirectory);
 
   bool exists;
-  nsresult rv = aFile->Exists(&exists);
+  nsresult rv = aFile.Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27813,7 +27802,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   // This corner case is partially simulated in test_file_copy_failure.js
   if (exists) {
     bool isFile;
-    rv = aFile->IsFile(&isFile);
+    rv = aFile.IsFile(&isFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27822,7 +27811,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
       return NS_ERROR_FAILURE;
     }
 
-    rv = aJournalFile->Exists(&exists);
+    rv = aJournalFile.Exists(&exists);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27831,7 +27820,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
       return NS_ERROR_FAILURE;
     }
 
-    rv = aJournalFile->IsFile(&isFile);
+    rv = aJournalFile.IsFile(&isFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27849,7 +27838,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   }
 
   // Create a journal file first.
-  rv = aJournalFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  rv = aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27857,24 +27846,29 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   // Now try to copy the stream.
   RefPtr<FileOutputStream> fileOutputStream =
       CreateFileOutputStream(mFileManager->Type(), mFileManager->Group(),
-                             mFileManager->Origin(), Client::IDB, aFile);
+                             mFileManager->Origin(), Client::IDB, &aFile);
   if (NS_WARN_IF(!fileOutputStream)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aCompress) {
-    RefPtr<SnappyCompressOutputStream> snappyOutputStream =
-        new SnappyCompressOutputStream(fileOutputStream);
+  AutoTArray<char, kFileCopyBufferSize> buffer;
+  const auto actualOutputStream =
+      [aCompress, &buffer, &fileOutputStream]() -> nsCOMPtr<nsIOutputStream> {
+    if (aCompress) {
+      auto snappyOutputStream =
+          MakeRefPtr<SnappyCompressOutputStream>(fileOutputStream);
 
-    UniquePtr<char[]> buffer(new char[snappyOutputStream->BlockSize()]);
+      buffer.SetLength(snappyOutputStream->BlockSize());
 
-    rv = SyncCopy(aInputStream, snappyOutputStream, buffer.get(),
-                  snappyOutputStream->BlockSize());
-  } else {
-    char buffer[kFileCopyBufferSize];
+      return snappyOutputStream;
+    }
 
-    rv = SyncCopy(aInputStream, fileOutputStream, buffer, kFileCopyBufferSize);
-  }
+    buffer.SetLength(kFileCopyBufferSize);
+    return std::move(fileOutputStream);
+  }();
+
+  rv = SyncCopy(aInputStream, *actualOutputStream, buffer.Elements(),
+                buffer.Length());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27882,19 +27876,19 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   return NS_OK;
 }
 
-nsresult FileHelper::RemoveFile(nsIFile* aFile, nsIFile* aJournalFile) {
+nsresult FileHelper::RemoveFile(nsIFile& aFile, nsIFile& aJournalFile) {
   nsresult rv;
 
   int64_t fileSize;
 
   if (mFileManager->EnforcingQuota()) {
-    rv = aFile->GetFileSize(&fileSize);
+    rv = aFile.GetFileSize(&fileSize);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  rv = aFile->Remove(false);
+  rv = aFile.Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27908,7 +27902,7 @@ nsresult FileHelper::RemoveFile(nsIFile* aFile, nsIFile* aJournalFile) {
         Client::IDB, fileSize);
   }
 
-  rv = aJournalFile->Remove(false);
+  rv = aJournalFile.Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27969,25 +27963,25 @@ NS_INTERFACE_MAP_BEGIN(FileHelper::ReadCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStreamCallback)
 NS_INTERFACE_MAP_END
 
-nsresult FileHelper::SyncRead(nsIInputStream* aInputStream, char* aBuffer,
-                              uint32_t aBufferSize, uint32_t* aRead) {
+nsresult FileHelper::SyncRead(nsIInputStream& aInputStream, char* const aBuffer,
+                              const uint32_t aBufferSize,
+                              uint32_t* const aRead) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aInputStream);
 
   // Let's try to read, directly.
-  nsresult rv = aInputStream->Read(aBuffer, aBufferSize, aRead);
+  nsresult rv = aInputStream.Read(aBuffer, aBufferSize, aRead);
   if (NS_SUCCEEDED(rv) || rv != NS_BASE_STREAM_WOULD_BLOCK) {
     return rv;
   }
 
   // We need to proceed async.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInputStream);
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(&aInputStream);
   if (!asyncStream) {
     return rv;
   }
 
   if (!mReadCallback) {
-    mReadCallback = new ReadCallback();
+    mReadCallback.init(new ReadCallback());
   }
 
   // We just need any thread with an event loop for receiving the
@@ -27996,7 +27990,7 @@ nsresult FileHelper::SyncRead(nsIInputStream* aInputStream, char* aBuffer,
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target);
 
-  rv = mReadCallback->AsyncWait(asyncStream, aBufferSize, target);
+  rv = (*mReadCallback)->AsyncWait(asyncStream, aBufferSize, target);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -28004,12 +27998,10 @@ nsresult FileHelper::SyncRead(nsIInputStream* aInputStream, char* aBuffer,
   return SyncRead(aInputStream, aBuffer, aBufferSize, aRead);
 }
 
-nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
-                              nsIOutputStream* aOutputStream, char* aBuffer,
-                              uint32_t aBufferSize) {
+nsresult FileHelper::SyncCopy(nsIInputStream& aInputStream,
+                              nsIOutputStream& aOutputStream,
+                              char* const aBuffer, const uint32_t aBufferSize) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(aOutputStream);
 
   AUTO_PROFILER_LABEL("FileHelper::SyncCopy", DOM);
 
@@ -28027,7 +28019,7 @@ nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
     }
 
     uint32_t numWrite;
-    rv = aOutputStream->Write(aBuffer, numRead, &numWrite);
+    rv = aOutputStream.Write(aBuffer, numRead, &numWrite);
     if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
       rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
     }
@@ -28042,13 +28034,13 @@ nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
   } while (true);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = aOutputStream->Flush();
+    rv = aOutputStream.Flush();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  nsresult rv2 = aOutputStream->Close();
+  nsresult rv2 = aOutputStream.Close();
   if (NS_WARN_IF(NS_FAILED(rv2))) {
     return NS_SUCCEEDED(rv) ? rv2 : rv;
   }
