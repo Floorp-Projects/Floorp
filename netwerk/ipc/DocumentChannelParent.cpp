@@ -55,9 +55,8 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   rv = NS_ERROR_UNEXPECTED;
   if (!mParent->Open(loadState, loadInfo, aArgs.loadFlags(), aArgs.cacheKey(),
                      aArgs.channelId(), aArgs.asyncOpenTime(),
-                     aArgs.documentOpenFlags(), aArgs.pluginsAllowed(),
-                     aArgs.timing().refOr(nullptr), std::move(clientInfo),
-                     aArgs.outerWindowId(), &rv)) {
+                     aArgs.documentOpenFlags(), aArgs.timing().refOr(nullptr),
+                     std::move(clientInfo), aArgs.outerWindowId(), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 

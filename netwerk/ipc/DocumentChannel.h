@@ -57,9 +57,8 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
     *aChannelRedirectFlags = mLastVisitInfo.previousFlags();
   }
 
-  void SetDocumentOpenFlags(uint32_t aFlags, bool aPluginsAllowed) {
+  void SetDocumentOpenFlags(uint32_t aFlags) {
     mDocumentOpenFlags = Some(aFlags);
-    mPluginsAllowed = aPluginsAllowed;
   }
 
   void SetNavigationTiming(nsDOMNavigationTiming* aTiming) {
@@ -95,7 +94,6 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsISupports> mOwner;
-  bool mPluginsAllowed = false;
   RefPtr<nsDOMNavigationTiming> mTiming;
   Maybe<dom::ClientInfo> mInitialClientInfo;
 };

@@ -72,7 +72,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   bool Open(nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
             nsLoadFlags aLoadFlags, uint32_t aCacheKey,
             const uint64_t& aChannelId, const TimeStamp& aAsyncOpenTime,
-            const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
+            const Maybe<uint32_t>& aDocumentOpenFlags,
             nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
             uint64_t aOuterWindowId, nsresult* aRv);
 
