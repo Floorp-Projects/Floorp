@@ -500,8 +500,10 @@ class nsFrameSelection final {
    * @param aAmount     amount of movement (char/line; word/page; eol/doc)
    * @param aExtend     continue selection
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PhysicalMove(int16_t aDirection,
+                                                    int16_t aAmount,
+                                                    bool aExtend);
 
   /**
    * CharacterMove will generally be called from the nsiselectioncontroller
@@ -510,22 +512,23 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult CharacterMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterMove(bool aForward,
+                                                     bool aExtend);
 
   /**
    * CharacterExtendForDelete extends the selection forward (logically) to
    * the next character cell, so that the selected cell can be deleted.
    */
-  /*unsafe*/
-  nsresult CharacterExtendForDelete();
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterExtendForDelete();
 
   /**
    * CharacterExtendForBackspace extends the selection backward (logically) to
    * the previous character cell, so that the selected cell can be deleted.
    */
-  /*unsafe*/
-  nsresult CharacterExtendForBackspace();
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterExtendForBackspace();
 
   /**
    * WordMove will generally be called from the nsiselectioncontroller
@@ -534,16 +537,16 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult WordMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WordMove(bool aForward, bool aExtend);
 
   /**
    * WordExtendForDelete extends the selection backward or forward (logically)
    * to the next word boundary, so that the selected word can be deleted.
    * @param aForward select forward in document.
    */
-  /*unsafe*/
-  nsresult WordExtendForDelete(bool aForward);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WordExtendForDelete(bool aForward);
 
   /**
    * LineMove will generally be called from the nsiselectioncontroller
@@ -552,8 +555,8 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult LineMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult LineMove(bool aForward, bool aExtend);
 
   /**
    * IntraLineMove will generally be called from the nsiselectioncontroller
@@ -562,8 +565,9 @@ class nsFrameSelection final {
    * @param aForward move forward in document.
    * @param aExtend continue selection
    */
-  /*unsafe*/
-  nsresult IntraLineMove(bool aForward, bool aExtend);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult IntraLineMove(bool aForward,
+                                                     bool aExtend);
 
   /**
    * Select All will generally be called from the nsiselectioncontroller
@@ -764,10 +768,10 @@ class nsFrameSelection final {
   // Whether MoveCaret should use logical or visual movement,
   // or follow the bidi.edit.caret_movement_style preference.
   enum CaretMovementStyle { eLogical, eVisual, eUsePrefStyle };
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult MoveCaret(nsDirection aDirection, bool aContinueSelection,
-                     nsSelectionAmount aAmount,
-                     CaretMovementStyle aMovementStyle);
+  MOZ_CAN_RUN_SCRIPT nsresult MoveCaret(nsDirection aDirection,
+                                        bool aContinueSelection,
+                                        nsSelectionAmount aAmount,
+                                        CaretMovementStyle aMovementStyle);
 
   nsresult FetchDesiredPos(
       nsPoint& aDesiredPos);  // the position requested by the Key Handling for
