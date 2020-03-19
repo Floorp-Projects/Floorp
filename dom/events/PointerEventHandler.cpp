@@ -15,6 +15,8 @@ namespace mozilla {
 
 using namespace dom;
 
+static bool sPointerEventImplicitCapture = false;
+
 Maybe<int32_t> PointerEventHandler::sSpoofedPointerId;
 
 class PointerInfo final {
@@ -42,6 +44,17 @@ static nsClassHashtable<nsUint32HashKey, PointerCaptureInfo>*
 static nsClassHashtable<nsUint32HashKey, PointerInfo>* sActivePointersIds;
 
 /* static */
+void PointerEventHandler::Initialize() {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+  Preferences::AddBoolVarCache(&sPointerEventImplicitCapture,
+                               "dom.w3c_pointer_events.implicit_capture", true);
+}
+
+/* static */
 void PointerEventHandler::InitializeStatics() {
   MOZ_ASSERT(!sPointerCaptureList, "InitializeStatics called multiple times!");
   sPointerCaptureList =
@@ -61,7 +74,7 @@ void PointerEventHandler::ReleaseStatics() {
 /* static */
 bool PointerEventHandler::IsPointerEventImplicitCaptureForTouchEnabled() {
   return StaticPrefs::dom_w3c_pointer_events_enabled() &&
-         StaticPrefs::dom_w3c_pointer_events_implicit_capture();
+         sPointerEventImplicitCapture;
 }
 
 /* static */

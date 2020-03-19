@@ -89,7 +89,6 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs_security.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
 #include "ReferrerInfo.h"
@@ -2277,8 +2276,7 @@ nsresult nsObjectLoadingContent::OpenChannel() {
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
   bool isURIUniqueOrigin =
-      StaticPrefs::security_data_uri_unique_opaque_origin() &&
-      mURI->SchemeIs("data");
+      nsIOService::IsDataURIUniqueOpaqueOrigin() && mURI->SchemeIs("data");
 
   if (inherit && !isURIUniqueOrigin) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;

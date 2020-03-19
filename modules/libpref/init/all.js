@@ -1047,6 +1047,13 @@ pref("dom.select_popup_in_parent.enabled", false);
 
 pref("dom.cycle_collector.incremental", true);
 
+// Whether to shim a Components object on untrusted windows.
+#ifdef NIGHTLY_BUILD
+  pref("dom.use_components_shim", false);
+#else // NIGHTLY_BUILD
+  pref("dom.use_components_shim", true);
+#endif // NIGHTLY_BUILD
+
 // Disable popups from plugins by default
 //   0 = openAllowed
 //   1 = openControlled
@@ -2037,6 +2044,19 @@ pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://global/locale/intl.properties");
 pref("font.cjk_pref_fallback_order",        "zh-cn,zh-hk,zh-tw,ja,ko");
 
+// Android-specific pref to control if keydown and keyup events are fired even
+// in during composition.  Note that those prefs are ignored if
+// "dom.keyboardevent.dispatch_during_composition" is false.
+#ifdef MOZ_WIDGET_ANDROID
+  // If true and intl.ime.hack.on_any_apps.fire_key_events_for_composition is
+  // false, dispatch the keydown and keyup events only on IME-unaware web apps.
+  // So, this supports web apps which listen to only keydown or keyup events
+  // to get a change to do something at every text input.
+  pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", true);
+#else
+  pref("intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition", false);
+#endif // MOZ_WIDGET_ANDROID
+
 // If you use legacy Chinese IME which puts an ideographic space to composition
 // string as placeholder, this pref might be useful.  If this is true and when
 // web contents forcibly commits composition (e.g., moving focus), the
@@ -2273,6 +2293,16 @@ pref("security.notification_enable_delay", 500);
   // Disallow web documents loaded with the SystemPrincipal
   pref("security.disallow_non_local_systemprincipal_in_tests", false);
 #endif
+
+// Mixed content blocking
+pref("security.mixed_content.block_active_content", false);
+pref("security.mixed_content.block_display_content", false);
+
+// Upgrade mixed display content before it's blocked
+pref("security.mixed_content.upgrade_display_content", false);
+
+// Block sub requests that happen within an object
+pref("security.mixed_content.block_object_subrequest", false);
 
 // Sub-resource integrity
 pref("security.sri.enable", true);
@@ -2552,6 +2582,9 @@ pref("layout.testing.overlay-scrollbars.always-visible", false);
 
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
+
+// Pref to throttle offsreen animations
+pref("dom.animations.offscreen-throttling", true);
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
@@ -4149,6 +4182,10 @@ pref("full-screen-api.warning.delay", 500);
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("pointer-lock-api.warning.timeout", 3000);
 
+pref("dom.vibrator.enabled", true);
+pref("dom.vibrator.max_vibrate_ms", 10000);
+pref("dom.vibrator.max_vibrate_list_len", 128);
+
 // Push
 
 pref("dom.push.loglevel", "Error");
@@ -4188,6 +4225,9 @@ pref("dom.push.requestTimeout", 10000);
 pref("dom.push.http2.reset_retry_count_after_ms", 60000);
 pref("dom.push.http2.maxRetries", 2);
 pref("dom.push.http2.retryInterval", 5000);
+
+// W3C pointer events draft
+pref("dom.w3c_pointer_events.implicit_capture", false);
 
 // W3C MediaDevices devicechange fake event
 pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
@@ -4593,6 +4633,13 @@ pref("dom.maxHardwareConcurrency", 16);
   pref("osfile.reset_worker_delay", 30000);
 #endif
 
+// TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
+// If true, data: URIs will be treated as unique opaque origins, hence will use
+// a NullPrincipal as the security context.
+// Otherwise it will inherit the origin from parent node, this is the legacy
+// behavior of Firefox.
+pref("security.data_uri.unique_opaque_origin", true);
+
 // If true, all toplevel data: URI navigations will be blocked.
 // Please note that manually entering a data: URI in the
 // URL-Bar will not be blocked when flipping this pref.
@@ -4661,6 +4708,12 @@ pref("dom.noopener.newprocess.enabled", true);
 // a content to view.  This is mostly intended to prevent infinite
 // loops with faulty converters involved.
 pref("general.document_open_conversion_depth_limit", 20);
+
+// Should only be enabled in tests
+pref("dom.events.testing.asyncClipboard", false);
+
+// Disable moz* APIs in DataTransfer
+pref("dom.datatransfer.mozAtAPIs", false);
 
 pref("fission.rebuild_frameloaders_on_remoteness_change", true);
 
