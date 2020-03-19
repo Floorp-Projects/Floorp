@@ -2813,14 +2813,7 @@ bool nsGlobalWindowInner::DoResolve(
   // We support a cut-down Components.interfaces in case websites are
   // using Components.interfaces.nsIFoo.CONSTANT_NAME for the ones
   // that have constants.
-  static bool watchingComponentsPref = false;
-  static bool useComponentsShim = false;
-  if (!watchingComponentsPref) {
-    watchingComponentsPref = true;
-    Preferences::AddBoolVarCache(&useComponentsShim, "dom.use_components_shim",
-                                 true);
-  }
-  if (useComponentsShim &&
+  if (StaticPrefs::dom_use_components_shim() &&
       aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS)) {
     return ResolveComponentsShim(aCx, aObj, aDesc);
   }

@@ -2664,6 +2664,12 @@
   value: 5000
   mirror: always
 
+# Whether to shim a Components object on untrusted windows.
+- name: dom.use_components_shim
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 - name: dom.vibrator.enabled
   type: bool
   value: true

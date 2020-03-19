@@ -1055,13 +1055,6 @@ pref("dom.select_popup_in_parent.enabled", false);
 
 pref("dom.cycle_collector.incremental", true);
 
-// Whether to shim a Components object on untrusted windows.
-#ifdef NIGHTLY_BUILD
-  pref("dom.use_components_shim", false);
-#else // NIGHTLY_BUILD
-  pref("dom.use_components_shim", true);
-#endif // NIGHTLY_BUILD
-
 // Disable popups from plugins by default
 //   0 = openAllowed
 //   1 = openControlled
