@@ -2,9 +2,9 @@
   {
     "algorithm": "sha512",
     "visibility": "public",
-    "filename": "host-utils-71.0a1.en-US.mac.tar.gz",
+    "filename": "host-utils-76.0a1.en-US.mac.tar.gz",
     "unpack": true,
-    "digest": "e7424f5ae427682344105afe94423b4087dbd792312d1c579bc8402dd7873cae545053ae9cf0f358267b386e21d98cecee45649a4ff6a3640a1d39b88e01261c",
-    "size": 90678290
+    "digest": "13b4162cb9dfddf3d7463a4f087a6a042d9f49d7a5dd17f93cd892fe44847bf51e4995e55641f76aea910fff8ae543262fd4c98536e766690453bb9ae8398742",
+    "size": 92410622
   }
 ]
