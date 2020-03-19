@@ -32,6 +32,8 @@
     <string name="mozac_feature_addons_permissions_history_description">Käytä selaushistoriaa</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Tarkkaile laajennusten käyttöä ja hallitse teemoja</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Vaihda viestejä muiden sovellusten kanssa</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Näytä ilmoituksia sinulle</string>
     <!-- Description for pkcs11 permission. -->
@@ -106,6 +108,8 @@
     <string name="mozac_feature_addons_updater_notification_title">Lisäosalle %1$s on uusi päivitys</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d uutta oikeutta vaaditaan</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">Uusi oikeus vaaditaan</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Lisäosapäivitykset</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->

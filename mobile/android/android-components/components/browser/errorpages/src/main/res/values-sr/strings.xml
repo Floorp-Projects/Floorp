@@ -191,24 +191,59 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Датотека није нађена</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Да није можда преименована, уклоњена или премештена?</li>
+        <li>Постоји ли у адреси везе правописна грешка или грешка при куцању?</li>
+        <li>Имате ли довољна овлашћења за приступ траженој ставци?</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Приступ датотеци је одбијен</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Можда је уклоњена, премештена или су овлашћења датотеке таква да спречавају приступ.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Прокси сервер је одбио везу</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Прегледач је подешен да користи прокси сервер, али је он одбио везу.</p>
+      <ul>
+        <li>Да ли је прокси конфигурација прегледача исправна? Проверите подешавања и покушајте поново.</li>
+        <li>Да ли прокси услуга дозвољава повезивања из ове мреже?</li>
+        <li>Још увек имате проблема? За помоћ се обратите мрежном администратору или интернет провајдеру.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Не могу да пронађем прокси сервер</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Прегледач је подешен да користи прокси сервер, али он није пронађен.</p>
+      <ul>
+        <li>Да ли је прокси конфигурација прегледача исправна? Проверите подешавања и покушајте поново.</li>
+        <li>Да ли је уређај повезан на активну мрежу?</li>
+        <li>Још увек имате проблема? За помоћ се обратите мрежном администратору или интернет провајдеру.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Проблем са злонамерним софтвером</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Страница на %1$s је пријављена као злонамерна и блокирана је на основу ваших сигурносних подешавања.</p>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Проблем са непожељном страницом</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Страница на %1$s је пријављена због послуживања непожељног софтвера и блокирана је на основу ваших сигурносних подешавања.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Проблем са штетном страницом</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Страница на %1$s је пријављена као потенцијално штетна и блокирана је на основу ваших сигурносних подешавања.</p>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Проблем са обманљивом страницом</string>
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Страница на %1$s је пријављена као обманљива и блокирана је на основу ваших сигурносних подешавања.</p>]]></string>
+</resources>

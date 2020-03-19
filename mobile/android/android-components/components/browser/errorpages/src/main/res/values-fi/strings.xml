@@ -51,6 +51,13 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Yhteys keskeytettiin</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Selain muodosti yhteyden, mutta yhteys katkesi siirrettäessä tietoa. Yritä uudestaan.</p>
+      <ul>
+        <li>Sivusto voi olla väliaikaisesti saavuttamattomissa tai kovan rasituksen alaisena. Yritä hetken kuluttua uudestaan.</li>
+        <li>Jos mitkään sivustot eivät toimi, tarkista laitteen data- tai Wi-Fi-yhteys.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Yhteys aikakatkaistiin</string>
 
@@ -79,14 +86,38 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Sivu ei uudelleenohjaa oikein</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Selain on lopettanut pyydetyn kohteen lataamisen. Palvelin uudelleenohjaa yhteyspyyntöjä loputtomasti.</p>
+      <ul>
+        <li>Onko kaikki tai sivuston tarvitsemat evästeet estetty?</li>
+        <li>Jos sivuston evästeiden salliminen ei korjaa ongelmaa, vika on luultavasti palvelimen asetuksissa, eikä tässä laitteessa.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Yhteydetön tila</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Selain on verkkoyhteydettömässä tilassa eikä voi muodostaa yhteyttä pyydettyyn kohteeseen.</p>
+      <ul>
+        <li>Onko laitteen verkkoyhteys toiminnassa?</li>
+        <li>Aseta selain yhteystilaan ja yritä uudelleen.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Portin käyttöä rajoitettu tietoturvasyistä</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Pyydetty osoite sisältää käytettävän portin (esim. <q>mozilla.org:80</q> ottaa yhteyden mozilla.orgin porttiin 80), joka ei normaalisti ole tarpeen selatessa verkkosivuja. Selain on perunut verkkopyynnön turvallisuussyistä.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Yhteys keskeytyi</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Verkkoyhteys katkesi muodostettaessa yhteyttä. Yritä uudestaan.</p>
+      <ul>
+        <li>Sivusto voi olla väliaikaisesti saavuttamattomissa tai kovan rasituksen alaisena. Yritä hetken kuluttua uudestaan.</li>
+        <li>Jos mitkään sivustot eivät toimi, tarkista laitteen data- tai Wi-Fi-yhteys.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Vaarallinen tiedostotyyppi</string>
@@ -101,8 +132,19 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Vioittuneen sisällön virhe</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Avattavaa sivua ei voida näyttää, koska tiedonsiirrossa tapahtui virhe.</p>
+      <ul>
+        <li>Ilmoitathan ongelmasta sivuston omistajalle.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Sisältö kaatui</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Avattavaa sivua ei voida näyttää, koska tiedonsiirrossa tapahtui virhe.</p>
+      <ul>
+        <li>Ilmoitathan ongelmasta sivuston omistajalle.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Sisällön koodausvirhe</string>
@@ -114,6 +156,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Osoitetta ei löytynyt</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Selain ei löytänyt osoitteessa annettua palvelinta.</p>
+      <ul>
+        <li>Tarkista osoite kirjoitusvirheiden varalta, esimerkiksi
+          <strong>ww</strong>.mozilla.org oikean muodon
+          <strong>www</strong>.mozilla.org sijaan.</li>
+        <li>Jos muutkaan sivustot eivät toimi, tarkista laitteen data- tai Wi-Fi-yhteys.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Ei internetyhteyttä</string>
@@ -141,8 +192,20 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Tuntematon yhteyskäytäntö</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Selain ei tunnistanut osoitteessa käytettyä yhteyskäytäntöä (esim. <q>wxyz://</q>), minkä takia yhteyttä palvelimeen ei voida muodostaa.</p>
+      <ul>
+        <li>Jos yhteyttä muodostetaan multimediaa tai jotain muuta kuin tekstiä tarjoavaan palveluun, tarkista palvelimen lisävaatimukset asiakasohjelmille.</li>
+        <li>Toimiakseen selaimessa jotkin yhteyskäytännöt vaativat kolmannen osapuolen tekemän ohjelman tai liitännäisen.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Tiedostoa ei löydy</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Tiedosto voi olla poistettu, siirretty tai nimetty uudelleen.</li>
+        <li>Onko tiedoston nimi ja sijainti kirjoitettu virheettömästi ja oikealla kirjainkoolla?</li>
+        <li>Onko käyttäjällä lukuoikeudet tiedostoon?</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Pääsy tiedostoon estettiin</string>
@@ -156,8 +219,22 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Välityspalvelin kieltäytyi yhteydestä</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Selain on asetettu käyttämään välityspalvelinta, mutta välityspalvelin ei hyväksynyt yhteyttä.</p>
+      <ul>
+        <li>Ovatko selaimen välityspalvelinasetukset oikeat? Tarkista asetukset ja yritä uudelleen.</li>
+        <li>Tulisiko välityspalvelimen hyväksyä yhteydet tästä verkkoyhteydestä?</li>
+        <li>Jos ongelmat jatkuvat, ota yhteyttä verkon ylläpitoon tai verkkoyhteyden palveluntarjoajaan.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Välityspalvelinta ei löytynyt</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Selain on asetettu käyttämään välityspalvelinta, mutta siihen ei saatu yhteyttä.</p>
+      <ul>
+        <li>Ovatko selaimen välityspalvelinasetukset oikeat? Tarkista asetukset ja yritä uudelleen.</li>
+        <li>Onko tietokoneen verkkoyhteys toimintakykyinen?</li>
+        <li>Jos ongelmat jatkuvat, ota yhteyttä verkon ylläpitoon tai verkkoyhteyden palveluntarjoajaan.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Haittaohjelmia sisältävä sivusto</string>
