@@ -63,7 +63,7 @@ fn chunks_to_string<'a, T: IntoChunks<'a>>(code: T) -> String {
 fn try_parse<'alloc, 'source, Source>(
     allocator: &'alloc Bump,
     code: Source,
-) -> Result<arena::Box<'alloc, Script<'alloc>>>
+) -> Result<'alloc, arena::Box<'alloc, Script<'alloc>>>
 where
     Source: IntoChunks<'source>,
 {
