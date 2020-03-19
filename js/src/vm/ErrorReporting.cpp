@@ -40,14 +40,6 @@ void js::CompileError::throwError(JSContext* cx) {
   // If there's a runtime exception type associated with this error
   // number, set that as the pending exception.  For errors occuring at
   // compile time, this is very likely to be a JSEXN_SYNTAXERR.
-  //
-  // If an exception is thrown but not caught, the JSREPORT_EXCEPTION
-  // flag will be set in report.flags.  Proper behavior for an error
-  // reporter is to ignore a report with this flag for all but top-level
-  // compilation errors.  The exception will remain pending, and so long
-  // as the non-top-level "load", "eval", or "compile" native function
-  // returns false, the top-level reporter will eventually receive the
-  // uncaught exception report.
   ErrorToException(cx, this, nullptr, nullptr);
 }
 
