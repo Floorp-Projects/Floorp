@@ -20,9 +20,13 @@ function handleRequest(req, res) {
       // Set a variable to allow the request to complete immediately:
       setState("finishReq", "true");
     }
+  } else if (req.queryString.includes('reset')) {
+    res.write("OK");
+    setObjectState("downloadReq", null);
+    setState("finishReq", "false");
   } else {
     res.processAsync();
-    if (getState("finishReq")) {
+    if (getState("finishReq") === "true") {
       actuallyHandleRequest(req, res);
     } else {
       let o = {callback() { actuallyHandleRequest(req, res) }};
