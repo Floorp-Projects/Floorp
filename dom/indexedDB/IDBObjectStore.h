@@ -104,7 +104,8 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
                                     nsTArray<IndexUpdateInfo>* aUpdateInfoArray,
                                     ErrorResult* aRv);
 
-  static void ClearCloneReadInfo(indexedDB::StructuredCloneReadInfo& aReadInfo);
+  static void ClearCloneReadInfo(
+      indexedDB::StructuredCloneReadInfoChild& aReadInfo);
 
   static bool DeserializeValue(JSContext* aCx,
                                StructuredCloneReadInfoChild&& aCloneReadInfo,
