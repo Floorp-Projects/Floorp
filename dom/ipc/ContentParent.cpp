@@ -4619,13 +4619,13 @@ bool ContentParent::DeallocPWebBrowserPersistDocumentParent(
 
 mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
-    const bool& aCalledFromJS, const bool& aPositionSpecified,
-    const bool& aSizeSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
-    const float& aFullZoom, uint64_t aNextRemoteTabId, const nsString& aName,
-    nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
-    bool* aWindowIsNew, int32_t& aOpenLocation,
-    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
-    bool aLoadURI, nsIContentSecurityPolicy* aCsp)
+    const bool& aCalledFromJS, const bool& aWidthSpecified, nsIURI* aURIToLoad,
+    const nsCString& aFeatures, const float& aFullZoom,
+    uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
+    nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
+    int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
+    nsIReferrerInfo* aReferrerInfo, bool aLoadURI,
+    nsIContentSecurityPolicy* aCsp)
 
 {
   // The content process should never be in charge of computing whether or
@@ -4699,8 +4699,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   aOpenLocation = nsWindowWatcher::GetWindowOpenLocation(
-      outerWin, aChromeFlags, aCalledFromJS, aPositionSpecified,
-      aSizeSpecified);
+      outerWin, aChromeFlags, aCalledFromJS, aWidthSpecified);
 
   MOZ_ASSERT(aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
              aOpenLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
@@ -4841,11 +4840,10 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     PBrowserParent* aThisTab, PBrowserParent* aNewTab,
     const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-    const bool& aPositionSpecified, const bool& aSizeSpecified,
-    const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
-    const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
-    nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
-    CreateWindowResolver&& aResolve) {
+    const bool& aWidthSpecified, const Maybe<URIParams>& aURIToLoad,
+    const nsCString& aFeatures, const float& aFullZoom,
+    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+    nsIReferrerInfo* aReferrerInfo, CreateWindowResolver&& aResolve) {
   nsresult rv = NS_OK;
   CreatedWindowInfo cwi;
 
@@ -4884,9 +4882,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ true, aChromeFlags, aCalledFromJS,
-      aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aFullZoom,
-      nextRemoteTabId, VoidString(), rv, newRemoteTab, &cwi.windowOpened(),
-      openLocation, aTriggeringPrincipal, aReferrerInfo,
+      aWidthSpecified, uriToLoad, aFeatures, aFullZoom, nextRemoteTabId,
+      VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
+      aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ false, aCsp);
   if (!ipcResult) {
     return ipcResult;
@@ -4918,9 +4916,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
-    const bool& aCalledFromJS, const bool& aPositionSpecified,
-    const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
-    const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
+    const bool& aCalledFromJS, const bool& aWidthSpecified,
+    const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
+    const float& aFullZoom, const nsString& aName,
     nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     nsIReferrerInfo* aReferrerInfo) {
   MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(aName));
@@ -4958,7 +4956,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
   nsresult rv;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ false, aChromeFlags, aCalledFromJS,
-      aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aFullZoom,
+      aWidthSpecified, uriToLoad, aFeatures, aFullZoom,
       /* aNextRemoteTabId = */ 0, aName, rv, newRemoteTab, &windowIsNew,
       openLocation, aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ true, aCsp);
