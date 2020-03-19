@@ -3,49 +3,12 @@
  * being opened from content.
  */
 
-// The following features set chrome flags on new windows and are
-// supported by web content. The schema for each property on this
-// object is as follows:
+// The following are not allowed from web content.
 //
 // <feature string>: {
 //   flag: <associated nsIWebBrowserChrome flag>,
 //   defaults_to: <what this feature defaults to normally>
 // }
-const ALLOWED = {
-  toolbar: {
-    flag: Ci.nsIWebBrowserChrome.CHROME_TOOLBAR,
-    defaults_to: true,
-  },
-  personalbar: {
-    flag: Ci.nsIWebBrowserChrome.CHROME_PERSONAL_TOOLBAR,
-    defaults_to: true,
-  },
-  menubar: {
-    flag: Ci.nsIWebBrowserChrome.CHROME_MENUBAR,
-    defaults_to: true,
-  },
-  scrollbars: {
-    flag: Ci.nsIWebBrowserChrome.CHROME_SCROLLBARS,
-    defaults_to: false,
-  },
-  minimizable: {
-    flag: Ci.nsIWebBrowserChrome.CHROME_WINDOW_MIN,
-    defaults_to: true,
-  },
-};
-
-// Construct a features string that flips all ALLOWED features
-// to not be their defaults.
-const ALLOWED_STRING = Object.keys(ALLOWED)
-  .map(feature => {
-    let toValue = ALLOWED[feature].defaults_to ? "no" : "yes";
-    return `${feature}=${toValue}`;
-  })
-  .join(",");
-
-// The following are not allowed from web content, at least
-// in the default case (since some are disabled by default
-// via the dom.disable_window_open_feature pref branch).
 const DISALLOWED = {
   location: {
     flag: Ci.nsIWebBrowserChrome.CHROME_LOCATIONBAR,
@@ -141,21 +104,6 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Given some nsIDOMWindow for a window running in the parent
- * process, return the nsIWebBrowserChrome chrome flags for
- * the associated XUL window.
- *
- * @param win (nsIDOMWindow)
- *        Some window in the parent process.
- * @returns int
- */
-function getParentChromeFlags(win) {
-  return win.docShell.treeOwner
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIAppWindow).chromeFlags;
-}
-
-/**
  * Given some nsIDOMWindow for a window running in the parent process,
  * asynchronously return the nsIWebBrowserChrome chrome flags for the
  * associated content window.
@@ -184,34 +132,13 @@ function getContentChromeFlags(win) {
 }
 
 /**
- * For some chromeFlags, ensures that flags that are in the
- * ALLOWED group were modified, and that flags in the DISALLOWED
+ * For some chromeFlags, ensures that flags in the DISALLOWED
  * group were not modified.
  *
  * @param chromeFlags (int)
  *        Some chromeFlags to check.
  */
-function assertContentFlags(chromeFlags) {
-  for (let feature in ALLOWED) {
-    let flag = ALLOWED[feature].flag;
-
-    if (ALLOWED[feature].defaults_to) {
-      // The feature is supposed to default to true, so we should
-      // have been able to flip it off.
-      Assert.ok(
-        !(chromeFlags & flag),
-        `Expected feature ${feature} to be disabled`
-      );
-    } else {
-      // The feature is supposed to default to false, so we should
-      // have been able to flip it on.
-      Assert.ok(
-        chromeFlags & flag,
-        `Expected feature ${feature} to be enabled`
-      );
-    }
-  }
-
+function assertContentFlags(chromeFlags, isPopup) {
   for (let feature in DISALLOWED) {
     let flag = DISALLOWED[feature].flag;
     Assert.ok(flag, "Expected flag to be a non-zeroish value");
@@ -235,11 +162,10 @@ function assertContentFlags(chromeFlags) {
 
 /**
  * Opens a window from content using window.open with the
- * features computed from ALLOWED and DISALLOWED. The computed
- * feature string attempts to flip every feature away from their
- * default.
+ * features computed from DISALLOWED. The computed feature string attempts to
+ * flip every feature away from their default.
  */
-add_task(async function test_new_remote_window_flags() {
+add_task(async function test_disallowed_flags() {
   // Construct a features string that flips all DISALLOWED features
   // to not be their defaults.
   const DISALLOWED_STRING = Object.keys(DISALLOWED)
@@ -249,7 +175,7 @@ add_task(async function test_new_remote_window_flags() {
     })
     .join(",");
 
-  const FEATURES = [ALLOWED_STRING, DISALLOWED_STRING].join(",");
+  const FEATURES = [DISALLOWED_STRING].join(",");
 
   const SCRIPT_PAGE = `data:text/html,<script>window.open("about:blank", "_blank", "${FEATURES}");</script>`;
   const SCRIPT_PAGE_FOR_CHROME_ALL = `data:text/html,<script>window.open("about:blank", "_blank", "all");</script>`;

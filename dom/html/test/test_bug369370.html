@@ -74,8 +74,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
 
         is(img.width,  800, "image width");
         is(img.height, 600, "image height");
-        is(kidDoc.body.scrollLeft,  400, "Checking scrollLeft");
-        is(kidDoc.body.scrollTop,   300, "Checking scrollTop");
+        is(kidDoc.body.scrollLeft,
+           kidDoc.body.scrollLeftMax, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,
+           kidDoc.body.scrollTopMax, "Checking scrollTop");
 
         // ========== test 4 ==========
         // Click there again to zoom out
@@ -106,7 +108,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
             // Give the image document time to respond
             SimpleTest.executeSoon(function() {
               is(img.height, 600, "image height");
-              is(img.getBoundingClientRect().top, 25, "Image is vertically centered");
+              var bodyHeight = kidDoc.body.scrollHeight;
+              var imgRect = img.getBoundingClientRect();
+              is(imgRect.top, bodyHeight - imgRect.bottom, "Image is vertically centered");
               test7();
             });
           }, {once: true});
@@ -139,7 +143,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
 
     SimpleTest.waitForExplicitFinish();
     SpecialPowers.pushPrefEnv({"set":[["browser.enable_automatic_image_resizing", true]]}, function() {
-       kidWin = window.open("bug369370-popup.png", "bug369370", "width=400,height=300,scrollbars=no");
+       kidWin = window.open("bug369370-popup.png", "bug369370", "width=400,height=300");
        // will init onload
        ok(kidWin, "opened child window");
        kidWin.onload = childLoaded;
