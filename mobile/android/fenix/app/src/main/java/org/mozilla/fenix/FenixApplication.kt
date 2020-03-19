@@ -151,6 +151,15 @@ open class FenixApplication : LocaleAwareApplication() {
         registerActivityLifecycleCallbacks(
             PerformanceActivityLifecycleCallbacks(components.performance.visualCompletenessTaskManager)
         )
+
+        components.performance.visualCompletenessTaskManager.add {
+            GlobalScope.launch(Dispatchers.IO) {
+                logger.info("Initializing storage after visual completeness...")
+                components.core.lazyHistoryStorage.value
+                components.core.lazyBookmarksStorage.value
+                components.core.lazyPasswordsStorage.value
+            }
+        }
     }
 
     // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.
