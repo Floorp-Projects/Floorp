@@ -417,8 +417,12 @@ void DataTransferItemList::GetTypes(nsTArray<nsString>& aTypes,
                                     CallerType aCallerType) const {
   MOZ_ASSERT(aTypes.IsEmpty());
 
+  if (mIndexedItems.IsEmpty()) {
+    return;
+  }
+
   bool foundFile = false;
-  for (const RefPtr<DataTransferItem>& item : mItems) {
+  for (const RefPtr<DataTransferItem>& item : mIndexedItems[0]) {
     MOZ_ASSERT(item);
 
     // XXX Why don't we check the caller type with item's permission only
@@ -449,7 +453,11 @@ void DataTransferItemList::GetTypes(nsTArray<nsString>& aTypes,
 
 bool DataTransferItemList::HasType(const nsAString& aType) const {
   MOZ_ASSERT(!aType.EqualsASCII("Files"), "Use HasFile instead");
-  for (const RefPtr<DataTransferItem>& item : mItems) {
+  if (mIndexedItems.IsEmpty()) {
+    return false;
+  }
+
+  for (const RefPtr<DataTransferItem>& item : mIndexedItems[0]) {
     if (item->IsInternalType(aType)) {
       return true;
     }
@@ -458,7 +466,11 @@ bool DataTransferItemList::HasType(const nsAString& aType) const {
 }
 
 bool DataTransferItemList::HasFile() const {
-  for (const RefPtr<DataTransferItem>& item : mItems) {
+  if (mIndexedItems.IsEmpty()) {
+    return false;
+  }
+
+  for (const RefPtr<DataTransferItem>& item : mIndexedItems[0]) {
     if (item->Kind() == DataTransferItem::KIND_FILE) {
       return true;
     }
