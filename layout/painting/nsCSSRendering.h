@@ -712,15 +712,16 @@ struct nsCSSRendering {
     }
   }
 
-  static CompositionOp GetGFXCompositeMode(uint8_t aCompositeMode) {
+  static CompositionOp GetGFXCompositeMode(
+      mozilla::StyleMaskComposite aCompositeMode) {
     switch (aCompositeMode) {
-      case NS_STYLE_MASK_COMPOSITE_ADD:
+      case mozilla::StyleMaskComposite::Add:
         return CompositionOp::OP_OVER;
-      case NS_STYLE_MASK_COMPOSITE_SUBTRACT:
+      case mozilla::StyleMaskComposite::Subtract:
         return CompositionOp::OP_OUT;
-      case NS_STYLE_MASK_COMPOSITE_INTERSECT:
+      case mozilla::StyleMaskComposite::Intersect:
         return CompositionOp::OP_IN;
-      case NS_STYLE_MASK_COMPOSITE_EXCLUDE:
+      case mozilla::StyleMaskComposite::Exclude:
         return CompositionOp::OP_XOR;
       default:
         MOZ_ASSERT(false);
