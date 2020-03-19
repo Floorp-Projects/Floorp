@@ -1362,12 +1362,15 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
       mClampMaxLine = 1 + aRange->Extent();
       mRepeatAutoEnd = mRepeatAutoStart;
       const auto& styleSubgrid = aTracks.mTemplate.AsSubgrid();
+      const auto fillStart = styleSubgrid->fill_start;
+      // Use decltype so we do not rely on the exact type that was exposed from
+      // rust code.
       mHasRepeatAuto =
-          styleSubgrid->fill_idx != std::numeric_limits<size_t>::max();
+          fillStart != std::numeric_limits<decltype(fillStart)>::max();
       if (mHasRepeatAuto) {
         const auto& lineNameLists = styleSubgrid->names;
         int32_t extraAutoFillLineCount = mClampMaxLine - lineNameLists.Length();
-        mRepeatAutoStart = styleSubgrid->fill_idx;
+        mRepeatAutoStart = fillStart;
         mRepeatAutoEnd =
             mRepeatAutoStart + std::max(0, extraAutoFillLineCount + 1);
       }
