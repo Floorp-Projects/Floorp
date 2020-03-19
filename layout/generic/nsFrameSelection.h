@@ -205,11 +205,6 @@ enum class TableSelectionMode : uint32_t {
 }  // namespace mozilla
 class nsIScrollableFrame;
 
-/**
- * Methods which are marked with *unsafe* should be handled with special care.
- * They may cause nsFrameSelection to be deleted, if strong pointer isn't used,
- * or they may cause other objects to be deleted.
- */
 class nsFrameSelection final {
  public:
   typedef mozilla::CaretAssociationHint CaretAssociateHint;
@@ -260,8 +255,9 @@ class nsFrameSelection final {
    *
    * @param aPoint is relative to aFrame
    */
-  /*unsafe*/
-  void HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HandleDrag(nsIFrame* aFrame,
+                                              const nsPoint& aPoint);
 
   /**
    * HandleTableSelection will set selection to a table, cell, etc
@@ -287,10 +283,11 @@ class nsFrameSelection final {
    * @param aMouseEvent passed in so we can get where event occurred
    * and what keys are pressed
    */
-  /*unsafe*/
-  nsresult HandleTableSelection(nsINode* aParentContent, int32_t aContentOffset,
-                                mozilla::TableSelectionMode aTarget,
-                                mozilla::WidgetMouseEvent* aMouseEvent);
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  HandleTableSelection(nsINode* aParentContent, int32_t aContentOffset,
+                       mozilla::TableSelectionMode aTarget,
+                       mozilla::WidgetMouseEvent* aMouseEvent);
 
   /**
    * Add cell to the selection with `SelectionType::eNormal`.
@@ -417,10 +414,10 @@ class nsFrameSelection final {
    *   * SCROLL_FIRST_ANCESTOR_ONLY: if set, only the first ancestor will be
    *     scrolled into view.
    */
-  /*unsafe*/
-  nsresult ScrollSelectionIntoView(mozilla::SelectionType aSelectionType,
-                                   SelectionRegion aRegion,
-                                   int16_t aFlags) const;
+  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  ScrollSelectionIntoView(mozilla::SelectionType aSelectionType,
+                          SelectionRegion aRegion, int16_t aFlags) const;
 
   /**
    * RepaintSelection repaints the selected frames that are inside the
@@ -820,13 +817,11 @@ class nsFrameSelection final {
     // (according to GetFirstCellNodeInRange).
     nsRange* GetNextCellRange(const mozilla::dom::Selection& aNormalSelection);
 
-    // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    nsresult HandleSelection(nsINode* aParentContent, int32_t aContentOffset,
-                             mozilla::TableSelectionMode aTarget,
-                             mozilla::WidgetMouseEvent* aMouseEvent,
-                             bool aDragState,
-                             mozilla::dom::Selection& aNormalSelection);
+    MOZ_CAN_RUN_SCRIPT nsresult
+    HandleSelection(nsINode* aParentContent, int32_t aContentOffset,
+                    mozilla::TableSelectionMode aTarget,
+                    mozilla::WidgetMouseEvent* aMouseEvent, bool aDragState,
+                    mozilla::dom::Selection& aNormalSelection);
 
     // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
