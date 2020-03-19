@@ -53,7 +53,7 @@ class ContextMenuCandidateTest {
         val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
-        assertEquals(8, candidates.size)
+        assertEquals(9, candidates.size)
     }
 
     @Test
@@ -438,6 +438,70 @@ class ContextMenuCandidateTest {
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
             "https://developer.mozilla.org/media/examples/t-rex-roar.mp3",
+            store.state.tabs.first().content.download!!.url)
+        assertTrue(
+            store.state.tabs.first().content.download!!.skipConfirmation)
+    }
+
+    @Test
+    fun `Candidate "download link"`() {
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        sessionManager.add(Session("https://www.mozilla.org", private = true))
+
+        val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
+            testContext,
+            ContextMenuUseCases(sessionManager, store))
+
+        // showFor
+
+        assertTrue(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertTrue(downloadLink.showFor(
+            createTab("https://www.mozilla.org", private = true),
+            HitResult.UNKNOWN("https://www.mozilla.org")))
+
+        assertTrue(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")))
+
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.IMAGE("https://www.mozilla.org")))
+
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.VIDEO("https://www.mozilla.org")))
+
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.PHONE("https://www.mozilla.org")))
+
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.EMAIL("https://www.mozilla.org")))
+
+        assertFalse(downloadLink.showFor(
+            createTab("https://www.mozilla.org"),
+            HitResult.GEO("https://www.mozilla.org")))
+
+        // action
+
+        assertNull(store.state.tabs.first().content.download)
+
+        downloadLink.action.invoke(
+            store.state.tabs.first(),
+            HitResult.IMAGE_SRC("https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
+                "https://firefox.com"))
+
+        store.waitUntilIdle()
+
+        assertNotNull(store.state.tabs.first().content.download)
+        assertEquals(
+            "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
             store.state.tabs.first().content.download!!.url)
         assertTrue(
             store.state.tabs.first().content.download!!.skipConfirmation)
