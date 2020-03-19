@@ -48,7 +48,8 @@ AbstractScopePtr GCThingList::getScope(size_t index) const {
   auto& elem = vector[index].get();
   if (elem.is<JS::GCCellPtr>()) {
     return AbstractScopePtr(&elem.as<JS::GCCellPtr>().as<Scope>());
-  } else if (elem.is<EmptyGlobalScopeType>()) {
+  }
+  if (elem.is<EmptyGlobalScopeType>()) {
     return AbstractScopePtr(&compilationInfo.cx->global()->emptyGlobalScope());
   }
   return AbstractScopePtr(compilationInfo, elem.as<ScopeIndex>());
