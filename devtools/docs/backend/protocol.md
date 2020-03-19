@@ -664,7 +664,7 @@ To attach to a *targetActor*, a client sends a message of the form:
 The target actor replies:
 
 ```
-{ "from":<targetActor>, "type":"tabAttached", "threadActor":<tabThreadActor> }
+{ "from":<targetActor>, "threadActor":<tabThreadActor> }
 ```
 
 where *tabThreadActor* is the name of a thread-like actor representing the tab's current content. If the user navigates the tab, *tabThreadActor* switches to the new content; we do not create a separate thread-like actor each page the tab visits.
