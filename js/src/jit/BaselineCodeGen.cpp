@@ -3898,8 +3898,6 @@ bool BaselineCompilerCodeGen::emit_GetImport() {
   Shape* shape;
   MOZ_ALWAYS_TRUE(env->lookupImport(id, &targetEnv, &shape));
 
-  EnsureTrackPropertyTypes(cx, targetEnv, shape->propid());
-
   frame.syncStack(0);
 
   uint32_t slot = shape->slot();
