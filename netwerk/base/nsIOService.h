@@ -124,7 +124,7 @@ class nsIOService final : public nsIIOService,
   bool SocketProcessReady();
   static void NotifySocketProcessPrefsChanged(const char* aName, void* aSelf);
   void NotifySocketProcessPrefsChanged(const char* aName);
-  static bool UseSocketProcess();
+  static bool UseSocketProcess(bool aCheckAgain = false);
 
   bool IsSocketProcessLaunchComplete();
 
@@ -140,6 +140,8 @@ class nsIOService final : public nsIIOService,
   RefPtr<MemoryReportingProcess> GetSocketProcessMemoryReporter();
 
   static void OnTLSPrefChange(const char* aPref, void* aSelf);
+
+  nsresult LaunchSocketProcess();
 
  private:
   // These shouldn't be called directly:
@@ -191,7 +193,6 @@ class nsIOService final : public nsIIOService,
                                       nsIInterfaceRequestor* aCallbacks,
                                       bool aAnonymous);
 
-  nsresult LaunchSocketProcess();
   void DestroySocketProcess();
 
  private:
