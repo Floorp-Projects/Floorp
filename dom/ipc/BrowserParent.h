@@ -340,7 +340,8 @@ class BrowserParent final : public PBrowserParent,
       const nsTArray<CollectedInputDataValue>& aXPathVals,
       nsTArray<nsCString>&& aOrigins, nsTArray<nsString>&& aKeys,
       nsTArray<nsString>&& aValues, const bool aIsFullStorage,
-      const uint32_t& aFlushId, const bool& aIsFinal, const uint32_t& aEpoch);
+      const bool aNeedCollectSHistory, const uint32_t& aFlushId,
+      const bool& aIsFinal, const uint32_t& aEpoch);
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
