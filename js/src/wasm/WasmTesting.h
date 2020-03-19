@@ -1,7 +1,7 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vim: set ts=8 sts=2 et sw=2 tw=80:
  *
- * Copyright 2015 Mozilla Foundation
+ * Copyright 2020 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_text_to_binary_h
-#define wasm_text_to_binary_h
+#ifndef wasm_testing_h
+#define wasm_testing_h
 
 #include "wasm/WasmTypes.h"
 
@@ -29,11 +29,18 @@ namespace wasm {
 // other than out-of-memory an error message string will be stored in 'error'.
 
 extern MOZ_MUST_USE bool TextToBinary(const char16_t* text, size_t textLen,
-                                      uintptr_t stackLimit, Bytes* bytes,
-                                      Uint32Vector* offsets,
-                                      UniqueChars* error);
+                                      Bytes* bytes, UniqueChars* error);
+
+// Decode the binary wasm module given and return the offsets of all
+// instructions inside of the the code section.
+//
+// This function is used exclusively for testing and handles errors by
+// returning an empty offset array.
+
+extern void CodeOffsets(const uint8_t* bytes, size_t bytesLen,
+                        Uint32Vector* offsets);
 
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_text_to_binary_h
+#endif  // wasm_testing_h
