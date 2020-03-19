@@ -266,6 +266,7 @@ Babel.registerPlugin("transform-mc", transformMC);
 module.exports = function(filePath) {
   return [
     "transform-flow-strip-types",
+    "proposal-optional-chaining",
     "proposal-class-properties",
     "transform-modules-commonjs",
     "transform-react-jsx",
