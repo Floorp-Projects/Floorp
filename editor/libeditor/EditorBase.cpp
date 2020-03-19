@@ -285,12 +285,6 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "nsISelectionController::SetCaretReadOnly(false) failed, but ignored");
-  rvIgnored = selectionController->SetDisplaySelection(
-      nsISelectionController::SELECTION_ON);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsISelectionController::SetDisplaySelection(nsISelectionController::"
-      "SELECTION_ON) failed, but ignored");
   // Show all the selection reflected to user.
   rvIgnored =
       selectionController->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);
@@ -309,7 +303,7 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
 
   // Make sure that the editor will be destroyed properly
   mDidPreDestroy = false;
-  // Make sure that the ediotr will be created properly
+  // Make sure that the editor will be created properly
   mDidPostCreate = false;
 
   return NS_OK;
@@ -2505,7 +2499,7 @@ nsresult EditorBase::GetPreferredIMEState(IMEState* aState) {
   aState->mEnabled = IMEState::ENABLED;
   aState->mOpen = IMEState::DONT_CHANGE_OPEN_STATE;
 
-  if (IsReadonly() || IsDisabled()) {
+  if (IsReadonly()) {
     aState->mEnabled = IMEState::DISABLED;
     return NS_OK;
   }
@@ -5039,7 +5033,7 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
              "HandleKeyPressEvent gets non-keypress event");
 
   // if we are readonly or disabled, then do nothing.
-  if (IsReadonly() || IsDisabled()) {
+  if (IsReadonly()) {
     // consume backspace for disabled and readonly textfields, to prevent
     // back in history, which could be confusing to users
     if (aKeyboardEvent->mKeyCode == NS_VK_BACK) {
@@ -5134,21 +5128,13 @@ nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
   caret->SetIgnoreUserModify(targetNode->OwnerDoc()->HasFlag(NODE_IS_EDITABLE));
 
   // Init selection
-  rvIgnored = selectionController->SetDisplaySelection(
-      nsISelectionController::SELECTION_ON);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsISelectionController::SetDisplaySelection() failed, but ignored");
   rvIgnored =
       selectionController->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "nsISelectionController::SetSelectionFlags() failed, but ignored");
-  rvIgnored = selectionController->RepaintSelection(
-      nsISelectionController::SELECTION_NORMAL);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsISelectionController::RepaintSelection() failed, but ignored");
+
+  selectionController->SelectionWillTakeFocus();
 
   // If the computed selection root isn't root content, we should set it
   // as selection ancestor limit.  However, if that is root element, it means
@@ -5192,26 +5178,6 @@ nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
   return NS_OK;
 }
 
-class RepaintSelectionRunner final : public Runnable {
- public:
-  explicit RepaintSelectionRunner(nsISelectionController* aSelectionController)
-      : Runnable("RepaintSelectionRunner"),
-        mSelectionController(aSelectionController) {}
-
-  NS_IMETHOD Run() override {
-    DebugOnly<nsresult> rvIgnored = mSelectionController->RepaintSelection(
-        nsISelectionController::SELECTION_NORMAL);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "nsISelectionController::RepaintSelection(nsISelectionController::"
-        "SELECTION_NORMAL) failed, but ignored");
-    return NS_OK;
-  }
-
- private:
-  nsCOMPtr<nsISelectionController> mSelectionController;
-};
-
 nsresult EditorBase::FinalizeSelection() {
   nsCOMPtr<nsISelectionController> selectionController =
       GetSelectionController();
@@ -5243,58 +5209,11 @@ nsresult EditorBase::FinalizeSelection() {
     return NS_ERROR_NOT_INITIALIZED;
   }
   focusManager->UpdateCaretForCaretBrowsingMode();
-
-  if (!HasIndependentSelection()) {
-    // If this editor doesn't have an independent selection, i.e., it must
-    // mean that it is an HTML editor, the selection controller is shared with
-    // presShell.  So, even this editor loses focus, other part of the document
-    // may still have focus.
-    RefPtr<Document> doc = GetDocument();
-    ErrorResult ret;
-    if (!doc || !doc->HasFocus(ret)) {
-      // If the document already lost focus, mark the selection as disabled.
-      DebugOnly<nsresult> rvIgnored = selectionController->SetDisplaySelection(
-          nsISelectionController::SELECTION_DISABLED);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsISelectionController::SetDisplaySelection(nsISelectionController::"
-          "SELECTION_DISABLED) failed, but ignored");
-    } else {
-      // Otherwise, mark selection as normal because outside of a
-      // contenteditable element should be selected with normal selection
-      // color after here.
-      DebugOnly<nsresult> rvIgnored = selectionController->SetDisplaySelection(
-          nsISelectionController::SELECTION_ON);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "nsISelectionController::SetDisplaySelection(nsISelectionController::"
-          "SELECTION_ON) failed, but ignored");
+  if (nsCOMPtr<nsINode> node = do_QueryInterface(GetDOMEventTarget())) {
+    if (node->OwnerDoc()->GetUnretargetedFocusedContent() != node) {
+      selectionController->SelectionWillLoseFocus();
     }
-  } else if (IsFormWidget() || IsPasswordEditor() || IsReadonly() ||
-             IsDisabled() || IsInputFiltered()) {
-    // In <input> or <textarea>, the independent selection should be hidden
-    // while this editor doesn't have focus.
-    DebugOnly<nsresult> rvIgnored = selectionController->SetDisplaySelection(
-        nsISelectionController::SELECTION_HIDDEN);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "nsISelectionController::SetDisplaySelection(nsISelectionController::"
-        "SELECTION_HIDDEN) failed, but ignored");
-  } else {
-    // Otherwise, although we're not sure how this case happens, the
-    // independent selection should be marked as disabled.
-    DebugOnly<nsresult> rvIgnored = selectionController->SetDisplaySelection(
-        nsISelectionController::SELECTION_DISABLED);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "nsISelectionController::SetDisplaySelection(nsISelectionController::"
-        "SELECTION_DISABLED) failed, but ignored");
   }
-
-  // FinalizeSelection might be called from ContentRemoved even if selection
-  // isn't updated.  So we need to call RepaintSelection after updated it.
-  nsContentUtils::AddScriptRunner(
-      new RepaintSelectionRunner(selectionController));
   return NS_OK;
 }
 

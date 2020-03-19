@@ -491,10 +491,6 @@ class EditorBase : public nsIEditor,
     return (mFlags & nsIEditor::eEditorReadonlyMask) != 0;
   }
 
-  bool IsDisabled() const {
-    return (mFlags & nsIEditor::eEditorDisabledMask) != 0;
-  }
-
   bool IsInputFiltered() const {
     return (mFlags & nsIEditor::eEditorFilterInputMask) != 0;
   }
@@ -2565,8 +2561,7 @@ class EditorBase : public nsIEditor,
     // Check for password/readonly/disabled, which are not spellchecked
     // regardless of DOM. Also, check to see if spell check should be skipped
     // or not.
-    return !IsPasswordEditor() && !IsReadonly() && !IsDisabled() &&
-           !ShouldSkipSpellCheck();
+    return !IsPasswordEditor() && !IsReadonly() && !ShouldSkipSpellCheck();
   }
 
   /**
