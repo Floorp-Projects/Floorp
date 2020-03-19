@@ -27,6 +27,7 @@ import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailActi
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
 import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
@@ -290,6 +291,9 @@ class Session(
         if (old != new && new == null) {
             store?.syncDispatch(RemoveCustomTabAction(id))
             store?.syncDispatch(AddTabAction(toTabSessionState()))
+            engineSessionHolder.engineSession?.let { engineSession ->
+                store?.syncDispatch(EngineAction.LinkEngineSessionAction(id, engineSession))
+            }
         }
     }
 
