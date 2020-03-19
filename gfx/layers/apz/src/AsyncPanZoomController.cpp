@@ -4327,78 +4327,6 @@ CSSRect AsyncPanZoomController::GetVisibleRect(
   return visible;
 }
 
-ParentLayerRect AsyncPanZoomController::RecursivelyClipCompBounds(
-    const ParentLayerRect& aChildCompBounds) const {
-  // The childCompBounds is in the ParentLayer space of a child layer, which
-  // is the Layer space of this layer, so we can cast it.
-  LayerRect compBoundsInLayerSpace = ViewAs<LayerPixel>(
-      aChildCompBounds, PixelCastJustification::MovingDownToChildren);
-
-  // Apply the async transform from this layer and then clip with this
-  // layer's composition bounds.
-  AsyncTransform appliesToLayer =
-      GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
-  ParentLayerRect compBoundsInParentSpace =
-      (compBoundsInLayerSpace * appliesToLayer.mScale) +
-      appliesToLayer.mTranslation;
-
-  {  // hold lock while reading Metrics()
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    compBoundsInParentSpace =
-        compBoundsInParentSpace.Intersect(Metrics().GetCompositionBounds());
-  }
-
-  // Recurse up the tree
-  if (mParent) {
-    // Make sure we're not holding our lock when we do this, to be extra safe.
-    mRecursiveMutex.AssertNotCurrentThreadIn();
-    compBoundsInParentSpace =
-        mParent->RecursivelyClipCompBounds(compBoundsInParentSpace);
-  }
-
-  // Undo async transformation from above to produce return value in the same
-  // coordinate space as the input parameter.
-  compBoundsInLayerSpace =
-      (compBoundsInParentSpace - appliesToLayer.mTranslation) /
-      appliesToLayer.mScale;
-  return ViewAs<ParentLayerPixel>(compBoundsInLayerSpace,
-                                  PixelCastJustification::MovingDownToChildren);
-}
-
-CSSRect AsyncPanZoomController::GetRecursivelyVisibleRect() const {
-  CSSRect visible;
-  ParentLayerRect compBounds;
-  CSSToParentLayerScale2D zoom;
-
-  {  // scope mutex
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    visible = GetVisibleRect(lock);  // relative to scrolled frame origin
-    compBounds = Metrics().GetCompositionBounds();
-    zoom = Metrics().GetZoom();
-  }
-
-  if (mParent) {
-    // compBounds and clippedCompBounds are relative to the layer tree origin
-    ParentLayerRect clippedCompBounds =
-        mParent->RecursivelyClipCompBounds(compBounds);
-
-    // the "*RelativeToItself*" variables are relative to the comp bounds origin
-    ParentLayerRect visiblePartOfCompBoundsRelativeToItself =
-        clippedCompBounds - compBounds.TopLeft();
-
-    CSSRect visiblePartOfCompBoundsRelativeToItselfInCssSpace =
-        (visiblePartOfCompBoundsRelativeToItself / zoom);
-
-    // this one is relative to the scrolled frame origin, same as `visible`
-    CSSRect visiblePartOfCompBoundsInCssSpace =
-        visiblePartOfCompBoundsRelativeToItselfInCssSpace + visible.TopLeft();
-
-    visible = visible.Intersect(visiblePartOfCompBoundsInCssSpace);
-  }
-
-  return visible;
-}
-
 uint32_t AsyncPanZoomController::GetCheckerboardMagnitude(
     const ParentLayerRect& aClippedCompositionBounds) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -4503,26 +4431,6 @@ void AsyncPanZoomController::FlushActiveCheckerboardReport() {
   // Pretend like we got a frame with 0 pixels checkerboarded. This will
   // terminate the checkerboard event and flush it out
   UpdateCheckerboardEvent(lock, 0);
-}
-
-bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
-  CSSRect painted;
-  {  // scope lock
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    painted = mLastContentPaintMetrics.GetDisplayPort() +
-              mLastContentPaintMetrics.GetScrollOffset();
-  }
-
-  painted.Inflate(CSSMargin::FromAppUnits(
-      nsMargin(1, 1, 1, 1)));  // fuzz for rounding error
-  CSSRect visible = GetRecursivelyVisibleRect();
-  if (visible.IsEmpty() || painted.Contains(visible)) {
-    return false;
-  }
-  APZC_LOG_FM(Metrics(),
-              "%p is currently checkerboarding (painted %s visible %s)", this,
-              Stringify(painted).c_str(), Stringify(visible).c_str());
-  return true;
 }
 
 void AsyncPanZoomController::NotifyLayersUpdated(

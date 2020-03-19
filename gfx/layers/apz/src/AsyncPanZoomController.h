@@ -334,14 +334,6 @@ class AsyncPanZoomController {
   void FlushActiveCheckerboardReport();
 
   /**
-   * Returns whether or not the APZC is currently in a state of checkerboarding.
-   * This is a simple computation based on the last-painted content and whether
-   * the async transform has pushed it so far that it doesn't fully contain the
-   * composition bounds.
-   */
-  bool IsCurrentlyCheckerboarding() const;
-
-  /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
    * than the composite-to dimensions so that when you scroll down, you don't
    * checkerboard immediately. This includes a bunch of logic, including
@@ -1220,25 +1212,6 @@ class AsyncPanZoomController {
    * CSS pixels. The caller must have acquired the mRecursiveMutex lock.
    */
   CSSRect GetVisibleRect(const RecursiveMutexAutoLock& aProofOfLock) const;
-  /**
-   * This returns the composition bounds of this APZC, but accounting for
-   * ancestor state. It's possible to have a scrollable frame with giant
-   * composition bounds nested inside a scrollable frame with smaller
-   * composition bounds, or even scrolled out of view entirely by an
-   * ancestor scrollable frame. This function accounts for those possibilities,
-   * by walking up to the root of the tree and clipping the composition bounds
-   * needed by the state of ancestor scrollframes. The returned value is
-   * in the same coordinate space as the composition bounds, and is guaranteed
-   * to be contained by the composition bounds.
-   */
-  ParentLayerRect RecursivelyClipCompBounds(
-      const ParentLayerRect& aChildCompBounds) const;
-  /**
-   * Similar to GetVisibleRect, but this accounts for ancestor APZC's
-   * composition bounds as well. Conceptually this is the intersection of
-   * GetVisibleRect() with RecursivelyClipCompBounds().
-   */
-  CSSRect GetRecursivelyVisibleRect() const;
 
  private:
   friend class AutoApplyAsyncTestAttributes;
