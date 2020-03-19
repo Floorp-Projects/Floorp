@@ -38,7 +38,7 @@ loadSubScript("resource://devtools/shared/worker/loader.js");
 
 var defer = worker.require("devtools/shared/defer");
 var EventEmitter = worker.require("devtools/shared/event-emitter");
-const { Pool } = worker.require("devtools/shared/protocol/Pool");
+var { ActorPool } = worker.require("devtools/server/actors/common");
 var { ThreadActor } = worker.require("devtools/server/actors/thread");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
 var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
@@ -66,7 +66,8 @@ this.addEventListener("message", function(event) {
       };
 
       // Step 4: Create a thread actor for the connection to the parent.
-      const pool = new Pool(connection);
+      const pool = new ActorPool(connection);
+      connection.addActorPool(pool);
 
       let sources = null;
 
@@ -108,13 +109,13 @@ this.addEventListener("message", function(event) {
       EventEmitter.decorate(parent);
 
       const threadActor = new ThreadActor(parent, global);
-      pool.manage(threadActor);
+      pool.addActor(threadActor);
 
       // parentActor.threadActor is needed from the webconsole for grip previewing
       parent.threadActor = threadActor;
 
       const consoleActor = new WebConsoleActor(connection, parent);
-      pool.manage(consoleActor);
+      pool.addActor(consoleActor);
 
       // needed so the thread actor can communicate with the console
       // when evaluating logpoints.
