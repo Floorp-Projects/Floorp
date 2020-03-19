@@ -2,9 +2,6 @@ var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
   Ci.nsIThreadManager
 );
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
 var mainThread = threadManager.currentThread;
 
 var listener1 = {
@@ -67,7 +64,6 @@ function test2() {
 // for this originAttributes.
 function test3() {
   do_test_pending();
-  prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
   try {
     dns.asyncResolve(
       "localhost",
@@ -78,7 +74,6 @@ function test3() {
     );
   } catch (e) {
     Assert.equal(e.result, Cr.NS_ERROR_OFFLINE);
-    prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
     do_test_finished();
   }
 }

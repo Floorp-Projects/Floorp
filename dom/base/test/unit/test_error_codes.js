@@ -38,8 +38,6 @@ function run_test_pt1() {
   } catch (e) {}
   Services.io.offline = true;
   prefs.setBoolPref("network.dns.offline-localhost", false);
-  // We always resolve localhost as it's hardcoded without the following pref:
-  prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 
   gExpectedStatus = Cr.NS_ERROR_OFFLINE;
   gNextTestFunc = run_test_pt2;
@@ -51,7 +49,6 @@ function run_test_pt1() {
 function run_test_pt2() {
   Services.io.offline = false;
   prefs.clearUserPref("network.dns.offline-localhost");
-  prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
 
   gExpectedStatus = Cr.NS_ERROR_CONNECTION_REFUSED;
   gNextTestFunc = end_test;
