@@ -2845,6 +2845,10 @@
           }
           if (fromExternal) {
             flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+          } else if (!triggeringPrincipal.isSystemPrincipal) {
+            // XXX this code must be reviewed and changed when bug 1616353
+            // lands.
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIRST_LOAD;
           }
           if (allowMixedContent) {
             flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
