@@ -28,7 +28,7 @@ function unary(name) {
         (func (export "f32_t") (param f32) (result f32)
             local.get 0
             i32.const 0
-            call_indirect $f_f
+            call_indirect (type $f_f)
         )
         (func (export "f64") (param f64) (result f64)
             local.get 0
@@ -37,7 +37,7 @@ function unary(name) {
         (func (export "f64_t") (param f64) (result f64)
             local.get 0
             i32.const 1
-            call_indirect $d_d
+            call_indirect (type $d_d)
         )
     )`, imports).exports;
 
@@ -79,7 +79,7 @@ function binary(name) {
             local.get 0
             local.get 1
             i32.const 0
-            call_indirect $ff_f
+            call_indirect (type $ff_f)
         )
         (func (export "f64") (param f64) (param f64) (result f64)
             local.get 0
@@ -90,7 +90,7 @@ function binary(name) {
             local.get 0
             local.get 1
             i32.const 1
-            call_indirect $dd_d
+            call_indirect (type $dd_d)
         )
     )`, imports).exports;
 

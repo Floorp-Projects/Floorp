@@ -42,7 +42,7 @@ test(
 
 test(
 `(module
-    (func $foo (call_indirect 0 (i32.const 0)))
+    (func $foo (call_indirect (type 0) (i32.const 0)))
     (func $bar)
     (table funcref (elem $bar))
     (export "" $foo)
@@ -54,7 +54,7 @@ test(
 `(module
     (import $foo "" "foo")
     (table funcref (elem $foo))
-    (func $bar (call_indirect 0 (i32.const 0)))
+    (func $bar (call_indirect (type 0) (i32.const 0)))
     (export "" $bar)
 )`,
 {"":{foo:()=>{}}},
@@ -149,7 +149,7 @@ for (let type of ['f32', 'f64']) {
     `(module
         (type $good (func))
         (type $bad (func (param i32)))
-        (func $foo (call_indirect $bad (i32.const 1) (i32.const 0)))
+        (func $foo (call_indirect (type $bad) (i32.const 1) (i32.const 0)))
         (func $bar (type $good))
         (table funcref (elem $bar))
         (export "" $foo)
@@ -206,7 +206,7 @@ for (let type of ['f32', 'f64']) {
         (import "a" "b" (table 10 funcref))
         (elem (i32.const 2) $bar)
         (func $bar (result i32) (i32.const 99))
-        (func $baz (param $i i32) (result i32) (call_indirect $v2i (local.get $i)))
+        (func $baz (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i)))
         (export "baz" $baz)
     )`, {a:{b:e.tbl}}).exports;
 
