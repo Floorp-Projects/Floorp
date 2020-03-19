@@ -533,6 +533,9 @@ class nsDocShell final : public nsDocLoader,
   static void ExtractLastVisit(nsIChannel* aChannel, nsIURI** aURI,
                                uint32_t* aChannelRedirectFlags);
 
+  static uint32_t ComputeURILoaderFlags(
+      mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType);
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;

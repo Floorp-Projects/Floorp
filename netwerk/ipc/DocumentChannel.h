@@ -57,10 +57,6 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
     *aChannelRedirectFlags = mLastVisitInfo.previousFlags();
   }
 
-  void SetDocumentOpenFlags(uint32_t aFlags) {
-    mDocumentOpenFlags = Some(aFlags);
-  }
-
   void SetNavigationTiming(nsDOMNavigationTiming* aTiming) {
     mTiming = aTiming;
   }
@@ -83,7 +79,6 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
 
   nsresult mStatus = NS_OK;
   bool mCanceled = false;
-  Maybe<uint32_t> mDocumentOpenFlags;
   bool mIsPending = false;
   bool mWasOpened = false;
   uint64_t mChannelId;
