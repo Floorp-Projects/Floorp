@@ -8,8 +8,8 @@ for (var i = 1000; i --> 0; ) {
 
 var code = `(module
  (func
-  (result f32)
   (param f32)
+  (result f32)
   ${expr}
  )
  (export "run" (func 0))

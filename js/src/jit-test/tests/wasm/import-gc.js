@@ -6,7 +6,7 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 
 const m1 = new Module(wasmTextToBinary(`(module (func $f) (export "f" (func $f)))`));
-const m2 = new Module(wasmTextToBinary(`(module (import "a" "f") (func $f) (export "g" (func $f)))`));
+const m2 = new Module(wasmTextToBinary(`(module (import "a" "f" (func)) (func $f) (export "g" (func $f)))`));
 
 // Imported instance objects should stay alive as long as any importer is alive.
 resetFinalizeCount();
