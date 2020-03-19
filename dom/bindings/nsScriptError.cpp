@@ -22,7 +22,6 @@
 
 static_assert(nsIScriptError::errorFlag == JSREPORT_ERROR &&
                   nsIScriptError::warningFlag == JSREPORT_WARNING &&
-                  nsIScriptError::exceptionFlag == JSREPORT_EXCEPTION &&
                   nsIScriptError::infoFlag == JSREPORT_USER_1,
               "flags should be consistent");
 
