@@ -38,7 +38,7 @@ try:
 except KeyError:
     print("TEST-UNEXPECTED-FAIL | autobinscope.py | BINSCOPE environment variable is not set, "
           "can't check DEP/ASLR etc. status.")
-    sys.exit(0)
+    sys.exit(1)
 
 try:
     proc = subprocess.Popen([
@@ -78,11 +78,11 @@ except WindowsError, (errno, strerror):  # noqa
     if errno != 2 and errno != 3:
         print("TEST-UNEXPECTED-FAIL | autobinscope.py | Unexpected error %d : %s" (
             errno, strerror))
-        sys.exit(0)
+        sys.exit(1)
     else:
         print("TEST-UNEXPECTED-FAIL | autobinscope.py | Could not locate binscope at location : "
               "%s\n" % binscope_path)
-        sys.exit(0)
+        sys.exit(1)
 
 proc.wait()
 
@@ -97,8 +97,10 @@ for line in output:
 if proc.returncode != 0:
     print("TEST-UNEXPECTED-FAIL | autobinscope.py | Binscope returned error code %d for file %s" %
           (proc.returncode, binary_path))
+    sys.exit(1)
 elif errors != 0:
     print("TEST-UNEXPECTED-FAIL | autobinscope.py | Binscope reported %d error(s) for file %s" % (
         errors, binary_path))
+    sys.exit(1)
 else:
     print("TEST-PASS | autobinscope.py | %s succeeded" % binary_path)
