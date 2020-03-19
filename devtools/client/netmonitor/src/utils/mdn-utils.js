@@ -73,6 +73,7 @@ const SUPPORTED_HEADERS = [
   "Referer",
   "Referrer-Policy",
   "Retry-After",
+  "Save-Data",
   "Server",
   "Server-Timing",
   "Set-Cookie",
