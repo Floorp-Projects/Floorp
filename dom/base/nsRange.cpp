@@ -217,7 +217,7 @@ static void MarkDescendants(nsINode* aNode) {
   // aNode's descendants unless aNode is already marked as a range common
   // ancestor or a descendant of one, in which case all of our descendants have
   // the bit set already.
-  if (!aNode->IsSelectionDescendant()) {
+  if (!aNode->IsMaybeSelected()) {
     // don't set the Descendant bit on |aNode| itself
     nsINode* node = aNode->GetNextNode(aNode);
     while (node) {
@@ -549,7 +549,7 @@ void nsRange::ContentAppended(nsIContent* aFirstNewContent) {
 
   nsINode* container = aFirstNewContent->GetParentNode();
   MOZ_ASSERT(container);
-  if (container->IsSelectionDescendant() && IsInSelection()) {
+  if (container->IsMaybeSelected() && IsInSelection()) {
     nsINode* child = aFirstNewContent;
     while (child) {
       if (!child
@@ -601,7 +601,7 @@ void nsRange::ContentInserted(nsIContent* aChild) {
     updateBoundaries = true;
   }
 
-  if (container->IsSelectionDescendant() &&
+  if (container->IsMaybeSelected() &&
       !aChild
            ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
     MarkDescendants(aChild);
@@ -683,7 +683,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
   MOZ_ASSERT(mStart.Ref() != aChild);
   MOZ_ASSERT(mEnd.Ref() != aChild);
 
-  if (container->IsSelectionDescendant() &&
+  if (container->IsMaybeSelected() &&
       aChild
           ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
     aChild
