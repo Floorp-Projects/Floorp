@@ -13,14 +13,14 @@ using namespace mozilla;
 #include <CoreFoundation/CoreFoundation.h>
 #include <LocalAuthentication/LocalAuthentication.h>
 
-nsresult ReauthenticateUserMacOS(const nsACString& aPrompt,
+nsresult ReauthenticateUserMacOS(const nsAString& aPrompt,
                                  /* out */ bool& aReauthenticated) {
   // The idea here is that we ask to be authorized to unlock the user's session.
   // This should cause a prompt to come up for the user asking them for their
   // password. If they correctly enter it, we'll set aReauthenticated to true.
 
   LAContext* context = [[LAContext alloc] init];
-  NSString* prompt = nsCocoaUtils::ToNSString(NS_ConvertUTF8toUTF16(aPrompt));
+  NSString* prompt = nsCocoaUtils::ToNSString(aPrompt);
 
   dispatch_semaphore_t sema = dispatch_semaphore_create(0);
 
