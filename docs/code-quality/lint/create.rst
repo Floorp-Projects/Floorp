@@ -82,6 +82,7 @@ Each ``.yml`` file must have at least one linter defined in it. Here are the sup
 * extensions - A list of file extensions to be considered (optional)
 * setup - A function that sets up external dependencies (optional)
 * support-files - A list of glob patterns matching configuration files (optional)
+* find-dotfiles - If set to ``true``, run on dot files (.*) (optional)
 
 In addition to the above, some ``.yml`` files correspond to a single lint rule. For these, the
 following additional keys may be specified:

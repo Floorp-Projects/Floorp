@@ -1,0 +1,11 @@
+============
+Coding style
+==========
+
+foo bar 
+~~~~~
+
+
+This file has error but should not be there
+as we don't analyze dot files
+

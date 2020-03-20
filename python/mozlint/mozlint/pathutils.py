@@ -269,6 +269,7 @@ def expand_exclusions(paths, config, root):
         Generator which generates list of paths that weren't excluded.
     """
     extensions = [e.lstrip('.') for e in config.get('extensions', [])]
+    find_dotfiles = config.get('find-dotfiles', False)
 
     def normalize(path):
         path = mozpath.normpath(path)
@@ -291,7 +292,7 @@ def expand_exclusions(paths, config, root):
 
         ignore = [e[len(path):].lstrip('/') for e in exclude
                   if mozpath.commonprefix((path, e)) == path]
-        finder = FileFinder(path, ignore=ignore)
+        finder = FileFinder(path, ignore=ignore, find_dotfiles=find_dotfiles)
 
         _, ext = os.path.splitext(path)
         ext.lstrip('.')
