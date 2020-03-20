@@ -1241,184 +1241,174 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.popups.maxReported"
 );
 
-function doURIFixup(browser, fixupInfo) {
-  // We get called irrespective of whether we did a keyword search, or
-  // whether the original input would be vaguely interpretable as a URL,
-  // so figure that out first.
-  let alternativeURI = fixupInfo.fixedURI;
-  if (
-    !fixupInfo.keywordProviderName ||
-    !alternativeURI ||
-    !alternativeURI.host
-  ) {
-    return;
-  }
-
-  let contentPrincipal = browser.contentPrincipal;
-
-  // At this point we're still only just about to load this URI.
-  // When the async DNS lookup comes back, we may be in any of these states:
-  // 1) still on the previous URI, waiting for the preferredURI (keyword
-  //    search) to respond;
-  // 2) at the keyword search URI (preferredURI)
-  // 3) at some other page because the user stopped navigation.
-  // We keep track of the currentURI to detect case (1) in the DNS lookup
-  // callback.
-  let previousURI = browser.currentURI;
-  let preferredURI = fixupInfo.preferredURI;
-
-  // now swap for a weak ref so we don't hang on to browser needlessly
-  // even if the DNS query takes forever
-  let weakBrowser = Cu.getWeakReference(browser);
-  browser = null;
-
-  // Additionally, we need the host of the parsed url
-  let hostName = alternativeURI.displayHost;
-  // and the ascii-only host for the pref:
-  let asciiHost = alternativeURI.asciiHost;
-  // Normalize out a single trailing dot - NB: not using endsWith/lastIndexOf
-  // because we need to be sure this last dot is the *only* dot, too.
-  // More generally, this is used for the pref and should stay in sync with
-  // the code in nsDefaultURIFixup::KeywordURIFixup .
-  if (asciiHost.indexOf(".") == asciiHost.length - 1) {
-    asciiHost = asciiHost.slice(0, -1);
-  }
-
-  let isIPv4Address = host => {
-    let parts = host.split(".");
-    if (parts.length != 4) {
-      return false;
+var gKeywordURIFixup = {
+  check(browser, { fixedURI, keywordProviderName, preferredURI }) {
+    // We get called irrespective of whether we did a keyword search, or
+    // whether the original input would be vaguely interpretable as a URL,
+    // so figure that out first.
+    if (!keywordProviderName || !fixedURI || !fixedURI.host) {
+      return;
     }
-    return parts.every(part => {
-      let n = parseInt(part, 10);
-      return n >= 0 && n <= 255;
+
+    let contentPrincipal = browser.contentPrincipal;
+
+    // At this point we're still only just about to load this URI.
+    // When the async DNS lookup comes back, we may be in any of these states:
+    // 1) still on the previous URI, waiting for the preferredURI (keyword
+    //    search) to respond;
+    // 2) at the keyword search URI (preferredURI)
+    // 3) at some other page because the user stopped navigation.
+    // We keep track of the currentURI to detect case (1) in the DNS lookup
+    // callback.
+    let previousURI = browser.currentURI;
+
+    // now swap for a weak ref so we don't hang on to browser needlessly
+    // even if the DNS query takes forever
+    let weakBrowser = Cu.getWeakReference(browser);
+    browser = null;
+
+    // Additionally, we need the host of the parsed url
+    let hostName = fixedURI.displayHost;
+    // and the ascii-only host for the pref:
+    let asciiHost = fixedURI.asciiHost;
+    // Normalize out a single trailing dot - NB: not using endsWith/lastIndexOf
+    // because we need to be sure this last dot is the *only* dot, too.
+    // More generally, this is used for the pref and should stay in sync with
+    // the code in nsDefaultURIFixup::KeywordURIFixup .
+    if (asciiHost.indexOf(".") == asciiHost.length - 1) {
+      asciiHost = asciiHost.slice(0, -1);
+    }
+
+    let isIPv4Address = host => {
+      let parts = host.split(".");
+      if (parts.length != 4) {
+        return false;
+      }
+      return parts.every(part => {
+        let n = parseInt(part, 10);
+        return n >= 0 && n <= 255;
+      });
+    };
+    // Avoid showing fixup information if we're suggesting an IP. Note that
+    // decimal representations of IPs are normalized to a 'regular'
+    // dot-separated IP address by network code, but that only happens for
+    // numbers that don't overflow. Longer numbers do not get normalized,
+    // but still work to access IP addresses. So for instance,
+    // 1097347366913 (ff7f000001) gets resolved by using the final bytes,
+    // making it the same as 7f000001, which is 127.0.0.1 aka localhost.
+    // While 2130706433 would get normalized by network, 1097347366913
+    // does not, and we have to deal with both cases here:
+    if (isIPv4Address(asciiHost) || /^(?:\d+|0x[a-f0-9]+)$/i.test(asciiHost)) {
+      return;
+    }
+
+    let onLookupCompleteListener = {
+      onLookupComplete(request, record, status) {
+        let browserRef = weakBrowser.get();
+        if (!Components.isSuccessCode(status) || !browserRef) {
+          return;
+        }
+
+        let currentURI = browserRef.currentURI;
+        // If we're in case (3) (see above), don't show an info bar.
+        if (
+          !currentURI.equals(previousURI) &&
+          !currentURI.equals(preferredURI)
+        ) {
+          return;
+        }
+
+        // show infobar offering to visit the host
+        let notificationBox = gBrowser.getNotificationBox(browserRef);
+        if (notificationBox.getNotificationWithValue("keyword-uri-fixup")) {
+          return;
+        }
+
+        let message = gNavigatorBundle.getFormattedString(
+          "keywordURIFixup.message",
+          [hostName]
+        );
+        let yesMessage = gNavigatorBundle.getFormattedString(
+          "keywordURIFixup.goTo",
+          [hostName]
+        );
+
+        let buttons = [
+          {
+            label: yesMessage,
+            accessKey: gNavigatorBundle.getString(
+              "keywordURIFixup.goTo.accesskey"
+            ),
+            callback() {
+              // Do not set this preference while in private browsing.
+              if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+                let pref = "browser.fixup.domainwhitelist." + asciiHost;
+                Services.prefs.setBoolPref(pref, true);
+              }
+              openTrustedLinkIn(fixedURI.spec, "current");
+            },
+          },
+          {
+            label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
+            accessKey: gNavigatorBundle.getString(
+              "keywordURIFixup.dismiss.accesskey"
+            ),
+            callback() {
+              let notification = notificationBox.getNotificationWithValue(
+                "keyword-uri-fixup"
+              );
+              notificationBox.removeNotification(notification, true);
+            },
+          },
+        ];
+        let notification = notificationBox.appendNotification(
+          message,
+          "keyword-uri-fixup",
+          null,
+          notificationBox.PRIORITY_INFO_HIGH,
+          buttons
+        );
+        notification.persistence = 1;
+      },
+    };
+
+    try {
+      gDNSService.asyncResolve(
+        hostName,
+        0,
+        onLookupCompleteListener,
+        Services.tm.mainThread,
+        contentPrincipal.originAttributes
+      );
+    } catch (ex) {
+      // Do nothing if the URL is invalid (we don't want to show a notification in that case).
+      if (ex.result != Cr.NS_ERROR_UNKNOWN_HOST) {
+        // ... otherwise, report:
+        Cu.reportError(ex);
+      }
+    }
+  },
+
+  observe(fixupInfo, topic, data) {
+    fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
+
+    if (!fixupInfo.consumer || fixupInfo.consumer.ownerGlobal != window) {
+      return;
+    }
+
+    this.check(fixupInfo.consumer, fixupInfo);
+  },
+
+  receiveMessage({ target: browser, data: fixupInfo }) {
+    // As fixupInfo comes from a serialized message, its URI properties are
+    // strings that we need to recreate nsIURIs from.
+    this.check(browser, {
+      fixedURI: makeURI(fixupInfo.fixedURI),
+      keywordProviderName: fixupInfo.keywordProviderName,
+      preferredURI: makeURI(fixupInfo.preferredURI),
     });
-  };
-  // Avoid showing fixup information if we're suggesting an IP. Note that
-  // decimal representations of IPs are normalized to a 'regular'
-  // dot-separated IP address by network code, but that only happens for
-  // numbers that don't overflow. Longer numbers do not get normalized,
-  // but still work to access IP addresses. So for instance,
-  // 1097347366913 (ff7f000001) gets resolved by using the final bytes,
-  // making it the same as 7f000001, which is 127.0.0.1 aka localhost.
-  // While 2130706433 would get normalized by network, 1097347366913
-  // does not, and we have to deal with both cases here:
-  if (isIPv4Address(asciiHost) || /^(?:\d+|0x[a-f0-9]+)$/i.test(asciiHost)) {
-    return;
-  }
-
-  let onLookupCompleteListener = {
-    onLookupComplete(request, record, status) {
-      let browserRef = weakBrowser.get();
-      if (!Components.isSuccessCode(status) || !browserRef) {
-        return;
-      }
-
-      let currentURI = browserRef.currentURI;
-      // If we're in case (3) (see above), don't show an info bar.
-      if (!currentURI.equals(previousURI) && !currentURI.equals(preferredURI)) {
-        return;
-      }
-
-      // show infobar offering to visit the host
-      let notificationBox = gBrowser.getNotificationBox(browserRef);
-      if (notificationBox.getNotificationWithValue("keyword-uri-fixup")) {
-        return;
-      }
-
-      let message = gNavigatorBundle.getFormattedString(
-        "keywordURIFixup.message",
-        [hostName]
-      );
-      let yesMessage = gNavigatorBundle.getFormattedString(
-        "keywordURIFixup.goTo",
-        [hostName]
-      );
-
-      let buttons = [
-        {
-          label: yesMessage,
-          accessKey: gNavigatorBundle.getString(
-            "keywordURIFixup.goTo.accesskey"
-          ),
-          callback() {
-            // Do not set this preference while in private browsing.
-            if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-              let pref = "browser.fixup.domainwhitelist." + asciiHost;
-              Services.prefs.setBoolPref(pref, true);
-            }
-            openTrustedLinkIn(alternativeURI.spec, "current");
-          },
-        },
-        {
-          label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
-          accessKey: gNavigatorBundle.getString(
-            "keywordURIFixup.dismiss.accesskey"
-          ),
-          callback() {
-            let notification = notificationBox.getNotificationWithValue(
-              "keyword-uri-fixup"
-            );
-            notificationBox.removeNotification(notification, true);
-          },
-        },
-      ];
-      let notification = notificationBox.appendNotification(
-        message,
-        "keyword-uri-fixup",
-        null,
-        notificationBox.PRIORITY_INFO_HIGH,
-        buttons
-      );
-      notification.persistence = 1;
-    },
-  };
-
-  try {
-    gDNSService.asyncResolve(
-      hostName,
-      0,
-      onLookupCompleteListener,
-      Services.tm.mainThread,
-      contentPrincipal.originAttributes
-    );
-  } catch (ex) {
-    // Do nothing if the URL is invalid (we don't want to show a notification in that case).
-    if (ex.result != Cr.NS_ERROR_UNKNOWN_HOST) {
-      // ... otherwise, report:
-      Cu.reportError(ex);
-    }
-  }
-}
-
-function gKeywordURIFixupObs(fixupInfo, topic, data) {
-  fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
-
-  if (!fixupInfo.consumer || fixupInfo.consumer.ownerGlobal != window) {
-    return;
-  }
-
-  doURIFixup(fixupInfo.consumer, {
-    fixedURI: fixupInfo.fixedURI,
-    keywordProviderName: fixupInfo.keywordProviderName,
-    preferredURI: fixupInfo.preferredURI,
-  });
-}
-
-function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
-  let deserializeURI = url => {
-    if (url instanceof Ci.nsIURI) {
-      return url;
-    }
-    return url ? makeURI(url) : null;
-  };
-
-  doURIFixup(browser, {
-    fixedURI: deserializeURI(fixupInfo.fixedURI),
-    keywordProviderName: fixupInfo.keywordProviderName,
-    preferredURI: deserializeURI(fixupInfo.preferredURI),
-  });
-}
+  },
+};
 
 function serializeInputStream(aStream) {
   let data = {
@@ -1973,7 +1963,7 @@ var gBrowserInit = {
       "Browser:URIFixup",
       gKeywordURIFixup
     );
-    Services.obs.addObserver(gKeywordURIFixupObs, "keyword-uri-fixup");
+    Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup");
 
     BrowserOffline.init();
     IndexedDBPromptHelper.init();
@@ -2504,7 +2494,7 @@ var gBrowserInit = {
         "Browser:URIFixup",
         gKeywordURIFixup
       );
-      Services.obs.removeObserver(gKeywordURIFixupObs, "keyword-uri-fixup");
+      Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
 
       if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
         MenuTouchModeObserver.uninit();

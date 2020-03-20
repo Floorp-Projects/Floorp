@@ -305,7 +305,9 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
   MOZ_ASSERT(aStartOffset <= aEndOffset);
 
   const nsINode* n = GetClosestCommonInclusiveAncestorForRangeInSelection(this);
-  NS_ASSERTION(n || !IsSelectionDescendant(), "orphan selection descendant");
+  NS_ASSERTION(n || !IsMaybeSelected(),
+               "A node without a common inclusive ancestor for a range in "
+               "Selection is for sure not selected.");
 
   // Collect the selection objects for potential ranges.
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;

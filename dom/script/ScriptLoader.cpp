@@ -139,7 +139,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mNumberOfProcessors(0),
       mEnabled(true),
       mDeferEnabled(false),
-      mDocumentParsingDone(false),
+      mDeferCheckpointReached(false),
       mBlockingDOMContentLoaded(false),
       mLoadEventFired(false),
       mGiveUpEncoding(false),
@@ -3113,7 +3113,7 @@ void ScriptLoader::ProcessPendingRequests() {
     ProcessRequest(request);
   }
 
-  if (mDocumentParsingDone && mXSLTRequests.isEmpty()) {
+  if (mDeferCheckpointReached && mXSLTRequests.isEmpty()) {
     while (ReadyToExecuteScripts() && !mDeferRequests.isEmpty() &&
            mDeferRequests.getFirst()->IsReadyToRun()) {
       request = mDeferRequests.StealFirst();
@@ -3128,21 +3128,21 @@ void ScriptLoader::ProcessPendingRequests() {
     child->RemoveParserBlockingScriptExecutionBlocker();
   }
 
-  if (mDocumentParsingDone && mDocument && !mParserBlockingRequest &&
+  if (mDeferCheckpointReached && mDocument && !mParserBlockingRequest &&
       mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
       mXSLTRequests.isEmpty() && mDeferRequests.isEmpty() &&
       MaybeRemovedDeferRequests()) {
     return ProcessPendingRequests();
   }
 
-  if (mDocumentParsingDone && mDocument && !mParserBlockingRequest &&
+  if (mDeferCheckpointReached && mDocument && !mParserBlockingRequest &&
       mLoadingAsyncRequests.isEmpty() && mLoadedAsyncRequests.isEmpty() &&
       mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
       mXSLTRequests.isEmpty() && mDeferRequests.isEmpty()) {
     // No more pending scripts; time to unblock onload.
     // OK to unblock onload synchronously here, since callers must be
     // prepared for the world changing anyway.
-    mDocumentParsingDone = false;
+    mDeferCheckpointReached = false;
     mDocument->UnblockOnload(true);
   }
 }
@@ -3685,39 +3685,45 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   return NS_OK;
 }
 
-void ScriptLoader::ParsingComplete(bool aTerminated) {
+void ScriptLoader::DeferCheckpointReached() {
   if (mDeferEnabled) {
     // Have to check because we apparently get ParsingComplete
     // without BeginDeferringScripts in some cases
-    mDocumentParsingDone = true;
+    mDeferCheckpointReached = true;
   }
+
   mDeferEnabled = false;
-  if (aTerminated) {
-    mDeferRequests.Clear();
-    mLoadingAsyncRequests.Clear();
-    mLoadedAsyncRequests.Clear();
-    mNonAsyncExternalScriptInsertedRequests.Clear();
-    mXSLTRequests.Clear();
+  ProcessPendingRequests();
+}
 
-    for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
-         req = req->getNext()) {
-      req->Cancel();
-      // FinishDynamicImport must happen exactly once for each dynamic import
-      // request. If the load is aborted we do it when we remove the request
-      // from mDynamicImportRequests.
-      FinishDynamicImport(req->AsModuleRequest(), NS_ERROR_ABORT);
-    }
-    mDynamicImportRequests.Clear();
+void ScriptLoader::ParsingComplete(bool aTerminated) {
+  if (!aTerminated) {
+    return;
+  }
+  mDeferRequests.Clear();
+  mLoadingAsyncRequests.Clear();
+  mLoadedAsyncRequests.Clear();
+  mNonAsyncExternalScriptInsertedRequests.Clear();
+  mXSLTRequests.Clear();
 
-    if (mParserBlockingRequest) {
-      mParserBlockingRequest->Cancel();
-      mParserBlockingRequest = nullptr;
-    }
+  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+    // FinishDynamicImport must happen exactly once for each dynamic import
+    // request. If the load is aborted we do it when we remove the request
+    // from mDynamicImportRequests.
+    FinishDynamicImport(req->AsModuleRequest(), NS_ERROR_ABORT);
+  }
+  mDynamicImportRequests.Clear();
+
+  if (mParserBlockingRequest) {
+    mParserBlockingRequest->Cancel();
+    mParserBlockingRequest = nullptr;
   }
 
   // Have to call this even if aTerminated so we'll correctly unblock
   // onload and all.
-  ProcessPendingRequests();
+  DeferCheckpointReached();
 }
 
 void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,

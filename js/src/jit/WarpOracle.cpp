@@ -17,6 +17,7 @@
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -141,6 +142,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
   auto autoClearOpSnapshots =
       mozilla::MakeScopeExit([&] { opSnapshots.clear(); });
 
+  ModuleObject* moduleObject = nullptr;
+
   // Analyze the bytecode to look for opcodes we can't compile yet. Eventually
   // this loop will also be responsible for copying IC data.
   for (BytecodeLocation loc : AllBytecodesIterable(script)) {
@@ -208,13 +211,70 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         }
         break;
 
+      case JSOp::BuiltinProto: {
+        // If we already resolved this proto we can bake it in.
+        JSProtoKey key = loc.getProtoKey();
+        if (JSObject* proto = cx_->global()->maybeGetPrototype(key)) {
+          if (!AddOpSnapshot<WarpBuiltinProto>(alloc_, opSnapshots, offset,
+                                               proto)) {
+            return abort(AbortReason::Alloc);
+          }
+        }
+        break;
+      }
+
+      case JSOp::GetIntrinsic: {
+        // If we already cloned this intrinsic we can bake it in.
+        PropertyName* name = loc.getPropertyName(script);
+        Value val;
+        if (cx_->global()->maybeExistingIntrinsicValue(name, &val)) {
+          if (!AddOpSnapshot<WarpGetIntrinsic>(alloc_, opSnapshots, offset,
+                                               val)) {
+            return abort(AbortReason::Alloc);
+          }
+        }
+        break;
+      }
+
+      case JSOp::ImportMeta: {
+        if (!moduleObject) {
+          moduleObject = GetModuleObjectForScript(script);
+          MOZ_ASSERT(moduleObject->isTenured());
+        }
+        break;
+      }
+
+      case JSOp::CallSiteObj: {
+        // Prepare the object so that WarpBuilder can just push it as constant.
+        if (!ProcessCallSiteObjOperation(cx_, script, loc.toRawBytecode())) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      }
+
+      case JSOp::NewArrayCopyOnWrite: {
+        // Fix up the copy-on-write ArrayObject if needed.
+        jsbytecode* pc = loc.toRawBytecode();
+        if (!ObjectGroup::getOrFixupCopyOnWriteObject(cx_, script, pc)) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      }
+
+      case JSOp::Object: {
+        if (!mirGen_.options.cloneSingletons()) {
+          cx_->realm()->behaviors().setSingletonsAsValues();
+        }
+        break;
+      }
+
       default:
         break;
     }
   }
 
-  auto* scriptSnapshot = new (alloc_.fallible())
-      WarpScriptSnapshot(script, environment, std::move(opSnapshots));
+  auto* scriptSnapshot = new (alloc_.fallible()) WarpScriptSnapshot(
+      script, environment, std::move(opSnapshots), moduleObject);
   if (!scriptSnapshot) {
     return abort(AbortReason::Alloc);
   }

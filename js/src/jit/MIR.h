@@ -2079,8 +2079,10 @@ class MNewArrayCopyOnWrite : public MUnaryInstruction,
         initialHeap_(initialHeap) {
     MOZ_ASSERT(!templateObject()->isSingleton());
     setResultType(MIRType::Object);
-    setResultTypeSet(
-        MakeSingletonTypeSet(alloc, constraints, templateObject()));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject()));
+    }
   }
 
  public:

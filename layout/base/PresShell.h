@@ -1330,11 +1330,10 @@ class PresShell final : public nsStubDocumentObserver,
    * by the frames.  Visual effects may not effect layout, only display.
    * Takes effect on next repaint, does not force a repaint itself.
    *
-   * @param aInEnable  if true, visual selection effects are enabled
-   *                   if false visual selection effects are disabled
+   * @param aFlags may be multiple of nsISelectionDisplay::DISPLAY_*.
    */
-  NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
-  NS_IMETHOD GetSelectionFlags(int16_t* aOutEnable) override;
+  NS_IMETHOD SetSelectionFlags(int16_t aFlags) override;
+  NS_IMETHOD GetSelectionFlags(int16_t* aFlags) override;
 
   /**
    * Gets the current state of non text selection effects
@@ -3021,6 +3020,7 @@ class PresShell final : public nsStubDocumentObserver,
   uint32_t mFontSizeInflationMinTwips;
   uint32_t mFontSizeInflationLineThreshold;
 
+  // Can be multiple of nsISelectionDisplay::DISPLAY_*.
   int16_t mSelectionFlags;
 
   // This is used to protect ourselves from triggering reflow while in the
