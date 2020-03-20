@@ -64,7 +64,7 @@ class AboutFragment : Fragment(), AboutPageListener {
         }
 
         populateAboutHeader()
-        aboutPageAdapter.updateData(populateAboutList())
+        aboutPageAdapter.submitList(populateAboutList())
     }
 
     private fun populateAboutHeader() {

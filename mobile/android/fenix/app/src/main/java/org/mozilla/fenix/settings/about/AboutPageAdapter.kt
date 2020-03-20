@@ -6,33 +6,33 @@ package org.mozilla.fenix.settings.about
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.annotation.VisibleForTesting
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder
 
-class AboutPageAdapter(private val listener: AboutPageListener) : RecyclerView.Adapter<AboutItemViewHolder>() {
-
-    @VisibleForTesting
-    var aboutList: List<AboutPageItem>? = null
-
-    fun updateData(items: List<AboutPageItem>) {
-        this.aboutList = items
-        notifyDataSetChanged()
-    }
+class AboutPageAdapter(private val listener: AboutPageListener) :
+    ListAdapter<AboutPageItem, AboutItemViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AboutItemViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(AboutItemViewHolder.LAYOUT_ID, parent, false)
-
         return AboutItemViewHolder(view, listener)
     }
 
-    override fun getItemCount(): Int = aboutList?.size ?: 0
-
     override fun onBindViewHolder(holder: AboutItemViewHolder, position: Int) {
-        (aboutList?.get(position) as AboutPageItem.Item).also {
-            holder.bind(it)
-        }
+        holder.bind(getItem(position) as AboutPageItem.Item)
+    }
+
+    private object DiffCallback : DiffUtil.ItemCallback<AboutPageItem>() {
+
+        override fun areItemsTheSame(oldItem: AboutPageItem, newItem: AboutPageItem) =
+            oldItem === newItem
+
+        override fun areContentsTheSame(oldItem: AboutPageItem, newItem: AboutPageItem) =
+            when (oldItem) {
+                is AboutPageItem.Item ->
+                    newItem is AboutPageItem.Item && oldItem.title == newItem.title
+            }
     }
 }
 

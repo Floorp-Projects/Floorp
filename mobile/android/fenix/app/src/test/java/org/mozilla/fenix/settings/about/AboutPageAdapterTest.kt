@@ -39,20 +39,6 @@ class AboutPageAdapterTest {
     private val listener: AboutPageListener = mockk(relaxed = true)
 
     @Test
-    fun `updateData should set the new data and call notifyDataSetChanged()`() {
-        val adapter = spyk(AboutPageAdapter(listener), recordPrivateCalls = true)
-        every { adapter.notifyDataSetChanged() } just Runs
-
-        adapter.updateData(aboutList)
-
-        // Wasn't able to test in verify block the 'adapter.aboutList' setter from the updateData method
-        assertThat(adapter.aboutList).isEqualTo(aboutList)
-        verify {
-            adapter.notifyDataSetChanged()
-        }
-    }
-
-    @Test
     fun `getItemCount on a default instantiated Adapter should return 0`() {
         val adapter = AboutPageAdapter(listener)
 
@@ -63,7 +49,7 @@ class AboutPageAdapterTest {
     fun `getItemCount after updateData() call should return the correct list size`() {
         val adapter = AboutPageAdapter(listener)
 
-        adapter.updateData(aboutList)
+        adapter.submitList(aboutList)
 
         assertThat(adapter.itemCount).isEqualTo(2)
     }
@@ -93,9 +79,9 @@ class AboutPageAdapterTest {
         } returns viewHolder
         every { viewHolder.bind(any()) } just Runs
 
-        adapter.updateData(aboutList)
+        adapter.submitList(aboutList)
         adapter.bindViewHolder(viewHolder, 1)
 
-        verify { viewHolder.bind(adapter.aboutList?.get(1) as AboutPageItem.Item) }
+        verify { viewHolder.bind(aboutList[1] as AboutPageItem.Item) }
     }
 }
