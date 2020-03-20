@@ -10,7 +10,7 @@ const {
 loader.lazyRequireGetter(
   this,
   "BrowsingContextTargetFront",
-  "devtools/client/fronts/targets/browsing-context",
+  "devtools/shared/fronts/targets/browsing-context",
   true
 );
 

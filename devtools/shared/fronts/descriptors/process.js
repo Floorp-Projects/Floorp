@@ -8,10 +8,10 @@ const {
 } = require("devtools/shared/specs/descriptors/process");
 const {
   BrowsingContextTargetFront,
-} = require("devtools/client/fronts/targets/browsing-context");
+} = require("devtools/shared/fronts/targets/browsing-context");
 const {
   ContentProcessTargetFront,
-} = require("devtools/client/fronts/targets/content-process");
+} = require("devtools/shared/fronts/targets/content-process");
 const {
   FrontClassWithSpec,
   registerFront,

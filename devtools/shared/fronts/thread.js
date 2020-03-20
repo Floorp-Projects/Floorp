@@ -15,14 +15,14 @@ const { threadSpec } = require("devtools/shared/specs/thread");
 loader.lazyRequireGetter(
   this,
   "ObjectFront",
-  "devtools/client/fronts/object",
+  "devtools/shared/fronts/object",
   true
 );
-loader.lazyRequireGetter(this, "FrameFront", "devtools/client/fronts/frame");
+loader.lazyRequireGetter(this, "FrameFront", "devtools/shared/fronts/frame");
 loader.lazyRequireGetter(
   this,
   "SourceFront",
-  "devtools/client/fronts/source",
+  "devtools/shared/fronts/source",
   true
 );
 
