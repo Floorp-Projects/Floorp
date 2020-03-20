@@ -3369,9 +3369,8 @@ class nsIFrame : public nsQueryFrame {
    * @returns true if this frame is selected.
    */
   bool IsSelected() const {
-    return (GetContent() && GetContent()->IsSelectionDescendant())
-               ? IsFrameSelected()
-               : false;
+    return (GetContent() && GetContent()->IsMaybeSelected()) ? IsFrameSelected()
+                                                             : false;
   }
 
   /**
