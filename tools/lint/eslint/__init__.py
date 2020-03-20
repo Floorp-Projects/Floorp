@@ -102,7 +102,10 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
 
     if errors:
         errors = errors.decode(encoding, "replace")
-        print(errors)
+        print(ESLINT_ERROR_MESSAGE.format(errors))
+
+    if proc.returncode >= 2:
+        return 1
 
     if not output:
         return []  # no output means success
