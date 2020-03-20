@@ -32,9 +32,10 @@ uint32_t nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
   // an nsSHistory, but not much we can do with that).  So if we start using
   // it here, we need to be careful to get to the docshell correctly.
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebNav));
-  auto* browsingContext = docShell ? docShell->GetBrowsingContext() : nullptr;
-  bool pluginsAllowed =
-      browsingContext ? browsingContext->GetAllowPlugins() : true;
+  bool pluginsAllowed = true;
+  if (docShell) {
+    docShell->GetAllowPlugins(&pluginsAllowed);
+  }
 
   return IsTypeSupported(aType, pluginsAllowed);
 }
