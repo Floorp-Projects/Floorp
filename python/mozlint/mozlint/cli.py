@@ -4,11 +4,9 @@
 
 import os
 import sys
-from argparse import REMAINDER, ArgumentParser
+from argparse import REMAINDER, SUPPRESS, ArgumentParser
 
 from mozlint.formatters import all_formatters
-
-SEARCH_PATHS = []
 
 
 class MozlintParser(ArgumentParser):
@@ -103,6 +101,14 @@ class MozlintParser(ArgumentParser):
           'help': "Number of worker processes to spawn when running linters. "
                   "Defaults to the number of cores in your CPU.",
           }],
+        # Paths to check for linter configurations.
+        # Default: tools/lint set in tools/lint/mach_commands.py
+        [['--config-path'],
+         {'action': 'append',
+          'default': [],
+          'dest': 'config_paths',
+          'help': SUPPRESS,
+          }],
         [['extra_args'],
          {'nargs': REMAINDER,
           'help': "Extra arguments that will be forwarded to the underlying linter.",
@@ -164,9 +170,9 @@ class MozlintParser(ArgumentParser):
             args.formats = [('stylish', None)]
 
 
-def find_linters(linters=None):
-    lints = []
-    for search_path in SEARCH_PATHS:
+def find_linters(config_paths, linters=None):
+    lints = {}
+    for search_path in config_paths:
         if not os.path.isdir(search_path):
             continue
 
@@ -183,8 +189,8 @@ def find_linters(linters=None):
             if linters and name not in linters:
                 continue
 
-            lints.append(os.path.join(search_path, f))
-    return lints
+            lints[name] = os.path.join(search_path, f)
+    return lints.values()
 
 
 def run(paths, linters, formats, outgoing, workdir, edit,
@@ -193,13 +199,13 @@ def run(paths, linters, formats, outgoing, workdir, edit,
     from mozlint.editor import edit_issues
 
     if list_linters:
-        lint_paths = find_linters(linters)
+        lint_paths = find_linters(lintargs['config_paths'], linters)
         linters = [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
         print("\n".join(sorted(linters)))
         return 0
 
     lint = LintRoller(**lintargs)
-    lint.read(find_linters(linters))
+    lint.read(find_linters(lintargs['config_paths'], linters))
 
     # Always run bootstrapping, but return early if --setup was passed in.
     ret = lint.setup()

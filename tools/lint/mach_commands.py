@@ -74,7 +74,7 @@ class MachCommands(MachCommandBase):
 
         lintargs.setdefault('root', self.topsrcdir)
         lintargs['exclude'] = get_global_excludes(lintargs['root'])
-        cli.SEARCH_PATHS.append(here)
+        lintargs['config_paths'].insert(0, here)
         for path in EXCLUSION_FILES:
             parser.GLOBAL_SUPPORT_FILES.append(os.path.join(self.topsrcdir, path))
         return cli.run(*runargs, **lintargs)
