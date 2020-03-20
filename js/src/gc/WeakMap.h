@@ -313,6 +313,8 @@ class ObjectWeakMap {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
+  ObjectValueWeakMap& valueMap() { return map; }
+
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkAfterMovingGC();
 #endif
