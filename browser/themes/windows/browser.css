@@ -472,9 +472,6 @@ menuitem.bookmark-item {
 
   #close-button {
     -moz-image-region: rect(0, 48px, 16px, 32px);
-    -moz-appearance: none;
-    border-style: none;
-    margin: 2px;
   }
 
   #close-button:hover {
