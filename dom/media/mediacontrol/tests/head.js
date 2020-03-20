@@ -19,6 +19,23 @@ async function createTabAndLoad(url, inputWindow = null) {
 }
 
 /**
+ * Returns a promise that resolves when generated media control keys has
+ * triggered the main media controller's corresponding method and changes its
+ * playback state.
+ *
+ * @param {string} event
+ *        The event name of the media control key
+ * @return {Promise}
+ *         Resolve when the main controller receives the media control key event
+ *         and change its playback state.
+ */
+function generateMediaControlKeyEvent(event) {
+  const playbackStateChanged = waitUntilMainMediaControllerPlaybackChanged();
+  ChromeUtils.generateMediaControlKeysTestEvent(event);
+  return playbackStateChanged;
+}
+
+/**
  * Play the specific media and wait until it plays successfully and the main
  * controller has been updated.
  *
