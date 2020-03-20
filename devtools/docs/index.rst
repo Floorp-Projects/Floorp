@@ -1,8 +1,16 @@
 ========
-Firefox DevTools Contributor Docs
+DevTools
 ========
 
-This is a guide to working on the code for Firefox Developer Tools. If you're looking for help with using the tools, see the `user docs <https://developer.mozilla.org/en-US/docs/Tools>`__. For other ways to get involved, check out our `community site <https://firefox-dev.tools/>`__.
+This collection of linked pages contain design and architectural documents
+for the DevTools implementation in Firefox. DevTools code base lives under
+`devtools` directory.
+
+This `MDN page <https://developer.mozilla.org/en-US/docs/Tools>`__ contains
+information about DevTools features.
+
+This `MDN page <https://www.mozilla.org/en-US/firefox/developer>`__ contains
+information about Developer Edition.
 
 
 Getting Started
