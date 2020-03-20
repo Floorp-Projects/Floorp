@@ -112,8 +112,8 @@ nsEditingSession::MakeWindowEditable(mozIDOMWindowProxy* aWindow,
   // disable plugins
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
   mDocShell = do_GetWeakReference(docShell);
+
   mInteractive = aInteractive;
   mMakeWholeDocumentEditable = aMakeWholeDocumentEditable;
 
@@ -184,8 +184,7 @@ nsresult nsEditingSession::DisableJSAndPlugins(nsIDocShell& aDocShell) {
   // Disable plugins in this document:
   mPluginsEnabled = aDocShell.PluginsAllowedInCurrentDoc();
 
-  rv = aDocShell.SetAllowPlugins(false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aDocShell.GetBrowsingContext()->SetAllowPlugins(false);
 
   mDisabledJSAndPlugins = true;
 
@@ -210,7 +209,11 @@ nsresult nsEditingSession::RestoreJSAndPlugins(nsPIDOMWindowOuter* aWindow) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Disable plugins in this document:
-  return docShell->SetAllowPlugins(mPluginsEnabled);
+  auto* browsingContext = aWindow->GetBrowsingContext();
+  NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
+  browsingContext->SetAllowPlugins(mPluginsEnabled);
+
+  return NS_OK;
 }
 
 /*---------------------------------------------------------------------------
