@@ -76,6 +76,7 @@ var TabCrashHandler = {
   browserMap: new BrowserWeakMap(),
   unseenCrashedChildIDs: [],
   crashedBrowserQueues: new Map(),
+  restartRequiredBrowsers: new WeakSet(),
   testBuildIDMismatch: false,
 
   get prefs() {
@@ -249,9 +250,12 @@ var TabCrashHandler = {
 
     let sentBrowser = false;
     for (let weakBrowser of browserQueue) {
-      let browser = weakBrowser.browser.get();
+      let browser = weakBrowser.get();
       if (browser) {
-        if (weakBrowser.restartRequired || this.testBuildIDMismatch) {
+        if (
+          this.restartRequiredBrowsers.has(browser) ||
+          this.testBuildIDMismatch
+        ) {
           this.sendToRestartRequiredPage(browser);
         } else {
           this.sendToTabCrashedPage(browser);
@@ -284,6 +288,7 @@ var TabCrashHandler = {
     }
 
     let childID = browser.frameLoader.childID;
+
     let browserQueue = this.crashedBrowserQueues.get(childID);
     if (!browserQueue) {
       browserQueue = [];
@@ -295,10 +300,45 @@ var TabCrashHandler = {
     // this queue will be flushed. The weak reference is to avoid
     // leaking browsers in case anything goes wrong during this
     // teardown process.
-    browserQueue.push({
-      browser: Cu.getWeakReference(browser),
-      restartRequired,
+    browserQueue.push(Cu.getWeakReference(browser));
+
+    if (restartRequired) {
+      this.restartRequiredBrowsers.add(browser);
+    }
+
+    // In the event that the content process failed to launch, then
+    // the childID will be 0. In that case, we will never receive
+    // a dumpID nor an ipc:content-shutdown observer notification,
+    // so we should flush the queue for childID 0 immediately.
+    if (childID == 0) {
+      this.flushCrashedBrowserQueue(0);
+    }
+  },
+
+  /**
+   * Called by a tabbrowser when it notices that a background browser
+   * has crashed. This will flip its remoteness to non-remote, and attempt
+   * to revive the crashed tab so that upon selection the tab either shows
+   * an error page, or automatically restores.
+   *
+   * @param browser (<xul:browser>)
+   *        The background browser that just crashed.
+   * @param restartRequired (bool)
+   *        Whether or not a browser restart is required to recover.
+   */
+  onBackgroundBrowserCrash(browser, restartRequired) {
+    if (restartRequired) {
+      this.restartRequiredBrowsers.add(browser);
+    }
+
+    let gBrowser = browser.getTabBrowser();
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    gBrowser.updateBrowserRemoteness(browser, {
+      remoteType: E10SUtils.NOT_REMOTE,
     });
+
+    SessionStore.reviveCrashedTab(tab);
   },
 
   /**
@@ -335,6 +375,13 @@ var TabCrashHandler = {
         this.sendToTabCrashedPage(browser);
         return true;
       }
+    } else if (childID === 0) {
+      if (this.restartRequiredBrowsers.has(browser)) {
+        this.sendToRestartRequiredPage(browser);
+      } else {
+        this.sendToTabCrashedPage(browser);
+      }
+      return true;
     }
 
     return false;
@@ -612,6 +659,21 @@ var TabCrashHandler = {
     }
 
     return this.childMap.get(this.browserMap.get(browser));
+  },
+
+  /**
+   * This is intended for TESTING ONLY. It returns the amount of
+   * content processes that have crashed such that we're still waiting
+   * for dump IDs for their crash reports.
+   *
+   * For our automated tests, accessing the crashed content process
+   * count helps us test the behaviour when content processes crash due
+   * to launch failure, since in those cases we should not increase the
+   * crashed browser queue (since we never receive dump IDs for launch
+   * failures).
+   */
+  get queuedCrashedBrowsers() {
+    return this.crashedBrowserQueues.size;
   },
 };
 
