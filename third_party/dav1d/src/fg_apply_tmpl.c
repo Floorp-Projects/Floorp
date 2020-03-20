@@ -122,17 +122,32 @@ void bitfn(dav1d_apply_grain)(const Dav1dFilmGrainDSPContext *const dsp,
     // TODO: eliminate in favor of per-plane refs
     assert(out->stride[0] == in->stride[0]);
     if (!data->num_y_points) {
-        memcpy(out->data[0], in->data[0], out->p.h * out->stride[0]);
+        const ptrdiff_t stride = out->stride[0];
+        const ptrdiff_t sz = out->p.h * stride;
+        if (sz < 0)
+            memcpy((uint8_t*) out->data[0] + sz - stride,
+                   (uint8_t*) in->data[0] + sz - stride, -sz);
+        else
+            memcpy(out->data[0], in->data[0], sz);
     }
 
-    if (in->p.layout != DAV1D_PIXEL_LAYOUT_I400) {
+    if (in->p.layout != DAV1D_PIXEL_LAYOUT_I400 && !data->chroma_scaling_from_luma) {
         assert(out->stride[1] == in->stride[1]);
-        for (int i = 0; i < 2; i++) {
-            if (!data->num_uv_points[i] && !data->chroma_scaling_from_luma) {
-                const int suby = in->p.layout == DAV1D_PIXEL_LAYOUT_I420;
-                memcpy(out->data[1+i], in->data[1+i],
-                       (out->p.h >> suby) * out->stride[1]);
-            }
+        const int ss_ver = in->p.layout == DAV1D_PIXEL_LAYOUT_I420;
+        const ptrdiff_t stride = out->stride[1];
+        const ptrdiff_t sz = (out->p.h * stride) >> ss_ver;
+        if (sz < 0) {
+            if (!data->num_uv_points[0])
+                memcpy((uint8_t*) out->data[1] + sz - stride,
+                       (uint8_t*) in->data[1] + sz - stride, -sz);
+            if (!data->num_uv_points[1])
+                memcpy((uint8_t*) out->data[2] + sz - stride,
+                       (uint8_t*) in->data[2] + sz - stride, -sz);
+        } else {
+            if (!data->num_uv_points[0])
+                memcpy(out->data[1], in->data[1], sz);
+            if (!data->num_uv_points[1])
+                memcpy(out->data[2], in->data[2], sz);
         }
     }
 

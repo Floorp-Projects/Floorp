@@ -67,7 +67,7 @@ struc msac
     .update_cdf: resd 1
 endstruc
 
-%define m(x) mangle(private_prefix %+ _ %+ x %+ SUFFIX)
+%define m(x, y) mangle(private_prefix %+ _ %+ x %+ y)
 
 SECTION .text
 
@@ -167,7 +167,7 @@ cglobal msac_decode_symbol_adapt4, 0, 6, 6
 %endif
     lea            t5, [t2+gprsize]
     cmp            t5, rcx
-    jg .refill_eob
+    ja .refill_eob
     mov            t2, [t2]
     lea           ecx, [t1+23]
     add           t1d, 16
@@ -195,7 +195,7 @@ cglobal msac_decode_symbol_adapt4, 0, 6, 6
     sub           ecx, t1d ; c
 .refill_eob_loop:
     cmp            t2, t5
-    jge .refill_eob_end    ; eob reached
+    jae .refill_eob_end    ; eob reached
     movzx         t1d, byte [t2]
     inc            t2
     shl            t1, cl
@@ -240,7 +240,7 @@ cglobal msac_decode_symbol_adapt8, 0, 6, 6
     pcmpeqw        m1, m2
     pmovmskb      eax, m1
     test          t3d, t3d
-    jz m(msac_decode_symbol_adapt4).renorm
+    jz m(msac_decode_symbol_adapt4, SUFFIX).renorm
     movzx         t3d, word [t1+t4*2]
     pcmpeqw        m2, m2
     mov           t2d, t3d
@@ -257,7 +257,7 @@ cglobal msac_decode_symbol_adapt8, 0, 6, 6
     paddw          m0, m2
     mova         [t1], m0
     mov     [t1+t4*2], t2w
-    jmp m(msac_decode_symbol_adapt4).renorm
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm
 
 cglobal msac_decode_symbol_adapt16, 0, 6, 6
     DECODE_SYMBOL_ADAPT_INIT
@@ -330,7 +330,7 @@ cglobal msac_decode_symbol_adapt16, 0, 6, 6
 %if WIN64
     add           rsp, 48
 %endif
-    jmp m(msac_decode_symbol_adapt4).renorm2
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm2
 
 cglobal msac_decode_bool_adapt, 0, 6, 0
     movifnidn      t1, r1mp
@@ -366,7 +366,7 @@ cglobal msac_decode_bool_adapt, 0, 6, 0
 %endif
     not            t4
     test          t3d, t3d
-    jz m(msac_decode_symbol_adapt4).renorm3
+    jz m(msac_decode_symbol_adapt4, SUFFIX).renorm3
 %if UNIX64 == 0
     push           t6
 %endif
@@ -390,13 +390,13 @@ cglobal msac_decode_bool_adapt, 0, 6, 0
 %if WIN64
     mov           t1d, [t7+msac.cnt]
     pop            t6
-    jmp m(msac_decode_symbol_adapt4).renorm4
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm4
 %else
 %if ARCH_X86_64 == 0
     pop            t5
     pop            t6
 %endif
-    jmp m(msac_decode_symbol_adapt4).renorm3
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm3
 %endif
 
 cglobal msac_decode_bool_equi, 0, 6, 0
@@ -418,7 +418,7 @@ cglobal msac_decode_bool_equi, 0, 6, 0
 %if ARCH_X86_64 == 0
     movzx         eax, al
 %endif
-    jmp m(msac_decode_symbol_adapt4).renorm3
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm3
 
 cglobal msac_decode_bool, 0, 6, 0
     movifnidn      t0, r0mp
@@ -442,7 +442,7 @@ cglobal msac_decode_bool, 0, 6, 0
 %if ARCH_X86_64 == 0
     movzx         eax, al
 %endif
-    jmp m(msac_decode_symbol_adapt4).renorm3
+    jmp m(msac_decode_symbol_adapt4, SUFFIX).renorm3
 
 %macro HI_TOK 1 ; update_cdf
 %if ARCH_X86_64 == 0
@@ -598,3 +598,71 @@ cglobal msac_decode_hi_tok, 0, 7 + ARCH_X86_64, 6
     HI_TOK          1
 .no_update_cdf:
     HI_TOK          0
+
+%if ARCH_X86_64
+INIT_YMM avx2
+cglobal msac_decode_symbol_adapt16, 3, 6, 6
+    lea           rax, [pw_0xff00]
+    vpbroadcastw   m2, [t0+msac.rng]
+    mova           m0, [t1]
+    vpbroadcastw   m3, [t0+msac.dif+6]
+    vbroadcasti128 m4, [rax]
+    mov           t3d, [t0+msac.update_cdf]
+    mov           t4d, t2d
+    not            t2
+%if STACK_ALIGNMENT < 32
+    mov            r5, rsp
+%if WIN64
+    and           rsp, ~31
+    sub           rsp, 40
+%else
+    and            r5, ~31
+    %define buf r5-32
+%endif
+%elif WIN64
+    sub           rsp, 64
+%else
+    %define buf rsp-56
+%endif
+    psrlw          m1, m0, 6
+    movd      [buf-4], xm2
+    pand           m2, m4
+    psllw          m1, 7
+    pmulhuw        m1, m2
+    paddw          m1, [rax+t2*2]
+    mova        [buf], m1
+    pmaxuw         m1, m3
+    pcmpeqw        m1, m3
+    pmovmskb      eax, m1
+    test          t3d, t3d
+    jz .renorm
+    movzx         t3d, word [t1+t4*2]
+    pcmpeqw        m2, m2
+    lea           t2d, [t3+80]
+    shr           t2d, 4
+    cmp           t3d, 32
+    adc           t3d, 0
+    movd          xm3, t2d
+    pavgw          m2, m1
+    psubw          m2, m0
+    psubw          m0, m1
+    psraw          m2, xm3
+    paddw          m0, m2
+    mova         [t1], m0
+    mov     [t1+t4*2], t3w
+.renorm:
+    tzcnt         eax, eax
+    mov            t4, [t0+msac.dif]
+    movzx         t1d, word [buf+rax-0]
+    movzx         t2d, word [buf+rax-2]
+    shr           eax, 1
+%if WIN64
+%if STACK_ALIGNMENT < 32
+    mov           rsp, r5
+%else
+    add           rsp, 64
+%endif
+%endif
+    vzeroupper
+    jmp m(msac_decode_symbol_adapt4, _sse2).renorm2
+%endif

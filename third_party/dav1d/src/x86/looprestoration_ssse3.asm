@@ -725,7 +725,7 @@ cglobal sgr_box3_h, 6, 7, 8, sumsq, sum, left, src, stride, x, h, edge, w, xlim
     punpckhbw    xm0, xm1
 
     ; when we reach this, m0 contains left two px in highest words
-    cmp           xq, -8
+    cmp           xd, -8
     jle .loop_x
 .partial_load_and_extend:
     movd          m3, [srcq-4]
@@ -1299,9 +1299,9 @@ cglobal sgr_box5_h, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
     punpckhbw     m0, m1
 
     ; when we reach this, m0 contains left two px in highest words
-    cmp           xq, -8
+    cmp           xd, -8
     jle .loop_x
-    test          xq, xq
+    test          xd, xd
     jge .right_extend
 .partial_load_and_extend:
     XCHG_PIC_REG
@@ -1394,11 +1394,11 @@ cglobal sgr_box5_h, 7, 7, 8, sumsq, sum, left, src, xlim, x, h, edge
     ; else if x < xlimd we extend from previous load (this implies have_right=0)
     ; else we are done
 
-    cmp           xq, -8
+    cmp           xd, -8
     jle .loop_x
-    test          xq, xq
+    test          xd, xd
     jl .partial_load_and_extend
-    cmp           xq, xlimq
+    cmp           xd, xlimd
     jl .right_extend
 
     add       sumsqq, (384+16)*4

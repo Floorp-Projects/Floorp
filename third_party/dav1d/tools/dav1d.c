@@ -113,18 +113,24 @@ static void synchronize(const int realtime, const unsigned cache,
 static void print_stats(const int istty, const unsigned n, const unsigned num,
                         const uint64_t elapsed, const double i_fps)
 {
-    if (istty) fputs("\r", stderr);
-    const double d_fps = 1e9 * n / elapsed;
-    const double speed = d_fps / i_fps;
-    if (num == 0xFFFFFFFF) {
-        fprintf(stderr, "Decoded %u frames", n);
-    } else {
-        fprintf(stderr, "Decoded %u/%u frames (%.1lf%%)", n, num,
-                100.0 * n / num);
+    char buf[80], *b = buf, *const end = buf + 80;
+
+    if (istty)
+        *b++ = '\r';
+    if (num == 0xFFFFFFFF)
+        b += snprintf(b, end - b, "Decoded %u frames", n);
+    else
+        b += snprintf(b, end - b, "Decoded %u/%u frames (%.1lf%%)",
+                      n, num, 100.0 * n / num);
+    if (i_fps && b < end) {
+        const double d_fps = 1e9 * n / elapsed;
+        const double speed = d_fps / i_fps;
+        b += snprintf(b, end - b, " - %.2lf/%.2lf fps (%.2lfx)",
+                      d_fps, i_fps, speed);
     }
-    if (i_fps)
-        fprintf(stderr, " - %.2lf/%.2lf fps (%.2lfx)", d_fps, i_fps, speed);
-    if (!istty) fputs("\n", stderr);
+    if (!istty)
+        strcpy(b > end - 2 ? end - 2 : b, "\n");
+    fputs(buf, stderr);
 }
 
 int main(const int argc, char *const *const argv) {
@@ -149,8 +155,6 @@ int main(const int argc, char *const *const argv) {
         return EXIT_FAILURE;
     }
 
-    init_demuxers();
-    init_muxers();
     parse(argc, argv, &cli_settings, &lib_settings);
 
     if ((res = input_open(&in, cli_settings.demuxer,

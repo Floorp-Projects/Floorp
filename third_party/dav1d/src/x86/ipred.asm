@@ -308,7 +308,7 @@ ALIGN function_align
     mov                 r6d, 0x5556
     mov                 r2d, 0x3334
     cmp                  hd, 32
-    cmovz               r6d, r2d
+    cmove               r6d, r2d
     movd                xm1, r6d
     pmulhuw             xm0, xm1
 .w8_end:
@@ -1441,7 +1441,7 @@ ALIGN function_align
     mov                 r3d, 9
     mov                 tlq, rsp
     cmp                  hd, 4
-    cmova          maxbased, r3d
+    cmovne         maxbased, r3d
     vextracti128        xm1, m0, 1
     packuswb            xm0, xm1
     mova              [tlq], xm0
@@ -1628,8 +1628,8 @@ ALIGN function_align
     sar                 r5d, 1
     mov                 tlq, rsp
     add                 r5d, 17 ; w*2 + (filter_strength == 3)
-    cmp                  hd, 8
-    cmova          maxbased, r5d
+    cmp                  hd, 16
+    cmovns         maxbased, r5d
     mov            [tlq+r5], r3b
     vextracti128        xm0, m1, 1
     packuswb            xm0, xm1
@@ -1745,8 +1745,8 @@ ALIGN function_align
     sar                 r5d, 1
     mov                 tlq, rsp
     add                 r5d, 33
-    cmp                  hd, 16
-    cmova          maxbased, r5d
+    cmp                  hd, 32
+    cmovns         maxbased, r5d
     mov            [tlq+r5], r3b
     packuswb             m0, m1
     vpermq               m0, m0, q3120
@@ -1812,7 +1812,7 @@ ALIGN function_align
     lea                 r3d, [hq+31]
     mov            maxbased, 63
     cmp                  hd, 32
-    cmovb          maxbased, r3d
+    cmovs          maxbased, r3d
     test             angled, 0x400 ; !enable_intra_edge_filter
     jnz .w32_main
     vbroadcasti128       m0, [pb_0to15]
@@ -1889,8 +1889,8 @@ ALIGN function_align
     mov                 tlq, rsp
     mov            [tlq+65], r3b
     mov                 r3d, 65
-    cmp                  hd, 32
-    cmova          maxbased, r3d
+    cmp                  hd, 64
+    cmove          maxbased, r3d
     packuswb             m0, m2
     packuswb             m1, m6
     mova           [tlq+ 0], m0
@@ -2294,7 +2294,7 @@ ALIGN function_align
     cmp                  hd, 16
     movu                xm2, [rsp+49]
     vinserti128          m2, [rsp+43], 1
-    cmovl               r5d, hd
+    cmovs               r5d, hd
     xor                 r5d, 15 ; h == 16 ? 5 : 15 - h
     movd                xm0, r5d
     vbroadcasti128       m1, [base+z_filter_s+12]
@@ -2501,7 +2501,7 @@ ALIGN function_align
 .w8_filter_left_h16:
     mov                 r5d, 10
     cmp                  hd, 16
-    cmovl               r5d, hd
+    cmovs               r5d, hd
     xor                 r5d, 15 ; h == 16 ? 5 : 15 - h
     movd                xm0, r5d
     vpbroadcastb         m0, xm0
@@ -2742,7 +2742,7 @@ ALIGN function_align
 .w16_filter_left_h16:
     mov                 r5d, 10
     cmp                  hd, 16
-    cmovl               r5d, hd
+    cmovs               r5d, hd
     xor                 r5d, 15 ; h == 16 ? 5 : 15 - h
     movd                xm0, r5d
     vpbroadcastb         m0, xm0
@@ -3115,7 +3115,7 @@ ALIGN function_align
     mov                 r4d, 9
     lea                 tlq, [rsp+15]
     cmp                  wd, 4
-    cmova          maxbased, r4d
+    cmovne         maxbased, r4d
     vextracti128        xm1, m0, 1
     packuswb            xm0, xm1
     mova              [rsp], xm0
@@ -3321,8 +3321,8 @@ ALIGN function_align
     sar                 r5d, 1
     lea                 tlq, [rsp+31]
     add                 r5d, 17
-    cmp                  wd, 8
-    cmova          maxbased, r5d
+    cmp                  wd, 16
+    cmovns         maxbased, r5d
     neg                  r5
     mov            [tlq+r5], r4b
     vextracti128        xm1, m0, 1
@@ -3385,7 +3385,7 @@ ALIGN function_align
     sub              org_wd, 8
     lea                  r2, [strideq*3]
     lea                  r6, [dstq+org_wq]
-    cmovg              dstq, r6
+    cmovns             dstq, r6
     punpcklwd           xm1, xm2, xm0
     punpckhwd           xm2, xm0
     lea                  r6, [dstq+strideq*4]
@@ -3493,8 +3493,8 @@ ALIGN function_align
     sar                 r5d, 1
     lea                 tlq, [rsp+63]
     add                 r5d, 33
-    cmp                  wd, 16
-    cmova          maxbased, r5d
+    cmp                  wd, 32
+    cmovns         maxbased, r5d
     neg                  r5
     mov            [tlq+r5], r4b
     packuswb             m0, m1
@@ -3563,7 +3563,7 @@ ALIGN function_align
     sub              org_wd, 8
     lea                  r2, [strideq*3]
     lea                  r6, [dstq+org_wq]
-    cmovg              dstq, r6
+    cmovns             dstq, r6
     punpcklbw            m1, m2, m0
     punpckhbw            m2, m0
     lea                  r3, [strideq*5]
@@ -3652,7 +3652,7 @@ ALIGN function_align
     movu               xm11, [tlq-66]    ; 56-63
     vinserti128         m11, [tlq-52], 1 ; 40-47
     sub                 r4d, wd ; 21-w
-    cmovg               r5d, r4d
+    cmovns              r5d, r4d
     movu               xm12, [tlq-58]    ; 48-55
     vinserti128         m12, [tlq-44], 1 ; 32-39
     sub                 r4d, 8 ; 13-w
@@ -3721,8 +3721,8 @@ ALIGN function_align
     lea                 tlq, [rsp+95]
     mov            [tlq-65], r4b
     mov                 r4d, 65
-    cmp                  wd, 32
-    cmova          maxbased, r4d
+    cmp                  wd, 64
+    cmove          maxbased, r4d
     packuswb             m0, m2
     packuswb             m1, m6
     mova           [tlq-63], m0
@@ -4553,7 +4553,7 @@ ALIGN function_align
     mov                 r6d, 0x5556
     mov                 r2d, 0x3334
     cmp                  hd, 32
-    cmovz               r6d, r2d
+    cmove               r6d, r2d
     movd                xm1, r6d
     pmulhuw             xm0, xm1
 .w8_end:

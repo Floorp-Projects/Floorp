@@ -148,20 +148,22 @@
 .endif
 .endm
 
-// void dav1d_cdef_paddingX_neon(uint16_t *tmp, const pixel *src,
-//                               ptrdiff_t src_stride, const pixel (*left)[2],
-//                               /*const*/ pixel *const top[2], int h,
-//                               enum CdefEdgeFlags edges);
+// void dav1d_cdef_paddingX_8bpc_neon(uint16_t *tmp, const pixel *src,
+//                                    ptrdiff_t src_stride, const pixel (*left)[2],
+//                                    const pixel *const top, int h,
+//                                    enum CdefEdgeFlags edges);
 
 // n1 = s0/d0
 // w1 = d0/q0
 // n2 = s4/d2
 // w2 = d2/q1
 .macro padding_func w, stride, n1, w1, n2, w2, align
-function cdef_padding\w\()_neon, export=1
+function cdef_padding\w\()_8bpc_neon, export=1
         push            {r4-r7,lr}
         ldrd            r4,  r5,  [sp, #20]
         ldr             r6,  [sp, #28]
+        cmp             r6,  #0xf // fully edged
+        beq             cdef_padding\w\()_edged_8bpc_neon
         vmov.i16        q3,  #0x8000
         tst             r6,  #4 // CDEF_HAVE_TOP
         bne             1f
@@ -175,10 +177,9 @@ function cdef_padding\w\()_neon, export=1
         b               3f
 1:
         // CDEF_HAVE_TOP
-        ldr             r7,  [r4]
-        ldr             lr,  [r4, #4]
+        add             r7,  r4,  r2
         sub             r0,  r0,  #2*(2*\stride)
-        pad_top_bottom  r7,  lr,  \w, \stride, \n1, \w1, \n2, \w2, \align, 0
+        pad_top_bottom  r4,  r7,  \w, \stride, \n1, \w1, \n2, \w2, \align, 0
 
         // Middle section
 3:
@@ -267,6 +268,65 @@ endfunc
 padding_func 8, 16, d0, q0, d2, q1, 128
 padding_func 4, 8,  s0, d0, s4, d2, 64
 
+// void cdef_paddingX_edged_8bpc_neon(uint16_t *tmp, const pixel *src,
+//                                    ptrdiff_t src_stride, const pixel (*left)[2],
+//                                    const pixel *const top, int h,
+//                                    enum CdefEdgeFlags edges);
+
+.macro padding_func_edged w, stride, reg, align
+function cdef_padding\w\()_edged_8bpc_neon
+        sub             r0,  r0,  #(2*\stride)
+
+        ldrh            r12, [r4, #-2]
+        vldr            \reg, [r4]
+        add             r7,  r4,  r2
+        strh            r12, [r0, #-2]
+        ldrh            r12, [r4, #\w]
+        vstr            \reg, [r0]
+        strh            r12, [r0, #\w]
+
+        ldrh            r12, [r7, #-2]
+        vldr            \reg, [r7]
+        strh            r12, [r0, #\stride-2]
+        ldrh            r12, [r7, #\w]
+        vstr            \reg, [r0, #\stride]
+        strh            r12, [r0, #\stride+\w]
+        add             r0,  r0,  #2*\stride
+
+0:
+        ldrh            r12, [r3], #2
+        vldr            \reg, [r1]
+        str             r12, [r0, #-2]
+        ldrh            r12, [r1, #\w]
+        add             r1,  r1,  r2
+        subs            r5,  r5,  #1
+        vstr            \reg, [r0]
+        str             r12, [r0, #\w]
+        add             r0,  r0,  #\stride
+        bgt             0b
+
+        ldrh            r12, [r1, #-2]
+        vldr            \reg, [r1]
+        add             r7,  r1,  r2
+        strh            r12, [r0, #-2]
+        ldrh            r12, [r1, #\w]
+        vstr            \reg, [r0]
+        strh            r12, [r0, #\w]
+
+        ldrh            r12, [r7, #-2]
+        vldr            \reg, [r7]
+        strh            r12, [r0, #\stride-2]
+        ldrh            r12, [r7, #\w]
+        vstr            \reg, [r0, #\stride]
+        strh            r12, [r0, #\stride+\w]
+
+        pop             {r4-r7,pc}
+endfunc
+.endm
+
+padding_func_edged 8, 16, d0, 64
+padding_func_edged 4, 8,  s0, 32
+
 .macro dir_table w, stride
 const directions\w
         .byte           -1 * \stride + 1, -2 * \stride + 2
@@ -311,14 +371,13 @@ endconst
         vld1.16         {\d22}, [r9]         // p1
 .endif
 .endm
-.macro handle_pixel s1, s2, threshold, thresh_vec, shift, tap
-        cmp             \threshold, #0
+.macro handle_pixel s1, s2, thresh_vec, shift, tap, min
+.if \min
         vmin.u16        q2,  q2,  \s1
         vmax.s16        q3,  q3,  \s1
         vmin.u16        q2,  q2,  \s2
         vmax.s16        q3,  q3,  \s2
-
-        beq             3f
+.endif
         vabd.u16        q8,  q0,  \s1        // abs(diff)
         vabd.u16        q11, q0,  \s2        // abs(diff)
         vshl.u16        q9,  q8,  \shift     // abs(diff) >> shift
@@ -326,7 +385,7 @@ endconst
         vqsub.u16       q9,  \thresh_vec, q9 // clip = imax(0, threshold - (abs(diff) >> shift))
         vqsub.u16       q12, \thresh_vec, q12// clip = imax(0, threshold - (abs(diff) >> shift))
         vsub.i16        q10, \s1, q0         // diff = p0 - px
-        vsub.u16        q13, \s2, q0         // diff = p1 - px
+        vsub.i16        q13, \s2, q0         // diff = p1 - px
         vneg.s16        q8,  q9              // -clip
         vneg.s16        q11, q12             // -clip
         vmin.s16        q10, q10, q9         // imin(diff, clip)
@@ -336,36 +395,44 @@ endconst
         vmax.s16        q13, q13, q11        // constrain() = imax(imin(diff, clip), -clip)
         vmla.i16        q1,  q10, q9         // sum += taps[k] * constrain()
         vmla.i16        q1,  q13, q9         // sum += taps[k] * constrain()
-3:
 .endm
 
-// void dav1d_cdef_filterX_neon(pixel *dst, ptrdiff_t dst_stride,
-//                              const uint16_t *tmp, int pri_strength,
-//                              int sec_strength, int dir, int damping, int h);
-.macro filter w
-function cdef_filter\w\()_neon, export=1
-        push            {r4-r9,lr}
-        vpush           {q4-q7}
-        ldrd            r4,  r5,  [sp, #92]
-        ldrd            r6,  r7,  [sp, #100]
+// void dav1d_cdef_filterX_8bpc_neon(pixel *dst, ptrdiff_t dst_stride,
+//                                   const uint16_t *tmp, int pri_strength,
+//                                   int sec_strength, int dir, int damping,
+//                                   int h, size_t edges);
+.macro filter_func w, pri, sec, min, suffix
+function cdef_filter\w\suffix\()_neon
+        cmp             r8,  #0xf
+        beq             cdef_filter\w\suffix\()_edged_neon
+.if \pri
         movrel_local    r8,  pri_taps
         and             r9,  r3,  #1
         add             r8,  r8,  r9, lsl #1
+.endif
         movrel_local    r9,  directions\w
         add             r5,  r9,  r5, lsl #1
         vmov.u16        d17, #15
         vdup.16         d16, r6              // damping
 
+.if \pri
         vdup.16         q5,  r3              // threshold
+.endif
+.if \sec
         vdup.16         q7,  r4              // threshold
+.endif
         vmov.16         d8[0], r3
         vmov.16         d8[1], r4
         vclz.i16        d8,  d8              // clz(threshold)
         vsub.i16        d8,  d17, d8         // ulog2(threshold)
         vqsub.u16       d8,  d16, d8         // shift = imax(0, damping - ulog2(threshold))
         vneg.s16        d8,  d8              // -shift
+.if \sec
         vdup.16         q6,  d8[1]
+.endif
+.if \pri
         vdup.16         q4,  d8[0]
+.endif
 
 1:
 .if \w == 8
@@ -377,47 +444,64 @@ function cdef_filter\w\()_neon, export=1
 .endif
 
         vmov.u16        q1,  #0              // sum
+.if \min
         vmov.u16        q2,  q0              // min
         vmov.u16        q3,  q0              // max
+.endif
 
         // Instead of loading sec_taps 2, 1 from memory, just set it
         // to 2 initially and decrease for the second round.
+        // This is also used as loop counter.
         mov             lr,  #2              // sec_taps[0]
 
 2:
+.if \pri
         ldrsb           r9,  [r5]            // off1
 
         load_px         d28, d29, d30, d31, \w
+.endif
 
+.if \sec
         add             r5,  r5,  #4         // +2*2
         ldrsb           r9,  [r5]            // off2
+.endif
 
+.if \pri
         ldrb            r12, [r8]            // *pri_taps
 
-        handle_pixel    q14, q15, r3,  q5,  q4,  r12
+        handle_pixel    q14, q15, q5,  q4,  r12, \min
+.endif
 
+.if \sec
         load_px         d28, d29, d30, d31, \w
 
         add             r5,  r5,  #8         // +2*4
         ldrsb           r9,  [r5]            // off3
 
-        handle_pixel    q14, q15, r4,  q7,  q6,  lr
+        handle_pixel    q14, q15, q7,  q6,  lr, \min
 
         load_px         d28, d29, d30, d31, \w
 
-        handle_pixel    q14, q15, r4,  q7,  q6,  lr
+        handle_pixel    q14, q15, q7,  q6,  lr, \min
 
-        sub             r5,  r5,  #11        // x8 -= 2*(2+4); x8 += 1;
+        sub             r5,  r5,  #11        // r5 -= 2*(2+4); r5 += 1;
+.else
+        add             r5,  r5,  #1         // r5 += 1
+.endif
         subs            lr,  lr,  #1         // sec_tap-- (value)
+.if \pri
         add             r8,  r8,  #1         // pri_taps++ (pointer)
+.endif
         bne             2b
 
         vshr.s16        q14, q1,  #15        // -(sum < 0)
         vadd.i16        q1,  q1,  q14        // sum - (sum < 0)
         vrshr.s16       q1,  q1,  #4         // (8 + sum - (sum < 0)) >> 4
         vadd.i16        q0,  q0,  q1         // px + (8 + sum ...) >> 4
+.if \min
         vmin.s16        q0,  q0,  q3
         vmax.s16        q0,  q0,  q2         // iclip(px + .., min, max)
+.endif
         vmovn.u16       d0,  q0
 .if \w == 8
         add             r2,  r2,  #2*16      // tmp += tmp_stride
@@ -430,9 +514,11 @@ function cdef_filter\w\()_neon, export=1
         vst1.32         {d0[1]}, [r0, :32], r1
 .endif
 
-        // Reset pri_taps/sec_taps back to the original point
+        // Reset pri_taps and directions back to the original point
         sub             r5,  r5,  #2
+.if \pri
         sub             r8,  r8,  #2
+.endif
 
         bgt             1b
         vpop            {q4-q7}
@@ -440,8 +526,236 @@ function cdef_filter\w\()_neon, export=1
 endfunc
 .endm
 
+.macro filter w
+filter_func \w, pri=1, sec=0, min=0, suffix=_pri
+filter_func \w, pri=0, sec=1, min=0, suffix=_sec
+filter_func \w, pri=1, sec=1, min=1, suffix=_pri_sec
+
+function cdef_filter\w\()_8bpc_neon, export=1
+        push            {r4-r9,lr}
+        vpush           {q4-q7}
+        ldrd            r4,  r5,  [sp, #92]
+        ldrd            r6,  r7,  [sp, #100]
+        ldr             r8,  [sp, #108]
+        cmp             r3,  #0 // pri_strength
+        bne             1f
+        b               cdef_filter\w\()_sec_neon // only sec
+1:
+        cmp             r4,  #0 // sec_strength
+        bne             1f
+        b               cdef_filter\w\()_pri_neon // only pri
+1:
+        b               cdef_filter\w\()_pri_sec_neon // both pri and sec
+endfunc
+.endm
+
 filter 8
 filter 4
+
+.macro load_px_8 d11, d12, d21, d22, w
+.if \w == 8
+        add             r6,  r2,  r9         // x + off
+        sub             r9,  r2,  r9         // x - off
+        vld1.8          {\d11}, [r6]         // p0
+        add             r6,  r6,  #16        // += stride
+        vld1.8          {\d21}, [r9]         // p1
+        add             r9,  r9,  #16        // += stride
+        vld1.8          {\d12}, [r6]         // p0
+        vld1.8          {\d22}, [r9]         // p1
+.else
+        add             r6,  r2,  r9         // x + off
+        sub             r9,  r2,  r9         // x - off
+        vld1.32         {\d11[0]}, [r6]      // p0
+        add             r6,  r6,  #8         // += stride
+        vld1.32         {\d21[0]}, [r9]      // p1
+        add             r9,  r9,  #8         // += stride
+        vld1.32         {\d11[1]}, [r6]      // p0
+        add             r6,  r6,  #8         // += stride
+        vld1.32         {\d21[1]}, [r9]      // p1
+        add             r9,  r9,  #8         // += stride
+        vld1.32         {\d12[0]}, [r6]      // p0
+        add             r6,  r6,  #8         // += stride
+        vld1.32         {\d22[0]}, [r9]      // p1
+        add             r9,  r9,  #8         // += stride
+        vld1.32         {\d12[1]}, [r6]      // p0
+        vld1.32         {\d22[1]}, [r9]      // p1
+.endif
+.endm
+.macro handle_pixel_8 s1, s2, thresh_vec, shift, tap, min
+.if \min
+        vmin.u8         q3,  q3,  \s1
+        vmax.u8         q4,  q4,  \s1
+        vmin.u8         q3,  q3,  \s2
+        vmax.u8         q4,  q4,  \s2
+.endif
+        vabd.u8         q8,  q0,  \s1        // abs(diff)
+        vabd.u8         q11, q0,  \s2        // abs(diff)
+        vshl.u8         q9,  q8,  \shift     // abs(diff) >> shift
+        vshl.u8         q12, q11, \shift     // abs(diff) >> shift
+        vqsub.u8        q9,  \thresh_vec, q9 // clip = imax(0, threshold - (abs(diff) >> shift))
+        vqsub.u8        q12, \thresh_vec, q12// clip = imax(0, threshold - (abs(diff) >> shift))
+        vcgt.u8         q10, q0,  \s1        // px > p0
+        vcgt.u8         q13, q0,  \s2        // px > p1
+        vmin.u8         q9,  q9,  q8         // imin(abs(diff), clip)
+        vmin.u8         q12, q12, q11        // imin(abs(diff), clip)
+        vneg.s8         q8,  q9              // -imin()
+        vneg.s8         q11, q12             // -imin()
+        vbsl            q10, q8,  q9         // constrain() = imax(imin(diff, clip), -clip)
+        vdup.8          d18, \tap            // taps[k]
+        vbsl            q13, q11, q12        // constrain() = imax(imin(diff, clip), -clip)
+        vmlal.s8        q1,  d20, d18        // sum += taps[k] * constrain()
+        vmlal.s8        q1,  d26, d18        // sum += taps[k] * constrain()
+        vmlal.s8        q2,  d21, d18        // sum += taps[k] * constrain()
+        vmlal.s8        q2,  d27, d18        // sum += taps[k] * constrain()
+.endm
+
+// void cdef_filterX_edged_neon(pixel *dst, ptrdiff_t dst_stride,
+//                              const uint16_t *tmp, int pri_strength,
+//                              int sec_strength, int dir, int damping,
+//                              int h, size_t edges);
+.macro filter_func_8 w, pri, sec, min, suffix
+function cdef_filter\w\suffix\()_edged_neon
+.if \pri
+        movrel_local    r8,  pri_taps
+        and             r9,  r3,  #1
+        add             r8,  r8,  r9, lsl #1
+.endif
+        movrel_local    r9,  directions\w
+        add             r5,  r9,  r5, lsl #1
+        vmov.u8         d17, #7
+        vdup.8          d16, r6              // damping
+
+        vmov.8          d8[0], r3
+        vmov.8          d8[1], r4
+        vclz.i8         d8,  d8              // clz(threshold)
+        vsub.i8         d8,  d17, d8         // ulog2(threshold)
+        vqsub.u8        d8,  d16, d8         // shift = imax(0, damping - ulog2(threshold))
+        vneg.s8         d8,  d8              // -shift
+.if \sec
+        vdup.8          q6,  d8[1]
+.endif
+.if \pri
+        vdup.8          q5,  d8[0]
+.endif
+
+1:
+.if \w == 8
+        add             r12, r2,  #16
+        vld1.8          {d0},  [r2,  :64]    // px
+        vld1.8          {d1},  [r12, :64]    // px
+.else
+        add             r12, r2,  #8
+        vld1.32         {d0[0]},  [r2,  :32] // px
+        add             r9,  r2,  #2*8
+        vld1.32         {d0[1]},  [r12, :32] // px
+        add             r12, r12, #2*8
+        vld1.32         {d1[0]},  [r9,  :32] // px
+        vld1.32         {d1[1]},  [r12, :32] // px
+.endif
+
+        vmov.u8         q1,  #0              // sum
+        vmov.u8         q2,  #0              // sum
+.if \min
+        vmov.u16        q3,  q0              // min
+        vmov.u16        q4,  q0              // max
+.endif
+
+        // Instead of loading sec_taps 2, 1 from memory, just set it
+        // to 2 initially and decrease for the second round.
+        // This is also used as loop counter.
+        mov             lr,  #2              // sec_taps[0]
+
+2:
+.if \pri
+        ldrsb           r9,  [r5]            // off1
+
+        load_px_8       d28, d29, d30, d31, \w
+.endif
+
+.if \sec
+        add             r5,  r5,  #4         // +2*2
+        ldrsb           r9,  [r5]            // off2
+.endif
+
+.if \pri
+        ldrb            r12, [r8]            // *pri_taps
+        vdup.8          q7,  r3              // threshold
+
+        handle_pixel_8  q14, q15, q7,  q5,  r12, \min
+.endif
+
+.if \sec
+        load_px_8       d28, d29, d30, d31, \w
+
+        add             r5,  r5,  #8         // +2*4
+        ldrsb           r9,  [r5]            // off3
+
+        vdup.8          q7,  r4              // threshold
+
+        handle_pixel_8  q14, q15, q7,  q6,  lr, \min
+
+        load_px_8       d28, d29, d30, d31, \w
+
+        handle_pixel_8  q14, q15, q7,  q6,  lr, \min
+
+        sub             r5,  r5,  #11        // r5 -= 2*(2+4); r5 += 1;
+.else
+        add             r5,  r5,  #1         // r5 += 1
+.endif
+        subs            lr,  lr,  #1         // sec_tap-- (value)
+.if \pri
+        add             r8,  r8,  #1         // pri_taps++ (pointer)
+.endif
+        bne             2b
+
+        vshr.s16        q14, q1,  #15        // -(sum < 0)
+        vshr.s16        q15, q2,  #15        // -(sum < 0)
+        vadd.i16        q1,  q1,  q14        // sum - (sum < 0)
+        vadd.i16        q2,  q2,  q15        // sum - (sum < 0)
+        vrshr.s16       q1,  q1,  #4         // (8 + sum - (sum < 0)) >> 4
+        vrshr.s16       q2,  q2,  #4         // (8 + sum - (sum < 0)) >> 4
+        vaddw.u8        q1,  q1,  d0         // px + (8 + sum ...) >> 4
+        vaddw.u8        q2,  q2,  d1         // px + (8 + sum ...) >> 4
+        vqmovun.s16     d0,  q1
+        vqmovun.s16     d1,  q2
+.if \min
+        vmin.u8         q0,  q0,  q4
+        vmax.u8         q0,  q0,  q3         // iclip(px + .., min, max)
+.endif
+.if \w == 8
+        vst1.8          {d0}, [r0, :64], r1
+        add             r2,  r2,  #2*16      // tmp += 2*tmp_stride
+        subs            r7,  r7,  #2         // h -= 2
+        vst1.8          {d1}, [r0, :64], r1
+.else
+        vst1.32         {d0[0]}, [r0, :32], r1
+        add             r2,  r2,  #4*8       // tmp += 4*tmp_stride
+        vst1.32         {d0[1]}, [r0, :32], r1
+        subs            r7,  r7,  #4         // h -= 4
+        vst1.32         {d1[0]}, [r0, :32], r1
+        vst1.32         {d1[1]}, [r0, :32], r1
+.endif
+
+        // Reset pri_taps and directions back to the original point
+        sub             r5,  r5,  #2
+.if \pri
+        sub             r8,  r8,  #2
+.endif
+
+        bgt             1b
+        vpop            {q4-q7}
+        pop             {r4-r9,pc}
+endfunc
+.endm
+
+.macro filter_8 w
+filter_func_8 \w, pri=1, sec=0, min=0, suffix=_pri
+filter_func_8 \w, pri=0, sec=1, min=0, suffix=_sec
+filter_func_8 \w, pri=1, sec=1, min=1, suffix=_pri_sec
+.endm
+
+filter_8 8
+filter_8 4
 
 const div_table, align=4
         .short         840, 420, 280, 210, 168, 140, 120, 105
@@ -451,9 +765,9 @@ const alt_fact, align=4
         .short         420, 210, 140, 105, 105, 105, 105, 105, 140, 210, 420, 0
 endconst
 
-// int dav1d_cdef_find_dir_neon(const pixel *img, const ptrdiff_t stride,
-//                              unsigned *const var)
-function cdef_find_dir_neon, export=1
+// int dav1d_cdef_find_dir_8bpc_neon(const pixel *img, const ptrdiff_t stride,
+//                                   unsigned *const var)
+function cdef_find_dir_8bpc_neon, export=1
         push            {lr}
         vpush           {q4-q7}
         sub             sp,  sp,  #32          // cost

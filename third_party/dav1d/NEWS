@@ -1,3 +1,26 @@
+Changes for 0.6.0 'Gyrfalcon':
+------------------------------
+
+0.6.0 is a major release for dav1d:
+ - New ARM64 optimizations for the 10/12bit depth:
+    - mc_avg, mc_w_avg, mc_mask
+    - mc_put/mc_prep 8tap/bilin
+    - mc_warp_8x8
+    - mc_w_mask
+    - mc_blend
+    - wiener
+    - SGR
+    - loopfilter
+    - cdef
+ - New AVX-512 optimizations for prep_bilin, prep_8tap, cdef_filter, mc_avg/w_avg/mask
+ - New SSSE3 optimizations for film grain
+ - New AVX2 optimizations for msac_adapt16
+ - Fix rare mismatches against the reference decoder, notably because of clipping
+ - Improvements on ARM64 on msac, cdef and looprestoration optimizations
+ - Improvements on AVX2 optimizations for cdef_filter
+ - Improvements in the C version for itxfm, cdef_filter
+
+
 Changes for 0.5.2 'Asiatic Cheetah':
 ------------------------------------
 
@@ -32,7 +55,7 @@ and improving speed significantly:
  - NEON optimizations for CDEF and warp on ARM32
  - SSE2 optimizations for MSAC hi_tok decoding
  - SSSE3 optimizations for deblocking loopfilters and warp_affine
- - AVX-2 optimizations for film grain and ipred_z2
+ - AVX2 optimizations for film grain and ipred_z2
  - SSE4 optimizations for warp_affine
  - VSX optimizations for wiener
  - Fix inverse transform overflows in x86 and NEON asm
@@ -81,7 +104,7 @@ Changes for 0.2.2 (0.3.0-rc) 'Antelope':
 -----------------------------
 
  - Large improvement on MSAC decoding with SSE, bringing 4-6% speed increase
-   The impact is important on SSSE3, SSE4 and AVX-2 cpus
+   The impact is important on SSSE3, SSE4 and AVX2 cpus
  - SSSE3 optimizations for all blocks size in itx
  - SSSE3 optimizations for ipred_paeth and ipred_cfl (420, 422 and 444)
  - Speed improvements on CDEF for SSE4 CPUs
@@ -93,7 +116,7 @@ Changes for 0.2.1 'Antelope':
 ----------------------------
 
  - SSSE3 optimization for cdef_dir
- - AVX-2 improvements of the existing CDEF optimizations
+ - AVX2 improvements of the existing CDEF optimizations
  - NEON improvements of the existing CDEF and wiener optimizations
  - Clarification about the numbering/versionning scheme
 
@@ -103,7 +126,7 @@ Changes for 0.2.0 'Antelope':
 
  - ARM64 and ARM optimizations using NEON instructions
  - SSSE3 optimizations for both 32 and 64bits
- - More AVX-2 assembly, reaching almost completion
+ - More AVX2 assembly, reaching almost completion
  - Fix installation of includes
  - Rewrite inverse transforms to avoid overflows
  - Snap packaging for Linux
@@ -118,6 +141,6 @@ Initial release of dav1d, the fast and small AV1 decoder.
  - Support for all features of the AV1 bitstream
  - Support for all bitdepth, 8, 10 and 12bits
  - Support for all chroma subsamplings 4:2:0, 4:2:2, 4:4:4 *and* grayscale
- - Full acceleration for AVX-2 64bits processors, making it the fastest decoder
+ - Full acceleration for AVX2 64bits processors, making it the fastest decoder
  - Partial acceleration for SSSE3 processors
  - Partial acceleration for NEON processors

@@ -29,15 +29,12 @@
 #define DAV1D_SRC_X86_CPU_H
 
 enum CpuFlags {
-    DAV1D_X86_CPU_FLAG_SSE = 1 << 0,
-    DAV1D_X86_CPU_FLAG_SSE2 = 1 << 1,
-    DAV1D_X86_CPU_FLAG_SSE3 = 1 << 2,
-    DAV1D_X86_CPU_FLAG_SSSE3 = 1 << 3,
-    DAV1D_X86_CPU_FLAG_SSE41 = 1 << 4,
-    DAV1D_X86_CPU_FLAG_SSE42 = 1 << 5,
-    DAV1D_X86_CPU_FLAG_AVX = 1 << 6,
-    DAV1D_X86_CPU_FLAG_AVX2 = 1 << 7,
-    DAV1D_X86_CPU_FLAG_AVX512 = 1 << 8, /* F + CD + BW + DQ + VL */
+    DAV1D_X86_CPU_FLAG_SSE2      = 1 << 0,
+    DAV1D_X86_CPU_FLAG_SSSE3     = 1 << 1,
+    DAV1D_X86_CPU_FLAG_SSE41     = 1 << 2,
+    DAV1D_X86_CPU_FLAG_AVX2      = 1 << 3,
+    DAV1D_X86_CPU_FLAG_AVX512ICL = 1 << 4, /* F/CD/BW/DQ/VL/VNNI/IFMA/VBMI/VBMI2/
+                                            * VPOPCNTDQ/BITALG/GFNI/VAES/VPCLMULQDQ */
 };
 
 unsigned dav1d_get_cpu_flags_x86(void);
