@@ -1050,62 +1050,6 @@ extern JSContext* NewContext(uint32_t maxBytes, JSRuntime* parentRuntime);
 
 extern void DestroyContext(JSContext* cx);
 
-enum ErrorArgumentsType {
-  ArgumentsAreUnicode,
-  ArgumentsAreASCII,
-  ArgumentsAreLatin1,
-  ArgumentsAreUTF8
-};
-
-/**
- * Report an exception, using printf-style APIs to generate the error
- * message.
- */
-extern bool ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
-                          ErrorArgumentsType argumentsType, va_list ap)
-    MOZ_FORMAT_PRINTF(3, 0);
-
-extern bool ReportErrorNumberVA(JSContext* cx, unsigned flags,
-                                JSErrorCallback callback, void* userRef,
-                                const unsigned errorNumber,
-                                ErrorArgumentsType argumentsType, va_list ap);
-
-extern bool ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
-                                     JSErrorCallback callback, void* userRef,
-                                     const unsigned errorNumber,
-                                     const char16_t** args);
-
-extern bool ReportErrorNumberUTF8Array(JSContext* cx, unsigned flags,
-                                       JSErrorCallback callback, void* userRef,
-                                       const unsigned errorNumber,
-                                       const char** args);
-
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
-                                   const char16_t** messageArgs,
-                                   ErrorArgumentsType argumentsType,
-                                   JSErrorReport* reportp, va_list ap);
-
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
-                                   const char** messageArgs,
-                                   ErrorArgumentsType argumentsType,
-                                   JSErrorReport* reportp, va_list ap);
-
-/*
- * For cases when we do not have an arguments array.
- */
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
-                                   ErrorArgumentsType argumentsType,
-                                   JSErrorReport* reportp, va_list ap);
-
-extern bool ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
-                                   void* userRef, const unsigned errorNumber,
-                                   const char16_t** messageArgs,
-                                   ErrorArgumentsType argumentsType,
-                                   JSErrorNotes::Note* notep, va_list ap);
-
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 extern void ReportUsageErrorASCII(JSContext* cx, HandleObject callee,
                                   const char* msg);
