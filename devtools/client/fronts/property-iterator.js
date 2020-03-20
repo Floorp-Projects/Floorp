@@ -13,7 +13,7 @@ const {
 } = require("devtools/shared/specs/property-iterator");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/shared/fronts/object");
+} = require("devtools/client/fronts/object");
 
 /**
  * A PropertyIteratorFront provides a way to access to property names and
