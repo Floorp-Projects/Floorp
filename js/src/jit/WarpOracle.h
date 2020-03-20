@@ -19,7 +19,9 @@ class MIRGenerator;
 
 #define WARP_OP_SNAPSHOT_LIST(_) \
   _(WarpArguments)               \
-  _(WarpRegExp)
+  _(WarpRegExp)                  \
+  _(WarpBuiltinProto)            \
+  _(WarpGetIntrinsic)
 
 // WarpOpSnapshot is the base class for data attached to a single bytecode op by
 // WarpOracle. This is typically data that WarpBuilder can't read off-thread
@@ -83,6 +85,34 @@ class WarpRegExp : public WarpOpSnapshot {
   WarpRegExp(uint32_t offset, bool hasShared)
       : WarpOpSnapshot(ThisKind, offset), hasShared_(hasShared) {}
   bool hasShared() const { return hasShared_; }
+};
+
+// The proto for JSOp::BuiltinProto if it exists at compile-time.
+class WarpBuiltinProto : public WarpOpSnapshot {
+  // TODO: trace this.
+  JSObject* proto_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpBuiltinProto;
+
+  WarpBuiltinProto(uint32_t offset, JSObject* proto)
+      : WarpOpSnapshot(ThisKind, offset), proto_(proto) {
+    MOZ_ASSERT(proto);
+  }
+  JSObject* proto() const { return proto_; }
+};
+
+// The intrinsic for JSOp::GetIntrinsic if it exists at compile-time.
+class WarpGetIntrinsic : public WarpOpSnapshot {
+  // TODO: trace this.
+  Value intrinsic_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpGetIntrinsic;
+
+  WarpGetIntrinsic(uint32_t offset, const Value& intrinsic)
+      : WarpOpSnapshot(ThisKind, offset), intrinsic_(intrinsic) {}
+  Value intrinsic() const { return intrinsic_; }
 };
 
 // Snapshot data for the environment object(s) created in the script's prologue.
@@ -152,16 +182,23 @@ class WarpScriptSnapshot : public TempObject {
   WarpEnvironment environment_;
   WarpOpSnapshotList opSnapshots_;
 
+  // If the script has a JSOp::ImportMeta op, this is the module to bake in.
+  // TODO: trace this
+  ModuleObject* moduleObject_;
+
  public:
   WarpScriptSnapshot(JSScript* script, const WarpEnvironment& env,
-                     WarpOpSnapshotList&& opSnapshots)
+                     WarpOpSnapshotList&& opSnapshots,
+                     ModuleObject* moduleObject)
       : script_(script),
         environment_(env),
-        opSnapshots_(std::move(opSnapshots)) {}
+        opSnapshots_(std::move(opSnapshots)),
+        moduleObject_(moduleObject) {}
 
   JSScript* script() const { return script_; }
   const WarpEnvironment& environment() const { return environment_; }
   const WarpOpSnapshotList& opSnapshots() const { return opSnapshots_; }
+  ModuleObject* moduleObject() const { return moduleObject_; }
 };
 
 // Data allocated by WarpOracle on the main thread that's used off-thread by

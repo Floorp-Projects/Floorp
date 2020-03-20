@@ -679,9 +679,11 @@ bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
   // purposes, as its side effect is not observable from JS. We are
   // guaranteed to bail out after this function, but because of its AliasSet,
   // type info will not be reflowed. Manually monitor here.
-  jsbytecode* pc;
-  JSScript* script = cx->currentScript(&pc);
-  JitScript::MonitorBytecodeType(cx, script, pc, rval);
+  if (!JitOptions.warpBuilder) {
+    jsbytecode* pc;
+    JSScript* script = cx->currentScript(&pc);
+    JitScript::MonitorBytecodeType(cx, script, pc, rval);
+  }
 
   return true;
 }
