@@ -2,7 +2,7 @@
 
 # ContextMenuCandidate
 
-`data class ContextMenuCandidate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L28)
+`data class ContextMenuCandidate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L29)
 
 A candidate for an item to be displayed in the context menu.
 
@@ -33,6 +33,7 @@ A candidate for an item to be displayed in the context menu.
 |---|---|
 | [createCopyImageLocationCandidate](create-copy-image-location-candidate.md) | `fun createCopyImageLocationCandidate(context: <ERROR CLASS>, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Copy Image Location". |
 | [createCopyLinkCandidate](create-copy-link-candidate.md) | `fun createCopyLinkCandidate(context: <ERROR CLASS>, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Copy Link". |
+| [createDownloadLinkCandidate](create-download-link-candidate.md) | `fun createDownloadLinkCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Save link". |
 | [createOpenImageInNewTabCandidate](create-open-image-in-new-tab-candidate.md) | `fun createOpenImageInNewTabCandidate(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Open Image in New Tab". |
 | [createOpenInExternalAppCandidate](create-open-in-external-app-candidate.md) | `fun createOpenInExternalAppCandidate(context: <ERROR CLASS>, appLinksUseCases: `[`AppLinksUseCases`](../../mozilla.components.feature.app.links/-app-links-use-cases/index.md)`): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Open Link in external App". |
 | [createOpenInNewTabCandidate](create-open-in-new-tab-candidate.md) | `fun createOpenInNewTabCandidate(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Open Link in New Tab". |
