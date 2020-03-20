@@ -16,6 +16,10 @@ test "$FLATPAK_BRANCH"
 
 pwd
 
+# XXX: this is used to populate the datetime in org.mozilla.firefox.appdata.xml
+DATE=$(date +%Y-%m-%d)
+export DATE
+
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TARGET_TAR_XZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.xz"
 SOURCE_DEST="${WORKSPACE}/source"
