@@ -247,14 +247,15 @@ def get_stack_fixer_function(utilityPath, symbolsPath):
         return module
 
     if symbolsPath and os.path.exists(symbolsPath):
-        # Run each line through fix_stacks.py, using breakpad symbol files.
-        # This method is preferred for automation, since native symbols may
-        # have been stripped.
-        stack_fixer_module = import_stack_fixer_module('fix_stacks')
+        # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad
+        # symbol files).
+        # This method is preferred for Tinderbox builds, since native
+        # symbols may have been stripped.
+        stack_fixer_module = import_stack_fixer_module(
+            'fix_stack_using_bpsyms')
 
         def stack_fixer_function(line):
-            return stack_fixer_module.fixSymbols(
-                line, slowWarning=True, breakpadSymsDir=symbolsPath)
+            return stack_fixer_module.fixSymbols(line, symbolsPath)
 
     elif mozinfo.isLinux or mozinfo.isMac or mozinfo.isWin:
         # Run each line through fix_stacks.py. This method is preferred for
