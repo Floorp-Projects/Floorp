@@ -85,7 +85,7 @@ class SmooshScriptStencil : public ScriptStencil {
         result_.is_function, /* funLength = */ 0,
         mozilla::MakeSpan(result_.bytecode.data, result_.bytecode.len),
         mozilla::Span<const jssrcnote>(), mozilla::Span<const uint32_t>(),
-        scopeNotes, mozilla::Span<const JSTryNote>());
+        scopeNotes, mozilla::Span<const TryNote>());
     if (!immutableScriptData) {
       return false;
     }
@@ -352,13 +352,12 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   RootedScript script(cx,
                       JSScript::Create(cx, cx->global(), options, sso, extent));
 
-  Rooted<SmooshScriptStencil> stencil(
-      cx, SmooshScriptStencil(cx, smoosh, compilationInfo));
-  if (!stencil.get().init(cx)) {
+  SmooshScriptStencil stencil(cx, smoosh, compilationInfo);
+  if (!stencil.init(cx)) {
     return nullptr;
   }
 
-  if (!JSScript::fullyInitFromStencil(cx, script, stencil.get())) {
+  if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
     return nullptr;
   }
 

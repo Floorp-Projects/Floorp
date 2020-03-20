@@ -444,15 +444,13 @@ class ScopeCreationData {
 class EmptyGlobalScopeType {};
 
 // These types all end up being baked into GC things as part of stencil
-// instantiation. Currently, GCCellPtr is part of this list while we complete
-// Stencil, but eventually will be removed.
+// instantiation.
 using ScriptThingVariant =
-    mozilla::Variant<JS::GCCellPtr, BigIntIndex, ObjLiteralCreationData,
-                     RegExpIndex, ScopeIndex, FunctionIndex,
-                     EmptyGlobalScopeType>;
+    mozilla::Variant<BigIntIndex, ObjLiteralCreationData, RegExpIndex,
+                     ScopeIndex, FunctionIndex, EmptyGlobalScopeType>;
 
 // A vector of things destined to be converted to GC things.
-using ScriptThingsVector = GCVector<ScriptThingVariant>;
+using ScriptThingsVector = Vector<ScriptThingVariant>;
 
 // Data used to instantiate the non-lazy script.
 class ScriptStencil {
@@ -485,7 +483,7 @@ class ScriptStencil {
 
   js::frontend::FunctionBox* functionBox = nullptr;
 
-  ScriptStencil(JSContext* cx) : gcThings(cx) {}
+  explicit ScriptStencil(JSContext* cx) : gcThings(cx) {}
 
   // Store all GC things into `gcthings`.
   // `gcthings.Length()` is `this.ngcthings`.
@@ -498,8 +496,6 @@ class ScriptStencil {
 
   // Call `FunctionBox::finish` for all inner functions.
   virtual void finishInnerFunctions() const = 0;
-
-  void trace(JSTracer* trc) { gcThings.trace(trc); }
 };
 
 } /* namespace frontend */
@@ -513,17 +509,5 @@ struct GCPolicy<js::frontend::ScopeCreationData*> {
     (*data)->trace(trc);
   }
 };
-
-template <typename T>
-struct GCPolicy<js::frontend::TypedIndex<T>>
-    : JS::IgnoreGCPolicy<js::frontend::TypedIndex<T>> {};
-
-template <>
-struct GCPolicy<js::frontend::FunctionIndex>
-    : JS::IgnoreGCPolicy<js::frontend::FunctionIndex> {};
-
-template <>
-struct GCPolicy<js::frontend::EmptyGlobalScopeType>
-    : JS::IgnoreGCPolicy<js::frontend::EmptyGlobalScopeType> {};
 }  // namespace JS
 #endif /* frontend_Stencil_h */
