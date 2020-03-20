@@ -83,7 +83,7 @@ class FTPChannelChild final : public PFTPChannelChild,
                                              const nsCString& aContentType,
                                              const PRTime& aLastModified,
                                              const nsCString& aEntityID,
-                                             const URIParams& aURI) override;
+                                             nsIURI* aURI) override;
   mozilla::ipc::IPCResult RecvOnDataAvailable(const nsresult& aChannelStatus,
                                               const nsCString& aData,
                                               const uint64_t& aOffset,
@@ -101,7 +101,7 @@ class FTPChannelChild final : public PFTPChannelChild,
                         const int64_t& aContentLength,
                         const nsCString& aContentType,
                         const PRTime& aLastModified, const nsCString& aEntityID,
-                        const URIParams& aURI);
+                        nsIURI* aURI);
   void DoOnDataAvailable(const nsresult& aChannelStatus, const nsCString& aData,
                          const uint64_t& aOffset, const uint32_t& aCount);
   void DoOnStopRequest(const nsresult& StatusCode, const nsCString& aErrorMsg,
