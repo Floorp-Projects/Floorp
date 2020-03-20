@@ -151,7 +151,6 @@ pref("signon.expireMasterPassword", false);
 pref("signon.debug", false);
 
 /* form helper (scroll to and optionally zoom into editable fields)  */
-pref("formhelper.mode", 2);  // 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
 pref("formhelper.autozoom", true);
 
 /* find helper */
