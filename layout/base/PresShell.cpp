@@ -2188,14 +2188,17 @@ NS_IMETHODIMP PresShell::GetCaretVisible(bool* aOutIsVisible) {
   return NS_OK;
 }
 
-NS_IMETHODIMP PresShell::SetSelectionFlags(int16_t aInEnable) {
-  mSelectionFlags = aInEnable;
+NS_IMETHODIMP PresShell::SetSelectionFlags(int16_t aFlags) {
+  mSelectionFlags = aFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP PresShell::GetSelectionFlags(int16_t* aOutEnable) {
-  if (!aOutEnable) return NS_ERROR_INVALID_ARG;
-  *aOutEnable = mSelectionFlags;
+NS_IMETHODIMP PresShell::GetSelectionFlags(int16_t* aFlags) {
+  if (!aFlags) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aFlags = mSelectionFlags;
   return NS_OK;
 }
 
