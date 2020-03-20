@@ -1032,6 +1032,8 @@
     <string name="preferences_passwords_logins_and_passwords">لاگ ان اور پاس ورڈ</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">لاگ ان اور پاس ورڈ کو محفوظ کریں</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">محفوظ کرنے کے لئے پوچھیں</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">کبھِی بھی محفوظ مت کریں</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -1128,6 +1130,9 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">مزید سیکھیں</string>
 
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">مزید لنک سیکھیں</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">تلاش انجن کا نام داخل کریں</string>
     <!-- Text shown when a user leaves the search string field empty -->
@@ -1141,10 +1146,14 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">حذف شدہ %s</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">بالکل نئی %s میں خوش آمدید</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s تازہ کارى کر رہا ہے…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">%s شروع کریں</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">منتقلی مکمل ہو گی</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">پاس ورڈ</string>
 

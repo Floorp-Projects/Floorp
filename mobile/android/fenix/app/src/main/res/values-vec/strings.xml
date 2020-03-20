@@ -1250,6 +1250,8 @@
     <string name="certificate_info_verified_by">Verificà da: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Scanseƚa</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Scanseƚare ste credensiaƚi?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Rimovi</string>
 </resources>

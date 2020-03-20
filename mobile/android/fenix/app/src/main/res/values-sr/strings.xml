@@ -295,6 +295,8 @@
     <string name="preferences_tracking_protection_settings">Заштита од праћења</string>
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Заштита од праћења</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Блокирајте садржај и скрипте које вас прате на мрежи</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Изузеци</string>
     <!-- Preference description for tracking protection exceptions -->
@@ -313,21 +315,41 @@
     <string name="preferences_telemetry">Телеметрија</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Употреба и технички подаци</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Делите податке о перформансама, употреби, хардверу и прилагођавањима вашег прегледача с Mozilla-ом како бисте нам помогли у побољшању %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетиншки подаци</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Дели податке о функцијама које користите у апликацији %1$s са Leanplum-ом, нашим провајдером мобилног маркетинга.</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Експерименти</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Дозвољава Mozilla-и да инсталира и прикупља податке за екперименталне функције</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Извештавач о рушењу</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla услуга локације</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">извештај о %s здрављу</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Укључите Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Скенирајте код за упаривање у десктоп Firefox-у</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Пријава</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Пријавите се за поновно повезивање</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Уклони налог</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Посетите <b>firefox.com/pair</b> у Firefox-у на вашем рачунару за добијање QR кода.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Отвори камеру</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Откажи</string>
 
@@ -342,6 +364,8 @@
     <string name="preference_light_theme">Светла</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Тамна</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Постави у подешавањима за штедњу батерије</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Прати тему уређаја</string>
 
@@ -373,6 +397,8 @@
     <string name="library_title">Библиотека</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Подешавања</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Мени ставки у историји</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Затвори</string>
 
@@ -389,16 +415,26 @@
     <string name="close_tab">Затвори језичак</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Затвори језичак %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Отворите мени за језичке</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Затвори све језичке</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Дели језичке</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection">Сачувај у збирку</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Мени за језичке</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Делите језичак</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Обриши</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
     <string name="current_session_save">Сачувај</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Подели</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Тренутна слика сесије</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Сачувај у збирку</string>
     <!-- Text for the menu button to delete a collection -->
@@ -440,6 +476,8 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Нажалост, %1$s не може учитати ту страницу.</string>
 
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Можете пробати са опоравком или затворити овај језичак испод.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Шаљи Mozilla-и извештаје о рушењу</string>
     <!-- Close tab button text on the tab crash page -->
@@ -577,6 +615,9 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Иск.</string>
 
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Убаците у збирку ваше важне ствари. Да бисте почели, отворите језичке и додајте их у нову збирку.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Збирке</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -586,14 +627,37 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">Ваше збирке биће приказане овде.</string>
 
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Изабери језичке</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Изабери збирку</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Назив збирке</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Додај нову збирку</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Изабери све</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Поништи избор</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Изаберите језичке за чување</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d језичака изабрано</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d језичак изабран</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Језичци сачувани!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Језичак сачуван!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Затвори</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Сачувај</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Збирка %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -622,6 +686,8 @@
     <string name="sync_offline">Ван мреже</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Повежи други уређај</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Да бисте послали језичак, пријавите се у Firefox на барем једном уређају.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Важи</string>
     <!-- Add new device screen title -->
@@ -637,6 +703,8 @@
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Сесија за приватно прегледање</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Обриши приватне језичке</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Затвори приватне језичке</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Отвори</string>
@@ -644,6 +712,16 @@
     <string name="notification_pbm_action_delete_and_open">Обриши и отвори</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Покреће</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Збирка обрисана</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Збирка преименована</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Језичак обрисан</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Језичци обрисани</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Језичак затворен</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ОПОЗОВИ</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -667,10 +745,16 @@
 
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">Отворени језичци</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Историјат</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Колачићи</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Дозволе на страници</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Обриши податке о прегледању</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Обриши податке о прегледању при изласку</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Историјат прегледања</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -684,14 +768,72 @@
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Погледајте шта је ново</string>
 
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Пријава у току</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Обично</string>
+
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Прегледајте приватно</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Ваша приватност</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Прочитајте наше обавештење о приватности</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Започните прегледање</string>
+
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Тамна тема</string>
     <!-- Theme setting for light mode -->
     <string name="onboarding_theme_light_title">Светла тема</string>
 
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ПОКУШАЈ ПОНОВО</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Скенирај код</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Прекини везу</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Откажи</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Подешавања заштите</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Побољшана заштита од праћења</string>
+
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Сазнајте више</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Обично</string>
+
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Строго</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Прилагођено</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Колачићи</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Садржаји који прате</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Крипто-рудари</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Хватачи отиска</string>
+    <string name="enhanced_tracking_protection_blocked">Блокирано</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Дозвољено</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Пријаве и лозинке</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Чувај пријаве и лозинке</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Сазнајте више</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Желите ли да %s сачува ову пријаву?</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Обезбедите ваше пријаве и лозинке</string>
 
     </resources>

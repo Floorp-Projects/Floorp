@@ -785,6 +785,136 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Kortelių: %d</string>
 
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Naršymo žurnalas ir svetainių duomenys</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresų: %d</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Žurnalas</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Tinklalapių: %d</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Slapukai</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Būsite atjungti iš daugumos svetainių</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Paveikslai ir failai podėlyje</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Atlaisvina vietos įrenginyje</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Svetainių leidimai</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Pašalinti naršymo duomenis</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Pašalinti naršymo duomenis išjungiant</string>
+
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Naršymo duomenys bus pašalinami automatiškai, pagrindiniame meniu pasirinkus „Išeiti“</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Naršymo duomenys bus pašalinami automatiškai, pagrindiniame meniu pasirinkus „Išeiti“</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Naršymo žurnalas</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Išeiti</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Bus pašalinti visi jūsų naršymo duomenys.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">„%s“ pašalins pasirinktus naršymo duomenis.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Atsisakyti</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Pašalinti</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Naršymo duomenys pašalinti</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Šalinami naršymo duomenys…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Sveiki, čia „%s“!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Jau turite paskyrą?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Susipažinkite su „%s“</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Susipažinkite su naujovėmis</string>
+
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Turite klausimų apie naująją „%s“? Norite sužinoti, kas pasikeitė?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Atsakymus rasite čia</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">išnaudokite daugiau „%s“ galimybių.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Esate prisijungę kaip %s kitoje „Firefox“ naršyklėje šiame įrenginyje. Ar norėtumėte prisijungti su šia paskyra?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Taip, prisijungti</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Prisijungiama…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Prisijungti prie „Firefox“</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Likti neprisijungus</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">„Sync“ įjungta</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Nepavyko prisijungti</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Apsaugokite save</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">„%s“ padeda neleisti svetainėms sekti jūsų naršymo.</string>
+
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Numatytoji</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description">Blokuoja mažiau stebėjimo elementų, tačiau leidžia įprastai įkelti tinklalapius</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Griežta (rekomenduojama)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Blokuoja daugiau stebėjimo elementų dėl geresnės apsaugos ir našumo, tačiau gali sutrikti kai kurių svetainių veikimas</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Pasirinkite poziciją</string>
+
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Išbandykite naršymą su viena ranka, kai priemonių juosta apačioje, arba perkelkite ją į viršų.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Naršykite privačiai</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Atverti privačiąją kortelę kartą: bakstelėkite %s piktogramą</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Atverti privačiąsias korteles visada: pakeiskite savo privačiojo naršymo nuostatas</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Atverti nuostatas</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Jūsų privatumas</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Mes sukūrėme „%s“ siekdami jums suteikti pasirinkimą, kuo dalinatės internete, ir kuo su mumis.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Mūsų privatumo pranešimas</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Pradėti naršymą</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Pasirinkite apvalkalą</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Pataupykite bateriją ir savo regėjimą, įjungdami tamsią veikseną.</string>
+
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Neleidžia rinkti jūsų įrenginį identifikuojančių duomenų, kurie gali būti naudojami stebėjimo tikslams.</string>
 

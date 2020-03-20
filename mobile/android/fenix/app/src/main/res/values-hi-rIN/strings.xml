@@ -986,10 +986,16 @@
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">जोड़ें</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">लॉगिन और पासवर्ड</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">लॉगिन और पासवर्ड सहेजें</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">सहेजने के लिए पूछें</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">कभी नहीं सहेजें</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">लॉगिन सिंक करें</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">चालू करें</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -998,6 +1004,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">सिंक करने के लिए साइन इन करें</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">सहेजे गए लॉगिन</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">सिंक के बारे में अधिक जानें।</string>
     <!-- Option to sort logins list by most recently used -->
     <string name="preferences_passwords_saved_logins_recently_used">हाल ही में उपयोग किया गया</string>
     <!-- The header for the site that a login is for -->
@@ -1072,6 +1080,14 @@
 
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s अपडेट हो रहा है...</string>
+
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s शुरू करें</string>
+
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">प्रवास पूरा हुआ</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">पासवर्ड</string>
 
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Android सेटिंग में जाएं</string>

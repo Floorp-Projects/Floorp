@@ -1106,4 +1106,124 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Infurmaziuns d\'annunzia memorisadas</string>
 
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Las infurmaziuns d\'annunzia che ti memoriseschas u sincroniseschas cun %s vegnan mussadas qua.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Vegnir a savair dapli davart Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Excepziuns</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Las infurmaziuns d\'annunzia ed ils pleds-clav betg memorisads vegnan mussadas qua.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Las infurmaziuns d\'annunzia ed ils pleds-clav na vegnan betg memorisads per questas paginas.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Tschertgar datas d\'annunzia</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetic</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Utilisà dacurt</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Website</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Num d\'utilisader</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Pled-clav</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Reendatar tes PIN</string>
+
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Debloccar per vesair las infurmaziuns d\'annunzia memorisadas</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Questa connexiun n\'è betg segira. Infurmaziuns d\'annunzia endatadas qua èn eventualmain periclitadas.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Ulteriuras infurmaziuns</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Duai %s memorisar questas datas d\'annunzia?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Memorisar</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Betg memorisar</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Copià il pled-clav en l\'archiv provisoric</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Copià il num d\'utilisader en l\'archiv provisoric</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Copià la pagina en l\'archiv provisoric</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copiar il pled-clav</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copiar il num d\'utilisader</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copiar la pagina</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Mussar il pled-clav</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Zuppentar il pled-clav</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Debloccar per vesair las infurmaziuns d\'annunzia memorisadas</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Protegia las infurmaziuns d\'annunzia ed ils pleds-clav</string>
+
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Definescha in muster per debloccar l\'apparat, in PIN u in pled-clav per proteger tias infurmaziuns d\'annunzia e tes pleds-clav da persunas che han access a tes apparat.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Pli tard</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Definir ussa</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Deblochescha tes apparat</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom sin tut las websites</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Activar per permetter da zoomar cun dus dets era sin paginas che impedeschan quest gest.</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Agiuntar ina maschina da tschertgar</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Modifitgar la maschina da tschertgar</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Agiuntar</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Memorisar</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Modifitgar</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Stizzar</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Auter</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Num</string>
+
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">String da tschertga per utilisar</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Remplazzar il term da tschertga cun «%s». Per exempel: \nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Ulteriuras infurmaziuns</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detagls da la maschina da tschertgar persunalisada</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Colliaziun ad ulteriuras infurmaziuns</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Endatar il num da la maschina da tschertgar</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Ina maschina da tschertgar cun il num «%s» exista gia.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Endatar in string da tschertga</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Controllescha ch\'il string da tschertga correspunda al format da l\'exempel</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Errur durant connectar cun «%s»</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Creà %s</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Memorisà %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Stizzà %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Bainvegni al %s cumplettamain nov</string>
+
     </resources>

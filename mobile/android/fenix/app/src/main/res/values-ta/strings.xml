@@ -56,6 +56,10 @@
     <string name="browser_menu_settings">அமைப்புகள்</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">உங்கள் நூலகம்</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">முகப்பு திரையில் சேர்</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">நிறுவுக</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">பக்கத்தில் தேடு</string>
     <!-- Browser menu button that creates a private tab -->
@@ -87,5 +91,55 @@
     <string name="search_scan_button">வருடு</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">குறுக்குவழிகள்</string>
+
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">தேடுபொறி அமைப்புகள்</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">அனுமதி</string>
+
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">மேலும் அறிய</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">தேடல்</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">இணையத்தில் தேடு</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">அமைவுகள்</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">அடிப்படை</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">அறிமுகம்</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">முன்னிருப்பு தேடுபொறி</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">தேடல்</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">முகவரி பட்டை</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">உதவி</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">கருத்து தெரிவிக்க</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s பற்றி</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">உங்கள் உரிமைகள்</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">கடவுச்சொற்கள்</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">கடன் அட்டைகள் மற்றும் முகவரிகள்</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">மேம்பட்டவை</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">தனியுரிமை</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">தள அனுமதிகள்</string>
+
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">இணைப்பைக் கமுக்க கீற்றில் திறக்க</string>
 
     </resources>
