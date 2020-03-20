@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 
 // Import this in order to use `triggerPictureInPicture()`.
-/* import-globals-from ../../../../../toolkit/components/pictureinpicture/tests/head.js */
+/* import-globals-from ../../../../toolkit/components/pictureinpicture/tests/head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/pictureinpicture/tests/head.js",
   this
@@ -16,10 +16,10 @@ add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.mediacontrol.testingevents.enabled", true],
-// As `main-media-controller-playback-changed` is dispatched asynchronously, if
-// we want to receive it after pausing media, we should postpone the time of
-// triggering the stop timer. That value should be changed to 0 after landing
-// bug1620113.
+      // As `main-media-controller-playback-changed` is dispatched asynchronously, if
+      // we want to receive it after pausing media, we should postpone the time of
+      // triggering the stop timer. That value should be changed to 0 after landing
+      // bug1620113.
       ["media.mediacontrol.stopcontrol.timer.ms", 2000],
     ],
   });
@@ -56,7 +56,7 @@ add_task(async function testNotToStopMediaControlForPIPVideo() {
   await playMedia(tab, testVideoId);
 
   info(`trigger PIP mode`);
-  let pipWin = await triggerPictureInPicture(tab.linkedBrowser, testVideoId);
+  await triggerPictureInPicture(tab.linkedBrowser, testVideoId);
 
   info(`pause media and the stop timer would not stop media control`);
   await pauseMedia(tab, testVideoId);
