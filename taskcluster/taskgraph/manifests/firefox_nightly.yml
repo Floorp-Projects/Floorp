@@ -186,7 +186,6 @@ mapping:
         description: "Metadata about the Normandy client of this build"
         only_for_platforms:
             - linux64-shippable
-            - win64-shippable
         pretty_name: firefox-${version}.normandy.json
         checksums_path: firefox-${version}.normandy.json
     target_info.txt:
@@ -255,34 +254,6 @@ mapping:
         pretty_name: mbsdiff
         checksums_path: mbsdiff
         not_for_platforms:
-            - win32-shippable
-            - win64-shippable
-            - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
-        destinations:
-            - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
-            - latest-${branch}/mar-tools/${stage_platform}
-    mar.exe:
-        <<: *default
-        description: "Alongside `mbsdiff.exe`, a tool used to generate partials for Windows platforms"
-        source_path_modifier: 'host/bin'
-        pretty_name: mar.exe
-        checksums_path: mar.exe
-        only_for_platforms:
-            - win32-shippable
-            - win64-shippable
-            - win64-aarch64-shippable
-            - win64-asan-reporter-nightly
-        destinations:
-            - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
-            - latest-${branch}/mar-tools/${stage_platform}
-    mbsdiff.exe:
-        <<: *default
-        description: "Alongside `mar.exe`, a tool used to generate partials for Windows platforms"
-        source_path_modifier: 'host/bin'
-        pretty_name: mbsdiff.exe
-        checksums_path: mbsdiff.exe
-        only_for_platforms:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable
