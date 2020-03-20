@@ -145,6 +145,7 @@ class CommandAction(argparse.Action):
 
         handler = self._mach_registrar.command_handlers.get(command)
 
+        prog = command
         usage = '%(prog)s [global arguments] ' + command + \
             ' [command arguments]'
 
@@ -160,6 +161,7 @@ class CommandAction(argparse.Action):
             elif args[0] in handler.subcommand_handlers:
                 subcommand = args[0]
                 handler = handler.subcommand_handlers[subcommand]
+                prog = prog + ' ' + subcommand
                 usage = '%(prog)s [global arguments] ' + command + ' ' + \
                     subcommand + ' [command arguments]'
                 args.pop(0)
@@ -179,6 +181,7 @@ class CommandAction(argparse.Action):
         if handler.parser:
             subparser = handler.parser
             subparser.context = self._context
+            subparser.prog = subparser.prog + ' ' + prog
             for arg in subparser._actions[:]:
                 if arg.nargs == argparse.REMAINDER:
                     subparser._actions.remove(arg)
