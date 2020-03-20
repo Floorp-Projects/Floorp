@@ -39,7 +39,10 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * Browse our [current Issues](https://github.com/mozilla-mobile/fenix/issues), or [file a security issue][sec issue].
 
-* Matrix: [#fenix:mozilla.org channel](https://chat.mozilla.org/#/room/#fenix:mozilla.org) (**We're available Monday-Friday, GMT and PST working hours**).
+* Matrix: [#fenix:mozilla.org channel](https://chat.mozilla.org/#/room/#fenix:mozilla.org) (**We're available Monday-Friday, GMT and PST working hours**). Related channels:
+  * [#mobile-test-eng:mozilla.org channel](https://chat.mozilla.org/#/room/#mobile-test-eng:mozilla.org): for UI test automation
+  * [#perf-android-frontend:mozilla.org channel](https://chat.mozilla.org/#/room/#perf-android-frontend:mozilla.org): for front-end (JVM) performance of Android apps
+  * [#android-tips:mozilla.org channel](https://chat.mozilla.org/#/room/#android-tips:mozilla.org): for tips on Android development
 
 * Check out the [project wiki](https://github.com/mozilla-mobile/fenix/wiki) for more information.
 
