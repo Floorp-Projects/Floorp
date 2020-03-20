@@ -84,7 +84,6 @@ class WebRenderUserData {
     eRemote,
     eGroup,
     eMask,
-    eRenderRoot,
   };
 
   virtual UserDataType GetType() = 0;
@@ -285,21 +284,6 @@ class WebRenderRemoteData : public WebRenderUserData {
 
  protected:
   RefPtr<dom::RemoteBrowser> mRemoteBrowser;
-};
-
-class WebRenderRenderRootData : public WebRenderUserData {
- public:
-  WebRenderRenderRootData(RenderRootStateManager* aManager,
-                          nsDisplayItem* aItem);
-  virtual ~WebRenderRenderRootData();
-
-  UserDataType GetType() override { return UserDataType::eRenderRoot; }
-  static UserDataType Type() { return UserDataType::eRenderRoot; }
-
-  RenderRootBoundary& EnsureHasBoundary(wr::RenderRoot aChildType);
-
- protected:
-  Maybe<RenderRootBoundary> mBoundary;
 };
 
 extern void DestroyWebRenderUserDataTable(WebRenderUserDataTable* aTable);
