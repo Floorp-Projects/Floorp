@@ -368,23 +368,6 @@ class PeerConnectionTelemetry {
   }
 }
 
-// Cache for RTPSourceEntries
-// Note: each cache is only valid for one JS event loop execution
-class RTCRtpSourceCache {
-  constructor() {
-    // The time in RTP source time (ms)
-    this.tsNowInRtpSourceTime = null;
-    // The time in JS
-    this.jsTimestamp = null;
-    // Time difference between JS time and RTP source time
-    this.timestampOffset = null;
-    // RTPSourceEntries cached by track id
-    this.rtpSourcesByTrackId = new Map();
-    // Has a cache wipe already been scheduled
-    this.scheduledClear = null;
-  }
-}
-
 class RTCPeerConnection {
   constructor() {
     this._receiveStreams = new Map();
@@ -406,10 +389,6 @@ class RTCPeerConnection {
 
     this._hasStunServer = this._hasTurnServer = false;
     this._iceGatheredRelayCandidates = false;
-    // Stored webrtc timing information
-    this._storedRtpSourceReferenceTime = null;
-    // Stores cached RTP sources state
-    this._rtpSourceCache = new RTCRtpSourceCache();
     // Records telemetry
     this._pcTelemetry = new PeerConnectionTelemetry();
   }
@@ -1476,48 +1455,6 @@ class RTCPeerConnection {
     this._transceivers.push(transceiver);
   }
 
-  /* Returns a dictionary with three keys:
-   * sources: a list of contributing and synchronization sources
-   * sourceClockOffset: an offset to apply to the source timestamp to get a
-   * very close approximation of the sample time with respect to the local
-   * clock.
-   * jsTimestamp: the current JS time
-   * Note: because the two clocks can drift with respect to each other, once
-   *  a timestamp offset has been calculated it should not be recalculated
-   *  until the timestamp changes, this way it will not appear as if a new
-   *  audio level sample has arrived.
-   */
-  _getRtpSources(receiver) {
-    let cache = this._rtpSourceCache;
-    // Schedule cache invalidation
-    if (!cache.scheduledClear) {
-      cache.scheduledClear = true;
-      Promise.resolve().then(() => {
-        this._rtpSourceCache = new RTCRtpSourceCache();
-      });
-    }
-    // Fetch the RTP source local time, store it for reuse, calculate
-    // the local offset, likewise store it for reuse.
-    if (cache.tsNowInRtpSourceTime !== undefined) {
-      cache.tsNowInRtpSourceTime = this._impl.getNowInRtpSourceReferenceTime();
-      cache.jsTimestamp =
-        this._win.performance.now() + this._win.performance.timeOrigin;
-      cache.timestampOffset = cache.jsTimestamp - cache.tsNowInRtpSourceTime;
-    }
-    let id = receiver.track.id;
-    if (cache.rtpSourcesByTrackId[id] === undefined) {
-      cache.rtpSourcesByTrackId[id] = this._impl.getRtpSources(
-        receiver.track,
-        cache.tsNowInRtpSourceTime
-      );
-    }
-    return {
-      sources: cache.rtpSourcesByTrackId[id],
-      sourceClockOffset: cache.timestampOffset,
-      jsTimestamp: cache.jsTimestamp,
-    };
-  }
-
   addTransceiver(sendTrackOrKind, init) {
     this._checkClosed();
     let transceiver = this._addTransceiverNoEvents(sendTrackOrKind, init);
@@ -1690,11 +1627,6 @@ class RTCPeerConnection {
     return this.getTransceivers()
       .filter(transceiver => !transceiver.stopped)
       .map(transceiver => transceiver.receiver);
-  }
-
-  // test-only: get the current time using the webrtc clock
-  mozGetNowInRtpSourceReferenceTime() {
-    return this._impl.getNowInRtpSourceReferenceTime();
   }
 
   // test-only: insert a contributing source entry for a track
@@ -2364,11 +2296,6 @@ class RTCRtpReceiver {
       _oldRecvBit: false,
       _streams: [],
       _oldstreams: [],
-      // Sync and contributing sources must be kept cached so that timestamps
-      // remain stable, as the timestamp offset can vary
-      // note key = entry.source + entry.sourceType
-      _rtpSources: new Map(),
-      _rtpSourcesJsTimestamp: null,
     });
   }
 
@@ -2376,87 +2303,6 @@ class RTCRtpReceiver {
   // that here.
   getStats() {
     return this._pc._async(async () => this._pc.getStats(this.track));
-  }
-
-  _getRtpSource(source, type) {
-    this._fetchRtpSources();
-    return this._rtpSources.get(type + source).entry;
-  }
-
-  /* Fetch all of the RTP Contributing and Sync sources for the receiver
-   * and store them so they are available when asked for.
-   */
-  _fetchRtpSources() {
-    if (this._rtpSourcesJsTimestamp !== null) {
-      return;
-    }
-    // Queue microtask to mark the cache as stale after this task completes
-    Promise.resolve().then(() => (this._rtpSourcesJsTimestamp = null));
-    let { sources, sourceClockOffset, jsTimestamp } = this._pc._getRtpSources(
-      this
-    );
-    this._rtpSourcesJsTimestamp = jsTimestamp;
-    for (let entry of sources) {
-      // Set the clock offset for calculating the 10-second window
-      entry.sourceClockOffset = sourceClockOffset;
-      // Store the new entries or update existing entries
-      let key = entry.source + entry.sourceType;
-      let cached = this._rtpSources.get(key);
-      if (cached === undefined) {
-        this._rtpSources.set(key, entry);
-      } else if (cached.timestamp != entry.timestamp) {
-        // Only update if the timestamp has changed
-        // This also prevents the sourceClockOffset from changing unecessarily
-        // which could cause a value to flutter at the edge of the 10 second
-        // window.
-        this._rtpSources.set(key, entry);
-      }
-    }
-    // Clear old entries
-    let cutoffTime = this._rtpSourcesJsTimestamp - 10 * 1000;
-    let removeKeys = [];
-    for (let entry of this._rtpSources.values()) {
-      if (entry.timestamp + entry.sourceClockOffset < cutoffTime) {
-        removeKeys.push(entry.source + entry.sourceType);
-      }
-    }
-    for (let delKey of removeKeys) {
-      this._rtpSources.delete(delKey);
-    }
-  }
-
-  _getRtpSourcesByType(type) {
-    this._fetchRtpSources();
-    // Only return the values from within the last 10 seconds as per the spec
-    const cutoffTime = this._rtpSourcesJsTimestamp - 10 * 1000;
-    return [...this._rtpSources.values()]
-      .filter(entry => {
-        return (
-          entry.sourceType == type &&
-          entry.timestamp + entry.sourceClockOffset >= cutoffTime
-        );
-      })
-      .map(e => {
-        const newEntry = {
-          source: e.source,
-          timestamp: e.timestamp + e.sourceClockOffset,
-          rtpTimestamp: e.rtpTimestamp,
-          audioLevel: e.audioLevel,
-        };
-        if (e.voiceActivityFlag !== undefined) {
-          Object.assign(newEntry, { voiceActivityFlag: e.voiceActivityFlag });
-        }
-        return newEntry;
-      })
-      .sort((a, b) => b.timestamp - a.timestamp);
-  }
-
-  getContributingSources() {
-    return this._getRtpSourcesByType("contributing");
-  }
-
-  getSynchronizationSources() {
-    return this._getRtpSourcesByType("synchronization");
   }
 
   setStreamIds(streamIds) {
