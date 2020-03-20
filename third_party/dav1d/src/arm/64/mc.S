@@ -29,14 +29,7 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
-.macro avg dst, t0, t1
-        ld1             {\t0\().8h},   [x2],  16
-        ld1             {\t1\().8h},   [x3],  16
-        add             \t0\().8h,   \t0\().8h,   \t1\().8h
-        sqrshrun        \dst\().8b,  \t0\().8h,   #5
-.endm
-
-.macro avg16 dst, t0, t1, t2, t3
+.macro avg dst, t0, t1, t2, t3
         ld1             {\t0\().8h,\t1\().8h},   [x2],  32
         ld1             {\t2\().8h,\t3\().8h},   [x3],  32
         add             \t0\().8h,   \t0\().8h,   \t2\().8h
@@ -45,16 +38,7 @@
         sqrshrun2       \dst\().16b, \t1\().8h,   #5
 .endm
 
-.macro w_avg dst, t0, t1
-        ld1             {\t0\().8h},   [x2],  16
-        ld1             {\t1\().8h},   [x3],  16
-        sub             \t0\().8h,   \t1\().8h,   \t0\().8h
-        sqdmulh         \t0\().8h,   \t0\().8h,   v30.8h
-        add             \t0\().8h,   \t1\().8h,   \t0\().8h
-        sqrshrun        \dst\().8b,  \t0\().8h,   #4
-.endm
-
-.macro w_avg16 dst, t0, t1, t2, t3
+.macro w_avg dst, t0, t1, t2, t3
         ld1             {\t0\().8h,\t1\().8h},   [x2],  32
         ld1             {\t2\().8h,\t3\().8h},   [x3],  32
         sub             \t0\().8h,   \t2\().8h,   \t0\().8h
@@ -67,19 +51,7 @@
         sqrshrun2       \dst\().16b, \t1\().8h,   #4
 .endm
 
-.macro mask dst, t0, t1
-        ld1             {v30.8b},      [x6],  8
-        ld1             {\t0\().8h},   [x2],  16
-        mul             v30.8b, v30.8b, v31.8b
-        ld1             {\t1\().8h},   [x3],  16
-        shll            v30.8h, v30.8b, #8
-        sub             \t0\().8h,   \t1\().8h,   \t0\().8h
-        sqdmulh         \t0\().8h,   \t0\().8h,   v30.8h
-        add             \t0\().8h,   \t1\().8h,   \t0\().8h
-        sqrshrun        \dst\().8b,  \t0\().8h,   #4
-.endm
-
-.macro mask16 dst, t0, t1, t2, t3
+.macro mask dst, t0, t1, t2, t3
         ld1             {v30.16b}, [x6],  16
         ld1             {\t0\().8h,\t1\().8h},   [x2],  32
         mul             v30.16b, v30.16b, v31.16b
@@ -109,113 +81,108 @@ function \type\()_8bpc_neon, export=1
 .endif
         adr             x7,  L(\type\()_tbl)
         sub             w4,  w4,  #24
-        \type           v4,  v0,  v1
         ldrh            w4,  [x7, x4, lsl #1]
-        \type           v5,  v2,  v3
+        \type           v4,  v0,  v1,  v2,  v3
         sub             x7,  x7,  w4, uxtw
         br              x7
+40:
+        add             x7,  x0,  x1
+        lsl             x1,  x1,  #1
 4:
         cmp             w5,  #4
         st1             {v4.s}[0],  [x0], x1
-        st1             {v4.s}[1],  [x0], x1
-        st1             {v5.s}[0],  [x0], x1
-        st1             {v5.s}[1],  [x0], x1
+        st1             {v4.s}[1],  [x7], x1
+        st1             {v4.s}[2],  [x0], x1
+        st1             {v4.s}[3],  [x7], x1
         b.eq            0f
-        \type           v6,  v0,  v1
-        \type           v7,  v2,  v3
+        \type           v5,  v0,  v1,  v2,  v3
         cmp             w5,  #8
-        st1             {v6.s}[0],  [x0], x1
-        st1             {v6.s}[1],  [x0], x1
-        st1             {v7.s}[0],  [x0], x1
-        st1             {v7.s}[1],  [x0], x1
-        b.eq            0f
-        \type           v4,  v0,  v1
-        \type           v5,  v2,  v3
-        st1             {v4.s}[0],  [x0], x1
-        st1             {v4.s}[1],  [x0], x1
-        \type           v6,  v0,  v1
         st1             {v5.s}[0],  [x0], x1
-        st1             {v5.s}[1],  [x0], x1
-        \type           v7,  v2,  v3
-        st1             {v6.s}[0],  [x0], x1
-        st1             {v6.s}[1],  [x0], x1
-        st1             {v7.s}[0],  [x0], x1
-        st1             {v7.s}[1],  [x0], x1
+        st1             {v5.s}[1],  [x7], x1
+        st1             {v5.s}[2],  [x0], x1
+        st1             {v5.s}[3],  [x7], x1
+        b.eq            0f
+        \type           v4,  v0,  v1,  v2,  v3
+        st1             {v4.s}[0],  [x0], x1
+        st1             {v4.s}[1],  [x7], x1
+        \type           v5,  v0,  v1,  v2,  v3
+        st1             {v4.s}[2],  [x0], x1
+        st1             {v4.s}[3],  [x7], x1
+        st1             {v5.s}[0],  [x0], x1
+        st1             {v5.s}[1],  [x7], x1
+        st1             {v5.s}[2],  [x0], x1
+        st1             {v5.s}[3],  [x7], x1
         ret
+80:
+        add             x7,  x0,  x1
+        lsl             x1,  x1,  #1
 8:
-        st1             {v4.8b},  [x0], x1
-        \type           v6,  v0,  v1
-        st1             {v5.8b},  [x0], x1
-        \type           v7,  v0,  v1
-        st1             {v6.8b},  [x0], x1
+        st1             {v4.d}[0],  [x0], x1
+        \type           v5,  v0,  v1,  v2,  v3
+        st1             {v4.d}[1],  [x7], x1
+        st1             {v5.d}[0],  [x0], x1
         subs            w5,  w5,  #4
-        st1             {v7.8b},  [x0], x1
+        st1             {v5.d}[1],  [x7], x1
         b.le            0f
-        \type           v4,  v0,  v1
-        \type           v5,  v2,  v3
+        \type           v4,  v0,  v1,  v2,  v3
         b               8b
-160:
-        trn1            v4.2d,  v4.2d,  v5.2d
 16:
-        \type\()16      v5, v0, v1, v2, v3
+        \type           v5,  v0,  v1,  v2,  v3
         st1             {v4.16b}, [x0], x1
-        \type\()16      v6, v0, v1, v2, v3
+        \type           v6,  v0,  v1,  v2,  v3
         st1             {v5.16b}, [x0], x1
-        \type\()16      v7, v0, v1, v2, v3
+        \type           v7,  v0,  v1,  v2,  v3
         st1             {v6.16b}, [x0], x1
         subs            w5,  w5,  #4
         st1             {v7.16b}, [x0], x1
         b.le            0f
-        \type\()16      v4, v0, v1, v2, v3
+        \type           v4,  v0,  v1,  v2,  v3
         b               16b
 320:
-        trn1            v4.2d,  v4.2d,  v5.2d
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 32:
-        \type\()16      v5, v0, v1, v2, v3
-        \type\()16      v6, v0, v1, v2, v3
+        \type           v5,  v0,  v1,  v2,  v3
+        \type           v6,  v0,  v1,  v2,  v3
         st1             {v4.16b,v5.16b}, [x0], x1
-        \type\()16      v7, v0, v1, v2, v3
+        \type           v7,  v0,  v1,  v2,  v3
         subs            w5,  w5,  #2
         st1             {v6.16b,v7.16b}, [x7], x1
         b.le            0f
-        \type\()16      v4, v0, v1, v2, v3
+        \type           v4,  v0,  v1,  v2,  v3
         b               32b
 640:
-        trn1            v4.2d,  v4.2d,  v5.2d
         add             x7,  x0,  x1
         lsl             x1,  x1,  #1
 64:
-        \type\()16      v5,  v0, v1, v2, v3
-        \type\()16      v6,  v0, v1, v2, v3
-        \type\()16      v7,  v0, v1, v2, v3
-        \type\()16      v16, v0, v1, v2, v3
-        \type\()16      v17, v0, v1, v2, v3
+        \type           v5,  v0,  v1,  v2,  v3
+        \type           v6,  v0,  v1,  v2,  v3
+        \type           v7,  v0,  v1,  v2,  v3
+        \type           v16, v0,  v1,  v2,  v3
+        \type           v17, v0,  v1,  v2,  v3
         st1             {v4.16b,v5.16b,v6.16b,v7.16b}, [x0], x1
-        \type\()16      v18, v0, v1, v2, v3
-        \type\()16      v19, v0, v1, v2, v3
+        \type           v18, v0,  v1,  v2,  v3
+        \type           v19, v0,  v1,  v2,  v3
         subs            w5,  w5,  #2
         st1             {v16.16b,v17.16b,v18.16b,v19.16b}, [x7], x1
         b.le            0f
-        \type\()16      v4, v0, v1, v2, v3
+        \type           v4, v0,  v1,  v2,  v3
         b               64b
 1280:
-        trn1            v4.2d,  v4.2d,  v5.2d
         add             x7,  x0,  #64
 128:
-        \type\()16      v5,  v0, v1, v2, v3
-        \type\()16      v6,  v0, v1, v2, v3
-        \type\()16      v7,  v0, v1, v2, v3
-        \type\()16      v16, v0, v1, v2, v3
-        \type\()16      v17, v0, v1, v2, v3
+        \type           v5,  v0,  v1,  v2,  v3
+        \type           v6,  v0,  v1,  v2,  v3
+        \type           v7,  v0,  v1,  v2,  v3
+        \type           v16, v0,  v1,  v2,  v3
+        \type           v17, v0,  v1,  v2,  v3
         st1             {v4.16b,v5.16b,v6.16b,v7.16b}, [x0], x1
-        \type\()16      v18, v0, v1, v2, v3
-        \type\()16      v19, v0, v1, v2, v3
+        \type           v18, v0,  v1,  v2,  v3
+        \type           v19, v0,  v1,  v2,  v3
         subs            w5,  w5,  #1
         st1             {v16.16b,v17.16b,v18.16b,v19.16b}, [x7], x1
         b.le            0f
-        \type\()16      v4, v0, v1, v2, v3
+        \type           v4, v0,  v1,  v2,  v3
         b               128b
 0:
         ret
@@ -223,9 +190,9 @@ L(\type\()_tbl):
         .hword L(\type\()_tbl) - 1280b
         .hword L(\type\()_tbl) -  640b
         .hword L(\type\()_tbl) -  320b
-        .hword L(\type\()_tbl) -  160b
-        .hword L(\type\()_tbl) -    8b
-        .hword L(\type\()_tbl) -    4b
+        .hword L(\type\()_tbl) -   16b
+        .hword L(\type\()_tbl) -   80b
+        .hword L(\type\()_tbl) -   40b
 endfunc
 .endm
 
@@ -464,10 +431,10 @@ function blend_8bpc_neon, export=1
         sub             x6,  x6,  w3,  uxtw
         movi            v4.16b,  #64
         add             x8,  x0,  x1
-        lsl             w1,  w1,  #1
+        lsl             x1,  x1,  #1
         br              x6
 4:
-        ld1             {v2.d}[0],   [x5],  #8
+        ld1             {v2.8b},     [x5],  #8
         ld1             {v1.d}[0],   [x2],  #8
         ld1             {v0.s}[0],   [x0]
         subs            w4,  w4,  #2
@@ -481,8 +448,8 @@ function blend_8bpc_neon, export=1
         b.gt            4b
         ret
 8:
-        ld1             {v2.2d},   [x5],  #16
-        ld1             {v1.2d},   [x2],  #16
+        ld1             {v2.16b},  [x5],  #16
+        ld1             {v1.16b},  [x2],  #16
         ld1             {v0.d}[0],   [x0]
         ld1             {v0.d}[1],   [x8]
         sub             v3.16b,  v4.16b,  v2.16b
@@ -498,13 +465,13 @@ function blend_8bpc_neon, export=1
         b.gt            8b
         ret
 16:
-        ld1             {v1.2d,   v2.2d},   [x5],  #32
-        ld1             {v5.2d,   v6.2d},   [x2],  #32
-        ld1             {v0.2d},   [x0]
+        ld1             {v1.16b,  v2.16b},  [x5],  #32
+        ld1             {v5.16b,  v6.16b},  [x2],  #32
+        ld1             {v0.16b},  [x0]
         subs            w4,  w4,  #2
         sub             v7.16b,  v4.16b,  v1.16b
         sub             v20.16b, v4.16b,  v2.16b
-        ld1             {v3.2d},   [x8]
+        ld1             {v3.16b},  [x8]
         umull           v16.8h,  v5.8b,   v1.8b
         umlal           v16.8h,  v0.8b,   v7.8b
         umull2          v17.8h,  v5.16b,  v1.16b
@@ -517,16 +484,16 @@ function blend_8bpc_neon, export=1
         rshrn2          v18.16b, v17.8h,  #6
         rshrn           v19.8b,  v21.8h,  #6
         rshrn2          v19.16b, v22.8h,  #6
-        st1             {v18.2d},  [x0],  x1
-        st1             {v19.2d},  [x8],  x1
+        st1             {v18.16b}, [x0],  x1
+        st1             {v19.16b}, [x8],  x1
         b.gt            16b
         ret
 32:
-        ld1             {v0.2d,   v1.2d,   v2.2d,   v3.2d},   [x5],  #64
-        ld1             {v16.2d,  v17.2d,  v18.2d,  v19.2d},  [x2],  #64
-        ld1             {v20.2d,  v21.2d},  [x0]
+        ld1             {v0.16b,  v1.16b,  v2.16b,  v3.16b},  [x5],  #64
+        ld1             {v16.16b, v17.16b, v18.16b, v19.16b}, [x2],  #64
+        ld1             {v20.16b, v21.16b}, [x0]
         subs            w4,  w4,  #2
-        ld1             {v22.2d,  v23.2d},  [x8]
+        ld1             {v22.16b, v23.16b}, [x8]
         sub             v5.16b,  v4.16b,  v0.16b
         sub             v6.16b,  v4.16b,  v1.16b
         sub             v30.16b, v4.16b,  v2.16b
@@ -555,8 +522,8 @@ function blend_8bpc_neon, export=1
         rshrn2          v27.16b, v1.8h,   #6
         rshrn           v28.8b,  v29.8h,  #6
         rshrn2          v28.16b, v21.8h,  #6
-        st1             {v24.2d, v25.2d}, [x0],  x1
-        st1             {v27.2d, v28.2d}, [x8],  x1
+        st1             {v24.16b, v25.16b}, [x0],  x1
+        st1             {v27.16b, v28.16b}, [x8],  x1
         b.gt            32b
         ret
 L(blend_tbl):
@@ -567,7 +534,7 @@ L(blend_tbl):
 endfunc
 
 function blend_h_8bpc_neon, export=1
-        adr             x6, L(blend_h_tbl)
+        adr             x6,  L(blend_h_tbl)
         movrel          x5,  X(obmc_masks)
         add             x5,  x5,  w4,  uxtw
         sub             w4,  w4,  w4,  lsr #2
@@ -596,7 +563,7 @@ function blend_h_8bpc_neon, export=1
         ret
 4:
         ld2r            {v0.8b,   v1.8b},   [x5],  #2
-        ld1             {v2.2s},   [x2],  #8
+        ld1             {v2.8b},   [x2],  #8
         subs            w4,  w4,  #2
         ext             v0.8b,   v0.8b,   v1.8b,   #4
         ld1             {v3.s}[0],   [x0]
@@ -742,8 +709,8 @@ function blend_v_8bpc_neon, export=1
         ret
 40:
         ld1r            {v0.2s},   [x5]
+        sub             x1,  x1,  #2
         sub             v1.8b,   v4.8b,   v0.8b
-        sub             x1,  x1,  #3
 4:
         ld1             {v2.8b},   [x2],  #8
         ld1             {v3.s}[0],   [x0]
@@ -754,16 +721,14 @@ function blend_v_8bpc_neon, export=1
         rshrn           v5.8b,   v5.8h,   #6
         st1             {v5.h}[0],   [x0],  #2
         st1             {v5.h}[2],   [x8],  #2
-        st1             {v5.b}[2],   [x0],  #1
-        st1             {v5.b}[6],   [x8],  #1
-        add             x0,  x0,  x1
-        add             x8,  x8,  x1
+        st1             {v5.b}[2],   [x0],  x1
+        st1             {v5.b}[6],   [x8],  x1
         b.gt            4b
         ret
 80:
         ld1r            {v0.2d},   [x5]
+        sub             x1,  x1,  #4
         sub             v1.16b,  v4.16b,  v0.16b
-        sub             x1,  x1,  #6
 8:
         ld1             {v2.16b},  [x2],  #16
         ld1             {v3.d}[0],   [x0]
@@ -777,16 +742,14 @@ function blend_v_8bpc_neon, export=1
         rshrn2          v7.16b, v6.8h,  #6
         st1             {v7.s}[0],   [x0],  #4
         st1             {v7.s}[2],   [x8],  #4
-        st1             {v7.h}[2],   [x0],  #2
-        st1             {v7.h}[6],   [x8],  #2
-        add             x0,  x0,  x1
-        add             x8,  x8,  x1
+        st1             {v7.h}[2],   [x0],  x1
+        st1             {v7.h}[6],   [x8],  x1
         b.gt            8b
         ret
 160:
         ld1             {v0.16b},  [x5]
+        sub             x1,  x1,  #8
         sub             v2.16b,  v4.16b,  v0.16b
-        sub             x1,  x1,  #12
 16:
         ld1             {v5.16b,  v6.16b},  [x2],  #32
         ld1             {v7.16b},  [x0]
@@ -806,17 +769,15 @@ function blend_v_8bpc_neon, export=1
         rshrn2          v22.16b, v21.8h,  #6
         st1             {v19.8b},  [x0],  #8
         st1             {v22.8b},  [x8],  #8
-        st1             {v19.s}[2],  [x0],  #4
-        st1             {v22.s}[2],  [x8],  #4
-        add             x0,  x0,  x1
-        add             x8,  x8,  x1
+        st1             {v19.s}[2],  [x0],  x1
+        st1             {v22.s}[2],  [x8],  x1
         b.gt            16b
         ret
 320:
         ld1             {v0.16b,  v1.16b},  [x5]
+        sub             x1,  x1,  #16
         sub             v2.16b,  v4.16b,  v0.16b
-        sub             v3.16b,  v4.16b,  v1.16b
-        sub             x1,  x1,  #24
+        sub             v3.8b,   v4.8b,   v1.8b
 32:
         ld1             {v16.16b, v17.16b, v18.16b, v19.16b}, [x2],  #64
         ld1             {v5.16b,  v6.16b},  [x0]
@@ -828,30 +789,22 @@ function blend_v_8bpc_neon, export=1
         umlal2          v23.8h,  v5.16b,  v2.16b
         umull           v28.8h,  v17.8b,  v1.8b
         umlal           v28.8h,  v6.8b,   v3.8b
-        umull2          v29.8h,  v17.16b, v1.16b
-        umlal2          v29.8h,  v6.16b,  v3.16b
         umull           v30.8h,  v18.8b,  v0.8b
         umlal           v30.8h,  v20.8b,  v2.8b
         umull2          v31.8h,  v18.16b, v0.16b
         umlal2          v31.8h,  v20.16b, v2.16b
         umull           v25.8h,  v19.8b,  v1.8b
         umlal           v25.8h,  v21.8b,  v3.8b
-        umull2          v26.8h,  v19.16b, v1.16b
-        umlal2          v26.8h,  v21.16b, v3.16b
         rshrn           v24.8b,  v22.8h,  #6
         rshrn2          v24.16b, v23.8h,  #6
         rshrn           v28.8b,  v28.8h,  #6
-        rshrn2          v28.16b, v29.8h,  #6
         rshrn           v30.8b,  v30.8h,  #6
         rshrn2          v30.16b, v31.8h,  #6
         rshrn           v27.8b,  v25.8h,  #6
-        rshrn2          v27.16b, v26.8h,  #6
         st1             {v24.16b}, [x0],  #16
         st1             {v30.16b}, [x8],  #16
-        st1             {v28.8b},  [x0],  #8
-        st1             {v27.8b},  [x8],  #8
-        add             x0,  x0,  x1
-        add             x8,  x8,  x1
+        st1             {v28.8b},  [x0],  x1
+        st1             {v27.8b},  [x8],  x1
         b.gt            32b
         ret
 L(blend_v_tbl):
@@ -2106,9 +2059,9 @@ L(\type\()_8tap_filter_2):
         st1             {v3.4h}, [\ds2], \d_strd
 .endif
         b.le            0f
-        mov             v16.16b, v18.16b
-        mov             v17.16b, v28.16b
-        mov             v18.16b, v29.16b
+        mov             v16.8b,  v18.8b
+        mov             v17.8b,  v28.8b
+        mov             v18.8b,  v29.8b
         b               4b
 
 480:    // 4x8, 4x16, 4x32 hv

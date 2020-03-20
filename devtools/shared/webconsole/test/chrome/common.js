@@ -4,14 +4,14 @@
 
 "use strict";
 
-/* exported ObjectFront, attachConsole, attachConsoleToTab, attachConsoleToWorker,
+/* exported attachConsole, attachConsoleToTab, attachConsoleToWorker,
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
    withActiveServiceWorker, Services, consoleAPICall */
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsClient } = require("devtools/shared/client/devtools-client");
-const { ObjectFront } = require("devtools/shared/fronts/object");
+
 const Services = require("Services");
 
 function initCommon() {

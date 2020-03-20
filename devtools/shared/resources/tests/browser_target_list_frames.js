@@ -7,7 +7,7 @@
 
 const { TargetList } = require("devtools/shared/resources/target-list");
 
-const FISSION_TEST_URL = URL_ROOT + "/fission_document.html";
+const FISSION_TEST_URL = URL_ROOT_SSL + "/fission_document.html";
 
 add_task(async function() {
   // Enabled fission's prefs as the TargetList is almost disabled without it

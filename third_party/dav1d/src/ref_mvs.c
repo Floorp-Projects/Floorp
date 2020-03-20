@@ -2094,10 +2094,7 @@ void dav1d_init_ref_mv_tile_row(AV1_COMMON *cm,
 
 AV1_COMMON *dav1d_alloc_ref_mv_common(void);
 AV1_COMMON *dav1d_alloc_ref_mv_common(void) {
-    AV1_COMMON *cm = malloc(sizeof(*cm));
-    if (!cm) return NULL;
-    memset(cm, 0, sizeof(*cm));
-    return cm;
+    return calloc(1, sizeof(AV1_COMMON));
 }
 
 void dav1d_free_ref_mv_common(AV1_COMMON *cm);

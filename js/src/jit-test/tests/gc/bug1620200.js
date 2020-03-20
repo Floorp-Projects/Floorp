@@ -1,4 +1,4 @@
-// |jit-test| error:TypeError
+// |jit-test| error:TypeError; skip-if: !this.hasOwnProperty("TypedObject")
 
 gczeal(14, 8);
 try {

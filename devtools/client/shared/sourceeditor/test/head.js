@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
 const Editor = require("devtools/client/shared/sourceeditor/editor");
 const {
   getClientCssProperties,
-} = require("devtools/shared/fronts/css-properties");
+} = require("devtools/client/fronts/css-properties");
 
 function promiseWaitForFocus(el) {
   return new Promise(resolve => waitForFocus(resolve, el));

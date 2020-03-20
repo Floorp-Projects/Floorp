@@ -6,63 +6,18 @@
   "engines": [
     {
       "_name": "engine1",
-      "_shortName": "engine1",
-      "_loadPath": "[other]addEngineWithDetails:engine1@search.mozilla.org",
-      "description": "A small test engine",
-      "__searchForm": null,
-      "_iconURL": "moz-extension://9c38b851-bede-2244-a086-9be8128dd64d/favicon.ico",
-      "_iconMapObj": {
-        "{}": "moz-extension://9c38b851-bede-2244-a086-9be8128dd64d/favicon.ico"
-      },
       "_metaData": {
-        "alias": null
+        "alias": "testAlias"
       },
-      "_urls": [
-        {
-          "template": "https://1.example.com/search",
-          "rels": [],
-          "resultDomain": "1.example.com",
-          "params": [
-            {
-              "name": "q",
-              "value": "{searchTerms}"
-            }
-          ]
-        }
-      ],
-      "_isBuiltin": true,
-      "queryCharset": "UTF-8",
-      "extensionID": "engine1@search.mozilla.org"
+      "_isBuiltin": true
     },
     {
       "_name": "engine2",
-      "_shortName": "engine2",
-      "_loadPath": "[other]addEngineWithDetails:engine2@search.mozilla.org",
-      "description": "A small test engine",
-      "__searchForm": null,
-      "_iconURL": "moz-extension://0ea1d9b5-a14c-0e42-afaf-f25e8261c135/favicon.ico",
-      "_iconMapObj": {
-        "{}": "moz-extension://0ea1d9b5-a14c-0e42-afaf-f25e8261c135/favicon.ico"
-      },
       "_metaData": {
-        "alias": null
+        "alias": null,
+        "hidden": true
       },
-      "_urls": [
-        {
-          "template": "https://2.example.com/search",
-          "rels": [],
-          "resultDomain": "2.example.com",
-          "params": [
-            {
-              "name": "q",
-              "value": "{searchTerms}"
-            }
-          ]
-        }
-      ],
-      "_isBuiltin": true,
-      "queryCharset": "UTF-8",
-      "extensionID": "engine2@search.mozilla.org"
+      "_isBuiltin": true
     },
     {
       "_name": "Test search engine",
@@ -124,7 +79,6 @@
         }
       ],
       "queryCharset": "UTF-8",
-      "_readOnly": false,
       "extensionID": "test-addon-id@mozilla.org"
     }
   ]

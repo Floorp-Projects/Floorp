@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "npapi.h"
 #include "nsCOMPtr.h"
 #include "nsIKeyEventInPluginCallback.h"
@@ -39,7 +40,6 @@ class TextComposition;
 namespace dom {
 class Element;
 class Event;
-struct MozPluginParameter;
 }  // namespace dom
 namespace widget {
 class PuppetWidget;

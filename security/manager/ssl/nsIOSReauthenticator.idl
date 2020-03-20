@@ -41,5 +41,5 @@ interface nsIOSReauthenticator: nsISupports {
    *         and false otherwise.
    */
   [implicit_jscontext, must_use]
-  Promise asyncReauthenticateUser(in ACString prompt, in ACString caption, in mozIDOMWindow parentWindow);
+  Promise asyncReauthenticateUser(in AString prompt, in AString caption, in mozIDOMWindow parentWindow);
 };

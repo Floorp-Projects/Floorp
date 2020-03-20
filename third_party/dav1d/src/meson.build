@@ -35,6 +35,7 @@ libdav1d_sources = files(
     'dequant_tables.c',
     'getbits.c',
     'intra_edge.c',
+    'itx_1d.c',
     'lf_mask.c',
     'log.c',
     'msac.c',
@@ -101,28 +102,59 @@ if is_asm_enabled
         )
         if host_machine.cpu_family() == 'aarch64'
             libdav1d_sources += files(
-                'arm/64/cdef.S',
-                'arm/64/ipred.S',
-                'arm/64/itx.S',
-                'arm/64/loopfilter.S',
-                'arm/64/looprestoration.S',
-                'arm/64/mc.S',
+                'arm/64/looprestoration_common.S',
                 'arm/64/msac.S',
             )
+
+            if dav1d_bitdepths.contains('8')
+                libdav1d_sources += files(
+                    'arm/64/cdef.S',
+                    'arm/64/ipred.S',
+                    'arm/64/itx.S',
+                    'arm/64/loopfilter.S',
+                    'arm/64/looprestoration.S',
+                    'arm/64/mc.S',
+                )
+            endif
+
+            if dav1d_bitdepths.contains('16')
+                libdav1d_sources += files(
+                    'arm/64/cdef16.S',
+                    'arm/64/loopfilter16.S',
+                    'arm/64/looprestoration16.S',
+                    'arm/64/mc16.S',
+                )
+            endif
         elif host_machine.cpu_family().startswith('arm')
             libdav1d_sources += files(
-                'arm/32/cdef.S',
-                'arm/32/ipred.S',
-                'arm/32/loopfilter.S',
-                'arm/32/looprestoration.S',
-                'arm/32/mc.S',
             )
+
+            if dav1d_bitdepths.contains('8')
+                libdav1d_sources += files(
+                    'arm/32/cdef.S',
+                    'arm/32/ipred.S',
+                    'arm/32/loopfilter.S',
+                    'arm/32/looprestoration.S',
+                    'arm/32/mc.S',
+                )
+            endif
+
+            if dav1d_bitdepths.contains('16')
+                libdav1d_sources += files(
+                )
+            endif
         endif
     elif host_machine.cpu_family().startswith('x86')
 
         libdav1d_sources += files(
             'x86/cpu.c',
         )
+
+        if host_machine.cpu_family() == 'x86_64'
+            libdav1d_sources += files(
+                'x86/msac_init.c',
+            )
+        endif
 
         libdav1d_tmpl_sources += files(
             'x86/cdef_init_tmpl.c',
@@ -150,6 +182,7 @@ if is_asm_enabled
                 'x86/looprestoration.asm',
                 'x86/mc.asm',
                 'x86/cdef_sse.asm',
+                'x86/film_grain_ssse3.asm',
                 'x86/ipred_ssse3.asm',
                 'x86/itx_ssse3.asm',
                 'x86/loopfilter_ssse3.asm',
@@ -278,11 +311,16 @@ libdav1d = library('dav1d',
         stdatomic_dependency,
         thread_dependency,
         thread_compat_dep,
+        libdl_dependency,
         ],
     c_args : [stackalign_flag, api_export_flags],
     version : dav1d_soname_version,
     soversion : dav1d_soversion,
     install : true,
+)
+
+dav1d_dep = declare_dependency(link_with: libdav1d,
+    include_directories : include_directories('../include/dav1d')
 )
 
 #

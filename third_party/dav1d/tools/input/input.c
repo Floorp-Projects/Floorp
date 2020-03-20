@@ -43,21 +43,15 @@ struct DemuxerContext {
     const Demuxer *impl;
 };
 
-#define MAX_NUM_DEMUXERS 3
-static const Demuxer *demuxers[MAX_NUM_DEMUXERS];
-static int num_demuxers = 0;
-
-#define register_demuxer(impl) { \
-    extern const Demuxer impl; \
-    assert(num_demuxers < MAX_NUM_DEMUXERS); \
-    demuxers[num_demuxers++] = &impl; \
-}
-
-void init_demuxers(void) {
-    register_demuxer(ivf_demuxer);
-    register_demuxer(annexb_demuxer);
-    register_demuxer(section5_demuxer);
-}
+extern const Demuxer ivf_demuxer;
+extern const Demuxer annexb_demuxer;
+extern const Demuxer section5_demuxer;
+static const Demuxer *const demuxers[] = {
+    &ivf_demuxer,
+    &annexb_demuxer,
+    &section5_demuxer,
+    NULL
+};
 
 int input_open(DemuxerContext **const c_out,
                const char *const name, const char *const filename,
@@ -68,19 +62,19 @@ int input_open(DemuxerContext **const c_out,
     int res, i;
 
     if (name) {
-        for (i = 0; i < num_demuxers; i++) {
+        for (i = 0; demuxers[i]; i++) {
             if (!strcmp(demuxers[i]->name, name)) {
                 impl = demuxers[i];
                 break;
             }
         }
-        if (i == num_demuxers) {
+        if (!demuxers[i]) {
             fprintf(stderr, "Failed to find demuxer named \"%s\"\n", name);
             return DAV1D_ERR(ENOPROTOOPT);
         }
     } else {
         int probe_sz = 0;
-        for (i = 0; i < num_demuxers; i++)
+        for (i = 0; demuxers[i]; i++)
             probe_sz = imax(probe_sz, demuxers[i]->probe_sz);
         uint8_t *const probe_data = malloc(probe_sz);
         if (!probe_data) {
@@ -96,14 +90,14 @@ int input_open(DemuxerContext **const c_out,
             return errno ? DAV1D_ERR(errno) : DAV1D_ERR(EIO);
         }
 
-        for (i = 0; i < num_demuxers; i++) {
+        for (i = 0; demuxers[i]; i++) {
             if (demuxers[i]->probe(probe_data)) {
                 impl = demuxers[i];
                 break;
             }
         }
         free(probe_data);
-        if (i == num_demuxers) {
+        if (!demuxers[i]) {
             fprintf(stderr,
                     "Failed to probe demuxer for file %s\n",
                     filename);
@@ -111,11 +105,10 @@ int input_open(DemuxerContext **const c_out,
         }
     }
 
-    if (!(c = malloc(sizeof(DemuxerContext) + impl->priv_data_size))) {
+    if (!(c = calloc(1, sizeof(DemuxerContext) + impl->priv_data_size))) {
         fprintf(stderr, "Failed to allocate memory\n");
         return DAV1D_ERR(ENOMEM);
     }
-    memset(c, 0, sizeof(DemuxerContext) + impl->priv_data_size);
     c->impl = impl;
     c->data = (DemuxerPriv *) &c[1];
     if ((res = impl->open(c->data, filename, fps, num_frames, timebase)) < 0) {

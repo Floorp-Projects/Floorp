@@ -44,66 +44,14 @@ const enginesCache = {
   },
   engines: [
     {
-      _readOnly: true,
-      _urls: [
-        {
-          type: "text/html",
-          method: "GET",
-          params: [{ name: "q", value: "{searchTerms}", purpose: void 0 }],
-          rels: [],
-          mozparams: {},
-          template: "https://1.example.com/search",
-          templateHost: "1.example.com",
-          resultDomain: "1.example.com",
-        },
-      ],
       _metaData: { alias: null },
-      _shortName: "engine1",
-      extensionID: "engine1@search.mozilla.org",
-      extensionLocale: "default",
       _isBuiltin: true,
-      _queryCharset: "UTF-8",
       _name: "engine1",
-      _description: "A small test engine",
-      __searchForm: null,
-      _iconURI: {},
-      _hasPreferredIcon: true,
-      _iconMapObj: {
-        "{}":
-          "moz-extension://090ca958-5ebb-f24e-a33c-e027d682491b/favicon.ico",
-      },
-      _loadPath: "[other]addEngineWithDetails:engine1@search.mozilla.org",
     },
     {
-      _readOnly: true,
-      _urls: [
-        {
-          type: "text/html",
-          method: "GET",
-          params: [{ name: "q", value: "{searchTerms}", purpose: void 0 }],
-          rels: [],
-          mozparams: {},
-          template: "https://2.example.com/search",
-          templateHost: "2.example.com",
-          resultDomain: "2.example.com",
-        },
-      ],
       _metaData: { alias: null },
-      _shortName: "engine2",
-      extensionID: "engine2@search.mozilla.org",
-      extensionLocale: "default",
       _isBuiltin: true,
-      _queryCharset: "UTF-8",
       _name: "engine2",
-      _description: "A small test engine",
-      __searchForm: null,
-      _iconURI: {},
-      _hasPreferredIcon: true,
-      _iconMapObj: {
-        "{}":
-          "moz-extension://ec9d0671-9f8f-a24d-99b1-2a6590c0aa51/favicon.ico",
-      },
-      _loadPath: "[other]addEngineWithDetails:engine2@search.mozilla.org",
     },
   ],
 };

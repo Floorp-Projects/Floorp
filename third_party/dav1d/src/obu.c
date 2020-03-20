@@ -917,10 +917,9 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
     hdr->skip_mode_allowed = 0;
     if (hdr->switchable_comp_refs && hdr->frame_type & 1 && seqhdr->order_hint) {
         const unsigned poc = hdr->frame_offset;
-        unsigned off_before[2] = { 0xFFFFFFFF, 0xFFFFFFFF };
+        unsigned off_before = 0xFFFFFFFFU;
         int off_after = -1;
-        int off_before_idx[2], off_after_idx;
-        off_before_idx[0] = 0;
+        int off_before_idx, off_after_idx;
         for (int i = 0; i < 7; i++) {
             if (!c->refs[hdr->refidx[i]].p.p.data[0]) return DAV1D_ERR(EINVAL);
             const unsigned refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
@@ -933,36 +932,42 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
                     off_after = refpoc;
                     off_after_idx = i;
                 }
-            } else if (diff < 0) {
-                if (off_before[0] == 0xFFFFFFFFU ||
-                    get_poc_diff(seqhdr->order_hint_n_bits,
-                                 refpoc, off_before[0]) > 0)
-                {
-                    off_before[1] = off_before[0];
-                    off_before[0] = refpoc;
-                    off_before_idx[1] = off_before_idx[0];
-                    off_before_idx[0] = i;
-                } else if (refpoc != off_before[0] &&
-                           (off_before[1] == 0xFFFFFFFFU ||
-                            get_poc_diff(seqhdr->order_hint_n_bits,
-                                         refpoc, off_before[1]) > 0))
-                {
-                    off_before[1] = refpoc;
-                    off_before_idx[1] = i;
-                }
+            } else if (diff < 0 && (off_before == 0xFFFFFFFFU ||
+                                    get_poc_diff(seqhdr->order_hint_n_bits,
+                                                 refpoc, off_before) > 0))
+            {
+                off_before = refpoc;
+                off_before_idx = i;
             }
         }
 
-        if (off_before[0] != 0xFFFFFFFFU && off_after != -1) {
-            hdr->skip_mode_refs[0] = imin(off_before_idx[0], off_after_idx);
-            hdr->skip_mode_refs[1] = imax(off_before_idx[0], off_after_idx);
+        if (off_before != 0xFFFFFFFFU && off_after != -1) {
+            hdr->skip_mode_refs[0] = imin(off_before_idx, off_after_idx);
+            hdr->skip_mode_refs[1] = imax(off_before_idx, off_after_idx);
             hdr->skip_mode_allowed = 1;
-        } else if (off_before[0] != 0xFFFFFFFFU &&
-                   off_before[1] != 0xFFFFFFFFU)
-        {
-            hdr->skip_mode_refs[0] = imin(off_before_idx[0], off_before_idx[1]);
-            hdr->skip_mode_refs[1] = imax(off_before_idx[0], off_before_idx[1]);
-            hdr->skip_mode_allowed = 1;
+        } else if (off_before != 0xFFFFFFFFU) {
+            unsigned off_before2 = 0xFFFFFFFFU;
+            int off_before2_idx;
+            for (int i = 0; i < 7; i++) {
+                if (!c->refs[hdr->refidx[i]].p.p.data[0]) return DAV1D_ERR(EINVAL);
+                const unsigned refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
+                if (get_poc_diff(seqhdr->order_hint_n_bits,
+                                 refpoc, off_before) < 0) {
+                    if (off_before2 == 0xFFFFFFFFU ||
+                        get_poc_diff(seqhdr->order_hint_n_bits,
+                                     refpoc, off_before2) > 0)
+                    {
+                        off_before2 = refpoc;
+                        off_before2_idx = i;
+                    }
+                }
+            }
+
+            if (off_before2 != 0xFFFFFFFFU) {
+                hdr->skip_mode_refs[0] = imin(off_before_idx, off_before2_idx);
+                hdr->skip_mode_refs[1] = imax(off_before_idx, off_before2_idx);
+                hdr->skip_mode_allowed = 1;
+            }
         }
     }
     hdr->skip_mode_enabled = hdr->skip_mode_allowed ? dav1d_get_bits(gb, 1) : 0;

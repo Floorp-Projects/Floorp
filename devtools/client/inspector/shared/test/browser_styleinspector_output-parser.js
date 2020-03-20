@@ -13,7 +13,7 @@ const { CSS_PROPERTIES_DB } = require("devtools/shared/css/properties-db");
 const {
   initCssProperties,
   getCssProperties,
-} = require("devtools/shared/fronts/css-properties");
+} = require("devtools/client/fronts/css-properties");
 
 const COLOR_CLASS = "color-class";
 const URL_CLASS = "url-class";
