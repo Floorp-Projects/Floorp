@@ -50,6 +50,8 @@ class WorkerErrorReport : public WorkerErrorBase, public SerializedStackHolder {
 
   void AssignErrorReport(JSErrorReport* aReport);
 
+  bool IsWarning() { return !!(mFlags & JSREPORT_WARNING); }
+
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
   // aTarget is the worker object that we are going to fire an error at
   // (if any).
