@@ -74,10 +74,15 @@ def test_migration(cmd, obj_dir, to_test, references):
     rv = 0
     migration_name = os.path.splitext(os.path.split(to_test)[1])[0]
     work_dir = mozpath.join(obj_dir, migration_name)
+
+    paths = os.path.normpath(to_test).split(os.sep)
+    # Migration modules should be in a sub-folder of l10n.
+    migration_module = '.'.join(paths[paths.index('l10n')+1:-1]) + '.' + migration_name
+
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     os.makedirs(mozpath.join(work_dir, 'reference'))
-    l10n_toml = mozpath.join(cmd.topsrcdir, 'browser', 'locales', 'l10n.toml')
+    l10n_toml = mozpath.join(cmd.topsrcdir, cmd.substs['MOZ_BUILD_APP'], 'locales', 'l10n.toml')
     pc = TOMLParser().parse(l10n_toml, env={
         'l10n_base': work_dir
     })
@@ -119,7 +124,7 @@ def test_migration(cmd, obj_dir, to_test, references):
         '--reference-dir', mozpath.join(work_dir, 'reference'),
         '--localization-dir', mozpath.join(work_dir, 'en-US'),
         '--dry-run',
-        'fluent_migrations.' + migration_name
+        migration_module
     ]
     cmd.run_process(
         run_migration,
