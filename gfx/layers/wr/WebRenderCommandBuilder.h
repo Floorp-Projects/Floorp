@@ -212,19 +212,6 @@ class WebRenderCommandBuilder final {
 
   WebRenderLayerManager* mManager;
 
-  class MOZ_RAII ScrollDataBoundaryWrapper {
-   public:
-    ScrollDataBoundaryWrapper(WebRenderCommandBuilder& aBuilder,
-                              RenderRootBoundary& aBoundary);
-    ~ScrollDataBoundaryWrapper();
-
-   private:
-    WebRenderCommandBuilder& mBuilder;
-    RenderRootBoundary mBoundary;
-    size_t mLayerCountBeforeRecursing;
-  };
-  friend class ScrollDataBoundaryWrapper;
-
  private:
   RenderRootStateManager* GetRenderRootStateManager(wr::RenderRoot aRenderRoot);
   void CreateWebRenderCommands(nsDisplayItem* aItem,
