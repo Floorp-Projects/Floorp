@@ -83,7 +83,7 @@ class TopSitesTest {
             verifyExistingTopSitesTabs(defaultWebPageTitle)
         }.openTopSiteTabWithTitle(title = defaultWebPageTitle) {
             verifyPageContent(defaultWebPage.content)
-            verifyUrl(defaultWebPage.url.toString())
+            verifyUrl(defaultWebPage.url.toString().replace("http://", ""))
         }.openHomeScreen {
             verifyExistingTopSitesList()
             verifyExistingTopSitesTabs(defaultWebPageTitle)

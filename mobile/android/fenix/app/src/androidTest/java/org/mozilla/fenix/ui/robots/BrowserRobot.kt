@@ -57,19 +57,19 @@ class BrowserRobot {
         )
         TestAssetHelper.waitingTime
         onView(withId(R.id.mozac_browser_toolbar_url_view))
-                .check(matches(withText(containsString(url))))
+                .check(matches(withText(containsString(url.replace("http://", "")))))
     }
 
     fun verifyHelpUrl() {
-        verifyUrl("https://support.mozilla.org/")
+        verifyUrl("support.mozilla.org/")
     }
 
     fun verifyWhatsNewURL() {
-        verifyUrl("https://support.mozilla.org/")
+        verifyUrl("support.mozilla.org/")
     }
 
     fun verifyRateOnGooglePlayURL() {
-        verifyUrl("https://play.google.com/store/apps/details?id=org.mozilla.fenix")
+        verifyUrl("play.google.com/store/apps/details?id=org.mozilla.fenix")
     }
 
     /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.

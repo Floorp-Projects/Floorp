@@ -138,10 +138,10 @@ private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view)
 
 private fun assertSearchEngineURL(searchEngineName: String) {
     mDevice.waitNotNull(
-        Until.findObject(By.textContains("https://${searchEngineName.toLowerCase()}.com/?q=mozilla")),
+        Until.findObject(By.textContains("${searchEngineName.toLowerCase()}.com/?q=mozilla")),
         TestAssetHelper.waitingTime
     )
-    onView(allOf(withText(startsWith("https://${searchEngineName.toLowerCase()}.com"))))
+    onView(allOf(withText(startsWith("${searchEngineName.toLowerCase()}.com"))))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
