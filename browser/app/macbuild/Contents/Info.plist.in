@@ -240,6 +240,8 @@
 	<string>10.9.0</string>
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
+  <key>NSRequiresAquaSystemAppearance</key>
+  <true/>
   <key>NSPrincipalClass</key>
   <string>GeckoNSApplication</string>
 	<key>SMPrivilegedExecutables</key>
