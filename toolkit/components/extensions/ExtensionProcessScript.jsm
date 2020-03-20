@@ -46,8 +46,13 @@ function getData(extension, key = "") {
 // We need to avoid touching Services.appinfo here in order to prevent
 // the wrong version from being cached during xpcshell test startup.
 // eslint-disable-next-line mozilla/use-services
-const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-const isContentProcess = appinfo.processType == appinfo.PROCESS_TYPE_CONTENT;
+XPCOMUtils.defineLazyGetter(this, "isContentProcess", () => {
+  return Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+});
+
+XPCOMUtils.defineLazyGetter(this, "isContentScriptProcess", () => {
+  return isContentProcess || !WebExtensionPolicy.useRemoteWebExtensions;
+});
 
 var extensions = new DefaultWeakMap(policy => {
   return new ExtensionChild.BrowserExtensionContent(policy);
@@ -98,6 +103,11 @@ class ExtensionGlobal {
           ExtensionPageChild.expectViewLoad(this.global, data.viewType);
         }
         return;
+    }
+    // Prevent script compilation in the parent process when we would never
+    // use them.
+    if (!isContentScriptProcess && messageName === "Extension:Execute") {
+      return;
     }
 
     // SetFrameData does not have a recipient extension, or it would be
@@ -392,7 +402,9 @@ var ExtensionProcessScript = {
   },
 
   preloadContentScript(contentScript) {
-    ExtensionContent.contentScripts.get(contentScript).preload();
+    if (isContentScriptProcess) {
+      ExtensionContent.contentScripts.get(contentScript).preload();
+    }
   },
 
   loadContentScript(contentScript, window) {
