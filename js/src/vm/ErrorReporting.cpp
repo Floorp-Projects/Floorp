@@ -23,8 +23,7 @@ using JS::HandleValue;
 using JS::UniqueTwoByteChars;
 
 void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
-  MOZ_ASSERT(reportp);
-  MOZ_ASSERT(JSREPORT_IS_WARNING(reportp->flags));
+  MOZ_ASSERT(reportp->isWarning());
 
   if (JS::WarningReporter warningReporter = cx->runtime()->warningReporter) {
     warningReporter(cx, reportp);
@@ -32,7 +31,7 @@ void js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp) {
 }
 
 void js::CompileError::throwError(JSContext* cx) {
-  if (JSREPORT_IS_WARNING(flags)) {
+  if (isWarning()) {
     CallWarningReporter(cx, this);
     return;
   }
