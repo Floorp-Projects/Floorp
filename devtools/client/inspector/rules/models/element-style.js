@@ -37,7 +37,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "isCssVariable",
-  "devtools/client/fronts/css-properties",
+  "devtools/shared/fronts/css-properties",
   true
 );
 
