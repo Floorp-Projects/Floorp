@@ -77,6 +77,7 @@
 #include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorObject.h"
+#include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
 #include "vm/Instrumentation.h"
 #include "vm/Interpreter.h"
