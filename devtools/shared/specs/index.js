@@ -20,82 +20,82 @@ const Types = (exports.__TypesForTests = [
       "parentaccessibility",
     ],
     spec: "devtools/shared/specs/accessibility",
-    front: "devtools/shared/fronts/accessibility",
+    front: "devtools/client/fronts/accessibility",
   },
   {
     types: ["addons"],
     spec: "devtools/shared/specs/addon/addons",
-    front: "devtools/shared/fronts/addon/addons",
+    front: "devtools/client/fronts/addon/addons",
   },
   {
     types: ["webExtensionInspectedWindow"],
     spec: "devtools/shared/specs/addon/webextension-inspected-window",
-    front: "devtools/shared/fronts/addon/webextension-inspected-window",
+    front: "devtools/client/fronts/addon/webextension-inspected-window",
   },
   {
     types: ["animationplayer", "animations"],
     spec: "devtools/shared/specs/animation",
-    front: "devtools/shared/fronts/animation",
+    front: "devtools/client/fronts/animation",
   },
   {
     types: ["arraybuffer"],
     spec: "devtools/shared/specs/array-buffer",
-    front: "devtools/shared/fronts/array-buffer",
+    front: "devtools/client/fronts/array-buffer",
   },
   {
     types: ["changes"],
     spec: "devtools/shared/specs/changes",
-    front: "devtools/shared/fronts/changes",
+    front: "devtools/client/fronts/changes",
   },
   {
     types: ["contentViewer"],
     spec: "devtools/shared/specs/content-viewer",
-    front: "devtools/shared/fronts/content-viewer",
+    front: "devtools/client/fronts/content-viewer",
   },
   {
     types: ["cssProperties"],
     spec: "devtools/shared/specs/css-properties",
-    front: "devtools/shared/fronts/css-properties",
+    front: "devtools/client/fronts/css-properties",
   },
   {
     types: ["frameDescriptor"],
     spec: "devtools/shared/specs/descriptors/frame",
-    front: "devtools/shared/fronts/descriptors/frame",
+    front: "devtools/client/fronts/descriptors/frame",
   },
   {
     types: ["processDescriptor"],
     spec: "devtools/shared/specs/descriptors/process",
-    front: "devtools/shared/fronts/descriptors/process",
+    front: "devtools/client/fronts/descriptors/process",
   },
   {
     types: ["tabDescriptor"],
     spec: "devtools/shared/specs/descriptors/tab",
-    front: "devtools/shared/fronts/descriptors/tab",
+    front: "devtools/client/fronts/descriptors/tab",
   },
   {
     types: ["webExtensionDescriptor"],
     spec: "devtools/shared/specs/descriptors/webextension",
-    front: "devtools/shared/fronts/descriptors/webextension",
+    front: "devtools/client/fronts/descriptors/webextension",
   },
   {
     types: ["device"],
     spec: "devtools/shared/specs/device",
-    front: "devtools/shared/fronts/device",
+    front: "devtools/client/fronts/device",
   },
   {
     types: ["environment"],
     spec: "devtools/shared/specs/environment",
-    front: "devtools/shared/fronts/environment",
+    front: "devtools/client/fronts/environment",
   },
   {
     types: ["frame"],
     spec: "devtools/shared/specs/frame",
-    front: "devtools/shared/fronts/frame",
+    front: "devtools/client/fronts/frame",
   },
   {
     types: ["framerate"],
     spec: "devtools/shared/specs/framerate",
-    front: "devtools/shared/fronts/framerate",
+    front: "devtools/client/fronts/framerate",
   },
   /* heap snapshot has old fashion client and no front */
   {
@@ -106,27 +106,27 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["highlighter", "customhighlighter"],
     spec: "devtools/shared/specs/highlighters",
-    front: "devtools/shared/fronts/highlighters",
+    front: "devtools/client/fronts/highlighters",
   },
   {
     types: ["inspector"],
     spec: "devtools/shared/specs/inspector",
-    front: "devtools/shared/fronts/inspector",
+    front: "devtools/client/fronts/inspector",
   },
   {
     types: ["flexbox", "grid", "layout"],
     spec: "devtools/shared/specs/layout",
-    front: "devtools/shared/fronts/layout",
+    front: "devtools/client/fronts/layout",
   },
   {
     types: ["manifest"],
     spec: "devtools/shared/specs/manifest",
-    front: "devtools/shared/fronts/manifest",
+    front: "devtools/client/fronts/manifest",
   },
   {
     types: ["memory"],
     spec: "devtools/shared/specs/memory",
-    front: "devtools/shared/fronts/memory",
+    front: "devtools/client/fronts/memory",
   },
   {
     types: ["netEvent"],
@@ -142,7 +142,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["domnode", "domnodelist"],
     spec: "devtools/shared/specs/node",
-    front: "devtools/shared/fronts/node",
+    front: "devtools/client/fronts/node",
   },
   {
     types: ["obj", "object.descriptor"],
@@ -152,52 +152,52 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["perf"],
     spec: "devtools/shared/specs/perf",
-    front: "devtools/shared/fronts/perf",
+    front: "devtools/client/fronts/perf",
   },
   {
     types: ["performance"],
     spec: "devtools/shared/specs/performance",
-    front: "devtools/shared/fronts/performance",
+    front: "devtools/client/fronts/performance",
   },
   {
     types: ["performance-recording"],
     spec: "devtools/shared/specs/performance-recording",
-    front: "devtools/shared/fronts/performance-recording",
+    front: "devtools/client/fronts/performance-recording",
   },
   {
     types: ["preference"],
     spec: "devtools/shared/specs/preference",
-    front: "devtools/shared/fronts/preference",
+    front: "devtools/client/fronts/preference",
   },
   {
     types: ["propertyIterator"],
     spec: "devtools/shared/specs/property-iterator",
-    front: "devtools/shared/fronts/property-iterator",
+    front: "devtools/client/fronts/property-iterator",
   },
   {
     types: ["reflow"],
     spec: "devtools/shared/specs/reflow",
-    front: "devtools/shared/fronts/reflow",
+    front: "devtools/client/fronts/reflow",
   },
   {
     types: ["responsive"],
     spec: "devtools/shared/specs/responsive",
-    front: "devtools/shared/fronts/responsive",
+    front: "devtools/client/fronts/responsive",
   },
   {
     types: ["root"],
     spec: "devtools/shared/specs/root",
-    front: "devtools/shared/fronts/root",
+    front: "devtools/client/fronts/root",
   },
   {
     types: ["screenshot"],
     spec: "devtools/shared/specs/screenshot",
-    front: "devtools/shared/fronts/screenshot",
+    front: "devtools/client/fronts/screenshot",
   },
   {
     types: ["source"],
     spec: "devtools/shared/specs/source",
-    front: "devtools/shared/fronts/source",
+    front: "devtools/client/fronts/source",
   },
   {
     types: [
@@ -209,7 +209,7 @@ const Types = (exports.__TypesForTests = [
       "storage",
     ],
     spec: "devtools/shared/specs/storage",
-    front: "devtools/shared/fronts/storage",
+    front: "devtools/client/fronts/storage",
   },
   /* longstring is special, it has a wrapper type. See its spec module */
   {
@@ -220,17 +220,17 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["longstractor"],
     spec: "devtools/shared/specs/string",
-    front: "devtools/shared/fronts/string",
+    front: "devtools/client/fronts/string",
   },
   {
     types: ["pagestyle", "domstylerule"],
     spec: "devtools/shared/specs/styles",
-    front: "devtools/shared/fronts/styles",
+    front: "devtools/client/fronts/styles",
   },
   {
     types: ["mediarule", "stylesheet", "stylesheets"],
     spec: "devtools/shared/specs/stylesheets",
-    front: "devtools/shared/fronts/stylesheets",
+    front: "devtools/client/fronts/stylesheets",
   },
   {
     types: ["symbol"],
@@ -240,12 +240,12 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["symbolIterator"],
     spec: "devtools/shared/specs/symbol-iterator",
-    front: "devtools/shared/fronts/symbol-iterator",
+    front: "devtools/client/fronts/symbol-iterator",
   },
   {
     types: ["browsingContextTarget"],
     spec: "devtools/shared/specs/targets/browsing-context",
-    front: "devtools/shared/fronts/targets/browsing-context",
+    front: "devtools/client/fronts/targets/browsing-context",
   },
   {
     types: ["chromeWindowTarget"],
@@ -275,42 +275,42 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["workerTarget"],
     spec: "devtools/shared/specs/targets/worker",
-    front: "devtools/shared/fronts/targets/worker",
+    front: "devtools/client/fronts/targets/worker",
   },
   {
     types: ["thread"],
     spec: "devtools/shared/specs/thread",
-    front: "devtools/shared/fronts/thread",
+    front: "devtools/client/fronts/thread",
   },
   {
     types: ["domwalker"],
     spec: "devtools/shared/specs/walker",
-    front: "devtools/shared/fronts/walker",
+    front: "devtools/client/fronts/walker",
   },
   {
     types: ["console"],
     spec: "devtools/shared/specs/webconsole",
-    front: "devtools/shared/fronts/webconsole",
+    front: "devtools/client/fronts/webconsole",
   },
   {
     types: ["webSocket"],
     spec: "devtools/shared/specs/websocket",
-    front: "devtools/shared/fronts/websocket",
+    front: "devtools/client/fronts/websocket",
   },
   {
     types: ["pushSubscription"],
     spec: "devtools/shared/specs/worker/push-subscription",
-    front: "devtools/shared/fronts/worker/push-subscription",
+    front: "devtools/client/fronts/worker/push-subscription",
   },
   {
     types: ["serviceWorker"],
     spec: "devtools/shared/specs/worker/service-worker",
-    front: "devtools/shared/fronts/worker/service-worker",
+    front: "devtools/client/fronts/worker/service-worker",
   },
   {
     types: ["serviceWorkerRegistration"],
     spec: "devtools/shared/specs/worker/service-worker-registration",
-    front: "devtools/shared/fronts/worker/service-worker-registration",
+    front: "devtools/client/fronts/worker/service-worker-registration",
   },
 ]);
 

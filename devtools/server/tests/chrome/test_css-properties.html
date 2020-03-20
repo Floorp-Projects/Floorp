@@ -14,7 +14,7 @@ Bug 1265798 - Replace inIDOMUtils.cssPropertyIsShorthand
 
 window.onload = function() {
   const { initCssProperties, getCssProperties } =
-    require("devtools/shared/fronts/css-properties");
+    require("devtools/client/fronts/css-properties");
 
   function toSortedString(array) {
     return JSON.stringify(array.sort());

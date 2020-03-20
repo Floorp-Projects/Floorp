@@ -11,7 +11,7 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsClient } = require("devtools/shared/client/devtools-client");
-const { ObjectFront } = require("devtools/shared/fronts/object");
+const { ObjectFront } = require("devtools/client/fronts/object");
 const Services = require("Services");
 
 function initCommon() {

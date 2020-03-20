@@ -15,7 +15,7 @@ const {
 
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/shared/fronts/object");
+} = require("devtools/client/fronts/object");
 
 /**
  * The corresponding Front object for the WebExtensionInspectedWindowActor.
