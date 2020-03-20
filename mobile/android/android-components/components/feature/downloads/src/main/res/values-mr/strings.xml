@@ -20,4 +20,20 @@
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s ह्या प्रकारच्या फाईल डाउनलोड करू शकत नाही</string>
 
-    </resources>
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">दस्तावेज उघडू शकले नाही</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">विराम</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">पुन्हा सुरू करा</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">रद्द करा</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">उघडा</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">पुन्हा प्रयत्न करा</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">बंद करा</string>
+</resources>

@@ -125,8 +125,18 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Tetepy jokopyre</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Pe kuatiarogue ehechasevahína ndaikatúi ojechauka oiko rupi jejavy mba’ekuaarã ohasakuévo.</p>
+      <ul>
+        <li>Eñe’ẽ umi ñanduti renda jára ndine ha emomarandu chupekuéra ko apañuãi.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Tetepy mbopapapy jejavy</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ko kuatiarogue eñeha’ãva ehecha ndojehechaukakuaái oipuru rupi ñeikumby oiko’ỹvaa térã ipu’aka’ỹva.</p>
+      <ul>
+        <li>Eñe’ẽ ñanduti renda jára ndive emombe’u hag̃ua chupekuéra ko apañuãi.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Ndojejuhúi kundaharape</string>
