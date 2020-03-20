@@ -24,6 +24,12 @@ EXCLUSION_FILES = [
     os.path.join('tools', 'rewriting', 'Generated.txt'),
     os.path.join('tools', 'rewriting', 'ThirdPartyPaths.txt'),
 ]
+
+EXCLUSION_FILES_OPTIONAL = []
+thunderbird_excludes = os.path.join('comm', 'tools', 'lint', 'GlobalExclude.txt')
+if os.path.exists(thunderbird_excludes):
+    EXCLUSION_FILES_OPTIONAL.append(thunderbird_excludes)
+
 GLOBAL_EXCLUDES = [
     'node_modules',
     'tools/lint/test/files',
@@ -43,8 +49,7 @@ def get_global_excludes(topsrcdir):
     excludes.extend([name for name in os.listdir(topsrcdir)
                      if name.startswith('obj') and os.path.isdir(name)])
 
-    for path in EXCLUSION_FILES:
-        # exclude third party paths
+    for path in EXCLUSION_FILES + EXCLUSION_FILES_OPTIONAL:
         with open(os.path.join(topsrcdir, path), 'r') as fh:
             excludes.extend([f.strip() for f in fh.readlines()])
 
