@@ -143,4 +143,122 @@ TEST(IPCSharedMemory, WinUnfreeze)
 }
 #endif
 
+// Test that a read-only copy sees changes made to the writeable
+// mapping in the case that the page wasn't accessed before the copy.
+TEST(IPCSharedMemory, ROCopyAndWrite)
+{
+  base::SharedMemory shmRW, shmRO;
+
+  // Create and initialize
+  ASSERT_TRUE(shmRW.CreateFreezeable(1));
+  ASSERT_TRUE(shmRW.Map(1));
+  auto memRW = reinterpret_cast<char*>(shmRW.memory());
+  ASSERT_TRUE(memRW);
+
+  // Create read-only copy
+  ASSERT_TRUE(shmRW.ReadOnlyCopy(&shmRO));
+  EXPECT_FALSE(shmRW.IsValid());
+  ASSERT_EQ(shmRW.memory(), memRW);
+  ASSERT_EQ(shmRO.max_size(), size_t(1));
+
+  // Map read-only
+  ASSERT_TRUE(shmRO.IsValid());
+  ASSERT_TRUE(shmRO.Map(1));
+  auto memRO = reinterpret_cast<const char*>(shmRO.memory());
+  ASSERT_TRUE(memRO);
+  ASSERT_NE(memRW, memRO);
+
+  // Check
+  *memRW = 'A';
+  EXPECT_EQ(*memRO, 'A');
+}
+
+// Test that a read-only copy sees changes made to the writeable
+// mapping in the case that the page was accessed before the copy
+// (and, before that, sees the state as of when the copy was made).
+TEST(IPCSharedMemory, ROCopyAndRewrite)
+{
+  base::SharedMemory shmRW, shmRO;
+
+  // Create and initialize
+  ASSERT_TRUE(shmRW.CreateFreezeable(1));
+  ASSERT_TRUE(shmRW.Map(1));
+  auto memRW = reinterpret_cast<char*>(shmRW.memory());
+  ASSERT_TRUE(memRW);
+  *memRW = 'A';
+
+  // Create read-only copy
+  ASSERT_TRUE(shmRW.ReadOnlyCopy(&shmRO));
+  EXPECT_FALSE(shmRW.IsValid());
+  ASSERT_EQ(shmRW.memory(), memRW);
+  ASSERT_EQ(shmRO.max_size(), size_t(1));
+
+  // Map read-only
+  ASSERT_TRUE(shmRO.IsValid());
+  ASSERT_TRUE(shmRO.Map(1));
+  auto memRO = reinterpret_cast<const char*>(shmRO.memory());
+  ASSERT_TRUE(memRO);
+  ASSERT_NE(memRW, memRO);
+
+  // Check
+  ASSERT_EQ(*memRW, 'A');
+  EXPECT_EQ(*memRO, 'A');
+  *memRW = 'X';
+  EXPECT_EQ(*memRO, 'X');
+}
+
+// See FreezeAndMapRW.
+TEST(IPCSharedMemory, ROCopyAndMapRW)
+{
+  base::SharedMemory shmRW, shmRO;
+
+  // Create and initialize
+  ASSERT_TRUE(shmRW.CreateFreezeable(1));
+  ASSERT_TRUE(shmRW.Map(1));
+  auto memRW = reinterpret_cast<char*>(shmRW.memory());
+  ASSERT_TRUE(memRW);
+  *memRW = 'A';
+
+  // Create read-only copy
+  ASSERT_TRUE(shmRW.ReadOnlyCopy(&shmRO));
+  ASSERT_TRUE(shmRO.IsValid());
+
+  // Re-create as writeable
+  auto handle = base::SharedMemory::NULLHandle();
+  ASSERT_TRUE(shmRO.GiveToProcess(base::GetCurrentProcId(), &handle));
+  ASSERT_TRUE(shmRO.IsHandleValid(handle));
+  ASSERT_FALSE(shmRO.IsValid());
+  ASSERT_TRUE(shmRO.SetHandle(handle, /* read-only */ false));
+  ASSERT_TRUE(shmRO.IsValid());
+
+  // This should fail
+  EXPECT_FALSE(shmRO.Map(1));
+}
+
+// See FreezeAndReprotect
+TEST(IPCSharedMemory, ROCopyAndReprotect)
+{
+  base::SharedMemory shmRW, shmRO;
+
+  // Create and initialize
+  ASSERT_TRUE(shmRW.CreateFreezeable(1));
+  ASSERT_TRUE(shmRW.Map(1));
+  auto memRW = reinterpret_cast<char*>(shmRW.memory());
+  ASSERT_TRUE(memRW);
+  *memRW = 'A';
+
+  // Create read-only copy
+  ASSERT_TRUE(shmRW.ReadOnlyCopy(&shmRO));
+  ASSERT_TRUE(shmRO.IsValid());
+
+  // Re-map
+  ASSERT_TRUE(shmRO.Map(1));
+  auto memRO = reinterpret_cast<char*>(shmRO.memory());
+  ASSERT_EQ(*memRO, 'A');
+
+  // Try to alter protection; should fail
+  EXPECT_FALSE(ipc::SharedMemory::SystemProtectFallible(
+      memRO, 1, ipc::SharedMemory::RightsReadWrite));
+}
+
 }  // namespace mozilla
