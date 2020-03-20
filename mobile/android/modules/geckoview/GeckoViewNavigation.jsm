@@ -39,7 +39,7 @@ const createReferrerInfo = aReferrer => {
 };
 
 function convertFlags(aFlags) {
-  let navFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
+  let navFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   if (!aFlags) {
     return navFlags;
   }
@@ -133,7 +133,10 @@ class GeckoViewNavigation extends GeckoViewModule {
       case "GeckoView:LoadUri":
         const { uri, referrerUri, referrerSessionId, flags, headers } = aData;
 
-        const navFlags = convertFlags(flags);
+        let navFlags = convertFlags(flags);
+        // For performance reasons we don't call the LoadUriDelegate.loadUri
+        // from Gecko, and instead we call it directly in the loadUri Java API.
+        navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
 
         let triggeringPrincipal, referrerInfo, csp;
         let parsedUri;
@@ -237,7 +240,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         // do anything to differentiate reloads (i.e normal vs skip caches)
         // So whenever we add more reload methods, please make sure the
         // telemetry probe is adjusted
-        this.browser.reload(convertFlags(aData.flags));
+        this.browser.reloadWithFlags(convertFlags(aData.flags));
         break;
       case "GeckoView:Stop":
         this.browser.stop();
