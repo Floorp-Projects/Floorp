@@ -335,20 +335,19 @@ void CodeGenerator::visitMulI(LMulI* ins) {
           }
         }
 
-        // Otherwise, just multiply.
+        // Otherwise, just multiply. We have to check for overflow.
+        // Negative zero was handled above.
         Label bailout;
-        Label* onZero = mul->canBeNegativeZero() ? &bailout : nullptr;
         Label* onOverflow = mul->canOverflow() ? &bailout : nullptr;
 
-        vixl::UseScratchRegisterScope temps(&masm.asVIXL());
-        const Register scratch = temps.AcquireW().asUnsized();
+        masm.move32(Imm32(constant), destreg);
+        masm.mul32(lhsreg, destreg, destreg, onOverflow);
 
-        masm.move32(Imm32(constant), scratch);
-        masm.mul32(lhsreg, scratch, destreg, onOverflow, onZero);
-        if (onZero || onOverflow) {
+        if (onOverflow) {
+          MOZ_ASSERT(lhsreg != destreg);
           bailoutFrom(&bailout, ins->snapshot());
         }
-        return;  // escape overflow check;
+        return;
     }
 
     // Overflow check.
@@ -357,14 +356,44 @@ void CodeGenerator::visitMulI(LMulI* ins) {
     }
   } else {
     Register rhsreg = ToRegister(rhs);
+    const ARMRegister rhsreg32 = ARMRegister(rhsreg, 32);
 
     Label bailout;
-    // TODO: x64 (but not other platforms) have an OOL path for onZero.
-    Label* onZero = mul->canBeNegativeZero() ? &bailout : nullptr;
     Label* onOverflow = mul->canOverflow() ? &bailout : nullptr;
 
-    masm.mul32(lhsreg, rhsreg, destreg, onOverflow, onZero);
-    if (onZero || onOverflow) {
+    if (mul->canBeNegativeZero()) {
+      // The product of two integer operands is negative zero iff one
+      // operand is zero, and the other is negative. Therefore, the
+      // sum of the two operands will also be negative (specifically,
+      // it will be the non-zero operand). If the result of the
+      // multiplication is 0, we can check the sign of the sum to
+      // determine whether we should bail out.
+
+      // This code can bailout, so lowering guarantees that the input
+      // operands are not overwritten.
+      MOZ_ASSERT(destreg != lhsreg);
+      MOZ_ASSERT(destreg != rhsreg);
+
+      // Do the multiplication.
+      masm.mul32(lhsreg, rhsreg, destreg, onOverflow);
+
+      // Set Zero flag if destreg is 0.
+      masm.test32(destreg, destreg);
+
+      // ccmn is 'conditional compare negative'.
+      // If the Zero flag is set:
+      //    perform a compare negative (compute lhs+rhs and set flags)
+      // else:
+      //    clear flags
+      masm.Ccmn(lhsreg32, rhsreg32, vixl::NoFlag, Assembler::Zero);
+
+      // Bails out if (lhs * rhs == 0) && (lhs + rhs < 0):
+      bailoutIf(Assembler::LessThan, ins->snapshot());
+
+    } else {
+      masm.mul32(lhsreg, rhsreg, destreg, onOverflow);
+    }
+    if (onOverflow) {
       bailoutFrom(&bailout, ins->snapshot());
     }
   }

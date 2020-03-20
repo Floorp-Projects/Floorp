@@ -378,18 +378,15 @@ void MacroAssembler::subFloat32(FloatRegister src, FloatRegister dest) {
 }
 
 void MacroAssembler::mul32(Register rhs, Register srcDest) {
-  mul32(srcDest, rhs, srcDest, nullptr, nullptr);
+  mul32(srcDest, rhs, srcDest, nullptr);
 }
 
 void MacroAssembler::mul32(Register src1, Register src2, Register dest,
-                           Label* onOver, Label* onZero) {
+                           Label* onOver) {
   Smull(ARMRegister(dest, 64), ARMRegister(src1, 32), ARMRegister(src2, 32));
   if (onOver) {
     Cmp(ARMRegister(dest, 64), Operand(ARMRegister(dest, 32), vixl::SXTW));
     B(onOver, NotEqual);
-  }
-  if (onZero) {
-    Cbz(ARMRegister(dest, 32), onZero);
   }
 
   // Clear upper 32 bits.
@@ -1132,7 +1129,7 @@ void MacroAssembler::branchMul32(Condition cond, T src, Register dest,
                                  Label* label) {
   MOZ_ASSERT(cond == Assembler::Overflow);
   vixl::UseScratchRegisterScope temps(this);
-  mul32(src, dest, dest, label, nullptr);
+  mul32(src, dest, dest, label);
 }
 
 void MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs,
