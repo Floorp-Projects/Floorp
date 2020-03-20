@@ -66,7 +66,7 @@
  * range, in the following order:
  * - [0] will be the top/left edge pixel;
  * - [1..w] will be the top edge pixels (1 being left-most, w being right-most);
- * - [w+1..w*w] will be the top/right edge pixels;
+ * - [w+1..2*w] will be the top/right edge pixels;
  * - [-1..-w] will be the left edge pixels (-1 being top-most, -w being bottom-
  *   most);
  * - [-w-1..-2*w] will be the bottom/left edge pixels.

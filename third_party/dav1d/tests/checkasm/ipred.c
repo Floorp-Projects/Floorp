@@ -66,9 +66,9 @@ static const uint8_t z_angles[27] = {
 };
 
 static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_32(pixel, c_dst, 64 * 64,);
-    ALIGN_STK_32(pixel, a_dst, 64 * 64,);
-    ALIGN_STK_32(pixel, topleft_buf, 257,);
+    ALIGN_STK_64(pixel, c_dst, 64 * 64,);
+    ALIGN_STK_64(pixel, a_dst, 64 * 64,);
+    ALIGN_STK_64(pixel, topleft_buf, 257,);
     pixel *const topleft = topleft_buf + 128;
 
     declare_func(void, pixel *dst, ptrdiff_t stride, const pixel *topleft,
@@ -132,9 +132,9 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
 }
 
 static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_32(int16_t, c_dst, 32 * 32,);
-    ALIGN_STK_32(int16_t, a_dst, 32 * 32,);
-    ALIGN_STK_32(pixel, luma, 32 * 32,);
+    ALIGN_STK_64(int16_t, c_dst, 32 * 32,);
+    ALIGN_STK_64(int16_t, a_dst, 32 * 32,);
+    ALIGN_STK_64(pixel, luma, 32 * 32,);
 
     declare_func(void, int16_t *ac, const pixel *y, ptrdiff_t stride,
                  int w_pad, int h_pad, int cw, int ch);
@@ -175,10 +175,10 @@ static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
 }
 
 static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_32(pixel, c_dst, 32 * 32,);
-    ALIGN_STK_32(pixel, a_dst, 32 * 32,);
-    ALIGN_STK_32(int16_t, ac, 32 * 32,);
-    ALIGN_STK_32(pixel, topleft_buf, 257,);
+    ALIGN_STK_64(pixel, c_dst, 32 * 32,);
+    ALIGN_STK_64(pixel, a_dst, 32 * 32,);
+    ALIGN_STK_64(int16_t, ac, 32 * 32,);
+    ALIGN_STK_64(pixel, topleft_buf, 257,);
     pixel *const topleft = topleft_buf + 128;
 
     declare_func(void, pixel *dst, ptrdiff_t stride, const pixel *topleft,
@@ -227,9 +227,9 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
 }
 
 static void check_pal_pred(Dav1dIntraPredDSPContext *const c) {
-    ALIGN_STK_32(pixel, c_dst, 64 * 64,);
-    ALIGN_STK_32(pixel, a_dst, 64 * 64,);
-    ALIGN_STK_32(uint8_t, idx, 64 * 64,);
+    ALIGN_STK_64(pixel, c_dst, 64 * 64,);
+    ALIGN_STK_64(pixel, a_dst, 64 * 64,);
+    ALIGN_STK_64(uint8_t, idx, 64 * 64,);
     ALIGN_STK_16(uint16_t, pal, 8,);
 
     declare_func(void, pixel *dst, ptrdiff_t stride, const uint16_t *pal,

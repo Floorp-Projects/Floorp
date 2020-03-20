@@ -28,11 +28,11 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
-// void dav1d_wiener_filter_h_neon(int16_t *dst, const pixel (*left)[4],
-//                                 const pixel *src, ptrdiff_t stride,
-//                                 const int16_t fh[7], const intptr_t w,
-//                                 int h, enum LrEdgeFlags edges);
-function wiener_filter_h_neon, export=1
+// void dav1d_wiener_filter_h_8bpc_neon(int16_t *dst, const pixel (*left)[4],
+//                                      const pixel *src, ptrdiff_t stride,
+//                                      const int16_t fh[7], const intptr_t w,
+//                                      int h, enum LrEdgeFlags edges);
+function wiener_filter_h_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4}
         ldrd            r4,  r5,  [sp, #52]
@@ -367,11 +367,11 @@ L(variable_shift_tbl):
 .purgem filter_4
 endfunc
 
-// void dav1d_wiener_filter_v_neon(pixel *dst, ptrdiff_t stride,
-//                                 const int16_t *mid, int w, int h,
-//                                 const int16_t fv[7], enum LrEdgeFlags edges,
-//                                 ptrdiff_t mid_stride);
-function wiener_filter_v_neon, export=1
+// void dav1d_wiener_filter_v_8bpc_neon(pixel *dst, ptrdiff_t stride,
+//                                      const int16_t *mid, int w, int h,
+//                                      const int16_t fv[7], enum LrEdgeFlags edges,
+//                                      ptrdiff_t mid_stride);
+function wiener_filter_v_8bpc_neon, export=1
         push            {r4-r7,lr}
         ldrd            r4,  r5,  [sp, #20]
         ldrd            r6,  r7,  [sp, #28]
@@ -548,9 +548,9 @@ function wiener_filter_v_neon, export=1
 .purgem filter
 endfunc
 
-// void dav1d_copy_narrow_neon(pixel *dst, ptrdiff_t stride,
-//                             const pixel *src, int w, int h);
-function copy_narrow_neon, export=1
+// void dav1d_copy_narrow_8bpc_neon(pixel *dst, ptrdiff_t stride,
+//                                  const pixel *src, int w, int h);
+function copy_narrow_8bpc_neon, export=1
         push            {r4,lr}
         ldr             r4, [sp, #8]
         adr             r12, L(copy_narrow_tbl)
@@ -687,12 +687,12 @@ endfunc
 
 #define SUM_STRIDE (384+16)
 
-// void dav1d_sgr_box3_h_neon(int32_t *sumsq, int16_t *sum,
-//                            const pixel (*left)[4],
-//                            const pixel *src, const ptrdiff_t stride,
-//                            const int w, const int h,
-//                            const enum LrEdgeFlags edges);
-function sgr_box3_h_neon, export=1
+// void dav1d_sgr_box3_h_8bpc_neon(int32_t *sumsq, int16_t *sum,
+//                                 const pixel (*left)[4],
+//                                 const pixel *src, const ptrdiff_t stride,
+//                                 const int w, const int h,
+//                                 const enum LrEdgeFlags edges);
+function sgr_box3_h_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
         ldrd            r4,  r5,  [sp, #100]
@@ -925,11 +925,11 @@ L(box3_variable_shift_tbl):
         vmull.u8        q6,  d9,  d9
 
         add3            4
+        subs            r5,  r5,  #4
         vst1.16         {d6},  [r1,  :64]!
         vst1.16         {d14}, [r11, :64]!
         vst1.32         {q12}, [r0,  :128]!
         vst1.32         {q8},  [r10, :128]!
-        subs            r5,  r5,  #4
         ble             9f
         vext.8          q0,  q0,  q0,  #4
         vext.8          q1,  q1,  q2,  #8
@@ -961,12 +961,12 @@ L(box3_variable_shift_tbl):
 .purgem add3
 endfunc
 
-// void dav1d_sgr_box5_h_neon(int32_t *sumsq, int16_t *sum,
-//                            const pixel (*left)[4],
-//                            const pixel *src, const ptrdiff_t stride,
-//                            const int w, const int h,
-//                            const enum LrEdgeFlags edges);
-function sgr_box5_h_neon, export=1
+// void dav1d_sgr_box5_h_8bpc_neon(int32_t *sumsq, int16_t *sum,
+//                                 const pixel (*left)[4],
+//                                 const pixel *src, const ptrdiff_t stride,
+//                                 const int w, const int h,
+//                                 const enum LrEdgeFlags edges);
+function sgr_box5_h_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
         ldrd            r4,  r5,  [sp, #100]
@@ -1038,7 +1038,7 @@ function sgr_box5_h_neon, export=1
         b               2f
 0:
         // !LR_HAVE_LEFT, fill q1 with the leftmost byte
-        // and shift q0 to have 2x the first byte at the front.
+        // and shift q0 to have 3x the first byte at the front.
         vdup.8          q1,  d0[0]
         vdup.8          q5,  d8[0]
         // Move r3 back to account for the last 3 bytes we loaded before,
@@ -1215,11 +1215,11 @@ L(box5_variable_shift_tbl):
         vmull.u8        q6,  d9,  d9
 
         add5            4
+        subs            r5,  r5,  #4
         vst1.16         {d6},  [r1,  :64]!
         vst1.16         {d14}, [r11, :64]!
         vst1.32         {q12}, [r0,  :128]!
         vst1.32         {q10}, [r10, :128]!
-        subs            r5,  r5,  #4
         ble             9f
         vext.8          q0,  q0,  q0,  #4
         vext.8          q1,  q1,  q2,  #8
@@ -1661,11 +1661,11 @@ endfunc
 
 #define FILTER_OUT_STRIDE 384
 
-// void dav1d_sgr_finish_filter1_neon(coef *tmp,
-//                                    const pixel *src, const ptrdiff_t stride,
-//                                    const int32_t *a, const int16_t *b,
-//                                    const int w, const int h);
-function sgr_finish_filter1_neon, export=1
+// void dav1d_sgr_finish_filter1_8bpc_neon(int16_t *tmp,
+//                                         const pixel *src, const ptrdiff_t stride,
+//                                         const int32_t *a, const int16_t *b,
+//                                         const int w, const int h);
+function sgr_finish_filter1_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
         ldrd            r4,  r5,  [sp, #100]
@@ -1765,11 +1765,11 @@ function sgr_finish_filter1_neon, export=1
         pop             {r4-r11,pc}
 endfunc
 
-// void dav1d_sgr_finish_filter2_neon(coef *tmp,
-//                                    const pixel *src, const ptrdiff_t stride,
-//                                    const int32_t *a, const int16_t *b,
-//                                    const int w, const int h);
-function sgr_finish_filter2_neon, export=1
+// void dav1d_sgr_finish_filter2_8bpc_neon(int16_t *tmp,
+//                                         const pixel *src, const ptrdiff_t stride,
+//                                         const int32_t *a, const int16_t *b,
+//                                         const int w, const int h);
+function sgr_finish_filter2_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
         ldrd            r4,  r5,  [sp, #100]
@@ -1925,11 +1925,11 @@ function sgr_finish_filter2_neon, export=1
         pop             {r4-r11,pc}
 endfunc
 
-// void dav1d_sgr_weighted1_neon(pixel *dst, const ptrdiff_t dst_stride,
-//                               const pixel *src, const ptrdiff_t src_stride,
-//                               const coef *t1, const int w, const int h,
-//                               const int wt);
-function sgr_weighted1_neon, export=1
+// void dav1d_sgr_weighted1_8bpc_neon(pixel *dst, const ptrdiff_t dst_stride,
+//                                    const pixel *src, const ptrdiff_t src_stride,
+//                                    const int16_t *t1, const int w, const int h,
+//                                    const int wt);
+function sgr_weighted1_8bpc_neon, export=1
         push            {r4-r9,lr}
         ldrd            r4,  r5,  [sp, #28]
         ldrd            r6,  r7,  [sp, #36]
@@ -2009,12 +2009,12 @@ function sgr_weighted1_neon, export=1
         pop             {r4-r9,pc}
 endfunc
 
-// void dav1d_sgr_weighted2_neon(pixel *dst, const ptrdiff_t stride,
-//                               const pixel *src, const ptrdiff_t src_stride,
-//                               const coef *t1, const coef *t2,
-//                               const int w, const int h,
-//                               const int16_t wt[2]);
-function sgr_weighted2_neon, export=1
+// void dav1d_sgr_weighted2_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                                    const pixel *src, const ptrdiff_t src_stride,
+//                                    const int16_t *t1, const int16_t *t2,
+//                                    const int w, const int h,
+//                                    const int16_t wt[2]);
+function sgr_weighted2_8bpc_neon, export=1
         push            {r4-r11,lr}
         ldrd            r4,  r5,  [sp, #36]
         ldrd            r6,  r7,  [sp, #44]

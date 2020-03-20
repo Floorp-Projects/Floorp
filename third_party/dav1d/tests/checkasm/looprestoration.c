@@ -43,10 +43,10 @@ static void init_tmp(pixel *buf, const ptrdiff_t stride,
     }
 }
 
-static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
-    ALIGN_STK_32(pixel, c_dst, 448 * 64,);
-    ALIGN_STK_32(pixel, a_dst, 448 * 64,);
-    ALIGN_STK_32(pixel, h_edge, 448 * 8,);
+static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
+    ALIGN_STK_64(pixel, c_dst, 448 * 64,);
+    ALIGN_STK_64(pixel, a_dst, 448 * 64,);
+    ALIGN_STK_64(pixel, h_edge, 448 * 8,);
     pixel left[64][4];
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride,
@@ -58,7 +58,7 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
 
     for (int pl = 0; pl < 2; pl++) {
         if (check_func(c->wiener, "wiener_%s_%dbpc",
-                       pl ? "chroma" : "luma", BITDEPTH))
+                       pl ? "chroma" : "luma", bpc))
         {
             int16_t filter[2][3], filter_v[7], filter_h[7];
 
@@ -81,11 +81,7 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
 
             const int base_w = 1 + (rnd() % 384);
             const int base_h = 1 + (rnd() & 63);
-#if BITDEPTH == 16
-            const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
-#else
-            const int bitdepth_max = 0xff;
-#endif
+            const int bitdepth_max = (1 << bpc) - 1;
 
             init_tmp(c_dst, 448 * sizeof(pixel), 448, 64, bitdepth_max);
             init_tmp(h_edge, 448 * sizeof(pixel), 448, 8, bitdepth_max);
@@ -112,13 +108,12 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
                       256, 64, filter_h, filter_v, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
-    report("wiener");
 }
 
-static void check_sgr(Dav1dLoopRestorationDSPContext *const c) {
-    ALIGN_STK_32(pixel, c_dst, 448 * 64,);
-    ALIGN_STK_32(pixel, a_dst, 448 * 64,);
-    ALIGN_STK_32(pixel, h_edge, 448 * 8,);
+static void check_sgr(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
+    ALIGN_STK_64(pixel, c_dst, 448 * 64,);
+    ALIGN_STK_64(pixel, a_dst, 448 * 64,);
+    ALIGN_STK_64(pixel, h_edge, 448 * 8,);
     pixel left[64][4];
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride,
@@ -130,7 +125,7 @@ static void check_sgr(Dav1dLoopRestorationDSPContext *const c) {
 
     for (int sgr_idx = 14; sgr_idx >= 6; sgr_idx -= 4) {
         if (check_func(c->selfguided, "selfguided_%s_%dbpc",
-                       sgr_idx == 6 ? "mix" : sgr_idx == 10 ? "3x3" : "5x5", BITDEPTH))
+                       sgr_idx == 6 ? "mix" : sgr_idx == 10 ? "3x3" : "5x5", bpc))
         {
             int16_t sgr_wt[2];
 
@@ -140,11 +135,7 @@ static void check_sgr(Dav1dLoopRestorationDSPContext *const c) {
 
             const int base_w = 1 + (rnd() % 384);
             const int base_h = 1 + (rnd() & 63);
-#if BITDEPTH == 16
-            const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
-#else
-            const int bitdepth_max = 0xff;
-#endif
+            const int bitdepth_max = (1 << bpc) - 1;
 
             init_tmp(c_dst, 448 * sizeof(pixel), 448, 64, bitdepth_max);
             init_tmp(h_edge, 448 * sizeof(pixel), 448, 8, bitdepth_max);
@@ -171,14 +162,24 @@ static void check_sgr(Dav1dLoopRestorationDSPContext *const c) {
                       256, 64, sgr_idx, sgr_wt, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
-    report("sgr");
 }
 
 void bitfn(checkasm_check_looprestoration)(void) {
-    Dav1dLoopRestorationDSPContext c;
-
-    bitfn(dav1d_loop_restoration_dsp_init)(&c);
-
-    check_wiener(&c);
-    check_sgr(&c);
+#if BITDEPTH == 16
+    const int bpc_min = 10, bpc_max = 12;
+#else
+    const int bpc_min = 8, bpc_max = 8;
+#endif
+    for (int bpc = bpc_min; bpc <= bpc_max; bpc += 2) {
+        Dav1dLoopRestorationDSPContext c;
+        bitfn(dav1d_loop_restoration_dsp_init)(&c, bpc);
+        check_wiener(&c, bpc);
+    }
+    report("wiener");
+    for (int bpc = bpc_min; bpc <= bpc_max; bpc += 2) {
+        Dav1dLoopRestorationDSPContext c;
+        bitfn(dav1d_loop_restoration_dsp_init)(&c, bpc);
+        check_sgr(&c, bpc);
+    }
+    report("sgr");
 }

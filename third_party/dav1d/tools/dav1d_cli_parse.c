@@ -86,7 +86,7 @@ static const struct option long_opts[] = {
 #define ALLOWED_CPU_MASKS " or 'neon'"
 #elif ARCH_X86
 #define ALLOWED_CPU_MASKS \
-    ", 'sse2', 'ssse3', 'sse41', 'avx2' or 'avx512'"
+    ", 'sse2', 'ssse3', 'sse41', 'avx2', 'avx512' or 'avx512icl'"
 #else
 #define ALLOWED_CPU_MASKS "not yet implemented for this architecture"
 #endif
@@ -176,15 +176,11 @@ typedef struct EnumParseTable {
 
 #if ARCH_X86
 enum CpuMask {
-    X86_CPU_MASK_SSE    = DAV1D_X86_CPU_FLAG_SSE,
-    X86_CPU_MASK_SSE2   = DAV1D_X86_CPU_FLAG_SSE2   | X86_CPU_MASK_SSE,
-    X86_CPU_MASK_SSE3   = DAV1D_X86_CPU_FLAG_SSE3   | X86_CPU_MASK_SSE2,
-    X86_CPU_MASK_SSSE3  = DAV1D_X86_CPU_FLAG_SSSE3  | X86_CPU_MASK_SSE3,
-    X86_CPU_MASK_SSE41  = DAV1D_X86_CPU_FLAG_SSE41  | X86_CPU_MASK_SSSE3,
-    X86_CPU_MASK_SSE42  = DAV1D_X86_CPU_FLAG_SSE42  | X86_CPU_MASK_SSE41,
-    X86_CPU_MASK_AVX    = DAV1D_X86_CPU_FLAG_AVX    | X86_CPU_MASK_SSE42,
-    X86_CPU_MASK_AVX2   = DAV1D_X86_CPU_FLAG_AVX2   | X86_CPU_MASK_AVX,
-    X86_CPU_MASK_AVX512 = DAV1D_X86_CPU_FLAG_AVX512 | X86_CPU_MASK_AVX2,
+    X86_CPU_MASK_SSE2      = DAV1D_X86_CPU_FLAG_SSE2,
+    X86_CPU_MASK_SSSE3     = DAV1D_X86_CPU_FLAG_SSSE3     | X86_CPU_MASK_SSE2,
+    X86_CPU_MASK_SSE41     = DAV1D_X86_CPU_FLAG_SSE41     | X86_CPU_MASK_SSSE3,
+    X86_CPU_MASK_AVX2      = DAV1D_X86_CPU_FLAG_AVX2      | X86_CPU_MASK_SSE41,
+    X86_CPU_MASK_AVX512ICL = DAV1D_X86_CPU_FLAG_AVX512ICL | X86_CPU_MASK_AVX2,
 };
 #endif
 
@@ -192,11 +188,11 @@ static const EnumParseTable cpu_mask_tbl[] = {
 #if ARCH_AARCH64 || ARCH_ARM
     { "neon", DAV1D_ARM_CPU_FLAG_NEON },
 #elif ARCH_X86
-    { "sse2",   X86_CPU_MASK_SSE2 },
-    { "ssse3",  X86_CPU_MASK_SSSE3 },
-    { "sse41",  X86_CPU_MASK_SSE41 },
-    { "avx2",   X86_CPU_MASK_AVX2 },
-    { "avx512", X86_CPU_MASK_AVX512 },
+    { "sse2",      X86_CPU_MASK_SSE2 },
+    { "ssse3",     X86_CPU_MASK_SSSE3 },
+    { "sse41",     X86_CPU_MASK_SSE41 },
+    { "avx2",      X86_CPU_MASK_AVX2 },
+    { "avx512icl", X86_CPU_MASK_AVX512ICL },
 #endif
     { 0 },
 };

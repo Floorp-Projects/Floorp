@@ -28,20 +28,16 @@
 #include "src/cpu.h"
 #include "src/cdef.h"
 
-decl_cdef_fn(dav1d_cdef_filter_8x8_avx2);
-decl_cdef_fn(dav1d_cdef_filter_8x8_sse4);
-decl_cdef_fn(dav1d_cdef_filter_8x8_ssse3);
-decl_cdef_fn(dav1d_cdef_filter_8x8_sse2);
+#define decl_cdef_size_fn(sz) \
+    decl_cdef_fn(dav1d_cdef_filter_##sz##_avx512icl); \
+    decl_cdef_fn(dav1d_cdef_filter_##sz##_avx2); \
+    decl_cdef_fn(dav1d_cdef_filter_##sz##_sse4); \
+    decl_cdef_fn(dav1d_cdef_filter_##sz##_ssse3); \
+    decl_cdef_fn(dav1d_cdef_filter_##sz##_sse2)
 
-decl_cdef_fn(dav1d_cdef_filter_4x8_avx2);
-decl_cdef_fn(dav1d_cdef_filter_4x8_sse4);
-decl_cdef_fn(dav1d_cdef_filter_4x8_ssse3);
-decl_cdef_fn(dav1d_cdef_filter_4x8_sse2);
-
-decl_cdef_fn(dav1d_cdef_filter_4x4_avx2);
-decl_cdef_fn(dav1d_cdef_filter_4x4_sse4);
-decl_cdef_fn(dav1d_cdef_filter_4x4_ssse3);
-decl_cdef_fn(dav1d_cdef_filter_4x4_sse2);
+decl_cdef_size_fn(4x4);
+decl_cdef_size_fn(4x8);
+decl_cdef_size_fn(8x8);
 
 decl_cdef_dir_fn(dav1d_cdef_dir_avx2);
 decl_cdef_dir_fn(dav1d_cdef_dir_sse4);
@@ -76,12 +72,21 @@ COLD void bitfn(dav1d_cdef_dsp_init_x86)(Dav1dCdefDSPContext *const c) {
     c->fb[2] = dav1d_cdef_filter_4x4_sse4;
 #endif
 
+#if ARCH_X86_64
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
-#if BITDEPTH == 8 && ARCH_X86_64
+#if BITDEPTH == 8
     c->dir = dav1d_cdef_dir_avx2;
     c->fb[0] = dav1d_cdef_filter_8x8_avx2;
     c->fb[1] = dav1d_cdef_filter_4x8_avx2;
     c->fb[2] = dav1d_cdef_filter_4x4_avx2;
+#endif
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
+
+#if BITDEPTH == 8
+    c->fb[2] = dav1d_cdef_filter_4x4_avx512icl;
+#endif
+
 #endif
 }

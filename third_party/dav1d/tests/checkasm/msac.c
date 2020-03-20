@@ -258,6 +258,12 @@ void checkasm_check_msac(void) {
         c.bool           = dav1d_msac_decode_bool_sse2;
         c.hi_tok         = dav1d_msac_decode_hi_tok_sse2;
     }
+
+#if ARCH_X86_64
+    if (dav1d_get_cpu_flags() & DAV1D_X86_CPU_FLAG_AVX2) {
+        c.symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_avx2;
+    }
+#endif
 #endif
 
     uint8_t buf[BUF_SIZE];

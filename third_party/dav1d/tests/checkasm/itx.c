@@ -226,9 +226,9 @@ void bitfn(checkasm_check_itx)(void) {
     Dav1dInvTxfmDSPContext c;
     bitfn(dav1d_itx_dsp_init)(&c);
 
-    ALIGN_STK_32(coef, coeff, 2, [32 * 32]);
-    ALIGN_STK_32(pixel, c_dst, 64 * 64,);
-    ALIGN_STK_32(pixel, a_dst, 64 * 64,);
+    ALIGN_STK_64(coef, coeff, 2, [32 * 32]);
+    ALIGN_STK_64(pixel, c_dst, 64 * 64,);
+    ALIGN_STK_64(pixel, a_dst, 64 * 64,);
 
     static const uint8_t txfm_size_order[N_RECT_TX_SIZES] = {
         TX_4X4,   RTX_4X8,  RTX_4X16,

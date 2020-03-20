@@ -55,9 +55,9 @@ static int mc_h_next(const int h) {
 }
 
 static void check_mc(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, src_buf, 135 * 135,);
-    ALIGN_STK_32(pixel, c_dst,   128 * 128,);
-    ALIGN_STK_32(pixel, a_dst,   128 * 128,);
+    ALIGN_STK_64(pixel, src_buf, 135 * 135,);
+    ALIGN_STK_64(pixel, c_dst,   128 * 128,);
+    ALIGN_STK_64(pixel, a_dst,   128 * 128,);
     const pixel *src = src_buf + 135 * 3 + 3;
     const ptrdiff_t src_stride = 135 * sizeof(pixel);
 
@@ -118,9 +118,9 @@ static void generate_mct_input(pixel *const buf, const int bitdepth_max) {
 }
 
 static void check_mct(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, src_buf, 135 * 135,);
-    ALIGN_STK_32(int16_t, c_tmp, 128 * 128,);
-    ALIGN_STK_32(int16_t, a_tmp, 128 * 128,);
+    ALIGN_STK_64(pixel, src_buf, 135 * 135,);
+    ALIGN_STK_64(int16_t, c_tmp, 128 * 128,);
+    ALIGN_STK_64(int16_t, a_tmp, 128 * 128,);
     const pixel *src = src_buf + 135 * 3 + 3;
     const ptrdiff_t src_stride = 135 * sizeof(pixel);
 
@@ -173,9 +173,9 @@ static void init_tmp(Dav1dMCDSPContext *const c, pixel *const buf,
 }
 
 static void check_avg(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_32(pixel, c_dst, 135 * 135,);
-    ALIGN_STK_32(pixel, a_dst, 128 * 128,);
+    ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
+    ALIGN_STK_64(pixel, c_dst, 135 * 135,);
+    ALIGN_STK_64(pixel, a_dst, 128 * 128,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const int16_t *tmp1,
                  const int16_t *tmp2, int w, int h HIGHBD_DECL_SUFFIX);
@@ -204,9 +204,9 @@ static void check_avg(Dav1dMCDSPContext *const c) {
 }
 
 static void check_w_avg(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_32(pixel, c_dst, 135 * 135,);
-    ALIGN_STK_32(pixel, a_dst, 128 * 128,);
+    ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
+    ALIGN_STK_64(pixel, c_dst, 135 * 135,);
+    ALIGN_STK_64(pixel, a_dst, 128 * 128,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const int16_t *tmp1,
                  const int16_t *tmp2, int w, int h, int weight HIGHBD_DECL_SUFFIX);
@@ -236,10 +236,10 @@ static void check_w_avg(Dav1dMCDSPContext *const c) {
 }
 
 static void check_mask(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_32(pixel,   c_dst, 135 * 135,);
-    ALIGN_STK_32(pixel,   a_dst, 128 * 128,);
-    ALIGN_STK_32(uint8_t, mask,  128 * 128,);
+    ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
+    ALIGN_STK_64(pixel,   c_dst, 135 * 135,);
+    ALIGN_STK_64(pixel,   a_dst, 128 * 128,);
+    ALIGN_STK_64(uint8_t, mask,  128 * 128,);
 
     for (int i = 0; i < 128 * 128; i++)
         mask[i] = rnd() % 65;
@@ -271,11 +271,11 @@ static void check_mask(Dav1dMCDSPContext *const c) {
 }
 
 static void check_w_mask(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(int16_t, tmp, 2, [128 * 128]);
-    ALIGN_STK_32(pixel,   c_dst,  135 * 135,);
-    ALIGN_STK_32(pixel,   a_dst,  128 * 128,);
-    ALIGN_STK_32(uint8_t, c_mask, 128 * 128,);
-    ALIGN_STK_32(uint8_t, a_mask, 128 * 128,);
+    ALIGN_STK_64(int16_t, tmp, 2, [128 * 128]);
+    ALIGN_STK_64(pixel,   c_dst,  135 * 135,);
+    ALIGN_STK_64(pixel,   a_dst,  128 * 128,);
+    ALIGN_STK_64(uint8_t, c_mask, 128 * 128,);
+    ALIGN_STK_64(uint8_t, a_mask, 128 * 128,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const int16_t *tmp1,
                  const int16_t *tmp2, int w, int h, uint8_t *mask, int sign
@@ -321,10 +321,10 @@ static void check_w_mask(Dav1dMCDSPContext *const c) {
 }
 
 static void check_blend(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, tmp, 32 * 32,);
-    ALIGN_STK_32(pixel, c_dst, 32 * 32,);
-    ALIGN_STK_32(pixel, a_dst, 32 * 32,);
-    ALIGN_STK_32(uint8_t, mask, 32 * 32,);
+    ALIGN_STK_64(pixel, tmp, 32 * 32,);
+    ALIGN_STK_64(pixel, c_dst, 32 * 32,);
+    ALIGN_STK_64(pixel, a_dst, 32 * 32,);
+    ALIGN_STK_64(uint8_t, mask, 32 * 32,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *tmp,
                  int w, int h, const uint8_t *mask);
@@ -357,9 +357,9 @@ static void check_blend(Dav1dMCDSPContext *const c) {
 }
 
 static void check_blend_v(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, tmp,   32 * 128,);
-    ALIGN_STK_32(pixel, c_dst, 32 * 128,);
-    ALIGN_STK_32(pixel, a_dst, 32 * 128,);
+    ALIGN_STK_64(pixel, tmp,   32 * 128,);
+    ALIGN_STK_64(pixel, c_dst, 32 * 128,);
+    ALIGN_STK_64(pixel, a_dst, 32 * 128,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *tmp,
                  int w, int h);
@@ -391,9 +391,9 @@ static void check_blend_v(Dav1dMCDSPContext *const c) {
 }
 
 static void check_blend_h(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, tmp,   128 * 32,);
-    ALIGN_STK_32(pixel, c_dst, 128 * 32,);
-    ALIGN_STK_32(pixel, a_dst, 128 * 32,);
+    ALIGN_STK_64(pixel, tmp,   128 * 32,);
+    ALIGN_STK_64(pixel, c_dst, 128 * 32,);
+    ALIGN_STK_64(pixel, a_dst, 128 * 32,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const pixel *tmp,
                  int w, int h);
@@ -424,9 +424,9 @@ static void check_blend_h(Dav1dMCDSPContext *const c) {
 }
 
 static void check_warp8x8(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, src_buf, 15 * 15,);
-    ALIGN_STK_32(pixel, c_dst,    8 *  8,);
-    ALIGN_STK_32(pixel, a_dst,    8 *  8,);
+    ALIGN_STK_64(pixel, src_buf, 15 * 15,);
+    ALIGN_STK_64(pixel, c_dst,    8 *  8,);
+    ALIGN_STK_64(pixel, a_dst,    8 *  8,);
     int16_t abcd[4];
     const pixel *src = src_buf + 15 * 3 + 3;
     const ptrdiff_t dst_stride =  8 * sizeof(pixel);
@@ -462,9 +462,9 @@ static void check_warp8x8(Dav1dMCDSPContext *const c) {
 }
 
 static void check_warp8x8t(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, src_buf, 15 * 15,);
-    ALIGN_STK_32(int16_t, c_tmp,  8 *  8,);
-    ALIGN_STK_32(int16_t, a_tmp,  8 *  8,);
+    ALIGN_STK_64(pixel, src_buf, 15 * 15,);
+    ALIGN_STK_64(int16_t, c_tmp,  8 *  8,);
+    ALIGN_STK_64(int16_t, a_tmp,  8 *  8,);
     int16_t abcd[4];
     const pixel *src = src_buf + 15 * 3 + 3;
     const ptrdiff_t src_stride = 15 * sizeof(pixel);
@@ -534,9 +534,9 @@ static void random_offset_for_edge(int *const x, int *const y,
 }
 
 static void check_emuedge(Dav1dMCDSPContext *const c) {
-    ALIGN_STK_32(pixel, c_dst, 135 * 192,);
-    ALIGN_STK_32(pixel, a_dst, 135 * 192,);
-    ALIGN_STK_32(pixel, src,   160 * 160,);
+    ALIGN_STK_64(pixel, c_dst, 135 * 192,);
+    ALIGN_STK_64(pixel, a_dst, 135 * 192,);
+    ALIGN_STK_64(pixel, src,   160 * 160,);
 
     for (int i = 0; i < 160 * 160; i++)
         src[i] = rnd() & ((1U << BITDEPTH) - 1);

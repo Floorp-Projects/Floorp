@@ -30,6 +30,7 @@
 
 #if defined(_WIN32)
 
+#include <limits.h>
 #include <windows.h>
 
 #define PTHREAD_ONCE_INIT INIT_ONCE_STATIC_INIT
@@ -72,9 +73,10 @@ static inline int pthread_attr_destroy(pthread_attr_t *const attr) {
 }
 
 static inline int pthread_attr_setstacksize(pthread_attr_t *const attr,
-                                            const unsigned stack_size)
+                                            const size_t stack_size)
 {
-    attr->stack_size = stack_size;
+    if (stack_size > UINT_MAX) return 1;
+    attr->stack_size = (unsigned) stack_size;
     return 0;
 }
 
