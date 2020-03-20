@@ -184,7 +184,8 @@ nsresult nsEditingSession::DisableJSAndPlugins(nsIDocShell& aDocShell) {
   // Disable plugins in this document:
   mPluginsEnabled = aDocShell.PluginsAllowedInCurrentDoc();
 
-  aDocShell.GetBrowsingContext()->SetAllowPlugins(false);
+  rv = aDocShell.SetAllowPlugins(false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mDisabledJSAndPlugins = true;
 
@@ -209,11 +210,7 @@ nsresult nsEditingSession::RestoreJSAndPlugins(nsPIDOMWindowOuter* aWindow) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Disable plugins in this document:
-  auto* browsingContext = aWindow->GetBrowsingContext();
-  NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
-  browsingContext->SetAllowPlugins(mPluginsEnabled);
-
-  return NS_OK;
+  return docShell->SetAllowPlugins(mPluginsEnabled);
 }
 
 /*---------------------------------------------------------------------------

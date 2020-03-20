@@ -6,7 +6,6 @@
 
 #include "nsPluginArray.h"
 
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PluginArrayBinding.h"
 #include "mozilla/dom/PluginBinding.h"
 #include "mozilla/dom/HiddenPluginEvent.h"
@@ -270,12 +269,15 @@ nsPluginArray::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 bool nsPluginArray::AllowPlugins() const {
-  auto* browsingContext = mWindow ? mWindow->GetBrowsingContext() : nullptr;
-  if (!browsingContext) {
+  if (!mWindow) {
+    return false;
+  }
+  nsCOMPtr<Document> doc = mWindow->GetDoc();
+  if (!doc) {
     return false;
   }
 
-  return browsingContext->GetAllowPlugins();
+  return doc->GetAllowPlugins();
 }
 
 static bool operator<(const RefPtr<nsPluginElement>& lhs,
