@@ -124,7 +124,6 @@
         }
       ],
       "queryCharset": "UTF-8",
-      "_readOnly": false,
       "extensionID": "test-addon-id@mozilla.org"
     }
   ]
