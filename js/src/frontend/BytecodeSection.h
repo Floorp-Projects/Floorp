@@ -46,7 +46,7 @@ class FunctionBox;
 
 struct MOZ_STACK_CLASS GCThingList {
   CompilationInfo& compilationInfo;
-  JS::Rooted<ScriptThingsVector> vector;
+  ScriptThingsVector vector;
 
   // Last emitted function.
   FunctionBox* lastbox = nullptr;
@@ -106,7 +106,7 @@ struct MOZ_STACK_CLASS GCThingList {
     return getScope(*firstScopeIndex);
   }
 
-  ScriptThingsVector stealGCThings() { return std::move(vector.get()); }
+  ScriptThingsVector stealGCThings() { return std::move(vector); }
 };
 
 MOZ_MUST_USE bool EmitScriptThingsVector(JSContext* cx,
