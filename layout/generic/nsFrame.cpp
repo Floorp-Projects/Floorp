@@ -11645,7 +11645,22 @@ DR_init_type_cookie::~DR_init_type_cookie() {
   ReflowInput::DisplayInitFrameTypeExit(mFrame, mState, mValue);
 }
 
-struct DR_FrameTypeInfo;
+struct DR_Rule;
+
+struct DR_FrameTypeInfo {
+  DR_FrameTypeInfo(LayoutFrameType aFrameType, const char* aFrameNameAbbrev,
+                   const char* aFrameName);
+  ~DR_FrameTypeInfo();
+
+  LayoutFrameType mType;
+  char mNameAbbrev[16];
+  char mName[32];
+  nsTArray<DR_Rule*> mRules;
+
+ private:
+  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&) = delete;
+};
+
 struct DR_FrameTreeNode;
 struct DR_Rule;
 
@@ -11727,25 +11742,13 @@ void DR_Rule::AddPart(LayoutFrameType aFrameType) {
   mLength++;
 }
 
-struct DR_FrameTypeInfo {
-  DR_FrameTypeInfo(LayoutFrameType aFrameType, const char* aFrameNameAbbrev,
-                   const char* aFrameName);
-  ~DR_FrameTypeInfo() {
-    int32_t numElements;
-    numElements = mRules.Length();
-    for (int32_t i = numElements - 1; i >= 0; i--) {
-      delete mRules.ElementAt(i);
-    }
+DR_FrameTypeInfo::~DR_FrameTypeInfo() {
+  int32_t numElements;
+  numElements = mRules.Length();
+  for (int32_t i = numElements - 1; i >= 0; i--) {
+    delete mRules.ElementAt(i);
   }
-
-  LayoutFrameType mType;
-  char mNameAbbrev[16];
-  char mName[32];
-  nsTArray<DR_Rule*> mRules;
-
- private:
-  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&) = delete;
-};
+}
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(LayoutFrameType aFrameType,
                                    const char* aFrameNameAbbrev,

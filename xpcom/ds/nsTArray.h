@@ -45,8 +45,16 @@ class Heap;
 } /* namespace JS */
 
 class nsRegion;
+
+namespace mozilla::a11y {
+class BatchData;
+}
+
 namespace mozilla {
 namespace layers {
+class Animation;
+class FrameStats;
+struct PropertyAnimationGroup;
 struct TileClient;
 struct RenderRootDisplayListData;
 struct RenderRootUpdates;
@@ -58,26 +66,40 @@ struct SerializedStructuredCloneBuffer;
 class SourceBufferTask;
 }  // namespace mozilla
 
-namespace mozilla {
-namespace dom {
-namespace ipc {
-class StructuredCloneData;
-}  // namespace ipc
-}  // namespace dom
-}  // namespace mozilla
+namespace mozilla::dom::binding_detail {
+template <typename, typename>
+class RecordEntry;
+}
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom::ipc {
+class StructuredCloneData;
+}  // namespace mozilla::dom::ipc
+
+namespace mozilla::dom {
 class ClonedMessageData;
 class MessageData;
+class MessagePortIdentifier;
+struct MozPluginParameter;
+template <typename T>
+struct Nullable;
+class OwningFileOrDirectory;
+class OwningStringOrBooleanOrObject;
+class OwningUTF8StringOrDouble;
+class Pref;
 class RefMessageData;
+class ResponsiveImageCandidate;
+class ServiceWorkerRegistrationData;
 namespace indexedDB {
 class SerializedStructuredCloneReadInfo;
 class ObjectStoreCursorResponse;
 class IndexCursorResponse;
 }  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
+
+namespace mozilla::ipc {
+class AutoIPCStream;
+class ContentSecurityPolicy;
+}  // namespace mozilla::ipc
 
 class JSStructuredCloneData;
 
@@ -222,10 +244,82 @@ extern "C" {
 extern nsTArrayHeader sEmptyTArrayHeader;
 }
 
+namespace detail {
+// SpecializableIsCopyConstructible is a wrapper around
+// std::is_copy_constructible, which explicitly disallows defining
+// specializations of it. However, we need to specialize it to allow
+// instantiating nsTArray for incomplete value types, for which it must be known
+// whether the value type is copy-constructible. Specialization should always be
+// done using the MOZ_DECLARE_COPY_CONSTRUCTIBLE or
+// MOZ_DECLARE_NON_COPY_CONSTRUCTIBLE macros.
+template <typename E>
+struct SpecializableIsCopyConstructible {
+  static constexpr bool Value = std::is_copy_constructible_v<E>;
+};
+
+#define MOZ_DECLARE_COPY_CONSTRUCTIBLE(E)      \
+  namespace detail {                           \
+  template <>                                  \
+  struct SpecializableIsCopyConstructible<E> { \
+    static constexpr bool Value = true;        \
+  };                                           \
+  }
+#define MOZ_DECLARE_NON_COPY_CONSTRUCTIBLE(E)  \
+  namespace detail {                           \
+  template <>                                  \
+  struct SpecializableIsCopyConstructible<E> { \
+    static constexpr bool Value = false;       \
+  };                                           \
+  }
+
+template <typename E>
+constexpr bool SpecializableIsCopyConstructibleValue =
+    SpecializableIsCopyConstructible<E>::Value;
+
+// nsTArray_CopyEnabler is used as a base class of nsTArray_Impl to ensure
+// nsTArray_Impl only is copy-constructible and copy-assignable if E is
+// copy-constructible. nsTArray_Impl never makes use of E's copy assignment
+// operator, so the decision is made solely based on E's copy-constructibility.
+template <typename E, typename Impl,
+          bool IsCopyConstructible = SpecializableIsCopyConstructibleValue<E>>
+class nsTArray_CopyEnabler;
+
+template <typename E, typename Impl>
+class nsTArray_CopyEnabler<E, Impl, false> {
+ public:
+  nsTArray_CopyEnabler() = default;
+
+  nsTArray_CopyEnabler(const nsTArray_CopyEnabler&) = delete;
+  nsTArray_CopyEnabler& operator=(const nsTArray_CopyEnabler&) = delete;
+};
+
+template <typename E, typename Impl>
+class nsTArray_CopyEnabler<E, Impl, true> {
+ public:
+  nsTArray_CopyEnabler() = default;
+
+  nsTArray_CopyEnabler(const nsTArray_CopyEnabler& aOther) {
+    static_cast<Impl*>(this)->AppendElements(static_cast<const Impl&>(aOther));
+  }
+
+  nsTArray_CopyEnabler& operator=(const nsTArray_CopyEnabler& aOther) {
+    if (this != &aOther) {
+      static_cast<Impl*>(this)->ReplaceElementsAt(
+          0, static_cast<Impl*>(this)->Length(),
+          static_cast<const Impl&>(aOther).Elements(),
+          static_cast<const Impl&>(aOther).Length());
+    }
+    return *this;
+  }
+};
+
+}  // namespace detail
+
 // This class provides a SafeElementAt method to nsTArray<T*> which does
 // not take a second default value parameter.
 template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper {
+struct nsTArray_SafeElementAtHelper
+    : public ::detail::nsTArray_CopyEnabler<E, Derived> {
   typedef E* elem_type;
   typedef size_t index_type;
 
@@ -237,7 +331,8 @@ struct nsTArray_SafeElementAtHelper {
 };
 
 template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<E*, Derived> {
+struct nsTArray_SafeElementAtHelper<E*, Derived>
+    : public ::detail::nsTArray_CopyEnabler<E*, Derived> {
   typedef E* elem_type;
   // typedef const E* const_elem_type;   XXX: see below
   typedef size_t index_type;
@@ -255,12 +350,13 @@ struct nsTArray_SafeElementAtHelper<E*, Derived> {
   }
 };
 
-// E is the base type that the smart pointer is templated over; the
-// smart pointer can act as E*.
+// E is a smart pointer type; the
+// smart pointer can act as its element_type*.
 template <class E, class Derived>
-struct nsTArray_SafeElementAtSmartPtrHelper {
-  typedef E* elem_type;
-  typedef const E* const_elem_type;
+struct nsTArray_SafeElementAtSmartPtrHelper
+    : public ::detail::nsTArray_CopyEnabler<E, Derived> {
+  typedef typename E::element_type* elem_type;
+  typedef const typename E::element_type* const_elem_type;
   typedef size_t index_type;
 
   elem_type SafeElementAt(index_type aIndex) {
@@ -286,11 +382,11 @@ class nsCOMPtr;
 
 template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper<nsCOMPtr<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<E, Derived> {};
+    : public nsTArray_SafeElementAtSmartPtrHelper<nsCOMPtr<E>, Derived> {};
 
 template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper<RefPtr<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<E, Derived> {};
+    : public nsTArray_SafeElementAtSmartPtrHelper<RefPtr<E>, Derived> {};
 
 namespace mozilla {
 template <class T>
@@ -299,7 +395,8 @@ class OwningNonNull;
 
 template <class E, class Derived>
 struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<E, Derived> {};
+    : public nsTArray_SafeElementAtSmartPtrHelper<mozilla::OwningNonNull<E>,
+                                                  Derived> {};
 
 // Servo bindings.
 extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
@@ -353,6 +450,9 @@ class nsTArray_base {
   nsTArray_base();
 
   ~nsTArray_base();
+
+  nsTArray_base(const nsTArray_base&);
+  nsTArray_base& operator=(const nsTArray_base&);
 
   // Resize the storage if necessary to achieve the requested capacity.
   // @param aCapacity The requested number of array elements.
@@ -707,6 +807,33 @@ struct MOZ_NEEDS_MEMMOVABLE_TYPE nsTArray_RelocationStrategy {
     using Type = nsTArray_RelocateUsingMoveConstructor<T<S>>;       \
   };
 
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(nsTString<char16_t>)
+
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::a11y::BatchData)
+
+// TODO mozilla::ipc::AutoIPCStream is not even movable, so memmovable use with
+// nsTArray (in StructuredCloneData) seems at least quirky
+MOZ_DECLARE_NON_COPY_CONSTRUCTIBLE(mozilla::ipc::AutoIPCStream)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::ipc::ContentSecurityPolicy)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::layers::Animation)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::layers::FrameStats)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::layers::PropertyAnimationGroup)
+#define MOZ_NSTARRAY_COMMA ,
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(
+    mozilla::dom::binding_detail::RecordEntry<
+        nsTString<char> MOZ_NSTARRAY_COMMA
+            mozilla::dom::Nullable<mozilla::dom::OwningUTF8StringOrDouble>>)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::binding_detail::RecordEntry<
+                               nsTString<char16_t> MOZ_NSTARRAY_COMMA
+                                   mozilla::dom::OwningStringOrBooleanOrObject>)
+#undef MOZ_NSTARRAY_COMMA
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::MessagePortIdentifier)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::MozPluginParameter)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::OwningFileOrDirectory)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::Pref)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::ResponsiveImageCandidate)
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::dom::ServiceWorkerRegistrationData)
+
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR_FOR_TEMPLATE(JS::Heap)
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR_FOR_TEMPLATE(std::function)
 
@@ -876,8 +1003,16 @@ template <class E, class Alloc>
 class nsTArray_Impl
     : public nsTArray_base<Alloc,
                            typename nsTArray_RelocationStrategy<E>::Type>,
-      public nsTArray_TypedBase<E, nsTArray_Impl<E, Alloc>> {
+      public nsTArray_TypedBase<
+          E,
+          nsTArray_Impl<E, Alloc>>  // This must come last to ensure the members
+                                    // from nsTArray_base are initialized before
+                                    // the delegated constructor calls from
+                                    // nsTArray_CopyEnabler are executed.
+{
  private:
+  friend class ::detail::nsTArray_CopyEnabler<E, nsTArray_Impl<E, Alloc>>;
+
   typedef nsTArrayFallibleAllocator FallibleAlloc;
   typedef nsTArrayInfallibleAllocator InfallibleAlloc;
 
@@ -946,7 +1081,7 @@ class nsTArray_Impl
   // nsTArray_Impl<E, X> can be cast to const nsTArray_Impl<E, Y>&.  So the
   // effect on the API is the same as if we'd declared this method as taking
   // |const nsTArray_Impl<E, OtherAlloc>&|.
-  explicit nsTArray_Impl(const self_type& aOther) { AppendElements(aOther); }
+  nsTArray_Impl(const nsTArray_Impl&) = default;
 
   explicit nsTArray_Impl(std::initializer_list<E> aIL) {
     AppendElements(aIL.begin(), aIL.size());
@@ -954,26 +1089,21 @@ class nsTArray_Impl
   // Allow converting to a const array with a different kind of allocator,
   // Since the allocator doesn't matter for const arrays
   template <typename Allocator>
-  operator const nsTArray_Impl<E, Allocator>&() const {
+  operator const nsTArray_Impl<E, Allocator>&() const& {
     return *reinterpret_cast<const nsTArray_Impl<E, Allocator>*>(this);
   }
   // And we have to do this for our subclasses too
-  operator const nsTArray<E>&() const {
+  operator const nsTArray<E>&() const& {
     return *reinterpret_cast<const nsTArray<E>*>(this);
   }
-  operator const FallibleTArray<E>&() const {
+  operator const FallibleTArray<E>&() const& {
     return *reinterpret_cast<const FallibleTArray<E>*>(this);
   }
 
   // The array's assignment operator performs a 'deep' copy of the given
   // array.  It is optimized to reuse existing storage if possible.
   // @param aOther The array object to copy.
-  self_type& operator=(const self_type& aOther) {
-    if (this != &aOther) {
-      ReplaceElementsAt(0, Length(), aOther.Elements(), aOther.Length());
-    }
-    return *this;
-  }
+  nsTArray_Impl& operator=(const nsTArray_Impl&) = default;
 
   // The array's move assignment operator steals the underlying data from
   // the other array.
@@ -2512,8 +2642,6 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
 
   nsTArray() {}
   explicit nsTArray(size_type aCapacity) : base_type(aCapacity) {}
-  explicit nsTArray(const nsTArray& aOther) : base_type(aOther) {}
-  MOZ_IMPLICIT nsTArray(nsTArray&& aOther) : base_type(std::move(aOther)) {}
   MOZ_IMPLICIT nsTArray(std::initializer_list<E> aIL) : base_type(aIL) {}
 
   template <class Allocator>
@@ -2523,17 +2651,9 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   MOZ_IMPLICIT nsTArray(nsTArray_Impl<E, Allocator>&& aOther)
       : base_type(std::move(aOther)) {}
 
-  self_type& operator=(const self_type& aOther) {
-    base_type::operator=(aOther);
-    return *this;
-  }
   template <class Allocator>
   self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
     base_type::operator=(aOther);
-    return *this;
-  }
-  self_type& operator=(self_type&& aOther) {
-    base_type::operator=(std::move(aOther));
     return *this;
   }
   template <class Allocator>
@@ -2573,9 +2693,6 @@ class FallibleTArray : public nsTArray_Impl<E, nsTArrayFallibleAllocator> {
 
   FallibleTArray() = default;
   explicit FallibleTArray(size_type aCapacity) : base_type(aCapacity) {}
-  explicit FallibleTArray(const FallibleTArray<E>& aOther)
-      : base_type(aOther) {}
-  FallibleTArray(FallibleTArray<E>&& aOther) : base_type(std::move(aOther)) {}
 
   template <class Allocator>
   explicit FallibleTArray(const nsTArray_Impl<E, Allocator>& aOther)
@@ -2584,17 +2701,9 @@ class FallibleTArray : public nsTArray_Impl<E, nsTArrayFallibleAllocator> {
   explicit FallibleTArray(nsTArray_Impl<E, Allocator>&& aOther)
       : base_type(std::move(aOther)) {}
 
-  self_type& operator=(const self_type& aOther) {
-    base_type::operator=(aOther);
-    return *this;
-  }
   template <class Allocator>
   self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
     base_type::operator=(aOther);
-    return *this;
-  }
-  self_type& operator=(self_type&& aOther) {
-    base_type::operator=(std::move(aOther));
     return *this;
   }
   template <class Allocator>

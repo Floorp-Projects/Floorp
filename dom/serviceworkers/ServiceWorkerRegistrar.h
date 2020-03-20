@@ -33,6 +33,10 @@ class PrincipalInfo;
 namespace dom {
 
 class ServiceWorkerRegistrationData;
+}
+}  // namespace mozilla
+
+namespace mozilla::dom {
 
 class ServiceWorkerRegistrar : public nsIObserver,
                                public nsIAsyncShutdownBlocker {
@@ -106,7 +110,6 @@ class ServiceWorkerRegistrar : public nsIObserver,
   bool mRunnableDispatched;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ServiceWorkerRegistrar_h

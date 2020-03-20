@@ -7,6 +7,7 @@
 #include "HeadlessScreenHelper.h"
 
 #include "prenv.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
