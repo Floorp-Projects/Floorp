@@ -96,7 +96,7 @@ sealed class Migration(val currentVersion: Int) {
     /**
      * Migrates / Disables all currently unsupported Add-ons.
      */
-    object Addons : Migration(currentVersion = 2)
+    object Addons : Migration(currentVersion = 3)
 
     /**
      * Migrates Fennec's telemetry identifiers.
