@@ -1710,27 +1710,6 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
   mPCObserver->OnPacket(level, type, sending, arrayBuffer, jrv);
 }
 
-NS_IMETHODIMP
-PeerConnectionImpl::GetRtpSources(
-    MediaStreamTrack& aRecvTrack, DOMHighResTimeStamp aRtpSourceTimeNow,
-    nsTArray<dom::RTCRtpSourceEntry>& outRtpSources) {
-  PC_AUTO_ENTER_API_CALL(true);
-  outRtpSources.Clear();
-  std::vector<RefPtr<TransceiverImpl>>& transceivers =
-      mMedia->GetTransceivers();
-  for (RefPtr<TransceiverImpl>& transceiver : transceivers) {
-    if (transceiver->HasReceiveTrack(&aRecvTrack)) {
-      transceiver->GetRtpSources(aRtpSourceTimeNow, outRtpSources);
-      break;
-    }
-  }
-  return NS_OK;
-}
-
-DOMHighResTimeStamp PeerConnectionImpl::GetNowInRtpSourceReferenceTime() {
-  return RtpSourceObserver::NowInReportClockTime();
-}
-
 // test-only: adds fake CSRCs and audio data
 nsresult PeerConnectionImpl::InsertAudioLevelForContributingSource(
     const dom::MediaStreamTrack& aRecvTrack, const unsigned long aSource,
