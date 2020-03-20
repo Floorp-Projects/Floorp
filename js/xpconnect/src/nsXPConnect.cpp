@@ -281,7 +281,7 @@ void xpc::ErrorReport::LogToStderr() {
 
   nsAutoCString error;
   error.AssignLiteral("JavaScript ");
-  if (IsWarning()) {
+  if (JSREPORT_IS_WARNING(mFlags)) {
     error.AppendLiteral("warning: ");
   } else {
     error.AppendLiteral("error: ");
@@ -313,7 +313,8 @@ void xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
 
   LogToStderr();
 
-  MOZ_LOG(gJSDiagnostics, IsWarning() ? LogLevel::Warning : LogLevel::Error,
+  MOZ_LOG(gJSDiagnostics,
+          JSREPORT_IS_WARNING(mFlags) ? LogLevel::Warning : LogLevel::Error,
           ("file %s, line %u\n%s", NS_ConvertUTF16toUTF8(mFileName).get(),
            mLineNumber, NS_ConvertUTF16toUTF8(mErrorMsg).get()));
 
@@ -372,7 +373,7 @@ void xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
   aString.Truncate();
   if (aReport->message()) {
     // Don't prefix warnings with an often misleading name like "Error: ".
-    if (!aReport->isWarning()) {
+    if (!JSREPORT_IS_WARNING(aReport->flags)) {
       JSLinearString* name = js::GetErrorTypeName(
           CycleCollectedJSContext::Get()->Context(), aReport->exnType);
       if (name) {
