@@ -107,10 +107,6 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
     return mJsepTransceiver->mTransport.mTransportId;
   }
 
-  void AddRIDExtension(unsigned short aExtensionId);
-
-  void AddRIDFilter(const nsAString& aRid);
-
   bool IsVideo() const;
 
   bool IsSending() const {
@@ -121,12 +117,6 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   void GetRtpSources(const int64_t aTimeNow,
                      nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
 
-  // test-only: insert fake CSRCs and audio levels for testing
-  void InsertAudioLevelForContributingSource(const uint32_t aSource,
-                                             const int64_t aTimestamp,
-                                             const uint32_t aRtpTimestamp,
-                                             const bool aHasLevel,
-                                             const uint8_t aLevel);
   MediaSessionConduit* GetConduit() const { return mConduit; }
 
   // nsISupports

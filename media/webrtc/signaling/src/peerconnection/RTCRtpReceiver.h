@@ -56,6 +56,13 @@ class RTCRtpReceiver : public nsISupports,
       nsTArray<dom::RTCRtpContributingSource>& aSources);
   void GetSynchronizationSources(
       nsTArray<dom::RTCRtpSynchronizationSource>& aSources);
+  // test-only: called from simulcast mochitests.
+  void MozAddRIDExtension(unsigned short aExtensionId);
+  void MozAddRIDFilter(const nsAString& aRid);
+  // test-only: insert fake CSRCs and audio levels for testing
+  void MozInsertAudioLevelForContributingSource(
+      const uint32_t aSource, const DOMHighResTimeStamp aTimestamp,
+      const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel);
 
   nsPIDOMWindowInner* GetParentObject() const;
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
