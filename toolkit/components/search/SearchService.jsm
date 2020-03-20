@@ -524,7 +524,7 @@ SearchService.prototype = {
   // Current cache version. This should be incremented if the format of the cache
   // file is modified.
   get CACHE_VERSION() {
-    return gModernConfig ? 4 : 3;
+    return gModernConfig ? 5 : 3;
   },
 
   // The current status of initialization. Note that it does not determine if
@@ -1080,11 +1080,23 @@ SearchService.prototype = {
 
     if (gModernConfig) {
       cache.builtInEngineList = this._searchOrder;
+      // For built-in engines we don't want to store all their data in the cache
+      // so just store the relevant metadata.
+      cache.engines = [...this._engines.values()].map(engine => {
+        if (!engine._isBuiltin) {
+          return engine;
+        }
+        return {
+          _name: engine.name,
+          _isBuiltin: true,
+          _metaData: engine._metaData,
+        };
+      });
     } else {
       cache.visibleDefaultEngines = this._visibleDefaultEngines;
+      cache.engines = [...this._engines.values()];
     }
     cache.metaData = this._metaData;
-    cache.engines = [...this._engines.values()];
 
     try {
       if (!cache.engines.length) {
@@ -1224,7 +1236,18 @@ SearchService.prototype = {
 
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
-      this._loadEnginesFromCache(cache);
+      if (gModernConfig) {
+        const newEngines = await this._loadEnginesFromConfig(engines, isReload);
+        for (let engine of newEngines) {
+          this._addEngineToStore(engine);
+        }
+        // TODO: Remove the second argument when we remove the legacy config
+        // (the function should then always skip-builtin engines).
+        this._loadEnginesFromCache(cache, true);
+        this._loadEnginesMetadataFromCache(cache);
+      } else {
+        this._loadEnginesFromCache(cache);
+      }
       if (this._engines.size) {
         SearchUtils.log("_loadEngines: done using existing cache");
         return;
