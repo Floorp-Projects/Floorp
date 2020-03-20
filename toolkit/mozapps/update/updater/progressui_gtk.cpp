@@ -8,6 +8,7 @@
 #include <gtk/gtk.h>
 #include <unistd.h>
 #include "mozilla/Sprintf.h"
+#include "mozilla/Atomics.h"
 #include "progressui.h"
 #include "readstrings.h"
 #include "updatererrors.h"
@@ -15,7 +16,7 @@
 #define TIMER_INTERVAL 100
 
 static float sProgressVal;  // between 0 and 100
-static gboolean sQuit = FALSE;
+static mozilla::Atomic<gboolean> sQuit(FALSE);
 static gboolean sEnableUI;
 static guint sTimerID;
 
