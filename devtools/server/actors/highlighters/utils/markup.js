@@ -140,7 +140,7 @@ function isNodeValid(node, nodeType = Node.ELEMENT_NODE) {
   }
 
   // Is its document accessible?
-  const doc = node.ownerDocument;
+  const doc = node.nodeType === Node.DOCUMENT_NODE ? node : node.ownerDocument;
   if (!doc || !doc.defaultView) {
     return false;
   }
