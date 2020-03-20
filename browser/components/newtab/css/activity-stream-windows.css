@@ -1725,10 +1725,10 @@ main {
     border-collapse: collapse;
     width: 100%; }
     .asrouter-admin table.minimal-table {
-      border-collapse: collapse; }
+      border-collapse: collapse;
+      border: 1px solid var(--newtab-border-secondary-color); }
       .asrouter-admin table.minimal-table td {
-        padding: 8px;
-        border: 1px solid var(--newtab-border-secondary-color); }
+        padding: 8px; }
       .asrouter-admin table.minimal-table td:first-child {
         width: 1%;
         white-space: nowrap; }
@@ -1751,11 +1751,15 @@ main {
     border-top: 1px solid var(--newtab-border-secondary-color); }
   .asrouter-admin .message-item td {
     vertical-align: top;
-    border-bottom: 1px solid var(--newtab-border-secondary-color);
-    padding: 8px; }
+    padding: 8px;
+    border-bottom: 1px solid var(--newtab-border-secondary-color); }
     .asrouter-admin .message-item td.min {
       width: 1%;
       white-space: nowrap; }
+    .asrouter-admin .message-item td.message-summary {
+      width: 60%; }
+    .asrouter-admin .message-item td.button-column {
+      width: 15%; }
     .asrouter-admin .message-item td:first-child {
       border-left: 1px solid var(--newtab-border-secondary-color); }
     .asrouter-admin .message-item td:last-child {
@@ -1791,6 +1795,17 @@ main {
     margin-bottom: 20px; }
   .asrouter-admin .modalOverlayInner {
     height: 80%; }
+  .asrouter-admin .clearButton {
+    border: 0;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex; }
+    .asrouter-admin .clearButton:hover {
+      background: var(--newtab-element-hover-color); }
+  .asrouter-admin .collapsed {
+    display: none; }
+  .asrouter-admin .icon {
+    cursor: pointer; }
 
 .pocket-logged-in-cta {
   font-size: 13px;
@@ -3240,6 +3255,13 @@ main {
       background-color: rgba(12, 12, 13, 0.3); }
     .ASRouterButton.secondary:focus {
       box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 4px rgba(10, 132, 255, 0.3); }
+  .ASRouterButton.slim {
+    background-color: rgba(12, 12, 13, 0.1);
+    margin-inline-start: 0;
+    font-size: 12px;
+    padding: 6px 12px; }
+    .ASRouterButton.slim:hover {
+      background-color: rgba(12, 12, 13, 0.2); }
 
 [lwt-newtab-brighttext] .secondary {
   background-color: rgba(249, 249, 250, 0.1); }

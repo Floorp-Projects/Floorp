@@ -43,6 +43,17 @@
       box-shadow: 0 0 0 1px $blue-50 inset, 0 0 0 1px $blue-50, 0 0 0 4px $blue-50-30;
     }
   }
+
+  &.slim {
+    background-color: $grey-90-10;
+    margin-inline-start: 0;
+    font-size: 12px;
+    padding: 6px 12px;
+
+    &:hover {
+      background-color: $grey-90-20;
+    }
+  }
 }
 
 [lwt-newtab-brighttext] {
