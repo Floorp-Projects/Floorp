@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <!--
    Tentative due to:
-    https://github.com/whatwg/html/issues/3739
-
+   https://github.com/whatwg/html/issues/1983
 -->
 <html>
 <head>
@@ -16,7 +15,9 @@
   <ol id="instructions">
     <li>Click this instruction text.
   </ol>
-  <iframe id="child" width="200" height="200"></iframe>
+  <iframe id="child" width="200" height="200"
+          src="resources/child-one.html">
+  </iframe>
   <script>
     async_test(function(t) {
       var child = document.getElementById("child");
@@ -25,33 +26,32 @@
       window.addEventListener("message", t.step_func(event => {
         var msg = JSON.parse(event.data);
         if (msg.type == 'child-one-loaded') {
-          // state should be false after load
+          // Child's states should be false after load.
           assert_false(msg.isActive);
           assert_false(msg.hasBeenActive);
 
-          // click in parent document
+          // Click in parent document.
           test_driver.click(document.getElementById('instructions'));
         } else if (msg.type == 'child-one-report') {
-          // only the transient state should be false after asked to report
+          // Only the transient state in child should be false after consumption below.
           assert_false(msg.isActive);
           assert_true(msg.hasBeenActive);
           t.done();
         }
       }));
       window.addEventListener("click", t.step_func(event => {
-          assert_true(navigator.userActivation.isActive);
-          assert_true(navigator.userActivation.hasBeenActive);
+        assert_true(navigator.userActivation.isActive);
+        assert_true(navigator.userActivation.hasBeenActive);
 
-          // Opening a window should consume the activation.
-          var win = window.open('404.html');
-          win.close();
-          assert_false(navigator.userActivation.isActive);
-          assert_true(navigator.userActivation.hasBeenActive);
+        // Opening a window should consume the activation.
+        var win = window.open('404.html');
+        win.close();
+        assert_false(navigator.userActivation.isActive);
+        assert_true(navigator.userActivation.hasBeenActive);
 
-          // ask child to report their state
-          child.contentWindow.postMessage('report', '*');
+        // Ask child to report its state.
+        child.contentWindow.postMessage(JSON.stringify({"type": "report"}), '*');
       }));
-      child.src = "resources/child-one.html";
     }, "Values adjust on activity");
   </script>
 </body>
