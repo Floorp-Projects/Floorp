@@ -1789,6 +1789,56 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Attempts to simulate a launch fail by crashing a browser, but
+   * stripping the browser of its childID so that the TabCrashHandler
+   * thinks it was a launch fail.
+   *
+   * @param browser (<xul:browser>)
+   *   The browser to simulate a content process launch failure on.
+   * @return Promise
+   * @resolves undefined
+   *   Resolves when the TabCrashHandler should be done handling the
+   *   simulated crash.
+   */
+  simulateProcessLaunchFail(browser, dueToBuildIDMismatch = false) {
+    const NORMAL_CRASH_TOPIC = "ipc:content-shutdown";
+
+    Object.defineProperty(browser.frameLoader, "childID", {
+      get: () => 0,
+    });
+
+    let sawNormalCrash = false;
+    let observer = (subject, topic, data) => {
+      sawNormalCrash = true;
+    };
+
+    Services.obs.addObserver(observer, NORMAL_CRASH_TOPIC);
+
+    Services.obs.notifyObservers(
+      browser.frameLoader,
+      "oop-frameloader-crashed"
+    );
+
+    let eventType = dueToBuildIDMismatch
+      ? "oop-browser-buildid-mismatch"
+      : "oop-browser-crashed";
+
+    let event = new browser.ownerGlobal.CustomEvent(eventType, {
+      bubbles: true,
+    });
+    event.isTopFrame = true;
+    browser.dispatchEvent(event);
+
+    Services.obs.removeObserver(observer, NORMAL_CRASH_TOPIC);
+
+    if (sawNormalCrash) {
+      throw new Error(`Unexpectedly saw ${NORMAL_CRASH_TOPIC}`);
+    }
+
+    return new Promise(resolve => TestUtils.executeSoon(resolve));
+  },
+
+  /**
    * Returns a promise that is resolved when element gains attribute (or,
    * optionally, when it is set to value).
    * @param {String} attr
