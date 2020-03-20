@@ -256,6 +256,7 @@ function validatedWebRemoteType(
     !documentChannel &&
     aPreferredRemoteType == FILE_REMOTE_TYPE
   ) {
+    E10SUtils.log().debug("checking allowLinkedWebInFileUriProcess");
     // If aCurrentUri is passed then we should only allow FILE_REMOTE_TYPE
     // when it is same origin as target or the current URI is already a
     // file:// URI.
@@ -265,12 +266,15 @@ function validatedWebRemoteType(
         // todo: if you intend to update CheckSameOriginURI to log the error to the
         // console you also need to update the 'aFromPrivateWindow' argument.
         sm.checkSameOriginURI(aCurrentUri, aTargetUri, false, false);
+        E10SUtils.log().debug("Next URL is same origin");
         return FILE_REMOTE_TYPE;
       } catch (e) {
+        E10SUtils.log().debug("Leaving same origin");
         return WEB_REMOTE_TYPE;
       }
     }
 
+    E10SUtils.log().debug("No aCurrentUri");
     return FILE_REMOTE_TYPE;
   }
 
@@ -296,6 +300,10 @@ var E10SUtils = {
   },
 
   _log: null,
+  _uriStr: function uriStr(aUri) {
+    return aUri ? aUri.spec : "undefined";
+  },
+
   log: function log() {
     if (!this._log) {
       this._log = console.createInstance({
@@ -533,13 +541,20 @@ var E10SUtils = {
           );
         }
 
-        return validatedWebRemoteType(
+        var log = this.log();
+        log.debug("validatedWebRemoteType()");
+        log.debug(`  aPreferredRemoteType: ${aPreferredRemoteType}`);
+        log.debug(`  aTargetUri: ${this._uriStr(aURI)}`);
+        log.debug(`  aCurrentUri: ${this._uriStr(aCurrentUri)}`);
+        var remoteType = validatedWebRemoteType(
           aPreferredRemoteType,
           aURI,
           aCurrentUri,
           aResultPrincipal,
           aRemoteSubframes
         );
+        log.debug(`  validatedWebRemoteType() returning: ${remoteType}`);
+        return remoteType;
     }
   },
 
