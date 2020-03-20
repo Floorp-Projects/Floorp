@@ -583,7 +583,7 @@ InplaceEditor.prototype = {
    */
   _incrementCSSValue: function(value, increment, selStart, selEnd) {
     const range = this._parseCSSValue(value, selStart);
-    const type = (range && range.type) || "";
+    const type = range?.type || "";
     const rawValue = range ? value.substring(range.start, range.end) : "";
     const preRawValue = range ? value.substr(0, range.start) : "";
     const postRawValue = range ? value.substr(range.end) : "";

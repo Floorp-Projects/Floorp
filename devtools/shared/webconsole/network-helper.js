@@ -272,7 +272,7 @@ var NetworkHelper = {
   isTopLevelLoad: function(request) {
     if (request instanceof Ci.nsIChannel) {
       const loadInfo = request.loadInfo;
-      if (loadInfo && loadInfo.isTopLevelLoad) {
+      if (loadInfo?.isTopLevelLoad) {
         return request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI;
       }
     }
@@ -601,7 +601,7 @@ var NetworkHelper = {
       const state = securityInfo.securityState;
 
       let uri = null;
-      if (httpActivity.channel && httpActivity.channel.URI) {
+      if (httpActivity.channel?.URI) {
         uri = httpActivity.channel.URI;
       }
       if (uri && !uri.schemeIs("https") && !uri.schemeIs("wss")) {

@@ -91,7 +91,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
         installingWorker,
         waitingWorker,
         activeWorker,
-        fetch: newestWorker && newestWorker.fetch,
+        fetch: newestWorker?.fetch,
         // - In old multi e10s: only active registrations are available.
         // - In non-e10s or new implementaion: check if we have an active worker
         active: isMultiE10sWithOldImplementation ? true : !!activeWorker,

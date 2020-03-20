@@ -177,6 +177,22 @@ class MSSymbolServerConverter {
                                           string *symbol_file,
                                           string *pe_file);
 
+  // Calls LocatePEFile and converts the returned PE file to the
+  // dumped-symbol format, storing it adjacent to the PE file. The
+  // only conversion supported is from PE files. Returns the return
+  // value of LocatePEFile, or if LocatePEFile succeeds but
+  // conversion fails, returns LOCATE_FAILURE. The pathname to the
+  // PE file and to the converted symbol file are returned in
+  // |converted_symbol_file| and |pe_file|. |pe_file| is optional and may be
+  // NULL.  If only the converted symbol file is desired, set |keep_pe_file|
+  // to false to indicate that the executable file (exe, dll) should be deleted
+  // after conversion.
+  // NOTE: Currrently only supports x64 PEs.
+  LocateResult LocateAndConvertPEFile(const MissingSymbolInfo &missing,
+      bool keep_pe_file,
+      string *converted_symbol_file,
+      string *pe_file);
+
  private:
   // Locates the PDB or PE file (DLL or EXE) specified by the identifying
   // information in |debug_or_code_file| and |debug_or_code_id|, by checking

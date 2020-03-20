@@ -31,7 +31,7 @@ class RequestListColumnInitiator extends Component {
 
     let initiator = "";
     let lineNumber = "";
-    if (cause && cause.lastFrame) {
+    if (cause?.lastFrame) {
       const { filename, lineNumber: _lineNumber } = cause.lastFrame;
       initiator = getUrlBaseName(filename);
       lineNumber = ":" + _lineNumber;

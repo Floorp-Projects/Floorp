@@ -194,9 +194,8 @@ def run(paths, linters, formats, outgoing, workdir, edit,
 
     if list_linters:
         lint_paths = find_linters(linters)
-        print("Available linters: {}".format(
-            [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
-        ))
+        linters = [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
+        print("\n".join(sorted(linters)))
         return 0
 
     lint = LintRoller(**lintargs)

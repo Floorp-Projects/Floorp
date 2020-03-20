@@ -91,10 +91,10 @@ NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
   if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
-    mContext = new nsRetrievalContextX11();
+    mContext = MakeUnique<nsRetrievalContextX11>();
 #if defined(MOZ_WAYLAND)
   } else {
-    mContext = new nsRetrievalContextWayland();
+    mContext = MakeUnique<nsRetrievalContextWayland>();
 #endif
   }
   NS_ASSERTION(mContext, "Missing nsRetrievalContext for nsClipboard!");

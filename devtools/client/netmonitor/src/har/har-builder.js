@@ -201,7 +201,7 @@ HarBuilder.prototype = {
     request.headersSize = requestHeaders.headersSize;
     request.postData = await this.buildPostData(file);
 
-    if (request.postData && request.postData.text) {
+    if (request.postData?.text) {
       request.bodySize = request.postData.text.length;
     }
 
@@ -402,7 +402,7 @@ HarBuilder.prototype = {
         "responseContent"
       );
     }
-    if (responseContent && responseContent.content) {
+    if (responseContent?.content) {
       content.size = responseContent.content.size;
       content.encoding = responseContent.content.encoding;
     }
@@ -445,7 +445,7 @@ HarBuilder.prototype = {
       if (responseCache.cache) {
         cache.afterRequest = this.buildCacheEntry(responseCache.cache);
       }
-    } else if (file.responseCache && file.responseCache.cache) {
+    } else if (file.responseCache?.cache) {
       cache.afterRequest = this.buildCacheEntry(file.responseCache.cache);
     } else {
       cache.afterRequest = null;

@@ -184,8 +184,12 @@ var OSKeyStore = {
         unlockPromise = this._reauthInTests();
       } else if (
         AppConstants.platform == "win" ||
-        AppConstants.platform == "macosx"
+        (AppConstants.platform == "macosx" &&
+          AppConstants.isPlatformAndVersionAtLeast("macosx", "16"))
       ) {
+        // The OS auth dialog is not supported on macOS < 10.12
+        // (Darwin 16) due to various issues (bug 1622304 and bug 1622303).
+
         // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
         // On macOS this resolves to false, so we would need to check it.
         unlockPromise = osReauthenticator

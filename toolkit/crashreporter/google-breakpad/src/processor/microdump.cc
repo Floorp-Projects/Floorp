@@ -113,7 +113,8 @@ void MicrodumpModules::Add(const CodeModule* module) {
 }
 
 void MicrodumpModules::SetEnableModuleShrink(bool is_enabled) {
-  map_.SetEnableShrinkDown(is_enabled);
+  map_.SetMergeStrategy(is_enabled ? MergeRangeStrategy::kTruncateUpper
+                                   : MergeRangeStrategy::kExclusiveRanges);
 }
 
 //

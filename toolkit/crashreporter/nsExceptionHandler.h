@@ -285,15 +285,6 @@ class InjectorCrashCallback {
 void InjectCrashReporterIntoProcess(DWORD processID, InjectorCrashCallback* cb);
 void UnregisterInjectorCallback(DWORD processID);
 #  endif
-
-// Child-side API
-#  if defined(XP_WIN)
-bool SetRemoteExceptionHandler(const nsACString& crashPipe,
-                               uintptr_t aCrashTimeAnnotationFile);
-#  else
-bool SetRemoteExceptionHandler(const nsACString& crashPipe);
-#  endif
-
 #else
 // Parent-side API for children
 
@@ -307,11 +298,11 @@ bool SetRemoteExceptionHandler(const nsACString& crashPipe);
 // and |true| will be returned.
 bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd);
 
-// Child-side API
-bool SetRemoteExceptionHandler();
-
 #endif  // XP_WIN
 
+// Child-side API
+bool SetRemoteExceptionHandler(const char* aCrashPipe = nullptr,
+                               uintptr_t aCrashTimeAnnotationFile = 0);
 bool UnsetRemoteExceptionHandler();
 
 #if defined(MOZ_WIDGET_ANDROID)

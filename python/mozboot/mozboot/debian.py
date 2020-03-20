@@ -51,7 +51,6 @@ class DebianBootstrapper(
         'autoconf2.13',
         'build-essential',
         'nodejs',
-        'python-dev',
         'python-pip',
         'python-setuptools',
         'unzip',
@@ -108,6 +107,12 @@ class DebianBootstrapper(
         self.packages = self.COMMON_PACKAGES + self.DISTRO_PACKAGES
         if self.distro == 'debian':
             self.packages += self.DEBIAN_PACKAGES
+        # Due to the Python 2 EOL, newer versions of Ubuntu don't carry the
+        # same Python packages as older ones.
+        if self.distro == 'ubuntu' and int(self.version.split('.')[0]) >= 20:
+            self.packages.extend(['python2.7', 'python2.7-dev'])
+        else:
+            self.packages.append('python-dev')
         self.browser_packages = self.BROWSER_COMMON_PACKAGES + self.BROWSER_DISTRO_PACKAGES
         self.mobile_android_packages = self.MOBILE_ANDROID_COMMON_PACKAGES + \
             self.MOBILE_ANDROID_DISTRO_PACKAGES

@@ -115,7 +115,7 @@ exports.ViewHelpers = {
    *         True if it looks, walks and quacks like an event emitter.
    */
   isEventEmitter: function(object) {
-    return object && object.on && object.off && object.once && object.emit;
+    return object?.on && object?.off && object?.once && object?.emit;
   },
 
   /**

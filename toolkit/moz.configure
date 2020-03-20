@@ -467,8 +467,8 @@ def dav1d_asm(target, nasm_version):
         if target.cpu == 'aarch64':
             return True
         elif target.cpu in ('x86', 'x86_64'):
-            if nasm_version < '2.13':
-                die('nasm 2.13 or greater is required for AV1 support. '
+            if nasm_version < '2.14':
+                die('nasm 2.14 or greater is required for AV1 support. '
                     'Either install nasm or add --disable-av1 to your configure options.')
             return True
 
@@ -2027,6 +2027,15 @@ option('--disable-new-cert-storage', env='MOZ_NEW_CERT_STORAGE',
 
 set_config('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
 set_define('MOZ_NEW_CERT_STORAGE', True, when='--enable-new-cert-storage')
+
+# Crash Reporter
+# ==============================================================
+
+with only_when(compile_environment & target_is_linux):
+    # Check if we need to use the breakpad_getcontext fallback.
+    getcontext = check_symbol('getcontext')
+    set_config('HAVE_GETCONTEXT', getcontext)
+    set_define('HAVE_GETCONTEXT', getcontext)
 
 
 # Enable or disable the default browser agent, which monitors the user's default

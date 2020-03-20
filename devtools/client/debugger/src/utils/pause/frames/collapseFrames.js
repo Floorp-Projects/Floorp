@@ -4,7 +4,7 @@
 
 // @flow
 
-import { get, findIndex } from "lodash";
+import { findIndex } from "lodash";
 
 // eslint-disable-next-line max-len
 import type { Frame } from "../../../types";
@@ -49,7 +49,7 @@ export function collapseFrames(frames: Frame[]): GroupedFrames {
   let currentGroup = null;
   let prevItem = null;
   for (const frame of frames) {
-    const prevLibrary = get(prevItem, "library");
+    const prevLibrary = prevItem?.library;
 
     if (!currentGroup) {
       currentGroup = [frame];

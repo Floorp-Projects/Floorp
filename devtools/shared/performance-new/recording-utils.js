@@ -46,13 +46,7 @@ function getActiveBrowsingContextID() {
   const { Services } = lazyServices();
   const win = Services.wm.getMostRecentWindow("navigator:browser");
 
-  if (
-    win &&
-    win.gBrowser &&
-    win.gBrowser.selectedBrowser &&
-    win.gBrowser.selectedBrowser.browsingContext &&
-    win.gBrowser.selectedBrowser.browsingContext.id
-  ) {
+  if (win?.gBrowser?.selectedBrowser?.browsingContext?.id) {
     return win.gBrowser.selectedBrowser.browsingContext.id;
   }
 

@@ -80,7 +80,7 @@ export function getSpecifiers(specifiers: any) {
     return [];
   }
 
-  return specifiers.map(specifier => specifier.local && specifier.local.name);
+  return specifiers.map(specifier => specifier.local?.name);
 }
 
 export function isComputedExpression(expression: string): boolean {
@@ -127,7 +127,7 @@ export function getVariables(dec: Node) {
       .map(element => ({
         name: t.isAssignmentPattern(element)
           ? element.left.name
-          : element.name || (element.argument && element.argument.name),
+          : element.name || element.argument?.name,
         location: element.loc,
       }))
       .filter(({ name }) => name);

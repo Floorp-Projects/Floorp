@@ -49,13 +49,14 @@ namespace google_breakpad {
 
 using std::vector;
 
-BasicCodeModules::BasicCodeModules(const CodeModules *that)
+BasicCodeModules::BasicCodeModules(const CodeModules* that,
+                                   MergeRangeStrategy strategy)
     : main_address_(0), map_() {
   BPLOG_IF(ERROR, !that) << "BasicCodeModules::BasicCodeModules requires "
                             "|that|";
   assert(that);
 
-  map_.SetEnableShrinkDown(that->IsModuleShrinkEnabled());
+  map_.SetMergeStrategy(strategy);
 
   const CodeModule *main_module = that->GetMainModule();
   if (main_module)
@@ -140,16 +141,12 @@ const CodeModule* BasicCodeModules::GetModuleAtIndex(
 }
 
 const CodeModules* BasicCodeModules::Copy() const {
-  return new BasicCodeModules(this);
+  return new BasicCodeModules(this, map_.GetMergeStrategy());
 }
 
 vector<linked_ptr<const CodeModule> >
 BasicCodeModules::GetShrunkRangeModules() const {
   return shrunk_range_modules_;
-}
-
-bool BasicCodeModules::IsModuleShrinkEnabled() const {
-  return map_.IsShrinkDownEnabled();
 }
 
 }  // namespace google_breakpad

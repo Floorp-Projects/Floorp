@@ -47,17 +47,6 @@
 namespace google_breakpad {
 
 template<typename AddressType, typename EntryType>
-void RangeMap<AddressType, EntryType>::SetEnableShrinkDown(
-    bool enable_shrink_down) {
-  enable_shrink_down_ = enable_shrink_down;
-}
-
-template<typename AddressType, typename EntryType>
-bool RangeMap<AddressType, EntryType>::IsShrinkDownEnabled() const {
-  return enable_shrink_down_;
-}
-
-template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::StoreRange(const AddressType &base,
                                                   const AddressType &size,
                                                   const EntryType &entry) {
@@ -88,11 +77,28 @@ bool RangeMap<AddressType, EntryType>::StoreRangeInternal(
   MapConstIterator iterator_high = map_.lower_bound(high);
 
   if (iterator_base != iterator_high) {
-    // Some other range begins in the space used by this range.  It may be
+    // Some other range ends in the space used by this range.  It may be
     // contained within the space used by this range, or it may extend lower.
-    // If enable_shrink_down_ is true, shrink the current range down, otherwise
-    // this is an error.
-    if (enable_shrink_down_) {
+    if (merge_strategy_ == MergeRangeStrategy::kTruncateLower) {
+      // kTruncate the range with the lower base address.
+      AddressType other_base = iterator_base->second.base();
+      if (base < other_base) {
+        return StoreRangeInternal(base, delta, other_base - base, entry);
+      } else if (other_base < base) {
+        EntryType other_entry;
+        AddressType other_high, other_size, other_delta;
+        other_high = iterator_base->first;
+        RetrieveRange(other_high, &other_entry, &other_base, &other_delta,
+                      &other_size);
+        map_.erase(iterator_base);
+        map_.insert(
+            MapValue(base - 1, Range(other_base, other_delta, other_entry)));
+        return StoreRangeInternal(base, delta, size, entry);
+      } else {
+        return false;
+      }
+    } else if (merge_strategy_ == MergeRangeStrategy::kTruncateUpper) {
+      // Truncate the lower portion of this range.
       AddressType additional_delta = iterator_base->first - base + 1;
       return StoreRangeInternal(base + additional_delta,
                                 delta + additional_delta,
@@ -112,44 +118,57 @@ bool RangeMap<AddressType, EntryType>::StoreRangeInternal(
     }
   }
 
-  if (iterator_high != map_.end()) {
-    if (iterator_high->second.base() <= high) {
-      // The range above this one overlaps with this one.  It may fully
-      // contain this range, or it may begin within this range and extend
-      // higher.  If enable_shrink_down_ is true, shrink the other range down,
-      // otherwise this is an error.
-      if (enable_shrink_down_ && iterator_high->first > high) {
-        // Shrink the other range down.
-        AddressType other_high = iterator_high->first;
-        AddressType additional_delta =
-            high - iterator_high->second.base() + 1;
+  if (iterator_high != map_.end() && iterator_high->second.base() <= high) {
+    // The range above this one overlaps with this one.  It may fully
+    // contain this range, or it may begin within this range and extend
+    // higher.
+    if (merge_strategy_ == MergeRangeStrategy::kTruncateLower) {
+      AddressType other_base = iterator_high->second.base();
+      if (base < other_base) {
+        return StoreRangeInternal(base, delta, other_base - base, entry);
+      } else if (other_base < base) {
         EntryType other_entry;
-        AddressType other_base = AddressType();
-        AddressType other_size = AddressType();
-        AddressType other_delta = AddressType();
+        AddressType other_high, other_size, other_delta;
+        other_high = iterator_high->first;
         RetrieveRange(other_high, &other_entry, &other_base, &other_delta,
                       &other_size);
         map_.erase(iterator_high);
-        map_.insert(MapValue(other_high,
-                             Range(other_base + additional_delta,
-                                   other_delta + additional_delta,
-                                   other_entry)));
-        // Retry to store this range.
+        map_.insert(
+            MapValue(base - 1, Range(other_base, other_delta, other_entry)));
         return StoreRangeInternal(base, delta, size, entry);
       } else {
-        // The processor hits this case too frequently with common symbol files.
-        // This is most appropriate for a DEBUG channel, but since none exists
-        // now simply comment out this logging.
-        //
-        // AddressType other_base = iterator_high->second.base();
-        // AddressType other_size = iterator_high->first - other_base + 1;
-        // BPLOG(INFO) << "StoreRangeInternal failed, an existing range "
-        //             << "contains or extends higher than the new range: new "
-        //             << HexString(base) << "+" << HexString(size)
-        //             << ", existing " << HexString(other_base) << "+"
-        //             << HexString(other_size);
         return false;
       }
+    } else if (merge_strategy_ == MergeRangeStrategy::kTruncateUpper &&
+               iterator_high->first > high) {
+      // Shrink the other range down.
+      AddressType other_high = iterator_high->first;
+      AddressType additional_delta = high - iterator_high->second.base() + 1;
+      EntryType other_entry;
+      AddressType other_base = AddressType();
+      AddressType other_size = AddressType();
+      AddressType other_delta = AddressType();
+      RetrieveRange(other_high, &other_entry, &other_base, &other_delta,
+                    &other_size);
+      map_.erase(iterator_high);
+      map_.insert(MapValue(other_high,
+                           Range(other_base + additional_delta,
+                                 other_delta + additional_delta, other_entry)));
+      // Retry to store this range.
+      return StoreRangeInternal(base, delta, size, entry);
+    } else {
+      // The processor hits this case too frequently with common symbol files.
+      // This is most appropriate for a DEBUG channel, but since none exists
+      // now simply comment out this logging.
+      //
+      // AddressType other_base = iterator_high->second.base();
+      // AddressType other_size = iterator_high->first - other_base + 1;
+      // BPLOG(INFO) << "StoreRangeInternal failed, an existing range "
+      //             << "contains or extends higher than the new range: new "
+      //             << HexString(base) << "+" << HexString(size)
+      //             << ", existing " << HexString(other_base) << "+"
+      //             << HexString(other_size);
+      return false;
     }
   }
 

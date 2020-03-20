@@ -4,14 +4,14 @@
 
 import re
 import os
-import signal
 import subprocess
 from collections import defaultdict
 
 from mozfile import which
+
 from mozlint import result
 from mozlint.pathutils import get_ancestors_by_name
-from mozprocess import ProcessHandlerMixin
+from mozlint.util.implementation import LintProcess
 
 
 YAMLLINT_FORMAT_REGEX = re.compile('(.*):(.*):(.*): \[(error|warning)\] (.*) \((.*)\)$')
@@ -19,12 +19,7 @@ YAMLLINT_FORMAT_REGEX = re.compile('(.*):(.*):(.*): \[(error|warning)\] (.*) \((
 results = []
 
 
-class YAMLLintProcess(ProcessHandlerMixin):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        kwargs['processOutputLine'] = [self.process_line]
-        kwargs['universal_newlines'] = True
-        ProcessHandlerMixin.__init__(self, *args, **kwargs)
+class YAMLLintProcess(LintProcess):
 
     def process_line(self, line):
         try:
@@ -43,13 +38,6 @@ class YAMLLintProcess(ProcessHandlerMixin):
                }
 
         results.append(result.from_config(self.config, **res))
-
-    def run(self, *args, **kwargs):
-        # protect against poor SIGINT handling. Handle it here instead
-        # so we can kill the process without a cryptic traceback.
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandlerMixin.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
 
 
 def get_yamllint_binary(mc_root):

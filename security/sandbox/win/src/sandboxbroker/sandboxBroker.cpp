@@ -288,52 +288,6 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
           last_error, last_warning);
   }
 
-  // moduleHandle holds a strong reference to the module, whereas realBase
-  // is weak and might reference a module from another process (and thus must
-  // not be considered valid to pass in to any Win32 APIs from within this
-  // process).
-  nsModuleHandle moduleHandle;
-  HMODULE realBase = nullptr;
-  if (XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
-    // We use GetModuleHandleEx here so that we increment the module's refcount
-    HMODULE ourExe;
-    if (::GetModuleHandleExW(0, nullptr, &ourExe)) {
-      moduleHandle.own(ourExe);
-      // We can assign ourExe to realBase because the child process's binary is
-      // the same as ours; ASLR will map it to the same address.
-      realBase = ourExe;
-    }
-  } else {
-    // Load the child executable as a datafile so that we can examine its
-    // headers without doing a full load with dependencies and such.
-    moduleHandle.own(
-        ::LoadLibraryExW(aPath, nullptr, LOAD_LIBRARY_AS_DATAFILE));
-    LauncherResult<HMODULE> procExeModule =
-        nt::GetProcessExeModule(targetInfo.hProcess);
-    if (procExeModule.isOk()) {
-      realBase = procExeModule.unwrap();
-    } else {
-      LOG_E("nt::GetProcessExeModule failed with HRESULT 0x%08lX",
-            procExeModule.unwrapErr().AsHResult());
-    }
-  }
-
-  if (moduleHandle && realBase) {
-    nt::PEHeaders exeImage(moduleHandle.get());
-    if (!!exeImage) {
-      LauncherVoidResult importsRestored = RestoreImportDirectory(
-          aPath, exeImage, targetInfo.hProcess, realBase);
-      if (importsRestored.isErr()) {
-        LOG_E("Failed to restore import directory with HRESULT 0x%08lX",
-              importsRestored.unwrapErr().AsHResult());
-        TerminateProcess(targetInfo.hProcess, 1);
-        CloseHandle(targetInfo.hThread);
-        CloseHandle(targetInfo.hProcess);
-        return false;
-      }
-    }
-  }
-
   if (XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
     RefPtr<DllServices> dllSvc(DllServices::Get());
     LauncherVoidResultWithLineInfo blocklistInitOk =
@@ -347,6 +301,43 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
       CloseHandle(targetInfo.hThread);
       CloseHandle(targetInfo.hProcess);
       return false;
+    }
+  } else {
+    // moduleHandle holds a strong reference to the module, whereas realBase
+    // is weak and might reference a module from another process (and thus must
+    // not be considered valid to pass in to any Win32 APIs from within this
+    // process).
+
+    // Load the child executable as a datafile so that we can examine its
+    // headers without doing a full load with dependencies and such.
+    nsModuleHandle moduleHandle(
+        ::LoadLibraryExW(aPath, nullptr, LOAD_LIBRARY_AS_DATAFILE));
+
+    LauncherResult<HMODULE> procExeModule =
+        nt::GetProcessExeModule(targetInfo.hProcess);
+
+    HMODULE realBase = nullptr;
+    if (procExeModule.isOk()) {
+      realBase = procExeModule.unwrap();
+    } else {
+      LOG_E("nt::GetProcessExeModule failed with HRESULT 0x%08lX",
+            procExeModule.unwrapErr().AsHResult());
+    }
+
+    if (moduleHandle && realBase) {
+      nt::PEHeaders exeImage(moduleHandle.get());
+      if (!!exeImage) {
+        LauncherVoidResult importsRestored = RestoreImportDirectory(
+            aPath, exeImage, targetInfo.hProcess, realBase);
+        if (importsRestored.isErr()) {
+          LOG_E("Failed to restore import directory with HRESULT 0x%08lX",
+                importsRestored.unwrapErr().AsHResult());
+          TerminateProcess(targetInfo.hProcess, 1);
+          CloseHandle(targetInfo.hThread);
+          CloseHandle(targetInfo.hProcess);
+          return false;
+        }
+      }
     }
   }
 

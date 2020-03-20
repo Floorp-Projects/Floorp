@@ -51,7 +51,7 @@ for (var constructor of typedArrayConstructors) {
 }
 
 // Tricky: Same as above, but with SharedArrayBuffer and different compartments.
-if (typeof setSharedObject === "function") {
+if (this.setSharedObject && this.SharedArrayBuffer) {
     for (var constructor of typedArrayConstructors) {
         const elementSize = constructor.BYTES_PER_ELEMENT;
         let ts = new constructor(new SharedArrayBuffer(10 * elementSize));

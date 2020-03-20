@@ -582,6 +582,8 @@ void HTMLVideoElement::EndCloningVisually() {
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
   Unused << SetVisualCloneTarget(nullptr);
 
+  CreateStopMediaControlTimerIfNeeded();
+
   if (IsInComposedDoc() && !StaticPrefs::media_cloneElementVisually_testing()) {
     NotifyUAWidgetSetupOrChange();
   }

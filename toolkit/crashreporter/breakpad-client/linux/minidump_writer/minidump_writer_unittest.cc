@@ -28,7 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fcntl.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -42,6 +42,7 @@
 #include "linux/minidump_writer/linux_dumper.h"
 #include "linux/minidump_writer/minidump_writer.h"
 #include "linux/minidump_writer/minidump_writer_unittest_utils.h"
+#include "common/linux/breakpad_getcontext.h"
 #include "common/linux/eintr_wrapper.h"
 #include "common/linux/file_id.h"
 #include "common/linux/ignore_ret.h"
@@ -306,7 +307,11 @@ TEST(MinidumpWriterTest, MinidumpStacksSkippedIfRequested) {
       ++threads_with_stacks;
     }
   }
-  ASSERT_EQ(1, threads_with_stacks);
+#if defined(THREAD_SANITIZER) || defined(ADDRESS_SANITIZER)
+  ASSERT_GE(threads_with_stacks, 1);
+#else
+  ASSERT_EQ(threads_with_stacks, 1);
+#endif
   close(fds[1]);
   IGNORE_EINTR(waitpid(child, nullptr, 0));
 }

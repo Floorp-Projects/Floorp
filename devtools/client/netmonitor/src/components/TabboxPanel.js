@@ -221,8 +221,7 @@ class TabboxPanel extends Component {
           request,
         })
       ),
-      request.cause &&
-        request.cause.stacktraceAvailable &&
+      request.cause?.stacktraceAvailable &&
         TabPanel(
           {
             id: PANELS.STACK_TRACE,

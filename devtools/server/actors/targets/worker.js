@@ -68,7 +68,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
           registration.activeWorker ||
           registration.waitingWorker ||
           registration.installingWorker;
-        form.fetch = newestWorker && newestWorker.handlesFetchEvents;
+        form.fetch = newestWorker?.handlesFetchEvents;
       }
     }
     return form;

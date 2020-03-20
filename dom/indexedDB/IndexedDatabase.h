@@ -25,7 +25,7 @@ namespace indexedDB {
 
 class SerializedStructuredCloneReadInfo;
 
-struct StructuredCloneFile {
+struct StructuredCloneFileBase {
   enum FileType {
     eBlob,
     eMutableFile,
@@ -35,47 +35,36 @@ struct StructuredCloneFile {
     eEndGuard
   };
 
-  StructuredCloneFile(const StructuredCloneFile&) = delete;
-  StructuredCloneFile& operator=(const StructuredCloneFile&) = delete;
-#ifdef NS_BUILD_REFCNT_LOGGING
-  // In IndexedDatabaseInlines.h
-  StructuredCloneFile(StructuredCloneFile&&);
-#else
-  StructuredCloneFile(StructuredCloneFile&&) = default;
-#endif
-  StructuredCloneFile& operator=(StructuredCloneFile&&) = delete;
-
-  // In IndexedDatabaseInlines.h
-  inline explicit StructuredCloneFile(FileType aType);
-
-  // In IndexedDatabaseInlines.h
-  inline StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob);
-
-  // In IndexedDatabaseInlines.h
-  inline StructuredCloneFile(FileType aType, RefPtr<FileInfo> aFileInfo);
-
-  // In IndexedDatabaseInlines.h
-  inline explicit StructuredCloneFile(RefPtr<IDBMutableFile> aMutableFile);
-
-  // In IndexedDatabaseInlines.h
-  ~StructuredCloneFile();
-
-  // In IndexedDatabaseInlines.h
-  inline bool operator==(const StructuredCloneFile& aOther) const;
-
-  // XXX This is only needed for a schema upgrade (UpgradeSchemaFrom19_0To20_0).
-  // If support for older schemas is dropped, we can probably remove this method
-  // and make mType const.
-  void MutateType(FileType aNewType) { mType = aNewType; }
-
   FileType Type() const { return mType; }
 
-  const indexedDB::FileInfo& FileInfo() const {
-    return *mContents->as<RefPtr<indexedDB::FileInfo>>();
-  }
+ protected:
+  explicit StructuredCloneFileBase(FileType aType) : mType{aType} {}
+
+  FileType mType;
+};
+
+struct StructuredCloneFileChild : StructuredCloneFileBase {
+  StructuredCloneFileChild(const StructuredCloneFileChild&) = delete;
+  StructuredCloneFileChild& operator=(const StructuredCloneFileChild&) = delete;
+#ifdef NS_BUILD_REFCNT_LOGGING
+  // In IndexedDatabaseInlines.h
+  StructuredCloneFileChild(StructuredCloneFileChild&&);
+#else
+  StructuredCloneFileChild(StructuredCloneFileChild&&) = default;
+#endif
+  StructuredCloneFileChild& operator=(StructuredCloneFileChild&&) = delete;
 
   // In IndexedDatabaseInlines.h
-  RefPtr<indexedDB::FileInfo> FileInfoPtr() const;
+  ~StructuredCloneFileChild();
+
+  // In IndexedDatabaseInlines.h
+  explicit StructuredCloneFileChild(FileType aType);
+
+  // In IndexedDatabaseInlines.h
+  StructuredCloneFileChild(FileType aType, RefPtr<Blob> aBlob);
+
+  // In IndexedDatabaseInlines.h
+  explicit StructuredCloneFileChild(RefPtr<IDBMutableFile> aMutableFile);
 
   const dom::Blob& Blob() const { return *mContents->as<RefPtr<dom::Blob>>(); }
 
@@ -86,7 +75,7 @@ struct StructuredCloneFile {
   dom::Blob& MutableBlob() const { return *mContents->as<RefPtr<dom::Blob>>(); }
 
   // In IndexedDatabaseInlines.h
-  inline RefPtr<dom::Blob> BlobPtr() const;
+  RefPtr<dom::Blob> BlobPtr() const;
 
   bool HasBlob() const { return mContents->is<RefPtr<dom::Blob>>(); }
 
@@ -104,13 +93,58 @@ struct StructuredCloneFile {
 
  private:
   InitializedOnce<
-      const Variant<Nothing, RefPtr<dom::Blob>, RefPtr<IDBMutableFile>,
-                    RefPtr<indexedDB::FileInfo>>>
+      const Variant<Nothing, RefPtr<dom::Blob>, RefPtr<IDBMutableFile>>>
       mContents;
-  FileType mType;
 };
 
-struct StructuredCloneReadInfo {
+struct StructuredCloneFileParent : StructuredCloneFileBase {
+  StructuredCloneFileParent(const StructuredCloneFileParent&) = delete;
+  StructuredCloneFileParent& operator=(const StructuredCloneFileParent&) =
+      delete;
+#ifdef NS_BUILD_REFCNT_LOGGING
+  // In IndexedDatabaseInlines.h
+  StructuredCloneFileParent(StructuredCloneFileParent&&);
+#else
+  StructuredCloneFileParent(StructuredCloneFileParent&&) = default;
+#endif
+  StructuredCloneFileParent& operator=(StructuredCloneFileParent&&) = delete;
+
+  // In IndexedDatabaseInlines.h
+  StructuredCloneFileParent(FileType aType, RefPtr<FileInfo> aFileInfo);
+
+  // In IndexedDatabaseInlines.h
+  ~StructuredCloneFileParent();
+
+  // XXX This is used for a schema upgrade hack in UpgradeSchemaFrom19_0To20_0.
+  // When this is eventually removed, this function can be removed, and mType
+  // can be declared const in the base class.
+  void MutateType(FileType aNewType) { mType = aNewType; }
+
+  const indexedDB::FileInfo& FileInfo() const { return ***mContents; }
+
+  // In IndexedDatabaseInlines.h
+  RefPtr<indexedDB::FileInfo> FileInfoPtr() const;
+
+ private:
+  InitializedOnce<const Maybe<RefPtr<indexedDB::FileInfo>>> mContents;
+};
+
+struct StructuredCloneReadInfoBase {
+  // In IndexedDatabaseInlines.h
+  explicit StructuredCloneReadInfoBase(JSStructuredCloneData&& aData)
+      : mData{std::move(aData)} {}
+
+  const JSStructuredCloneData& Data() const { return mData; }
+  JSStructuredCloneData ReleaseData() { return std::move(mData); }
+
+ private:
+  JSStructuredCloneData mData;
+};
+
+template <typename StructuredCloneFileT>
+struct StructuredCloneReadInfo : StructuredCloneReadInfoBase {
+  using StructuredCloneFile = StructuredCloneFileT;
+
   // In IndexedDatabaseInlines.h
   explicit StructuredCloneReadInfo(JS::StructuredCloneScope aScope);
 
@@ -144,9 +178,6 @@ struct StructuredCloneReadInfo {
   // In IndexedDatabaseInlines.h
   size_t Size() const;
 
-  const JSStructuredCloneData& Data() const { return mData; }
-  JSStructuredCloneData ReleaseData() { return std::move(mData); }
-
   // XXX This is only needed for a schema upgrade (UpgradeSchemaFrom19_0To20_0).
   // If support for older schemas is dropped, we can probably remove this method
   // and make mFiles InitializedOnce.
@@ -160,13 +191,13 @@ struct StructuredCloneReadInfo {
   bool HasFiles() const { return !mFiles.IsEmpty(); }
 
  private:
-  JSStructuredCloneData mData;
   nsTArray<StructuredCloneFile> mFiles;
 };
 
-struct StructuredCloneReadInfoChild : StructuredCloneReadInfo {
+struct StructuredCloneReadInfoChild
+    : StructuredCloneReadInfo<StructuredCloneFileChild> {
   inline StructuredCloneReadInfoChild(JSStructuredCloneData&& aData,
-                                      nsTArray<StructuredCloneFile> aFiles,
+                                      nsTArray<StructuredCloneFileChild> aFiles,
                                       IDBDatabase* aDatabase);
 
   IDBDatabase* Database() const { return mDatabase; }
@@ -177,9 +208,10 @@ struct StructuredCloneReadInfoChild : StructuredCloneReadInfo {
 
 // This is only defined in the header file to satisfy the clang-plugin static
 // analysis, it could be placed in ActorsParent.cpp otherwise.
-struct StructuredCloneReadInfoParent : StructuredCloneReadInfo {
+struct StructuredCloneReadInfoParent
+    : StructuredCloneReadInfo<StructuredCloneFileParent> {
   StructuredCloneReadInfoParent(JSStructuredCloneData&& aData,
-                                nsTArray<StructuredCloneFile> aFiles,
+                                nsTArray<StructuredCloneFileParent> aFiles,
                                 bool aHasPreprocessInfo)
       : StructuredCloneReadInfo{std::move(aData), std::move(aFiles)},
         mHasPreprocessInfo{aHasPreprocessInfo} {}
@@ -190,6 +222,7 @@ struct StructuredCloneReadInfoParent : StructuredCloneReadInfo {
   bool mHasPreprocessInfo;
 };
 
+template <typename StructuredCloneReadInfo>
 JSObject* CommonStructuredCloneReadCallback(
     JSContext* aCx, JSStructuredCloneReader* aReader,
     const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag, uint32_t aData,
@@ -205,7 +238,12 @@ JSObject* StructuredCloneReadCallback(
 }  // namespace dom
 }  // namespace mozilla
 
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::StructuredCloneReadInfo);
+DECLARE_USE_COPY_CONSTRUCTORS(
+    mozilla::dom::indexedDB::StructuredCloneReadInfo<
+        mozilla::dom::indexedDB::StructuredCloneFileChild>);
+DECLARE_USE_COPY_CONSTRUCTORS(
+    mozilla::dom::indexedDB::StructuredCloneReadInfo<
+        mozilla::dom::indexedDB::StructuredCloneFileParent>);
 DECLARE_USE_COPY_CONSTRUCTORS(
     mozilla::dom::indexedDB::StructuredCloneReadInfoChild);
 DECLARE_USE_COPY_CONSTRUCTORS(

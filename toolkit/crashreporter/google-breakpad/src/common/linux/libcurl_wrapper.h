@@ -51,13 +51,38 @@ class LibcurlWrapper {
                        const string& basename);
   virtual bool SendRequest(const string& url,
                            const std::map<string, string>& parameters,
-                           int* http_status_code,
+                           long* http_status_code,
                            string* http_header_data,
                            string* http_response_data);
+  bool SendGetRequest(const string& url,
+                      long* http_status_code,
+                      string* http_header_data,
+                      string* http_response_data);
+  bool SendPutRequest(const string& url,
+                      const string& path,
+                      long* http_status_code,
+                      string* http_header_data,
+                      string* http_response_data);
+  bool SendSimplePostRequest(const string& url,
+                             const string& body,
+                             const string& content_type,
+                             long* http_status_code,
+                             string* http_header_data,
+                             string* http_response_data);
+
  private:
   // This function initializes class state corresponding to function
   // pointers into the CURL library.
   bool SetFunctionPointers();
+
+  bool SendRequestInner(const string& url,
+                        long* http_status_code,
+                        string* http_header_data,
+                        string* http_response_data);
+
+  void Reset();
+
+  bool CheckInit();
 
   bool init_ok_;                 // Whether init succeeded
   void* curl_lib_;               // Pointer to result of dlopen() on
@@ -85,6 +110,7 @@ class LibcurlWrapper {
   const char* (*easy_strerror_)(CURLcode);
   void (*easy_cleanup_)(CURL *);
   CURLcode (*easy_getinfo_)(CURL *, CURLINFO info, ...);
+  void (*easy_reset_)(CURL*);
   void (*formfree_)(struct curl_httppost *);
 
 };

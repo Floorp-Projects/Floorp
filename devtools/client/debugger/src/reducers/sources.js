@@ -797,7 +797,7 @@ export function getSourceContent(
 
 export function getSelectedSourceId(state: OuterState) {
   const source = getSelectedSource((state: any));
-  return source && source.id;
+  return source?.id;
 }
 
 export function getProjectDirectoryRoot(state: OuterState): string {
@@ -979,7 +979,7 @@ export function getBreakpointPositionsForSource(
   sourceId: string
 ): ?BreakpointPositions {
   const positions = getBreakpointPositions(state);
-  return positions && positions[sourceId];
+  return positions?.[sourceId];
 }
 
 export function hasBreakpointPositions(
@@ -995,7 +995,7 @@ export function getBreakpointPositionsForLine(
   line: number
 ): ?Array<BreakpointPosition> {
   const positions = getBreakpointPositionsForSource(state, sourceId);
-  return positions && positions[line];
+  return positions?.[line];
 }
 
 export function hasBreakpointPositionsForLine(

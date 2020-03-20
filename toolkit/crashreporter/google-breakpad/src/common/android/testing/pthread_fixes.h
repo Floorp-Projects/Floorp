@@ -89,11 +89,6 @@ int pthread_barrier_destroy(pthread_barrier_t *barrier) {
 
 #endif  // defined(PTHREAD_BARRIER_SERIAL_THREAD)
 
-int pthread_yield(void) {
-  sched_yield();
-  return 0;
-}
-
 }  // namespace
 
 #endif  // GOOGLE_BREAKPAD_COMMON_ANDROID_TESTING_PTHREAD_FIXES_H

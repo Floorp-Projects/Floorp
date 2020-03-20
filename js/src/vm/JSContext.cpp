@@ -226,23 +226,13 @@ bool AutoResolving::alreadyStartedSlow() const {
 
 static void ReportError(JSContext* cx, JSErrorReport* reportp,
                         JSErrorCallback callback, void* userRef) {
-  /*
-   * Check the error report, and set a JavaScript-catchable exception
-   * if the error is defined to have an associated exception.  If an
-   * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
-   * on the error report, and exception-aware hosts should ignore it.
-   */
-  MOZ_ASSERT(reportp);
-  if ((!callback || callback == GetErrorMessage) &&
-      reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION) {
-    reportp->flags |= JSREPORT_EXCEPTION;
-  }
-
   if (JSREPORT_IS_WARNING(reportp->flags)) {
     CallWarningReporter(cx, reportp);
     return;
   }
 
+  // Check the error report, and set a JavaScript-catchable exception
+  // if the error is defined to have an associated exception.
   ErrorToException(cx, reportp, callback, userRef);
 }
 

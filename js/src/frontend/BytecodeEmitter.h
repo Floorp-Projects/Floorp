@@ -46,8 +46,8 @@
 #include "vm/Interpreter.h"  // CheckIsObjectKind, CheckIsCallableKind
 #include "vm/Iteration.h"    // IteratorKind
 #include "vm/JSFunction.h"   // JSFunction, FunctionPrefixKind
-#include "vm/JSScript.h"  // JSScript, BaseScript, FieldInitializers, JSTryNoteKind
-#include "vm/Runtime.h"     // ReportOutOfMemory
+#include "vm/JSScript.h"  // JSScript, BaseScript, FieldInitializers, TryNoteKind
+#include "vm/Runtime.h"   // ReportOutOfMemory
 #include "vm/StringType.h"  // JSAtom
 
 namespace js {
@@ -345,7 +345,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   // Add TryNote to the tryNoteList array. The start and end offset are
   // relative to current section.
-  MOZ_MUST_USE bool addTryNote(JSTryNoteKind kind, uint32_t stackDepth,
+  MOZ_MUST_USE bool addTryNote(TryNoteKind kind, uint32_t stackDepth,
                                BytecodeOffset start, BytecodeOffset end);
 
   // Append a new source note of the given type (and therefore size) to the

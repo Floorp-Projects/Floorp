@@ -106,6 +106,8 @@ All should be unsigned values to avoid sign extension during
 bit mask & shift operations.
 ------------------------------------------------------------------------ */
 
+namespace google_breakpad {
+
 typedef unsigned long	UTF32;	/* at least 32 bits */
 typedef unsigned short	UTF16;	/* at least 16 bits */
 typedef unsigned char	UTF8;	/* typically 8 bits */
@@ -130,11 +132,6 @@ typedef enum {
 	lenientConversion
 } ConversionFlags;
 
-/* This is for C++ and does no harm in C */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 ConversionResult ConvertUTF8toUTF16 (const UTF8** sourceStart, const UTF8* sourceEnd,
                                      UTF16** targetStart, UTF16* targetEnd, ConversionFlags flags);
 
@@ -155,9 +152,7 @@ ConversionResult ConvertUTF32toUTF16 (const UTF32** sourceStart, const UTF32* so
 
 Boolean isLegalUTF8Sequence(const UTF8 *source, const UTF8 *sourceEnd);
 
-#ifdef __cplusplus
-}
-#endif
+}  // namespace google_breakpad
 
 /* --------------------------------------------------------------------- */
 

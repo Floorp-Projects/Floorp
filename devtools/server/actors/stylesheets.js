@@ -162,7 +162,7 @@ exports.getSheetText = getSheetText;
 function getCSSCharset(sheet) {
   if (sheet) {
     // charset attribute of <link> or <style> element, if it exists
-    if (sheet.ownerNode && sheet.ownerNode.getAttribute) {
+    if (sheet.ownerNode?.getAttribute) {
       const linkCharset = sheet.ownerNode.getAttribute("charset");
       if (linkCharset != null) {
         return linkCharset;
@@ -170,7 +170,7 @@ function getCSSCharset(sheet) {
     }
 
     // charset of referring document.
-    if (sheet.ownerNode && sheet.ownerNode.ownerDocument.characterSet) {
+    if (sheet.ownerNode?.ownerDocument.characterSet) {
       return sheet.ownerNode.ownerDocument.characterSet;
     }
   }

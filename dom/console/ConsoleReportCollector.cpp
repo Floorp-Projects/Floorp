@@ -114,7 +114,6 @@ void ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(
     ConsoleUtils::Level level = ConsoleUtils::eLog;
     switch (report.mErrorFlags) {
       case nsIScriptError::errorFlag:
-      case nsIScriptError::exceptionFlag:
         level = ConsoleUtils::eError;
         break;
       case nsIScriptError::warningFlag:

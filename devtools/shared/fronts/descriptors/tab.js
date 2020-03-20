@@ -36,7 +36,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     // devtools/client/framework/test/browser_toolbox_target.js is passing such
     // a fake tab.
     let front;
-    if (filter && filter.tab && filter.tab.tagName == "tab") {
+    if (filter?.tab?.tagName == "tab") {
       front = new LocalTabTargetFront(this._client, null, this, filter.tab);
     } else {
       front = new BrowsingContextTargetFront(this._client, null, this);

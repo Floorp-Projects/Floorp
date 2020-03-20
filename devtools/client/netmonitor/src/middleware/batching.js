@@ -39,7 +39,7 @@ function batchingMiddleware(store) {
         return flushQueue();
       }
 
-      if (action.meta && action.meta.batch) {
+      if (action.meta?.batch) {
         if (!enabled) {
           next(action);
           return Promise.resolve();

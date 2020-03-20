@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import signal
 import re
 
 # py2-compat
@@ -13,9 +12,10 @@ except ImportError:
     JSONDecodeError = ValueError
 
 from mozfile import which
+
 from mozlint import result
 from mozlint.util import pip
-from mozprocess import ProcessHandlerMixin
+from mozlint.util.implementation import LintProcess
 
 here = os.path.abspath(os.path.dirname(__file__))
 CODESPELL_REQUIREMENTS_PATH = os.path.join(here, 'codespell_requirements.txt')
@@ -38,14 +38,7 @@ results = []
 CODESPELL_FORMAT_REGEX = re.compile(r'(.*):(.*): (.*) ==> (.*)$')
 
 
-class CodespellProcess(ProcessHandlerMixin):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        kwargs = {
-            'processOutputLine': [self.process_line],
-            'universal_newlines': True,
-        }
-        ProcessHandlerMixin.__init__(self, *args, **kwargs)
+class CodespellProcess(LintProcess):
 
     def process_line(self, line):
         try:
@@ -60,17 +53,13 @@ class CodespellProcess(ProcessHandlerMixin):
         m = re.match(r'^[a-z][A-Z][a-z]*', typo)
         if m:
             return
-        res = {'path': abspath,
-               'message': typo.strip() + " ==> " + correct,
-               'level': 'error',
-               'lineno': line,
-               }
+        res = {
+            'path': abspath,
+            'message': typo.strip() + " ==> " + correct,
+            'level': 'error',
+            'lineno': line,
+        }
         results.append(result.from_config(self.config, **res))
-
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandlerMixin.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
 
 
 def run_process(config, cmd):

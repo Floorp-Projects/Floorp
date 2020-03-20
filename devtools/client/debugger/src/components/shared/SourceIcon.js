@@ -23,11 +23,11 @@ type OwnProps = {|
   source: Source,
 
   // An additional validator for the icon returned
-  shouldHide?: string => boolean,
+  modifier?: string => string | null,
 |};
 type Props = {
   source: Source,
-  shouldHide?: string => boolean,
+  modifier?: string => string | null,
 
   // symbols will provide framework information
   symbols: ?Symbols,
@@ -36,13 +36,17 @@ type Props = {
 
 class SourceIcon extends PureComponent<Props> {
   render() {
-    const { shouldHide, source, symbols, framework } = this.props;
-    const iconClass = framework
+    const { modifier, source, symbols, framework } = this.props;
+    let iconClass = framework
       ? framework.toLowerCase()
       : getSourceClassnames(source, symbols);
 
-    if (shouldHide && shouldHide(iconClass)) {
-      return null;
+    if (modifier) {
+      const modified = modifier(iconClass);
+      if (!modified) {
+        return null;
+      }
+      iconClass = modified;
     }
 
     return <AccessibleImage className={`source-icon ${iconClass}`} />;

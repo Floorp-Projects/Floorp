@@ -248,7 +248,7 @@ void xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
   mLineNumber = aException->LineNumber(aCx);
   mColumn = aException->ColumnNumber();
 
-  mFlags = JSREPORT_EXCEPTION;
+  mFlags = JSREPORT_ERROR;
 }
 
 static LazyLogModule gJSDiagnostics("JSDiagnostics");

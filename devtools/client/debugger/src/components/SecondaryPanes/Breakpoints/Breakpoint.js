@@ -129,7 +129,7 @@ class Breakpoint extends PureComponent<Props> {
     const { source } = this.props;
     const { column, line } = this.selectedLocation;
 
-    const isWasm = source && source.isWasm;
+    const isWasm = source?.isWasm;
     const columnVal = features.columnBreakpoints && column ? `:${column}` : "";
     const bpLocation = isWasm
       ? `0x${line.toString(16).toUpperCase()}`

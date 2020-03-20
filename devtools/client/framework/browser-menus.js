@@ -156,7 +156,7 @@ function insertToolMenuElements(doc, toolDefinition, prevDef) {
   let ref;
   if (prevDef) {
     const menuitem = doc.getElementById("menuitem_" + prevDef.id);
-    ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
+    ref = menuitem?.nextSibling ? menuitem.nextSibling : null;
   } else {
     ref = doc.getElementById("menu_devtools_separator");
   }

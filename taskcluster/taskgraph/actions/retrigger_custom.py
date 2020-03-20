@@ -20,6 +20,58 @@ from taskgraph.util import taskcluster
 
 logger = logging.getLogger(__name__)
 
+# Properties available for custom retrigger of any supported test suites
+basic_properties = {
+    'path': {
+        'type': 'string',
+        'maxLength': 255,
+        'default': '',
+        'title': 'Path name',
+        'description': 'Path of test(s) to retrigger'
+    },
+    'logLevel': {
+        'type': 'string',
+        'enum': ['debug', 'info', 'warning', 'error', 'critical'],
+        'default': 'info',
+        'title': 'Log level',
+        'description': 'Log level for output (INFO is normal, DEBUG gives more detail)'
+    },
+    'environment': {
+        'type': 'object',
+        'default': {'MOZ_LOG': ''},
+        'title': 'Extra environment variables',
+        'description': 'Extra environment variables to use for this run',
+        'additionalProperties': {'type': 'string'}
+    },
+}
+
+# Additional properties available for custom retrigger of some additional test suites
+extended_properties = basic_properties.copy()
+extended_properties.update({
+    'runUntilFail': {
+        'type': 'boolean',
+        'default': False,
+        'title': 'Run until failure',
+        'description': ('Runs the specified set of tests repeatedly '
+                        'until failure (up to REPEAT times)')
+    },
+    'repeat': {
+        'type': 'integer',
+        'default': 1,
+        'minimum': 1,
+        'title': 'Repeat test(s) N times',
+        'description': ('Run test(s) repeatedly (usually used in '
+                        'conjunction with runUntilFail)')
+    },
+    'preferences': {
+        'type': 'object',
+        'default': {'marionette.log.level': 'Info'},
+        'title': 'Extra gecko (about:config) preferences',
+        'description': 'Extra gecko (about:config) preferences to use for this run',
+        'additionalProperties': {'type': 'string'}
+    }
+})
+
 
 @register_callback_action(
     name='retrigger-custom',
@@ -33,56 +85,35 @@ logger = logging.getLogger(__name__)
     order=10,
     schema={
         'type': 'object',
-        'properties': {
-            'path': {
-                'type': 'string',
-                'maxLength': 255,
-                'default': '',
-                'title': 'Path name',
-                'description': 'Path of test(s) to retrigger'
-            },
-            'logLevel': {
-                'type': 'string',
-                'enum': ['debug', 'info', 'warning', 'error', 'critical'],
-                'default': 'info',
-                'title': 'Log level',
-                'description': 'Log level for output (INFO is normal, DEBUG gives more detail)'
-            },
-            'runUntilFail': {
-                'type': 'boolean',
-                'default': False,
-                'title': 'Run until failure',
-                'description': ('Runs the specified set of tests repeatedly '
-                                'until failure (up to REPEAT times)')
-            },
-            'repeat': {
-                'type': 'integer',
-                'default': 1,
-                'minimum': 1,
-                'title': 'Repeat test(s) N times',
-                'description': ('Run test(s) repeatedly (usually used in '
-                                'conjunction with runUntilFail)')
-            },
-            'environment': {
-                'type': 'object',
-                'default': {'MOZ_LOG': ''},
-                'title': 'Extra environment variables',
-                'description': 'Extra environment variables to use for this run',
-                'additionalProperties': {'type': 'string'}
-            },
-            'preferences': {
-                'type': 'object',
-                'default': {'marionette.log.level': 'Info'},
-                'title': 'Extra gecko (about:config) preferences',
-                'description': 'Extra gecko (about:config) preferences to use for this run',
-                'additionalProperties': {'type': 'string'}
-            }
-        },
+        'properties': extended_properties,
         'additionalProperties': False,
         'required': ['path']
     }
 )
-def custom_retrigger_action(parameters, graph_config, input, task_group_id, task_id):
+def extended_custom_retrigger_action(parameters, graph_config, input, task_group_id, task_id):
+    handle_custom_retrigger(parameters, graph_config, input, task_group_id, task_id)
+
+
+@register_callback_action(
+    name='retrigger-custom (gtest)',
+    title='Retrigger gtest task with custom parameters',
+    symbol='rt',
+    generic=True,
+    description="Retriggers the specified task with custom environment and parameters",
+    context=[{'test-type': 'gtest'}],
+    order=10,
+    schema={
+        'type': 'object',
+        'properties': basic_properties,
+        'additionalProperties': False,
+        'required': ['path']
+    }
+)
+def basic_custom_retrigger_action_basic(parameters, graph_config, input, task_group_id, task_id):
+    handle_custom_retrigger(parameters, graph_config, input, task_group_id, task_id)
+
+
+def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task_id):
     task = taskcluster.get_task_definition(task_id)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config)

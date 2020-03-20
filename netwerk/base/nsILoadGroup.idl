@@ -17,7 +17,7 @@ interface nsIRequestContext;
  * made for subdocuments in order to track page load progress and allow all
  * requests made on behalf of the document to be stopped, etc.
  */
-[scriptable, uuid(f0c87725-7a35-463c-9ceb-2c07f23406cc)]
+[builtinclass, scriptable, uuid(f0c87725-7a35-463c-9ceb-2c07f23406cc)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -95,4 +95,11 @@ interface nsILoadGroup : nsIRequest
      * the docShell has created the default request.)
      */
     attribute nsLoadFlags defaultLoadFlags;
+
+    /**
+     * Returns true if the loadGroup belongs to a discarded context, such as, a
+     * terminated private browsing session.
+     */
+    [infallible]
+    readonly attribute boolean isBrowsingContextDiscarded;
 };

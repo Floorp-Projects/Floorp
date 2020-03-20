@@ -225,6 +225,10 @@ struct DwarfCUToModule::CUContext {
   //
   // Destroying this destroys all the functions this vector points to.
   vector<Module::Function *> functions;
+
+  // Keep a list of forward references from DW_AT_abstract_origin and
+  // DW_AT_specification attributes so names can be fixed up.
+  std::map<uint64_t, Module::Function *> forward_ref_die_to_func;
 };
 
 // Information about the context of a particular DIE. This is for
@@ -256,7 +260,8 @@ class DwarfCUToModule::GenericDIEHandler: public dwarf2reader::DIEHandler {
         parent_context_(parent_context),
         offset_(offset),
         declaration_(false),
-        specification_(NULL) { }
+        specification_(NULL),
+        forward_ref_die_offset_(0) { }
 
   // Derived classes' ProcessAttributeUnsigned can defer to this to
   // handle DW_AT_declaration, or simply not override it.
@@ -308,6 +313,11 @@ class DwarfCUToModule::GenericDIEHandler: public dwarf2reader::DIEHandler {
   // Otherwise, this is NULL.
   Specification *specification_;
 
+  // If this DIE has a DW_AT_specification or DW_AT_abstract_origin and it is a
+  // forward reference, no Specification will be available. Track the reference
+  // to be fixed up when the DIE is parsed.
+  uint64_t forward_ref_die_offset_;
+
   // The value of the DW_AT_name attribute, or the empty string if the
   // DIE has no such attribute.
   string name_attribute_;
@@ -354,12 +364,9 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeReference(
       SpecificationByOffset::iterator spec = specifications->find(data);
       if (spec != specifications->end()) {
         specification_ = &spec->second;
+      } else if (data > offset_) {
+        forward_ref_die_offset_ = data;
       } else {
-        // Technically, there's no reason a DW_AT_specification
-        // couldn't be a forward reference, but supporting that would
-        // be a lot of work (changing to a two-pass structure), and I
-        // don't think any producers we care about ever emit such
-        // things.
         cu_context_->reporter->UnknownSpecification(offset_, data);
       }
       break;
@@ -684,6 +691,8 @@ void DwarfCUToModule::FuncHandler::ProcessAttributeReference(
       AbstractOriginByOffset::const_iterator origin = origins.find(data);
       if (origin != origins.end()) {
         abstract_origin_ = &(origin->second);
+      } else if (data > offset_) {
+        forward_ref_die_offset_ = data;
       } else {
         cu_context_->reporter->UnknownAbstractOrigin(offset_, data);
       }
@@ -716,6 +725,15 @@ static bool IsEmptyRange(const vector<Module::Range>& ranges) {
 
 void DwarfCUToModule::FuncHandler::Finish() {
   vector<Module::Range> ranges;
+
+  // Check if this DIE was one of the forward references that was not able
+  // to be processed, and fix up the name of the appropriate Module::Function.
+  // "name_" will have already been fixed up in EndAttributes().
+  if (!name_.empty()) {
+    auto iter = cu_context_->forward_ref_die_to_func.find(offset_);
+    if (iter != cu_context_->forward_ref_die_to_func.end())
+      iter->second->name = name_;
+  }
 
   if (!ranges_) {
     // Make high_pc_ an address, if it isn't already.
@@ -752,7 +770,11 @@ void DwarfCUToModule::FuncHandler::Finish() {
     if (!name_.empty()) {
       name = name_;
     } else {
-      cu_context_->reporter->UnnamedFunction(offset_);
+      // If we have a forward reference to a DW_AT_specification or
+      // DW_AT_abstract_origin, then don't warn, the name will be fixed up
+      // later
+      if (forward_ref_die_offset_ == 0)
+        cu_context_->reporter->UnnamedFunction(offset_);
       name = "<name omitted>";
     }
 
@@ -762,10 +784,20 @@ void DwarfCUToModule::FuncHandler::Finish() {
     func->ranges = ranges;
     func->parameter_size = 0;
     if (func->address) {
-       // If the function address is zero this is a sign that this function
-       // description is just empty debug data and should just be discarded.
-       cu_context_->functions.push_back(func.release());
-     }
+      // If the function address is zero this is a sign that this function
+      // description is just empty debug data and should just be discarded.
+      cu_context_->functions.push_back(func.release());
+      if (forward_ref_die_offset_ != 0) {
+        auto iter =
+            cu_context_->forward_ref_die_to_func.find(forward_ref_die_offset_);
+        if (iter == cu_context_->forward_ref_die_to_func.end()) {
+          cu_context_->reporter->UnknownSpecification(offset_,
+                                                      forward_ref_die_offset_);
+        } else {
+          iter->second = cu_context_->functions.back();
+        }
+      }
+    }
   } else if (inline_) {
     AbstractOrigin origin(name_);
     cu_context_->file_context->file_private_->origins[offset_] = origin;
@@ -839,8 +871,8 @@ void DwarfCUToModule::WarningReporter::UnknownSpecification(uint64 offset,
                                                             uint64 target) {
   CUHeading();
   fprintf(stderr, "%s: the DIE at offset 0x%llx has a DW_AT_specification"
-          " attribute referring to the die at offset 0x%llx, which either"
-          " was not marked as a declaration, or comes later in the file\n",
+          " attribute referring to the DIE at offset 0x%llx, which was not"
+          " marked as a declaration\n",
           filename_.c_str(), offset, target);
 }
 
@@ -848,8 +880,8 @@ void DwarfCUToModule::WarningReporter::UnknownAbstractOrigin(uint64 offset,
                                                              uint64 target) {
   CUHeading();
   fprintf(stderr, "%s: the DIE at offset 0x%llx has a DW_AT_abstract_origin"
-          " attribute referring to the die at offset 0x%llx, which either"
-          " was not marked as an inline, or comes later in the file\n",
+          " attribute referring to the DIE at offset 0x%llx, which was not"
+          " marked as an inline\n",
           filename_.c_str(), offset, target);
 }
 

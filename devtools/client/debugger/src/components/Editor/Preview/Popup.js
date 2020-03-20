@@ -225,10 +225,7 @@ export class Popup extends Component<Props> {
       editorRef,
     } = this.props;
 
-    if (
-      typeof resultGrip == "undefined" ||
-      (resultGrip && resultGrip.optimizedOut)
-    ) {
+    if (typeof resultGrip == "undefined" || resultGrip?.optimizedOut) {
       return null;
     }
 

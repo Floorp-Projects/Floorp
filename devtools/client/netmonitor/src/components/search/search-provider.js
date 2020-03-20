@@ -71,7 +71,7 @@ const SearchProvider = {
 
   getResourceTooltipLabel(object) {
     const { resource } = object;
-    if (resource.urlDetails && resource.urlDetails.url) {
+    if (resource.urlDetails?.url) {
       return resource.urlDetails.url;
     }
 

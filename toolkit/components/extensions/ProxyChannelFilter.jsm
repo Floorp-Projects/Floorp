@@ -168,22 +168,30 @@ const ProxyInfoData = {
   },
 
   proxyAuthorizationHeader(proxyData) {
-    let { proxyauthorizationheader } = proxyData;
-    if (
-      proxyauthorizationheader !== undefined &&
-      typeof username !== "string"
-    ) {
+    let { proxyAuthorizationHeader, type } = proxyData;
+    if (proxyAuthorizationHeader === undefined) {
+      return;
+    }
+    if (typeof proxyAuthorizationHeader !== "string") {
       throw new ExtensionError(
-        `ProxyInfoData: Invalid proxy server authorization header: "${proxyauthorizationheader}"`
+        `ProxyInfoData: Invalid proxy server authorization header: "${proxyAuthorizationHeader}"`
+      );
+    }
+    if (type !== "https") {
+      throw new ExtensionError(
+        `ProxyInfoData: ProxyAuthorizationHeader requires type "https"`
       );
     }
   },
 
   connectionIsolationKey(proxyData) {
-    let { connectionisolationkey } = proxyData;
-    if (connectionisolationkey !== undefined && typeof username !== "string") {
+    let { connectionIsolationKey } = proxyData;
+    if (
+      connectionIsolationKey !== undefined &&
+      typeof connectionIsolationKey !== "string"
+    ) {
       throw new ExtensionError(
-        `ProxyInfoData: Invalid proxy server authorization header: "${connectionisolationkey}"`
+        `ProxyInfoData: Invalid proxy connection isolation key: "${connectionIsolationKey}"`
       );
     }
   },

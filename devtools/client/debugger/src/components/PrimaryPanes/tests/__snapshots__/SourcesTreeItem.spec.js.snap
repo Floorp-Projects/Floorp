@@ -13,7 +13,7 @@ Object {
       className="img no-arrow"
     />
     <Connect(SourceIcon)
-      shouldHide={[Function]}
+      modifier={[Function]}
       source={
         Object {
           "extensionName": null,
@@ -162,7 +162,7 @@ Object {
             className="img no-arrow"
           />
           <Connect(SourceIcon)
-            shouldHide={[Function]}
+            modifier={[Function]}
             source={
               Object {
                 "extensionName": null,
@@ -254,7 +254,7 @@ Object {
       className="img no-arrow"
     />
     <Connect(SourceIcon)
-      shouldHide={[Function]}
+      modifier={[Function]}
       source={
         Object {
           "extensionName": null,
@@ -412,7 +412,7 @@ Object {
             className="img no-arrow"
           />
           <Connect(SourceIcon)
-            shouldHide={[Function]}
+            modifier={[Function]}
             source={
               Object {
                 "extensionName": null,
@@ -511,7 +511,7 @@ Object {
       className="img no-arrow"
     />
     <Connect(SourceIcon)
-      shouldHide={[Function]}
+      modifier={[Function]}
       source={
         Object {
           "extensionName": null,
@@ -664,7 +664,7 @@ Object {
             className="img no-arrow"
           />
           <Connect(SourceIcon)
-            shouldHide={[Function]}
+            modifier={[Function]}
             source={
               Object {
                 "extensionName": null,
@@ -2891,7 +2891,7 @@ Object {
       className="img no-arrow"
     />
     <Connect(SourceIcon)
-      shouldHide={[Function]}
+      modifier={[Function]}
       source={
         Object {
           "extensionName": null,
@@ -3042,7 +3042,7 @@ Object {
             className="img no-arrow"
           />
           <Connect(SourceIcon)
-            shouldHide={[Function]}
+            modifier={[Function]}
             source={
               Object {
                 "extensionName": null,
@@ -3135,7 +3135,7 @@ Object {
       className="img no-arrow"
     />
     <Connect(SourceIcon)
-      shouldHide={[Function]}
+      modifier={[Function]}
       source={
         Object {
           "extensionName": null,
@@ -3288,7 +3288,7 @@ Object {
             className="img no-arrow"
           />
           <Connect(SourceIcon)
-            shouldHide={[Function]}
+            modifier={[Function]}
             source={
               Object {
                 "extensionName": null,
@@ -3382,7 +3382,7 @@ Object {
       className="img no-arrow"
     />
     <Connect(SourceIcon)
-      shouldHide={[Function]}
+      modifier={[Function]}
       source={
         Object {
           "extensionName": null,
@@ -3533,7 +3533,7 @@ Object {
             className="img no-arrow"
           />
           <Connect(SourceIcon)
-            shouldHide={[Function]}
+            modifier={[Function]}
             source={
               Object {
                 "extensionName": null,

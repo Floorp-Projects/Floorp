@@ -37,6 +37,7 @@
       'type': 'none',
       'dependencies': [
         './converter/ms_symbol_server_converter.gyp:*',
+        './converter_exe/converter.gyp:*',
         './dump_syms/dump_syms.gyp:*',
         './symupload/symupload.gyp:*',
       ],

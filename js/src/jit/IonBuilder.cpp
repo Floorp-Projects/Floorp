@@ -7572,7 +7572,7 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newPendingLoopHeader(
   bool emptyStack = block->stackDepth() == info().firstStackSlot();
   if (!emptyStack) {
     for (TryNoteIterAllNoGC tni(script(), pc); !tni.done(); ++tni) {
-      const JSTryNote& tn = **tni;
+      const TryNote& tn = **tni;
 
       // Stop if we reach an outer loop because outer loops were already
       // processed when we visited their loop headers.

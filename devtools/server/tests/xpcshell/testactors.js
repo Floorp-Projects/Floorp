@@ -162,7 +162,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
   attach: function(request) {
     this._attached = true;
 
-    return { type: "tabAttached", threadActor: this.threadActor.actorID };
+    return { threadActor: this.threadActor.actorID };
   },
 
   detach: function(request) {

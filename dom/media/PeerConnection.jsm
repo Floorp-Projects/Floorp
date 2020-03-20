@@ -820,7 +820,7 @@ class RTCPeerConnection {
       e.message,
       e.fileName,
       e.lineNumber,
-      Ci.nsIScriptError.exceptionFlag
+      Ci.nsIScriptError.errorFlag
     );
 
     // Safely call onerror directly if present (necessary for testing)

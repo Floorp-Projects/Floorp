@@ -3404,12 +3404,19 @@ Range<T> SubRange(const Range<T>& full, const size_t offset,
   return Range<T>{newBegin, newBegin + length};
 }
 
+static inline size_t SizeOfViewElem(const dom::ArrayBufferView& view) {
+  const auto& elemType = view.Type();
+  if (elemType == js::Scalar::MaxTypedArrayViewType)  // DataViews.
+    return 1;
+
+  return js::Scalar::byteSize(elemType);
+}
+
 Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,
                                              GLuint elemOffset,
                                              GLuint elemCountOverride) {
   const auto byteRange = MakeRangeAbv(view);  // In bytes.
-  const auto& elemType = view.Type();
-  const auto bytesPerElem = js::Scalar::byteSize(elemType);
+  const auto bytesPerElem = SizeOfViewElem(view);
 
   auto elemCount = byteRange.length() / bytesPerElem;
   if (elemOffset > elemCount) return {};
@@ -5272,14 +5279,6 @@ const webgl::LinkResult& ClientWebGLContext::GetLinkResult(
 #undef RPROC
 
 // ---------------------------
-
-static inline size_t SizeOfViewElem(const dom::ArrayBufferView& view) {
-  const auto& elemType = view.Type();
-  if (elemType == js::Scalar::MaxTypedArrayViewType)  // DataViews.
-    return 1;
-
-  return js::Scalar::byteSize(elemType);
-}
 
 bool ClientWebGLContext::ValidateArrayBufferView(
     const dom::ArrayBufferView& view, GLuint elemOffset,

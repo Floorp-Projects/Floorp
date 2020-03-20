@@ -219,7 +219,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
               resp.result = getAdHocFrontOrPrimitiveGrip(resp.result, this);
             }
 
-            if (resp.helperResult && resp.helperResult.object) {
+            if (resp.helperResult?.object) {
               resp.helperResult.object = getAdHocFrontOrPrimitiveGrip(
                 resp.helperResult.object,
                 this
@@ -284,7 +284,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   beforePageError(packet) {
-    if (packet && packet.pageError && packet.pageError.errorMessage) {
+    if (packet?.pageError?.errorMessage) {
       packet.pageError.errorMessage = getAdHocFrontOrPrimitiveGrip(
         packet.pageError.errorMessage,
         this

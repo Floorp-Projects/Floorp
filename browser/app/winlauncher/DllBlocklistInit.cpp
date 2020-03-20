@@ -151,9 +151,23 @@ LauncherVoidResultWithLineInfo InitializeDllBlocklistOOP(
     const wchar_t* aFullImagePath, HANDLE aChildProcess) {
   // We come here when the browser process launches a sandbox process.
   // If the launcher process already failed to bootstrap the browser process,
-  // we should not attempt to bootstrap a child process.
+  // we should not attempt to bootstrap a child process because it's likely
+  // to fail again.  Instead, we only restore the import directory entry.
   if (!(gBlocklistInitFlags & eDllBlocklistInitFlagWasBootstrapped)) {
-    return Ok();
+    HMODULE exeImageBase;
+#  if defined(_MSC_VER)
+    exeImageBase = reinterpret_cast<HMODULE>(&__ImageBase);
+#  else
+    exeImageBase = ::GetModuleHandleW(nullptr);
+#  endif  // defined(_MSC_VER)
+
+    mozilla::nt::PEHeaders localImage(exeImageBase);
+    if (!localImage) {
+      return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+    }
+
+    return RestoreImportDirectory(aFullImagePath, localImage, aChildProcess,
+                                  exeImageBase);
   }
 
   return InitializeDllBlocklistOOPInternal(aFullImagePath, aChildProcess);

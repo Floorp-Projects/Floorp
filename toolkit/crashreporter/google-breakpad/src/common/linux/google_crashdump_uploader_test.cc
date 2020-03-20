@@ -50,7 +50,7 @@ class MockLibcurlWrapper : public LibcurlWrapper {
   MOCK_METHOD5(SendRequest,
                bool(const string& url,
                     const std::map<string, string>& parameters,
-                    int* http_status_code,
+                    long* http_status_code,
                     string* http_header_data,
                     string* http_response_data));
 };

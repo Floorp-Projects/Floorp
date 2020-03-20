@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'convert_UTF.c',
+    'convert_UTF.cc',
     'string_conversion.cc',
 ]
 
@@ -34,7 +34,7 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
     HOST_SOURCES += [
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
-        'convert_UTF.c',
+        'convert_UTF.cc',
         'dwarf_cfi_to_module.cc',
         'dwarf_cu_to_module.cc',
         'dwarf_line_to_module.cc',
@@ -58,12 +58,6 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
         '/toolkit/crashreporter/rust',
     ]
     HostLibrary('host_breakpad_common_s')
-
-if CONFIG['OS_TARGET'] == 'Android':
-    # We don't support unifying assembly files.
-    SOURCES += [
-        'android/breakpad_getcontext.S',
-    ]
 
 Library('breakpad_common_s')
 

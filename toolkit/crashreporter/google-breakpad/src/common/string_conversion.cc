@@ -46,7 +46,7 @@ void UTF8ToUTF16(const char *in, vector<uint16_t> *out) {
   out->clear();
   out->insert(out->begin(), source_length, 0);
   uint16_t *target_ptr = &(*out)[0];
-  uint16_t *target_end_ptr = target_ptr + out->capacity() * sizeof(uint16_t);
+  uint16_t *target_end_ptr = target_ptr + out->capacity();
   ConversionResult result = ConvertUTF8toUTF16(&source_ptr, source_end_ptr,
                                                &target_ptr, target_end_ptr,
                                                strictConversion);
@@ -90,7 +90,7 @@ void UTF32ToUTF16(const wchar_t *in, vector<uint16_t> *out) {
   out->clear();
   out->insert(out->begin(), source_length, 0);
   uint16_t *target_ptr = &(*out)[0];
-  uint16_t *target_end_ptr = target_ptr + out->capacity() * sizeof(uint16_t);
+  uint16_t *target_end_ptr = target_ptr + out->capacity();
   ConversionResult result = ConvertUTF32toUTF16(&source_ptr, source_end_ptr,
                                                 &target_ptr, target_end_ptr,
                                                 strictConversion);

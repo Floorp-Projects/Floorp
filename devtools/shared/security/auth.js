@@ -326,7 +326,7 @@ OOBCert.Client.prototype = {
     const closeDialog = () => {
       // Close any prompts the client may have been showing from previous
       // authentication steps
-      if (activeSendDialog && activeSendDialog.close) {
+      if (activeSendDialog?.close) {
         activeSendDialog.close();
         activeSendDialog = null;
       }

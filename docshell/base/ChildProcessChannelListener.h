@@ -13,6 +13,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsDataHashtable.h"
 #include "nsIChannel.h"
+#include "BackgroundUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,15 +21,16 @@ namespace dom {
 class ChildProcessChannelListener final {
   NS_INLINE_DECL_REFCOUNTING(ChildProcessChannelListener)
 
-  using Callback = std::function<void(nsDocShellLoadState*,
-                                      nsTArray<net::DocumentChannelRedirect>&&,
-                                      nsDOMNavigationTiming*)>;
+  using Resolver = std::function<void(const nsresult&)>;
+  using Callback = std::function<nsresult(
+      nsDocShellLoadState*, nsTArray<net::DocumentChannelRedirect>&&,
+      nsDOMNavigationTiming*)>;
 
   void RegisterCallback(uint64_t aIdentifier, Callback&& aCallback);
 
   void OnChannelReady(nsDocShellLoadState* aLoadState, uint64_t aIdentifier,
                       nsTArray<net::DocumentChannelRedirect>&& aRedirects,
-                      nsDOMNavigationTiming* aTiming);
+                      nsDOMNavigationTiming* aTiming, Resolver&& aResolver);
 
   static already_AddRefed<ChildProcessChannelListener> GetSingleton();
 
@@ -39,6 +41,7 @@ class ChildProcessChannelListener final {
     RefPtr<nsDocShellLoadState> mLoadState;
     nsTArray<net::DocumentChannelRedirect> mRedirects;
     RefPtr<nsDOMNavigationTiming> mTiming;
+    Resolver mResolver;
   };
 
   // TODO Backtrack.

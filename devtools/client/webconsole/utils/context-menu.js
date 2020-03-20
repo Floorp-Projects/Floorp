@@ -72,6 +72,11 @@ function createContextMenu(event, message, webConsoleWrapper) {
     : null;
   const rootActorId = rootActor ? rootActor.dataset.linkActorId : null;
 
+  const elementNode =
+    target.closest(".objectBox-node") || target.closest(".objectBox-textNode");
+  const isConnectedElement =
+    elementNode && elementNode.querySelector(".open-inspector") !== null;
+
   const win = parentNode.ownerDocument.defaultView;
   const selection = win.getSelection();
 
@@ -95,8 +100,8 @@ function createContextMenu(event, message, webConsoleWrapper) {
     })
   );
 
-  // Open Network message in the Network panel.
   if (toolbox && request) {
+    // Open Network message in the Network panel.
     menu.append(
       new MenuItem({
         id: "console-menu-open-in-network-panel",
@@ -106,10 +111,7 @@ function createContextMenu(event, message, webConsoleWrapper) {
         click: () => dispatch(actions.openNetworkPanel(message.messageId)),
       })
     );
-  }
-
-  // Resend Network message.
-  if (toolbox && request) {
+    // Resend Network message.
     menu.append(
       new MenuItem({
         id: "console-menu-resend-network-request",
@@ -138,6 +140,19 @@ function createContextMenu(event, message, webConsoleWrapper) {
       },
     })
   );
+
+  // Open DOM node in the Inspector panel.
+  if (isConnectedElement) {
+    menu.append(
+      new MenuItem({
+        id: "console-menu-open-node",
+        label: l10n.getStr("webconsole.menu.openNodeInInspector.label"),
+        accesskey: l10n.getStr("webconsole.menu.openNodeInInspector.accesskey"),
+        disabled: false,
+        click: () => dispatch(actions.openNodeInInspector(actor)),
+      })
+    );
+  }
 
   // Store as global variable.
   menu.append(

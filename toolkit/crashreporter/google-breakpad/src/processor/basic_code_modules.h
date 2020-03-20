@@ -58,7 +58,7 @@ class BasicCodeModules : public CodeModules {
   // the CodeModules and CodeModule interfaces without requiring all of the
   // resources that other implementations may require.  A copy will be
   // made of each contained CodeModule using CodeModule::Copy.
-  explicit BasicCodeModules(const CodeModules *that);
+  BasicCodeModules(const CodeModules *that, MergeRangeStrategy strategy);
 
   virtual ~BasicCodeModules();
 
@@ -71,7 +71,6 @@ class BasicCodeModules : public CodeModules {
   virtual const CodeModules* Copy() const;
   virtual std::vector<linked_ptr<const CodeModule> >
   GetShrunkRangeModules() const;
-  virtual bool IsModuleShrinkEnabled() const;
 
  protected:
   BasicCodeModules();

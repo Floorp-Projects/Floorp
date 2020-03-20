@@ -70,6 +70,12 @@ def assert_paths(a, b):
         'include': ['docs'],
         'exclude': [],
         'expected': [],
+    },
+    {
+        'paths': ['does/not/exist'],
+        'include': ['.'],
+        'exclude': [],
+        'expected': [],
     }
 ))
 def test_filterpaths(test):

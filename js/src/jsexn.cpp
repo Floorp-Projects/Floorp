@@ -96,8 +96,6 @@ bool CopyExtraData(JSContext* cx, uint8_t** cursor, JSErrorReport* copy,
   /* Copy non-pointer members. */
   copy->isMuted = report->isMuted;
   copy->exnType = report->exnType;
-
-  /* Note that this is before it gets flagged with JSREPORT_EXCEPTION */
   copy->flags = report->flags;
 
   /* Deep copy notes. */
@@ -347,9 +345,6 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     nstack = &stack->as<SavedFrame>();
   }
   cx->setPendingException(errValue, nstack);
-
-  // Flag the error report passed in to indicate an exception was raised.
-  reportp->flags |= JSREPORT_EXCEPTION;
 }
 
 using SniffingBehavior = js::ErrorReport::SniffingBehavior;
@@ -617,8 +612,6 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
     }
   } else {
     toStringResult_ = JS::ConstUTF8CharsZ(utf8Message, strlen(utf8Message));
-    /* Flag the error as an exception. */
-    reportp->flags |= JSREPORT_EXCEPTION;
   }
 
   return true;

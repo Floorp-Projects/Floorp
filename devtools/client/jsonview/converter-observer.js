@@ -63,7 +63,7 @@ JsonViewSniffer.prototype = {
 
   isTopLevelLoad: function(request) {
     const loadInfo = request.loadInfo;
-    if (loadInfo && loadInfo.isTopLevelLoad) {
+    if (loadInfo?.isTopLevelLoad) {
       return request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI;
     }
     return false;

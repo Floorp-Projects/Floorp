@@ -4,15 +4,14 @@
 
 import os
 import json
-import signal
 from json.decoder import JSONDecodeError
 
 import mozpack.path as mozpath
 from mozfile import which
-from mozlint import result
 from mozpack.files import FileFinder
-from mozprocess import ProcessHandlerMixin
 
+from mozlint import result
+from mozlint.util.implementation import LintProcess
 
 SHELLCHECK_NOT_FOUND = """
 Unable to locate shellcheck, please ensure it is installed and in
@@ -24,12 +23,7 @@ https://shellcheck.net or your system's package manager.
 results = []
 
 
-class ShellcheckProcess(ProcessHandlerMixin):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        kwargs['universal_newlines'] = True
-        kwargs['processOutputLine'] = [self.process_line]
-        ProcessHandlerMixin.__init__(self, *args, **kwargs)
+class ShellcheckProcess(LintProcess):
 
     def process_line(self, line):
         try:
@@ -47,12 +41,7 @@ class ShellcheckProcess(ProcessHandlerMixin):
                 'column': entry['column'],
                 'rule': entry['code'],
             }
-            results.append(result.from_config(self.config, **res))
-
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandlerMixin.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
+            results.append(result.from_config(self.config, *res))
 
 
 def determine_shell_from_script(path):
