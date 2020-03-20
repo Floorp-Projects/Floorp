@@ -56,6 +56,28 @@ export class ToggleStoryButton extends React.PureComponent {
   }
 }
 
+export class ToggleMessageJSON extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.props.toggleJSON(this.props.msgId);
+  }
+
+  render() {
+    let iconName = this.props.isCollapsed
+      ? "icon icon-arrowhead-forward-small"
+      : "icon icon-arrowhead-down-small";
+    return (
+      <button className="clearButton" onClick={this.handleClick}>
+        <span className={iconName} />
+      </button>
+    );
+  }
+}
+
 export class TogglePrefCheckbox extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -480,9 +502,12 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
     this.handleForceWNP = this.handleForceWNP.bind(this);
     this.pushWNMessage = this.pushWNMessage.bind(this);
+    this.toggleJSON = this.toggleJSON.bind(this);
+    this.toggleAllMessages = this.toggleAllMessages.bind(this);
     this.state = {
       messageFilter: "all",
       WNMessages: [],
+      collapsedMessages: [],
       evaluationStatus: {},
       trailhead: {},
       stringTargetingParameters: null,
@@ -746,6 +771,22 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
   }
 
+  toggleJSON(msgId) {
+    if (this.state.collapsedMessages.includes(msgId)) {
+      let index = this.state.collapsedMessages.indexOf(msgId);
+      this.setState(prevState => ({
+        collapsedMessages: [
+          ...prevState.collapsedMessages.slice(0, index),
+          ...prevState.collapsedMessages.slice(index + 1),
+        ],
+      }));
+    } else {
+      this.setState(prevState => ({
+        collapsedMessages: prevState.collapsedMessages.concat(msgId),
+      }));
+    }
+  }
+
   renderMessageItem(msg) {
     const isBlockedByGroup = this.state.groups
       .filter(group => msg.groups.includes(group.id))
@@ -763,6 +804,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     const impressions = this.state.messageImpressions[msg.id]
       ? this.state.messageImpressions[msg.id].length
       : 0;
+    const isCollapsed = this.state.collapsedMessages.includes(msg.id);
 
     let itemClassName = "message-item";
     if (isBlocked) {
@@ -777,6 +819,13 @@ export class ASRouterAdminInner extends React.PureComponent {
           </span>
         </td>
         <td>
+          <ToggleMessageJSON
+            msgId={`${msg.id}`}
+            toggleJSON={this.toggleJSON}
+            isCollapsed={isCollapsed}
+          />
+        </td>
+        <td className="button-column">
           <button
             className={`button ${isBlocked ? "" : " primary"}`}
             onClick={
@@ -802,7 +851,9 @@ export class ASRouterAdminInner extends React.PureComponent {
             </tr>
           )}
           <tr>
-            <pre>{JSON.stringify(msg, null, 2)}</pre>
+            <pre className={isCollapsed ? "collapsed" : "expanded"}>
+              {JSON.stringify(msg, null, 2)}
+            </pre>
           </tr>
         </td>
       </tr>
@@ -835,6 +886,8 @@ export class ASRouterAdminInner extends React.PureComponent {
       ? this.state.messageImpressions[msg.id].length
       : 0;
 
+    const isCollapsed = this.state.collapsedMessages.includes(msg.id);
+
     let itemClassName = "message-item";
     if (isBlocked) {
       itemClassName += " blocked";
@@ -849,6 +902,13 @@ export class ASRouterAdminInner extends React.PureComponent {
           </span>
         </td>
         <td>
+          <ToggleMessageJSON
+            msgId={`${msg.id}`}
+            toggleJSON={this.toggleJSON}
+            isCollapsed={isCollapsed}
+          />
+        </td>
+        <td>
           <input
             type="checkbox"
             id={`${msg.id} checkbox`}
@@ -857,11 +917,27 @@ export class ASRouterAdminInner extends React.PureComponent {
             onClick={e => this.pushWNMessage(e, msg.id)}
           />
         </td>
-        <td className="message-summary">
-          <pre>{JSON.stringify(msg, null, 2)}</pre>
+        <td className={`message-summary`}>
+          <pre className={isCollapsed ? "collapsed" : "expanded"}>
+            {JSON.stringify(msg, null, 2)}
+          </pre>
         </td>
       </tr>
     );
+  }
+
+  toggleAllMessages(messagesToShow) {
+    if (this.state.collapsedMessages.length) {
+      this.setState({
+        collapsedMessages: [],
+      });
+    } else {
+      Array.prototype.forEach.call(messagesToShow, msg => {
+        this.setState(prevState => ({
+          collapsedMessages: prevState.collapsedMessages.concat(msg.id),
+        }));
+      });
+    }
   }
 
   renderMessages() {
@@ -874,10 +950,22 @@ export class ASRouterAdminInner extends React.PureComponent {
         : this.state.messages.filter(
             message => message.provider === this.state.messageFilter
           );
+
     return (
-      <table>
-        <tbody>{messagesToShow.map(msg => this.renderMessageItem(msg))}</tbody>
-      </table>
+      <div>
+        <button
+          className="ASRouterButton slim button"
+          // eslint-disable-next-line react/jsx-no-bind
+          onClick={e => this.toggleAllMessages(messagesToShow)}
+        >
+          Collapse/Expand All
+        </button>
+        <table>
+          <tbody>
+            {messagesToShow.map(msg => this.renderMessageItem(msg))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 
@@ -1414,6 +1502,13 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   renderWNPTests() {
+    if (!this.state.messages) {
+      return null;
+    }
+    let messagesToShow = this.state.messages.filter(
+      message => message.provider === "whats-new-panel"
+    );
+
     return (
       <div>
         <p className="helpLink">
@@ -1439,6 +1534,13 @@ export class ASRouterAdminInner extends React.PureComponent {
             Render Selected Messages
           </button>
           <h2>Messages</h2>
+          <button
+            className="ASRouterButton slim button"
+            // eslint-disable-next-line react/jsx-no-bind
+            onClick={e => this.toggleAllMessages(messagesToShow)}
+          >
+            Collapse/Expand All
+          </button>
           {this.renderWNMessages()}
         </div>
       </div>
