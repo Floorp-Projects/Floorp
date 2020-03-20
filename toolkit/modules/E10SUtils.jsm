@@ -80,10 +80,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIExternalProtocolService"
 );
 
-function debug(msg) {
-  Cu.reportError(new Error("E10SUtils: " + msg));
-}
-
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
   let moduleName = aURL.pathQueryRef.replace(/[#?].*/, "").toLowerCase();
@@ -327,7 +323,7 @@ var E10SUtils = {
         serializedCSP = serializationHelper.serializeToString(csp);
       }
     } catch (e) {
-      debug(`Failed to serialize csp '${csp}' ${e}`);
+      this.log().error(`Failed to serialize csp '${csp}' ${e}`);
     }
     return serializedCSP;
   },
@@ -349,7 +345,7 @@ var E10SUtils = {
       csp.QueryInterface(Ci.nsIContentSecurityPolicy);
       return csp;
     } catch (e) {
-      debug(`Failed to deserialize csp_b64 '${csp_b64}' ${e}`);
+      this.log().error(`Failed to deserialize csp_b64 '${csp_b64}' ${e}`);
     }
     return null;
   },
@@ -641,7 +637,7 @@ var E10SUtils = {
         );
       }
     } catch (e) {
-      debug(`Failed to serialize principal '${principal}' ${e}`);
+      this.log().error(`Failed to serialize principal '${principal}' ${e}`);
     }
 
     return serializedPrincipal;
@@ -657,7 +653,7 @@ var E10SUtils = {
   deserializePrincipal(principal_b64, fallbackPrincipalCallback = null) {
     if (!principal_b64) {
       if (!fallbackPrincipalCallback) {
-        debug(
+        this.log().warn(
           "No principal passed to deserializePrincipal and no fallbackPrincipalCallback"
         );
         return null;
@@ -681,10 +677,12 @@ var E10SUtils = {
       principal.QueryInterface(Ci.nsIPrincipal);
       return principal;
     } catch (e) {
-      debug(`Failed to deserialize principal_b64 '${principal_b64}' ${e}`);
+      this.log().error(
+        `Failed to deserialize principal_b64 '${principal_b64}' ${e}`
+      );
     }
     if (!fallbackPrincipalCallback) {
-      debug(
+      this.log().warn(
         "No principal passed to deserializePrincipal and no fallbackPrincipalCallback"
       );
       return null;
@@ -959,7 +957,9 @@ var E10SUtils = {
       try {
         serialized = serializationHelper.serializeToString(referrerInfo);
       } catch (e) {
-        debug(`Failed to serialize referrerInfo '${referrerInfo}' ${e}`);
+        this.log().error(
+          `Failed to serialize referrerInfo '${referrerInfo}' ${e}`
+        );
       }
     }
     return serialized;
@@ -977,7 +977,7 @@ var E10SUtils = {
         deserialized = serializationHelper.deserializeObject(referrerInfo_b64);
         deserialized.QueryInterface(Ci.nsIReferrerInfo);
       } catch (e) {
-        debug(
+        this.log().error(
           `Failed to deserialize referrerInfo_b64 '${referrerInfo_b64}' ${e}`
         );
       }
