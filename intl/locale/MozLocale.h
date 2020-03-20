@@ -157,6 +157,6 @@ class Locale {
 }  // namespace intl
 }  // namespace mozilla
 
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::intl::Locale)
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::intl::Locale)
 
 #endif /* mozilla_intl_MozLocale_h__ */

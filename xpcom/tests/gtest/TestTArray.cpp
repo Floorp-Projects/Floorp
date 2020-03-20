@@ -47,13 +47,13 @@ struct Movable {
 }  // namespace TestTArray
 
 template <>
-struct nsTArray_CopyChooser<TestTArray::Copyable> {
-  typedef nsTArray_CopyWithConstructors<TestTArray::Copyable> Type;
+struct nsTArray_RelocationStrategy<TestTArray::Copyable> {
+  using Type = nsTArray_RelocateUsingMoveConstructor<TestTArray::Copyable>;
 };
 
 template <>
-struct nsTArray_CopyChooser<TestTArray::Movable> {
-  typedef nsTArray_CopyWithConstructors<TestTArray::Movable> Type;
+struct nsTArray_RelocationStrategy<TestTArray::Movable> {
+  using Type = nsTArray_RelocateUsingMoveConstructor<TestTArray::Movable>;
 };
 
 namespace TestTArray {

@@ -704,14 +704,15 @@ TEST(IntervalSet, StaticAssert)
 {
   media::Interval<int> i;
 
-  static_assert(
-      mozilla::IsSame<nsTArray_CopyChooser<IntIntervals>::Type,
-                      nsTArray_CopyWithConstructors<IntIntervals>>::value,
-      "Must use copy constructor");
   static_assert(mozilla::IsSame<
-                    nsTArray_CopyChooser<media::TimeIntervals>::Type,
-                    nsTArray_CopyWithConstructors<media::TimeIntervals>>::value,
+                    nsTArray_RelocationStrategy<IntIntervals>::Type,
+                    nsTArray_RelocateUsingMoveConstructor<IntIntervals>>::value,
                 "Must use copy constructor");
+  static_assert(
+      mozilla::IsSame<
+          nsTArray_RelocationStrategy<media::TimeIntervals>::Type,
+          nsTArray_RelocateUsingMoveConstructor<media::TimeIntervals>>::value,
+      "Must use copy constructor");
 }
 
 TEST(IntervalSet, Substraction)
