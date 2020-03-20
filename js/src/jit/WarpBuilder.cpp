@@ -1960,3 +1960,55 @@ bool WarpBuilder::build_Object(BytecodeLocation loc) {
   current->push(objConst);
   return true;
 }
+
+bool WarpBuilder::buildInitPropGetterSetterOp(BytecodeLocation loc) {
+  PropertyName* name = loc.getPropertyName(script_);
+  MDefinition* value = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  auto* ins = MInitPropGetterSetter::New(alloc(), obj, name, value);
+  current->add(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_InitPropGetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitPropSetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenPropGetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenPropSetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::buildInitElemGetterSetterOp(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MDefinition* id = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  auto* ins = MInitElemGetterSetter::New(alloc(), obj, id, value);
+  current->add(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_InitElemGetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitElemSetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenElemGetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenElemSetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
