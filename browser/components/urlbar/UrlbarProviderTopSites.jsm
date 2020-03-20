@@ -80,7 +80,8 @@ class ProviderTopSites extends UrlbarProvider {
       UrlbarPrefs.get("openViewOnFocus") &&
       !queryContext.searchString &&
       Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.feeds.topsites"
+        "browser.newtabpage.activity-stream.feeds.topsites",
+        false
       )
     );
   }
