@@ -162,7 +162,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         // Make sure out sync engine checkboxes are up-to-date and disabled if currently syncing
         updateSyncEngineStates()
-        setCwtsDisabledWhileSyncing(accountManager.isSyncActive())
+        setDisabledWhileSyncing(accountManager.isSyncActive())
 
         val historyNameKey = getPreferenceKey(R.string.pref_key_sync_history)
         findPreference<CheckBoxPreference>(historyNameKey)?.apply {
@@ -317,9 +317,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun setCwtsDisabledWhileSyncing(isSyncing: Boolean) {
+    private fun setDisabledWhileSyncing(isSyncing: Boolean) {
         findPreference<PreferenceCategory>(
             getPreferenceKey(R.string.preferences_sync_category)
+        )?.isEnabled = !isSyncing
+
+        findPreference<EditTextPreference>(
+            getPreferenceKey(R.string.pref_key_sync_device_name)
         )?.isEnabled = !isSyncing
     }
 
@@ -330,7 +334,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
                 pref?.title = getString(R.string.sync_syncing_in_progress)
                 pref?.isEnabled = false
-                setCwtsDisabledWhileSyncing(true)
+                setDisabledWhileSyncing(true)
             }
         }
 
@@ -347,7 +351,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 }
                 // Make sure out sync engine checkboxes are up-to-date.
                 updateSyncEngineStates()
-                setCwtsDisabledWhileSyncing(false)
+                setDisabledWhileSyncing(false)
             }
         }
 
