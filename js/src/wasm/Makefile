@@ -14,6 +14,11 @@ help:
 	@echo "  If you need to exclude a test, change test directives, or add a"
 	@echo "  proposal; that is the file to modify."
 	@echo ""
+	@echo "  Generated testsuites are made reproducible using 'wasm-config-lock.toml'"
+	@echo "  which contains pinned commits from the last build. New testsuites will"
+	@echo "  remain on those commits by default. To update to the latest version for"
+	@echo "  a repo, delete it from the lock file and do a build."
+	@echo ""
 	@echo "- 'MOZCONFIG=/path/to/bin/firefox make run' runs the WPT test cases and prints a"
 	@echo "  summary of the failures in the console."
 	@echo ""
@@ -25,14 +30,14 @@ help:
 update:
 	[ -d ./wasm-generate-testsuite ] || git clone https://github.com/eqrion/wasm-generate-testsuite ./wasm-generate-testsuite
 	cp ../jit-test/etc/wasm-config.toml ./wasm-generate-testsuite/config.toml
+	cp ../jit-test/etc/wasm-config-lock.toml ./wasm-generate-testsuite/config-lock.toml
 	(cd ./wasm-generate-testsuite && cargo run)
+	cp ./wasm-generate-testsuite/config-lock.toml ../jit-test/etc/wasm-config-lock.toml
 	rm -r ../jit-test/tests/wasm/spec
 	cp -R wasm-generate-testsuite/tests/js ../jit-test/tests/wasm/spec
-	[ ! -d ../jit-test/etc/wasm-spec-test.patch ] || (cd ../jit-test/tests/wasm/spec && patch -u -p7 < ../../../etc/wasm-spec-test.patch)
-	cp wasm-generate-testsuite/tests/config.lock ../jit-test/tests/wasm/spec
+	[ ! -d ../jit-test/etc/wasm-spec-tests.patch ] || (cd ../jit-test/tests/wasm/spec && patch -u -p7 < ../../../etc/wasm-spec-tests.patch)
 	rm -r ../../../testing/web-platform/mozilla/tests/wasm
 	cp -R wasm-generate-testsuite/tests/wpt ../../../testing/web-platform/mozilla/tests/wasm
-	cp wasm-generate-testsuite/tests/config.lock ../../../testing/web-platform/mozilla/tests/wasm
 
 run:
 	@[ -z $(MOZCONFIG) ] && echo "You need to define the MOZCONFIG env variable first."

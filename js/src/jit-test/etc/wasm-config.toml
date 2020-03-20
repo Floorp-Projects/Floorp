@@ -8,6 +8,7 @@ excluded_tests = ["align.wast", "memory_trap.wast", "imports.wast", "exports.was
 [[repos]]
 name = "spec"
 url = "https://github.com/WebAssembly/spec"
+excluded_tests = ["elem.wast", "func.wast", "type.wast", "unreached-invalid.wast"]
 
 [[repos]]
 name = "sign-extension-ops"
@@ -23,7 +24,7 @@ parent = "spec"
 name = "multi-value"
 url = "https://github.com/WebAssembly/multi-value"
 parent = "spec"
-excluded_tests = ["call_indirect.wast", "block.wast", "fac.wast", "if.wast"]
+excluded_tests = ["call.wast", "call_indirect.wast", "block.wast", "fac.wast", "func.wast", "if.wast"]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
@@ -33,6 +34,7 @@ directive = "; skip-if: !wasmMultiValueEnabled()"
 name = "threads"
 url = "https://github.com/WebAssembly/threads"
 parent = "spec"
+excluded_tests = ["atomic.wast"]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
@@ -51,7 +53,7 @@ directive = "; skip-if: !wasmBulkMemSupported()"
 name = "reference-types"
 url = "https://github.com/WebAssembly/reference-types"
 parent = "spec"
-excluded_tests = ["table_fill.wast", "select.wast", "float_memory.wast", "call_indirect.wast"]
+excluded_tests = ["br_table.wast", "elem.wast", "func.wast", "globals.wast", "memory.wast", "table_get.wast", "table_set.wast", "table_grow.wast", "table_fill.wast", "ref_func.wast", "ref_is_null.wast", "select.wast", "float_memory.wast", "call_indirect.wast"]
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
