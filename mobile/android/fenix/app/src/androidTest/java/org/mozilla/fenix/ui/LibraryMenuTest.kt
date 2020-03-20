@@ -39,7 +39,9 @@ class LibraryMenuTest {
     fun libraryMenuItemsTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
+            verifyLibraryButton()
         }.openLibrary {
             verifyLibraryView()
             verifyHistoryButton()
@@ -51,7 +53,9 @@ class LibraryMenuTest {
     fun backButtonTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
+            verifyLibraryButton()
         }.openLibrary {
         }.goBack {
             verifyBrowserScreen()
@@ -62,7 +66,9 @@ class LibraryMenuTest {
     fun bookmarksButtonTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
+            verifyLibraryButton()
         }.openLibrary {
         }.openBookmarks {
             verifyBookmarksMenuView()
@@ -73,7 +79,9 @@ class LibraryMenuTest {
     fun historyButtonTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
         }.openThreeDotMenu {
+            verifyLibraryButton()
         }.openLibrary {
         }.openHistory {
             verifyHistoryMenuView()
