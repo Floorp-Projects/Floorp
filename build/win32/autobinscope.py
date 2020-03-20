@@ -11,19 +11,25 @@
 # the symbol dir should point to the symbol dir hierarchy created
 # via running make buildsymbols in a windows build's objdir
 
-import os
-import shutil
-import subprocess
 import sys
-import tempfile
+import subprocess
+import os
+
+BINSCOPE_OUTPUT_LOGFILE = r".\binscope_xml_output.log"
 
 # usage
-if len(sys.argv) != 3:
-    print("""usage : autobinscope.by path_to_binary path_to_symbols""")
+if len(sys.argv) < 3:
+    print("""usage : autobinscope.by path_to_binary path_to_symbols [log_file_path]"
+    log_file_path is optional, log will be written to .\binscope_xml_output.log by default""")
     sys.exit(0)
 
 binary_path = sys.argv[1]
 symbol_path = sys.argv[2]
+
+if len(sys.argv) == 4:
+    log_file_path = sys.argv[3]
+else:
+    log_file_path = BINSCOPE_OUTPUT_LOGFILE
 
 # execute binscope against the binary, using the BINSCOPE environment
 # variable as the path to binscope.exe
@@ -35,11 +41,9 @@ except KeyError:
     sys.exit(1)
 
 try:
-    tmpdir = tempfile.mkdtemp()
     proc = subprocess.Popen([
         binscope_path,
         "/NoLogo",
-        "/OutDir", tmpdir,
         "/Target", binary_path,
         "/SymPath", symbol_path,
         # ATLVersionCheck triggers a crash in msdia120: bug 1525113
@@ -79,8 +83,6 @@ except WindowsError, (errno, strerror):  # noqa
         print("TEST-UNEXPECTED-FAIL | autobinscope.py | Could not locate binscope at location : "
               "%s\n" % binscope_path)
         sys.exit(1)
-finally:
-    shutil.rmtree(tmpdir)
 
 proc.wait()
 
