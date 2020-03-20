@@ -93,7 +93,7 @@ class _SphinxManager(object):
         self.trees, self.python_package_dirs = read_build_config(app.srcdir)
 
         logger.info('Staging static documentation')
-        self._synchronize_docs()
+        self._synchronize_docs(app)
 
         logger.info('Generating Python API documentation')
         self._generate_python_api_docs()
@@ -146,7 +146,7 @@ class _SphinxManager(object):
                 # as it will be the the same file
                 m.add_link(markdown_file, dest)
 
-    def _synchronize_docs(self):
+    def _synchronize_docs(self, app):
         m = InstallManifest()
 
         with open(os.path.join(MAIN_DOC_PATH, 'config.yml'), 'r') as fh:
@@ -195,16 +195,21 @@ class _SphinxManager(object):
         for t in tree_config:
             CATEGORIES[t] = format_paths(tree_config[t])
 
-        indexes = set([os.path.normpath(os.path.join(p, 'index')) for p in toplevel_trees.keys()])
-        # Format categories like indexes
-        cats = '\n'.join(CATEGORIES.values()).split("\n")
-        # Remove heading spaces
-        cats = [os.path.normpath(x.strip()) for x in cats]
-        indexes = tuple(set(indexes) - set(cats))
-        if indexes:
-            # In case a new doc isn't categorized
-            print(indexes)
-            raise Exception("Uncategorized documentation. Please add it in docs/config.yml")
+        # During livereload, we don't correctly rebuild the full document
+        # tree (Bug 1557020). The page is no longer referenced within the index
+        # tree, thus we shall check categorisation only if complete tree is being rebuilt.
+        if app.srcdir == self.topsrcdir:
+            indexes = set([os.path.normpath(os.path.join(p, 'index'))
+                           for p in toplevel_trees.keys()])
+            # Format categories like indexes
+            cats = '\n'.join(CATEGORIES.values()).split("\n")
+            # Remove heading spaces
+            cats = [os.path.normpath(x.strip()) for x in cats]
+            indexes = tuple(set(indexes) - set(cats))
+            if indexes:
+                # In case a new doc isn't categorized
+                print(indexes)
+                raise Exception("Uncategorized documentation. Please add it in docs/config.yml")
 
         data = data.format(**CATEGORIES)
 
