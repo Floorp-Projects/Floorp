@@ -458,11 +458,77 @@ var RecipeRunner = {
    * @return {Promise<BaseAction.suitability>} The recipe's suitability
    */
   async getRecipeSuitability(recipe, signature) {
+    let generator = this.getAllSuitabilities(recipe, signature);
+    // For our purposes, only the first suitability matters, so pull the first
+    // value out of the async generator. This additionally guarantees if we fail
+    // a security or compatibility check, we won't continue to run other checks,
+    // which is good for the general case of running recipes.
+    let { value: suitability } = await generator.next();
+    switch (suitability) {
+      case BaseAction.suitability.SIGNATURE_ERROR: {
+        await Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_SIGNATURE);
+        break;
+      }
+
+      case BaseAction.suitability.CAPABILITES_MISMATCH: {
+        await Uptake.reportRecipe(
+          recipe,
+          Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES
+        );
+        break;
+      }
+
+      case BaseAction.suitability.FILTER_MATCH: {
+        // No telemetry needs to be sent for this right now.
+        break;
+      }
+
+      case BaseAction.suitability.FILTER_MISMATCH: {
+        // This represents a terminal state for the given recipe, so
+        // report its outcome. Others are reported when executed in
+        // ActionsManager.
+        await Uptake.reportRecipe(recipe, Uptake.RECIPE_DIDNT_MATCH_FILTER);
+        break;
+      }
+
+      case BaseAction.suitability.FILTER_ERROR: {
+        await Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
+        break;
+      }
+
+      case BaseAction.suitability.ARGUMENTS_INVALID: {
+        // This shouldn't ever occur, since the arguments schema is checked by
+        // BaseAction itself.
+        throw new Error(`Shouldn't get ${suitability} in RecipeRunner`);
+      }
+
+      default: {
+        throw new Error(`Unexpected recipe suitability ${suitability}`);
+      }
+    }
+
+    return suitability;
+  },
+
+  /**
+   * Some uses cases, such as Normandy Devtools, want the status of all
+   * suitabilities, not only the most important one. This checks the cases of
+   * suitabilities in order from most blocking to least blocking. The first
+   * yielded is the "primary" suitability to pass on to actions.
+   *
+   * If this function yields only [FILTER_MATCH], then the recipe fully matches
+   * and should be executed. If any other statuses are yielded, then the recipe
+   * should not be executed as normal.
+   *
+   * This is a generator so that the execution can be halted as needed. For
+   * example, after receiving a signature error, a caller can stop advancing
+   * the iterator to avoid exposing the browser to unneeded risk.
+   */
+  async *getAllSuitabilities(recipe, signature) {
     try {
       await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
     } catch (e) {
-      await Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_SIGNATURE);
-      return BaseAction.suitability.SIGNATURE_ERROR;
+      yield BaseAction.suitability.SIGNATURE_ERROR;
     }
 
     const runnerCapabilities = this.getCapabilities();
@@ -476,36 +542,24 @@ var RecipeRunner = {
                 Array.from(runnerCapabilities)
               )}`
           );
-          await Uptake.reportRecipe(
-            recipe,
-            Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES
-          );
-          return BaseAction.suitability.CAPABILITES_MISMATCH;
+          yield BaseAction.suitability.CAPABILITES_MISMATCH;
         }
       }
     }
 
     const context = this.getFilterContext(recipe);
-    let result;
     try {
-      result = await FilterExpressions.eval(recipe.filter_expression, context);
+      if (await FilterExpressions.eval(recipe.filter_expression, context)) {
+        yield BaseAction.suitability.FILTER_MATCH;
+      } else {
+        yield BaseAction.suitability.FILTER_MISMATCH;
+      }
     } catch (err) {
       log.error(
         `Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`
       );
-      await Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
-      return BaseAction.suitability.FILTER_ERROR;
+      yield BaseAction.suitability.FILTER_ERROR;
     }
-
-    if (!result) {
-      // This represents a terminal state for the given recipe, so
-      // report its outcome. Others are reported when executed in
-      // ActionsManager.
-      await Uptake.reportRecipe(recipe, Uptake.RECIPE_DIDNT_MATCH_FILTER);
-      return BaseAction.suitability.FILTER_MISMATCH;
-    }
-
-    return BaseAction.suitability.FILTER_MATCH;
   },
 
   /**
