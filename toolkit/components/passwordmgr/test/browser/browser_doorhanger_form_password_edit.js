@@ -70,7 +70,6 @@ let testCases = [
       [passwordInputSelector]: "autopass-changed",
     },
     expected: {
-      formAutofilled: true,
       initialForm: {
         username: "user1",
         password: "autopass",
@@ -94,7 +93,6 @@ let testCases = [
       [passwordInputSelector]: "pass2",
     },
     expected: {
-      formAutofilled: true,
       initialForm: {
         username: "user1",
         password: "pass1",
@@ -150,33 +148,32 @@ let testCases = [
       },
     },
   },
-  // Disabled test tracked in bug 1619030
-  // {
-  //   name: "Change to existing username, different password",
-  //   prefEnabled: true,
-  //   logins: [{ username: "user-saved", password: "pass1" }],
-  //   formDefaults: {
-  //     [usernameInputSelector]: "user-prefilled",
-  //     [passwordInputSelector]: "pass2",
-  //   },
-  //   formChanges: {
-  //     [usernameInputSelector]: "user-saved",
-  //   },
-  //   expected: {
-  //     initialForm: {
-  //       username: "user-prefilled",
-  //       password: "pass2",
-  //     },
-  //     doorhanger: {
-  //       type: "password-change",
-  //       dismissed: true,
-  //       anchorExtraAttr: "",
-  //       username: "user-saved",
-  //       password: "pass2",
-  //       toggle: "visible",
-  //     },
-  //   },
-  // },
+  {
+    name: "Change to existing username, different password",
+    prefEnabled: true,
+    logins: [{ username: "user-saved", password: "pass1" }],
+    formDefaults: {
+      [usernameInputSelector]: "user-prefilled",
+      [passwordInputSelector]: "pass2",
+    },
+    formChanges: {
+      [usernameInputSelector]: "user-saved",
+    },
+    expected: {
+      initialForm: {
+        username: "user-prefilled",
+        password: "pass2",
+      },
+      doorhanger: {
+        type: "password-change",
+        dismissed: true,
+        anchorExtraAttr: "",
+        username: "user-saved",
+        password: "pass2",
+        toggle: "visible",
+      },
+    },
+  },
   {
     name: "Add username to existing password",
     prefEnabled: true,
@@ -276,9 +273,7 @@ async function testPasswordChange({
     info(`Saved login: ${login.username}, ${login.password}, ${login.origin}`);
   }
 
-  let formProcessedPromise = expected.formAutofilled
-    ? listenForTestNotification("FormProcessed")
-    : Promise.resolve();
+  let formProcessedPromise = listenForTestNotification("FormProcessed");
   info("Opening tab with url: " + url);
   await BrowserTestUtils.withNewTab(
     {
