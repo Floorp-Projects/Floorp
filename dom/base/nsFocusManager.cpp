@@ -359,7 +359,8 @@ InputContextAction::Cause nsFocusManager::GetFocusMoveActionCause(
 
 NS_IMETHODIMP
 nsFocusManager::GetActiveWindow(mozIDOMWindowProxy** aWindow) {
-  // TODO mActiveWindow in content process
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "Must not be called outside the parent process.");
   NS_IF_ADDREF(*aWindow = mActiveWindow);
   return NS_OK;
 }
