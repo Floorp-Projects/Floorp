@@ -1496,10 +1496,6 @@ wr::RenderRoot gfxUtils::GetContentRenderRoot() {
   return wr::RenderRoot::Default;
 }
 
-Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
-  return Nothing();
-}
-
 wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
     const nsIFrame* aFrame) {
   return wr::RenderRoot::Default;
