@@ -8172,7 +8172,7 @@
   value: 0
 #else
 #  ifdef NIGHTLY_BUILD
-  value: 2
+  value: 3
 #  else
   value: 1
 #  endif
