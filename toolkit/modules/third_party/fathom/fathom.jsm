@@ -1020,13 +1020,26 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      * Take nodes that match a given DOM selector. Example:
      * ``dom('meta[property="og:title"]')``
      *
-     * Every ruleset has at least one ``dom`` rule, as that is where nodes begin to
-     * flow into the system.
+     * Every ruleset has at least one ``dom`` or :func:`element` rule, as that is
+     * where nodes begin to flow into the system. If run against a subtree of a
+     * document, the root of the subtree is not considered as a possible match.
      */
     function dom(selector) {
         return new DomLhs(selector);
     }
 
+    /**
+     * Take a single given node if it matches a given DOM selector, without looking
+     * through its descendents or ancestors. Otherwise, take no nodes. Example:
+     * ``element(someNodeTheUserClicked)``
+     *
+     * This is useful for applications in which you want Fathom to classify an
+     * element the user has selected, rather than scanning the whole page for
+     * candidates.
+     */
+    function element(selector) {
+        return new ElementLhs(selector);
+    }
 
     /**
      * Rules and the LHSs and RHSs that comprise them have no mutable state. This
@@ -1161,9 +1174,16 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         constructor(selector) {
             super();
             if (selector === undefined) {
-                throw new Error('A querySelector()-style selector is required as the argument to dom().');
+                throw new Error('A querySelector()-style selector is required as the argument to ' + this._callName() + '().');
             }
             this.selector = selector;
+        }
+
+        /**
+         * Return the name of this kind of LHS, for use in error messages.
+         */
+        _callName() {
+            return 'dom';
         }
 
         clone() {
@@ -1171,17 +1191,26 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         fnodes(ruleset) {
-            const ret = [];
-            const matches = ruleset.doc.querySelectorAll(this.selector);
-            for (let i = 0; i < matches.length; i++) {
-                ret.push(ruleset.fnodeForElement(matches[i]));
+            return this._domNodesToFilteredFnodes(
+                ruleset,
+                ruleset.doc.querySelectorAll(this.selector));
+        }
+
+        /**
+         * Turn a NodeList of DOM nodes into an array of fnodes, and filter out
+         * those that don't match the :func:`when()` clause.
+         */
+        _domNodesToFilteredFnodes(ruleset, domNodes) {
+            let ret = [];
+            for (let i = 0; i < domNodes.length; i++) {
+                ret.push(ruleset.fnodeForElement(domNodes[i]));
             }
             return super.fnodesSatisfyingWhen(ret);
         }
 
         checkFact(fact) {
             if (fact.type === undefined) {
-                throw new Error(`The right-hand side of a dom() rule failed to specify a type. This means there is no way for its output to be used by later rules. All it specified was ${fact}.`);
+                throw new Error(`The right-hand side of a ${this._callName()}() rule failed to specify a type. This means there is no way for its output to be used by later rules. All it specified was ${fact}.`);
             }
         }
 
@@ -1195,6 +1224,18 @@ this.EXPORTED_SYMBOLS = ["fathom"];
 
         typesMentioned() {
             return new NiceSet();
+        }
+    }
+
+    class ElementLhs extends DomLhs {
+        _callName() {
+            return 'element';
+        }
+
+        fnodes(ruleset) {
+            return this._domNodesToFilteredFnodes(
+                ruleset,
+                ruleset.doc.matches(this.selector) ? [ruleset.doc] : []);
         }
     }
 
@@ -2446,10 +2487,13 @@ this.EXPORTED_SYMBOLS = ["fathom"];
         }
 
         /**
-         * Commit this ruleset to running against a specific DOM tree.
+         * Commit this ruleset to running against a specific DOM tree or subtree.
+         *
+         * When run against a subtree, the root of the subtree is not considered as
+         * a possible match.
          *
          * This doesn't actually modify the Ruleset but rather returns a fresh
-         * BoundRuleset, which contains caches and other stateful, per-DOM
+         * :class:`BoundRuleset`, which contains caches and other stateful, per-DOM
          * bric-a-brac.
          */
         against(doc) {
@@ -2477,7 +2521,7 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      * A ruleset that is earmarked to analyze a certain DOM
      *
      * Carries a cache of rule results on that DOM. Typically comes from
-     * :func:`Ruleset.against`.
+     * :func:`against`.
      */
     class BoundRuleset {
         /**
@@ -2666,12 +2710,13 @@ this.EXPORTED_SYMBOLS = ["fathom"];
      * License, v. 2.0. If a copy of the MPL was not distributed with this
      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-    const version = '3.2.1';
+    const version = '3.3';
 
     exports.and = and;
     exports.atMost = atMost;
     exports.clusters = clusters$1;
     exports.dom = dom;
+    exports.element = element;
     exports.nearest = nearest;
     exports.note = note;
     exports.out = out;

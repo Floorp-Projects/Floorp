@@ -266,20 +266,11 @@ class JSErrorReport : public JSErrorBase {
 /*
  * JSErrorReport flag values.  These may be freely composed.
  */
-#define JSREPORT_ERROR 0x0     /* pseudo-flag for default case */
-#define JSREPORT_WARNING 0x1   /* reported via JS::Warn* */
-#define JSREPORT_EXCEPTION 0x2 /* exception was thrown */
+#define JSREPORT_ERROR 0x0   /* pseudo-flag for default case */
+#define JSREPORT_WARNING 0x1 /* reported via JS::Warn* */
 
 #define JSREPORT_USER_1 0x8 /* user-defined flag */
 
-/*
- * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
- * has been thrown for this runtime error, and the host should ignore it.
- * Exception-aware hosts should also check for JS_IsExceptionPending if
- * JS_ExecuteScript returns failure, and signal or propagate the exception, as
- * appropriate.
- */
 #define JSREPORT_IS_WARNING(flags) (((flags)&JSREPORT_WARNING) != 0)
-#define JSREPORT_IS_EXCEPTION(flags) (((flags)&JSREPORT_EXCEPTION) != 0)
 
 #endif /* js_ErrorReport_h */

@@ -664,7 +664,7 @@ To attach to a *targetActor*, a client sends a message of the form:
 The target actor replies:
 
 ```
-{ "from":<targetActor>, "type":"tabAttached", "threadActor":<tabThreadActor> }
+{ "from":<targetActor>, "threadActor":<tabThreadActor> }
 ```
 
 where *tabThreadActor* is the name of a thread-like actor representing the tab's current content. If the user navigates the tab, *tabThreadActor* switches to the new content; we do not create a separate thread-like actor each page the tab visits.
@@ -672,7 +672,7 @@ where *tabThreadActor* is the name of a thread-like actor representing the tab's
 If the user closes the tab before the client attaches to it, *targetActor* replies:
 
 ```
-{ "from":<targetActor>, "type":"exited" }
+{ "from":<targetActor>, "error":"exited" }
 ```
 
 When the client is no longer interested in interacting with the tab, the client can request:

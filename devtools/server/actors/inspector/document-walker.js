@@ -193,8 +193,8 @@ DocumentWalker.prototype = {
     let previous = node;
     let next = node;
     while (previous || next) {
-      previous = previous && previous.previousSibling;
-      next = next && next.nextSibling;
+      previous = previous?.previousSibling;
+      next = next?.nextSibling;
 
       if (
         previous &&

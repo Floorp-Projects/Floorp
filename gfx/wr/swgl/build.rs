@@ -8,14 +8,15 @@ extern crate glsl_to_cxx;
 use std::collections::HashSet;
 use std::fmt::Write;
 
-fn write_load_shader(shaders: &[&str]) {
+fn write_load_shader(shader_keys: &[&str]) {
+    let shaders: Vec<_> = shader_keys.iter().map(|s| s.replace(':', "_")).collect();
     let mut load_shader = String::new();
-    for s in shaders {
+    for s in &shaders {
         let _ = write!(load_shader, "#include \"{}.h\"\n", s);
     }
     load_shader.push_str("ProgramLoader load_shader(const char* name) {\n");
-    for s in shaders {
-        let _ = write!(load_shader, "  if (!strcmp(name, \"{}\")) {{ return {}_program::loader; }}\n", s, s);
+    for s in &shaders {
+        let _ = write!(load_shader, "  if (!strcmp(name, \"{0}\")) {{ return {0}_program::loader; }}\n", s);
     }
     load_shader.push_str("  return nullptr;\n}\n");
     std::fs::write(std::env::var("OUT_DIR").unwrap() + "/load_shader.h", load_shader).unwrap();
@@ -42,22 +43,20 @@ fn process_imports(shader_dir: &str, shader: &str, included: &mut HashSet<String
     }
 }
 
-fn translate_shader(shader: &str, shader_dir: &str) {
+fn translate_shader(shader_key: &str, shader_dir: &str) {
     let mut imported = String::new();
     imported.push_str("#define SWGL 1\n");
     imported.push_str("#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024U\n");
-    let basename = if let Some(feature_start) = shader.find(char::is_uppercase) {
-        let feature_end = shader.rfind(char::is_uppercase).unwrap();
-        let features = shader[feature_start .. feature_end + 1].split('.');
-        for feature in features {
-            let _ = write!(imported, "#define WR_FEATURE_{}\n", feature);
-        }
-        &shader[0..feature_start]
-    } else {
-        shader
-    };
+
+    let mut features = shader_key.split(':');
+    let basename = features.next().unwrap();
+    for feature in features {
+        let _ = write!(imported, "#define WR_FEATURE_{}\n", feature);
+    }
 
     process_imports(shader_dir, basename, &mut HashSet::new(), &mut imported);
+
+    let shader = shader_key.replace(':', "_");
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let imp_name = format!("{}/{}.c", out_dir, shader);
@@ -96,42 +95,42 @@ fn translate_shader(shader: &str, shader_dir: &str) {
 }
 
 const WR_SHADERS: &'static [&'static str] = &[
-    "brush_blendALPHA_PASS",
+    "brush_blend:ALPHA_PASS",
     "brush_blend",
-    "brush_imageALPHA_PASS",
+    "brush_image:ALPHA_PASS",
     "brush_image",
-    "brush_imageREPETITION_ANTIALIASING_ALPHA_PASS",
-    "brush_imageREPETITION_ANTIALIASING",
-    "brush_linear_gradientALPHA_PASS",
-    "brush_linear_gradientDITHERING_ALPHA_PASS",
-    "brush_linear_gradientDITHERING",
+    "brush_image:REPETITION:ANTIALIASING:ALPHA_PASS",
+    "brush_image:REPETITION:ANTIALIASING",
+    "brush_linear_gradient:ALPHA_PASS",
+    "brush_linear_gradient:DITHERING:ALPHA_PASS",
+    "brush_linear_gradient:DITHERING",
     "brush_linear_gradient",
-    "brush_mix_blendALPHA_PASS",
+    "brush_mix_blend:ALPHA_PASS",
     "brush_mix_blend",
-    "brush_opacityALPHA_PASS",
-    "brush_radial_gradientALPHA_PASS",
-    "brush_radial_gradientDITHERING_ALPHA_PASS",
-    "brush_radial_gradientDITHERING",
+    "brush_opacity:ALPHA_PASS",
+    "brush_radial_gradient:ALPHA_PASS",
+    "brush_radial_gradient:DITHERING:ALPHA_PASS",
+    "brush_radial_gradient:DITHERING",
     "brush_radial_gradient",
-    "brush_solidALPHA_PASS",
+    "brush_solid:ALPHA_PASS",
     "brush_solid",
     "brush_yuv_image",
-    "brush_yuv_imageTEXTURE_2D_YUV_NV12",
-    "brush_yuv_imageYUV",
-    "brush_yuv_imageYUV_ALPHA_PASS",
-    "brush_yuv_imageYUV_INTERLEAVED",
-    "brush_yuv_imageYUV_NV12_ALPHA_PASS",
-    "brush_yuv_imageYUV_NV12",
-    "brush_yuv_imageYUV_PLANAR",
+    "brush_yuv_image:TEXTURE_2D:YUV:NV12",
+    "brush_yuv_image:YUV",
+    "brush_yuv_image:YUV:ALPHA_PASS",
+    "brush_yuv_image:YUV:INTERLEAVED",
+    "brush_yuv_image:YUV:NV12:ALPHA_PASS",
+    "brush_yuv_image:YUV:NV12",
+    "brush_yuv_image:YUV:PLANAR",
     "composite",
-    "compositeYUV",
-    "cs_blurALPHA_TARGET",
-    "cs_blurCOLOR_TARGET",
+    "composite:YUV",
+    "cs_blur:ALPHA_TARGET",
+    "cs_blur:COLOR_TARGET",
     "cs_border_segment",
     "cs_border_solid",
     "cs_clip_box_shadow",
     "cs_clip_image",
-    "cs_clip_rectangleFAST_PATH",
+    "cs_clip_rectangle:FAST_PATH",
     "cs_clip_rectangle",
     "cs_gradient",
     "cs_line_decoration",
@@ -140,10 +139,10 @@ const WR_SHADERS: &'static [&'static str] = &[
     "debug_color",
     "debug_font",
     "ps_split_composite",
-    "ps_text_runDUAL_SOURCE_BLENDING_ALPHA_PASS",
-    "ps_text_runGLYPH_TRANSFORM_ALPHA_PASS",
-    "ps_text_runDUAL_SOURCE_BLENDING_GLYPH_TRANSFORM_ALPHA_PASS",
-    "ps_text_runALPHA_PASS",
+    "ps_text_run:DUAL_SOURCE_BLENDING:ALPHA_PASS",
+    "ps_text_run:GLYPH_TRANSFORM:ALPHA_PASS",
+    "ps_text_run:DUAL_SOURCE_BLENDING:GLYPH_TRANSFORM:ALPHA_PASS",
+    "ps_text_run:ALPHA_PASS",
 ];
 
 fn main() {

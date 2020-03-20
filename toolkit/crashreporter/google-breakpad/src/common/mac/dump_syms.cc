@@ -414,7 +414,7 @@ bool DumpSymbols::CreateEmptyModule(scoped_ptr<Module>& module) {
   return true;
 }
 
-bool DumpSymbols::ReadDwarf(google_breakpad::Module *module,
+void DumpSymbols::ReadDwarf(google_breakpad::Module *module,
                             const mach_o::Reader &macho_reader,
                             const mach_o::SectionMap &dwarf_sections,
                             bool handle_inter_cu_refs) const {
@@ -440,15 +440,14 @@ bool DumpSymbols::ReadDwarf(google_breakpad::Module *module,
   // Find the __debug_info section.
   dwarf2reader::SectionMap::const_iterator debug_info_entry =
       file_context.section_map().find("__debug_info");
-  assert(debug_info_entry != file_context.section_map().end());
-  const std::pair<const uint8_t *, uint64>& debug_info_section =
-      debug_info_entry->second;
   // There had better be a __debug_info section!
-  if (!debug_info_section.first) {
+  if (debug_info_entry == file_context.section_map().end()) {
     fprintf(stderr, "%s: __DWARF segment of file has no __debug_info section\n",
             selected_object_name_.c_str());
-    return false;
+    return;
   }
+  const std::pair<const uint8_t*, uint64>& debug_info_section =
+      debug_info_entry->second;
 
   // Build a line-to-module loader for the root handler to use.
   DumperLineToModule line_to_module(&byte_reader);
@@ -485,8 +484,6 @@ bool DumpSymbols::ReadDwarf(google_breakpad::Module *module,
     // Process the entire compilation unit; get the offset of the next.
     offset += dwarf_reader.Start();
   }
-
-  return true;
 }
 
 bool DumpSymbols::ReadCFI(google_breakpad::Module *module,
@@ -599,10 +596,7 @@ bool DumpSymbols::LoadCommandDumper::SegmentCommand(const Segment &segment) {
 
   if (segment.name == "__DWARF") {
     if (symbol_data_ != ONLY_CFI) {
-      if (!dumper_.ReadDwarf(module_, reader_, section_map,
-                             handle_inter_cu_refs_)) {
-        return false;
-      }
+      dumper_.ReadDwarf(module_, reader_, section_map, handle_inter_cu_refs_);
     }
     if (symbol_data_ != NO_CFI) {
       mach_o::SectionMap::const_iterator debug_frame

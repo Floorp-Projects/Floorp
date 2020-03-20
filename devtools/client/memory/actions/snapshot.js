@@ -381,7 +381,7 @@ const fetchIndividuals = (exports.fetchIndividuals = function(
 
     const snapshot_ = getSnapshot(getState(), id);
     assert(
-      snapshot_.dominatorTree && snapshot_.dominatorTree.root,
+      snapshot_.dominatorTree?.root,
       "Should have a dominator tree with a root."
     );
 
@@ -396,7 +396,7 @@ const fetchIndividuals = (exports.fetchIndividuals = function(
     do {
       labelDisplay = getState().labelDisplay;
       assert(
-        labelDisplay && labelDisplay.breakdown && labelDisplay.breakdown.by,
+        labelDisplay?.breakdown?.by,
         `Should have a breakdown to label nodes with, got: ${JSON.stringify(
           labelDisplay
         )}`
@@ -560,7 +560,7 @@ const computeDominatorTree = (exports.computeDominatorTree = TaskCache.declareCa
     task: async function(heapWorker, id, removeFromCache, dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
       assert(
-        !(snapshot.dominatorTree && snapshot.dominatorTree.dominatorTreeId),
+        !snapshot.dominatorTree?.dominatorTreeId,
         "Should not re-compute dominator trees"
       );
 
@@ -614,7 +614,7 @@ const fetchDominatorTree = (exports.fetchDominatorTree = TaskCache.declareCachea
       do {
         display = getState().labelDisplay;
         assert(
-          display && display.breakdown,
+          display?.breakdown,
           `Should have a breakdown to describe nodes with, got: ${JSON.stringify(
             display
           )}`

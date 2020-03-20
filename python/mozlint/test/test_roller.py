@@ -52,28 +52,28 @@ def test_roll_from_subdir(lint, linters):
         os.chdir(os.path.join(lint.root, 'files'))
 
         # Path relative to cwd works
-        result = lint.roll('no_foobar.js')
-        assert len(result.issues) == 0
+        result = lint.roll('foobar.js')
+        assert len(result.issues) == 1
         assert len(result.failed) == 0
-        assert result.returncode == 0
-
-        # Path relative to root doesn't work
-        result = lint.roll(os.path.join('files', 'no_foobar.js'))
-        assert len(result.issues) == 0
-        assert len(result.failed) == 3
         assert result.returncode == 1
 
-        # Paths from vcs are always joined to root instead of cwd
-        lint.mock_vcs([os.path.join('files', 'no_foobar.js')])
-        result = lint.roll(outgoing=True)
+        # Path relative to root doesn't work
+        result = lint.roll(os.path.join('files', 'foobar.js'))
         assert len(result.issues) == 0
         assert len(result.failed) == 0
         assert result.returncode == 0
 
-        result = lint.roll(workdir=True)
-        assert len(result.issues) == 0
+        # Paths from vcs are always joined to root instead of cwd
+        lint.mock_vcs([os.path.join('files', 'foobar.js')])
+        result = lint.roll(outgoing=True)
+        assert len(result.issues) == 1
         assert len(result.failed) == 0
-        assert result.returncode == 0
+        assert result.returncode == 1
+
+        result = lint.roll(workdir=True)
+        assert len(result.issues) == 1
+        assert len(result.failed) == 0
+        assert result.returncode == 1
     finally:
         os.chdir(oldcwd)
 

@@ -206,7 +206,7 @@ static NSData *SendSynchronousNSURLRequest(NSURLRequest *req,
   NSMutableURLRequest *req =
     [[NSMutableURLRequest alloc]
           initWithURL:url_ cachePolicy:NSURLRequestUseProtocolCachePolicy
-      timeoutInterval:10.0 ];
+      timeoutInterval:60.0];
 
   NSMutableData *postBody = [NSMutableData data];
 

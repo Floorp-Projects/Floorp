@@ -27,12 +27,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <poll.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/mman.h>
-#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
@@ -421,6 +421,10 @@ TEST(ExceptionHandlerTest, RedeliveryToDefaultHandler) {
 
   const pid_t child = fork();
   if (child == 0) {
+    // Custom signal handlers, which may have been installed by a test launcher,
+    // are undesirable in this child.
+    signal(SIGSEGV, SIG_DFL);
+
     CrashWithCallbacks(FilterCallbackReturnFalse, NULL, temp_dir.path());
   }
 
@@ -869,17 +873,37 @@ TEST(ExceptionHandlerTest, InstructionPointerMemoryNullPointer) {
   ASSERT_GT(st.st_size, 0);
 
   // Read the minidump. Locate the exception record and the
-  // memory list, and then ensure that there is a memory region
+  // memory list, and then ensure that there is no memory region
   // in the memory list that covers the instruction pointer from
   // the exception record.
   Minidump minidump(minidump_path);
   ASSERT_TRUE(minidump.Read());
 
   MinidumpException* exception = minidump.GetException();
-  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
   ASSERT_TRUE(exception);
+
+  MinidumpContext* exception_context = exception->GetContext();
+  ASSERT_TRUE(exception_context);
+
+  uint64_t instruction_pointer;
+  ASSERT_TRUE(exception_context->GetInstructionPointer(&instruction_pointer));
+  EXPECT_EQ(instruction_pointer, 0u);
+
+  MinidumpMemoryList* memory_list = minidump.GetMemoryList();
   ASSERT_TRUE(memory_list);
-  ASSERT_EQ(static_cast<unsigned int>(1), memory_list->region_count());
+
+  unsigned int region_count = memory_list->region_count();
+  ASSERT_GE(region_count, 1u);
+
+  for (unsigned int region_index = 0;
+       region_index < region_count;
+       ++region_index) {
+    MinidumpMemoryRegion* region =
+        memory_list->GetMemoryRegionAtIndex(region_index);
+    uint64_t region_base = region->GetBase();
+    EXPECT_FALSE(instruction_pointer >= region_base &&
+                 instruction_pointer < region_base + region->GetSize());
+  }
 
   unlink(minidump_path.c_str());
 }

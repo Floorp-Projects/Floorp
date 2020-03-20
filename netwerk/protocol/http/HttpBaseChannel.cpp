@@ -2132,9 +2132,21 @@ void HttpBaseChannel::NotifySetCookie(const nsACString& aCookie) {
   }
 }
 
+bool HttpBaseChannel::IsBrowsingContextDiscarded() const {
+  if (mLoadGroup && mLoadGroup->GetIsBrowsingContextDiscarded()) {
+    return true;
+  }
+
+  return false;
+}
+
 NS_IMETHODIMP
 HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   if (mLoadFlags & LOAD_ANONYMOUS) return NS_OK;
+
+  if (IsBrowsingContextDiscarded()) {
+    return NS_OK;
+  }
 
   // empty header isn't an error
   if (aCookieHeader.IsEmpty()) {

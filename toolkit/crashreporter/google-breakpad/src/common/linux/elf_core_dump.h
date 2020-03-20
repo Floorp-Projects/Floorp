@@ -34,6 +34,7 @@
 #define COMMON_LINUX_ELF_CORE_DUMP_H_
 
 #include <elf.h>
+#include <limits.h>
 #include <link.h>
 #include <stddef.h>
 
@@ -45,18 +46,18 @@ namespace google_breakpad {
 // provides methods for accessing program headers and the note section.
 class ElfCoreDump {
  public:
-  // ELF types based on the value of __WORDSIZE.
+  // ELF types based on the native word size.
   typedef ElfW(Ehdr) Ehdr;
   typedef ElfW(Nhdr) Nhdr;
   typedef ElfW(Phdr) Phdr;
   typedef ElfW(Word) Word;
   typedef ElfW(Addr) Addr;
-#if __WORDSIZE == 32
+#if ULONG_MAX == 0xffffffff
   static const int kClass = ELFCLASS32;
-#elif __WORDSIZE == 64
+#elif ULONG_MAX == 0xffffffffffffffff
   static const int kClass = ELFCLASS64;
 #else
-#error "Unsupported __WORDSIZE for ElfCoreDump."
+#error "Unsupported word size for ElfCoreDump."
 #endif
 
   // A class encapsulating the note content in a core dump, which provides

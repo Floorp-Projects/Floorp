@@ -138,8 +138,7 @@ class CustomElementWatcher extends EventEmitter {
     return (
       !Cu.isDeadWrapper(node) &&
       node.ownerGlobal &&
-      node.ownerDocument &&
-      node.ownerDocument.documentElement
+      node.ownerDocument?.documentElement
     );
   }
 }

@@ -33,19 +33,17 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 // Fast timeout for TLS tests
 Services.prefs.setIntPref("devtools.remote.tls-handshake-timeout", 1000);
 
-// Convert an nsIScriptError 'flags' value into an appropriate string.
-function scriptErrorFlagsToKind(flags) {
-  let kind;
-  if (flags & Ci.nsIScriptError.warningFlag) {
-    kind = "warning";
+// Convert an nsIScriptError 'logLevel' value into an appropriate string.
+function scriptErrorLogLevel(message) {
+  switch (message.logLevel) {
+    case Ci.nsIConsoleMessage.info:
+      return "info";
+    case Ci.nsIConsoleMessage.warn:
+      return "warning";
+    default:
+      Assert.equal(message.logLevel, Ci.nsIConsoleMessage.error);
+      return "error";
   }
-  if (flags & Ci.nsIScriptError.exceptionFlag) {
-    kind = "exception";
-  } else {
-    kind = "error";
-  }
-
-  return kind;
 }
 
 // Register a console listener, so console messages don't just disappear
@@ -60,7 +58,7 @@ var listener = {
           ":" +
           message.lineNumber +
           ": " +
-          scriptErrorFlagsToKind(message.flags) +
+          scriptErrorLogLevel(message) +
           ": " +
           message.errorMessage +
           "\n"

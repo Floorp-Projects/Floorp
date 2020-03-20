@@ -124,7 +124,7 @@ class DomTree extends Component {
       });
 
       // Object can be an objectFront, while Rep always expect grips.
-      if (props && props.object && props.object.getGrip) {
+      if (props?.object?.getGrip) {
         repProps.object = props.object.getGrip();
       }
 

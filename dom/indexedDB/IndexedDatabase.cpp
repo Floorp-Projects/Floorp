@@ -175,42 +175,32 @@ bool ReadWasmModule(JSStructuredCloneReader* aReader, WasmModuleData* aRetval) {
   return true;
 }
 
-class ValueDeserializationHelper {
+template <typename StructuredCloneFile>
+class ValueDeserializationHelper;
+
+class ValueDeserializationHelperBase {
  public:
-  static bool CreateAndWrapMutableFile(JSContext* aCx,
-                                       StructuredCloneFile& aFile,
-                                       const MutableFileData& aData,
-                                       JS::MutableHandle<JSObject*> aResult) {
+  static bool CreateAndWrapWasmModule(JSContext* aCx,
+                                      const StructuredCloneFileBase& aFile,
+                                      const WasmModuleData& aData,
+                                      JS::MutableHandle<JSObject*> aResult) {
     MOZ_ASSERT(aCx);
+    MOZ_ASSERT(aFile.Type() == StructuredCloneFileBase::eWasmBytecode);
 
-    // If we have eBlob, we are in an IDB SQLite schema upgrade where we don't
-    // care about a real 'MutableFile', but we just care of having a proper
-    // |mType| flag.
-    if (aFile.Type() == StructuredCloneFile::eBlob) {
-      aFile.MutateType(StructuredCloneFile::eMutableFile);
+    // Both on the parent and child side, just create a plain object here,
+    // support for de-serialization of WebAssembly.Modules has been removed in
+    // bug 1561876. Full removal is tracked in bug 1487479.
 
-      // Just make a dummy object.
-      JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-      if (NS_WARN_IF(!obj)) {
-        return false;
-      }
-
-      aResult.set(obj);
-      return true;
-    }
-
-    MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eMutableFile);
-
-    if (!aFile.HasMutableFile() || !NS_IsMainThread()) {
+    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!obj)) {
       return false;
     }
 
-    aFile.MutableMutableFile().SetLazyData(aData.name, aData.type);
-
-    return WrapAsJSObject(aCx, aFile.MutableMutableFile(), aResult);
+    aResult.set(obj);
+    return true;
   }
 
+  template <typename StructuredCloneFile>
   static bool CreateAndWrapBlobOrFile(JSContext* aCx, IDBDatabase* aDatabase,
                                       const StructuredCloneFile& aFile,
                                       const BlobOrFileData& aData,
@@ -219,48 +209,10 @@ class ValueDeserializationHelper {
     MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
                aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
                aData.tag == SCTAG_DOM_BLOB);
-    MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eBlob);
+    MOZ_ASSERT(aFile.Type() == StructuredCloneFileBase::eBlob);
 
-    const auto blob = [&aFile, aDatabase, aCx]() -> RefPtr<Blob> {
-      if (aFile.HasBlob()) {
-        return aFile.BlobPtr();
-      }
-
-      // It can happen that this IDB is chrome code, so there is no parent, but
-      // still we want to set a correct parent for the new File object.
-      const auto global = [aDatabase, aCx]() -> nsCOMPtr<nsIGlobalObject> {
-        if (NS_IsMainThread()) {
-          if (aDatabase && aDatabase->GetParentObject()) {
-            return aDatabase->GetParentObject();
-          }
-          return xpc::CurrentNativeGlobal(aCx);
-        }
-        const WorkerPrivate* const workerPrivate =
-            GetCurrentThreadWorkerPrivate();
-        MOZ_ASSERT(workerPrivate);
-
-        WorkerGlobalScope* const globalScope = workerPrivate->GlobalScope();
-        MOZ_ASSERT(globalScope);
-
-        return do_QueryObject(globalScope);
-      }();
-
-      MOZ_ASSERT(global);
-
-      /* If we are creating an index, we do not have an mBlob but do have an
-       * FileInfo.  Unlike other index or upgrade cases, we do need a
-       * real-looking Blob/File instance because the index's key path can
-       * reference their properties.  Rather than create a fake-looking object,
-       * create a real Blob. */
-      const nsCOMPtr<nsIFile> file = aFile.FileInfo().GetFileForFileInfo();
-      if (!file) {
-        return nullptr;
-      }
-
-      const auto impl = MakeRefPtr<FileBlobImpl>(file);
-      impl->SetFileId(aFile.FileInfo().Id());
-      return File::Create(global, impl);
-    }();
+    const auto blob = ValueDeserializationHelper<StructuredCloneFile>::GetBlob(
+        aCx, aDatabase, aFile);
     if (NS_WARN_IF(!blob)) {
       return false;
     }
@@ -269,6 +221,10 @@ class ValueDeserializationHelper {
       blob->Impl()->SetLazyData(VoidString(), aData.type, aData.size,
                                 INT64_MAX);
       MOZ_ASSERT(!blob->IsFile());
+
+      // XXX The comment below is somewhat confusing, since it seems to imply
+      // that this branch is only executed when called from ActorsParent, but
+      // it's executed from both the parent and the child side code.
 
       // ActorsParent sends here a kind of half blob and half file wrapped into
       // a DOM File object. DOM File and DOM Blob are a WebIDL wrapper around a
@@ -295,20 +251,27 @@ class ValueDeserializationHelper {
 
     return WrapAsJSObject(aCx, file, aResult);
   }
+};
 
-  static bool CreateAndWrapWasmModule(JSContext* aCx,
-                                      const StructuredCloneFile& aFile,
-                                      const WasmModuleData& aData,
-                                      JS::MutableHandle<JSObject*> aResult) {
+template <>
+class ValueDeserializationHelper<StructuredCloneFileParent>
+    : public ValueDeserializationHelperBase {
+ public:
+  static bool CreateAndWrapMutableFile(JSContext* aCx,
+                                       StructuredCloneFileParent& aFile,
+                                       const MutableFileData& aData,
+                                       JS::MutableHandle<JSObject*> aResult) {
     MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eWasmBytecode);
-    MOZ_ASSERT(!aFile.HasBlob());
+    MOZ_ASSERT(aFile.Type() == StructuredCloneFileBase::eBlob);
 
-    // Just create a plain object here, support for de-serialization of
-    // WebAssembly.Modules has been removed in bug 1561876. Full removal is
-    // tracked in bug 1487479.
+    // We are in an IDB SQLite schema upgrade where we don't care about a real
+    // 'MutableFile', but we just care of having a proper |mType| flag.
 
+    aFile.MutateType(StructuredCloneFileBase::eMutableFile);
+
+    // Just make a dummy object.
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+
     if (NS_WARN_IF(!obj)) {
       return false;
     }
@@ -316,10 +279,85 @@ class ValueDeserializationHelper {
     aResult.set(obj);
     return true;
   }
+
+  static RefPtr<Blob> GetBlob(JSContext* aCx, IDBDatabase* aDatabase,
+                              const StructuredCloneFileParent& aFile) {
+    // This is chrome code, so there is no parent, but still we want to set a
+    // correct parent for the new File object.
+    const auto global = [aDatabase, aCx]() -> nsCOMPtr<nsIGlobalObject> {
+      if (NS_IsMainThread()) {
+        if (aDatabase && aDatabase->GetParentObject()) {
+          return aDatabase->GetParentObject();
+        }
+        return xpc::CurrentNativeGlobal(aCx);
+      }
+      const WorkerPrivate* const workerPrivate =
+          GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+
+      WorkerGlobalScope* const globalScope = workerPrivate->GlobalScope();
+      MOZ_ASSERT(globalScope);
+
+      return do_QueryObject(globalScope);
+    }();
+
+    MOZ_ASSERT(global);
+
+    // We do not have an mBlob but do have an FileInfo.
+    //
+    // If we are creating an index, we do need a real-looking Blob/File instance
+    // because the index's key path can reference their properties.  Rather than
+    // create a fake-looking object, create a real Blob.
+    //
+    // If we are in a schema upgrade, we don't strictly need that, but we do not
+    // need to optimize for that, and create it anyway.
+    const nsCOMPtr<nsIFile> file = aFile.FileInfo().GetFileForFileInfo();
+    if (!file) {
+      return nullptr;
+    }
+
+    const auto impl = MakeRefPtr<FileBlobImpl>(file);
+    impl->SetFileId(aFile.FileInfo().Id());
+    return File::Create(global, impl);
+  }
+};
+
+template <>
+class ValueDeserializationHelper<StructuredCloneFileChild>
+    : public ValueDeserializationHelperBase {
+ public:
+  static bool CreateAndWrapMutableFile(JSContext* aCx,
+                                       StructuredCloneFileChild& aFile,
+                                       const MutableFileData& aData,
+                                       JS::MutableHandle<JSObject*> aResult) {
+    MOZ_ASSERT(aCx);
+    MOZ_ASSERT(aFile.Type() == StructuredCloneFileBase::eMutableFile);
+
+    // If either MutableFile is disabled (via a pref) and we don't have a
+    // mutable file here, or we are on a DOM worker and MutableFile is not
+    // supported on workers, return false to indicate that.
+    if (!aFile.HasMutableFile() || !NS_IsMainThread()) {
+      return false;
+    }
+
+    aFile.MutableMutableFile().SetLazyData(aData.name, aData.type);
+
+    return WrapAsJSObject(aCx, aFile.MutableMutableFile(), aResult);
+  }
+
+  static RefPtr<Blob> GetBlob(JSContext* aCx, IDBDatabase* aDatabase,
+                              const StructuredCloneFileChild& aFile) {
+    if (aFile.HasBlob()) {
+      return aFile.BlobPtr();
+    }
+
+    MOZ_CRASH("Expected a StructuredCloneFile with a Blob");
+  }
 };
 
 }  // namespace
 
+template <typename StructuredCloneReadInfo>
 JSObject* CommonStructuredCloneReadCallback(
     JSContext* aCx, JSStructuredCloneReader* aReader,
     const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag, uint32_t aData,
@@ -333,6 +371,9 @@ JSObject* CommonStructuredCloneReadCallback(
                     SCTAG_DOM_WASM_MODULE == 0xffff8006,
                 "You changed our structured clone tag values and just ate "
                 "everyone's IndexedDB data.  I hope you are happy.");
+
+  using StructuredCloneFile =
+      typename StructuredCloneReadInfo::StructuredCloneFile;
 
   if (aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
       aTag == SCTAG_DOM_BLOB || aTag == SCTAG_DOM_FILE ||
@@ -355,10 +396,10 @@ JSObject* CommonStructuredCloneReadCallback(
         return nullptr;
       }
 
-      const StructuredCloneFile& file = files[data.bytecodeIndex];
+      const auto& file = files[data.bytecodeIndex];
 
-      if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapWasmModule(
-              aCx, file, data, &result))) {
+      if (NS_WARN_IF(!ValueDeserializationHelper<StructuredCloneFile>::
+                         CreateAndWrapWasmModule(aCx, file, data, &result))) {
         return nullptr;
       }
 
@@ -370,7 +411,7 @@ JSObject* CommonStructuredCloneReadCallback(
       return nullptr;
     }
 
-    StructuredCloneFile& file = aCloneReadInfo->MutableFile(aData);
+    auto& file = aCloneReadInfo->MutableFile(aData);
 
     if (aTag == SCTAG_DOM_MUTABLEFILE) {
       MutableFileData data;
@@ -378,8 +419,8 @@ JSObject* CommonStructuredCloneReadCallback(
         return nullptr;
       }
 
-      if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapMutableFile(
-              aCx, file, data, &result))) {
+      if (NS_WARN_IF(!ValueDeserializationHelper<StructuredCloneFile>::
+                         CreateAndWrapMutableFile(aCx, file, data, &result))) {
         return nullptr;
       }
 
@@ -391,8 +432,10 @@ JSObject* CommonStructuredCloneReadCallback(
       return nullptr;
     }
 
-    if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapBlobOrFile(
-            aCx, aDatabase, file, data, &result))) {
+    if (NS_WARN_IF(!ValueDeserializationHelper<
+                   StructuredCloneFile>::CreateAndWrapBlobOrFile(aCx, aDatabase,
+                                                                 file, data,
+                                                                 &result))) {
       return nullptr;
     }
 
@@ -402,4 +445,14 @@ JSObject* CommonStructuredCloneReadCallback(
   return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
                                                              aTag);
 }
+
+template JSObject* CommonStructuredCloneReadCallback(
+    JSContext* aCx, JSStructuredCloneReader* aReader,
+    const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag, uint32_t aData,
+    StructuredCloneReadInfoChild* aCloneReadInfo, IDBDatabase* aDatabase);
+
+template JSObject* CommonStructuredCloneReadCallback(
+    JSContext* aCx, JSStructuredCloneReader* aReader,
+    const JS::CloneDataPolicy& aCloneDataPolicy, uint32_t aTag, uint32_t aData,
+    StructuredCloneReadInfoParent* aCloneReadInfo, IDBDatabase* aDatabase);
 }  // namespace mozilla::dom::indexedDB

@@ -248,12 +248,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * Debug mode is controlled by preference browser.sessionstore.debug
  */
 var gDebuggingEnabled = false;
-function debug(aMsg) {
-  if (gDebuggingEnabled) {
-    aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
-    Services.console.logStringMessage(aMsg);
-  }
-}
 
 /**
  * A global value to tell that fingerprinting resistance is enabled or not.
@@ -611,6 +605,8 @@ var SessionStoreInternal = {
   // number of tabs currently restoring
   _tabsRestoringCount: 0,
 
+  _log: null,
+
   // When starting Firefox with a single private window, this is the place
   // where we keep the session we actually wanted to restore in case the user
   // decides to later open a non-private window as well.
@@ -820,7 +816,7 @@ var SessionStoreInternal = {
           });
         }
       } catch (ex) {
-        debug("The session file is invalid: " + ex);
+        this._log.error("The session file is invalid: " + ex);
       }
     }
 
@@ -844,6 +840,11 @@ var SessionStoreInternal = {
 
     Services.prefs.addObserver("browser.sessionstore.debug", () => {
       gDebuggingEnabled = this._prefBranch.getBoolPref("sessionstore.debug");
+    });
+
+    this._log = console.createInstance({
+      prefix: "SessionStore",
+      maxLogLevel: gDebuggingEnabled ? "Debug" : "Warn",
     });
 
     this._max_tabs_undo = this._prefBranch.getIntPref(
@@ -2917,8 +2918,8 @@ var SessionStoreInternal = {
     aSwitchId,
     aReplaceBrowsingContext
   ) {
-    debug(
-      `[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`
+    E10SUtils.log().info(
+      `performing switch from ${aBrowser.remoteType} to ${aRemoteType}`
     );
 
     // Don't try to switch tabs before delayed startup is completed.
@@ -2952,7 +2953,7 @@ var SessionStoreInternal = {
 
     // Tell our caller to redirect the load into this newly created process.
     let remoteTab = aBrowser.frameLoader.remoteTab;
-    debug(`[process-switch]: new tabID: ${remoteTab.tabId}`);
+    E10SUtils.log().debug(`new tabID: ${remoteTab.tabId}`);
     return remoteTab.contentProcessId;
   },
 
@@ -2998,7 +2999,7 @@ var SessionStoreInternal = {
     try {
       switchRequestor = aRequestor.QueryInterface(Ci.nsIProcessSwitchRequestor);
     } catch (e) {
-      debug(`[process-switch]: object not compatible with process switching `);
+      E10SUtils.log().warn(`object not compatible with process switching `);
       return;
     }
 
@@ -3014,21 +3015,21 @@ var SessionStoreInternal = {
       Ci.nsIContentPolicy.TYPE_DOCUMENT;
 
     if (!browsingContext) {
-      debug(`[process-switch]: no BrowsingContext - ignoring`);
+      E10SUtils.log().debug(`no BrowsingContext - ignoring`);
       return;
     }
 
     // Determine if remote subframes should be used for this load.
     let topBC = browsingContext.top;
     if (!topBC.embedderElement) {
-      debug(`[process-switch]: no embedder for top - ignoring`);
+      E10SUtils.log().debug(`no embedder for top - ignoring`);
       return;
     }
 
     let topDocShell = topBC.embedderElement.ownerGlobal.docShell;
     let { useRemoteSubframes } = topDocShell.QueryInterface(Ci.nsILoadContext);
     if (!useRemoteSubframes && isSubframe) {
-      debug(`[process-switch]: remote subframes disabled - ignoring`);
+      E10SUtils.log().debug(`remote subframes disabled - ignoring`);
       return;
     }
 
@@ -3044,22 +3045,22 @@ var SessionStoreInternal = {
     if (browsingContext.embedderElement) {
       let tabbrowser = browsingContext.embedderElement.getTabBrowser();
       if (!tabbrowser) {
-        debug(
-          `[process-switch]: cannot find tabbrowser for loading tab - ignoring`
+        E10SUtils.log().debug(
+          `cannot find tabbrowser for loading tab - ignoring`
         );
         return;
       }
 
       let tab = tabbrowser.getTabForBrowser(browsingContext.embedderElement);
       if (!tab) {
-        debug(
-          `[process-switch]: not a normal tab, so cannot swap processes - ignoring`
+        E10SUtils.log().debug(
+          `not a normal tab, so cannot swap processes - ignoring`
         );
         return;
       }
     } else if (!browsingContext.parent) {
-      debug(
-        `[process-switch] no parent or in-process embedder element - ignoring`
+      E10SUtils.log().debug(
+        `no parent or in-process embedder element - ignoring`
       );
       return;
     }
@@ -3067,7 +3068,7 @@ var SessionStoreInternal = {
     // Get the current remote type for the BrowsingContext.
     let currentRemoteType = browsingContext.currentRemoteType;
     if (currentRemoteType == E10SUtils.NOT_REMOTE) {
-      debug(`[process-switch]: currently not remote - ignoring`);
+      E10SUtils.log().debug(`currently not remote - ignoring`);
       return;
     }
 
@@ -3096,8 +3097,8 @@ var SessionStoreInternal = {
       // to a default remoteType
       preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
     }
-    debug(
-      `[process-switch]: currentRemoteType (${currentRemoteType}) preferredRemoteType: ${preferredRemoteType}`
+    E10SUtils.log().info(
+      `currentRemoteType (${currentRemoteType}) preferredRemoteType: ${preferredRemoteType}`
     );
 
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(
@@ -3109,12 +3110,12 @@ var SessionStoreInternal = {
       isSubframe
     );
 
-    debug(
-      `[process-switch]: ${currentRemoteType}, ${remoteType}, ${isCOOPSwitch}`
+    E10SUtils.log().debug(
+      `${currentRemoteType}, ${remoteType}, ${isCOOPSwitch}`
     );
 
     if (currentRemoteType == remoteType && !isCOOPSwitch) {
-      debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
+      E10SUtils.log().debug(`type (${remoteType}) is compatible - ignoring`);
       return;
     }
 
@@ -3122,7 +3123,7 @@ var SessionStoreInternal = {
       remoteType == E10SUtils.NOT_REMOTE ||
       currentRemoteType == E10SUtils.NOT_REMOTE
     ) {
-      debug(`[process-switch]: non-remote source/target - ignoring`);
+      E10SUtils.log().debug(`non-remote source/target - ignoring`);
       return;
     }
 
@@ -4742,7 +4743,7 @@ var SessionStoreInternal = {
       root = typeof aState == "string" ? JSON.parse(aState) : aState;
     } catch (ex) {
       // invalid state object - don't restore anything
-      debug(ex);
+      this._log.error(ex);
       this._sendRestoreCompletedNotifications();
       return;
     }

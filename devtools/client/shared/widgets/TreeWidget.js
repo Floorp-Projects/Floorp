@@ -193,7 +193,7 @@ TreeWidget.prototype = {
     }
     node = node.parentNode;
     while (node.parentNode && node != this.root.children) {
-      if (node.parentNode && node.parentNode.nextSibling) {
+      if (node.parentNode?.nextSibling) {
         return JSON.parse(node.parentNode.nextSibling.getAttribute("data-id"));
       }
       node = node.parentNode;

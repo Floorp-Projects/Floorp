@@ -6,6 +6,10 @@
 
 /* global XPCNativeWrapper */
 
+// protocol.js uses objects as exceptions in order to define
+// error packets.
+/* eslint-disable no-throw-literal */
+
 /*
  * BrowsingContextTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
@@ -591,11 +595,7 @@ const browsingContextTargetPrototype = {
     } catch (e) {
       // ignore
     }
-    if (
-      metadata &&
-      metadata["inner-window-id"] &&
-      metadata["inner-window-id"] == id
-    ) {
+    if (metadata?.["inner-window-id"] && metadata["inner-window-id"] == id) {
       return true;
     }
 
@@ -653,7 +653,7 @@ const browsingContextTargetPrototype = {
       // ignore
     }
     if (!win) {
-      return {
+      throw {
         error: "noWindow",
         message: "The related docshell is destroyed or not found",
       };
@@ -690,7 +690,9 @@ const browsingContextTargetPrototype = {
 
   listWorkers(request) {
     if (!this.attached) {
-      return { error: "wrongState" };
+      throw {
+        error: "wrongState",
+      };
     }
 
     return this.ensureWorkerTargetActorList()
@@ -988,13 +990,14 @@ const browsingContextTargetPrototype = {
 
   attach(request) {
     if (this.exited) {
-      return { type: "exited" };
+      throw {
+        error: "exited",
+      };
     }
 
     this._attach();
 
     return {
-      type: "tabAttached",
       threadActor: this.threadActor.actorID,
       cacheDisabled: this._getCacheDisabled(),
       javascriptEnabled: this._getJavascriptEnabled(),
@@ -1004,10 +1007,12 @@ const browsingContextTargetPrototype = {
 
   detach(request) {
     if (!this._detach()) {
-      return { error: "wrongState" };
+      throw {
+        error: "wrongState",
+      };
     }
 
-    return { type: "detached" };
+    return {};
   },
 
   /**
@@ -1024,7 +1029,7 @@ const browsingContextTargetPrototype = {
    * Reload the page in this browsing context.
    */
   reload(request) {
-    const force = request && request.options && request.options.force;
+    const force = request?.options?.force;
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     Services.tm.dispatchToMainThread(

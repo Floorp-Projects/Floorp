@@ -10469,7 +10469,7 @@ static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes,
   return true;
 }
 
-bool BytecodeEmitter::addTryNote(JSTryNoteKind kind, uint32_t stackDepth,
+bool BytecodeEmitter::addTryNote(TryNoteKind kind, uint32_t stackDepth,
                                  BytecodeOffset start, BytecodeOffset end) {
   MOZ_ASSERT(!inPrologue());
   return bytecodeSection().tryNoteList().append(kind, stackDepth, start, end);

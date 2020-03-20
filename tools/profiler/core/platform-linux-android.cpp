@@ -63,6 +63,7 @@
 #include "mozilla/LinuxSignal.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/DebugOnly.h"
+#include "common/linux/breakpad_getcontext.h"
 
 #include <string.h>
 #include <list>

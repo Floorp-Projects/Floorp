@@ -1753,7 +1753,7 @@ MarkupView.prototype = {
         (this.inspector.selection.nodeFront === removedNode && isHTMLTag)
       ) {
         const childContainers = parentContainer.getChildContainers();
-        if (childContainers && childContainers[childIndex]) {
+        if (childContainers?.[childIndex]) {
           const childContainer = childContainers[childIndex];
           this._markContainerAsSelected(childContainer, reason);
           if (childContainer.hasChildren) {
@@ -2073,8 +2073,8 @@ MarkupView.prototype = {
       return promise.resolve(container);
     }
 
-    const expand = options && options.expand;
-    const flash = options && options.flash;
+    const expand = options?.expand;
+    const flash = options?.flash;
 
     container.hasChildren = container.node.hasChildren;
     // Accessibility should either ignore empty children or semantically

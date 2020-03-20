@@ -2234,6 +2234,10 @@ nsresult nsHttpChannel::ProcessSecurityHeaders() {
     return NS_OK;
   }
 
+  if (IsBrowsingContextDiscarded()) {
+    return NS_OK;
+  }
+
   nsAutoCString asciiHost;
   nsresult rv = mURI->GetAsciiHost(asciiHost);
   NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -2389,6 +2393,10 @@ void nsHttpChannel::ProcessAltService() {
   }
 
   if (!gHttpHandler->AllowAltSvc() || (mCaps & NS_HTTP_DISALLOW_SPDY)) {
+    return;
+  }
+
+  if (IsBrowsingContextDiscarded()) {
     return;
   }
 

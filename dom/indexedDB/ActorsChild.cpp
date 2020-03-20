@@ -519,16 +519,17 @@ auto DeserializeStructuredCloneFiles(
   MOZ_ASSERT_IF(aForPreprocess, aSerializedFiles.Length() == 1);
 
   const auto count = aSerializedFiles.Length();
-  auto files = nsTArray<StructuredCloneFile>(count);
+  auto files = nsTArray<StructuredCloneFileChild>(count);
 
   for (const auto& serializedFile : aSerializedFiles) {
-    MOZ_ASSERT_IF(aForPreprocess, serializedFile.type() ==
-                                      StructuredCloneFile::eStructuredClone);
+    MOZ_ASSERT_IF(
+        aForPreprocess,
+        serializedFile.type() == StructuredCloneFileBase::eStructuredClone);
 
     const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
 
     switch (serializedFile.type()) {
-      case StructuredCloneFile::eBlob: {
+      case StructuredCloneFileBase::eBlob: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
         const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
@@ -539,19 +540,19 @@ auto DeserializeStructuredCloneFiles(
         RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
         MOZ_ASSERT(blob);
 
-        files.EmplaceBack(StructuredCloneFile::eBlob, std::move(blob));
+        files.EmplaceBack(StructuredCloneFileBase::eBlob, std::move(blob));
 
         break;
       }
 
-      case StructuredCloneFile::eMutableFile: {
+      case StructuredCloneFileBase::eMutableFile: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
                    blobOrMutableFile.type() ==
                        BlobOrMutableFile::TPBackgroundMutableFileChild);
 
         switch (blobOrMutableFile.type()) {
           case BlobOrMutableFile::Tnull_t: {
-            files.EmplaceBack(StructuredCloneFile::eMutableFile);
+            files.EmplaceBack(StructuredCloneFileBase::eMutableFile);
 
             break;
           }
@@ -581,7 +582,7 @@ auto DeserializeStructuredCloneFiles(
         break;
       }
 
-      case StructuredCloneFile::eStructuredClone: {
+      case StructuredCloneFileBase::eStructuredClone: {
         if (aForPreprocess) {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
@@ -594,19 +595,19 @@ auto DeserializeStructuredCloneFiles(
               Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
           MOZ_ASSERT(blob);
 
-          files.EmplaceBack(StructuredCloneFile::eStructuredClone,
+          files.EmplaceBack(StructuredCloneFileBase::eStructuredClone,
                             std::move(blob));
         } else {
           MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
-          files.EmplaceBack(StructuredCloneFile::eStructuredClone);
+          files.EmplaceBack(StructuredCloneFileBase::eStructuredClone);
         }
 
         break;
       }
 
-      case StructuredCloneFile::eWasmBytecode:
-      case StructuredCloneFile::eWasmCompiled: {
+      case StructuredCloneFileBase::eWasmBytecode:
+      case StructuredCloneFileBase::eWasmCompiled: {
         MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
         files.EmplaceBack(serializedFile.type());
@@ -1367,7 +1368,7 @@ class BackgroundRequestChild::PreprocessHelper final
     mActor = nullptr;
   }
 
-  nsresult Init(const StructuredCloneFile& aFile);
+  nsresult Init(const StructuredCloneFileChild& aFile);
 
   nsresult Dispatch();
 
@@ -2941,10 +2942,10 @@ mozilla::ipc::IPCResult BackgroundRequestChild::RecvPreprocess(
 }
 
 nsresult BackgroundRequestChild::PreprocessHelper::Init(
-    const StructuredCloneFile& aFile) {
+    const StructuredCloneFileChild& aFile) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFile.HasBlob());
-  MOZ_ASSERT(aFile.Type() == StructuredCloneFile::eStructuredClone);
+  MOZ_ASSERT(aFile.Type() == StructuredCloneFileBase::eStructuredClone);
   MOZ_ASSERT(mState == State::Initial);
 
   // The stream transport service is used for asynchronous processing. It has a

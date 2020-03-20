@@ -606,7 +606,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    */
   preprocessDebuggerObject(dbgObj) {
     // Returns the bound target function on a bound function.
-    if (dbgObj && dbgObj.isBoundFunction && dbgObj.boundTargetFunction) {
+    if (dbgObj?.isBoundFunction && dbgObj?.boundTargetFunction) {
       return dbgObj.boundTargetFunction;
     }
 
@@ -1164,8 +1164,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       if ("return" in evalResult) {
         result = evalResult.return;
         if (
-          mapped &&
-          mapped.await &&
+          mapped?.await &&
           result &&
           result.class === "Promise" &&
           typeof result.unsafeDereference === "function"
@@ -1251,7 +1250,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
         try {
           const notes = error.errorNotes;
-          if (notes && notes.length) {
+          if (notes?.length) {
             errorNotes = [];
             for (const note of notes) {
               errorNotes.push({
@@ -1704,7 +1703,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     let notesArray = null;
     const notes = pageError.notes;
-    if (notes && notes.length) {
+    if (notes?.length) {
       notesArray = [];
       for (let i = 0, len = notes.length; i < len; i++) {
         const note = notes.queryElementAt(i, Ci.nsIScriptErrorNote);
@@ -2120,7 +2119,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
                   ignoreNonIndexedProperties: isArray(grip),
                 })
                 .all();
-              if (res && res.ownProperties) {
+              if (res?.ownProperties) {
                 desc[key].ownProperties = res.ownProperties;
               }
             }

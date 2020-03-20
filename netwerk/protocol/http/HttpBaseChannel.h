@@ -601,6 +601,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   void MaybeFlushConsoleReports();
 
+  bool IsBrowsingContextDiscarded() const;
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 

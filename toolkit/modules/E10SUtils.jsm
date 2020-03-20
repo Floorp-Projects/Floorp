@@ -80,10 +80,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIExternalProtocolService"
 );
 
-function debug(msg) {
-  Cu.reportError(new Error("E10SUtils: " + msg));
-}
-
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
   let moduleName = aURL.pathQueryRef.replace(/[#?].*/, "").toLowerCase();
@@ -260,6 +256,7 @@ function validatedWebRemoteType(
     !documentChannel &&
     aPreferredRemoteType == FILE_REMOTE_TYPE
   ) {
+    E10SUtils.log().debug("checking allowLinkedWebInFileUriProcess");
     // If aCurrentUri is passed then we should only allow FILE_REMOTE_TYPE
     // when it is same origin as target or the current URI is already a
     // file:// URI.
@@ -269,12 +266,15 @@ function validatedWebRemoteType(
         // todo: if you intend to update CheckSameOriginURI to log the error to the
         // console you also need to update the 'aFromPrivateWindow' argument.
         sm.checkSameOriginURI(aCurrentUri, aTargetUri, false, false);
+        E10SUtils.log().debug("Next URL is same origin");
         return FILE_REMOTE_TYPE;
       } catch (e) {
+        E10SUtils.log().debug("Leaving same origin");
         return WEB_REMOTE_TYPE;
       }
     }
 
+    E10SUtils.log().debug("No aCurrentUri");
     return FILE_REMOTE_TYPE;
   }
 
@@ -299,6 +299,24 @@ var E10SUtils = {
     return documentChannel;
   },
 
+  _log: null,
+  _uriStr: function uriStr(aUri) {
+    return aUri ? aUri.spec : "undefined";
+  },
+
+  log: function log() {
+    if (!this._log) {
+      this._log = console.createInstance({
+        prefix: "ProcessSwitch",
+        maxLogLevel: "Error", // Change to debug the process switching code
+      });
+
+      this._log.debug("Setup logger");
+    }
+
+    return this._log;
+  },
+
   /**
    * Serialize csp data.
    *
@@ -313,7 +331,7 @@ var E10SUtils = {
         serializedCSP = serializationHelper.serializeToString(csp);
       }
     } catch (e) {
-      debug(`Failed to serialize csp '${csp}' ${e}`);
+      this.log().error(`Failed to serialize csp '${csp}' ${e}`);
     }
     return serializedCSP;
   },
@@ -335,7 +353,7 @@ var E10SUtils = {
       csp.QueryInterface(Ci.nsIContentSecurityPolicy);
       return csp;
     } catch (e) {
-      debug(`Failed to deserialize csp_b64 '${csp_b64}' ${e}`);
+      this.log().error(`Failed to deserialize csp_b64 '${csp_b64}' ${e}`);
     }
     return null;
   },
@@ -523,13 +541,20 @@ var E10SUtils = {
           );
         }
 
-        return validatedWebRemoteType(
+        var log = this.log();
+        log.debug("validatedWebRemoteType()");
+        log.debug(`  aPreferredRemoteType: ${aPreferredRemoteType}`);
+        log.debug(`  aTargetUri: ${this._uriStr(aURI)}`);
+        log.debug(`  aCurrentUri: ${this._uriStr(aCurrentUri)}`);
+        var remoteType = validatedWebRemoteType(
           aPreferredRemoteType,
           aURI,
           aCurrentUri,
           aResultPrincipal,
           aRemoteSubframes
         );
+        log.debug(`  validatedWebRemoteType() returning: ${remoteType}`);
+        return remoteType;
     }
   },
 
@@ -627,7 +652,7 @@ var E10SUtils = {
         );
       }
     } catch (e) {
-      debug(`Failed to serialize principal '${principal}' ${e}`);
+      this.log().error(`Failed to serialize principal '${principal}' ${e}`);
     }
 
     return serializedPrincipal;
@@ -643,7 +668,7 @@ var E10SUtils = {
   deserializePrincipal(principal_b64, fallbackPrincipalCallback = null) {
     if (!principal_b64) {
       if (!fallbackPrincipalCallback) {
-        debug(
+        this.log().warn(
           "No principal passed to deserializePrincipal and no fallbackPrincipalCallback"
         );
         return null;
@@ -667,10 +692,12 @@ var E10SUtils = {
       principal.QueryInterface(Ci.nsIPrincipal);
       return principal;
     } catch (e) {
-      debug(`Failed to deserialize principal_b64 '${principal_b64}' ${e}`);
+      this.log().error(
+        `Failed to deserialize principal_b64 '${principal_b64}' ${e}`
+      );
     }
     if (!fallbackPrincipalCallback) {
-      debug(
+      this.log().warn(
         "No principal passed to deserializePrincipal and no fallbackPrincipalCallback"
       );
       return null;
@@ -678,6 +705,52 @@ var E10SUtils = {
     return fallbackPrincipalCallback();
   },
 
+  /**
+   * Returns whether or not a URI is supposed to load in a particular
+   * browser given its current remote type.
+   *
+   * @param browser (<xul:browser>)
+   *   The browser to check.
+   * @param uri (String)
+   *   The URI that will be checked to see if it can load in the
+   *   browser.
+   * @param multiProcess (boolean, optional)
+   *   Whether or not multi-process tabs are enabled. Defaults to true.
+   * @param remoteSubframes (boolean, optional)
+   *   Whether or not multi-process subframes are enabled. Defaults to
+   *   false.
+   * @param flags (Number, optional)
+   *   nsIWebNavigation flags used to clean up the URL in the event that
+   *   it needs fixing ia the URI fixup service. Defaults to
+   *   nsIWebNavigation.LOAD_FLAGS_NONE.
+   *
+   * @return (Object)
+   *   An object with the following properties:
+   *
+   *   uriObject (nsIURI)
+   *     The fixed-up URI that was generated for the check.
+   *
+   *   requiredRemoteType (String)
+   *     The remoteType that was computed for the browser that
+   *     is required to load the URI.
+   *
+   *   mustChangeProcess (boolean)
+   *     Whether or not the front-end will be required to flip
+   *     the process in order to view the URI.
+   *
+   *     NOTE:
+   *       mustChangeProcess might be false even if a process
+   *       flip will occur. In this case, DocumentChannel is taking
+   *       care of the process flip for us rather than the front-end
+   *       code.
+   *
+   *   newFrameloader (boolean)
+   *     Whether or not a new frameloader will need to be created
+   *     in order to browse to this URI. For non-Fission, this is
+   *     important if we're transition from a web content process
+   *     to another web content process, but want to force the
+   *     creation of a _new_ web content process.
+   */
   shouldLoadURIInBrowser(
     browser,
     uri,
@@ -749,19 +822,21 @@ var E10SUtils = {
 
   shouldLoadURIInThisProcess(aURI, aRemoteSubframes) {
     let remoteType = Services.appinfo.remoteType;
-    return (
-      remoteType ==
-      this.getRemoteTypeForURIObject(
-        aURI,
-        /* remote */ true,
-        aRemoteSubframes,
-        remoteType
-      )
+    let wantRemoteType = this.getRemoteTypeForURIObject(
+      aURI,
+      /* remote */ true,
+      aRemoteSubframes,
+      remoteType
     );
+    this.log().info(
+      `shouldLoadURIInThisProcess: have ${remoteType} want ${wantRemoteType}`
+    );
+    return remoteType == wantRemoteType;
   },
 
   shouldLoadURI(aDocShell, aURI, aHasPostData) {
     let { useRemoteSubframes } = aDocShell;
+    this.log().debug(`shouldLoadURI(${this._uriStr(aURI)})`);
 
     // Inner frames should always load in the current process
     // XXX(nika): Handle shouldLoadURI-triggered process switches for remote
@@ -813,32 +888,38 @@ var E10SUtils = {
       !aDocShell.awaitingLargeAlloc &&
       isOnlyToplevelBrowsingContext
     ) {
+      this.log().info(
+        "returning false to throw away large allocation process\n"
+      );
       return false;
     }
 
     // Allow history load if loaded in this process before.
     let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
     if (requestedIndex >= 0) {
+      this.log().debug("Checking history case\n");
       if (
         sessionHistory.legacySHistory.getEntryAtIndex(requestedIndex)
           .loadedInThisProcess
       ) {
+        this.log().info("History entry loaded in this process");
         return true;
       }
 
       // If not originally loaded in this process allow it if the URI would
       // normally be allowed to load in this process by default.
       let remoteType = Services.appinfo.remoteType;
-      return (
-        remoteType ==
-        this.getRemoteTypeForURIObject(
-          aURI,
-          true,
-          useRemoteSubframes,
-          remoteType,
-          webNav.currentURI
-        )
+      let wantRemoteType = this.getRemoteTypeForURIObject(
+        aURI,
+        true,
+        useRemoteSubframes,
+        remoteType,
+        webNav.currentURI
       );
+      this.log().debug(
+        `Checking remote type, got: ${remoteType} want: ${wantRemoteType}\n`
+      );
+      return remoteType == wantRemoteType;
     }
 
     // If the URI can be loaded in the current process then continue
@@ -899,7 +980,9 @@ var E10SUtils = {
       try {
         serialized = serializationHelper.serializeToString(referrerInfo);
       } catch (e) {
-        debug(`Failed to serialize referrerInfo '${referrerInfo}' ${e}`);
+        this.log().error(
+          `Failed to serialize referrerInfo '${referrerInfo}' ${e}`
+        );
       }
     }
     return serialized;
@@ -917,7 +1000,7 @@ var E10SUtils = {
         deserialized = serializationHelper.deserializeObject(referrerInfo_b64);
         deserialized.QueryInterface(Ci.nsIReferrerInfo);
       } catch (e) {
-        debug(
+        this.log().error(
           `Failed to deserialize referrerInfo_b64 '${referrerInfo_b64}' ${e}`
         );
       }

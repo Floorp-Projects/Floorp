@@ -25,7 +25,7 @@ class TreeMap extends Component {
 
   componentDidMount() {
     const { treeMap } = this.props;
-    if (treeMap && treeMap.report) {
+    if (treeMap?.report) {
       this._startVisualization();
     }
   }

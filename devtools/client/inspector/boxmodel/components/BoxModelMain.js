@@ -340,7 +340,7 @@ class BoxModelMain extends PureComponent {
 
             this.setAriaActive(nextLayout);
 
-            if (target && target._editable) {
+            if (target?._editable) {
               target.blur();
             }
 
@@ -393,7 +393,7 @@ class BoxModelMain extends PureComponent {
     );
     this.setAriaActive(nextLayout);
 
-    if (target && target._editable) {
+    if (target?._editable) {
       target.blur();
     }
   }

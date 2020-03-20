@@ -49,18 +49,29 @@ namespace google_breakpad {
 // Forward declarations (for later friend declarations of specialized template).
 template<class, class> class RangeMapSerializer;
 
+// Determines what happens when two ranges overlap.
+enum class MergeRangeStrategy {
+  // When two ranges overlap, the new range fails to be inserted. The default
+  // strategy.
+  kExclusiveRanges,
+
+  // The range with the lower base address will be truncated such that it's
+  // high address is one less than the range above it.
+  kTruncateLower,
+
+  // The range with the greater high address has its range truncated such that
+  // its base address is one higher than the range below it.
+  kTruncateUpper
+};
+
 template<typename AddressType, typename EntryType>
 class RangeMap {
  public:
-  RangeMap() : enable_shrink_down_(false), map_() {}
+  RangeMap() : merge_strategy_(MergeRangeStrategy::kExclusiveRanges), map_() {}
 
-  // |enable_shrink_down| tells whether overlapping ranges can be shrunk down.
-  // If true, then adding a new range that overlaps with an existing one can
-  // be a successful operation.  The range which ends at the higher address
-  // will be shrunk down by moving its start position to a higher address so
-  // that it does not overlap anymore.
-  void SetEnableShrinkDown(bool enable_shrink_down);
-  bool IsShrinkDownEnabled() const;
+  void SetMergeStrategy(MergeRangeStrategy strat) { merge_strategy_ = strat; }
+
+  MergeRangeStrategy GetMergeStrategy() const { return merge_strategy_; }
 
   // Inserts a range into the map.  Returns false for a parameter error,
   // or if the location of the range would conflict with a range already
@@ -147,8 +158,7 @@ class RangeMap {
   typedef typename AddressToRangeMap::const_iterator MapConstIterator;
   typedef typename AddressToRangeMap::value_type MapValue;
 
-  // Whether overlapping ranges can be shrunk down.
-  bool enable_shrink_down_;
+  MergeRangeStrategy merge_strategy_;
 
   // Maps the high address of each range to a EntryType.
   AddressToRangeMap map_;

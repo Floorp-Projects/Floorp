@@ -81,10 +81,10 @@ LOCAL_SRC_FILES := \
     src/client/linux/minidump_writer/linux_ptrace_dumper.cc \
     src/client/linux/minidump_writer/minidump_writer.cc \
     src/client/minidump_file_writer.cc \
-    src/common/android/breakpad_getcontext.S \
-    src/common/convert_UTF.c \
+    src/common/convert_UTF.cc \
     src/common/md5.cc \
     src/common/string_conversion.cc \
+    src/common/linux/breakpad_getcontext.S \
     src/common/linux/elfutils.cc \
     src/common/linux/file_id.cc \
     src/common/linux/guid_creator.cc \
@@ -93,7 +93,8 @@ LOCAL_SRC_FILES := \
     src/common/linux/safe_readlink.cc
 
 LOCAL_C_INCLUDES        := $(LOCAL_PATH)/src/common/android/include \
-                           $(LOCAL_PATH)/src
+                           $(LOCAL_PATH)/src \
+                           $(LSS_PATH)
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 LOCAL_EXPORT_LDLIBS     := -llog

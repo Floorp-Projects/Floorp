@@ -276,7 +276,7 @@ define(function(require, exports, module) {
     get visibleRows() {
       return this.rows.filter(row => {
         const rowEl = findDOMNode(row);
-        return rowEl && rowEl.offsetParent;
+        return rowEl?.offsetParent;
       });
     }
 
@@ -325,7 +325,7 @@ define(function(require, exports, module) {
           }
           break;
         case "ArrowLeft":
-          if (row && row.props.member.open) {
+          if (row?.props.member.open) {
             this.toggle(this.state.selected);
           } else {
             const parentRow = rows
@@ -601,7 +601,7 @@ define(function(require, exports, module) {
       }
 
       members.forEach(member => {
-        if (decorator && decorator.renderRow) {
+        if (decorator?.renderRow) {
           renderRow = decorator.renderRow(member.object) || renderRow;
         }
 

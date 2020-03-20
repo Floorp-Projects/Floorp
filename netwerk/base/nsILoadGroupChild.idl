@@ -14,7 +14,7 @@ interface nsILoadGroup;
  * for the purposes of cancellation and status events.
  */
 
-[scriptable, uuid(02efe8e2-fbbc-4718-a299-b8a09c60bf6b)]
+[builtinclass, scriptable, uuid(02efe8e2-fbbc-4718-a299-b8a09c60bf6b)]
 interface nsILoadGroupChild : nsISupports
 {
     /**

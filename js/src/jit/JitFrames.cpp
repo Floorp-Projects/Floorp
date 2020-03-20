@@ -88,7 +88,7 @@ static uint32_t NumArgAndLocalSlots(const InlineFrameIterator& frame) {
 
 static void CloseLiveIteratorIon(JSContext* cx,
                                  const InlineFrameIterator& frame,
-                                 const JSTryNote* tn) {
+                                 const TryNote* tn) {
   MOZ_ASSERT(tn->kind == JSTRY_FOR_IN || tn->kind == JSTRY_DESTRUCTURING);
 
   bool isDestructuring = tn->kind == JSTRY_DESTRUCTURING;
@@ -145,7 +145,7 @@ class IonTryNoteFilter {
     depth_ = si.numAllocations() - base;
   }
 
-  bool operator()(const JSTryNote* note) { return note->stackDepth <= depth_; }
+  bool operator()(const TryNote* note) { return note->stackDepth <= depth_; }
 };
 
 class TryNoteIterIon : public TryNoteIter<IonTryNoteFilter> {
@@ -197,7 +197,7 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
   RootedScript script(cx, frame.script());
 
   for (TryNoteIterIon tni(cx, frame); !tni.done(); ++tni) {
-    const JSTryNote* tn = *tni;
+    const TryNote* tn = *tni;
     switch (tn->kind) {
       case JSTRY_FOR_IN:
       case JSTRY_DESTRUCTURING:
@@ -257,7 +257,7 @@ static void OnLeaveBaselineFrame(JSContext* cx, const JSJitFrameIter& frame,
 }
 
 static inline void BaselineFrameAndStackPointersFromTryNote(
-    const JSTryNote* tn, const JSJitFrameIter& frame, uint8_t** framePointer,
+    const TryNote* tn, const JSJitFrameIter& frame, uint8_t** framePointer,
     uint8_t** stackPointer) {
   JSScript* script = frame.baselineFrame()->script();
   *framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
@@ -265,7 +265,7 @@ static inline void BaselineFrameAndStackPointersFromTryNote(
                   (script->nfixed() + tn->stackDepth) * sizeof(Value);
 }
 
-static void SettleOnTryNote(JSContext* cx, const JSTryNote* tn,
+static void SettleOnTryNote(JSContext* cx, const TryNote* tn,
                             const JSJitFrameIter& frame, EnvironmentIter& ei,
                             ResumeFromException* rfe, jsbytecode** pc) {
   RootedScript script(cx, frame.baselineFrame()->script());
@@ -288,7 +288,7 @@ class BaselineTryNoteFilter {
 
  public:
   explicit BaselineTryNoteFilter(const JSJitFrameIter& frame) : frame_(frame) {}
-  bool operator()(const JSTryNote* note) {
+  bool operator()(const TryNote* note) {
     BaselineFrame* frame = frame_.baselineFrame();
 
     uint32_t numValueSlots = frame_.baselineFrameNumValueSlots();
@@ -311,7 +311,7 @@ class TryNoteIterBaseline : public TryNoteIter<BaselineTryNoteFilter> {
 static void CloseLiveIteratorsBaselineForUncatchableException(
     JSContext* cx, const JSJitFrameIter& frame, jsbytecode* pc) {
   for (TryNoteIterBaseline tni(cx, frame, pc); !tni.done(); ++tni) {
-    const JSTryNote* tn = *tni;
+    const TryNote* tn = *tni;
     switch (tn->kind) {
       case JSTRY_FOR_IN: {
         uint8_t* framePointer;
@@ -339,7 +339,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
   RootedScript script(cx, frame.baselineFrame()->script());
 
   for (TryNoteIterBaseline tni(cx, frame, *pc); !tni.done(); ++tni) {
-    const JSTryNote* tn = *tni;
+    const TryNote* tn = *tni;
 
     MOZ_ASSERT(cx->isExceptionPending());
     switch (tn->kind) {

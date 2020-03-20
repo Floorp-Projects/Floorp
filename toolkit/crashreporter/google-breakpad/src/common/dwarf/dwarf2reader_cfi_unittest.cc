@@ -608,11 +608,11 @@ TEST_F(CFI, CIEVersion3ReturnColumn) {
 }
 
 TEST_F(CFI, CIEVersion4AdditionalFields) {
-  CFISection section(kBigEndian, 4);
+  CFISection section(kBigEndian, 8);
   Label cie;
   section
       .Mark(&cie)
-      // CIE version 4 with expected address and segment size.
+      // CIE version 4 with expected address (64bit) and segment size.
       .CIEHeader(0x0ab4758d, 0xc010fdf7, 0x89, 4, "", true, 8, 0)
       .FinishEntry()
       // FDE, citing that CIE.
@@ -631,7 +631,36 @@ TEST_F(CFI, CIEVersion4AdditionalFields) {
   string contents;
   EXPECT_TRUE(section.GetContents(&contents));
   ByteReader byte_reader(ENDIANNESS_BIG);
-  byte_reader.SetAddressSize(4);
+  CallFrameInfo parser(reinterpret_cast<const uint8_t *>(contents.data()),
+                       contents.size(),
+                       &byte_reader, &handler, &reporter);
+  EXPECT_TRUE(parser.Start());
+}
+
+TEST_F(CFI, CIEVersion4AdditionalFields32BitAddress) {
+  CFISection section(kBigEndian, 4);
+  Label cie;
+  section
+      .Mark(&cie)
+      // CIE version 4 with expected address (32bit) and segment size.
+      .CIEHeader(0x0ab4758d, 0xc010fdf7, 0x89, 4, "", true, 4, 0)
+      .FinishEntry()
+      // FDE, citing that CIE.
+      .FDEHeader(cie, 0x86763f2b, 0x2a66dc23)
+      .FinishEntry();
+
+  PERHAPS_WRITE_DEBUG_FRAME_FILE("CIEVersion3ReturnColumn", section);
+
+  {
+    InSequence s;
+    EXPECT_CALL(handler, Entry(_, 0x86763f2b, 0x2a66dc23, 4, "", 0x89))
+        .WillOnce(Return(true));
+    EXPECT_CALL(handler, End()).WillOnce(Return(true));
+  }
+
+  string contents;
+  EXPECT_TRUE(section.GetContents(&contents));
+  ByteReader byte_reader(ENDIANNESS_BIG);
   CallFrameInfo parser(reinterpret_cast<const uint8_t *>(contents.data()),
                        contents.size(),
                        &byte_reader, &handler, &reporter);
@@ -659,7 +688,6 @@ TEST_F(CFI, CIEVersion4AdditionalFieldsUnexpectedAddressSize) {
   string contents;
   EXPECT_TRUE(section.GetContents(&contents));
   ByteReader byte_reader(ENDIANNESS_BIG);
-  byte_reader.SetAddressSize(8);
   CallFrameInfo parser(reinterpret_cast<const uint8_t *>(contents.data()),
                        contents.size(),
                        &byte_reader, &handler, &reporter);
@@ -667,7 +695,7 @@ TEST_F(CFI, CIEVersion4AdditionalFieldsUnexpectedAddressSize) {
 }
 
 TEST_F(CFI, CIEVersion4AdditionalFieldsUnexpectedSegmentSize) {
-  CFISection section(kBigEndian, 4);
+  CFISection section(kBigEndian, 8);
   Label cie;
 
   section
@@ -685,7 +713,6 @@ TEST_F(CFI, CIEVersion4AdditionalFieldsUnexpectedSegmentSize) {
   string contents;
   EXPECT_TRUE(section.GetContents(&contents));
   ByteReader byte_reader(ENDIANNESS_BIG);
-  byte_reader.SetAddressSize(8);
   CallFrameInfo parser(reinterpret_cast<const uint8_t *>(contents.data()),
                        contents.size(),
                        &byte_reader, &handler, &reporter);

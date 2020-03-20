@@ -320,7 +320,7 @@ CssLogic.prototype = {
 
     if (domSheet.href) {
       cacheId = domSheet.href;
-    } else if (domSheet.ownerNode && domSheet.ownerNode.ownerDocument) {
+    } else if (domSheet.ownerNode?.ownerDocument) {
       cacheId = domSheet.ownerNode.ownerDocument.location;
     }
 

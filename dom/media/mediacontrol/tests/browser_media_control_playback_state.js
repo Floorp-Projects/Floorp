@@ -85,51 +85,14 @@ add_task(async function testBothGuessedAndDeclaredPlaybackState() {
  */
 function setGuessedPlaybackState(tab, state) {
   if (state == "playing") {
-    return playMedia(tab);
+    return playMedia(tab, testVideoId);
   } else if (state == "paused") {
-    return pauseMedia(tab);
+    return pauseMedia(tab, testVideoId);
   }
   // We won't set the state `stopped`, which would only happen if no any media
   // has ever been started in the page.
   ok(false, `should only set 'playing' or 'paused' state`);
   return Promise.resolve();
-}
-
-function playMedia(tab) {
-  const playPromise = SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [testVideoId],
-    Id => {
-      const video = content.document.getElementById(Id);
-      if (!video) {
-        ok(false, `can't get the media element!`);
-      }
-      return video.play();
-    }
-  );
-  return Promise.all([
-    playPromise,
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
-}
-
-function pauseMedia(tab) {
-  const spawnPromise = SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [testVideoId],
-    Id => {
-      const video = content.document.getElementById(Id);
-      if (!video) {
-        ok(false, `can't get the media element!`);
-      }
-      ok(!video.paused, `video is playing before calling pause`);
-      video.pause();
-    }
-  );
-  return Promise.all([
-    spawnPromise,
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
 }
 
 function isActualPlaybackStateEqualTo(tab, expectedState) {

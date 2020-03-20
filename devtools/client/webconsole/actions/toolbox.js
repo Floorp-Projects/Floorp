@@ -34,9 +34,16 @@ function unHighlightDomElement(grip) {
   };
 }
 
+function openNodeInInspector(actor) {
+  return ({ hud }) => {
+    hud.openNodeInInspector({ actor: actor });
+  };
+}
+
 module.exports = {
   highlightDomElement,
   unHighlightDomElement,
   openNetworkPanel,
   resendNetworkRequest,
+  openNodeInInspector,
 };

@@ -205,7 +205,7 @@ class App extends Component {
       return;
     }
 
-    if (webConsoleUI && webConsoleUI.jsterm) {
+    if (webConsoleUI?.jsterm) {
       webConsoleUI.jsterm.focus();
     }
   }

@@ -20,6 +20,7 @@ add_task(async function setup() {
       let settings = { proxy: null };
 
       browser.proxy.onError.addListener(error => {
+        browser.test.log(`error received ${error.message}`);
         browser.test.sendMessage("proxy-error-received", error);
       });
       browser.test.onMessage.addListener((message, data) => {
@@ -187,6 +188,32 @@ add_task(async function test_proxyInfo_results() {
       expected: {
         error:
           "ProxyInfoData: Proxy server port 65536 outside range 1 to 65535",
+      },
+    },
+    {
+      proxy: [
+        {
+          type: "http",
+          host: "foo.bar",
+          port: 3128,
+          proxyAuthorizationHeader: "test",
+        },
+      ],
+      expected: {
+        error: 'ProxyInfoData: ProxyAuthorizationHeader requires type "https"',
+      },
+    },
+    {
+      proxy: [
+        {
+          type: "http",
+          host: "foo.bar",
+          port: 3128,
+          connectionIsolationKey: 1234,
+        },
+      ],
+      expected: {
+        error: 'ProxyInfoData: Invalid proxy connection isolation key: "1234"',
       },
     },
     {
@@ -404,6 +431,26 @@ add_task(async function test_proxyInfo_results() {
               },
             },
           },
+        },
+      },
+    },
+    {
+      proxy: [
+        {
+          type: "https",
+          host: "foo.bar",
+          port: 3128,
+          proxyAuthorizationHeader: "test",
+          connectionIsolationKey: "key",
+        },
+      ],
+      expected: {
+        proxyInfo: {
+          host: "foo.bar",
+          port: "3128",
+          type: "https",
+          proxyAuthorizationHeader: "test",
+          connectionIsolationKey: "key",
         },
       },
     },

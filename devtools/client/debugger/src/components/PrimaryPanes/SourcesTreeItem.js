@@ -273,7 +273,7 @@ class SourceTreeItem extends Component<Props, State> {
       return <AccessibleImage className="folder" />;
     }
 
-    if (source && source.isBlackBoxed) {
+    if (source?.isBlackBoxed) {
       return <AccessibleImage className="blackBox" />;
     }
 
@@ -283,7 +283,10 @@ class SourceTreeItem extends Component<Props, State> {
 
     if (source) {
       return (
-        <SourceIcon source={source} shouldHide={icon => icon === "extension"} />
+        <SourceIcon
+          source={source}
+          modifier={icon => (icon === "extension" ? "javascript" : icon)}
+        />
       );
     }
 

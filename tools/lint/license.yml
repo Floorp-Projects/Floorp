@@ -6,38 +6,26 @@ license:
     exclude:
         # These paths need to be triaged.
         - build/pgo/js-input
-        - build/workspace-hack/src/lib.rs
-        - tools/crashreporter/system-symbols/mac/parse_pbzx.py
         # License not super clear
         - browser/branding/
         # Trademark
         - browser/components/pocket/content/panels/
-        - browser/components/shell/ScreenshotChild.jsm
         - browser/extensions/pdfjs/content/web/images/
-        - browser/extensions/webcompat/about-compat/aboutCompat.html
         # We probably want a specific license
         - browser/extensions/webcompat/injections/
         # Different license
         - build/pgo/blueprint/print.css
         # Different license
         - build/pgo/blueprint/screen.css
-        - config/external/ffi/preprocess_libffi_asm.py
-        - config/external/ffi/subst_header.py
+        # Empty files
         - config/external/nspr/_pl_bld.h
         - config/external/nspr/_pr_bld.h
-        - dom/docs/Fission-IPC-Diagram.svg
         # Unknown origin
         - gfx/2d/MMIHelpers.h
-        # Generated code
-        - gfx/2d/ShadersD2D1.h
         # might not work with license
         - gradle.properties
         # might not work with license
         - gradle/wrapper/gradle-wrapper.properties
-        - intl/l10n/L10nRegistry.jsm
-        - ipc/ipdl/ipdl/cxx/code.py
-        - media/libdav1d/vcs_version.h
-        - media/mtransport/mdns_service/mdns_service.h
         - mobile/android/components/extensions
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
@@ -48,23 +36,16 @@ license:
         - mobile/android/gradle/dotgradle-online/gradle.properties
         # Almost empty file
         - modules/libpref/greprefs.js
-        - mozglue/android/NativeCrypto.h
         - parser/html/java/named-character-references.html
-        - python/mozbuild/mozbuild/action/tooltool.py
-        - python/mozbuild/mozbuild/artifact_commands.py
-        - python/mozbuild/mozbuild/export_telemetry_schema.py
-        - python/mozbuild/mozpack/hg.py
         - python/mozlint/test/files/
         # By design
         - python/mozrelease/mozrelease
-        - security/generate_certdata.py
         - security/mac/hardenedruntime/browser.developer.entitlements.xml
         - security/mac/hardenedruntime/browser.production.entitlements.xml
         - security/mac/hardenedruntime/developer.entitlements.xml
         - security/mac/hardenedruntime/plugin-container.developer.entitlements.xml
         - security/mac/hardenedruntime/plugin-container.production.entitlements.xml
         - security/mac/hardenedruntime/production.entitlements.xml
-        - services/sync/modules-testing/fxa_utils.js
         - servo/components/hashglobe/src/alloc.rs
         - servo/components/hashglobe/src/shim.rs
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.cc
@@ -73,8 +54,6 @@ license:
         - tools/lint/eslint/eslint-plugin-mozilla/lib/configs
         # By design
         - tools/lint/test/
-        # generated file
-        - xpcom/ds/HTMLAtoms.py
     extensions:
         - .c
         - .cc

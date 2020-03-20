@@ -6,7 +6,6 @@
 
 // eslint-disable-next-line max-len
 import type { Frame } from "../../../types";
-import { getFilename } from "../../source";
 
 // Decodes an anonymous naming scheme that
 // spider monkey implements based on "Naming Anonymous JavaScript Functions"
@@ -67,10 +66,7 @@ const displayNameMap = {
 
 function mapDisplayNames(frame, library) {
   const { displayName } = frame;
-  return (
-    (displayNameMap[library] && displayNameMap[library][displayName]) ||
-    displayName
-  );
+  return displayNameMap[library]?.[displayName] || displayName;
 }
 
 function getFrameDisplayName(frame: Frame): string {
@@ -105,7 +101,7 @@ export function formatCopyName(frame: Frame, l10n: typeof L10N): string {
   if (!frame.source) {
     throw new Error("no frame source");
   }
-  const fileName = getFilename(frame.source);
+  const fileName = frame.source.url || frame.source.id;
   const frameLocation = frame.location.line;
 
   return `${displayName} (${fileName}#${frameLocation})`;

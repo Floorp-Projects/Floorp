@@ -240,6 +240,7 @@ using namespace webrtc::videocapturemodule;
   _orientationHasChanged = NO;
   [self waitForCaptureChangeToFinish];
   [self directOutputToNil];
+  _owner = NULL;
 
   if (!_captureSession) {
     return NO;
@@ -325,7 +326,9 @@ using namespace webrtc::videocapturemodule;
   tempCaptureCapability.maxFPS = _capability.maxFPS;
   tempCaptureCapability.videoType = VideoType::kUYVY;
 
-  _owner->IncomingFrame(baseAddress, frameSize, tempCaptureCapability, 0);
+  if (_owner) {
+    _owner->IncomingFrame(baseAddress, frameSize, tempCaptureCapability, 0);
+  }
 
   CVPixelBufferUnlockBaseAddress(videoFrame, kFlags);
 }

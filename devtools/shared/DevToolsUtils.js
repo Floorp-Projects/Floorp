@@ -266,7 +266,7 @@ exports.hasSafeGetter = function(desc) {
   // unwrapping.
   let fn = desc.get;
   fn = fn && exports.unwrap(fn);
-  return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
+  return fn?.callable && fn?.class == "Function" && fn?.script === undefined;
 };
 
 /**

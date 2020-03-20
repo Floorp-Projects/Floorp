@@ -239,7 +239,7 @@ class FramePayload extends Component {
     try {
       decoder = new JsonHubProtocol();
       const msgs = decoder.parseMessages(payload, null);
-      if (msgs && msgs.length) {
+      if (msgs?.length) {
         return msgs;
       }
     } catch (err) {

@@ -12,7 +12,6 @@ import {
 import { getCurrentThreadFrames } from "../reducers/pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isOriginal } from "../utils/source";
-import { get } from "lodash";
 import type { State, SourceResourceState } from "../reducers/types";
 import type { Frame, Source } from "../types";
 import { createSelector } from "reselect";
@@ -57,7 +56,7 @@ export function formatCallStackFrames(
   const formattedFrames: Frame[] = frames
     .filter(frame => getSourceForFrame(sources, frame))
     .map(frame => appendSource(sources, frame, selectedSource))
-    .filter(frame => !get(frame, "source.isBlackBoxed"));
+    .filter(frame => !frame?.source?.isBlackBoxed);
 
   return annotateFrames(formattedFrames);
 }
