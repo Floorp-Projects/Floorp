@@ -17,14 +17,11 @@ py2commands="
     artifact
     awsy-test
     browsertime
-    build
-    build-backend
     buildsymbols
     cargo
     check-spidermonkey
     clang-format
     compileflags
-    configure
     cppunittest
     cramtest
     crashtest
