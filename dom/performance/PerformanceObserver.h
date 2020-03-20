@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
+#include "mozilla/dom/PerformanceObserverBinding.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -26,7 +27,6 @@ class GlobalObject;
 class Performance;
 class PerformanceEntry;
 class PerformanceObserverCallback;
-struct PerformanceObserverInit;
 class WorkerPrivate;
 
 class PerformanceObserver final : public nsISupports, public nsWrapperCache {

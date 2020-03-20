@@ -51,6 +51,8 @@ namespace mozilla {
 template <class T>
 class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
  public:
+  using element_type = T;
+
   OwningNonNull() = default;
 
   MOZ_IMPLICIT OwningNonNull(T& aValue) { init(&aValue); }

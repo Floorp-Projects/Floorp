@@ -22,6 +22,22 @@ nsTArray_base<Alloc, RelocationStrategy>::~nsTArray_base() {
 }
 
 template <class Alloc, class RelocationStrategy>
+nsTArray_base<Alloc, RelocationStrategy>::nsTArray_base(const nsTArray_base&)
+    : mHdr(EmptyHdr()) {
+  // Actual copying happens through nsTArray_CopyEnabler, we just need to do the
+  // initialization of mHdr.
+  MOZ_COUNT_CTOR(nsTArray_base);
+}
+
+template <class Alloc, class RelocationStrategy>
+nsTArray_base<Alloc, RelocationStrategy>&
+nsTArray_base<Alloc, RelocationStrategy>::operator=(const nsTArray_base&) {
+  // Actual copying happens through nsTArray_CopyEnabler, so do nothing here (do
+  // not copy mHdr).
+  return *this;
+}
+
+template <class Alloc, class RelocationStrategy>
 const nsTArrayHeader*
 nsTArray_base<Alloc, RelocationStrategy>::GetAutoArrayBufferUnsafe(
     size_t aElemAlign) const {

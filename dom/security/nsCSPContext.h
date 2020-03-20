@@ -31,6 +31,8 @@ class nsINetworkInterceptController;
 class nsIEventTarget;
 struct ConsoleMsgQueueElem;
 
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(ConsoleMsgQueueElem)
+
 namespace mozilla {
 namespace dom {
 class Element;
