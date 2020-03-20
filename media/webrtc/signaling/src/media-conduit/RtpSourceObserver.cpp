@@ -30,7 +30,7 @@ void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
                                     const uint32_t aJitter) {
   DOMHighResTimeStamp jsNow = mTimestampMaker.GetNow();
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
       "RtpSourceObserver::OnRtpPacket",
       [this, self = RefPtr<RtpSourceObserver>(this), aHeader, aJitter,
        jsNow]() {
@@ -64,7 +64,15 @@ void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
           hist.Insert(jsNow, predictedPlayoutTime, aHeader.timestamp, hasLevel,
                       level);
         }
-      }));
+      });
+
+  if (NS_IsMainThread()) {
+    // Code-path for gtests; everything happens on main, and there's no event
+    // loop.
+    runnable->Run();
+  } else {
+    NS_DispatchToMainThread(runnable);
+  }
 }
 
 void RtpSourceObserver::GetRtpSources(
