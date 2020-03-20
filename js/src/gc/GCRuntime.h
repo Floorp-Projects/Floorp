@@ -436,6 +436,8 @@ class GCRuntime {
   JS::DoCycleCollectionCallback setDoCycleCollectionCallback(
       JS::DoCycleCollectionCallback callback);
 
+  bool addFinalizationRegistry(JSContext* cx,
+                               FinalizationRegistryObject* registry);
   bool registerWithFinalizationRegistry(JSContext* cx, HandleObject target,
                                         HandleObject record);
   bool cleanupQueuedFinalizationRegistry(

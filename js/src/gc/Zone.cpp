@@ -162,6 +162,7 @@ JS::Zone::Zone(JSRuntime* rt)
       baseShapes_(this, this),
       initialShapes_(this, this),
       nurseryShapes_(this),
+      finalizationRegistries_(this, this),
       finalizationRecordMap_(this, this),
       jitZone_(this, nullptr),
       gcScheduled_(false),

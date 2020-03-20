@@ -135,8 +135,10 @@ class FinalizationRecordObject : public NativeObject {
 using FinalizationRecordVector =
     GCVector<HeapPtr<FinalizationRecordObject*>, 1, js::ZoneAllocPolicy>;
 
-// A JS object that wraps a FinalizationRecordVector. Used as the values in the
-// registration weakmap.
+// A JS object containing a vector of FinalizationRecordObjects, which holds the
+// records corresponding to the registrations for a particular registration
+// token. These are used as the values in the registration weakmap. The contents
+// of the vector are weak references and are not traced.
 class FinalizationRecordVectorObject : public NativeObject {
   enum { RecordsSlot = 0, SlotCount };
 
@@ -152,6 +154,8 @@ class FinalizationRecordVectorObject : public NativeObject {
 
   bool append(HandleFinalizationRecordObject record);
   void remove(HandleFinalizationRecordObject record);
+
+  void sweep();
 
  private:
   static const JSClassOps classOps_;
@@ -191,6 +195,8 @@ class FinalizationRegistryObject : public NativeObject {
   void queueRecordToBeCleanedUp(FinalizationRecordObject* record);
   void setQueuedForCleanup(bool value);
   void setCleanupJobActive(bool value);
+
+  void sweep();
 
   static bool cleanupQueuedRecords(JSContext* cx,
                                    HandleFinalizationRegistryObject registry,

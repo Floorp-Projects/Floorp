@@ -151,7 +151,7 @@ const JSClassOps FinalizationRecordVectorObject::classOps_ = {
     nullptr,                                   // call
     nullptr,                                   // hasInstance
     nullptr,                                   // construct
-    FinalizationRecordVectorObject::trace,     // trace
+    nullptr,                                   // trace
 };
 
 /* static */
@@ -172,14 +172,6 @@ FinalizationRecordVectorObject* FinalizationRecordVectorObject::create(
                    MemoryUse::FinalizationRecordVector);
 
   return object;
-}
-
-/* static */
-void FinalizationRecordVectorObject::trace(JSTracer* trc, JSObject* obj) {
-  auto rv = &obj->as<FinalizationRecordVectorObject>();
-  if (auto* records = rv->records()) {
-    records->trace(trc);
-  }
 }
 
 /* static */
@@ -222,6 +214,11 @@ inline void FinalizationRecordVectorObject::remove(
     HandleFinalizationRecordObject record) {
   MOZ_ASSERT(records());
   records()->eraseIfEqual(record);
+}
+
+inline void FinalizationRecordVectorObject::sweep() {
+  MOZ_ASSERT(records());
+  return records()->sweep();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -329,6 +326,10 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
   registry->initReservedSlot(IsQueuedForCleanupSlot, BooleanValue(false));
   registry->initReservedSlot(IsCleanupJobActiveSlot, BooleanValue(false));
 
+  if (!cx->runtime()->gc.addFinalizationRegistry(cx, registry)) {
+    return false;
+  }
+
   args.rval().setObject(*registry);
   return true;
 }
@@ -336,14 +337,37 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
 /* static */
 void FinalizationRegistryObject::trace(JSTracer* trc, JSObject* obj) {
   auto registry = &obj->as<FinalizationRegistryObject>();
+
+  // Trace the registrations weak map. At most this traces the
+  // FinalizationRecordVectorObject values of the map; the contents of those
+  // objects are weakly held and are not traced.
   if (ObjectWeakMap* registrations = registry->registrations()) {
     registrations->trace(trc);
   }
-  if (FinalizationRecordSet* records = registry->activeRecords()) {
-    records->trace(trc);
-  }
+
+  // The active record set is weakly held and is not traced.
+
   if (FinalizationRecordVector* records = registry->recordsToBeCleanedUp()) {
     records->trace(trc);
+  }
+}
+
+void FinalizationRegistryObject::sweep() {
+  // Sweep the set of active records. These may die if CCWs to record objects
+  // get nuked.
+  MOZ_ASSERT(activeRecords());
+  activeRecords()->sweep();
+
+  // Sweep the contents of the registrations weak map's values.
+  MOZ_ASSERT(registrations());
+  for (ObjectValueWeakMap::Enum e(registrations()->valueMap()); !e.empty();
+       e.popFront()) {
+    auto registrations =
+        &e.front().value().toObject().as<FinalizationRecordVectorObject>();
+    registrations->sweep();
+    if (registrations->isEmpty()) {
+      e.removeFront();
+    }
   }
 }
 
@@ -354,7 +378,7 @@ void FinalizationRegistryObject::finalize(JSFreeOp* fop, JSObject* obj) {
   // Clear the weak pointer to the registry in all remaining records.
 
   // FinalizationRegistries are foreground finalized whereas record objects are
-  // background finalized, so record objects and guaranteed to still be
+  // background finalized, so record objects are guaranteed to still be
   // accessible at this point.
   MOZ_ASSERT(registry->getClass()->flags & JSCLASS_FOREGROUND_FINALIZE);
 

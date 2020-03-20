@@ -4956,8 +4956,9 @@ void GCRuntime::sweepWeakRefs() {
 void GCRuntime::sweepFinalizationRegistriesOnMainThread() {
   // This calls back into the browser which expects to be called from the main
   // thread.
-  gcstats::AutoPhase ap(stats(),
-                        gcstats::PhaseKind::SWEEP_FINALIZATION_REGISTRIES);
+  gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
+  gcstats::AutoPhase ap2(stats(),
+                         gcstats::PhaseKind::SWEEP_FINALIZATION_REGISTRIES);
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     sweepFinalizationRegistries(zone);
   }
@@ -5242,7 +5243,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     {
       AutoUnlockHelperThreadState unlock(lock);
       sweepJitDataOnMainThread(fop);
-      sweepFinalizationRegistriesOnMainThread();
     }
 
     for (auto& task : sweepCacheTasks) {
@@ -5253,6 +5253,10 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   if (sweepingAtoms) {
     startSweepingAtomsTable();
   }
+
+  // FinalizationRegistry sweeping touches weak maps and so must not run in
+  // parallel with that.
+  sweepFinalizationRegistriesOnMainThread();
 
   // Queue all GC things in all zones for sweeping, either on the foreground
   // or on the background thread.
