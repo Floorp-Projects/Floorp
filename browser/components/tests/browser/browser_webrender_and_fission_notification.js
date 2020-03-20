@@ -9,8 +9,10 @@ add_task(async function() {
   // Run the check manually. Otherwise, it is deactivated during automation.
   FissionTestingUI.checkFissionWithoutWebRender();
 
-  const isWebRenderEnabled = Services.prefs.getBoolPref("gfx.webrender.all");
   const isFissionEnabled = Services.prefs.getBoolPref("fission.autostart");
+  let isWebRenderEnabled = Cc["@mozilla.org/gfx/info;1"].getService(
+    Ci.nsIGfxInfo
+  ).WebRenderEnabled;
   const isWarningExpected = isFissionEnabled && !isWebRenderEnabled;
 
   // Wait until the browser has had a chance to display the warning.
