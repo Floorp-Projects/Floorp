@@ -76,6 +76,14 @@ async function testURL(url, loadFunc, endFunc) {
         null,
         "focusedElement not null"
       );
+
+      if (arg.isRemote) {
+        Assert.equal(
+          Services.focus.activeWindow,
+          content,
+          "activeWindow not correct"
+        );
+      }
     }
   );
 
