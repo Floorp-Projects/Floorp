@@ -1989,6 +1989,32 @@ class PeerConnectionObserver {
     );
   }
 
+  fireTrackEvent(receiver, streams) {
+    const pc = this._dompc;
+    const transceiver = pc.getTransceivers().find(t => t.receiver == receiver);
+    if (!transceiver) {
+      return;
+    }
+    const track = receiver.track;
+    this.dispatchEvent(
+      new this._win.RTCTrackEvent("track", {
+        transceiver,
+        receiver,
+        track,
+        streams,
+      })
+    );
+    // Fire legacy event as well for a little bit.
+    this.dispatchEvent(
+      new this._win.MediaStreamTrackEvent("addtrack", { track })
+    );
+  }
+
+  fireStreamEvent(stream) {
+    const ev = new this._win.MediaStreamEvent("addstream", { stream });
+    this.dispatchEvent(ev);
+  }
+
   onDTMFToneChange(track, tone) {
     var pc = this._dompc;
     var sender = pc.getSenders().find(sender => sender.track == track);
