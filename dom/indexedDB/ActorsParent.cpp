@@ -10160,15 +10160,7 @@ struct ValuePopulateResponseHelper {
   void MaybeFillCloneInfo(Response* const aResponse, FilesArray* const aFiles) {
     auto cloneInfo = mCloneInfo.release();
     aResponse->cloneInfo().data().data = cloneInfo.ReleaseData();
-
-    // TODO (Bug 1620632) On gcc, the following fails to compile:
-    //     aFiles->AppendElement(cloneInfo.ReleaseFiles());
-    // so we construct a FallibleTArray and swap the elements...
-
-    auto files = cloneInfo.ReleaseFiles();
-    FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFileParent> temp;
-    temp.SwapElements(files);
-    aFiles->AppendElement(std::move(temp));
+    aFiles->AppendElement(cloneInfo.ReleaseFiles());
   }
 
   template <typename Response>
