@@ -54,7 +54,7 @@ add_task(async function test_search_favicon() {
         search_provider: {
           name: "Bad Icon",
           search_url: "https://example.net/",
-          favicon_url: "moz-extension://invalid/iDoNotExist.png",
+          favicon_url: "iDoNotExist.png",
         },
       },
     },
