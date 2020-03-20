@@ -551,6 +551,8 @@ var gSitePermissionsManager = {
 
     menulist.menupopup.setAttribute("incontentshell", "false");
 
+    menulist.disabled = Services.prefs.prefIsLocked(AUTOPLAY_PREF);
+
     document.getElementById("setAutoplayPref").appendChild(menulist);
   },
 

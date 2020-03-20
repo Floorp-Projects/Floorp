@@ -600,6 +600,47 @@ const POLICIES_TESTS = [
       "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": false,
     },
   },
+
+  // POLICY: Permissions->Autoplay
+  {
+    policies: {
+      Permissions: {
+        Autoplay: {
+          Default: "allow-audio-video",
+          Locked: true,
+        },
+      },
+    },
+    lockedPrefs: {
+      "media.autoplay.default": 0,
+    },
+  },
+
+  {
+    policies: {
+      Permissions: {
+        Autoplay: {
+          Default: "block-audio",
+        },
+      },
+    },
+    unlockedPrefs: {
+      "media.autoplay.default": 1,
+    },
+  },
+
+  {
+    policies: {
+      Permissions: {
+        Autoplay: {
+          Default: "block-audio-video",
+        },
+      },
+    },
+    unlockedPrefs: {
+      "media.autoplay.default": 5,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

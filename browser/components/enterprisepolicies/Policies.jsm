@@ -1180,7 +1180,25 @@ var Policies = {
           param.Autoplay.Allow,
           param.Autoplay.Block
         );
-        setDefaultPermission("autoplay-media", param.Autoplay);
+        if ("Default" in param.Autoplay) {
+          let prefValue;
+          switch (param.Autoplay.Default) {
+            case "allow-audio-video":
+              prefValue = 0;
+              break;
+            case "block-audio":
+              prefValue = 1;
+              break;
+            case "block-audio-video":
+              prefValue = 5;
+              break;
+          }
+          setDefaultPref(
+            "media.autoplay.default",
+            prefValue,
+            param.Autoplay.Locked
+          );
+        }
       }
 
       if (param.Location) {
