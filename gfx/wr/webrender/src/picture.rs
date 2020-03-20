@@ -3937,7 +3937,7 @@ pub enum Picture3DContext<C> {
         /// Additional data per child for the case of this a root of 3D hierarchy.
         root_data: Option<Vec<C>>,
         /// The spatial node index of an "ancestor" element, i.e. one
-        /// that establishes the transformed element’s containing block.
+        /// that establishes the transformed element's containing block.
         ///
         /// See CSS spec draft for more details:
         /// https://drafts.csswg.org/css-transforms-2/#accumulated-3d-transformation-matrix-computation
