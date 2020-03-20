@@ -14,7 +14,7 @@ var {
 var {
   getString,
 } = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
-var { initCssProperties } = require("devtools/shared/fronts/css-properties");
+var { initCssProperties } = require("devtools/client/fronts/css-properties");
 
 var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   EventEmitter.decorate(this);

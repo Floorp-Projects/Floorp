@@ -25,14 +25,14 @@ const {
 loader.lazyRequireGetter(
   this,
   "LongStringFront",
-  "devtools/shared/fronts/string",
+  "devtools/client/fronts/string",
   true
 );
 
 loader.lazyRequireGetter(
   this,
   "ObjectFront",
-  "devtools/shared/fronts/object",
+  "devtools/client/fronts/object",
   true
 );
 

@@ -8,7 +8,7 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { MemoryFront } = require("devtools/shared/fronts/memory");
+const { MemoryFront } = require("devtools/client/fronts/memory");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {

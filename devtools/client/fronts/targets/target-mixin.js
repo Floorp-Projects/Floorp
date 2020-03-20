@@ -165,7 +165,7 @@ function TargetMixin(parentClass) {
 
     /**
      * The following getters: isLocalTab, localTab, ... will be overriden for
-     * local tabs by some code in devtools/shared/fronts/targets/local-tab.js.
+     * local tabs by some code in devtools/client/fronts/targets/local-tab.js.
      * They are all specific to local tabs, i.e. when you are debugging a tab of
      * the current Firefox instance.
      */

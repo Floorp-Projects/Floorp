@@ -67,7 +67,7 @@ A request/reply will look like this:
     <- { from: <actorID>, greeting: "hello" }
 
 Now we can create a client side object.  We call these *front* objects and
-they typically go in `devtools/shared/fronts/`.
+they typically go in `devtools/client/fronts/`.
 
 Here's the front for the HelloActor:
 
@@ -479,7 +479,7 @@ Now you can listen to events on a front:
 If you want to modify the argument that will be passed to event listeners callbacks, you
 can use `before(eventName, fn)` in the front definition. This can only be used once for a
 given `eventName`. The `fn` function will be called before emitting the event via
-the EventEmitter API on the Front, and its return value will be passed to the event 
+the EventEmitter API on the Front, and its return value will be passed to the event
 listener callbacks. If `fn` is async, the event will only be emitted after `fn` call resolves.
 
     // In front file, most probably in the constructor:
