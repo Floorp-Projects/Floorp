@@ -604,8 +604,9 @@ ContentChild::~ContentChild() {
 #endif
 
 NS_INTERFACE_MAP_BEGIN(ContentChild)
+  NS_INTERFACE_MAP_ENTRY(nsIContentChild)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentChild)
 NS_INTERFACE_MAP_END
 
 mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
@@ -2870,7 +2871,8 @@ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(this, "content-child-will-shutdown", nullptr);
+    os->NotifyObservers(ToSupports(this), "content-child-will-shutdown",
+                        nullptr);
   }
 
   ShutdownInternal();
@@ -2917,7 +2919,7 @@ void ContentChild::ShutdownInternal() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(this, "content-child-shutdown", nullptr);
+    os->NotifyObservers(ToSupports(this), "content-child-shutdown", nullptr);
   }
 
 #if defined(XP_WIN)
@@ -4288,6 +4290,11 @@ mozilla::ipc::IPCResult ContentChild::RecvInitSandboxTesting(
   return IPC_OK();
 }
 #endif
+
+NS_IMETHODIMP ContentChild::GetChildID(uint64_t* aOut) {
+  *aOut = mID;
+  return NS_OK;
+}
 
 }  // namespace dom
 

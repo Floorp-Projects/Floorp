@@ -19,6 +19,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
+#include "nsIContentParent.h"
 #include "mozilla/dom/WindowGlobalActor.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
@@ -154,6 +155,8 @@ class WindowGlobalParent final : public WindowContext,
           aReason = Nothing());
 
   ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }
+
+  nsIContentParent* GetContentParent();
 
  protected:
   const nsAString& GetRemoteType() override;

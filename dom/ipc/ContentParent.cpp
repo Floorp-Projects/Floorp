@@ -2922,11 +2922,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ContentParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentParent)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ContentParent)
+  NS_INTERFACE_MAP_ENTRY(nsIContentParent)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionErrorCallback)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentParent)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -6450,6 +6451,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
   mBrowsingContextFieldEpoch = aEpoch;
 
   return aTransaction.CommitFromIPC(aContext, this);
+}
+
+NS_IMETHODIMP ContentParent::GetChildID(uint64_t* aOut) {
+  *aOut = this->ChildID();
+  return NS_OK;
 }
 
 }  // namespace dom

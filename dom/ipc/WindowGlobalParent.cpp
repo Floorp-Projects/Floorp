@@ -649,6 +649,15 @@ nsIGlobalObject* WindowGlobalParent::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
+nsIContentParent* WindowGlobalParent::GetContentParent() {
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  if (!browserParent) {
+    return nullptr;
+  }
+
+  return browserParent->Manager();
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
                                    mWindowActors)
 

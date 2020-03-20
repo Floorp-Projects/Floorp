@@ -8,6 +8,8 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
 XPIDL_SOURCES += [
+    'nsIContentChild.idl',
+    'nsIContentParent.idl',
     'nsIHangReport.idl',
     'nsIRemoteWebProgress.idl',
     'nsIRemoteWebProgressRequest.idl',
