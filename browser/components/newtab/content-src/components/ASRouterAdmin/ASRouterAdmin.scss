@@ -85,10 +85,10 @@
 
     &.minimal-table {
       border-collapse: collapse;
+      border: 1px solid $border-color;
 
       td {
         padding: 8px;
-        border: 1px solid $border-color;
       }
 
       td:first-child {
@@ -134,14 +134,20 @@
 
     td {
       vertical-align: top;
-      border-bottom: 1px solid $border-color;
       padding: 8px;
-
-
+      border-bottom: 1px solid $border-color;
 
       &.min {
         width: 1%;
         white-space: nowrap;
+      }
+
+      &.message-summary {
+        width: 60%;
+      }
+
+      &.button-column {
+        width: 15%;
       }
 
       &:first-child {
@@ -205,5 +211,24 @@
 
   .modalOverlayInner {
     height: 80%;
+  }
+
+  .clearButton {
+    border: 0;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+
+    &:hover {
+      background: var(--newtab-element-hover-color);
+    }
+  }
+
+  .collapsed {
+    display: none;
+  }
+
+  .icon {
+    cursor: pointer;
   }
 }
