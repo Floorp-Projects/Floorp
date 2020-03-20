@@ -122,7 +122,26 @@ class SharedMemory {
   //
   // (See bug 1479960 comment #0 for OS-specific implementation
   // details.)
-  MOZ_MUST_USE bool Freeze();
+  MOZ_MUST_USE bool Freeze() {
+    Unmap();
+    return ReadOnlyCopy(this);
+  }
+
+  // Similar to Freeze(), but assigns the read-only capability to
+  // another SharedMemory object and leaves this object's mapping in
+  // place and writeable.  This can be used to broadcast data to
+  // several untrusted readers without copying.
+  //
+  // The other constraints of Freeze() still apply: this object closes
+  // its handle (as if by `Close(false)`), it cannot have been
+  // previously shared, and the read-only handle cannot be used to
+  // write the memory even by a malicious process.
+  //
+  // (The out parameter can currently be the same as `this` if and
+  // only if the memory was unmapped, but this is an implementation
+  // detail and shouldn't be relied on; for that use case Freeze()
+  // should be used instead.)
+  MOZ_MUST_USE bool ReadOnlyCopy(SharedMemory *ro_out);
 
   // Closes the open shared memory segment.
   // It is safe to call Close repeatedly.
