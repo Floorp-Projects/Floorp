@@ -184,19 +184,6 @@ TEST_VARIANTS = {
                 ],
             }
         }
-    },
-    'socketprocess_networking': {
-        'description': "{description} with networking on socket process enabled",
-        'suffix': 'spi-nw',
-        'merge': {
-            'mozharness': {
-                'extra-options': [
-                    '--setpref=network.process.enabled=true',
-                    '--setpref=network.http.network_access_on_socket_process.enabled=true',
-                    '--setpref=network.ssl_tokens_cache_enabled=true',
-                ],
-            }
-        }
     }
 }
 
@@ -1239,7 +1226,7 @@ def ensure_spi_disabled_on_all_but_spi(config, tests):
                        'junit' not in test['suite'] and
                        'raptor' not in test['suite'])
 
-        if has_setpref and variant != 'socketprocess' and variant != 'socketprocess_networking':
+        if has_setpref and variant != 'socketprocess':
             test['mozharness']['extra-options'].append(
                     '--setpref=media.peerconnection.mtransport_process=false')
             test['mozharness']['extra-options'].append(
