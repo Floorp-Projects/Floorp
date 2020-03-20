@@ -186,7 +186,6 @@
   skin/classic/browser/fullscreen-exit.svg            (../shared/icons/fullscreen-exit.svg)
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
-  skin/classic/browser/import.svg                     (../shared/icons/import.svg)
 #ifndef MOZ_WIDGET_GTK
   skin/classic/browser/import-export.svg              (../shared/icons/import-export.svg)
 #endif
