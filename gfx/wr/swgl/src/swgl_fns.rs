@@ -485,17 +485,10 @@ impl Gl for Context {
             const PREFIX: &'static str = "// shader: ";
             if let Some(start) = u.find(PREFIX) {
                 if let Some(end) = u[start ..].find('\n') {
-                    debug!(
-                        "shader name: {}",
-                        u[start + PREFIX.len() .. start + end].trim()
-                    );
+                    let name = u[start + PREFIX.len() .. start + end].trim();
+                    debug!("shader name: {}", name);
                     unsafe {
-                        let c_string = CString::new(
-                            u[start + PREFIX.len() .. start + end]
-                                .trim()
-                                .replace(" ", ""),
-                        )
-                        .unwrap();
+                        let c_string = CString::new(name).unwrap();
                         ShaderSourceByName(shader, c_string.as_ptr());
                         return;
                     }
