@@ -256,6 +256,11 @@ class BytecodeLocation {
     return JSProtoKey(GET_UINT8(rawBytecode_));
   }
 
+  uint32_t getNewArrayLength() const {
+    MOZ_ASSERT(is(JSOp::NewArray));
+    return GET_UINT32(rawBytecode_);
+  }
+
   int8_t getInt8() const {
     MOZ_ASSERT(is(JSOp::Int8));
     return GET_INT8(rawBytecode_);
