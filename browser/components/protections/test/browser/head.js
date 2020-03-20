@@ -11,3 +11,16 @@ async function reloadTab(tab) {
   gBrowser.reloadTab(tab);
   await tabReloaded;
 }
+
+// Used to replace AboutProtectionsHandler.getLoginData in front-end tests.
+const mockGetLoginDataWithSyncedDevices = (
+  deviceCount,
+  mobileDeviceConnected = false
+) => async () => {
+  return {
+    hasFxa: true,
+    numLogins: Services.logins.countLogins("", "", ""),
+    numSyncedDevices: deviceCount,
+    mobileDeviceConnected: deviceCount && mobileDeviceConnected,
+  };
+};
