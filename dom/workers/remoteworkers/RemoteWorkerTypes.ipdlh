@@ -80,9 +80,9 @@ struct ErrorDataNote {
 };
 
 struct ErrorData {
+  bool isWarning;
   uint32_t lineNumber;
   uint32_t columnNumber;
-  uint32_t flags;
   nsString message;
   nsString filename;
   nsString line;
