@@ -14,19 +14,19 @@ loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 loader.lazyRequireGetter(
   this,
   "TabDescriptorFront",
-  "devtools/shared/fronts/descriptors/tab",
+  "devtools/client/fronts/descriptors/tab",
   true
 );
 loader.lazyRequireGetter(
   this,
   "BrowsingContextTargetFront",
-  "devtools/shared/fronts/targets/browsing-context",
+  "devtools/client/fronts/targets/browsing-context",
   true
 );
 loader.lazyRequireGetter(
   this,
   "LocalTabTargetFront",
-  "devtools/shared/fronts/targets/local-tab",
+  "devtools/client/fronts/targets/local-tab",
   true
 );
 

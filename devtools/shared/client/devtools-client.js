@@ -37,7 +37,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "ObjectFront",
-  "devtools/shared/fronts/object",
+  "devtools/client/fronts/object",
   true
 );
 loader.lazyRequireGetter(this, "Front", "devtools/shared/protocol", true);

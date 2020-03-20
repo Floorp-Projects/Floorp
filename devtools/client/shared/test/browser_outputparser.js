@@ -6,7 +6,7 @@
 const {
   initCssProperties,
   getCssProperties,
-} = require("devtools/shared/fronts/css-properties");
+} = require("devtools/client/fronts/css-properties");
 const { CSS_PROPERTIES_DB } = require("devtools/shared/css/properties-db");
 
 add_task(async function() {

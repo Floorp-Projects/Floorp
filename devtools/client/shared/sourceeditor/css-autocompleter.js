@@ -10,7 +10,7 @@ const {
 } = require("devtools/shared/css/parsing-utils");
 const {
   getClientCssProperties,
-} = require("devtools/shared/fronts/css-properties");
+} = require("devtools/client/fronts/css-properties");
 
 /**
  * Here is what this file (+ css-parsing-utils.js) do.

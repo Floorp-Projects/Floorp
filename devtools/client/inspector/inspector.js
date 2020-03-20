@@ -19,7 +19,7 @@ const Promise = require("Promise");
 loader.lazyRequireGetter(
   this,
   "initCssProperties",
-  "devtools/shared/fronts/css-properties",
+  "devtools/client/fronts/css-properties",
   true
 );
 loader.lazyRequireGetter(
