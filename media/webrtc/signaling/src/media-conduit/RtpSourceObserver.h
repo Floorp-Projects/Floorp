@@ -10,10 +10,9 @@
 #include <vector>
 #include <map>
 
-#include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_packet_observer.h"
+#include "webrtc/common_types.h"
 #include "RTCStatsReport.h"
 
 // Unit Test class
@@ -28,15 +27,14 @@ namespace mozilla {
  *  * csrc-audio-level RTP header extension
  *  * ssrc-audio-level RTP header extension
  */
-class RtpSourceObserver : public webrtc::RtpPacketObserver {
+class RtpSourceObserver {
  public:
   explicit RtpSourceObserver(
       const dom::RTCStatsTimestampMaker& aTimestampMaker);
 
-  virtual ~RtpSourceObserver(){};
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RtpSourceObserver)
 
-  void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
-                   const int64_t aTimestamp, const uint32_t aJitter) override;
+  void OnRtpPacket(const webrtc::RTPHeader& aHeader, const uint32_t aJitter);
 
   /*
    * Get the most recent 10 second window of CSRC and SSRC sources.
@@ -47,7 +45,8 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
 
  private:
-  // Note: these are pool allocated
+  virtual ~RtpSourceObserver() = default;
+
   struct RtpSourceEntry {
     RtpSourceEntry() = default;
     void Update(const int64_t aTimestamp, const uint32_t aRtpTimestamp,
@@ -164,8 +163,6 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
   std::map<uint64_t, RtpSourceHistory> mRtpSources;
   // 2 x the largest observed
   int64_t mMaxJitterWindow;
-  // Guards statistics
-  mutable Mutex mLevelGuard;
   dom::RTCStatsTimestampMaker mTimestampMaker;
 
   // Unit test
