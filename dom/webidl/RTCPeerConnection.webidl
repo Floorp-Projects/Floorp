@@ -140,9 +140,6 @@ interface RTCPeerConnection : EventTarget  {
 
   // test-only: for testing getContributingSources
   [ChromeOnly]
-  DOMHighResTimeStamp mozGetNowInRtpSourceReferenceTime();
-  // test-only: for testing getContributingSources
-  [ChromeOnly]
   void mozInsertAudioLevelForContributingSource(RTCRtpReceiver receiver,
                                                 unsigned long source,
                                                 DOMHighResTimeStamp timestamp,
