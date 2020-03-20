@@ -2,7 +2,7 @@ This directory contains build files for dav1d. The actual library
 source is in $TOPSRCDIR/third_party/dav1d/
 
 Any patches or additional configuration to be applied to the
-upstream source should be kept here in the media/libaom
+upstream source should be kept here in the media/libdav1d
 directory.
 
 To update the library source and build config files, execute
@@ -13,8 +13,35 @@ To update to a specific upstream git tag or commit, use
 
   ./mach vendor dav1d -r <commit>
 
-The upstream git repository is https://aomedia.googlesource.com/aom
+The upstream git repository is https://code.videolan.org/videolan/dav1d
 
 To update to a fork, use
 
   ./mach vendor dav1d --repo <repository url> [-r <commit>]
+
+
+The rough steps are:
+- Execute ./mach vendor dav1d -r {tag-name}  # ex: ./mach vendor dav1d -r 0.6.0
+- Update moz.build with the new files, check the
+  third_party/dav1d/src/meson.build (confirm with the diff) (note the
+  empty .asm file in x86_64)
+- Build a stand-alone libdav1d following the steps here:
+  https://code.videolan.org/videolan/dav1d#compile
+- Copy vcs_version.h from the local build/include/vcs_version.h
+  to media/libdav1d/vcs_version.h
+- Copy version.h from local build/include/dav1di/version.h to
+  media/libdav1d/version.h
+- Update dav1d.rc:
+  - update the API_VERSION_NUMBER, API_VERSION_NUMBER_STR, defines to
+    match the 'dav1d_soname_version' field in
+    third_party/dav1d/meson.build.
+  - update the PROJECT_VERSION_NUMBER, PROJECT_VERSION_NUMBER_STR
+    defines to match the new project versions from the git tag (or from
+    the project version found in third_party/dav1d/meson.build).
+- Add new options, if any, in moz.build or config.h
+
+Tips:
+- If you see build failures in build-linux64-base-toolchains (or
+  similar jobs) dav1d may now require a higher minimum nasm version
+  than our base toolchains currently support.  A bug updating the
+  minimum nasm version will probably be necessary.

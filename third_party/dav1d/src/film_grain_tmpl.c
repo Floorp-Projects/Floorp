@@ -43,7 +43,7 @@ static inline int get_random_number(const int bits, unsigned *const state) {
     return (*state >> (16 - bits)) & ((1 << bits) - 1);
 }
 
-static inline int round2(const int x, const int shift) {
+static inline int round2(const int x, const uint64_t shift) {
     return (x + ((1 << shift) >> 1)) >> shift;
 }
 

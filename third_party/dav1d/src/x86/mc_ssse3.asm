@@ -1425,7 +1425,7 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     jmp                  wq
 .h_w2:
 %if ARCH_X86_32
-    and                 mxd, 0xff
+    and                 mxd, 0x7f
 %else
     movzx               mxd, mxb
 %endif
@@ -1455,7 +1455,7 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     RET
 .h_w4:
 %if ARCH_X86_32
-    and                 mxd, 0xff
+    and                 mxd, 0x7f
 %else
     movzx               mxd, mxb
 %endif
@@ -1564,16 +1564,16 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
 %if ARCH_X86_32
     movzx               mxd, ssb
     shr                 ssd, 16
-    cmp                  hd, 4
-    cmovle              ssd, mxd
+    cmp                  hd, 6
+    cmovs               ssd, mxd
     lea                 ssq, [base_reg+ssq*8+subpel_filters-put_ssse3]
 %else
  %assign stack_offset org_stack_offset
     WIN64_SPILL_XMM      16
     movzx               mxd, myb
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    cmp                  hd, 6
+    cmovs               myd, mxd
     lea                 myq, [base_reg+myq*8+subpel_filters-put_ssse3]
 %endif
     tzcnt               r6d, wd
@@ -1850,14 +1850,18 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     %assign stack_offset org_stack_offset
     cmp                  wd, 4
     jg .hv_w8
-    and                 mxd, 0xff
+%if ARCH_X86_32
+    and                 mxd, 0x7f
+%else
+    movzx               mxd, mxb
+%endif
     dec                srcq
     movd                 m1, [base_reg+mxq*8+subpel_filters-put_ssse3+2]
 %if ARCH_X86_32
     movzx               mxd, ssb
     shr                 ssd, 16
-    cmp                  hd, 4
-    cmovle              ssd, mxd
+    cmp                  hd, 6
+    cmovs               ssd, mxd
     movq                 m0, [base_reg+ssq*8+subpel_filters-put_ssse3]
     W32_RESTORE_SSQ
     lea                  r6, [ssq*3]
@@ -1886,8 +1890,8 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
 %else
     movzx               mxd, myb
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    cmp                  hd, 6
+    cmovs               myd, mxd
     movq                 m0, [base_reg+myq*8+subpel_filters-put_ssse3]
     ALLOC_STACK   mmsize*14, 14
     lea                ss3q, [ssq*3]
@@ -2202,8 +2206,8 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     movq                 m1, [base_reg+mxq*8+subpel_filters-put_ssse3]
     movzx               mxd, ssb
     shr                 ssd, 16
-    cmp                  hd, 4
-    cmovle              ssd, mxd
+    cmp                  hd, 6
+    cmovs               ssd, mxd
     movq                 m5, [base_reg+ssq*8+subpel_filters-put_ssse3]
     mov                 ssq, ssmp
     ALLOC_STACK  -mmsize*13
@@ -2243,8 +2247,8 @@ cglobal put_8tap, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     movq                 m0, [base_reg+mxq*8+subpel_filters-put_ssse3]
     movzx               mxd, myb
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    cmp                  hd, 6
+    cmovs               myd, mxd
     movq                 m1, [base_reg+myq*8+subpel_filters-put_ssse3]
     pshufd         subpelh0, m0, q0000
     pshufd         subpelh1, m0, q1111
@@ -2511,7 +2515,7 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     jmp                  wq
 .h_w4:
 %if ARCH_X86_32
-    and                 mxd, 0xff
+    and                 mxd, 0x7f
 %else
     movzx               mxd, mxb
 %endif
@@ -2635,15 +2639,15 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
 .v:
 %if ARCH_X86_32
     mov                 mxd, myd
-    and                 mxd, 0xff
+    and                 mxd, 0x7f
 %else
  %assign stack_offset org_stack_offset
     WIN64_SPILL_XMM      16
     movzx               mxd, myb
 %endif
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    cmp                  hd, 6
+    cmovs               myd, mxd
     lea                 myq, [base_reg+myq*8+subpel_filters-prep_ssse3]
     mova                 m2, [base+pw_512]
     psrlw                m2, m2, 1 ; 0x0100
@@ -2849,14 +2853,14 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     %assign stack_offset org_stack_offset
     cmp                  wd, 4
     jg .hv_w8
-    and                 mxd, 0xff
+    and                 mxd, 0x7f
     movd                 m1, [base_reg+mxq*8+subpel_filters-prep_ssse3+2]
 %if ARCH_X86_32
     mov                 mxd, myd
-    and                 mxd, 0xff
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    and                 mxd, 0x7f
+    cmp                  hd, 6
+    cmovs               myd, mxd
     movq                 m0, [base_reg+myq*8+subpel_filters-prep_ssse3]
     mov                  r5, r2; use as new base
  %define           base_reg  r5
@@ -2885,8 +2889,8 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
 %else
     movzx               mxd, myb
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    cmp                  hd, 6
+    cmovs               myd, mxd
     movq                 m0, [base_reg+myq*8+subpel_filters-prep_ssse3]
     ALLOC_STACK   mmsize*14, 14
     lea            stride3q, [strideq*3]
@@ -3101,11 +3105,11 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
  %define             accuv0  [rsp+mmsize*11]
  %define             accuv1  [rsp+mmsize*12]
     movq                 m1, [base_reg+mxq*8+subpel_filters-prep_ssse3]
-    movzx               mxd, myw
-    and                 mxd, 0xff
+    mov                 mxd, myd
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    and                 mxd, 0x7f
+    cmp                  hd, 6
+    cmovs               myd, mxd
     movq                 m5, [base_reg+myq*8+subpel_filters-prep_ssse3]
     ALLOC_STACK  -mmsize*13
 %if STACK_ALIGNMENT < mmsize
@@ -3150,8 +3154,8 @@ cglobal prep_8tap, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     movq                 m0, [base_reg+mxq*8+subpel_filters-prep_ssse3]
     movzx               mxd, myb
     shr                 myd, 16
-    cmp                  hd, 4
-    cmovle              myd, mxd
+    cmp                  hd, 6
+    cmovs               myd, mxd
     movq                 m1, [base_reg+myq*8+subpel_filters-prep_ssse3]
     pshufd         subpelh0, m0, q0000
     pshufd         subpelh1, m0, q1111
@@ -4743,9 +4747,9 @@ cglobal emu_edge, 10, 13, 2, bw, bh, iw, ih, x, \
     xor            reg_zero, reg_zero
     lea             reg_tmp, [ihq-1]
     cmp                  yq, ihq
-    cmovl           reg_tmp, yq
+    cmovs           reg_tmp, yq
     test                 yq, yq
-    cmovl           reg_tmp, reg_zero
+    cmovs           reg_tmp, reg_zero
 %if ARCH_X86_64
     imul            reg_tmp, sstrideq
     add                srcq, reg_tmp
@@ -4758,9 +4762,9 @@ cglobal emu_edge, 10, 13, 2, bw, bh, iw, ih, x, \
     ; ref += iclip(x, 0, iw - 1)
     lea             reg_tmp, [iwq-1]
     cmp                  xq, iwq
-    cmovl           reg_tmp, xq
+    cmovs           reg_tmp, xq
     test                 xq, xq
-    cmovl           reg_tmp, reg_zero
+    cmovs           reg_tmp, reg_zero
     add             reg_src, reg_tmp
 %if ARCH_X86_32
     mov                srcm, reg_src
@@ -4773,7 +4777,7 @@ cglobal emu_edge, 10, 13, 2, bw, bh, iw, ih, x, \
     lea       reg_bottomext, [yq+bhq]
     sub       reg_bottomext, ihq
     lea                  r3, [bhq-1]
-    cmovl     reg_bottomext, reg_zero
+    cmovs     reg_bottomext, reg_zero
     ;
 
     DEFINE_ARGS bw, bh, iw, ih, x, \
@@ -4782,9 +4786,9 @@ cglobal emu_edge, 10, 13, 2, bw, bh, iw, ih, x, \
 
     ; top_ext = iclip(-y, 0, bh - 1)
     neg             topextq
-    cmovl           topextq, reg_zero
+    cmovs           topextq, reg_zero
     cmp       reg_bottomext, bhq
-    cmovge    reg_bottomext, r3
+    cmovns    reg_bottomext, r3
     cmp             topextq, bhq
     cmovg           topextq, r3
  %if ARCH_X86_32
@@ -4796,7 +4800,7 @@ cglobal emu_edge, 10, 13, 2, bw, bh, iw, ih, x, \
     lea        reg_rightext, [xq+bwq]
     sub        reg_rightext, iwq
     lea                  r2, [bwq-1]
-    cmovl      reg_rightext, reg_zero
+    cmovs      reg_rightext, reg_zero
 
     DEFINE_ARGS bw, bh, iw, ih, leftext, \
                 topext, dst, dstride, src, sstride, \
@@ -4804,14 +4808,14 @@ cglobal emu_edge, 10, 13, 2, bw, bh, iw, ih, x, \
 
     ; left_ext = iclip(-x, 0, bw - 1)
     neg            leftextq
-    cmovl          leftextq, reg_zero
+    cmovs          leftextq, reg_zero
     cmp        reg_rightext, bwq
-    cmovge     reg_rightext, r2
+    cmovns     reg_rightext, r2
  %if ARCH_X86_32
     mov                 r3m, r1
  %endif
     cmp            leftextq, bwq
-    cmovge         leftextq, r2
+    cmovns         leftextq, r2
 
 %undef reg_zero
 %undef reg_tmp

@@ -193,12 +193,20 @@ void checkasm_checked_call(void *func, ...);
  * not guaranteed and false negatives is theoretically possible, but there
  * can never be any false positives. */
 void checkasm_stack_clobber(uint64_t clobber, ...);
+/* YMM and ZMM registers on x86 are turned off to save power when they haven't
+ * been used for some period of time. When they are used there will be a
+ * "warmup" period during which performance will be reduced and inconsistent
+ * which is problematic when trying to benchmark individual functions. We can
+ * work around this by periodically issuing "dummy" instructions that uses
+ * those registers to keep them powered on. */
+void checkasm_simd_warmup(void);
 #define declare_new(ret, ...)\
     ret (*checked_call)(void *, int, int, int, int, int, __VA_ARGS__) =\
     (void *)checkasm_checked_call;
 #define CLOB (UINT64_C(0xdeadbeefdeadbeef))
 #define call_new(...)\
     (checkasm_set_signal_handler_state(1),\
+     checkasm_simd_warmup(),\
      checkasm_stack_clobber(CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB,\
                             CLOB, CLOB, CLOB, CLOB, CLOB, CLOB, CLOB),\

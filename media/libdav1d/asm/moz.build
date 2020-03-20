@@ -88,11 +88,13 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
             '../../../third_party/dav1d/src/x86/looprestoration.asm',
             '../../../third_party/dav1d/src/x86/mc.asm',
+            '../../../third_party/dav1d/src/x86/msac_init.c',
         ]
 
     SOURCES += [
         '../../../third_party/dav1d/src/x86/cdef_sse.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
+        '../../../third_party/dav1d/src/x86/film_grain_ssse3.asm',
         '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
         '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
         '../../../third_party/dav1d/src/x86/loopfilter_ssse3.asm',
@@ -192,11 +194,18 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     if CONFIG['CPU_ARCH'] == 'aarch64':
         SOURCES += [
             '../../../third_party/dav1d/src/arm/64/cdef.S',
+            '../../../third_party/dav1d/src/arm/64/cdef16.S',
+            '../../../third_party/dav1d/src/arm/64/cdef_tmpl.S',
             '../../../third_party/dav1d/src/arm/64/ipred.S',
             '../../../third_party/dav1d/src/arm/64/itx.S',
             '../../../third_party/dav1d/src/arm/64/loopfilter.S',
+            '../../../third_party/dav1d/src/arm/64/loopfilter16.S',
             '../../../third_party/dav1d/src/arm/64/looprestoration.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration16.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration_common.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration_tmpl.S',
             '../../../third_party/dav1d/src/arm/64/mc.S',
+            '../../../third_party/dav1d/src/arm/64/mc16.S',
             '../../../third_party/dav1d/src/arm/64/msac.S',
         ]
     elif CONFIG['CPU_ARCH'] == 'arm':

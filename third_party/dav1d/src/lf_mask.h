@@ -72,8 +72,8 @@ void dav1d_create_lf_mask_inter(Av1Filter *lflvl, uint8_t (*level_cache)[4],
                                 const ptrdiff_t b4_stride,
                                 const uint8_t (*level)[8][2], int bx, int by,
                                 int iw, int ih, int skip_inter,
-                                enum BlockSize bs, const uint16_t *tx_mask,
-                                enum RectTxfmSize uvtx,
+                                enum BlockSize bs, enum RectTxfmSize max_ytx,
+                                const uint16_t *tx_mask, enum RectTxfmSize uvtx,
                                 enum Dav1dPixelLayout layout, uint8_t *ay,
                                 uint8_t *ly, uint8_t *auv, uint8_t *luv);
 void dav1d_calc_eih(Av1FilterLUT *lim_lut, int filter_sharpness);

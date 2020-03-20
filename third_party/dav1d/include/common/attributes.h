@@ -43,15 +43,18 @@
 #endif
 
 #if ARCH_X86_64
-/* x86-64 needs 32-byte alignment for AVX2. */
+/* x86-64 needs 32- and 64-byte alignment for AVX2 and AVX-512. */
+#define ALIGN_64_VAL 64
 #define ALIGN_32_VAL 32
 #define ALIGN_16_VAL 16
 #elif ARCH_X86_32 || ARCH_ARM || ARCH_AARCH64 || ARCH_PPC64LE
 /* ARM doesn't benefit from anything more than 16-byte alignment. */
+#define ALIGN_64_VAL 16
 #define ALIGN_32_VAL 16
 #define ALIGN_16_VAL 16
 #else
 /* No need for extra alignment on platforms without assembly. */
+#define ALIGN_64_VAL 8
 #define ALIGN_32_VAL 8
 #define ALIGN_16_VAL 8
 #endif
@@ -76,9 +79,10 @@
  * becomes:
  * ALIGN_STK_$align(uint8_t, var, 1, [2][3][4])
  */
+#define ALIGN_STK_64(type, var, sz1d, sznd) \
+    ALIGN(type var[sz1d]sznd, ALIGN_64_VAL)
 #define ALIGN_STK_32(type, var, sz1d, sznd) \
     ALIGN(type var[sz1d]sznd, ALIGN_32_VAL)
-// as long as stack is itself 16-byte aligned, this works (win64, gcc)
 #define ALIGN_STK_16(type, var, sz1d, sznd) \
     ALIGN(type var[sz1d]sznd, ALIGN_16_VAL)
 
@@ -91,6 +95,12 @@
 #else /* !_MSC_VER */
 #define NOINLINE __attribute__((noinline))
 #endif /* !_MSC_VER */
+
+#ifdef __clang__
+#define NO_SANITIZE(x) __attribute__((no_sanitize(x)))
+#else
+#define NO_SANITIZE(x)
+#endif
 
 #if defined(NDEBUG) && (defined(__GNUC__) || defined(__clang__))
 #define assert(x) do { if (!(x)) __builtin_unreachable(); } while (0)
