@@ -1133,7 +1133,8 @@ static bool IsNextFocusableElementTextControl(Element* aInputContent) {
   nsCOMPtr<nsIContent> nextContent;
   nsresult rv = fm->DetermineElementToMoveFocus(
       aInputContent->OwnerDoc()->GetWindow(), aInputContent,
-      nsIFocusManager::MOVEFOCUS_FORWARD, true, getter_AddRefs(nextContent));
+      nsIFocusManager::MOVEFOCUS_FORWARD, true, false,
+      getter_AddRefs(nextContent));
   if (NS_WARN_IF(NS_FAILED(rv)) || !nextContent) {
     return false;
   }

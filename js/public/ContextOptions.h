@@ -26,6 +26,7 @@ class JS_PUBLIC_API ContextOptions {
         wasmIon_(true),
         wasmCranelift_(false),
         wasmGc_(false),
+        wasmMultiValue_(false),
         testWasmAwaitTier2_(false),
 #ifdef ENABLE_WASM_BIGINT
         enableWasmBigInt_(true),
@@ -109,6 +110,10 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmGc() const { return wasmGc_; }
   // Defined out-of-line because it depends on a compile-time option
   ContextOptions& setWasmGc(bool flag);
+
+  bool wasmMultiValue() const { return wasmMultiValue_; }
+  // Defined out-of-line because it depends on a compile-time option
+  ContextOptions& setWasmMultiValue(bool flag);
 
   bool throwOnAsmJSValidationFailure() const {
     return throwOnAsmJSValidationFailure_;
@@ -197,6 +202,7 @@ class JS_PUBLIC_API ContextOptions {
     setWasmBaseline(false);
     setWasmIon(false);
     setWasmGc(false);
+    setWasmMultiValue(false);
   }
 
  private:
@@ -208,6 +214,7 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmIon_ : 1;
   bool wasmCranelift_ : 1;
   bool wasmGc_ : 1;
+  bool wasmMultiValue_ : 1;
   bool testWasmAwaitTier2_ : 1;
 #ifdef ENABLE_WASM_BIGINT
   bool enableWasmBigInt_ : 1;

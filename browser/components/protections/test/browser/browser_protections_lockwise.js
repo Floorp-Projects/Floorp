@@ -34,16 +34,6 @@ const TEST_LOGIN2 = new nsLoginInfo(
   "password"
 );
 
-// Modify AboutProtectionsHandler's getLoginData method to fake returning a specified
-// number of devices.
-const mockGetLoginDataWithSyncedDevices = deviceCount => async () => {
-  return {
-    hasFxa: true,
-    numLogins: Services.logins.countLogins("", "", ""),
-    numSyncedDevices: deviceCount,
-  };
-};
-
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",

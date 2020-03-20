@@ -4693,7 +4693,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
   // starting a new selection since the user may be trying to
   // drag the selected region to some other app.
 
-  if (GetContent() && GetContent()->IsSelectionDescendant()) {
+  if (GetContent() && GetContent()->IsMaybeSelected()) {
     bool inSelection = false;
     UniquePtr<SelectionDetails> details = frameselection->LookUpSelection(
         offsets.content, 0, offsets.EndOffset(), false);
@@ -8159,7 +8159,7 @@ const nsFrameSelection* nsIFrame::GetConstFrameSelection() const {
 }
 
 bool nsIFrame::IsFrameSelected() const {
-  NS_ASSERTION(!GetContent() || GetContent()->IsSelectionDescendant(),
+  NS_ASSERTION(!GetContent() || GetContent()->IsMaybeSelected(),
                "use the public IsSelected() instead");
   return GetContent()->IsSelected(0, GetContent()->GetChildCount());
 }

@@ -1323,6 +1323,10 @@ bool WarpBuilder::build_SetAliasedVar(BytecodeLocation loc) {
   return resumeAfter(store, loc);
 }
 
+bool WarpBuilder::build_InitAliasedLexical(BytecodeLocation loc) {
+  return build_SetAliasedVar(loc);
+}
+
 bool WarpBuilder::build_EnvCallee(BytecodeLocation loc) {
   uint32_t numHops = loc.getEnvCalleeNumHops();
   MDefinition* env = walkEnvironmentChain(numHops);
@@ -1617,6 +1621,26 @@ bool WarpBuilder::build_StrictSetName(BytecodeLocation loc) {
   return build_SetProp(loc);
 }
 
+bool WarpBuilder::build_SetGName(BytecodeLocation loc) {
+  return build_SetProp(loc);
+}
+
+bool WarpBuilder::build_StrictSetGName(BytecodeLocation loc) {
+  return build_SetProp(loc);
+}
+
+bool WarpBuilder::build_InitGLexical(BytecodeLocation loc) {
+  MOZ_ASSERT(!script_->hasNonSyntacticScope());
+
+  MDefinition* globalLexical = globalLexicalEnvConstant();
+  MDefinition* val = current->pop();
+
+  PropertyName* name = loc.getPropertyName(script_);
+  MConstant* id = constant(StringValue(name));
+
+  return buildSetPropOp(loc, globalLexical, id, val);
+}
+
 bool WarpBuilder::build_SetElem(BytecodeLocation loc) {
   MDefinition* val = current->pop();
   MDefinition* id = current->pop();
@@ -1759,4 +1783,232 @@ bool WarpBuilder::build_CheckReturn(BytecodeLocation) {
   current->add(ins);
   current->setSlot(info().returnValueSlot(), ins);
   return true;
+}
+
+void WarpBuilder::buildCheckLexicalOp(BytecodeLocation loc) {
+  JSOp op = loc.getOp();
+  MOZ_ASSERT(op == JSOp::CheckLexical || op == JSOp::CheckAliasedLexical);
+
+  // TODO: IonBuilder has code to mark not-movable if lexical checks failed
+  // before. We likely need a mechanism to prevent LICM/bailout loops.
+  MDefinition* input = current->pop();
+  MInstruction* lexicalCheck = MLexicalCheck::New(alloc(), input);
+  current->add(lexicalCheck);
+  current->push(lexicalCheck);
+
+  if (op == JSOp::CheckLexical) {
+    // Set the local slot so that a subsequent GetLocal without a CheckLexical
+    // (the frontend can elide lexical checks) doesn't let a definition with
+    // MIRType::MagicUninitializedLexical escape to arbitrary MIR instructions.
+    // Note that in this case the GetLocal would be unreachable because we throw
+    // an exception here, but we still generate MIR instructions for it.
+    uint32_t slot = info().localSlot(loc.local());
+    current->setSlot(slot, lexicalCheck);
+  }
+}
+
+bool WarpBuilder::build_CheckLexical(BytecodeLocation loc) {
+  buildCheckLexicalOp(loc);
+  return true;
+}
+
+bool WarpBuilder::build_CheckAliasedLexical(BytecodeLocation loc) {
+  buildCheckLexicalOp(loc);
+  return true;
+}
+
+bool WarpBuilder::build_InitHomeObject(BytecodeLocation loc) {
+  MDefinition* homeObject = current->pop();
+  MDefinition* function = current->pop();
+
+  current->add(MPostWriteBarrier::New(alloc(), function, homeObject));
+
+  auto* ins = MInitHomeObject::New(alloc(), function, homeObject);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_SuperBase(BytecodeLocation) {
+  MDefinition* callee = current->pop();
+
+  auto* homeObject = MHomeObject::New(alloc(), callee);
+  current->add(homeObject);
+
+  auto* superBase = MHomeObjectSuperBase::New(alloc(), homeObject);
+  current->add(superBase);
+  current->push(superBase);
+  return true;
+}
+
+bool WarpBuilder::build_SuperFun(BytecodeLocation) {
+  MDefinition* callee = current->pop();
+  auto* ins = MSuperFunction::New(alloc(), callee);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_BuiltinProto(BytecodeLocation loc) {
+  if (auto* snapshot = getOpSnapshot<WarpBuiltinProto>(loc)) {
+    JSObject* proto = snapshot->proto();
+    pushConstant(ObjectValue(*proto));
+    return true;
+  }
+
+  auto* ins = MBuiltinProto::New(alloc(), loc.toRawBytecode());
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_GetIntrinsic(BytecodeLocation loc) {
+  if (auto* snapshot = getOpSnapshot<WarpGetIntrinsic>(loc)) {
+    Value intrinsic = snapshot->intrinsic();
+    pushConstant(intrinsic);
+    return true;
+  }
+
+  PropertyName* name = loc.getPropertyName(script_);
+  MCallGetIntrinsicValue* ins = MCallGetIntrinsicValue::New(alloc(), name);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_ImportMeta(BytecodeLocation loc) {
+  ModuleObject* moduleObj = snapshot_.script()->moduleObject();
+  MOZ_ASSERT(moduleObj);
+
+  MModuleMetadata* ins = MModuleMetadata::New(alloc(), moduleObj);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_CallSiteObj(BytecodeLocation loc) {
+  // WarpOracle already called ProcessCallSiteObjOperation to prepare the
+  // object.
+  JSObject* obj = loc.getObject(script_);
+  pushConstant(ObjectValue(*obj));
+  return true;
+}
+
+bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
+  uint32_t length = loc.getNewArrayLength();
+
+  // TODO: support fast inline allocation, pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  MConstant* templateConst = constant(NullValue());
+
+  auto* ins = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, length,
+                               templateConst, heap, loc.toRawBytecode());
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_NewArrayCopyOnWrite(BytecodeLocation loc) {
+  ArrayObject* templateObject = &loc.getObject(script_)->as<ArrayObject>();
+
+  // TODO: pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  MConstant* templateConst =
+      MConstant::NewConstraintlessObject(alloc(), templateObject);
+  current->add(templateConst);
+
+  auto* ins = MNewArrayCopyOnWrite::New(alloc(), /* constraints = */ nullptr,
+                                        templateConst, heap);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_NewObject(BytecodeLocation loc) {
+  // TODO: support fast inline allocation, pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  MConstant* templateConst = constant(NullValue());
+
+  auto* ins = MNewObject::NewVM(alloc(), /* constraints = */ nullptr,
+                                templateConst, heap, MNewObject::ObjectLiteral);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_NewObjectWithGroup(BytecodeLocation loc) {
+  return build_NewObject(loc);
+}
+
+bool WarpBuilder::build_NewInit(BytecodeLocation loc) {
+  return build_NewObject(loc);
+}
+
+bool WarpBuilder::build_Object(BytecodeLocation loc) {
+  JSObject* obj = loc.getObject(script_);
+  MConstant* objConst = constant(ObjectValue(*obj));
+
+  if (mirGen_.options.cloneSingletons()) {
+    auto* clone = MCloneLiteral::New(alloc(), objConst);
+    current->add(clone);
+    current->push(clone);
+    return resumeAfter(clone, loc);
+  }
+
+  // WarpOracle called realm->setSingletonsAsValues() so we can just push the
+  // object here.
+  current->push(objConst);
+  return true;
+}
+
+bool WarpBuilder::buildInitPropGetterSetterOp(BytecodeLocation loc) {
+  PropertyName* name = loc.getPropertyName(script_);
+  MDefinition* value = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  auto* ins = MInitPropGetterSetter::New(alloc(), obj, name, value);
+  current->add(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_InitPropGetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitPropSetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenPropGetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenPropSetter(BytecodeLocation loc) {
+  return buildInitPropGetterSetterOp(loc);
+}
+
+bool WarpBuilder::buildInitElemGetterSetterOp(BytecodeLocation loc) {
+  MDefinition* value = current->pop();
+  MDefinition* id = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  auto* ins = MInitElemGetterSetter::New(alloc(), obj, id, value);
+  current->add(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_InitElemGetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitElemSetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenElemGetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenElemSetter(BytecodeLocation loc) {
+  return buildInitElemGetterSetterOp(loc);
 }

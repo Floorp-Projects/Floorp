@@ -3,13 +3,6 @@
 
 "use strict";
 
-// This is intended for development-only. Setting it to true restricts the
-// set of locales and regions that are covered, to provide tests that are
-// quicker to run.
-// Turning it on will generate one error at the end of the test, as a reminder
-// that it needs to be changed back before shipping.
-const TEST_DEBUG = false;
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -19,14 +12,23 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gEnvironment: ["@mozilla.org/process/environment;1", "nsIEnvironment"],
+});
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+
 const GLOBAL_SCOPE = this;
+const TEST_DEBUG = gEnvironment.get("TEST_DEBUG");
 
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 const URLTYPE_SEARCH_HTML = "text/html";
@@ -100,6 +102,18 @@ class SearchConfigTest {
       "42"
     );
 
+    const SEARCH_CONFIG = gEnvironment.get("SEARCH_CONFIG");
+    if (SEARCH_CONFIG) {
+      if (!(SEARCH_CONFIG in SearchUtils.ENGINES_URLS)) {
+        throw new Error(`Invalid value for SEARCH_CONFIG`);
+      }
+      const url = SearchUtils.ENGINES_URLS[SEARCH_CONFIG];
+      const response = await fetch(url);
+      const config = await response.json();
+      const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+      sinon.stub(settings, "get").returns(config.data);
+    }
+
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
 
@@ -139,13 +153,6 @@ class SearchConfigTest {
       Services.search.isInitialized,
       "Should have correctly initialized the search service"
     );
-
-    registerCleanupFunction(() => {
-      this.assertOk(
-        !TEST_DEBUG,
-        "Should not have test debug turned on in production"
-      );
-    });
   }
 
   /**

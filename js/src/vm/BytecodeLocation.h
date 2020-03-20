@@ -96,6 +96,7 @@ class BytecodeLocation {
   inline JSAtom* getAtom(const JSScript* script) const;
   inline PropertyName* getPropertyName(const JSScript* script) const;
   inline JS::BigInt* getBigInt(const JSScript* script) const;
+  inline JSObject* getObject(const JSScript* script) const;
   inline js::RegExpObject* getRegExp(const JSScript* script) const;
   inline js::Scope* getScope(const JSScript* script) const;
 
@@ -248,6 +249,16 @@ class BytecodeLocation {
   FunctionPrefixKind getFunctionPrefixKind() const {
     MOZ_ASSERT(is(JSOp::SetFunName));
     return FunctionPrefixKind(GET_UINT8(rawBytecode_));
+  }
+
+  JSProtoKey getProtoKey() const {
+    MOZ_ASSERT(is(JSOp::BuiltinProto));
+    return JSProtoKey(GET_UINT8(rawBytecode_));
+  }
+
+  uint32_t getNewArrayLength() const {
+    MOZ_ASSERT(is(JSOp::NewArray));
+    return GET_UINT32(rawBytecode_);
   }
 
   int8_t getInt8() const {

@@ -49,6 +49,13 @@ inline JS::BigInt* BytecodeLocation::getBigInt(const JSScript* script) const {
   return script->getBigInt(this->rawBytecode_);
 }
 
+inline JSObject* BytecodeLocation::getObject(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  MOZ_ASSERT(is(JSOp::CallSiteObj) || is(JSOp::Object) ||
+             is(JSOp::NewArrayCopyOnWrite));
+  return script->getObject(this->rawBytecode_);
+}
+
 inline js::RegExpObject* BytecodeLocation::getRegExp(
     const JSScript* script) const {
   MOZ_ASSERT(this->isValid());

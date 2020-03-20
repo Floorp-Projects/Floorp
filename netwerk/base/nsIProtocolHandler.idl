@@ -171,16 +171,18 @@ interface nsIProtocolHandler : nsISupports
      * |                                                                   |
      * +-------------------------------------------------------------------+
      *
+     *    * URI_LOADABLE_BY_ANYONE
+     *    * URI_DANGEROUS_TO_LOAD
+     *    * URI_IS_UI_RESOURCE
+     *    * URI_IS_LOCAL_FILE
+     *    * URI_LOADABLE_BY_SUBSUMERS
+     *
      * These flags are used to determine who is allowed to load URIs for this
      * protocol.  Note that if a URI is nested, only the flags for the
      * innermost URI matter.  See nsINestedURI.
      *
-     * If none of these five flags are set, the URI must be treated as if it
-     * had the URI_LOADABLE_BY_ANYONE flag set, for compatibility with protocol
-     * handlers written against Gecko 1.8 or earlier.  In this case, there may
-     * be run-time warning messages indicating that a "default insecure"
-     * assumption is being made.  At some point in the futures (Mozilla 2.0,
-     * most likely), these warnings will become errors.
+     * If none of these five flags are set, the ContentSecurityManager will
+     * deny the load.
      */
 
     /**

@@ -670,9 +670,11 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   // we must keep this around and revalidate it when its just UP/DOWN
   nsPoint desiredPos(0, 0);
 
-  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  RefPtr<Selection> sel = mDomSelections[index];
-  if (!sel) return NS_ERROR_NULL_POINTER;
+  const int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+  const RefPtr<Selection> sel = mDomSelections[index];
+  if (!sel) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   int32_t scrollFlags = Selection::SCROLL_FOR_CARET_MOVE;
   const bool isEditorSelection = sel->IsEditorSelection();
@@ -862,9 +864,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     result = NS_OK;
   }
   if (NS_SUCCEEDED(result)) {
-    result = mDomSelections[index]->ScrollIntoView(
-        nsISelectionController::SELECTION_FOCUS_REGION, ScrollAxis(),
-        ScrollAxis(), scrollFlags);
+    result = sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
+                                 ScrollAxis(), ScrollAxis(), scrollFlags);
   }
 
   return result;

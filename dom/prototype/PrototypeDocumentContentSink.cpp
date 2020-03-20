@@ -633,6 +633,7 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
 
   if (mScriptLoader) {
     mScriptLoader->ParsingComplete(false);
+    mScriptLoader->DeferCheckpointReached();
   }
 
   StartLayout();

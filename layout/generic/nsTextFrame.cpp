@@ -6413,7 +6413,7 @@ void nsTextFrame::PaintTextSelectionDecorations(
 bool nsTextFrame::PaintTextWithSelection(
     const PaintTextSelectionParams& aParams,
     const nsDisplayText::ClipEdges& aClipEdges) {
-  NS_ASSERTION(GetContent()->IsSelectionDescendant(), "wrong paint path");
+  NS_ASSERTION(GetContent()->IsMaybeSelected(), "wrong paint path");
 
   UniquePtr<SelectionDetails> details = GetSelectionDetails();
   if (!details) {
@@ -7406,7 +7406,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 }
 
 bool nsTextFrame::IsFrameSelected() const {
-  NS_ASSERTION(!GetContent() || GetContent()->IsSelectionDescendant(),
+  NS_ASSERTION(!GetContent() || GetContent()->IsMaybeSelected(),
                "use the public IsSelected() instead");
   return GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
 }

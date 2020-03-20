@@ -226,7 +226,7 @@ nsIContent::IMEState nsIContent::GetDesiredIMEState() {
   return state;
 }
 
-bool nsIContent::HasIndependentSelection() {
+bool nsIContent::HasIndependentSelection() const {
   nsIFrame* frame = GetPrimaryFrame();
   return (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
 }

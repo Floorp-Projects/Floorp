@@ -83,6 +83,39 @@ add_task(async function() {
   ok(!inParams(curlParams, "--data"), "no data param in GET curl output");
 });
 
+// Test `Curl.generateCommand` URL glob handling
+add_task(async function() {
+  let request = {
+    url: "https://example.com/",
+    method: "GET",
+    headers: [],
+    httpVersion: "HTTP/2.0",
+  };
+
+  let cmd = Curl.generateCommand(request);
+  let curlParams = parseCurl(cmd);
+
+  ok(
+    !inParams(curlParams, "--globoff"),
+    "no globoff param in curl output when not needed"
+  );
+
+  request = {
+    url: "https://example.com/[]",
+    method: "GET",
+    headers: [],
+    httpVersion: "HTTP/2.0",
+  };
+
+  cmd = Curl.generateCommand(request);
+  curlParams = parseCurl(cmd);
+
+  ok(
+    inParams(curlParams, "--globoff"),
+    "globoff param present in curl output when needed"
+  );
+});
+
 // Test `Curl.generateCommand` data POSTing
 add_task(async function() {
   const request = {
