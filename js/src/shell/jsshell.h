@@ -110,6 +110,9 @@ extern bool enableWasmCranelift;
 #ifdef ENABLE_WASM_GC
 extern bool enableWasmGc;
 #endif
+#ifdef ENABLE_WASM_MULTI_VALUE
+extern bool enableWasmMultiValue;
+#endif
 extern bool enableWasmVerbose;
 extern bool enableTestWasmAwaitTier2;
 #ifdef ENABLE_WASM_BIGINT

@@ -67,7 +67,7 @@ extern mozilla::Atomic<bool> fuzzingSafe;
 
 static inline bool WasmMultiValueFlag(JSContext* cx) {
 #ifdef ENABLE_WASM_MULTI_VALUE
-  return true;
+  return cx->options().wasmMultiValue();
 #else
   return false;
 #endif
