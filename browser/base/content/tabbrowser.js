@@ -5490,8 +5490,8 @@
         }
       });
 
-      this.addEventListener("oop-browser-crashed", event => {
-        if (!event.isTrusted) {
+      let onTabCrashed = event => {
+        if (!event.isTrusted || !event.isTopFrame) {
           return;
         }
 
@@ -5504,33 +5504,30 @@
           return;
         }
 
+        let isRestartRequiredCrash =
+          event.type == "oop-browser-buildid-mismatch";
+
         let icon = browser.mIconURL;
         let tab = this.getTabForBrowser(browser);
 
         if (this.selectedBrowser == browser) {
-          TabCrashHandler.onSelectedBrowserCrash(browser, false);
+          TabCrashHandler.onSelectedBrowserCrash(
+            browser,
+            isRestartRequiredCrash
+          );
         } else {
-          this.updateBrowserRemoteness(browser, {
-            remoteType: E10SUtils.NOT_REMOTE,
-          });
-          SessionStore.reviveCrashedTab(tab);
+          TabCrashHandler.onBackgroundBrowserCrash(
+            browser,
+            isRestartRequiredCrash
+          );
         }
 
         tab.removeAttribute("soundplaying");
         this.setIcon(tab, icon);
-      });
+      };
 
-      this.addEventListener("oop-browser-buildid-mismatch", event => {
-        if (!event.isTrusted) {
-          return;
-        }
-
-        let browser = event.originalTarget;
-
-        if (this.selectedBrowser == browser) {
-          TabCrashHandler.onSelectedBrowserCrash(browser, true);
-        }
-      });
+      this.addEventListener("oop-browser-crashed", onTabCrashed);
+      this.addEventListener("oop-browser-buildid-mismatch", onTabCrashed);
 
       this.addEventListener("DOMAudioPlaybackStarted", event => {
         var tab = this.getTabFromAudioEvent(event);
