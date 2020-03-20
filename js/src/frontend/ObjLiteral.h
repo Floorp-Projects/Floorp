@@ -567,15 +567,4 @@ class ObjLiteralCreationData {
 };
 
 }  // namespace js
-
-namespace JS {
-// Ignore GC tracing for the ObjLiteralCreationData. It contains JSAtom
-// pointers, but these are already held and rooted by the parser. (We must
-// specify GC policy for the creation data because it is placed in the
-// GC-things vector.)
-template <>
-struct GCPolicy<js::ObjLiteralCreationData>
-    : JS::IgnoreGCPolicy<js::ObjLiteralCreationData> {};
-}  // namespace JS
-
 #endif  // frontend_ObjLiteral_h

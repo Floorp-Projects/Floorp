@@ -740,11 +740,11 @@ bool FunctionScriptEmitter::initScript(
     return false;
   }
 
-  JS::Rooted<BCEScriptStencil> stencil(bce_->cx, BCEScriptStencil(*bce_));
-  if (!stencil.get().init(bce_->cx, nslots)) {
+  BCEScriptStencil stencil(*bce_);
+  if (!stencil.init(bce_->cx, nslots)) {
     return false;
   }
-  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->script, stencil.get())) {
+  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->script, stencil)) {
     return false;
   }
 

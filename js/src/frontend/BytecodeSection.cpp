@@ -45,10 +45,7 @@ void GCThingList::finishInnerFunctions() {
 }
 
 AbstractScopePtr GCThingList::getScope(size_t index) const {
-  auto& elem = vector[index].get();
-  if (elem.is<JS::GCCellPtr>()) {
-    return AbstractScopePtr(&elem.as<JS::GCCellPtr>().as<Scope>());
-  }
+  const ScriptThingVariant& elem = vector[index];
   if (elem.is<EmptyGlobalScopeType>()) {
     return AbstractScopePtr(&compilationInfo.cx->global()->emptyGlobalScope());
   }
@@ -67,11 +64,6 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     CompilationInfo& compilationInfo;
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& output;
-
-    bool operator()(const JS::GCCellPtr& value) {
-      output[i] = value;
-      return true;
-    }
 
     bool operator()(const BigIntIndex& index) {
       BigIntCreationData& data = compilationInfo.bigIntData[index];

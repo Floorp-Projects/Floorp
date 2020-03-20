@@ -2438,12 +2438,12 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  JS::Rooted<BCEScriptStencil> stencil(cx, BCEScriptStencil(*this));
-  if (!stencil.get().init(cx, nslots)) {
+  BCEScriptStencil stencil(*this);
+  if (!stencil.init(cx, nslots)) {
     return false;
   }
 
-  if (!JSScript::fullyInitFromStencil(cx, script, stencil.get())) {
+  if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
     return false;
   }
 
