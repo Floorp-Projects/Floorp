@@ -22,7 +22,7 @@ activation:
 installation:
   description: >
     This ping is intended to capture the source of the installation
-  include_client_id: false
+  include_client_id: true
   bugs:
     - https://github.com/mozilla-mobile/fenix/issues/7295
   data_reviews:

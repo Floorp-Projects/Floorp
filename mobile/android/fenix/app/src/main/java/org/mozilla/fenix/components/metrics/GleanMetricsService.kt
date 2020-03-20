@@ -545,7 +545,12 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                 defaultMozBrowser.set(it)
             }
             mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
+
             adjustCampaign.set(context.settings().adjustCampaignId)
+            adjustAdGroup.set(context.settings().adjustAdGroup)
+            adjustCreative.set(context.settings().adjustCreative)
+            adjustNetwork.set(context.settings().adjustNetwork)
+
             toolbarPosition.set(
                 if (context.settings().shouldUseBottomToolbar) {
                     Event.ToolbarPositionChanged.Position.BOTTOM.name
