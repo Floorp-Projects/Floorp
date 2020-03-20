@@ -52,7 +52,10 @@ class RuntimeService final : public nsIObserver {
     }
   };
 
-  struct IdleThreadInfo;
+  struct IdleThreadInfo {
+    RefPtr<WorkerThread> mThread;
+    mozilla::TimeStamp mExpirationTime;
+  };
 
   mozilla::Mutex mMutex;
 

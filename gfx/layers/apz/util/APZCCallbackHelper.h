@@ -9,6 +9,7 @@
 #include "InputData.h"
 #include "LayersTypes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/RepaintRequest.h"

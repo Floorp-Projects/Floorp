@@ -12,6 +12,7 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/Keyframe.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"

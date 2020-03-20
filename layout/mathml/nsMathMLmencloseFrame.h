@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
+#include "nsMathMLChar.h"
 #include "nsMathMLContainerFrame.h"
 
 namespace mozilla {

@@ -28,7 +28,12 @@ namespace storage {
 class Connection;
 class ResultSet;
 class StatementData;
+}  // namespace storage
+}  // namespace mozilla
 
+MOZ_DECLARE_COPY_CONSTRUCTIBLE(mozilla::storage::StatementData)
+
+namespace mozilla::storage {
 class AsyncExecuteStatements final : public nsIRunnable,
                                      public mozIStoragePendingStatement {
  public:
@@ -244,7 +249,6 @@ class AsyncExecuteStatements final : public nsIRunnable,
   TimeStamp mRequestStartDate;
 };
 
-}  // namespace storage
-}  // namespace mozilla
+}  // namespace mozilla::storage
 
 #endif  // mozStorageAsyncStatementExecution_h
