@@ -1597,8 +1597,8 @@ fn is_aggregate_device(device_info: &ffi::cubeb_device_info) -> bool {
     }
 }
 
-fn audiounit_device_destroy(device: &mut ffi::cubeb_device_info) {
-    // This should be mapped to the memory allocation in audiounit_create_device_from_hwdev.
+fn destroy_cubeb_device_info(device: &mut ffi::cubeb_device_info) {
+    // This should be mapped to the memory allocation in create_cubeb_device_info.
     // Set the pointers to null in case it points to some released memory.
     unsafe {
         if !device.device_id.is_null() {
@@ -1696,12 +1696,12 @@ extern "C" fn audiounit_collection_changed_callback(
 ) -> OSStatus {
     let context = unsafe { &mut *(in_client_data as *mut AudioUnitContext) };
 
-    let queue = context.serial_queue;
+    let queue = context.serial_queue.clone();
     let mutexed_context = Arc::new(Mutex::new(context));
     let also_mutexed_context = Arc::clone(&mutexed_context);
 
     // This can be called from inside an AudioUnit function, dispatch to another queue.
-    async_dispatch(queue, move || {
+    queue.run_async(move || {
         let ctx_guard = also_mutexed_context.lock().unwrap();
         let ctx_ptr = *ctx_guard as *const AudioUnitContext;
 
@@ -1849,10 +1849,7 @@ pub const OPS: Ops = capi_new!(AudioUnitContext, AudioUnitStream);
 #[derive(Debug)]
 pub struct AudioUnitContext {
     _ops: *const Ops,
-    // serial_queue will be created by dispatch_queue_create(create_dispatch_queue)
-    // without ARC(Automatic Reference Counting) support, so it should be released
-    // by dispatch_release(release_dispatch_queue).
-    serial_queue: dispatch_queue_t,
+    serial_queue: Queue,
     latency_controller: Mutex<LatencyController>,
     devices: Mutex<SharedDevices>,
 }
@@ -1861,7 +1858,7 @@ impl AudioUnitContext {
     fn new() -> Self {
         Self {
             _ops: &OPS as *const _,
-            serial_queue: create_dispatch_queue(DISPATCH_QUEUE_LABEL, DISPATCH_QUEUE_SERIAL),
+            serial_queue: Queue::new(DISPATCH_QUEUE_LABEL),
             latency_controller: Mutex::new(LatencyController::default()),
             devices: Mutex::new(SharedDevices::default()),
         }
@@ -2098,7 +2095,7 @@ impl ContextOps for AudioUnitContext {
 
         let mut devices = retake_forgotten_vec(coll.device, coll.count);
         for device in &mut devices {
-            audiounit_device_destroy(device);
+            destroy_cubeb_device_info(device);
         }
         drop(devices); // Release the memory.
         coll.device = ptr::null_mut();
@@ -2168,6 +2165,10 @@ impl ContextOps for AudioUnitContext {
             global_latency_frames,
         ));
 
+        // Rename the task queue to be an unique label.
+        let queue_label = format!("{}.{:p}", DISPATCH_QUEUE_LABEL, boxed_stream.as_ref());
+        boxed_stream.queue = Queue::new(queue_label.as_str());
+
         boxed_stream.core_stream_data =
             CoreStreamData::new(boxed_stream.as_ref(), in_stm_settings, out_stm_settings);
 
@@ -2218,11 +2219,14 @@ impl Drop for AudioUnitContext {
             }
         }
 
-        // Unregister the callback if necessary.
-        self.remove_devices_changed_listener(DeviceType::INPUT);
-        self.remove_devices_changed_listener(DeviceType::OUTPUT);
-
-        release_dispatch_queue(self.serial_queue);
+        // Make sure all the pending (device-collection-changed-callback) tasks
+        // in queue are done, and cancel all the tasks appended after `drop` is executed.
+        let queue = self.serial_queue.clone();
+        queue.run_final(|| {
+            // Unregister the callback if necessary.
+            self.remove_devices_changed_listener(DeviceType::INPUT);
+            self.remove_devices_changed_listener(DeviceType::OUTPUT);
+        });
     }
 }
 
@@ -3071,6 +3075,8 @@ impl<'ctx> Drop for CoreStreamData<'ctx> {
 struct AudioUnitStream<'ctx> {
     context: &'ctx mut AudioUnitContext,
     user_ptr: *mut c_void,
+    // Task queue for the stream.
+    queue: Queue,
 
     data_callback: ffi::cubeb_data_callback,
     state_callback: ffi::cubeb_state_callback,
@@ -3107,6 +3113,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
         AudioUnitStream {
             context,
             user_ptr,
+            queue: Queue::new(DISPATCH_QUEUE_LABEL),
             data_callback,
             state_callback,
             device_changed_callback: Mutex::new(None),
@@ -3266,12 +3273,12 @@ impl<'ctx> AudioUnitStream<'ctx> {
             return;
         }
 
-        let queue = self.context.serial_queue;
+        let queue = self.queue.clone();
         let mutexed_stm = Arc::new(Mutex::new(self));
         let also_mutexed_stm = Arc::clone(&mutexed_stm);
         // Use a new thread, through the queue, to avoid deadlock when calling
         // Get/SetProperties method from inside notify callback
-        async_dispatch(queue, move || {
+        queue.run_async(move || {
             let mut stm_guard = also_mutexed_stm.lock().unwrap();
             let stm_ptr = *stm_guard as *const AudioUnitStream;
             if stm_guard.destroy_pending.load(Ordering::SeqCst) {
@@ -3327,12 +3334,12 @@ impl<'ctx> AudioUnitStream<'ctx> {
         // Execute the stream destroy work.
         self.destroy_pending.store(true, Ordering::SeqCst);
 
-        let queue = self.context.serial_queue;
+        let queue = self.queue.clone();
 
         let stream_ptr = self as *const AudioUnitStream;
         // Execute close in serial queue to avoid collision
         // with reinit when un/plug devices
-        sync_dispatch(queue, move || {
+        queue.run_final(move || {
             // Call stop_audiounits to avoid potential data race. If there is a running data callback,
             // which locks a mutex inside CoreAudio framework, then this call will block the current
             // thread until the callback is finished since this call asks to lock a mutex inside
@@ -3361,11 +3368,10 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         self.draining.store(false, Ordering::SeqCst);
 
         // Execute start in serial queue to avoid racing with destroy or reinit.
-        let queue = self.context.serial_queue;
         let mut result = Err(Error::error());
         let started = &mut result;
         let stream = &self;
-        sync_dispatch(queue, move || {
+        self.queue.run_sync(move || {
             *started = stream.core_stream_data.start_audiounits();
         });
 
@@ -3385,9 +3391,8 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         self.shutdown.store(true, Ordering::SeqCst);
 
         // Execute stop in serial queue to avoid racing with destroy or reinit.
-        let queue = self.context.serial_queue;
         let stream = &self;
-        sync_dispatch(queue, move || {
+        self.queue.run_sync(move || {
             stream.core_stream_data.stop_audiounits();
         });
 

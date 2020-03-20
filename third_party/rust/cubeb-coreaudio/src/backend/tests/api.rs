@@ -1355,24 +1355,22 @@ fn test_create_cubeb_device_info() {
             let mut results = test_create_device_infos_by_device(device);
             assert_eq!(results.len(), 2);
             // Input device type:
+            let input_result = results.pop_front().unwrap();
             if is_input {
-                check_device_info_by_device(
-                    results.pop_front().unwrap().unwrap(),
-                    device,
-                    Scope::Input,
-                );
+                let mut input_device_info = input_result.unwrap();
+                check_device_info_by_device(&input_device_info, device, Scope::Input);
+                destroy_cubeb_device_info(&mut input_device_info);
             } else {
-                assert_eq!(results.pop_front().unwrap().unwrap_err(), Error::error());
+                assert_eq!(input_result.unwrap_err(), Error::error());
             }
             // Output device type:
+            let output_result = results.pop_front().unwrap();
             if is_output {
-                check_device_info_by_device(
-                    results.pop_front().unwrap().unwrap(),
-                    device,
-                    Scope::Output,
-                );
+                let mut output_device_info = output_result.unwrap();
+                check_device_info_by_device(&output_device_info, device, Scope::Output);
+                destroy_cubeb_device_info(&mut output_device_info);
             } else {
-                assert_eq!(results.pop_front().unwrap().unwrap_err(), Error::error());
+                assert_eq!(output_result.unwrap_err(), Error::error());
             }
         } else {
             println!("No device for {:?}.", scope);
@@ -1390,7 +1388,7 @@ fn test_create_cubeb_device_info() {
         results
     }
 
-    fn check_device_info_by_device(info: ffi::cubeb_device_info, id: AudioObjectID, scope: Scope) {
+    fn check_device_info_by_device(info: &ffi::cubeb_device_info, id: AudioObjectID, scope: Scope) {
         assert!(!info.devid.is_null());
         assert!(mem::size_of_val(&info.devid) >= mem::size_of::<AudioObjectID>());
         assert_eq!(info.devid as AudioObjectID, id);
@@ -1486,7 +1484,7 @@ fn test_is_aggregate_device() {
     assert!(!is_aggregate_device(&info));
 }
 
-// device_destroy
+// destroy_cubeb_device_info
 // ------------------------------------
 #[test]
 fn test_device_destroy() {
@@ -1502,7 +1500,7 @@ fn test_device_destroy() {
     device.friendly_name = friendly_name.into_raw();
     device.vendor_name = vendor_name.into_raw();
 
-    audiounit_device_destroy(&mut device);
+    destroy_cubeb_device_info(&mut device);
 
     assert!(device.device_id.is_null());
     assert!(device.group_id.is_null());
@@ -1514,24 +1512,9 @@ fn test_device_destroy() {
 #[should_panic]
 fn test_device_destroy_with_different_device_id_and_group_id() {
     let mut device = ffi::cubeb_device_info::default();
-
-    let device_id = CString::new("test: device id").unwrap();
-    let group_id = CString::new("test: group id").unwrap();
-    let friendly_name = CString::new("test: friendly name").unwrap();
-    let vendor_name = CString::new("test: vendor name").unwrap();
-
-    device.device_id = device_id.into_raw();
-    device.group_id = group_id.into_raw();
-    device.friendly_name = friendly_name.into_raw();
-    device.vendor_name = vendor_name.into_raw();
-
-    audiounit_device_destroy(&mut device);
-    // Hit the assertion above, so we will leak some memory allocated for the above cstring.
-
-    assert!(device.device_id.is_null());
-    assert!(device.group_id.is_null());
-    assert!(device.friendly_name.is_null());
-    assert!(device.vendor_name.is_null());
+    device.device_id = 0xdeaddead as *const _;
+    device.group_id = 0xdeadbeef as *const _;
+    destroy_cubeb_device_info(&mut device);
 }
 
 #[test]
@@ -1543,7 +1526,7 @@ fn test_device_destroy_empty_device() {
     assert!(device.friendly_name.is_null());
     assert!(device.vendor_name.is_null());
 
-    audiounit_device_destroy(&mut device);
+    destroy_cubeb_device_info(&mut device);
 
     assert!(device.device_id.is_null());
     assert!(device.group_id.is_null());
