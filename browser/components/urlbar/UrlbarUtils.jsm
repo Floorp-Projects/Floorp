@@ -697,6 +697,26 @@ class UrlbarProvider {
   }
 
   /**
+   * Calls a method on the provider in a try-catch block and reports any error.
+   * Unlike most other provider methods, `tryMethod` is not intended to be
+   * overridden.
+   *
+   * @param {string} methodName The name of the method to call.
+   * @param {*} args The method arguments.
+   * @returns {*} The return value of the method, or undefined if the method
+   *          throws an error.
+   * @abstract
+   */
+  tryMethod(methodName, ...args) {
+    try {
+      return this[methodName](...args);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    return undefined;
+  }
+
+  /**
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.

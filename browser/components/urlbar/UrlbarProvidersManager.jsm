@@ -187,7 +187,7 @@ class ProvidersManager {
     // Update the behavior of extension providers.
     for (let provider of this.providers) {
       if (provider.type == UrlbarUtils.PROVIDER_TYPE.EXTENSION) {
-        await provider.updateBehavior(queryContext);
+        await provider.tryMethod("updateBehavior", queryContext);
       }
     }
 
@@ -239,7 +239,7 @@ class ProvidersManager {
    */
   notifyEngagementChange(isPrivate, state) {
     for (let provider of this.providers) {
-      provider.onEngagement(isPrivate, state);
+      provider.tryMethod("onEngagement", isPrivate, state);
     }
   }
 }
@@ -292,8 +292,8 @@ class Query {
     let providers = [];
     let maxPriority = -1;
     for (let provider of this.providers) {
-      if (provider.isActive(this.context)) {
-        let priority = provider.getPriority(this.context);
+      if (provider.tryMethod("isActive", this.context)) {
+        let priority = provider.tryMethod("getPriority", this.context);
         if (priority >= maxPriority) {
           // The provider's priority is at least as high as the max.
           if (priority > maxPriority) {
@@ -330,7 +330,9 @@ class Query {
         });
         await this._sleepTimer.promise;
       }
-      promises.push(provider.startQuery(this.context, this.add.bind(this)));
+      promises.push(
+        provider.tryMethod("startQuery", this.context, this.add.bind(this))
+      );
     }
 
     logger.info(`Queried ${promises.length} providers`);
@@ -361,7 +363,7 @@ class Query {
     }
     this.canceled = true;
     for (let provider of this.providers) {
-      provider.cancelQuery(this.context);
+      provider.tryMethod("cancelQuery", this.context);
     }
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);

@@ -720,7 +720,7 @@ class UrlbarInput {
             Cu.reportError(`Provider not found: ${result.providerName}`);
             return;
           }
-          provider.pickResult(result);
+          provider.tryMethod("pickResult", result);
           return;
         }
         break;
