@@ -622,7 +622,7 @@ class nsIContent : public nsINode {
    * If this content has independent selection, e.g., if this is input field
    * or textarea, this return TRUE.  Otherwise, false.
    */
-  bool HasIndependentSelection();
+  bool HasIndependentSelection() const;
 
   /**
    * If the content is a part of HTML editor, this returns editing
