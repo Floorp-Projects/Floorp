@@ -358,6 +358,14 @@ document.addEventListener("DOMContentLoaded", e => {
   RPMAddMessageListener("SendContentBlockingRecords", message => {
     createGraph(message.data);
   });
+  RPMAddMessageListener("SendUserMobileDeviceData", message => {
+    if (
+      RPMGetBoolPref("browser.contentblocking.report.show_mobile_app") &&
+      !message.data.mobileDeviceConnected
+    ) {
+      document.getElementById("mobile-hanger").classList.remove("hidden");
+    }
+  });
 
   let exitIcon = document.querySelector("#mobile-hanger .exit-icon");
   // hide the mobile promotion and keep hidden with a pref.
@@ -365,10 +373,6 @@ document.addEventListener("DOMContentLoaded", e => {
     RPMSetBoolPref("browser.contentblocking.report.show_mobile_app", false);
     document.getElementById("mobile-hanger").classList.add("hidden");
   });
-
-  if (RPMGetBoolPref("browser.contentblocking.report.show_mobile_app")) {
-    document.getElementById("mobile-hanger").classList.remove("hidden");
-  }
 
   let androidMobileAppLink = document.getElementById(
     "android-mobile-inline-link"
