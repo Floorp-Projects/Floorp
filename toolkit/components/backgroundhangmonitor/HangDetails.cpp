@@ -551,7 +551,7 @@ Result<Ok, nsresult> ReadEntry(PRFileDesc* aFile, HangStack& aStack) {
       break;
     }
     default:
-      MOZ_CRASH("Unsupported HangEntry type?");
+      return Err(NS_ERROR_UNEXPECTED);
   }
   return Ok();
 }
