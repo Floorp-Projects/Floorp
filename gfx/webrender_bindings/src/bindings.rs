@@ -197,7 +197,13 @@ pub struct DocumentHandle {
 }
 
 impl DocumentHandle {
-    pub fn new(api: RenderApi, hit_tester: Option<Arc<dyn ApiHitTester>>, size: DeviceIntSize, layer: i8, id: u32) -> DocumentHandle {
+    pub fn new(
+        api: RenderApi,
+        hit_tester: Option<Arc<dyn ApiHitTester>>,
+        size: DeviceIntSize,
+        layer: i8,
+        id: u32,
+    ) -> DocumentHandle {
         let doc = api.add_document_with_id(size, layer, id);
         let hit_tester_request = if hit_tester.is_none() {
             // Request the hit tester early to reduce the likelihood of blocking on the
@@ -3529,10 +3535,7 @@ pub extern "C" fn wr_dp_cancel_item_group(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_finish_item_group(
-    state: &mut WrState,
-    key: ItemKey
-) -> bool {
+pub extern "C" fn wr_dp_finish_item_group(state: &mut WrState, key: ItemKey) -> bool {
     state.frame_builder.dl_builder.finish_item_group(key)
 }
 
@@ -3623,11 +3626,11 @@ pub extern "C" fn wr_api_hit_test(
 ) -> bool {
     dh.ensure_hit_tester();
 
-    let result = dh.hit_tester.as_ref().unwrap().hit_test(
-        None,
-        point,
-        HitTestFlags::empty()
-    );
+    let result = dh
+        .hit_tester
+        .as_ref()
+        .unwrap()
+        .hit_test(None, point, HitTestFlags::empty());
 
     for item in &result.items {
         // For now we should never be getting results back for which the tag is

@@ -101,10 +101,7 @@ impl<'a> FirefoxCapabilities<'a> {
 
 // TODO: put this in webdriver-rust
 fn convert_version_error(err: mozversion::Error) -> WebDriverError {
-    WebDriverError::new(
-        ErrorStatus::SessionNotCreated,
-        err.to_string(),
-    )
+    WebDriverError::new(ErrorStatus::SessionNotCreated, err.to_string())
 }
 
 impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {

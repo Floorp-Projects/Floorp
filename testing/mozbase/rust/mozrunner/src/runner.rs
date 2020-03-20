@@ -93,7 +93,7 @@ impl fmt::Display for RunnerError {
             RunnerError::Io(ref err) => match err.kind() {
                 ErrorKind::NotFound => "no such file or directory".fmt(f),
                 _ => err.fmt(f),
-            }
+            },
             RunnerError::PrefReader(ref err) => err.fmt(f),
         }
     }
