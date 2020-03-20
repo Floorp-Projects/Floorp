@@ -69,8 +69,10 @@ class SavedLoginsView(
     }
 
     fun update(state: SavedLoginsFragmentState) {
-        view.saved_logins_list.isVisible = state.items.isNotEmpty()
-        view.saved_passwords_empty_view.isVisible = state.items.isEmpty()
+        if (!state.isLoading) {
+            view.saved_logins_list.isVisible = state.items.isNotEmpty()
+            view.saved_passwords_empty_view.isVisible = state.items.isEmpty()
+        }
         loginsAdapter.submitList(state.filteredItems)
     }
 }

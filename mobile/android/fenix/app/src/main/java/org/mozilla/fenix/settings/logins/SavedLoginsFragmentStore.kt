@@ -48,6 +48,7 @@ sealed class SavedLoginsFragmentAction : Action {
  * @property items Filtered (or not) list of logins to display
  */
 data class SavedLoginsFragmentState(
+    val isLoading: Boolean = false,
     val items: List<SavedLoginsItem>,
     val filteredItems: List<SavedLoginsItem>
 ) : State
@@ -61,14 +62,19 @@ private fun savedLoginsStateReducer(
 ): SavedLoginsFragmentState {
     return when (action) {
         is SavedLoginsFragmentAction.UpdateLogins -> state.copy(
+            isLoading = false,
             items = action.list,
             filteredItems = action.list
         )
         is SavedLoginsFragmentAction.FilterLogins -> {
             if (action.newText.isNullOrBlank()) {
-                state.copy(filteredItems = state.items)
+                state.copy(
+                    isLoading = false,
+                    filteredItems = state.items)
             } else {
-                state.copy(filteredItems = state.items.filter { it.url.contains(action.newText) })
+                state.copy(
+                    isLoading = false,
+                    filteredItems = state.items.filter { it.url.contains(action.newText) })
             }
         }
     }

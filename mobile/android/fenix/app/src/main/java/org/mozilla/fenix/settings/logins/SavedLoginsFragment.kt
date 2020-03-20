@@ -65,6 +65,7 @@ class SavedLoginsFragment : Fragment() {
         savedLoginsStore = StoreProvider.get(this) {
             SavedLoginsFragmentStore(
                 SavedLoginsFragmentState(
+                    isLoading = true,
                     items = listOf(),
                     filteredItems = listOf()
                 )
