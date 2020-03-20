@@ -277,7 +277,8 @@ JS_FRIEND_API JSLinearString* js::GetErrorTypeName(JSContext* cx,
 
 void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
                           JSErrorCallback callback, void* userRef) {
-  MOZ_ASSERT(!reportp->isWarning());
+  MOZ_ASSERT(reportp);
+  MOZ_ASSERT(!JSREPORT_IS_WARNING(reportp->flags));
 
   // We cannot throw a proper object inside the self-hosting realm, as we
   // cannot construct the Error constructor without self-hosted code. Just

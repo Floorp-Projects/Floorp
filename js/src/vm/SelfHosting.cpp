@@ -103,7 +103,8 @@ using JS::CompileOptions;
 using mozilla::Maybe;
 
 static void selfHosting_WarningReporter(JSContext* cx, JSErrorReport* report) {
-  MOZ_ASSERT(report->isWarning());
+  MOZ_ASSERT(report);
+  MOZ_ASSERT(JSREPORT_IS_WARNING(report->flags));
 
   PrintError(cx, stderr, JS::ConstUTF8CharsZ(), report, true);
 }
@@ -2628,7 +2629,7 @@ static void MaybePrintAndClearPendingException(JSContext* cx, FILE* file) {
     return;
   }
 
-  MOZ_ASSERT(!report.report()->isWarning());
+  MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
   PrintError(cx, file, report.toStringResult(), report.report(), true);
 }
 

@@ -3796,7 +3796,7 @@ static bool CreateErrorReport(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  MOZ_ASSERT(!report.report()->isWarning());
+  MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
 
   RootedObject obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
@@ -9570,7 +9570,7 @@ js::shell::AutoReportException::~AutoReportException() {
     return;
   }
 
-  MOZ_ASSERT(!report.report()->isWarning());
+  MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
 
   FILE* fp = ErrorFilePointer();
   PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
@@ -9600,7 +9600,8 @@ void js::shell::WarningReporter(JSContext* cx, JSErrorReport* report) {
   ShellContext* sc = GetShellContext(cx);
   FILE* fp = ErrorFilePointer();
 
-  MOZ_ASSERT(report->isWarning());
+  MOZ_ASSERT(report);
+  MOZ_ASSERT(JSREPORT_IS_WARNING(report->flags));
 
   if (sc->lastWarningEnabled) {
     JS::AutoSaveExceptionState savedExc(cx);
