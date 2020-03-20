@@ -11,11 +11,22 @@
 #include "builtin/FinalizationRegistryObject.h"
 #include "gc/GCRuntime.h"
 #include "gc/Zone.h"
+#include "vm/JSContext.h"
 
 #include "gc/PrivateIterators-inl.h"
 
 using namespace js;
 using namespace js::gc;
+
+bool GCRuntime::addFinalizationRegistry(JSContext* cx,
+                                        FinalizationRegistryObject* registry) {
+  if (!cx->zone()->finalizationRegistries().put(registry)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
 
 bool GCRuntime::registerWithFinalizationRegistry(JSContext* cx,
                                                  HandleObject target,
@@ -66,6 +77,12 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
 void GCRuntime::sweepFinalizationRegistries(Zone* zone) {
   // Sweep finalization registry data and queue finalization records for cleanup
   // for any entries whose target is dying and remove them from the map.
+
+  Zone::FinalizationRegistrySet& set = zone->finalizationRegistries();
+  set.sweep();
+  for (auto r = set.all(); !r.empty(); r.popFront()) {
+    r.front()->as<FinalizationRegistryObject>().sweep();
+  }
 
   Zone::FinalizationRecordMap& map = zone->finalizationRecordMap();
   for (Zone::FinalizationRecordMap::Enum e(map); !e.empty(); e.popFront()) {

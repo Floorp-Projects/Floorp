@@ -319,6 +319,12 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
       js::Vector<js::AccessorShape*, 0, js::SystemAllocPolicy>;
   js::ZoneData<NurseryShapeVector> nurseryShapes_;
 
+  // The set of all finalization registries in this zone.
+  using FinalizationRegistrySet =
+      GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
+                js::ZoneAllocPolicy>;
+  js::ZoneOrGCTaskData<FinalizationRegistrySet> finalizationRegistries_;
+
   // A map from finalization registry targets to a list of finalization records
   // representing registries that the target is registered with and their
   // associated held values.
@@ -684,6 +690,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   bool isQueuedForBackgroundSweep() { return isOnList(); }
 
   void sweepWeakKeysAfterMinorGC();
+
+  FinalizationRegistrySet& finalizationRegistries() {
+    return finalizationRegistries_.ref();
+  }
 
   FinalizationRecordMap& finalizationRecordMap() {
     return finalizationRecordMap_.ref();
