@@ -1,5 +1,7 @@
 // META: script=/resources/WebIDLParser.js
 // META: script=/resources/idlharness.js
+// META: script=/resources/testdriver.js
+// META: script=/resources/testdriver-vendor.js
 
 // https://w3c.github.io/wake-lock/
 
@@ -9,18 +11,15 @@ idl_test(
   ['wake-lock'],
   ['dom', 'html', 'permissions'],
   async idl_array => {
-    if (self.GLOBAL.isWorker()) {
-      idl_array.add_objects({ WorkerNavigator: ['navigator'] });
-    } else {
-      idl_array.add_objects({ Navigator: ['navigator'] });
-    }
+    idl_array.add_objects({ Navigator: ['navigator'] });
+
     idl_array.add_objects({
       WakeLock: ['navigator.wakeLock'],
       WakeLockSentinel: ['sentinel'],
     });
 
-    // For now, this assumes the request will be granted and the promise will
-    // be fulfilled with a WakeLockSentinel object.
+    await test_driver.set_permission(
+        { name: 'wake-lock', type: 'screen' }, 'granted', false);
     self.sentinel = await navigator.wakeLock.request('screen');
     self.sentinel.release();
   }
