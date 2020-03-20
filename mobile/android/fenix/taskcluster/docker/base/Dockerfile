@@ -19,8 +19,10 @@ WORKDIR /builds/worker/
 #-- Configuration -----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV ANDROID_SDK_VERSION='3859397' \
+ENV ANDROID_SDK_SHA256='444e22ce8ca0f67353bda4b85175ed3731cae3ffa695ca18119cbacef1c1bea0' \
+    ANDROID_SDK_VERSION='3859397' \
     ANDROID_SDK_ROOT='/builds/worker/android-sdk-linux' \
+    CURL='curl --location --retry 5' \
     GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
     LANG='en_US.UTF-8' \
     TERM='dumb' \
@@ -52,7 +54,8 @@ RUN pip install taskcluster
 
 RUN locale-gen "$LANG"
 
-RUN curl -o "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip" \
+RUN $CURL --output "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip" \
+    && echo "$ANDROID_SDK_SHA256  $SDK_ZIP_LOCATION" | sha256sum --check \
     && unzip -d "$ANDROID_SDK_ROOT" "$SDK_ZIP_LOCATION" \
     && rm "$SDK_ZIP_LOCATION" \
     && yes | "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" --licenses \
@@ -63,7 +66,7 @@ RUN curl -o "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-to
 
 ENV SHELL=/bin/bash \
     HOME=/builds/worker \
-    PATH=/builds/worker/.local/bin:$PATH
+    PATH="/builds/worker/.local/bin:$PATH"
 
 
 VOLUME /builds/worker/checkouts

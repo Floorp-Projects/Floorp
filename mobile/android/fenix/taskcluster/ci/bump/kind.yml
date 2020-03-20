@@ -1,0 +1,50 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies: []
+
+transforms:
+    - fenix_taskgraph.transforms.secrets:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    treeherder:
+        kind: build
+        symbol: bump(a-c)
+        tier: 2
+        platform: android-all/opt
+    run-on-tasks-for: []
+    run:
+        dummy-secrets:
+            by-level:
+                '3': []
+                default:
+                    - content: "faketoken"
+                      path: .github_token
+        secrets:
+            by-level:
+                '3':
+                    - name: project/mobile/github
+                      key: botAccountToken
+                      path: .github_token
+                default: []
+        using: run-commands
+        use-caches: false
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: bump}
+        max-run-time: 7200
+        chain-of-trust: true
+
+jobs:
+    android-components:
+        attributes:
+            bump-type: android-components
+        description: Bump android-components to the latest version
+        run:
+            commands:
+                - [automation/taskcluster/update_android_components.sh]

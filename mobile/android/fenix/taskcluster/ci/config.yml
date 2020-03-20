@@ -4,6 +4,7 @@ treeherder:
     group-names:
         'beta': 'Beta-related tasks'
         'betaFennec': 'Beta-related tasks with same APK configuration as Fennec'
+        'bump': 'Bump dependencies'
         'debug': 'Builds made for testing'
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'
         'I': 'Docker Image Builds'

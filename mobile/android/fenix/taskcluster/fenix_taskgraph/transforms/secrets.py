@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Apply some defaults and minor modifications to the jobs defined in the nimbledroid
-kind.
+Resolve secrets and dummy secrets
 """
 
 from __future__ import absolute_import, print_function, unicode_literals

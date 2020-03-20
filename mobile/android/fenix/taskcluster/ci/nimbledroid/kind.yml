@@ -5,7 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - fenix_taskgraph.transforms.nimbledroid:transforms
+    - fenix_taskgraph.transforms.secrets:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -27,10 +27,10 @@ job-defaults:
                 default: []
         dummy-secrets:
             by-level:
-              '3': []
-              default:
-                - content: "faketoken"
-                  path: .nimbledroid_token
+                '3': []
+                default:
+                      - content: "faketoken"
+                        path: .nimbledroid_token
     run-on-tasks-for: []
     treeherder:
         kind: test
