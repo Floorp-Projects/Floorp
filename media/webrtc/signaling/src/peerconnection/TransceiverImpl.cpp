@@ -479,19 +479,6 @@ void TransceiverImpl::InsertDTMFTone(int tone, uint32_t duration) {
   conduit->InsertDTMFTone(0, tone, true, duration, 6);
 }
 
-bool TransceiverImpl::HasReceiveTrack(
-    const dom::MediaStreamTrack* aRecvTrack) const {
-  if (!mHaveStartedReceiving) {
-    return false;
-  }
-
-  if (!aRecvTrack) {
-    return true;
-  }
-
-  return mReceiveTrack == aRecvTrack;
-}
-
 JSObject* TransceiverImpl::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return dom::TransceiverImpl_Binding::Wrap(aCx, this, aGivenProto);
@@ -501,10 +488,6 @@ nsPIDOMWindowInner* TransceiverImpl::GetParentObject() const { return mWindow; }
 
 RefPtr<MediaPipelineTransmit> TransceiverImpl::GetSendPipeline() {
   return mTransmitPipeline;
-}
-
-RefPtr<MediaPipelineReceive> TransceiverImpl::GetReceivePipeline() {
-  return mReceivePipeline;
 }
 
 static nsresult JsepCodecDescToAudioCodecConfig(
