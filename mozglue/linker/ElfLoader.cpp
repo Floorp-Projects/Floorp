@@ -28,6 +28,24 @@ mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gPageSize;
 #  include <math.h>
 
 #  include <android/api-level.h>
+
+/**
+ * Return the current Android version, or 0 on failure.
+ */
+static int GetAndroidSDKVersion() {
+  static int version = 0;
+  if (version) {
+    return version;
+  }
+
+  char version_string[PROP_VALUE_MAX] = {'\0'};
+  int len = __system_property_get("ro.build.version.sdk", version_string);
+  if (len) {
+    version = static_cast<int>(strtol(version_string, nullptr, 10));
+  }
+  return version;
+}
+
 #  if __ANDROID_API__ < 8
 /* Android API < 8 doesn't provide sigaltstack */
 
@@ -61,12 +79,20 @@ extern "C" Elf::Dyn _DYNAMIC[];
  */
 
 void* __wrap_dlopen(const char* path, int flags) {
+  if (GetAndroidSDKVersion() >= 23) {
+    return dlopen(path, flags);
+  }
+
   RefPtr<LibHandle> handle = ElfLoader::Singleton.Load(path, flags);
   if (handle) handle->AddDirectRef();
   return handle;
 }
 
 const char* __wrap_dlerror(void) {
+  if (GetAndroidSDKVersion() >= 23) {
+    return dlerror();
+  }
+
   const char* error = ElfLoader::Singleton.lastError.exchange(nullptr);
   if (error) {
     // Return a custom error if available.
@@ -77,6 +103,10 @@ const char* __wrap_dlerror(void) {
 }
 
 void* __wrap_dlsym(void* handle, const char* symbol) {
+  if (GetAndroidSDKVersion() >= 23) {
+    return dlsym(handle, symbol);
+  }
+
   if (!handle) {
     ElfLoader::Singleton.lastError = "dlsym(NULL, sym) unsupported";
     return nullptr;
@@ -91,6 +121,10 @@ void* __wrap_dlsym(void* handle, const char* symbol) {
 }
 
 int __wrap_dlclose(void* handle) {
+  if (GetAndroidSDKVersion() >= 23) {
+    return dlclose(handle);
+  }
+
   if (!handle) {
     ElfLoader::Singleton.lastError = "No handle given to dlclose()";
     return -1;
@@ -100,6 +134,10 @@ int __wrap_dlclose(void* handle) {
 }
 
 int __wrap_dladdr(void* addr, Dl_info* info) {
+  if (GetAndroidSDKVersion() >= 23) {
+    return dladdr(addr, info);
+  }
+
   RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
   if (!handle) {
     return dladdr(addr, info);
@@ -197,6 +235,10 @@ int DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
 }
 
 int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void* data) {
+  if (GetAndroidSDKVersion() >= 23) {
+    return dl_iterate_phdr(callback, data);
+  }
+
   DlIteratePhdrHelper helper;
   AutoLock lock(&ElfLoader::Singleton.handlesMutex);
 
@@ -274,25 +316,6 @@ const char* LeafName(const char* path) {
   if (lastSlash) return lastSlash + 1;
   return path;
 }
-
-#if defined(ANDROID)
-/**
- * Return the current Android version, or 0 on failure.
- */
-int GetAndroidSDKVersion() {
-  static int version = 0;
-  if (version) {
-    return version;
-  }
-
-  char version_string[PROP_VALUE_MAX] = {'\0'};
-  int len = __system_property_get("ro.build.version.sdk", version_string);
-  if (len) {
-    version = static_cast<int>(strtol(version_string, nullptr, 10));
-  }
-  return version;
-}
-#endif
 
 /**
  * Run the given lambda while holding the internal lock of the system linker.

@@ -19,6 +19,10 @@
 #if defined(MOZ_LINKER)
 #  include <dlfcn.h>
 #  include "mozilla/Types.h"
+#  if defined(ANDROID)
+#    include <sys/system_properties.h>
+#  endif
+
 // FIXME move these out of mozglue/linker/ElfLoader.h into their
 // own header, so as to avoid conflicts arising from two definitions
 // of Array
@@ -140,10 +144,32 @@ AutoObjectMapperFaultyLib::~AutoObjectMapperFaultyLib() {
   // either by faulty.lib or by the parent class, but not by both.
 }
 
+#  if defined(ANDROID)
+static int GetAndroidSDKVersion() {
+  static int version = 0;
+  if (version) {
+    return version;
+  }
+
+  char version_string[PROP_VALUE_MAX] = {'\0'};
+  int len = __system_property_get("ro.build.version.sdk", version_string);
+  if (len) {
+    version = static_cast<int>(strtol(version_string, nullptr, 10));
+  }
+  return version;
+}
+#  endif
+
 bool AutoObjectMapperFaultyLib::Map(/*OUT*/ void** start,
                                     /*OUT*/ size_t* length,
                                     std::string fileName) {
   MOZ_ASSERT(!mHdl);
+
+#  if defined(ANDROID)
+  if (GetAndroidSDKVersion() >= 23) {
+    return AutoObjectMapperPOSIX::Map(start, length, fileName);
+  }
+#  endif
 
   if (fileName == "libmozglue.so") {
     // Do (2) in the comment above.
