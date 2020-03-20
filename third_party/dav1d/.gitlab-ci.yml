@@ -38,7 +38,7 @@ build-debian:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
     stage: build
     tags:
-        - debian
+        - avx2
         - amd64
     script:
         - meson build --buildtype release --werror
@@ -173,7 +173,7 @@ build-win-arm64:
 
 build-debian-aarch64:
     stage: build
-    image: registry.videolan.org:5000/dav1d-debian-unstable-aarch64:20181122182457
+    image: registry.videolan.org/dav1d-debian-buster-aarch64:20200218203017
     tags:
         - aarch64
         - debian
@@ -184,7 +184,7 @@ build-debian-aarch64:
 
 build-debian-aarch64-clang-5:
     stage: build
-    image: registry.videolan.org:5000/dav1d-debian-unstable-aarch64:20181122182457
+    image: registry.videolan.org/dav1d-debian-buster-aarch64:20200218203017
     tags:
         - aarch64
         - debian
@@ -203,7 +203,7 @@ build-macos:
         - cd build && meson test -v
 
 build-debian-werror:
-    image: registry.videolan.org:5000/dav1d-debian-unstable-aarch64:20181122182457
+    image: registry.videolan.org/dav1d-debian-buster-aarch64:20200218203017
     stage: build
     tags:
         - aarch64
@@ -219,7 +219,7 @@ build-debian-armv7:
         - armv7
         - debian
     script:
-        - meson build --buildtype debugoptimized --werror
+        - linux32 meson build --buildtype debugoptimized --werror
         - ninja -C build
         - cd build && meson test -v
 
@@ -230,13 +230,13 @@ build-debian-armv7-clang-5:
         - armv7
         - debian
     script:
-        - env CC=clang-5.0 CFLAGS='-integrated-as' meson build --buildtype release
+        - env CC=clang-5.0 CFLAGS='-integrated-as' linux32 meson build --buildtype release
         - ninja -C build
         - cd build && meson test -v
 
 build-ubuntu-snap:
     stage: build
-    image: registry.videolan.org:5000/dav1d-ubuntu-bionic:20190221154127
+    image: registry.videolan.org/dav1d-ubuntu-bionic:20200121182340
     tags:
         - debian
         - amd64
@@ -292,7 +292,7 @@ test-debian-unaligned-stack:
     stage: test
     needs: ["build-debian"]
     tags:
-        - debian
+        - avx2
         - amd64
     cache:
         key: testdata.git-20190215
@@ -382,7 +382,7 @@ test-win64:
     stage: test
     needs: ["build-win64"]
     tags:
-        - debian
+        - avx2
         - amd64
     cache:
         key: testdata.git-20190215
@@ -403,7 +403,7 @@ test-win64:
     dependencies: []
 
 test-debian-aarch64:
-    image: registry.videolan.org:5000/dav1d-debian-unstable-aarch64:20181122182457
+    image: registry.videolan.org/dav1d-debian-buster-aarch64:20200218203017
     stage: test
     needs: ["build-debian-aarch64"]
     tags:
@@ -464,7 +464,7 @@ test-debian-armv7-clang-5:
         - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
         - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
         - git clone cache/dav1d-test-data.git tests/dav1d-test-data
-        - env CC=clang-5.0 CFLAGS='-integrated-as' meson build --buildtype release
+        - env CC=clang-5.0 CFLAGS='-integrated-as' linux32 meson build --buildtype release
                                                                -Dtestdata_tests=true
                                                                -Dlogging=false
         - ninja -C build

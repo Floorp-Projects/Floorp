@@ -382,11 +382,11 @@ class CheckedUnsafePtr : public detail::CheckedUnsafePtrBase<T> {
 // Since CheckedUnsafePtr<T> has a non-trivial copy constructor, it has to opt
 // into nsTArray<T> using them.
 template <typename T>
-struct nsTArray_CopyChooser<mozilla::CheckedUnsafePtr<T>> {
+struct nsTArray_RelocationStrategy<mozilla::CheckedUnsafePtr<T>> {
   using Type = std::conditional_t<
       T::SupportsChecking::value == mozilla::CheckingSupport::Enabled,
-      nsTArray_CopyWithConstructors<mozilla::CheckedUnsafePtr<T>>,
-      nsTArray_CopyWithMemutils>;
+      nsTArray_RelocateUsingMoveConstructor<mozilla::CheckedUnsafePtr<T>>,
+      nsTArray_RelocateUsingMemutils>;
 };
 
 #endif  // mozilla_CheckedUnsafePtr_h

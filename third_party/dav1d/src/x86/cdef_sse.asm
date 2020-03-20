@@ -364,26 +364,19 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
 .body_done:
 
     ; top
- %if ARCH_X86_64
-    DEFINE_ARGS dst, stride, left, top2, pri, sec, stride3, top1, edge
- %else
-    DEFINE_ARGS dst, stride, left, top2, stride3, top1, edge
- %endif
     LOAD_ARG32     top
     test         edged, 4                    ; have_top
     jz .no_top
-    mov          top1q, [top2q+0*gprsize]
-    mov          top2q, [top2q+1*gprsize]
     test         edged, 1                    ; have_left
     jz .top_no_left
     test         edged, 2                    ; have_right
     jz .top_no_right
  %if %1 == 4
-    PMOVZXBW        m0, [top1q-2]
-    PMOVZXBW        m1, [top2q-2]
+    PMOVZXBW        m0, [topq+strideq*0-2]
+    PMOVZXBW        m1, [topq+strideq*1-2]
  %else
-    movu            m0, [top1q-4]
-    movu            m1, [top2q-4]
+    movu            m0, [topq+strideq*0-4]
+    movu            m1, [topq+strideq*1-4]
     punpckhbw       m2, m0, m15
     punpcklbw       m0, m15
     punpckhbw       m3, m1, m15
@@ -396,13 +389,13 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
     jmp .top_done
 .top_no_right:
  %if %1 == 4
-    PMOVZXBW        m0, [top1q-%1]
-    PMOVZXBW        m1, [top2q-%1]
+    PMOVZXBW        m0, [topq+strideq*0-%1]
+    PMOVZXBW        m1, [topq+strideq*1-%1]
     movu [px-2*%3-4*2], m0
     movu [px-1*%3-4*2], m1
  %else
-    movu            m0, [top1q-%1]
-    movu            m1, [top2q-%2]
+    movu            m0, [topq+strideq*0-%1]
+    movu            m1, [topq+strideq*1-%2]
     punpckhbw       m2, m0, m15
     punpcklbw       m0, m15
     punpckhbw       m3, m1, m15
@@ -419,11 +412,11 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
     test         edged, 2                   ; have_right
     jz .top_no_left_right
  %if %1 == 4
-    PMOVZXBW        m0, [top1q]
-    PMOVZXBW        m1, [top2q]
+    PMOVZXBW        m0, [topq+strideq*0]
+    PMOVZXBW        m1, [topq+strideq*1]
  %else
-    movu            m0, [top1q]
-    movu            m1, [top2q]
+    movu            m0, [topq+strideq*0]
+    movu            m1, [topq+strideq*1]
     punpckhbw       m2, m0, m15
     punpcklbw       m0, m15
     punpckhbw       m3, m1, m15
@@ -437,8 +430,8 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
     mov dword [px-1*%3-4], OUT_OF_BOUNDS
     jmp .top_done
 .top_no_left_right:
-    PMOVZXBW        m0, [top1q], %1 == 4
-    PMOVZXBW        m1, [top2q], %1 == 4
+    PMOVZXBW        m0, [topq+strideq*0], %1 == 4
+    PMOVZXBW        m1, [topq+strideq*1], %1 == 4
     mova     [px-2*%3], m0
     mova     [px-1*%3], m1
     mov dword [px-2*%3+%1*2], OUT_OF_BOUNDS
@@ -630,9 +623,9 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
     sub        secdmpd, dampingd
     xor       dampingd, dampingd
     neg        pridmpd
-    cmovl      pridmpd, dampingd
+    cmovs      pridmpd, dampingd
     neg        secdmpd
-    cmovl      secdmpd, dampingd
+    cmovs      secdmpd, dampingd
  %if ARCH_X86_64
     mov       [rsp+ 0], pridmpq                 ; pri_shift
     mov       [rsp+16], secdmpq                 ; sec_shift

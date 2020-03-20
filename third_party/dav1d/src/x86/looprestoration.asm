@@ -347,7 +347,7 @@ cglobal sgr_box3_h, 8, 11, 8, sumsq, sum, left, src, stride, w, h, edge, x, xlim
     punpckhbw    xm0, xm1
 
     ; when we reach this, xm0 contains left two px in highest words
-    cmp           xq, -16
+    cmp           xd, -16
     jle .loop_x
 .partial_load_and_extend:
     vpbroadcastb  m3, [srcq-1]
@@ -396,17 +396,17 @@ cglobal sgr_box3_h, 8, 11, 8, sumsq, sum, left, src, stride, w, h, edge, x, xlim
     ; else if x < xlimd we extend from previous load (this implies have_right=0)
     ; else we are done
 
-    cmp           xq, -16
+    cmp           xd, -16
     jle .loop_x
-    test          xq, xq
+    test          xd, xd
     jl .partial_load_and_extend
-    cmp           xq, xlimq
+    cmp           xd, xlimd
     jl .right_extend
 
     add       sumsqq, (384+16)*4
     add         sumq, (384+16)*2
     add         srcq, strideq
-    dec hd
+    dec           hd
     jg .loop_y
     RET
 
@@ -418,7 +418,7 @@ cglobal sgr_box3_v, 5, 10, 9, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr, 
     shr        ylimd, 2
     sub        ylimd, 2                             ; -2 if have_bottom=0, else 0
 .loop_x:
-    lea           yd, [hd+ylimd+2]
+    lea           yd, [hq+ylimq+2]
     lea   sumsq_ptrq, [sumsqq+xq*4+4-(384+16)*4]
     lea     sum_ptrq, [sumq+xq*2+2-(384+16)*2]
     test       edged, 4                             ; have_top
@@ -720,9 +720,9 @@ cglobal sgr_box5_h, 8, 11, 10, sumsq, sum, left, src, stride, w, h, edge, x, xli
     punpckhbw    xm0, xm1
 
     ; when we reach this, xm0 contains left two px in highest words
-    cmp           xq, -16
+    cmp           xd, -16
     jle .loop_x
-    test          xq, xq
+    test          xd, xd
     jge .right_extend
 .partial_load_and_extend:
     vpbroadcastb  m3, [srcq-1]
@@ -781,11 +781,11 @@ cglobal sgr_box5_h, 8, 11, 10, sumsq, sum, left, src, stride, w, h, edge, x, xli
     ; else if x < xlimd we extend from previous load (this implies have_right=0)
     ; else we are done
 
-    cmp           xq, -16
+    cmp           xd, -16
     jle .loop_x
-    test          xq, xq
+    test          xd, xd
     jl .partial_load_and_extend
-    cmp           xq, xlimq
+    cmp           xd, xlimd
     jl .right_extend
 
     add       sumsqq, (384+16)*4
@@ -803,7 +803,7 @@ cglobal sgr_box5_v, 5, 10, 15, sumsq, sum, w, h, edge, x, y, sumsq_ptr, sum_ptr,
     shr        ylimd, 2
     sub        ylimd, 3                             ; -3 if have_bottom=0, else -1
 .loop_x:
-    lea           yd, [hd+ylimd+2]
+    lea           yd, [hq+ylimq+2]
     lea   sumsq_ptrq, [sumsqq+xq*4+4-(384+16)*4]
     lea     sum_ptrq, [sumq+xq*2+2-(384+16)*2]
     test       edged, 4                             ; have_top

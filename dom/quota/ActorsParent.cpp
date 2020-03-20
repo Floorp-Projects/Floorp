@@ -1989,7 +1989,34 @@ void UnregisterNormalOriginOp(NormalOriginOperationBase* aNormalOriginOp) {
 
 class StorageOperationBase {
  protected:
-  struct OriginProps;
+  struct OriginProps {
+    enum Type { eChrome, eContent, eObsolete, eInvalid };
+
+    nsCOMPtr<nsIFile> mDirectory;
+    nsString mLeafName;
+    nsCString mSpec;
+    OriginAttributes mAttrs;
+    int64_t mTimestamp;
+    nsCString mSuffix;
+    nsCString mGroup;
+    nsCString mOrigin;
+    nsCString mOriginalSuffix;
+
+    Type mType;
+    bool mNeedsRestore;
+    bool mNeedsRestore2;
+    bool mIgnore;
+
+   public:
+    explicit OriginProps()
+        : mTimestamp(0),
+          mType(eContent),
+          mNeedsRestore(false),
+          mNeedsRestore2(false),
+          mIgnore(false) {}
+
+    nsresult Init(nsIFile* aDirectory);
+  };
 
   nsTArray<OriginProps> mOriginProps;
 
@@ -2027,35 +2054,6 @@ class StorageOperationBase {
   nsresult ProcessOriginDirectories();
 
   virtual nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) = 0;
-};
-
-struct StorageOperationBase::OriginProps {
-  enum Type { eChrome, eContent, eObsolete, eInvalid };
-
-  nsCOMPtr<nsIFile> mDirectory;
-  nsString mLeafName;
-  nsCString mSpec;
-  OriginAttributes mAttrs;
-  int64_t mTimestamp;
-  nsCString mSuffix;
-  nsCString mGroup;
-  nsCString mOrigin;
-  nsCString mOriginalSuffix;
-
-  Type mType;
-  bool mNeedsRestore;
-  bool mNeedsRestore2;
-  bool mIgnore;
-
- public:
-  explicit OriginProps()
-      : mTimestamp(0),
-        mType(eContent),
-        mNeedsRestore(false),
-        mNeedsRestore2(false),
-        mIgnore(false) {}
-
-  nsresult Init(nsIFile* aDirectory);
 };
 
 class MOZ_STACK_CLASS OriginParser final {

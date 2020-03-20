@@ -362,27 +362,6 @@ PVRLayerChild* VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
   return SendPVRLayerConstructor(vrLayerChild, aDisplayID, aGroup);
 }
 
-// XXX TODO - VRManagerChild::FrameRequest is the same as
-// Document::FrameRequest, should we consolodate these?
-struct VRManagerChild::FrameRequest {
-  FrameRequest(mozilla::dom::FrameRequestCallback& aCallback, int32_t aHandle)
-      : mCallback(&aCallback), mHandle(aHandle) {}
-
-  // Conversion operator so that we can append these to a
-  // FrameRequestCallbackList
-  operator const RefPtr<mozilla::dom::FrameRequestCallback>&() const {
-    return mCallback;
-  }
-
-  // Comparator operators to allow RemoveElementSorted with an
-  // integer argument on arrays of FrameRequest
-  bool operator==(int32_t aHandle) const { return mHandle == aHandle; }
-  bool operator<(int32_t aHandle) const { return mHandle < aHandle; }
-
-  RefPtr<mozilla::dom::FrameRequestCallback> mCallback;
-  int32_t mHandle;
-};
-
 nsresult VRManagerChild::ScheduleFrameRequestCallback(
     mozilla::dom::FrameRequestCallback& aCallback, int32_t* aHandle) {
   if (mFrameRequestCallbackCounter == INT32_MAX) {

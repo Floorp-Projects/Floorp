@@ -19,7 +19,7 @@ const mappings = {
   "./source-editor": "devtools/client/shared/sourceeditor/editor",
   "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
   "./test-flag": "devtools/shared/flags",
-  "./fronts-device": "devtools/shared/fronts/device",
+  "./fronts-device": "devtools/client/fronts/device",
   immutable: "devtools/client/shared/vendor/immutable",
   lodash: "devtools/client/shared/vendor/lodash",
   react: "devtools/client/shared/vendor/react",

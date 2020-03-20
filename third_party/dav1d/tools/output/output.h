@@ -32,7 +32,6 @@
 
 typedef struct MuxerContext MuxerContext;
 
-void init_muxers(void);
 int output_open(MuxerContext **c, const char *name, const char *filename,
                 const Dav1dPictureParameters *p, const unsigned fps[2]);
 int output_write(MuxerContext *ctx, Dav1dPicture *pic);

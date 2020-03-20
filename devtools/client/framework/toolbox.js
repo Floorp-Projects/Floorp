@@ -193,7 +193,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "NodeFront",
-  "devtools/shared/fronts/node",
+  "devtools/client/fronts/node",
   true
 );
 

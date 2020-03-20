@@ -1244,7 +1244,6 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                              item);
 
       {
-        MOZ_ASSERT(item->GetType() != DisplayItemType::TYPE_RENDER_ROOT);
         auto spaceAndClipChain = mClipManager.SwitchItem(item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
@@ -2682,19 +2681,6 @@ WebRenderGroupData::~WebRenderGroupData() {
   GP("Group data destruct\n");
   mSubGroup.ClearImageKey(mManager, true);
   mFollowingGroup.ClearImageKey(mManager, true);
-}
-
-WebRenderCommandBuilder::ScrollDataBoundaryWrapper::ScrollDataBoundaryWrapper(
-    WebRenderCommandBuilder& aBuilder, RenderRootBoundary& aBoundary)
-    : mBuilder(aBuilder), mBoundary(aBoundary) {
-  mLayerCountBeforeRecursing =
-      mBuilder.mLayerScrollDatas.GetLayerCount(mBoundary.GetChildType());
-}
-
-WebRenderCommandBuilder::ScrollDataBoundaryWrapper::
-    ~ScrollDataBoundaryWrapper() {
-  mBuilder.mLayerScrollDatas.AppendWrapper(mBoundary,
-                                           mLayerCountBeforeRecursing);
 }
 
 }  // namespace layers

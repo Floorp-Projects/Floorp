@@ -62,7 +62,8 @@ struct CloneInfo;
 }  // namespace dom
 }  // namespace mozilla
 
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::CloneInfo)
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::indexedDB::CloneInfo)
+MOZ_DECLARE_NON_COPY_CONSTRUCTIBLE(mozilla::dom::indexedDB::CloneInfo)
 
 namespace mozilla {
 namespace dom {

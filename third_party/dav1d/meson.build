@@ -23,14 +23,14 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.5.2',
+    version: '0.6.0',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
     meson_version: '>= 0.47.0')
 
-dav1d_soname_version       = '3.1.0'
+dav1d_soname_version       = '4.0.0'
 dav1d_api_version_array    = dav1d_soname_version.split('.')
 dav1d_api_version_major    = dav1d_api_version_array[0]
 dav1d_api_version_minor    = dav1d_api_version_array[1]
@@ -84,13 +84,15 @@ test_args = []
 
 optional_arguments = []
 
-# Define _POSIX_C_SOURCE to POSIX.1–2001 (IEEE Std 1003.1-2001)
-test_args += '-D_POSIX_C_SOURCE=200112L'
-add_project_arguments('-D_POSIX_C_SOURCE=200112L', language: 'c')
-
-if host_machine.system() == 'darwin'
+if host_machine.system() == 'linux'
+    test_args += '-D_GNU_SOURCE'
+    add_project_arguments('-D_GNU_SOURCE', language: 'c')
+elif host_machine.system() == 'darwin'
     test_args += '-D_DARWIN_C_SOURCE'
     add_project_arguments('-D_DARWIN_C_SOURCE', language: 'c')
+else
+    test_args += '-D_POSIX_C_SOURCE=200112L'
+    add_project_arguments('-D_POSIX_C_SOURCE=200112L', language: 'c')
 endif
 
 if host_machine.system() == 'windows'
@@ -130,6 +132,15 @@ else
         cdata.set('HAVE_CLOCK_GETTIME', 1)
     endif
 endif
+
+libdl_dependency = []
+if host_machine.system() == 'linux'
+    libdl_dependency = cc.find_library('dl', required : false)
+    if cc.has_function('dlsym', prefix : '#include <dlfcn.h>', args : test_args, dependencies : libdl_dependency)
+        cdata.set('HAVE_DLSYM', 1)
+    endif
+endif
+
 
 # Header checks
 
@@ -257,12 +268,12 @@ if host_machine.cpu_family().startswith('x86')
     if get_option('stack_alignment') > 0
         stack_alignment = get_option('stack_alignment')
     elif host_machine.cpu_family() == 'x86_64'
-        if cc.has_argument('-mpreferred-stack-boundary=5')
-            stackalign_flag = ['-mpreferred-stack-boundary=5']
+        if cc.has_argument('-mpreferred-stack-boundary=6')
+            stackalign_flag = ['-mpreferred-stack-boundary=6']
             stackrealign_flag = ['-mincoming-stack-boundary=4']
             stack_alignment = 32
-        elif cc.has_argument('-mstack-alignment=32')
-            stackalign_flag = ['-mstack-alignment=32']
+        elif cc.has_argument('-mstack-alignment=64')
+            stackalign_flag = ['-mstack-alignment=64']
             stackrealign_flag = ['-mstackrealign']
             stack_alignment = 32
         else
@@ -364,8 +375,8 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
 
         out = nasm_r.stdout().strip().split()
         if out[1].to_lower() == 'version'
-            if out[2].version_compare('<2.13.02')
-                error('nasm 2.13.02 or later is required, found nasm @0@'.format(out[2]))
+            if out[2].version_compare('<2.14')
+                error('nasm 2.14 or later is required, found nasm @0@'.format(out[2]))
             endif
         else
             error('unexpected nasm version string: @0@'.format(nasm_r.stdout()))
@@ -390,7 +401,7 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
         depfile: '@BASENAME@.obj.ndep',
         arguments: [
             '-f', nasm_format,
-            '-I', '@SOURCE_DIR@/src/',
+            '-I', '@0@/src/'.format(meson.current_source_dir()),
             '-I', '@0@/'.format(meson.current_build_dir()),
             '-MQ', '@OUTPUT@', '-MF', '@DEPFILE@',
             '@EXTRA_ARGS@',

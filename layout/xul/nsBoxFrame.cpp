@@ -906,13 +906,6 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                   const nsDisplayListSet& aLists) {
   bool forceLayer = false;
-  // We check the renderroot attribute here in nsBoxFrame for lack of a better
-  // place. This roughly mirrors the pre-existing "layer" attribute. In the
-  // long term we may want to add a specific element in which we can wrap
-  // alternate renderroot content, but we're electing to not go down that
-  // rabbit hole today.
-  wr::RenderRoot renderRoot =
-      gfxUtils::GetRenderRootForFrame(this).valueOr(wr::RenderRoot::Default);
 
   if (GetContent()->IsXULElement()) {
     // forcelayer is only supported on XUL elements with box layout
@@ -930,14 +923,12 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   nsDisplayListCollection tempLists(aBuilder);
-  const nsDisplayListSet& destination =
-      (forceLayer || renderRoot != wr::RenderRoot::Default) ? tempLists
-                                                            : aLists;
+  const nsDisplayListSet& destination = (forceLayer) ? tempLists : aLists;
 
   DisplayBorderBackgroundOutline(aBuilder, destination);
 
   Maybe<nsDisplayListBuilder::AutoContainerASRTracker> contASRTracker;
-  if (forceLayer || renderRoot != wr::RenderRoot::Default) {
+  if (forceLayer) {
     contASRTracker.emplace(aBuilder);
   }
 
@@ -946,7 +937,7 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // see if we have to draw a selection frame around this container
   DisplaySelectionOverlay(aBuilder, destination.Content());
 
-  if (forceLayer || renderRoot != wr::RenderRoot::Default) {
+  if (forceLayer) {
     // This is a bit of a hack. Collect up all descendant display items
     // and merge them into a single Content() list. This can cause us
     // to violate CSS stacking order, but forceLayer is a magic
@@ -962,16 +953,11 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore ownLayerClipState(aBuilder);
 
     if (forceLayer) {
-      MOZ_ASSERT(renderRoot == wr::RenderRoot::Default);
       // Wrap the list to make it its own layer
       aLists.Content()->AppendNewToTop<nsDisplayOwnLayer>(
           aBuilder, this, &masterList, ownLayerASR,
           nsDisplayOwnLayerFlags::None, mozilla::layers::ScrollbarData{}, true,
           true, nsDisplayOwnLayer::OwnLayerForBoxFrame);
-    } else {
-      MOZ_ASSERT(!XRE_IsContentProcess());
-      aLists.Content()->AppendNewToTop<nsDisplayRenderRoot>(
-          aBuilder, this, &masterList, ownLayerASR, renderRoot);
     }
   }
 }

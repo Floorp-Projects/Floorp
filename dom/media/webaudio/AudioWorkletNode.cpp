@@ -96,7 +96,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
 
   // Vector<T> supports non-memmovable types such as PersistentRooted
   // (without any need to jump through hoops like
-  // DECLARE_USE_COPY_CONSTRUCTORS_FOR_TEMPLATE for nsTArray).
+  // MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR_FOR_TEMPLATE for nsTArray).
   // PersistentRooted is used because these AudioWorkletGlobalScope scope
   // objects may be kept alive as long as the AudioWorkletNode in the
   // main-thread global.

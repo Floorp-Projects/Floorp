@@ -78,6 +78,55 @@ MediaSessionActionHandler* MediaSession::GetActionHandler(
   return mActionHandlers[static_cast<size_t>(aAction)];
 }
 
+void MediaSession::SetPositionState(const MediaPositionState& aState,
+                                    ErrorResult& aRv) {
+  // https://w3c.github.io/mediasession/#dom-mediasession-setpositionstate
+  // If the state is an empty dictionary then clear the position state.
+  if (!aState.IsAnyMemberPresent()) {
+    mPositionState.reset();
+    return;
+  }
+
+  // If the duration is not present, throw a TypeError.
+  if (!aState.mDuration.WasPassed()) {
+    return aRv.ThrowTypeError("Duration is not present");
+  }
+
+  // If the duration is negative, throw a TypeError.
+  if (aState.mDuration.WasPassed() && aState.mDuration.Value() < 0.0) {
+    return aRv.ThrowTypeError(nsPrintfCString(
+        "Invalid duration %f, it can't be negative", aState.mDuration.Value()));
+  }
+
+  // If the position is negative or greater than duration, throw a TypeError.
+  if (aState.mPosition.WasPassed() &&
+      (aState.mPosition.Value() < 0.0 ||
+       aState.mPosition.Value() > aState.mDuration.Value())) {
+    return aRv.ThrowTypeError(nsPrintfCString(
+        "Invalid position %f, it can't be negative or greater than duration",
+        aState.mPosition.Value()));
+  }
+
+  // If the playbackRate is zero, throw a TypeError.
+  if (aState.mPlaybackRate.WasPassed() && aState.mPlaybackRate.Value() == 0.0) {
+    return aRv.ThrowTypeError("The playbackRate is zero");
+  }
+
+  // If the position is not present, set it to zero.
+  double position = aState.mPosition.WasPassed() ? aState.mPosition.Value() : 0;
+
+  // If the playbackRate is not present, set it to 1.0.
+  double playbackRate =
+      aState.mPlaybackRate.WasPassed() ? aState.mPlaybackRate.Value() : 1.0;
+
+  // Update the position state and last position updated time.
+  MOZ_ASSERT(aState.mDuration.WasPassed());
+  mPositionState =
+      Some(PositionState(aState.mDuration.Value(), playbackRate, position));
+  // TODO : propagate position state to the media controller in the chrome
+  // process.
+}
+
 void MediaSession::NotifyHandler(const MediaSessionActionDetails& aDetails) {
   DispatchNotifyHandler(aDetails);
 }

@@ -21,7 +21,8 @@ class MessagePortService final {
  public:
   NS_INLINE_DECL_REFCOUNTING(MessagePortService)
 
-  // Needs to be public for the DECLARE_USE_COPY_CONSTRUCTORS macro.
+  // Needs to be public for the MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR
+  // macro.
   struct NextParent;
 
   static MessagePortService* Get();

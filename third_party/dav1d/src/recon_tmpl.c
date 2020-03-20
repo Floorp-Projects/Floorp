@@ -70,10 +70,10 @@ static inline unsigned get_skip_ctx(const TxfmInfo *const t_dim,
         const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
         const int not_one_blk = b_dim[2] - (!!b_dim[2] && ss_hor) > t_dim->lw ||
                                 b_dim[3] - (!!b_dim[3] && ss_ver) > t_dim->lh;
-        int ca, cl;
+        unsigned ca, cl;
 
-#define MERGE_CTX(dir, type, mask) \
-        c##dir = !!((*(const type *) dir) & mask); \
+#define MERGE_CTX(dir, type, no_val) \
+        c##dir = *(const type *) dir != no_val; \
         break
 
         switch (t_dim->lw) {
@@ -83,17 +83,17 @@ static inline unsigned get_skip_ctx(const TxfmInfo *const t_dim,
          * and will therefore complain about the use of uninitialized variables
          * when compiled in debug mode if we put the default case at the end. */
         default: assert(0); /* fall-through */
-        case TX_4X4:   MERGE_CTX(a, uint8_t,  0x3F);
-        case TX_8X8:   MERGE_CTX(a, uint16_t, 0x3F3F);
-        case TX_16X16: MERGE_CTX(a, uint32_t, 0x3F3F3F3FU);
-        case TX_32X32: MERGE_CTX(a, uint64_t, 0x3F3F3F3F3F3F3F3FULL);
+        case TX_4X4:   MERGE_CTX(a, uint8_t,  0x40);
+        case TX_8X8:   MERGE_CTX(a, uint16_t, 0x4040);
+        case TX_16X16: MERGE_CTX(a, uint32_t, 0x40404040U);
+        case TX_32X32: MERGE_CTX(a, uint64_t, 0x4040404040404040ULL);
         }
         switch (t_dim->lh) {
         default: assert(0); /* fall-through */
-        case TX_4X4:   MERGE_CTX(l, uint8_t,  0x3F);
-        case TX_8X8:   MERGE_CTX(l, uint16_t, 0x3F3F);
-        case TX_16X16: MERGE_CTX(l, uint32_t, 0x3F3F3F3FU);
-        case TX_32X32: MERGE_CTX(l, uint64_t, 0x3F3F3F3F3F3F3F3FULL);
+        case TX_4X4:   MERGE_CTX(l, uint8_t,  0x40);
+        case TX_8X8:   MERGE_CTX(l, uint16_t, 0x4040);
+        case TX_16X16: MERGE_CTX(l, uint32_t, 0x40404040U);
+        case TX_32X32: MERGE_CTX(l, uint64_t, 0x4040404040404040ULL);
         }
 #undef MERGE_CTX
 
@@ -352,13 +352,17 @@ static int decode_coefs(Dav1dTileContext *const t,
     if (lossless) {
         assert(t_dim->max == TX_4X4);
         *txtp = WHT_WHT;
-    } else if (!f->frame_hdr->segmentation.qidx[b->seg_id] ||
-               t_dim->max + intra >= TX_64X64)
-    {
+    } else if (t_dim->max + intra >= TX_64X64) {
         *txtp = DCT_DCT;
     } else if (chroma) {
+        // inferred from either the luma txtp (inter) or a LUT (intra)
         *txtp = intra ? dav1d_txtp_from_uvmode[b->uv_mode] :
                         get_uv_inter_txtp(t_dim, *txtp);
+    } else if (!f->frame_hdr->segmentation.qidx[b->seg_id]) {
+        // In libaom, lossless is checked by a literal qidx == 0, but not all
+        // such blocks are actually lossless. The remainder gets an implicit
+        // transform type (for luma)
+        *txtp = DCT_DCT;
     } else {
         unsigned idx;
         if (intra) {
@@ -1993,7 +1997,7 @@ void bytefn(dav1d_filter_sbrow)(Dav1dFrameContext *const f, const int sby) {
         bytefn(dav1d_cdef_brow)(f, f->lf.p, f->lf.mask_ptr, sby * sbsz,
                                 imin(sby * sbsz + n_blks, f->bh));
     }
-    if (f->frame_hdr->super_res.enabled) {
+    if (f->frame_hdr->width[0] != f->frame_hdr->width[1]) {
         const int has_chroma = f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I400;
         for (int pl = 0; pl < 1 + 2 * has_chroma; pl++) {
             const int ss_ver = pl && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;

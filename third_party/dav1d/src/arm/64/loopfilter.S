@@ -151,8 +151,8 @@ function lpf_16_wd\wd\()_neon
         movi            v7.16b,  #3
         sqxtn           v2.8b,   v2.8h            // f
         sqxtn2          v2.16b,  v3.8h
-        sqadd           v4.16b,  v6.16b,  v2.16b  // imin(f + 4, 128)
-        sqadd           v5.16b,  v7.16b,  v2.16b  // imin(f + 3, 128)
+        sqadd           v4.16b,  v6.16b,  v2.16b  // imin(f + 4, 127)
+        sqadd           v5.16b,  v7.16b,  v2.16b  // imin(f + 3, 127)
         sshr            v4.16b,  v4.16b,  #3      // f1
         sshr            v5.16b,  v5.16b,  #3      // f2
         uxtl            v2.8h,   v23.8b           // p0
@@ -981,13 +981,13 @@ function lpf_h_16_16_neon
         br              x15
 endfunc
 
-// void dav1d_lpf_v_sb_y_neon(pixel *dst, const ptrdiff_t stride,
-//                            const uint32_t *const vmask,
-//                            const uint8_t (*l)[4], ptrdiff_t b4_stride,
-//                            const Av1FilterLUT *lut, const int w)
+// void dav1d_lpf_v_sb_y_8bpc_neon(pixel *dst, const ptrdiff_t stride,
+//                                 const uint32_t *const vmask,
+//                                 const uint8_t (*l)[4], ptrdiff_t b4_stride,
+//                                 const Av1FilterLUT *lut, const int w)
 
 .macro lpf_func dir, type
-function lpf_\dir\()_sb_\type\()_neon, export=1
+function lpf_\dir\()_sb_\type\()_8bpc_neon, export=1
         mov             x11, x30
         stp             d8,  d9,  [sp, #-0x40]!
         stp             d10, d11, [sp, #0x10]

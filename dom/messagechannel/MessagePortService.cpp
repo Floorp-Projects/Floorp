@@ -40,7 +40,8 @@ struct MessagePortService::NextParent {
 // Need to call CheckedUnsafePtr's copy constructor and destructor when
 // resizing dynamic arrays containing NextParent (by calling NextParent's
 // implicit copy constructor/destructor rather than memmove-ing NextParents).
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessagePortService::NextParent);
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
+    mozilla::dom::MessagePortService::NextParent);
 
 namespace mozilla {
 namespace dom {

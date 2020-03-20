@@ -170,6 +170,19 @@ cglobal checked_call, 2,15,16,max_args*8+8
 .ok:
     RET
 
+; trigger a warmup of vector units
+%macro WARMUP 0
+cglobal warmup, 0, 0
+    xorps   m0, m0
+    mulps   m0, m0
+    RET
+%endmacro
+
+INIT_YMM avx2
+WARMUP
+INIT_ZMM avx512
+WARMUP
+
 %else
 
 ; just random numbers to reduce the chance of incidental match

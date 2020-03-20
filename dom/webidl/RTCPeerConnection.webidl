@@ -138,21 +138,6 @@ interface RTCPeerConnection : EventTarget  {
   sequence<RTCRtpReceiver> getReceivers();
   sequence<RTCRtpTransceiver> getTransceivers();
 
-  // test-only: for testing getContributingSources
-  [ChromeOnly]
-  DOMHighResTimeStamp mozGetNowInRtpSourceReferenceTime();
-  // test-only: for testing getContributingSources
-  [ChromeOnly]
-  void mozInsertAudioLevelForContributingSource(RTCRtpReceiver receiver,
-                                                unsigned long source,
-                                                DOMHighResTimeStamp timestamp,
-                                                unsigned long rtpTimestamp,
-                                                boolean hasLevel,
-                                                byte level);
-  [ChromeOnly]
-  void mozAddRIDExtension(RTCRtpReceiver receiver, unsigned short extensionId);
-  [ChromeOnly]
-  void mozAddRIDFilter(RTCRtpReceiver receiver, DOMString rid);
   [ChromeOnly]
   void mozSetPacketCallback(mozPacketCallback callback);
   [ChromeOnly]

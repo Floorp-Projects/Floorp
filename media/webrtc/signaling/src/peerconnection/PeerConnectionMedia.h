@@ -84,26 +84,15 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // TODO: Let's move the TransceiverImpl stuff to PeerConnectionImpl.
   nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
-                          dom::MediaStreamTrack& aReceiveTrack,
                           dom::MediaStreamTrack* aSendTrack,
-                          const PrincipalHandle& aPrincipalHandle,
                           RefPtr<TransceiverImpl>* aTransceiverImpl);
 
   void GetTransmitPipelinesMatching(
       const dom::MediaStreamTrack* aTrack,
       nsTArray<RefPtr<MediaPipelineTransmit>>* aPipelines);
 
-  void GetReceivePipelinesMatching(
-      const dom::MediaStreamTrack* aTrack,
-      nsTArray<RefPtr<MediaPipelineReceive>>* aPipelines);
-
-  std::string GetTransportIdMatching(const dom::MediaStreamTrack& aTrack) const;
-
-  nsresult AddRIDExtension(dom::MediaStreamTrack& aRecvTrack,
-                           unsigned short aExtensionId);
-
-  nsresult AddRIDFilter(dom::MediaStreamTrack& aRecvTrack,
-                        const nsAString& aRid);
+  std::string GetTransportIdMatchingSendTrack(
+      const dom::MediaStreamTrack& aTrack) const;
 
   // In cases where the peer isn't yet identified, we disable the pipeline (not
   // the stream, that would potentially affect others), so that it sends

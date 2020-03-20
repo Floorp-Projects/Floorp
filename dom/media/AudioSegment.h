@@ -23,7 +23,7 @@ namespace mozilla {
 struct AudioChunk;
 class AudioSegment;
 }  // namespace mozilla
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioChunk)
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::AudioChunk)
 
 /**
  * This allows compilation of nsTArray<AudioSegment> and
@@ -33,7 +33,7 @@ DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioChunk)
  * Note that AudioSegment(const AudioSegment&) is deleted, so this should
  * never come into effect.
  */
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioSegment)
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::AudioSegment)
 
 namespace mozilla {
 

@@ -34,7 +34,8 @@ interface MediaSession {
 
   void setActionHandler(MediaSessionAction action, MediaSessionActionHandler? handler);
 
-  // TODO: void setPositionState(optional MediaPositionState? state); (bug 1582509)
+  [Throws]
+  void setPositionState(optional MediaPositionState state = {});
 
   // Fire the action handler. It's test-only for now.
   [ChromeOnly]
@@ -75,4 +76,8 @@ dictionary MediaSessionActionDetails {
   double seekOffset;
 };
 
-// TODO: Implement MediaPositionState (bug 1582509)
+dictionary MediaPositionState {
+  double duration;
+  double playbackRate;
+  double position;
+};

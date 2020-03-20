@@ -1493,53 +1493,11 @@ bool gfxUtils::DumpDisplayList() {
 }
 
 wr::RenderRoot gfxUtils::GetContentRenderRoot() {
-  if (gfx::gfxVars::UseWebRender() &&
-      StaticPrefs::gfx_webrender_split_render_roots_AtStartup()) {
-    return wr::RenderRoot::Content;
-  }
   return wr::RenderRoot::Default;
-}
-
-Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
-  if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots_AtStartup() ||
-      !XRE_IsParentProcess()) {
-    return Nothing();
-  }
-  if (!aFrame->GetContent()) {
-    return Nothing();
-  }
-  if (!aFrame->GetContent()->IsElement()) {
-    return Nothing();
-  }
-  const dom::Element* element = aFrame->GetContent()->AsElement();
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
-                           NS_LITERAL_STRING("content"), eCaseMatters)) {
-    return Some(wr::RenderRoot::Content);
-  }
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::renderroot,
-                           NS_LITERAL_STRING("popover"), eCaseMatters)) {
-    return Some(wr::RenderRoot::Popover);
-  }
-  return Nothing();
 }
 
 wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
     const nsIFrame* aFrame) {
-  if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots_AtStartup() ||
-      !XRE_IsParentProcess()) {
-    return wr::RenderRoot::Default;
-  }
-
-  for (const nsIFrame* current = aFrame; current;
-       current = nsLayoutUtils::GetCrossDocParentFrame(current)) {
-    auto renderRoot = gfxUtils::GetRenderRootForFrame(current);
-    if (renderRoot) {
-      return *renderRoot;
-    }
-  }
-
   return wr::RenderRoot::Default;
 }
 

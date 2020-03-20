@@ -62,6 +62,7 @@ Http3Session::Http3Session()
       mShouldClose(false),
       mIsClosedByNeqo(false),
       mError(NS_OK),
+      mSocketError(NS_OK),
       mBeforeConnectedError(false) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Session::Http3Session [this=%p]", this));
@@ -181,13 +182,15 @@ Http3Session::~Http3Session() {
   Shutdown();
 }
 
-PRIntervalTime Http3Session::IdleTime() {
-  // Seting this value to 0 will never triger PruneDeadConnections for
-  // this connection. We want to let neqo-transport perform close on idle
-  // connections.
-  return 0;
-}
-
+// This function may return a socket error.
+// It will not return an error if socket error is
+// NS_BASE_STREAM_WOULD_BLOCK.
+// A caller of this function will close the Http3 connection
+// in case of a error.
+// The only callers is:
+//   HttpConnectionUDP::OnInputStreamReady ->
+//   HttpConnectionUDP::OnSocketReadable ->
+//   Http3Session::WriteSegmentsAgain
 nsresult Http3Session::ProcessInput() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mSegmentReaderWriter);
@@ -215,6 +218,9 @@ nsresult Http3Session::ProcessInput() {
 
   LOG(("Http3Session::ProcessInput error=%" PRIx32 " [this=%p]",
        static_cast<uint32_t>(rv), this));
+  if (NS_SUCCEEDED(mSocketError)) {
+    mSocketError = rv;
+  }
   return rv;
 }
 
@@ -259,7 +265,6 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
                                   ? NS_BINDING_RETARGETED
                                   : NS_OK);
           *again = false;
-          Unused << ResumeRecv();
         } else if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
           return rv;
         }
@@ -276,7 +281,6 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
                                     ? NS_BINDING_RETARGETED
                                     : NS_OK);
             *again = false;
-            Unused << ResumeRecv();
           } else if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
             return rv;
           }
@@ -361,10 +365,19 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
   }
 
   *again = false;
-  Unused << ResumeRecv();
   return NS_OK;
 }
 
+// This function may return a socket error.
+// It will not return an error if socket error is
+// NS_BASE_STREAM_WOULD_BLOCK.
+// A Caller of this function will close the Http3 connection
+// if this function returns an error.
+// Callers are:
+//   1) HttpConnectionUDP::OnQuicTimeoutExpired
+//   2) HttpConnectionUDP::OnOutputStreamReady ->
+//      HttpConnectionUDP::OnSocketWritable ->
+//      Http3Session::ReadSegmentsAgain
 nsresult Http3Session::ProcessOutput() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mSegmentReaderWriter);
@@ -372,47 +385,32 @@ nsresult Http3Session::ProcessOutput() {
   LOG(("Http3Session::ProcessOutput reader=%p, [this=%p]",
        mSegmentReaderWriter.get(), this));
 
-  nsresult rv = NS_OK;
-  // Check if we have a packet that could not have been sent in a previous
-  // iteration.
-  if (mPacketToSend.Length()) {
-    uint32_t written = 0;
-    rv = mSegmentReaderWriter->OnReadSegment(
-        (const char*)mPacketToSend.Elements(), mPacketToSend.Length(),
-        &written);
-    if (NS_FAILED(rv)) {
-      if ((rv == NS_BASE_STREAM_WOULD_BLOCK) && mConnection) {
-        // The socket is still blocked, wait again.
-        Unused << mConnection->ResumeSend();
-      }
-      return rv;
-    }
-    MOZ_ASSERT(written == mPacketToSend.Length());
-    mPacketToSend.TruncateLength(0);
-  }
-
   // Process neqo.
   mHttp3Connection->ProcessHttp3();
   uint64_t timeout = mHttp3Connection->ProcessOutput();
 
-  // Maybe get new packets to send.
-  while (NS_SUCCEEDED(mHttp3Connection->GetDataToSend(mPacketToSend))) {
+  // Check if we have a packet that could not have been sent in a previous
+  // iteration or maybe get new packets to send.
+  while (mPacketToSend.Length() ||
+         NS_SUCCEEDED(mHttp3Connection->GetDataToSend(mPacketToSend))) {
     MOZ_ASSERT(mPacketToSend.Length());
     LOG(("Http3Session::ProcessOutput sending packet with %u bytes [this=%p].",
          (uint32_t)mPacketToSend.Length(), this));
     uint32_t written = 0;
-    rv = mSegmentReaderWriter->OnReadSegment(
+    nsresult rv = mSegmentReaderWriter->OnReadSegment(
         (const char*)mPacketToSend.Elements(), mPacketToSend.Length(),
         &written);
-    if (NS_FAILED(rv)) {
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-        // The socket is blocked, keep the packet and we will send it when the
-        // socket is ready to send data again.
-        if (mConnection) {
-          Unused << mConnection->ResumeSend();
-        }
-        SetupTimer(timeout);
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      // The socket is blocked, keep the packet and we will send it when the
+      // socket is ready to send data again.
+      if (mConnection) {
+        Unused << mConnection->ResumeSend();
       }
+      SetupTimer(timeout);
+      return NS_OK;
+    }
+    if (NS_FAILED(rv)) {
+      mSocketError = rv;
       // Ok the socket is blocked or there is an error, return from here,
       // we do not need to set a timer if error is not
       // NS_BASE_STREAM_WOULD_BLOCK, i.e. we are closing the connection.
@@ -423,7 +421,7 @@ nsresult Http3Session::ProcessOutput() {
   }
 
   SetupTimer(timeout);
-  return rv;
+  return NS_OK;
 }
 
 // This is only called when timer expires.
@@ -819,21 +817,21 @@ nsresult Http3Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
 
 void Http3Session::Close(nsresult aReason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
   if (NS_FAILED(mError)) {
     CloseInternal(false);
   } else {
     mError = aReason;
+    // If necko closes connection, this will map to "closing" key and 37 in the
+    // graph.
+    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
+                          NS_LITERAL_CSTRING("closing"), 37);
     CloseInternal(true);
   }
 
-  // If necko closes connection, this will map to "closing" key and 37 in the
-  // graph.
-  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
-                        NS_LITERAL_CSTRING("closing"), 37);
-
-  if (mCleanShutdown || mIsClosedByNeqo) {
-    // It is network-tear-down or neqo is state CLOSED(it does not need to send
-    // any more packets or wait for new packets).
+  if (mCleanShutdown || mIsClosedByNeqo || NS_FAILED(mSocketError)) {
+    // It is network-tear-down, a socker error or neqo is state CLOSED
+    // (it does not need to send any more packets or wait for new packets).
     // We need to remove all references, so that
     // Http3Session will be destroyed.
     if (mTimer) {
@@ -845,6 +843,7 @@ void Http3Session::Close(nsresult aReason) {
     mState = CLOSED;
   }
   if (mConnection) {
+    // resume sending to send CLOSE_CONNECTION frame.
     Unused << mConnection->ResumeSend();
   }
 }

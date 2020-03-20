@@ -1,0 +1,133 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef _RTCRtpReceiver_h_
+#define _RTCRtpReceiver_h_
+
+#include "nsISupports.h"
+#include "nsWrapperCache.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Maybe.h"
+#include "js/RootingAPI.h"
+#include "nsTArray.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
+#include "RTCStatsReport.h"
+#include "signaling/src/media-conduit/RtcpEventObserver.h"
+#include <vector>
+
+class nsPIDOMWindowInner;
+
+namespace mozilla {
+class MediaPipelineReceive;
+class MediaSessionConduit;
+class MediaTransportHandler;
+class JsepTransceiver;
+
+namespace dom {
+class MediaStreamTrack;
+class Promise;
+struct RTCRtpContributingSource;
+struct RTCRtpSynchronizationSource;
+
+class RTCRtpReceiver : public nsISupports,
+                       public nsWrapperCache,
+                       public RtcpEventObserver {
+ public:
+  explicit RTCRtpReceiver(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+                          const std::string& aPCHandle,
+                          MediaTransportHandler* aTransportHandler,
+                          JsepTransceiver* aJsepTransceiver,
+                          nsISerialEventTarget* aMainThread,
+                          nsISerialEventTarget* aStsThread,
+                          MediaSessionConduit* aConduit);
+
+  // nsISupports
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCRtpReceiver)
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+  // webidl
+  MediaStreamTrack* Track() const { return mTrack; }
+  already_AddRefed<Promise> GetStats();
+  void GetContributingSources(
+      nsTArray<dom::RTCRtpContributingSource>& aSources);
+  void GetSynchronizationSources(
+      nsTArray<dom::RTCRtpSynchronizationSource>& aSources);
+  // test-only: called from simulcast mochitests.
+  void MozAddRIDExtension(unsigned short aExtensionId);
+  void MozAddRIDFilter(const nsAString& aRid);
+  // test-only: insert fake CSRCs and audio levels for testing
+  void MozInsertAudioLevelForContributingSource(
+      const uint32_t aSource, const DOMHighResTimeStamp aTimestamp,
+      const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel);
+
+  nsPIDOMWindowInner* GetParentObject() const;
+  nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal();
+
+  void Shutdown();
+  void Stop();
+  void Start();
+  bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
+
+  struct StreamAssociation {
+    RefPtr<MediaStreamTrack> mTrack;
+    std::string mStreamId;
+  };
+
+  struct TrackEventInfo {
+    RefPtr<RTCRtpReceiver> mReceiver;
+    std::vector<std::string> mStreamIds;
+  };
+
+  struct StreamAssociationChanges {
+    std::vector<RefPtr<MediaStreamTrack>> mTracksToMute;
+    std::vector<StreamAssociation> mStreamAssociationsRemoved;
+    std::vector<StreamAssociation> mStreamAssociationsAdded;
+    std::vector<TrackEventInfo> mTrackEvents;
+  };
+
+  // This is called when we set an answer (ie; when the transport is finalized).
+  void UpdateTransport();
+  nsresult UpdateConduit();
+
+  // This is called when we set a remote description; may be an offer or answer.
+  void UpdateStreams(StreamAssociationChanges* aChanges);
+
+  void OnRtcpBye() override;
+
+  void OnRtcpTimeout() override;
+
+  void SetReceiveTrackMuted(bool aMuted);
+
+ private:
+  virtual ~RTCRtpReceiver();
+
+  nsresult UpdateVideoConduit();
+  nsresult UpdateAudioConduit();
+
+  // For logging
+  std::string GetMid() const;
+
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  const std::string mPCHandle;
+  RefPtr<JsepTransceiver> mJsepTransceiver;
+  bool mHaveStartedReceiving = false;
+  bool mHaveSetupTransport = false;
+  nsCOMPtr<nsISerialEventTarget> mMainThread;
+  nsCOMPtr<nsISerialEventTarget> mStsThread;
+  RefPtr<dom::MediaStreamTrack> mTrack;
+  RefPtr<MediaPipelineReceive> mPipeline;
+  RefPtr<MediaTransportHandler> mTransportHandler;
+  // This is [[AssociatedRemoteMediaStreams]], basically. We do not keep the
+  // streams themselves here, because that would require this object to know
+  // where the stream list for the whole RTCPeerConnection lives..
+  std::vector<std::string> mStreamIds;
+  bool mRemoteSetSendBit = false;
+};
+
+}  // namespace dom
+}  // namespace mozilla
+#endif  // _RTCRtpReceiver_h_

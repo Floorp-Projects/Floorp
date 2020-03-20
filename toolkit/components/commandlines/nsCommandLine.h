@@ -8,6 +8,7 @@
 #include "nsICommandLineRunner.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 class nsICommandLineHandler;
