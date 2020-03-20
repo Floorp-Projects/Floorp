@@ -1561,6 +1561,7 @@ var SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
+      case "oop-browser-buildid-mismatch":
         if (aEvent.isTopFrame) {
           this.onBrowserCrashed(target);
         }
@@ -2538,6 +2539,7 @@ var SessionStoreInternal = {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("SwapDocShells", this);
     browser.addEventListener("oop-browser-crashed", this);
+    browser.addEventListener("oop-browser-buildid-mismatch", this);
 
     if (browser.frameLoader) {
       this._lastKnownFrameLoader.set(browser.permanentKey, browser.frameLoader);
@@ -2688,6 +2690,7 @@ var SessionStoreInternal = {
 
     browser.removeEventListener("SwapDocShells", this);
     browser.removeEventListener("oop-browser-crashed", this);
+    browser.removeEventListener("oop-browser-buildid-mismatch", this);
 
     // If this tab was in the middle of restoring or still needs to be restored,
     // we need to reset that state. If the tab was restoring, we will attempt to
