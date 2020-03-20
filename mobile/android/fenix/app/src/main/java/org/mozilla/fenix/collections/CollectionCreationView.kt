@@ -229,22 +229,8 @@ class CollectionCreationView(
                 interactor.onBackPressed(SaveCollectionStep.NameCollection)
             }, TRANSITION_DURATION)
         }
-        transition.addListener(object : Transition.TransitionListener {
-            override fun onTransitionStart(transition: Transition) { /* noop */ }
 
-            override fun onTransitionEnd(transition: Transition) {
-                view.name_collection_edittext.showKeyboard()
-                transition.removeListener(this)
-            }
-
-            override fun onTransitionCancel(transition: Transition) { /* noop */ }
-            override fun onTransitionPause(transition: Transition) { /* noop */ }
-            override fun onTransitionResume(transition: Transition) { /* noop */ }
-        })
-        TransitionManager.beginDelayedTransition(
-            view.collection_constraint_layout,
-            transition
-        )
+        view.name_collection_edittext.showKeyboard()
         val constraint = nameCollectionConstraints
         constraint.applyTo(view.collection_constraint_layout)
         name_collection_edittext.setText(
