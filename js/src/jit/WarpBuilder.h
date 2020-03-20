@@ -168,6 +168,12 @@ namespace jit {
   _(GetIntrinsic)           \
   _(ImportMeta)             \
   _(CallSiteObj)            \
+  _(NewArray)               \
+  _(NewArrayCopyOnWrite)    \
+  _(NewObject)              \
+  _(NewObjectWithGroup)     \
+  _(NewInit)                \
+  _(Object)                 \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)

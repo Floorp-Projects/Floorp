@@ -252,6 +252,22 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         break;
       }
 
+      case JSOp::NewArrayCopyOnWrite: {
+        // Fix up the copy-on-write ArrayObject if needed.
+        jsbytecode* pc = loc.toRawBytecode();
+        if (!ObjectGroup::getOrFixupCopyOnWriteObject(cx_, script, pc)) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      }
+
+      case JSOp::Object: {
+        if (!mirGen_.options.cloneSingletons()) {
+          cx_->realm()->behaviors().setSingletonsAsValues();
+        }
+        break;
+      }
+
       default:
         break;
     }
