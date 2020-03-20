@@ -1376,7 +1376,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * ancestor. This node is definitely not selected when |false| is returned,
    * but it may or may not be selected when |true| is returned.
    */
-  bool IsSelectionDescendant() const {
+  bool IsMaybeSelected() const {
     return IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection() ||
            IsClosestCommonInclusiveAncestorForRangeInSelection();
   }
