@@ -63,7 +63,6 @@ const NS_APP_DISTRIBUTION_SEARCH_DIR_LIST = "SrchPluginsDistDL";
 // We load plugins from EXT_SEARCH_PREFIX, where a list.json
 // file needs to exist to list available engines.
 const EXT_SEARCH_PREFIX = "resource://search-extensions/";
-const APP_SEARCH_PREFIX = "resource://search-plugins/";
 
 // The address we use to sign the built in search extensions with.
 const EXT_SIGNING_ADDRESS = "search.mozilla.org";
@@ -344,14 +343,6 @@ function convertGoogleEngines(engineNames) {
     "google-2018": "google-b-1-d",
   };
 
-  let mobileOverrides = {
-    google: "google-b-m",
-    "google-2018": "google-b-1-m",
-  };
-
-  if (AppConstants.platform == "android") {
-    overrides = mobileOverrides;
-  }
   for (let engine in overrides) {
     let index = engineNames.indexOf(engine);
     if (index > -1) {
@@ -796,7 +787,9 @@ SearchService.prototype = {
    * handled via a sync listener.
    *
    * For desktop, the initial remote settings are obtained from dumps in
-   * `services/settings/dumps/main/`. These are not shipped with Android, and
+   * `services/settings/dumps/main/`.
+   *
+   * When enabling for Android, be aware the dumps are not shipped there, and
    * hence the `get` may take a while to return.
    */
   async _setupRemoteSettings() {
@@ -918,10 +911,7 @@ SearchService.prototype = {
     return val;
   },
 
-  _listJSONURL:
-    (AppConstants.platform == "android"
-      ? APP_SEARCH_PREFIX
-      : EXT_SEARCH_PREFIX) + "list.json",
+  _listJSONURL: `${EXT_SEARCH_PREFIX}list.json`,
 
   get _sortedEngines() {
     if (!this.__sortedEngines) {
@@ -1251,31 +1241,26 @@ SearchService.prototype = {
       let enginesFromDir = await this._loadEnginesFromDir(loadDir);
       enginesFromDir.forEach(this._addEngineToStore, this);
     }
-    if (AppConstants.platform == "android") {
-      let enginesFromURLs = await this._loadFromChromeURLs(engines, isReload);
-      enginesFromURLs.forEach(this._addEngineToStore, this);
+    if (gModernConfig) {
+      let newEngines = await this._loadEnginesFromConfig(engines, isReload);
+      newEngines.forEach(this._addEngineToStore, this);
     } else {
-      if (gModernConfig) {
-        let newEngines = await this._loadEnginesFromConfig(engines, isReload);
-        newEngines.forEach(this._addEngineToStore, this);
-      } else {
-        let engineList = this._enginesToLocales(engines);
-        for (let [id, locales] of engineList) {
-          await this.ensureBuiltinExtension(id, locales, isReload);
-        }
+      let engineList = this._enginesToLocales(engines);
+      for (let [id, locales] of engineList) {
+        await this.ensureBuiltinExtension(id, locales, isReload);
       }
-      SearchUtils.log(
-        "_loadEngines: loading " +
-          this._startupExtensions.size +
-          " engines reported by AddonManager startup"
+    }
+    SearchUtils.log(
+      "_loadEngines: loading " +
+        this._startupExtensions.size +
+        " engines reported by AddonManager startup"
+    );
+    for (let extension of this._startupExtensions) {
+      await this._installExtensionEngine(
+        extension,
+        [SearchUtils.DEFAULT_TAG],
+        true
       );
-      for (let extension of this._startupExtensions) {
-        await this._installExtensionEngine(
-          extension,
-          [SearchUtils.DEFAULT_TAG],
-          true
-        );
-      }
     }
 
     SearchUtils.log(
@@ -1845,43 +1830,6 @@ SearchService.prototype = {
         SearchUtils.log(
           "_loadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex
         );
-      }
-    }
-    return engines;
-  },
-
-  /**
-   * Loads engines from Chrome URLs asynchronously.
-   *
-   * @param {array} urls
-   *   a list of URLs.
-   * @param {boolean} [isReload]
-   *   is being called from maybeReloadEngines.
-   * @returns {Array<SearchEngine>}
-   *   An array of search engines that were loaded.
-   */
-  async _loadFromChromeURLs(urls, isReload = false) {
-    let engines = [];
-    for (let url of urls) {
-      try {
-        SearchUtils.log(
-          "_loadFromChromeURLs: loading engine from chrome url: " + url
-        );
-        let uri = Services.io.newURI(APP_SEARCH_PREFIX + url + ".xml");
-        let engine = new SearchEngine({
-          uri,
-          readOnly: true,
-        });
-        await engine._initFromURI(uri);
-        // If there is an existing engine with the same name then update that engine.
-        // Only do this during reloads so it doesn't interfere with distribution
-        // engines
-        if (isReload && this._engines.has(engine.name)) {
-          engine._engineToUpdate = this._engines.get(engine.name);
-        }
-        engines.push(engine);
-      } catch (ex) {
-        SearchUtils.log("_loadFromChromeURLs: failed to load engine: " + ex);
       }
     }
     return engines;
