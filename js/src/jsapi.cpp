@@ -428,6 +428,13 @@ JS::ContextOptions& JS::ContextOptions::setWasmGc(bool flag) {
   return *this;
 }
 
+JS::ContextOptions& JS::ContextOptions::setWasmMultiValue(bool flag) {
+#ifdef ENABLE_WASM_MULTI_VALUE
+  wasmMultiValue_ = flag;
+#endif
+  return *this;
+}
+
 JS::ContextOptions& JS::ContextOptions::setFuzzing(bool flag) {
 #ifdef FUZZING
   fuzzing_ = flag;
