@@ -11039,19 +11039,8 @@ void nsIFrame::SetParent(nsContainerFrame* aParent) {
 void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
                                       nsDisplayList* aList, uint16_t aType,
                                       bool* aCreatedContainerItem) {
-  wr::RenderRoot renderRoot =
-      gfxUtils::GetRenderRootForFrame(this).valueOr(wr::RenderRoot::Default);
-
-  if (renderRoot != wr::RenderRoot::Default) {
-    aList->AppendNewToTop<nsDisplayRenderRoot>(
-        aBuilder, this, aList, aBuilder->CurrentActiveScrolledRoot(),
-        renderRoot);
-    if (aCreatedContainerItem) {
-      *aCreatedContainerItem = true;
-    }
-  } else if (GetContent() && GetContent()->IsXULElement() &&
-             GetContent()->AsElement()->HasAttr(kNameSpaceID_None,
-                                                nsGkAtoms::layer)) {
+  if (GetContent() && GetContent()->IsXULElement() &&
+      GetContent()->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
     aList->AppendNewToTop<nsDisplayOwnLayer>(
         aBuilder, this, aList, aBuilder->CurrentActiveScrolledRoot(),
         nsDisplayOwnLayerFlags::None, ScrollbarData{}, true, false, aType);
