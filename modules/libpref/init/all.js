@@ -1121,6 +1121,9 @@ pref("javascript.options.wasm_baselinejit",       true);
 #ifdef ENABLE_WASM_REFTYPES
   pref("javascript.options.wasm_gc",              false);
 #endif
+#ifdef ENABLE_WASM_MULTI_VALUE
+  pref("javascript.options.wasm_multi_value",     true);
+#endif
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
 // Async stacks instrumentation adds overhead that is only

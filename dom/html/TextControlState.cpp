@@ -361,7 +361,6 @@ class TextInputSelectionController final : public nsSupportsWeakReference,
 
  private:
   RefPtr<nsFrameSelection> mFrameSelection;
-  nsCOMPtr<nsIContent> mLimiter;
   nsIScrollableFrame* mScrollFrame;
   nsWeakPtr mPresShellWeak;
 };
@@ -374,18 +373,16 @@ NS_INTERFACE_TABLE_HEAD(TextInputSelectionController)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(TextInputSelectionController)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WEAK(TextInputSelectionController, mFrameSelection,
-                              mLimiter)
+NS_IMPL_CYCLE_COLLECTION_WEAK(TextInputSelectionController, mFrameSelection)
 
 TextInputSelectionController::TextInputSelectionController(
     PresShell* aPresShell, nsIContent* aLimiter)
     : mScrollFrame(nullptr) {
   if (aPresShell) {
-    mLimiter = aLimiter;
     bool accessibleCaretEnabled =
         PresShell::AccessibleCaretEnabled(aLimiter->OwnerDoc()->GetDocShell());
     mFrameSelection =
-        new nsFrameSelection(aPresShell, mLimiter, accessibleCaretEnabled);
+        new nsFrameSelection(aPresShell, aLimiter, accessibleCaretEnabled);
     mPresShellWeak = do_GetWeakReference(aPresShell);
   }
 }

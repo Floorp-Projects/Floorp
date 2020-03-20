@@ -669,10 +669,10 @@ class UrlbarInput {
               originalUntrimmedValue.trim(),
               flags
             );
-            this.window.gKeywordURIFixup({
-              target: this.window.gBrowser.selectedBrowser,
-              data: fixupInfo,
-            });
+            this.window.gKeywordURIFixup.check(
+              this.window.gBrowser.selectedBrowser,
+              fixupInfo
+            );
           } catch (ex) {
             Cu.reportError(
               `An error occured while trying to fixup "${originalUntrimmedValue.trim()}": ${ex}`

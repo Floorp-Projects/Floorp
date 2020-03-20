@@ -324,7 +324,7 @@ public class FileUtils {
             e.printStackTrace();
         }
 
-        return fileName;
+        return canonicalizeFilename(fileName);
     }
 
     public static void copy(final Context context, final Uri srcUri, final File dstFile) {
@@ -414,6 +414,14 @@ public class FileUtils {
             // This is rather hacky, but then SD card support on older Android versions
             // was equally messy.
             return absPath.contains("/sdcard0") || absPath.contains("/storage/emulated");
+        }
+    }
+
+    private static @Nullable String canonicalizeFilename(@Nullable final String originalFilename) {
+        if (TextUtils.isEmpty(originalFilename)) {
+            return null;
+        } else {
+            return new File(originalFilename).getName();
         }
     }
 }

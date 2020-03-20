@@ -169,7 +169,8 @@ var AboutProtectionsHandler = {
    *
    * @return {{ hasFxa: Boolean,
    *            numLogins: Number,
-   *            numSyncedDevices: Number }}
+   *            numSyncedDevices: Number,
+   *            mobileDeviceConnected: Boolean }}
    *         The login data.
    */
   async getLoginData() {
@@ -187,12 +188,19 @@ var AboutProtectionsHandler = {
       Services.logins.countLogins("", "", "") -
       Services.logins.countLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
 
+    let mobileDeviceConnected =
+      fxAccounts.device.recentDeviceList &&
+      fxAccounts.device.recentDeviceList.filter(
+        device => device.type == "mobile"
+      ).length;
+
     return {
       hasFxa,
       numLogins: userFacingLogins,
       numSyncedDevices: fxAccounts.device.recentDeviceList
         ? fxAccounts.device.recentDeviceList.length
         : 0,
+      mobileDeviceConnected,
     };
   },
 
@@ -406,11 +414,20 @@ var AboutProtectionsHandler = {
         );
         break;
       case "FetchUserLoginsData":
-        this.sendMessage(
-          aMessage.target,
-          "SendUserLoginsData",
-          await this.getLoginData()
-        );
+        let {
+          hasFxa,
+          numLogins,
+          numSyncedDevices,
+          mobileDeviceConnected,
+        } = await this.getLoginData();
+        this.sendMessage(aMessage.target, "SendUserLoginsData", {
+          hasFxa,
+          numLogins,
+          numSyncedDevices,
+        });
+        this.sendMessage(aMessage.target, "SendUserMobileDeviceData", {
+          mobileDeviceConnected,
+        });
         break;
       case "ClearMonitorCache":
         this.monitorResponse = null;

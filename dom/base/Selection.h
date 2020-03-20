@@ -145,11 +145,9 @@ class Selection final : public nsSupportsWeakReference,
   // Otherwise, if SCROLL_DO_FLUSH is also in aFlags, then this method will
   // flush layout and you MUST hold a strong ref on 'this' for the duration
   // of this call.  This might destroy arbitrary layout objects.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult ScrollIntoView(SelectionRegion aRegion,
-                          ScrollAxis aVertical = ScrollAxis(),
-                          ScrollAxis aHorizontal = ScrollAxis(),
-                          int32_t aFlags = 0);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ScrollIntoView(SelectionRegion aRegion, ScrollAxis aVertical = ScrollAxis(),
+                 ScrollAxis aHorizontal = ScrollAxis(), int32_t aFlags = 0);
   static nsresult SubtractRange(StyledRange& aRange, nsRange& aSubtract,
                                 nsTArray<StyledRange>* aOutput);
 
@@ -391,10 +389,11 @@ class Selection final : public nsSupportsWeakReference,
                             bool aAllowAdjacent,
                             nsTArray<RefPtr<nsRange>>& aReturn,
                             mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
-                      WhereToScroll aVPercent, WhereToScroll aHPercent,
-                      mozilla::ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT void ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
+                                         WhereToScroll aVPercent,
+                                         WhereToScroll aHPercent,
+                                         mozilla::ErrorResult& aRv);
 
   void SetColors(const nsAString& aForeColor, const nsAString& aBackColor,
                  const nsAString& aAltForeColor, const nsAString& aAltBackColor,
@@ -674,7 +673,8 @@ class Selection final : public nsSupportsWeakReference,
 
   class ScrollSelectionIntoViewEvent : public Runnable {
    public:
-    NS_DECL_NSIRUNNABLE
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_DECL_NSIRUNNABLE
+
     ScrollSelectionIntoViewEvent(Selection* aSelection, SelectionRegion aRegion,
                                  ScrollAxis aVertical, ScrollAxis aHorizontal,
                                  int32_t aFlags)

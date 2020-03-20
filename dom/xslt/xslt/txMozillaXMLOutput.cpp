@@ -208,8 +208,7 @@ nsresult txMozillaXMLOutput::endDocument(nsresult aResult) {
     MOZ_ASSERT(mDocument->GetReadyStateEnum() == Document::READYSTATE_LOADING,
                "Bad readyState");
     mDocument->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
-    ScriptLoader* loader = mDocument->ScriptLoader();
-    if (loader) {
+    if (ScriptLoader* loader = mDocument->ScriptLoader()) {
       loader->ParsingComplete(false);
     }
   }
@@ -956,6 +955,7 @@ void txTransformNotifier::SignalTransformEnd(nsresult aResult) {
   nsCOMPtr<nsIScriptLoaderObserver> kungFuDeathGrip(this);
 
   if (mDocument) {
+    mDocument->ScriptLoader()->DeferCheckpointReached();
     mDocument->ScriptLoader()->RemoveObserver(this);
     // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
 

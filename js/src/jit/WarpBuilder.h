@@ -112,6 +112,7 @@ namespace jit {
   _(ObjWithProto)           \
   _(GetAliasedVar)          \
   _(SetAliasedVar)          \
+  _(InitAliasedLexical)     \
   _(EnvCallee)              \
   _(Iter)                   \
   _(IterNext)               \
@@ -138,6 +139,9 @@ namespace jit {
   _(StrictSetProp)          \
   _(SetName)                \
   _(StrictSetName)          \
+  _(SetGName)               \
+  _(StrictSetGName)         \
+  _(InitGLexical)           \
   _(SetElem)                \
   _(StrictSetElem)          \
   _(DelProp)                \
@@ -155,6 +159,29 @@ namespace jit {
   _(CheckThis)              \
   _(CheckThisReinit)        \
   _(CheckReturn)            \
+  _(CheckLexical)           \
+  _(CheckAliasedLexical)    \
+  _(InitHomeObject)         \
+  _(SuperBase)              \
+  _(SuperFun)               \
+  _(BuiltinProto)           \
+  _(GetIntrinsic)           \
+  _(ImportMeta)             \
+  _(CallSiteObj)            \
+  _(NewArray)               \
+  _(NewArrayCopyOnWrite)    \
+  _(NewObject)              \
+  _(NewObjectWithGroup)     \
+  _(NewInit)                \
+  _(Object)                 \
+  _(InitPropGetter)         \
+  _(InitPropSetter)         \
+  _(InitHiddenPropGetter)   \
+  _(InitHiddenPropSetter)   \
+  _(InitElemGetter)         \
+  _(InitElemSetter)         \
+  _(InitHiddenElemGetter)   \
+  _(InitHiddenElemSetter)   \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -249,7 +276,11 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildSetPropOp(BytecodeLocation loc, MDefinition* obj,
                                    MDefinition* id, MDefinition* val);
 
+  MOZ_MUST_USE bool buildInitPropGetterSetterOp(BytecodeLocation loc);
+  MOZ_MUST_USE bool buildInitElemGetterSetterOp(BytecodeLocation loc);
+
   void buildCopyLexicalEnvOp(bool copySlots);
+  void buildCheckLexicalOp(BytecodeLocation loc);
 
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);

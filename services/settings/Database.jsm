@@ -87,8 +87,7 @@ class Database {
     const objFilters = transformSubObjectFilters(filters);
     let results = [];
     try {
-      await this.open();
-      await executeIDB(this._idb, "records", store => {
+      await executeIDB(await this.open(), "records", store => {
         const request = store
           .index("cid")
           .openCursor(IDBKeyRange.only(this.identifier));
@@ -116,8 +115,7 @@ class Database {
   async importBulk(toInsert) {
     const _cid = this.identifier;
     try {
-      await this.open();
-      await executeIDB(this._idb, "records", store => {
+      await executeIDB(await this.open(), "records", store => {
         // Chain the put operations together, the last one will be waited by
         // the `transaction.oncomplete` callback.
         let i = 0;
@@ -140,8 +138,7 @@ class Database {
   async deleteBulk(toDelete) {
     const _cid = this.identifier;
     try {
-      await this.open();
-      await executeIDB(this._idb, "records", store => {
+      await executeIDB(await this.open(), "records", store => {
         // Chain the delete operations together, the last one will be waited by
         // the `transaction.oncomplete` callback.
         let i = 0;
@@ -163,9 +160,8 @@ class Database {
   async getLastModified() {
     let entry = null;
     try {
-      await this.open();
       await executeIDB(
-        this._idb,
+        await this.open(),
         "timestamps",
         store => {
           store.get(this.identifier).onsuccess = e => (entry = e.target.result);
@@ -181,8 +177,7 @@ class Database {
   async saveLastModified(lastModified) {
     const value = parseInt(lastModified, 10) || null;
     try {
-      await this.open();
-      await executeIDB(this._idb, "timestamps", store => {
+      await executeIDB(await this.open(), "timestamps", store => {
         if (value === null) {
           store.delete(this.identifier);
         } else {
@@ -198,9 +193,8 @@ class Database {
   async getMetadata() {
     let entry = null;
     try {
-      await this.open();
       await executeIDB(
-        this._idb,
+        await this.open(),
         "collections",
         store => {
           store.get(this.identifier).onsuccess = e => (entry = e.target.result);
@@ -215,8 +209,7 @@ class Database {
 
   async saveMetadata(metadata) {
     try {
-      await this.open();
-      await executeIDB(this._idb, "collections", store =>
+      await executeIDB(await this.open(), "collections", store =>
         store.put({ cid: this.identifier, metadata })
       );
       return metadata;
@@ -226,11 +219,10 @@ class Database {
   }
 
   async clear() {
-    await this.open();
-    await this.saveLastModified(null);
-    await this.saveMetadata(null);
     try {
-      await executeIDB(this._idb, "records", store => {
+      await this.saveLastModified(null);
+      await this.saveMetadata(null);
+      await executeIDB(await this.open(), "records", store => {
         const range = IDBKeyRange.only(this.identifier);
         const request = store.index("cid").openKeyCursor(range);
         request.onsuccess = event => {
@@ -256,8 +248,7 @@ class Database {
       record = { ...record, id: CommonUtils.generateUUID() };
     }
     try {
-      await this.open();
-      await executeIDB(this._idb, "records", store => {
+      await executeIDB(await this.open(), "records", store => {
         store.add({ ...record, _cid: this.identifier });
       });
     } catch (e) {
@@ -268,8 +259,7 @@ class Database {
 
   async update(record) {
     try {
-      await this.open();
-      await executeIDB(this._idb, "records", store => {
+      await executeIDB(await this.open(), "records", store => {
         store.put({ ...record, _cid: this.identifier });
       });
     } catch (e) {
@@ -279,8 +269,7 @@ class Database {
 
   async delete(recordId) {
     try {
-      await this.open();
-      await executeIDB(this._idb, "records", store => {
+      await executeIDB(await this.open(), "records", store => {
         store.delete([this.identifier, recordId]); // [_cid, id]
       });
     } catch (e) {

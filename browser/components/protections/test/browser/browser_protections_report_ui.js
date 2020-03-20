@@ -6,6 +6,10 @@
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+const { AboutProtectionsHandler } = ChromeUtils.import(
+  "resource:///modules/aboutpages/AboutProtectionsHandler.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
@@ -728,11 +732,15 @@ add_task(async function test_etp_custom_protections_off() {
   BrowserTestUtils.removeTab(tab);
 });
 
-// Ensure that the ETP mobile promotion card is shown when the pref is on, and hidden when the pref is off
-add_task(async function test_etp_mobile_promotion() {
+// Ensure that the ETP mobile promotion card is shown when the pref is on and
+// there are no mobile devices connected.
+add_task(async function test_etp_mobile_promotion_pref_on() {
+  const { getLoginData } = AboutProtectionsHandler;
+  AboutProtectionsHandler.onLoginData = mockGetLoginDataWithSyncedDevices(0);
   await SpecialPowers.pushPrefEnv({
     set: [["browser.contentblocking.report.show_mobile_app", true]],
   });
+
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
@@ -741,21 +749,23 @@ add_task(async function test_etp_mobile_promotion() {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
       ContentTaskUtils.is_visible(mobilePromotion),
-      "Mobile promotions card is displayed"
+      "Mobile promotions card is displayed when pref is on and there are no synced mobile devices"
     );
 
     // Card should hide after the X is clicked.
     mobilePromotion.querySelector(".exit-icon").click();
     Assert.ok(
       ContentTaskUtils.is_hidden(mobilePromotion),
-      "Mobile promotions card is no longer displayed"
+      "Mobile promotions card is no longer displayed after clicking the X button"
     );
   });
   BrowserTestUtils.removeTab(tab);
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.contentblocking.report.show_mobile_app", false]],
-  });
+  // Add a mock mobile device. The promotion should now be hidden.
+  AboutProtectionsHandler.onLoginData = mockGetLoginDataWithSyncedDevices(
+    2,
+    true
+  );
   tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
@@ -764,9 +774,53 @@ add_task(async function test_etp_mobile_promotion() {
     let mobilePromotion = content.document.getElementById("mobile-hanger");
     Assert.ok(
       ContentTaskUtils.is_hidden(mobilePromotion),
-      "Mobile promotions card is hidden"
+      "Mobile promotions card is hidden when pref is on if there are synced mobile devices"
     );
   });
 
   BrowserTestUtils.removeTab(tab);
+  AboutProtectionsHandler.getLoginData = getLoginData;
+});
+
+// Test that ETP mobile promotion is not shown when the pref is off,
+// even if no mobile devices are synced.
+add_task(async function test_etp_mobile_promotion_pref_on() {
+  const { getLoginData } = AboutProtectionsHandler;
+  AboutProtectionsHandler.onLoginData = mockGetLoginDataWithSyncedDevices(0);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.contentblocking.report.show_mobile_app", false]],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    let mobilePromotion = content.document.getElementById("mobile-hanger");
+    Assert.ok(
+      ContentTaskUtils.is_hidden(mobilePromotion),
+      "Mobile promotions card is not displayed when pref is off and there are no synced mobile devices"
+    );
+  });
+
+  BrowserTestUtils.removeTab(tab);
+
+  AboutProtectionsHandler.onLoginData = mockGetLoginDataWithSyncedDevices(
+    2,
+    true
+  );
+  tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    let mobilePromotion = content.document.getElementById("mobile-hanger");
+    Assert.ok(
+      ContentTaskUtils.is_hidden(mobilePromotion),
+      "Mobile promotions card is not displayed when pref is off even if there are synced mobile devices"
+    );
+  });
+  BrowserTestUtils.removeTab(tab);
+  AboutProtectionsHandler.getLoginData = getLoginData;
 });

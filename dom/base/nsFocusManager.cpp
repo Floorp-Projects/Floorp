@@ -498,9 +498,9 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
 
   bool noParentTraversal = aFlags & FLAG_NOPARENTFRAME;
   nsCOMPtr<nsIContent> newFocus;
-  nsresult rv =
-      DetermineElementToMoveFocus(window, aStartElement, aType,
-                                  noParentTraversal, getter_AddRefs(newFocus));
+  nsresult rv = DetermineElementToMoveFocus(window, aStartElement, aType,
+                                            noParentTraversal, true,
+                                            getter_AddRefs(newFocus));
   if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
     return NS_OK;
   }
@@ -2938,7 +2938,7 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
 
 nsresult nsFocusManager::DetermineElementToMoveFocus(
     nsPIDOMWindowOuter* aWindow, nsIContent* aStartContent, int32_t aType,
-    bool aNoParentTraversal, nsIContent** aNextContent) {
+    bool aNoParentTraversal, bool aNavigateByKey, nsIContent** aNextContent) {
   *aNextContent = nullptr;
 
   // True if we are navigating by document (F6/Shift+F6) or false if we are
@@ -3007,16 +3007,20 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   NS_ENSURE_TRUE(presShell, NS_OK);
 
   if (aType == MOVEFOCUS_FIRST) {
-    if (!aStartContent) startContent = rootContent;
+    if (!aStartContent) {
+      startContent = rootContent;
+    }
     return GetNextTabbableContent(presShell, startContent, nullptr,
                                   startContent, true, 1, false, false,
-                                  aNextContent);
+                                  aNavigateByKey, aNextContent);
   }
   if (aType == MOVEFOCUS_LAST) {
-    if (!aStartContent) startContent = rootContent;
+    if (!aStartContent) {
+      startContent = rootContent;
+    }
     return GetNextTabbableContent(presShell, startContent, nullptr,
                                   startContent, false, 0, false, false,
-                                  aNextContent);
+                                  aNavigateByKey, aNextContent);
   }
 
   bool forward = (aType == MOVEFOCUS_FORWARD || aType == MOVEFOCUS_FORWARDDOC ||
@@ -3187,7 +3191,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
           presShell, rootContent,
           skipOriginalContentCheck ? nullptr : originalStartContent,
           startContent, forward, tabIndex, ignoreTabIndex,
-          forDocumentNavigation, getter_AddRefs(nextFocus));
+          forDocumentNavigation, aNavigateByKey, getter_AddRefs(nextFocus));
       NS_ENSURE_SUCCESS(rv, rv);
       if (rv == NS_SUCCESS_DOM_NO_OPERATION) {
         // Navigation was redirected to a child process, so just return.
@@ -3281,18 +3285,20 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
         }
       }
     } else {
-      // There is no parent, so call the tree owner. This will tell the
-      // embedder or parent process that it should take the focus.
-      bool tookFocus;
-      docShell->TabToTreeOwner(forward, forDocumentNavigation, &tookFocus);
-      // If the tree owner took the focus, blur the current element.
-      if (tookFocus) {
-        nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
-        if (window->GetFocusedElement() == mFocusedElement)
-          Blur(GetFocusedBrowsingContext(), nullptr, true, true);
-        else
-          window->SetFocusedElement(nullptr);
-        return NS_OK;
+      if (aNavigateByKey) {
+        // There is no parent, so call the tree owner. This will tell the
+        // embedder or parent process that it should take the focus.
+        bool tookFocus;
+        docShell->TabToTreeOwner(forward, forDocumentNavigation, &tookFocus);
+        // If the tree owner took the focus, blur the current element.
+        if (tookFocus) {
+          nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
+          if (window->GetFocusedElement() == mFocusedElement)
+            Blur(GetFocusedBrowsingContext(), nullptr, true, true);
+          else
+            window->SetFocusedElement(nullptr);
+          return NS_OK;
+        }
       }
 
       // If we have reached the end of the top-level document, focus the
@@ -3498,7 +3504,8 @@ static int32_t HostOrSlotTabIndexValue(const nsIContent* aContent,
 nsIContent* nsFocusManager::GetNextTabbableContentInScope(
     nsIContent* aOwner, nsIContent* aStartContent,
     nsIContent* aOriginalStartContent, bool aForward, int32_t aCurrentTabIndex,
-    bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aSkipOwner) {
+    bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aNavigateByKey,
+    bool aSkipOwner) {
   MOZ_ASSERT(IsHostOrSlot(aOwner), "Scope owner should be host or slot");
 
   if (!aSkipOwner && (aForward && aOwner == aStartContent)) {
@@ -3574,6 +3581,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
 
         if (TryToMoveFocusToSubDocument(iterContent, aOriginalStartContent,
                                         aForward, aForDocumentNavigation,
+                                        aNavigateByKey,
                                         getter_AddRefs(elementInFrame))) {
           return elementInFrame;
         }
@@ -3586,7 +3594,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
       nsIContent* contentToFocus = GetNextTabbableContentInScope(
           iterContent, iterContent, aOriginalStartContent, aForward,
           aForward ? 1 : 0, aIgnoreTabIndex, aForDocumentNavigation,
-          false /* aSkipOwner */);
+          aNavigateByKey, false /* aSkipOwner */);
       if (contentToFocus) {
         return contentToFocus;
       }
@@ -3625,7 +3633,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
 nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     nsIContent* aStartOwner, nsIContent** aStartContent,
     nsIContent* aOriginalStartContent, bool aForward, int32_t* aCurrentTabIndex,
-    bool aIgnoreTabIndex, bool aForDocumentNavigation) {
+    bool aIgnoreTabIndex, bool aForDocumentNavigation, bool aNavigateByKey) {
   MOZ_ASSERT(aStartOwner == FindScopeOwner(*aStartContent),
              "aStartOWner should be the scope owner of aStartContent");
   MOZ_ASSERT(IsHostOrSlot(aStartOwner), "scope owner should be host or slot");
@@ -3643,7 +3651,8 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     }
     nsIContent* contentToFocus = GetNextTabbableContentInScope(
         owner, startContent, aOriginalStartContent, aForward, tabIndex,
-        aIgnoreTabIndex, aForDocumentNavigation, false /* aSkipOwner */);
+        aIgnoreTabIndex, aForDocumentNavigation, aNavigateByKey,
+        false /* aSkipOwner */);
     if (contentToFocus) {
       return contentToFocus;
     }
@@ -3684,7 +3693,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
     PresShell* aPresShell, nsIContent* aRootContent,
     nsIContent* aOriginalStartContent, nsIContent* aStartContent, bool aForward,
     int32_t aCurrentTabIndex, bool aIgnoreTabIndex, bool aForDocumentNavigation,
-    nsIContent** aResultContent) {
+    bool aNavigateByKey, nsIContent** aResultContent) {
   *aResultContent = nullptr;
 
   if (!aStartContent) {
@@ -3703,7 +3712,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
     nsIContent* contentToFocus = GetNextTabbableContentInScope(
         startContent, startContent, aOriginalStartContent, aForward,
         aForward ? 1 : 0, aIgnoreTabIndex, aForDocumentNavigation,
-        true /* aSkipOwner */);
+        aNavigateByKey, true /* aSkipOwner */);
     if (contentToFocus) {
       NS_ADDREF(*aResultContent = contentToFocus);
       return NS_OK;
@@ -3715,7 +3724,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
   if (nsIContent* owner = FindScopeOwner(startContent)) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
         owner, &startContent, aOriginalStartContent, aForward,
-        &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation);
+        &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation,
+        aNavigateByKey);
     if (contentToFocus) {
       NS_ADDREF(*aResultContent = contentToFocus);
       return NS_OK;
@@ -3760,7 +3770,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           nsIContent* contentToFocus = GetNextTabbableContentInScope(
               iterStartContent, iterStartContent, aOriginalStartContent,
               aForward, aForward ? 1 : 0, aIgnoreTabIndex,
-              aForDocumentNavigation, true /* aSkipOwner */);
+              aForDocumentNavigation, aNavigateByKey, true /* aSkipOwner */);
           if (contentToFocus) {
             NS_ADDREF(*aResultContent = contentToFocus);
             return NS_OK;
@@ -3869,7 +3879,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
             // want to locate the first content, not the first document.
             nsresult rv = GetNextTabbableContent(
                 aPresShell, currentContent, nullptr, currentContent, true, 1,
-                false, false, aResultContent);
+                false, false, aNavigateByKey, aResultContent);
             if (NS_SUCCEEDED(rv) && *aResultContent) {
               return rv;
             }
@@ -3895,7 +3905,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
           nsIContent* contentToFocus = GetNextTabbableContentInScope(
               currentTopLevelScopeOwner, currentTopLevelScopeOwner,
               aOriginalStartContent, aForward, aForward ? 1 : 0,
-              aIgnoreTabIndex, aForDocumentNavigation, true /* aSkipOwner */);
+              aIgnoreTabIndex, aForDocumentNavigation, aNavigateByKey,
+              true /* aSkipOwner */);
           if (contentToFocus) {
             NS_ADDREF(*aResultContent = contentToFocus);
             return NS_OK;
@@ -3966,15 +3977,21 @@ nsresult nsFocusManager::GetNextTabbableContent(
           // into document navigation again by calling MoveFocus.
           BrowserParent* remote = BrowserParent::GetFrom(currentContent);
           if (remote) {
-            remote->NavigateByKey(aForward, aForDocumentNavigation);
-            return NS_SUCCESS_DOM_NO_OPERATION;
+            if (aNavigateByKey) {
+              remote->NavigateByKey(aForward, aForDocumentNavigation);
+              return NS_SUCCESS_DOM_NO_OPERATION;
+            }
+            return NS_OK;
           }
 
           // Same as above but for out-of-process iframes
           BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(currentContent);
           if (bbc) {
-            bbc->NavigateByKey(aForward, aForDocumentNavigation);
-            return NS_SUCCESS_DOM_NO_OPERATION;
+            if (aNavigateByKey) {
+              bbc->NavigateByKey(aForward, aForDocumentNavigation);
+              return NS_SUCCESS_DOM_NO_OPERATION;
+            }
+            return NS_OK;
           }
 
           // Next, for document navigation, check if this a non-remote child
@@ -3991,7 +4008,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
             // frame. If so, navigate into the child frame instead.
             if (TryToMoveFocusToSubDocument(
                     currentContent, aOriginalStartContent, aForward,
-                    aForDocumentNavigation, aResultContent)) {
+                    aForDocumentNavigation, aNavigateByKey, aResultContent)) {
               MOZ_ASSERT(*aResultContent);
               return NS_OK;
             }
@@ -4096,7 +4113,8 @@ bool nsFocusManager::TryDocumentNavigation(nsIContent* aCurrentContent,
 
 bool nsFocusManager::TryToMoveFocusToSubDocument(
     nsIContent* aCurrentContent, nsIContent* aOriginalStartContent,
-    bool aForward, bool aForDocumentNavigation, nsIContent** aResultContent) {
+    bool aForward, bool aForDocumentNavigation, bool aNavigateByKey,
+    nsIContent** aResultContent) {
   Document* doc = aCurrentContent->GetComposedDoc();
   NS_ASSERTION(doc, "content not in document");
   Document* subdoc = doc->GetSubDocumentFor(aCurrentContent);
@@ -4119,7 +4137,7 @@ bool nsFocusManager::TryToMoveFocusToSubDocument(
       nsresult rv = GetNextTabbableContent(
           subPresShell, rootElement, aOriginalStartContent, rootElement,
           aForward, (aForward ? 1 : 0), false, aForDocumentNavigation,
-          aResultContent);
+          aNavigateByKey, aResultContent);
       NS_ENSURE_SUCCESS(rv, false);
       if (*aResultContent) {
         return true;
@@ -4266,7 +4284,7 @@ nsresult nsFocusManager::FocusFirst(Element* aRootElement,
       PresShell* presShell = doc->GetPresShell();
       if (presShell) {
         return GetNextTabbableContent(presShell, aRootElement, nullptr,
-                                      aRootElement, true, 1, false, false,
+                                      aRootElement, true, 1, false, false, true,
                                       aNextContent);
       }
     }
