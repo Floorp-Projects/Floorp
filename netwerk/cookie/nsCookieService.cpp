@@ -515,7 +515,7 @@ bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
       currentTimeInUsec - aCookie->CreationTime() <=
           (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() *
            PR_USEC_PER_SEC) &&
-      NS_IsSafeMethodNav(aChannel)) {
+      !NS_IsSafeMethodNav(aChannel)) {
     return true;
   }
 
