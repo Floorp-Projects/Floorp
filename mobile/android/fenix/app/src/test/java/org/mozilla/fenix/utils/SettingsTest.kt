@@ -497,14 +497,7 @@ class SettingsTest {
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, ALLOWED)
 
         assertEquals(
-            defaultPermissions(),
-            settings.getSitePermissionsCustomSettingsRules()
-        )
-
-        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.AUTOPLAY_INAUDIBLE, BLOCKED)
-
-        assertEquals(
-            defaultPermissions(),
+            defaultPermissions().copy(autoplayInaudible = ALLOWED),
             settings.getSitePermissionsCustomSettingsRules()
         )
     }
@@ -524,5 +517,5 @@ private fun defaultPermissions() = SitePermissionsRules(
     microphone = ASK_TO_ALLOW,
     notification = ASK_TO_ALLOW,
     autoplayAudible = AutoplayAction.BLOCKED,
-    autoplayInaudible = AutoplayAction.ALLOWED
+    autoplayInaudible = AutoplayAction.BLOCKED
 )

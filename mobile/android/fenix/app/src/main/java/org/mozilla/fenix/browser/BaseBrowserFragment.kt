@@ -391,6 +391,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view = view
             )
 
+            context.settings().setSitePermissionSettingListener(viewLifecycleOwner) {
+                // If the user connects to WIFI while on the BrowserFragment, this will update the
+                // SitePermissionsRules (specifically autoplay) accordingly
+                this.context?.let { assignSitePermissionsRules(it) }
+            }
+            assignSitePermissionsRules(context)
+
             fullScreenFeature.set(
                 feature = FullScreenFeature(
                     sessionManager,
@@ -541,8 +548,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             components.useCases.sessionUseCases.reload()
         }
         hideToolbar()
-
-        assignSitePermissionsRules()
     }
 
     @CallSuper
@@ -673,8 +678,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     /**
      * Updates the site permissions rules based on user settings.
      */
-    private fun assignSitePermissionsRules() {
-        val settings = requireContext().settings()
+    private fun assignSitePermissionsRules(context: Context) {
+        val settings = context.settings()
 
         val rules: SitePermissionsRules = settings.getSitePermissionsCustomSettingsRules()
 

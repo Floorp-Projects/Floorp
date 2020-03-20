@@ -12,6 +12,7 @@ import android.content.SharedPreferences
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.lifecycle.LifecycleOwner
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
@@ -29,7 +30,10 @@ import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
+import org.mozilla.fenix.settings.registerOnSharedPreferenceChangeListener
 import java.security.InvalidParameterException
+
+private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
@@ -174,10 +178,6 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_experimentation),
         default = true
     )
-
-    val isAutoPlayEnabled = getSitePermissionsPhoneFeatureAction(
-        PhoneFeature.AUTOPLAY_AUDIBLE, Action.BLOCKED
-    ) != Action.BLOCKED
 
     private var trackingProtectionOnboardingShownThisSession = false
     var isOverrideTPPopupsForPerformanceTest = false
@@ -452,6 +452,34 @@ class Settings private constructor(
     ) =
         preferences.getInt(feature.getPreferenceKey(appContext), default.toInt()).toAction()
 
+    /**
+     * Saves the user selected autoplay setting.
+     *
+     * Under the hood, autoplay is represented by two settings, [AUTOPLAY_AUDIBLE] and
+     * [AUTOPLAY_INAUDIBLE]. The user selection cannot be inferred from the combination of these
+     * settings because, while on [AUTOPLAY_ALLOW_ON_WIFI], they will be indistinguishable from
+     * either [AUTOPLAY_ALLOW_ALL] or [AUTOPLAY_BLOCK_ALL]. Because of this, we are forced to save
+     * the user selected setting as well.
+     */
+    fun setAutoplayUserSetting(
+        autoplaySetting: Int
+    ) {
+        preferences.edit().putInt(AUTOPLAY_USER_SETTING, autoplaySetting).apply()
+    }
+
+    /**
+     * Gets the user selected autoplay setting.
+     *
+     * Under the hood, autoplay is represented by two settings, [AUTOPLAY_AUDIBLE] and
+     * [AUTOPLAY_INAUDIBLE]. The user selection cannot be inferred from the combination of these
+     * settings because, while on [AUTOPLAY_ALLOW_ON_WIFI], they will be indistinguishable from
+     * either [AUTOPLAY_ALLOW_ALL] or [AUTOPLAY_BLOCK_ALL]. Because of this, we are forced to save
+     * the user selected setting as well.
+     */
+    fun getAutoplayUserSetting(
+        default: Int
+    ) = preferences.getInt(AUTOPLAY_USER_SETTING, default)
+
     fun getSitePermissionsPhoneFeatureAutoplayAction(
         feature: PhoneFeature,
         default: AutoplayAction = AutoplayAction.BLOCKED
@@ -471,9 +499,23 @@ class Settings private constructor(
             location = getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION),
             camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA),
             autoplayAudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_AUDIBLE),
-            // TODO autoplayInaudible will be hardcoded until additional options are added in #8017
-            autoplayInaudible = AutoplayAction.ALLOWED
+            autoplayInaudible = getSitePermissionsPhoneFeatureAutoplayAction(PhoneFeature.AUTOPLAY_INAUDIBLE)
         )
+    }
+
+    fun setSitePermissionSettingListener(lifecycleOwner: LifecycleOwner, listener: () -> Unit) {
+        val sitePermissionKeys = listOf(
+            PhoneFeature.NOTIFICATION,
+            PhoneFeature.MICROPHONE,
+            PhoneFeature.LOCATION,
+            PhoneFeature.CAMERA,
+            PhoneFeature.AUTOPLAY_AUDIBLE,
+            PhoneFeature.AUTOPLAY_INAUDIBLE
+        ).map { it.getPreferenceKey(appContext) }
+
+        preferences.registerOnSharedPreferenceChangeListener(lifecycleOwner) { _, key ->
+            if (key in sitePermissionKeys) listener.invoke()
+        }
     }
 
     var shouldPromptToSaveLogins by booleanPreference(

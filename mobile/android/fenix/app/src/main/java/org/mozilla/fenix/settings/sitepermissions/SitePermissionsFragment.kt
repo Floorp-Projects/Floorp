@@ -61,10 +61,17 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         val settings = context.settings()
 
         val summary = phoneFeature.getActionLabel(context, settings = settings)
+        // Remove autoplaySummary after https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed
+        val autoplaySummary =
+            if (summary == context.getString(R.string.preference_option_autoplay_allowed2)) {
+                context.getString(R.string.preference_option_autoplay_allowed_wifi_only2)
+            } else {
+                null
+            }
         val preferenceKey = phoneFeature.getPreferenceKey(context)
 
         val cameraPhoneFeatures: Preference = requireNotNull(findPreference(preferenceKey))
-        cameraPhoneFeatures.summary = summary
+        cameraPhoneFeatures.summary = autoplaySummary ?: summary
 
         cameraPhoneFeatures.onPreferenceClickListener = OnPreferenceClickListener {
             navigateToPhoneFeature(phoneFeature)

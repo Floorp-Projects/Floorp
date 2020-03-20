@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.getInsecureWebsiteUiValues
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.getPermissionStatus
@@ -33,6 +34,7 @@ import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Compa
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.toWebsitePermission
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
+import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -120,6 +122,7 @@ class QuickSettingsFragmentStoreTest {
         every { permissions.location } returns SitePermissions.Status.ALLOWED
         every { permissions.autoplayAudible } returns SitePermissions.Status.BLOCKED
         every { permissions.autoplayInaudible } returns SitePermissions.Status.BLOCKED
+        every { appSettings.getAutoplayUserSetting(any()) } returns AUTOPLAY_BLOCK_ALL
 
         val state = QuickSettingsFragmentStore.createWebsitePermissionState(
             context, permissions, appSettings

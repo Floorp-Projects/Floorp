@@ -14,6 +14,10 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_ALLOW_ALL
+import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_ALLOW_ON_WIFI
+import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
+import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.utils.Settings
 import android.Manifest.permission.CAMERA as CAMERA_PERMISSION
 
@@ -49,11 +53,13 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             when (isAndroidPermissionGranted(context)) {
                 false -> R.string.phone_feature_blocked_by_android
                 else -> when (this) {
-                    AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE -> {
-                        when (getStatus(sitePermissions, settings)) {
-                            SitePermissions.Status.BLOCKED -> R.string.preference_option_autoplay_blocked
-                            SitePermissions.Status.ALLOWED -> R.string.preference_option_autoplay_allowed
-                            else -> R.string.preference_option_autoplay_allowed
+                    AUTOPLAY_AUDIBLE -> {
+                        when (settings?.getAutoplayUserSetting(default = AUTOPLAY_BLOCK_ALL) ?: AUTOPLAY_BLOCK_ALL) {
+                            AUTOPLAY_ALLOW_ALL -> R.string.preference_option_autoplay_allowed2
+                            AUTOPLAY_ALLOW_ON_WIFI -> R.string.preference_option_autoplay_allowed_wifi_only2
+                            AUTOPLAY_BLOCK_AUDIBLE -> R.string.preference_option_autoplay_block_audio2
+                            AUTOPLAY_BLOCK_ALL -> R.string.preference_option_autoplay_blocked3
+                            else -> R.string.preference_option_autoplay_blocked3
                         }
                     }
                     else -> {

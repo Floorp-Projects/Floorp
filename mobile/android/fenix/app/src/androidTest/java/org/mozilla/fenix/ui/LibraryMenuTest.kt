@@ -3,6 +3,7 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -36,6 +37,7 @@ class LibraryMenuTest {
     }
 
     @Test
+    @Ignore("Intermittently failing. See https://github.com/mozilla-mobile/fenix/issues/9287")
     fun libraryMenuItemsTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
@@ -50,6 +52,7 @@ class LibraryMenuTest {
     }
 
     @Test
+    @Ignore("Intermittent failure.  See https://github.com/mozilla-mobile/fenix/issues/9232")
     fun backButtonTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
