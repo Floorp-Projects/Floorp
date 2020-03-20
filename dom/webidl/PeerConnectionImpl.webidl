@@ -39,6 +39,8 @@ interface PeerConnectionImpl  {
 
   Promise<RTCStatsReport> getStats(MediaStreamTrack? selector);
 
+  sequence<MediaStream> getRemoteStreams();
+
   /* Adds the tracks created by GetUserMedia */
   [Throws]
   TransceiverImpl createTransceiverImpl(DOMString kind,

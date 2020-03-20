@@ -18,7 +18,6 @@ const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
-const PC_RECEIVER_CONTRACT = "@mozilla.org/dom/rtpreceiver;1";
 const PC_TRANSCEIVER_CONTRACT = "@mozilla.org/dom/rtptransceiver;1";
 const PC_COREQUEST_CONTRACT = "@mozilla.org/dom/createofferrequest;1";
 const PC_DTMF_SENDER_CONTRACT = "@mozilla.org/dom/rtcdtmfsender;1";
@@ -30,7 +29,6 @@ const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
 const PC_SENDER_CID = Components.ID("{4fff5d46-d827-4cd4-a970-8fd53977440e}");
-const PC_RECEIVER_CID = Components.ID("{d974b814-8fde-411c-8c45-b86791b81030}");
 const PC_TRANSCEIVER_CID = Components.ID(
   "{09475754-103a-41f5-a2d0-e1f27eb0b537}"
 );
@@ -370,9 +368,6 @@ class PeerConnectionTelemetry {
 
 class RTCPeerConnection {
   constructor() {
-    this._receiveStreams = new Map();
-    // Used to fire onaddstream, remove when we don't do that anymore.
-    this._newStreams = [];
     this._transceivers = [];
 
     this._pc = null;
@@ -1189,8 +1184,6 @@ class RTCPeerConnection {
               ""
             );
           });
-          this._processTrackAdditionsAndRemovals();
-          this._fireLegacyAddStreamEvents();
           this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
           this._updateCanTrickle();
         }
@@ -1202,8 +1195,6 @@ class RTCPeerConnection {
           this._impl.setRemoteDescription(this._actions[type], sdp);
         });
         await p;
-        this._processTrackAdditionsAndRemovals();
-        this._fireLegacyAddStreamEvents();
         this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
         this._updateCanTrickle();
       })();
@@ -1491,79 +1482,6 @@ class RTCPeerConnection {
     });
   }
 
-  _processTrackAdditionsAndRemovals() {
-    const removeList = [];
-    const addList = [];
-    const muteTransceiverReceiveTracks = [];
-    const trackEventInits = [];
-
-    for (const transceiver of this._transceivers) {
-      transceiver.receiver.processTrackAdditionsAndRemovals(transceiver, {
-        removeList,
-        addList,
-        muteTransceiverReceiveTracks,
-        trackEventInits,
-      });
-    }
-
-    muteTransceiverReceiveTracks.forEach(transceiver => {
-      // Check this as late as possible, in case JS has messed with this state.
-      transceiver.setReceiveTrackMuted(true);
-    });
-
-    for (const { stream, track } of removeList) {
-      // Check this as late as possible, in case JS messes with the track lists.
-      if (stream.getTracks().includes(track)) {
-        stream.removeTrack(track);
-        // Removing tracks from JS does not result in the stream getting a
-        // removetrack event, so we need to do that here.
-        stream.dispatchEvent(
-          new this._win.MediaStreamTrackEvent("removetrack", { track })
-        );
-      }
-    }
-
-    for (const { stream, track } of addList) {
-      // Check this as late as possible, in case JS messes with the track lists.
-      if (!stream.getTracks().includes(track)) {
-        stream.addTrack(track);
-        // Adding tracks from JS does not result in the stream getting an
-        // addtrack event, so we need to do that here.
-        stream.dispatchEvent(
-          new this._win.MediaStreamTrackEvent("addtrack", { track })
-        );
-      }
-    }
-
-    trackEventInits.forEach(init => {
-      this.dispatchEvent(new this._win.RTCTrackEvent("track", init));
-      // Fire legacy event as well for a little bit.
-      this.dispatchEvent(
-        new this._win.MediaStreamTrackEvent("addtrack", { track: init.track })
-      );
-    });
-  }
-
-  // TODO(Bug 1241291): Legacy event, remove eventually
-  _fireLegacyAddStreamEvents() {
-    for (let stream of this._newStreams) {
-      let ev = new this._win.MediaStreamEvent("addstream", { stream });
-      this.dispatchEvent(ev);
-    }
-    this._newStreams = [];
-  }
-
-  _getOrCreateStream(id) {
-    if (!this._receiveStreams.has(id)) {
-      let stream = new this._win.MediaStream();
-      stream.assignId(id);
-      this._newStreams.push(stream);
-      this._receiveStreams.set(id, stream);
-    }
-
-    return this._receiveStreams.get(id);
-  }
-
   _insertDTMF(transceiverImpl, tones, duration, interToneGap) {
     return this._impl.insertDTMF(
       transceiverImpl,
@@ -1614,7 +1532,7 @@ class RTCPeerConnection {
 
   getRemoteStreams() {
     this._checkClosed();
-    return [...this._receiveStreams.values()];
+    return this._impl.getRemoteStreams();
   }
 
   getSenders() {
@@ -2286,76 +2204,9 @@ setupPrototype(RTCRtpSender, {
   QueryInterface: ChromeUtils.generateQI([]),
 });
 
-class RTCRtpReceiver {
-  constructor(pc, transceiverImpl) {
-    Object.assign(this, {
-      _pc: pc,
-      _transceiverImpl: transceiverImpl,
-      track: transceiverImpl.getReceiveTrack(),
-      _recvBit: false,
-      _oldRecvBit: false,
-      _streams: [],
-      _oldstreams: [],
-    });
-  }
-
-  // TODO(bug 1401983): Create a getStats binding on TransceiverImpl, and use
-  // that here.
-  getStats() {
-    return this._pc._async(async () => this._pc.getStats(this.track));
-  }
-
-  setStreamIds(streamIds) {
-    this._streams = streamIds.map(id => this._pc._getOrCreateStream(id));
-  }
-
-  setRecvBit(recvBit) {
-    this._recvBit = recvBit;
-  }
-
-  processTrackAdditionsAndRemovals(
-    transceiver,
-    { removeList, addList, muteTransceiverReceiveTracks, trackEventInits }
-  ) {
-    const receiver = this.__DOM_IMPL__;
-    const track = this.track;
-    const streams = this._streams;
-    const streamsAdded = streams.filter(s => !this._oldstreams.includes(s));
-    const streamsRemoved = this._oldstreams.filter(s => !streams.includes(s));
-
-    addList.push(...streamsAdded.map(stream => ({ stream, track })));
-    removeList.push(...streamsRemoved.map(stream => ({ stream, track })));
-    this._oldstreams = this._streams;
-
-    let needsTrackEvent = streamsAdded.length != 0;
-
-    if (this._recvBit != this._oldRecvBit) {
-      this._oldRecvBit = this._recvBit;
-      if (this._recvBit) {
-        // New track, set in case streamsAdded is empty
-        needsTrackEvent = true;
-      } else {
-        muteTransceiverReceiveTracks.push(this._transceiverImpl);
-      }
-    }
-
-    if (needsTrackEvent) {
-      trackEventInits.push({ track, streams, receiver, transceiver });
-    }
-  }
-}
-setupPrototype(RTCRtpReceiver, {
-  classID: PC_RECEIVER_CID,
-  contractID: PC_RECEIVER_CONTRACT,
-  QueryInterface: ChromeUtils.generateQI([]),
-});
-
 class RTCRtpTransceiver {
   constructor(pc, transceiverImpl, init, kind, sendTrack) {
-    let receiver = pc._win.RTCRtpReceiver._create(
-      pc._win,
-      new RTCRtpReceiver(pc, transceiverImpl)
-    );
+    let receiver = transceiverImpl.receiver;
     let streams = (init && init.streams) || [];
     let sender = pc._win.RTCRtpSender._create(
       pc._win,
@@ -2531,7 +2382,6 @@ var EXPORTED_SYMBOLS = [
   "RTCSessionDescription",
   "RTCPeerConnection",
   "RTCPeerConnectionStatic",
-  "RTCRtpReceiver",
   "RTCRtpSender",
   "RTCRtpTransceiver",
   "PeerConnectionObserver",
