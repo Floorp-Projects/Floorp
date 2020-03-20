@@ -45,8 +45,7 @@
     // Audio level as expected to be returned
     const expectedAudioLevel0 = 10 ** (-audioLevel0 / 20);
 
-    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
-        remoteReceiver,
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
         csrc0,
         timestamp0,
         rtpTimestamp0,
@@ -59,8 +58,7 @@
     const hasAudioLevel1 = false;
     const audioLevel1 = 0;
 
-    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
-        remoteReceiver,
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
         csrc1,
         timestamp1,
         rtpTimestamp1,
@@ -73,8 +71,7 @@
     const hasAudioLevel2 = true;
     const audioLevel2 = 127;
 
-    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
-        remoteReceiver,
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
         csrc2,
         timestamp2,
         rtpTimestamp2,
@@ -126,8 +123,7 @@
     // Larger offsets are further back in time
     const testOffsets = [3, 7, 5, 6, 1, 4];
     for (const offset of testOffsets) {
-      SpWrap(test.pcLocal).mozInsertAudioLevelForContributingSource(
-          localReceiver,
+      SpecialPowers.wrap(localReceiver).mozInsertAudioLevelForContributingSource(
           offset, // Using offset for SSRC for convenience
           timestamp3 - offset,
           rtpTimestamp3,

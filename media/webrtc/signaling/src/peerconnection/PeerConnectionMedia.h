@@ -91,11 +91,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       const dom::MediaStreamTrack* aTrack,
       nsTArray<RefPtr<MediaPipelineTransmit>>* aPipelines);
 
-  nsresult AddRIDExtension(dom::MediaStreamTrack& aRecvTrack,
-                           unsigned short aExtensionId);
-
-  nsresult AddRIDFilter(dom::MediaStreamTrack& aRecvTrack,
-                        const nsAString& aRid);
   std::string GetTransportIdMatchingSendTrack(
       const dom::MediaStreamTrack& aTrack) const;
 
