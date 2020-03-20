@@ -56,7 +56,7 @@
         android:elevation="1dp"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
-        app:layout_constraintLeft_toLeftOf="@+id/toolbar_top_image"
+        app:layout_constraintStart_toStartOf="@+id/toolbar_top_image"
         app:layout_constraintTop_toTopOf="@+id/toolbar_top_image"
         app:layout_constraintTop_toBottomOf="@+id/description_text"
         app:onboardingKey="@string/pref_key_toolbar_top" />
@@ -83,7 +83,7 @@
         android:elevation="1dp"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
-        app:layout_constraintLeft_toLeftOf="@+id/toolbar_bottom_image"
+        app:layout_constraintStart_toStartOf="@+id/toolbar_bottom_image"
         app:layout_constraintTop_toTopOf="@+id/toolbar_bottom_image"
         app:layout_constraintTop_toBottomOf="@+id/description_text"
         app:onboardingKey="@string/pref_key_toolbar_bottom" />
