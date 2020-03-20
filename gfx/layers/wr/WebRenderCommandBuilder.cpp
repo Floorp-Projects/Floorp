@@ -1244,7 +1244,6 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                              item);
 
       {
-        MOZ_ASSERT(item->GetType() != DisplayItemType::TYPE_RENDER_ROOT);
         auto spaceAndClipChain = mClipManager.SwitchItem(item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
