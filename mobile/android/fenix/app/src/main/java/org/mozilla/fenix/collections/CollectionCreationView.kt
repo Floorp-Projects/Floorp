@@ -148,10 +148,6 @@ class CollectionCreationView(
             interactor.close()
         }
 
-        TransitionManager.beginDelayedTransition(
-            view.collection_constraint_layout,
-            transition
-        )
         val constraint = selectTabsConstraints
         constraint.applyTo(view.collection_constraint_layout)
 
