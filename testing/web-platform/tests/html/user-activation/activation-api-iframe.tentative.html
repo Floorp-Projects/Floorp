@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <!--
    Tentative due to:
-    https://github.com/whatwg/html/issues/3739
-
+   https://github.com/whatwg/html/issues/1983
 -->
 <html>
 <head>
@@ -14,9 +13,11 @@
 <body>
   <h1>Clicking in iframe has activation state in child</h1>
   <ol id="instructions">
-    <li>Click inside the light-grey area.
+    <li>Click inside the yellow area.
   </ol>
-  <iframe id="child" width="200" height="200"></iframe>
+  <iframe id="child" width="200" height="200"
+          src="resources/child-one.html">
+  </iframe>
   <script>
     async_test(function(t) {
       var child = document.getElementById("child");
@@ -45,7 +46,6 @@
           t.done();
         }
       }));
-      child.src = "resources/child-one.html";
     }, "Values adjust on activity");
   </script>
 </body>
