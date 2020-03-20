@@ -9,7 +9,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { LongStringFront } = require("devtools/shared/fronts/string");
+const { LongStringFront } = require("devtools/client/fronts/string");
 
 /**
  * A ObjectFront is used as a front end for the ObjectActor that is
