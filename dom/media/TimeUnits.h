@@ -20,8 +20,9 @@ class TimeIntervals;
 }  // namespace mozilla
 // CopyChooser specialization for nsTArray
 template <>
-struct nsTArray_CopyChooser<mozilla::media::TimeIntervals> {
-  typedef nsTArray_CopyWithConstructors<mozilla::media::TimeIntervals> Type;
+struct nsTArray_RelocationStrategy<mozilla::media::TimeIntervals> {
+  typedef nsTArray_RelocateUsingMoveConstructor<mozilla::media::TimeIntervals>
+      Type;
 };
 
 namespace mozilla {
