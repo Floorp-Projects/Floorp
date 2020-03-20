@@ -174,6 +174,14 @@ namespace jit {
   _(NewObjectWithGroup)     \
   _(NewInit)                \
   _(Object)                 \
+  _(InitPropGetter)         \
+  _(InitPropSetter)         \
+  _(InitHiddenPropGetter)   \
+  _(InitHiddenPropSetter)   \
+  _(InitElemGetter)         \
+  _(InitElemSetter)         \
+  _(InitHiddenElemGetter)   \
+  _(InitHiddenElemSetter)   \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -267,6 +275,9 @@ class MOZ_STACK_CLASS WarpBuilder {
                                    MDefinition* id);
   MOZ_MUST_USE bool buildSetPropOp(BytecodeLocation loc, MDefinition* obj,
                                    MDefinition* id, MDefinition* val);
+
+  MOZ_MUST_USE bool buildInitPropGetterSetterOp(BytecodeLocation loc);
+  MOZ_MUST_USE bool buildInitElemGetterSetterOp(BytecodeLocation loc);
 
   void buildCopyLexicalEnvOp(bool copySlots);
   void buildCheckLexicalOp(BytecodeLocation loc);
