@@ -312,10 +312,6 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
 
   DOMHighResTimeStamp GetNow() const { return mTimestampMaker.GetNow(); }
 
-  const dom::RTCStatsTimestampMaker& GetTimestampMaker() const {
-    return mTimestampMaker;
-  }
-
   MOZ_DECLARE_REFCOUNTED_TYPENAME(WebRtcCallWrapper)
 
   rtc::scoped_refptr<webrtc::AudioDecoderFactory> mDecoderFactory;
@@ -601,7 +597,8 @@ class AudioSessionConduit : public MediaSessionConduit {
   virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
                               int lengthMs, int attenuationDb) = 0;
 
-  virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
+  virtual void GetRtpSources(const int64_t aTimeNow,
+                             nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 };
 }  // namespace mozilla
 #endif
