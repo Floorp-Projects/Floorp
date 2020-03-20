@@ -17,7 +17,7 @@ const promise = require("promise");
 loader.lazyRequireGetter(
   this,
   "RuleRewriter",
-  "devtools/client/fronts/inspector/rule-rewriter"
+  "devtools/shared/fronts/inspector/rule-rewriter"
 );
 
 /**

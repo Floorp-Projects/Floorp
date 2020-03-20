@@ -11,7 +11,7 @@ const {
 const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("devtools/shared/fronts/object");
 
 /**
  * A SymbolIteratorFront is used as a front end for the SymbolIterator that is

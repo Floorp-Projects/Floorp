@@ -5,7 +5,7 @@
 "use strict";
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { LongStringFront } = require("devtools/client/fronts/string");
+const { LongStringFront } = require("devtools/shared/fronts/string");
 const {
   FrontClassWithSpec,
   registerFront,
@@ -13,7 +13,7 @@ const {
 const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/client/fronts/object");
+} = require("devtools/shared/fronts/object");
 
 /**
  * A WebConsoleFront is used as a front end for the WebConsoleActor that is

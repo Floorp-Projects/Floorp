@@ -8,13 +8,13 @@ const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 loader.lazyRequireGetter(
   this,
   "BrowsingContextTargetFront",
-  "devtools/client/fronts/targets/browsing-context",
+  "devtools/shared/fronts/targets/browsing-context",
   true
 );
 loader.lazyRequireGetter(
   this,
   "LocalTabTargetFront",
-  "devtools/client/fronts/targets/local-tab",
+  "devtools/shared/fronts/targets/local-tab",
   true
 );
 const {

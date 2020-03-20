@@ -12,6 +12,7 @@ DIRS += [
     'client',
     'css',
     'discovery',
+    'fronts',
     'heapsnapshot',
     'inspector',
     'jsbeautify',
