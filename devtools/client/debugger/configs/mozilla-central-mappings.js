@@ -12,7 +12,7 @@ const EXCLUDED_FILES = {
 };
 
 const whatwgUrl = `
-(() => { 
+(() => {
   importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
   return { URL }
 })()
@@ -23,7 +23,7 @@ module.exports = Object.assign(
     "./source-editor": "devtools/client/sourceeditor/editor",
     "../editor/source-editor": "devtools/client/sourceeditor/editor",
     "./test-flag": "devtools/shared/flags",
-    "./fronts-device": "devtools/shared/fronts/device",
+    "./fronts-device": "devtools/client/fronts/device",
     immutable: "devtools/client/shared/vendor/immutable",
     lodash: "devtools/client/shared/vendor/lodash",
     react: "devtools/client/shared/vendor/react",

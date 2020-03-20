@@ -11,7 +11,7 @@ const {
 } = require("devtools/shared/protocol");
 const {
   PerformanceRecordingFront,
-} = require("devtools/shared/fronts/performance-recording");
+} = require("devtools/client/fronts/performance-recording");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
 loader.lazyRequireGetter(

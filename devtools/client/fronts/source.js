@@ -9,7 +9,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { ArrayBufferFront } = require("devtools/shared/fronts/array-buffer");
+const { ArrayBufferFront } = require("devtools/client/fronts/array-buffer");
 
 /**
  * A SourceFront provides a way to access the source text of a script.

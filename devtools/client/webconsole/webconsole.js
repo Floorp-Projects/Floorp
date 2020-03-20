@@ -467,7 +467,7 @@ class WebConsole {
    *
    * @param {String} string: The code you want to evaluate.
    * @param {Object} options: Options for evaluation. See evaluateJSAsync method on
-   *                          devtools/shared/fronts/webconsole.js
+   *                          devtools/client/fronts/webconsole.js
    */
   evaluateJSAsync(expression, options = {}) {
     return this.ui._commands.evaluateJSAsync(expression, options);

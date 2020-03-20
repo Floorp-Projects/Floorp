@@ -8,7 +8,7 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/shared/fronts/object");
+} = require("devtools/client/fronts/object");
 
 const CHROME_PREFIX = "chrome://mochitests/content/browser/";
 const STUBS_FOLDER = "devtools/client/webconsole/test/node/fixtures/stubs/";

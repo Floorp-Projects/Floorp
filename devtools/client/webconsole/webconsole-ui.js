@@ -18,7 +18,7 @@ const { BrowserLoader } = ChromeUtils.import(
 );
 const {
   getAdHocFrontOrPrimitiveGrip,
-} = require("devtools/shared/fronts/object");
+} = require("devtools/client/fronts/object");
 
 loader.lazyRequireGetter(
   this,
