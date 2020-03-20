@@ -112,6 +112,7 @@ namespace jit {
   _(ObjWithProto)           \
   _(GetAliasedVar)          \
   _(SetAliasedVar)          \
+  _(InitAliasedLexical)     \
   _(EnvCallee)              \
   _(Iter)                   \
   _(IterNext)               \
@@ -138,6 +139,9 @@ namespace jit {
   _(StrictSetProp)          \
   _(SetName)                \
   _(StrictSetName)          \
+  _(SetGName)               \
+  _(StrictSetGName)         \
+  _(InitGLexical)           \
   _(SetElem)                \
   _(StrictSetElem)          \
   _(DelProp)                \
@@ -155,6 +159,15 @@ namespace jit {
   _(CheckThis)              \
   _(CheckThisReinit)        \
   _(CheckReturn)            \
+  _(CheckLexical)           \
+  _(CheckAliasedLexical)    \
+  _(InitHomeObject)         \
+  _(SuperBase)              \
+  _(SuperFun)               \
+  _(BuiltinProto)           \
+  _(GetIntrinsic)           \
+  _(ImportMeta)             \
+  _(CallSiteObj)            \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -250,6 +263,7 @@ class MOZ_STACK_CLASS WarpBuilder {
                                    MDefinition* id, MDefinition* val);
 
   void buildCopyLexicalEnvOp(bool copySlots);
+  void buildCheckLexicalOp(BytecodeLocation loc);
 
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
