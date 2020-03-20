@@ -1893,3 +1893,70 @@ bool WarpBuilder::build_CallSiteObj(BytecodeLocation loc) {
   pushConstant(ObjectValue(*obj));
   return true;
 }
+
+bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
+  uint32_t length = loc.getNewArrayLength();
+
+  // TODO: support fast inline allocation, pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  MConstant* templateConst = constant(NullValue());
+
+  auto* ins = MNewArray::NewVM(alloc(), /* constraints = */ nullptr, length,
+                               templateConst, heap, loc.toRawBytecode());
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_NewArrayCopyOnWrite(BytecodeLocation loc) {
+  ArrayObject* templateObject = &loc.getObject(script_)->as<ArrayObject>();
+
+  // TODO: pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  MConstant* templateConst =
+      MConstant::NewConstraintlessObject(alloc(), templateObject);
+  current->add(templateConst);
+
+  auto* ins = MNewArrayCopyOnWrite::New(alloc(), /* constraints = */ nullptr,
+                                        templateConst, heap);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_NewObject(BytecodeLocation loc) {
+  // TODO: support fast inline allocation, pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+  MConstant* templateConst = constant(NullValue());
+
+  auto* ins = MNewObject::NewVM(alloc(), /* constraints = */ nullptr,
+                                templateConst, heap, MNewObject::ObjectLiteral);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_NewObjectWithGroup(BytecodeLocation loc) {
+  return build_NewObject(loc);
+}
+
+bool WarpBuilder::build_NewInit(BytecodeLocation loc) {
+  return build_NewObject(loc);
+}
+
+bool WarpBuilder::build_Object(BytecodeLocation loc) {
+  JSObject* obj = loc.getObject(script_);
+  MConstant* objConst = constant(ObjectValue(*obj));
+
+  if (mirGen_.options.cloneSingletons()) {
+    auto* clone = MCloneLiteral::New(alloc(), objConst);
+    current->add(clone);
+    current->push(clone);
+    return resumeAfter(clone, loc);
+  }
+
+  // WarpOracle called realm->setSingletonsAsValues() so we can just push the
+  // object here.
+  current->push(objConst);
+  return true;
+}
