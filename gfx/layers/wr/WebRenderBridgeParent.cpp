@@ -360,10 +360,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 
-  if (IsRootWebRenderBridgeParent() ||
-      !StaticPrefs::gfx_webrender_split_render_roots_AtStartup()) {
-    mRenderRoot = Some(wr::RenderRoot::Default);
-  }
+  mRenderRoot = Some(wr::RenderRoot::Default);
 
   for (auto& api : aApis) {
     MOZ_ASSERT(api);
@@ -396,12 +393,7 @@ WebRenderBridgeParent::~WebRenderBridgeParent() {
 }
 
 bool WebRenderBridgeParent::RenderRootIsValid(wr::RenderRoot aRenderRoot) {
-  if (StaticPrefs::gfx_webrender_split_render_roots_AtStartup() &&
-      IsRootWebRenderBridgeParent()) {
-    return aRenderRoot <= wr::kHighestRenderRoot;
-  } else {
-    return aRenderRoot == wr::RenderRoot::Default;
-  }
+  return aRenderRoot == wr::RenderRoot::Default;
 }
 
 void WebRenderBridgeParent::RemoveDeferredPipeline(wr::PipelineId aPipelineId) {
@@ -565,16 +557,6 @@ bool WebRenderBridgeParent::MaybeHandleDeferredPipelineData(
     wr::RenderRoot aRenderRoot, const nsTArray<wr::PipelineId>& aPipelineIds,
     const TimeStamp& aTxnStartTime) {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
-  if (!StaticPrefs::gfx_webrender_split_render_roots_AtStartup()) {
-    return true;
-  }
-  for (wr::PipelineId pipelineId : aPipelineIds) {
-    if (!MaybeHandleDeferredPipelineDataForPipeline(aRenderRoot, pipelineId,
-                                                    aTxnStartTime)) {
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -1201,22 +1183,8 @@ bool WebRenderBridgeParent::SetDisplayList(
             aRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
       }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
-      LayoutDeviceIntRect rect;
-      if (StaticPrefs::gfx_webrender_split_render_roots_AtStartup()) {
-        rect = RoundedToInt(aRect);
-        rect.SetWidth(
-            std::max(0, std::min(widgetSize.width - rect.X(), rect.Width())));
-        rect.SetHeight(
-            std::max(0, std::min(widgetSize.height - rect.Y(), rect.Height())));
-      } else {
-        // XXX: If we can't have multiple documents, just use the
-        // pre-document- splitting behavior of directly applying the client
-        // size. This is a speculative and temporary attempt to address bug
-        // 1538540, as an incorrect rect supplied to SetDocumentView can cause
-        // us to not build a frame and potentially render with stale texture
-        // cache items.
-        rect = LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
-      }
+      LayoutDeviceIntRect rect =
+          LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
       aTxn.SetDocumentView(rect);
     }
     gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
@@ -2043,9 +2011,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   }
 
   for (auto renderRoot : wr::kRenderRoots) {
-    if (renderRoot == wr::RenderRoot::Default ||
-        (IsRootWebRenderBridgeParent() &&
-         StaticPrefs::gfx_webrender_split_render_roots_AtStartup())) {
+    if (renderRoot == wr::RenderRoot::Default) {
       if (mRenderRoot) {
         // Clear resources
         wr::TransactionBuilder txn;
@@ -2139,9 +2105,7 @@ void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
   }
 
   for (auto renderRoot : wr::kRenderRoots) {
-    if (renderRoot == wr::RenderRoot::Default ||
-        (IsRootWebRenderBridgeParent() &&
-         StaticPrefs::gfx_webrender_split_render_roots_AtStartup())) {
+    if (renderRoot == wr::RenderRoot::Default) {
       wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
       fastTxn.InvalidateRenderedFrame();
       Api(renderRoot)->SendTransaction(fastTxn);
@@ -2186,8 +2150,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(
   for (size_t i = 0; i < aTargets.Length(); i++) {
     // Guard against bad data from hijacked child processes
     if (aTargets[i].mRenderRoot > wr::kHighestRenderRoot ||
-        (!StaticPrefs::gfx_webrender_split_render_roots_AtStartup() &&
-         aTargets[i].mRenderRoot != wr::RenderRoot::Default)) {
+        aTargets[i].mRenderRoot != wr::RenderRoot::Default) {
       NS_ERROR(
           "Unexpected render root in RecvSetConfirmedTargetAPZC; dropping "
           "message...");

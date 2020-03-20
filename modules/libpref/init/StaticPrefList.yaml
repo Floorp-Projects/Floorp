@@ -3994,11 +3994,6 @@
   value: true
   mirror: always
 
-- name: gfx.webrender.split-render-roots
-  type: bool
-  value: false
-  mirror: once
-
 - name: gfx.webrender.enable-multithreading
   type: bool
   value: true
