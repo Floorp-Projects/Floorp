@@ -3,23 +3,23 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="16dp"
-        android:orientation="vertical">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="16dp"
+    android:orientation="vertical">
 
     <ProgressBar
         android:id="@+id/progress_bar_bookmark"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:indeterminate="true"
         android:layout_width="match_parent"
         android:layout_height="8dp"
+        android:indeterminate="true"
         android:translationY="-3dp"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/bookmark_name_label"
@@ -88,13 +88,14 @@
     <TextView
         android:id="@+id/bookmarkParentFolderSelector"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        app:drawableStartCompat="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
+        android:gravity="center_vertical"
         android:textColor="?secondaryText"
         android:textSize="16sp"
+        app:drawableStartCompat="@drawable/ic_folder_icon"
         app:drawableTint="?primaryText"
         tools:text="Mobile Bookmarks" />
 
