@@ -84,7 +84,6 @@ const enginesCache = {
         },
       ],
       queryCharset: "UTF-8",
-      _readOnly: false,
       filePath: "TBD",
     },
   ],

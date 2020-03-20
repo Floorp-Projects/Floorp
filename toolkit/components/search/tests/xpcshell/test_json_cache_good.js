@@ -44,7 +44,6 @@ const enginesCache = {
   },
   engines: [
     {
-      _readOnly: true,
       _urls: [
         {
           type: "text/html",
@@ -75,7 +74,6 @@ const enginesCache = {
       _loadPath: "[other]addEngineWithDetails:engine1@search.mozilla.org",
     },
     {
-      _readOnly: true,
       _urls: [
         {
           type: "text/html",

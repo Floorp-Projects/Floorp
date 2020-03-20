@@ -1737,7 +1737,7 @@ SearchService.prototype = {
     }
   },
 
-  _loadEnginesFromCache(cache, skipReadOnly) {
+  _loadEnginesFromCache(cache, skipBuiltIn) {
     if (!cache.engines) {
       return;
     }
@@ -1750,7 +1750,7 @@ SearchService.prototype = {
 
     let skippedEngines = 0;
     for (let engine of cache.engines) {
-      if (skipReadOnly && engine._readOnly == undefined) {
+      if (skipBuiltIn && engine._isBuiltin) {
         ++skippedEngines;
         continue;
       }
@@ -1762,7 +1762,7 @@ SearchService.prototype = {
       SearchUtils.log(
         "_loadEnginesFromCache: skipped " +
           skippedEngines +
-          " read-only engines."
+          " built-in engines."
       );
     }
   },
@@ -1771,7 +1771,7 @@ SearchService.prototype = {
     try {
       let engine = new SearchEngine({
         name: json._shortName,
-        readOnly: json._readOnly == undefined,
+        isBuiltin: !!json._isBuiltin,
       });
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
@@ -1822,7 +1822,7 @@ SearchService.prototype = {
         file.initWithPath(osfile.path);
         addedEngine = new SearchEngine({
           fileURI: file,
-          readOnly: false,
+          isBuiltin: false,
         });
         await addedEngine._initFromFile(file);
         engines.push(addedEngine);
@@ -2496,7 +2496,7 @@ SearchService.prototype = {
 
     let newEngine = new SearchEngine({
       name,
-      readOnly: isBuiltin,
+      isBuiltin,
       sanitizeName: true,
     });
     newEngine._initFromMetadata(name, params);
@@ -2599,7 +2599,7 @@ SearchService.prototype = {
 
     let engine = new SearchEngine({
       name: engineParams.name,
-      readOnly: engineParams.isBuiltin,
+      isBuiltin: engineParams.isBuiltin,
       sanitizeName: true,
     });
     engine._initFromMetadata(engineParams.name, engineParams);
@@ -2751,7 +2751,7 @@ SearchService.prototype = {
     try {
       var engine = new SearchEngine({
         uri: engineURL,
-        readOnly: false,
+        isBuiltin: false,
       });
       engine._setIcon(iconURL, false);
       engine._confirm = confirm;
@@ -2825,7 +2825,7 @@ SearchService.prototype = {
       this._currentPrivateEngine = null;
     }
 
-    if (engineToRemove._readOnly || engineToRemove.isBuiltin) {
+    if (engineToRemove._isBuiltin) {
       // Just hide it (the "hidden" setter will notify) and remove its alias to
       // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
@@ -3740,7 +3740,7 @@ var engineUpdateService = {
       this._log("updating " + engine.name + " from " + updateURI.spec);
       testEngine = new SearchEngine({
         uri: updateURI,
-        readOnly: false,
+        isBuiltin: false,
       });
       testEngine._engineToUpdate = engine;
       testEngine._initFromURIAndLoad(updateURI);
