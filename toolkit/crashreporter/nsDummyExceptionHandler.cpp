@@ -190,24 +190,18 @@ void UnregisterInjectorCallback(DWORD processID) {}
 
 bool GetLastRunCrashID(nsAString& id) { return false; }
 
-#if defined(XP_WIN)
-bool SetRemoteExceptionHandler(const nsACString& crashPipe,
-                               uintptr_t aCrashTimeAnnotationFile) {
-  return false;
-}
-
-#elif defined(XP_MACOSX)
-
-bool SetRemoteExceptionHandler(const nsACString& crashPipe) { return false; }
-
-#else
+#if defined(XP_LINUX)
 
 bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd) {
   return false;
 }
 
-bool SetRemoteExceptionHandler() { return false; }
-#endif  // XP_WIN
+#endif  // defined(XP_LINUX)
+
+bool SetRemoteExceptionHandler(const char* aCrashPipe,
+                               uintptr_t aCrashTimeAnnotationFile) {
+  return false;
+}
 
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations, uint32_t* aSequence) {
