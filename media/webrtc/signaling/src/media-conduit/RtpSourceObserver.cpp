@@ -22,21 +22,35 @@ double RtpSourceObserver::RtpSourceEntry::ToLinearAudioLevel() const {
   return std::pow(10, -static_cast<double>(audioLevel) / 20);
 }
 
-RtpSourceObserver::RtpSourceObserver()
-    : mMaxJitterWindow(0), mLevelGuard("RtpSourceObserver::mLevelGuard") {}
+RtpSourceObserver::RtpSourceObserver(
+    const dom::RTCStatsTimestampMaker& aTimestampMaker)
+    : mMaxJitterWindow(0),
+      mLevelGuard("RtpSourceObserver::mLevelGuard"),
+      mTimestampMaker(aTimestampMaker) {}
 
 void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
                                     const int64_t aTimestamp,
                                     const uint32_t aJitter) {
   MutexAutoLock lock(mLevelGuard);
   {
+    // We assume that aTimestamp is not significantly in the past, and just get
+    // a JS timestamp for the current time instead of converting aTimestamp.
+    DOMHighResTimeStamp jsNow = mTimestampMaker.GetNow();
     mMaxJitterWindow =
         std::max(mMaxJitterWindow, static_cast<int64_t>(aJitter) * 2);
-    const auto jitterAdjusted = aTimestamp + aJitter;
+    // We are supposed to report the time at which this packet was played out,
+    // but we have only just received the packet. We try to guess when it will
+    // be played out.
+    // TODO: We need to move where we update these stats to MediaPipeline, where
+    // we send frames to the media track graph. In order to do that, we will
+    // need to have the ssrc (and csrc) for decoded frames, but we don't have
+    // that right now. Once we move this to the correct place, we will no longer
+    // need to keep anything but the most recent data.
+    const auto predictedPlayoutTime = jsNow + aJitter;
     auto& hist = mRtpSources[GetKey(aHeader.ssrc, EntryType::Synchronization)];
-    hist.Prune(aTimestamp);
+    hist.Prune(jsNow);
     // ssrc-audio-level handling
-    hist.Insert(aTimestamp, jitterAdjusted, aHeader.timestamp,
+    hist.Insert(jsNow, predictedPlayoutTime, aHeader.timestamp,
                 aHeader.extension.hasAudioLevel, aHeader.extension.audioLevel);
 
     // csrc-audio-level handling
@@ -44,27 +58,27 @@ void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
     for (uint8_t i = 0; i < aHeader.numCSRCs; i++) {
       const uint32_t& csrc = aHeader.arrOfCSRCs[i];
       auto& hist = mRtpSources[GetKey(csrc, EntryType::Contributing)];
-      hist.Prune(aTimestamp);
+      hist.Prune(jsNow);
       bool hasLevel = i < list.numAudioLevels;
       uint8_t level = hasLevel ? list.arrOfAudioLevels[i] : 0;
-      hist.Insert(aTimestamp, jitterAdjusted, aHeader.timestamp, hasLevel,
+      hist.Insert(jsNow, predictedPlayoutTime, aHeader.timestamp, hasLevel,
                   level);
     }
   }
 }
 
 void RtpSourceObserver::GetRtpSources(
-    const int64_t aTimeNow,
     nsTArray<dom::RTCRtpSourceEntry>& outSources) const {
   MutexAutoLock lock(mLevelGuard);
   outSources.Clear();
   for (const auto& it : mRtpSources) {
-    const RtpSourceEntry* entry = it.second.FindClosestNotAfter(aTimeNow);
+    const RtpSourceEntry* entry =
+        it.second.FindClosestNotAfter(mTimestampMaker.GetNow());
     if (entry) {
       dom::RTCRtpSourceEntry domEntry;
       domEntry.mSource = GetSourceFromKey(it.first);
       domEntry.mSourceType = GetTypeFromKey(it.first);
-      domEntry.mTimestamp = entry->jitterAdjustedTimestamp;
+      domEntry.mTimestamp = entry->predictedPlayoutTime;
       domEntry.mRtpTimestamp = entry->rtpTimestamp;
       if (entry->hasAudioLevel) {
         domEntry.mAudioLevel.Construct(entry->ToLinearAudioLevel());
@@ -72,10 +86,6 @@ void RtpSourceObserver::GetRtpSources(
       outSources.AppendElement(std::move(domEntry));
     }
   }
-}
-
-int64_t RtpSourceObserver::NowInReportClockTime() {
-  return webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
 }
 
 const RtpSourceObserver::RtpSourceEntry*
@@ -88,7 +98,7 @@ RtpSourceObserver::RtpSourceHistory::FindClosestNotAfter(int64_t aTime) const {
   auto lastFound = mDetailedHistory.cbegin();
   bool found = false;
   for (const auto& it : mDetailedHistory) {
-    if (it.second.jitterAdjustedTimestamp > aTime) {
+    if (it.second.predictedPlayoutTime > aTime) {
       break;
     }
     // lastFound can't start before begin, so the first inc must be skipped
@@ -100,7 +110,7 @@ RtpSourceObserver::RtpSourceHistory::FindClosestNotAfter(int64_t aTime) const {
   if (found) {
     return &lastFound->second;
   }
-  if (HasEvicted() && aTime >= mLatestEviction.jitterAdjustedTimestamp) {
+  if (HasEvicted() && aTime >= mLatestEviction.predictedPlayoutTime) {
     return &mLatestEviction;
   }
   return nullptr;
@@ -113,7 +123,7 @@ void RtpSourceObserver::RtpSourceHistory::Prune(const int64_t aTimeNow) {
   // New lower bound of the map
   auto lower = mDetailedHistory.begin();
   for (auto& it : mDetailedHistory) {
-    if (it.second.jitterAdjustedTimestamp > aTimeT) {
+    if (it.second.predictedPlayoutTime > aTimeT) {
       found = true;
       break;
     }
@@ -123,7 +133,7 @@ void RtpSourceObserver::RtpSourceHistory::Prune(const int64_t aTimeNow) {
     found = true;
   }
   if (found) {
-    if (lower->second.jitterAdjustedTimestamp > aTimePrehistory) {
+    if (lower->second.predictedPlayoutTime > aTimePrehistory) {
       mLatestEviction = lower->second;
       mHasEvictedEntry = true;
     }
@@ -131,7 +141,7 @@ void RtpSourceObserver::RtpSourceHistory::Prune(const int64_t aTimeNow) {
     mDetailedHistory.erase(mDetailedHistory.begin(), lower);
   }
   if (HasEvicted() &&
-      (mLatestEviction.jitterAdjustedTimestamp + kHistoryWindow) < aTimeNow) {
+      (mLatestEviction.predictedPlayoutTime + kHistoryWindow) < aTimeNow) {
     mHasEvictedEntry = false;
   }
 }
@@ -156,7 +166,7 @@ RtpSourceObserver::RtpSourceEntry& RtpSourceObserver::RtpSourceHistory::Insert(
   // x or x        T   J
   //  |------Z-----|ABC| -> |------Z-----|ABC|
   if ((aTimestamp + kHistoryWindow) < aTimeNow ||
-      aTimestamp < mLatestEviction.jitterAdjustedTimestamp) {
+      aTimestamp < mLatestEviction.predictedPlayoutTime) {
     return mPrehistory;  // A.K.A. /dev/null
   }
   mMaxJitterWindow = std::max(mMaxJitterWindow, (aTimestamp - aTimeNow) * 2);
