@@ -1,0 +1,27 @@
+[[repos]]
+name = 'spec'
+commit = 'c0e7b84c'
+
+[[repos]]
+name = 'sign-extension-ops'
+commit = 'a09a028e'
+
+[[repos]]
+name = 'nontrapping-float-to-int-conversions'
+commit = 'aa25b24d'
+
+[[repos]]
+name = 'multi-value'
+commit = '0032d27f'
+
+[[repos]]
+name = 'threads'
+commit = 'dfdcb81a'
+
+[[repos]]
+name = 'bulk-memory-operations'
+commit = 'ffdbb6e3'
+
+[[repos]]
+name = 'reference-types'
+commit = '7cfa1996'
