@@ -222,6 +222,42 @@ add_task(async function test_SecurityHTTP() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+// Test displaying valid certificate information in page info.
+add_task(async function test_ValidCert() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_ORIGIN);
+
+  let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let pageInfoDoc = pageInfo.document;
+  let securityTab = pageInfoDoc.getElementById("securityTab");
+  await TestUtils.waitForCondition(
+    () => BrowserTestUtils.is_visible(securityTab),
+    "Security tab should be visible."
+  );
+
+  let owner = pageInfoDoc.getElementById("security-identity-owner-value");
+  let verifier = pageInfoDoc.getElementById("security-identity-verifier-value");
+  let domain = pageInfoDoc.getElementById("security-identity-domain-value");
+
+  await TestUtils.waitForCondition(
+    () => owner.value === "This website does not supply ownership information.",
+    `Value of owner should be "This website does not supply ownership information.", got "${owner.value}".`
+  );
+
+  await TestUtils.waitForCondition(
+    () => verifier.value === "Mozilla Testing",
+    `Value of verifier should be "Mozilla Testing", got "${verifier.value}".`
+  );
+
+  await TestUtils.waitForCondition(
+    () => domain.value === gBrowser.selectedBrowser.currentURI.displayHost,
+    `Value of domain should be ${gBrowser.selectedBrowser.currentURI.displayHost}, instead got "${domain.value}".`
+  );
+
+  pageInfo.close();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 // Test displaying and removing quota managed data.
 add_task(async function test_SiteData() {
   await SiteDataTestUtils.addToIndexedDB(TEST_ORIGIN);

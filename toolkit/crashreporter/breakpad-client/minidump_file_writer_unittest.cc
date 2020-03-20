@@ -30,7 +30,7 @@
 // Author: waylonis@google.com (Dan Waylonis)
 
 /*
- g++ -I../ ../common/convert_UTF.c \
+ g++ -I../ ../common/convert_UTF.cc \
  ../common/string_conversion.cc \
  minidump_file_writer.cc \
  minidump_file_writer_unittest.cc \

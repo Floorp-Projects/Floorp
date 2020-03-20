@@ -143,7 +143,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   async pickColorFromPage(options) {
     await super.pickColorFromPage(options);
-    if (options && options.fromMenu) {
+    if (options?.fromMenu) {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED_MENU).add(true);
     } else {
       telemetry.getHistogramById(TELEMETRY_EYEDROPPER_OPENED).add(true);

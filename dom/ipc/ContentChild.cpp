@@ -3481,12 +3481,14 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
   RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
-  auto scopeExit = MakeScopeExit([&]() {
+  auto resolve = [=](const nsresult& aRv) {
+    nsresult rv = aRv;
     if (httpChild) {
       rv = httpChild->CrossProcessRedirectFinished(rv);
     }
     aResolve(rv);
-  });
+  };
+  auto scopeExit = MakeScopeExit([&]() { resolve(rv); });
 
   if (NS_FAILED(rv)) {
     return IPC_OK();
@@ -3550,9 +3552,10 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   RefPtr<ChildProcessChannelListener> processListener =
       ChildProcessChannelListener::GetSingleton();
   // The listener will call completeRedirectSetup or asyncOpen on the channel.
-  processListener->OnChannelReady(loadState, aArgs.redirectIdentifier(),
-                                  std::move(aArgs.redirects()),
-                                  aArgs.timing().refOr(nullptr));
+  processListener->OnChannelReady(
+      loadState, aArgs.redirectIdentifier(), std::move(aArgs.redirects()),
+      aArgs.timing().refOr(nullptr), std::move(resolve));
+  scopeExit.release();
 
   // scopeExit will call CrossProcessRedirectFinished(rv) here
   return IPC_OK();

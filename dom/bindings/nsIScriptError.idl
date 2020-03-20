@@ -44,9 +44,6 @@ interface nsIScriptError : nsIConsoleMessage
     /** message is warning */
     const unsigned long warningFlag = 0x1;
 
-    /** exception was thrown for this case - exception-aware hosts can ignore */
-    const unsigned long exceptionFlag = 0x2;
-
     /** just a log message */
     const unsigned long infoFlag = 0x8;
 

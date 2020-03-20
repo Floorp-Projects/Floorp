@@ -50,7 +50,7 @@ class JSONPreview extends Component {
     // Put 2 here to not dup this method
     if (
       (member.level === 0 && member.type === "object") ||
-      (typeof member.value === "object" && member.value && member.value.value)
+      (typeof member.value === "object" && member.value?.value)
     ) {
       return null;
     }

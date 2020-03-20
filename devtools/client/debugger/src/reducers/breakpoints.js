@@ -239,7 +239,7 @@ export function hasLogpoint(
   location: ?SourceLocation
 ): ?string {
   const breakpoint = getBreakpoint(state, location);
-  return breakpoint && breakpoint.options.logValue;
+  return breakpoint?.options.logValue;
 }
 
 export default update;

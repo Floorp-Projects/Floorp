@@ -84,7 +84,7 @@ export function getScope(
       }
     }
 
-    if (vars && vars.length) {
+    if (vars?.length) {
       const title = getScopeTitle(type, scope) || "";
       vars.sort((a, b) => a.name.localeCompare(b.name));
       return {

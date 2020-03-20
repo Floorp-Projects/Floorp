@@ -2343,21 +2343,15 @@ bool CallFrameInfo::ReadCIEFields(CIE *cie) {
   }
 
   if (cie->version >= 4) {
-    uint8_t address_size = *cursor++;
-    if (address_size != 8) {
-      // TODO(scottmg): Only supporting x64 for now.
-      reporter_->UnexpectedAddressSize(cie->offset, address_size);
+    cie->address_size = *cursor++;
+    if (cie->address_size != 8 && cie->address_size != 4) {
+      reporter_->UnexpectedAddressSize(cie->offset, cie->address_size);
       return false;
     }
 
-    uint8_t segment_size = *cursor++;
-    if (segment_size != 0) {
-      // TODO(scottmg): Only supporting x64 for now.
-      // I would have perhaps expected 4 here, but LLVM emits a 0, near
-      // http://llvm.org/docs/doxygen/html/MCDwarf_8cpp_source.html#l00606. As
-      // we are not using the value, only succeed for now if it's the expected
-      // 0.
-      reporter_->UnexpectedSegmentSize(cie->offset, segment_size);
+    cie->segment_size = *cursor++;
+    if (cie->segment_size != 0) {
+      reporter_->UnexpectedSegmentSize(cie->offset, cie->segment_size);
       return false;
     }
   }
@@ -2618,6 +2612,15 @@ bool CallFrameInfo::Start() {
     }
     if (!ReadCIEFields(&cie))
       continue;
+
+    // TODO(nbilling): This could lead to strange behavior if a single buffer
+    // contained a mixture of DWARF versions as well as address sizes. Not
+    // sure if it's worth handling such a case.
+
+    // DWARF4 CIE specifies address_size, so use it for this call frame.
+    if (cie.version >= 4) {
+      reader_->SetAddressSize(cie.address_size);
+    }
 
     // We now have the values that govern both the CIE and the FDE.
     cie.cie = &cie;

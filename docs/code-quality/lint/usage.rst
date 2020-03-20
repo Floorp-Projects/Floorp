@@ -33,6 +33,12 @@ To restrict which linters are invoked manually, pass in ``-l/--linter``:
 
     ./mach lint -l eslint path/to/files
 
+You can see a list of the available linters by running:
+
+.. parsed-literal::
+
+    ./mach lint --list
+
 Finally, ``mozlint`` can lint the files touched by outgoing revisions or the working directory using
 the ``-o/--outgoing`` and ``-w/--workdir`` arguments respectively. These work both with mercurial and
 git. In the case of ``--outgoing``, the default remote repository the changes would be pushed to is

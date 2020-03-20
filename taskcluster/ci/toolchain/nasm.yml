@@ -35,13 +35,13 @@ linux64-nasm:
         fetch:
             - nasm-2.14.02
 
-linux64-nasm-2.13.02:
+linux64-nasm-2.14.02:
     description: "nasm linux64 minimum supported version build"
     treeherder:
-        symbol: TL(nasm-2.13.02)
+        symbol: TL(nasm-2.14.02)
     run:
         script: build-nasm.sh
         arguments: ['linux64']
     fetches:
         fetch:
-            - nasm-2.13.02
+            - nasm-2.14.02

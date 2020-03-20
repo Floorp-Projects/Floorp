@@ -106,7 +106,7 @@ class Module {
     }
 
     // The function's name.
-    const string name;
+    string name;
 
     // The start address and the address ranges covered by the function.
     const Address address;
@@ -212,6 +212,14 @@ class Module {
   // Write is used.
   void SetLoadAddress(Address load_address);
 
+  // Sets address filtering on elements added to the module.  This allows
+  // libraries with extraneous debug symbols to generate symbol files containing
+  // only relevant symbols.  For example, an LLD-generated partition library may
+  // contain debug information pertaining to all partitions derived from a
+  // single "combined" library.  Filtering applies only to elements added after
+  // this method is called.
+  void SetAddressRanges(const vector<Range>& ranges);
+
   // Add FUNCTION to the module. FUNCTION's name must not be empty.
   // This module owns all Function objects added with this function:
   // destroying the module destroys them as well.
@@ -313,6 +321,10 @@ class Module {
   // if an error occurs, return false, and leave errno set.
   static bool WriteRuleMap(const RuleMap &rule_map, std::ostream &stream);
 
+  // Returns true of the specified address resides with an specified address
+  // range, or if no ranges have been specified.
+  bool AddressIsInModule(Address address) const;
+
   // Module header entries.
   string name_, os_, architecture_, id_, code_id_;
 
@@ -320,6 +332,10 @@ class Module {
   // lines are absolute, assuming the module is loaded at this
   // address.
   Address load_address_;
+
+  // The set of valid address ranges of the module.  If specified, attempts to
+  // add elements residing outside these ranges will be silently filtered.
+  vector<Range> address_ranges_;
 
   // Relation for maps whose keys are strings shared with some other
   // structure.

@@ -556,7 +556,7 @@ function positionInNodeList(element, nodeList) {
  */
 function findNodeAndContainer(node) {
   const shadowRoot = node.containingShadowRoot;
-  while (node && node.isNativeAnonymous) {
+  while (node?.isNativeAnonymous) {
     node = node.parentNode;
   }
 

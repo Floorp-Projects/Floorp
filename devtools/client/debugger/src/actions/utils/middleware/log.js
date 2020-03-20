@@ -28,7 +28,7 @@ function cloneAction(action: any) {
   action = { ...action };
 
   // ADD_TAB, ...
-  if (action.source && action.source.text) {
+  if (action.source?.text) {
     const source = { ...action.source, text: "" };
     action.source = source;
   }
@@ -46,7 +46,7 @@ function cloneAction(action: any) {
     action.text = "";
   }
 
-  if (action.value && action.value.text) {
+  if (action.value?.text) {
     const value = { ...action.value, text: "" };
     action.value = value;
   }
@@ -76,7 +76,7 @@ function serializeAction(action) {
 
     const serializer = function(key, value) {
       // Serialize Object/LongString fronts
-      if (value && value.getGrip) {
+      if (value?.getGrip) {
         return value.getGrip();
       }
       return value;

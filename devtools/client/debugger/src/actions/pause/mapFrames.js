@@ -24,7 +24,7 @@ import SourceMaps, { isGeneratedId } from "devtools-source-map";
 
 function isFrameBlackboxed(state, frame) {
   const source = getSource(state, frame.location.sourceId);
-  return source && source.isBlackBoxed;
+  return source?.isBlackBoxed;
 }
 
 function getSelectedFrameId(state, thread, frames) {
@@ -34,7 +34,7 @@ function getSelectedFrameId(state, thread, frames) {
   }
 
   selectedFrame = frames.find(frame => !isFrameBlackboxed(state, frame));
-  return selectedFrame && selectedFrame.id;
+  return selectedFrame?.id;
 }
 
 export function updateFrameLocation(
@@ -105,7 +105,7 @@ function isWasmOriginalSourceFrame(frame, getState: () => State): boolean {
     frame.generatedLocation.sourceId
   );
 
-  return Boolean(generatedSource && generatedSource.isWasm);
+  return Boolean(generatedSource?.isWasm);
 }
 
 async function expandFrames(

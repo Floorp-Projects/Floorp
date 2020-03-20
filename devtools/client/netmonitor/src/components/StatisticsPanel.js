@@ -106,8 +106,7 @@ class StatisticsPanel extends Component {
 
     const { requests } = this.props;
     const ready =
-      requests &&
-      requests.length &&
+      requests?.length &&
       requests.every(
         req =>
           req.contentSize !== undefined &&

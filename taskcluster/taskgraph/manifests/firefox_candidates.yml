@@ -184,7 +184,6 @@ mapping:
         description: "Metadata about the Normandy client of this build"
         only_for_platforms:
             - linux64-shippable
-            - win64-shippable
         pretty_name: firefox-${version}.normandy.json
         checksums_path: ${path_platform}/${locale}/target.normandy.json
     target_info.txt:
@@ -251,38 +250,6 @@ mapping:
         pretty_name: ${tools_platform}/mbsdiff
         checksums_path: mar-tools/${tools_platform}/mbsdiff
         not_for_platforms:
-            - win32-shippable
-            - win64-shippable
-            - win64-aarch64-shippable
-            - win32-devedition
-            - win64-devedition
-            - win64-aarch64-devedition
-        destinations:
-            - ${version}-candidates/build${build_number}/mar-tools
-    mar.exe:
-        <<: *default
-        description: "Alongside `mbsdiff.exe`, a tool used to generate partials for Windows platforms"
-        locale_prefix: ''
-        source_path_modifier: 'host/bin'
-        pretty_name: ${tools_platform}/mar.exe
-        checksums_path: mar-tools/${tools_platform}/mar.exe
-        only_for_platforms:
-            - win32-shippable
-            - win64-shippable
-            - win64-aarch64-shippable
-            - win32-devedition
-            - win64-devedition
-            - win64-aarch64-devedition
-        destinations:
-            - ${version}-candidates/build${build_number}/mar-tools
-    mbsdiff.exe:
-        <<: *default
-        locale_prefix: ''
-        description: "Alongside `mar.exe`, a tool used to generate partials for Windows platforms"
-        source_path_modifier: 'host/bin'
-        pretty_name: ${tools_platform}/mbsdiff.exe
-        checksums_path: mar-tools/${tools_platform}/mbsdiff.exe
-        only_for_platforms:
             - win32-shippable
             - win64-shippable
             - win64-aarch64-shippable

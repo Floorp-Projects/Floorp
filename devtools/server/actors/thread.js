@@ -496,9 +496,24 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     );
   },
 
+  // We clear the priorPause field when a breakpoint is added or removed
+  // at the same location because we are no longer worried about pausing twice
+  // at that location (e.g. debugger statement, stepping).
+  _maybeClearPriorPause(location) {
+    if (!this._priorPause) {
+      return;
+    }
+
+    const { where } = this._priorPause.frame;
+    if (where.line === location.line && where.column === location.column) {
+      this._priorPause = null;
+    }
+  },
+
   setBreakpoint: async function(location, options) {
     const actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
     actor.setOptions(options);
+    this._maybeClearPriorPause(location);
 
     if (location.sourceUrl) {
       // There can be multiple source actors for a URL if there are multiple
@@ -519,6 +534,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   removeBreakpoint(location) {
     const actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
+    this._maybeClearPriorPause(location);
     actor.delete();
   },
 
@@ -1062,7 +1078,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   _clearSteppingHooks: function() {
     let frame = this.youngestFrame;
-    if (frame && frame.onStack) {
+    if (frame?.onStack) {
       while (frame) {
         frame.onStep = undefined;
         frame.onPop = undefined;

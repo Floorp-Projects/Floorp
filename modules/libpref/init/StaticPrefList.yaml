@@ -1999,7 +1999,7 @@
 # Media Session API
 - name: dom.media.mediasession.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Enable meta-viewport support in remote APZ-enabled frames.

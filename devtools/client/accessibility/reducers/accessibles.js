@@ -38,7 +38,7 @@ function accessibles(state = getInitialState(), action) {
 }
 
 function getActorID(accessible) {
-  return accessible.actorID || (accessible._form && accessible._form.actor);
+  return accessible.actorID || accessible._form?.actor;
 }
 
 /**

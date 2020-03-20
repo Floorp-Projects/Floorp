@@ -304,7 +304,7 @@ function getNodeBounds(boundaryWindow, node) {
   let offsetLeft = 0;
   let offsetTop = 0;
   let el = node;
-  while (el && el.parentNode) {
+  while (el?.parentNode) {
     offsetLeft += el.offsetLeft;
     offsetTop += el.offsetTop;
     el = el.offsetParent;
@@ -312,7 +312,7 @@ function getNodeBounds(boundaryWindow, node) {
 
   // Also take scrolled containers into account
   el = node;
-  while (el && el.parentNode) {
+  while (el?.parentNode) {
     if (el.scrollTop) {
       offsetTop -= el.scrollTop;
     }
@@ -840,7 +840,7 @@ exports.getAbsoluteScrollOffsetsForNode = getAbsoluteScrollOffsetsForNode;
  */
 function isRemoteFrame(node) {
   if (ChromeUtils.getClassName(node) == "HTMLIFrameElement") {
-    return node.frameLoader && node.frameLoader.isRemoteFrame;
+    return node.frameLoader?.isRemoteFrame;
   }
 
   if (ChromeUtils.getClassName(node) == "XULFrameElement") {

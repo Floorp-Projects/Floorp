@@ -367,7 +367,7 @@ BrowserTabList.prototype.getTab = function(
     // First look for in-process frames with this ID
     const window = Services.wm.getOuterWindowWithId(outerWindowID);
     // Safety check to prevent debugging top level window via getTab
-    if (window && window.isChromeWindow) {
+    if (window?.isChromeWindow) {
       return Promise.reject({
         error: "forbidden",
         message: "Window with outerWindowID '" + outerWindowID + "' is chrome",
@@ -394,8 +394,7 @@ BrowserTabList.prototype.getTab = function(
     // Tabs OOP
     for (const browser of this._getBrowsers()) {
       if (
-        browser.frameLoader &&
-        browser.frameLoader.remoteTab &&
+        browser.frameLoader?.remoteTab &&
         browser.frameLoader.remoteTab.tabId === tabId
       ) {
         return this._getActorForBrowser(browser, browserActorOptions);

@@ -36,27 +36,38 @@
 #include <string>
 
 #include "common/windows/pdb_source_line_writer.h"
+#include "common/windows/pe_source_line_writer.h"
 
 using std::wstring;
 using google_breakpad::PDBSourceLineWriter;
+using google_breakpad::PESourceLineWriter;
+using std::unique_ptr;
 
 int wmain(int argc, wchar_t **argv) {
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %ws <file.[pdb|exe|dll]>\n", argv[0]);
+  bool success;
+  if (argc == 2) {
+    PDBSourceLineWriter pdb_writer;
+    if (!pdb_writer.Open(wstring(argv[1]), PDBSourceLineWriter::ANY_FILE)) {
+      fprintf(stderr, "Open failed.\n");
+      return 1;
+    }
+    success = pdb_writer.WriteSymbols(stdout);
+  } else if (argc == 3 && wcscmp(argv[1], L"--pe") == 0) {
+    PESourceLineWriter pe_writer(argv[2]);
+    success = pe_writer.WriteSymbols(stdout);
+  } else {
+    fprintf(stderr, "Usage: %ws [--pe] <file.[pdb|exe|dll]>\n", argv[0]);
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "--pe:\tRead debugging information from PE file and do "
+      "not attempt to locate matching PDB file.\n"
+      "\tThis is only supported for PE32+ (64 bit) PE files.\n");
     return 1;
   }
 
-  PDBSourceLineWriter writer;
-  if (!writer.Open(wstring(argv[1]), PDBSourceLineWriter::ANY_FILE)) {
-    fprintf(stderr, "Open failed\n");
+  if (!success) {
+    fprintf(stderr, "WriteSymbols failed.\n");
     return 1;
   }
 
-  if (!writer.WriteMap(stdout)) {
-    fprintf(stderr, "WriteMap failed\n");
-    return 1;
-  }
-
-  writer.Close();
   return 0;
 }

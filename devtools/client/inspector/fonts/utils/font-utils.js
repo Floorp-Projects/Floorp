@@ -48,7 +48,7 @@ module.exports = {
     }
 
     const match = value.match(/\D+?$/);
-    return match && match.length ? match[0] : null;
+    return match?.length ? match[0] : null;
   },
 
   /**

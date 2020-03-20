@@ -64,10 +64,10 @@ def pgo_profile_path(path, pgo_use, profdata, build_env):
 
 set_config('PGO_PROFILE_PATH', pgo_profile_path)
 
-@depends(c_compiler, pgo_profile_path)
+@depends(c_compiler, pgo_profile_path, target_is_windows)
 @imports('multiprocessing')
 @imports(_from='__builtin__', _import='min')
-def pgo_flags(compiler, profdata):
+def pgo_flags(compiler, profdata, target_is_windows):
     if compiler.type == 'gcc':
         return namespace(
             gen_cflags=['-fprofile-generate'],
@@ -85,8 +85,15 @@ def pgo_flags(compiler, profdata):
         else:
             gen_ldflags = ['-fprofile-generate']
 
+        gen_cflags = [prefix + '-fprofile-generate']
+        if target_is_windows:
+            # native llvm-profdata.exe on Windows can't read profile data
+            # if name compression is enabled (which cross-compiling enables
+            # by default)
+            gen_cflags += ['-mllvm', '-enable-name-compression=false']
+
         return namespace(
-            gen_cflags=[prefix + '-fprofile-generate'],
+            gen_cflags=gen_cflags,
             gen_ldflags=gen_ldflags,
             use_cflags=[prefix + '-fprofile-use=%s' % profdata,
                         # Some error messages about mismatched profile data

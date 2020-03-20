@@ -129,8 +129,7 @@ function JSPropertyProvider({
       webconsoleActor
     );
 
-    const ret =
-      eagerResponse && eagerResponse.result && eagerResponse.result.return;
+    const ret = eagerResponse?.result?.return;
 
     // Only send matches if eager evaluation returned something meaningful
     if (ret && ret !== undefined) {
@@ -159,7 +158,7 @@ function JSPropertyProvider({
   if (!isWorker && isPropertyAccess) {
     const syntaxTrees = getSyntaxTrees(mainExpression);
     const lastTree = syntaxTrees[syntaxTrees.length - 1];
-    const lastBody = lastTree && lastTree.body[lastTree.body.length - 1];
+    const lastBody = lastTree?.body[lastTree.body.length - 1];
 
     // Finding the last expression since we've sliced up until the dot.
     // If there were parse errors this won't exist.
@@ -749,7 +748,7 @@ function analyzeInputString(str) {
 function getContentPrototypeObject(env, name) {
   // Retrieve the outermost environment to get the global object.
   let outermostEnv = env;
-  while (outermostEnv && outermostEnv.parent) {
+  while (outermostEnv?.parent) {
     outermostEnv = outermostEnv.parent;
   }
 

@@ -78,7 +78,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <sys/signal.h>
 #include <sys/ucontext.h>
 #include <sys/user.h>
 #include <ucontext.h>
@@ -88,6 +87,7 @@
 #include <vector>
 
 #include "common/basictypes.h"
+#include "common/linux/breakpad_getcontext.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/memory_allocator.h"
 #include "linux/log/log.h"

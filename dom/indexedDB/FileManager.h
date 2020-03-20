@@ -79,6 +79,10 @@ class FileManager final : public FileManagerBase<FileManager> {
 
   MOZ_MUST_USE nsresult SyncDeleteFile(int64_t aId);
 
+  // XXX When getting rid of FileHelper, this method should be removed/made
+  // private.
+  MOZ_MUST_USE nsresult SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile);
+
   MOZ_MUST_USE nsresult AsyncDeleteFile(int64_t aFileId);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileManager)

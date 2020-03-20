@@ -268,7 +268,7 @@ class Message extends Component {
                       this.props.message,
                       function(key, value) {
                         // The message can hold one or multiple fronts that we need to serialize
-                        if (value && value.getGrip) {
+                        if (value?.getGrip) {
                           return value.getGrip();
                         }
                         return value;

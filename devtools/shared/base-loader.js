@@ -175,7 +175,7 @@ function load(loader, module) {
     };
   }
   const define = Object.getOwnPropertyDescriptor(globals, "define");
-  if (define && define.value) {
+  if (define?.value) {
     descriptors.define = define;
   }
   if ("DOMParser" in globals) {

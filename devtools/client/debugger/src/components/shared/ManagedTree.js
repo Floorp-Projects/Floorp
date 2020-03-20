@@ -84,7 +84,7 @@ class ManagedTree extends Component<Props, State> {
       while (parents.length) {
         const children = [];
         for (const parent of parents) {
-          if (parent.contents && parent.contents.length) {
+          if (parent.contents?.length) {
             for (const child of parent.contents) {
               expandItem(child);
               children.push(child);

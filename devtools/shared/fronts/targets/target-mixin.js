@@ -140,7 +140,7 @@ function TargetMixin(parentClass) {
      */
     actorHasMethod(actorName, methodName) {
       return this.getActorDescription(actorName).then(desc => {
-        if (desc && desc.methods) {
+        if (desc?.methods) {
           return !!desc.methods.find(method => method.name === methodName);
         }
         return false;
@@ -187,10 +187,7 @@ function TargetMixin(parentClass) {
     async getFront(typeName) {
       let front = this.fronts.get(typeName);
       // the front might have been destroyed and no longer have an actor ID
-      if (
-        (front && front.actorID) ||
-        (front && typeof front.then === "function")
-      ) {
+      if (front?.actorID || (front && typeof front.then === "function")) {
         return front;
       }
       front = getFront(this.client, typeName, this.targetForm, this);
@@ -205,7 +202,7 @@ function TargetMixin(parentClass) {
       // do not wait for async fronts;
       const front = this.fronts.get(typeName);
       // ensure that the front is a front, and not async front
-      if (front && front.actorID) {
+      if (front?.actorID) {
         return front;
       }
       return null;

@@ -6254,8 +6254,8 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
   }
 
   // Called when receiving from the child.
-  DatabaseFile(BlobImpl* aBlobImpl, FileInfo* aFileInfo)
-      : mBlobImpl(aBlobImpl), mFileInfo(aFileInfo) {
+  DatabaseFile(RefPtr<BlobImpl> aBlobImpl, FileInfo* aFileInfo)
+      : mBlobImpl(std::move(aBlobImpl)), mFileInfo(aFileInfo) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(*mBlobImpl);
     MOZ_ASSERT(mFileInfo);
@@ -7467,14 +7467,14 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
       Variant<Nothing, RefPtr<DatabaseFile>, nsCOMPtr<nsIInputStream>>;
   InitializedOnce<const FileActorOrInputStream> mFileActorOrInputStream;
 #ifdef DEBUG
-  const StructuredCloneFile::FileType mType;
+  const StructuredCloneFileBase::FileType mType;
 #endif
 
   void AssertInvariants() const {
     // The only allowed types are eStructuredClone, eBlob and eMutableFile.
-    MOZ_ASSERT(StructuredCloneFile::eStructuredClone == mType ||
-               StructuredCloneFile::eBlob == mType ||
-               StructuredCloneFile::eMutableFile == mType);
+    MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType ||
+               StructuredCloneFileBase::eBlob == mType ||
+               StructuredCloneFileBase::eMutableFile == mType);
 
     // mFileInfo and a file actor in mFileActorOrInputStream are present until
     // the object is moved away, but an inputStream in mFileActorOrInputStream
@@ -7489,7 +7489,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
       //   storedFileInfo.mFileActorOrInputStream CAN be a non-nullptr input
       //   stream (but that might have been release by ReleaseInputStream).
       MOZ_ASSERT_IF(
-          StructuredCloneFile::eStructuredClone == mType,
+          StructuredCloneFileBase::eStructuredClone == mType,
           !mFileActorOrInputStream ||
               (mFileActorOrInputStream->is<nsCOMPtr<nsIInputStream>>() &&
                mFileActorOrInputStream->as<nsCOMPtr<nsIInputStream>>()));
@@ -7498,13 +7498,13 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
       //   already been written to disk.  storedFileInfo.mFileActorOrInputStream
       //   MUST be a non-null file actor, but its GetInputStream may return
       //   nullptr (so don't assert on that).
-      MOZ_ASSERT_IF(StructuredCloneFile::eBlob == mType,
+      MOZ_ASSERT_IF(StructuredCloneFileBase::eBlob == mType,
                     mFileActorOrInputStream->is<RefPtr<DatabaseFile>>() &&
                         mFileActorOrInputStream->as<RefPtr<DatabaseFile>>());
 
       // - It's a mutable file (eMutableFile).  No writing will be performed,
       // and storedFileInfo.mFileActorOrInputStream is Nothing.
-      MOZ_ASSERT_IF(StructuredCloneFile::eMutableFile == mType,
+      MOZ_ASSERT_IF(StructuredCloneFileBase::eMutableFile == mType,
                     mFileActorOrInputStream->is<Nothing>());
     }
   }
@@ -7514,7 +7514,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     Nothing {}
   }
 #ifdef DEBUG
-  , mType { StructuredCloneFile::eMutableFile }
+  , mType { StructuredCloneFileBase::eMutableFile }
 #endif
   {
     AssertIsOnBackgroundThread();
@@ -7528,7 +7528,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     std::move(aFileActor)
   }
 #ifdef DEBUG
-  , mType { StructuredCloneFile::eBlob }
+  , mType { StructuredCloneFileBase::eBlob }
 #endif
   {
     AssertIsOnBackgroundThread();
@@ -7543,7 +7543,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     std::move(aInputStream)
   }
 #ifdef DEBUG
-  , mType { StructuredCloneFile::eStructuredClone }
+  , mType { StructuredCloneFileBase::eStructuredClone }
 #endif
   {
     AssertIsOnBackgroundThread();
@@ -7601,7 +7601,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
     // called after GetInputStream, when mFileActorOrInputStream has been
     // cleared, which is only possible for this type.
     const bool res = !mFileActorOrInputStream;
-    MOZ_ASSERT(res == (StructuredCloneFile::eStructuredClone == mType));
+    MOZ_ASSERT(res == (StructuredCloneFileBase::eStructuredClone == mType));
     return res;
   }
 
@@ -7621,7 +7621,7 @@ class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
   using InputStreamResult = mozilla::Result<nsCOMPtr<nsIInputStream>, nsresult>;
   InputStreamResult GetInputStream() {
     if (!mFileActorOrInputStream) {
-      MOZ_ASSERT(StructuredCloneFile::eStructuredClone == mType);
+      MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType);
       return nsCOMPtr<nsIInputStream>{};
     }
 
@@ -7836,7 +7836,7 @@ class IndexGetRequestOp final : public IndexRequestOpBase {
 
   RefPtr<Database> mDatabase;
   const Maybe<SerializedKeyRange> mOptionalKeyRange;
-  AutoTArray<StructuredCloneReadInfo, 1> mResponse;
+  AutoTArray<StructuredCloneReadInfoParent, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
   const uint32_t mLimit;
   const bool mGetAll;
@@ -8046,7 +8046,7 @@ class ObjectStoreCursorBase : public CursorBase {
   };
 };
 
-using FilesArray = nsTArray<FallibleTArray<StructuredCloneFile>>;
+using FilesArray = nsTArray<FallibleTArray<StructuredCloneFileParent>>;
 
 struct PseudoFilesArray {
   static constexpr bool IsEmpty() { return true; }
@@ -8683,8 +8683,6 @@ class DeleteFilesRunnable final : public Runnable,
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
-  nsCOMPtr<nsIFile> mDirectory;
-  nsCOMPtr<nsIFile> mJournalDirectory;
   nsTArray<int64_t> mFileIds;
   State mState;
 
@@ -8697,8 +8695,6 @@ class DeleteFilesRunnable final : public Runnable,
   ~DeleteFilesRunnable() = default;
 
   nsresult Open();
-
-  nsresult DeleteFile(int64_t aFileId);
 
   nsresult DoDatabaseWork();
 
@@ -9083,17 +9079,26 @@ class DEBUGThreadSlower final : public nsIThreadObserver {
  * Helper classes
  ******************************************************************************/
 
+// XXX Get rid of FileHelper and move the functions into FileManager.
+// Then, FileManager::Get(Journal)Directory and FileManager::GetFileForId might
+// eventually be made private.
 class MOZ_STACK_CLASS FileHelper final {
-  RefPtr<FileManager> mFileManager;
+  const RefPtr<FileManager> mFileManager;
 
-  nsCOMPtr<nsIFile> mFileDirectory;
-  nsCOMPtr<nsIFile> mJournalDirectory;
+  InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
+      mFileDirectory;
+  InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
+      mJournalDirectory;
 
   class ReadCallback;
-  RefPtr<ReadCallback> mReadCallback;
+  InitializedOnceMustBeTrue<const RefPtr<ReadCallback>, LazyInit::Allow>
+      mReadCallback;
 
  public:
-  explicit FileHelper(FileManager* aFileManager) : mFileManager(aFileManager) {}
+  explicit FileHelper(RefPtr<FileManager>&& aFileManager)
+      : mFileManager(std::move(aFileManager)) {
+    MOZ_ASSERT(mFileManager);
+  }
 
   nsresult Init();
 
@@ -9101,17 +9106,15 @@ class MOZ_STACK_CLASS FileHelper final {
 
   MOZ_MUST_USE nsCOMPtr<nsIFile> GetJournalFile(const FileInfo& aFileInfo);
 
-  nsresult CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
-                                nsIInputStream* aInputStream, bool aCompress);
-
-  nsresult RemoveFile(nsIFile* aFile, nsIFile* aJournalFile);
+  nsresult CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
+                                nsIInputStream& aInputStream, bool aCompress);
 
  private:
-  nsresult SyncCopy(nsIInputStream* aInputStream,
-                    nsIOutputStream* aOutputStream, char* aBuffer,
+  nsresult SyncCopy(nsIInputStream& aInputStream,
+                    nsIOutputStream& aOutputStream, char* aBuffer,
                     uint32_t aBufferSize);
 
-  nsresult SyncRead(nsIInputStream* aInputStream, char* aBuffer,
+  nsresult SyncRead(nsIInputStream& aInputStream, char* aBuffer,
                     uint32_t aBufferSize, uint32_t* aRead);
 };
 
@@ -9121,37 +9124,37 @@ class MOZ_STACK_CLASS FileHelper final {
 
 bool TokenizerIgnoreNothing(char16_t /* aChar */) { return false; }
 
-Result<StructuredCloneFile, nsresult> DeserializeStructuredCloneFile(
+Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
     const FileManager& aFileManager, const nsDependentSubstring& aText) {
   MOZ_ASSERT(!aText.IsEmpty());
 
-  StructuredCloneFile::FileType type;
+  StructuredCloneFileBase::FileType type;
 
   switch (aText.First()) {
     case char16_t('-'):
-      type = StructuredCloneFile::eMutableFile;
+      type = StructuredCloneFileBase::eMutableFile;
       break;
 
     case char16_t('.'):
-      type = StructuredCloneFile::eStructuredClone;
+      type = StructuredCloneFileBase::eStructuredClone;
       break;
 
     case char16_t('/'):
-      type = StructuredCloneFile::eWasmBytecode;
+      type = StructuredCloneFileBase::eWasmBytecode;
       break;
 
     case char16_t('\\'):
-      type = StructuredCloneFile::eWasmCompiled;
+      type = StructuredCloneFileBase::eWasmCompiled;
       break;
 
     default:
-      type = StructuredCloneFile::eBlob;
+      type = StructuredCloneFileBase::eBlob;
   }
 
   nsresult rv;
   int32_t id;
 
-  if (type == StructuredCloneFile::eBlob) {
+  if (type == StructuredCloneFileBase::eBlob) {
     id = aText.ToInteger(&rv);
   } else {
     nsString text(Substring(aText, 1));
@@ -9176,17 +9179,18 @@ Result<StructuredCloneFile, nsresult> DeserializeStructuredCloneFile(
     return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
-  return StructuredCloneFile{type, std::move(fileInfo)};
+  return StructuredCloneFileParent{type, std::move(fileInfo)};
 }
 
-Result<nsTArray<StructuredCloneFile>, nsresult> DeserializeStructuredCloneFiles(
-    const FileManager& aFileManager, const nsAString& aText) {
+Result<nsTArray<StructuredCloneFileParent>, nsresult>
+DeserializeStructuredCloneFiles(const FileManager& aFileManager,
+                                const nsAString& aText) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing> tokenizer(aText,
                                                                      ' ');
 
-  nsTArray<StructuredCloneFile> result;
+  nsTArray<StructuredCloneFileParent> result;
   while (tokenizer.hasMoreTokens()) {
     const auto& token = tokenizer.nextToken();
     MOZ_ASSERT(!token.IsEmpty());
@@ -9223,7 +9227,7 @@ bool GetBaseFilename(const nsAString& aFilename, const nsAString& aSuffix,
 mozilla::Result<nsTArray<SerializedStructuredCloneFile>, nsresult>
 SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
                               Database* aDatabase,
-                              const nsTArray<StructuredCloneFile>& aFiles,
+                              const nsTArray<StructuredCloneFileParent>& aFiles,
                               bool aForPreprocess) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
@@ -9249,9 +9253,9 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
-  for (const StructuredCloneFile& file : aFiles) {
+  for (const StructuredCloneFileParent& file : aFiles) {
     if (aForPreprocess &&
-        file.Type() != StructuredCloneFile::eStructuredClone) {
+        file.Type() != StructuredCloneFileBase::eStructuredClone) {
       continue;
     }
 
@@ -9267,7 +9271,7 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
     }
 
     switch (file.Type()) {
-      case StructuredCloneFile::eBlob: {
+      case StructuredCloneFileBase::eBlob: {
         RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
         impl->SetFileId(file.FileInfo().Id());
 
@@ -9279,15 +9283,15 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
           return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
         }
 
-        result.EmplaceBack(ipcBlob, StructuredCloneFile::eBlob);
+        result.EmplaceBack(ipcBlob, StructuredCloneFileBase::eBlob);
 
         aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
         break;
       }
 
-      case StructuredCloneFile::eMutableFile: {
+      case StructuredCloneFileBase::eMutableFile: {
         if (aDatabase->IsFileHandleDisabled()) {
-          result.EmplaceBack(null_t(), StructuredCloneFile::eMutableFile);
+          result.EmplaceBack(null_t(), StructuredCloneFileBase::eMutableFile);
         } else {
           RefPtr<MutableFile> actor =
               MutableFile::Create(nativeFile, aDatabase, file.FileInfoPtr());
@@ -9306,15 +9310,17 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
-          result.EmplaceBack(actor.get(), StructuredCloneFile::eMutableFile);
+          result.EmplaceBack(actor.get(),
+                             StructuredCloneFileBase::eMutableFile);
         }
 
         break;
       }
 
-      case StructuredCloneFile::eStructuredClone: {
+      case StructuredCloneFileBase::eStructuredClone: {
         if (!aForPreprocess) {
-          result.EmplaceBack(null_t(), StructuredCloneFile::eStructuredClone);
+          result.EmplaceBack(null_t(),
+                             StructuredCloneFileBase::eStructuredClone);
         } else {
           RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
           impl->SetFileId(file.FileInfo().Id());
@@ -9328,7 +9334,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
             return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
           }
 
-          result.EmplaceBack(ipcBlob, StructuredCloneFile::eStructuredClone);
+          result.EmplaceBack(ipcBlob,
+                             StructuredCloneFileBase::eStructuredClone);
 
           aDatabase->MapBlob(ipcBlob, file.FileInfoPtr());
         }
@@ -9336,8 +9343,8 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
         break;
       }
 
-      case StructuredCloneFile::eWasmBytecode:
-      case StructuredCloneFile::eWasmCompiled: {
+      case StructuredCloneFileBase::eWasmBytecode:
+      case StructuredCloneFileBase::eWasmCompiled: {
         // Set file() to null, support for storing WebAssembly.Modules has been
         // removed in bug 1469395. Support for de-serialization of
         // WebAssembly.Modules modules has been removed in bug 1561876. Full
@@ -9356,36 +9363,28 @@ SerializeStructuredCloneFiles(PBackgroundParent* aBackgroundActor,
   return std::move(result);
 }
 
-// Idempotently delete a file, decreasing the quota usage as appropriate. If the
-// file no longer exists, success is returned, although quota usage can't be
-// decreased. (With the assumption being that the file was already deleted prior
-// to this logic running, and the non-existent file was no longer tracked by
-// quota because it didn't exist at initialization time or a previous deletion
-// call updated the usage.)
-nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
-                    QuotaManager* aQuotaManager,
+enum struct Idempotency { Yes, No };
+
+// Delete a file, decreasing the quota usage as appropriate. If the file no
+// longer exists but aIdempotent is true, success is returned, although quota
+// usage can't be decreased. (With the assumption being that the file was
+// already deleted prior to this logic running, and the non-existent file was no
+// longer tracked by quota because it didn't exist at initialization time or a
+// previous deletion call updated the usage.)
+nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
                     const PersistenceType aPersistenceType,
-                    const nsACString& aGroup, const nsACString& aOrigin) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(!aFilename.IsEmpty());
+                    const nsACString& aGroup, const nsACString& aOrigin,
+                    const Idempotency aIdempotent) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = file->Append(aFilename);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  nsresult rv;
   int64_t fileSize;
   if (aQuotaManager) {
-    rv = file->GetFileSize(&fileSize);
-    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    rv = aFile.GetFileSize(&fileSize);
+    if (aIdempotent == Idempotency::Yes &&
+        (rv == NS_ERROR_FILE_NOT_FOUND ||
+         rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
       return NS_OK;
     }
 
@@ -9396,9 +9395,10 @@ nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
     MOZ_ASSERT(fileSize >= 0);
   }
 
-  rv = file->Remove(false);
-  if (rv == NS_ERROR_FILE_NOT_FOUND ||
-      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+  rv = aFile.Remove(false);
+  if (aIdempotent == Idempotency::Yes &&
+      (rv == NS_ERROR_FILE_NOT_FOUND ||
+       rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
     return NS_OK;
   }
 
@@ -9414,12 +9414,35 @@ nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
   return NS_OK;
 }
 
+nsresult DeleteFile(nsIFile& aDirectory, const nsAString& aFilename,
+                    QuotaManager* const aQuotaManager,
+                    const PersistenceType aPersistenceType,
+                    const nsACString& aGroup, const nsACString& aOrigin,
+                    const Idempotency aIdempotent) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!aFilename.IsEmpty());
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDirectory.Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->Append(aFilename);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return DeleteFile(*file, aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                    aIdempotent);
+}
+
 nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(!aFilename.IsEmpty());
 
-  // The current using function hasn't initialzed the origin, so in here we
+  // The current using function hasn't initialized the origin, so in here we
   // don't update the size of origin. Adding this assertion for preventing from
   // misusing.
   DebugOnly<QuotaManager*> quotaManager = QuotaManager::Get();
@@ -9452,15 +9475,14 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 // CreateMarkerFile and RemoveMarkerFile are a pair of functions to indicate
 // whether having removed all the files successfully. The marker file should
 // be checked before executing the next operation or initialization.
-nsresult CreateMarkerFile(nsIFile* aBaseDirectory,
+nsresult CreateMarkerFile(nsIFile& aBaseDirectory,
                           const nsAString& aDatabaseNameBase,
                           nsCOMPtr<nsIFile>* aMarkerFileOut) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aBaseDirectory);
   MOZ_ASSERT(!aDatabaseNameBase.IsEmpty());
 
   nsCOMPtr<nsIFile> markerFile;
-  nsresult rv = aBaseDirectory->Clone(getter_AddRefs(markerFile));
+  nsresult rv = aBaseDirectory.Clone(getter_AddRefs(markerFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9504,7 +9526,7 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
 // called on a partially deleted database, this method uses DeleteFile which
 // succeeds when the file we ask it to delete does not actually exist. The
 // marker file is removed once deletion has successfully completed.
-nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
+nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
                                          const nsAString& aFilenameBase,
                                          QuotaManager* aQuotaManager,
                                          const PersistenceType aPersistenceType,
@@ -9512,7 +9534,6 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
                                          const nsACString& aOrigin,
                                          const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aBaseDirectory);
   MOZ_ASSERT(!aFilenameBase.IsEmpty());
 
   AUTO_PROFILER_LABEL("RemoveDatabaseFilesAndDirectory", DOM);
@@ -9525,7 +9546,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
 
   // The database file counts towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSuffix, aQuotaManager,
-                  aPersistenceType, aGroup, aOrigin);
+                  aPersistenceType, aGroup, aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9533,7 +9554,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   // .sqlite-journal files don't count towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteJournalSuffix,
                   /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                  aOrigin);
+                  aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9541,20 +9562,21 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   // .sqlite-shm files don't count towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSHMSuffix,
                   /* doesn't count */ nullptr, aPersistenceType, aGroup,
-                  aOrigin);
+                  aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // .sqlite-wal files do count towards quota.
   rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteWALSuffix,
-                  aQuotaManager, aPersistenceType, aGroup, aOrigin);
+                  aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                  Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsCOMPtr<nsIFile> fmDirectory;
-  rv = aBaseDirectory->Clone(getter_AddRefs(fmDirectory));
+  rv = aBaseDirectory.Clone(getter_AddRefs(fmDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10131,7 +10153,7 @@ struct ValuePopulateResponseHelper {
     // so we construct a FallibleTArray and swap the elements...
 
     auto files = cloneInfo.ReleaseFiles();
-    FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFile> temp;
+    FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFileParent> temp;
     temp.SwapElements(files);
     aFiles->AppendElement(std::move(temp));
   }
@@ -10523,14 +10545,15 @@ class DeserializeUpgradeValueHelper final : public Runnable {
   void PopulateFileIds(nsAString& aFileIds) {
     for (uint32_t count = mCloneReadInfo.Files().Length(), index = 0;
          index < count; index++) {
-      const StructuredCloneFile& file = mCloneReadInfo.Files()[index];
+      const StructuredCloneFileParent& file = mCloneReadInfo.Files()[index];
 
       const int64_t id = file.FileInfo().Id();
 
       if (index) {
         aFileIds.Append(' ');
       }
-      aFileIds.AppendInt(file.Type() == StructuredCloneFile::eBlob ? id : -id);
+      aFileIds.AppendInt(file.Type() == StructuredCloneFileBase::eBlob ? id
+                                                                       : -id);
     }
   }
 
@@ -11684,7 +11707,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
   if (NS_WARN_IF(filesOrErr.isErr())) {
     return filesOrErr.unwrapErr();
   }
-  for (const StructuredCloneFile& file : filesOrErr.inspect()) {
+  for (const StructuredCloneFileParent& file : filesOrErr.inspect()) {
     const int64_t id = file.FileInfo().Id();
     MOZ_ASSERT(id > 0);
 
@@ -14096,9 +14119,6 @@ PBackgroundIDBDatabaseFileParent*
 Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
-  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aIPCBlob);
-  MOZ_ASSERT(blobImpl);
-
   RefPtr<FileInfo> fileInfo = GetBlob(aIPCBlob);
   RefPtr<DatabaseFile> actor;
 
@@ -14109,7 +14129,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) {
     fileInfo = mFileManager->CreateFileInfo();
     MOZ_ASSERT(fileInfo);
 
-    actor = new DatabaseFile(blobImpl, fileInfo);
+    actor = new DatabaseFile(IPCBlobUtils::Deserialize(aIPCBlob), fileInfo);
   }
 
   MOZ_ASSERT(actor);
@@ -14991,7 +15011,7 @@ bool TransactionBase::VerifyRequestParams(
     MOZ_ASSERT(file.type() != DatabaseOrMutableFile::T__None);
 
     switch (fileAddInfo.type()) {
-      case StructuredCloneFile::eBlob:
+      case StructuredCloneFileBase::eBlob:
         if (NS_WARN_IF(
                 file.type() !=
                 DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
@@ -15004,7 +15024,7 @@ bool TransactionBase::VerifyRequestParams(
         }
         break;
 
-      case StructuredCloneFile::eMutableFile: {
+      case StructuredCloneFileBase::eMutableFile: {
         if (NS_WARN_IF(file.type() !=
                        DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
           ASSERT_UNLESS_FUZZING();
@@ -15033,10 +15053,10 @@ bool TransactionBase::VerifyRequestParams(
         break;
       }
 
-      case StructuredCloneFile::eStructuredClone:
-      case StructuredCloneFile::eWasmBytecode:
-      case StructuredCloneFile::eWasmCompiled:
-      case StructuredCloneFile::eEndGuard:
+      case StructuredCloneFileBase::eStructuredClone:
+      case StructuredCloneFileBase::eWasmBytecode:
+      case StructuredCloneFileBase::eWasmCompiled:
+      case StructuredCloneFileBase::eEndGuard:
         ASSERT_UNLESS_FUZZING();
         return false;
 
@@ -16946,35 +16966,26 @@ nsresult FileManager::SyncDeleteFile(const int64_t aId) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-  int64_t fileSize;
-
-  if (EnforcingQuota()) {
-    rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  nsCOMPtr<nsIFile> journalFile = GetFileForId(journalDirectory, aId);
+  if (NS_WARN_IF(!journalFile)) {
+    return NS_ERROR_FAILURE;
   }
 
-  rv = file->Remove(false);
+  return SyncDeleteFile(*file, *journalFile);
+}
+
+nsresult FileManager::SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile) {
+  QuotaManager* const quotaManager =
+      EnforcingQuota() ? QuotaManager::Get() : nullptr;
+  MOZ_ASSERT_IF(EnforcingQuota(), quotaManager);
+
+  nsresult rv = DeleteFile(aFile, quotaManager, Type(), Group(), Origin(),
+                           Idempotency::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (EnforcingQuota()) {
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    quotaManager->DecreaseUsageForOrigin(Type(), Group(), Origin(), Client::IDB,
-                                         fileSize);
-  }
-
-  file = GetFileForId(journalDirectory, aId);
-  if (NS_WARN_IF(!file)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = file->Remove(false);
+  rv = aJournalFile.Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -17283,7 +17294,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     }
 
     if (obsoleteFilenames.Contains(subdirNameBase)) {
-      rv = RemoveDatabaseFilesAndDirectory(directory, subdirNameBase, nullptr,
+      rv = RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase, nullptr,
                                            aPersistenceType, aGroup, aOrigin,
                                            EmptyString());
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17925,59 +17936,13 @@ nsresult DeleteFilesRunnable::Open() {
   return NS_OK;
 }
 
-nsresult DeleteFilesRunnable::DeleteFile(int64_t aFileId) {
-  MOZ_ASSERT(mDirectory);
-  MOZ_ASSERT(mJournalDirectory);
-
-  nsCOMPtr<nsIFile> file = mFileManager->GetFileForId(mDirectory, aFileId);
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-  nsresult rv;
-  int64_t fileSize;
-
-  if (mFileManager->EnforcingQuota()) {
-    rv = file->GetFileSize(&fileSize);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  }
-
-  rv = file->Remove(false);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-  if (mFileManager->EnforcingQuota()) {
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    NS_ASSERTION(quotaManager, "Shouldn't be null!");
-
-    quotaManager->DecreaseUsageForOrigin(
-        mFileManager->Type(), mFileManager->Group(), mFileManager->Origin(),
-        Client::IDB, fileSize);
-  }
-
-  file = mFileManager->GetFileForId(mJournalDirectory, aFileId);
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-  rv = file->Remove(false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult DeleteFilesRunnable::DoDatabaseWork() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mState == State_DatabaseWorkOpen);
 
   if (!mFileManager->Invalidated()) {
-    mDirectory = mFileManager->GetDirectory();
-    if (NS_WARN_IF(!mDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mJournalDirectory = mFileManager->GetJournalDirectory();
-    if (NS_WARN_IF(!mJournalDirectory)) {
-      return NS_ERROR_FAILURE;
-    }
-
     for (int64_t fileId : mFileIds) {
-      if (NS_FAILED(DeleteFile(fileId))) {
+      if (NS_FAILED(mFileManager->SyncDeleteFile(fileId))) {
         NS_WARNING("Failed to delete file!");
       }
     }
@@ -19531,7 +19496,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
-  nsTArray<StructuredCloneFile> files;
+  nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
@@ -19557,7 +19522,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
 
   nsresult rv;
 
-  nsTArray<StructuredCloneFile> files;
+  nsTArray<StructuredCloneFileParent> files;
   if (!aFileIds.IsVoid()) {
     auto filesOrErr = DeserializeStructuredCloneFiles(aFileManager, aFileIds);
     if (NS_WARN_IF(filesOrErr.isErr())) {
@@ -19583,8 +19548,8 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   }
 
   // XXX Why can there be multiple files, but we use only a single one here?
-  const StructuredCloneFile& file = files[index];
-  MOZ_ASSERT(file.Type() == StructuredCloneFile::eStructuredClone);
+  const StructuredCloneFileParent& file = files[index];
+  MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eStructuredClone);
 
   const nsCOMPtr<nsIFile> nativeFile = file.FileInfo().GetFileForFileInfo();
   if (NS_WARN_IF(!nativeFile)) {
@@ -21371,7 +21336,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     // previous operation.
     // Note: only update usage to the QuotaManager when mEnforcingQuota == true
     rv = RemoveDatabaseFilesAndDirectory(
-        dbDirectory, filename, mEnforcingQuota ? quotaManager : nullptr,
+        *dbDirectory, filename, mEnforcingQuota ? quotaManager : nullptr,
         persistenceType, mGroup, mOrigin, databaseName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -22886,7 +22851,7 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
   }
 
   nsresult rv = RemoveDatabaseFilesAndDirectory(
-      directory, mDeleteDatabaseOp->mDatabaseFilenameBase, quotaManager,
+      *directory, mDeleteDatabaseOp->mDatabaseFilenameBase, quotaManager,
       persistenceType, mDeleteDatabaseOp->mGroup, mDeleteDatabaseOp->mOrigin,
       mDeleteDatabaseOp->mCommonParams.metadata().name());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -25322,13 +25287,13 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
     }
 
     for (const auto& fileAddInfo : fileAddInfos) {
-      MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFile::eBlob ||
-                 fileAddInfo.type() == StructuredCloneFile::eMutableFile);
+      MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFileBase::eBlob ||
+                 fileAddInfo.type() == StructuredCloneFileBase::eMutableFile);
 
       const DatabaseOrMutableFile& file = fileAddInfo.file();
 
       switch (fileAddInfo.type()) {
-        case StructuredCloneFile::eBlob: {
+        case StructuredCloneFileBase::eBlob: {
           MOZ_ASSERT(file.type() ==
                      DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
 
@@ -25341,7 +25306,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
           break;
         }
 
-        case StructuredCloneFile::eMutableFile: {
+        case StructuredCloneFileBase::eMutableFile: {
           MOZ_ASSERT(file.type() ==
                      DatabaseOrMutableFile::TPBackgroundMutableFileParent);
 
@@ -25562,13 +25527,12 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
       const auto inputStream = inputStreamOrErr.unwrap();
 
+      auto* const fileManager = Transaction().GetDatabase()->GetFileManager();
+      MOZ_ASSERT(fileManager);
+
       if (inputStream) {
         if (fileHelper.isNothing()) {
-          RefPtr<FileManager> fileManager =
-              Transaction().GetDatabase()->GetFileManager();
-          MOZ_ASSERT(fileManager);
-
-          fileHelper.emplace(fileManager);
+          fileHelper.emplace(RefPtr{fileManager});
           rv = fileHelper->Init();
           if (NS_WARN_IF(NS_FAILED(rv))) {
             IDB_REPORT_INTERNAL_ERR();
@@ -25592,7 +25556,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
         const bool compress = storedFileInfo.ShouldCompress();
 
-        rv = fileHelper->CreateFileFromStream(file, journalFile, inputStream,
+        rv = fileHelper->CreateFileFromStream(*file, *journalFile, *inputStream,
                                               compress);
         if (NS_FAILED(rv) &&
             NS_ERROR_GET_MODULE(rv) != NS_ERROR_MODULE_DOM_INDEXEDDB) {
@@ -25601,7 +25565,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           // Try to remove the file if the copy failed.
-          nsresult rv2 = fileHelper->RemoveFile(file, journalFile);
+          nsresult rv2 = fileManager->SyncDeleteFile(*file, *journalFile);
           if (NS_WARN_IF(NS_FAILED(rv2))) {
             return rv;
           }
@@ -26482,7 +26446,7 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
 
       for (uint32_t count = mResponse.Length(), index = 0; index < count;
            index++) {
-        StructuredCloneReadInfo& info = mResponse[index];
+        StructuredCloneReadInfoParent& info = mResponse[index];
         *aResponseSize += info.Size();
 
         SerializedStructuredCloneReadInfo& serializedInfo =
@@ -26516,7 +26480,7 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
   *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
-    StructuredCloneReadInfo& info = mResponse[0];
+    StructuredCloneReadInfoParent& info = mResponse[0];
     *aResponseSize += info.Size();
 
     SerializedStructuredCloneReadInfo& serializedInfo =
@@ -27734,7 +27698,6 @@ DEBUGThreadSlower::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
 
 nsresult FileHelper::Init() {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mFileManager);
 
   auto fileDirectory = mFileManager->GetCheckedDirectory();
   if (NS_WARN_IF(!fileDirectory)) {
@@ -27754,47 +27717,31 @@ nsresult FileHelper::Init() {
   MOZ_ASSERT(NS_SUCCEEDED(journalDirectory->IsDirectory(&isDirectory)));
   MOZ_ASSERT(isDirectory);
 
-  mFileDirectory = std::move(fileDirectory);
-  mJournalDirectory = std::move(journalDirectory);
+  mFileDirectory.init(std::move(fileDirectory));
+  mJournalDirectory.init(std::move(journalDirectory));
 
   return NS_OK;
 }
 
 nsCOMPtr<nsIFile> FileHelper::GetFile(const FileInfo& aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mFileDirectory);
 
-  const int64_t fileId = aFileInfo.Id();
-  MOZ_ASSERT(fileId > 0);
-
-  return mFileManager->GetFileForId(mFileDirectory, fileId);
+  return mFileManager->GetFileForId(*mFileDirectory, aFileInfo.Id());
 }
 
 nsCOMPtr<nsIFile> FileHelper::GetJournalFile(const FileInfo& aFileInfo) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mJournalDirectory);
 
-  const int64_t fileId = aFileInfo.Id();
-  MOZ_ASSERT(fileId > 0);
-
-  return mFileManager->GetFileForId(mJournalDirectory, fileId);
+  return mFileManager->GetFileForId(*mJournalDirectory, aFileInfo.Id());
 }
 
-nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
-                                          nsIInputStream* aInputStream,
+nsresult FileHelper::CreateFileFromStream(nsIFile& aFile, nsIFile& aJournalFile,
+                                          nsIInputStream& aInputStream,
                                           bool aCompress) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aFile);
-  MOZ_ASSERT(aJournalFile);
-  MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mFileDirectory);
-  MOZ_ASSERT(mJournalDirectory);
 
   bool exists;
-  nsresult rv = aFile->Exists(&exists);
+  nsresult rv = aFile.Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27813,7 +27760,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   // This corner case is partially simulated in test_file_copy_failure.js
   if (exists) {
     bool isFile;
-    rv = aFile->IsFile(&isFile);
+    rv = aFile.IsFile(&isFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27822,7 +27769,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
       return NS_ERROR_FAILURE;
     }
 
-    rv = aJournalFile->Exists(&exists);
+    rv = aJournalFile.Exists(&exists);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27831,7 +27778,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
       return NS_ERROR_FAILURE;
     }
 
-    rv = aJournalFile->IsFile(&isFile);
+    rv = aJournalFile.IsFile(&isFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -27842,14 +27789,14 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
 
     IDB_WARNING("Deleting orphaned file!");
 
-    rv = RemoveFile(aFile, aJournalFile);
+    rv = mFileManager->SyncDeleteFile(aFile, aJournalFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
   // Create a journal file first.
-  rv = aJournalFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  rv = aJournalFile.Create(nsIFile::NORMAL_FILE_TYPE, 0644);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27857,58 +27804,29 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   // Now try to copy the stream.
   RefPtr<FileOutputStream> fileOutputStream =
       CreateFileOutputStream(mFileManager->Type(), mFileManager->Group(),
-                             mFileManager->Origin(), Client::IDB, aFile);
+                             mFileManager->Origin(), Client::IDB, &aFile);
   if (NS_WARN_IF(!fileOutputStream)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aCompress) {
-    RefPtr<SnappyCompressOutputStream> snappyOutputStream =
-        new SnappyCompressOutputStream(fileOutputStream);
+  AutoTArray<char, kFileCopyBufferSize> buffer;
+  const auto actualOutputStream =
+      [aCompress, &buffer, &fileOutputStream]() -> nsCOMPtr<nsIOutputStream> {
+    if (aCompress) {
+      auto snappyOutputStream =
+          MakeRefPtr<SnappyCompressOutputStream>(fileOutputStream);
 
-    UniquePtr<char[]> buffer(new char[snappyOutputStream->BlockSize()]);
+      buffer.SetLength(snappyOutputStream->BlockSize());
 
-    rv = SyncCopy(aInputStream, snappyOutputStream, buffer.get(),
-                  snappyOutputStream->BlockSize());
-  } else {
-    char buffer[kFileCopyBufferSize];
-
-    rv = SyncCopy(aInputStream, fileOutputStream, buffer, kFileCopyBufferSize);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult FileHelper::RemoveFile(nsIFile* aFile, nsIFile* aJournalFile) {
-  nsresult rv;
-
-  int64_t fileSize;
-
-  if (mFileManager->EnforcingQuota()) {
-    rv = aFile->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return snappyOutputStream;
     }
-  }
 
-  rv = aFile->Remove(false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+    buffer.SetLength(kFileCopyBufferSize);
+    return std::move(fileOutputStream);
+  }();
 
-  if (mFileManager->EnforcingQuota()) {
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    quotaManager->DecreaseUsageForOrigin(
-        mFileManager->Type(), mFileManager->Group(), mFileManager->Origin(),
-        Client::IDB, fileSize);
-  }
-
-  rv = aJournalFile->Remove(false);
+  rv = SyncCopy(aInputStream, *actualOutputStream, buffer.Elements(),
+                buffer.Length());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -27969,25 +27887,25 @@ NS_INTERFACE_MAP_BEGIN(FileHelper::ReadCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStreamCallback)
 NS_INTERFACE_MAP_END
 
-nsresult FileHelper::SyncRead(nsIInputStream* aInputStream, char* aBuffer,
-                              uint32_t aBufferSize, uint32_t* aRead) {
+nsresult FileHelper::SyncRead(nsIInputStream& aInputStream, char* const aBuffer,
+                              const uint32_t aBufferSize,
+                              uint32_t* const aRead) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aInputStream);
 
   // Let's try to read, directly.
-  nsresult rv = aInputStream->Read(aBuffer, aBufferSize, aRead);
+  nsresult rv = aInputStream.Read(aBuffer, aBufferSize, aRead);
   if (NS_SUCCEEDED(rv) || rv != NS_BASE_STREAM_WOULD_BLOCK) {
     return rv;
   }
 
   // We need to proceed async.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInputStream);
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(&aInputStream);
   if (!asyncStream) {
     return rv;
   }
 
   if (!mReadCallback) {
-    mReadCallback = new ReadCallback();
+    mReadCallback.init(new ReadCallback());
   }
 
   // We just need any thread with an event loop for receiving the
@@ -27996,7 +27914,7 @@ nsresult FileHelper::SyncRead(nsIInputStream* aInputStream, char* aBuffer,
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target);
 
-  rv = mReadCallback->AsyncWait(asyncStream, aBufferSize, target);
+  rv = (*mReadCallback)->AsyncWait(asyncStream, aBufferSize, target);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -28004,12 +27922,10 @@ nsresult FileHelper::SyncRead(nsIInputStream* aInputStream, char* aBuffer,
   return SyncRead(aInputStream, aBuffer, aBufferSize, aRead);
 }
 
-nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
-                              nsIOutputStream* aOutputStream, char* aBuffer,
-                              uint32_t aBufferSize) {
+nsresult FileHelper::SyncCopy(nsIInputStream& aInputStream,
+                              nsIOutputStream& aOutputStream,
+                              char* const aBuffer, const uint32_t aBufferSize) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(aOutputStream);
 
   AUTO_PROFILER_LABEL("FileHelper::SyncCopy", DOM);
 
@@ -28027,7 +27943,7 @@ nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
     }
 
     uint32_t numWrite;
-    rv = aOutputStream->Write(aBuffer, numRead, &numWrite);
+    rv = aOutputStream.Write(aBuffer, numRead, &numWrite);
     if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
       rv = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
     }
@@ -28042,13 +27958,13 @@ nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
   } while (true);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = aOutputStream->Flush();
+    rv = aOutputStream.Flush();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  nsresult rv2 = aOutputStream->Close();
+  nsresult rv2 = aOutputStream.Close();
   if (NS_WARN_IF(NS_FAILED(rv2))) {
     return NS_SUCCEEDED(rv) ? rv2 : rv;
   }

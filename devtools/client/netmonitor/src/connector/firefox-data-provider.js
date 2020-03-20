@@ -180,7 +180,7 @@ class FirefoxDataProvider {
 
   async fetchResponseContent(responseContent) {
     const payload = {};
-    if (responseContent && responseContent.content) {
+    if (responseContent?.content) {
       const { text } = responseContent.content;
       const response = await this.getLongString(text);
       responseContent.content.text = response;
@@ -191,11 +191,7 @@ class FirefoxDataProvider {
 
   async fetchRequestHeaders(requestHeaders) {
     const payload = {};
-    if (
-      requestHeaders &&
-      requestHeaders.headers &&
-      requestHeaders.headers.length
-    ) {
+    if (requestHeaders?.headers?.length) {
       const headers = await fetchHeaders(requestHeaders, this.getLongString);
       if (headers) {
         payload.requestHeaders = headers;
@@ -206,11 +202,7 @@ class FirefoxDataProvider {
 
   async fetchResponseHeaders(responseHeaders) {
     const payload = {};
-    if (
-      responseHeaders &&
-      responseHeaders.headers &&
-      responseHeaders.headers.length
-    ) {
+    if (responseHeaders?.headers?.length) {
       const headers = await fetchHeaders(responseHeaders, this.getLongString);
       if (headers) {
         payload.responseHeaders = headers;
@@ -221,7 +213,7 @@ class FirefoxDataProvider {
 
   async fetchPostData(requestPostData) {
     const payload = {};
-    if (requestPostData && requestPostData.postData) {
+    if (requestPostData?.postData) {
       const { text } = requestPostData.postData;
       const postData = await this.getLongString(text);
       const headers = CurlUtils.getHeadersFromMultipartText(postData);

@@ -36,6 +36,7 @@
 #include <unistd.h>
 
 #include <list>
+#include <type_traits>
 #include <utility>
 
 #include "linux/minidump_writer/linux_dumper.h"
@@ -48,7 +49,7 @@ class ExceptionHandler;
 #if defined(__aarch64__)
 typedef struct fpsimd_context fpstate_t;
 #elif !defined(__ARM_EABI__) && !defined(__mips__)
-typedef struct _libc_fpstate fpstate_t;
+typedef std::remove_pointer<fpregset_t>::type fpstate_t;
 #endif
 
 // These entries store a list of memory regions that the client wants included

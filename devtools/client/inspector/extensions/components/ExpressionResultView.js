@@ -68,16 +68,14 @@ class ObjectValueGripView extends PureComponent {
       disabledFocus: true,
       roots: [
         {
-          path:
-            (expressionResult && expressionResult.actorID) ||
-            JSON.stringify(expressionResult),
+          path: expressionResult?.actorID || JSON.stringify(expressionResult),
           contents: { value: grip, front: isFront ? expressionResult : null },
         },
       ],
       // TODO: evaluate if there should also be a serviceContainer.openLink.
     };
 
-    if (expressionResult && expressionResult.actorID) {
+    if (expressionResult?.actorID) {
       Object.assign(objectInspectorProps, {
         onDOMNodeMouseOver: serviceContainer.highlightDomElement,
         onDOMNodeMouseOut: serviceContainer.unHighlightDomElement,

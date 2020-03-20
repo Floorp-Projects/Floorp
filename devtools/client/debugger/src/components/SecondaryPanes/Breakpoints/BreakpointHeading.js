@@ -65,7 +65,9 @@ class BreakpointHeading extends PureComponent<Props> {
       >
         <SourceIcon
           source={source}
-          shouldHide={icon => ["file", "javascript"].includes(icon)}
+          modifier={icon =>
+            ["file", "javascript"].includes(icon) ? null : icon
+          }
         />
         <div className="filename">
           {getTruncatedFileName(source, query)}

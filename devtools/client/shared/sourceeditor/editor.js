@@ -212,7 +212,7 @@ function Editor(config) {
   // indenting with tabs, insert one tab. Otherwise insert N
   // whitespaces where N == indentUnit option.
   this.config.extraKeys.Tab = cm => {
-    if (config.extraKeys && config.extraKeys.Tab) {
+    if (config.extraKeys?.Tab) {
       // If a consumer registers its own extraKeys.Tab, we execute it before doing
       // anything else. If it returns false, that mean that all the key handling work is
       // done, so we can do an early return.
@@ -259,7 +259,7 @@ Editor.prototype = {
    */
   get CodeMirror() {
     const codeMirror = editors.get(this);
-    return codeMirror && codeMirror.constructor;
+    return codeMirror?.constructor;
   },
 
   /**
@@ -1436,7 +1436,7 @@ Editor.prototype = {
 
     // Remove the link between the document and code-mirror.
     const cm = editors.get(this);
-    if (cm && cm.doc) {
+    if (cm?.doc) {
       cm.doc.cm = null;
     }
 

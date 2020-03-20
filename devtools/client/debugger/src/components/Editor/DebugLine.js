@@ -137,7 +137,7 @@ export class DebugLine extends PureComponent<Props> {
 const mapStateToProps = state => {
   const frame = getVisibleSelectedFrame(state);
   const previewLocation = getPausePreviewLocation(state);
-  const location = previewLocation || (frame && frame.location);
+  const location = previewLocation || frame?.location;
   return {
     frame,
     location,

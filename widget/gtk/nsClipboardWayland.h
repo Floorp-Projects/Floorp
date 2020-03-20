@@ -12,6 +12,7 @@
 #include <gdk/gdkwayland.h>
 #include <nsTArray.h>
 
+#include "mozilla/UniquePtr.h"
 #include "nsClipboard.h"
 #include "nsWaylandDisplay.h"
 #include "mozwayland/mozwayland.h"
@@ -100,7 +101,7 @@ class nsWaylandDragContext : public nsISupports {
  private:
   virtual ~nsWaylandDragContext() = default;
 
-  nsAutoPtr<WaylandDataOffer> mDataOffer;
+  mozilla::UniquePtr<WaylandDataOffer> mDataOffer;
   wl_display* mDisplay;
   uint32_t mTime;
   GtkWidget* mGtkWidget;
@@ -142,8 +143,8 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
 
   // Data offers provided by Wayland data device
   GHashTable* mActiveOffers;
-  nsAutoPtr<DataOffer> mClipboardOffer;
-  nsAutoPtr<DataOffer> mPrimaryOffer;
+  mozilla::UniquePtr<DataOffer> mClipboardOffer;
+  mozilla::UniquePtr<DataOffer> mPrimaryOffer;
   RefPtr<nsWaylandDragContext> mDragContext;
 
   int mClipboardRequestNumber;

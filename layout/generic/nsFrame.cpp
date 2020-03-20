@@ -9240,7 +9240,7 @@ nsresult nsIFrame::GetFrameFromDirection(
       bool canSkipBr = false;
       for (nsIFrame* current = traversedFrame->GetPrevSibling(); current;
            current = current->GetPrevSibling()) {
-        if (IsSelectable(current)) {
+        if (!current->IsBlockOutside() && IsSelectable(current)) {
           canSkipBr = true;
           break;
         }

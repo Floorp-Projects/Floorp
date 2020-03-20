@@ -20,8 +20,8 @@
 // Although most of this code can deal with arbitrary ELF files of
 // either word size, the public ElfReader interface only examines
 // files loaded into the current address space, which must all match
-// __WORDSIZE. This code cannot handle ELF files with a non-native
-// byte ordering.
+// the machine's native word size. This code cannot handle ELF files
+// with a non-native byte ordering.
 //
 // TODO(chatham): It would be nice if we could accomplish this task
 // without using malloc(), so we could use it as the process is dying.
@@ -30,12 +30,13 @@
 #define _GNU_SOURCE  // needed for pread()
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <map>
@@ -1053,9 +1054,9 @@ ElfReader::~ElfReader() {
 
 
 // The only word-size specific part of this file is IsNativeElfFile().
-#if __WORDSIZE == 32
+#if ULONG_MAX == 0xffffffff
 #define NATIVE_ELF_ARCH Elf32
-#elif __WORDSIZE == 64
+#elif ULONG_MAX == 0xffffffffffffffff
 #define NATIVE_ELF_ARCH Elf64
 #else
 #error "Invalid word size"

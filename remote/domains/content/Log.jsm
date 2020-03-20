@@ -69,14 +69,15 @@ class Log extends ContentProcessDomain {
   }
 }
 
+const MESSAGE_LEVELS = {
+  [Ci.nsIConsoleMessage.debug]: "verbose",
+  [Ci.nsIConsoleMessage.info]: "info",
+  [Ci.nsIConsoleMessage.warn]: "warning",
+  [Ci.nsIConsoleMessage.error]: "error",
+};
+
 function fromConsoleMessage(message) {
-  const levels = {
-    [Ci.nsIConsoleMessage.debug]: "verbose",
-    [Ci.nsIConsoleMessage.info]: "info",
-    [Ci.nsIConsoleMessage.warn]: "warning",
-    [Ci.nsIConsoleMessage.error]: "error",
-  };
-  const level = levels[message.logLevel];
+  const level = MESSAGE_LEVELS[message.logLevel];
 
   return {
     source: "javascript",
@@ -113,20 +114,8 @@ function fromConsoleAPI(message) {
 }
 
 function fromScriptError(error) {
-  const { flags, errorMessage, sourceName, lineNumber, stack } = error;
-
-  // lossy reduction from bitmask to CDP string level
-  let level = "verbose";
-  if (
-    flags & Ci.nsIScriptError.exceptionFlag ||
-    flags & Ci.nsIScriptError.errorFlag
-  ) {
-    level = "error";
-  } else if (flags & Ci.nsIScriptError.warningFlag) {
-    level = "warning";
-  } else if (flags & Ci.nsIScriptError.infoFlag) {
-    level = "info";
-  }
+  const { logLevel, errorMessage, sourceName, lineNumber, stack } = error;
+  const level = MESSAGE_LEVELS[logLevel];
 
   return {
     source: "javascript",

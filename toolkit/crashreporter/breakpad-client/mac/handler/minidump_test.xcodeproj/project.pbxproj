@@ -21,13 +21,13 @@
 		8BFC81AE11FF9C8C002CB4DC /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */; };
 		8BFC81AF11FF9C8C002CB4DC /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */; };
 		8BFC81B011FF9C8D002CB4DC /* breakpad_nlist_64.cc in Sources */ = {isa = PBXBuildFile; fileRef = F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */; };
-		9B35FF5A0B267D5F008DE8C7 /* convert_UTF.c in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.c */; };
+		9B35FF5A0B267D5F008DE8C7 /* convert_UTF.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.cc */; };
 		9B35FF5B0B267D5F008DE8C7 /* string_conversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF580B267D5F008DE8C7 /* string_conversion.cc */; };
 		9B37CEEC0AF98ECD00FA4BD4 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B37CEEB0AF98ECD00FA4BD4 /* CoreFoundation.framework */; };
 		9B7CA7700B12873A00CD3A1D /* minidump_file_writer-inl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE3C01E0B0CE329009892DF /* minidump_file_writer-inl.h */; };
 		9B7CA8540B12989000CD3A1D /* minidump_file_writer_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B7CA8530B12989000CD3A1D /* minidump_file_writer_unittest.cc */; };
 		9B7CA8550B1298A100CD3A1D /* minidump_file_writer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BD82C230B01344C0055103E /* minidump_file_writer.cc */; };
-		9BC1D2940B336F2300F2A2B4 /* convert_UTF.c in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.c */; };
+		9BC1D2940B336F2300F2A2B4 /* convert_UTF.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.cc */; };
 		9BC1D2950B336F2500F2A2B4 /* string_conversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF580B267D5F008DE8C7 /* string_conversion.cc */; };
 		9BD82AC10B0029DF0055103E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B37CEEB0AF98ECD00FA4BD4 /* CoreFoundation.framework */; };
 		9BD82BFF0B01333D0055103E /* exception_handler_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BD82BFD0B01333D0055103E /* exception_handler_test.cc */; };
@@ -56,7 +56,7 @@
 		D2F6510F0BEF94EB00920385 /* macho_walker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2F6510D0BEF94EB00920385 /* macho_walker.h */; };
 		D2F651110BEF951700920385 /* string_conversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF580B267D5F008DE8C7 /* string_conversion.cc */; };
 		D2F651130BEF951C00920385 /* string_conversion.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B35FF590B267D5F008DE8C7 /* string_conversion.h */; };
-		D2F651150BEF953000920385 /* convert_UTF.c in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.c */; };
+		D2F651150BEF953000920385 /* convert_UTF.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.cc */; };
 		D2F651160BEF953100920385 /* convert_UTF.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B35FF570B267D5F008DE8C7 /* convert_UTF.h */; };
 		D2F6511B0BEF970E00920385 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F651070BEF949A00920385 /* dynamic_images.cc */; };
 		D2F6511D0BEF973500920385 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FA0BEF947200920385 /* file_id.cc */; };
@@ -115,7 +115,7 @@
 		8BFC815411FF9B7F002CB4DC /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		8BFC819211FF9C23002CB4DC /* CPlusTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CPlusTest.framework; path = Library/Frameworks/CPlusTest.framework; sourceTree = DEVELOPER_DIR; };
 		8DD76F6C0486A84900D96B5E /* generator_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = generator_test; sourceTree = BUILT_PRODUCTS_DIR; };
-		9B35FF560B267D5F008DE8C7 /* convert_UTF.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = convert_UTF.c; path = ../../../common/convert_UTF.c; sourceTree = SOURCE_ROOT; };
+		9B35FF560B267D5F008DE8C7 /* convert_UTF.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = convert_UTF.cc; path = ../../../common/convert_UTF.cc; sourceTree = SOURCE_ROOT; };
 		9B35FF570B267D5F008DE8C7 /* convert_UTF.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = convert_UTF.h; path = ../../../common/convert_UTF.h; sourceTree = SOURCE_ROOT; };
 		9B35FF580B267D5F008DE8C7 /* string_conversion.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = string_conversion.cc; path = ../../../common/string_conversion.cc; sourceTree = SOURCE_ROOT; };
 		9B35FF590B267D5F008DE8C7 /* string_conversion.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = string_conversion.h; path = ../../../common/string_conversion.h; sourceTree = SOURCE_ROOT; };
@@ -307,7 +307,7 @@
 		9BD82C040B0133420055103E /* Breakpad */ = {
 			isa = PBXGroup;
 			children = (
-				9B35FF560B267D5F008DE8C7 /* convert_UTF.c */,
+				9B35FF560B267D5F008DE8C7 /* convert_UTF.cc */,
 				9B35FF570B267D5F008DE8C7 /* convert_UTF.h */,
 				9B35FF580B267D5F008DE8C7 /* string_conversion.cc */,
 				9B35FF590B267D5F008DE8C7 /* string_conversion.h */,
@@ -555,7 +555,7 @@
 				D2F651090BEF949A00920385 /* dynamic_images.cc in Sources */,
 				D2F6510E0BEF94EB00920385 /* macho_walker.cc in Sources */,
 				D2F651110BEF951700920385 /* string_conversion.cc in Sources */,
-				D2F651150BEF953000920385 /* convert_UTF.c in Sources */,
+				D2F651150BEF953000920385 /* convert_UTF.cc in Sources */,
 				8BFC81B011FF9C8D002CB4DC /* breakpad_nlist_64.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -566,7 +566,7 @@
 			files = (
 				9B7CA8540B12989000CD3A1D /* minidump_file_writer_unittest.cc in Sources */,
 				9B7CA8550B1298A100CD3A1D /* minidump_file_writer.cc in Sources */,
-				9BC1D2940B336F2300F2A2B4 /* convert_UTF.c in Sources */,
+				9BC1D2940B336F2300F2A2B4 /* convert_UTF.cc in Sources */,
 				9BC1D2950B336F2500F2A2B4 /* string_conversion.cc in Sources */,
 				8BFC81AE11FF9C8C002CB4DC /* breakpad_nlist_64.cc in Sources */,
 			);
@@ -581,7 +581,7 @@
 				9BD82C0E0B0133520055103E /* minidump_generator.cc in Sources */,
 				9BD82C250B01344C0055103E /* minidump_file_writer.cc in Sources */,
 				9BD82C2D0B01345E0055103E /* string_utilities.cc in Sources */,
-				9B35FF5A0B267D5F008DE8C7 /* convert_UTF.c in Sources */,
+				9B35FF5A0B267D5F008DE8C7 /* convert_UTF.cc in Sources */,
 				9B35FF5B0B267D5F008DE8C7 /* string_conversion.cc in Sources */,
 				D2F6511B0BEF970E00920385 /* dynamic_images.cc in Sources */,
 				D2F6511D0BEF973500920385 /* file_id.cc in Sources */,
@@ -636,6 +636,7 @@
 		1DEB923208733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
@@ -648,6 +649,7 @@
 		1DEB923308733DC60010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",

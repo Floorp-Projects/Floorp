@@ -182,7 +182,7 @@ class LayoutApp extends PureComponent {
     // The reason is that if the user selects an item-container in the markup view, it
     // is assumed that they want to primarily see that element as a container, so the
     // container info should be at the top.
-    if (flexItemContainer && flexItemContainer.actorID) {
+    if (flexItemContainer?.actorID) {
       items.splice(
         this.props.flexbox.initiatedByMarkupViewSelection ? 1 : 0,
         0,

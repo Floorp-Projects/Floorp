@@ -24,7 +24,7 @@ class AdbRuntime {
     // We use a very flexible regular expression to accommodate for those
     // different formats.
     const matches = versionNameString.match(/versionName=(.*)\n/);
-    if (matches && matches[1]) {
+    if (matches?.[1]) {
       this._versionName = matches[1];
     }
   }

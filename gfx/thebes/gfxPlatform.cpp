@@ -2148,7 +2148,7 @@ eCMSMode gfxPlatform::GetCMSMode() {
 }
 
 int gfxPlatform::GetRenderingIntent() {
-  // StaticPrefs.yaml is using 0 as the default for the rendering
+  // StaticPrefList.yaml is using 0 as the default for the rendering
   // intent preference, based on that being the value for
   // QCMS_INTENT_DEFAULT.  Assert here to catch if that ever
   // changes and we can then figure out what to do about it.

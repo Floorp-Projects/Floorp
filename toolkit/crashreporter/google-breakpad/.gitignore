@@ -39,6 +39,7 @@ lib*.a
 /breakpad-client.pc
 /src/client/linux/linux_client_unittest_shlib
 /src/client/linux/linux_dumper_unittest_helper
+/src/common/linux/google_crashdump_uploader_test
 /src/processor/microdump_stackwalk
 /src/processor/minidump_dump
 /src/processor/minidump_stackwalk

@@ -465,8 +465,7 @@ function updateRemoteRuntimes(runtimes, type) {
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
       const isConnectionValid =
-        existingRuntime &&
-        existingRuntime.runtimeDetails &&
+        existingRuntime?.runtimeDetails &&
         !existingRuntime.runtimeDetails.clientWrapper.isClosed();
       runtime.runtimeDetails = isConnectionValid
         ? existingRuntime.runtimeDetails

@@ -26,7 +26,7 @@ function openRequestInTab(url, requestHeaders, requestPostData) {
   const rawData = requestPostData ? requestPostData.postData : null;
   let postData;
 
-  if (rawData && rawData.text) {
+  if (rawData?.text) {
     const stringStream = getInputStreamFromString(rawData.text);
     postData = Cc["@mozilla.org/network/mime-input-stream;1"].createInstance(
       Ci.nsIMIMEInputStream
