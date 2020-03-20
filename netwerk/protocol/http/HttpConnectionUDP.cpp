@@ -492,12 +492,14 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   }
 
   mDontReuse = true;
-  mHttp3Session->SetCleanShutdown(aIsShutdown);
-  mHttp3Session->Close(reason);
-  if (!mHttp3Session->IsClosed()) {
-    // During closing phase we still keep mHttp3Session session,
-    // to resend CLOSE_CONNECTION frames.
-    return;
+  if (mHttp3Session) {
+    mHttp3Session->SetCleanShutdown(aIsShutdown);
+    mHttp3Session->Close(reason);
+    if (!mHttp3Session->IsClosed()) {
+      // During closing phase we still keep mHttp3Session session,
+      // to resend CLOSE_CONNECTION frames.
+      return;
+    }
   }
 
   mHttp3Session = nullptr;
