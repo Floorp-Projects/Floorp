@@ -311,9 +311,9 @@ void WebrtcAudioConduit::SetRtcpEventObserver(
 }
 
 void WebrtcAudioConduit::GetRtpSources(
-    const int64_t aTimeNow, nsTArray<dom::RTCRtpSourceEntry>& outSources) {
+    nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
-  return mRtpSourceObserver.GetRtpSources(aTimeNow, outSources);
+  return mRtpSourceObserver.GetRtpSources(outSources);
 }
 
 // test-only: inserts a CSRC entry in a RtpSourceObserver's history for
