@@ -49,7 +49,6 @@ py2commands="
     mochitest
     mozbuild-reference
     mozharness
-    mozregression
     package
     package-multi-locale
     pastebin
