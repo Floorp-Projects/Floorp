@@ -511,6 +511,31 @@ void RTCRtpReceiver::UpdateStreams(StreamAssociationChanges* aChanges) {
   }
 }
 
+void RTCRtpReceiver::MozAddRIDExtension(unsigned short aExtensionId) {
+  if (mPipeline) {
+    mPipeline->AddRIDExtension_m(aExtensionId);
+  }
+}
+
+void RTCRtpReceiver::MozAddRIDFilter(const nsAString& aRid) {
+  if (mPipeline) {
+    mPipeline->AddRIDFilter_m(NS_ConvertUTF16toUTF8(aRid).get());
+  }
+}
+
+// test-only: adds fake CSRCs and audio data
+void RTCRtpReceiver::MozInsertAudioLevelForContributingSource(
+    const uint32_t aSource, const DOMHighResTimeStamp aTimestamp,
+    const uint32_t aRtpTimestamp, const bool aHasLevel, const uint8_t aLevel) {
+  if (!mPipeline || mPipeline->IsVideo() || !mPipeline->Conduit()) {
+    return;
+  }
+  WebrtcAudioConduit* audio_conduit =
+      static_cast<WebrtcAudioConduit*>(mPipeline->Conduit());
+  audio_conduit->InsertAudioLevelForContributingSource(
+      aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
+}
+
 void RTCRtpReceiver::OnRtcpBye() { SetReceiveTrackMuted(true); }
 
 void RTCRtpReceiver::OnRtcpTimeout() { SetReceiveTrackMuted(true); }
