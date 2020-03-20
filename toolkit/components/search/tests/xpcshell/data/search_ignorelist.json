@@ -71,8 +71,7 @@
           ]
         }
       ],
-      "queryCharset": "UTF-8",
-      "_readOnly": false
+      "queryCharset": "UTF-8"
     }
   ]
 }
