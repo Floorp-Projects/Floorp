@@ -22,14 +22,12 @@ def parser():
 
 @pytest.fixture
 def run(parser, lintdir, files):
-    if lintdir not in cli.SEARCH_PATHS:
-        cli.SEARCH_PATHS.append(lintdir)
-
     def inner(args=None):
         args = args or []
         args.extend(files)
         lintargs = vars(parser.parse_args(args))
         lintargs['root'] = here
+        lintargs['config_paths'] = [os.path.join(here, 'linters')]
         return cli.run(**lintargs)
     return inner
 

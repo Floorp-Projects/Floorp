@@ -8,10 +8,10 @@ import sys
 from mozlint import cli
 
 here = os.path.abspath(os.path.dirname(__file__))
-cli.SEARCH_PATHS.append(os.path.join(here, 'linters'))
 
 if __name__ == '__main__':
     parser = cli.MozlintParser()
     args = vars(parser.parse_args(sys.argv[1:]))
     args['root'] = here
+    args['config_paths'] = [os.path.join(here, 'linters')]
     sys.exit(cli.run(**args))
