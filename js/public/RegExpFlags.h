@@ -19,7 +19,7 @@ namespace JS {
 /**
  * Regular expression flag values, suitable for initializing a collection of
  * regular expression flags as defined below in |RegExpFlags|.  Flags are listed
- * in alphabetical order by syntax -- /g, /i, /m, /s, /u, /y.
+ * in alphabetical order by syntax -- /g, /i, /m, /u, /y.
  */
 class RegExpFlag {
   // WARNING TO SPIDERMONKEY HACKERS (embedders must assume these values can
@@ -34,31 +34,28 @@ class RegExpFlag {
    * Act globally and find *all* matches (rather than stopping after just the
    * first one), i.e. /g.
    */
-  static constexpr uint8_t Global = 0b00'0010;
+  static constexpr uint8_t Global = 0b0'0010;
 
   /**
    * Interpret regular expression source text case-insensitively by folding
    * uppercase letters to lowercase, i.e. /i.
    */
-  static constexpr uint8_t IgnoreCase = 0b00'0001;
+  static constexpr uint8_t IgnoreCase = 0b0'0001;
 
   /** Treat ^ and $ as begin and end of line, i.e. /m. */
-  static constexpr uint8_t Multiline = 0b00'0100;
-
-  /* Allow . to match newline characters, i.e. /s. */
-  static constexpr uint8_t DotAll = 0b10'0000;
+  static constexpr uint8_t Multiline = 0b0'0100;
 
   /** Use Unicode semantics, i.e. /u. */
-  static constexpr uint8_t Unicode = 0b01'0000;
+  static constexpr uint8_t Unicode = 0b1'0000;
 
   /** Only match starting from <regular expression>.lastIndex, i.e. /y. */
-  static constexpr uint8_t Sticky = 0b00'1000;
+  static constexpr uint8_t Sticky = 0b0'1000;
 
   /** No regular expression flags. */
-  static constexpr uint8_t NoFlags = 0b00'0000;
+  static constexpr uint8_t NoFlags = 0b0'0000;
 
   /** All regular expression flags. */
-  static constexpr uint8_t AllFlags = 0b11'1111;
+  static constexpr uint8_t AllFlags = 0b1'1111;
 };
 
 /**
@@ -88,30 +85,17 @@ class RegExpFlags {
 
   bool operator!=(const RegExpFlags& other) const { return !(*this == other); }
 
-  RegExpFlags& operator&=(const RegExpFlags& rhs) {
-    flags_ &= rhs.flags_;
-    return *this;
-  }
-
-  RegExpFlags& operator|=(const RegExpFlags& rhs) {
-    flags_ |= rhs.flags_;
-    return *this;
-  }
-
   RegExpFlags operator&(Flag flag) const { return RegExpFlags(flags_ & flag); }
 
   RegExpFlags operator|(Flag flag) const { return RegExpFlags(flags_ | flag); }
 
   RegExpFlags operator^(Flag flag) const { return RegExpFlags(flags_ ^ flag); }
 
-  RegExpFlags operator~() const {
-    return RegExpFlags(~flags_ & RegExpFlag::AllFlags);
-  }
+  RegExpFlags operator~() const { return RegExpFlags(~flags_); }
 
   bool global() const { return flags_ & RegExpFlag::Global; }
   bool ignoreCase() const { return flags_ & RegExpFlag::IgnoreCase; }
   bool multiline() const { return flags_ & RegExpFlag::Multiline; }
-  bool dotAll() const { return flags_ & RegExpFlag::DotAll; }
   bool unicode() const { return flags_ & RegExpFlag::Unicode; }
   bool sticky() const { return flags_ & RegExpFlag::Sticky; }
 
@@ -133,18 +117,6 @@ inline RegExpFlags& operator|=(RegExpFlags& flags, RegExpFlags::Flag flag) {
 inline RegExpFlags& operator^=(RegExpFlags& flags, RegExpFlags::Flag flag) {
   flags = flags ^ flag;
   return flags;
-}
-
-inline RegExpFlags operator&(const RegExpFlags& lhs, const RegExpFlags& rhs) {
-  RegExpFlags result = lhs;
-  result &= rhs;
-  return lhs;
-}
-
-inline RegExpFlags operator|(const RegExpFlags& lhs, const RegExpFlags& rhs) {
-  RegExpFlags result = lhs;
-  result |= rhs;
-  return result;
 }
 
 }  // namespace JS

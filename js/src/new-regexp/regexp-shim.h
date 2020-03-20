@@ -926,16 +926,27 @@ class JSRegExp : public HeapObject {
   // JSRegExp::Flags
   // **************************************************
 
-  enum Flag : uint8_t {
-    kNone = JS::RegExpFlag::NoFlags,
-    kGlobal = JS::RegExpFlag::Global,
-    kIgnoreCase = JS::RegExpFlag::IgnoreCase,
-    kMultiline = JS::RegExpFlag::Multiline,
-    kSticky = JS::RegExpFlag::Sticky,
-    kUnicode = JS::RegExpFlag::Unicode,
-    kDotAll = JS::RegExpFlag::DotAll,
+  struct FlagShiftBit {
+    static constexpr int kGlobal = 0;
+    static constexpr int kIgnoreCase = 1;
+    static constexpr int kMultiline = 2;
+    static constexpr int kSticky = 3;
+    static constexpr int kUnicode = 4;
+    static constexpr int kDotAll = 5;
+    static constexpr int kInvalid = 6;
   };
-  using Flags = JS::RegExpFlags;
+  enum Flag : uint8_t {
+    kNone = 0,
+    kGlobal = 1 << FlagShiftBit::kGlobal,
+    kIgnoreCase = 1 << FlagShiftBit::kIgnoreCase,
+    kMultiline = 1 << FlagShiftBit::kMultiline,
+    kSticky = 1 << FlagShiftBit::kSticky,
+    kUnicode = 1 << FlagShiftBit::kUnicode,
+    kDotAll = 1 << FlagShiftBit::kDotAll,
+    kInvalid = 1 << FlagShiftBit::kInvalid,  // Not included in FlagCount.
+  };
+  using Flags = base::Flags<Flag>;
+  static constexpr int kFlagCount = 6;
 
   static constexpr int kNoBacktrackLimit = 0;
 

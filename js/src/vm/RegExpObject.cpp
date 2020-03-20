@@ -56,8 +56,6 @@ static_assert(RegExpFlag::IgnoreCase == REGEXP_IGNORECASE_FLAG,
               "self-hosted JS and /i flag bits must agree");
 static_assert(RegExpFlag::Multiline == REGEXP_MULTILINE_FLAG,
               "self-hosted JS and /m flag bits must agree");
-static_assert(RegExpFlag::DotAll == REGEXP_DOTALL_FLAG,
-              "self-hosted JS and /s flag bits must agree");
 static_assert(RegExpFlag::Unicode == REGEXP_UNICODE_FLAG,
               "self-hosted JS and /u flag bits must agree");
 static_assert(RegExpFlag::Sticky == REGEXP_STICKY_FLAG,
@@ -131,10 +129,6 @@ bool RegExpObject::isOriginalFlagGetter(JSNative native, RegExpFlags* mask) {
   }
   if (native == regexp_multiline) {
     *mask = RegExpFlag::Multiline;
-    return true;
-  }
-  if (native == regexp_dotAll) {
-    *mask = RegExpFlag::DotAll;
     return true;
   }
   if (native == regexp_sticky) {
@@ -537,9 +531,6 @@ JSLinearString* RegExpObject::toString(JSContext* cx) const {
     return nullptr;
   }
   if (multiline() && !sb.append('m')) {
-    return nullptr;
-  }
-  if (dotAll() && !sb.append('s')) {
     return nullptr;
   }
   if (unicode() && !sb.append('u')) {
@@ -1353,9 +1344,6 @@ static bool ParseRegExpFlags(const CharT* chars, size_t length,
         break;
       case 'm':
         flag = RegExpFlag::Multiline;
-        break;
-      case 's':
-        flag = RegExpFlag::DotAll;
         break;
       case 'u':
         flag = RegExpFlag::Unicode;
