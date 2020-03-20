@@ -18,6 +18,7 @@
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/KeyboardScrollAction.h"
+#include "mozilla/TextEvents.h"
 
 template <class E>
 struct already_AddRefed;

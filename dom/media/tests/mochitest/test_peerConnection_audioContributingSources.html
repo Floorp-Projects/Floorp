@@ -11,15 +11,6 @@
     title: "Test audio receiver getContributingSources"
   });
 
-  var SpWrap = (pc) => SpecialPowers.wrap(pc._pc);
-
-  var SpRtpSourceNowTimestamp = (pc) => {
-    return SpecialPowers.wrap(pc._pc).mozGetNowInRtpSourceReferenceTime();
-  };
-  var SpInsertLevelForContributingSource = (pc, ...args) => {
-    return SpecialPowers.wrap(pc._pc).mozInsertLevelForContributingSource(
-        ...args);
-  };
   // test_peerConnection_audioSynchronizationSources.html tests
   // much of the functionality of getContributingSources as the implementation
   // is shared.
@@ -36,17 +27,15 @@
     await Promise.resolve().then();
     // Insert new entries as if there were an MCU
     const csrc0 = 124756;
-    const timestamp0 = SpWrap(test.pcRemote).mozGetNowInRtpSourceReferenceTime();
+    const timestamp0 = performance.now() + performance.timeOrigin;
     const rtpTimestamp0 = 11111;
-    const timestampOffset = new Date().getTime() - timestamp0;
     const hasAudioLevel0 = true;
     // Audio level as expected to be received in RTP
     const audioLevel0 = 34;
     // Audio level as expected to be returned
     const expectedAudioLevel0 = 10 ** (-audioLevel0 / 20);
 
-    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
-        remoteReceiver,
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
         csrc0,
         timestamp0,
         rtpTimestamp0,
@@ -59,8 +48,7 @@
     const hasAudioLevel1 = false;
     const audioLevel1 = 0;
 
-    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
-        remoteReceiver,
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
         csrc1,
         timestamp1,
         rtpTimestamp1,
@@ -73,8 +61,7 @@
     const hasAudioLevel2 = true;
     const audioLevel2 = 127;
 
-    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
-        remoteReceiver,
+    SpecialPowers.wrap(remoteReceiver).mozInsertAudioLevelForContributingSource(
         csrc2,
         timestamp2,
         rtpTimestamp2,
@@ -100,14 +87,14 @@
         < expectedAudioLevel0 / 50;
     ok(isWithinErr,
        `Contributing source has correct audio level. (${source0.audioLevel})`);
-    ok(compareTimestamps(source0.timestamp, timestamp0 + timestampOffset),
+    ok(compareTimestamps(source0.timestamp, timestamp0),
        `Contributing source has correct timestamp (${source0.timestamp})`);
     is(source0.rtpTimestamp, rtpTimestamp0,
        `Contributing source has correct RTP timestamp (${source0.rtpTimestamp}`);
     // Check the CSRC without audioLevel
     is(source1.audioLevel, undefined,
        `Contributing source has no audio level. (${source1.audioLevel})`);
-    ok(compareTimestamps(source1.timestamp, timestamp1 + timestampOffset),
+    ok(compareTimestamps(source1.timestamp, timestamp1),
        `Contributing source has correct timestamp (${source1.timestamp})`);
     is(source1.rtpTimestamp, rtpTimestamp1,
        `Contributing source has correct RTP timestamp (${source1.rtpTimestamp}`);
@@ -121,13 +108,12 @@
        JSON.stringify(remoteReceiver.getContributingSources()),
        "getContributingSources is cached");
     // Check that sources are sorted in descending order by time stamp
-    const timestamp3 = SpWrap(test.pcLocal).mozGetNowInRtpSourceReferenceTime();
+    const timestamp3 =  performance.now() + performance.timeOrigin;
     const rtpTimestamp3 = 44444;
     // Larger offsets are further back in time
     const testOffsets = [3, 7, 5, 6, 1, 4];
     for (const offset of testOffsets) {
-      SpWrap(test.pcLocal).mozInsertAudioLevelForContributingSource(
-          localReceiver,
+      SpecialPowers.wrap(localReceiver).mozInsertAudioLevelForContributingSource(
           offset, // Using offset for SSRC for convenience
           timestamp3 - offset,
           rtpTimestamp3,

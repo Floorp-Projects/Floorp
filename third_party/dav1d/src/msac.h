@@ -31,7 +31,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "common/attributes.h"
+#include "common/intops.h"
 
 typedef size_t ec_win;
 
@@ -42,6 +42,10 @@ typedef struct MsacContext {
     unsigned rng;
     int cnt;
     int allow_update_cdf;
+
+#if ARCH_X86_64 && HAVE_ASM
+    unsigned (*symbol_adapt16)(struct MsacContext *s, uint16_t *cdf, size_t n_symbols);
+#endif
 } MsacContext;
 
 #if HAVE_ASM

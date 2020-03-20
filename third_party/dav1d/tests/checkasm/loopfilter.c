@@ -95,8 +95,8 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
                          const int n_blks, const int lf_idx,
                          const int is_chroma, const int dir)
 {
-    ALIGN_STK_32(pixel, c_dst_mem, 128 * 16,);
-    ALIGN_STK_32(pixel, a_dst_mem, 128 * 16,);
+    ALIGN_STK_64(pixel, c_dst_mem, 128 * 16,);
+    ALIGN_STK_64(pixel, a_dst_mem, 128 * 16,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const uint32_t *mask,
                  const uint8_t (*l)[4], ptrdiff_t b4_stride,

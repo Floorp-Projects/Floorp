@@ -28,6 +28,11 @@
 #include "src/cpu.h"
 #include "src/film_grain.h"
 
+decl_generate_grain_y_fn(dav1d_generate_grain_y_ssse3);
+decl_generate_grain_uv_fn(dav1d_generate_grain_uv_420_ssse3);
+decl_fgy_32x32xn_fn(dav1d_fgy_32x32xn_ssse3);
+decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i420_ssse3);
+
 decl_generate_grain_y_fn(dav1d_generate_grain_y_avx2);
 decl_generate_grain_uv_fn(dav1d_generate_grain_uv_420_avx2);
 decl_fgy_32x32xn_fn(dav1d_fgy_32x32xn_avx2);
@@ -35,6 +40,15 @@ decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i420_avx2);
 
 COLD void bitfn(dav1d_film_grain_dsp_init_x86)(Dav1dFilmGrainDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
+
+#if BITDEPTH == 8
+    c->generate_grain_y = dav1d_generate_grain_y_ssse3;
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_generate_grain_uv_420_ssse3;
+    c->fgy_32x32xn = dav1d_fgy_32x32xn_ssse3;
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_fguv_32x32xn_i420_ssse3;
+#endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 

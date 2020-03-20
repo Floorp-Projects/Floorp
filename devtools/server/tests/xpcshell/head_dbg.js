@@ -43,8 +43,8 @@ const { DevToolsServer: WorkerDevToolsServer } = worker.require(
   "devtools/server/devtools-server"
 );
 const { DevToolsClient } = require("devtools/shared/client/devtools-client");
-const { ObjectFront } = require("devtools/shared/fronts/object");
-const { LongStringFront } = require("devtools/shared/fronts/string");
+const { ObjectFront } = require("devtools/client/fronts/object");
+const { LongStringFront } = require("devtools/client/fronts/string");
 const { TargetFactory } = require("devtools/client/framework/target");
 
 const { addDebuggerToGlobal } = ChromeUtils.import(

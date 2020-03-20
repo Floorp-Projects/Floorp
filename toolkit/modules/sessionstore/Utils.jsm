@@ -9,11 +9,6 @@ var EXPORTED_SYMBOLS = ["Utils"];
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "eTLDService",
@@ -22,21 +17,6 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 var Utils = Object.freeze({
-  serializeInputStream(aStream) {
-    let data = {
-      content: NetUtil.readInputStreamToString(aStream, aStream.available()),
-    };
-
-    if (aStream instanceof Ci.nsIMIMEInputStream) {
-      data.headers = new Map();
-      aStream.visitHeaders((name, value) => {
-        data.headers.set(name, value);
-      });
-    }
-
-    return data;
-  },
-
   /**
    * Returns true if the |url| passed in is part of the given root |domain|.
    * For example, if |url| is "www.mozilla.org", and we pass in |domain| as
@@ -54,16 +34,6 @@ var Utils = Object.freeze({
     }
 
     return eTLDService.hasRootDomain(host, domain);
-  },
-
-  shallowCopy(obj) {
-    let retval = {};
-
-    for (let key of Object.keys(obj)) {
-      retval[key] = obj[key];
-    }
-
-    return retval;
   },
 
   /**

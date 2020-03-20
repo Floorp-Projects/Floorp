@@ -55,8 +55,8 @@ struct Band;
 }
 
 template <>
-struct nsTArray_CopyChooser<regiondetails::Band> {
-  typedef nsTArray_CopyWithConstructors<regiondetails::Band> Type;
+struct nsTArray_RelocationStrategy<regiondetails::Band> {
+  typedef nsTArray_RelocateUsingMoveConstructor<regiondetails::Band> Type;
 };
 
 namespace regiondetails {

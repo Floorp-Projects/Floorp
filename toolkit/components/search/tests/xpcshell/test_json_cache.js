@@ -23,7 +23,9 @@ add_task(async function setup() {
   await useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
 
-  let cacheTemplateFile = do_get_file("data/search.json");
+  let cacheTemplateFile = do_get_file(
+    gModernConfig ? "data/search.json" : "data/search-legacy.json"
+  );
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
 
@@ -40,7 +42,7 @@ add_task(async function setup() {
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
   if (gModernConfig) {
-    cacheTemplate.version = 4;
+    cacheTemplate.version = 5;
     delete cacheTemplate.visibleDefaultEngines;
   } else {
     cacheTemplate.version = 3;
@@ -82,6 +84,22 @@ add_task(async function test_cached_engine_properties() {
   await cacheFileWritten;
 
   let engines = await Services.search.getEngines();
+
+  Assert.equal(
+    engines[0].name,
+    "engine1",
+    "Should have loaded the correct first engine"
+  );
+  Assert.equal(engines[0].alias, "testAlias", "Should have set the alias");
+  Assert.equal(engines[0].hidden, false, "Should have not hidden the engine");
+  Assert.equal(
+    engines[1].name,
+    "engine2",
+    "Should have loaded the correct second engine"
+  );
+  Assert.equal(engines[1].alias, null, "Should have not set the alias");
+  Assert.equal(engines[1].hidden, true, "Should have hidden the engine");
+
   // The extra engine is the second in the list.
   isSubObjectOf(EXPECTED_ENGINE.engine, engines[2]);
 

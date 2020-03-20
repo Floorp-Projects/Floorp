@@ -753,7 +753,7 @@ L(blend_v_tbl):
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         d5,  d22, d4
-        sub             r1,  r1,  #3
+        sub             r1,  r1,  #2
 4:
         vld1.u8         {d2},     [r2,  :64]!
         vld1.32         {d0[]},   [r0,  :32]
@@ -764,10 +764,8 @@ L(blend_v_tbl):
         vrshrn.i16      d20, q3,  #6
         vst1.16         {d20[0]}, [r0,  :16]!
         vst1.16         {d20[2]}, [r12, :16]!
-        vst1.8          {d20[2]}, [r0]!
-        vst1.8          {d20[6]}, [r12]!
-        add             r0,  r0,  r1
-        add             r12, r12, r1
+        vst1.8          {d20[2]}, [r0],  r1
+        vst1.8          {d20[6]}, [r12], r1
         bgt             4b
         pop             {r4-r5,pc}
 80:
@@ -776,7 +774,7 @@ L(blend_v_tbl):
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         d17, d16, d2
-        sub             r1,  r1,  #6
+        sub             r1,  r1,  #4
 8:
         vld1.u8         {d4,  d5},  [r2,  :128]!
         vld1.u8         {d0},  [r0,  :64]
@@ -790,10 +788,8 @@ L(blend_v_tbl):
         vrshrn.i16      d23, q10, #6
         vst1.32         {d22[0]}, [r0,  :32]!
         vst1.32         {d23[0]}, [r12, :32]!
-        vst1.16         {d22[2]}, [r0,  :16]!
-        vst1.16         {d23[2]}, [r12, :16]!
-        add             r0,  r0,  r1
-        add             r12, r12, r1
+        vst1.16         {d22[2]}, [r0,  :16], r1
+        vst1.16         {d23[2]}, [r12, :16], r1
         bgt             8b
         pop             {r4-r5,pc}
 160:
@@ -802,7 +798,7 @@ L(blend_v_tbl):
         add             r12, r0,  r1
         lsl             r1,  r1,  #1
         vsub.i8         q11, q12, q14
-        sub             r1,  r1,  #12
+        sub             r1,  r1,  #8
 16:
         vld1.u8         {q1,  q2},  [r2,  :128]!
         vld1.u8         {q0},  [r0,  :128]
@@ -822,20 +818,18 @@ L(blend_v_tbl):
         vrshrn.i16      d21, q8,  #6
         vst1.u8         {d18},    [r0,  :64]!
         vst1.u8         {d20},    [r12, :64]!
-        vst1.32         {d19[0]}, [r0,  :32]!
-        vst1.32         {d21[0]}, [r12, :32]!
-        add             r0,  r0,  r1
-        add             r12, r12, r1
+        vst1.32         {d19[0]}, [r0,  :32], r1
+        vst1.32         {d21[0]}, [r12, :32], r1
         bgt             16b
         pop             {r4-r5,pc}
 320:
         vmov.i8         q10, #64
         vld1.u8         {q2,  q3},  [r5,  :128]
         vsub.i8         q11, q10, q2
-        vsub.i8         q12, q10, q3
+        vsub.i8         d24, d20, d6
 32:
         vld1.u8         {q8,  q9},  [r2,  :128]!
-        vld1.u8         {q0,  q1},  [r0,  :128]
+        vld1.u8         {d0,  d1,  d2},  [r0,  :64]
         subs            r4,  r4,  #1
         vmull.u8        q15, d16, d4
         vmlal.u8        q15, d0,  d22

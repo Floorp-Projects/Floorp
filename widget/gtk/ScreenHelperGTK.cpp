@@ -16,6 +16,7 @@
 #include <gtk/gtk.h>
 
 #include "gfxPlatformGtk.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/Logging.h"
 #include "nsGtkUtils.h"
 #include "nsTArray.h"

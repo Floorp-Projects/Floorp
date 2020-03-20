@@ -25,8 +25,9 @@ class AnimationImageKeyData;
 }  // namespace mozilla
 
 template <>
-struct nsTArray_CopyChooser<mozilla::layers::AnimationImageKeyData> {
-  typedef nsTArray_CopyWithConstructors<mozilla::layers::AnimationImageKeyData>
+struct nsTArray_RelocationStrategy<mozilla::layers::AnimationImageKeyData> {
+  typedef nsTArray_RelocateUsingMoveConstructor<
+      mozilla::layers::AnimationImageKeyData>
       Type;
 };
 

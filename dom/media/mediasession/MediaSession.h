@@ -21,6 +21,18 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
+// https://w3c.github.io/mediasession/#position-state
+struct PositionState {
+  PositionState(double aDuration, double aPlaybackRate,
+                double aLastReportedTime)
+      : mDuration(aDuration),
+        mPlaybackRate(aPlaybackRate),
+        mLastReportedPlaybackPosition(aLastReportedTime) {}
+  double mDuration;
+  double mPlaybackRate;
+  double mLastReportedPlaybackPosition;
+};
+
 class MediaSession final : public nsISupports, public nsWrapperCache {
  public:
   // Ref counting and cycle collection
@@ -45,6 +57,8 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
 
   void SetActionHandler(MediaSessionAction aAction,
                         MediaSessionActionHandler* aHandler);
+
+  void SetPositionState(const MediaPositionState& aState, ErrorResult& aRv);
 
   bool IsSupportedAction(MediaSessionAction aAction) const;
 
@@ -82,6 +96,8 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   // https://w3c.github.io/mediasession/#declared-playback-state
   MediaSessionPlaybackState mDeclaredPlaybackState =
       MediaSessionPlaybackState::None;
+
+  Maybe<PositionState> mPositionState;
 };
 
 }  // namespace dom

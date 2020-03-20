@@ -8,7 +8,6 @@
  */
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtpreceiver;1",
  Exposed=Window]
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
@@ -19,11 +18,14 @@ interface RTCRtpReceiver {
   sequence<RTCRtpSynchronizationSource> getSynchronizationSources();
 
   [ChromeOnly]
-  void setStreamIds(sequence<DOMString> streamIds);
+  void mozAddRIDExtension(unsigned short extensionId);
   [ChromeOnly]
-  void setRecvBit(boolean recvBit);
+  void mozAddRIDFilter(DOMString rid);
+  // test-only: for testing getContributingSources
   [ChromeOnly]
-  void processTrackAdditionsAndRemovals(
-      RTCRtpTransceiver transceiver,
-      object postProcessing);
+  void mozInsertAudioLevelForContributingSource(unsigned long source,
+                                                DOMHighResTimeStamp timestamp,
+                                                unsigned long rtpTimestamp,
+                                                boolean hasLevel,
+                                                byte level);
 };

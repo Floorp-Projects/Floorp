@@ -755,14 +755,15 @@ EngineURL.prototype = {
  * @param {boolean} [options.sanitizeName]
  *   Only applies when options.name is specified, will santize the name so
  *   it can be used as a file name, defaults to false.
- * @param {boolean} options.readOnly
- *   Indicates whether the engine should be treated as read-only.
+ * @param {boolean} options.isBuiltin
+ *   Indicates whether the engine is a app-provided or not. If it is, it will
+ *   be treated as read-only.
  */
 function SearchEngine(options = {}) {
-  if (!("readOnly" in options)) {
-    throw new Error("readOnly missing from options.");
+  if (!("isBuiltin" in options)) {
+    throw new Error("isBuiltin missing from options.");
   }
-  this._readOnly = options.readOnly;
+  this._isBuiltin = options.isBuiltin;
   this._urls = [];
   this._metaData = {};
 
@@ -818,7 +819,7 @@ function SearchEngine(options = {}) {
       shortName = file.leafName;
     } else if (uri && uri instanceof Ci.nsIURL) {
       if (
-        this._readOnly ||
+        this._isBuiltin ||
         (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
           uri.scheme == "resource")
       ) {
@@ -830,7 +831,7 @@ function SearchEngine(options = {}) {
     }
     this._loadPath = this.getAnonymizedLoadPath(file, uri);
 
-    if (!shortName && !this._readOnly) {
+    if (!shortName && !this._isBuiltin) {
       // We are in the process of downloading and installing the engine.
       // We'll have the shortName and id once we are done parsing it.
       return;
@@ -846,7 +847,7 @@ function SearchEngine(options = {}) {
       // They aren't default engines (because they aren't app-shipped), but we
       // still need to give their id an [app] prefix for backward compat.
       this._id = "[app]/" + this._shortName + ".xml";
-    } else if (!this._readOnly) {
+    } else if (!this._isBuiltin) {
       this._id = "[profile]/" + this._shortName + ".xml";
     } else {
       // If the engine is neither a default one, nor a user-installed one,
@@ -864,8 +865,6 @@ SearchEngine.prototype = {
   _metaData: null,
   // The data describing the engine, in the form of an XML document element.
   _data: null,
-  // Whether or not the engine is readonly.
-  _readOnly: true,
   // Anonymized path of where we initially loaded the engine from.
   // This will stay null for engines installed in the profile before we moved
   // to a JSON storage.
@@ -916,7 +915,7 @@ SearchEngine.prototype = {
   _extensionID: null,
   // The locale, or "DEFAULT", if required.
   _locale: null,
-  // Built in search engine extensions.
+  // Whether the engine is provided by the application.
   _isBuiltin: false,
   // The order hint from the configuration (if any).
   _orderHint: null,
@@ -1287,7 +1286,7 @@ SearchEngine.prototype = {
    *   A URI string pointing to the engine's icon. Must have a http[s],
    *   ftp, or data scheme. Icons with HTTP[S] or FTP schemes will be
    *   downloaded and converted to data URIs for storage in the engine
-   *   XML files, if the engine is not readonly.
+   *   XML files, if the engine is not built-in.
    * @param {boolean} isPreferred
    *   Whether or not this icon is to be preferred. Preferred icons can
    *   override non-preferred icons.
@@ -1498,7 +1497,6 @@ SearchEngine.prototype = {
   _initFromMetadata(engineName, params) {
     this._extensionID = params.extensionID;
     this._locale = params.locale;
-    this._isBuiltin = !!params.isBuiltin;
     this._orderHint = params.orderHint;
     this._telemetryId = params.telemetryId;
 
@@ -1767,11 +1765,9 @@ SearchEngine.prototype = {
     this._updateInterval = json._updateInterval || null;
     this._updateURL = json._updateURL || null;
     this._iconUpdateURL = json._iconUpdateURL || null;
-    this._readOnly = json._readOnly == undefined;
     this._iconURI = SearchUtils.makeURI(json._iconURL);
     this._iconMapObj = json._iconMapObj;
     this._metaData = json._metaData || {};
-    this._isBuiltin = json._isBuiltin;
     this._orderHint = json._orderHint || null;
     this._telemetryId = json._telemetryId || null;
     if (json.filePath) {
@@ -1831,9 +1827,6 @@ SearchEngine.prototype = {
     }
     if (this.queryCharset != SearchUtils.DEFAULT_QUERY_CHARSET) {
       json.queryCharset = this.queryCharset;
-    }
-    if (!this._readOnly) {
-      json._readOnly = this._readOnly;
     }
     if (this._filePath) {
       // File path is stored so that we can remove legacy xml files
@@ -2140,8 +2133,8 @@ SearchEngine.prototype = {
       SearchUtils.fail("missing name or value for nsISearchEngine::addParam!");
     }
     ENSURE_WARN(
-      !this._readOnly,
-      "called nsISearchEngine::addParam on a read-only engine!",
+      !this._isBuiltin,
+      "called nsISearchEngine::addParam on a built-in engine!",
       Cr.NS_ERROR_FAILURE
     );
     if (!responseType) {

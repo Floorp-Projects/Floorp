@@ -7,7 +7,7 @@
 const TESTCASE_URI = TEST_BASE_HTTP + "autocomplete.html";
 const MAX_SUGGESTIONS = 15;
 
-const { initCssProperties } = require("devtools/shared/fronts/css-properties");
+const { initCssProperties } = require("devtools/client/fronts/css-properties");
 
 // Test cases to test that autocompletion works correctly when enabled.
 // Format:

@@ -295,6 +295,61 @@ class Moveable {
   static int Count() { return sCount; }
 };
 
+class MoveOnly_RelocateUsingMemutils {
+ public:
+  MoveOnly_RelocateUsingMemutils() = default;
+
+  MoveOnly_RelocateUsingMemutils(const MoveOnly_RelocateUsingMemutils&) =
+      delete;
+  MoveOnly_RelocateUsingMemutils(MoveOnly_RelocateUsingMemutils&&) = default;
+
+  MoveOnly_RelocateUsingMemutils& operator=(
+      const MoveOnly_RelocateUsingMemutils&) = delete;
+  MoveOnly_RelocateUsingMemutils& operator=(MoveOnly_RelocateUsingMemutils&&) =
+      default;
+};
+
+static_assert(
+    std::is_move_constructible_v<nsTArray<MoveOnly_RelocateUsingMemutils>>);
+static_assert(
+    std::is_move_assignable_v<nsTArray<MoveOnly_RelocateUsingMemutils>>);
+static_assert(
+    !std::is_copy_constructible_v<nsTArray<MoveOnly_RelocateUsingMemutils>>);
+static_assert(
+    !std::is_copy_assignable_v<nsTArray<MoveOnly_RelocateUsingMemutils>>);
+
+class MoveOnly_RelocateUsingMoveConstructor {
+ public:
+  MoveOnly_RelocateUsingMoveConstructor() = default;
+
+  MoveOnly_RelocateUsingMoveConstructor(
+      const MoveOnly_RelocateUsingMoveConstructor&) = delete;
+  MoveOnly_RelocateUsingMoveConstructor(
+      MoveOnly_RelocateUsingMoveConstructor&&) = default;
+
+  MoveOnly_RelocateUsingMoveConstructor& operator=(
+      const MoveOnly_RelocateUsingMoveConstructor&) = delete;
+  MoveOnly_RelocateUsingMoveConstructor& operator=(
+      MoveOnly_RelocateUsingMoveConstructor&&) = default;
+};
+}  // namespace TestTArray
+
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
+    TestTArray::MoveOnly_RelocateUsingMoveConstructor)
+
+namespace TestTArray {
+static_assert(std::is_move_constructible_v<
+              nsTArray<MoveOnly_RelocateUsingMoveConstructor>>);
+static_assert(
+    std::is_move_assignable_v<nsTArray<MoveOnly_RelocateUsingMoveConstructor>>);
+static_assert(!std::is_copy_constructible_v<
+              nsTArray<MoveOnly_RelocateUsingMoveConstructor>>);
+static_assert(!std::is_copy_assignable_v<
+              nsTArray<MoveOnly_RelocateUsingMoveConstructor>>);
+}  // namespace TestTArray
+
+namespace TestTArray {
+
 /* static */
 int Countable::sCount = 0;
 /* static */
@@ -426,6 +481,154 @@ TEST(TArray, test_move_array)
   ASSERT_EQ(Moveable::Count(), 16);
 }
 
+template <typename TypeParam>
+class TArray_MoveOnlyTest : public ::testing::Test {};
+
+TYPED_TEST_CASE_P(TArray_MoveOnlyTest);
+
+static constexpr size_t kMoveOnlyTestArrayLength = 4;
+
+template <typename ArrayType>
+static auto MakeMoveOnlyArray() {
+  ArrayType moveOnlyArray;
+  for (size_t i = 0; i < kMoveOnlyTestArrayLength; ++i) {
+    EXPECT_TRUE(
+        moveOnlyArray.AppendElement(typename ArrayType::elem_type(), fallible));
+  }
+  return moveOnlyArray;
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, nsTArray_MoveConstruct) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  nsTArray<TypeParam> movedMoveOnlyArray(std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, movedMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, nsTArray_MoveAssign) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  nsTArray<TypeParam> movedMoveOnlyArray;
+  movedMoveOnlyArray = std::move(moveOnlyArray);
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, movedMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, nsTArray_MoveReAssign) {
+  nsTArray<TypeParam> movedMoveOnlyArray;
+  movedMoveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  // Re-assign, to check that move-assign does not only work on an empty array.
+  movedMoveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+
+  ASSERT_EQ(kMoveOnlyTestArrayLength, movedMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, nsTArray_to_FallibleTArray_MoveConstruct) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  FallibleTArray<TypeParam> differentAllocatorMoveOnlyArray(
+      std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, differentAllocatorMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, nsTArray_to_FallibleTArray_MoveAssign) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  FallibleTArray<TypeParam> differentAllocatorMoveOnlyArray;
+  differentAllocatorMoveOnlyArray = std::move(moveOnlyArray);
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, differentAllocatorMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, FallibleTArray_to_nsTArray_MoveConstruct) {
+  auto moveOnlyArray = MakeMoveOnlyArray<FallibleTArray<TypeParam>>();
+  nsTArray<TypeParam> differentAllocatorMoveOnlyArray(std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, differentAllocatorMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, FallibleTArray_to_nsTArray_MoveAssign) {
+  auto moveOnlyArray = MakeMoveOnlyArray<FallibleTArray<TypeParam>>();
+  nsTArray<TypeParam> differentAllocatorMoveOnlyArray;
+  differentAllocatorMoveOnlyArray = std::move(moveOnlyArray);
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, differentAllocatorMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, AutoTArray_AutoStorage_MoveConstruct) {
+  auto moveOnlyArray =
+      MakeMoveOnlyArray<AutoTArray<TypeParam, kMoveOnlyTestArrayLength>>();
+  AutoTArray<TypeParam, kMoveOnlyTestArrayLength> autoMoveOnlyArray(
+      std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest, AutoTArray_AutoStorage_MoveAssign) {
+  auto moveOnlyArray =
+      MakeMoveOnlyArray<AutoTArray<TypeParam, kMoveOnlyTestArrayLength>>();
+  AutoTArray<TypeParam, kMoveOnlyTestArrayLength> autoMoveOnlyArray;
+  autoMoveOnlyArray = std::move(moveOnlyArray);
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest,
+             nsTArray_to_AutoTArray_AutoStorage_MoveConstruct) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  AutoTArray<TypeParam, kMoveOnlyTestArrayLength> autoMoveOnlyArray(
+      std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest,
+             nsTArray_to_AutoTArray_HeapStorage_MoveConstruct) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  AutoTArray<TypeParam, kMoveOnlyTestArrayLength - 1> autoMoveOnlyArray(
+      std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest,
+             FallibleTArray_to_AutoTArray_HeapStorage_MoveConstruct) {
+  auto moveOnlyArray = MakeMoveOnlyArray<FallibleTArray<TypeParam>>();
+  AutoTArray<TypeParam, 4> autoMoveOnlyArray(std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+REGISTER_TYPED_TEST_CASE_P(
+    TArray_MoveOnlyTest, nsTArray_MoveConstruct, nsTArray_MoveAssign,
+    nsTArray_MoveReAssign, nsTArray_to_FallibleTArray_MoveConstruct,
+    nsTArray_to_FallibleTArray_MoveAssign,
+    FallibleTArray_to_nsTArray_MoveConstruct,
+    FallibleTArray_to_nsTArray_MoveAssign, AutoTArray_AutoStorage_MoveConstruct,
+    AutoTArray_AutoStorage_MoveAssign,
+    nsTArray_to_AutoTArray_AutoStorage_MoveConstruct,
+    nsTArray_to_AutoTArray_HeapStorage_MoveConstruct,
+    FallibleTArray_to_AutoTArray_HeapStorage_MoveConstruct);
+
+// TODO Add nsTArray_to_AutoTArray_AutoStorage_MoveAssign,
+// nsTArray_to_AutoTArray_HeapStorage_MoveAssign,
+// FallibleTArray_to_AutoTArray_HeapStorage_MoveAssign test cases.
+
+using BothMoveOnlyTypes =
+    ::testing::Types<MoveOnly_RelocateUsingMemutils,
+                     MoveOnly_RelocateUsingMoveConstructor>;
+INSTANTIATE_TYPED_TEST_CASE_P(InstantiationOf, TArray_MoveOnlyTest,
+                              BothMoveOnlyTypes);
+
 //----
 
 TEST(TArray, test_string_array)
@@ -529,7 +732,7 @@ class RefcountedObject {
 
 TEST(TArray, test_refptr_array)
 {
-  nsTArray<RefPtr<RefcountedObject> > objArray;
+  nsTArray<RefPtr<RefcountedObject>> objArray;
 
   RefcountedObject* a = new RefcountedObject();
   a->AddRef();
@@ -1043,9 +1246,9 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
   }
 
   void* initial_Hdrs[] = {
-      static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-      static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
-      static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(), nullptr};
+      static_cast<BufAccessor<FallibleTArray<int>>&>(f).GetHdr(),
+      static_cast<BufAccessor<nsTArray<int>>&>(t).GetHdr(),
+      static_cast<BufAccessor<AutoTArray<int, N>>&>(tauto).GetHdr(), nullptr};
 
   // SetLengthAndRetainStorage(n), should NOT overwrite memory when T hasn't
   // a default constructor.
@@ -1065,9 +1268,9 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
   }
 
   void* current_Hdrs[] = {
-      static_cast<BufAccessor<FallibleTArray<int> >&>(f).GetHdr(),
-      static_cast<BufAccessor<nsTArray<int> >&>(t).GetHdr(),
-      static_cast<BufAccessor<AutoTArray<int, N> >&>(tauto).GetHdr(), nullptr};
+      static_cast<BufAccessor<FallibleTArray<int>>&>(f).GetHdr(),
+      static_cast<BufAccessor<nsTArray<int>>&>(t).GetHdr(),
+      static_cast<BufAccessor<AutoTArray<int, N>>&>(tauto).GetHdr(), nullptr};
 
   // SetLengthAndRetainStorage(n) should NOT have reallocated the internal
   // memory.

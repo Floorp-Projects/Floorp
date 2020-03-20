@@ -45,6 +45,7 @@
 #include "signaling/src/jsep/JsepSessionImpl.h"
 
 #include "signaling/src/mediapipeline/MediaPipeline.h"
+#include "signaling/src/peerconnection/RTCRtpReceiver.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
@@ -89,15 +90,12 @@
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
-#include "MediaTrackGraph.h"
 #include "DOMMediaStream.h"
 #include "WebrtcGlobalInformation.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/net/DataChannelProtocol.h"
 #include "MediaManager.h"
-
-#include "MediaTrackGraphImpl.h"
 
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file
@@ -986,29 +984,9 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
     aSendTrack->AddPrincipalChangeObserver(this);
   }
 
-  // Set the principal used for the receive tracks. This makes the track
-  // data (audio/video samples) accessible to the receiving page. We're
-  // only certain that privacy has been requested if we're connected.
-  RefPtr<nsIPrincipal> principal;
-  Document* doc = GetWindow()->GetExtantDoc();
-  MOZ_ASSERT(doc);
-  if (mPrivacyRequested.valueOr(false)) {
-    principal =
-        NullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
-  } else {
-    // We're either certain that we don't need isolation for the tracks, OR
-    // we're not sure and the pipeline fixes the track later in
-    // MediaPipeline::AlpnNegotiated.
-    principal = doc->NodePrincipal();
-  }
-
-  OwningNonNull<dom::MediaStreamTrack> receiveTrack =
-      CreateReceiveTrack(aJsepTransceiver->GetMediaType(), principal);
-
   RefPtr<TransceiverImpl> transceiverImpl;
-  aRv =
-      mMedia->AddTransceiver(aJsepTransceiver, *receiveTrack, aSendTrack,
-                             MakePrincipalHandle(principal), &transceiverImpl);
+
+  aRv = mMedia->AddTransceiver(aJsepTransceiver, aSendTrack, &transceiverImpl);
 
   return transceiverImpl.forget();
 }
@@ -1353,7 +1331,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    OnSetDescriptionSuccess(sdpType == mozilla::kJsepSdpRollback);
+    OnSetDescriptionSuccess(sdpType == mozilla::kJsepSdpRollback, false);
   }
 
   return NS_OK;
@@ -1482,7 +1460,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
       RecordIceRestartStatistics(sdpType);
     }
 
-    OnSetDescriptionSuccess(sdpType == kJsepSdpRollback);
+    OnSetDescriptionSuccess(sdpType == kJsepSdpRollback, true);
 
     startCallTelem();
   }
@@ -1519,6 +1497,11 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
           });
 
   return promise.forget();
+}
+
+void PeerConnectionImpl::GetRemoteStreams(
+    nsTArray<RefPtr<DOMMediaStream>>& aStreamsOut) const {
+  aStreamsOut = mReceiveStreams;
 }
 
 NS_IMETHODIMP
@@ -1710,56 +1693,6 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
   mPCObserver->OnPacket(level, type, sending, arrayBuffer, jrv);
 }
 
-NS_IMETHODIMP
-PeerConnectionImpl::GetRtpSources(
-    MediaStreamTrack& aRecvTrack, DOMHighResTimeStamp aRtpSourceTimeNow,
-    nsTArray<dom::RTCRtpSourceEntry>& outRtpSources) {
-  PC_AUTO_ENTER_API_CALL(true);
-  outRtpSources.Clear();
-  std::vector<RefPtr<TransceiverImpl>>& transceivers =
-      mMedia->GetTransceivers();
-  for (RefPtr<TransceiverImpl>& transceiver : transceivers) {
-    if (transceiver->HasReceiveTrack(&aRecvTrack)) {
-      transceiver->GetRtpSources(aRtpSourceTimeNow, outRtpSources);
-      break;
-    }
-  }
-  return NS_OK;
-}
-
-DOMHighResTimeStamp PeerConnectionImpl::GetNowInRtpSourceReferenceTime() {
-  return RtpSourceObserver::NowInReportClockTime();
-}
-
-// test-only: adds fake CSRCs and audio data
-nsresult PeerConnectionImpl::InsertAudioLevelForContributingSource(
-    const dom::MediaStreamTrack& aRecvTrack, const unsigned long aSource,
-    const DOMHighResTimeStamp aTimestamp, const unsigned long aRtpTimestamp,
-    const bool aHasLevel, const uint8_t aLevel) {
-  PC_AUTO_ENTER_API_CALL(true);
-  std::vector<RefPtr<TransceiverImpl>>& transceivers =
-      mMedia->GetTransceivers();
-  for (RefPtr<TransceiverImpl>& transceiver : transceivers) {
-    if (transceiver->HasReceiveTrack(&aRecvTrack)) {
-      transceiver->InsertAudioLevelForContributingSource(
-          aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult PeerConnectionImpl::AddRIDExtension(MediaStreamTrack& aRecvTrack,
-                                             unsigned short aExtensionId) {
-  return mMedia->AddRIDExtension(aRecvTrack, aExtensionId);
-}
-
-nsresult PeerConnectionImpl::AddRIDFilter(MediaStreamTrack& aRecvTrack,
-                                          const nsAString& aRid) {
-  return mMedia->AddRIDFilter(aRecvTrack, aRid);
-}
-
 nsresult PeerConnectionImpl::EnablePacketDump(unsigned long level,
                                               dom::mozPacketDumpType type,
                                               bool sending) {
@@ -1813,41 +1746,6 @@ static int GetDTMFToneCode(uint16_t c) {
   const char* i = strchr(DTMF_TONECODES, c);
   MOZ_ASSERT(i);
   return i - DTMF_TONECODES;
-}
-
-OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
-    SdpMediaSection::MediaType type, nsIPrincipal* aPrincipal) {
-  bool audio = (type == SdpMediaSection::MediaType::kAudio);
-
-  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
-      audio ? MediaTrackGraph::AUDIO_THREAD_DRIVER
-            : MediaTrackGraph::SYSTEM_THREAD_DRIVER,
-      GetWindow(), MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
-      MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
-
-  RefPtr<MediaStreamTrack> track;
-  RefPtr<RemoteTrackSource> trackSource;
-  if (audio) {
-    RefPtr<SourceMediaTrack> source =
-        graph->CreateSourceTrack(MediaSegment::AUDIO);
-    trackSource = new RemoteTrackSource(source, aPrincipal,
-                                        NS_ConvertASCIItoUTF16("remote audio"));
-    track = new AudioStreamTrack(GetWindow(), source, trackSource);
-  } else {
-    RefPtr<SourceMediaTrack> source =
-        graph->CreateSourceTrack(MediaSegment::VIDEO);
-    trackSource = new RemoteTrackSource(source, aPrincipal,
-                                        NS_ConvertASCIItoUTF16("remote video"));
-    track = new VideoStreamTrack(GetWindow(), source, trackSource);
-  }
-
-  CSFLogDebug(LOGTAG, "Created %s track %p, inner: %p",
-              audio ? "audio" : "video", track.get(), track->GetTrack());
-
-  // Spec says remote tracks start out muted.
-  trackSource->SetMuted(true);
-
-  return OwningNonNull<dom::MediaStreamTrack>(*track);
 }
 
 NS_IMETHODIMP
@@ -2248,13 +2146,33 @@ void PeerConnectionImpl::ShutdownMedia() {
   mMedia.forget().take()->SelfDestruct();
 }
 
-void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback) {
+DOMMediaStream* PeerConnectionImpl::GetReceiveStream(
+    const std::string& aId) const {
+  nsString wanted = NS_ConvertASCIItoUTF16(aId.c_str());
+  for (auto& stream : mReceiveStreams) {
+    nsString id;
+    stream->GetId(id);
+    if (id == wanted) {
+      return stream;
+    }
+  }
+  return nullptr;
+}
+
+DOMMediaStream* PeerConnectionImpl::CreateReceiveStream(
+    const std::string& aId) {
+  mReceiveStreams.AppendElement(new DOMMediaStream(mWindow));
+  mReceiveStreams.LastElement()->AssignId(NS_ConvertASCIItoUTF16(aId.c_str()));
+  return mReceiveStreams.LastElement();
+}
+
+void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback, bool remote) {
   // Spec says we queue a task for all the stuff that ends up back in JS
   auto newSignalingState = GetSignalingState();
 
   mThread->Dispatch(NS_NewRunnableFunction(
-      __func__,
-      [this, self = RefPtr<PeerConnectionImpl>(this), newSignalingState] {
+      __func__, [this, self = RefPtr<PeerConnectionImpl>(this),
+                 newSignalingState, remote] {
         if (IsClosed()) {
           return;
         }
@@ -2277,6 +2195,64 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback) {
           mSignalingState = newSignalingState;
           mPCObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
         }
+
+        // TODO: Spec says that we should do this even if JS closes the PC
+        // during the signalingstatechange event. We'd need to refactor a
+        // little here to make this possible.
+        if (remote && HasMedia()) {
+          dom::RTCRtpReceiver::StreamAssociationChanges changes;
+          for (const auto& transceiver : mMedia->GetTransceivers()) {
+            transceiver->Receiver()->UpdateStreams(&changes);
+          }
+
+          for (const auto& track : changes.mTracksToMute) {
+            // This sets the muted state for track and all its clones.
+            static_cast<RemoteTrackSource&>(track->GetSource()).SetMuted(true);
+          }
+
+          for (const auto& association : changes.mStreamAssociationsRemoved) {
+            RefPtr<DOMMediaStream> stream =
+                GetReceiveStream(association.mStreamId);
+            if (stream && stream->HasTrack(*association.mTrack)) {
+              stream->RemoveTrackInternal(association.mTrack);
+            }
+          }
+
+          // TODO(Bug 1241291): For legacy event, remove eventually
+          std::vector<RefPtr<DOMMediaStream>> newStreams;
+
+          for (const auto& association : changes.mStreamAssociationsAdded) {
+            RefPtr<DOMMediaStream> stream =
+                GetReceiveStream(association.mStreamId);
+            if (!stream) {
+              stream = CreateReceiveStream(association.mStreamId);
+              newStreams.push_back(stream);
+            }
+
+            if (!stream->HasTrack(*association.mTrack)) {
+              stream->AddTrackInternal(association.mTrack);
+            }
+          }
+
+          for (const auto& trackEvent : changes.mTrackEvents) {
+            dom::Sequence<OwningNonNull<DOMMediaStream>> streams;
+            for (const auto& id : trackEvent.mStreamIds) {
+              RefPtr<DOMMediaStream> stream = GetReceiveStream(id);
+              if (!stream) {
+                MOZ_ASSERT(false);
+                continue;
+              }
+              streams.AppendElement(*stream, fallible);
+            }
+            mPCObserver->FireTrackEvent(*trackEvent.mReceiver, streams, jrv);
+          }
+
+          // TODO(Bug 1241291): Legacy event, remove eventually
+          for (const auto& stream : newStreams) {
+            mPCObserver->FireStreamEvent(*stream, jrv);
+          }
+        }
+
         mPCObserver->OnSetDescriptionSuccess(jrv);
       }));
 
@@ -2558,108 +2534,7 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
       defaultAddr, defaultPort, defaultRtcpAddr, defaultRtcpPort, transportId);
 }
 
-// TODO(bug 1586109): Move this to RTCRtpReceiver.
-static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
-    const RefPtr<MediaPipelineReceive>& aPipeline) {
-  UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
-  auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
-
-  nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
-                                      : NS_LITERAL_STRING("video");
-  nsString idstr = kind + NS_LITERAL_STRING("_");
-  idstr.AppendInt(static_cast<uint32_t>(aPipeline->Level()));
-
-  // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
-  // This is pending spec work
-  // Gather pipeline stats.
-  nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
-  nsString remoteId;
-  Maybe<uint32_t> ssrc;
-  unsigned int ssrcval;
-  if (aPipeline->Conduit()->GetRemoteSSRC(&ssrcval)) {
-    ssrc = Some(ssrcval);
-  }
-
-  // First, fill in remote stat with rtcp sender data, if present.
-  uint32_t packetsSent;
-  uint64_t bytesSent;
-  Maybe<DOMHighResTimeStamp> timestamp =
-      aPipeline->Conduit()->LastRtcpReceived();
-  if (timestamp.isSome() &&
-      aPipeline->Conduit()->GetRTCPSenderReport(&packetsSent, &bytesSent)) {
-    RTCRemoteOutboundRtpStreamStats s;
-    remoteId = NS_LITERAL_STRING("inbound_rtcp_") + idstr;
-    s.mTimestamp.Construct(*timestamp);
-    s.mId.Construct(remoteId);
-    s.mType.Construct(RTCStatsType::Remote_outbound_rtp);
-    ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
-    s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
-    s.mKind.Construct(kind);
-    s.mLocalId.Construct(localId);
-    s.mPacketsSent.Construct(packetsSent);
-    s.mBytesSent.Construct(bytesSent);
-    report->mRemoteOutboundRtpStreamStats.AppendElement(s, fallible);
-  }
-
-  // Then, fill in local side (with cross-link to remote only if present)
-  RTCInboundRtpStreamStats s;
-  // TODO(bug 1496533): Should we use the time of the most-recently received RTP
-  // packet? If so, what do we use if we haven't received any RTP? Now?
-  s.mTimestamp.Construct(aPipeline->GetNow());
-  s.mId.Construct(localId);
-  s.mType.Construct(RTCStatsType::Inbound_rtp);
-  ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
-  s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
-  s.mKind.Construct(kind);
-  unsigned int jitterMs, packetsLost;
-  if (aPipeline->Conduit()->GetRTPReceiverStats(&jitterMs, &packetsLost)) {
-    s.mJitter.Construct(double(jitterMs) / 1000);
-    s.mPacketsLost.Construct(packetsLost);
-  }
-  if (remoteId.Length()) {
-    s.mRemoteId.Construct(remoteId);
-  }
-  s.mPacketsReceived.Construct(aPipeline->RtpPacketsReceived());
-  s.mBytesReceived.Construct(aPipeline->RtpBytesReceived());
-
-  // Fill in packet type statistics
-  webrtc::RtcpPacketTypeCounter counters;
-  if (aPipeline->Conduit()->GetRecvPacketTypeStats(&counters)) {
-    s.mNackCount.Construct(counters.nack_packets);
-    // Fill in video only packet type stats
-    if (asVideo) {
-      s.mFirCount.Construct(counters.fir_packets);
-      s.mPliCount.Construct(counters.pli_packets);
-    }
-  }
-  // Lastly, fill in video decoder stats if this is video
-  asVideo.apply([&s](auto conduit) {
-    double framerateMean;
-    double framerateStdDev;
-    double bitrateMean;
-    double bitrateStdDev;
-    uint32_t discardedPackets;
-    uint32_t framesDecoded;
-    if (conduit->GetVideoDecoderStats(&framerateMean, &framerateStdDev,
-                                      &bitrateMean, &bitrateStdDev,
-                                      &discardedPackets, &framesDecoded)) {
-      s.mFramerateMean.Construct(framerateMean);
-      s.mFramerateStdDev.Construct(framerateStdDev);
-      s.mBitrateMean.Construct(bitrateMean);
-      s.mBitrateStdDev.Construct(bitrateStdDev);
-      s.mDiscardedPackets.Construct(discardedPackets);
-      s.mFramesDecoded.Construct(framesDecoded);
-    }
-  });
-  report->mInboundRtpStreamStats.AppendElement(s, fallible);
-
-  // Fill in Contributing Source statistics
-  aPipeline->GetContributingSourceStats(localId,
-                                        report->mRtpContributingSourceStats);
-  return report;
-}
-
-// TODO(bug 1586109): Move this to RTCRtpSender.
+// TODO(bug 1616937): Move this to RTCRtpSender.
 static UniquePtr<dom::RTCStatsCollection> GetSenderStats_s(
     const RefPtr<MediaPipelineTransmit>& aPipeline) {
   UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
@@ -2761,14 +2636,6 @@ static UniquePtr<dom::RTCStatsCollection> GetSenderStats_s(
   return report;
 }
 
-RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetReceiverStats(
-    const RefPtr<MediaPipelineReceive>& aPipeline) {
-  return InvokeAsync(mSTSThread, __func__, [aPipeline]() {
-    return dom::RTCStatsPromise::CreateAndResolve(GetReceiverStats_s(aPipeline),
-                                                  __func__);
-  });
-}
-
 RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetSenderStats(
     const RefPtr<MediaPipelineTransmit>& aPipeline) {
   return InvokeAsync(mSTSThread, __func__, [aPipeline]() {
@@ -2782,19 +2649,20 @@ void PeerConnectionImpl::RecordConduitTelemetry() {
     return;
   }
 
-  nsTArray<RefPtr<MediaPipelineReceive>> pipelines;
+  nsTArray<RefPtr<VideoSessionConduit>> conduits;
   for (const auto& transceiver : mMedia->GetTransceivers()) {
-    if (transceiver->IsValid()) {
-      pipelines.AppendElement(transceiver->GetReceivePipeline());
+    RefPtr<MediaSessionConduit> conduit = transceiver->GetConduit();
+    if (conduit) {
+      auto asVideo = conduit->AsVideoSessionConduit();
+      if (asVideo) {
+        conduits.AppendElement(asVideo.value());
+      }
     }
   }
 
-  mSTSThread->Dispatch(NS_NewRunnableFunction(__func__, [pipelines]() {
-    for (const auto& pipeline : pipelines) {
-      auto asVideo = pipeline->Conduit()->AsVideoSessionConduit();
-      if (asVideo) {
-        asVideo.value()->RecordTelemetry();
-      }
+  mSTSThread->Dispatch(NS_NewRunnableFunction(__func__, [conduits]() {
+    for (const auto& conduit : conduits) {
+      conduit->RecordTelemetry();
     }
   }));
 }
@@ -2836,7 +2704,7 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   if (mMedia) {
     nsTArray<RefPtr<MediaPipelineTransmit>> sendPipelines;
     // Gather up pipelines from mMedia so they may be inspected on STS
-    // TODO(bug 1586109): Use RTCRtpSender for these instead.
+    // TODO(bug 1616937): Use RTCRtpSender for these instead.
     mMedia->GetTransmitPipelinesMatching(aSelector, &sendPipelines);
     if (!sendPipelines.Length()) {
       CSFLogError(LOGTAG, "%s: Found no pipelines matching selector.",
@@ -2847,29 +2715,28 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
       promises.AppendElement(GetSenderStats(pipeline));
     }
 
-    nsTArray<RefPtr<MediaPipelineReceive>> recvPipelines;
-    // Gather up pipelines from mMedia so they may be inspected on STS
-    // TODO(bug 1586109): Use RTCRtpReceiver for these instead.
-    mMedia->GetReceivePipelinesMatching(aSelector, &recvPipelines);
-    if (!recvPipelines.Length()) {
-      CSFLogError(LOGTAG, "%s: Found no pipelines matching selector.",
-                  __FUNCTION__);
+    for (const auto& transceiver : mMedia->GetTransceivers()) {
+      if (transceiver->Receiver()->HasTrack(aSelector)) {
+        // Right now, returns two promises; one for RTP/RTCP stats, and another
+        // for ICE stats.
+        promises.AppendElements(transceiver->Receiver()->GetStatsInternal());
+      }
     }
 
-    for (const auto& pipeline : recvPipelines) {
-      promises.AppendElement(GetReceiverStats(pipeline));
-    }
-
-    // TODO(bug 1586109): We need to move this is RTCRtpSender/Receiver, to make
+    // TODO(bug 1616937): We need to move this is RTCRtpSender, to make
     // getStats on those objects work properly. It might be worth optimizing the
     // null selector case, so we don't end up with bunches of copies of the same
     // transport information in the final report.
-    std::string transportId;
     if (aSelector) {
-      transportId = mMedia->GetTransportIdMatching(*aSelector);
+      std::string transportId =
+          mMedia->GetTransportIdMatchingSendTrack(*aSelector);
+      if (!transportId.empty()) {
+        promises.AppendElement(
+            mTransportHandler->GetIceStats(transportId, now));
+      }
+    } else {
+      promises.AppendElement(mTransportHandler->GetIceStats("", now));
     }
-
-    promises.AppendElement(mTransportHandler->GetIceStats(transportId, now));
   }
 
   // This is what we're going to return; all the stuff in |promises| will be

@@ -2,6 +2,9 @@
 
 set -xe
 
+# Future products supporting Flatpaks will set this accordingly
+: PRODUCT                       "${PRODUCT:=firefox}"
+
 # Required env variables
 
 test "$VERSION"
@@ -48,6 +51,14 @@ $CURL -o "${WORKSPACE}/l10n_changesets.json" "$L10N_CHANGESETS"
 locales=$(python3 "$SCRIPT_DIRECTORY/extract_locales_from_l10n_json.py" "${WORKSPACE}/l10n_changesets.json")
 
 DISTRIBUTION_DIR="$SOURCE_DEST/distribution"
+if [[ "$PRODUCT" == "firefox" ]]; then
+    # Get Flatpak configuration
+    PARTNER_CONFIG_DIR="$WORKSPACE/partner_config"
+    git clone https://github.com/mozilla-partners/flatpak.git "$PARTNER_CONFIG_DIR"
+    mv "$PARTNER_CONFIG_DIR/desktop/flatpak/distribution" "$DISTRIBUTION_DIR"
+else
+    mkdir -p "$DISTRIBUTION_DIR"
+fi
 
 mkdir -p "$DISTRIBUTION_DIR/extensions"
 for locale in $locales; do
@@ -57,7 +68,6 @@ done
 
 envsubst < "$SCRIPT_DIRECTORY/org.mozilla.firefox.appdata.xml.in" > "${WORKSPACE}/org.mozilla.firefox.appdata.xml"
 cp -v "$SCRIPT_DIRECTORY/org.mozilla.firefox.desktop" "$WORKSPACE"
-cp -v "$SCRIPT_DIRECTORY/distribution.ini" "$WORKSPACE"
 # Add a group policy file to disable app updates, as those are handled by Flathub
 cp -v "$SCRIPT_DIRECTORY/policies.json" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/default-preferences.js" "$WORKSPACE"
@@ -113,7 +123,7 @@ for locale in $locales; do
     install -D -m644 -t "${appdir}/share/runtime/langpack/${locale:0:2}/" "${DISTRIBUTION_DIR}/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
     ln -sf "/app/share/runtime/langpack/${locale:0:2}/langpack-${locale}@firefox.mozilla.org.xpi" "${appdir}/lib/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
 done
-install -D -m644 -t "${appdir}/lib/firefox/distribution" distribution.ini
+install -D -m644 -t "${appdir}/lib/firefox/distribution" "$DISTRIBUTION_DIR/distribution.ini"
 install -D -m644 -t "${appdir}/lib/firefox/distribution" policies.json
 install -D -m644 -t "${appdir}/lib/firefox/browser/defaults/preferences" default-preferences.js
 install -D -m755 launch-script.sh "${appdir}/bin/firefox"

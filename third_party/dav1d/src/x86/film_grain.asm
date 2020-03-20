@@ -44,6 +44,7 @@ round_vals: dw 32, 64, 128, 256, 512
 max: dw 255, 240, 235
 min: dw 0, 16
 pb_27_17_17_27: db 27, 17, 17, 27
+pw_1: dw 1
 
 %macro JMP_TABLE 1-*
     %xdefine %1_table %%table
@@ -56,6 +57,7 @@ pb_27_17_17_27: db 27, 17, 17, 27
     %endrep
 %endmacro
 
+ALIGN 4
 JMP_TABLE generate_grain_y_avx2, 0, 1, 2, 3
 JMP_TABLE generate_grain_uv_420_avx2, 0, 1, 2, 3
 
@@ -69,8 +71,8 @@ struc FGData
     .scaling_shift:             resd 1
     .ar_coeff_lag:              resd 1
     .ar_coeffs_y:               resb 24
-    .ar_coeffs_uv:              resb 2 * 26 ; includes padding
-    .ar_coeff_shift:            resd 1
+    .ar_coeffs_uv:              resb 2 * 28 ; includes padding
+    .ar_coeff_shift:            resq 1
     .grain_scale_shift:         resd 1
     .uv_mult:                   resd 2
     .uv_luma_mult:              resd 2
@@ -169,9 +171,9 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     movsx         val0d, byte [bufq+xq]
     add           val3d, val0d
     cmp           val3d, maxd
-    cmovg         val3d, maxd
+    cmovns        val3d, maxd
     cmp           val3d, mind
-    cmovl         val3d, mind
+    cmovs         val3d, mind
     mov  byte [bufq+xq], val3b
     ; keep val3d in-place as left for next x iteration
     inc              xq
@@ -190,18 +192,19 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
 .ar2:
     DEFINE_ARGS buf, fg_data, shift
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    movd           xm14, [base+hmul_bits-10+shiftq*2]
+    vpbroadcastw   xm14, [base+round_vals-12+shiftq*2]
     movq           xm15, [base+byte_blend+1]
     pmovsxbw        xm8, [fg_dataq+FGData.ar_coeffs_y+0]    ; cf0-7
     movd            xm9, [fg_dataq+FGData.ar_coeffs_y+8]    ; cf8-11
     pmovsxbw        xm9, xm9
-    DEFINE_ARGS buf, h, x
+    DEFINE_ARGS buf, fg_data, h, x
     pshufd         xm12, xm9, q0000
     pshufd         xm13, xm9, q1111
     pshufd         xm11, xm8, q3333
     pshufd         xm10, xm8, q2222
     pshufd          xm9, xm8, q1111
     pshufd          xm8, xm8, q0000
+    pmovzxwd       xm14, xm14
     sub            bufq, 82*73-(82*3+79)
     mov              hd, 70
 .y_loop_ar2:
@@ -233,6 +236,7 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     paddd           xm4, xm6
     paddd           xm2, xm7
     paddd           xm2, xm4
+    paddd           xm2, xm14
 
     movq            xm0, [bufq+xq-2]        ; y=0,x=[-2,+5]
 .x_loop_ar2_inner:
@@ -241,9 +245,8 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     paddd           xm3, xm2
     psrldq          xm1, 4                  ; y=0,x=0
     psrldq          xm2, 4                  ; shift top to next pixel
-    psrad           xm3, 5
-    packssdw        xm3, xm3
-    pmulhrsw        xm3, xm14
+    psrad           xm3, [fg_dataq+FGData.ar_coeff_shift]
+    ; don't packssdw since we only care about one value
     paddw           xm3, xm1
     packsswb        xm3, xm3
     pextrb    [bufq+xq], xm3, 0
@@ -274,7 +277,7 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     ALLOC_STACK   16*12
 %endif
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    movd           xm14, [base+hmul_bits-10+shiftq*2]
+    vpbroadcastw   xm14, [base+round_vals-12+shiftq*2]
     movq           xm15, [base+byte_blend]
     pmovsxbw        xm0, [fg_dataq+FGData.ar_coeffs_y+ 0]   ; cf0-7
     pmovsxbw        xm1, [fg_dataq+FGData.ar_coeffs_y+ 8]   ; cf8-15
@@ -288,10 +291,11 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     pshufd          xm8, xm1, q3333
     pshufd          xm1, xm1, q0000
     pshufd          xm3, xm2, q1111
+    psrldq         xm13, xm2, 10
+    pinsrw          xm2, [pw_1], 5
     pshufd          xm4, xm2, q2222
-    psrldq          xm5, xm2, 10
     pshufd          xm2, xm2, q0000
-    pinsrw          xm5, [base+round_vals+shiftq*2-10], 3
+    pinsrw         xm13, [base+round_vals+shiftq*2-10], 3
     mova    [rsp+ 0*16], xm0
     mova    [rsp+ 1*16], xm9
     mova    [rsp+ 2*16], xm10
@@ -303,9 +307,7 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     mova    [rsp+ 8*16], xm2
     mova    [rsp+ 9*16], xm3
     mova    [rsp+10*16], xm4
-    mova    [rsp+11*16], xm5
-    pxor           xm13, xm13
-    DEFINE_ARGS buf, h, x
+    DEFINE_ARGS buf, fg_data, h, x
     sub            bufq, 82*73-(82*3+79)
     mov              hd, 70
 .y_loop_ar3:
@@ -374,7 +376,7 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
 
     punpcklwd       xm6, xm7
     punpcklwd       xm8, xm9
-    punpcklwd       xm5, xm13
+    punpcklwd       xm5, xm14
     pmaddwd         xm6, [rsp+ 8*16]
     pmaddwd         xm8, [rsp+ 9*16]
     pmaddwd         xm5, [rsp+10*16]
@@ -385,14 +387,13 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
     movq            xm1, [bufq+xq-3]        ; y=0,x=[-3,+4]
 .x_loop_ar3_inner:
     pmovsxbw        xm2, xm1
-    pmaddwd         xm2, [rsp+16*11]
+    pmaddwd         xm2, xm13
     pshufd          xm3, xm2, q1111
     paddd           xm2, xm3                ; left+cur
     paddd           xm2, xm0                ; add top
     psrldq          xm0, 4
-    psrad           xm2, 5
-    packssdw        xm2, xm2
-    pmulhrsw        xm2, xm14
+    psrad           xm2, [fg_dataq+FGData.ar_coeff_shift]
+    ; don't packssdw since we only care about one value
     packsswb        xm2, xm2
     pextrb    [bufq+xq], xm2, 0
     pslldq          xm2, 3
@@ -468,7 +469,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
 .ar0:
     INIT_YMM avx2
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
-    imul            uvd, 25
+    imul            uvd, 28
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
     movd            xm4, [fg_dataq+FGData.ar_coeffs_uv+uvq]
     movd            xm3, [base+hmul_bits+shiftq*2]
@@ -538,7 +539,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
 .ar1:
     INIT_XMM avx2
     DEFINE_ARGS buf, bufy, fg_data, uv, val3, cf3, min, max, x, shift
-    imul            uvd, 25
+    imul            uvd, 28
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
     movsx          cf3d, byte [fg_dataq+FGData.ar_coeffs_uv+uvq+3]
     movd            xm4, [fg_dataq+FGData.ar_coeffs_uv+uvq]
@@ -584,9 +585,9 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     movsx         val0d, byte [bufq+xq]
     add           val3d, val0d
     cmp           val3d, maxd
-    cmovg         val3d, maxd
+    cmovns        val3d, maxd
     cmp           val3d, mind
-    cmovl         val3d, mind
+    cmovs         val3d, mind
     mov  byte [bufq+xq], val3b
     ; keep val3d in-place as left for next x iteration
     inc              xq
@@ -605,18 +606,17 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
 .ar2:
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    imul            uvd, 25
-    movd           xm15, [base+hmul_bits-10+shiftq*2]
+    imul            uvd, 28
+    vpbroadcastw   xm15, [base+round_vals-12+shiftq*2]
     pmovsxbw        xm8, [fg_dataq+FGData.ar_coeffs_uv+uvq+0]   ; cf0-7
     pmovsxbw        xm9, [fg_dataq+FGData.ar_coeffs_uv+uvq+8]   ; cf8-12
+    pinsrw          xm9, [base+pw_1], 5
     vpbroadcastw    xm7, [base+hmul_bits+4]
     vpbroadcastd    xm6, [base+pb_1]
-    DEFINE_ARGS buf, bufy, h, x
+    DEFINE_ARGS buf, bufy, fg_data, h, unused, x
     pshufd         xm12, xm9, q0000
     pshufd         xm13, xm9, q1111
     pshufd         xm14, xm9, q2222
-    pxor           xm10, xm10
-    vpblendw       xm14, xm10, 10101010b
     pshufd         xm11, xm8, q3333
     pshufd         xm10, xm8, q2222
     pshufd          xm9, xm8, q1111
@@ -660,7 +660,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     pmaddubsw       xm3, xm6, xm3
     paddw           xm0, xm3
     pmulhrsw        xm0, xm7
-    punpcklwd       xm0, xm0
+    punpcklwd       xm0, xm15
     pmaddwd         xm0, xm14
     paddd           xm2, xm0
 
@@ -670,9 +670,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     pmaddwd         xm3, xm0, xm13
     paddd           xm3, xm2
     psrldq          xm2, 4                  ; shift top to next pixel
-    psrad           xm3, 5
-    packssdw        xm3, xm3
-    pmulhrsw        xm3, xm15
+    psrad           xm3, [fg_dataq+FGData.ar_coeff_shift]
     pslldq          xm3, 2
     psrldq          xm0, 2
     paddw           xm3, xm0
@@ -698,8 +696,8 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
 %assign stack_size_padded (stack_size_padded+16*12)
 %assign stack_size (stack_size+16*12)
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
-    imul            uvd, 25
-    movd           xm14, [base+hmul_bits-10+shiftq*2]
+    imul            uvd, 28
+    vpbroadcastw   xm14, [base+round_vals-12+shiftq*2]
     pmovsxbw        xm0, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 0]   ; cf0-7
     pmovsxbw        xm1, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 8]   ; cf8-15
     pmovsxbw        xm2, [fg_dataq+FGData.ar_coeffs_uv+uvq+16]   ; cf16-23
@@ -719,6 +717,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     psrldq          xm5, xm2, 10
     pshufd          xm2, xm2, q0000
     pinsrw          xm5, [base+round_vals+shiftq*2-10], 3
+    pmovzxwd       xm14, xm14
     mova    [rsp+ 0*16], xm0
     mova    [rsp+ 1*16], xm9
     mova    [rsp+ 2*16], xm10
@@ -733,7 +732,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     mova    [rsp+11*16], xm5
     vpbroadcastd   xm13, [base+pb_1]
     vpbroadcastw   xm15, [base+hmul_bits+4]
-    DEFINE_ARGS buf, bufy, h, x
+    DEFINE_ARGS buf, bufy, fg_data, h, unused, x
     sub            bufq, 82*38+44-(82*3+41)
     add           bufyq, 79+82*3
     mov              hd, 35
@@ -817,6 +816,7 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     paddd           xm0, xm6
     paddd           xm8, xm5
     paddd           xm0, xm8
+    paddd           xm0, xm14
 
     movq            xm1, [bufq+xq-3]        ; y=0,x=[-3,+4]
 .x_loop_ar3_inner:
@@ -826,9 +826,8 @@ cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
     paddd           xm2, xm3                ; left+cur
     paddd           xm2, xm0                ; add top
     psrldq          xm0, 4
-    psrad           xm2, 5
-    packssdw        xm2, xm2
-    pmulhrsw        xm2, xm14
+    psrad           xm2, [fg_dataq+FGData.ar_coeff_shift]
+    ; don't packssdw, we only care about one value
     pslldq          xm2, 6
     vpblendw        xm1, xm2, 1000b
     packsswb        xm1, xm1

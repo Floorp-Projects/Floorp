@@ -153,7 +153,6 @@ using mozilla::dom::quota::Client;
 namespace {
 
 class ConnectionPool;
-class CursorBase;
 class Database;
 struct DatabaseActorInfo;
 class DatabaseFile;
@@ -5002,13 +5001,145 @@ class ConnectionPool final {
   struct DatabasesCompleteCallback;
   class FinishCallbackWrapper;
   class IdleConnectionRunnable;
-  struct IdleDatabaseInfo;
-  struct IdleResource;
-  struct IdleThreadInfo;
-  class ThreadInfo;
+
   class ThreadRunnable;
   class TransactionInfo;
   struct TransactionInfoPair;
+
+  struct IdleResource {
+    TimeStamp mIdleTime;
+
+    IdleResource(const IdleResource& aOther) = delete;
+    IdleResource(IdleResource&& aOther) noexcept
+        : IdleResource(aOther.mIdleTime) {}
+    IdleResource& operator=(const IdleResource& aOther) = delete;
+    IdleResource& operator=(IdleResource&& aOther) = delete;
+
+   protected:
+    explicit IdleResource(const TimeStamp& aIdleTime);
+
+    ~IdleResource();
+  };
+
+  struct IdleDatabaseInfo final : public IdleResource {
+    InitializedOnceMustBeTrue<DatabaseInfo* const> mDatabaseInfo;
+
+   public:
+    explicit IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
+
+    IdleDatabaseInfo(const IdleDatabaseInfo& aOther) = delete;
+    IdleDatabaseInfo(IdleDatabaseInfo&& aOther) noexcept
+        : IdleResource(std::move(aOther)),
+          mDatabaseInfo{std::move(aOther.mDatabaseInfo)} {
+      MOZ_ASSERT(mDatabaseInfo);
+
+      MOZ_COUNT_CTOR(ConnectionPool::IdleDatabaseInfo);
+    }
+    IdleDatabaseInfo& operator=(const IdleDatabaseInfo& aOther) = delete;
+    IdleDatabaseInfo& operator=(IdleDatabaseInfo&& aOther) = delete;
+
+    ~IdleDatabaseInfo();
+
+    bool operator==(const IdleDatabaseInfo& aOther) const {
+      return *mDatabaseInfo == *aOther.mDatabaseInfo;
+    }
+
+    bool operator==(DatabaseInfo* const aDatabaseInfo) const {
+      return *mDatabaseInfo == aDatabaseInfo;
+    }
+
+    bool operator<(const IdleDatabaseInfo& aOther) const {
+      return mIdleTime < aOther.mIdleTime;
+    }
+  };
+
+  class ThreadInfo {
+   public:
+    ThreadInfo();
+
+    ThreadInfo(nsCOMPtr<nsIThread> aThread, RefPtr<ThreadRunnable> aRunnable)
+        : mThread{std::move(aThread)}, mRunnable{std::move(aRunnable)} {
+      AssertIsOnBackgroundThread();
+      AssertValid();
+
+      MOZ_COUNT_CTOR(ConnectionPool::ThreadInfo);
+    }
+
+    ThreadInfo(const ThreadInfo& aOther) = delete;
+    ThreadInfo& operator=(const ThreadInfo& aOther) = delete;
+
+    ThreadInfo(ThreadInfo&& aOther) noexcept;
+    ThreadInfo& operator=(ThreadInfo&& aOther) = default;
+
+    bool IsValid() const {
+      const bool res = mThread;
+      if (res) {
+        AssertValid();
+      } else {
+        AssertEmpty();
+      }
+      return res;
+    }
+
+    void AssertValid() const {
+      MOZ_ASSERT(mThread);
+      MOZ_ASSERT(mRunnable);
+    }
+
+    void AssertEmpty() const {
+      MOZ_ASSERT(!mThread);
+      MOZ_ASSERT(!mRunnable);
+    }
+
+    nsIThread& ThreadRef() {
+      AssertValid();
+      return *mThread;
+    }
+
+    std::tuple<nsCOMPtr<nsIThread>, RefPtr<ThreadRunnable>> Forget() {
+      AssertValid();
+
+      return {std::move(mThread), std::move(mRunnable)};
+    }
+
+    ~ThreadInfo();
+
+    bool operator==(const ThreadInfo& aOther) const {
+      return mThread == aOther.mThread && mRunnable == aOther.mRunnable;
+    }
+
+   private:
+    nsCOMPtr<nsIThread> mThread;
+    RefPtr<ThreadRunnable> mRunnable;
+  };
+
+  struct IdleThreadInfo final : public IdleResource {
+    ThreadInfo mThreadInfo;
+
+    explicit IdleThreadInfo(ThreadInfo aThreadInfo);
+
+    IdleThreadInfo(const IdleThreadInfo& aOther) = delete;
+    IdleThreadInfo(IdleThreadInfo&& aOther) noexcept
+        : IdleResource(std::move(aOther)),
+          mThreadInfo(std::move(aOther.mThreadInfo)) {
+      AssertIsOnBackgroundThread();
+      mThreadInfo.AssertValid();
+
+      MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
+    }
+    IdleThreadInfo& operator=(const IdleThreadInfo& aOther) = delete;
+    IdleThreadInfo& operator=(IdleThreadInfo&& aOther) = delete;
+
+    ~IdleThreadInfo();
+
+    bool operator==(const IdleThreadInfo& aOther) const {
+      return mThreadInfo == aOther.mThreadInfo;
+    }
+
+    bool operator<(const IdleThreadInfo& aOther) const {
+      return mIdleTime < aOther.mIdleTime;
+    }
+  };
 
   // This mutex guards mDatabases, see below.
   Mutex mDatabasesMutex;
@@ -5143,66 +5274,6 @@ class ConnectionPool::CloseConnectionRunnable final
   NS_DECL_NSIRUNNABLE
 };
 
-class ConnectionPool::ThreadInfo {
- public:
-  ThreadInfo();
-
-  ThreadInfo(nsCOMPtr<nsIThread> aThread, RefPtr<ThreadRunnable> aRunnable)
-      : mThread{std::move(aThread)}, mRunnable{std::move(aRunnable)} {
-    AssertIsOnBackgroundThread();
-    AssertValid();
-
-    MOZ_COUNT_CTOR(ConnectionPool::ThreadInfo);
-  }
-
-  ThreadInfo(const ThreadInfo& aOther) = delete;
-  ThreadInfo& operator=(const ThreadInfo& aOther) = delete;
-
-  ThreadInfo(ThreadInfo&& aOther) noexcept;
-  ThreadInfo& operator=(ThreadInfo&& aOther) = default;
-
-  bool IsValid() const {
-    const bool res = mThread;
-    if (res) {
-      AssertValid();
-    } else {
-      AssertEmpty();
-    }
-    return res;
-  }
-
-  void AssertValid() const {
-    MOZ_ASSERT(mThread);
-    MOZ_ASSERT(mRunnable);
-  }
-
-  void AssertEmpty() const {
-    MOZ_ASSERT(!mThread);
-    MOZ_ASSERT(!mRunnable);
-  }
-
-  nsIThread& ThreadRef() {
-    AssertValid();
-    return *mThread;
-  }
-
-  std::tuple<nsCOMPtr<nsIThread>, RefPtr<ThreadRunnable>> Forget() {
-    AssertValid();
-
-    return {std::move(mThread), std::move(mRunnable)};
-  }
-
-  ~ThreadInfo();
-
-  bool operator==(const ThreadInfo& aOther) const {
-    return mThread == aOther.mThread && mRunnable == aOther.mRunnable;
-  }
-
- private:
-  nsCOMPtr<nsIThread> mThread;
-  RefPtr<ThreadRunnable> mRunnable;
-};
-
 struct ConnectionPool::DatabaseInfo final {
   friend class mozilla::DefaultDelete<DatabaseInfo>;
 
@@ -5289,81 +5360,6 @@ class ConnectionPool::FinishCallbackWrapper final : public Runnable {
   ~FinishCallbackWrapper() override;
 
   NS_DECL_NSIRUNNABLE
-};
-
-struct ConnectionPool::IdleResource {
-  TimeStamp mIdleTime;
-
-  IdleResource(const IdleResource& aOther) = delete;
-  IdleResource(IdleResource&& aOther) noexcept
-      : IdleResource(aOther.mIdleTime) {}
-  IdleResource& operator=(const IdleResource& aOther) = delete;
-  IdleResource& operator=(IdleResource&& aOther) = delete;
-
- protected:
-  explicit IdleResource(const TimeStamp& aIdleTime);
-
-  ~IdleResource();
-};
-
-struct ConnectionPool::IdleDatabaseInfo final : public IdleResource {
-  InitializedOnceMustBeTrue<DatabaseInfo* const> mDatabaseInfo;
-
- public:
-  explicit IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
-
-  IdleDatabaseInfo(const IdleDatabaseInfo& aOther) = delete;
-  IdleDatabaseInfo(IdleDatabaseInfo&& aOther) noexcept
-      : IdleResource(std::move(aOther)),
-        mDatabaseInfo{std::move(aOther.mDatabaseInfo)} {
-    MOZ_ASSERT(mDatabaseInfo);
-
-    MOZ_COUNT_CTOR(ConnectionPool::IdleDatabaseInfo);
-  }
-  IdleDatabaseInfo& operator=(const IdleDatabaseInfo& aOther) = delete;
-  IdleDatabaseInfo& operator=(IdleDatabaseInfo&& aOther) = delete;
-
-  ~IdleDatabaseInfo();
-
-  bool operator==(const IdleDatabaseInfo& aOther) const {
-    return *mDatabaseInfo == *aOther.mDatabaseInfo;
-  }
-
-  bool operator==(DatabaseInfo* const aDatabaseInfo) const {
-    return *mDatabaseInfo == aDatabaseInfo;
-  }
-
-  bool operator<(const IdleDatabaseInfo& aOther) const {
-    return mIdleTime < aOther.mIdleTime;
-  }
-};
-
-struct ConnectionPool::IdleThreadInfo final : public IdleResource {
-  ThreadInfo mThreadInfo;
-
-  explicit IdleThreadInfo(ThreadInfo aThreadInfo);
-
-  IdleThreadInfo(const IdleThreadInfo& aOther) = delete;
-  IdleThreadInfo(IdleThreadInfo&& aOther) noexcept
-      : IdleResource(std::move(aOther)),
-        mThreadInfo(std::move(aOther.mThreadInfo)) {
-    AssertIsOnBackgroundThread();
-    mThreadInfo.AssertValid();
-
-    MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
-  }
-  IdleThreadInfo& operator=(const IdleThreadInfo& aOther) = delete;
-  IdleThreadInfo& operator=(IdleThreadInfo&& aOther) = delete;
-
-  ~IdleThreadInfo();
-
-  bool operator==(const IdleThreadInfo& aOther) const {
-    return mThreadInfo == aOther.mThreadInfo;
-  }
-
-  bool operator<(const IdleThreadInfo& aOther) const {
-    return mIdleTime < aOther.mIdleTime;
-  }
 };
 
 class ConnectionPool::ThreadRunnable final : public Runnable {
@@ -6718,7 +6714,27 @@ class FactoryOp
       public PBackgroundIDBFactoryRequestParent,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
-  struct MaybeBlockedDatabaseInfo;
+  struct MaybeBlockedDatabaseInfo final {
+    RefPtr<Database> mDatabase;
+    bool mBlocked;
+
+    MOZ_IMPLICIT MaybeBlockedDatabaseInfo(Database* aDatabase)
+        : mDatabase(aDatabase), mBlocked(false) {
+      MOZ_ASSERT(aDatabase);
+
+      MOZ_COUNT_CTOR(FactoryOp::MaybeBlockedDatabaseInfo);
+    }
+
+    ~MaybeBlockedDatabaseInfo() {
+      MOZ_COUNT_DTOR(FactoryOp::MaybeBlockedDatabaseInfo);
+    }
+
+    bool operator==(const MaybeBlockedDatabaseInfo& aOther) const {
+      return mDatabase == aOther.mDatabase;
+    }
+
+    Database* operator->() MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mDatabase; }
+  };
 
  protected:
   enum class State {
@@ -6933,28 +6949,6 @@ class FactoryOp
 
   // Test whether this FactoryOp needs to wait for the given op.
   bool MustWaitFor(const FactoryOp& aExistingOp);
-};
-
-struct FactoryOp::MaybeBlockedDatabaseInfo final {
-  RefPtr<Database> mDatabase;
-  bool mBlocked;
-
-  MOZ_IMPLICIT MaybeBlockedDatabaseInfo(Database* aDatabase)
-      : mDatabase(aDatabase), mBlocked(false) {
-    MOZ_ASSERT(aDatabase);
-
-    MOZ_COUNT_CTOR(FactoryOp::MaybeBlockedDatabaseInfo);
-  }
-
-  ~MaybeBlockedDatabaseInfo() {
-    MOZ_COUNT_DTOR(FactoryOp::MaybeBlockedDatabaseInfo);
-  }
-
-  bool operator==(const MaybeBlockedDatabaseInfo& aOther) const {
-    return mDatabase == aOther.mDatabase;
-  }
-
-  Database* operator->() MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mDatabase; }
 };
 
 class OpenDatabaseOp final : public FactoryOp {
@@ -7421,7 +7415,70 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
-  class StoredFileInfo;
+  class StoredFileInfo final {
+    InitializedOnceMustBeTrue<const RefPtr<FileInfo>> mFileInfo;
+    // Either nothing, a file actor or a non-Blob-backed inputstream to write to
+    // disk.
+    using FileActorOrInputStream =
+        Variant<Nothing, RefPtr<DatabaseFile>, nsCOMPtr<nsIInputStream>>;
+    InitializedOnce<const FileActorOrInputStream> mFileActorOrInputStream;
+#ifdef DEBUG
+    const StructuredCloneFileBase::FileType mType;
+#endif
+
+    void AssertInvariants() const;
+
+    explicit StoredFileInfo(RefPtr<FileInfo> aFileInfo);
+
+    StoredFileInfo(RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor);
+
+    StoredFileInfo(RefPtr<FileInfo> aFileInfo,
+                   nsCOMPtr<nsIInputStream> aInputStream);
+
+   public:
+#if defined(NS_BUILD_REFCNT_LOGGING)
+    // Only for MOZ_COUNT_CTOR.
+    StoredFileInfo(StoredFileInfo&& aOther)
+        : mFileInfo{std::move(aOther.mFileInfo)}, mFileActorOrInputStream {
+      std::move(aOther.mFileActorOrInputStream)
+    }
+#  ifdef DEBUG
+    , mType { aOther.mType }
+#  endif
+    { MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo); }
+#else
+    StoredFileInfo(StoredFileInfo&&) = default;
+#endif
+
+    static StoredFileInfo CreateForMutableFile(RefPtr<FileInfo> aFileInfo);
+    static StoredFileInfo CreateForBlob(RefPtr<FileInfo> aFileInfo,
+                                        RefPtr<DatabaseFile> aFileActor);
+    static StoredFileInfo CreateForStructuredClone(
+        RefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream);
+
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
+    ~StoredFileInfo() {
+      AssertIsOnBackgroundThread();
+      AssertInvariants();
+
+      MOZ_COUNT_DTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+    }
+#endif
+
+    bool IsValid() const { return static_cast<bool>(mFileInfo); }
+
+    const FileInfo& GetFileInfo() const { return **mFileInfo; }
+
+    bool ShouldCompress() const;
+
+    void NotifyWriteSucceeded() const;
+
+    using InputStreamResult =
+        mozilla::Result<nsCOMPtr<nsIInputStream>, nsresult>;
+    InputStreamResult GetInputStream();
+
+    void Serialize(nsString& aText) const;
+  };
   class SCInputStream;
 
   const ObjectStoreAddPutParams mParams;
@@ -7459,229 +7516,197 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   void Cleanup() override;
 };
 
-class ObjectStoreAddOrPutRequestOp::StoredFileInfo final {
-  InitializedOnceMustBeTrue<const RefPtr<FileInfo>> mFileInfo;
-  // Either nothing, a file actor or a non-Blob-backed inputstream to write to
-  // disk.
-  using FileActorOrInputStream =
-      Variant<Nothing, RefPtr<DatabaseFile>, nsCOMPtr<nsIInputStream>>;
-  InitializedOnce<const FileActorOrInputStream> mFileActorOrInputStream;
+void ObjectStoreAddOrPutRequestOp::StoredFileInfo::AssertInvariants() const {
+  // The only allowed types are eStructuredClone, eBlob and eMutableFile.
+  MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType ||
+             StructuredCloneFileBase::eBlob == mType ||
+             StructuredCloneFileBase::eMutableFile == mType);
+
+  // mFileInfo and a file actor in mFileActorOrInputStream are present until
+  // the object is moved away, but an inputStream in mFileActorOrInputStream
+  // can be released early.
+  MOZ_ASSERT_IF(static_cast<bool>(mFileActorOrInputStream) &&
+                    mFileActorOrInputStream->is<RefPtr<DatabaseFile>>(),
+                static_cast<bool>(mFileInfo));
+
+  if (mFileInfo) {
+    // In a non-moved StoredFileInfo, one of the following is true:
+    // - This was an overflow structured clone (eStructuredClone) and
+    //   storedFileInfo.mFileActorOrInputStream CAN be a non-nullptr input
+    //   stream (but that might have been release by ReleaseInputStream).
+    MOZ_ASSERT_IF(
+        StructuredCloneFileBase::eStructuredClone == mType,
+        !mFileActorOrInputStream ||
+            (mFileActorOrInputStream->is<nsCOMPtr<nsIInputStream>>() &&
+             mFileActorOrInputStream->as<nsCOMPtr<nsIInputStream>>()));
+
+    // - This is a reference to a Blob (eBlob) that may or may not have
+    //   already been written to disk.  storedFileInfo.mFileActorOrInputStream
+    //   MUST be a non-null file actor, but its GetInputStream may return
+    //   nullptr (so don't assert on that).
+    MOZ_ASSERT_IF(StructuredCloneFileBase::eBlob == mType,
+                  mFileActorOrInputStream->is<RefPtr<DatabaseFile>>() &&
+                      mFileActorOrInputStream->as<RefPtr<DatabaseFile>>());
+
+    // - It's a mutable file (eMutableFile).  No writing will be performed,
+    // and storedFileInfo.mFileActorOrInputStream is Nothing.
+    MOZ_ASSERT_IF(StructuredCloneFileBase::eMutableFile == mType,
+                  mFileActorOrInputStream->is<Nothing>());
+  }
+}
+
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
+    RefPtr<FileInfo> aFileInfo)
+    : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
+  Nothing {}
+}
 #ifdef DEBUG
-  const StructuredCloneFileBase::FileType mType;
+, mType { StructuredCloneFileBase::eMutableFile }
 #endif
+{
+  AssertIsOnBackgroundThread();
+  AssertInvariants();
 
-  void AssertInvariants() const {
-    // The only allowed types are eStructuredClone, eBlob and eMutableFile.
-    MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType ||
-               StructuredCloneFileBase::eBlob == mType ||
-               StructuredCloneFileBase::eMutableFile == mType);
+  MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+}
 
-    // mFileInfo and a file actor in mFileActorOrInputStream are present until
-    // the object is moved away, but an inputStream in mFileActorOrInputStream
-    // can be released early.
-    MOZ_ASSERT_IF(static_cast<bool>(mFileActorOrInputStream) &&
-                      mFileActorOrInputStream->is<RefPtr<DatabaseFile>>(),
-                  static_cast<bool>(mFileInfo));
-
-    if (mFileInfo) {
-      // In a non-moved StoredFileInfo, then one of the following is true:
-      // - This was an overflow structured clone (eStructuredClone) and
-      //   storedFileInfo.mFileActorOrInputStream CAN be a non-nullptr input
-      //   stream (but that might have been release by ReleaseInputStream).
-      MOZ_ASSERT_IF(
-          StructuredCloneFileBase::eStructuredClone == mType,
-          !mFileActorOrInputStream ||
-              (mFileActorOrInputStream->is<nsCOMPtr<nsIInputStream>>() &&
-               mFileActorOrInputStream->as<nsCOMPtr<nsIInputStream>>()));
-
-      // - This is a reference to a Blob (eBlob) that may or may not have
-      //   already been written to disk.  storedFileInfo.mFileActorOrInputStream
-      //   MUST be a non-null file actor, but its GetInputStream may return
-      //   nullptr (so don't assert on that).
-      MOZ_ASSERT_IF(StructuredCloneFileBase::eBlob == mType,
-                    mFileActorOrInputStream->is<RefPtr<DatabaseFile>>() &&
-                        mFileActorOrInputStream->as<RefPtr<DatabaseFile>>());
-
-      // - It's a mutable file (eMutableFile).  No writing will be performed,
-      // and storedFileInfo.mFileActorOrInputStream is Nothing.
-      MOZ_ASSERT_IF(StructuredCloneFileBase::eMutableFile == mType,
-                    mFileActorOrInputStream->is<Nothing>());
-    }
-  }
-
-  explicit StoredFileInfo(RefPtr<FileInfo> aFileInfo)
-      : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
-    Nothing {}
-  }
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
+    RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
+    : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
+  std::move(aFileActor)
+}
 #ifdef DEBUG
-  , mType { StructuredCloneFileBase::eMutableFile }
+, mType { StructuredCloneFileBase::eBlob }
 #endif
-  {
-    AssertIsOnBackgroundThread();
-    AssertInvariants();
+{
+  AssertIsOnBackgroundThread();
+  AssertInvariants();
 
-    MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
-  }
+  MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+}
 
-  StoredFileInfo(RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
-      : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
-    std::move(aFileActor)
-  }
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
+    RefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream)
+    : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
+  std::move(aInputStream)
+}
 #ifdef DEBUG
-  , mType { StructuredCloneFileBase::eBlob }
+, mType { StructuredCloneFileBase::eStructuredClone }
 #endif
-  {
-    AssertIsOnBackgroundThread();
-    AssertInvariants();
+{
+  AssertIsOnBackgroundThread();
+  AssertInvariants();
 
-    MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+  MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+}
+
+ObjectStoreAddOrPutRequestOp::StoredFileInfo
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::CreateForMutableFile(
+    RefPtr<FileInfo> aFileInfo) {
+  return StoredFileInfo{std::move(aFileInfo)};
+}
+
+ObjectStoreAddOrPutRequestOp::StoredFileInfo
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::CreateForBlob(
+    RefPtr<FileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor) {
+  return {std::move(aFileInfo), std::move(aFileActor)};
+}
+
+ObjectStoreAddOrPutRequestOp::StoredFileInfo
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::CreateForStructuredClone(
+    RefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream) {
+  return {std::move(aFileInfo), std::move(aInputStream)};
+}
+
+bool ObjectStoreAddOrPutRequestOp::StoredFileInfo::ShouldCompress() const {
+  // Must not be called after moving.
+  MOZ_ASSERT(IsValid());
+
+  // Compression is only necessary for eStructuredClone, i.e. when
+  // mFileActorOrInputStream stored an input stream. However, this is only
+  // called after GetInputStream, when mFileActorOrInputStream has been
+  // cleared, which is only possible for this type.
+  const bool res = !mFileActorOrInputStream;
+  MOZ_ASSERT(res == (StructuredCloneFileBase::eStructuredClone == mType));
+  return res;
+}
+
+void ObjectStoreAddOrPutRequestOp::StoredFileInfo::NotifyWriteSucceeded()
+    const {
+  MOZ_ASSERT(IsValid());
+
+  // For eBlob, clear the blob implementation.
+  if (mFileActorOrInputStream &&
+      mFileActorOrInputStream->is<RefPtr<DatabaseFile>>()) {
+    mFileActorOrInputStream->as<RefPtr<DatabaseFile>>()
+        ->WriteSucceededClearBlobImpl();
   }
 
-  StoredFileInfo(RefPtr<FileInfo> aFileInfo,
-                 nsCOMPtr<nsIInputStream> aInputStream)
-      : mFileInfo{std::move(aFileInfo)}, mFileActorOrInputStream {
-    std::move(aInputStream)
-  }
-#ifdef DEBUG
-  , mType { StructuredCloneFileBase::eStructuredClone }
-#endif
-  {
-    AssertIsOnBackgroundThread();
-    AssertInvariants();
+  // For the other types, no action is necessary.
+}
 
-    MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::InputStreamResult
+ObjectStoreAddOrPutRequestOp::StoredFileInfo::GetInputStream() {
+  if (!mFileActorOrInputStream) {
+    MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType);
+    return nsCOMPtr<nsIInputStream>{};
   }
 
- public:
-#if defined(NS_BUILD_REFCNT_LOGGING)
-  // Only for MOZ_COUNT_CTOR.
-  StoredFileInfo(StoredFileInfo&& aOther)
-      : mFileInfo{std::move(aOther.mFileInfo)}, mFileActorOrInputStream {
-    std::move(aOther.mFileActorOrInputStream)
-  }
-#  ifdef DEBUG
-  , mType { aOther.mType }
-#  endif
-  { MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo); }
-#else
-  StoredFileInfo(StoredFileInfo&&) = default;
-#endif
+  // For the different cases, see also the comments in AssertInvariants.
+  return mFileActorOrInputStream->match(
+      [](const Nothing&) -> InputStreamResult {
+        return nsCOMPtr<nsIInputStream>{};
+      },
+      [](const RefPtr<DatabaseFile>& databaseActor) -> InputStreamResult {
+        ErrorResult rv;
+        auto inputStream = databaseActor->GetInputStream(rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          return Err(rv.StealNSResult());
+        }
 
-  static StoredFileInfo CreateForMutableFile(RefPtr<FileInfo> aFileInfo) {
-    return StoredFileInfo{std::move(aFileInfo)};
-  }
-  static StoredFileInfo CreateForBlob(RefPtr<FileInfo> aFileInfo,
-                                      RefPtr<DatabaseFile> aFileActor) {
-    return {std::move(aFileInfo), std::move(aFileActor)};
-  }
-  static StoredFileInfo CreateForStructuredClone(
-      RefPtr<FileInfo> aFileInfo, nsCOMPtr<nsIInputStream> aInputStream) {
-    return {std::move(aFileInfo), std::move(aInputStream)};
-  }
+        return inputStream;
+      },
+      [this](const nsCOMPtr<nsIInputStream>& inputStream) -> InputStreamResult {
+        auto res = inputStream;
+        // reset() clears the inputStream parameter, so we needed to make a
+        // copy before
+        mFileActorOrInputStream.reset();
+        AssertInvariants();
+        return res;
+      });
+}
 
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
-  ~StoredFileInfo() {
-    AssertIsOnBackgroundThread();
-    AssertInvariants();
+void ObjectStoreAddOrPutRequestOp::StoredFileInfo::Serialize(
+    nsString& aText) const {
+  AssertInvariants();
+  MOZ_ASSERT(IsValid());
 
-    MOZ_COUNT_DTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
-  }
-#endif
+  const int64_t id = (*mFileInfo)->Id();
 
-  bool IsValid() const { return static_cast<bool>(mFileInfo); }
+  auto structuredCloneHandler = [&aText, id](const nsCOMPtr<nsIInputStream>&) {
+    // eStructuredClone
+    aText.Append('.');
+    aText.AppendInt(id);
+  };
 
-  const FileInfo& GetFileInfo() const { return **mFileInfo; }
-
-  bool ShouldCompress() const {
-    // Must not be called after moving.
-    MOZ_ASSERT(IsValid());
-
-    // Compression is only necessary for eStructuredClone, i.e. when
-    // mFileActorOrInputStream stored an input stream. However, this is only
-    // called after GetInputStream, when mFileActorOrInputStream has been
-    // cleared, which is only possible for this type.
-    const bool res = !mFileActorOrInputStream;
-    MOZ_ASSERT(res == (StructuredCloneFileBase::eStructuredClone == mType));
-    return res;
+  // If mFileActorOrInputStream was moved, we had an inputStream before.
+  if (!mFileActorOrInputStream) {
+    structuredCloneHandler(nullptr);
+    return;
   }
 
-  void NotifyWriteSucceeded() const {
-    MOZ_ASSERT(IsValid());
-
-    // For eBlob, clear the blob implementation.
-    if (mFileActorOrInputStream &&
-        mFileActorOrInputStream->is<RefPtr<DatabaseFile>>()) {
-      mFileActorOrInputStream->as<RefPtr<DatabaseFile>>()
-          ->WriteSucceededClearBlobImpl();
-    }
-
-    // For the other types, no action is necessary.
-  }
-
-  using InputStreamResult = mozilla::Result<nsCOMPtr<nsIInputStream>, nsresult>;
-  InputStreamResult GetInputStream() {
-    if (!mFileActorOrInputStream) {
-      MOZ_ASSERT(StructuredCloneFileBase::eStructuredClone == mType);
-      return nsCOMPtr<nsIInputStream>{};
-    }
-
-    // For the different cases, see also the comments in AssertInvariants.
-    return mFileActorOrInputStream->match(
-        [](const Nothing&) -> InputStreamResult {
-          return nsCOMPtr<nsIInputStream>{};
-        },
-        [](const RefPtr<DatabaseFile>& databaseActor) -> InputStreamResult {
-          ErrorResult rv;
-          auto inputStream = databaseActor->GetInputStream(rv);
-          if (NS_WARN_IF(rv.Failed())) {
-            return Err(rv.StealNSResult());
-          }
-
-          return inputStream;
-        },
-        [this](
-            const nsCOMPtr<nsIInputStream>& inputStream) -> InputStreamResult {
-          auto res = inputStream;
-          // reset() clears the inputStream parameter, so we needed to make a
-          // copy before
-          mFileActorOrInputStream.reset();
-          AssertInvariants();
-          return res;
-        });
-  }
-
-  void Serialize(nsString& aText) const {
-    AssertInvariants();
-    MOZ_ASSERT(IsValid());
-
-    const int64_t id = (*mFileInfo)->Id();
-
-    auto structuredCloneHandler = [&aText,
-                                   id](const nsCOMPtr<nsIInputStream>&) {
-      // eStructuredClone
-      aText.Append('.');
-      aText.AppendInt(id);
-    };
-
-    // If mFileActorOrInputStream was moved, we had an inputStream before.
-    if (!mFileActorOrInputStream) {
-      structuredCloneHandler(nullptr);
-      return;
-    }
-
-    // This encoding is parsed in DeserializeStructuredCloneFile.
-    mFileActorOrInputStream->match(
-        [&aText, id](const Nothing&) {
-          // eMutableFile
-          aText.AppendInt(-id);
-        },
-        [&aText, id](const RefPtr<DatabaseFile>&) {
-          // eBlob
-          aText.AppendInt(id);
-        },
-        structuredCloneHandler);
-  }
-};
+  // This encoding is parsed in DeserializeStructuredCloneFile.
+  mFileActorOrInputStream->match(
+      [&aText, id](const Nothing&) {
+        // eMutableFile
+        aText.AppendInt(-id);
+      },
+      [&aText, id](const RefPtr<DatabaseFile>&) {
+        // eBlob
+        aText.AppendInt(id);
+      },
+      structuredCloneHandler);
+}
 
 class ObjectStoreAddOrPutRequestOp::SCInputStream final
     : public nsIInputStream {
@@ -8712,7 +8737,20 @@ class DeleteFilesRunnable final : public Runnable,
 };
 
 class Maintenance final : public Runnable, public OpenDirectoryListener {
-  struct DirectoryInfo;
+  struct DirectoryInfo final {
+    InitializedOnce<const nsCString> mGroup;
+    InitializedOnce<const nsCString> mOrigin;
+    InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
+    const PersistenceType mPersistenceType;
+
+    DirectoryInfo(PersistenceType aPersistenceType, nsCString aGroup,
+                  nsCString aOrigin, nsTArray<nsString>&& aDatabasePaths);
+
+    DirectoryInfo(const DirectoryInfo& aOther) = delete;
+    DirectoryInfo(DirectoryInfo&& aOther) = delete;
+
+    ~DirectoryInfo() { MOZ_COUNT_DTOR(Maintenance::DirectoryInfo); }
+  };
 
   enum class State {
     // Newly created on the PBackground thread. Will proceed immediately or be
@@ -8859,50 +8897,25 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
   void DirectoryLockFailed() override;
 };
 
-struct Maintenance::DirectoryInfo final {
-  InitializedOnce<const nsCString> mGroup;
-  InitializedOnce<const nsCString> mOrigin;
-  InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
-  const PersistenceType mPersistenceType;
-
-  DirectoryInfo(PersistenceType aPersistenceType, nsCString aGroup,
-                nsCString aOrigin, nsTArray<nsString>&& aDatabasePaths)
-      : mGroup(std::move(aGroup)),
-        mOrigin(std::move(aOrigin)),
-        mDatabasePaths(std::move(aDatabasePaths)),
-        mPersistenceType(aPersistenceType) {
-    MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-    MOZ_ASSERT(!mGroup->IsEmpty());
-    MOZ_ASSERT(!mOrigin->IsEmpty());
+Maintenance::DirectoryInfo::DirectoryInfo(PersistenceType aPersistenceType,
+                                          nsCString aGroup, nsCString aOrigin,
+                                          nsTArray<nsString>&& aDatabasePaths)
+    : mGroup(std::move(aGroup)),
+      mOrigin(std::move(aOrigin)),
+      mDatabasePaths(std::move(aDatabasePaths)),
+      mPersistenceType(aPersistenceType) {
+  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
+  MOZ_ASSERT(!mGroup->IsEmpty());
+  MOZ_ASSERT(!mOrigin->IsEmpty());
 #ifdef DEBUG
-    MOZ_ASSERT(!mDatabasePaths->IsEmpty());
-    for (const nsString& databasePath : *mDatabasePaths) {
-      MOZ_ASSERT(!databasePath.IsEmpty());
-    }
+  MOZ_ASSERT(!mDatabasePaths->IsEmpty());
+  for (const nsString& databasePath : *mDatabasePaths) {
+    MOZ_ASSERT(!databasePath.IsEmpty());
+  }
 #endif
 
-    MOZ_COUNT_CTOR(Maintenance::DirectoryInfo);
-  }
-
-  DirectoryInfo(DirectoryInfo&& aOther)
-      : mGroup(std::move(aOther.mGroup)),
-        mOrigin(std::move(aOther.mOrigin)),
-        mDatabasePaths(std::move(aOther.mDatabasePaths)),
-        mPersistenceType(aOther.mPersistenceType) {
-#ifdef DEBUG
-    MOZ_ASSERT(!mDatabasePaths->IsEmpty());
-    for (const nsString& databasePath : *mDatabasePaths) {
-      MOZ_ASSERT(!databasePath.IsEmpty());
-    }
-#endif
-
-    MOZ_COUNT_CTOR(Maintenance::DirectoryInfo);
-  }
-
-  ~DirectoryInfo() { MOZ_COUNT_DTOR(Maintenance::DirectoryInfo); }
-
-  DirectoryInfo(const DirectoryInfo& aOther) = delete;
-};
+  MOZ_COUNT_CTOR(Maintenance::DirectoryInfo);
+}
 
 class DatabaseMaintenance final : public Runnable {
   // The minimum amount of time that has passed since the last vacuum before we
@@ -10147,15 +10160,7 @@ struct ValuePopulateResponseHelper {
   void MaybeFillCloneInfo(Response* const aResponse, FilesArray* const aFiles) {
     auto cloneInfo = mCloneInfo.release();
     aResponse->cloneInfo().data().data = cloneInfo.ReleaseData();
-
-    // TODO (Bug 1620632) On gcc, the following fails to compile:
-    //     aFiles->AppendElement(cloneInfo.ReleaseFiles());
-    // so we construct a FallibleTArray and swap the elements...
-
-    auto files = cloneInfo.ReleaseFiles();
-    FallibleTArray<mozilla::dom::indexedDB::StructuredCloneFileParent> temp;
-    temp.SwapElements(files);
-    aFiles->AppendElement(std::move(temp));
+    aFiles->AppendElement(cloneInfo.ReleaseFiles());
   }
 
   template <typename Response>

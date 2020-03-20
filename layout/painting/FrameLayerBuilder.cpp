@@ -69,7 +69,7 @@ using mozilla::WrapUnique;
 
 // PaintedLayerData::mAssignedDisplayItems is a std::vector, which is
 // non-memmovable
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::PaintedLayerData);
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::PaintedLayerData);
 
 namespace mozilla {
 

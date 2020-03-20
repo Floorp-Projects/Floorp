@@ -1174,7 +1174,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentContainerASR(nullptr),
       mCurrentFrame(aReferenceFrame),
       mCurrentReferenceFrame(aReferenceFrame),
-      mNeedsDisplayListBuild{},
       mRootAGR(AnimatedGeometryRoot::CreateAGRForFrame(
           aReferenceFrame, nullptr, true, aRetainingDisplayList)),
       mCurrentAGR(mRootAGR),
@@ -1266,9 +1265,6 @@ void nsDisplayListBuilder::BeginFrame() {
   mInTransform = false;
   mInFilter = false;
   mSyncDecodeImages = false;
-  for (auto& needsDisplayListBuild : mNeedsDisplayListBuild) {
-    needsDisplayListBuild = false;
-  }
 
   for (auto& renderRootRect : mRenderRootRects) {
     renderRootRect = LayoutDeviceRect();
@@ -7055,127 +7051,6 @@ void nsDisplayOwnLayer::WriteDebugInfo(std::stringstream& aStream) {
   aStream << nsPrintfCString(" (flags 0x%x) (scrolltarget %" PRIu64 ")",
                              (int)mFlags, mScrollbarData.mTargetViewId)
                  .get();
-}
-
-nsDisplayRenderRoot::nsDisplayRenderRoot(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    const ActiveScrolledRoot* aActiveScrolledRoot, wr::RenderRoot aRenderRoot)
-    : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true),
-      mRenderRoot(aRenderRoot),
-      mBuiltWRCommands(false) {
-  MOZ_ASSERT(aRenderRoot != wr::RenderRoot::Default);
-  MOZ_ASSERT(StaticPrefs::gfx_webrender_split_render_roots_AtStartup());
-  ExpandDisplayListBuilderRenderRootRect(aBuilder);
-  MOZ_COUNT_CTOR(nsDisplayRenderRoot);
-}
-
-void nsDisplayRenderRoot::Destroy(nsDisplayListBuilder* aBuilder) {
-  if (mBuiltWRCommands && aBuilder) {
-    aBuilder->SetNeedsDisplayListBuild(mRenderRoot);
-  }
-  nsDisplayWrapList::Destroy(aBuilder);
-}
-
-void nsDisplayRenderRoot::NotifyUsed(nsDisplayListBuilder* aBuilder) {
-  ExpandDisplayListBuilderRenderRootRect(aBuilder);
-  nsDisplayWrapList::SetReused(aBuilder);
-}
-
-void nsDisplayRenderRoot::InvalidateCachedChildInfo(
-    nsDisplayListBuilder* aBuilder) {
-  if (mBuiltWRCommands && aBuilder) {
-    aBuilder->SetNeedsDisplayListBuild(mRenderRoot);
-    mBuiltWRCommands = false;
-  }
-}
-
-bool nsDisplayRenderRoot::UpdateScrollData(
-    mozilla::layers::WebRenderScrollData* aData,
-    mozilla::layers::WebRenderLayerScrollData* aLayerData) {
-  // Ideally we'd return false if this nsDisplayRenderRoot isn't actually
-  // establishing a render root boundary (i.e. if mRenderRoot ==
-  // aBuilder.GetRenderRoot()). But we don't have aBuilder here so we can't do
-  // that. Returning true unconditionally is suboptimal but still correct.
-  if (aLayerData) {
-    if (mBoundary) {
-      // Scroll data entries that are referents should never have direct
-      // descendants. Instead they will refer to a different subtree
-      MOZ_ASSERT(aLayerData->GetDescendantCount() == 0);
-      aLayerData->SetReferentRenderRoot(*mBoundary);
-    }
-  }
-  return true;
-}
-
-bool nsDisplayRenderRoot::CreateWebRenderCommands(
-    mozilla::wr::DisplayListBuilder& aBuilder,
-    mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const StackingContextHelper& aSc, RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder) {
-  // It's important to get the userData here even in the early-return case,
-  // because this has the important side-effect of marking the user data "used"
-  // so it doesn't get discarded at the end of the transaction.
-  RefPtr<WebRenderRenderRootData> userData =
-      aManager->CommandBuilder()
-          .CreateOrRecycleWebRenderUserData<WebRenderRenderRootData>(
-              this, aBuilder.GetRenderRoot());
-  // Technically the next line is redundant but maybe it will stop people who
-  // don't read comments from accidentally moving the above line of code back
-  // down below the early-return.
-  userData->SetUsed(true);
-
-  if (!aDisplayListBuilder->GetNeedsDisplayListBuild(mRenderRoot) &&
-      mBuiltWRCommands) {
-    return true;
-  }
-  if (aBuilder.GetRenderRoot() == mRenderRoot) {
-    nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, aSc,
-                                               aManager, aDisplayListBuilder);
-  } else {
-    mBoundary = Some(userData->EnsureHasBoundary(mRenderRoot));
-
-    WebRenderCommandBuilder::ScrollDataBoundaryWrapper wrapper(
-        aManager->CommandBuilder(), *mBoundary);
-
-    aBuilder.SetSendSubBuilderDisplayList(mRenderRoot);
-    wr::DisplayListBuilder& builder = aBuilder.SubBuilder(mRenderRoot);
-    wr::IpcResourceUpdateQueue& resources = aResources.SubQueue(mRenderRoot);
-
-    wr::StackingContextParams params;
-    params.clip =
-        wr::WrStackingContextClip::ClipChain(builder.CurrentClipChainId());
-    LayoutDeviceRect rrRect =
-        aDisplayListBuilder->GetRenderRootRect(mRenderRoot);
-    LayoutDevicePoint scOrigin = aSc.GetOrigin();
-    // Subtract the render root rect from this, as it already acts as the
-    // origin for our whole display list in WebRender (via SetDocumentView).
-    // However, we can't simply ignore the value of aSc.GetOrigin(), even
-    // though they will often be the same. This is because there might be
-    // multiple cousin nsDisplayRenderRoots in a tree of nsDisplayItems, and
-    // the RenderRootRect will be the union of their areas.
-    scOrigin.x -= rrRect.x;
-    scOrigin.y -= rrRect.y;
-    StackingContextHelper sc(
-        aManager->CommandBuilder().GetRootStackingContextHelper(mRenderRoot),
-        nullptr, nullptr, nullptr, builder, params,
-        LayoutDeviceRect(scOrigin, LayoutDeviceSize()));
-
-    nsDisplayWrapList::CreateWebRenderCommands(builder, resources, sc, aManager,
-                                               aDisplayListBuilder);
-  }
-  mBuiltWRCommands = true;
-  return true;
-}
-
-void nsDisplayRenderRoot::ExpandDisplayListBuilderRenderRootRect(
-    nsDisplayListBuilder* aBuilder) {
-  if (mFrame->GetRect().IsEmpty()) {
-    return;
-  }
-  mozilla::LayoutDeviceRect rect = mozilla::LayoutDeviceRect::FromAppUnits(
-      mFrame->GetRectRelativeToSelf() + ToReferenceFrame(),
-      mFrame->PresContext()->AppUnitsPerDevPixel());
-  aBuilder->ExpandRenderRootRect(rect, mRenderRoot);
 }
 
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,

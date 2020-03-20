@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { EnvironmentFront } = require("devtools/shared/fronts/environment");
+const { EnvironmentFront } = require("devtools/client/fronts/environment");
 
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {

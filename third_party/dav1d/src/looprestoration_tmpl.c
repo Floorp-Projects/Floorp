@@ -573,13 +573,13 @@ static void selfguided_c(pixel *p, const ptrdiff_t p_stride,
     }
 }
 
-COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c) {
+COLD void bitfn(dav1d_loop_restoration_dsp_init)(Dav1dLoopRestorationDSPContext *const c, int bpc) {
     c->wiener = wiener_c;
     c->selfguided = selfguided_c;
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_loop_restoration_dsp_init_arm)(c);
+    bitfn(dav1d_loop_restoration_dsp_init_arm)(c, bpc);
 #elif ARCH_PPC64LE
     bitfn(dav1d_loop_restoration_dsp_init_ppc)(c);
 #elif ARCH_X86

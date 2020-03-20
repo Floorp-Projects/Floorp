@@ -42,7 +42,8 @@
 #include "src/x86/cpu.h"
 #endif
 
+void dav1d_init_cpu(void);
 unsigned dav1d_get_cpu_flags(void);
-DAV1D_API void dav1d_set_cpu_flags_mask(const unsigned mask);
+DAV1D_API void dav1d_set_cpu_flags_mask(unsigned mask);
 
 #endif /* DAV1D_SRC_CPU_H */

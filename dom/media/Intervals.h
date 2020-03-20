@@ -20,8 +20,9 @@ class IntervalSet;
 }  // namespace mozilla
 
 template <class E>
-struct nsTArray_CopyChooser<mozilla::media::IntervalSet<E>> {
-  typedef nsTArray_CopyWithConstructors<mozilla::media::IntervalSet<E>> Type;
+struct nsTArray_RelocationStrategy<mozilla::media::IntervalSet<E>> {
+  typedef nsTArray_RelocateUsingMoveConstructor<mozilla::media::IntervalSet<E>>
+      Type;
 };
 
 namespace mozilla {

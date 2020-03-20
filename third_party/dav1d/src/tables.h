@@ -105,6 +105,8 @@ static const unsigned interintra_allowed_mask =
 
 extern const Dav1dWarpedMotionParams dav1d_default_wm_params;
 
+extern const int8_t dav1d_cdef_directions[12][2];
+
 extern const int16_t dav1d_sgr_params[16][4];
 extern const uint8_t dav1d_sgr_x_by_x[256];
 

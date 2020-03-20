@@ -1924,13 +1924,6 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     return mWrBridge;
   }
 
-  if (StaticPrefs::gfx_webrender_split_render_roots_AtStartup()) {
-    apis.AppendElement(
-        apis[0]->CreateDocument(aSize, 1, wr::RenderRoot::Content));
-    apis.AppendElement(
-        apis[0]->CreateDocument(aSize, 2, wr::RenderRoot::Popover));
-  }
-
   nsTArray<RefPtr<wr::WebRenderAPI>> clonedApis;
   for (auto& api : apis) {
     wr::TransactionBuilder txn;
