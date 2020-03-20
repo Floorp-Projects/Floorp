@@ -197,6 +197,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mSendChannel(-1),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
+        mRtpSourceObserver(mCall->GetTimestampMaker()),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
@@ -241,8 +242,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool InsertDTMFTone(int channel, int eventCode, bool outOfBand, int lengthMs,
                       int attenuationDb) override;
 
-  void GetRtpSources(const int64_t aTimeNow,
-                     nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
+  void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
 
   void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
                    const int64_t aTimestamp, const uint32_t aJitter) override;
