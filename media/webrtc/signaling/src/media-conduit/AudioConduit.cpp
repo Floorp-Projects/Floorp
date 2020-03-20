@@ -279,7 +279,7 @@ void WebrtcAudioConduit::OnRtpPacket(const webrtc::RTPHeader& aHeader,
                                      const int64_t aTimestamp,
                                      const uint32_t aJitter) {
   ASSERT_ON_THREAD(mStsThread);
-  mRtpSourceObserver->OnRtpPacket(aHeader, aJitter);
+  mRtpSourceObserver.OnRtpPacket(aHeader, aTimestamp, aJitter);
 }
 
 void WebrtcAudioConduit::OnRtcpBye() {
@@ -311,9 +311,9 @@ void WebrtcAudioConduit::SetRtcpEventObserver(
 }
 
 void WebrtcAudioConduit::GetRtpSources(
-    nsTArray<dom::RTCRtpSourceEntry>& outSources) {
+    const int64_t aTimeNow, nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
-  return mRtpSourceObserver->GetRtpSources(outSources);
+  return mRtpSourceObserver.GetRtpSources(aTimeNow, outSources);
 }
 
 // test-only: inserts a CSRC entry in a RtpSourceObserver's history for
@@ -337,7 +337,7 @@ void WebrtcAudioConduit::InsertAudioLevelForContributingSource(
     const uint8_t aAudioLevel) {
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::InsertAudioLevelForContributingSource(
-      *mRtpSourceObserver, aCsrcSource, aTimestamp, aRtpTimestamp,
+      mRtpSourceObserver, aCsrcSource, aTimestamp, aRtpTimestamp,
       aHasAudioLevel, aAudioLevel);
 }
 

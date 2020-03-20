@@ -22,7 +22,7 @@
     is(receivers.length, 1, "We have exactly one RTP receiver");
     const receiver = receivers[0];
 
-    SpecialPowers.wrap(receiver).mozAddRIDExtension(extensionId);
+    SpecialPowers.wrap(pc._pc).mozAddRIDExtension(receiver, extensionId);
   }
 
   function selectRecvRID(pc, rid) {
@@ -30,7 +30,7 @@
     is(receivers.length, 1, "We have exactly one RTP receiver");
     const receiver = receivers[0];
 
-    SpecialPowers.wrap(receiver).mozAddRIDFilter(rid);
+    SpecialPowers.wrap(pc._pc).mozAddRIDFilter(receiver, rid);
   }
 
   async function changeSourceResolution(test, emitter, width, height) {
