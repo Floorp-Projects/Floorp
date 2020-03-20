@@ -402,6 +402,17 @@ class MachBrowsertime(MachCommandBase):
 
         return append_env
 
+    def _need_install(self, package):
+        from pip._internal.req.constructors import install_req_from_line
+        req = install_req_from_line("Pillow")
+        req.check_if_exists(use_user_site=False)
+        if req.satisfied_by is None:
+            return True
+        venv_site_lib = os.path.abspath(os.path.join(self.virtualenv_manager.bin_path, "..",
+                                        "lib"))
+        site_packages = os.path.abspath(req.satisfied_by.location)
+        return not site_packages.startswith(venv_site_lib)
+
     def _activate_virtualenv(self, *args, **kwargs):
         r'''Activates virtualenv.
 
@@ -409,19 +420,11 @@ class MachBrowsertime(MachCommandBase):
         It will raise an error in case the install failed.
         '''
         MachCommandBase._activate_virtualenv(self, *args, **kwargs)
+
         # installing Python deps on the fly
-        try:
-            import PIL
-            if PIL.__version__ != PILLOW_VERSION:
-                raise ImportError("Wrong version %s" % PIL.__version__)
-        except ImportError:
-            self.virtualenv_manager.install_pip_package('Pillow==%s' % PILLOW_VERSION)
-        try:
-            # No __version__ in that package.
-            # We make the assumption it's fine.
-            import ssim  # noqa
-        except ImportError:
-            self.virtualenv_manager.install_pip_package('pyssim==%s' % PYSSIM_VERSION)
+        for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
+            if self._need_install(dep):
+                self.virtualenv_manager._run_pip(["install", dep])
 
     def check(self):
         r'''Run `visualmetrics.py --check`.'''
