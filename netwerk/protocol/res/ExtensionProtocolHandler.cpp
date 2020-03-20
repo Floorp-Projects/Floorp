@@ -390,6 +390,10 @@ nsresult ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI,
     if (!policy->PrivateBrowsingAllowed()) {
       flags |= URI_DISALLOW_IN_PRIVATE_CONTEXT;
     }
+  } else {
+    // In case there is no policy, then default to treating moz-extension URIs
+    // as unsafe and generally only allow chrome: to load such.
+    flags |= URI_DANGEROUS_TO_LOAD;
   }
 
   *aFlags = flags;
