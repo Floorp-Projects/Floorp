@@ -64,8 +64,7 @@ class Thread {
       // constructor as an Options and vice versa.
       typename NonConstO = typename mozilla::RemoveConst<O>::Type,
       typename DerefO = typename mozilla::RemoveReference<NonConstO>::Type,
-      typename = typename mozilla::EnableIf<std::is_same_v<DerefO, Options>,
-                                            void*>::Type>
+      typename = std::enable_if_t<std::is_same_v<DerefO, Options>>>
   explicit Thread(O&& options = Options())
       : id_(ThreadId()), options_(std::forward<O>(options)) {
     MOZ_ASSERT(isInitialized());

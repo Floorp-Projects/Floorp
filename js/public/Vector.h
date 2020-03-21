@@ -8,6 +8,9 @@
 #define js_Vector_h
 
 #include "mozilla/Vector.h"
+
+#include <type_traits>
+
 #include "js/TypeDecls.h"
 
 namespace js {
@@ -27,8 +30,7 @@ struct TypeIsGCThing<JS::Value> : mozilla::TrueType {};
 template <typename T, size_t MinInlineCapacity = 0,
           class AllocPolicy = TempAllocPolicy,
           // Don't use this with JS::Value!  Use JS::RootedValueVector instead.
-          typename = typename mozilla::EnableIf<
-              !detail::TypeIsGCThing<T>::value>::Type>
+          typename = std::enable_if_t<!detail::TypeIsGCThing<T>::value>>
 using Vector = mozilla::Vector<T, MinInlineCapacity, AllocPolicy>;
 
 }  // namespace js
