@@ -120,6 +120,7 @@
   MACRO(do, do_, "do")                                                         \
   MACRO(domNode, domNode, "domNode")                                           \
   MACRO(done, done, "done")                                                    \
+  MACRO(dotAll, dotAll, "dotAll")                                              \
   MACRO(dotGenerator, dotGenerator, ".generator")                              \
   MACRO(dotThis, dotThis, ".this")                                             \
   MACRO(dotInitializers, dotInitializers, ".initializers")                     \

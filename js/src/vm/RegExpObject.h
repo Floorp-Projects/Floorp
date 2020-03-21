@@ -172,6 +172,7 @@ class RegExpObject : public NativeObject {
   bool global() const { return getFlags().global(); }
   bool ignoreCase() const { return getFlags().ignoreCase(); }
   bool multiline() const { return getFlags().multiline(); }
+  bool dotAll() const { return getFlags().dotAll(); }
   bool unicode() const { return getFlags().unicode(); }
   bool sticky() const { return getFlags().sticky(); }
 
