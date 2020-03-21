@@ -889,7 +889,7 @@ parent:
 
     async PRemoteSpellcheckEngine();
 
-    async InitCrashReporter(Shmem shmem, NativeThreadId tid);
+    async InitCrashReporter(NativeThreadId tid);
 
     sync IsSecureURI(uint32_t aType, URIParams aURI, uint32_t aFlags,
                      OriginAttributes aOriginAttributes)

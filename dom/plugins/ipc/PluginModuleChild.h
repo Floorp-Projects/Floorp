@@ -97,7 +97,7 @@ class PluginModuleChild : public PPluginModuleChild {
   mozilla::ipc::IPCResult RecvSetParentHangTimeout(const uint32_t& aSeconds);
 
   mozilla::ipc::IPCResult AnswerInitCrashReporter(
-      Shmem&& aShmem, mozilla::dom::NativeThreadId* aId);
+      mozilla::dom::NativeThreadId* aId);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
