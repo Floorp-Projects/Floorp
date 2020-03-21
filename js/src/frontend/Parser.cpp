@@ -24,13 +24,13 @@
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
 #include <memory>
 #include <new>
+#include <type_traits>
 
 #include "jsnum.h"
 #include "jstypes.h"
@@ -815,8 +815,8 @@ bool PerHandlerParser<ParseHandler>::
     return true;
   }
 
-  bool isSyntaxParser =
-      mozilla::IsSame<ParseHandler, SyntaxParseHandler>::value;
+  constexpr bool isSyntaxParser =
+      std::is_same_v<ParseHandler, SyntaxParseHandler>;
   uint32_t scriptId = pc_->scriptId();
   uint32_t scopeId = scope.id();
 
@@ -827,19 +827,22 @@ bool PerHandlerParser<ParseHandler>::
       if (closedOver) {
         bi.setClosedOver();
 
-        if (isSyntaxParser &&
-            !pc_->closedOverBindingsForLazy().append(bi.name())) {
-          ReportOutOfMemory(cx_);
-          return false;
+        if constexpr (isSyntaxParser) {
+          if (!pc_->closedOverBindingsForLazy().append(bi.name())) {
+            ReportOutOfMemory(cx_);
+            return false;
+          }
         }
       }
     }
   }
 
   // Append a nullptr to denote end-of-scope.
-  if (isSyntaxParser && !pc_->closedOverBindingsForLazy().append(nullptr)) {
-    ReportOutOfMemory(cx_);
-    return false;
+  if constexpr (isSyntaxParser) {
+    if (!pc_->closedOverBindingsForLazy().append(nullptr)) {
+      ReportOutOfMemory(cx_);
+      return false;
+    }
   }
 
   return true;

@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/JitOptions.h"
-#include "mozilla/TypeTraits.h"
 
 #include <cstdlib>
+#include <type_traits>
 
 #include "vm/JSFunction.h"
 
@@ -25,11 +25,6 @@ static void Warn(const char* env, const char* value) {
   fprintf(stderr, "Warning: I didn't understand %s=\"%s\"\n", env, value);
 }
 
-template <typename T>
-struct IsBool : mozilla::FalseType {};
-template <>
-struct IsBool<bool> : mozilla::TrueType {};
-
 static Maybe<int> ParseInt(const char* str) {
   char* endp;
   int retval = strtol(str, &endp, 0);
@@ -45,7 +40,7 @@ T overrideDefault(const char* param, T dflt) {
   if (!str) {
     return dflt;
   }
-  if (IsBool<T>::value) {
+  if constexpr (std::is_same_v<T, bool>) {
     if (strcmp(str, "true") == 0 || strcmp(str, "yes") == 0) {
       return true;
     }

@@ -17,6 +17,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
 
+#include <type_traits>
 #include <utility>
 
 #include "frontend/BinAST-macros.h"
@@ -3544,7 +3545,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
   RegExpFlags reflags = JS::RegExpFlag::NoFlags;
   auto flagsContext =
       FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags);
-  if (mozilla::IsSame<Tok, BinASTTokenReaderContext>::value) {
+  if constexpr (std::is_same_v<Tok, BinASTTokenReaderContext>) {
     // Hack: optimized `readChars` is not implemented for
     // `BinASTTokenReaderContext`.
     RootedAtom flags(cx_);
