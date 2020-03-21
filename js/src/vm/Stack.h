@@ -14,6 +14,7 @@
 #include "mozilla/Variant.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "gc/Rooting.h"
 #include "jit/JSJitFrameIter.h"
@@ -858,8 +859,8 @@ namespace detail {
 
 /** Function call/construct args of statically-unknown count. */
 template <MaybeConstruct Construct>
-class GenericArgsBase : public mozilla::Conditional<Construct, AnyConstructArgs,
-                                                    AnyInvokeArgs>::Type {
+class GenericArgsBase
+    : public std::conditional_t<Construct, AnyConstructArgs, AnyInvokeArgs> {
  protected:
   RootedValueVector v_;
 
@@ -891,8 +892,8 @@ class GenericArgsBase : public mozilla::Conditional<Construct, AnyConstructArgs,
 
 /** Function call/construct args of statically-known count. */
 template <MaybeConstruct Construct, size_t N>
-class FixedArgsBase : public mozilla::Conditional<Construct, AnyConstructArgs,
-                                                  AnyInvokeArgs>::Type {
+class FixedArgsBase
+    : public std::conditional_t<Construct, AnyConstructArgs, AnyInvokeArgs> {
   static_assert(N <= ARGS_LENGTH_MAX, "o/~ too many args o/~");
 
  protected:
