@@ -1865,7 +1865,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
       bool done =
           handlerNum == PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone;
       // 25.1.4.2.5 Async-from-Sync Iterator Value Unwrap Functions, steps 1-2.
-      JSObject* resultObj = CreateIterResultObject(cx, argument, done);
+      PlainObject* resultObj = CreateIterResultObject(cx, argument, done);
       if (!resultObj) {
         return false;
       }
@@ -4579,7 +4579,7 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
     // we omit that step above, and check for `null` here instead.)
     if (func.isNullOrUndefined()) {
       // Step 7.a: Let iterResult be ! CreateIterResultObject(value, true).
-      JSObject* resultObj = CreateIterResultObject(cx, args.get(0), true);
+      PlainObject* resultObj = CreateIterResultObject(cx, args.get(0), true);
       if (!resultObj) {
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
       }

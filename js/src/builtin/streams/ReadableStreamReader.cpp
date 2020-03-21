@@ -244,12 +244,12 @@ MOZ_MUST_USE JSObject* js::ReadableStreamDefaultReaderRead(
   // Step 5: If stream.[[state]] is "closed", return a promise resolved with
   //         ! ReadableStreamCreateReadResult(undefined, true, forAuthorCode).
   if (unwrappedStream->closed()) {
-    RootedObject iterResult(
-        cx, ReadableStreamCreateReadResult(cx, UndefinedHandleValue, true,
-                                           unwrappedReader->forAuthorCode()));
+    PlainObject* iterResult = ReadableStreamCreateReadResult(
+        cx, UndefinedHandleValue, true, unwrappedReader->forAuthorCode());
     if (!iterResult) {
       return nullptr;
     }
+
     Rooted<Value> iterResultVal(cx, JS::ObjectValue(*iterResult));
     return PromiseObject::unforgeableResolve(cx, iterResultVal);
   }

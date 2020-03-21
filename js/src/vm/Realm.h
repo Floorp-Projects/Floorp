@@ -24,6 +24,7 @@
 #include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Compartment.h"
+#include "vm/NativeObject.h"
 #include "vm/PromiseLookup.h"  // js::PromiseLookup
 #include "vm/ReceiverGuard.h"
 #include "vm/RegExpShared.h"
@@ -365,8 +366,8 @@ class JS::Realm : public JS::shadow::Realm {
 
   js::WeakHeapPtr<js::ArgumentsObject*> mappedArgumentsTemplate_{nullptr};
   js::WeakHeapPtr<js::ArgumentsObject*> unmappedArgumentsTemplate_{nullptr};
-  js::WeakHeapPtr<js::NativeObject*> iterResultTemplate_{nullptr};
-  js::WeakHeapPtr<js::NativeObject*> iterResultWithoutPrototypeTemplate_{
+  js::WeakHeapPtr<js::PlainObject*> iterResultTemplate_{nullptr};
+  js::WeakHeapPtr<js::PlainObject*> iterResultWithoutPrototypeTemplate_{
       nullptr};
 
   // There are two ways to enter a realm:
@@ -667,13 +668,13 @@ class JS::Realm : public JS::shadow::Realm {
 
   static const size_t IterResultObjectValueSlot = 0;
   static const size_t IterResultObjectDoneSlot = 1;
-  js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
-  js::NativeObject* getOrCreateIterResultWithoutPrototypeTemplateObject(
+  js::PlainObject* getOrCreateIterResultTemplateObject(JSContext* cx);
+  js::PlainObject* getOrCreateIterResultWithoutPrototypeTemplateObject(
       JSContext* cx);
 
  private:
   enum class WithObjectPrototype { No, Yes };
-  js::NativeObject* createIterResultTemplateObject(
+  js::PlainObject* createIterResultTemplateObject(
       JSContext* cx, WithObjectPrototype withProto);
 
  public:

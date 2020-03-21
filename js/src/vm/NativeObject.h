@@ -553,9 +553,6 @@ class NativeObject : public JSObject {
       JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
       js::HandleShape shape, js::HandleObjectGroup group);
 
-  static inline JS::Result<NativeObject*, JS::OOM&> createWithTemplate(
-      JSContext* cx, HandleObject templateObject);
-
 #ifdef DEBUG
   static void enableShapeConsistencyChecks();
 #endif
@@ -1490,6 +1487,9 @@ class NativeObject : public JSObject {
 class PlainObject : public NativeObject {
  public:
   static const JSClass class_;
+
+  static inline JS::Result<PlainObject*, JS::OOM&> createWithTemplate(
+      JSContext* cx, Handle<PlainObject*> templateObject);
 
   /* Return the allocKind we would use if we were to tenure this object. */
   inline js::gc::AllocKind allocKindForTenure() const;
