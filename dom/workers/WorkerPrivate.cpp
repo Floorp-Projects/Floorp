@@ -4321,8 +4321,6 @@ void WorkerPrivate::ReportError(JSContext* aCx,
   UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>();
   if (aReport) {
     report->AssignErrorReport(aReport);
-  } else {
-    report->mFlags = nsIScriptError::errorFlag;
   }
 
   JS::RootedObject stack(aCx), stackGlobal(aCx);
