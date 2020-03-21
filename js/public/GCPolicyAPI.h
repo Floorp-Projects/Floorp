@@ -54,6 +54,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
+#include <type_traits>
+
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE
 #include "js/TraceKind.h"
 #include "js/TracingAPI.h"
@@ -65,7 +67,7 @@ namespace JS {
 // policy dispatches to the underlying struct for GC interactions.
 template <typename T>
 struct StructGCPolicy {
-  static_assert(!mozilla::IsPointer<T>::value,
+  static_assert(!std::is_pointer_v<T>,
                 "Pointer type not allowed for StructGCPolicy");
 
   static void trace(JSTracer* trc, T* tp, const char* name) { tp->trace(trc); }
@@ -101,7 +103,7 @@ struct GCPolicy<uint64_t> : public IgnoreGCPolicy<uint64_t> {};
 
 template <typename T>
 struct GCPointerPolicy {
-  static_assert(mozilla::IsPointer<T>::value,
+  static_assert(std::is_pointer_v<T>,
                 "Non-pointer type not allowed for GCPointerPolicy");
 
   static void trace(JSTracer* trc, T* vp, const char* name) {
