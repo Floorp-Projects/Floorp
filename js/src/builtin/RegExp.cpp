@@ -8,7 +8,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/TypeTraits.h"
+#include "mozilla/TextUtils.h"
 
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
