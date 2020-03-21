@@ -46,6 +46,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/LoginManagerChild.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "NewPasswordModel",
+  "resource://gre/modules/NewPasswordModel.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "formFillController",
@@ -59,7 +65,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("LoginAutoCompleteResult");
+  return LoginHelper.createLogger("LoginAutoComplete");
 });
 XPCOMUtils.defineLazyGetter(this, "passwordMgrBundle", () => {
   return Services.strings.createBundle(
@@ -425,12 +431,16 @@ LoginAutoCompleteResult.prototype = {
   },
 };
 
-function LoginAutoComplete() {}
+function LoginAutoComplete() {
+  // HTMLInputElement to number, the element's new-password heuristic confidence score
+  this._cachedNewPasswordScore = new WeakMap();
+}
 LoginAutoComplete.prototype = {
   classID: Components.ID("{2bdac17c-53f1-4896-a521-682ccdeef3a8}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsILoginAutoCompleteSearch]),
 
   _autoCompleteLookupPromise: null,
+  _cachedNewPasswordScore: null,
 
   /**
    * Yuck. This is called directly by satchel:
@@ -550,8 +560,6 @@ LoginAutoComplete.prototype = {
       return;
     }
 
-    log.debug("AutoCompleteSearch invoked. Search is:", aSearchString);
-
     let previousResult;
     if (aPreviousResult) {
       previousResult = {
@@ -594,14 +602,19 @@ LoginAutoComplete.prototype = {
       inputElement.ownerGlobal
     );
     let forcePasswordGeneration = false;
+    let isProbablyANewPasswordField = false;
     if (isPasswordField) {
       forcePasswordGeneration = loginManagerActor.isPasswordGenerationForcedOn(
         inputElement
       );
+      // Run the Fathom model only if the password field does not have the
+      // autocomplete="new-password" attribute.
+      isProbablyANewPasswordField =
+        autocompleteInfo.fieldName == "new-password" ||
+        this._isProbablyANewPasswordField(inputElement);
     }
 
     let messageData = {
-      autocompleteInfo,
       formOrigin,
       actionOrigin,
       searchString,
@@ -609,11 +622,22 @@ LoginAutoComplete.prototype = {
       forcePasswordGeneration,
       isSecure: InsecurePasswordUtils.isFormSecure(form),
       isPasswordField,
+      isProbablyANewPasswordField,
     };
 
     if (LoginHelper.showAutoCompleteFooter) {
       gAutoCompleteListener.init();
     }
+
+    log.debug("LoginAutoComplete search:", {
+      forcePasswordGeneration,
+      isSecure: messageData.isSecure,
+      isPasswordField,
+      isProbablyANewPasswordField,
+      searchString: isPasswordField
+        ? "*".repeat(searchString.length)
+        : searchString,
+    });
 
     let result = await loginManagerActor.sendQuery(
       "PasswordManager:autoCompleteLogins",
@@ -625,6 +649,25 @@ LoginAutoComplete.prototype = {
       logins: LoginHelper.vanillaObjectsToLogins(result.logins),
       willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
     };
+  },
+
+  _isProbablyANewPasswordField(inputElement) {
+    const threshold = LoginHelper.generationConfidenceThreshold;
+    if (threshold == -1) {
+      // Fathom is disabled
+      return false;
+    }
+
+    let score = this._cachedNewPasswordScore.get(inputElement);
+    if (score) {
+      return score >= threshold;
+    }
+
+    const { rules, type } = NewPasswordModel;
+    const results = rules.against(inputElement);
+    score = results.get(inputElement).scoreFor(type);
+    this._cachedNewPasswordScore.set(inputElement, score);
+    return score >= threshold;
   },
 };
 
