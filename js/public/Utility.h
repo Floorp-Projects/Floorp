@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <type_traits>
 #include <utility>
 
 #include "jstypes.h"
@@ -637,8 +638,8 @@ struct DeletePolicy {
   template <typename U>
   MOZ_IMPLICIT DeletePolicy(
       DeletePolicy<U> other,
-      typename mozilla::EnableIf<mozilla::IsConvertible<U*, T*>::value,
-                                 int>::Type dummy = 0) {}
+      typename mozilla::EnableIf<std::is_convertible_v<U*, T*>, int>::Type
+          dummy = 0) {}
 
   void operator()(const T* ptr) { js_delete(const_cast<T*>(ptr)); }
 };

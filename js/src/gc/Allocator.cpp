@@ -9,6 +9,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TimeStamp.h"
 
+#include <type_traits>
+
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCTrace.h"
@@ -183,7 +185,7 @@ JSString* GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize,
 
 template <typename StringAllocT, AllowGC allowGC /* = CanGC */>
 StringAllocT* js::AllocateStringImpl(JSContext* cx, InitialHeap heap) {
-  static_assert(mozilla::IsConvertible<StringAllocT*, JSString*>::value,
+  static_assert(std::is_convertible_v<StringAllocT*, JSString*>,
                 "must be JSString derived");
 
   AllocKind kind = MapTypeToFinalizeKind<StringAllocT>::kind;
@@ -313,7 +315,7 @@ FOR_EACH_NURSERY_STRING_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
 
 template <typename T, AllowGC allowGC /* = CanGC */>
 T* js::Allocate(JSContext* cx) {
-  static_assert(!mozilla::IsConvertible<T*, JSObject*>::value,
+  static_assert(!std::is_convertible_v<T*, JSObject*>,
                 "must not be JSObject derived");
   static_assert(
       sizeof(T) >= MinCellSize,
