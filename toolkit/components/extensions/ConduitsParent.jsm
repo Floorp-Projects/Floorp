@@ -25,7 +25,11 @@ const EXPORTED_SYMBOLS = ["BroadcastConduit", "ConduitsParent"];
  * @prop {string[]} [recv]
  * @prop {string[]} [send]
  * @prop {string[]} [query]
- * Lists of recvX, sendX, and queryX methods this subject will use.
+ * @prop {string[]} [cast]
+ * Lists of recvX, sendX, queryX and castX methods this subject will use.
+ *
+ * @typedef {"messenger"|"port"|"tab"} BroadcastKind
+ * Kinds of broadcast targeting filters.
  *
  * @example:
  *
@@ -45,7 +49,7 @@ const EXPORTED_SYMBOLS = ["BroadcastConduit", "ConduitsParent"];
  */
 
 const {
-  ExtensionUtils: { DefaultMap, DefaultWeakMap },
+  ExtensionUtils: { DefaultWeakMap },
 } = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const { BaseConduit } = ChromeUtils.import(
@@ -71,8 +75,8 @@ const Hub = {
   /** @type WeakMap<ConduitsParent, Set<ConduitAddress>> Conduits by actor. */
   byActor: new DefaultWeakMap(() => new Set()),
 
-  /** @type Map<ConduitID, Set<BroadcastConduit>> */
-  onRemoteClosed: new DefaultMap(() => new Set()),
+  /** @type Map<string, BroadcastConduit> */
+  reportOnClosed: new Map(),
 
   /**
    * Save info about a new parent conduit, register it as a global listener.
@@ -151,8 +155,10 @@ const Hub = {
     this.byActor.get(remote.actor).delete(remote);
 
     remote.actor = null;
-    for (let conduit of this.onRemoteClosed.get(remote.id)) {
-      conduit.subject.recvConduitClosed(remote);
+    for (let [key, conduit] of Hub.reportOnClosed.entries()) {
+      if (remote[key]) {
+        conduit.subject.recvConduitClosed(remote);
+      }
     }
   },
 
@@ -161,6 +167,11 @@ const Hub = {
    * @param {ConduitsParent} actor
    */
   actorClosed(actor) {
+    for (let remote of this.byActor.get(actor)) {
+      // When a Port is closed, we notify the other side, but it might share
+      // an actor, so we shouldn't sendQeury() in that case (see bug 1623976).
+      this.remotes.delete(remote.id);
+    }
     for (let remote of this.byActor.get(actor)) {
       this.recvConduitClosed(remote);
     }
@@ -179,6 +190,17 @@ class BroadcastConduit extends BaseConduit {
    */
   constructor(subject, address) {
     super(subject, address);
+
+    // Create conduit.castX() bidings.
+    for (let name of address.cast || []) {
+      this[`cast${name}`] = this._cast.bind(this, name);
+    }
+
+    // Wants to know when conduits with a specific attribute are closed.
+    // `subject.recvConduitClosed(address)` method will be called.
+    if (address.reportOnClosed) {
+      Hub.reportOnClosed.set(address.reportOnClosed, this);
+    }
 
     this.open = true;
     Hub.openConduit(this);
@@ -207,12 +229,40 @@ class BroadcastConduit extends BaseConduit {
   }
 
   /**
-   * Indicate the subject wants to listen for the specific conduit closing.
-   * The method `recvConduitClosed(address)` will be called.
-   * @param {ConduitID} target
+   * Broadcasts a method call to all conduits of kind that satisfy filtering by
+   * kind-specific properties from arg, returns an array of response promises.
+   * @param {string} method
+   * @param {BroadcastKind} kind
+   * @param {object} arg
+   * @returns {Promise[]}
    */
-  reportOnClosed(target) {
-    Hub.onRemoteClosed.get(target).add(this);
+  _cast(method, kind, arg) {
+    let filters = {
+      // Target Ports by portId and side (connect caller/onConnect receiver).
+      port: remote =>
+        remote.portId === arg.portId &&
+        (arg.source == null || remote.source === arg.source),
+
+      // Target Messengers in extension pages by extensionId and envType.
+      messenger: r =>
+        r.verified &&
+        r.recv.includes(method) &&
+        r.id !== arg.sender.contextId &&
+        r.extensionId === arg.extensionId &&
+        // TODO: Bug 1453343 - get rid of this:
+        (r.envType === "addon_child" || arg.sender.envType !== "content_child"),
+
+      // Target content Messengers by extensionId, tabId (topBC) and frameId.
+      tab: remote =>
+        remote.recv.includes(method) &&
+        remote.extensionId === arg.extensionId &&
+        remote.actor.manager.browsingContext.top.id === arg.topBC &&
+        (arg.frameId == null || remote.frameId === arg.frameId),
+    };
+
+    let targets = Array.from(Hub.remotes.values()).filter(filters[kind]);
+    let responses = targets.map(c => this._send(method, true, c.id, arg));
+    return Promise.allSettled(responses);
   }
 
   async close() {

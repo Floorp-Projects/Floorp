@@ -53,13 +53,7 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-const {
-  DefaultMap,
-  LimitedSet,
-  getMessageManager,
-  getUniqueId,
-  getWinUtils,
-} = ExtensionUtils;
+const { DefaultMap, LimitedSet, getUniqueId, getWinUtils } = ExtensionUtils;
 
 const {
   defineLazyGetter,
@@ -128,26 +122,6 @@ const ExtensionActivityLogChild = {
   },
 };
 
-// Copy an API object from |source| into the scope |dest|.
-function injectAPI(source, dest) {
-  for (let prop in source) {
-    // Skip names prefixed with '_'.
-    if (prop[0] == "_") {
-      continue;
-    }
-
-    let desc = Object.getOwnPropertyDescriptor(source, prop);
-    if (typeof desc.value == "function") {
-      Cu.exportFunction(desc.value, dest, { defineAs: prop });
-    } else if (typeof desc.value == "object") {
-      let obj = Cu.createObjectIn(dest, { defineAs: prop });
-      injectAPI(desc.value, obj);
-    } else {
-      Object.defineProperty(dest, prop, desc);
-    }
-  }
-}
-
 /**
  * A finalization witness helper that wraps a sendMessage response and
  * guarantees to either get the promise resolved, or rejected when the
@@ -194,244 +168,6 @@ const StrongPromise = {
 };
 Services.obs.addObserver(StrongPromise, "extensions-sendMessage-witness");
 
-/**
- * Abstraction for a Port object in the extension API.
- *
- * @param {BaseContext} context The context that owns this port.
- * @param {nsIMessageSender} senderMM The message manager to send messages to.
- * @param {Array<nsIMessageListenerManager>} receiverMMs Message managers to
- *     listen on.
- * @param {string} name Arbitrary port name as defined by the addon.
- * @param {number} id An ID that uniquely identifies this port's channel.
- * @param {object} sender The `port.sender` property.
- * @param {object} recipient The recipient of messages sent from this port.
- */
-class Port {
-  constructor(context, senderMM, receiverMMs, name, id, sender, recipient) {
-    this.context = context;
-    this.senderMM = senderMM;
-    this.receiverMMs = receiverMMs;
-    this.name = name;
-    this.id = id;
-    this.sender = sender;
-    this.recipient = recipient;
-    this.disconnected = false;
-    this.disconnectListeners = new Set();
-    this.unregisterMessageFuncs = new Set();
-
-    // Common options for onMessage and onDisconnect.
-    this.handlerBase = {
-      messageFilterStrict: { portId: id },
-
-      filterMessage: (sender, recipient) => {
-        return sender.contextId !== this.context.contextId;
-      },
-    };
-
-    this.disconnectHandler = Object.assign(
-      {
-        receiveMessage: ({ data }) => this.disconnectByOtherEnd(data),
-      },
-      this.handlerBase
-    );
-
-    MessageChannel.addListener(
-      this.receiverMMs,
-      "Extension:Port:Disconnect",
-      this.disconnectHandler
-    );
-
-    this.context.callOnClose(this);
-  }
-
-  api() {
-    let portObj = Cu.createObjectIn(this.context.cloneScope);
-
-    let portError = null;
-    let publicAPI = {
-      name: this.name,
-
-      disconnect: () => {
-        this.disconnect();
-      },
-
-      postMessage: json => {
-        this.postMessage(json);
-      },
-
-      onDisconnect: new EventManager({
-        context: this.context,
-        name: "Port.onDisconnect",
-        register: fire => {
-          return this.registerOnDisconnect(holder => {
-            let error = holder && holder.deserialize(this.context.cloneScope);
-            portError = error && this.context.normalizeError(error);
-            fire.asyncWithoutClone(portObj);
-          });
-        },
-      }).api(),
-
-      onMessage: new EventManager({
-        context: this.context,
-        name: "Port.onMessage",
-        register: fire => {
-          return this.registerOnMessage((holder, isLastHandler) => {
-            let msg = holder.deserialize(
-              this.context.cloneScope,
-              !isLastHandler
-            );
-            fire.asyncWithoutClone(msg, portObj);
-          });
-        },
-      }).api(),
-
-      get error() {
-        return portError;
-      },
-    };
-
-    if (this.sender) {
-      publicAPI.sender = this.sender;
-    }
-
-    injectAPI(publicAPI, portObj);
-    return portObj;
-  }
-
-  postMessage(json) {
-    if (this.disconnected) {
-      throw new this.context.cloneScope.Error(
-        "Attempt to postMessage on disconnected port"
-      );
-    }
-
-    this._sendMessage("Extension:Port:PostMessage", json);
-  }
-
-  /**
-   * Register a callback that is called when the port is disconnected by the
-   * *other* end. The callback is automatically unregistered when the port or
-   * context is closed.
-   *
-   * @param {function} callback Called when the other end disconnects the port.
-   *     If the disconnect is caused by an error, the first parameter is an
-   *     object with a "message" string property that describes the cause.
-   * @returns {function} Function to unregister the listener.
-   */
-  registerOnDisconnect(callback) {
-    let listener = error => {
-      if (this.context.active && !this.disconnected) {
-        callback(error);
-      }
-    };
-    this.disconnectListeners.add(listener);
-    return () => {
-      this.disconnectListeners.delete(listener);
-    };
-  }
-
-  /**
-   * Register a callback that is called when a message is received. The callback
-   * is automatically unregistered when the port or context is closed.
-   *
-   * @param {function} callback Called when a message is received.
-   * @returns {function} Function to unregister the listener.
-   */
-  registerOnMessage(callback) {
-    let handler = Object.assign(
-      {
-        receiveMessage: ({ data }, isLastHandler) => {
-          if (this.context.active && !this.disconnected) {
-            callback(data, isLastHandler);
-          }
-        },
-      },
-      this.handlerBase
-    );
-
-    let unregister = () => {
-      this.unregisterMessageFuncs.delete(unregister);
-      MessageChannel.removeListener(
-        this.receiverMMs,
-        "Extension:Port:PostMessage",
-        handler
-      );
-    };
-    MessageChannel.addListener(
-      this.receiverMMs,
-      "Extension:Port:PostMessage",
-      handler
-    );
-    this.unregisterMessageFuncs.add(unregister);
-    return unregister;
-  }
-
-  _sendMessage(message, data) {
-    let options = {
-      recipient: Object.assign({}, this.recipient, { portId: this.id }),
-      responseType: MessageChannel.RESPONSE_NONE,
-    };
-
-    let holder = new StructuredCloneHolder(data);
-
-    return this.context.sendMessage(this.senderMM, message, holder, options);
-  }
-
-  handleDisconnection() {
-    MessageChannel.removeListener(
-      this.receiverMMs,
-      "Extension:Port:Disconnect",
-      this.disconnectHandler
-    );
-    for (let unregister of this.unregisterMessageFuncs) {
-      unregister();
-    }
-    this.context.forgetOnClose(this);
-    this.disconnected = true;
-  }
-
-  /**
-   * Disconnect the port from the other end (which may not even exist).
-   *
-   * @param {Error|{message: string}} [error] The reason for disconnecting,
-   *     if it is an abnormal disconnect.
-   */
-  disconnectByOtherEnd(error = null) {
-    if (this.disconnected) {
-      return;
-    }
-
-    for (let listener of this.disconnectListeners) {
-      listener(error);
-    }
-
-    this.handleDisconnection();
-  }
-
-  /**
-   * Disconnect the port from this end.
-   *
-   * @param {Error|{message: string}} [error] The reason for disconnecting,
-   *     if it is an abnormal disconnect.
-   */
-  disconnect(error = null) {
-    if (this.disconnected) {
-      // disconnect() may be called without side effects even after the port is
-      // closed - https://developer.chrome.com/extensions/runtime#type-Port
-      return;
-    }
-    this.handleDisconnection();
-    if (error) {
-      error = { message: this.context.normalizeError(error).message };
-    }
-    this._sendMessage("Extension:Port:Disconnect", error);
-  }
-
-  close() {
-    this.disconnect();
-  }
-}
-
 // Simple single-event emitter-like helper, exposes the EventManager api.
 class SimpleEventAPI extends EventManager {
   constructor(context, name) {
@@ -447,18 +183,30 @@ class SimpleEventAPI extends EventManager {
   }
 }
 
-function holdMessage(sender, data) {
-  if (AppConstants.platform !== "android") {
-    data = NativeApp.encodeMessage(sender.context, data);
+function holdMessage(data, native = null) {
+  if (native && AppConstants.platform !== "android") {
+    data = NativeApp.encodeMessage(native.context, data);
   }
   return new StructuredCloneHolder(data);
 }
 
-class NativePort {
-  constructor(context, name, portId) {
-    this.id = portId;
+// Implements the runtime.Port extension API object.
+class Port {
+  /**
+   * @param {BaseContext} context The context that owns this port.
+   * @param {number} portId Uniquely identifies this port's channel.
+   * @param {string} name Arbitrary port name as defined by the addon.
+   * @param {boolean} native Is this a Port for native messaging.
+   * @param {object} sender The `Port.sender` property.
+   */
+  constructor(context, portId, name, native, sender) {
     this.context = context;
+    this.holdMessage = native ? data => holdMessage(data, this) : holdMessage;
+
     this.conduit = context.openConduit(this, {
+      portId,
+      native,
+      source: !sender,
       recv: ["PortMessage", "PortDisconnect"],
       send: ["PortMessage"],
     });
@@ -466,8 +214,10 @@ class NativePort {
     this.onMessage = new SimpleEventAPI(context, "Port.onMessage");
     this.onDisconnect = new SimpleEventAPI(context, "Port.onDisconnect");
 
+    // Public Port object handed to extensions from `connect()` and `onConnect`.
     let api = {
       name,
+      sender,
       error: null,
       onMessage: this.onMessage.api(),
       onDisconnect: this.onDisconnect.api(),
@@ -481,15 +231,17 @@ class NativePort {
     this.onMessage.emit(holder.deserialize(this.api), this.api);
   }
 
-  recvPortDisconnect({ error }) {
-    this.api.error = error && this.context.normalizeError(error);
-    this.onDisconnect.emit(this.api);
+  recvPortDisconnect({ error = null }) {
     this.conduit.close();
+    if (this.context.active) {
+      this.api.error = error && this.context.normalizeError(error);
+      this.onDisconnect.emit(this.api);
+    }
   }
 
   sendPortMessage(json) {
     if (this.conduit.actor) {
-      return this.conduit.sendPortMessage({ holder: holdMessage(this, json) });
+      return this.conduit.sendPortMessage({ holder: this.holdMessage(json) });
     }
     throw new this.context.Error("Attempt to postMessage on disconnected port");
   }
@@ -503,21 +255,40 @@ class NativeMessenger {
       url: sender.url,
       frameId: sender.frameId,
       childId: context.childManager.id,
-      query: ["NativeMessage", "NativeConnect"],
+      query: ["NativeMessage", "PortConnect"],
+      recv: ["PortConnect"],
     });
+
+    this.onConnect = new SimpleEventAPI(context, "runtime.onConnect");
+    this.onConnectEx = new SimpleEventAPI(context, "runtime.onConnectExternal");
+
+    if (context.viewType === "background" && context.childManager) {
+      context.childManager.callParentFunctionNoReturn(
+        "runtime.addMessagingListener",
+        ["onConnect"]
+      );
+    }
   }
 
   sendNativeMessage(nativeApp, json) {
-    let holder = holdMessage(this, json);
+    let holder = holdMessage(json, this);
     return this.conduit.queryNativeMessage({ nativeApp, holder });
   }
 
-  connectNative(nativeApp) {
-    let port = new NativePort(this.context, nativeApp, getUniqueId());
+  connect({ name, native, ...args }) {
+    let portId = getUniqueId();
+    let port = new Port(this.context, portId, name, !!native);
     this.conduit
-      .queryNativeConnect({ nativeApp, portId: port.id })
+      .queryPortConnect({ portId, name, native, ...args })
       .catch(error => port.recvPortDisconnect({ error }));
     return port.api;
+  }
+
+  recvPortConnect({ portId, name, sender }) {
+    let ex = sender.id === this.context.extension.id;
+    let port = new Port(this.context, portId, name, false, sender);
+    let event = ex ? this.onConnect : this.onConnectEx;
+    return event.emit(port.api).length;
   }
 }
 
@@ -702,136 +473,6 @@ class Messenger {
 
   onMessageExternal(name) {
     return this._onMessage(name, sender => sender.id !== this.sender.id);
-  }
-
-  _connect(messageManager, port, recipient) {
-    let msg = {
-      name: port.name,
-      portId: port.id,
-    };
-
-    this._sendMessage(
-      messageManager,
-      "Extension:Connect",
-      msg,
-      recipient
-    ).catch(error => {
-      if (error.result === MessageChannel.RESULT_NO_HANDLER) {
-        error = {
-          message:
-            "Could not establish connection. Receiving end does not exist.",
-        };
-      } else if (error.result === MessageChannel.RESULT_DISCONNECTED) {
-        error = null;
-      }
-      port.disconnectByOtherEnd(new StructuredCloneHolder(error));
-    });
-
-    return port.api();
-  }
-
-  connect(messageManager, name, recipient) {
-    let portId = getUniqueId();
-
-    let port = new Port(
-      this.context,
-      messageManager,
-      this.messageManagers,
-      name,
-      portId,
-      null,
-      recipient
-    );
-
-    return this._connect(messageManager, port, recipient);
-  }
-
-  _onConnect(name, filter) {
-    return new EventManager({
-      context: this.context,
-      name,
-      register: fire => {
-        let listener = {
-          messageFilterPermissive: this.optionalFilter,
-          messageFilterStrict: this.filter,
-
-          filterMessage: (sender, recipient) => {
-            // Exclude messages coming from content scripts for the devtools extension contexts
-            // (See Bug 1383310).
-            if (
-              this.excludeContentScriptSender &&
-              sender.envType === "content_child"
-            ) {
-              return false;
-            }
-
-            // Ignore the port if it was created by this Messenger.
-            return (
-              sender.contextId !== this.context.contextId &&
-              filter(sender, recipient)
-            );
-          },
-
-          receiveMessage: ({ target, data: message, sender }) => {
-            let { name, portId } = message;
-            let mm = getMessageManager(target);
-            let recipient = Object.assign({}, sender);
-            if (recipient.tab) {
-              recipient.tabId = recipient.tab.id;
-              delete recipient.tab;
-            }
-            let port = new Port(
-              this.context,
-              mm,
-              this.messageManagers,
-              name,
-              portId,
-              sender,
-              recipient
-            );
-            fire.asyncWithoutClone(port.api());
-            return true;
-          },
-        };
-
-        const childManager =
-          this.context.viewType == "background"
-            ? this.context.childManager
-            : null;
-        MessageChannel.addListener(
-          this.messageManagers,
-          "Extension:Connect",
-          listener
-        );
-        if (childManager) {
-          childManager.callParentFunctionNoReturn(
-            "runtime.addMessagingListener",
-            ["onConnect"]
-          );
-        }
-        return () => {
-          MessageChannel.removeListener(
-            this.messageManagers,
-            "Extension:Connect",
-            listener
-          );
-          if (childManager && !this.context.unloaded) {
-            childManager.callParentFunctionNoReturn(
-              "runtime.removeMessagingListener",
-              ["onConnect"]
-            );
-          }
-        };
-      },
-    }).api();
-  }
-
-  onConnect(name) {
-    return this._onConnect(name, sender => sender.id === this.sender.id);
-  }
-
-  onConnectExternal(name) {
-    return this._onConnect(name, sender => sender.id !== this.sender.id);
   }
 }
 
@@ -1222,6 +863,7 @@ class ChildAPIManager {
     this.id = `${context.extension.id}.${context.contextId}`;
 
     this.conduit = context.openConduit(this, {
+      childId: this.id,
       send: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
       recv: ["CallResult", "RunListener"],
     });
@@ -1453,5 +1095,4 @@ var ExtensionChild = {
   BrowserExtensionContent,
   ChildAPIManager,
   Messenger,
-  Port,
 };
