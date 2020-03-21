@@ -1694,7 +1694,7 @@ static MOZ_MUST_USE bool AdjustGeneratorResumptionValue(JSContext* cx,
     // C++ implementation of AsyncGeneratorResolve will do this. So don't do it
     // twice:
     if (!genObj->is<AsyncGeneratorObject>()) {
-      JSObject* pair = CreateIterResultObject(cx, vp, true);
+      PlainObject* pair = CreateIterResultObject(cx, vp, true);
       if (!pair) {
         return false;
       }

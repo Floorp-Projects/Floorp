@@ -537,19 +537,23 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   return nobj;
 }
 
-/* static */ inline JS::Result<NativeObject*, JS::OOM&>
-NativeObject::createWithTemplate(JSContext* cx, HandleObject templateObject) {
+/* static */ inline JS::Result<PlainObject*, JS::OOM&>
+PlainObject::createWithTemplate(JSContext* cx,
+                                Handle<PlainObject*> templateObject) {
   RootedObjectGroup group(cx, templateObject->group());
+  MOZ_ASSERT(group->clasp() == &PlainObject::class_);
 
   gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
 
-  RootedShape shape(cx, templateObject->as<NativeObject>().lastProperty());
+  RootedShape shape(cx, templateObject->lastProperty());
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(CanChangeToBackgroundAllocKind(kind, shape->getObjectClass()));
   kind = gc::ForegroundToBackgroundAllocKind(kind);
 
-  return create(cx, kind, heap, shape, group);
+  return create(cx, kind, heap, shape, group).map([](NativeObject* obj) {
+    return &obj->as<PlainObject>();
+  });
 }
 
 MOZ_ALWAYS_INLINE bool NativeObject::updateSlotsForSpan(JSContext* cx,

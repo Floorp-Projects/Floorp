@@ -483,12 +483,13 @@ JSObject* js::ReadableStreamDefaultControllerPullSteps(
     if (!unwrappedReader) {
       return nullptr;
     }
-    Rooted<JSObject*> readResultObj(
-        cx, ReadableStreamCreateReadResult(cx, chunk, false,
-                                           unwrappedReader->forAuthorCode()));
+
+    PlainObject* readResultObj = ReadableStreamCreateReadResult(
+        cx, chunk, false, unwrappedReader->forAuthorCode());
     if (!readResultObj) {
       return nullptr;
     }
+
     Rooted<Value> readResult(cx, ObjectValue(*readResultObj));
     return PromiseObject::unforgeableResolve(cx, readResult);
   }

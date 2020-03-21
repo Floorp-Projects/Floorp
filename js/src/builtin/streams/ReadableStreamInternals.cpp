@@ -27,7 +27,7 @@
 #include "js/Value.h"  // JS::Value, JS::{Boolean,Object}Value, JS::UndefinedHandleValue
 #include "vm/JSContext.h"      // JSContext
 #include "vm/JSFunction.h"     // JSFunction, js::NewNativeFunction
-#include "vm/NativeObject.h"   // js::NativeObject
+#include "vm/NativeObject.h"   // js::NativeObject, js::PlainObject
 #include "vm/ObjectGroup.h"    // js::GenericObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"          // JS::Realm
@@ -41,8 +41,6 @@
 #include "vm/List-inl.h"  // js::ListObject, js::AppendToListInFixedSlot, js::StoreNewListInFixedSlot
 #include "vm/Realm-inl.h"  // JS::Realm
 
-using js::ReadableStream;
-
 using JS::BooleanValue;
 using JS::CallArgs;
 using JS::CallArgsFromVp;
@@ -52,6 +50,9 @@ using JS::ResolvePromise;
 using JS::Rooted;
 using JS::UndefinedHandleValue;
 using JS::Value;
+
+using js::PlainObject;
+using js::ReadableStream;
 
 /*** 3.5. The interface between readable streams and controllers ************/
 
@@ -249,12 +250,12 @@ MOZ_MUST_USE bool js::ReadableStreamCloseInternal(
  * Streams spec, 3.5.5. ReadableStreamCreateReadResult ( value, done,
  *                                                       forAuthorCode )
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamCreateReadResult(
+MOZ_MUST_USE PlainObject* js::ReadableStreamCreateReadResult(
     JSContext* cx, Handle<Value> value, bool done,
     ForAuthorCodeBool forAuthorCode) {
   // Step 1: Let prototype be null.
   // Step 2: If forAuthorCode is true, set prototype to %ObjectPrototype%.
-  Rooted<JSObject*> templateObject(
+  Rooted<PlainObject*> templateObject(
       cx,
       forAuthorCode == ForAuthorCodeBool::Yes
           ? cx->realm()->getOrCreateIterResultTemplateObject(cx)
@@ -267,9 +268,9 @@ MOZ_MUST_USE JSObject* js::ReadableStreamCreateReadResult(
   // Step 3: Assert: Type(done) is Boolean (implicit).
 
   // Step 4: Let obj be ObjectCreate(prototype).
-  NativeObject* obj;
+  PlainObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::createWithTemplate(cx, templateObject));
+      cx, obj, PlainObject::createWithTemplate(cx, templateObject));
 
   // Step 5: Perform CreateDataProperty(obj, "value", value).
   obj->setSlot(Realm::IterResultObjectValueSlot, value);
@@ -411,12 +412,12 @@ MOZ_MUST_USE bool js::ReadableStreamFulfillReadOrReadIntoRequest(
   // Step 4: Resolve read{Into}Request.[[promise]] with
   //         ! ReadableStreamCreateReadResult(chunk, done,
   //         readIntoRequest.[[forAuthorCode]]).
-  Rooted<JSObject*> iterResult(
-      cx, ReadableStreamCreateReadResult(cx, chunk, done,
-                                         unwrappedReader->forAuthorCode()));
+  PlainObject* iterResult = ReadableStreamCreateReadResult(
+      cx, chunk, done, unwrappedReader->forAuthorCode());
   if (!iterResult) {
     return false;
   }
+
   Rooted<Value> val(cx, ObjectValue(*iterResult));
   return ResolvePromise(cx, readIntoRequest, val);
 }

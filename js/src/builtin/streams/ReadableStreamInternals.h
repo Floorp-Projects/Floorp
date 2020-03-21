@@ -17,9 +17,11 @@
 #include "js/Value.h"                              // JS::Value
 
 struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
 
 namespace js {
 
+class PlainObject;
 class PromiseObject;
 class ReadableStream;
 
@@ -33,7 +35,7 @@ extern MOZ_MUST_USE JSObject* ReadableStreamCancel(
 extern MOZ_MUST_USE bool ReadableStreamCloseInternal(
     JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream);
 
-extern MOZ_MUST_USE JSObject* ReadableStreamCreateReadResult(
+extern MOZ_MUST_USE PlainObject* ReadableStreamCreateReadResult(
     JSContext* cx, JS::Handle<JS::Value> value, bool done,
     ForAuthorCodeBool forAuthorCode);
 
