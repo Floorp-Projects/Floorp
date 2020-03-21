@@ -13,7 +13,6 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/WrappingOperations.h"
 
 #include <cmath>
@@ -368,7 +367,7 @@ inline UnsignedInteger ToUnsignedInteger(double d) {
 
 template <typename SignedInteger>
 inline SignedInteger ToSignedInteger(double d) {
-  static_assert(mozilla::IsSigned<SignedInteger>::value,
+  static_assert(std::is_signed_v<SignedInteger>,
                 "SignedInteger must be a signed type");
 
   using UnsignedInteger = std::make_unsigned_t<SignedInteger>;
