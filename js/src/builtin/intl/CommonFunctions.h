@@ -8,11 +8,11 @@
 #define builtin_intl_CommonFunctions_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <type_traits>
 
 #include "js/RootingAPI.h"
 #include "js/Vector.h"
@@ -99,7 +99,7 @@ extern UniqueChars EncodeLocale(JSContext* cx, JSString* locale);
 
 // Starting with ICU 59, UChar defaults to char16_t.
 static_assert(
-    mozilla::IsSame<UChar, char16_t>::value,
+    std::is_same_v<UChar, char16_t>,
     "SpiderMonkey doesn't support redefining UChar to a different type");
 
 // The inline capacity we use for a Vector<char16_t>.  Use this to ensure that

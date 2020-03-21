@@ -16,6 +16,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include <type_traits>
+
 #include "frontend/BCEParserHandle.h"
 #include "frontend/BinASTEnum.h"
 #include "frontend/BinASTParserBase.h"
@@ -202,10 +204,10 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   // This is used to avoid generating unnecessary branches for more
   // optimized format.
   static constexpr bool isInvalidKindPossible() {
-    return mozilla::IsSame<Tok, BinASTTokenReaderMultipart>::value;
+    return std::is_same_v<Tok, BinASTTokenReaderMultipart>;
   }
   static constexpr bool isInvalidVariantPossible() {
-    return mozilla::IsSame<Tok, BinASTTokenReaderMultipart>::value;
+    return std::is_same_v<Tok, BinASTTokenReaderMultipart>;
   }
 
  protected:

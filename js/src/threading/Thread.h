@@ -13,6 +13,7 @@
 #include "mozilla/Tuple.h"
 
 #include <stdint.h>
+#include <type_traits>
 #include <utility>
 
 #include "js/Initialization.h"
@@ -63,8 +64,8 @@ class Thread {
       // constructor as an Options and vice versa.
       typename NonConstO = typename mozilla::RemoveConst<O>::Type,
       typename DerefO = typename mozilla::RemoveReference<NonConstO>::Type,
-      typename = typename mozilla::EnableIf<
-          mozilla::IsSame<DerefO, Options>::value, void*>::Type>
+      typename = typename mozilla::EnableIf<std::is_same_v<DerefO, Options>,
+                                            void*>::Type>
   explicit Thread(O&& options = Options())
       : id_(ThreadId()), options_(std::forward<O>(options)) {
     MOZ_ASSERT(isInitialized());

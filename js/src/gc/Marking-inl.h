@@ -11,6 +11,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include <type_traits>
+
 #include "gc/RelocationOverlay.h"
 #include "vm/BigIntType.h"
 #include "vm/RegExpShared.h"
@@ -58,8 +60,7 @@ struct TaggedPtr<TaggedProto> {
 template <typename T>
 struct MightBeForwarded {
   static_assert(std::is_base_of<Cell, T>::value, "T must derive from Cell");
-  static_assert(!mozilla::IsSame<Cell, T>::value &&
-                    !mozilla::IsSame<TenuredCell, T>::value,
+  static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>,
                 "T must not be Cell or TenuredCell");
 
   static const bool value = std::is_base_of<JSObject, T>::value ||
