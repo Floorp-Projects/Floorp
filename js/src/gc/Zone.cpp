@@ -6,6 +6,8 @@
 
 #include "gc/Zone-inl.h"
 
+#include <type_traits>
+
 #include "gc/FreeOp.h"
 #include "gc/GCLock.h"
 #include "gc/Policy.h"
@@ -783,7 +785,7 @@ JS_PUBLIC_API void JS::shadow::RegisterWeakCache(
 }
 
 void Zone::traceScriptTableRoots(JSTracer* trc) {
-  static_assert(mozilla::IsConvertible<BaseScript*, gc::TenuredCell*>::value,
+  static_assert(std::is_convertible_v<BaseScript*, gc::TenuredCell*>,
                 "BaseScript must not be nursery-allocated for script-table "
                 "tracing to work");
 

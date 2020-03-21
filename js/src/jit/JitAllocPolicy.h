@@ -10,9 +10,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/OperatorNewExtensions.h"
-#include "mozilla/TypeTraits.h"
 
 #include <algorithm>
+#include <type_traits>
 #include <utility>
 
 #include "ds/LifoAlloc.h"
@@ -152,13 +152,13 @@ struct TempObject {
   }
   template <class T>
   inline void* operator new(size_t nbytes, T* pos) {
-    static_assert(mozilla::IsConvertible<T*, TempObject*>::value,
+    static_assert(std::is_convertible_v<T*, TempObject*>,
                   "Placement new argument type must inherit from TempObject");
     return pos;
   }
   template <class T>
   inline void* operator new(size_t nbytes, mozilla::NotNullTag, T* pos) {
-    static_assert(mozilla::IsConvertible<T*, TempObject*>::value,
+    static_assert(std::is_convertible_v<T*, TempObject*>,
                   "Placement new argument type must inherit from TempObject");
     MOZ_ASSERT(pos);
     return pos;

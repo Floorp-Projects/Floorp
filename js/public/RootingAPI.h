@@ -584,10 +584,9 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
 
   /* Creates a handle from a handle of a type convertible to T. */
   template <typename S>
-  MOZ_IMPLICIT Handle(
-      Handle<S> handle,
-      typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-          dummy = 0) {
+  MOZ_IMPLICIT Handle(Handle<S> handle,
+                      typename mozilla::EnableIf<std::is_convertible_v<S, T>,
+                                                 int>::Type dummy = 0) {
     static_assert(sizeof(Handle<T>) == sizeof(T*),
                   "Handle must be binary compatible with T*.");
     ptr = reinterpret_cast<const T*>(handle.address());
@@ -629,21 +628,21 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
   template <typename S>
   inline MOZ_IMPLICIT Handle(
       const Rooted<S>& root,
-      typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-          dummy = 0);
+      typename mozilla::EnableIf<std::is_convertible_v<S, T>, int>::Type dummy =
+          0);
 
   template <typename S>
   inline MOZ_IMPLICIT Handle(
       const PersistentRooted<S>& root,
-      typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-          dummy = 0);
+      typename mozilla::EnableIf<std::is_convertible_v<S, T>, int>::Type dummy =
+          0);
 
   /* Construct a read only handle from a mutable handle. */
   template <typename S>
   inline MOZ_IMPLICIT Handle(
       MutableHandle<S>& root,
-      typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-          dummy = 0);
+      typename mozilla::EnableIf<std::is_convertible_v<S, T>, int>::Type dummy =
+          0);
 
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_NONPOINTER_ACCESSOR_METHODS(*ptr);
@@ -1243,8 +1242,7 @@ template <typename T>
 template <typename S>
 inline Handle<T>::Handle(
     const Rooted<S>& root,
-    typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-        dummy) {
+    typename mozilla::EnableIf<std::is_convertible_v<S, T>, int>::Type dummy) {
   ptr = reinterpret_cast<const T*>(root.address());
 }
 
@@ -1252,8 +1250,7 @@ template <typename T>
 template <typename S>
 inline Handle<T>::Handle(
     const PersistentRooted<S>& root,
-    typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-        dummy) {
+    typename mozilla::EnableIf<std::is_convertible_v<S, T>, int>::Type dummy) {
   ptr = reinterpret_cast<const T*>(root.address());
 }
 
@@ -1261,8 +1258,7 @@ template <typename T>
 template <typename S>
 inline Handle<T>::Handle(
     MutableHandle<S>& root,
-    typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type
-        dummy) {
+    typename mozilla::EnableIf<std::is_convertible_v<S, T>, int>::Type dummy) {
   ptr = reinterpret_cast<const T*>(root.address());
 }
 
