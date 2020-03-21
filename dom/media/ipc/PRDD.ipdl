@@ -49,7 +49,7 @@ parent:
 
 child:
 
-  async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+  async InitCrashReporter(NativeThreadId threadId);
 
   async AddMemoryReport(MemoryReport aReport);
   async FinishMemoryReport(uint32_t aGeneration);

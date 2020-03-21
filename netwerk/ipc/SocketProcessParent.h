@@ -19,10 +19,6 @@ class MemoryReport;
 class MemoryReportRequestHost;
 }  // namespace dom
 
-namespace ipc {
-class CrashReporterHost;
-}  // namespace ipc
-
 namespace net {
 
 class SocketProcessHost;
