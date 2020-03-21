@@ -521,12 +521,6 @@ function SearchService() {
 SearchService.prototype = {
   classID: Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}"),
 
-  // Current cache version. This should be incremented if the format of the cache
-  // file is modified.
-  get CACHE_VERSION() {
-    return gModernConfig ? 5 : 3;
-  },
-
   // The current status of initialization. Note that it does not determine if
   // initialization is complete, only if an error has been encountered so far.
   _initRV: Cr.NS_OK,
@@ -1067,7 +1061,7 @@ SearchService.prototype = {
     let appVersion = Services.appinfo.version;
 
     // Allows us to force a cache refresh should the cache format change.
-    cache.version = this.CACHE_VERSION;
+    cache.version = SearchUtils.CACHE_VERSION;
     // We don't want to incur the costs of stat()ing each plugin on every
     // startup when the only (supported) time they will change is during
     // app updates (where the buildID is obviously going to change).
@@ -1178,7 +1172,7 @@ SearchService.prototype = {
     let rebuildCache =
       gEnvironment.get("RELOAD_ENGINES") ||
       !cache.engines ||
-      cache.version != this.CACHE_VERSION ||
+      cache.version != SearchUtils.CACHE_VERSION ||
       cache.locale != Services.locale.requestedLocale ||
       cache.buildID != buildID;
 
@@ -1199,8 +1193,13 @@ SearchService.prototype = {
           cache.builtInEngineList.length != engines.length ||
           engines.some(notInCacheEngines);
 
+        // We don't do a built-in list comparison with distributions because they
+        // have a different set of built-ins to that given from the configuration.
+        // Once distributions are incorporated into the modern config, we could
+        // probably move the distroID check to be legacy config only.
         if (
           !rebuildCache &&
+          SearchUtils.distroID == "" &&
           cache.engines.filter(e => e._isBuiltin).length !=
             cache.builtInEngineList.length
         ) {
@@ -1211,15 +1210,17 @@ SearchService.prototype = {
         function notInCacheVisibleEngines(engineName) {
           return !cache.visibleDefaultEngines.includes(engineName);
         }
-
         // Legacy config.
         rebuildCache =
           cache.visibleDefaultEngines.length !=
             this._visibleDefaultEngines.length ||
           this._visibleDefaultEngines.some(notInCacheVisibleEngines);
 
+        // We don't do a built-in list comparison with distributions because they
+        // have a different set of built-ins to that given from the configuration.
         if (
           !rebuildCache &&
+          SearchUtils.distroID == "" &&
           cache.engines.filter(e => e._isBuiltin).length !=
             cache.visibleDefaultEngines.length
         ) {

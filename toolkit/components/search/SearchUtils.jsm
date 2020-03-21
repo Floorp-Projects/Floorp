@@ -169,7 +169,25 @@ var SearchUtils = {
   isPartnerBuild() {
     return SearchUtils.distroID && !SearchUtils.distroID.startsWith("mozilla");
   },
+
+  /**
+   * Current cache version. This should be incremented if the format of the cache
+   * file is modified.
+   *
+   * @returns {number}
+   *   The current cache version.
+   */
+  get CACHE_VERSION() {
+    return this.gModernConfig ? 5 : 3;
+  },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  SearchUtils,
+  "gModernConfig",
+  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
+  false
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   SearchUtils,
