@@ -227,14 +227,14 @@ void WorkerErrorNote::AssignErrorNote(JSErrorNotes::Note* aNote) {
 }
 
 WorkerErrorReport::WorkerErrorReport()
-    : mFlags(0), mExnType(JSEXN_ERR), mMutedError(false) {}
+    : mIsWarning(false), mExnType(JSEXN_ERR), mMutedError(false) {}
 
 void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
   WorkerErrorBase::AssignErrorBase(aReport);
   xpc::ErrorReport::ErrorReportToMessageString(aReport, mMessage);
 
   mLine.Assign(aReport->linebuf(), aReport->linebufLength());
-  mFlags = aReport->flags;
+  mIsWarning = aReport->isWarning();
   MOZ_ASSERT(aReport->exnType >= JSEXN_FIRST && aReport->exnType < JSEXN_LIMIT);
   mExnType = JSExnType(aReport->exnType);
   mMutedError = aReport->isMuted;
@@ -268,7 +268,7 @@ void WorkerErrorReport::ReportError(
 
   // We should not fire error events for warnings but instead make sure that
   // they show up in the error console.
-  if (!JSREPORT_IS_WARNING(aReport->mFlags)) {
+  if (!aReport->mIsWarning) {
     // First fire an ErrorEvent at the worker.
     RootedDictionary<ErrorEventInit> init(aCx);
 
@@ -389,9 +389,9 @@ void WorkerErrorReport::LogErrorToConsole(JSContext* aCx,
   JS::RootedObject stack(aCx, aReport.ReadStack(aCx));
   JS::RootedObject stackGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  ErrorData errorData(aReport.mLineNumber, aReport.mColumnNumber,
-                      aReport.mFlags, aReport.mMessage, aReport.mFilename,
-                      aReport.mLine, notes);
+  ErrorData errorData(aReport.mIsWarning, aReport.mLineNumber,
+                      aReport.mColumnNumber, aReport.mMessage,
+                      aReport.mFilename, aReport.mLine, notes);
   LogErrorToConsole(errorData, aInnerWindowId, stack, stackGlobal);
 }
 
@@ -413,10 +413,12 @@ void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
 
   if (scriptError) {
     nsAutoCString category("Web Worker");
+    uint32_t flags = aReport.isWarning() ? nsIScriptError::warningFlag
+                                         : nsIScriptError::errorFlag;
     if (NS_FAILED(scriptError->nsIScriptError::InitWithWindowID(
             aReport.message(), aReport.filename(), aReport.line(),
-            aReport.lineNumber(), aReport.columnNumber(), aReport.flags(),
-            category, aInnerWindowId))) {
+            aReport.lineNumber(), aReport.columnNumber(), flags, category,
+            aInnerWindowId))) {
       NS_WARNING("Failed to init script error!");
       scriptError = nullptr;
     }

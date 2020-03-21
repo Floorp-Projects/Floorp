@@ -41,7 +41,7 @@ class WorkerPrivate;
 class WorkerErrorReport : public WorkerErrorBase, public SerializedStackHolder {
  public:
   nsString mLine;
-  uint32_t mFlags;
+  bool mIsWarning;
   JSExnType mExnType;
   bool mMutedError;
   nsTArray<WorkerErrorNote> mNotes;

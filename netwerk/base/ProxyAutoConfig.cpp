@@ -389,7 +389,7 @@ static void PACLogErrorOrWarning(const nsAString& aKind,
 
 static void PACWarningReporter(JSContext* aCx, JSErrorReport* aReport) {
   MOZ_ASSERT(aReport);
-  MOZ_ASSERT(JSREPORT_IS_WARNING(aReport->flags));
+  MOZ_ASSERT(aReport->isWarning());
 
   PACLogErrorOrWarning(NS_LITERAL_STRING("Warning"), aReport);
 }
