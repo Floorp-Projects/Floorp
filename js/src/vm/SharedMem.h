@@ -7,8 +7,6 @@
 #ifndef vm_SharedMem_h
 #define vm_SharedMem_h
 
-#include "mozilla/TypeTraits.h"
-
 #include <type_traits>
 
 template <typename T>
@@ -80,9 +78,8 @@ class SharedMem {
 #ifdef DEBUG
     MOZ_ASSERT(
         asValue() %
-            sizeof(
-                mozilla::Conditional<std::is_void_v<std::remove_pointer_t<U>>,
-                                     char, std::remove_pointer_t<U>>) ==
+            sizeof(std::conditional_t<std::is_void_v<std::remove_pointer_t<U>>,
+                                      char, std::remove_pointer_t<U>>) ==
         0);
     if (sharedness_ == IsUnshared) {
       return SharedMem<U>::unshared(unwrap());
@@ -126,9 +123,8 @@ class SharedMem {
   SharedMem addBytes(size_t nbytes) {
     MOZ_ASSERT(
         nbytes %
-            sizeof(
-                mozilla::Conditional<std::is_void_v<std::remove_pointer_t<T>>,
-                                     char, std::remove_pointer_t<T>>) ==
+            sizeof(std::conditional_t<std::is_void_v<std::remove_pointer_t<T>>,
+                                      char, std::remove_pointer_t<T>>) ==
         0);
     return SharedMem(
         reinterpret_cast<T>(reinterpret_cast<char*>(ptr_) + nbytes), *this);
