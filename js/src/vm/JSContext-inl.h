@@ -10,6 +10,7 @@
 #include "vm/JSContext.h"
 
 #include <type_traits>
+#include <utility>
 
 #include "builtin/Object.h"
 #include "gc/Zone.h"
@@ -139,9 +140,8 @@ class ContextChecks {
   // Check the contents of any container class that supports the C++
   // iteration protocol, eg GCVector<jsid>.
   template <typename Container>
-  typename mozilla::EnableIf<
-      std::is_same_v<decltype(((Container*)nullptr)->begin()),
-                     decltype(((Container*)nullptr)->end())>>::Type
+  std::enable_if_t<std::is_same_v<decltype(std::declval<Container>().begin()),
+                                  decltype(std::declval<Container>().end())>>
   check(const Container& container, int argIndex) {
     for (auto i : container) {
       check(i, argIndex);
