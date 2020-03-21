@@ -402,7 +402,7 @@ class ArgSeq<> {
 template <typename HeadType, typename... TailTypes>
 class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...> {
  private:
-  using RawHeadType = typename mozilla::RemoveReference<HeadType>::Type;
+  using RawHeadType = std::remove_reference_t<HeadType>;
   RawHeadType head_;
 
  public:
