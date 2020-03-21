@@ -649,9 +649,9 @@ void RemoteWorkerChild::ErrorPropagationOnMainThread(
                                         note.mMessage, note.mFilename));
     }
 
-    ErrorData data(aReport->mLineNumber, aReport->mColumnNumber,
-                   aReport->mFlags, aReport->mMessage, aReport->mFilename,
-                   aReport->mLine, notes);
+    ErrorData data(aReport->mIsWarning, aReport->mLineNumber,
+                   aReport->mColumnNumber, aReport->mMessage,
+                   aReport->mFilename, aReport->mLine, notes);
     value = data;
   } else {
     value = void_t();

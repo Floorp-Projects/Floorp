@@ -444,7 +444,7 @@ bool AutoJSAPI::Init(nsGlobalWindowInner* aWindow) {
 // Eventually, SpiderMonkey will have a special-purpose callback for warnings
 // only.
 void WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep) {
-  MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
+  MOZ_ASSERT(aRep->isWarning());
   if (!NS_IsMainThread()) {
     // Reporting a warning on workers is a bit complicated because we have to
     // climb our parent chain until we get to the main thread.  So go ahead and
