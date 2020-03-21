@@ -7,7 +7,7 @@
 #ifndef jit_TypePolicy_h
 #define jit_TypePolicy_h
 
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
 
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
@@ -419,8 +419,8 @@ class MixPolicy final : public TypePolicy {
   }
 
   template <class P, class... Rest>
-  static typename mozilla::EnableIf<(sizeof...(Rest) > 0), bool>::Type
-  staticAdjustInputsHelper(TempAllocator& alloc, MInstruction* ins) {
+  static std::enable_if_t<(sizeof...(Rest) > 0), bool> staticAdjustInputsHelper(
+      TempAllocator& alloc, MInstruction* ins) {
     return P::staticAdjustInputs(alloc, ins) &&
            MixPolicy::staticAdjustInputsHelper<Rest...>(alloc, ins);
   }
