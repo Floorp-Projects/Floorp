@@ -79,3 +79,4 @@ license:
         - 'tools/lint/license/**'
     type: external
     payload: license:lint
+    find-dotfiles: true
