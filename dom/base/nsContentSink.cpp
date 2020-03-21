@@ -1132,6 +1132,12 @@ void nsContentSink::StartLayout(bool aIgnorePendingSheets) {
 
   mDeferredLayoutStart = false;
 
+  if (aIgnorePendingSheets) {
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"), mDocument,
+        nsContentUtils::eLAYOUT_PROPERTIES, "ForcedLayoutStart");
+  }
+
   // Notify on all our content.  If none of our presshells have started layout
   // yet it'll be a no-op except for updating our data structures, a la
   // UpdateChildCounts() (because we don't want to double-notify on whatever we
