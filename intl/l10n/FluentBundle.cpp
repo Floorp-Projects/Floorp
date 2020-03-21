@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FluentBundle.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "unicode/numberformatter.h"
 #include "unicode/datefmt.h"
@@ -103,16 +102,7 @@ void FluentBundle::AddResource(
     FluentResource& aResource,
     const dom::FluentBundleAddResourceOptions& aOptions) {
   bool allowOverrides = aOptions.mAllowOverrides;
-  nsTArray<nsCString> errors;
-
-  fluent_bundle_add_resource(mRaw.get(), aResource.Raw(), allowOverrides,
-                             &errors);
-
-  for (auto& err : errors) {
-    nsContentUtils::LogSimpleConsoleError(NS_ConvertUTF8toUTF16(err), "L10n",
-                                          false, true,
-                                          nsIScriptError::warningFlag);
-  }
+  fluent_bundle_add_resource(mRaw.get(), aResource.Raw(), allowOverrides);
 }
 
 bool FluentBundle::HasMessage(const nsACString& aId) {
