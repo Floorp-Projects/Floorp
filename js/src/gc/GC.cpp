@@ -197,7 +197,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
@@ -5688,8 +5687,8 @@ IncrementalProgress GCRuntime::sweepShapeTree(JSFreeOp* fop,
 // interface. This iterator provides a done()/get()/next() style interface.
 template <typename Container>
 class ContainerIter {
-  using Iter = decltype(mozilla::DeclVal<const Container>().begin());
-  using Elem = decltype(*mozilla::DeclVal<Iter>());
+  using Iter = decltype(std::declval<const Container>().begin());
+  using Elem = decltype(*std::declval<Iter>());
 
   Iter iter;
   const Iter end;
@@ -5715,7 +5714,7 @@ class ContainerIter {
 template <typename Iter>
 struct IncrementalIter {
   using State = Maybe<Iter>;
-  using Elem = decltype(mozilla::DeclVal<Iter>().get());
+  using Elem = decltype(std::declval<Iter>().get());
 
  private:
   State& maybeIter;
@@ -5861,7 +5860,7 @@ class SweepActionSequence final : public SweepAction {
 
 template <typename Iter, typename Init>
 class SweepActionForEach final : public SweepAction {
-  using Elem = decltype(mozilla::DeclVal<Iter>().get());
+  using Elem = decltype(std::declval<Iter>().get());
   using IncrIter = IncrementalIter<Iter>;
 
   Init iterInit;
