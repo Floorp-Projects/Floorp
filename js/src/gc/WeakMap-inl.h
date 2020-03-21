@@ -13,6 +13,7 @@
 #include "mozilla/Unused.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "gc/Zone.h"
 #include "js/TraceKind.h"
@@ -86,7 +87,7 @@ template <class K, class V>
 WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
     : Base(cx->zone()), WeakMapBase(memOf, cx->zone()) {
   using ElemType = typename K::ElementType;
-  using NonPtrType = typename mozilla::RemovePointer<ElemType>::Type;
+  using NonPtrType = std::remove_pointer_t<ElemType>;
 
   // The object's TraceKind needs to be added to CC graph if this object is
   // used as a WeakMap key, otherwise the key is considered to be pointed from

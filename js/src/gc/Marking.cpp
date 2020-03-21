@@ -11,7 +11,6 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
@@ -249,9 +248,8 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   MOZ_ASSERT_IF(!isClearEdgesTracer, !zone->usedByHelperThread());
 
   MOZ_ASSERT(thing->isAligned());
-  MOZ_ASSERT(
-      MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind ==
-      thing->getTraceKind());
+  MOZ_ASSERT(MapTypeToTraceKind<std::remove_pointer_t<T>>::kind ==
+             thing->getTraceKind());
 
   if (isGcMarkingTracer) {
     GCMarker* gcMarker = GCMarker::fromTracer(trc);
