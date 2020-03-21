@@ -11,7 +11,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/TypeTraits.h"
 
 #include <type_traits>
 #include <utility>
@@ -593,7 +592,7 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>> {
   }
 
   MOZ_IMPLICIT Handle(decltype(nullptr)) {
-    static_assert(mozilla::IsPointer<T>::value,
+    static_assert(std::is_pointer_v<T>,
                   "nullptr_t overload not valid for non-pointer types");
     static void* const ConstNullValue = nullptr;
     ptr = reinterpret_cast<const T*>(&ConstNullValue);
