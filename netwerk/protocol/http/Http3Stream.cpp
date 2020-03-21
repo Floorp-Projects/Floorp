@@ -30,6 +30,7 @@ Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
       mDataReceived(false),
       mRequestBodyLenRemaining(0),
       mSocketTransport(session->SocketTransport()),
+      mActivatingFailed(false),
       mTotalSent(0),
       mTotalRead(0),
       mFin(false) {
@@ -146,19 +147,33 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
 
   switch (mState) {
     case PREPARING_HEADERS:
-      GetHeadersString(buf, count, countRead);
-
-      if (*countRead) {
-        mTotalSent += *countRead;
-        mTransaction->OnTransportStatus(mSocketTransport,
-                                        NS_NET_STATUS_SENDING_TO, mTotalSent);
+      if (mActivatingFailed) {
+        MOZ_ASSERT(count, "There must be at least one byte in the buffer.");
+        // We already read all headers but TryActivating() failed, so we left
+        // one fake byte in the buffer. Read this byte and try to activate the
+        // stream again.
+        MOZ_ASSERT(mRequestHeadersDone, "Must have already all headers!");
+        *countRead = 1;
+        mActivatingFailed = false;
+      } else {
+        GetHeadersString(buf, count, countRead);
+        if (*countRead) {
+          mTotalSent += *countRead;
+        }
       }
+
       MOZ_ASSERT(!mRequestStarted, "We should be in one of the next states.");
       if (mRequestHeadersDone && !mRequestStarted) {
         nsresult rv = TryActivating();
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
           LOG3(("Http3Stream::OnReadSegment %p cannot activate now. queued.\n",
                 this));
+          if (*countRead) {
+            // Keep at least one byte in the buffer to ensure this method is
+            // called again and set the flag to ignore this byte.
+            --*countRead;
+            mActivatingFailed = true;
+          }
           return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
         }
         if (NS_FAILED(rv)) {
@@ -167,6 +182,9 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
                 this, static_cast<uint32_t>(rv)));
           return rv;
         }
+
+        mTransaction->OnTransportStatus(mSocketTransport,
+                                        NS_NET_STATUS_SENDING_TO, mTotalSent);
       }
 
       if (mRequestStarted) {
