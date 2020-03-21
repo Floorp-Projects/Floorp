@@ -1184,11 +1184,11 @@ struct RoleDescrComparator {
 - (void)expire {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
-
   [self invalidateChildren];
 
   mGeckoAccessible = 0;
+
+  NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
