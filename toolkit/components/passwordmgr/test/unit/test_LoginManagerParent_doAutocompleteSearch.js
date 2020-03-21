@@ -11,13 +11,6 @@ const { LoginManagerParent } = ChromeUtils.import(
 
 // new-password to the happy path
 const NEW_PASSWORD_TEMPLATE_ARG = {
-  autocompleteInfo: {
-    section: "",
-    addressType: "",
-    contactType: "",
-    fieldName: "new-password",
-    canAutomaticallyPersist: false,
-  },
   formOrigin: "https://example.com",
   actionOrigin: "https://mozilla.org",
   searchString: "",
@@ -25,6 +18,7 @@ const NEW_PASSWORD_TEMPLATE_ARG = {
   requestId: "foo",
   isSecure: true,
   isPasswordField: true,
+  isProbablyANewPasswordField: true,
 };
 
 add_task(async function setup() {
@@ -77,7 +71,10 @@ add_task(async function test_generated_noLogins() {
 
   let result3 = await LMP.doAutocompleteSearch({
     ...NEW_PASSWORD_TEMPLATE_ARG,
-    ...{ isPasswordField: false },
+    ...{
+      isPasswordField: false,
+      isProbablyANewPasswordField: false,
+    },
   });
   equal(
     result3.generatedPassword,
@@ -85,14 +82,18 @@ add_task(async function test_generated_noLogins() {
     "no generated password when not a pw. field"
   );
 
-  // Deep copy since we need to modify a property of autocompleteInfo.
-  let arg1_2 = JSON.parse(JSON.stringify(NEW_PASSWORD_TEMPLATE_ARG));
-  arg1_2.autocompleteInfo.fieldName = "";
-  let result4 = await LMP.doAutocompleteSearch(arg1_2);
+  let result4 = await LMP.doAutocompleteSearch({
+    ...NEW_PASSWORD_TEMPLATE_ARG,
+    ...{
+      // This is false when there is no autocomplete="new-password" attribute &&
+      // LoginAutoComplete._isProbablyANewPasswordField returns false
+      isProbablyANewPasswordField: false,
+    },
+  });
   equal(
     result4.generatedPassword,
     null,
-    "no generated password when not autocomplete=new-password"
+    "no generated password when isProbablyANewPasswordField is false"
   );
 
   LMP.useBrowsingContext(999);

@@ -30,6 +30,7 @@ this.LoginHelper = {
   storageEnabled: null,
   formlessCaptureEnabled: null,
   generationAvailable: null,
+  generationConfidenceThreshold: null,
   generationEnabled: null,
   includeOtherSubdomainsInLookup: null,
   insecureAutofill: null,
@@ -62,6 +63,9 @@ this.LoginHelper = {
     );
     this.generationAvailable = Services.prefs.getBoolPref(
       "signon.generation.available"
+    );
+    this.generationConfidenceThreshold = parseFloat(
+      Services.prefs.getStringPref("signon.generation.confidenceThreshold")
     );
     this.generationEnabled = Services.prefs.getBoolPref(
       "signon.generation.enabled"

@@ -412,7 +412,6 @@ class LoginManagerParent extends JSWindowActorParent {
   }
 
   async doAutocompleteSearch({
-    autocompleteInfo,
     formOrigin,
     actionOrigin,
     searchString,
@@ -420,6 +419,7 @@ class LoginManagerParent extends JSWindowActorParent {
     forcePasswordGeneration,
     isSecure,
     isPasswordField,
+    isProbablyANewPasswordField,
   }) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
@@ -486,10 +486,11 @@ class LoginManagerParent extends JSWindowActorParent {
     let generatedPassword = null;
     let willAutoSaveGeneratedPassword = false;
     if (
-      forcePasswordGeneration ||
-      (isPasswordField &&
-        autocompleteInfo.fieldName == "new-password" &&
-        Services.logins.getLoginSavingEnabled(formOrigin))
+      // If MP was cancelled above, don't try to offer pwgen or access storage again (causing a new MP prompt).
+      Services.logins.isLoggedIn &&
+      (forcePasswordGeneration ||
+        (isProbablyANewPasswordField &&
+          Services.logins.getLoginSavingEnabled(formOrigin)))
     ) {
       generatedPassword = this.getGeneratedPassword();
       let potentialConflictingLogins = LoginHelper.searchLoginsWithObject({
