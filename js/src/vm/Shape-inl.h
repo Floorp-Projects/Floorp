@@ -9,8 +9,6 @@
 
 #include "vm/Shape.h"
 
-#include "mozilla/TypeTraits.h"
-
 #include "gc/Allocator.h"
 #include "vm/Interpreter.h"
 #include "vm/JSObject.h"

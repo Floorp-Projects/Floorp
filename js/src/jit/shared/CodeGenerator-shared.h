@@ -8,7 +8,6 @@
 #define jit_shared_CodeGenerator_shared_h
 
 #include "mozilla/Alignment.h"
-#include "mozilla/TypeTraits.h"
 
 #include <utility>
 
