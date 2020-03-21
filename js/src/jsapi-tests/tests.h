@@ -357,8 +357,7 @@ class JSAPITest {
   }
 
   static void reportWarning(JSContext* cx, JSErrorReport* report) {
-    MOZ_RELEASE_ASSERT(report);
-    MOZ_RELEASE_ASSERT(JSREPORT_IS_WARNING(report->flags));
+    MOZ_RELEASE_ASSERT(report->isWarning());
 
     fprintf(stderr, "%s:%u:%s\n",
             report->filename ? report->filename : "<no filename>",

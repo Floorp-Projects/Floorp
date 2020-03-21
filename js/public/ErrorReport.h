@@ -203,6 +203,16 @@ class JSErrorNotes {
   JS_PUBLIC_API iterator end();
 };
 
+/*
+ * JSErrorReport flag values.  These may be freely composed.
+ *
+ * To be removed.
+ */
+#define JSREPORT_ERROR 0x0   /* pseudo-flag for default case */
+#define JSREPORT_WARNING 0x1 /* reported via JS::Warn* */
+
+#define JSREPORT_USER_1 0x8 /* user-defined flag */
+
 /**
  * Describes a single error or warning that occurs in the execution of script.
  */
@@ -259,18 +269,10 @@ class JSErrorReport : public JSErrorBase {
   void initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg,
                            size_t tokenOffsetArg);
 
+  bool isWarning() const { return !!(flags & JSREPORT_WARNING); }
+
  private:
   void freeLinebuf();
 };
-
-/*
- * JSErrorReport flag values.  These may be freely composed.
- */
-#define JSREPORT_ERROR 0x0   /* pseudo-flag for default case */
-#define JSREPORT_WARNING 0x1 /* reported via JS::Warn* */
-
-#define JSREPORT_USER_1 0x8 /* user-defined flag */
-
-#define JSREPORT_IS_WARNING(flags) (((flags)&JSREPORT_WARNING) != 0)
 
 #endif /* js_ErrorReport_h */
