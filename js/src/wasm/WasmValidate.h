@@ -19,7 +19,7 @@
 #ifndef wasm_validate_h
 #define wasm_validate_h
 
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
 
 #include "ds/Bitmap.h"
 
@@ -551,7 +551,7 @@ class Decoder {
 
   template <typename SInt>
   MOZ_MUST_USE bool readVarS(SInt* out) {
-    using UInt = typename mozilla::MakeUnsigned<SInt>::Type;
+    using UInt = std::make_unsigned_t<SInt>;
     const unsigned numBits = sizeof(SInt) * CHAR_BIT;
     const unsigned remainderBits = numBits % 7;
     const unsigned numBitsInSevens = numBits - remainderBits;
