@@ -226,7 +226,7 @@ bool AutoResolving::alreadyStartedSlow() const {
 
 static void ReportError(JSContext* cx, JSErrorReport* reportp,
                         JSErrorCallback callback, void* userRef) {
-  if (JSREPORT_IS_WARNING(reportp->flags)) {
+  if (reportp->isWarning()) {
     CallWarningReporter(cx, reportp);
     return;
   }
@@ -378,10 +378,9 @@ bool js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
   }
   PopulateReportBlame(cx, &report);
 
-  bool warning = JSREPORT_IS_WARNING(report.flags);
-
   ReportError(cx, &report, nullptr, nullptr);
-  return warning;
+
+  return report.isWarning();
 }
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
@@ -510,12 +509,12 @@ bool js::PrintError(JSContext* cx, FILE* file,
   MOZ_ASSERT(report);
 
   /* Conditionally ignore reported warnings. */
-  if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings) {
+  if (report->isWarning() && !reportWarnings) {
     return false;
   }
 
   PrintErrorKind kind = PrintErrorKind::Error;
-  if (JSREPORT_IS_WARNING(report->flags)) {
+  if (report->isWarning()) {
     kind = PrintErrorKind::Warning;
   }
   PrintSingleError(cx, file, toStringResult, report, kind);
@@ -806,10 +805,6 @@ bool js::ReportErrorNumberVA(JSContext* cx, unsigned flags,
                              const unsigned errorNumber,
                              ErrorArgumentsType argumentsType, va_list ap) {
   JSErrorReport report;
-  bool warning;
-
-  warning = JSREPORT_IS_WARNING(flags);
-
   report.flags = flags;
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
@@ -821,7 +816,7 @@ bool js::ReportErrorNumberVA(JSContext* cx, unsigned flags,
 
   ReportError(cx, &report, callback, userRef);
 
-  return warning;
+  return report.isWarning();
 }
 
 template <typename CharT>
@@ -849,8 +844,6 @@ static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
           (argType != ArgumentsAreUnicode && std::is_same_v<CharT, char>),
       "Mismatch between character type and argument type");
 
-  bool warning = JSREPORT_IS_WARNING(flags);
-
   JSErrorReport report;
   report.flags = flags;
   report.errorNumber = errorNumber;
@@ -863,7 +856,7 @@ static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
 
   ReportError(cx, &report, callback, userRef);
 
-  return warning;
+  return report.isWarning();
 }
 
 bool js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
