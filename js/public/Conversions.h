@@ -371,7 +371,7 @@ inline SignedInteger ToSignedInteger(double d) {
   static_assert(mozilla::IsSigned<SignedInteger>::value,
                 "SignedInteger must be a signed type");
 
-  using UnsignedInteger = typename mozilla::MakeUnsigned<SignedInteger>::Type;
+  using UnsignedInteger = std::make_unsigned_t<SignedInteger>;
   UnsignedInteger u = ToUnsignedInteger<UnsignedInteger>(d);
 
   return mozilla::WrapToSigned(u);
