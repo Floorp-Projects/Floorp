@@ -191,7 +191,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 
@@ -200,6 +199,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <type_traits>
 
 #include "jspubtd.h"
 
@@ -278,7 +278,7 @@ class TokenStreamShared {
   }
 };
 
-static_assert(mozilla::IsEmpty<TokenStreamShared>::value,
+static_assert(std::is_empty_v<TokenStreamShared>,
               "TokenStreamShared shouldn't bloat classes that inherit from it");
 
 template <typename Unit, class AnyCharsAccess>
