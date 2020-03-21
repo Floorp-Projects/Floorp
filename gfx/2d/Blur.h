@@ -150,6 +150,8 @@ class GFX2D_API AlphaBoxBlur final {
   /**
    * A rect indicating the area where blurring is unnecessary, and the blur
    * algorithm should skip over it.
+   *
+   * This is guaranteed to be 4-pixel aligned in the x axis.
    */
   IntRect mSkipRect;
 
