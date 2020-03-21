@@ -61,7 +61,7 @@ class Thread {
   template <typename O = Options,
             // SFINAE to make sure we don't try and treat functors for the other
             // constructor as an Options and vice versa.
-            typename NonConstO = typename mozilla::RemoveConst<O>::Type,
+            typename NonConstO = std::remove_const_t<O>,
             typename DerefO = std::remove_reference_t<NonConstO>,
             typename = std::enable_if_t<std::is_same_v<DerefO, Options>>>
   explicit Thread(O&& options = Options())
