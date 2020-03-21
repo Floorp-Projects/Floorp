@@ -9,6 +9,8 @@
 
 #include "mozilla/TypeTraits.h"
 
+#include <type_traits>
+
 template <typename T>
 class SharedMem {
   // static_assert(mozilla::IsPointer<T>::value,
@@ -78,9 +80,8 @@ class SharedMem {
 #ifdef DEBUG
     MOZ_ASSERT(asValue() %
                    sizeof(mozilla::Conditional<
-                          mozilla::IsVoid<
-                              typename mozilla::RemovePointer<U>::Type>::value,
-                          char, typename mozilla::RemovePointer<U>::Type>) ==
+                          mozilla::IsVoid<std::remove_pointer_t<U>>::value,
+                          char, std::remove_pointer_t<U>>) ==
                0);
     if (sharedness_ == IsUnshared) {
       return SharedMem<U>::unshared(unwrap());
@@ -122,11 +123,9 @@ class SharedMem {
   // Cast to char*, add nbytes, and cast back to T.  Simplifies code in a few
   // places.
   SharedMem addBytes(size_t nbytes) {
-    MOZ_ASSERT(nbytes %
-                   sizeof(mozilla::Conditional<
-                          mozilla::IsVoid<
-                              typename mozilla::RemovePointer<T>::Type>::value,
-                          char, typename mozilla::RemovePointer<T>::Type>) ==
+    MOZ_ASSERT(nbytes % sizeof(mozilla::Conditional<
+                               mozilla::IsVoid<std::remove_pointer_t<T>>::value,
+                               char, std::remove_pointer_t<T>>) ==
                0);
     return SharedMem(
         reinterpret_cast<T>(reinterpret_cast<char*>(ptr_) + nbytes), *this);

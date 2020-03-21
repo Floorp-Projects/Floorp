@@ -9,7 +9,8 @@
 #ifndef gc_Policy_h
 #define gc_Policy_h
 
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
+
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "js/GCPolicyAPI.h"
@@ -19,7 +20,7 @@ namespace js {
 // Define the GCPolicy for all internal pointers.
 template <typename T>
 struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
-  using Type = typename mozilla::RemovePointer<T>::Type;
+  using Type = std::remove_pointer_t<T>;
 
 #define IS_BASE_OF_OR(_1, BaseType, _2, _3) \
   std::is_base_of<BaseType, Type>::value ||
