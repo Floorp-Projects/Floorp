@@ -197,7 +197,7 @@ void MediaControlService::ControllerManager::Shutdown() {
   DisconnectMainControllerEvents();
 }
 
-void MediaControlService::ControllerManager::ControllerPlaybackStateChanged(
+void MediaControlService::ControllerManager::MainControllerPlaybackStateChanged(
     MediaSessionPlaybackState aState) {
   MOZ_ASSERT(NS_IsMainThread());
   mSource->SetPlaybackState(aState);
@@ -209,7 +209,7 @@ void MediaControlService::ControllerManager::ControllerPlaybackStateChanged(
   }
 }
 
-void MediaControlService::ControllerManager::ControllerMetadataChanged(
+void MediaControlService::ControllerManager::MainControllerMetadataChanged(
     const MediaMetadataBase& aMetadata) {
   MOZ_ASSERT(NS_IsMainThread());
   mSource->SetMediaMetadata(aMetadata);
@@ -246,10 +246,10 @@ void MediaControlService::ControllerManager::ConnectToMainControllerEvents() {
   mPlayStateChangedListener =
       mMainController->PlaybackStateChangedEvent().Connect(
           AbstractThread::MainThread(), this,
-          &ControllerManager::ControllerPlaybackStateChanged);
+          &ControllerManager::MainControllerPlaybackStateChanged);
   mMetadataChangedListener = mMainController->MetadataChangedEvent().Connect(
       AbstractThread::MainThread(), this,
-      &ControllerManager::ControllerMetadataChanged);
+      &ControllerManager::MainControllerMetadataChanged);
 
   // Update controller's current status to the event source.
   mSource->SetPlaybackState(mMainController->GetState());
