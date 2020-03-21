@@ -1038,9 +1038,8 @@ namespace detail {
  */
 template <typename T>
 using MaybeWrapped =
-    typename mozilla::Conditional<MapTypeToRootKind<T>::kind ==
-                                      JS::RootKind::Traceable,
-                                  js::DispatchWrapper<T>, T>::Type;
+    std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
+                       js::DispatchWrapper<T>, T>;
 
 // Dummy types to make it easier to understand template overload preference
 // ordering.
