@@ -140,6 +140,12 @@ class Http3Stream final : public nsAHttpSegmentReader,
   // The underlying socket transport object is needed to propogate some events
   RefPtr<nsISocketTransport> mSocketTransport;
 
+  // True if TryActivating() failed and the stream was queued. In this case we
+  // return fake count of bytes read by OnReadSegment() to ensure that
+  // OnReadSegment() is called again. Otherwise we wouldn't call TryActivating()
+  // again and the stream would hang.
+  bool mActivatingFailed;
+
   // For Progress Events
   uint64_t mTotalSent;
   uint64_t mTotalRead;
