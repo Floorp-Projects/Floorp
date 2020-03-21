@@ -15,6 +15,7 @@
 #include "mozilla/Unused.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "jsfriendapi.h"
 
@@ -57,7 +58,6 @@ using JS::MapTypeToTraceKind;
 
 using mozilla::DebugOnly;
 using mozilla::IntegerRange;
-using mozilla::IsSame;
 using mozilla::PodCopy;
 
 // [SMDOC] GC Tracing
@@ -698,11 +698,10 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
 // a sufficiently smart C++ compiler may be able to devirtualize some paths.
 template <typename T>
 bool js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
-#define IS_SAME_TYPE_OR(name, type, _, _1) mozilla::IsSame<type*, T>::value ||
+#define IS_SAME_TYPE_OR(name, type, _, _1) std::is_same_v<type*, T> ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR)
-                        mozilla::IsSame<T, JS::Value>::value ||
-                    mozilla::IsSame<T, jsid>::value ||
-                    mozilla::IsSame<T, TaggedProto>::value,
+                        std::is_same_v<T, JS::Value> ||
+                    std::is_same_v<T, jsid> || std::is_same_v<T, TaggedProto>,
                 "Only the base cell layout types are allowed into "
                 "marking/tracing internals");
 #undef IS_SAME_TYPE_OR
@@ -3516,7 +3515,7 @@ size_t js::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
 
 template <typename T>
 static inline void CheckIsMarkedThing(T* thingp) {
-#define IS_SAME_TYPE_OR(name, type, _, _1) mozilla::IsSame<type*, T>::value ||
+#define IS_SAME_TYPE_OR(name, type, _, _1) std::is_same_v<type*, T> ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR) false,
                 "Only the base cell layout types are allowed into "
                 "marking/tracing internals");

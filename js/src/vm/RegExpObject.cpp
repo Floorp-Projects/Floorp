@@ -10,6 +10,7 @@
 #include "mozilla/PodOperations.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"  // REGEXP_*_FLAG
@@ -202,7 +203,7 @@ RegExpObject* RegExpObject::create(JSContext* cx, const CharT* chars,
                                    size_t length, RegExpFlags flags,
                                    frontend::TokenStreamAnyChars& tokenStream,
                                    NewObjectKind newKind) {
-  static_assert(mozilla::IsSame<CharT, char16_t>::value,
+  static_assert(std::is_same_v<CharT, char16_t>,
                 "this code may need updating if/when CharT encodes UTF-8");
 
   RootedAtom source(cx, AtomizeChars(cx, chars, length));
@@ -221,7 +222,7 @@ template <typename CharT>
 RegExpObject* RegExpObject::create(JSContext* cx, const CharT* chars,
                                    size_t length, RegExpFlags flags,
                                    NewObjectKind newKind) {
-  static_assert(mozilla::IsSame<CharT, char16_t>::value,
+  static_assert(std::is_same_v<CharT, char16_t>,
                 "this code may need updating if/when CharT encodes UTF-8");
 
   RootedAtom source(cx, AtomizeChars(cx, chars, length));
@@ -400,8 +401,10 @@ template <typename CharT>
 static MOZ_ALWAYS_INLINE bool SetupBuffer(StringBuffer& sb,
                                           const CharT* oldChars, size_t oldLen,
                                           const CharT* it) {
-  if (mozilla::IsSame<CharT, char16_t>::value && !sb.ensureTwoByteChars()) {
-    return false;
+  if constexpr (std::is_same_v<CharT, char16_t>) {
+    if (!sb.ensureTwoByteChars()) {
+      return false;
+    }
   }
 
   if (!sb.reserve(oldLen + 1)) {

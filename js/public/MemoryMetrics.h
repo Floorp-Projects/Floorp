@@ -12,9 +12,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TypeTraits.h"
 
 #include <string.h>
+#include <type_traits>
 
 #include "jspubtd.h"
 
@@ -157,8 +157,8 @@ struct InefficientNonFlatteningStringHashPolicy {
 #define ADD_SIZE_TO_N(tabKind, servoKind, mSize) n += mSize;
 #define ADD_SIZE_TO_N_IF_LIVE_GC_THING(tabKind, servoKind, mSize)     \
   /* Avoid self-comparison warnings by comparing enums indirectly. */ \
-  n += (mozilla::IsSame<int[ServoSizes::servoKind],                   \
-                        int[ServoSizes::GCHeapUsed]>::value)          \
+  n += (std::is_same_v<int[ServoSizes::servoKind],                    \
+                       int[ServoSizes::GCHeapUsed]>)                  \
            ? mSize                                                    \
            : 0;
 #define ADD_TO_TAB_SIZES(tabKind, servoKind, mSize) \

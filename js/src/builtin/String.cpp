@@ -13,7 +13,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
@@ -75,7 +74,6 @@ using mozilla::AsciiAlphanumericToNumber;
 using mozilla::CheckedInt;
 using mozilla::IsAsciiHexDigit;
 using mozilla::IsNaN;
-using mozilla::IsSame;
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
 
@@ -706,12 +704,14 @@ static size_t ToLowerCaseImpl(CharT* destChars, const CharT* srcChars,
                               size_t destLength) {
   MOZ_ASSERT(startIndex < srcLength);
   MOZ_ASSERT(srcLength <= destLength);
-  MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value), srcLength == destLength);
+  if constexpr (std::is_same_v<CharT, Latin1Char>) {
+    MOZ_ASSERT(srcLength == destLength);
+  }
 
   size_t j = startIndex;
   for (size_t i = startIndex; i < srcLength; i++) {
     CharT c = srcChars[i];
-    if constexpr (!IsSame<CharT, Latin1Char>::value) {
+    if constexpr (!std::is_same_v<CharT, Latin1Char>) {
       if (unicode::IsLeadSurrogate(c) && i + 1 < srcLength) {
         char16_t trail = srcChars[i + 1];
         if (unicode::IsTrailSurrogate(trail)) {
@@ -791,7 +791,7 @@ static JSString* ToLowerCase(JSContext* cx, JSLinearString* str) {
 
     // One element Latin-1 strings can be directly retrieved from the
     // static strings cache.
-    if constexpr (IsSame<CharT, Latin1Char>::value) {
+    if constexpr (std::is_same_v<CharT, Latin1Char>) {
       if (length == 1) {
         CharT lower = unicode::ToLowerCase(chars[0]);
         MOZ_ASSERT(StaticStrings::hasUnit(lower));
@@ -804,7 +804,7 @@ static JSString* ToLowerCase(JSContext* cx, JSLinearString* str) {
     size_t i = 0;
     for (; i < length; i++) {
       CharT c = chars[i];
-      if constexpr (!IsSame<CharT, Latin1Char>::value) {
+      if constexpr (!std::is_same_v<CharT, Latin1Char>) {
         if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
           CharT trail = chars[i + 1];
           if (unicode::IsTrailSurrogate(trail)) {
@@ -836,7 +836,7 @@ static JSString* ToLowerCase(JSContext* cx, JSLinearString* str) {
 
     size_t readChars =
         ToLowerCaseImpl(newChars.get(), chars, i, length, resultLength);
-    if constexpr (!IsSame<CharT, Latin1Char>::value) {
+    if constexpr (!std::is_same_v<CharT, Latin1Char>) {
       if (readChars < length) {
         resultLength = ToLowerCaseLength(chars, readChars, length);
 
@@ -1071,8 +1071,8 @@ template <typename DestChar, typename SrcChar>
 static size_t ToUpperCaseImpl(DestChar* destChars, const SrcChar* srcChars,
                               size_t startIndex, size_t srcLength,
                               size_t destLength) {
-  static_assert(IsSame<SrcChar, Latin1Char>::value ||
-                    !IsSame<DestChar, Latin1Char>::value,
+  static_assert(std::is_same_v<SrcChar, Latin1Char> ||
+                    !std::is_same_v<DestChar, Latin1Char>,
                 "cannot write non-Latin-1 characters into Latin-1 string");
   MOZ_ASSERT(startIndex < srcLength);
   MOZ_ASSERT(srcLength <= destLength);
@@ -1080,7 +1080,7 @@ static size_t ToUpperCaseImpl(DestChar* destChars, const SrcChar* srcChars,
   size_t j = startIndex;
   for (size_t i = startIndex; i < srcLength; i++) {
     char16_t c = srcChars[i];
-    if constexpr (!IsSame<DestChar, Latin1Char>::value) {
+    if constexpr (!std::is_same_v<DestChar, Latin1Char>) {
       if (unicode::IsLeadSurrogate(c) && i + 1 < srcLength) {
         char16_t trail = srcChars[i + 1];
         if (unicode::IsTrailSurrogate(trail)) {
@@ -1105,8 +1105,9 @@ static size_t ToUpperCaseImpl(DestChar* destChars, const SrcChar* srcChars,
     }
 
     c = unicode::ToUpperCase(c);
-    MOZ_ASSERT_IF((IsSame<DestChar, Latin1Char>::value),
-                  c <= JSString::MAX_LATIN1_CHAR);
+    if constexpr (std::is_same_v<DestChar, Latin1Char>) {
+      MOZ_ASSERT(c <= JSString::MAX_LATIN1_CHAR);
+    }
     destChars[j++] = c;
   }
 
@@ -1131,7 +1132,7 @@ static size_t ToUpperCaseLength(const CharT* chars, size_t startIndex,
 template <typename DestChar, typename SrcChar>
 static inline void CopyChars(DestChar* destChars, const SrcChar* srcChars,
                              size_t length) {
-  static_assert(!IsSame<DestChar, SrcChar>::value,
+  static_assert(!std::is_same_v<DestChar, SrcChar>,
                 "PodCopy is used for the same type case");
   for (size_t i = 0; i < length; i++) {
     destChars[i] = srcChars[i];
@@ -1189,7 +1190,7 @@ static JSString* ToUpperCase(JSContext* cx, JSLinearString* str) {
 
     // Most one element Latin-1 strings can be directly retrieved from the
     // static strings cache.
-    if constexpr (IsSame<CharT, Latin1Char>::value) {
+    if constexpr (std::is_same_v<CharT, Latin1Char>) {
       if (length == 1) {
         Latin1Char c = chars[0];
         if (c != unicode::MICRO_SIGN &&
@@ -1211,7 +1212,7 @@ static JSString* ToUpperCase(JSContext* cx, JSLinearString* str) {
     size_t i = 0;
     for (; i < length; i++) {
       CharT c = chars[i];
-      if constexpr (!IsSame<CharT, Latin1Char>::value) {
+      if constexpr (!std::is_same_v<CharT, Latin1Char>) {
         if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
           CharT trail = chars[i + 1];
           if (unicode::IsTrailSurrogate(trail)) {
@@ -1248,7 +1249,7 @@ static JSString* ToUpperCase(JSContext* cx, JSLinearString* str) {
     // If the original string is a two-byte string, its uppercase form is
     // so rarely Latin-1 that we don't even consider creating a new
     // Latin-1 string.
-    if constexpr (IsSame<CharT, Latin1Char>::value) {
+    if constexpr (std::is_same_v<CharT, Latin1Char>) {
       bool resultIsLatin1 = true;
       for (size_t j = i; j < length; j++) {
         Latin1Char c = chars[j];
@@ -1925,7 +1926,7 @@ static MOZ_ALWAYS_INLINE int StringMatch(const TextChar* text, uint32_t textLen,
    * speed of memcmp. For small patterns, a simple loop is faster. We also can't
    * use memcmp if one of the strings is TwoByte and the other is Latin-1.
    */
-  return (patLen > 128 && IsSame<TextChar, PatChar>::value)
+  return (patLen > 128 && std::is_same_v<TextChar, PatChar>)
              ? Matcher<MemCmp<TextChar, PatChar>, TextChar, PatChar>(
                    text, textLen, pat, patLen)
              : Matcher<ManualCmp<TextChar, PatChar>, TextChar, PatChar>(
@@ -3077,8 +3078,8 @@ static JSString* ReplaceAll(JSContext* cx, JSLinearString* string,
 
   // Step 13.
   JSStringBuilder result(cx);
-  if (std::is_same<StrChar, char16_t>::value ||
-      std::is_same<RepChar, char16_t>::value) {
+  if constexpr (std::is_same_v<StrChar, char16_t> ||
+                std::is_same_v<RepChar, char16_t>) {
     if (!result.ensureTwoByteChars()) {
       return nullptr;
     }
@@ -3160,8 +3161,8 @@ static JSString* ReplaceAllInterleave(JSContext* cx, JSLinearString* string,
 
   // Step 13.
   JSStringBuilder result(cx);
-  if (std::is_same<StrChar, char16_t>::value ||
-      std::is_same<RepChar, char16_t>::value) {
+  if constexpr (std::is_same_v<StrChar, char16_t> ||
+                std::is_same_v<RepChar, char16_t>) {
     if (!result.ensureTwoByteChars()) {
       return nullptr;
     }
@@ -4124,7 +4125,7 @@ static MOZ_NEVER_INLINE EncodeResult Encode(StringBuffer& sb,
         return Encode_Failure;
       }
 
-      if (mozilla::IsSame<CharT, Latin1Char>::value) {
+      if constexpr (std::is_same_v<CharT, Latin1Char>) {
         if (c < 0x80) {
           if (!appendEncoded(c)) {
             return Encode_Failure;

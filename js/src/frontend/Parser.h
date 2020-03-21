@@ -173,7 +173,9 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TypeTraits.h"
+
+#include <type_traits>
+#include <utility>
 
 #include "jspubtd.h"
 
@@ -208,7 +210,7 @@ class SourceParseContext : public ParseContext {
                      Directives* newDirectives)
       : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream,
                      prs->getCompilationInfo(), newDirectives,
-                     mozilla::IsSame<ParseHandler, FullParseHandler>::value) {}
+                     std::is_same_v<ParseHandler, FullParseHandler>) {}
 };
 
 enum VarContext { HoistVars, DontHoistVars };
@@ -1789,11 +1791,9 @@ ParserAnyCharsAccess<Parser>::anyChars(const GeneralTokenStreamChars* ts) {
 
   auto tssAddr = reinterpret_cast<uintptr_t>(tss);
 
-  using ActualTokenStreamType =
-      decltype(static_cast<Parser*>(nullptr)->tokenStream);
-  static_assert(
-      mozilla::IsSame<ActualTokenStreamType, TokenStreamSpecific>::value,
-      "Parser::tokenStream must have type TokenStreamSpecific");
+  using ActualTokenStreamType = decltype(std::declval<Parser>().tokenStream);
+  static_assert(std::is_same_v<ActualTokenStreamType, TokenStreamSpecific>,
+                "Parser::tokenStream must have type TokenStreamSpecific");
 
   uintptr_t parserAddr = tssAddr - offsetof(Parser, tokenStream);
 
