@@ -10,28 +10,20 @@ this.runtime = class extends ExtensionAPI {
 
     return {
       runtime: {
-        onConnect: context.messenger.onConnect("runtime.onConnect"),
+        onConnect: context.messenger.nm.onConnect.api(),
 
         onMessage: context.messenger.onMessage("runtime.onMessage"),
 
-        onConnectExternal: context.messenger.onConnectExternal(
-          "runtime.onConnectExternal"
-        ),
+        onConnectExternal: context.messenger.nm.onConnectEx.api(),
 
         onMessageExternal: context.messenger.onMessageExternal(
           "runtime.onMessageExternal"
         ),
 
-        connect: function(extensionId, connectInfo) {
-          let name = (connectInfo !== null && connectInfo.name) || "";
+        connect(extensionId, options) {
+          let { name = "" } = options || {};
           extensionId = extensionId || extension.id;
-          let recipient = { extensionId };
-
-          return context.messenger.connect(
-            context.messageManager,
-            name,
-            recipient
-          );
+          return context.messenger.nm.connect({ name, extensionId });
         },
 
         sendMessage(...args) {
@@ -115,8 +107,8 @@ this.runtime = class extends ExtensionAPI {
           );
         },
 
-        connectNative(nativeApp) {
-          return context.messenger.nm.connectNative(nativeApp);
+        connectNative(name) {
+          return context.messenger.nm.connect({ name, native: true });
         },
 
         sendNativeMessage(nativeApp, message) {
