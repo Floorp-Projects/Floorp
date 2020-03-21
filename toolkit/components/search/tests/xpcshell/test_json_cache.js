@@ -41,11 +41,11 @@ add_task(async function setup() {
   let engineTemplateFile = do_get_file("data/engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
+  cacheTemplate.version = SearchUtils.CACHE_VERSION;
+
   if (gModernConfig) {
-    cacheTemplate.version = 5;
     delete cacheTemplate.visibleDefaultEngines;
   } else {
-    cacheTemplate.version = 3;
     // The list of visibleDefaultEngines needs to match or the cache will be ignored.
     cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
   }
