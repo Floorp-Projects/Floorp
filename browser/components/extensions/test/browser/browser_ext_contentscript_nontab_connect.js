@@ -12,6 +12,11 @@ function extensionScript() {
   browser.runtime.onConnect.addListener(port => {
     browser.test.assertEq(port.sender.tab, undefined, "Sender is not a tab");
     browser.test.assertEq(port.sender.url, FRAME_URL, "Expected sender URL");
+
+    let { frameId } = port.sender;
+    browser.test.assertEq(typeof frameId, "number", "frameId is a number");
+    browser.test.assertTrue(frameId > 0, "frameId greater than 0");
+
     port.onMessage.addListener(msg => {
       browser.test.assertEq("pong", msg, "Reply from content script");
       port.disconnect();

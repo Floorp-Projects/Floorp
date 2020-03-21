@@ -16,6 +16,8 @@ add_task(async function connect_from_tab_to_bg_and_crash_tab() {
     background() {
       browser.runtime.onConnect.addListener(port => {
         browser.test.assertEq("tab_to_bg", port.name, "expected port");
+        browser.test.assertEq(port.sender.frameId, 0, "correct frameId");
+
         port.onDisconnect.addListener(() => {
           browser.test.assertEq(
             null,
