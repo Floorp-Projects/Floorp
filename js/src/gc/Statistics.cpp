@@ -787,8 +787,7 @@ Statistics::Statistics(GCRuntime* gc)
 
 #ifdef DEBUG
   for (const auto& duration : totalTimes_) {
-    using ElementType =
-        typename mozilla::RemoveReference<decltype(duration)>::Type;
+    using ElementType = std::remove_reference_t<decltype(duration)>;
     static_assert(!std::is_trivially_constructible<ElementType>::value,
                   "Statistics::Statistics will only initialize "
                   "totalTimes_'s elements if their default constructor is "
