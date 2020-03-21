@@ -96,19 +96,13 @@ add_task(async function test_mpAutocompleteUIBusy() {
     gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
   let loginManagerParent = windowGlobal.getActor("LoginManager");
   let arg1 = {
-    autocompleteInfo: {
-      section: "",
-      addressType: "",
-      contactType: "",
-      fieldName: "",
-      canAutomaticallyPersist: false,
-    },
     formOrigin: "https://www.example.com",
     actionOrigin: "",
     searchString: "",
     previousResult: null,
     isSecure: false,
     isPasswordField: true,
+    isProbablyANewPasswordField: true,
   };
 
   function dialogObserver(subject, topic, data) {

@@ -9,7 +9,7 @@
 // The origin for the test URIs.
 const TEST_ORIGIN = "https://example.com";
 const FORM_PAGE_PATH =
-  "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
+  "/browser/toolkit/components/passwordmgr/test/browser/form_basic_login.html";
 const CONTEXT_MENU = document.getElementById("contentAreaContextMenu");
 
 const passwordInputSelector = "#form-basic-password";

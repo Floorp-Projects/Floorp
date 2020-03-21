@@ -12,8 +12,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    # Make this file available from the "resource:" URI of the test environment.
-    'test/browser/form_basic.html',
     'test/LoginTestUtils.jsm',
 ]
 
@@ -43,6 +41,7 @@ EXTRA_JS_MODULES += [
     'LoginManagerParent.jsm',
     'LoginManagerPrompter.jsm',
     'LoginRecipes.jsm',
+    'NewPasswordModel.jsm',
     'OSCrypto.jsm',
     'storage-json.js',
 ]

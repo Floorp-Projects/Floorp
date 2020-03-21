@@ -232,6 +232,8 @@ EXTRA_JS_MODULES.sessionstore += [
     'sessionstore/Utils.jsm',
 ]
 
+EXTRA_JS_MODULES.third_party.fathom += ['third_party/fathom/fathom.jsm']
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk'):
     DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
 
