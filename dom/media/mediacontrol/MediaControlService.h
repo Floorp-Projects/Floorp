@@ -101,9 +101,9 @@ class MediaControlService final : public nsIObserver {
     MediaController* GetControllerById(uint64_t aId) const;
     uint64_t GetControllersNum() const;
 
-    // Callback functions for monitoring main controller's status change.
-    void ControllerPlaybackStateChanged(MediaSessionPlaybackState aState);
-    void ControllerMetadataChanged(const MediaMetadataBase& aMetadata);
+    // These functions are used for monitoring main controller's status change.
+    void MainControllerPlaybackStateChanged(MediaSessionPlaybackState aState);
+    void MainControllerMetadataChanged(const MediaMetadataBase& aMetadata);
 
    private:
     void UpdateMainController(MediaController* aController);
