@@ -299,6 +299,7 @@ const NativeMessenger = {
     sender = {
       id: sender.extensionId,
       envType: sender.envType,
+      frameId: sender.frameId,
       url: sender.actor.manager.documentURI.spec,
     };
     apiManager.global.tabGetSender(extension, target, sender);
