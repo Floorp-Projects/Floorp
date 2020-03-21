@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <type_traits>
 
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
@@ -201,7 +202,7 @@ class JSAPITest {
                   "using CHECK_EQUAL with different-signed inputs triggers "
                   "compiler warnings");
     static_assert(
-        mozilla::IsUnsigned<T>::value == mozilla::IsUnsigned<U>::value,
+        std::is_unsigned_v<T> == std::is_unsigned_v<U>,
         "using CHECK_EQUAL with different-signed inputs triggers compiler "
         "warnings");
     return (actual == expected) ||

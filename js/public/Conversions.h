@@ -19,6 +19,7 @@
 #include <cmath>
 #include <stddef.h>  // size_t
 #include <stdint.h>  // {u,}int{8,16,32,64}_t
+#include <type_traits>
 
 #include "jspubtd.h"
 #include "jstypes.h"  // JS_PUBLIC_API
@@ -287,7 +288,7 @@ inline JSObject* ToObject(JSContext* cx, HandleValue v) {
  */
 template <typename UnsignedInteger>
 inline UnsignedInteger ToUnsignedInteger(double d) {
-  static_assert(mozilla::IsUnsigned<UnsignedInteger>::value,
+  static_assert(std::is_unsigned_v<UnsignedInteger>,
                 "UnsignedInteger must be an unsigned type");
 
   uint64_t bits = mozilla::BitwiseCast<uint64_t>(d);
@@ -513,7 +514,7 @@ inline int32_t ToSignedInteger<int32_t>(double d) {
 namespace detail {
 
 template <typename IntegerType,
-          bool IsUnsigned = mozilla::IsUnsigned<IntegerType>::value>
+          bool IsUnsigned = std::is_unsigned_v<IntegerType>>
 struct ToSignedOrUnsignedInteger;
 
 template <typename IntegerType>
