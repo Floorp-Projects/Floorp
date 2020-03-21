@@ -36,6 +36,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/NativeObject.h"  // js::PlainObject
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 
@@ -951,20 +952,20 @@ PropertyIteratorObject* js::LookupInIteratorCache(JSContext* cx,
 }
 
 // ES 2017 draft 7.4.7.
-JSObject* js::CreateIterResultObject(JSContext* cx, HandleValue value,
-                                     bool done) {
+PlainObject* js::CreateIterResultObject(JSContext* cx, HandleValue value,
+                                        bool done) {
   // Step 1 (implicit).
 
   // Step 2.
-  RootedObject templateObject(
+  Rooted<PlainObject*> templateObject(
       cx, cx->realm()->getOrCreateIterResultTemplateObject(cx));
   if (!templateObject) {
     return nullptr;
   }
 
-  NativeObject* resultObj;
+  PlainObject* resultObj;
   JS_TRY_VAR_OR_RETURN_NULL(
-      cx, resultObj, NativeObject::createWithTemplate(cx, templateObject));
+      cx, resultObj, PlainObject::createWithTemplate(cx, templateObject));
 
   // Step 3.
   resultObj->setSlot(Realm::IterResultObjectValueSlot, value);
@@ -977,20 +978,20 @@ JSObject* js::CreateIterResultObject(JSContext* cx, HandleValue value,
   return resultObj;
 }
 
-NativeObject* Realm::getOrCreateIterResultTemplateObject(JSContext* cx) {
+PlainObject* Realm::getOrCreateIterResultTemplateObject(JSContext* cx) {
   MOZ_ASSERT(cx->realm() == this);
 
   if (iterResultTemplate_) {
     return iterResultTemplate_;
   }
 
-  NativeObject* templateObj =
+  PlainObject* templateObj =
       createIterResultTemplateObject(cx, WithObjectPrototype::Yes);
   iterResultTemplate_.set(templateObj);
   return iterResultTemplate_;
 }
 
-NativeObject* Realm::getOrCreateIterResultWithoutPrototypeTemplateObject(
+PlainObject* Realm::getOrCreateIterResultWithoutPrototypeTemplateObject(
     JSContext* cx) {
   MOZ_ASSERT(cx->realm() == this);
 
@@ -998,16 +999,16 @@ NativeObject* Realm::getOrCreateIterResultWithoutPrototypeTemplateObject(
     return iterResultWithoutPrototypeTemplate_;
   }
 
-  NativeObject* templateObj =
+  PlainObject* templateObj =
       createIterResultTemplateObject(cx, WithObjectPrototype::No);
   iterResultWithoutPrototypeTemplate_.set(templateObj);
   return iterResultWithoutPrototypeTemplate_;
 }
 
-NativeObject* Realm::createIterResultTemplateObject(
+PlainObject* Realm::createIterResultTemplateObject(
     JSContext* cx, WithObjectPrototype withProto) {
   // Create template plain object
-  RootedNativeObject templateObject(
+  Rooted<PlainObject*> templateObject(
       cx, withProto == WithObjectPrototype::Yes
               ? NewBuiltinClassInstance<PlainObject>(cx, TenuredObject)
               : NewObjectWithNullTaggedProto<PlainObject>(cx));

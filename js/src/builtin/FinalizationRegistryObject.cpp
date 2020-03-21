@@ -961,7 +961,7 @@ bool FinalizationIteratorObject::next(JSContext* cx, unsigned argc, Value* vp) {
   if (index < records->length() && index < INT32_MAX) {
     RootedFinalizationRecordObject record(cx, (*records)[index]);
     RootedValue heldValue(cx, record->heldValue());
-    JSObject* result = CreateIterResultObject(cx, heldValue, false);
+    PlainObject* result = CreateIterResultObject(cx, heldValue, false);
     if (!result) {
       return false;
     }
@@ -975,7 +975,7 @@ bool FinalizationIteratorObject::next(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // 9. Otherwise, return CreateIterResultObject(undefined, true).
-  JSObject* result = CreateIterResultObject(cx, UndefinedHandleValue, true);
+  PlainObject* result = CreateIterResultObject(cx, UndefinedHandleValue, true);
   if (!result) {
     return false;
   }

@@ -20,6 +20,7 @@
 
 namespace js {
 
+class PlainObject;
 class PropertyIteratorObject;
 
 struct NativeIterator {
@@ -426,8 +427,8 @@ inline Value IteratorMore(JSObject* iterobj) {
  * Create an object of the form { value: VALUE, done: DONE }.
  * ES 2017 draft 7.4.7.
  */
-extern JSObject* CreateIterResultObject(JSContext* cx, HandleValue value,
-                                        bool done);
+extern PlainObject* CreateIterResultObject(JSContext* cx, HandleValue value,
+                                           bool done);
 
 enum class IteratorKind { Sync, Async };
 
