@@ -14,10 +14,10 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
+#include <type_traits>
 #include <utility>
 
 #include "frontend/BCEParserHandle.h"
@@ -31,7 +31,7 @@ namespace detail {
 template <template <class Parser> class GetThis,
           template <class This> class MemberFunction, typename... Args>
 struct InvokeMemberFunction {
-  mozilla::Tuple<typename mozilla::Decay<Args>::Type...> args;
+  mozilla::Tuple<std::decay_t<Args>...> args;
 
   template <class This, size_t... Indices>
   auto matchInternal(This* obj, std::index_sequence<Indices...>) -> decltype(

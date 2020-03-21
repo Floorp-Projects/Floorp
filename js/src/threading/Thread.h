@@ -184,7 +184,7 @@ class ThreadTrampoline {
   // thread. To avoid this dangerous and highly non-obvious footgun, the
   // standard requires a "decay" copy of the arguments at the cost of making it
   // impossible to pass references between threads.
-  mozilla::Tuple<typename mozilla::Decay<Args>::Type...> args;
+  mozilla::Tuple<std::decay_t<Args>...> args;
 
   // Protect the thread id during creation.
   Mutex createMutex;
