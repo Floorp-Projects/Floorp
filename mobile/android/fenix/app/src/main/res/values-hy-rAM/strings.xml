@@ -33,7 +33,7 @@
 
     <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Ավելացնել դյուրանցում՝ Տան էկրանից գաղտնի ներդիրները բացելու համար:</string>
+    <string name="cfr_message">Ավելացնել դյուրանցում՝ Տնային էկրանից գաղտնի ներդիրները բացելու համար:</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Ավելացնել դյուրանցում</string>
     <!-- Text for the negative button -->
@@ -76,7 +76,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Դեսքթոփ տարբերակ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Ավելացնել Տան էկրանին</string>
+    <string name="browser_menu_add_to_homescreen">Ավելացնել Տնային էկրանին</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Տեղադրել</string>
 
@@ -1076,7 +1076,7 @@
     <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL-ն պատճենվել է սեղմնատախտակ</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">Ավելացնել Տան էկրանին</string>
+    <string name="add_to_homescreen_title">Ավելացնել Տնային էկրանին</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_cancel">Չեղարկել</string>
     <!-- Add button text for the Add to Homescreen dialog -->
