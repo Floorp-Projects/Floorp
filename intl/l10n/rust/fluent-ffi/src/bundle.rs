@@ -213,29 +213,7 @@ pub unsafe extern "C" fn fluent_bundle_format_pattern(
     let mut errors = vec![];
     let value = bundle.format_pattern(pattern, args.as_ref(), &mut errors);
     ret_val.assign(value.as_bytes());
-    for error in errors {
-        match error {
-            FluentError::ResolverError(ref err) => match err {
-                ResolverError::Reference(ref s) => {
-                    let error = format!("ReferenceError: {}", s);
-                    ret_errors.push((&error).into());
-                }
-                ResolverError::MissingDefault => {
-                    let error = "RangeError: No default";
-                    ret_errors.push(error.into());
-                }
-                ResolverError::Cyclic => {
-                    let error = "RangeError: Cyclic reference";
-                    ret_errors.push(error.into());
-                }
-                ResolverError::TooManyPlaceables => {
-                    let error = "RangeError: Too many placeables";
-                    ret_errors.push(error.into());
-                }
-            },
-            _ => panic!("Unknown error!"),
-        }
-    }
+    append_fluent_errors_to_ret_errors(ret_errors, &errors);
     true
 }
 
@@ -244,14 +222,15 @@ pub unsafe extern "C" fn fluent_bundle_add_resource(
     bundle: &mut FluentBundleRc,
     r: &FluentResource,
     allow_overrides: bool,
+    ret_errors: &mut ThinVec<nsCString>,
 ) {
     // we don't own the resource
     let r = mem::ManuallyDrop::new(Rc::from_raw(r));
 
     if allow_overrides {
         bundle.add_resource_overriding(Rc::clone(&r));
-    } else if bundle.add_resource(Rc::clone(&r)).is_err() {
-        eprintln!("Error while adding a resource");
+    } else if let Err(errors) = bundle.add_resource(Rc::clone(&r)) {
+        append_fluent_errors_to_ret_errors(ret_errors, &errors);
     }
 }
 
@@ -271,4 +250,40 @@ fn convert_args<'a>(ids: &'a [String], arg_vals: &'a [FluentArgument]) -> Option
         args.insert(id.as_str(), val);
     }
     Some(args)
+}
+
+fn append_fluent_errors_to_ret_errors(ret_errors: &mut ThinVec<nsCString>, errors: &[FluentError]) {
+    for error in errors {
+        match error {
+            FluentError::ResolverError(ref err) => match err {
+                ResolverError::Reference(ref s) => {
+                    let error = format!("[fluent] ReferenceError: {}.", s);
+                    ret_errors.push(error.into());
+                }
+                ResolverError::MissingDefault => {
+                    let error = "[fluent] RangeError: No default value for selector.";
+                    ret_errors.push(error.into());
+                }
+                ResolverError::Cyclic => {
+                    let error = "[fluent] RangeError: Cyclic reference encountered while resolving a message.";
+                    ret_errors.push(error.into());
+                }
+                ResolverError::TooManyPlaceables => {
+                    let error = "[fluent] RangeError: Too many placeables in a message.";
+                    ret_errors.push(error.into());
+                }
+            },
+            FluentError::Overriding { kind, id } => {
+                let error = format!("[fluent] OverrideError: An entry {} of type {} is already defined in this bundle.", id, kind);
+                ret_errors.push(error.into());
+            }
+            FluentError::ParserError(pe) => {
+                let error = format!(
+                    "[fluent] ParserError: Error of kind {:#?} in position: ({}, {})",
+                    pe.kind, pe.pos.0, pe.pos.1
+                );
+                ret_errors.push(error.into());
+            }
+        }
+    }
 }
