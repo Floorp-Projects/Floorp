@@ -78,11 +78,12 @@ class SharedMem {
   template <typename U>
   inline SharedMem<U> cast() const {
 #ifdef DEBUG
-    MOZ_ASSERT(asValue() %
-                   sizeof(mozilla::Conditional<
-                          mozilla::IsVoid<std::remove_pointer_t<U>>::value,
-                          char, std::remove_pointer_t<U>>) ==
-               0);
+    MOZ_ASSERT(
+        asValue() %
+            sizeof(
+                mozilla::Conditional<std::is_void_v<std::remove_pointer_t<U>>,
+                                     char, std::remove_pointer_t<U>>) ==
+        0);
     if (sharedness_ == IsUnshared) {
       return SharedMem<U>::unshared(unwrap());
     }
@@ -123,10 +124,12 @@ class SharedMem {
   // Cast to char*, add nbytes, and cast back to T.  Simplifies code in a few
   // places.
   SharedMem addBytes(size_t nbytes) {
-    MOZ_ASSERT(nbytes % sizeof(mozilla::Conditional<
-                               mozilla::IsVoid<std::remove_pointer_t<T>>::value,
-                               char, std::remove_pointer_t<T>>) ==
-               0);
+    MOZ_ASSERT(
+        nbytes %
+            sizeof(
+                mozilla::Conditional<std::is_void_v<std::remove_pointer_t<T>>,
+                                     char, std::remove_pointer_t<T>>) ==
+        0);
     return SharedMem(
         reinterpret_cast<T>(reinterpret_cast<char*>(ptr_) + nbytes), *this);
   }
