@@ -20,16 +20,16 @@ add_task(async function testPlayPauseAndStop() {
   await playMedia(tab, testVideoId);
 
   info(`pressing 'pause' key`);
-  ChromeUtils.generateMediaControlKeysTestEvent("pause");
-  await waitUntilPlaybackStops(tab);
+  await generateMediaControlKeyEvent("pause");
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'play' key`);
-  ChromeUtils.generateMediaControlKeysTestEvent("play");
-  await waitUntilPlaybackStarts(tab);
+  await generateMediaControlKeyEvent("play");
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`pressing 'stop' key`);
-  ChromeUtils.generateMediaControlKeysTestEvent("stop");
-  await waitUntilPlaybackStops(tab);
+  await generateMediaControlKeyEvent("stop");
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -41,12 +41,12 @@ add_task(async function testPlayPause() {
   await playMedia(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should stop`);
-  ChromeUtils.generateMediaControlKeysTestEvent("playPause");
-  await waitUntilPlaybackStops(tab);
+  await generateMediaControlKeyEvent("playPause");
+  await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should start`);
-  ChromeUtils.generateMediaControlKeysTestEvent("playPause");
-  await waitUntilPlaybackStarts(tab);
+  await generateMediaControlKeyEvent("playPause");
+  await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
   await BrowserTestUtils.removeTab(tab);
@@ -55,16 +55,8 @@ add_task(async function testPlayPause() {
 /**
  * The following are helper functions.
  */
-function waitUntilPlaybackStarts(tab) {
-  return Promise.all([
-    checkOrWaitUntilMediaStartedPlaying(tab, testVideoId),
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
-}
-
-function waitUntilPlaybackStops(tab) {
-  return Promise.all([
-    checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId),
-    waitUntilMainMediaControllerPlaybackChanged(),
-  ]);
+function generateMediaControlKeyEvent(event) {
+  const playbackStateChanged = waitUntilMainMediaControllerPlaybackChanged();
+  ChromeUtils.generateMediaControlKeysTestEvent(event);
+  return playbackStateChanged;
 }
