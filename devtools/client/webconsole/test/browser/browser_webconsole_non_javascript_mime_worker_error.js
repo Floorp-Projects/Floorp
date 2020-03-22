@@ -19,6 +19,9 @@ const MIME_ERROR_MSG1 = `Loading Worker from “${JS_URI}” was blocked because
 const MIME_ERROR_MSG2 = `Loading script from “${JS_URI}” with importScripts() was blocked because of a disallowed MIME type (“text/plain”).`;
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["security.block_Worker_with_wrong_mime", true]],
+  });
   const hud = await openNewTabAndConsole(TEST_URI);
   await waitFor(
     () => findMessage(hud, MIME_ERROR_MSG1, ".message.error"),
