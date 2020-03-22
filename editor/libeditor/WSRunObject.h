@@ -826,8 +826,8 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MOZ_CAN_RUN_SCRIPT nsresult ReplacePreviousNBSPIfUnnecessary(
       WSFragment* aRun, const EditorDOMPoint& aPoint);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode, int32_t aOffset);
+  MOZ_CAN_RUN_SCRIPT nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
+                                               int32_t aOffset);
 
   MOZ_CAN_RUN_SCRIPT nsresult Scrub();
 
