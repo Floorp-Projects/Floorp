@@ -74,6 +74,11 @@ def test_roll_from_subdir(lint, linters):
         assert len(result.issues) == 1
         assert len(result.failed) == 0
         assert result.returncode == 1
+
+        result = lint.roll(rev='not public() and keyword("dummy revset expression")')
+        assert len(result.issues) == 1
+        assert len(result.failed) == 0
+        assert result.returncode == 1
     finally:
         os.chdir(oldcwd)
 
@@ -273,6 +278,11 @@ def test_support_files(lint, linters, filedir, monkeypatch, files):
 
     jobs = []
     lint.roll(path, outgoing=True)
+    actual_files = sorted(chain(*jobs))
+    assert actual_files == expected_files
+
+    jobs = []
+    lint.roll(path, rev='draft() and keyword("dummy revset expression")')
     actual_files = sorted(chain(*jobs))
     assert actual_files == expected_files
 
