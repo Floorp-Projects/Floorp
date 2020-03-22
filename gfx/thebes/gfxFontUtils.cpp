@@ -1812,7 +1812,6 @@ void gfxFontUtils::GetVariationData(
           0 ||  // no axes?
                 // https://www.microsoft.com/typography/otspec/fvar.htm#axisSize
       axisSize != 20 ||      // required value for current table version
-      instanceCount == 0 ||  // no instances?
       // https://www.microsoft.com/typography/otspec/fvar.htm#instanceSize
       (instanceSize != axisCount * sizeof(int32_t) + 4 &&
        instanceSize != axisCount * sizeof(int32_t) + 6)) {
