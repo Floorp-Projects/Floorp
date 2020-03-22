@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Constraints
@@ -24,18 +25,23 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.AddonUpdater.Frequency
+import mozilla.components.feature.addons.update.db.UpdateAttemptsDatabase
+import mozilla.components.feature.addons.update.db.toEntity
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import mozilla.components.support.webextensions.WebExtensionSupport
 import java.lang.Exception
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -120,7 +126,7 @@ interface AddonUpdater {
          * @property message A string message describing what has happened.
          * @property exception The exception of the error.
          */
-        class Error(val message: String, val exception: Throwable) : Status()
+        data class Error(val message: String, val exception: Throwable) : Status()
     }
 
     /**
@@ -129,6 +135,11 @@ interface AddonUpdater {
      * @property repeatIntervalTimeUnit The time unit of the [repeatInterval].
      */
     class Frequency(val repeatInterval: Long, val repeatIntervalTimeUnit: TimeUnit)
+
+    /**
+     * Represents an attempt to update an add-on.
+     */
+    data class UpdateAttempt(val addonId: String, val date: Date, val status: Status?)
 }
 
 /**
@@ -146,6 +157,7 @@ class DefaultAddonUpdater(
 
     @VisibleForTesting
     internal val updateStatusStorage = UpdateStatusStorage()
+    internal var updateAttempStorage = UpdateAttemptStorage(applicationContext)
 
     /**
      * See [AddonUpdater.registerForFutureUpdates]. If an add-on is already registered nothing will happen.
@@ -166,6 +178,9 @@ class DefaultAddonUpdater(
         WorkManager.getInstance(applicationContext)
             .cancelUniqueWork(getUniquePeriodicWorkName(addonId))
         logger.info("unregisterForFutureUpdates $addonId")
+        CoroutineScope(Dispatchers.IO).launch {
+            updateAttempStorage.remove(addonId)
+        }
     }
 
     /**
@@ -482,6 +497,47 @@ class DefaultAddonUpdater(
                 "mozilla.components.feature.addons.update.KEY_ALLOWED_SET"
         }
     }
+
+    /**
+     * A storage implementation to persist [AddonUpdater.UpdateAttempt]s.
+     */
+    class UpdateAttemptStorage(context: Context) {
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal var databaseInitializer = {
+            UpdateAttemptsDatabase.get(context)
+        }
+        private val database by lazy { databaseInitializer() }
+
+        /**
+         * Persists the [AddonUpdater.UpdateAttempt] provided as a parameter.
+         * @param updateAttempt the [AddonUpdater.UpdateAttempt] to be stored.
+         */
+        @WorkerThread
+        internal fun saveOrUpdate(updateAttempt: AddonUpdater.UpdateAttempt) {
+            database.updateAttemptDao().insertOrUpdate(updateAttempt.toEntity())
+        }
+
+        /**
+         * Finds the [AddonUpdater.UpdateAttempt] that match the [addonId] otherwise returns null.
+         * @param addonId the id to be used as filter in the search.
+         */
+        @WorkerThread
+        fun findUpdateAttemptBy(addonId: String): AddonUpdater.UpdateAttempt? {
+            return database
+                    .updateAttemptDao()
+                    .getUpdateAttemptFor(addonId)
+                    ?.toUpdateAttempt()
+        }
+
+        /**
+         * Deletes the [AddonUpdater.UpdateAttempt] that match the [addonId] provided as a parameter.
+         * @param addonId the id of the [AddonUpdater.UpdateAttempt] to be deleted from the storage.
+         */
+        @WorkerThread
+        internal fun remove(addonId: String) {
+            database.updateAttemptDao().deleteUpdateAttempt(addonId)
+        }
+    }
 }
 
 /**
@@ -492,6 +548,7 @@ internal class AddonUpdaterWorker(
     private val params: WorkerParameters
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("AddonUpdaterWorker")
+    internal var updateAttemptStorage = DefaultAddonUpdater.UpdateAttemptStorage(applicationContext)
 
     @Suppress("OverridingDeprecatedMember")
     override val coroutineContext = Dispatchers.Main
@@ -500,7 +557,6 @@ internal class AddonUpdaterWorker(
     override suspend fun doWork(): Result {
         val extensionId = params.inputData.getString(KEY_DATA_EXTENSIONS_ID) ?: ""
         logger.info("Trying to update extension $extensionId")
-
         // We need to guarantee that we are not trying to update without all the required state being initialized first.
         WebExtensionSupport.awaitInitialization()
 
@@ -530,6 +586,7 @@ internal class AddonUpdaterWorker(
                             Result.retry()
                         }
                     }
+                    saveUpdateAttempt(extensionId, status)
                     continuation.resume(result)
                 }
             } catch (exception: Exception) {
@@ -537,9 +594,16 @@ internal class AddonUpdaterWorker(
                         "Unable to update extension $extensionId, re-schedule ${exception.message}",
                         exception
                 )
+                saveUpdateAttempt(extensionId, AddonUpdater.Status.Error(exception.message ?: "", exception))
                 GlobalAddonDependencyProvider.onCrash?.invoke(exception)
                 continuation.resume(Result.retry())
             }
+        }
+    }
+
+    private fun saveUpdateAttempt(extensionId: String, status: AddonUpdater.Status) {
+        CoroutineScope((Dispatchers.IO)).launch {
+            updateAttemptStorage.saveOrUpdate(AddonUpdater.UpdateAttempt(extensionId, Date(), status))
         }
     }
 

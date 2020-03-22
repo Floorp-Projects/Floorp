@@ -5,6 +5,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -36,6 +37,8 @@ dependencies {
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_recyclerview
     implementation Dependencies.androidx_cardview
+    implementation Dependencies.androidx_room_runtime
+    kapt Dependencies.androidx_room_compiler
 
     implementation project(':ui-colors')
     implementation project(':ui-icons')
