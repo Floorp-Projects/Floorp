@@ -52,6 +52,9 @@ def test_push_to_try(repo, monkeypatch):
 
 
 def test_push_to_try_missing_extensions(repo, monkeypatch):
+    if repo.vcs != 'git':
+        return
+
     vcs = get_repository_object(repo.strpath)
 
     orig = vcs._run
