@@ -9,7 +9,6 @@ exclude =
     dom/browser-element,
     dom/canvas,
     dom/encoding,
-    dom/security,
     dom/websocket,
     gfx/tests,
     ipc/ipdl/ipdl,
