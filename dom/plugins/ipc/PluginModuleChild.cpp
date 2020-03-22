@@ -715,8 +715,8 @@ mozilla::ipc::IPCResult PluginModuleChild::RecvInitPluginFunctionBroker(
 }
 
 mozilla::ipc::IPCResult PluginModuleChild::AnswerInitCrashReporter(
-    mozilla::dom::NativeThreadId* aOutId) {
-  CrashReporterClient::InitSingleton();
+    Shmem&& aShmem, mozilla::dom::NativeThreadId* aOutId) {
+  CrashReporterClient::InitSingletonWithShmem(aShmem);
   *aOutId = CrashReporter::CurrentThreadId();
 
   return IPC_OK();

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CrashReporterClient.h"
+#include "CrashReporterMetadataShmem.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -13,7 +14,8 @@ namespace ipc {
 StaticMutex CrashReporterClient::sLock;
 StaticRefPtr<CrashReporterClient> CrashReporterClient::sClientSingleton;
 
-CrashReporterClient::CrashReporterClient() {
+CrashReporterClient::CrashReporterClient(const Shmem& aShmem)
+    : mMetadata(new CrashReporterMetadataShmem(aShmem)) {
   MOZ_COUNT_CTOR(CrashReporterClient);
 }
 
@@ -21,14 +23,27 @@ CrashReporterClient::~CrashReporterClient() {
   MOZ_COUNT_DTOR(CrashReporterClient);
 }
 
+void CrashReporterClient::AnnotateCrashReport(CrashReporter::Annotation aKey,
+                                              const nsACString& aData) {
+  StaticMutexAutoLock lock(sLock);
+  mMetadata->AnnotateCrashReport(aKey, aData);
+}
+
+void CrashReporterClient::AppendAppNotes(const nsACString& aData) {
+  StaticMutexAutoLock lock(sLock);
+  mMetadata->AppendAppNotes(aData);
+}
+
 /* static */
-void CrashReporterClient::InitSingleton() {
+void CrashReporterClient::InitSingletonWithShmem(const Shmem& aShmem) {
   {
     StaticMutexAutoLock lock(sLock);
 
     MOZ_ASSERT(!sClientSingleton);
-    sClientSingleton = new CrashReporterClient();
+    sClientSingleton = new CrashReporterClient(aShmem);
   }
+
+  CrashReporter::NotifyCrashReporterClientCreated();
 }
 
 /* static */

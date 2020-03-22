@@ -11,36 +11,66 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ipc/Shmem.h"
 
 namespace mozilla {
 namespace ipc {
+
+class CrashReporterMetadataShmem;
 
 class CrashReporterClient {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CrashReporterClient);
 
-  // |aTopLevelProtocol| must have a child-to-parent message:
+  // |aTopLevelProtocol| must be a top-level protocol instance, as sub-actors
+  // do not have AllocUnsafeShmem. It must also have a child-to-parent message:
   //
-  //   async InitCrashReporter(NativeThreadId threadId);
+  //   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+  //
+  // The parent-side receive function of this message should save the shmem
+  // somewhere, and when the top-level actor's ActorDestroy runs (or when the
+  // crash reporter needs metadata), the shmem should be parsed.
   template <typename T>
   static void InitSingleton(T* aToplevelProtocol) {
-    InitSingleton();
+    Shmem shmem;
+    if (!AllocShmem(aToplevelProtocol, &shmem)) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "failed to allocate crash reporter shmem");
+      return;
+    }
+
+    InitSingletonWithShmem(shmem);
     Unused << aToplevelProtocol->SendInitCrashReporter(
-        CrashReporter::CurrentThreadId());
+        std::move(shmem), CrashReporter::CurrentThreadId());
   }
 
-  static void InitSingleton();
+  template <typename T>
+  static bool AllocShmem(T* aToplevelProtocol, Shmem* aOutShmem) {
+    // 16KB should be enough for most metadata - see bug 1278717 comment #11.
+    static const size_t kShmemSize = 16 * 1024;
+
+    return aToplevelProtocol->AllocUnsafeShmem(
+        kShmemSize, SharedMemory::TYPE_BASIC, aOutShmem);
+  }
+
+  static void InitSingletonWithShmem(const Shmem& aShmem);
 
   static void DestroySingleton();
   static RefPtr<CrashReporterClient> GetSingleton();
 
+  void AnnotateCrashReport(CrashReporter::Annotation aKey,
+                           const nsACString& aData);
+  void AppendAppNotes(const nsACString& aData);
+
  private:
-  explicit CrashReporterClient();
+  explicit CrashReporterClient(const Shmem& aShmem);
   ~CrashReporterClient();
 
  private:
   static StaticMutex sLock;
   static StaticRefPtr<CrashReporterClient> sClientSingleton;
+
+ private:
+  UniquePtr<CrashReporterMetadataShmem> mMetadata;
 };
 
 }  // namespace ipc
