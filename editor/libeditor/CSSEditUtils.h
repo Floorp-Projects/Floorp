@@ -130,9 +130,8 @@ class CSSEditUtils final {
    * @param aPropertyValue  [IN] The value of the property we have to remove
    *                             if the property accepts more than one value.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveCSSInlineStyle(nsINode& aNode, nsAtom* aProperty,
-                                const nsAString& aPropertyValue);
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSInlineStyle(
+      nsINode& aNode, nsAtom* aProperty, const nsAString& aPropertyValue);
 
   /**
    * Answers true is the property can be removed by setting a "none" CSS value
@@ -261,12 +260,9 @@ class CSSEditUtils final {
    * @param aSuppressTransaction [IN] A boolean indicating, when true,
    *                                  that no transaction should be recorded.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveCSSEquivalentToHTMLStyle(dom::Element* aElement,
-                                          nsAtom* aHTMLProperty,
-                                          nsAtom* aAttribute,
-                                          const nsAString* aValue,
-                                          bool aSuppressTransaction);
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSEquivalentToHTMLStyle(
+      dom::Element* aElement, nsAtom* aHTMLProperty, nsAtom* aAttribute,
+      const nsAString* aValue, bool aSuppressTransaction);
 
   /**
    * Parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char.

@@ -24,18 +24,16 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EditTransactionBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EditTransactionBase)
 
-NS_IMETHODIMP
-EditTransactionBase::RedoTransaction() { return DoTransaction(); }
+NS_IMETHODIMP EditTransactionBase::RedoTransaction() { return DoTransaction(); }
 
-NS_IMETHODIMP
-EditTransactionBase::GetIsTransient(bool* aIsTransient) {
+NS_IMETHODIMP EditTransactionBase::GetIsTransient(bool* aIsTransient) {
   *aIsTransient = false;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditTransactionBase::Merge(nsITransaction* aTransaction, bool* aDidMerge) {
+NS_IMETHODIMP EditTransactionBase::Merge(nsITransaction* aTransaction,
+                                         bool* aDidMerge) {
   *aDidMerge = false;
 
   return NS_OK;
