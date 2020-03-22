@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -94,6 +95,7 @@ internal fun serializeSession(session: Session): JSONObject {
         put(Keys.SESSION_PARENT_UUID_KEY, session.parentId ?: "")
         put(Keys.SESSION_TITLE, session.title)
         put(Keys.SESSION_READER_MODE_KEY, session.readerMode)
+        put(Keys.SESSION_CONTEXT_ID_KEY, session.contextId)
     }
 }
 
@@ -114,7 +116,8 @@ internal fun deserializeSession(json: JSONObject, restoreId: Boolean, restorePar
             json.getString(Keys.SESSION_UUID_KEY)
         } else {
             UUID.randomUUID().toString()
-        }
+        },
+        json.tryGetString(Keys.SESSION_CONTEXT_ID_KEY)
     )
     if (restoreParentId) {
         session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
@@ -131,6 +134,7 @@ private object Keys {
     const val SESSION_SOURCE_KEY = "source"
     const val SESSION_URL_KEY = "url"
     const val SESSION_UUID_KEY = "uuid"
+    const val SESSION_CONTEXT_ID_KEY = "contextId"
     const val SESSION_PARENT_UUID_KEY = "parentUuid"
     const val SESSION_READER_MODE_KEY = "readerMode"
     const val SESSION_TITLE = "title"

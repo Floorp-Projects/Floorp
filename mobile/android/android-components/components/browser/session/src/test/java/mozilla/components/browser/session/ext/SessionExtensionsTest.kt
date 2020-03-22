@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +26,7 @@ class SessionExtensionsTest {
         assertEquals(tabState.id, session.id)
         assertEquals(tabState.content.url, session.url)
         assertEquals(tabState.parentId, session.parentId)
+        assertNull(tabState.contextId)
     }
 
     @Test
@@ -38,6 +40,16 @@ class SessionExtensionsTest {
         assertEquals(tabState.content.url, session.url)
         assertEquals(tabState.readerState.readerable, true)
         assertEquals(tabState.readerState.active, true)
+        assertNull(tabState.contextId)
+    }
+
+    @Test
+    fun `toTabSessionState - Can convert tab session with contextId`() {
+        val session = Session("https://mozilla.org", contextId = "1")
+        val tabState = session.toTabSessionState()
+        assertEquals(tabState.id, session.id)
+        assertEquals(tabState.content.url, session.url)
+        assertEquals(tabState.contextId, session.contextId)
     }
 
     @Test
@@ -49,6 +61,19 @@ class SessionExtensionsTest {
         assertEquals(customTabState.id, session.id)
         assertEquals(customTabState.content.url, session.url)
         assertSame(customTabState.config, session.customTabConfig)
+        assertNull(customTabState.contextId)
+    }
+
+    @Test
+    fun `toCustomTabSessionState - Can convert custom tab session with contextId`() {
+        val session = Session("https://mozilla.org", contextId = "1")
+        session.customTabConfig = CustomTabConfig()
+
+        val customTabState = session.toCustomTabSessionState()
+        assertEquals(customTabState.id, session.id)
+        assertEquals(customTabState.content.url, session.url)
+        assertSame(customTabState.config, session.customTabConfig)
+        assertEquals(customTabState.contextId, session.contextId)
     }
 
     @Test(expected = IllegalStateException::class)

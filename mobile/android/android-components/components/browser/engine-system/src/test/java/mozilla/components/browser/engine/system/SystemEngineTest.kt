@@ -43,6 +43,12 @@ class SystemEngineTest {
             // Private browsing not yet supported
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedOperationException) { }
+
+        try {
+            engine.createSession(false, "1")
+            // Contextual identities not yet supported
+            fail("Expected UnsupportedOperationException")
+        } catch (e: UnsupportedOperationException) { }
     }
 
     @Test

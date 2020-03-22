@@ -83,11 +83,12 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * the parameter(s) ([private]) are equal.
      *
      * @param private whether or not this session should use private mode.
+     * @param contextId the session context ID for this session.
      *
      * @return the newly created [EngineSession].
      */
     @MainThread
-    fun createSession(private: Boolean = false): EngineSession
+    fun createSession(private: Boolean = false, contextId: String? = null): EngineSession
 
     /**
      * Create a new [EngineSessionState] instance from the serialized JSON representation.
@@ -121,9 +122,10 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      * need it.
      *
      * @param private whether or not the session should use private mode.
+     * @param contextId the session context ID for the session.
      */
     @MainThread
-    fun speculativeCreateSession(private: Boolean = false) = Unit
+    fun speculativeCreateSession(private: Boolean = false, contextId: String? = null) = Unit
 
     /**
      * Registers a [WebNotificationDelegate] to be notified of engine events

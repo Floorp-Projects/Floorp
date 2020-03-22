@@ -52,9 +52,11 @@ class GeckoEngineSession(
     private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
     private val defaultSettings: Settings? = null,
+    contextId: String? = null,
     private val geckoSessionProvider: () -> GeckoSession = {
         val settings = GeckoSessionSettings.Builder()
             .usePrivateMode(privateMode)
+            .contextId(contextId)
             .build()
         GeckoSession(settings)
     },

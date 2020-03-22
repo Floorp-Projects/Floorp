@@ -273,7 +273,7 @@ class LegacySessionManager(
     fun getOrCreateEngineSession(session: Session = selectedSessionOrThrow): EngineSession {
         getEngineSession(session)?.let { return it }
 
-        return engine.createSession(session.private).apply {
+        return engine.createSession(session.private, session.contextId).apply {
             var restored = false
             session.engineSessionHolder.engineSessionState?.let { state ->
                 restored = restoreState(state)

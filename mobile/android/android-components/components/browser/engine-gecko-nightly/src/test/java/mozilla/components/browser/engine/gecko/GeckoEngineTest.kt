@@ -137,6 +137,28 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `createSession with contextId`() {
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        // Create a speculative session with a context id and consume it
+        engine.speculativeCreateSession(private = false, contextId = "1")
+        assertNotNull(engine.speculativeSession)
+        var newSpeculativeSession = engine.speculativeSession!!
+        assertSame(newSpeculativeSession, engine.createSession(private = false, contextId = "1"))
+        assertNull(engine.speculativeSession)
+
+        // Create a regular speculative session and make sure it is not returned
+        // if a session with a context id is requested instead.
+        engine.speculativeCreateSession(private = false)
+        assertNotNull(engine.speculativeSession)
+        newSpeculativeSession = engine.speculativeSession!!
+        assertNotSame(newSpeculativeSession, engine.createSession(private = false, contextId = "1"))
+        // Make sure previous (never used) speculative session is now closed
+        assertFalse(newSpeculativeSession.geckoSession.isOpen)
+        assertNull(engine.speculativeSession)
+    }
+
+    @Test
     fun name() {
         assertEquals("Gecko", GeckoEngine(context, runtime = runtime).name())
     }

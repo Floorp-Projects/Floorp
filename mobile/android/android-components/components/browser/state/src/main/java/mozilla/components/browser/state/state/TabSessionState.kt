@@ -20,6 +20,7 @@ import java.util.UUID
  * @property extensionState a map of web extension ids to extensions,
  * that contains the overridden values for this tab.
  * @property readerState the [ReaderState] of this tab.
+ * @property contextId the session context ID of this tab.
  */
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
@@ -28,7 +29,8 @@ data class TabSessionState(
     override val engineState: EngineState = EngineState(),
     val parentId: String? = null,
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
-    val readerState: ReaderState = ReaderState()
+    val readerState: ReaderState = ReaderState(),
+    override val contextId: String? = null
 ) : SessionState
 
 /**
@@ -43,7 +45,8 @@ fun createTab(
     extensions: Map<String, WebExtensionState> = emptyMap(),
     readerState: ReaderState = ReaderState(),
     title: String = "",
-    thumbnail: Bitmap? = null
+    thumbnail: Bitmap? = null,
+    contextId: String? = null
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -55,6 +58,7 @@ fun createTab(
         ),
         parentId = parent?.id,
         extensionState = extensions,
-        readerState = readerState
+        readerState = readerState,
+        contextId = contextId
     )
 }

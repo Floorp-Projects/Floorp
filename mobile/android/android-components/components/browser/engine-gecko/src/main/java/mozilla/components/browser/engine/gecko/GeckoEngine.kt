@@ -137,10 +137,11 @@ class GeckoEngine(
     /**
      * See [Engine.createSession].
      */
-    override fun createSession(private: Boolean): EngineSession {
+    override fun createSession(private: Boolean, contextId: String?): EngineSession {
         ThreadUtils.assertOnUiThread()
         val speculativeSession = this.speculativeSession?.let { speculativeSession ->
-            if (speculativeSession.geckoSession.settings.usePrivateMode == private) {
+            if (speculativeSession.geckoSession.settings.usePrivateMode == private &&
+                speculativeSession.geckoSession.settings.contextId == contextId) {
                 speculativeSession
             } else {
                 speculativeSession.close()
@@ -149,7 +150,7 @@ class GeckoEngine(
                 this.speculativeSession = null
             }
         }
-        return speculativeSession ?: GeckoEngineSession(runtime, private, defaultSettings)
+        return speculativeSession ?: GeckoEngineSession(runtime, private, defaultSettings, contextId)
     }
 
     /**
@@ -162,11 +163,12 @@ class GeckoEngine(
     /**
      * See [Engine.speculativeCreateSession].
      */
-    override fun speculativeCreateSession(private: Boolean) {
+    override fun speculativeCreateSession(private: Boolean, contextId: String?) {
         ThreadUtils.assertOnUiThread()
-        if (this.speculativeSession?.geckoSession?.settings?.usePrivateMode != private) {
+        if (this.speculativeSession?.geckoSession?.settings?.usePrivateMode != private ||
+            this.speculativeSession?.geckoSession?.settings?.contextId != contextId) {
             this.speculativeSession?.geckoSession?.close()
-            this.speculativeSession = GeckoEngineSession(runtime, private, defaultSettings)
+            this.speculativeSession = GeckoEngineSession(runtime, private, defaultSettings, contextId)
         }
     }
 

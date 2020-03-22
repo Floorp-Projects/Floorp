@@ -60,6 +60,27 @@ class SessionManagerTest {
         assertEquals(session2.id, manager.sessions[3].parentId)
     }
 
+    @Test
+    fun `session can be added by specifying contextId`() {
+        val manager = SessionManager(mock())
+        val session1 = Session("https://www.mozilla.org")
+        val session2 = Session("https://www.firefox.com", contextId = "1")
+        val session3 = Session("https://wiki.mozilla.org", contextId = "2")
+
+        manager.add(session1)
+        manager.add(session2, true)
+        manager.add(session3)
+
+        assertEquals(3, manager.size)
+        assertEquals("https://www.firefox.com", manager.selectedSessionOrThrow.url)
+        assertEquals("1", manager.selectedSessionOrThrow.contextId)
+
+        manager.select(session3)
+
+        assertEquals("https://wiki.mozilla.org", manager.selectedSessionOrThrow.url)
+        assertEquals("2", manager.selectedSessionOrThrow.contextId)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun `session manager throws exception if parent is not in session manager`() {
         val parent = Session("https://www.mozilla.org")
@@ -114,7 +135,7 @@ class SessionManagerTest {
         val engineSession1 = mock(EngineSession::class.java)
         val engineSession2 = mock(EngineSession::class.java)
         `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession(anyBoolean())).thenReturn(engineSession1)
+        `when`(engine.createSession(anyBoolean(), any())).thenReturn(engineSession1)
 
         val session1 = Session("http://www.mozilla.org")
         val session2 = Session("http://www.firefox.com")
@@ -132,7 +153,7 @@ class SessionManagerTest {
         verify(engineSession1).markActiveForWebExtensions(true)
 
         // Selecting a new session should mark the new session as active and the previous one as inactive
-        `when`(engine.createSession(anyBoolean())).thenReturn(engineSession2)
+        `when`(engine.createSession(anyBoolean(), any())).thenReturn(engineSession2)
         verify(engineSession2, never()).markActiveForWebExtensions(true)
         manager.getOrCreateEngineSession(session2)
         manager.select(session2)
@@ -141,7 +162,7 @@ class SessionManagerTest {
         verify(engineSession2).markActiveForWebExtensions(true)
 
         // Removing the selected session should mark it as inactive and the new selection as active
-        `when`(engine.createSession(anyBoolean())).thenReturn(engineSession1)
+        `when`(engine.createSession(anyBoolean(), any())).thenReturn(engineSession1)
         manager.remove(session2)
         assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
         verify(engineSession2).markActiveForWebExtensions(false)
@@ -313,6 +334,7 @@ class SessionManagerTest {
             add(Session("https://www.mozilla.org"))
             add(session)
             add(Session("https://www.firefox.com"))
+            add(Session("https://www.wikipedia.org", contextId = "1"))
         }
 
         val item = manager.createSessionSnapshot(session)
@@ -324,11 +346,16 @@ class SessionManagerTest {
 
         manager.restore(SessionManager.Snapshot.singleItem(item), updateSelection = false)
 
-        assertEquals(3, manager.size)
+        assertEquals(4, manager.size)
         assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
         assertEquals("https://getpocket.com", manager.sessions[0].url)
         assertEquals("https://www.mozilla.org", manager.sessions[1].url)
         assertEquals("https://www.firefox.com", manager.sessions[2].url)
+        assertEquals("https://www.wikipedia.org", manager.sessions[3].url)
+        assertNull(manager.sessions[0].contextId)
+        assertNull(manager.sessions[1].contextId)
+        assertNull(manager.sessions[2].contextId)
+        assertEquals("1", manager.sessions[3].contextId)
 
         verify(observer).onSessionsRestored()
     }
@@ -344,7 +371,7 @@ class SessionManagerTest {
             listOf(
                 SessionManager.Snapshot.Item(session = Session("https://www.firefox.com")),
                 SessionManager.Snapshot.Item(session = Session("https://www.wikipedia.org")),
-                SessionManager.Snapshot.Item(session = Session("https://getpocket.com"))
+                SessionManager.Snapshot.Item(session = Session("https://getpocket.com", contextId = "1"))
             ),
             selectedSessionIndex = 1
         )
@@ -358,6 +385,10 @@ class SessionManagerTest {
         assertEquals("https://www.wikipedia.org", manager.sessions[1].url)
         assertEquals("https://getpocket.com", manager.sessions[2].url)
         assertEquals("https://www.mozilla.org", manager.sessions[3].url)
+        assertNull(manager.sessions[0].contextId)
+        assertNull(manager.sessions[1].contextId)
+        assertNull(manager.sessions[3].contextId)
+        assertEquals("1", manager.sessions[2].contextId)
     }
 
     @Test
