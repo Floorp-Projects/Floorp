@@ -77,6 +77,12 @@ class MozlintParser(ArgumentParser):
                   "can be used to only consider staged files. Works with "
                   "mercurial or git.",
           }],
+        [['-r', '--rev'],
+         {'default': None,
+          'type': str,
+          'help': "Lint files touched by changes in revisions described by REV. "
+                  "For mercurial, it may be any revset. For git, it is a single tree-ish.",
+          }],
         [['--fix'],
          {'action': 'store_true',
           'default': False,
@@ -193,7 +199,7 @@ def find_linters(config_paths, linters=None):
     return lints.values()
 
 
-def run(paths, linters, formats, outgoing, workdir, edit,
+def run(paths, linters, formats, outgoing, workdir, rev, edit,
         setup=False, list_linters=False, num_procs=None, **lintargs):
     from mozlint import LintRoller, formatters
     from mozlint.editor import edit_issues
@@ -213,7 +219,11 @@ def run(paths, linters, formats, outgoing, workdir, edit,
         return ret
 
     # run all linters
-    result = lint.roll(paths, outgoing=outgoing, workdir=workdir, num_procs=num_procs)
+    result = lint.roll(
+        paths,
+        outgoing=outgoing, workdir=workdir, rev=rev,
+        num_procs=num_procs
+    )
 
     if edit and result.issues:
         edit_issues(result)

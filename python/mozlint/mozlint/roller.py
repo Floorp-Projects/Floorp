@@ -233,7 +233,9 @@ class LintRoller(object):
         # Merge this job's results with our global ones.
         self.result.update(future.result())
 
-    def roll(self, paths=None, outgoing=None, workdir=None, num_procs=None):
+    def roll(self, paths=None,
+             outgoing=None, workdir=None, rev=None,
+             num_procs=None):
         """Run all of the registered linters against the specified file paths.
 
         :param paths: An iterable of files and/or directories to lint.
@@ -264,6 +266,8 @@ class LintRoller(object):
         try:
             if workdir:
                 vcs_paths.update(self.vcs.get_changed_files('AM', mode=workdir))
+            if rev:
+                vcs_paths.update(self.vcs.get_changed_files('AM', rev=rev))
             if outgoing:
                 try:
                     vcs_paths.update(self.vcs.get_outgoing_files('AM', upstream=outgoing))
