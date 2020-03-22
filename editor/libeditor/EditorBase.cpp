@@ -565,16 +565,14 @@ void EditorBase::PreDestroy(bool aDestroyingFrames) {
   mDidPreDestroy = true;
 }
 
-NS_IMETHODIMP
-EditorBase::GetFlags(uint32_t* aFlags) {
+NS_IMETHODIMP EditorBase::GetFlags(uint32_t* aFlags) {
   // NOTE: If you need to override this method, you need to make Flags()
   //       virtual.
   *aFlags = Flags();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditorBase::SetFlags(uint32_t aFlags) {
+NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
   if (mFlags == aFlags) {
     return NS_OK;
   }
@@ -848,8 +846,7 @@ nsresult EditorBase::DoTransactionInternal(nsITransaction* aTxn) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditorBase::EnableUndo(bool aEnable) {
+NS_IMETHODIMP EditorBase::EnableUndo(bool aEnable) {
   // XXX Should we return NS_ERROR_FAILURE if EdnableUndoRedo() or
   //     DisableUndoRedo() returns false?
   if (aEnable) {
@@ -864,8 +861,8 @@ EditorBase::EnableUndo(bool aEnable) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-EditorBase::GetTransactionManager(nsITransactionManager** aTransactionManager) {
+NS_IMETHODIMP EditorBase::GetTransactionManager(
+    nsITransactionManager** aTransactionManager) {
   if (NS_WARN_IF(!aTransactionManager)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1263,11 +1260,9 @@ NS_IMETHODIMP EditorBase::SetAttribute(Element* aElement,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetAttribute);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -1297,11 +1292,9 @@ NS_IMETHODIMP EditorBase::RemoveAttribute(Element* aElement,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eRemoveAttribute);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -1497,11 +1490,9 @@ NS_IMETHODIMP EditorBase::InsertNode(nsINode* aNodeToInsert,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertNode);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -1800,11 +1791,9 @@ NS_IMETHODIMP EditorBase::DeleteNode(nsINode* aNode) {
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eRemoveNode);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -2673,11 +2662,9 @@ NS_IMETHODIMP EditorBase::CloneAttributes(Element* aDestElement,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetAttribute);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -4471,23 +4458,23 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
 
   // Create a br.
-  RefPtr<Element> newBrElement = CreateHTMLContent(nsGkAtoms::br);
+  RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(!newBrElement)) {
+  if (NS_WARN_IF(!newBRElement)) {
     return NS_ERROR_FAILURE;
   }
 
   mPaddingBRElementForEmptyEditor =
-      static_cast<HTMLBRElement*>(newBrElement.get());
+      static_cast<HTMLBRElement*>(newBRElement.get());
 
   // Give it a special attribute.
-  newBrElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
+  newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
 
   // Put the node in the document.
   nsresult rv =
-      InsertNodeWithTransaction(*newBrElement, EditorDOMPoint(rootElement, 0));
+      InsertNodeWithTransaction(*newBRElement, EditorDOMPoint(rootElement, 0));
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -4979,11 +4966,9 @@ NS_IMETHODIMP EditorBase::SetAttributeOrEquivalent(Element* aElement,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetAttribute);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -5003,11 +4988,9 @@ NS_IMETHODIMP EditorBase::RemoveAttributeOrEquivalent(
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eRemoveAttribute);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -5305,11 +5288,9 @@ nsresult EditorBase::ToggleTextDirectionAsAction(nsIPrincipal* aPrincipal) {
   // FYI: Oddly, Chrome does not dispatch beforeinput event in this case but
   //      dispatches input event.
   rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("MaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "MaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -5347,11 +5328,9 @@ void EditorBase::SwitchTextDirectionTo(TextDirection aTextDirection) {
   // FYI: Oddly, Chrome does not dispatch beforeinput event in this case but
   //      dispatches input event.
   rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return;
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("MaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "MaybeDispatchBeforeInputEvent() failed");
     return;
   }
 
@@ -5866,11 +5845,9 @@ nsresult EditorBase::InsertTextAsAction(const nsAString& aStringToInsert,
   MOZ_ASSERT(!aStringToInsert.IsVoid());
   editActionData.SetData(aStringToInsert);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
@@ -5920,11 +5897,9 @@ nsresult EditorBase::InsertTextAsSubAction(const nsAString& aStringToInsert) {
 NS_IMETHODIMP EditorBase::InsertLineBreak() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("CanHandleAndMaybeDispatchBeforeInputEvent() failed");
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
