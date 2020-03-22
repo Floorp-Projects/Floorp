@@ -429,7 +429,7 @@ class ContentParent final
   virtual void OnChannelError() override;
 
   mozilla::ipc::IPCResult RecvInitCrashReporter(
-      const NativeThreadId& aThreadId);
+      Shmem&& aShmem, const NativeThreadId& aThreadId);
 
   PNeckoParent* AllocPNeckoParent();
 
