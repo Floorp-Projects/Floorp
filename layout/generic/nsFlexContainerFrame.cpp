@@ -903,7 +903,7 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
   explicit FlexLine(nscoord aMainGapSize) : mMainGapSize(aMainGapSize) {}
 
   nscoord SumOfGaps() const {
-    return mNumItems > 0 ? (mNumItems - 1) * mMainGapSize : 0;
+    return NumItems() > 0 ? (NumItems() - 1) * mMainGapSize : 0;
   }
 
   // Returns the sum of our FlexItems' outer hypothetical main sizes plus the
@@ -915,38 +915,38 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
 
   // Accessors for our FlexItems & information about them:
   FlexItem* GetFirstItem() {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
+    MOZ_ASSERT(mItems.isEmpty() == (NumItems() == 0),
+               "NumItems() bookkeeping is off");
     return mItems.getFirst();
   }
 
   const FlexItem* GetFirstItem() const {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
+    MOZ_ASSERT(mItems.isEmpty() == (NumItems() == 0),
+               "NumItems() bookkeeping is off");
     return mItems.getFirst();
   }
 
   FlexItem* GetLastItem() {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
+    MOZ_ASSERT(mItems.isEmpty() == (NumItems() == 0),
+               "NumItems() bookkeeping is off");
     return mItems.getLast();
   }
 
   const FlexItem* GetLastItem() const {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
+    MOZ_ASSERT(mItems.isEmpty() == (NumItems() == 0),
+               "NumItems() bookkeeping is off");
     return mItems.getLast();
   }
 
   bool IsEmpty() const {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
+    MOZ_ASSERT(mItems.isEmpty() == (NumItems() == 0),
+               "NumItems() bookkeeping is off");
     return mItems.isEmpty();
   }
 
   uint32_t NumItems() const {
     MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
+               "NumItems() bookkeeping is off");
     return mNumItems;
   }
 
@@ -989,7 +989,7 @@ class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine> {
 
     // If the item added was not the first item in the line, we add in any gap
     // space as needed.
-    if (mNumItems >= 2) {
+    if (NumItems() >= 2) {
       mTotalOuterHypotheticalMainSize =
           AddChecked(mTotalOuterHypotheticalMainSize, mMainGapSize);
     }
@@ -2470,7 +2470,7 @@ void FlexLine::FreezeItemsEarly(bool aIsUsingFlexGrow,
 
   // Since this loop only operates on unfrozen flex items, we can break as
   // soon as we have seen all of them.
-  uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+  uint32_t numUnfrozenItemsToBeSeen = NumItems() - mNumFrozenItems;
   for (FlexItem* item = mItems.getFirst(); numUnfrozenItemsToBeSeen > 0;
        item = item->getNext()) {
     MOZ_ASSERT(item, "numUnfrozenItemsToBeSeen says items remain to be seen");
@@ -2524,7 +2524,7 @@ void FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
 
   // Since this loop only operates on unfrozen flex items, we can break as
   // soon as we have seen all of them.
-  uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+  uint32_t numUnfrozenItemsToBeSeen = NumItems() - mNumFrozenItems;
   for (FlexItem* item = mItems.getFirst(); numUnfrozenItemsToBeSeen > 0;
        item = item->getNext()) {
     MOZ_ASSERT(item, "numUnfrozenItemsToBeSeen says items remain to be seen");
@@ -2601,7 +2601,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
   // direction we've chosen:
   FreezeItemsEarly(isUsingFlexGrow, aLineInfo);
 
-  if ((mNumFrozenItems == mNumItems) && !aLineInfo) {
+  if ((mNumFrozenItems == NumItems()) && !aLineInfo) {
     // All our items are frozen, so we have no flexible lengths to resolve,
     // and we aren't being asked to generate computed line info.
     return;
@@ -2619,12 +2619,12 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
   bool isOrigAvailFreeSpaceInitialized = false;
 
   // NOTE: I claim that this chunk of the algorithm (the looping part) needs to
-  // run the loop at MOST mNumItems times.  This claim should hold up
+  // run the loop at MOST NumItems() times.  This claim should hold up
   // because we'll freeze at least one item on each loop iteration, and once
   // we've run out of items to freeze, there's nothing left to do.  However,
   // in most cases, we'll break out of this loop long before we hit that many
   // iterations.
-  for (uint32_t iterationCounter = 0; iterationCounter < mNumItems;
+  for (uint32_t iterationCounter = 0; iterationCounter < NumItems();
        iterationCounter++) {
     // Set every not-yet-frozen item's used main size to its
     // flex base size, and subtract all the used main sizes from our
@@ -2680,7 +2680,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
       // Since this loop only operates on unfrozen flex items, we can break as
       // soon as we have seen all of them.
-      uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+      uint32_t numUnfrozenItemsToBeSeen = NumItems() - mNumFrozenItems;
       for (FlexItem* item = mItems.getFirst(); numUnfrozenItemsToBeSeen > 0;
            item = item->getNext()) {
         MOZ_ASSERT(item,
@@ -2752,7 +2752,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
         FLEX_LOG(" Distributing available space:");
         // Since this loop only operates on unfrozen flex items, we can break as
         // soon as we have seen all of them.
-        numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+        numUnfrozenItemsToBeSeen = NumItems() - mNumFrozenItems;
 
         // NOTE: It's important that we traverse our items in *reverse* order
         // here, for correct width distribution according to the items'
@@ -2833,7 +2833,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
     // Since this loop only operates on unfrozen flex items, we can break as
     // soon as we have seen all of them.
-    uint32_t numUnfrozenItemsToBeSeen = mNumItems - mNumFrozenItems;
+    uint32_t numUnfrozenItemsToBeSeen = NumItems() - mNumFrozenItems;
     for (FlexItem* item = mItems.getFirst(); numUnfrozenItemsToBeSeen > 0;
          item = item->getNext()) {
       MOZ_ASSERT(item, "numUnfrozenItemsToBeSeen says items remain to be seen");
@@ -2855,11 +2855,11 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
     }
 
     FreezeOrRestoreEachFlexibleSize(totalViolation,
-                                    iterationCounter + 1 == mNumItems);
+                                    iterationCounter + 1 == NumItems());
 
     FLEX_LOG(" Total violation: %d", totalViolation);
 
-    if (mNumFrozenItems == mNumItems) {
+    if (mNumFrozenItems == NumItems()) {
       break;
     }
 
@@ -2870,7 +2870,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 #ifdef DEBUG
   // Post-condition: all items should've been frozen.
   // Make sure the counts match:
-  MOZ_ASSERT(mNumFrozenItems == mNumItems, "All items should be frozen");
+  MOZ_ASSERT(mNumFrozenItems == NumItems(), "All items should be frozen");
 
   // For good measure, check each item directly, in case our counts are busted:
   for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
