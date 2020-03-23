@@ -11,10 +11,10 @@ job-defaults:
     target:
         by-test-platform:
             android-hw-p2-8-0-android-aarch64.*:
-                index: gecko.v2.mozilla-esr68.latest.mobile.android-aarch64-opt
+                index: gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-aarch64-release-opt
                 name: build/target.apk
             default:
-                index: gecko.v2.mozilla-esr68.latest.mobile.android-api-16-opt
+                index: gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-api-16-release-opt
                 name: build/target.apk
     virtualization: hardware
     mozharness:

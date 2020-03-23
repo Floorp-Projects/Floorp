@@ -21,7 +21,7 @@ from condprof.util import write_yml_file, logger, DEFAULT_PREFS, BaseEnv
 class AndroidDevice:
     def __init__(self, app_name, marionette_port=2828, verbose=False):
         self.app_name = app_name
-        self.fennec = "fennec" in app_name
+        self.fennec = "firefox" in app_name
 
         # XXX make that an option
         if "fenix" in app_name:
