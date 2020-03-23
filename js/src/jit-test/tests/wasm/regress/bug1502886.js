@@ -21,7 +21,7 @@ function f(x, initFunc) {
     })
 };
 try {
-    f('(module (funcnopnop)(export "" 0))',
+    f('(module (funcnopnop)(export "" (func 0)))',
         function({
             wasmScript,
             breakpoints

@@ -11,7 +11,7 @@ var m1 = wasmEvalText(
    )
    drop
   )
-  (export "" 0))`).exports[""];
+  (export "" (func 0)))`).exports[""];
 
 try {
     m1();
@@ -31,7 +31,7 @@ var m2 = wasmEvalText(
    )
    drop
   )
-  (export "" 0))`).exports[""];
+  (export "" (func 0)))`).exports[""];
 
 try {
     m2();

@@ -6,13 +6,13 @@ var i = wasmEvalText(
        (i32.load8_u (local.get $base))
        (i32.load8_u offset=1 (local.get $base)))
    )
-   (export "off1" $off1)
+   (export "off1" (func $off1))
    (func $off2 (param $base i32) (result i32)
      (i32.add
        (i32.load8_u offset=1 (local.get $base))
        (i32.load8_u offset=2 (local.get $base)))
    )
-   (export "off2" $off2)
+   (export "off2" (func $off2))
 )`).exports;
 assertEq(i.off1(0), 3);
 assertEq(i.off1(1), 5);

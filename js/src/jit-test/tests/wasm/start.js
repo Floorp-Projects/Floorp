@@ -15,7 +15,7 @@ assertEq(count, 1);
 assertEq(Object.keys(exports).length, 0);
 
 count = 0;
-exports = wasmEvalText(`(module (import "" "inc") (func $start (call 0)) (start $start) (export "" 0))`, { "":{inc} }).exports;
+exports = wasmEvalText(`(module (import "" "inc") (func $start (call 0)) (start $start) (export "" (func 0)))`, { "":{inc} }).exports;
 assertEq(count, 1);
 assertEq(typeof exports[""], 'function');
 assertEq(exports[""](), undefined);
@@ -26,7 +26,7 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 
 count = 0;
-const m = new Module(wasmTextToBinary('(module (import $imp "" "inc") (func) (func $start (call $imp)) (start $start) (export "" $start))'));
+const m = new Module(wasmTextToBinary('(module (import $imp "" "inc") (func) (func $start (call $imp)) (start $start) (export "" (func $start)))'));
 assertEq(count, 0);
 
 assertErrorMessage(() => new Instance(m), TypeError, /second argument must be an object/);

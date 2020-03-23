@@ -26,7 +26,7 @@ function testConversion0(resultType, opcode, paramType, op, expect) {
         wasmFullPass(`(module
            (func (param ${paramType}) (result ${resultType})
             (${opcode} (local.get 0)))
-            (export "run" 0)
+            (export "run" (func 0))
         )`, expect, {}, op);
     }
 
@@ -68,7 +68,7 @@ function testTrap(resultType, opcode, paramType, op) {
             call 0
             drop
         )
-        (export "" 1)
+        (export "" (func 1))
     )`).exports[""];
 
     let expectedError = op === 'nan' ? /invalid conversion to integer/ : /integer overflow/;
@@ -366,5 +366,5 @@ testConversion('f32', 'demote', 'f64', 40.1, 40.099998474121094);
 testConversion('f64', 'promote', 'f32', 40.1, 40.099998474121094);
 
 // Non-canonical NaNs.
-wasmFullPass('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "run" 0))', -0x1dddde);
-wasmFullPass('(module (func (result i32) (local i64) (local.set 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (local.get 0)) (i32.wrap/i64 (i64.shr_u (local.get 0) (i64.const 32))))) (export "run" 0))', -0x4003bbbc);
+wasmFullPass('(module (func (result i32) (i32.reinterpret/f32 (f32.demote/f64 (f64.const -nan:0x4444444444444)))) (export "run" (func 0)))', -0x1dddde);
+wasmFullPass('(module (func (result i32) (local i64) (local.set 0 (i64.reinterpret/f64 (f64.promote/f32 (f32.const -nan:0x222222)))) (i32.xor (i32.wrap/i64 (local.get 0)) (i32.wrap/i64 (i64.shr_u (local.get 0) (i64.const 32))))) (export "run" (func 0)))', -0x4003bbbc);

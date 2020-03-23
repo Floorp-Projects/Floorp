@@ -1,6 +1,6 @@
-assertEq(wasmEvalText('(module (func (result i32) (i32.const -1)) (export "" 0))').exports[""](), -1);
-assertEq(wasmEvalText('(module (func (result i32) (i32.const -2147483648)) (export "" 0))').exports[""](), -2147483648);
-assertEq(wasmEvalText('(module (func (result i32) (i32.const 4294967295)) (export "" 0))').exports[""](), -1);
+assertEq(wasmEvalText('(module (func (result i32) (i32.const -1)) (export "" (func 0)))').exports[""](), -1);
+assertEq(wasmEvalText('(module (func (result i32) (i32.const -2147483648)) (export "" (func 0)))').exports[""](), -2147483648);
+assertEq(wasmEvalText('(module (func (result i32) (i32.const 4294967295)) (export "" (func 0)))').exports[""](), -1);
 
 function testUnary(type, opcode, op, expect) {
     if (type === 'i64') {
@@ -11,9 +11,9 @@ function testUnary(type, opcode, op, expect) {
         return;
     }
     // Test with constant
-    wasmFullPass(`(module (func (result ${type}) (${type}.${opcode} (${type}.const ${op}))) (export "run" 0))`, expect);
+    wasmFullPass(`(module (func (result ${type}) (${type}.${opcode} (${type}.const ${op}))) (export "run" (func 0)))`, expect);
     // Test with param
-    wasmFullPass(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (local.get 0))) (export "run" 0))`, expect, {}, op);
+    wasmFullPass(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (local.get 0))) (export "run" (func 0)))`, expect, {}, op);
 }
 
 function testBinary64(opcode, lhs, rhs, expect) {
@@ -27,15 +27,15 @@ function testBinary64(opcode, lhs, rhs, expect) {
 }
 
 function testBinary32(opcode, lhs, rhs, expect) {
-    wasmFullPass(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (local.get 0) (local.get 1))) (export "run" 0))`, expect, {}, lhs, rhs);
+    wasmFullPass(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (local.get 0) (local.get 1))) (export "run" (func 0)))`, expect, {}, lhs, rhs);
     // The same, but now the RHS is a constant.
-    wasmFullPass(`(module (func (param i32) (result i32) (i32.${opcode} (local.get 0) (i32.const ${rhs}))) (export "run" 0))`, expect, {}, lhs);
+    wasmFullPass(`(module (func (param i32) (result i32) (i32.${opcode} (local.get 0) (i32.const ${rhs}))) (export "run" (func 0)))`, expect, {}, lhs);
     // LHS and RHS are constants.
-    wasmFullPass(`(module (func (result i32) (i32.${opcode} (i32.const ${lhs}) (i32.const ${rhs}))) (export "run" 0))`, expect);
+    wasmFullPass(`(module (func (result i32) (i32.${opcode} (i32.const ${lhs}) (i32.const ${rhs}))) (export "run" (func 0)))`, expect);
 }
 
 function testComparison32(opcode, lhs, rhs, expect) {
-    wasmFullPass(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (local.get 0) (local.get 1))) (export "run" 0))`, expect, {}, lhs, rhs);
+    wasmFullPass(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (local.get 0) (local.get 1))) (export "run" (func 0)))`, expect, {}, lhs, rhs);
 }
 function testComparison64(opcode, lhs, rhs, expect) {
     let lsrc = `i64.const ${lhs}`;
@@ -48,7 +48,7 @@ function testComparison64(opcode, lhs, rhs, expect) {
                      i64.const ${rhs}
                      call $cmp
                     )
-                    (export "run" $assert))`, expect);
+                    (export "run" (func $assert)))`, expect);
 
     // Also test `if`, for the compare-and-branch path.
     wasmFullPass(`(module
@@ -61,23 +61,23 @@ function testComparison64(opcode, lhs, rhs, expect) {
                      i64.const ${rhs}
                      call $cmp
                     )
-                    (export "run" $assert))`, expect);
+                    (export "run" (func $assert)))`, expect);
 }
 
 function testI64Eqz(input, expect) {
-    wasmFullPass(`(module (func (result i32) (i64.eqz (i64.const ${input}))) (export "run" 0))`, expect, {});
+    wasmFullPass(`(module (func (result i32) (i64.eqz (i64.const ${input}))) (export "run" (func 0)))`, expect, {});
     wasmFullPass(`(module
         (func (param i64) (result i32) (i64.eqz (local.get 0)))
         (func $assert (result i32) (i64.const ${input}) (call 0))
-        (export "run" $assert))`, expect);
+        (export "run" (func $assert)))`, expect);
 }
 
 function testTrap32(opcode, lhs, rhs, expect) {
-    assertErrorMessage(() => wasmEvalText(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (local.get 0) (local.get 1))) (export "" 0))`).exports[""](lhs, rhs), Error, expect);
+    assertErrorMessage(() => wasmEvalText(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (local.get 0) (local.get 1))) (export "" (func 0)))`).exports[""](lhs, rhs), Error, expect);
     // The same, but now the RHS is a constant.
-    assertErrorMessage(() => wasmEvalText(`(module (func (param i32) (result i32) (i32.${opcode} (local.get 0) (i32.const ${rhs}))) (export "" 0))`).exports[""](lhs), Error, expect);
+    assertErrorMessage(() => wasmEvalText(`(module (func (param i32) (result i32) (i32.${opcode} (local.get 0) (i32.const ${rhs}))) (export "" (func 0)))`).exports[""](lhs), Error, expect);
     // LHS and RHS are constants.
-    assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.${opcode} (i32.const ${lhs}) (i32.const ${rhs}))) (export "" 0))`).exports[""], Error, expect);
+    assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.${opcode} (i32.const ${lhs}) (i32.const ${rhs}))) (export "" (func 0)))`).exports[""], Error, expect);
 }
 
 function testTrap64(opcode, lhs, rhs, expect) {
@@ -174,7 +174,7 @@ if (getJitCompilerOptions()["ion.warmup.trigger"] === 0)
     gc();
 
 // Test MTest's GVN branch inversion.
-var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i32.eqz (i32.trunc_s/f32 (local.get 0))) (i32.const 0) (i32.const 1))) (export "" 0))`).exports[""];
+var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i32.eqz (i32.trunc_s/f32 (local.get 0))) (i32.const 0) (i32.const 1))) (export "" (func 0)))`).exports[""];
 assertEq(testTrunc(0), 0);
 assertEq(testTrunc(13.37), 1);
 
@@ -372,7 +372,7 @@ wasmAssert(`(module (func $run (param i64) (result i64) (local i64) (local.set 1
            [{ type: 'i64', func: '$run', args: ['i64.const 2'], expected: 2048}]);
 
 // Test MTest's GVN branch inversion.
-var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i64.eqz (i64.trunc_s/f32 (local.get 0))) (i32.const 0) (i32.const 1))) (export "" 0))`).exports[""];
+var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (result i32) (i64.eqz (i64.trunc_s/f32 (local.get 0))) (i32.const 0) (i32.const 1))) (export "" (func 0)))`).exports[""];
 assertEq(testTrunc(0), 0);
 assertEq(testTrunc(13.37), 1);
 

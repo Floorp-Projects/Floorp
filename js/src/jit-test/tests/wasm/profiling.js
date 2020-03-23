@@ -26,7 +26,7 @@ function test(code, importObj, expectedStacks)
 test(
 `(module
     (func (result i32) (i32.const 42))
-    (export "" 0)
+    (export "" (func 0))
 )`,
 {},
 ["", ">", "0,>", ">", ""]);
@@ -35,7 +35,7 @@ test(
 `(module
     (func (result i32) (i32.add (call 1) (i32.const 1)))
     (func (result i32) (i32.const 42))
-    (export "" 0)
+    (export "" (func 0))
 )`,
 {},
 ["", ">", "0,>", "1,0,>", "0,>", ">", ""]);
@@ -45,7 +45,7 @@ test(
     (func $foo (call_indirect (type 0) (i32.const 0)))
     (func $bar)
     (table funcref (elem $bar))
-    (export "" $foo)
+    (export "" (func $foo))
 )`,
 {},
 ["", ">", "0,>", "1,0,>", "0,>", ">", ""]);
@@ -55,7 +55,7 @@ test(
     (import $foo "" "foo")
     (table funcref (elem $foo))
     (func $bar (call_indirect (type 0) (i32.const 0)))
-    (export "" $bar)
+    (export "" (func $bar))
 )`,
 {"":{foo:()=>{}}},
 ["", ">", "1,>", "0,1,>", "<,0,1,>", "0,1,>", "1,>", ">", ""]);
@@ -152,7 +152,7 @@ for (let type of ['f32', 'f64']) {
         (func $foo (call_indirect (type $bad) (i32.const 1) (i32.const 0)))
         (func $bar (type $good))
         (table funcref (elem $bar))
-        (export "" $foo)
+        (export "" (func $foo))
     )`,
     WebAssembly.RuntimeError,
     ["", ">", "0,>", "1,0,>", ">", "", ">", ""]);
@@ -163,7 +163,7 @@ for (let type of ['f32', 'f64']) {
     var e = wasmEvalText(`
     (module
         (func $foo (result i32) (i32.const 42))
-        (export "foo" $foo)
+        (export "foo" (func $foo))
         (func $bar (result i32) (i32.const 13))
         (table 10 funcref)
         (elem (i32.const 0) $foo $bar)
@@ -207,7 +207,7 @@ for (let type of ['f32', 'f64']) {
         (elem (i32.const 2) $bar)
         (func $bar (result i32) (i32.const 99))
         (func $baz (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i)))
-        (export "baz" $baz)
+        (export "baz" (func $baz))
     )`, {a:{b:e.tbl}}).exports;
 
     enableGeckoProfiling();
@@ -233,12 +233,12 @@ for (let type of ['f32', 'f64']) {
     // Optimized wasm->wasm import.
     var m1 = new Module(wasmTextToBinary(`(module
         (func $foo (result i32) (i32.const 42))
-        (export "foo" $foo)
+        (export "foo" (func $foo))
     )`));
     var m2 = new Module(wasmTextToBinary(`(module
         (import $foo "a" "foo" (result i32))
         (func $bar (result i32) (call $foo))
-        (export "bar" $bar)
+        (export "bar" (func $bar))
     )`));
 
     // Instantiate while not active:

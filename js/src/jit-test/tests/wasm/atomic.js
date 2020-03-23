@@ -14,7 +14,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
     {
 	let text = (shared) => `(module (memory 1 1 ${shared})
 				 (func (result ${type}) (${type}.atomic.load${view} (i32.const 0)))
-				 (export "" 0))`;
+				 (export "" (func 0)))`;
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
     }
@@ -22,7 +22,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
     {
 	let text = (shared) => `(module (memory 1 1 ${shared})
 				 (func (${type}.atomic.store${view} (i32.const 0) (${type}.const 1)))
-				 (export "" 0))`;
+				 (export "" (func 0)))`;
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
     }
@@ -31,7 +31,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
 	let text = (shared) => `(module (memory 1 1 ${shared})
 				 (func (result ${type})
 				  (${type}.atomic.rmw${view}.cmpxchg (i32.const 0) (${type}.const 1) (${type}.const 2)))
-				 (export "" 0))`;
+				 (export "" (func 0)))`;
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
     }
@@ -40,7 +40,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
 	// Operate with appropriately-typed value 1 on address 0
 	let text = (shared) => `(module (memory 1 1 ${shared})
 				 (func (result ${type}) (${type}.atomic.rmw${view}.${op} (i32.const 0) (${type}.const 1)))
-				 (export "" 0))`;
+				 (export "" (func 0)))`;
 
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
@@ -50,7 +50,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
 for (let type of ['i32', 'i64']) {
     let text = (shared) => `(module (memory 1 1 ${shared})
 			     (func (result i32) (${type}.atomic.wait (i32.const 0) (${type}.const 1) (i64.const -1)))
-			     (export "" 0))`;
+			     (export "" (func 0)))`;
     assertEq(valText(text(SHARED)), true);
     assertEq(valText(text(UNSHARED)), false);
 }
@@ -59,7 +59,7 @@ for (let type of ['i32', 'i64']) {
 for ( let notify of ['wake', 'notify']) {
     let text = (shared) => `(module (memory 1 1 ${shared})
 			     (func (result i32) (atomic.${notify} (i32.const 0) (i32.const 1)))
-			     (export "" 0))`;
+			     (export "" (func 0)))`;
     assertEq(valText(text(SHARED)), true);
     assertEq(valText(text(UNSHARED)), false);
 }
@@ -71,7 +71,7 @@ for (let [type,align,good] of [['i32',1,false],['i32',2,false],['i32',4,true],['
 {
     let text = `(module (memory 1 1 shared)
 		 (func (result i32) (${type}.atomic.wait align=${align} (i32.const 0) (${type}.const 1) (i64.const -1)))
-		 (export "" 0))`;
+		 (export "" (func 0)))`;
     assertEq(valText(text), good);
 }
 
@@ -80,7 +80,7 @@ for (let [type,align,good] of [['i32',1,false],['i32',2,false],['i32',4,true],['
 for (let align of [1, 2, 4, 8]) {
     let text = `(module (memory 1 1 shared)
 		 (func (result i32) (atomic.notify align=${align} (i32.const 0) (i32.const 1)))
-		 (export "" 0))`;
+		 (export "" (func 0)))`;
     assertEq(valText(text), align == 4);
 }
 
@@ -472,31 +472,31 @@ BoundsAndAlignment.run();
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
 					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
-					(export "" 0))`).exports[""](65536),
+					(export "" (func 0)))`).exports[""](65536),
 		   RuntimeError, oob);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
 					 (i64.atomic.wait (local.get 0) (i64.const 1) (i64.const -1)))
-					(export "" 0))`).exports[""](65536),
+					(export "" (func 0)))`).exports[""](65536),
 		   RuntimeError, oob);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
 					 (i32.atomic.wait (local.get 0) (i32.const 1) (i64.const -1)))
-					(export "" 0))`).exports[""](65501),
+					(export "" (func 0)))`).exports[""](65501),
 		   RuntimeError, unaligned);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
 					 (i64.atomic.wait (local.get 0) (i64.const 1) (i64.const -1)))
-					(export "" 0))`).exports[""](65501),
+					(export "" (func 0)))`).exports[""](65501),
 		   RuntimeError, unaligned);
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
 					 (atomic.notify (local.get 0) (i32.const 1)))
-					(export "" 0))`).exports[""](65536),
+					(export "" (func 0)))`).exports[""](65536),
 		   RuntimeError, oob);
 
 // Minimum run-time alignment for NOTIFY is 4

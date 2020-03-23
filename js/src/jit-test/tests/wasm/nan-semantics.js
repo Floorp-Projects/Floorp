@@ -11,7 +11,7 @@ function assertSameBitPattern(from, to, offset) {
 f32[0] = NaN;
 f32[0] = f32[0]; // Force canonicalization.
 
-f32[1] = wasmEvalText('(module (func (result f32) (f32.const nan:0x123456)) (export "" 0))').exports[""]();
+f32[1] = wasmEvalText('(module (func (result f32) (f32.const nan:0x123456)) (export "" (func 0)))').exports[""]();
 assertSameBitPattern(0, 4, 4);
 
 var checkBitPatterns = {
@@ -27,14 +27,14 @@ var checkBitPatterns = {
     }
 }
 
-wasmEvalText('(module (import "" "float32" (param f32)) (func (call 0 (f32.const nan:0x123456))) (export "" 0))', checkBitPatterns).exports[""]();
+wasmEvalText('(module (import "" "float32" (param f32)) (func (call 0 (f32.const nan:0x123456))) (export "" (func 0)))', checkBitPatterns).exports[""]();
 
 f64[0] = NaN;
 f64[0] = f64[0]; // Force canonicalization.
-f64[1] = wasmEvalText('(module (func (result f64) (f64.const nan:0x123456)) (export "" 0))').exports[""]();
+f64[1] = wasmEvalText('(module (func (result f64) (f64.const nan:0x123456)) (export "" (func 0)))').exports[""]();
 assertSameBitPattern(0, 8, 8);
 
-wasmEvalText('(module (import "" "float64" (param f64)) (func (call 0 (f64.const nan:0x123456))) (export "" 0))', checkBitPatterns).exports[""]();
+wasmEvalText('(module (import "" "float64" (param f64)) (func (call 0 (f64.const nan:0x123456))) (export "" (func 0)))', checkBitPatterns).exports[""]();
 
 // SANITY CHECKS
 
