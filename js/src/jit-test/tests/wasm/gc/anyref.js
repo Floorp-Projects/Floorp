@@ -175,9 +175,9 @@ function assertJoin(body) {
 
 assertJoin("(block (result anyref) local.get $ref)");
 assertJoin("(block $out anyref local.get $ref br $out)");
-assertJoin("(loop anyref local.get $ref)");
+assertJoin("(loop (result anyref) local.get $ref)");
 
-assertJoin(`(block $out anyref (loop $top anyref
+assertJoin(`(block $out anyref (loop $top (result anyref)
     local.get $i
     i32.const 1
     i32.add
