@@ -54,6 +54,7 @@ class CollectionCreationView(
 
     init {
         transition.duration = TRANSITION_DURATION
+        transition.excludeTarget(back_button, true)
 
         selectTabsConstraints.clone(collection_constraint_layout)
         selectCollectionConstraints.clone(
