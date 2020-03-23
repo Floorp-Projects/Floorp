@@ -719,11 +719,13 @@ gouv.ci
 *.ck
 !www.ck
 
-// cl : https://en.wikipedia.org/wiki/.cl
+// cl : https://www.nic.cl
+// Confirmed by .CL registry <hsalgado@nic.cl>
 cl
-gov.cl
-gob.cl
+aprendemas.cl
 co.cl
+gob.cl
+gov.cl
 mil.cl
 
 // cm : https://en.wikipedia.org/wiki/.cm plus bug 981927
@@ -12444,12 +12446,13 @@ pcloud.host
 nyc.mn
 
 // NymNom : https://nymnom.com/
-// Submitted by Dave McCormack <dave.mccormack@nymnom.com>
+// Submitted by NymNom <psl@nymnom.com>
 nom.ae
 nom.af
 nom.ai
 nom.al
 nym.by
+nom.bz
 nym.bz
 nom.cl
 nym.ec
@@ -12471,6 +12474,7 @@ nom.li
 nym.li
 nym.lt
 nym.lu
+nom.lv
 nym.me
 nom.mk
 nym.mn
