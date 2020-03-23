@@ -161,7 +161,7 @@ async function testSubview(hasException) {
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
   is(
     listItem.querySelector("label").value,
-    "social-tracking.example.org",
+    "https://social-tracking.example.org",
     "Has the correct host"
   );
 

@@ -130,17 +130,15 @@ var Fingerprinting = {
       return null;
     }
 
-    let uri = Services.io.newURI(origin);
-
     let listItem = document.createXULElement("hbox");
     listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
-    listItem.tooltipText = uri.host;
+    listItem.tooltipText = origin;
 
     let label = document.createXULElement("label");
-    label.value = uri.host;
+    label.value = origin;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
@@ -260,17 +258,15 @@ var Cryptomining = {
       return null;
     }
 
-    let uri = Services.io.newURI(origin);
-
     let listItem = document.createXULElement("hbox");
     listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
-    listItem.tooltipText = uri.host;
+    listItem.tooltipText = origin;
 
     let label = document.createXULElement("label");
-    label.value = uri.host;
+    label.value = origin;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
@@ -490,8 +486,6 @@ var TrackingProtection = {
       return null;
     }
 
-    let uri = Services.io.newURI(origin);
-
     // Because we might use different lists for annotation vs. blocking, we
     // need to make sure that this is a tracker that we would actually have blocked
     // before showing it to the user.
@@ -513,10 +507,10 @@ var TrackingProtection = {
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
-    listItem.tooltipText = uri.host;
+    listItem.tooltipText = origin;
 
     let label = document.createXULElement("label");
-    label.value = uri.host;
+    label.value = origin;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
@@ -1115,17 +1109,15 @@ var SocialTracking = {
       return null;
     }
 
-    let uri = Services.io.newURI(origin);
-
     let listItem = document.createXULElement("hbox");
     listItem.className = "protections-popup-list-item";
     listItem.classList.toggle("allowed", isAllowed);
     // Repeat the host in the tooltip in case it's too long
     // and overflows in our panel.
-    listItem.tooltipText = uri.host;
+    listItem.tooltipText = origin;
 
     let label = document.createXULElement("label");
-    label.value = uri.host;
+    label.value = origin;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
