@@ -59,7 +59,7 @@ let t =
 
      ;; -- fn 1
      (func $fn1 (export "fn1") (param $arg1 anyref) (result i32)
-       (loop i32
+       (loop (result i32)
          ;; call direct to $fn0
          (call $fn0 (i32.const 10) (local.get $arg1) (i32.const 12)
                     (local.get $arg1) (local.get $arg1) (i32.const 15))
