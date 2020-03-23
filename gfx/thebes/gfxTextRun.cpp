@@ -2809,9 +2809,19 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
   // If the char is a cluster extender, we want to use the same font as the
   // preceding character if possible. This is preferable to using the font
   // group because it avoids breaks in shaping within a cluster.
-  if (aPrevMatchedFont && IsClusterExtender(aCh) &&
-      aPrevMatchedFont->HasCharacter(aCh)) {
-    return aPrevMatchedFont;
+  if (aPrevMatchedFont && IsClusterExtender(aCh)) {
+    if (aPrevMatchedFont->HasCharacter(aCh)) {
+      return aPrevMatchedFont;
+    }
+    // Get the singleton NFC normalizer; this does not need to be deleted.
+    static UErrorCode err = U_ZERO_ERROR;
+    static const UNormalizer2* nfc = unorm2_getNFCInstance(&err);
+    // Check if this char and preceding char can compose; if so, is the
+    // combination supported by the current font.
+    int32_t composed = unorm2_composePair(nfc, aPrevCh, aCh);
+    if (composed > 0 && aPrevMatchedFont->HasCharacter(composed)) {
+      return aPrevMatchedFont;
+    }
   }
 
   // Special cases for NNBSP (as used in Mongolian):
