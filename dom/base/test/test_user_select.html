@@ -167,7 +167,7 @@ function test()
   checkRanges([], e);
 
   clear();
-  dragSelect(e, 340, 20, 140);
+  dragSelect(e, 340, 20, 141);
   checkText('bbbbbbbbcc', e);
   checkRanges([[1,0,1,10]], e);
   // #test2 is used again below
@@ -188,7 +188,7 @@ function test()
 
   clear();
   e = document.getElementById('test5');
-  dragSelect(e, 340, 20, 140);
+  dragSelect(e, 340, 20, 141);
   checkText('bbbbbbbbcc', e);
   checkRanges([[1,0,1,10]], e);
   doneTest(e);
