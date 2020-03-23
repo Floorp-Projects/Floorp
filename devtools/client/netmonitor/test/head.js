@@ -372,12 +372,22 @@ function teardown(monitor) {
   })();
 }
 
+function isFiltering(monitor) {
+  const doc = monitor.panelWin.document;
+  return !!doc.querySelector(
+    ".requests-list-filter-buttons button[aria-pressed]"
+  );
+}
+
 function waitForNetworkEvents(monitor, getRequests) {
   return new Promise(resolve => {
     const panel = monitor.panelWin;
     const { getNetworkRequest } = panel.connector;
     let networkEvent = 0;
+    let nonBlockedNetworkEvent = 0;
     let payloadReady = 0;
+    let eventTimings = 0;
+    const filtering = isFiltering(monitor);
 
     function onNetworkEvent(actor) {
       const networkInfo = getNetworkRequest(actor);
@@ -387,6 +397,9 @@ function waitForNetworkEvents(monitor, getRequests) {
         return;
       }
       networkEvent++;
+      if (!networkInfo.blockedReason) {
+        nonBlockedNetworkEvent++;
+      }
       maybeResolve(TEST_EVENTS.NETWORK_EVENT, actor, networkInfo);
     }
 
@@ -401,6 +414,17 @@ function waitForNetworkEvents(monitor, getRequests) {
       maybeResolve(EVENTS.PAYLOAD_READY, actor, networkInfo);
     }
 
+    function onEventTimings(actor) {
+      const networkInfo = getNetworkRequest(actor);
+      if (!networkInfo) {
+        // Must have been related to reloading document to disable cache.
+        // Ignore the event.
+        return;
+      }
+      eventTimings++;
+      maybeResolve(EVENTS.RECEIVED_EVENT_TIMINGS, actor, networkInfo);
+    }
+
     function maybeResolve(event, actor, networkInfo) {
       info(
         "> Network event progress: " +
@@ -413,6 +437,10 @@ function waitForNetworkEvents(monitor, getRequests) {
           payloadReady +
           "/" +
           getRequests +
+          "EventTimings: " +
+          eventTimings +
+          "/" +
+          getRequests +
           ", " +
           "got " +
           event +
@@ -420,16 +448,29 @@ function waitForNetworkEvents(monitor, getRequests) {
           actor
       );
 
-      // Wait until networkEvent & payloadReady finish for each request.
-      if (networkEvent >= getRequests && payloadReady >= getRequests) {
+      const { document } = monitor.panelWin;
+      // Wait until networkEvent, payloadReady and event timings finish for each request.
+      // The UI won't fetch timings when:
+      // * hidden in background,
+      // * for any blocked request,
+      // * when filtering.
+      if (
+        networkEvent >= getRequests &&
+        payloadReady >= getRequests &&
+        (eventTimings >= nonBlockedNetworkEvent ||
+          document.visibilityState == "hidden" ||
+          filtering)
+      ) {
         panel.api.off(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
         panel.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
+        panel.api.off(EVENTS.RECEIVED_EVENT_TIMINGS, onEventTimings);
         executeSoon(resolve);
       }
     }
 
     panel.api.on(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
     panel.api.on(EVENTS.PAYLOAD_READY, onPayloadReady);
+    panel.api.on(EVENTS.RECEIVED_EVENT_TIMINGS, onEventTimings);
   });
 }
 
