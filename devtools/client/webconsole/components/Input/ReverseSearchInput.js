@@ -230,6 +230,7 @@ class ReverseSearchInput extends Component {
     }
 
     const classNames = ["reverse-search"];
+
     if (reverseSearchTotalResults === 0) {
       classNames.push("no-result");
     }
