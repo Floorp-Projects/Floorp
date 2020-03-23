@@ -852,16 +852,16 @@ void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
 void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
                                  const Address& rhs, const Address& src,
                                  Register dest) {
-  Label skip;
-  branch32(cond, rhs, lhs, &skip);
-  load32(src, dest);
-  bind(&skip);
+  ScratchRegisterScope scratch(*this);
+  MOZ_ASSERT(lhs != scratch && dest != scratch);
+  load32(rhs, scratch);
+  cmp32Load32(cond, lhs, scratch, src, dest);
 }
 
 void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
                                  const Address& src, Register dest) {
   Label skip;
-  branch32(cond, rhs, lhs, &skip);
+  branch32(Assembler::InvertCondition(cond), lhs, rhs, &skip);
   load32(src, dest);
   bind(&skip);
 }
