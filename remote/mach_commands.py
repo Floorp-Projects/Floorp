@@ -16,6 +16,7 @@ import re
 import tempfile
 import shutil
 import subprocess
+from collections import OrderedDict
 
 from six import iteritems
 
@@ -187,7 +188,7 @@ class MochaOutputHandler(object):
         self.test_name_re = re.compile(r"\d+\) \[\s*(\w+)\s*\] (.*) \(.*\)")
         self.control_re = re.compile("\x1b\\[[0-9]*m")
         self.proc = None
-        self.test_results = {}
+        self.test_results = OrderedDict()
         self.expected = expected
 
         self.has_unexpected = False
@@ -229,15 +230,16 @@ class MochaOutputHandler(object):
         self.logger.process_output(self.pid, line, command="npm")
 
     def new_expected(self):
-        new_expected = {}
+        new_expected = OrderedDict()
         for test_name, status in iteritems(self.test_results):
             if test_name not in self.expected:
-                new_expected[test_name] = [status]
+                new_status = [status]
             else:
                 if status in self.expected[test_name]:
-                    new_expected[test_name] = self.expected[test_name]
+                    new_status = self.expected[test_name]
                 else:
-                    new_expected[test_name] = [status]
+                    new_status = [status]
+            new_expected[test_name] = new_status
         return new_expected
 
     def after_end(self, subset=False):
@@ -359,7 +361,8 @@ class PuppeteerRunner(MozbuildObject):
 
         if params["write_results"] and output_handler.has_unexpected:
             with open(params["write_results"], "w") as f:
-                json.dump(output_handler.new_expected(), f, indent=2)
+                json.dump(output_handler.new_expected(), f, indent=2,
+                          separators=(",", ": "))
 
         if output_handler.has_unexpected:
             exit(1, "Got unexpected results")
