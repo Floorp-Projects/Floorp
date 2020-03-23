@@ -2,7 +2,7 @@
 
 # USER
 
-`USER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L392)
+`USER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L397)
 
 The extension is enabled or disabled by the user.
 

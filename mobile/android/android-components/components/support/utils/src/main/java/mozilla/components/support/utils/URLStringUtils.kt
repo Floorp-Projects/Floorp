@@ -101,4 +101,30 @@ object URLStringUtils {
     // complain that this value is not one of the predefined enums that are allowed.
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var flags = 0
+
+    private const val HTTP = "http://"
+    private const val HTTPS = "https://"
+    private const val WWW = "www."
+
+    /**
+     * Generates a shorter version of the provided URL for display purposes by stripping it of
+     * https/http and/or WWW prefixes when applicable.
+     */
+    fun toDisplayUrl(originalUrl: CharSequence) = maybeStripUrlProtocol(originalUrl)
+
+    private fun maybeStripUrlProtocol(url: CharSequence): CharSequence {
+        var noPrefixUrl = url
+        if (url.toString().startsWith(HTTPS)) {
+            noPrefixUrl = maybeStripUrlSubDomain(url.toString().replaceFirst(HTTPS, ""))
+        } else if (url.toString().startsWith(HTTP)) {
+            noPrefixUrl = maybeStripUrlSubDomain(url.toString().replaceFirst(HTTP, ""))
+        }
+        return noPrefixUrl
+    }
+
+    private fun maybeStripUrlSubDomain(url: CharSequence): CharSequence {
+        return if (url.toString().startsWith(WWW)) {
+            url.toString().replaceFirst(WWW, "")
+        } else url
+    }
 }

@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`HistoryDelegate(historyStorage: `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`)`
+`HistoryDelegate(historyStorage: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`>)`
 
 Implementation of the [HistoryTrackingDelegate](../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.md) which delegates work to an instance of [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md).
 

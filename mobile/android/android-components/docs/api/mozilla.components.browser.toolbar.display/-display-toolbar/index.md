@@ -66,6 +66,7 @@ Progress (optional):
 | [textSize](text-size.md) | `var textSize: `[`Float`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html)<br>Sets the size of the text for the URL/search term displayed in the toolbar. |
 | [titleTextSize](title-text-size.md) | `var titleTextSize: `[`Float`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html)<br>Sets the size of the text for the title displayed in the toolbar. |
 | [typeface](typeface.md) | `var typeface: <ERROR CLASS>`<br>Sets the typeface of the text for the URL/search term displayed in the toolbar. |
+| [urlFormatter](url-formatter.md) | `var urlFormatter: (`[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)`) -> `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)<br>Allows customization of URL for display purposes. |
 
 ### Functions
 

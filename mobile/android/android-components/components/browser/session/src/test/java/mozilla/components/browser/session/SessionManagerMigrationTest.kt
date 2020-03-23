@@ -109,6 +109,8 @@ class SessionManagerMigrationTest {
 
         val customTabSession = Session("https://www.mozilla.org")
         customTabSession.customTabConfig = mock()
+        val engineSession: EngineSession = mock()
+        customTabSession.engineSessionHolder.engineSession = engineSession
         sessionManager.add(customTabSession)
 
         assertEquals(0, sessionManager.sessions.size)
@@ -127,6 +129,7 @@ class SessionManagerMigrationTest {
 
         val tab = store.state.tabs[0]
         assertEquals("https://www.mozilla.org", tab.content.url)
+        assertSame(engineSession, tab.engineState.engineSession)
     }
 
     @Test

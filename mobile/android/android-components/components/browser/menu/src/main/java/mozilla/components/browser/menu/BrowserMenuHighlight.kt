@@ -15,6 +15,7 @@ import mozilla.components.browser.menu.item.NO_ID
  */
 sealed class BrowserMenuHighlight {
     abstract val label: String?
+    abstract val canPropagate: Boolean
 
     /**
      * Displays a notification dot.
@@ -22,10 +23,13 @@ sealed class BrowserMenuHighlight {
      *
      * @property notificationTint Tint for the notification dot displayed on the icon and menu button.
      * @property label Label to override the normal label of the menu item.
+     * @property canPropagate Indicate whether other components should consider this highlight when
+     * displaying their own highlight.
      */
     data class LowPriority(
         @ColorInt val notificationTint: Int,
-        override val label: String? = null
+        override val label: String? = null,
+        override val canPropagate: Boolean = true
     ) : BrowserMenuHighlight()
 
     /**
@@ -36,11 +40,14 @@ sealed class BrowserMenuHighlight {
      * Also used to highlight the menu button.
      * @property label Label to override the normal label of the menu item.
      * @property endImageResource Icon to display at the end of the menu item when highlighted.
+     * @property canPropagate Indicate whether other components should consider this highlight when
+     * displaying their own highlight.
      */
     data class HighPriority(
         @ColorInt val backgroundTint: Int,
         override val label: String? = null,
-        val endImageResource: Int = NO_ID
+        val endImageResource: Int = NO_ID,
+        override val canPropagate: Boolean = true
     ) : BrowserMenuHighlight()
 
     /**
@@ -48,13 +55,17 @@ sealed class BrowserMenuHighlight {
      * Replaced by [LowPriority] and [HighPriority] which lets a priority be specified.
      * This class only exists so that [mozilla.components.browser.menu.item.BrowserMenuHighlightableItem.Highlight]
      * can subclass it.
+     *
+     * @property canPropagate Indicate whether other components should consider this highlight when
+     * displaying their own highlight.
      */
     @Deprecated("Replace with LowPriority or HighPriority highlight")
     open class ClassicHighlight(
         @DrawableRes val startImageResource: Int,
         @DrawableRes val endImageResource: Int,
         @DrawableRes val backgroundResource: Int,
-        @ColorRes val colorResource: Int
+        @ColorRes val colorResource: Int,
+        override val canPropagate: Boolean = true
     ) : BrowserMenuHighlight() {
         override val label: String? = null
     }

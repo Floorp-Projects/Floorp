@@ -52,6 +52,12 @@ subprojects {
         }
     }
 
+    // Allow local appservices substitution in each subproject.
+    if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
+        ext.appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
+        apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+    }
+
     afterEvaluate {
         if (it.hasProperty('android')) {
             jacoco {

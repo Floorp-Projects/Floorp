@@ -2,7 +2,7 @@
 
 # thumbnail
 
-`var thumbnail: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L411)
+`var thumbnail: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L415)
 
 The target of the latest thumbnail.
 

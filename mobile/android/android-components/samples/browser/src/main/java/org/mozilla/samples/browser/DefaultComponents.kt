@@ -81,7 +81,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     // Engine Settings
     val engineSettings by lazy {
         DefaultSettings().apply {
-            historyTrackingDelegate = HistoryDelegate(historyStorage)
+            historyTrackingDelegate = HistoryDelegate(lazyHistoryStorage)
             requestInterceptor = SampleRequestInterceptor(applicationContext)
             remoteDebuggingEnabled = true
             supportMultipleWindows = true
@@ -101,7 +101,8 @@ open class DefaultComponents(private val applicationContext: Context) {
     val icons by lazy { BrowserIcons(applicationContext, client) }
 
     // Storage
-    val historyStorage by lazy { InMemoryHistoryStorage() }
+    private val lazyHistoryStorage = lazy { InMemoryHistoryStorage() }
+    val historyStorage by lazy { lazyHistoryStorage.value }
 
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 

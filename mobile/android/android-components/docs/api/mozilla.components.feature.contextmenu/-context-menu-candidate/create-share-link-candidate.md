@@ -2,7 +2,7 @@
 
 # createShareLinkCandidate
 
-`fun createShareLinkCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L205)
+`fun createShareLinkCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L225)
 
 Context Menu item: "Share Link".
 

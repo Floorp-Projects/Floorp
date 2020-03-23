@@ -27,6 +27,19 @@ permalink: /changelog/
 * **feature-sitepermissions**
   * Fixed issue [#6299](https://github.com/mozilla-mobile/android-components/issues/6299), from now on, any media requests like a microphone or a camera permission will require the system permissions to be granted before a dialog can be shown.
 
+* **service-sync-logins**
+  * ⚠️ **This is a breaking change**: `DefaultLoginValidationDelegate`, `GeckoLoginStorageDelegate` constructors changed to take `Lazy<LoginsStorage>` instead of `LoginsStorage`, to facilitate late initialization.
+
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**: `GlobalSyncableStoreProvider#configureStore` changed to take `Lazy<SyncableStore>` instead of `SyncableStore`, to facilitate late initialization.
+
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `HistoryDelegate` constructor changed to take `Lazy<HistoryStorage>` instead of `HistoryStorage`, to facilitate late initialization.
+
+* **browser-menu**
+  * Added `canPropagate` param to all `BrowserMenuHighlight`s, making it optional to be displayed in other components
+  * Changed `BrowserMenuItem.getHighlight` to filter the highlights which should not propagate.
+
 # 36.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v35.0.0...v36.0.0)

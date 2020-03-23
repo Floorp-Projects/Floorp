@@ -20,7 +20,7 @@ import mozilla.components.concept.storage.LoginsStorage
  * information about why it can or cannot.
  */
 class DefaultLoginValidationDelegate(
-    private val storage: LoginsStorage,
+    private val storage: Lazy<LoginsStorage>,
     private val scope: CoroutineScope = CoroutineScope(IO)
 ) : LoginValidationDelegate {
 
@@ -32,7 +32,7 @@ class DefaultLoginValidationDelegate(
                 // Internally, the library ensures to not dupe records against themselves
                 // (via a `guid <> :guid` check), which means we need to "pretend" this is a new record,
                 // in order for `ensureValid` to actually throw `DUPLICATE_LOGIN`.
-                storage.ensureValid(login.copy(guid = null))
+                storage.value.ensureValid(login.copy(guid = null))
                 Result.CanBeCreated
             } catch (e: InvalidRecordException) {
                 when (e.reason) {

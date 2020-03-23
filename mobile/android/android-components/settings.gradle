@@ -41,18 +41,34 @@ gradle.projectsLoaded { ->
     if (gradle.rootProject.hasProperty("nightlyVersion")) {
         version = gradle.rootProject.nightlyVersion
     }
+    // To support local auto-publication workflow, we use a version prefix we wouldn't normally encounter.
+    if (gradle.rootProject.hasProperty("local")) {
+        version = "0.0.1"
+    }
     // Wait until root project is "loaded" before we set "config"
     // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
     // gradle files. This means that they can just access "config.<value>", and it'll function properly
     gradle.rootProject.ext.config = new Config(version)
     gradle.rootProject.ext.buildConfig = buildconfig
 }
+
+def runCmd(cmd, workingDir, successMessage) {
+    def proc = cmd.execute(null, new File(workingDir))
+    proc.consumeProcessOutput(System.out, System.err)
+    proc.waitFor()
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}")
+    } else {
+        logger.lifecycle(successMessage)
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
 //////////////////////////////////////////////////////////////////////////
 
 Properties localProperties = null;
-String settingAppServicesPath = "substitutions.application-services.dir";
+String settingAppServicesPath = "autoPublish.application-services.dir"
 String settingGleanPath = "substitutions.glean.dir";
 
 if (file('local.properties').canRead()) {
@@ -71,11 +87,11 @@ if (localProperties != null) {
     String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath);
 
     if (appServicesLocalPath != null) {
-        logger.lifecycle("Local configuration: substituting application-services modules from path: $appServicesLocalPath")
-
-        includeBuild(appServicesLocalPath)
+        logger.lifecycle("Enabling automatic publication of application-services from: $appServicesLocalPath")
+        def publishAppServicesCmd = ["./gradlew", "autoPublishForLocalDevelopment"]
+        runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.")
     } else {
-        logger.lifecycle("Local configuration: application-services substitution path missing. You may specify it via '$settingAppServicesPath' setting.")
+        logger.lifecycle("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
     }
 
     String gleanLocalPath = localProperties.getProperty(settingGleanPath);

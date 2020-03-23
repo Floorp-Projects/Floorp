@@ -37,7 +37,7 @@ who decides whether or not to save the [Login](../../mozilla.components.concept.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `GeckoLoginStorageDelegate(loginStorage: `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, isAutofillEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`<br>[LoginStorageDelegate](../../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation. |
+| [&lt;init&gt;](-init-.md) | `GeckoLoginStorageDelegate(loginStorage: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`>, isAutofillEnabled: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = { false }, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`<br>[LoginStorageDelegate](../../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation. |
 
 ### Functions
 
