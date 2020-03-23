@@ -1317,10 +1317,10 @@ pref("browser.newtabpage.activity-stream.discoverystream.personalization.modelKe
   pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-pref("trailhead.firstrun.branches", "");
+pref("trailhead.firstrun.branches", "join-dynamic");
 
 // Separate about welcome
-pref("browser.aboutwelcome.enabled", false);
+pref("browser.aboutwelcome.enabled", true);
 // Temporary utility to unblock testing on about:welcome experiment variations
 pref("browser.aboutwelcome.temp.testExperiment.slug", "");
 pref("browser.aboutwelcome.temp.testExperiment.branch", "control");
