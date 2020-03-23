@@ -5,7 +5,7 @@
 """
 from condprof.util import logger
 
-_SUPPORTED_MOBILE_BROWSERS = "fenix", "gecko", "fennec"
+_SUPPORTED_MOBILE_BROWSERS = "fenix", "gecko", "firefox"
 
 
 def is_mobile(platform):
