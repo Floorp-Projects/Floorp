@@ -466,6 +466,17 @@ class WebConsoleUI {
           if (!this.connected) {
             this.connected = true;
             syntaxHighlightNode(this);
+
+            // Highlight Again when the innerText changes
+            // We remove the listener before running codemirror mode and add
+            // it again to capture text changes
+            this.observer = new win.MutationObserver((mutations, observer) => {
+              observer.disconnect();
+              syntaxHighlightNode(this);
+              observer.observe(this, { childList: true });
+            });
+
+            this.observer.observe(this, { childList: true });
           }
         }
       }

@@ -61,7 +61,7 @@ add_task(async function() {
     await clearOutput(hud);
     await executeAndWaitForMessage(hud, command, "", ".result");
 
-    const result = await waitFor(() => getDisplayedInput(hud));
+    const result = await getActualDisplayedInput(hud);
 
     if (result === expected) {
       ok(true, name);
@@ -76,12 +76,19 @@ add_task(async function() {
  * @param {WebConsole} hud: The webconsole
  * @return {string|null}
  */
-function getDisplayedInput(hud) {
+async function getActualDisplayedInput(hud) {
   const message = Array.from(
     hud.ui.outputNode.querySelectorAll(".message.command")
   ).pop();
 
   if (message) {
+    // Open the message if its collapsed
+    const toggleArrow = message.querySelector(".collapse-button");
+    if (toggleArrow) {
+      toggleArrow.click();
+      await waitFor(() => message.classList.contains("open") === true);
+    }
+
     return message.querySelector("syntax-highlighted").textContent;
   }
 
