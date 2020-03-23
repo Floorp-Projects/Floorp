@@ -1287,14 +1287,10 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
         nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
       aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
                                      context.mHTMLInputInputmode);
-      if (context.mHTMLInputInputmode.EqualsLiteral("mozAwesomebar")) {
-        if (!nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
-          // mozAwesomebar should be allowed only in chrome
-          context.mHTMLInputInputmode.Truncate();
-        }
-      } else {
-        // Except to mozAwesomebar, inputmode should be lower case.
-        ToLowerCase(context.mHTMLInputInputmode);
+      if (context.mHTMLInputInputmode.EqualsLiteral("mozAwesomebar") &&
+          !nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
+        // mozAwesomebar should be allowed only in chrome
+        context.mHTMLInputInputmode.Truncate();
       }
     }
 

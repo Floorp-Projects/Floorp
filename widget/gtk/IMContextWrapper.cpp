@@ -1294,6 +1294,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
   mInputContext = *aContext;
 
   if (changingEnabledState) {
+#ifdef MOZ_WIDGET_GTK
     static bool sInputPurposeSupported = !gtk_check_version(3, 6, 0);
     if (sInputPurposeSupported && mInputContext.mIMEState.MaybeEditable()) {
       GtkIMContext* currentContext = GetCurrentContext();
@@ -1328,30 +1329,12 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
           purpose = GTK_INPUT_PURPOSE_PHONE;
         } else if (inputType.EqualsLiteral("number")) {
           purpose = GTK_INPUT_PURPOSE_NUMBER;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("decimal")) {
-          purpose = GTK_INPUT_PURPOSE_NUMBER;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("email")) {
-          purpose = GTK_INPUT_PURPOSE_EMAIL;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("numeric")) {
-          purpose = GTK_INPUT_PURPOSE_DIGITS;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("tel")) {
-          purpose = GTK_INPUT_PURPOSE_PHONE;
-        } else if (mInputContext.mHTMLInputInputmode.EqualsLiteral("url")) {
-          purpose = GTK_INPUT_PURPOSE_URL;
         }
-        // Search by type and inputmode isn't supported on GTK.
 
         g_object_set(currentContext, "input-purpose", purpose, nullptr);
-
-        // Although GtkInputHints is enum type, value is bit field.
-        gint hints = GTK_INPUT_HINT_NONE;
-        if (mInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
-          hints |= GTK_INPUT_HINT_INHIBIT_OSK;
-        }
-
-        g_object_set(currentContext, "input-hints", hints, nullptr);
       }
     }
+#endif  // #ifdef MOZ_WIDGET_GTK
 
     // Even when aState is not enabled state, we need to set IME focus.
     // Because some IMs are updating the status bar of them at this time.
