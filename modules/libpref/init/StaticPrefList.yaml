@@ -1329,6 +1329,12 @@
   value: false
   mirror: always
 
+# Checks if offscreen animation throttling is enabled.
+- name: dom.animations.offscreen-throttling
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for automatically removing replaced filling animations enabled?
 - name: dom.animations-api.autoremove.enabled
   type: bool
