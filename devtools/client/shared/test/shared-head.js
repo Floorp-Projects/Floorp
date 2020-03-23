@@ -125,9 +125,9 @@ function testActorBootstrap() {
 
   const unloadObserver = function(subject) {
     if (subject.wrappedJSObject == _require("@loader/unload")) {
-      Services.prefs.removeObserver(
-        "devtools-server-initialized",
-        actorRegistryObserver
+      Services.obs.removeObserver(
+        actorRegistryObserver,
+        "devtools-server-initialized"
       );
       Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");
     }
