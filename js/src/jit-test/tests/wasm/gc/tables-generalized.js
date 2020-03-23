@@ -91,7 +91,7 @@ new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
        (table 5 funcref)
        (elem (table 1) (i32.const 0) func $f1 $f2 $f3 $f4 $f5)
        (func (export "f")
-         (table.copy 0 (i32.const 5) 1 (i32.const 0) (i32.const 5))))`)));
+         (table.copy 0 1 (i32.const 5) (i32.const 0) (i32.const 5))))`)));
     ins.exports.f();
     let t = ins.exports.t;
     let xs = [];
@@ -112,7 +112,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (table 10 funcref)
        (table 10 anyref)
        (func (export "f")
-         (table.copy 0 (i32.const 0) 1 (i32.const 0) (i32.const 5))))`)),
+         (table.copy 0 1 (i32.const 0) (i32.const 0) (i32.const 5))))`)),
                    WebAssembly.CompileError,
                    /expression has type anyref but expected funcref/);
 

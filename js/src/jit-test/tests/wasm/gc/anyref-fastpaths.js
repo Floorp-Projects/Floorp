@@ -54,8 +54,8 @@ function js_anyref_stackarg(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, p) {
 
 var ins1 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (import $f "" "f" (func (param anyref)))
-       (import $g "" "g" (func (param i32) (param i32) (param i32) (param i32) (param i32)
+       (import "" "f" (func $f (param anyref)))
+       (import "" "g" (func $g (param i32) (param i32) (param i32) (param i32) (param i32)
                                (param i32) (param i32) (param i32) (param i32) (param i32)
                                (param anyref)))
        (func (export "run1") (param anyref) (result anyref)
@@ -97,8 +97,8 @@ function js_returns_anyref(p) {
 
 var ins2 = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (import $f "" "f" (func (result anyref)))
-       (import $g "" "g" (func (param anyref)))
+       (import "" "f" (func $f (result anyref)))
+       (import "" "g" (func $g (param anyref)))
        (func (export "run1") (result anyref)
          (local $tmp anyref)
          (local.set $tmp (call $f))
