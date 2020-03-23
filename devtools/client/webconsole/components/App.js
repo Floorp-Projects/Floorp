@@ -396,9 +396,12 @@ class App extends Component {
   }
 
   renderRootElement(children) {
-    const { editorMode, serviceContainer } = this.props;
+    const { editorMode, serviceContainer, sidebarVisible } = this.props;
 
     const classNames = ["webconsole-app"];
+    if (sidebarVisible) {
+      classNames.push("sidebar-visible");
+    }
     if (editorMode) {
       classNames.push("jsterm-editor");
     }
