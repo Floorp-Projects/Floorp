@@ -66,7 +66,7 @@ wasmFullPass(`(module
         i32.const 1
         i32.load offset=2
     )
-    (export "mem" memory)
+    (export "mem" (memory 0))
 )`, 0x050403, {"": {memory}});
 
 // Tables.

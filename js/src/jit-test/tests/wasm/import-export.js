@@ -190,18 +190,18 @@ assertEq(e.foo(), undefined);
 assertEq(e.bar(), undefined);
 assertEq(e.foo, e.bar);
 
-var code = wasmTextToBinary('(module (memory 1 1) (export "memory" memory))');
+var code = wasmTextToBinary('(module (memory 1 1) (export "memory" (memory 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "memory");
 
-var code = wasmTextToBinary('(module (memory 1 1) (export "foo" memory) (export "bar" memory))');
+var code = wasmTextToBinary('(module (memory 1 1) (export "foo" (memory 0)) (export "bar" (memory 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "foo,bar");
 assertEq(e.foo, e.bar);
 assertEq(e.foo instanceof Memory, true);
 assertEq(e.foo.buffer.byteLength, 64*1024);
 
-var code = wasmTextToBinary('(module (memory 1 1) (func) (export "foo" (func 0)) (export "bar" memory))');
+var code = wasmTextToBinary('(module (memory 1 1) (func) (export "foo" (func 0)) (export "bar" (memory 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "foo,bar");
 assertEq(e.foo(), undefined);
@@ -209,13 +209,13 @@ assertEq(e.bar instanceof Memory, true);
 assertEq(e.bar instanceof Memory, true);
 assertEq(e.bar.buffer.byteLength, 64*1024);
 
-var code = wasmTextToBinary('(module (memory 1 1) (func) (export "bar" memory) (export "foo" (func 0)))');
+var code = wasmTextToBinary('(module (memory 1 1) (func) (export "bar" (memory 0)) (export "foo" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "bar,foo");
 assertEq(e.foo(), undefined);
 assertEq(e.bar.buffer.byteLength, 64*1024);
 
-var code = wasmTextToBinary('(module (memory 1 1) (export "" memory))');
+var code = wasmTextToBinary('(module (memory 1 1) (export "" (memory 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
@@ -235,7 +235,7 @@ assertEq(e.t2 instanceof Table, true);
 assertEq(e.t1, e.t2);
 assertEq(e.t1.length, 2);
 
-var code = wasmTextToBinary('(module (table 2 funcref) (memory 1 1) (func) (export "t" table) (export "m" memory) (export "f" (func 0)))');
+var code = wasmTextToBinary('(module (table 2 funcref) (memory 1 1) (func) (export "t" table) (export "m" (memory 0)) (export "f" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t,m,f");
 assertEq(e.f(), undefined);
@@ -243,7 +243,7 @@ assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
 assertEq(e.t.length, 2);
 
-var code = wasmTextToBinary('(module (table 1 funcref) (memory 1 1) (func) (export "m" memory) (export "f" (func 0)) (export "t" table))');
+var code = wasmTextToBinary('(module (table 1 funcref) (memory 1 1) (func) (export "m" (memory 0)) (export "f" (func 0)) (export "t" table))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "m,f,t");
 assertEq(e.f(), undefined);
@@ -335,7 +335,7 @@ assertEq(args.length, 0);
 
 // Re-exports and Identity:
 
-var code = wasmTextToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" memory) (export "bar" memory))');
+var code = wasmTextToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" (memory 0)) (export "bar" (memory 0)))');
 var mem = new Memory({initial:1, maximum:1});
 var e = new Instance(new Module(code), {a:{b:mem}}).exports;
 assertEq(mem, e.foo);
@@ -422,7 +422,7 @@ assertEq(e2.f(), 52);
 
 wasmFailValidateText('(module (export "a" (func 0)))', /exported function index out of bounds/);
 wasmFailValidateText('(module (export "a" global 0))', /exported global index out of bounds/);
-wasmFailValidateText('(module (export "a" memory))', /exported memory index out of bounds/);
+wasmFailValidateText('(module (export "a" (memory 0)))', /exported memory index out of bounds/);
 wasmFailValidateText('(module (export "a" table))', /exported table index out of bounds/);
 
 // Default memory/table rules
