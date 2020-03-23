@@ -43,7 +43,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.0.1")  // Check version number in `Versions.detekt`
+    id("io.gitlab.arturbosch.detekt").version("1.7.4")  // Check version number in `Versions.detekt`
 }
 
 allprojects {
@@ -277,12 +277,17 @@ detekt {
     config = files("$projectDir/config/detekt.yml")
     baseline = file("$projectDir/config/detekt-baseline.xml")
 
+    failFast = false
+
     reports {
         html {
             enabled = true
             destination = file("$projectDir/build/reports/detekt.html")
         }
         xml {
+            enabled = false
+        }
+        txt {
             enabled = false
         }
     }
