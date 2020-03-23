@@ -607,18 +607,25 @@ Toolbox.prototype = {
     return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
   },
 
-  selectThread(threadActor) {
-    const thread = this.target.client.getFrontByID(threadActor);
-    this.store.dispatch(selectThread(thread));
+  /**
+   * Set a given thread as selected (which may impact the console evaluation context selector).
+   *
+   * @param {String} threadActorID: The actorID of the thread we want to select.
+   */
+  selectThread(threadActorID) {
+    this.store.dispatch(selectThread(threadActorID));
   },
 
+  /**
+   * @returns {ThreadFront|null} The selected thread front, or null if there is none.
+   */
   getSelectedThreadFront: function() {
-    const thread = getSelectedThread(this.store.getState());
-    if (!thread) {
+    const selectedThread = getSelectedThread(this.store.getState());
+    if (!selectedThread) {
       return null;
     }
 
-    return this.target.client.getFrontByID(thread.actor);
+    return this.target.client.getFrontByID(selectedThread.actorID);
   },
 
   _onPausedState: function(packet, threadFront) {

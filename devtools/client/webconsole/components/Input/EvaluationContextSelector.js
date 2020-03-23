@@ -64,7 +64,7 @@ class EvaluationContextSelector extends Component {
         : thread.name;
 
     return MenuItem({
-      key: `webconsole-evaluation-selector-item-${thread.actor}`,
+      key: `webconsole-evaluation-selector-item-${thread.actorID}`,
       className: "menu-item webconsole-evaluation-selector-item",
       type: "checkbox",
       checked: selectedThread
@@ -72,7 +72,7 @@ class EvaluationContextSelector extends Component {
         : thread.type == THREAD_TYPES.MAIN_THREAD,
       label,
       tooltip: thread.url,
-      onClick: () => selectThread(thread),
+      onClick: () => selectThread(thread.actorID),
     });
   }
 
@@ -158,7 +158,8 @@ const toolboxConnected = connect(
     selectedThread: threadSelectors.getSelectedThread(state),
   }),
   dispatch => ({
-    selectThread: thread => dispatch(frameworkActions.selectThread(thread)),
+    selectThread: threadActorID =>
+      dispatch(frameworkActions.selectThread(threadActorID)),
   }),
   undefined,
   { storeKey: "toolbox-store" }
