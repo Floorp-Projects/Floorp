@@ -266,6 +266,14 @@ void XRSession::WillRefresh(mozilla::TimeStamp aTime) {
 void XRSession::StartFrame() {
   ApplyPendingRenderState();
 
+  if (mActiveRenderState->GetBaseLayer() == nullptr) {
+    return;
+  }
+
+  if (!IsImmersive() && mActiveRenderState->GetOutputCanvas() == nullptr) {
+    return;
+  }
+
   // Determine timestamp for the callbacks
   TimeStamp nowTime = TimeStamp::Now();
   mozilla::TimeDuration duration = nowTime - mStartTimeStamp;
