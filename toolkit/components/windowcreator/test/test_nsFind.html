@@ -3,6 +3,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=202251
 https://bugzilla.mozilla.org/show_bug.cgi?id=450048
+https://bugzilla.mozilla.org/show_bug.cgi?id=812837
 https://bugzilla.mozilla.org/show_bug.cgi?id=969980
 https://bugzilla.mozilla.org/show_bug.cgi?id=1589786
 https://bugzilla.mozilla.org/show_bug.cgi?id=1611568
@@ -61,6 +62,10 @@ async function runTests() {
   searchValue = "유";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(!retRange, "\"" + searchValue + "\" found (not caseSensitive)");
+
+  searchValue = "istanbul";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
 
   searchValue = "degrees k";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
@@ -296,6 +301,7 @@ async function runTests() {
 <p id="nullcharsinjected"></p>
 <p id="greek">ΛΌΓΟΣ</p>
 <p id="korean">위</p>
+<p id="turkish">İstanbul</p>
 <p id="kelvin">degrees &#x212A;</p>
 <p id="guarani">G̃uahe</p>
 <p id="deseret">𐐐𐐯𐑊𐐬 𐐶𐐯𐑉𐑊𐐼!</p>

@@ -125,6 +125,12 @@ inline uint32_t GetTitlecaseForAll(
 }
 
 inline uint32_t GetFoldedcase(uint32_t aCh) {
+  // Handle dotted capital I and dotless small i specially because we want to
+  // use a combination of ordinary case-folding rules and Turkish case-folding
+  // rules.
+  if (aCh == 0x0130 || aCh == 0x0131) {
+    return 'i';
+  }
   return u_foldCase(aCh, U_FOLD_CASE_DEFAULT);
 }
 
