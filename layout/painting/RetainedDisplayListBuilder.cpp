@@ -1052,7 +1052,8 @@ static bool ProcessFrameInternal(nsIFrame* aFrame,
       MOZ_ASSERT(sf);
       nsRect displayPort;
       DebugOnly<bool> hasDisplayPort = nsLayoutUtils::GetDisplayPort(
-          currentFrame->GetContent(), &displayPort, RelativeTo::ScrollPort);
+          currentFrame->GetContent(), &displayPort,
+          DisplayportRelativeTo::ScrollPort);
       MOZ_ASSERT(hasDisplayPort);
       // get it relative to the scrollport (from the scrollframe)
       nsRect r = aOverflow - sf->GetScrollPortRect().TopLeft();

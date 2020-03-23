@@ -5642,9 +5642,9 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
 
     nsRect displayPort;
     bool usingDisplayport =
-        !ignoreDisplayPort &&
-        nsLayoutUtils::GetDisplayPortForVisibilityTesting(
-            aFrame->GetContent(), &displayPort, RelativeTo::ScrollFrame);
+        !ignoreDisplayPort && nsLayoutUtils::GetDisplayPortForVisibilityTesting(
+                                  aFrame->GetContent(), &displayPort,
+                                  DisplayportRelativeTo::ScrollFrame);
 
     scrollFrame->NotifyApproximateFrameVisibilityUpdate(!usingDisplayport);
 
