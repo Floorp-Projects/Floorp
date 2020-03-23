@@ -810,27 +810,27 @@ class nsFlexContainerFrame::FlexItem final {
 
   uint32_t NumAutoMarginsInAxis(LogicalAxis aAxis) const;
 
-  // Values that we already know in constructor (and are hence mostly 'const'):
+  // Values that we already know in constructor, and remain unchanged:
   // The flex item's frame.
-  nsIFrame* const mFrame = nullptr;
-  const float mFlexGrow = 0.0f;
-  const float mFlexShrink = 0.0f;
-  const AspectRatio mIntrinsicRatio;
+  nsIFrame* mFrame = nullptr;
+  float mFlexGrow = 0.0f;
+  float mFlexShrink = 0.0f;
+  AspectRatio mIntrinsicRatio;
 
   // The flex item's writing mode.
-  const WritingMode mWM;
+  WritingMode mWM;
 
   // The flex container's writing mode.
-  const WritingMode mCBWM;
+  WritingMode mCBWM;
 
   // The flex container's main axis in flex container's writing mode.
-  const LogicalAxis mMainAxis;
+  LogicalAxis mMainAxis;
 
   // Stored in flex container's writing mode.
-  const LogicalMargin mBorderPadding;
+  LogicalMargin mBorderPadding;
 
-  // Stored in flex container's writing mode. Non-const because we need to
-  // resolve auto margins.
+  // Stored in flex container's writing mode. Its value can change when we
+  // resolve "auto" marigns.
   LogicalMargin mMargin;
 
   // These are non-const so that we can lazily update them with the item's
@@ -840,8 +840,9 @@ class nsFlexContainerFrame::FlexItem final {
   nscoord mMainMinSize = 0;
   nscoord mMainMaxSize = 0;
 
-  const nscoord mCrossMinSize = 0;
-  const nscoord mCrossMaxSize = 0;
+  // mCrossMinSize and mCrossMaxSize are not changed after constructor.
+  nscoord mCrossMinSize = 0;
+  nscoord mCrossMaxSize = 0;
 
   // Values that we compute after constructor:
   nscoord mMainSize = 0;
@@ -873,8 +874,9 @@ class nsFlexContainerFrame::FlexItem final {
   // Is this item a "strut" left behind by an element with visibility:collapse?
   bool mIsStrut = false;
 
-  // See IsInlineAxisMainAxis() documentation.
-  const bool mIsInlineAxisMainAxis = true;
+  // See IsInlineAxisMainAxis() documentation. This is not changed after
+  // constructor.
+  bool mIsInlineAxisMainAxis = true;
 
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
   bool mNeedsMinSizeAutoResolution = false;
@@ -929,21 +931,12 @@ class nsFlexContainerFrame::FlexLine final {
   nsTArray<FlexItem>& Items() { return mItems; }
   const nsTArray<FlexItem>& Items() const { return mItems; }
 
-  // Adds the given FlexItem to our list of items (at the front or back
-  // depending on aShouldInsertAtFront), and adds its hypothetical
-  // outer & inner main sizes to our totals. Use this method instead of
-  // directly modifying the item list, so that our bookkeeping remains correct.
-  void AddItem(const FlexItem& aItem, bool aShouldInsertAtFront,
-               nscoord aItemInnerHypotheticalMainSize,
+  // Adds the given FlexItem to our array of items, and adds its hypothetical
+  // outer & inner main sizes to our totals. Use this method instead of directly
+  // modifying the item list, so that our bookkeeping remains correct.
+  void AddItem(const FlexItem& aItem, nscoord aItemInnerHypotheticalMainSize,
                nscoord aItemOuterHypotheticalMainSize) {
-    if (aShouldInsertAtFront) {
-      // XXX: Inserting at the front of an array like this is super inefficient.
-      // However, a later patch will fix this up to append and then reverse,
-      // which is more efficient.
-      mItems.InsertElementAt(0, aItem);
-    } else {
-      mItems.AppendElement(aItem);
-    }
+    mItems.AppendElement(aItem);
 
     // Update our various bookkeeping member-vars:
     if (aItem.IsFrozen()) {
@@ -3613,21 +3606,6 @@ LogicalSide FlexboxAxisTracker::CrossAxisStartSide() const {
       CrossAxis(), mIsCrossAxisReversed ? eLogicalEdgeEnd : eLogicalEdgeStart);
 }
 
-// Constructs a new FlexLine, adds it to the given array (at the front or
-// back depending on aShouldInsertAtFront), and returns a pointer to it.
-static FlexLine* AddNewFlexLineToList(nsTArray<FlexLine>& aLines,
-                                      bool aShouldInsertAtFront,
-                                      nscoord aMainGapSize) {
-  // XXX: Inserting at the front of an array like this is super inefficient.
-  // However, a later patch will fix this up to append and then reverse, which
-  // is more efficient.
-  if (aShouldInsertAtFront) {
-    return aLines.InsertElementAt(0, FlexLine(aMainGapSize));
-  }
-
-  return aLines.AppendElement(FlexLine(aMainGapSize));
-}
-
 bool nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
     const nsStyleDisplay* aFlexStyleDisp) {
   MOZ_ASSERT(StyleDisplay() == aFlexStyleDisp, "wrong StyleDisplay passed in");
@@ -3667,21 +3645,16 @@ void nsFlexContainerFrame::GenerateFlexLines(
     nsTArray<FlexLine>& aLines /* out */) {
   MOZ_ASSERT(aLines.IsEmpty(), "Expecting outparam to start out empty");
 
+  auto ConstructNewFlexLine = [&aLines, aMainGapSize]() {
+    return aLines.EmplaceBack(aMainGapSize);
+  };
+
   const bool isSingleLine =
       StyleFlexWrap::Nowrap == aReflowInput.mStylePosition->mFlexWrap;
 
-  // If we're transparently reversing axes, then we'll need to link up our
-  // FlexItems and FlexLines in the reverse order, so that the rest of flex
-  // layout (with flipped axes) will still produce the correct result.
-  // Here, we declare a convenience bool that we'll pass when adding a new
-  // FlexLine or FlexItem, to make us insert it at the beginning of its list
-  // (so the list ends up reversed).
-  const bool shouldInsertAtFront = aAxisTracker.AreAxesInternallyReversed();
-
   // We have at least one FlexLine. Even an empty flex container has a single
   // (empty) flex line.
-  FlexLine* curLine =
-      AddNewFlexLineToList(aLines, shouldInsertAtFront, aMainGapSize);
+  FlexLine* curLine = ConstructNewFlexLine();
 
   nscoord wrapThreshold;
   if (isSingleLine) {
@@ -3743,7 +3716,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
     // Honor "page-break-before", if we're multi-line and this line isn't empty:
     if (!isSingleLine && !curLine->IsEmpty() &&
         childFrame->StyleDisplay()->BreakBefore()) {
-      curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront, aMainGapSize);
+      curLine = ConstructNewFlexLine();
     }
 
     UniquePtr<FlexItem> item;
@@ -3788,22 +3761,31 @@ void nsFlexContainerFrame::GenerateFlexLines(
       // Account for gap between this line's previous item and this item
       newOuterSize = AddChecked(newOuterSize, aMainGapSize);
       if (newOuterSize == nscoord_MAX || newOuterSize > wrapThreshold) {
-        curLine =
-            AddNewFlexLineToList(aLines, shouldInsertAtFront, aMainGapSize);
+        curLine = ConstructNewFlexLine();
       }
     }
 
     // Add item to current flex line (and update the line's bookkeeping about
     // how large its items collectively are).
-    curLine->AddItem(*item, shouldInsertAtFront, itemInnerHypotheticalMainSize,
+    curLine->AddItem(*item, itemInnerHypotheticalMainSize,
                      itemOuterHypotheticalMainSize);
 
     // Honor "page-break-after", if we're multi-line and have more children:
     if (!isSingleLine && childFrame->GetNextSibling() &&
         childFrame->StyleDisplay()->BreakAfter()) {
-      curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront, aMainGapSize);
+      curLine = ConstructNewFlexLine();
     }
     itemIdxInContainer++;
+  }
+
+  // If we're transparently reversing axes, then we'll need to reverse the order
+  // of our FlexItems and FlexLines, so that the rest of flex layout (with
+  // flipped axes) will still produce the correct result.
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    for (FlexLine& line : aLines) {
+      line.Items().Reverse();
+    }
+    aLines.Reverse();
   }
 }
 
