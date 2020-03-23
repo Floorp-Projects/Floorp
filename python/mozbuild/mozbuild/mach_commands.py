@@ -84,7 +84,7 @@ class Watch(MachCommandBase):
 
         self._activate_virtualenv()
         try:
-            self.virtualenv_manager.install_pip_package('pywatchman==1.3.0')
+            self.virtualenv_manager.install_pip_package('pywatchman==1.4.1')
         except Exception:
             print('Could not install pywatchman from pip. See '
                   'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching')  # noqa
