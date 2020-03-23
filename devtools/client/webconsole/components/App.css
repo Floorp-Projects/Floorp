@@ -177,6 +177,7 @@ body {
 .webconsole-input-buttons {
   grid-column: -1 / -2;
   display: flex;
+  align-items: flex-start;
 }
 
 :root:dir(rtl) .webconsole-input-openEditorButton {

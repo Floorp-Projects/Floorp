@@ -3,13 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .webconsole-evaluation-selector-button {
-  padding-inline: 8px 16px !important;
+  padding: 1px 16px 1px 8px !important;
+  margin-top: 2px;
   background-position-x: calc(100% - 4px) !important;
+  max-width: 150px;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-evaluation-selector-button {
   height: 20px;
   margin-inline-start: 5px;
+  margin-top: 1px;
 }
 
 .webconsole-evaluation-selector-button-non-top.devtools-dropdown-button {
