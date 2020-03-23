@@ -55,5 +55,8 @@ fuzzy(0-128,0-4) == number-reframe-anon-text-field.html number-reframe-anon-text
 # Style inheritance:
 == number-style-inheritance.html number-style-inheritance-ref.html
 
+# l10n
+!= number-localized.html number-localized-notref.html
+
 == overflow-clip-box.html overflow-clip-box-ref.html
 != overflow-clip-box.html overflow-clip-box-notref.html

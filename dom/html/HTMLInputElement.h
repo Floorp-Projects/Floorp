@@ -1085,12 +1085,14 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT
   void HandleTypeChange(uint8_t aNewType, bool aNotify);
 
+  enum class ForValueGetter { No, Yes };
+
   /**
    * Sanitize the value of the element depending of its current type.
    * See:
    * http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
    */
-  void SanitizeValue(nsAString& aValue);
+  void SanitizeValue(nsAString& aValue, ForValueGetter = ForValueGetter::No);
 
   /**
    * Returns whether the placeholder attribute applies for the current type.

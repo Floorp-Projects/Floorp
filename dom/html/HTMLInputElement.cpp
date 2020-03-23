@@ -1441,7 +1441,7 @@ void HTMLInputElement::GetValue(nsAString& aValue, CallerType aCallerType) {
   GetValueInternal(aValue, aCallerType);
 
   if (SanitizesOnValueGetter()) {
-    SanitizeValue(aValue);
+    SanitizeValue(aValue, ForValueGetter::Yes);
   }
 }
 
@@ -4495,7 +4495,8 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
   }
 }
 
-void HTMLInputElement::SanitizeValue(nsAString& aValue) {
+void HTMLInputElement::SanitizeValue(nsAString& aValue,
+                                     ForValueGetter aForGetter) {
   NS_ASSERTION(mDoneCreating, "The element creation should be finished!");
 
   switch (mType) {
@@ -4517,7 +4518,40 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue) {
       bool ok = mInputType->ConvertStringToNumber(aValue, value);
       if (!ok) {
         aValue.Truncate();
+        return;
       }
+
+      nsAutoString sanitizedValue;
+      if (aForGetter == ForValueGetter::Yes) {
+        // If the default non-localized algorithm parses the value, then we're
+        // done, don't un-localize it, to avoid precision loss, and to preserve
+        // scientific notation as well for example.
+        //
+        // FIXME(emilio, bug 1622808): Localization should ideally be more
+        // input-preserving.
+        if (StringToDecimal(aValue).isFinite()) {
+          return;
+        }
+        // For the <input type=number> value getter, we return the unlocalized
+        // value if it doesn't parse as StringToDecimal, for compat with other
+        // browsers.
+        char buf[32];
+        DebugOnly<bool> ok = value.toString(buf, ArrayLength(buf));
+        sanitizedValue.AssignASCII(buf);
+        MOZ_ASSERT(ok, "buf not big enough");
+      } else {
+        mInputType->ConvertNumberToString(value, sanitizedValue);
+        // Otherwise we localize as needed, but if both the localized and
+        // unlocalized version parse, we just use the unlocalized one, to
+        // preserve the input as much as possible.
+        //
+        // FIXME(emilio, bug 1622808): Localization should ideally be more
+        // input-preserving.
+        if (StringToDecimal(sanitizedValue).isFinite()) {
+          return;
+        }
+      }
+      aValue.Assign(sanitizedValue);
     } break;
     case NS_FORM_INPUT_RANGE: {
       Decimal minimum = GetMinimum();
