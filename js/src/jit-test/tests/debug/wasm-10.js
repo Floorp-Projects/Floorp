@@ -47,7 +47,7 @@ function monitorLocalValues(wast, lib, expected) {
 }
 
 monitorLocalValues(
-    '(module (func (nop) (nop)) (export "test" 0))',
+    '(module (func (nop) (nop)) (export "test" (func 0)))',
     undefined,
     [{}]
 );
