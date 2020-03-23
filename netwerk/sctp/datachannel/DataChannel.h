@@ -112,6 +112,10 @@ class DataChannelConnection final : public net::NeckoTargetHolder
                                     public sigslot::has_slots<>
 #endif
 {
+  friend class DataChannel;
+  friend class DataChannelOnMessageAvailable;
+  friend class DataChannelConnectRunnable;
+
   virtual ~DataChannelConnection();
 
  public:
@@ -206,7 +210,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   // Find out state
   enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
 
-  friend class DataChannel;
   Mutex mLock;
 
   void ReadBlob(already_AddRefed<DataChannelConnection> aThis, uint16_t aStream,
@@ -215,14 +218,11 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   bool SendDeferredMessages();
 
  protected:
-  friend class DataChannelOnMessageAvailable;
   // Avoid cycles with PeerConnectionImpl
   // Use from main thread only as WeakPtr is not threadsafe
   WeakPtr<DataConnectionListener> mListener;
 
  private:
-  friend class DataChannelConnectRunnable;
-
   DataChannelConnection(DataConnectionListener* aListener,
                         nsIEventTarget* aTarget,
                         MediaTransportHandler* aHandler);
@@ -401,6 +401,9 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   } while (0)
 
 class DataChannel {
+  friend class DataChannelOnMessageAvailable;
+  friend class DataChannelConnection;
+
  public:
   enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
 
@@ -512,9 +515,6 @@ class DataChannel {
   nsCOMPtr<nsISupports> mContext;
 
  private:
-  friend class DataChannelOnMessageAvailable;
-  friend class DataChannelConnection;
-
   nsresult AddDataToBinaryMsg(const char* data, uint32_t size);
   bool EnsureValidStream(ErrorResult& aRv);
 
