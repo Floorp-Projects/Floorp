@@ -122,6 +122,8 @@ namespace jit {
   _(Call)                   \
   _(CallIgnoresRv)          \
   _(CallIter)               \
+  _(FunCall)                \
+  _(FunApply)               \
   _(New)                    \
   _(SuperCall)              \
   _(FunctionThis)           \
@@ -202,6 +204,10 @@ namespace jit {
   _(Lambda)                 \
   _(LambdaArrow)            \
   _(FunWithProto)           \
+  _(SpreadCall)             \
+  _(SpreadNew)              \
+  _(SpreadSuperCall)        \
+  _(OptimizeSpreadCall)     \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
