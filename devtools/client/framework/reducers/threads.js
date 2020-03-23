@@ -12,17 +12,23 @@ exports.reducer = threadsReducer;
 function threadsReducer(state = initialReducerState, action) {
   switch (action.type) {
     case "SELECT_THREAD": {
-      const thread = state.threads.find(
-        thread => thread.actor === action.thread.actor
+      const { threadActorID } = action;
+
+      if (state.selected?.actorID === threadActorID) {
+        return state;
+      }
+
+      const selectedThread = state.threads.find(
+        thread => thread.actorID === threadActorID
       );
 
       // It's possible that the threads reducer is missing a thread
       // e.g. workers, remote iframes, etc. (Bug 1594754)
-      if (!thread) {
+      if (!selectedThread) {
         return state;
       }
 
-      return { ...state, selected: thread };
+      return { ...state, selected: selectedThread };
     }
     case "ADD_THREAD": {
       return {

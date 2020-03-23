@@ -13,7 +13,7 @@ function registerThread(targetFront) {
   return async function(dispatch) {
     const threadFront = await targetFront.getFront("thread");
     const thread = {
-      actor: threadFront.actor,
+      actorID: threadFront.actorID,
       url: targetFront.url,
       type: getTargetType(targetFront),
       name: targetFront.name,
@@ -28,15 +28,17 @@ function registerThread(targetFront) {
   };
 }
 
-exports.clearThread = clearThread;
 function clearThread(target) {
   return { type: "CLEAR_THREAD", target };
 }
 
-exports.selectThread = selectThread;
-function selectThread(thread) {
+/**
+ *
+ * @param {String} threadActorID: The actorID of the thread we want to select.
+ */
+function selectThread(threadActorID) {
   return function(dispatch) {
-    dispatch({ type: "SELECT_THREAD", thread });
+    dispatch({ type: "SELECT_THREAD", threadActorID });
   };
 }
 
