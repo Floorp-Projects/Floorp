@@ -25,9 +25,10 @@
 #include "js/RootingAPI.h"         // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"          // Rooted{Script,Value,String,Object}
 #include "vm/JSAtom.h"             // AtomizeUTF8Chars
-#include "vm/JSScript.h"           // JSScript, ScopeNote
+#include "vm/JSScript.h"           // JSScript
 #include "vm/Scope.h"              // BindingName
 #include "vm/ScopeKind.h"          // ScopeKind
+#include "vm/SharedStencil.h"      // ImmutableScriptData, ScopeNote, TryNote
 
 #include "vm/JSContext-inl.h"  // AutoKeepAtoms (used by BytecodeCompiler)
 
