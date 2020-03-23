@@ -383,7 +383,13 @@ data class Metadata(
     /**
      * Describes the reason (or reasons) why an extension is disabled.
      */
-    val disabledFlags: DisabledFlags
+    val disabledFlags: DisabledFlags,
+
+    /**
+     * Base URL for pages of this extension. Can be used to determine if a page
+     * is from / belongs to this extension.
+     */
+    val baseUrl: String
 )
 
 /**

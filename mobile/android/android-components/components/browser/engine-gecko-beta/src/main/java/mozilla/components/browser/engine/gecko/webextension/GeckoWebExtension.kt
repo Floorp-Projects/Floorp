@@ -356,7 +356,8 @@ class GeckoWebExtension(
                 hostPermissions = it.origins.toList(),
                 disabledFlags = DisabledFlags.select(it.disabledFlags),
                 optionsPageUrl = it.optionsPageUrl,
-                openOptionsPageInTab = it.openOptionsPageInTab
+                openOptionsPageInTab = it.openOptionsPageInTab,
+                baseUrl = it.baseUrl
             )
         }
     }

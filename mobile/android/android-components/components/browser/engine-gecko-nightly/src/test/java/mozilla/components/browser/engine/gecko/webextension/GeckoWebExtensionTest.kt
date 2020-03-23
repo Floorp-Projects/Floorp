@@ -430,6 +430,7 @@ class GeckoWebExtensionTest {
         metaDataBundle.putString("homepageURL", "https://mozilla.org")
         metaDataBundle.putString("name", "myextension")
         metaDataBundle.putString("optionsPageURL", "http://options-page.moz")
+        metaDataBundle.putString("baseURL", "moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/")
         metaDataBundle.putBoolean("openOptionsPageInTab", false)
         metaDataBundle.putStringArray("disabledFlags", arrayOf("userDisabled"))
         val bundle = GeckoBundle()
@@ -450,6 +451,7 @@ class GeckoWebExtensionTest {
         assertEquals("https://mozilla.org", metadata.homePageUrl)
         assertEquals("myextension", metadata.name)
         assertEquals("http://options-page.moz", metadata.optionsPageUrl)
+        assertEquals("moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/", metadata.baseUrl)
         assertFalse(metadata.openOptionsPageInTab)
         assertTrue(metadata.disabledFlags.contains(DisabledFlags.USER))
         assertFalse(metadata.disabledFlags.contains(DisabledFlags.BLOCKLIST))
@@ -457,7 +459,7 @@ class GeckoWebExtensionTest {
     }
 
     @Test
-    fun `nullable metadata fields `() {
+    fun `nullable metadata fields`() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
@@ -475,6 +477,7 @@ class GeckoWebExtensionTest {
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
         metaDataBundle.putStringArray("disabledFlags", emptyArray())
+        metaDataBundle.putString("baseURL", "moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/")
         bundle.putBundle("metaData", metaDataBundle)
 
         val nativeWebExtension = MockWebExtension(bundle)
@@ -484,6 +487,7 @@ class GeckoWebExtensionTest {
         assertEquals("1.0", metadata.version)
         assertEquals(listOf("p1", "p2"), metadata.permissions)
         assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
+        assertEquals("moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/", metadata.baseUrl)
         assertNull(metadata.description)
         assertNull(metadata.developerName)
         assertNull(metadata.developerUrl)
