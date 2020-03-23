@@ -306,11 +306,6 @@ add_task(async function groupByHost() {
         comment: "https://example.com",
         style: ["autofill", "heuristic"],
       },
-      {
-        value: "http://example.com/",
-        comment: "test visit for http://example.com/",
-        style: ["favicon"],
-      },
     ],
   });
 
@@ -374,11 +369,6 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
         value: "example.com/",
         comment: "https://example.com",
         style: ["autofill", "heuristic"],
-      },
-      {
-        value: "http://example.com/",
-        comment: "test visit for http://example.com/",
-        style: ["favicon"],
       },
     ],
   });
