@@ -47,8 +47,8 @@ function runTest(test) {
   sendString(test.inputWithoutGrouping);
   is(elem.valueAsNumber, test.value, "Test " + test.desc + " ('" + test.langTag +
                                      "') localization without grouping separator");
-  is(elem.value, test.inputWithoutGrouping,
-     "Test " + test.desc + " ('" + test.langTag + "') localization without grouping separator as string");
+  is(elem.value, String(test.value), "Test " + test.desc + " ('" + test.langTag +
+                                     "') localization without grouping separator as string");
 }
 
 function runInvalidInputTest(test) {
