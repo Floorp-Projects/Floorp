@@ -54,7 +54,7 @@
 #include "nsIXULRuntime.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsRFPService.h"
-#include "rust-helper/src/helper.h"
+#include "mozilla/net/rust_helper.h"
 
 #include "mozilla/net/HttpConnectionMgrParent.h"
 #include "mozilla/net/NeckoChild.h"

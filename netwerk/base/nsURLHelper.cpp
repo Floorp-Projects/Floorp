@@ -21,7 +21,7 @@
 #include "prnetdb.h"
 #include "mozilla/Tokenizer.h"
 #include "nsEscape.h"
-#include "rust-helper/src/helper.h"
+#include "mozilla/net/rust_helper.h"
 
 using namespace mozilla;
 
@@ -454,7 +454,7 @@ nsresult net_ExtractURLScheme(const nsACString& inURI, nsACString& scheme) {
 }
 
 bool net_IsValidScheme(const nsACString& scheme) {
-  return rust_net_is_valid_scheme(scheme);
+  return rust_net_is_valid_scheme(&scheme);
 }
 
 bool net_IsAbsoluteURL(const nsACString& uri) {
@@ -952,9 +952,9 @@ bool net_IsValidHostName(const nsACString& host) {
 }
 
 bool net_IsValidIPv4Addr(const nsACString& aAddr) {
-  return rust_net_is_valid_ipv4_addr(aAddr);
+  return rust_net_is_valid_ipv4_addr(&aAddr);
 }
 
 bool net_IsValidIPv6Addr(const nsACString& aAddr) {
-  return rust_net_is_valid_ipv6_addr(aAddr);
+  return rust_net_is_valid_ipv6_addr(&aAddr);
 }
