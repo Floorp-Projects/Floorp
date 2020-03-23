@@ -13,6 +13,9 @@
 #include "jit/JitContext.h"
 
 namespace js {
+
+class ModuleEnvironmentObject;
+
 namespace jit {
 
 class MIRGenerator;
@@ -21,7 +24,8 @@ class MIRGenerator;
   _(WarpArguments)               \
   _(WarpRegExp)                  \
   _(WarpBuiltinProto)            \
-  _(WarpGetIntrinsic)
+  _(WarpGetIntrinsic)            \
+  _(WarpGetImport)
 
 // WarpOpSnapshot is the base class for data attached to a single bytecode op by
 // WarpOracle. This is typically data that WarpBuilder can't read off-thread
@@ -115,6 +119,30 @@ class WarpGetIntrinsic : public WarpOpSnapshot {
   Value intrinsic() const { return intrinsic_; }
 };
 
+// Target module environment and slot information for JSOp::GetImport.
+class WarpGetImport : public WarpOpSnapshot {
+  // TODO: trace this.
+  ModuleEnvironmentObject* targetEnv_;
+  uint32_t numFixedSlots_;
+  uint32_t slot_;
+  bool needsLexicalCheck_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpGetImport;
+
+  WarpGetImport(uint32_t offset, ModuleEnvironmentObject* targetEnv,
+                uint32_t numFixedSlots, uint32_t slot, bool needsLexicalCheck)
+      : WarpOpSnapshot(ThisKind, offset),
+        targetEnv_(targetEnv),
+        numFixedSlots_(numFixedSlots),
+        slot_(slot),
+        needsLexicalCheck_(needsLexicalCheck) {}
+  ModuleEnvironmentObject* targetEnv() const { return targetEnv_; }
+  uint32_t numFixedSlots() const { return numFixedSlots_; }
+  uint32_t slot() const { return slot_; }
+  bool needsLexicalCheck() const { return needsLexicalCheck_; }
+};
+
 // Snapshot data for the environment object(s) created in the script's prologue.
 // TODO: trace object pointers.
 class WarpEnvironment {
@@ -186,19 +214,19 @@ class WarpScriptSnapshot : public TempObject {
   // TODO: trace this
   ModuleObject* moduleObject_;
 
+  // Whether this script is for an arrow function.
+  bool isArrowFunction_;
+
  public:
   WarpScriptSnapshot(JSScript* script, const WarpEnvironment& env,
                      WarpOpSnapshotList&& opSnapshots,
-                     ModuleObject* moduleObject)
-      : script_(script),
-        environment_(env),
-        opSnapshots_(std::move(opSnapshots)),
-        moduleObject_(moduleObject) {}
+                     ModuleObject* moduleObject);
 
   JSScript* script() const { return script_; }
   const WarpEnvironment& environment() const { return environment_; }
   const WarpOpSnapshotList& opSnapshots() const { return opSnapshots_; }
   ModuleObject* moduleObject() const { return moduleObject_; }
+  bool isArrowFunction() const { return isArrowFunction_; }
 };
 
 // Data allocated by WarpOracle on the main thread that's used off-thread by

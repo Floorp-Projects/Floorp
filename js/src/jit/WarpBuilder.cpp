@@ -243,9 +243,7 @@ bool WarpBuilder::buildEnvironmentChain() {
       envDef = constant(ObjectValue(*env.constantObject()));
       break;
     case WarpEnvironment::Kind::Function: {
-      // TODO: fix this for inlining.
-      MCallee* callee = MCallee::New(alloc());
-      current->add(callee);
+      MDefinition* callee = getCallee();
       envDef = MFunctionEnvironment::New(alloc(), callee);
       current->add(envDef);
       if (LexicalEnvironmentObject* obj = env.maybeNamedLambdaTemplate()) {
@@ -1188,10 +1186,15 @@ bool WarpBuilder::build_MutateProto(BytecodeLocation loc) {
   return resumeAfter(mutate, loc);
 }
 
-bool WarpBuilder::build_Callee(BytecodeLocation) {
+MDefinition* WarpBuilder::getCallee() {
   // TODO: handle inlined callees when we implement inlining.
   MInstruction* callee = MCallee::New(alloc());
   current->add(callee);
+  return callee;
+}
+
+bool WarpBuilder::build_Callee(BytecodeLocation) {
+  MDefinition* callee = getCallee();
   current->push(callee);
   return true;
 }
@@ -2011,4 +2014,149 @@ bool WarpBuilder::build_InitHiddenElemGetter(BytecodeLocation loc) {
 
 bool WarpBuilder::build_InitHiddenElemSetter(BytecodeLocation loc) {
   return buildInitElemGetterSetterOp(loc);
+}
+
+bool WarpBuilder::build_In(BytecodeLocation loc) {
+  MDefinition* obj = current->pop();
+  MDefinition* id = current->pop();
+
+  MInCache* ins = MInCache::New(alloc(), id, obj);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_HasOwn(BytecodeLocation loc) {
+  MDefinition* obj = current->pop();
+  MDefinition* id = current->pop();
+
+  MHasOwnCache* ins = MHasOwnCache::New(alloc(), obj, id);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
+  MDefinition* rhs = current->pop();
+  MDefinition* obj = current->pop();
+
+  MInstanceOfCache* ins = MInstanceOfCache::New(alloc(), obj, rhs);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
+  if (!script_->isFunction()) {
+    MOZ_ASSERT(!script_->isForEval());
+    pushConstant(NullValue());
+    return true;
+  }
+
+  if (snapshot_.script()->isArrowFunction()) {
+    MDefinition* callee = getCallee();
+    MArrowNewTarget* ins = MArrowNewTarget::New(alloc(), callee);
+    current->add(ins);
+    current->push(ins);
+    return true;
+  }
+
+  // TODO: handle newTarget in inlined functions when we can inline.
+
+  MNewTarget* ins = MNewTarget::New(alloc());
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_CheckIsObj(BytecodeLocation loc) {
+  CheckIsObjectKind kind = loc.getCheckIsObjectKind();
+  MDefinition* val = current->pop();
+
+  MCheckIsObj* ins = MCheckIsObj::New(alloc(), val, uint8_t(kind));
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_CheckIsCallable(BytecodeLocation loc) {
+  CheckIsCallableKind kind = loc.getCheckIsCallableKind();
+  MDefinition* val = current->pop();
+
+  MCheckIsCallable* ins = MCheckIsCallable::New(alloc(), val, uint8_t(kind));
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+bool WarpBuilder::build_CheckObjCoercible(BytecodeLocation) {
+  MDefinition* val = current->pop();
+  MCheckObjCoercible* ins = MCheckObjCoercible::New(alloc(), val);
+  current->add(ins);
+  current->push(ins);
+  return true;
+}
+
+MInstruction* WarpBuilder::buildLoadSlot(MDefinition* obj,
+                                         uint32_t numFixedSlots,
+                                         uint32_t slot) {
+  if (slot < numFixedSlots) {
+    MLoadFixedSlot* load = MLoadFixedSlot::New(alloc(), obj, slot);
+    current->add(load);
+    return load;
+  }
+
+  MSlots* slots = MSlots::New(alloc(), obj);
+  current->add(slots);
+
+  MLoadSlot* load = MLoadSlot::New(alloc(), slots, slot - numFixedSlots);
+  current->add(load);
+  return load;
+}
+
+bool WarpBuilder::build_GetImport(BytecodeLocation loc) {
+  auto* snapshot = getOpSnapshot<WarpGetImport>(loc);
+
+  ModuleEnvironmentObject* targetEnv = snapshot->targetEnv();
+
+  // Load the target environment slot.
+  MConstant* obj = constant(ObjectValue(*targetEnv));
+  auto* load = buildLoadSlot(obj, snapshot->numFixedSlots(), snapshot->slot());
+
+  if (snapshot->needsLexicalCheck()) {
+    // TODO: IonBuilder has code to mark non-movable. See buildCheckLexicalOp.
+    MInstruction* lexicalCheck = MLexicalCheck::New(alloc(), load);
+    current->add(lexicalCheck);
+    current->push(lexicalCheck);
+  } else {
+    current->push(load);
+  }
+
+  return true;
+}
+
+bool WarpBuilder::buildGetPropSuperOp(BytecodeLocation loc, MDefinition* obj,
+                                      MDefinition* receiver, MDefinition* id) {
+  auto* ins = MGetPropSuperCache::New(alloc(), obj, receiver, id);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_GetPropSuper(BytecodeLocation loc) {
+  MDefinition* obj = current->pop();
+  MDefinition* receiver = current->pop();
+
+  PropertyName* name = loc.getPropertyName(script_);
+  MConstant* id = constant(StringValue(name));
+
+  return buildGetPropSuperOp(loc, obj, receiver, id);
+}
+
+bool WarpBuilder::build_GetElemSuper(BytecodeLocation loc) {
+  MDefinition* obj = current->pop();
+  MDefinition* id = current->pop();
+  MDefinition* receiver = current->pop();
+
+  return buildGetPropSuperOp(loc, obj, receiver, id);
 }
