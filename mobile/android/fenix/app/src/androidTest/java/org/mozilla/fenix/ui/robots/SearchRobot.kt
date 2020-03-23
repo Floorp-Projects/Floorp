@@ -9,7 +9,9 @@ package org.mozilla.fenix.ui.robots
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
@@ -21,7 +23,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
-import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
@@ -79,10 +80,12 @@ class SearchRobot {
         )
     }
 
-    fun scrollToSearchEngineSettings(): UiScrollable {
-        val appView = UiScrollable(UiSelector().scrollable(true))
-        appView.scrollTextIntoView("Search engine settings")
-        return appView
+    fun scrollToSearchEngineSettings() {
+        // Soft keyboard is visible on screen on view access; hide it
+        onView(allOf(withId(R.id.search_layout))).perform(
+            closeSoftKeyboard()
+        )
+        onView(allOf(withId(R.id.awesomeBar))).perform(ViewActions.swipeUp())
     }
 
     fun clickSearchEngineSettings() {
