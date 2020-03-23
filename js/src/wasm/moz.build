@@ -40,7 +40,7 @@ UNIFIED_SOURCES += [
     'WasmSignalHandlers.cpp',
     'WasmStubs.cpp',
     'WasmTable.cpp',
-    'WasmTextToBinary.cpp',
+    'WasmTesting.cpp',
     'WasmTypes.cpp',
     'WasmValidate.cpp'
 ]
