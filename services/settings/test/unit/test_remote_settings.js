@@ -685,7 +685,7 @@ add_task(async function test_telemetry_reports_if_fetching_signature_fails() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_unknown_errors() {
-  const backup = client.db._wrappedDBForTestOnly.list;
+  const backup = client.db.list;
   client.db.list = () => {
     throw new Error("Internal");
   };
@@ -695,7 +695,7 @@ add_task(async function test_telemetry_reports_unknown_errors() {
     await client.maybeSync(2000);
   } catch (e) {}
 
-  client.db._wrappedDBForTestOnly.list = backup;
+  client.db.list = backup;
   const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
   const expectedIncrements = { [UptakeTelemetry.STATUS.UNKNOWN_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
@@ -703,7 +703,7 @@ add_task(async function test_telemetry_reports_unknown_errors() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
-  const backup = client.db._wrappedDBForTestOnly.getLastModified;
+  const backup = client.db.getLastModified;
   const msg =
     "IndexedDB getLastModified() The operation failed for reasons unrelated to the database itself";
   client.db.getLastModified = () => {
@@ -715,7 +715,7 @@ add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
     await client.maybeSync(2000);
   } catch (e) {}
 
-  client.db._wrappedDBForTestOnly.getLastModified = backup;
+  client.db.getLastModified = backup;
   const endHistogram = getUptakeTelemetrySnapshot(client.identifier);
   const expectedIncrements = { [UptakeTelemetry.STATUS.CUSTOM_1_ERROR]: 1 };
   checkUptakeTelemetry(startHistogram, endHistogram, expectedIncrements);
@@ -723,7 +723,7 @@ add_task(async function test_telemetry_reports_indexeddb_as_custom_1() {
 add_task(clear_state);
 
 add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
-  const backup = client.db._wrappedDBForTestOnly.list;
+  const backup = client.db.list;
   client.db.list = () => {
     const e = new Error("Some unknown error");
     e.name = "ThrownError";
@@ -751,7 +751,7 @@ add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
     ]);
   });
 
-  client.db._wrappedDBForTestOnly.list = backup;
+  client.db.list = backup;
 });
 add_task(clear_state);
 
