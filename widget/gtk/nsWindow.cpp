@@ -3532,8 +3532,9 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   //
   // See https://gitlab.gnome.org/GNOME/gtk/issues/1044
   //
-  // This is fixed in Gtk 3.24+
-  if (gtk_check_version(3, 24, 0) != nullptr) {
+  // This may be fixed in Gtk 3.24+ but some DE still have this issue
+  // (Bug 1624199) so let's remove it for Wayland only.
+  if (mIsX11Display) {
     if (!mIsShown) {
       aEvent->changed_mask = static_cast<GdkWindowState>(
           aEvent->changed_mask & ~GDK_WINDOW_STATE_MAXIMIZED);
