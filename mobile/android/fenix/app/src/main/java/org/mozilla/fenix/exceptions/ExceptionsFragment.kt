@@ -79,7 +79,7 @@ class ExceptionsFragment : Fragment() {
     private fun deleteOneItem(item: TrackingProtectionException) {
         // This feature hasn't been uplifted yet.
         if (FeatureFlags.deleteIndividualTrackingProtectionExceptions) {
-            trackingProtectionUseCases.removeAllExceptions()
+            trackingProtectionUseCases.removeException(item)
         }
         Log.e("Remove one exception", "$item")
         reloadExceptions()
