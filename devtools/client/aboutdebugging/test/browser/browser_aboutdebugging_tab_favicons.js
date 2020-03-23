@@ -26,7 +26,17 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  await waitUntil(() => findDebugTargetByText("Favicon tab", document));
+  await waitUntil(() => {
+    const target = findDebugTargetByText("Favicon tab", document);
+    if (!target) {
+      return false;
+    }
+    // We may get a default globe.svg icon for a short period of time while
+    // the target tab is still loading.
+    return target
+      .querySelector(".qa-debug-target-item-icon")
+      .src.includes("data:");
+  });
   const faviconTabTarget = findDebugTargetByText("Favicon tab", document);
   const faviconTabIcon = faviconTabTarget.querySelector(
     ".qa-debug-target-item-icon"
