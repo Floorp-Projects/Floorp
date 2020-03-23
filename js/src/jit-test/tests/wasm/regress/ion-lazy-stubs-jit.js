@@ -2,7 +2,7 @@
 
 (function coerceinplace() {
     var { table } = wasmEvalText(`(module
-        (func $add (result i32) (param i32) (param i32)
+        (func $add (param i32) (param i32) (result i32)
          local.get 0
         )
         (table (export "table") 10 funcref)
@@ -16,13 +16,13 @@
 
 (function reporti64() {
     var instance = wasmEvalText(`(module
-        (func $add (export "add") (result i32) (param i32) (param i32)
+        (func $add (export "add") (param i32) (param i32) (result i32)
             local.get 0
             local.get 1
             i32.add
         )
 
-        (func $addi64 (result i64) (param i32) (param i32)
+        (func $addi64 (param i32) (param i32) (result i64)
             local.get 0
             local.get 1
             call $add

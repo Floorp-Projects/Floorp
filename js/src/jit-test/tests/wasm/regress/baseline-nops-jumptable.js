@@ -1,5 +1,5 @@
 // |jit-test| --arm-asm-nop-fill=1
-var f = wasmEvalText(`(module (func (result i32) (param i32)
+var f = wasmEvalText(`(module (func (param i32) (result i32)
       (block $0
        (block $1
         (block $2

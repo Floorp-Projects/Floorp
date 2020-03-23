@@ -23,7 +23,7 @@ wasmFullPassI64(`
 
 wasmFullPassI64(`
 (module
-    (func $run (result i64) (param f32)
+    (func $run (param f32) (result i64)
         i64.const 0x13100000001
         i64.const 0x23370000002
         i64.const 0x34480000003
