@@ -4,14 +4,14 @@
 
 // Test i64 signature failures.
 
-var f = wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))').exports[""];
+var f = wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" (func 0)))').exports[""];
 assertErrorMessage(f, TypeError, /i64/);
-var f = wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))').exports[""];
+var f = wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" (func 0)))').exports[""];
 assertErrorMessage(f, TypeError, /i64/);
 
-var f = wasmEvalText('(module (import $imp "a" "b" (param i64) (result i32)) (func $f (result i32) (call $imp (i64.const 0))) (export "" $f))', {a:{b:()=>{}}}).exports[""];
+var f = wasmEvalText('(module (import $imp "a" "b" (param i64) (result i32)) (func $f (result i32) (call $imp (i64.const 0))) (export "" (func $f)))', {a:{b:()=>{}}}).exports[""];
 assertErrorMessage(f, TypeError, /i64/);
-var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (result i64) (call $imp)) (export "" $f))', {a:{b:()=>{}}}).exports[""];
+var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (result i64) (call $imp)) (export "" (func $f)))', {a:{b:()=>{}}}).exports[""];
 assertErrorMessage(f, TypeError, /i64/);
 
 // Import and export related tests.
@@ -32,15 +32,15 @@ i = wasmEvalText('(module (func (export "f") (param i32) (result i64) (i64.const
 assertErrorMessage(() => i.f({ valueOf() { sideEffect = true; return 42; } }), TypeError, 'cannot pass i64 to or from JS');
 assertEq(sideEffect, false);
 
-i = wasmEvalText('(module (import "i64" "func" (param i64)) (export "f" 0))', { i64: { func() {} } }).exports;
+i = wasmEvalText('(module (import "i64" "func" (param i64)) (export "f" (func 0)))', { i64: { func() {} } }).exports;
 assertErrorMessage(() => i.f({ valueOf() { sideEffect = true; return 42; } }), TypeError, 'cannot pass i64 to or from JS');
 assertEq(sideEffect, false);
 
-i = wasmEvalText('(module (import "i64" "func" (param i32) (param i64)) (export "f" 0))', { i64: { func() {} } }).exports;
+i = wasmEvalText('(module (import "i64" "func" (param i32) (param i64)) (export "f" (func 0)))', { i64: { func() {} } }).exports;
 assertErrorMessage(() => i.f({ valueOf() { sideEffect = true; return 42; } }, 0), TypeError, 'cannot pass i64 to or from JS');
 assertEq(sideEffect, false);
 
-i = wasmEvalText('(module (import "i64" "func" (result i64)) (export "f" 0))', { i64: { func() {} } }).exports;
+i = wasmEvalText('(module (import "i64" "func" (result i64)) (export "f" (func 0)))', { i64: { func() {} } }).exports;
 assertErrorMessage(() => i.f({ valueOf() { sideEffect = true; return 42; } }), TypeError, 'cannot pass i64 to or from JS');
 assertEq(sideEffect, false);
 

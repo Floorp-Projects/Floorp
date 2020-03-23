@@ -17,7 +17,7 @@ var m = new Module(wasmTextToBinary(`(module
 var jsFun = () => 83;
 var wasmFun = new Instance(
   new Module(
-    wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" 0))')
+    wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" (func 0)))')
   )
 ).exports.foo;
 var e1 = new Instance(m, {

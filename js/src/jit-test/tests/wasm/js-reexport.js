@@ -56,7 +56,7 @@ setJitCompilerOption("ion.warmup.trigger", 10);
 
 var e = wasmEvalText(`(module
     (import $a "" "a" (param i32 f64) (result f64))
-    (export "a" $a)
+    (export "a" (func $a))
 )`, {"":{a:(a,b)=>a+b}}).exports;
 for (var i = 0; i < 100; i++)
     assertEq(e.a(1.5, 2.5), 3.5);

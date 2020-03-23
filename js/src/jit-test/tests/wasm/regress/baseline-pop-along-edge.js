@@ -61,6 +61,6 @@ var o = wasmEvalText(
 			(i32.add (i32.const 29) (i32.const 30))
 			(br_if $b (i32.const 31) (i32.const 1)))))))))))))))))))
        (return (local.get $v3)))
-      (export "a" 0))`).exports;
+      (export "a" (func 0)))`).exports;
 
 assertEq(o["a"](), 0xEEFDEADB|0);

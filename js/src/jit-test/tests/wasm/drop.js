@@ -7,7 +7,7 @@ for (let type of ['i32', 'f32', 'f64']) {
             (block)
             drop
          )
-         (export "test" $test)
+         (export "test" (func $test))
         )
     `).exports.test(0x1337abc0, 0xffffffff), 0x1337abc0);
 }
@@ -26,7 +26,7 @@ assertEq(wasmEvalText(`
         drop
         drop
      )
-     (export "test" $test)
+     (export "test" (func $test))
     )
 `).exports.test(0x1337abc0, 0xffffffff), 0x1337abc0);
 
@@ -38,7 +38,7 @@ wasmAssert(`
         (block)
         drop
      )
-     (export "test" $test)
+     (export "test" (func $test))
     )
 `, [
     { type: 'i64', func: '$test', args: ['(i64.const 0x1337abc0)', '(i64.const -1)'], expected: '0x1337abc0' }

@@ -7,6 +7,6 @@ var src =
     i32.const 1
     br_if 0
     unreachable)
-  (export "run" 0))`;
+  (export "run" (func 0)))`;
 
 wasmFullPass(src, 0);

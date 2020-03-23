@@ -1,7 +1,7 @@
 wasmFullPass(`(module
     (func $test (result i32) (param i32) (param i32) (i32.add (local.get 0) (local.get 1)))
     (func $run (result i32) (call $test (i32.const 1) (i32.const ${Math.pow(2, 31) - 1})))
-    (export "run" $run)
+    (export "run" (func $run))
 )`, -Math.pow(2, 31));
 
 wasmFullPass(`(module
@@ -17,7 +17,7 @@ wasmFullPass(`(module
         i32.add
     )
     (func) (func) (func)
-(export "run" 0))`, 43);
+(export "run" (func 0)))`, 43);
 
 wasmFullPass(`
 (module
@@ -43,7 +43,7 @@ wasmFullPass(`(module
   global.get $imm_local_2
   i32.add
  )
- (export "run" $get)
+ (export "run" (func $get))
 )`, 13 + 42 + 37 + 42, { globals: {x: 42} });
 
 // Memory.

@@ -71,7 +71,7 @@ var tbl = new Table({initial:50, element:"funcref"});
 assertEq(new Instance(m, {globals:{a:20, table:tbl}}) instanceof Instance, true);
 assertSegmentFitError(() => new Instance(m, {globals:{a:50, table:tbl}}));
 
-var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i))) (export "call" $call)`
+var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i))) (export "call" (func $call))`
 var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 var call = wasmEvalText(`(module (table 10 funcref) ${callee(0)} ${caller})`).exports.call;
@@ -125,14 +125,14 @@ assertEq(tbl.get(0)(), 0);
 assertEq(tbl.get(1)(), 1);
 assertEq(tbl.get(2)(), 2);
 
-var exp1 = wasmEvalText(`(module (table 10 funcref) (export "tbl" table) (elem (i32.const 0) $f0 $f0) ${callee(0)} (export "f0" $f0) ${caller})`).exports
+var exp1 = wasmEvalText(`(module (table 10 funcref) (export "tbl" table) (elem (i32.const 0) $f0 $f0) ${callee(0)} (export "f0" (func $f0)) ${caller})`).exports
 assertEq(exp1.tbl.get(0), exp1.f0);
 assertEq(exp1.tbl.get(1), exp1.f0);
 assertEq(exp1.tbl.get(2), null);
 assertEq(exp1.call(0), 0);
 assertEq(exp1.call(1), 0);
 assertErrorMessage(() => exp1.call(2), RuntimeError, /indirect call to null/);
-var exp2 = wasmEvalText(`(module (import "a" "b" (table 10 funcref)) (export "tbl" table) (elem (i32.const 1) $f1 $f1) ${callee(1)} (export "f1" $f1) ${caller})`, {a:{b:exp1.tbl}}).exports
+var exp2 = wasmEvalText(`(module (import "a" "b" (table 10 funcref)) (export "tbl" table) (elem (i32.const 1) $f1 $f1) ${callee(1)} (export "f1" (func $f1)) ${caller})`, {a:{b:exp1.tbl}}).exports
 assertEq(exp1.tbl, exp2.tbl);
 assertEq(exp2.tbl.get(0), exp1.f0);
 assertEq(exp2.tbl.get(1), exp2.f1);
@@ -145,9 +145,9 @@ assertEq(exp2.call(1), 1);
 assertEq(exp2.call(2), 1);
 
 var tbl = new Table({initial:3, element:"funcref"});
-var e1 = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" $f))`).exports;
-var e2 = wasmEvalText(`(module (func $g (result f32) (f32.const 10)) (export "g" $g))`).exports;
-var e3 = wasmEvalText(`(module (func $h (result i32) (i32.const 13)) (export "h" $h))`).exports;
+var e1 = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" (func $f)))`).exports;
+var e2 = wasmEvalText(`(module (func $g (result f32) (f32.const 10)) (export "g" (func $g)))`).exports;
+var e3 = wasmEvalText(`(module (func $h (result i32) (i32.const 13)) (export "h" (func $h)))`).exports;
 tbl.set(0, e1.f);
 tbl.set(1, e2.g);
 tbl.set(2, e3.h);
@@ -176,7 +176,7 @@ var m = new Module(wasmTextToBinary(`(module
                     (else
                         (local.set $i (i32.sub (local.get $i) (i32.const 1)))
                         (call_indirect (type $i2i) (local.get $i) (local.get $i)))))))
-    (export "call" $call)
+    (export "call" (func $call))
 )`));
 var failTime = false;
 var tbl = new Table({initial:10, element:"funcref"});
@@ -206,7 +206,7 @@ var call = wasmEvalText(`(module
     (func $b (type $v2i2) (i32.const 1))
     (func $c (type $i2v))
     (func $call (param i32) (result i32) (call_indirect (type $v2i1) (local.get 0)))
-    (export "call" $call)
+    (export "call" (func $call))
 )`).exports.call;
 assertEq(call(0), 0);
 assertEq(call(1), 1);
@@ -230,7 +230,7 @@ var call = wasmEvalText(`(module
     (func $g (type $G) (local.get 13))
     (func $call (param i32) (result i32)
         (call_indirect (type $A) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 42) (local.get 0)))
-    (export "call" $call)
+    (export "call" (func $call))
 )`).exports.call;
 assertEq(call(0), 42);
 for (var i = 1; i < 7; i++)
@@ -265,7 +265,7 @@ assertEq(tbl.get(0).foo, 42);
             (import "a" "m" (memory 1))
             (type $v2i (func (result i32)))
             (func $call (param $i i32) (result i32) (i32.add (call_indirect (type $v2i) (local.get $i)) (memory.size)))
-            (export "call" $call))
+            (export "call" (func $call)))
     `)), {a:{t:g.tbl,m:g.mem}}).exports.call;
 
     for (var i = 0; i < 10; i++)

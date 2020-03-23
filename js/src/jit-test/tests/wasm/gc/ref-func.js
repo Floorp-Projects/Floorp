@@ -13,7 +13,7 @@ wasmFullPass(`
 			ref.func $run
 			ref.is_null
 		)
-		(export "run" $run)
+		(export "run" (func $run))
 	)
 `, 0);
 
@@ -23,7 +23,7 @@ wasmFullPass(`
 		(module
 			(elem declared $f1)
 			(func $f1 (result funcref) ref.func $f1)
-			(export "f1" $f1)
+			(export "f1" (func $f1))
 		)
 	`).exports;
 	assertEq(f1(), f1);
@@ -36,8 +36,8 @@ wasmFullPass(`
 			(elem declared $f1)
 			(func $f1)
 			(func $f2 (result funcref) ref.func $f1)
-			(export "f1" $f1)
-			(export "f2" $f2)
+			(export "f1" (func $f1))
+			(export "f2" (func $f2))
 		)
 	`).exports;
 	assertEq(f2(), f1);
@@ -49,7 +49,7 @@ wasmFullPass(`
 		(module
 			(elem declared $f1)
 			(func $f1)
-			(export "f1" $f1)
+			(export "f1" (func $f1))
 		)
 	`);
 	let i2 = wasmEvalText(`
@@ -57,8 +57,8 @@ wasmFullPass(`
 			(import $f1 "" "f1" (func))
 			(elem declared $f1)
 			(func $f2 (result funcref) ref.func $f1)
-			(export "f1" $f1)
-			(export "f2" $f2)
+			(export "f1" (func $f1))
+			(export "f2" (func $f2))
 		)
 	`, {"": i1.exports});
 
@@ -103,7 +103,7 @@ assertEq(validFuncRefText('(elem anyref (ref.func $referenced))', 'anyref') inst
 assertErrorMessage(() => validFuncRefText('(start $referenced)', 'funcref'),
                    WebAssembly.CompileError,
                    /function index is not in an element segment/);
-assertErrorMessage(() => validFuncRefText('(export "referenced" $referenced)', 'funcref'),
+assertErrorMessage(() => validFuncRefText('(export "referenced" (func $referenced))', 'funcref'),
                    WebAssembly.CompileError,
                    /function index is not in an element segment/);
 

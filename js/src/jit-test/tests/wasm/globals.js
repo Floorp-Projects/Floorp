@@ -25,10 +25,10 @@ function testInner(type, initialValue, nextValue, coercion)
 
         (func $get_cst (result ${type}) (global.get 1))
 
-        (export "get" $get)
-        (export "get_cst" $get_cst)
+        (export "get" (func $get))
+        (export "get_cst" (func $get_cst))
 
-        (export "set" $set)
+        (export "set" (func $set))
     )`).exports;
 
     assertEq(module.get(), coercion(initialValue));
@@ -68,11 +68,11 @@ var module = wasmEvalText(`(module
     ${get_set(3, 'f64')}
     ${get_set(4, 'i32')}
 
-    (export "get0" $get_0) (export "set0" $set_0)
-    (export "get1" $get_1) (export "set1" $set_1)
-    (export "get2" $get_2) (export "set2" $set_2)
-    (export "get3" $get_3) (export "set3" $set_3)
-    (export "get4" $get_4) (export "set4" $set_4)
+    (export "get0" (func $get_0)) (export "set0" (func $set_0))
+    (export "get1" (func $get_1)) (export "set1" (func $set_1))
+    (export "get2" (func $get_2)) (export "set2" (func $set_2))
+    (export "get3" (func $get_3)) (export "set3" (func $set_3))
+    (export "get4" (func $get_4)) (export "set4" (func $set_4))
 )`).exports;
 
 let values = [42, 10, Math.fround(13.37), 13.37, -18];
@@ -98,7 +98,7 @@ module = wasmEvalText(`(module
     (table (export "tbl") 4 funcref)
     (elem (global.get 0) $f)
     (func $f)
-    (export "f" $f)
+    (export "f" (func $f))
 )`, {
     globals: {
         a: 1
@@ -110,7 +110,7 @@ assertEq(module.f, module.tbl.get(1));
 module = wasmEvalText(`(module
  (import $g "globals" "x" (global i32))
  (func $get (result i32) (global.get $g))
- (export "getter" $get)
+ (export "getter" (func $get))
  (export "value" global 0)
 )`, { globals: {x: 42} }).exports;
 
@@ -196,11 +196,11 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
 
         (func $get_cst (result ${type}) (global.get 2))
 
-        (export "get0" $get0)
-        (export "get1" $get1)
-        (export "get_cst" $get_cst)
+        (export "get0" (func $get0))
+        (export "get1" (func $get1))
+        (export "get_cst" (func $get_cst))
 
-        (export "set1" $set1)
+        (export "set1" (func $set1))
         (export "global_imm" (global $glob_imm))
     )`, {
         globals: {
@@ -237,9 +237,9 @@ wasmAssert(`(module
     (func $get (result i64) (global.get 0))
     (func $set (param i64) (global.set 0 (local.get 0)))
     (func $get_cst (result i64) (global.get 1))
-    (export "get" $get)
-    (export "get_cst" $get_cst)
-    (export "set" $set)
+    (export "get" (func $get))
+    (export "get_cst" (func $get_cst))
+    (export "set" (func $set))
 )`, [
     {type: 'i64', func: '$get', expected: initialValue},
     {type: 'i64', func: '$set', args: [`i64.const ${nextValue}`]},
