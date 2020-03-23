@@ -38,6 +38,14 @@ class RecentAppsStorage(context: Context) {
     }
 
     /**
+     * Deletes an app form the recent apps list
+     * @param activityName - name of the activity of the app
+     */
+    fun deleteRecentApp(activityName: String) {
+        database.value.recentAppsDao().deleteRecentApp(activityName)
+    }
+
+    /**
      * Get a descending ordered list of the most recent apps
      * @param limit - size of list
      */
