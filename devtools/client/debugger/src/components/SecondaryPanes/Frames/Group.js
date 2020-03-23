@@ -151,10 +151,10 @@ export default class Group extends Component<Props, State> {
   renderDescription() {
     const { l10n } = this.context;
     const { group } = this.props;
+    const { expanded } = this.state;
 
     const frame = group[0];
-    const expanded = this.state.expanded;
-    const l10NEntry = this.state.expanded
+    const l10NEntry = expanded
       ? "callStack.group.collapseTooltip"
       : "callStack.group.expandTooltip";
     const title = l10n.getFormatStr(l10NEntry, frame.library);

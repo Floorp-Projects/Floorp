@@ -189,7 +189,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
   }
 
   if (t.isCallExpression(path)) {
-    const callee = path.node.callee;
+    const { callee } = path.node;
     const args = path.node.arguments;
     if (t.isMemberExpression(callee)) {
       const {
@@ -236,7 +236,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     }
 
     if (path.node.typeAnnotation) {
-      const column = path.node.typeAnnotation.loc.start.column;
+      const { column } = path.node.typeAnnotation.loc.start;
       end = { ...end, column };
     }
 
@@ -344,7 +344,7 @@ function extendSnippet(
 
 function getMemberSnippet(node: Node, expression: string = "") {
   if (t.isMemberExpression(node)) {
-    const name = node.property.name;
+    const { name } = node.property;
     const snippet = getMemberSnippet(
       node.object,
       extendSnippet(name, expression, { node })
@@ -379,7 +379,7 @@ function getObjectSnippet(
     return expression;
   }
 
-  const name = path.node.key.name;
+  const { name } = path.node.key;
 
   const extendedExpression = extendSnippet(name, expression, path, prevPath);
 
@@ -418,7 +418,7 @@ function getSnippet(
 
   if (t.isVariableDeclaration(path)) {
     const node = path.node.declarations[0];
-    const name = node.id.name;
+    const { name } = node.id;
     return extendSnippet(name, expression, path, prevPath);
   }
 

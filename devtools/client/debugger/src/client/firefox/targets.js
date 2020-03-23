@@ -43,7 +43,7 @@ async function attachTargets(targetLists, args) {
       // Content process targets have already been attached by the toolbox.
       // And the thread front has been initialized from there.
       // So we only need to retrieve it here.
-      let threadFront = targetFront.threadFront;
+      let { threadFront } = targetFront;
 
       // But workers targets are still only managed by the debugger codebase
       // and so we have to attach their thread actor

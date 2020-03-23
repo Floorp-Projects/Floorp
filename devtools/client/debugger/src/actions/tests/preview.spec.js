@@ -65,7 +65,7 @@ async function pause(store, client) {
   await dispatch(actions.selectSource(cx, base.id));
   await waitForState(store, state => selectors.hasSymbols(state, base));
 
-  const thread = cx.thread;
+  const { thread } = cx;
   const frames = [makeFrame({ id: "frame1", sourceId: base.id, thread })];
   client.getFrames = async () => frames;
 

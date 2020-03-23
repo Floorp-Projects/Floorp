@@ -12,7 +12,7 @@ import Services from "devtools-services";
 // Schema version to bump when the async store format has changed incompatibly
 // and old stores should be cleared.
 const prefsSchemaVersion = 11;
-const pref = Services.pref;
+const { pref } = Services;
 
 if (isDevelopment()) {
   pref("devtools.browsertoolbox.fission", false);
