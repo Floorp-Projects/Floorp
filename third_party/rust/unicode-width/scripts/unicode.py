@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2011-2015 The Rust Project Developers. See the COPYRIGHT
 # file at the top-level directory of this distribution and at
@@ -68,28 +68,28 @@ def load_unicode_data(f):
     fetch(f)
     gencats = {}
 
-    udict = {};
-    range_start = -1;
+    udict = {}
+    range_start = -1
     for line in fileinput.input(f):
-        data = line.split(';');
+        data = line.split(';')
         if len(data) != 15:
             continue
-        cp = int(data[0], 16);
+        cp = int(data[0], 16)
         if is_surrogate(cp):
             continue
         if range_start >= 0:
-            for i in xrange(range_start, cp):
-                udict[i] = data;
-            range_start = -1;
+            for i in range(range_start, cp):
+                udict[i] = data
+            range_start = -1
         if data[1].endswith(", First>"):
-            range_start = cp;
-            continue;
-        udict[cp] = data;
+            range_start = cp
+            continue
+        udict[cp] = data
 
     for code in udict:
         [code_org, name, gencat, combine, bidi,
          decomp, deci, digit, num, mirror,
-         old, iso, upcase, lowcase, titlecase ] = udict[code];
+         old, iso, upcase, lowcase, titlecase ] = udict[code]
 
         # place letter in categories as appropriate
         for cat in [gencat, "Assigned"] + expanded_categories.get(gencat, []):
@@ -300,15 +300,15 @@ pub const UNICODE_VERSION: (u64, u64, u64) = (%s, %s, %s);
         ### character width module
         width_table = []
         for zwcat in ["Me", "Mn", "Cf"]:
-            width_table.extend(map(lambda (lo, hi): (lo, hi, 0, 0), gencats[zwcat]))
+            width_table.extend([(lo_hi[0], lo_hi[1], 0, 0) for lo_hi in gencats[zwcat]])
         width_table.append((4448, 4607, 0, 0))
 
         # get widths, except those that are explicitly marked zero-width above
         ea_widths = load_east_asian_width(["W", "F", "A"], ["Me", "Mn", "Cf"])
         # these are doublewidth
         for dwcat in ["W", "F"]:
-            width_table.extend(map(lambda (lo, hi): (lo, hi, 2, 2), ea_widths[dwcat]))
-        width_table.extend(map(lambda (lo, hi): (lo, hi, 1, 2), ea_widths["A"]))
+            width_table.extend([(lo_hi1[0], lo_hi1[1], 2, 2) for lo_hi1 in ea_widths[dwcat]])
+        width_table.extend([(lo_hi2[0], lo_hi2[1], 1, 2) for lo_hi2 in ea_widths["A"]])
 
         width_table.sort(key=lambda w: w[0])
 
