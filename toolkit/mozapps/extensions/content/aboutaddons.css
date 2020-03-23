@@ -101,13 +101,11 @@ message-bar-stack > * {
 .list-section-heading {
   font-size: 17px;
   font-weight: 600;
-  margin-top: 32px;
   margin-bottom: 16px;
 }
 
-/* The margin is set on the main heading, no need on the first subheading. */
-addon-list > section:first-of-type .list-section-heading {
-  margin-top: 0;
+.section {
+  margin-bottom: 32px;
 }
 
 /* Add-on cards */
