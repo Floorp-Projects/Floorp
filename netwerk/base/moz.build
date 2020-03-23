@@ -313,7 +313,7 @@ EXTRA_JS_MODULES += [
     'NetUtil.jsm',
 ]
 
-DIRS += [ 'mozurl' ]
+DIRS += [ 'mozurl', 'rust-helper' ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
