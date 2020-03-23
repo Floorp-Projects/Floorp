@@ -340,8 +340,11 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         Label bailout;
         Label* onOverflow = mul->canOverflow() ? &bailout : nullptr;
 
-        masm.move32(Imm32(constant), destreg);
-        masm.mul32(lhsreg, destreg, destreg, onOverflow);
+        vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+        const Register scratch = temps.AcquireW().asUnsized();
+
+        masm.move32(Imm32(constant), scratch);
+        masm.mul32(lhsreg, scratch, destreg, onOverflow);
 
         if (onOverflow) {
           MOZ_ASSERT(lhsreg != destreg);
