@@ -6,7 +6,7 @@ const { assertStackTrace, startProfiling, endProfiling, assertEqPreciseStacks } 
 enableGeckoProfiling();
 
 let { add } = wasmEvalText(`(module
-    (func $add (export "add") (result i32) (param i32) (param i32)
+    (func (export "add") (param i32) (param i32) (result i32)
      local.get 0
      i32.const 42
      i32.eq

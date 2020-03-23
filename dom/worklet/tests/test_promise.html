@@ -37,7 +37,7 @@ function runTestInIframe() {
     const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
     const fooModuleCode = wasmTextToBinary(`(module
       (func $foo (result i32) (i32.const 42))
-      (export "foo" $foo)
+      (export "foo" (func $foo))
     )`);
 
     node.port.postMessage(fooModuleCode);

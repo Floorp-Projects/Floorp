@@ -28,7 +28,7 @@ wasmFullPass(`(module
 
 // Grow during import call:
 var exports = wasmEvalText(`(module
-    (import $imp "" "imp")
+    (import "" "imp" (func $imp))
     (memory 1)
     (func $grow (drop (memory.grow (i32.const 99))))
     (export "grow" (func $grow))
@@ -134,7 +134,7 @@ assertEq(mem.buffer.byteLength, 2 * 64*1024);
 // Grow during import call:
 var exports = wasmEvalText(`(module
     (type $v2i (func (result i32)))
-    (import $grow "" "grow")
+    (import "" "grow" (func $grow))
     (table (export "tbl") 1 funcref)
     (func $test (result i32)
         (i32.add
@@ -157,14 +157,14 @@ assertEq(exports.tbl.length, 11);
 
 // Grow during call_indirect:
 var exports1 = wasmEvalText(`(module
-    (import $grow "" "grow")
+    (import "" "grow" (func $grow))
     (func $exp (call $grow))
     (export "exp" (func $exp))
 )`, {"":{grow() { exports2.tbl.grow(1); exports2.tbl.set(2, exports2.eleven) }}}).exports;
 var exports2 = wasmEvalText(`(module
     (type $v2v (func))
     (type $v2i (func (result i32)))
-    (import $imp "" "imp")
+    (import "" "imp" (func $imp))
     (elem (i32.const 0) $imp)
     (table 2 funcref)
     (func $test (result i32)

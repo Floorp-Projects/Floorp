@@ -157,7 +157,7 @@ function create_wasmModule() {
   );
   const fooModuleCode = wasmTextToBinary(`(module
     (func $foo (result i32) (i32.const 42))
-    (export "foo" $foo)
+    (export "foo" (func $foo))
   )`);
 
   WebAssembly.compile(fooModuleCode).then(

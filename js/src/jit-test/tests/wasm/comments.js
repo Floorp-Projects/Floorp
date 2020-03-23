@@ -1,5 +1,5 @@
 // sanity check
-assertErrorMessage(() => wasmEvalText(''), SyntaxError, /parsing wasm text/);
+assertErrorMessage(() => wasmEvalText(''), SyntaxError, /wasm text error/);
 
 // single line comment
 var o = wasmEvalText('(module (func)) ;; end');
@@ -25,7 +25,7 @@ assertEq(Object.getOwnPropertyNames(o)[0], "a");
 var o = wasmEvalText('(module (;nested(;comment;);)(func (;;;;)))');
 var o = wasmEvalText(';;;;;;;;;;\n(module ;;(;n \n(func (;\n;;;)))');
 
-assertErrorMessage(() => wasmEvalText(';; only comment'), SyntaxError, /parsing wasm text/);
-assertErrorMessage(() => wasmEvalText(';; only comment\n'), SyntaxError, /parsing wasm text/);
-assertErrorMessage(() => wasmEvalText('(; only comment ;)'), SyntaxError, /parsing wasm text/);
-assertErrorMessage(() => wasmEvalText(';; only comment\n'), SyntaxError, /parsing wasm text/);
+assertErrorMessage(() => wasmEvalText(';; only comment'), SyntaxError, /wasm text error/);
+assertErrorMessage(() => wasmEvalText(';; only comment\n'), SyntaxError, /wasm text error/);
+assertErrorMessage(() => wasmEvalText('(; only comment ;)'), SyntaxError, /wasm text error/);
+assertErrorMessage(() => wasmEvalText(';; only comment\n'), SyntaxError, /wasm text error/);
