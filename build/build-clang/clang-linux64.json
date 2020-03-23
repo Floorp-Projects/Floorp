@@ -20,6 +20,7 @@
       "android-mangling-error.patch",
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
+      "tsan-hang-be41a98ac222.patch",
       "loosen-msvc-detection.patch"
     ]
 }
