@@ -2617,7 +2617,7 @@ impl TileCacheInstance {
         // tiles if the user is scrolling up and down small amounts, at the cost of
         // a bit of extra texture memory.
         let desired_rect_in_pic_space = screen_rect_in_pic_space
-            .inflate(0.0, 3.0 * self.tile_size.height);
+            .inflate(0.0, 1.0 * self.tile_size.height);
 
         let needed_rect_in_pic_space = desired_rect_in_pic_space
             .intersection(&pic_rect)
