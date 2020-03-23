@@ -417,7 +417,7 @@ assertEq(called, 0);
 // br/br_if and loop
 wasmFullPass(`(module (func (param i32) (result i32) (loop $out $in i32 (br $out (local.get 0)))) (export "run" (func 0)))`, 1, {}, 1);
 wasmFullPass(`(module (func (param i32) (result i32) (loop $in (result i32) (br 1 (local.get 0)))) (export "run" (func 0)))`, 1, {}, 1);
-wasmFullPass(`(module (func (param i32) (result i32) (block $out i32 (loop $in (result i32) (br $out (local.get 0))))) (export "run" (func 0)))`, 1, {}, 1);
+wasmFullPass(`(module (func (param i32) (result i32) (block $out (result i32) (loop $in (result i32) (br $out (local.get 0))))) (export "run" (func 0)))`, 1, {}, 1);
 
 wasmFailValidateText(`(module (func (param i32) (result i32)
   (loop $out $in
@@ -433,7 +433,7 @@ wasmFullPass(`(module
  (func
   (result i32)
   (local i32)
-  (block $out i32
+  (block $out (result i32)
     (loop $in (result i32)
      (local.set 0 (i32.add (local.get 0) (i32.const 1)))
      (if
@@ -450,7 +450,7 @@ wasmFullPass(`(module
  (func
   (result i32)
   (local i32)
-  (block $out i32
+  (block $out (result i32)
    (loop $in (result i32)
     (local.set 0 (i32.add (local.get 0) (i32.const 1)))
     (br_if $out (local.get 0) (i32.ge_s (local.get 0) (i32.const 7)))
@@ -698,8 +698,8 @@ wasmFailValidateText('(module (func (result i32) (block (result i32) (br_table 0
 wasmFailValidateText(`(module
  (func
   (result i32)
-  (block $outer f32
-   (block $inner f32
+  (block $outer (result f32)
+   (block $inner (result f32)
     (br_table $outer $inner (f32.const 13.37) (i32.const 1))
    )
    (br $outer (i32.const 42))
@@ -707,13 +707,13 @@ wasmFailValidateText(`(module
  )
 (export "" (func 0)))`, mismatchError("i32", "f32"));
 
-wasmFullPass(`(module (func (result i32) (block $default i32 (br_table $default (i32.const 42) (i32.const 1)))) (export "run" (func 0)))`, 42);
+wasmFullPass(`(module (func (result i32) (block $default (result i32) (br_table $default (i32.const 42) (i32.const 1)))) (export "run" (func 0)))`, 42);
 
 var f = wasmEvalText(`(module (func (param i32) (result i32)
   (i32.add
-   (block $1 i32
-    (drop (block $0 i32
-     (drop (block $default i32
+   (block $1 (result i32)
+    (drop (block $0 (result i32)
+     (drop (block $default (result i32)
       (br_table $0 $1 $default (local.get 0) (local.get 0))
      ))
      (tee_local 0 (i32.mul (i32.const 2) (local.get 0)))

@@ -90,7 +90,7 @@ wasmEvalText(`
     (func
         (call 1
             (i32.const 43)
-            (block $b i32
+            (block $b (result i32)
                 (if (i32.const 1)
                     (call 0
                         (block (result i32)
@@ -179,9 +179,9 @@ wasmEvalText(`
 (module
  (func (result i32)
   (i32.add
-   (block $outer i32
-    (drop (block $middle i32
-     (block $inner i32
+   (block $outer (result i32)
+    (drop (block $middle (result i32)
+     (block $inner (result i32)
       (br_table $middle $outer $inner (i32.const 42) (i32.const 1))
      )
      (nop)
