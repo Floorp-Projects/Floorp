@@ -22,8 +22,8 @@ function visit(aStuff) {
 let bin = wasmTextToBinary(
 `
 (module
-  (import $allocate "" "allocate" (func (result anyref) (param i32)))
-  (import $visit "" "visit" (func (result i32) (param anyref)))
+  (import "" "allocate" (func $allocate (param i32) (result anyref)))
+  (import "" "visit" (func $visit (param anyref) (result i32)))
 
   ;; A function with many params and locals, most of which are ref-typed.
   ;; The purpose of having so many is to defeat any reasonable attempt at
@@ -32,10 +32,10 @@ let bin = wasmTextToBinary(
   ;; vs what the stackmap claims the layout to be.
 
   (func $manyParamsAndLocals (export "manyParamsAndLocals")
-    (result i32)
     (param $p1 anyref) (param $p2 i32)    (param $p3 anyref)
     (param $p4 anyref) (param $p5 anyref) (param $p6 anyref)
     (param $p7 anyref) (param $p8 anyref) (param $p9 i32)
+    (result i32)
     (local $l1 anyref) (local $l2 anyref) (local $l3 anyref)
     (local $l4 i32)    (local $l5 anyref) (local $l6 i32)
     (local $l7 anyref) (local $l8 anyref) (local $l9 anyref)
