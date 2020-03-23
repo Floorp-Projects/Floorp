@@ -108,6 +108,8 @@
     <string name="mozac_feature_addons_updater_notification_title">У %1$s вышло обновление</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d требует предоставить новые разрешения</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">Требуется предоставить ещё одно разрешение</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Обновления дополнений</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
@@ -127,7 +129,7 @@
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Загрузка и проверка дополнения…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons">Не удалось получить список дополнений!</string>
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Не удалось загрузить список дополнений!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s успешно установлено</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
