@@ -1502,3 +1502,10 @@ def ensure_subprocess_env(env, encoding='utf-8'):
     """
     ensure = ensure_bytes if sys.version_info[0] < 3 else ensure_unicode
     return {ensure(k, encoding): ensure(v, encoding) for k, v in six.iteritems(env)}
+
+
+def process_time():
+    if six.PY2:
+        return time.clock()
+    else:
+        return time.process_time()
