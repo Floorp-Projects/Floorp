@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.407';
-var pdfjsBuild = '25693c6b';
+var pdfjsVersion = '2.4.445';
+var pdfjsBuild = '1bc5cef2b';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -202,8 +202,6 @@ exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.isLittleEndian = isLittleEndian;
-exports.isEvalSupported = isEvalSupported;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
@@ -214,7 +212,7 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
 exports.unreachable = unreachable;
-exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
+exports.IsEvalSupportedCached = exports.IsLittleEndianCached = exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
 
 __w_pdfjs_require__(2);
 
@@ -755,6 +753,14 @@ function isLittleEndian() {
   return view32[0] === 1;
 }
 
+const IsLittleEndianCached = {
+  get value() {
+    return shadow(this, "value", isLittleEndian());
+  }
+
+};
+exports.IsLittleEndianCached = IsLittleEndianCached;
+
 function isEvalSupported() {
   try {
     new Function("");
@@ -764,6 +770,13 @@ function isEvalSupported() {
   }
 }
 
+const IsEvalSupportedCached = {
+  get value() {
+    return shadow(this, "value", isEvalSupported());
+  }
+
+};
+exports.IsEvalSupportedCached = IsEvalSupportedCached;
 const rgbBuf = ["rgb(", 0, ",", 0, ",", 0, ")"];
 
 class Util {
@@ -1205,7 +1218,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.4.407',
+    apiVersion: '2.4.445',
     source: {
       data: source.data,
       url: source.url,
@@ -1391,8 +1404,15 @@ class PDFDocumentProxy {
     return this._transport.getViewerPreferences();
   }
 
+  getOpenAction() {
+    return this._transport.getOpenAction();
+  }
+
   getOpenActionDestination() {
-    return this._transport.getOpenActionDestination();
+    (0, _display_utils.deprecated)("getOpenActionDestination, use getOpenAction instead.");
+    return this.getOpenAction().then(function (openAction) {
+      return openAction && openAction.dest ? openAction.dest : null;
+    });
   }
 
   getAttachments() {
@@ -2837,8 +2857,8 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetViewerPreferences", null);
   }
 
-  getOpenActionDestination() {
-    return this.messageHandler.sendWithPromise("GetOpenActionDestination", null);
+  getOpenAction() {
+    return this.messageHandler.sendWithPromise("GetOpenAction", null);
   }
 
   getAttachments() {
@@ -3150,9 +3170,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.407';
+const version = '2.4.445';
 exports.version = version;
-const build = '25693c6b';
+const build = '1bc5cef2b';
 exports.build = build;
 
 /***/ }),
@@ -3683,7 +3703,7 @@ class BaseFontLoader {
 
   async bind(font) {
     if (font.attached || font.missingFile) {
-      return undefined;
+      return;
     }
 
     font.attached = true;
@@ -3707,7 +3727,7 @@ class BaseFontLoader {
         }
       }
 
-      return undefined;
+      return;
     }
 
     const rule = font.createFontFaceRule();
@@ -3716,17 +3736,15 @@ class BaseFontLoader {
       this.insertRule(rule);
 
       if (this.isSyncFontLoadingSupported) {
-        return undefined;
+        return;
       }
 
-      return new Promise(resolve => {
+      await new Promise(resolve => {
         const request = this._queueLoadingCallback(resolve);
 
         this._prepareFontLoadEvent([rule], [font], request);
       });
     }
-
-    return undefined;
   }
 
   _queueLoadingCallback(callback) {
@@ -3762,12 +3780,6 @@ exports.FontLoader = FontLoader;
 
   };
 }
-const IsEvalSupportedCached = {
-  get value() {
-    return (0, _util.shadow)(this, "value", (0, _util.isEvalSupported)());
-  }
-
-};
 
 class FontFaceObject {
   constructor(translatedData, {
@@ -3844,7 +3856,7 @@ class FontFaceObject {
       return this.compiledGlyphs[character] = function (c, size) {};
     }
 
-    if (this.isEvalSupported && IsEvalSupportedCached.value) {
+    if (this.isEvalSupported && _util.IsEvalSupportedCached.value) {
       let args,
           js = "";
 
@@ -3914,12 +3926,6 @@ var MIN_WIDTH_FACTOR = 0.65;
 var COMPILE_TYPE3_GLYPHS = true;
 var MAX_SIZE_TO_COMPILE = 1000;
 var FULL_CHUNK_HEIGHT = 16;
-var IsLittleEndianCached = {
-  get value() {
-    return (0, _util.shadow)(IsLittleEndianCached, "value", (0, _util.isLittleEndian)());
-  }
-
-};
 
 function addContextCurrentTransform(ctx) {
   if (!ctx.mozCurrentTransform) {
@@ -4328,7 +4334,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       var dest32DataLength = dest32.length;
       var fullSrcDiff = width + 7 >> 3;
       var white = 0xffffffff;
-      var black = IsLittleEndianCached.value ? 0xff000000 : 0x000000ff;
+      var black = _util.IsLittleEndianCached.value ? 0xff000000 : 0x000000ff;
 
       for (i = 0; i < totalChunks; i++) {
         thisChunkHeight = i < fullChunks ? FULL_CHUNK_HEIGHT : partialChunkHeight;

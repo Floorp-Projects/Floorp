@@ -895,10 +895,6 @@ html[dir='rtl'] .splitToolbarButton > .toolbarButton {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset,
               0 0 1px rgba(255, 255, 255, 0.15) inset,
               0 1px 0 rgba(255, 255, 255, 0.05);
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
-
 }
 .splitToolbarButton > .toolbarButton:hover,
 .splitToolbarButton > .toolbarButton:focus,
@@ -957,9 +953,6 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
   padding: 12px 0;
   margin: 1px 0;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
-  transition-property: padding;
-  transition-duration: 10ms;
-  transition-timing-function: ease;
 }
 
 .toolbarButton,
@@ -976,9 +969,6 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
   user-select: none;
   /* Opera does not support user-select, use <... unselectable="on"> instead */
   cursor: default;
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
 }
 
 html[dir='ltr'] .toolbarButton,
@@ -1018,9 +1008,6 @@ html[dir='rtl'] .dropdownToolbarButton {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1) inset,
               0 0 1px rgba(0, 0, 0, 0.2) inset,
               0 1px 0 rgba(255, 255, 255, 0.05);
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 10ms;
-  transition-timing-function: linear;
 }
 
 .toolbarButton.toggled,
@@ -1032,9 +1019,6 @@ html[dir='rtl'] .dropdownToolbarButton {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1) inset,
               0 0 1px rgba(0, 0, 0, 0.2) inset,
               0 1px 0 rgba(255, 255, 255, 0.05);
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 10ms;
-  transition-timing-function: linear;
 }
 
 .toolbarButton.toggled:hover:active,
@@ -1390,9 +1374,6 @@ html[dir='rtl'] .verticalToolbarSeparator {
   font-size: 12px;
   line-height: 14px;
   outline-style: none;
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
 }
 
 .toolbarField[type=checkbox] {
