@@ -8,7 +8,7 @@ wasmRunWithDebugger(
      (global (mut f64) (f64.const 0.5))\
      (global f32 (f32.const 3.5))\
      (func (param i32) (local f64) (f64.const 1.0) (tee_local 1) (set_global 0) (nop))\
-     (export "test" 0)\
+     (export "test" (func 0))\
      (data (i32.const 0) "Abc\\x2A"))',
     undefined,
     function ({dbg}) {

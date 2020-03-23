@@ -7,7 +7,7 @@ load(libdir + "wasm.js");
 // Checking if we stop at every wasm instruction during step.
 var onEnterFrameCalled, onLeaveFrameCalled, onStepCalled;
 wasmRunWithDebugger(
-    '(module (func (nop) (nop)) (export "test" 0))',
+    '(module (func (nop) (nop)) (export "test" (func 0)))',
     undefined,
     function ({dbg}) {
         onEnterFrameCalled = 0;
@@ -38,7 +38,7 @@ wasmRunWithDebugger(
 
 // Checking if step mode was disabled after debugger has been detached.
 wasmRunWithDebugger(
-    '(module (func (nop) (nop)) (export "test" 0))',
+    '(module (func (nop) (nop)) (export "test" (func 0)))',
     undefined,
     function ({dbg, g}) {
         onEnterFrameCalled = 0;

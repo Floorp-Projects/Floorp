@@ -52,12 +52,12 @@ function appendSourceMappingURL(wasmBytes, url) {
 g.toWasm = (wast, url) => appendSourceMappingURL(wasmTextToBinary(wast), url);
 
 // The sourceMappingURL section is not present
-g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(toWasm('(module (func) (export "" 0))')));`);
+g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(toWasm('(module (func) (export "" (func 0)))')));`);
 assertEq(gotScript.format, "wasm");
 assertEq(gotScript.source.sourceMapURL, null);
 
 // The sourceMappingURL section is present
-g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(toWasm('(module (func) (export "a" 0))', 'http://example.org/test')));`);
+g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(toWasm('(module (func) (export "a" (func 0)))', 'http://example.org/test')));`);
 assertEq(gotScript.format, "wasm");
 assertEq(gotScript.source.sourceMapURL, 'http://example.org/test');
 
@@ -67,6 +67,6 @@ assertThrowsInstanceOf(() => gotScript.source.sourceMapURL = 'foo', Error);
 // The sourceMappingURL section is present, and is still available when wasm
 // binary source is disabled.
 dbg.allowWasmBinarySource = false;
-g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(toWasm('(module (func) (export "a" 0))', 'http://example.org/test2')));`);
+g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(toWasm('(module (func) (export "a" (func 0)))', 'http://example.org/test2')));`);
 assertEq(gotScript.format, "wasm");
 assertEq(gotScript.source.sourceMapURL, 'http://example.org/test2');
