@@ -71,7 +71,6 @@
 
 #ifdef MOZ_X11
 #  include "mozilla/X11Util.h"
-using mozilla::DefaultXDisplay;
 #endif
 
 #ifdef XP_WIN

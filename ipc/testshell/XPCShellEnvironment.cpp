@@ -45,8 +45,6 @@
 using mozilla::AutoSafeJSContext;
 using mozilla::dom::AutoEntryScript;
 using mozilla::dom::AutoJSAPI;
-using mozilla::ipc::TestShellChild;
-using mozilla::ipc::TestShellParent;
 using mozilla::ipc::XPCShellEnvironment;
 using namespace JS;
 

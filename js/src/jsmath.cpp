@@ -49,7 +49,6 @@ using mozilla::IsNegativeZero;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
-using mozilla::NumberIsInt32;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 

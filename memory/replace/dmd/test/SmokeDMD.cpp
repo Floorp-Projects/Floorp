@@ -27,7 +27,6 @@
 #include "mozilla/UniquePtr.h"
 #include "DMD.h"
 
-using mozilla::JSONWriter;
 using mozilla::MakeUnique;
 using namespace mozilla::dmd;
 

@@ -39,7 +39,6 @@ using mozilla::gfx::SharedDIBSurface;
 #include "ImageContainer.h"
 
 using namespace mozilla;
-using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;

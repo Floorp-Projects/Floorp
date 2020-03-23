@@ -12,8 +12,6 @@
 #define MOZ_GTEST_BENCH_FRAMEWORK "platform_microbench"
 #define MOZ_GTEST_NUM_ITERATIONS 5
 
-using mozilla::TimeStamp;
-
 namespace mozilla {
 void GTestBench(const char* aSuite, const char* aName,
                 const std::function<void()>& aTest) {
