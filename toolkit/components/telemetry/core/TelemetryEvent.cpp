@@ -31,9 +31,7 @@
 #include "TelemetryEventData.h"
 #include "TelemetryScalar.h"
 
-using mozilla::ArrayLength;
 using mozilla::Maybe;
-using mozilla::Nothing;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
@@ -43,11 +41,9 @@ using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::LABELS_TELEMETRY_EVENT_RECORDING_ERROR;
 using mozilla::Telemetry::LABELS_TELEMETRY_EVENT_REGISTRATION_ERROR;
 using mozilla::Telemetry::ProcessID;
-using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::CanRecordInProcess;
 using mozilla::Telemetry::Common::CanRecordProduct;
-using mozilla::Telemetry::Common::GetCurrentProduct;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::IsInDataset;

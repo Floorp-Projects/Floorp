@@ -68,11 +68,8 @@ using mozilla::AssertedCast;
 using mozilla::AsVariant;
 using mozilla::Maybe;
 using mozilla::Nothing;
-using mozilla::PodCopy;
-using mozilla::PodZero;
 using mozilla::PointerRangeSize;
 using mozilla::Some;
-using mozilla::Unused;
 using mozilla::Utf8Unit;
 
 using JS::AutoGCRooter;

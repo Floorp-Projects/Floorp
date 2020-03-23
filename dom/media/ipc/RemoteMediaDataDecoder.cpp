@@ -12,8 +12,6 @@
 
 namespace mozilla {
 
-using base::Thread;
-
 RemoteMediaDataDecoder::RemoteMediaDataDecoder(IRemoteDecoderChild* aChild)
     : mChild(aChild) {}
 

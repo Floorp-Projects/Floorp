@@ -41,8 +41,6 @@
 
 namespace mozilla::gl {
 
-using gfx::SurfaceFormat;
-
 UniquePtr<GLScreenBuffer> GLScreenBuffer::Create(GLContext* gl,
                                                  const gfx::IntSize& size,
                                                  const SurfaceCaps& caps) {

@@ -11,8 +11,6 @@
 
 namespace mozilla {
 
-using media::TimeUnit;
-
 RemoteDecoderParent::RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
                                          TaskQueue* aManagerTaskQueue,
                                          TaskQueue* aDecodeTaskQueue)

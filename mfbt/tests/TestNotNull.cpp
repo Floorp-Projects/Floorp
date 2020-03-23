@@ -10,7 +10,6 @@
 #include "mozilla/Unused.h"
 
 using mozilla::MakeNotNull;
-using mozilla::MakeUnique;
 using mozilla::NotNull;
 using mozilla::UniquePtr;
 using mozilla::WrapNotNull;
