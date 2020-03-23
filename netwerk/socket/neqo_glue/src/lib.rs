@@ -477,7 +477,7 @@ pub extern "C" fn neqo_http3conn_read_response_headers(
             if status_element.len() != 1 {
                 return NS_ERROR_ILLEGAL_VALUE;
             }
-            headers.extend_from_slice("HTTP/3.0 ".as_bytes());
+            headers.extend_from_slice("HTTP/3 ".as_bytes());
             headers.extend_from_slice(status_element[0].1.as_bytes());
             headers.extend_from_slice("\r\n".as_bytes());
 
