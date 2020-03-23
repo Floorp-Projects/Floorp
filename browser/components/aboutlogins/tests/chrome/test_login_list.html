@@ -247,17 +247,32 @@ add_task(async function test_populated_list() {
 });
 
 add_task(async function test_breach_indicator() {
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2, Object.assign({}, TEST_LOGIN_3, {password: TEST_LOGIN_1.password})]);
   gLoginList.setBreaches(TEST_BREACHES_MAP);
+  let vulnerableLogins = new Map();
+  vulnerableLogins.set(TEST_LOGIN_1.guid, true);
+  vulnerableLogins.set(TEST_LOGIN_3.guid, true);
+  gLoginList.setVulnerableLogins(vulnerableLogins);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
-  let warningIcon = loginListItems[0].querySelector(".list-item-warning-icon");
+  let breachWarningIcon = loginListItems[0].querySelector(".list-item-warning-icon");
   let hiddenWarningIcon = loginListItems[1].querySelector(".list-item-warning-icon");
+  let vulnerableWarningIcon = loginListItems[2].querySelector(".list-item-warning-icon");
+  is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "The first login should be TEST_LOGIN_1");
+  ok(!loginListItems[0].classList.contains("vulnerable"), "The first login should not have the .vulnerable class");
   ok(loginListItems[0].classList.contains("breached"), "The first login should have the .breached class.");
-  ok(!isHidden(warningIcon), "The warning icon for a breached login should not be hidden.");
+  ok(!isHidden(breachWarningIcon), "The warning icon for a breached login should not be hidden.");
+  is(loginListItems[1].dataset.guid, TEST_LOGIN_3.guid, "The second login should be TEST_LOGIN_3");
+  ok(loginListItems[1].classList.contains("vulnerable"), "The second login should have the .vulnerable class");
   ok(!loginListItems[1].classList.contains("breached"), "The second login should not have the .breached class");
-  ok(isHidden(hiddenWarningIcon), "The warning icon for a login without an associated breach should be hidden.");
+  ok(!isHidden(hiddenWarningIcon), "The warning icon for a vulnerable login should not be hidden.");
+  is(loginListItems[2].dataset.guid, TEST_LOGIN_2.guid, "The third login should be TEST_LOGIN_2");
+  ok(!loginListItems[2].classList.contains("vulnerable"), "The third login should not have the .vulnerable class");
+  ok(!loginListItems[2].classList.contains("breached"), "The third login should not have the .breached class");
+  ok(isHidden(vulnerableWarningIcon), "The warning icon for a login with a vulnerable password should be visible.");
 });
 
 add_task(async function test_filtered_list() {
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
   let emptySearchText = gLoginList.shadowRoot.querySelector(".empty-search-message");
   ok(isHidden(emptySearchText), "The empty search text should be hidden when there are results in the list");
   is(gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])").length, 2, "Both logins should be visible");

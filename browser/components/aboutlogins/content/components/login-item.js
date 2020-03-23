@@ -218,18 +218,40 @@ export default class LoginItem extends HTMLElement {
   }
 
   setBreaches(breachesByLoginGUID) {
-    this._breachesMap = breachesByLoginGUID;
-    this.render();
+    this._internalSetMonitorData("_breachesMap", breachesByLoginGUID);
   }
 
   updateBreaches(breachesByLoginGUID) {
-    if (!this._breachesMap) {
-      this._breachesMap = new Map();
+    this._internalUpdateMonitorData("_breachesMap", breachesByLoginGUID);
+  }
+
+  setVulnerableLogins(vulnerableLoginsByLoginGUID) {
+    this._internalSetMonitorData(
+      "_vulnerableLoginsMap",
+      vulnerableLoginsByLoginGUID
+    );
+  }
+
+  updateVulnerableLogins(vulnerableLoginsByLoginGUID) {
+    this._internalUpdateMonitorData(
+      "_vulnerableLoginsMap",
+      vulnerableLoginsByLoginGUID
+    );
+  }
+
+  _internalSetMonitorData(internalMemberName, mapByLoginGUID) {
+    this[internalMemberName] = mapByLoginGUID;
+    this.render();
+  }
+
+  _internalUpdateMonitorData(internalMemberName, mapByLoginGUID) {
+    if (!this[internalMemberName]) {
+      this[internalMemberName] = new Map();
     }
-    for (const [guid, breach] of [...breachesByLoginGUID]) {
-      this._breachesMap.set(guid, breach);
+    for (const [guid, data] of [...mapByLoginGUID]) {
+      this[internalMemberName].set(guid, data);
     }
-    this.setBreaches(this._breachesMap);
+    this._internalSetMonitorData(internalMemberName, this[internalMemberName]);
   }
 
   dismissBreachAlert() {
@@ -740,9 +762,17 @@ export default class LoginItem extends HTMLElement {
   }
 
   _recordTelemetryEvent(eventObject) {
+    // Breach alerts have higher priority than vulnerable logins, the
+    // following conditionals must reflect this priority.
     const extra = eventObject.hasOwnProperty("extra") ? eventObject.extra : {};
     if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
       Object.assign(extra, { breached: "true" });
+      eventObject.extra = extra;
+    } else if (
+      this._vulnerableLoginsMap &&
+      this._vulnerableLoginsMap.has(this._login.guid)
+    ) {
+      Object.assign(extra, { vulnerable: "true" });
       eventObject.extra = extra;
     }
     recordTelemetryEvent(eventObject);

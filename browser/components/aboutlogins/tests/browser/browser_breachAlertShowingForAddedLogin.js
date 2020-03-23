@@ -63,4 +63,51 @@ add_task(async function test_added_login_shows_breach_warning() {
       );
     }
   );
+
+  info("adding a login that uses the same password as the breached login");
+  let vulnerableLogin = new nsLoginInfo(
+    "https://2.example.com",
+    "https://2.example.com",
+    null,
+    "user2",
+    "pass3",
+    "username",
+    "password"
+  );
+  vulnerableLogin = await addLogin(vulnerableLogin);
+  await SpecialPowers.spawn(
+    browser,
+    [[TEST_LOGIN3.guid, vulnerableLogin.guid]],
+    async ([aTestLogin3Guid, aVulnerableLoginGuid]) => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      is(
+        loginList._loginGuidsSortedOrder.length,
+        2,
+        "two logins should be in the list"
+      );
+      let breachedAndVulnerableLoginListItems;
+      await ContentTaskUtils.waitForCondition(() => {
+        breachedAndVulnerableLoginListItems = [
+          ...loginList._list.querySelectorAll(".breached, .vulnerable"),
+        ];
+        return breachedAndVulnerableLoginListItems.length == 2;
+      }, "waiting for the logins to get marked as breached and vulnerable");
+      ok(
+        !!breachedAndVulnerableLoginListItems.find(
+          listItem => listItem.dataset.guid == aTestLogin3Guid
+        ),
+        "the list should include the breached login: " +
+          breachedAndVulnerableLoginListItems.map(li => li.dataset.guid)
+      );
+      ok(
+        !!breachedAndVulnerableLoginListItems.find(
+          listItem => listItem.dataset.guid == aVulnerableLoginGuid
+        ),
+        "the list should include the vulnerable login: " +
+          breachedAndVulnerableLoginListItems.map(li => li.dataset.guid)
+      );
+    }
+  );
 });
