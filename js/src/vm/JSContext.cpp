@@ -373,7 +373,7 @@ static void PrintErrorLine(FILE* file, const char* prefix,
                            JSErrorNotes::Note* note) {}
 
 template <typename T>
-static bool PrintSingleError(JSContext* cx, FILE* file,
+static void PrintSingleError(JSContext* cx, FILE* file,
                              JS::ConstUTF8CharsZ toStringResult, T* report,
                              PrintErrorKind kind) {
   UniqueChars prefix;
@@ -426,17 +426,16 @@ static bool PrintSingleError(JSContext* cx, FILE* file,
   fputc('\n', file);
 
   fflush(file);
-  return true;
 }
 
-bool js::PrintError(JSContext* cx, FILE* file,
+void js::PrintError(JSContext* cx, FILE* file,
                     JS::ConstUTF8CharsZ toStringResult, JSErrorReport* report,
                     bool reportWarnings) {
   MOZ_ASSERT(report);
 
   /* Conditionally ignore reported warnings. */
   if (report->isWarning() && !reportWarnings) {
-    return false;
+    return;
   }
 
   PrintErrorKind kind = PrintErrorKind::Error;
@@ -451,8 +450,6 @@ bool js::PrintError(JSContext* cx, FILE* file,
                        PrintErrorKind::Note);
     }
   }
-
-  return true;
 }
 
 void js::ReportIsNotDefined(JSContext* cx, HandleId id) {

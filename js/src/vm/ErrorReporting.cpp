@@ -63,7 +63,7 @@ bool js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata,
   }
 
   err->notes = std::move(notes);
-  err->flags = JSREPORT_WARNING;
+  err->isWarning_ = true;
   err->errorNumber = errorNumber;
 
   err->filename = metadata.filename;
@@ -102,7 +102,7 @@ static void ReportCompileErrorImpl(JSContext* cx, js::ErrorMetadata&& metadata,
   }
 
   err->notes = std::move(notes);
-  err->flags = JSREPORT_ERROR;
+  err->isWarning_ = false;
   err->errorNumber = errorNumber;
 
   err->filename = metadata.filename;
@@ -465,8 +465,7 @@ bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
                              const unsigned errorNumber,
                              ErrorArgumentsType argumentsType, va_list ap) {
   JSErrorReport report;
-  report.flags =
-      isWarning == IsWarning::Yes ? JSREPORT_WARNING : JSREPORT_ERROR;
+  report.isWarning_ = isWarning == IsWarning::Yes;
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
@@ -506,8 +505,7 @@ static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
       "Mismatch between character type and argument type");
 
   JSErrorReport report;
-  report.flags =
-      isWarning == IsWarning::Yes ? JSREPORT_WARNING : JSREPORT_ERROR;
+  report.isWarning_ = isWarning == IsWarning::Yes;
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
@@ -550,8 +548,7 @@ bool js::ReportErrorVA(JSContext* cx, IsWarning isWarning, const char* format,
   MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII,
                 JS::StringIsASCII(message.get()));
 
-  report.flags =
-      isWarning == IsWarning::Yes ? JSREPORT_WARNING : JSREPORT_ERROR;
+  report.isWarning_ = isWarning == IsWarning::Yes;
   report.errorNumber = JSMSG_USER_DEFINED_ERROR;
   if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreUTF8) {
     report.initOwnedMessage(message.release());
