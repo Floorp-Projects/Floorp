@@ -73,7 +73,14 @@ function startTest() {
 
 SimpleTest.waitForExplicitFinish();
 
+let oldResolution = 1.0;
+
 function endTest() {
+  if (navigator.appVersion.includes("Android")) {
+    // Restore any resolution that was changed at the end of the test.
+    let topUtils = SpecialPowers.getDOMWindowUtils(window.top);
+    topUtils.setResolutionAndScaleTo(oldResolution);
+  }
   SimpleTest.finish();
 }
 
@@ -100,11 +107,19 @@ var mm;
 function runTest() {
   let resolution = 1;
   if (navigator.appVersion.includes("Android")) {
+    // Choose a roundish number for the resolution so that the "midpoint" test below
+    // doesn't mis-target an element due to rounding error.
+    let desiredResolution = 0.75;
+    let topUtils = SpecialPowers.getDOMWindowUtils(window.top);
+    // Save the old resolution for restoration at the end of the test.
+    oldResolution = topUtils.getResolution();
+    topUtils.setResolutionAndScaleTo(desiredResolution);
     // This test runs on Android, zoomed out. Therefore we need to account
     // for the resolution as well, because the fluff area is relative to screen
     // pixels rather than CSS pixels.
-    resolution = SpecialPowers.getDOMWindowUtils(window.top).getResolution();
-    ok(resolution <= 1, "Resolution is " + resolution);
+    resolution = topUtils.getResolution();
+    // Make sure we were actually able to zoom out to the desired level.
+    ok(resolution == desiredResolution, "Resolution is " + resolution);
   }
   mm = SpecialPowers.getDOMWindowUtils(window.top).physicalMillimeterInCSSPixels / resolution;
   ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
