@@ -217,8 +217,12 @@ class Browser(object):
                     )
                 )
         except Exception:
-            exc, val, tb = sys.exc_info()
-            reraise(exc, "Failed to trigger opening a new tab: {}".format(val), tb)
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            reraise(
+                exc_type,
+                exc_type("Failed to trigger opening a new tab: {}".format(exc_value)),
+                exc_traceback,
+            )
         else:
             Wait(self.marionette).until(
                 lambda mn: len(mn.window_handles) == len(current_tabs) + 1,
