@@ -17,11 +17,10 @@
 namespace v8 {
 namespace internal {
 
-RegExpParser::RegExpParser(FlatStringReader* in, Handle<String>* error,
-                           JSRegExp::Flags flags, Isolate* isolate, Zone* zone)
+RegExpParser::RegExpParser(FlatStringReader* in, JSRegExp::Flags flags,
+                           Isolate* isolate, Zone* zone)
     : isolate_(isolate),
       zone_(zone),
-      error_(error),
       captures_(nullptr),
       named_captures_(nullptr),
       named_back_references_(nullptr),
@@ -74,13 +73,12 @@ void RegExpParser::Advance() {
       if (FLAG_correctness_fuzzer_suppressions) {
         FATAL("Aborting on stack overflow");
       }
-      ReportError(CStrVector(
-          MessageFormatter::TemplateString(MessageTemplate::kStackOverflow)));
+      ReportError(RegExpError::kStackOverflow);
     } else if (zone()->excess_allocation()) {
       if (FLAG_correctness_fuzzer_suppressions) {
         FATAL("Aborting on excess zone allocation");
       }
-      ReportError(CStrVector("Regular expression too large"));
+      ReportError(RegExpError::kTooLarge);
     } else {
       current_ = ReadNext<true>();
     }
@@ -132,15 +130,12 @@ bool RegExpParser::IsSyntaxCharacterOrSlash(uc32 c) {
   return false;
 }
 
-
-RegExpTree* RegExpParser::ReportError(Vector<const char> message) {
+RegExpTree* RegExpParser::ReportError(RegExpError error) {
   if (failed_) return nullptr;  // Do not overwrite any existing error.
   failed_ = true;
-  *error_ = isolate()
-                ->factory()
-                ->NewStringFromOneByte(Vector<const uint8_t>::cast(message))
-                .ToHandleChecked();
-  // Zip to the end to make sure the no more input is read.
+  error_ = error;
+  error_pos_ = position();
+  // Zip to the end to make sure no more input is read.
   current_ = kEndMarker;
   next_pos_ = in()->length();
   return nullptr;
@@ -187,14 +182,14 @@ RegExpTree* RegExpParser::ParseDisjunction() {
       case kEndMarker:
         if (state->IsSubexpression()) {
           // Inside a parenthesized group when hitting end of input.
-          return ReportError(CStrVector("Unterminated group"));
+          return ReportError(RegExpError::kUnterminatedGroup);
         }
         DCHECK_EQ(INITIAL, state->group_type());
         // Parsing completed successfully.
         return builder->ToRegExp();
       case ')': {
         if (!state->IsSubexpression()) {
-          return ReportError(CStrVector("Unmatched ')'"));
+          return ReportError(RegExpError::kUnmatchedParen);
         }
         DCHECK_NE(INITIAL, state->group_type());
 
@@ -245,7 +240,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
       case '*':
       case '+':
       case '?':
-        return ReportError(CStrVector("Nothing to repeat"));
+        return ReportError(RegExpError::kNothingToRepeat);
       case '^': {
         Advance();
         if (builder->multiline()) {
@@ -300,7 +295,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
       case '\\':
         switch (Next()) {
           case kEndMarker:
-            return ReportError(CStrVector("\\ at end of pattern"));
+            return ReportError(RegExpError::kEscapeAtEndOfPattern);
           case 'b':
             Advance(2);
             builder->AddAssertion(new (zone()) RegExpAssertion(
@@ -340,7 +335,8 @@ RegExpTree* RegExpParser::ParseDisjunction() {
             if (unicode()) {
               ZoneList<CharacterRange>* ranges =
                   new (zone()) ZoneList<CharacterRange>(2, zone());
-              std::vector<char> name_1, name_2;
+              ZoneVector<char> name_1(zone());
+              ZoneVector<char> name_2(zone());
               if (ParsePropertyClassName(&name_1, &name_2)) {
                 if (AddPropertyClassRange(ranges, p == 'P', name_1, name_2)) {
                   RegExpCharacterClass* cc = new (zone())
@@ -356,7 +352,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
                   }
                 }
               }
-              return ReportError(CStrVector("Invalid property name"));
+              return ReportError(RegExpError::kInvalidPropertyName);
             } else {
               builder->AddCharacter(p);
             }
@@ -392,7 +388,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
             // With /u, no identity escapes except for syntax characters
             // are allowed. Otherwise, all identity escapes are allowed.
             if (unicode()) {
-              return ReportError(CStrVector("Invalid escape"));
+              return ReportError(RegExpError::kInvalidEscape);
             }
             uc32 first_digit = Next();
             if (first_digit == '8' || first_digit == '9') {
@@ -406,7 +402,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
             Advance();
             if (unicode() && Next() >= '0' && Next() <= '9') {
               // With /u, decimal escape with leading 0 are not parsed as octal.
-              return ReportError(CStrVector("Invalid decimal escape"));
+              return ReportError(RegExpError::kInvalidDecimalEscape);
             }
             uc32 octal = ParseOctalLiteral();
             builder->AddCharacter(octal);
@@ -447,7 +443,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
               // ES#prod-annexB-ExtendedPatternCharacter
               if (unicode()) {
                 // With /u, invalid escapes are not treated as identity escapes.
-                return ReportError(CStrVector("Invalid unicode escape"));
+                return ReportError(RegExpError::kInvalidUnicodeEscape);
               }
               builder->AddCharacter('\\');
             } else {
@@ -465,7 +461,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
               builder->AddCharacter('x');
             } else {
               // With /u, invalid escapes are not treated as identity escapes.
-              return ReportError(CStrVector("Invalid escape"));
+              return ReportError(RegExpError::kInvalidEscape);
             }
             break;
           }
@@ -478,7 +474,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
               builder->AddCharacter('u');
             } else {
               // With /u, invalid escapes are not treated as identity escapes.
-              return ReportError(CStrVector("Invalid Unicode escape"));
+              return ReportError(RegExpError::kInvalidUnicodeEscape);
             }
             break;
           }
@@ -502,7 +498,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
               builder->AddCharacter(current());
               Advance();
             } else {
-              return ReportError(CStrVector("Invalid escape"));
+              return ReportError(RegExpError::kInvalidEscape);
             }
             break;
         }
@@ -510,13 +506,13 @@ RegExpTree* RegExpParser::ParseDisjunction() {
       case '{': {
         int dummy;
         bool parsed = ParseIntervalQuantifier(&dummy, &dummy CHECK_FAILED);
-        if (parsed) return ReportError(CStrVector("Nothing to repeat"));
+        if (parsed) return ReportError(RegExpError::kNothingToRepeat);
         V8_FALLTHROUGH;
       }
       case '}':
       case ']':
         if (unicode()) {
-          return ReportError(CStrVector("Lone quantifier brackets"));
+          return ReportError(RegExpError::kLoneQuantifierBrackets);
         }
         V8_FALLTHROUGH;
       default:
@@ -551,13 +547,12 @@ RegExpTree* RegExpParser::ParseDisjunction() {
       case '{':
         if (ParseIntervalQuantifier(&min, &max)) {
           if (max < min) {
-            return ReportError(
-                CStrVector("numbers out of order in {} quantifier"));
+            return ReportError(RegExpError::kRangeOutOfOrder);
           }
           break;
         } else if (unicode()) {
           // With /u, incomplete quantifiers are not allowed.
-          return ReportError(CStrVector("Incomplete quantifier"));
+          return ReportError(RegExpError::kIncompleteQuantifier);
         }
         continue;
       default:
@@ -573,7 +568,7 @@ RegExpTree* RegExpParser::ParseDisjunction() {
       Advance();
     }
     if (!builder->AddQuantifierToAtom(min, max, quantifier_type)) {
-      return ReportError(CStrVector("Invalid quantifier"));
+      return ReportError(RegExpError::kInvalidQuantifier);
     }
   }
 }
@@ -608,7 +603,7 @@ RegExpParser::RegExpParserState* RegExpParser::ParseOpenParenthesis(
       case 's':
       case 'm': {
         if (!FLAG_regexp_mode_modifiers) {
-          ReportError(CStrVector("Invalid group"));
+          ReportError(RegExpError::kInvalidGroup);
           return nullptr;
         }
         Advance();
@@ -617,7 +612,7 @@ RegExpParser::RegExpParserState* RegExpParser::ParseOpenParenthesis(
           switch (current()) {
             case '-':
               if (!flags_sense) {
-                ReportError(CStrVector("Multiple dashes in flag group"));
+                ReportError(RegExpError::kMultipleFlagDashes);
                 return nullptr;
               }
               flags_sense = false;
@@ -631,7 +626,7 @@ RegExpParser::RegExpParserState* RegExpParser::ParseOpenParenthesis(
               if (current() == 'm') bit = JSRegExp::kMultiline;
               if (current() == 's') bit = JSRegExp::kDotAll;
               if (((switch_on | switch_off) & bit) != 0) {
-                ReportError(CStrVector("Repeated flag in flag group"));
+                ReportError(RegExpError::kRepeatedFlag);
                 return nullptr;
               }
               if (flags_sense) {
@@ -659,7 +654,7 @@ RegExpParser::RegExpParserState* RegExpParser::ParseOpenParenthesis(
               subexpr_type = GROUPING;  // Will break us out of the outer loop.
               continue;
             default:
-              ReportError(CStrVector("Invalid flag group"));
+              ReportError(RegExpError::kInvalidFlagGroup);
               return nullptr;
           }
         }
@@ -683,13 +678,13 @@ RegExpParser::RegExpParserState* RegExpParser::ParseOpenParenthesis(
         Advance();
         break;
       default:
-        ReportError(CStrVector("Invalid group"));
+        ReportError(RegExpError::kInvalidGroup);
         return nullptr;
     }
   }
   if (subexpr_type == CAPTURE) {
     if (captures_started_ >= JSRegExp::kMaxCaptures) {
-      ReportError(CStrVector("Too many captures"));
+      ReportError(RegExpError::kTooManyCaptures);
       return nullptr;
     }
     captures_started_++;
@@ -838,20 +833,20 @@ const ZoneVector<uc16>* RegExpParser::ParseCaptureGroupName() {
     if (c == '\\' && current() == 'u') {
       Advance();
       if (!ParseUnicodeEscape(&c)) {
-        ReportError(CStrVector("Invalid Unicode escape sequence"));
+        ReportError(RegExpError::kInvalidUnicodeEscape);
         return nullptr;
       }
     }
 
     // The backslash char is misclassified as both ID_Start and ID_Continue.
     if (c == '\\') {
-      ReportError(CStrVector("Invalid capture group name"));
+      ReportError(RegExpError::kInvalidCaptureGroupName);
       return nullptr;
     }
 
     if (at_start) {
       if (!IsIdentifierStart(c)) {
-        ReportError(CStrVector("Invalid capture group name"));
+        ReportError(RegExpError::kInvalidCaptureGroupName);
         return nullptr;
       }
       push_code_unit(name, c);
@@ -862,7 +857,7 @@ const ZoneVector<uc16>* RegExpParser::ParseCaptureGroupName() {
       } else if (IsIdentifierPart(c)) {
         push_code_unit(name, c);
       } else {
-        ReportError(CStrVector("Invalid capture group name"));
+        ReportError(RegExpError::kInvalidCaptureGroupName);
         return nullptr;
       }
     }
@@ -889,7 +884,7 @@ bool RegExpParser::CreateNamedCaptureAtIndex(const ZoneVector<uc16>* name,
 
     const auto& named_capture_it = named_captures_->find(capture);
     if (named_capture_it != named_captures_->end()) {
-      ReportError(CStrVector("Duplicate capture group name"));
+      ReportError(RegExpError::kDuplicateCaptureGroupName);
       return false;
     }
   }
@@ -903,7 +898,7 @@ bool RegExpParser::ParseNamedBackReference(RegExpBuilder* builder,
                                            RegExpParserState* state) {
   // The parser is assumed to be on the '<' in \k<name>.
   if (current() != '<') {
-    ReportError(CStrVector("Invalid named reference"));
+    ReportError(RegExpError::kInvalidNamedReference);
     return false;
   }
 
@@ -936,7 +931,7 @@ void RegExpParser::PatchNamedBackReferences() {
   if (named_back_references_ == nullptr) return;
 
   if (named_captures_ == nullptr) {
-    ReportError(CStrVector("Invalid named capture referenced"));
+    ReportError(RegExpError::kInvalidNamedCaptureReference);
     return;
   }
 
@@ -957,7 +952,7 @@ void RegExpParser::PatchNamedBackReferences() {
     if (capture_it != named_captures_->end()) {
       index = (*capture_it)->index();
     } else {
-      ReportError(CStrVector("Invalid named capture referenced"));
+      ReportError(RegExpError::kInvalidNamedCaptureReference);
       return;
     }
 
@@ -1378,8 +1373,8 @@ bool IsUnicodePropertyValueCharacter(char c) {
 
 }  // anonymous namespace
 
-bool RegExpParser::ParsePropertyClassName(std::vector<char>* name_1,
-                                          std::vector<char>* name_2) {
+bool RegExpParser::ParsePropertyClassName(ZoneVector<char>* name_1,
+                                          ZoneVector<char>* name_2) {
   DCHECK(name_1->empty());
   DCHECK(name_2->empty());
   // Parse the property class as follows:
@@ -1418,8 +1413,8 @@ bool RegExpParser::ParsePropertyClassName(std::vector<char>* name_1,
 
 bool RegExpParser::AddPropertyClassRange(ZoneList<CharacterRange>* add_to,
                                          bool negate,
-                                         const std::vector<char>& name_1,
-                                         const std::vector<char>& name_2) {
+                                         const ZoneVector<char>& name_1,
+                                         const ZoneVector<char>& name_2) {
   if (name_2.empty()) {
     // First attempt to interpret as general category property value name.
     const char* name = name_1.data();
@@ -1456,7 +1451,7 @@ bool RegExpParser::AddPropertyClassRange(ZoneList<CharacterRange>* add_to,
   }
 }
 
-RegExpTree* RegExpParser::GetPropertySequence(const std::vector<char>& name_1) {
+RegExpTree* RegExpParser::GetPropertySequence(const ZoneVector<char>& name_1) {
   if (!FLAG_harmony_regexp_sequence) return nullptr;
   const char* name = name_1.data();
   const uc32* sequence_list = nullptr;
@@ -1522,19 +1517,19 @@ RegExpTree* RegExpParser::GetPropertySequence(const std::vector<char>& name_1) {
 
 #else  // V8_INTL_SUPPORT
 
-bool RegExpParser::ParsePropertyClassName(std::vector<char>* name_1,
-                                          std::vector<char>* name_2) {
+bool RegExpParser::ParsePropertyClassName(ZoneVector<char>* name_1,
+                                          ZoneVector<char>* name_2) {
   return false;
 }
 
 bool RegExpParser::AddPropertyClassRange(ZoneList<CharacterRange>* add_to,
                                          bool negate,
-                                         const std::vector<char>& name_1,
-                                         const std::vector<char>& name_2) {
+                                         const ZoneVector<char>& name_1,
+                                         const ZoneVector<char>& name_2) {
   return false;
 }
 
-RegExpTree* RegExpParser::GetPropertySequence(const std::vector<char>& name) {
+RegExpTree* RegExpParser::GetPropertySequence(const ZoneVector<char>& name) {
   return nullptr;
 }
 
@@ -1598,7 +1593,7 @@ uc32 RegExpParser::ParseClassCharacterEscape() {
       }
       if (unicode()) {
         // With /u, invalid escapes are not treated as identity escapes.
-        ReportError(CStrVector("Invalid class escape"));
+        ReportError(RegExpError::kInvalidClassEscape);
         return 0;
       }
       if ((controlLetter >= '0' && controlLetter <= '9') ||
@@ -1631,7 +1626,7 @@ uc32 RegExpParser::ParseClassCharacterEscape() {
       // ES#prod-annexB-LegacyOctalEscapeSequence
       if (unicode()) {
         // With /u, decimal escape is not interpreted as octal character code.
-        ReportError(CStrVector("Invalid class escape"));
+        ReportError(RegExpError::kInvalidClassEscape);
         return 0;
       }
       return ParseOctalLiteral();
@@ -1641,7 +1636,7 @@ uc32 RegExpParser::ParseClassCharacterEscape() {
       if (ParseHexEscape(2, &value)) return value;
       if (unicode()) {
         // With /u, invalid escapes are not treated as identity escapes.
-        ReportError(CStrVector("Invalid escape"));
+        ReportError(RegExpError::kInvalidEscape);
         return 0;
       }
       // If \x is not followed by a two-digit hexadecimal, treat it
@@ -1654,7 +1649,7 @@ uc32 RegExpParser::ParseClassCharacterEscape() {
       if (ParseUnicodeEscape(&value)) return value;
       if (unicode()) {
         // With /u, invalid escapes are not treated as identity escapes.
-        ReportError(CStrVector("Invalid unicode escape"));
+        ReportError(RegExpError::kInvalidUnicodeEscape);
         return 0;
       }
       // If \u is not followed by a two-digit hexadecimal, treat it
@@ -1669,11 +1664,11 @@ uc32 RegExpParser::ParseClassCharacterEscape() {
         Advance();
         return result;
       }
-      ReportError(CStrVector("Invalid escape"));
+      ReportError(RegExpError::kInvalidEscape);
       return 0;
     }
   }
-  return 0;
+  UNREACHABLE();
 }
 
 void RegExpParser::ParseClassEscape(ZoneList<CharacterRange>* ranges,
@@ -1696,17 +1691,18 @@ void RegExpParser::ParseClassEscape(ZoneList<CharacterRange>* ranges,
         return;
       }
       case kEndMarker:
-        ReportError(CStrVector("\\ at end of pattern"));
+        ReportError(RegExpError::kEscapeAtEndOfPattern);
         return;
       case 'p':
       case 'P':
         if (unicode()) {
           bool negate = Next() == 'P';
           Advance(2);
-          std::vector<char> name_1, name_2;
+          ZoneVector<char> name_1(zone);
+          ZoneVector<char> name_2(zone);
           if (!ParsePropertyClassName(&name_1, &name_2) ||
               !AddPropertyClassRange(ranges, negate, name_1, name_2)) {
-            ReportError(CStrVector("Invalid property name in character class"));
+            ReportError(RegExpError::kInvalidClassPropertyName);
           }
           *is_class_escape = true;
           return;
@@ -1725,10 +1721,6 @@ void RegExpParser::ParseClassEscape(ZoneList<CharacterRange>* ranges,
 }
 
 RegExpTree* RegExpParser::ParseCharacterClass(const RegExpBuilder* builder) {
-  static const char* kUnterminated = "Unterminated character class";
-  static const char* kRangeInvalid = "Invalid character class";
-  static const char* kRangeOutOfOrder = "Range out of order in character class";
-
   DCHECK_EQ(current(), '[');
   Advance();
   bool is_negated = false;
@@ -1761,7 +1753,7 @@ RegExpTree* RegExpParser::ParseCharacterClass(const RegExpBuilder* builder) {
         // Either end is an escaped character class. Treat the '-' verbatim.
         if (unicode()) {
           // ES2015 21.2.2.15.1 step 1.
-          return ReportError(CStrVector(kRangeInvalid));
+          return ReportError(RegExpError::kInvalidCharacterClass);
         }
         if (!is_class_1) ranges->Add(CharacterRange::Singleton(char_1), zone());
         ranges->Add(CharacterRange::Singleton('-'), zone());
@@ -1770,7 +1762,7 @@ RegExpTree* RegExpParser::ParseCharacterClass(const RegExpBuilder* builder) {
       }
       // ES2015 21.2.2.15.1 step 6.
       if (char_1 > char_2) {
-        return ReportError(CStrVector(kRangeOutOfOrder));
+        return ReportError(RegExpError::kOutOfOrderCharacterClass);
       }
       ranges->Add(CharacterRange::Range(char_1, char_2), zone());
     } else {
@@ -1778,7 +1770,7 @@ RegExpTree* RegExpParser::ParseCharacterClass(const RegExpBuilder* builder) {
     }
   }
   if (!has_more()) {
-    return ReportError(CStrVector(kUnterminated));
+    return ReportError(RegExpError::kUnterminatedCharacterClass);
   }
   Advance();
   RegExpCharacterClass::CharacterClassFlags character_class_flags;
@@ -1795,14 +1787,16 @@ bool RegExpParser::ParseRegExp(Isolate* isolate, Zone* zone,
                                FlatStringReader* input, JSRegExp::Flags flags,
                                RegExpCompileData* result) {
   DCHECK(result != nullptr);
-  RegExpParser parser(input, &result->error, flags, isolate, zone);
+  RegExpParser parser(input, flags, isolate, zone);
   RegExpTree* tree = parser.ParsePattern();
   if (parser.failed()) {
     DCHECK(tree == nullptr);
-    DCHECK(!result->error.is_null());
+    DCHECK(parser.error_ != RegExpError::kNone);
+    result->error = parser.error_;
+    result->error_pos = parser.error_pos_;
   } else {
     DCHECK(tree != nullptr);
-    DCHECK(result->error.is_null());
+    DCHECK(parser.error_ == RegExpError::kNone);
     if (FLAG_trace_regexp_parser) {
       StdoutStream os;
       tree->Print(os, zone);

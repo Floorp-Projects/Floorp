@@ -36,6 +36,9 @@ class RegExpStackScope {
 
 class RegExpStack {
  public:
+  RegExpStack();
+  ~RegExpStack();
+
   // Number of allocated locations on the stack below the limit.
   // No sequence of pushes must be longer that this without doing a stack-limit
   // check.
@@ -75,9 +78,6 @@ class RegExpStack {
   static constexpr size_t kMaximumStackSize = 64 * MB;
 
  private:
-  RegExpStack();
-  ~RegExpStack();
-
   // Artificial limit used when the thread-local state has been destroyed.
   static const Address kMemoryTop =
       static_cast<Address>(static_cast<uintptr_t>(-1));
