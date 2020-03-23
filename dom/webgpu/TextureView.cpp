@@ -23,7 +23,7 @@ void TextureView::Cleanup() {
     mValid = false;
     WebGPUChild* bridge = mParent->mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
-      bridge->DestroyTextureView(mId);
+      bridge->SendTextureViewDestroy(mId);
     }
   }
 }

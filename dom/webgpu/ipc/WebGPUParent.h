@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace webgpu {
 namespace ffi {
-struct WGPUGlobal;
+struct WGPUGlobal_IdentityRecyclerFactory;
 }  // namespace ffi
 
 class WebGPUParent final : public PWebGPUParent {
@@ -91,7 +91,7 @@ class WebGPUParent final : public PWebGPUParent {
   virtual ~WebGPUParent();
   void MaintainDevices();
 
-  const ffi::WGPUGlobal* const mContext;
+  const ffi::WGPUGlobal_IdentityRecyclerFactory* const mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
 };
 

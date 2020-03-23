@@ -23,7 +23,7 @@ void ComputePipeline::Cleanup() {
     mValid = false;
     WebGPUChild* bridge = mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
-      bridge->DestroyComputePipeline(mId);
+      bridge->SendComputePipelineDestroy(mId);
     }
   }
 }

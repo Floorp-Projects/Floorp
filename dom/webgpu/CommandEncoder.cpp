@@ -29,7 +29,7 @@ void CommandEncoder::Cleanup() {
     mValid = false;
     WebGPUChild* bridge = mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
-      bridge->DestroyCommandEncoder(mId);
+      bridge->SendCommandEncoderDestroy(mId);
     }
   }
 }
