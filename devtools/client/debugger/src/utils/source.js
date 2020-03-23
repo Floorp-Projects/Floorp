@@ -111,7 +111,7 @@ export function isPrettyURL(url: string): boolean {
 }
 
 export function isThirdParty(source: Source) {
-  const url = source.url;
+  const { url } = source;
   if (!source || !url) {
     return false;
   }

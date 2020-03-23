@@ -58,7 +58,7 @@ async function findNewLocation(
   const func = symbols ? findFunctionByName(symbols, name, index) : null;
 
   // Fallback onto the location line, if we do not find a function.
-  let line = location.line;
+  let { line } = location;
   if (func) {
     line = func.location.start.line + offset.line;
   }

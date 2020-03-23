@@ -340,7 +340,7 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   getResultCount = () => {
-    const results = this.state.results;
+    const { results } = this.state;
     return results && results.length ? results.length : 0;
   };
 

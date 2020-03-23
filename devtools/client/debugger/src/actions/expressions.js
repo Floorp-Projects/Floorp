@@ -139,7 +139,7 @@ function evaluateExpression(cx: ThreadContext, expression: Expression) {
       return;
     }
 
-    let input = expression.input;
+    let { input } = expression;
     const frame = getSelectedFrame(getState(), cx.thread);
 
     if (frame) {

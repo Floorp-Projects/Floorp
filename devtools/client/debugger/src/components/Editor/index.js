@@ -154,9 +154,9 @@ class Editor extends PureComponent<Props, State> {
   }
 
   componentWillReceiveProps(nextProps: Props) {
-    let editor = this.state.editor;
+    let { editor } = this.state;
 
-    if (!this.state.editor && nextProps.selectedSource) {
+    if (!editor && nextProps.selectedSource) {
       editor = this.setupEditor();
     }
 
@@ -258,13 +258,14 @@ class Editor extends PureComponent<Props, State> {
   };
 
   componentWillUnmount() {
-    if (this.state.editor) {
-      this.state.editor.destroy();
-      this.state.editor.codeMirror.off("scroll", this.onEditorScroll);
+    const { editor } = this.state;
+    if (editor) {
+      editor.destroy();
+      editor.codeMirror.off("scroll", this.onEditorScroll);
       this.setState({ editor: (null: any) });
     }
 
-    const shortcuts = this.context.shortcuts;
+    const { shortcuts } = this.context;
     shortcuts.off(L10N.getStr("sourceTabs.closeTab.key"));
     shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
     shortcuts.off(L10N.getStr("toggleCondPanel.breakpoint.key"));

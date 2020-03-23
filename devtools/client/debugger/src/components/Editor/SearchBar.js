@@ -92,7 +92,7 @@ class SearchBar extends Component<Props, State> {
   }
 
   componentWillUnmount() {
-    const shortcuts = this.context.shortcuts;
+    const { shortcuts } = this.context;
     const {
       searchShortcut,
       searchAgainShortcut,
@@ -109,7 +109,7 @@ class SearchBar extends Component<Props, State> {
     // overwrite this.doSearch with debounced version to
     // reduce frequency of queries
     this.doSearch = debounce(this.doSearch, 100);
-    const shortcuts = this.context.shortcuts;
+    const { shortcuts } = this.context;
     const {
       searchShortcut,
       searchAgainShortcut,
@@ -191,7 +191,7 @@ class SearchBar extends Component<Props, State> {
   traverseResults = (e: SyntheticEvent<HTMLElement>, rev: boolean) => {
     e.stopPropagation();
     e.preventDefault();
-    const editor = this.props.editor;
+    const { editor } = this.props;
 
     if (!editor) {
       return;

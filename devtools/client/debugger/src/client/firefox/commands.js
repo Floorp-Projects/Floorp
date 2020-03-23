@@ -81,7 +81,7 @@ function createObjectFront(grip: Grip): ObjectFront {
 }
 
 async function loadObjectProperties(root: Node) {
-  const utils = Reps.objectInspector.utils;
+  const { utils } = Reps.objectInspector;
   const properties = await utils.loadProperties.loadItemProperties(
     root,
     devToolsClient

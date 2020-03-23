@@ -72,7 +72,7 @@ export function recordEvent(eventName: string, fields: {} = {}) {
   /* eslint-enable camelcase */
 
   if (!isFirefoxPanel() && window.dbg) {
-    const events = window.dbg._telemetry.events;
+    const { events } = window.dbg._telemetry;
     if (!events[eventName]) {
       events[eventName] = [];
     }

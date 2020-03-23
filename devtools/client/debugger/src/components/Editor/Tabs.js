@@ -277,7 +277,7 @@ class Tabs extends PureComponent<Props, State> {
   }
 
   renderDropdown() {
-    const hiddenTabs = this.state.hiddenTabs;
+    const { hiddenTabs } = this.state;
     if (!hiddenTabs || hiddenTabs.length == 0) {
       return null;
     }

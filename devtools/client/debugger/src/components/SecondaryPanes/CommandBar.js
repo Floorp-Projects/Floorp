@@ -93,15 +93,17 @@ type Props = {
 
 class CommandBar extends Component<Props> {
   componentWillUnmount() {
-    const shortcuts = this.context.shortcuts;
+    const { shortcuts } = this.context;
+
     COMMANDS.forEach(action => shortcuts.off(getKey(action)));
+
     if (isMacOS) {
       COMMANDS.forEach(action => shortcuts.off(getKeyForOS("WINNT", action)));
     }
   }
 
   componentDidMount() {
-    const shortcuts = this.context.shortcuts;
+    const { shortcuts } = this.context;
 
     COMMANDS.forEach(action =>
       shortcuts.on(getKey(action), (_, e) => this.handleEvent(e, action))

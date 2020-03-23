@@ -51,7 +51,7 @@ export async function buildOriginalScopes(
 
   const inputs = [];
   for (let i = 0; i < originalVariables.vars.length; i++) {
-    const expr = originalVariables.vars[i].expr;
+    const { expr } = originalVariables.vars[i];
     const expression = expr
       ? expr.replace(expressionRegex, frameBase)
       : "void 0";
@@ -66,7 +66,7 @@ export async function buildOriginalScopes(
 
   const variables = {};
   for (let i = 0; i < originalVariables.vars.length; i++) {
-    const name = originalVariables.vars[i].name;
+    const { name } = originalVariables.vars[i];
     variables[name] = { value: results[i].result };
   }
 
