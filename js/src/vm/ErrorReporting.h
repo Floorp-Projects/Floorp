@@ -120,25 +120,27 @@ enum ErrorArgumentsType {
   ArgumentsAreUTF8
 };
 
+enum class IsWarning { No, Yes };
+
 /**
  * Report an exception, using printf-style APIs to generate the error
  * message.
  */
-extern bool ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
-                          ErrorArgumentsType argumentsType, va_list ap)
-    MOZ_FORMAT_PRINTF(3, 0);
+extern bool ReportErrorVA(JSContext* cx, IsWarning isWarning,
+                          const char* format, ErrorArgumentsType argumentsType,
+                          va_list ap) MOZ_FORMAT_PRINTF(3, 0);
 
-extern bool ReportErrorNumberVA(JSContext* cx, unsigned flags,
+extern bool ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
                                 JSErrorCallback callback, void* userRef,
                                 const unsigned errorNumber,
                                 ErrorArgumentsType argumentsType, va_list ap);
 
-extern bool ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
+extern bool ReportErrorNumberUCArray(JSContext* cx, IsWarning isWarning,
                                      JSErrorCallback callback, void* userRef,
                                      const unsigned errorNumber,
                                      const char16_t** args);
 
-extern bool ReportErrorNumberUTF8Array(JSContext* cx, unsigned flags,
+extern bool ReportErrorNumberUTF8Array(JSContext* cx, IsWarning isWarning,
                                        JSErrorCallback callback, void* userRef,
                                        const unsigned errorNumber,
                                        const char** args);
