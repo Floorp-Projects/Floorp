@@ -6630,7 +6630,7 @@ nsresult nsDocShell::CreateContentViewerForActor(
     MOZ_ASSERT(
         doc,
         "Should have a document if CreateAboutBlankContentViewer succeeded");
-    MOZ_ASSERT(doc->GetOwnerGlobal() == aWindowActor->WindowGlobal(),
+    MOZ_ASSERT(doc->GetOwnerGlobal() == aWindowActor->GetWindowGlobal(),
                "New document should be in the same global as our actor");
 
     // FIXME: We may want to support non-initial documents here.

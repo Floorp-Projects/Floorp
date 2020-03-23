@@ -115,7 +115,7 @@ Document* JSWindowActorChild::GetDocument(ErrorResult& aRv) {
     return nullptr;
   }
 
-  nsGlobalWindowInner* window = mManager->WindowGlobal();
+  nsGlobalWindowInner* window = mManager->GetWindowGlobal();
   return window ? window->GetDocument() : nullptr;
 }
 

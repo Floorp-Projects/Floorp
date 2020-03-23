@@ -270,7 +270,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameLocal(
     return IPC_OK();
   }
 
-  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != WindowGlobal())) {
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != GetWindowGlobal())) {
     return IPC_OK();
   }
 
@@ -327,7 +327,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
     return IPC_OK();
   }
 
-  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != WindowGlobal())) {
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != GetWindowGlobal())) {
     BrowserBridgeChild::Send__delete__(bridge);
     return IPC_OK();
   }
