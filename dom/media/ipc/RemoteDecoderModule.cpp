@@ -25,7 +25,6 @@
 
 namespace mozilla {
 
-using base::Thread;
 using dom::ContentChild;
 using namespace ipc;
 using namespace layers;

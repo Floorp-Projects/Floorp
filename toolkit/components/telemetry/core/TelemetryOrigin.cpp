@@ -27,7 +27,6 @@
 #include <cmath>
 #include <type_traits>
 
-using mozilla::ErrorResult;
 using mozilla::Get;
 using mozilla::MakeTuple;
 using mozilla::MakeUnique;

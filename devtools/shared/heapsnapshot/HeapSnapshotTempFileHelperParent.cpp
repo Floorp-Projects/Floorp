@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace devtools {
 
-using ipc::FileDescriptor;
-
 static bool openFileFailure(ErrorResult& rv,
                             OpenHeapSnapshotTempFileResponse* outResponse) {
   *outResponse = rv.StealNSResult();

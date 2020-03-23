@@ -20,7 +20,6 @@ using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::SomeRef;
 using mozilla::ToMaybe;
-using mozilla::UniquePtr;
 
 #define RUN_TEST(t)                                                     \
   do {                                                                  \

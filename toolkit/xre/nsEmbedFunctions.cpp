@@ -144,7 +144,6 @@ using mozilla::ipc::IOThreadChild;
 using mozilla::ipc::ProcessChild;
 using mozilla::ipc::ScopedXREEmbed;
 
-using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentProcess;
 using mozilla::plugins::PluginProcessChild;
@@ -153,7 +152,6 @@ using mozilla::gmp::GMPProcessChild;
 
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::TestShellParent;
-using mozilla::ipc::XPCShellEnvironment;
 
 using mozilla::startup::sChildProcessType;
 

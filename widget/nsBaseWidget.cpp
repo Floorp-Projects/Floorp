@@ -113,7 +113,6 @@ using namespace mozilla::layers;
 using namespace mozilla::ipc;
 using namespace mozilla::widget;
 using namespace mozilla;
-using base::Thread;
 
 // Async pump timer during injected long touch taps
 #define TOUCH_INJECT_PUMP_TIMER_MSEC 50

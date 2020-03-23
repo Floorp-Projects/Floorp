@@ -50,8 +50,6 @@ JS::ubi::StackFrame DeserializedStackFrame::getParentStackFrame() const {
 namespace JS {
 namespace ubi {
 
-using mozilla::devtools::DeserializedEdge;
-
 const char16_t Concrete<DeserializedNode>::concreteTypeName[] =
     u"mozilla::devtools::DeserializedNode";
 

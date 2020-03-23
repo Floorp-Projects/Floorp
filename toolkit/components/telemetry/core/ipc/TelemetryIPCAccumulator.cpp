@@ -21,7 +21,6 @@
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 
-using mozilla::Preferences;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
