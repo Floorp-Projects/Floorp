@@ -71,7 +71,7 @@ var tbl = new Table({initial:50, element:"funcref"});
 assertEq(new Instance(m, {globals:{a:20, table:tbl}}) instanceof Instance, true);
 assertSegmentFitError(() => new Instance(m, {globals:{a:50, table:tbl}}));
 
-var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect $v2i (local.get $i))) (export "call" $call)`
+var caller = `(type $v2i (func (result i32))) (func $call (param $i i32) (result i32) (call_indirect (type $v2i) (local.get $i))) (export "call" $call)`
 var callee = i => `(func $f${i} (type $v2i) (i32.const ${i}))`;
 
 var call = wasmEvalText(`(module (table 10 funcref) ${callee(0)} ${caller})`).exports.call;
@@ -175,7 +175,7 @@ var m = new Module(wasmTextToBinary(`(module
                     (then (i32.const 0))
                     (else
                         (local.set $i (i32.sub (local.get $i) (i32.const 1)))
-                        (call_indirect $i2i (local.get $i) (local.get $i)))))))
+                        (call_indirect (type $i2i) (local.get $i) (local.get $i)))))))
     (export "call" $call)
 )`));
 var failTime = false;
@@ -205,7 +205,7 @@ var call = wasmEvalText(`(module
     (func $a (type $v2i1) (i32.const 0))
     (func $b (type $v2i2) (i32.const 1))
     (func $c (type $i2v))
-    (func $call (param i32) (result i32) (call_indirect $v2i1 (local.get 0)))
+    (func $call (param i32) (result i32) (call_indirect (type $v2i1) (local.get 0)))
     (export "call" $call)
 )`).exports.call;
 assertEq(call(0), 0);
@@ -229,7 +229,7 @@ var call = wasmEvalText(`(module
     (func $f (type $F) (local.get 12))
     (func $g (type $G) (local.get 13))
     (func $call (param i32) (result i32)
-        (call_indirect $A (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 42) (local.get 0)))
+        (call_indirect (type $A) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 0) (i32.const 42) (local.get 0)))
     (export "call" $call)
 )`).exports.call;
 assertEq(call(0), 42);
@@ -264,7 +264,7 @@ assertEq(tbl.get(0).foo, 42);
             (import "a" "t" (table 3 funcref))
             (import "a" "m" (memory 1))
             (type $v2i (func (result i32)))
-            (func $call (param $i i32) (result i32) (i32.add (call_indirect $v2i (local.get $i)) (memory.size)))
+            (func $call (param $i i32) (result i32) (i32.add (call_indirect (type $v2i) (local.get $i)) (memory.size)))
             (export "call" $call))
     `)), {a:{t:g.tbl,m:g.mem}}).exports.call;
 

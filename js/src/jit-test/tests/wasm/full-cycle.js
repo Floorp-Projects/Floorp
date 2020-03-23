@@ -80,7 +80,7 @@ wasmFullPass(`(module
     (elem (i32.const 2) $foo)
     (func (export "run") (param i32) (result i32)
         local.get 0
-        call_indirect $t
+        call_indirect (type $t)
     )
 )`, 3, {}, 0);
 
@@ -96,7 +96,7 @@ wasmFullPass(`(module
     (elem (i32.const 2) $foo)
     (func (export "run") (param i32) (result i32)
         local.get 0
-        call_indirect $t
+        call_indirect (type $t)
     )
 )`, 3, {"":{table}}, 0);
 

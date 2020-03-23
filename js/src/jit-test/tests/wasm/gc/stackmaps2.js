@@ -65,7 +65,7 @@ let t =
                     (local.get $arg1) (local.get $arg1) (i32.const 15))
 
          ;; call indirect to table index 0, which is $fn0
-         (call_indirect $typeOfFn0
+         (call_indirect (type $typeOfFn0)
                     (i32.const 10) (local.get $arg1) (i32.const 12)
                     (local.get $arg1) (local.get $arg1) (i32.const 15)
                     (i32.const 0)) ;; table index

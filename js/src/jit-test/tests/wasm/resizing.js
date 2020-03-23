@@ -67,7 +67,7 @@ var exports2 = wasmEvalText(`(module
     (type $v2v (func))
     (func $test (result i32)
         (i32.store (i32.const 0) (i32.const 1))
-        (call_indirect $v2v (i32.const 0))
+        (call_indirect (type $v2v) (i32.const 0))
         (i32.add
             (i32.load (i32.const 0))
             (i32.add
@@ -138,10 +138,10 @@ var exports = wasmEvalText(`(module
     (table (export "tbl") 1 funcref)
     (func $test (result i32)
         (i32.add
-            (call_indirect $v2i (i32.const 0))
+            (call_indirect (type $v2i) (i32.const 0))
             (block (result i32)
                 (call $grow)
-                (call_indirect $v2i (i32.const 1)))))
+                (call_indirect (type $v2i) (i32.const 1)))))
     (func $one (result i32) (i32.const 1))
     (elem (i32.const 0) $one)
     (func $two (result i32) (i32.const 2))
@@ -169,10 +169,10 @@ var exports2 = wasmEvalText(`(module
     (table 2 funcref)
     (func $test (result i32)
         (i32.add
-            (call_indirect $v2i (i32.const 1))
+            (call_indirect (type $v2i) (i32.const 1))
             (block (result i32)
-                (call_indirect $v2v (i32.const 0))
-                (call_indirect $v2i (i32.const 2)))))
+                (call_indirect (type $v2v) (i32.const 0))
+                (call_indirect (type $v2i) (i32.const 2)))))
     (func $ten (result i32) (i32.const 10))
     (elem (i32.const 1) $ten)
     (func $eleven (result i32) (i32.const 11))
@@ -198,7 +198,7 @@ tbl.set(0, src.one);
 var mod = new Module(wasmTextToBinary(`(module
     (type $v2i (func (result i32)))
     (table (import "" "tbl") 1 funcref)
-    (func $ci (param i32) (result i32) (call_indirect $v2i (local.get 0)))
+    (func $ci (param i32) (result i32) (call_indirect (type $v2i) (local.get 0)))
     (export "call_indirect" $ci)
 )`));
 var exp1 = new Instance(mod, {"":{tbl}}).exports;
