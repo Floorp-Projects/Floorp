@@ -3237,32 +3237,6 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
   // 3 = secure and "https:"
   bool potentiallyTurstworthy =
       nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(aHostURI);
-  Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_SECURITY,
-                        ((aCookieData.isSecure()) ? 0x02 : 0x00) |
-                            ((potentiallyTurstworthy) ? 0x01 : 0x00));
-
-  // Collect telemetry on how often are first- and third-party cookies set
-  // from HTTPS origins:
-  //
-  // 0 (000) = first-party and "http:"
-  // 1 (001) = first-party and "http:" with bogus Secure cookie flag?!
-  // 2 (010) = first-party and "https:"
-  // 3 (011) = first-party and "https:" with Secure cookie flag
-  // 4 (100) = third-party and "http:"
-  // 5 (101) = third-party and "http:" with bogus Secure cookie flag?!
-  // 6 (110) = third-party and "https:"
-  // 7 (111) = third-party and "https:" with Secure cookie flag
-  if (aThirdPartyUtil) {
-    bool isThirdParty = true;
-
-    if (aChannel) {
-      aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isThirdParty);
-    }
-    Telemetry::Accumulate(Telemetry::COOKIE_SCHEME_HTTPS,
-                          (isThirdParty ? 0x04 : 0x00) |
-                              (potentiallyTurstworthy ? 0x02 : 0x00) |
-                              (aCookieData.isSecure() ? 0x01 : 0x00));
-  }
 
   int64_t currentTimeInUsec = PR_Now();
 

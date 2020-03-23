@@ -10826,26 +10826,6 @@
     "n_values": 8,
     "description": "When we record an upgrade due to HSTS, record the source of that HSTS entry. (0: HSTS preload list, 1: HSTS Header seen naturally, 2: HSTS priming)"
   },
-  "COOKIE_SCHEME_SECURITY": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out",
-    "description": "How often are secure cookies set from non-secure origins, and vice-versa? 0=nonsecure/http, 1=nonsecure/https, 2=secure/http, 3=secure/https"
-  },
-  "COOKIE_SCHEME_HTTPS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["cpeterson@mozilla.com", "seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1160368],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "How often are first- and third-party cookies set from HTTPS origins? 0=first/http, 1=first/http+secure?!, 2=first/https, 3=first/https+secure, 4=third/http, 5=third/http+secure?!, 6=third/https, 7=third/https+secure"
-  },
   "COOKIE_TIME_MOVING_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
