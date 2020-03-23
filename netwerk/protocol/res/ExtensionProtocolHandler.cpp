@@ -14,7 +14,6 @@
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/ipc/URIParams.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/RefPtr.h"
@@ -234,14 +233,10 @@ Result<Ok, nsresult> ExtensionStreamGetter::GetAsync(
   mListener = aListener;
   mChannel = aChannel;
 
-  // Serialize the URI to send to parent
-  mozilla::ipc::URIParams uri;
-  SerializeURI(mURI, uri);
-
   RefPtr<ExtensionStreamGetter> self = this;
   if (mIsJarChannel) {
     // Request an FD for this moz-extension URI
-    gNeckoChild->SendGetExtensionFD(uri)->Then(
+    gNeckoChild->SendGetExtensionFD(mURI)->Then(
         mMainThreadEventTarget, __func__,
         [self](const FileDescriptor& fd) { self->OnFD(fd); },
         [self](const mozilla::ipc::ResponseRejectReason) {
@@ -251,7 +246,7 @@ Result<Ok, nsresult> ExtensionStreamGetter::GetAsync(
   }
 
   // Request an input stream for this moz-extension URI
-  gNeckoChild->SendGetExtensionStream(uri)->Then(
+  gNeckoChild->SendGetExtensionStream(mURI)->Then(
       mMainThreadEventTarget, __func__,
       [self](const RefPtr<nsIInputStream>& stream) {
         self->OnStream(do_AddRef(stream));
