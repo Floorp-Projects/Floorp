@@ -34,7 +34,13 @@ function threadsReducer(state = initialReducerState, action) {
       const threads = state.threads.filter(
         thread => thread._targetFront !== action.target
       );
-      return { ...state, threads };
+
+      let { selected } = state;
+      if (selected._targetFront === action.target) {
+        selected = null;
+      }
+
+      return { ...state, threads, selected };
     }
   }
   return state;
