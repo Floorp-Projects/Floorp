@@ -40,7 +40,7 @@ const REGEXP_INSERT_METHOD = /(?:^| )insert-method:(\d+)/;
 // Regex used to match one or more whitespace.
 const REGEXP_SPACES = /\s+/;
 
-// Regex used to strip prefixes from URLs.  See stripAnyPrefix().
+// Regex used to strip prefixes from URLs.  See stripPrefix().
 const REGEXP_STRIP_PREFIX = /^[a-z]+:(?:\/){0,2}/i;
 
 // The result is notified on a delay, to avoid rebuilding the panel at every match.
@@ -469,7 +469,7 @@ XPCOMUtils.defineLazyGetter(this, "sourceToBehaviorMap", () => {
  *         The possible URL to strip.
  * @return If `str` is a URL, then [prefix, remainder].  Otherwise, ["", str].
  */
-function stripAnyPrefix(str) {
+function stripPrefix(str) {
   let match = REGEXP_STRIP_PREFIX.exec(str);
   if (!match) {
     return ["", str];
@@ -482,49 +482,25 @@ function stripAnyPrefix(str) {
 }
 
 /**
- * Strips parts of a URL defined in `options`.
+ * Strip http and trailing separators from a spec.
  *
- * @param {string} spec
+ * @param spec
  *        The text to modify.
- * @param {object} options
- * @param {boolean} options.stripHttp
- *        Whether to strip http.
- * @param {boolean} options.stripHttps
- *        Whether to strip https.
- * @param {boolean} options.stripWww
- *        Whether to strip `www.`.
- * @param {boolean} options.trimSlash
+ * @param trimSlash
  *        Whether to trim the trailing slash.
- * @param {boolean} options.trimEmptyQuery
- *        Whether to trim a trailing `?`.
- * @returns {array} [modified, prefix, suffix]
- *          modified: {string} The modified spec.
- *          prefix: {string} The parts stripped from the prefix, if any.
- *          suffix: {string} The parts trimmed from the suffix, if any.
+ * @return the modified spec.
  */
-function stripPrefixAndTrim(spec, options = {}) {
-  let prefix = "";
-  let suffix = "";
-  if (options.stripHttp && spec.startsWith("http://")) {
+function stripHttpAndTrim(spec, trimSlash = true) {
+  if (spec.startsWith("http://")) {
     spec = spec.slice(7);
-    prefix = "http://";
-  } else if (options.stripHttps && spec.startsWith("https://")) {
-    spec = spec.slice(8);
-    prefix = "https://";
   }
-  if (options.stripWww && spec.startsWith("www.")) {
-    spec = spec.slice(4);
-    prefix += "www.";
-  }
-  if (options.trimSlash && spec.endsWith("/")) {
+  if (spec.endsWith("?")) {
     spec = spec.slice(0, -1);
-    suffix += "/";
   }
-  if (options.trimEmptyQuery && spec.endsWith("?")) {
+  if (trimSlash && spec.endsWith("/")) {
     spec = spec.slice(0, -1);
-    suffix += "?";
   }
-  return [spec, prefix, suffix];
+  return spec;
 }
 
 /**
@@ -540,33 +516,18 @@ function stripPrefixAndTrim(spec, options = {}) {
  *          compare keys.
  */
 function makeKeyForMatch(match) {
-  // For autofill entries, we need to have a key based on the finalCompleteValue
-  // rather than the value field, because the latter may have been trimmed.
-  let key, prefix;
+  // For autofill entries, we need to have a key based on the comment rather
+  // than the value field, because the latter may have been trimmed.
   if (match.style && match.style.includes("autofill")) {
-    [key, prefix] = stripPrefixAndTrim(match.finalCompleteValue, {
-      stripHttp: true,
-      stripHttps: true,
-      stripWww: true,
-      trimEmptyQuery: true,
-      trimSlash: true,
-    });
-
-    return [key, prefix, null];
+    return [stripHttpAndTrim(match.comment), null];
   }
 
   let action = PlacesUtils.parseActionUrl(match.value);
   if (!action) {
-    [key, prefix] = stripPrefixAndTrim(match.value, {
-      stripHttp: true,
-      stripHttps: true,
-      stripWww: true,
-      trimEmptyQuery: true,
-      trimSlash: true,
-    });
-    return [key, prefix, null];
+    return [stripHttpAndTrim(match.value), null];
   }
 
+  let key;
   switch (action.type) {
     case "searchengine":
       // We want to exclude search suggestion matches that simply echo back the
@@ -581,17 +542,11 @@ function makeKeyForMatch(match) {
       ];
       break;
     default:
-      [key, prefix] = stripPrefixAndTrim(action.params.url || match.value, {
-        stripHttp: true,
-        stripHttps: true,
-        stripWww: true,
-        trimEmptyQuery: true,
-        trimSlash: true,
-      });
+      key = stripHttpAndTrim(action.params.url || match.value);
       break;
   }
 
-  return [key, prefix, action];
+  return [key, action];
 }
 
 /**
@@ -708,7 +663,7 @@ function Search(
   let unescapedSearchString = Services.textToSubURI.unEscapeURIForUI(
     this._trimmedOriginalSearchString
   );
-  let [prefix, suffix] = stripAnyPrefix(unescapedSearchString);
+  let [prefix, suffix] = stripPrefix(unescapedSearchString);
   this._searchString = suffix;
   this._strippedPrefix = prefix.toLowerCase();
 
@@ -1391,7 +1346,7 @@ Search.prototype = {
     this._result.setDefaultIndex(0);
 
     let url = matchedSite.uri.spec;
-    let value = stripAnyPrefix(url)[1];
+    let value = stripPrefix(url)[1];
     value = value.substr(value.indexOf(this._searchString));
 
     this._addAutofillMatch(value, url, Infinity, ["preloaded-top-site"]);
@@ -2238,34 +2193,16 @@ Search.prototype = {
     this.notifyResult(true, match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC);
   },
 
-  // Ranks a URL prefix from 3 - 0 with the following preferences:
-  // https:// > https://www. > http:// > http://www.
-  // Higher is better.
-  // Returns -1 if the prefix does not match any of the above.
-  _getPrefixRank(prefix) {
-    return ["http://www.", "http://", "https://www.", "https://"].indexOf(
-      prefix
-    );
-  },
-
-  /**
-   * Check for duplicates and either discard the duplicate or replace the
-   * original match, in case the new one is more specific. For example,
-   * a Remote Tab wins over History, and a Switch to Tab wins over a Remote Tab.
-   * We must check both id and url for duplication, because keywords may change
-   * the url by replacing the %s placeholder.
-   * @param match
-   * @returns {object} matchPosition
-   * @returns {number} matchPosition.index
-   *   The index the match should take in the results. Return -1 if the match
-   *   should be discarded.
-   * @returns {boolean} matchPosition.replace
-   *   True if the match should replace the result already at
-   *   matchPosition.index.
-   *
-   */
   _getInsertIndexForMatch(match) {
-    let [urlMapKey, prefix, action] = makeKeyForMatch(match);
+    // Check for duplicates and either discard (by returning -1) the duplicate
+    // or suggest to replace the original match, in case the new one is more
+    // specific (for example a Remote Tab wins over History, and a Switch to Tab
+    // wins over a Remote Tab).
+    // Must check both id and url, cause keywords dynamically modify the url.
+    // Note: this partially fixes Bug 1222435,  but not if the urls differ more
+    // than just by "http://". We should still evaluate www and other schemes
+    // equivalences.
+    let [urlMapKey, action] = makeKeyForMatch(match);
     if (
       (match.placeId && this._usedPlaceIds.has(match.placeId)) ||
       this._usedURLs.some(e => ObjectUtils.deepEqual(e.key, urlMapKey))
@@ -2296,112 +2233,13 @@ Search.prototype = {
               continue;
             }
             if (!matchAction || action.type == "switchtab") {
-              this._usedURLs[i] = {
-                key: urlMapKey,
-                action,
-                type: match.type,
-                prefix,
-                comment: match.comment,
-              };
+              this._usedURLs[i] = { key: urlMapKey, action, type: match.type };
               return { index: i, replace: true };
             }
             break; // Found the duplicate, no reason to continue.
           }
         }
-      } else {
-        // Dedupe with this flow:
-        // 1. If the two URLs are the same, dedupe whichever is not the
-        //    heuristic result.
-        // 2. If they both contain www. or both do not contain it, prefer https.
-        // 3. If they differ by www.:
-        //    3a. If the page titles are different, keep both. This is a guard
-        //        against deduping when www.site.com and site.com have different
-        //        content.
-        //    3b. Otherwise, dedupe based on the priorities in _getPrefixRank.
-        let prefixRank = this._getPrefixRank(prefix);
-        for (let i = 0; i < this._usedURLs.length; ++i) {
-          if (!this._usedURLs[i]) {
-            // This is true when the result at [i] is a searchengine result.
-            continue;
-          }
-
-          let {
-            key: existingKey,
-            prefix: existingPrefix,
-            type: existingType,
-            comment: existingComment,
-          } = this._usedURLs[i];
-
-          let existingPrefixRank = this._getPrefixRank(existingPrefix);
-          if (ObjectUtils.deepEqual(existingKey, urlMapKey)) {
-            isDupe = true;
-
-            if (prefix == existingPrefix) {
-              // The URLs are identical. Throw out the new result, unless it's
-              // the heuristic.
-              if (match.type != UrlbarUtils.RESULT_GROUP.HEURISTIC) {
-                break; // Replace match.
-              } else {
-                this._usedURLs[i] = {
-                  key: urlMapKey,
-                  action,
-                  type: match.type,
-                  prefix,
-                  comment: match.comment,
-                };
-                return { index: i, replace: true };
-              }
-            }
-
-            if (prefix.endsWith("www.") == existingPrefix.endsWith("www.")) {
-              // The results differ only by protocol.
-
-              if (match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC) {
-                isDupe = false;
-                continue;
-              }
-
-              if (prefixRank <= existingPrefixRank) {
-                break; // Replace match.
-              } else if (existingType != UrlbarUtils.RESULT_GROUP.HEURISTIC) {
-                this._usedURLs[i] = {
-                  key: urlMapKey,
-                  action,
-                  type: match.type,
-                  prefix,
-                  comment: match.comment,
-                };
-                return { index: i, replace: true };
-              } else {
-                isDupe = false;
-                continue;
-              }
-            } else {
-              // If either result is the heuristic, this will be true and we
-              // will keep both results.
-              if (match.comment != existingComment) {
-                isDupe = false;
-                continue;
-              }
-
-              if (prefixRank <= existingPrefixRank) {
-                break; // Replace match.
-              } else {
-                this._usedURLs[i] = {
-                  key: urlMapKey,
-                  action,
-                  type: match.type,
-                  prefix,
-                  comment: match.comment,
-                };
-                return { index: i, replace: true };
-              }
-            }
-          }
-        }
       }
-
-      // Discard the duplicate.
       if (isDupe) {
         return { index: -1, replace: false };
       }
@@ -2475,13 +2313,7 @@ Search.prototype = {
       bucket.insertIndex++;
       break;
     }
-    this._usedURLs[index] = {
-      key: urlMapKey,
-      action,
-      type: match.type,
-      prefix,
-      comment: match.comment || "",
-    };
+    this._usedURLs[index] = { key: urlMapKey, action, type: match.type };
     return { index, replace };
   },
 
@@ -2593,12 +2425,10 @@ Search.prototype = {
     // that the user knows exactly where the match will take them.  To make it
     // look a little nicer, remove "http://", and if the user typed a host
     // without a trailing slash, remove any trailing slash, too.
-    let [comment] = stripPrefixAndTrim(finalCompleteValue, {
-      stripHttp: true,
-      trimEmptyQuery: true,
-      trimSlash: !this._searchString.includes("/"),
-    });
-
+    let comment = stripHttpAndTrim(
+      finalCompleteValue,
+      !this._searchString.includes("/")
+    );
     this._addMatch({
       value: this._strippedPrefix + autofilledValue,
       finalCompleteValue,
