@@ -15,8 +15,8 @@ assertErrorMessage(() => validate({ valueOf: () => new ArrayBuffer(65536) }), Er
 
 assertEq(validate(wasmTextToBinary(`(module)`)), true);
 
-assertEq(validate(wasmTextToBinary(`(module (export "run" 0))`)), false);
-assertEq(validate(wasmTextToBinary(`(module (func) (export "run" 0))`)), true);
+assertEq(validate(wasmTextToBinary(`(module (export "run" (func 0)))`)), false);
+assertEq(validate(wasmTextToBinary(`(module (func) (export "run" (func 0)))`)), true);
 
 // Feature-testing proof-of-concept.
 assertEq(validate(wasmTextToBinary(`(module (memory 1) (func (result i32) (memory.size)))`)), true);

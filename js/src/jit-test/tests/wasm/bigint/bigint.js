@@ -112,7 +112,7 @@ function testImportExport() {
   var f1 = wasmEvalText(
     `(module
       (import "i64" "func" (param i64))
-      (export "f" 0)
+      (export "f" (func 0))
     )`,
     {
       i64: {
@@ -126,7 +126,7 @@ function testImportExport() {
   var f2 = wasmEvalText(
     `(module
       (import "i64" "func" (param i64) (result i64))
-      (export "f" 0)
+      (export "f" (func 0))
     )`,
     {
       i64: {
@@ -156,7 +156,7 @@ function testImportExport() {
   var f4 = wasmEvalText(
     `(module
       (import "i64" "func" (result i64))
-      (export "f" 0)
+      (export "f" (func 0))
     )`,
     { i64: { func() {} } }
   ).exports.f;

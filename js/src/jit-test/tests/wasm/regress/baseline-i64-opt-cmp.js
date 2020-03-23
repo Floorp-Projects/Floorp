@@ -12,5 +12,5 @@ wasmEvalText(
 	  drop
           i64.const 2
         end)
-      (export "run" $run))`
+      (export "run" (func $run)))`
 );
