@@ -53,9 +53,6 @@ class WebRenderScrollDataCollection {
   void AppendRoot(Maybe<ScrollMetadata>& aRootMetadata,
                   wr::RenderRootArray<WebRenderScrollData>& aScrollDatas);
 
-  void AppendWrapper(const RenderRootBoundary& aBoundary,
-                     size_t aLayerCountBeforeRecursing);
-
   void AppendScrollData(const wr::DisplayListBuilder& aBuilder,
                         WebRenderLayerManager* aManager, nsDisplayItem* aItem,
                         size_t aLayerCountBeforeRecursing,

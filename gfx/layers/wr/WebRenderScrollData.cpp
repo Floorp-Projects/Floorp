@@ -132,14 +132,6 @@ void WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const {
   if (mReferentId) {
     printf_stderr("  ref layers id: 0x%" PRIx64 "\n", uint64_t(*mReferentId));
   }
-  if (mBoundaryRoot) {
-    printf_stderr("  boundary root for: %s\n",
-                  mBoundaryRoot->ToString().c_str());
-  }
-  if (mReferentRenderRoot) {
-    printf_stderr("  ref renderroot: %s\n",
-                  mReferentRenderRoot->ToString().c_str());
-  }
   printf_stderr("  scrollbar type: %d animation: %" PRIx64 "\n",
                 (int)mScrollbarData.mScrollbarLayerType,
                 mScrollbarAnimationId.valueOr(0));
