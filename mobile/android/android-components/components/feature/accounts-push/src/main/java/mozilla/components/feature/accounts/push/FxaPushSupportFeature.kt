@@ -141,7 +141,6 @@ internal class AccountObserver(
         // Delete cached value of last verified timestamp and scope when we log out.
         preference(context).edit()
             .remove(PREF_LAST_VERIFIED)
-            .remove(PREF_FXA_SCOPE)
             .apply()
     }
 }

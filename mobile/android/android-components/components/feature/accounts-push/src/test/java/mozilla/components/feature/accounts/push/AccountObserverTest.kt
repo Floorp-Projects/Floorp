@@ -91,7 +91,7 @@ class AccountObserverTest {
         observer.onLoggedOut()
 
         assertFalse(preference(testContext).contains(PREF_LAST_VERIFIED))
-        assertFalse(preference(testContext).contains(PREF_FXA_SCOPE))
+        assertTrue(preference(testContext).contains(PREF_FXA_SCOPE))
     }
 
     @Test
