@@ -5,12 +5,15 @@ const { ASRouter } = ChromeUtils.import(
 );
 
 const BRANCH_PREF = "trailhead.firstrun.branches";
+const SIMPLIFIED_WELCOME_ENABLED_PREF = "browser.aboutwelcome.enabled";
 
 /**
  * Sets the trailhead branch pref to the passed value.
  */
 async function setTrailheadBranch(value) {
   Services.prefs.setCharPref(BRANCH_PREF, value);
+  // Set about:welcome to use trailhead flow
+  Services.prefs.setBoolPref(SIMPLIFIED_WELCOME_ENABLED_PREF, false);
 
   // Reset trailhead so it loads the new branch.
   Services.prefs.clearUserPref("trailhead.firstrun.didSeeAboutWelcome");
@@ -18,6 +21,7 @@ async function setTrailheadBranch(value) {
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(BRANCH_PREF);
+    Services.prefs.clearUserPref(SIMPLIFIED_WELCOME_ENABLED_PREF);
   });
 }
 
