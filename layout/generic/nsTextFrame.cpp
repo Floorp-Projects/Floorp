@@ -4035,7 +4035,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   if (mInitSelectionColorsAndShadow) return true;
 
   int16_t selectionFlags;
-  int16_t selectionStatus = mFrame->GetSelectionStatus(&selectionFlags);
+  const int16_t selectionStatus = mFrame->GetSelectionStatus(&selectionFlags);
   if (!(selectionFlags & nsISelectionDisplay::DISPLAY_TEXT) ||
       selectionStatus < nsISelectionController::SELECTION_ON) {
     // Not displaying the normal selection.
@@ -4061,18 +4061,25 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   nscolor selectionBGColor =
       LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectBackground);
 
-  if (selectionStatus == nsISelectionController::SELECTION_ATTENTION) {
-    mSelectionBGColor = LookAndFeel::GetColor(
-        LookAndFeel::ColorID::TextSelectBackgroundAttention);
-    mSelectionBGColor =
-        EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
-  } else if (selectionStatus != nsISelectionController::SELECTION_ON) {
-    mSelectionBGColor = LookAndFeel::GetColor(
-        LookAndFeel::ColorID::TextSelectBackgroundDisabled);
-    mSelectionBGColor =
-        EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
-  } else {
-    mSelectionBGColor = selectionBGColor;
+  switch (selectionStatus) {
+    case nsISelectionController::SELECTION_ATTENTION: {
+      mSelectionBGColor = LookAndFeel::GetColor(
+          LookAndFeel::ColorID::TextSelectBackgroundAttention);
+      mSelectionBGColor =
+          EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
+      break;
+    }
+    case nsISelectionController::SELECTION_ON: {
+      mSelectionBGColor = selectionBGColor;
+      break;
+    }
+    default: {
+      mSelectionBGColor = LookAndFeel::GetColor(
+          LookAndFeel::ColorID::TextSelectBackgroundDisabled);
+      mSelectionBGColor =
+          EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
+      break;
+    }
   }
 
   mSelectionTextColor =
