@@ -82,7 +82,6 @@ py2commands="
     valgrind-test
     visualmetrics
     warnings-list
-    watch
     web-platform-tests
     web-platform-tests-update
     webidl-example
