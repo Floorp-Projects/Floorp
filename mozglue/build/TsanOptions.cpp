@@ -185,6 +185,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:js::gc::MovingTracer::onBaseShapeEdge\n"
          "race:js::gc::MovingTracer::onScopeEdge\n"
          "race:js::gc::MovingTracer::onShapeEdge\n"
+         "race:fixupShapeTreeAfterMovingGC\n"
 
          // Bug 1601286
          "race:setFlagBit\n"
