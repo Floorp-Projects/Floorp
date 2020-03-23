@@ -32,7 +32,7 @@ import pywatchman
 
 def print_line(prefix, m, now=None):
     now = now or datetime.datetime.utcnow()
-    print(b'[%s %sZ] %s' % (prefix, now.isoformat(), m))
+    print('[%s %sZ] %s' % (prefix, now.isoformat(), m))
 
 
 def print_copy_result(elapsed, destdir, result, verbose=True):
