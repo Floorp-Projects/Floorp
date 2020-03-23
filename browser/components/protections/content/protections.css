@@ -210,17 +210,24 @@ a.hidden,
   inset-inline-end: var(--exit-icon-position);
   background-image: url(chrome://browser/skin/stop.svg);
   background-size: calc(var(--exit-icon-size) - 2px);
+  background-color: transparent;
   background-position: center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
   fill: var(--in-content-deemphasized-text);
+
+  /* Override margin, padding, min-height and min-width set in common.inc.css */
+  padding: 0;
+  margin: 0;
+  min-width: 1px;
+  min-height: 1px;
 }
 
-.exit-icon:hover {
+.exit-icon:enabled:hover {
   background-color: var(--in-content-button-background);
 }
 
-.exit-icon:hover:active {
+.exit-icon:enabled:hover:active {
   background-color: var(--in-content-button-background-hover);
 }
 
