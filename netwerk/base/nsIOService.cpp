@@ -182,7 +182,6 @@ static const char kProfileDoChange[] = "profile-do-change";
 uint32_t nsIOService::gDefaultSegmentSize = 4096;
 uint32_t nsIOService::gDefaultSegmentCount = 24;
 
-bool nsIOService::sIsDataURIUniqueOpaqueOrigin = false;
 bool nsIOService::sBlockToplevelDataUriNavigations = false;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,8 +281,6 @@ nsresult nsIOService::Init() {
   } else
     NS_WARNING("failed to get observer service");
 
-  Preferences::AddBoolVarCache(&sIsDataURIUniqueOpaqueOrigin,
-                               "security.data_uri.unique_opaque_origin", false);
   Preferences::AddBoolVarCache(
       &sBlockToplevelDataUriNavigations,
       "security.data_uri.block_toplevel_data_uri_navigations", false);
@@ -1945,11 +1942,6 @@ NS_IMETHODIMP
 nsIOService::SpeculativeAnonymousConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
                                          nsIInterfaceRequestor* aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
-}
-
-/*static*/
-bool nsIOService::IsDataURIUniqueOpaqueOrigin() {
-  return sIsDataURIUniqueOpaqueOrigin;
 }
 
 /*static*/
