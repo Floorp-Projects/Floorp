@@ -15,8 +15,6 @@ Once a review has been approved, someone with enough privileges can request the 
 
 If you don't have the privileges, you can also ask your mentor to land the code. In fact, they might even initiate that for you once the code review is approved.
 
-## From Bugzilla
+To request the landing, add the *Check-in Needed* Tags to the review (*Edit Revision*).
 
-Another route is to request the landing using Bugzilla. Go to the bug, and add `checkin-needed` to the `Keywords` field.
-
-Someone looks at bugs marked with `checkin-needed` a few times a day, verifies they have an associated **approved** review, and then attempts to land them.
+Someone looks at review marked with `Check-in Needed` a few times a day, verifies they have an associated **approved** review, and then attempts to land them.
