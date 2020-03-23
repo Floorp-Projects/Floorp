@@ -656,6 +656,8 @@ class nsTextFrame : public nsFrame {
 
   nscolor GetCaretColorAt(int32_t aOffset) final;
 
+  // @param aSelectionFlags may be multiple of nsISelectionDisplay::DISPLAY_*.
+  // @return nsISelectionController.idl's `getDisplaySelection`.
   int16_t GetSelectionStatus(int16_t* aSelectionFlags);
 
   int32_t GetContentOffset() const { return mContentOffset; }
