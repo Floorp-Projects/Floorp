@@ -311,10 +311,9 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void SanityCheckAnonymousFlexItems() const;
 #endif  // DEBUG
 
-  /*
-   * Returns a new FlexItem for the given child frame, allocated on the heap.
-   * Guaranteed to return non-null. Caller is responsible for managing the
-   * FlexItem's lifetime.
+  /**
+   * Returns a new FlexItem for the given child frame, directly constructed at
+   * the end of aLine. Guaranteed to return non-null.
    *
    * Before returning, this method also processes the FlexItem to resolve its
    * flex basis (including e.g. auto-height) as well as to resolve
@@ -322,10 +321,17 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * returned FlexItem will be ready to participate in the "Resolve the
    * Flexible Lengths" step of the Flex Layout Algorithm.)
    * https://drafts.csswg.org/css-flexbox-1/#algo-flex
+   *
+   * Note that this method **does not** update aLine's main-size bookkeeping to
+   * account for the newly-constructed flex item. The caller is responsible for
+   * determining whether this line is a good fit for the new item. If so,
+   * updating aLine's bookkeeping (via FlexLine::AddLastItemToMainSizeTotals),
+   * or moving the new item to a new line otherwise.
    */
-  mozilla::UniquePtr<FlexItem> GenerateFlexItemForChild(
-      nsIFrame* aChildFrame, const ReflowInput& aParentReflowInput,
-      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
+  FlexItem* GenerateFlexItemForChild(FlexLine& aLine, nsIFrame* aChildFrame,
+                                     const ReflowInput& aParentReflowInput,
+                                     const FlexboxAxisTracker& aAxisTracker,
+                                     bool aHasLineClampEllipsis);
 
   /**
    * This method gets a cached measuring reflow for a flex item, or does it and
