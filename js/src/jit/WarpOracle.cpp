@@ -72,6 +72,30 @@ static MOZ_MUST_USE bool AddOpSnapshot(TempAllocator& alloc,
   return true;
 }
 
+static MOZ_MUST_USE bool AddWarpGetImport(TempAllocator& alloc,
+                                          WarpOpSnapshotList& snapshots,
+                                          uint32_t offset, JSScript* script,
+                                          PropertyName* name) {
+  ModuleEnvironmentObject* env = GetModuleEnvironmentForScript(script);
+  MOZ_ASSERT(env);
+
+  Shape* shape;
+  ModuleEnvironmentObject* targetEnv;
+  MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(name), &targetEnv, &shape));
+
+  uint32_t numFixedSlots = shape->numFixedSlots();
+  uint32_t slot = shape->slot();
+
+  // In the rare case where this import hasn't been initialized already (we have
+  // an import cycle where modules reference each other's imports), we need a
+  // check.
+  bool needsLexicalCheck =
+      targetEnv->getSlot(slot).isMagic(JS_UNINITIALIZED_LEXICAL);
+
+  return AddOpSnapshot<WarpGetImport>(alloc, snapshots, offset, targetEnv,
+                                      numFixedSlots, slot, needsLexicalCheck);
+}
+
 AbortReasonOr<WarpEnvironment> WarpOracle::createEnvironment(
     HandleScript script) {
   WarpEnvironment env;
@@ -124,6 +148,16 @@ AbortReasonOr<WarpEnvironment> WarpOracle::createEnvironment(
   env.initFunction(callObjectTemplate, namedLambdaTemplate);
   return env;
 }
+
+WarpScriptSnapshot::WarpScriptSnapshot(JSScript* script,
+                                       const WarpEnvironment& env,
+                                       WarpOpSnapshotList&& opSnapshots,
+                                       ModuleObject* moduleObject)
+    : script_(script),
+      environment_(env),
+      opSnapshots_(std::move(opSnapshots)),
+      moduleObject_(moduleObject),
+      isArrowFunction_(script->isFunction() && script->function()->isArrow()) {}
 
 AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
     HandleScript script) {
@@ -265,6 +299,25 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         if (!mirGen_.options.cloneSingletons()) {
           cx_->realm()->behaviors().setSingletonsAsValues();
         }
+        break;
+      }
+
+      case JSOp::GetImport: {
+        PropertyName* name = loc.getPropertyName(script);
+        if (!AddWarpGetImport(alloc_, opSnapshots, offset, script, name)) {
+          return abort(AbortReason::Alloc);
+        }
+        break;
+      }
+
+      case JSOp::GetElemSuper: {
+#if defined(JS_CODEGEN_X86)
+        // x86 does not have enough registers if profiling is enabled.
+        if (mirGen_.instrumentedProfiling()) {
+          return abort(AbortReason::Disable,
+                       "GetElemSuper with profiling is not supported on x86");
+        }
+#endif
         break;
       }
 
