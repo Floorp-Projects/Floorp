@@ -186,7 +186,7 @@ class Scopes extends PureComponent<Props, State> {
       return null;
     }
 
-    const watchpoint = item.contents.watchpoint;
+    const { watchpoint } = item.contents;
     return (
       <button
         className={`remove-${watchpoint}-watchpoint`}

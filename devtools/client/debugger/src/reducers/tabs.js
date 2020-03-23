@@ -104,7 +104,7 @@ function update(
  * @static
  */
 export function getNewSelectedSourceId(state: State, tabList: TabList): string {
-  const selectedLocation = state.sources.selectedLocation;
+  const { selectedLocation } = state.sources;
   const availableTabs = state.tabs.tabs;
   if (!selectedLocation) {
     return "";
@@ -120,7 +120,7 @@ export function getNewSelectedSourceId(state: State, tabList: TabList): string {
   );
 
   if (matchingTab) {
-    const sources = state.sources.sources;
+    const { sources } = state.sources;
     if (!sources) {
       return "";
     }

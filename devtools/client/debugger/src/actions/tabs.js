@@ -22,8 +22,7 @@ import type { Action, ThunkArgs } from "./types";
 import type { Source, Context } from "../types";
 
 export function updateTab(source: Source, framework: string): Action {
-  const { url, id: sourceId } = source;
-  const isOriginal = source.isOriginal;
+  const { url, id: sourceId, isOriginal } = source;
 
   return {
     type: "UPDATE_TAB",
@@ -35,8 +34,7 @@ export function updateTab(source: Source, framework: string): Action {
 }
 
 export function addTab(source: Source): Action {
-  const { url, id: sourceId } = source;
-  const isOriginal = source.isOriginal;
+  const { url, id: sourceId, isOriginal } = source;
 
   return {
     type: "ADD_TAB",

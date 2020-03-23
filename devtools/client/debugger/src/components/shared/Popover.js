@@ -251,7 +251,7 @@ class Popover extends Component<Props, State> {
 
   getChildren() {
     const { children } = this.props;
-    const coords = this.state.coords;
+    const { coords } = this.state;
     const gap = this.getGap();
 
     return coords.orientation === "up" ? [children, gap] : [gap, children];

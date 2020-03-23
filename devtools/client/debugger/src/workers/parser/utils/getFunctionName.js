@@ -18,7 +18,7 @@ export default function getFunctionName(node: Node, parent: Node): string {
     t.isObjectMethod(node, { computed: false }) ||
     t.isClassMethod(node, { computed: false })
   ) {
-    const key = node.key;
+    const { key } = node;
 
     if (t.isIdentifier(key)) {
       return key.name;
@@ -38,7 +38,7 @@ export default function getFunctionName(node: Node, parent: Node): string {
     // can change to use computed: false like ObjectProperty.
     (t.isClassProperty(parent, { value: node }) && !parent.computed)
   ) {
-    const key = parent.key;
+    const { key } = parent;
 
     if (t.isIdentifier(key)) {
       return key.name;

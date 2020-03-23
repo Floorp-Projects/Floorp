@@ -444,7 +444,7 @@ const scopeCollectionVisitor = {
         refs: [],
       };
     } else if (t.isFunction(node)) {
-      let scope = state.scope;
+      let { scope } = state;
       if (t.isFunctionExpression(node) && isNode(node.id, "Identifier")) {
         scope = pushTempScope(state, "block", "Function Expression", {
           start: fromBabelLocation(node.loc.start, state.sourceId),
@@ -914,8 +914,7 @@ function buildMetaBindings(
     t.isNumericLiteral(parent.expressions[0]) &&
     parent.expressions[1] === node
   ) {
-    let start = parent.loc.start;
-    let end = parent.loc.end;
+    let { start, end } = parent.loc;
 
     if (t.isCallExpression(grandparent, { callee: parent })) {
       // Attempt to expand the range around parentheses, e.g.
