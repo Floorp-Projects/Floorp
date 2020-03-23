@@ -9,7 +9,9 @@ const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
  * Test the throttle_change telemetry event.
  */
 add_task(async function() {
-  const { monitor, toolbox } = await initNetMonitor(SIMPLE_URL);
+  const { monitor, toolbox } = await initNetMonitor(SIMPLE_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(SIMPLE_SJS);
+  const { monitor } = await initNetMonitor(SIMPLE_SJS, { requestCount: 1 });
   info("Starting test... ");
 
   const { store, windowRequire, connector } = monitor.panelWin;

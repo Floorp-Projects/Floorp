@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(STATISTICS_URL);
+  const { monitor } = await initNetMonitor(STATISTICS_URL, { requestCount: 1 });
   info("Starting test... ");
 
   const panel = monitor.panelWin;

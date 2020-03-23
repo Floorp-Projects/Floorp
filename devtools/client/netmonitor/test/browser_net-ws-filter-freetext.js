@@ -11,7 +11,9 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.netmonitor.features.webSockets", true]],
   });
-  const { tab, monitor } = await initNetMonitor(WS_PAGE_URL);
+  const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

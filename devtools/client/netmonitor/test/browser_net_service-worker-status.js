@@ -13,7 +13,10 @@ const URL = EXAMPLE_URL.replace("http:", "https:");
 const TEST_URL = URL + "service-workers/status-codes.html";
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(TEST_URL, true);
+  const { tab, monitor } = await initNetMonitor(TEST_URL, {
+    enableCache: true,
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire, connector } = monitor.panelWin;

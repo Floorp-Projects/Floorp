@@ -10,7 +10,9 @@ const IMAGE_TOOLTIP_REQUESTS = 1;
  * Tests if image responses show a popup in the requests menu when hovered.
  */
 add_task(async function test() {
-  const { tab, monitor } = await initNetMonitor(IMAGE_TOOLTIP_URL);
+  const { tab, monitor } = await initNetMonitor(IMAGE_TOOLTIP_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire, connector } = monitor.panelWin;

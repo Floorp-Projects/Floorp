@@ -11,7 +11,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 );
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(SINGLE_GET_URL);
+  const { monitor } = await initNetMonitor(SINGLE_GET_URL, { requestCount: 1 });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

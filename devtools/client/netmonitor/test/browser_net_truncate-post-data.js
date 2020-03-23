@@ -8,7 +8,9 @@
  * Verifies that requests with large post data are truncated and error is displayed.
  */
 add_task(async function() {
-  const { monitor, tab } = await initNetMonitor(POST_JSON_URL);
+  const { monitor, tab } = await initNetMonitor(POST_JSON_URL, {
+    requestCount: 1,
+  });
 
   info("Starting test... ");
 

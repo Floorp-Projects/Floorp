@@ -8,7 +8,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CSP_URL);
+  const { tab, monitor } = await initNetMonitor(CSP_URL, { requestCount: 3 });
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
@@ -18,9 +18,9 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
+  const wait = waitForNetworkEvents(monitor, 3);
   tab.linkedBrowser.reload();
-
-  await waitForNetworkEvents(monitor, 2);
+  await wait;
 
   info("Waiting until the requests appear in netmonitor");
 

@@ -85,7 +85,7 @@ const EXPECTED_REQUESTS = [
 add_task(async function() {
   // Load a different URL first to instantiate the network monitor before we
   // load the page we're really interested in.
-  const { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL, { requestCount: 1 });
 
   const { store, windowRequire, connector } = monitor.panelWin;
   const { getSortedRequests } = windowRequire(
