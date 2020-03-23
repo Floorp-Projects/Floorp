@@ -114,9 +114,9 @@ function getInterfacesFromServicesFile() {
   let content = fs.readFileSync(filePath, "utf8");
 
   // Parse the content into an AST
-  let ast = helpers.getAST(content);
+  let { ast, visitorKeys } = helpers.parseCode(content);
 
-  helpers.walkAST(ast, (type, node, parents) => {
+  helpers.walkAST(ast, visitorKeys, (type, node, parents) => {
     if (type in servicesASTParser) {
       servicesASTParser[type](node, parents);
     }
