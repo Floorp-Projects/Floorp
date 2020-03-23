@@ -94,8 +94,6 @@ nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
 
 bool NumericInputTypeBase::ConvertStringToNumber(
     nsAString& aValue, mozilla::Decimal& aResultValue) const {
-  // FIXME(emilio, bug 1605158): This should really just be
-  // StringToDecimal(aValue).
   ICUUtils::LanguageTagIterForContent langTagIter(mInputElement);
   aResultValue =
       mozilla::Decimal::fromDouble(ICUUtils::ParseNumber(aValue, langTagIter));
@@ -119,7 +117,7 @@ bool NumericInputTypeBase::ConvertNumberToString(
   return ok;
 }
 
-/* input type=numer */
+/* input type=number */
 
 bool NumberInputType::IsValueMissing() const {
   if (!mInputElement->IsRequired()) {
@@ -137,6 +135,16 @@ bool NumberInputType::HasBadInput() const {
   nsAutoString value;
   GetNonFileValueInternal(value);
   return !value.IsEmpty() && mInputElement->GetValueAsDecimal().isNaN();
+}
+
+bool NumberInputType::ConvertNumberToString(
+    Decimal aValue, nsAString& aResultString) const {
+  MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
+
+  aResultString.Truncate();
+  ICUUtils::LanguageTagIterForContent langTagIter(mInputElement);
+  ICUUtils::LocalizeNumber(aValue.toDouble(), langTagIter, aResultString);
+  return true;
 }
 
 nsresult NumberInputType::GetValueMissingMessage(nsAString& aMessage) {
