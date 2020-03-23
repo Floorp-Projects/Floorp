@@ -41,6 +41,7 @@ use crate::resource_cache::{FontInstanceMap, ImageRequest};
 use crate::scene::{Scene, BuiltScene, SceneStats, StackingContextHelpers};
 use crate::scene_builder_thread::Interners;
 use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind};
+use euclid::approxeq::ApproxEq;
 use std::{f32, mem, usize, ops};
 use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
@@ -4087,13 +4088,21 @@ fn process_repeat_size(
     unsnapped_rect: &LayoutRect,
     repeat_size: LayoutSize,
 ) -> LayoutSize {
+    // FIXME(aosmond): The tile size is calculated based on several parameters
+    // during display list building. It may produce a slightly different result
+    // than the bounds due to floating point error accumulation, even though in
+    // theory they should be the same. We do a fuzzy check here to paper over
+    // that. It may make more sense to push the original parameters into scene
+    // building and let it do a saner calculation with more information (e.g.
+    // the snapped values).
+    const EPSILON: f32 = 0.001;
     LayoutSize::new(
-        if repeat_size.width == unsnapped_rect.size.width {
+        if repeat_size.width.approx_eq_eps(&unsnapped_rect.size.width, &EPSILON) {
             snapped_rect.size.width
         } else {
             repeat_size.width
         },
-        if repeat_size.height == unsnapped_rect.size.height {
+        if repeat_size.height.approx_eq_eps(&unsnapped_rect.size.height, &EPSILON) {
             snapped_rect.size.height
         } else {
             repeat_size.height
