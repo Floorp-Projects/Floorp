@@ -24,7 +24,7 @@ platform(linux,mac) fuzzy(1,283) == near-plane-clip.yaml near-plane-clip.png
 platform(linux,mac) == perspective-mask.yaml perspective-mask.png
 == rotate-clip.yaml rotate-clip-ref.yaml
 == clip-translate.yaml clip-translate-ref.yaml
-platform(linux,mac) == perspective-clip.yaml perspective-clip.png
+platform(linux,mac) fuzzy(1,1) == perspective-clip.yaml perspective-clip.png
 platform(linux,mac) fuzzy(1,2) == perspective-clip-1.yaml perspective-clip-1.png
 platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
 # The ref YAML here produces significantly worse quality
