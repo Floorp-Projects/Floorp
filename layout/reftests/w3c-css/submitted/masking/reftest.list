@@ -91,7 +91,7 @@ fuzzy-if(winWidget,0-1,0-27) fuzzy-if(skiaContent,0-7,0-150) fuzzy-if(webrender,
 fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent||webrender,0-7,0-185) == clip-path-contentBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent,0-7,0-150) fuzzy-if(webrender,0-64,0-376) == clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent,0-7,0-150) fuzzy-if(webrender,0-64,0-376) == clip-path-paddingBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent||webrender,0-7,0-185) == clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent||webrender,0-7,0-187) == clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent,0-7,0-150) fuzzy-if(webrender,0-64,0-376) == clip-path-paddingBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy(0-64,0-376) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent||webrender,0-7,0-185) == clip-path-borderBox-1b.html clip-path-geometryBox-1-ref.html
@@ -100,8 +100,8 @@ fuzzy-if(winWidget,0-16,0-27) fuzzy-if(skiaContent||webrender,0-7,0-185) == clip
 fuzzy(0-64,0-376) == clip-path-fillBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy(0-64,0-376) == clip-path-strokeBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy(0-64,0-370) == clip-path-strokeBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent||webrender,0-7,0-185) == clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent||webrender,0-7,0-185) == clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent||webrender,0-7,0-187) == clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,0-1,0-21) fuzzy-if(skiaContent||webrender,0-7,0-187) == clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy(0-64,0-376) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,0-9,0-98) fuzzy-if(webrender,0-65,0-134) == clip-path-geometryBox-2.html clip-path-geometryBox-2-ref.html
 
