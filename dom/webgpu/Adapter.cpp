@@ -25,7 +25,7 @@ Adapter::~Adapter() { Cleanup(); }
 void Adapter::Cleanup() {
   if (mValid && mBridge && mBridge->IsOpen()) {
     mValid = false;
-    mBridge->DestroyAdapter(mId);
+    mBridge->SendAdapterDestroy(mId);
   }
 }
 

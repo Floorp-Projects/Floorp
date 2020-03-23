@@ -11,7 +11,105 @@ namespace webgpu {
 
 const uint64_t POLL_TIME_MS = 100;
 
-WebGPUParent::WebGPUParent() : mContext(ffi::wgpu_server_new()) {
+static void FreeAdapter(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeAdapter(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeDevice(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeDevice(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeSwapChain(RawId id, void* param) {
+  Unused << id;
+  Unused << param;
+}
+static void FreePipelineLayout(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreePipelineLayout(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeShaderModule(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeShaderModule(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeBindGroupLayout(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeBindGroupLayout(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeBindGroup(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeBindGroup(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeCommandBuffer(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeCommandBuffer(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeRenderPipeline(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeRenderPipeline(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeComputePipeline(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeComputePipeline(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeBuffer(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeBuffer(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeTexture(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeTexture(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeTextureView(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeTextureView(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeSampler(RawId id, void* param) {
+  if (!static_cast<WebGPUParent*>(param)->SendFreeSampler(id)) {
+    MOZ_CRASH("IPC failure");
+  }
+}
+static void FreeSurface(RawId id, void* param) {
+  Unused << id;
+  Unused << param;
+}
+
+static ffi::WGPUIdentityRecyclerFactory MakeFactory(void* param) {
+  // Note: careful about the order here!
+  const ffi::WGPUIdentityRecyclerFactory factory = {
+      param,
+      FreeAdapter,
+      FreeDevice,
+      FreeSwapChain,
+      FreePipelineLayout,
+      FreeShaderModule,
+      FreeBindGroupLayout,
+      FreeBindGroup,
+      FreeCommandBuffer,
+      FreeRenderPipeline,
+      FreeComputePipeline,
+      FreeBuffer,
+      FreeTexture,
+      FreeTextureView,
+      FreeSampler,
+      FreeSurface,
+  };
+  return factory;
+}
+
+WebGPUParent::WebGPUParent()
+    : mContext(ffi::wgpu_server_new(MakeFactory(this))) {
   mTimer.Start(base::TimeDelta::FromMilliseconds(POLL_TIME_MS), this,
                &WebGPUParent::MaintainDevices);
 }
@@ -39,6 +137,13 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
     resolver(aTargetIds[index]);
   } else {
     resolver(0);
+  }
+
+  // free the unused IDs
+  for (size_t i = 0; i < aTargetIds.Length(); ++i) {
+    if (static_cast<int8_t>(i) != index && !SendFreeAdapter(aTargetIds[i])) {
+      MOZ_CRASH("IPC failure");
+    }
   }
   return IPC_OK();
 }

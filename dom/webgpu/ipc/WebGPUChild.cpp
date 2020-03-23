@@ -34,8 +34,7 @@ RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
   unsigned long count =
       ffi::wgpu_client_make_adapter_ids(mClient, ids, max_ids);
 
-  auto client = mClient;
-  nsTArray<RawId> sharedIds;
+  nsTArray<RawId> sharedIds(count);
   for (unsigned long i = 0; i != count; ++i) {
     sharedIds.AppendElement(ids[i]);
   }
@@ -43,28 +42,14 @@ RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
   return SendInstanceRequestAdapter(aOptions, sharedIds)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
-          [client, ids, count](const RawId& aId) {
+          [](const RawId& aId) {
             if (aId == 0) {
-              ffi::wgpu_client_kill_adapter_ids(client, ids, count);
               return RawIdPromise::CreateAndReject(Nothing(), __func__);
             } else {
-              // find the position in the list
-              unsigned int i = 0;
-              while (ids[i] != aId) {
-                i++;
-              }
-              if (i > 0) {
-                ffi::wgpu_client_kill_adapter_ids(client, ids, i);
-              }
-              if (i + 1 < count) {
-                ffi::wgpu_client_kill_adapter_ids(client, ids + i + 1,
-                                                  count - i - 1);
-              }
               return RawIdPromise::CreateAndResolve(aId, __func__);
             }
           },
-          [client, ids, count](const ipc::ResponseRejectReason& aReason) {
-            ffi::wgpu_client_kill_adapter_ids(client, ids, count);
+          [](const ipc::ResponseRejectReason& aReason) {
             return RawIdPromise::CreateAndReject(Some(aReason), __func__);
           });
 }
@@ -80,11 +65,6 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
   }
 }
 
-void WebGPUChild::DestroyAdapter(RawId aId) {
-  SendAdapterDestroy(aId);
-  ffi::wgpu_client_kill_adapter_ids(mClient, &aId, 1);
-}
-
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
                                       const dom::GPUBufferDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_buffer_id(mClient, aSelfId);
@@ -92,11 +72,6 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
     MOZ_CRASH("IPC failure");
   }
   return id;
-}
-
-void WebGPUChild::DestroyBuffer(RawId aId) {
-  SendBufferDestroy(aId);
-  ffi::wgpu_client_kill_buffer_id(mClient, aId);
 }
 
 UniquePtr<ffi::WGPUTextureViewDescriptor> WebGPUChild::GetDefaultViewDescriptor(
@@ -181,16 +156,6 @@ RawId WebGPUChild::TextureCreateView(
   return id;
 }
 
-void WebGPUChild::DestroyTexture(RawId aId) {
-  SendTextureDestroy(aId);
-  ffi::wgpu_client_kill_texture_id(mClient, aId);
-}
-
-void WebGPUChild::DestroyTextureView(RawId aId) {
-  SendTextureViewDestroy(aId);
-  ffi::wgpu_client_kill_texture_view_id(mClient, aId);
-}
-
 RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
                                        const dom::GPUSamplerDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_sampler_id(mClient, aSelfId);
@@ -198,11 +163,6 @@ RawId WebGPUChild::DeviceCreateSampler(RawId aSelfId,
     MOZ_CRASH("IPC failure");
   }
   return id;
-}
-
-void WebGPUChild::DestroySampler(RawId aId) {
-  SendSamplerDestroy(aId);
-  ffi::wgpu_client_kill_sampler_id(mClient, aId);
 }
 
 RawId WebGPUChild::DeviceCreateCommandEncoder(
@@ -224,15 +184,6 @@ RawId WebGPUChild::CommandEncoderFinish(
   // and a new command buffer ID is being created from it. Resolve the ID
   // type aliasing at the place that introduces it: `wgpu-core`.
   return aSelfId;
-}
-
-void WebGPUChild::DestroyCommandEncoder(RawId aId) {
-  SendCommandEncoderDestroy(aId);
-  ffi::wgpu_client_kill_encoder_id(mClient, aId);
-}
-void WebGPUChild::DestroyCommandBuffer(RawId aId) {
-  SendCommandBufferDestroy(aId);
-  ffi::wgpu_client_kill_encoder_id(mClient, aId);
 }
 
 RawId WebGPUChild::DeviceCreateBindGroupLayout(
@@ -262,11 +213,6 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
   return id;
 }
 
-void WebGPUChild::DestroyBindGroupLayout(RawId aId) {
-  SendBindGroupLayoutDestroy(aId);
-  ffi::wgpu_client_kill_bind_group_layout_id(mClient, aId);
-}
-
 RawId WebGPUChild::DeviceCreatePipelineLayout(
     RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_pipeline_layout_id(mClient, aSelfId);
@@ -278,11 +224,6 @@ RawId WebGPUChild::DeviceCreatePipelineLayout(
     MOZ_CRASH("IPC failure");
   }
   return id;
-}
-
-void WebGPUChild::DestroyPipelineLayout(RawId aId) {
-  SendPipelineLayoutDestroy(aId);
-  ffi::wgpu_client_kill_pipeline_layout_id(mClient, aId);
 }
 
 RawId WebGPUChild::DeviceCreateBindGroup(
@@ -317,11 +258,6 @@ RawId WebGPUChild::DeviceCreateBindGroup(
   return id;
 }
 
-void WebGPUChild::DestroyBindGroup(RawId aId) {
-  SendBindGroupDestroy(aId);
-  ffi::wgpu_client_kill_bind_group_id(mClient, aId);
-}
-
 RawId WebGPUChild::DeviceCreateShaderModule(
     RawId aSelfId, const dom::GPUShaderModuleDescriptor& aDesc) {
   RawId id = ffi::wgpu_client_make_shader_module_id(mClient, aSelfId);
@@ -334,11 +270,6 @@ RawId WebGPUChild::DeviceCreateShaderModule(
     MOZ_CRASH("IPC failure");
   }
   return id;
-}
-
-void WebGPUChild::DestroyShaderModule(RawId aId) {
-  SendShaderModuleDestroy(aId);
-  ffi::wgpu_client_kill_shader_module_id(mClient, aId);
 }
 
 static SerialProgrammableStageDescriptor ConvertProgrammableStageDescriptor(
@@ -360,11 +291,6 @@ RawId WebGPUChild::DeviceCreateComputePipeline(
     MOZ_CRASH("IPC failure");
   }
   return id;
-}
-
-void WebGPUChild::DestroyComputePipeline(RawId aId) {
-  SendComputePipelineDestroy(aId);
-  ffi::wgpu_client_kill_compute_pipeline_id(mClient, aId);
 }
 
 static ffi::WGPURasterizationStateDescriptor ConvertRasterizationDescriptor(
@@ -490,17 +416,62 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
   return id;
 }
 
-void WebGPUChild::DestroyRenderPipeline(RawId aId) {
-  SendRenderPipelineDestroy(aId);
-  ffi::wgpu_client_kill_render_pipeline_id(mClient, aId);
-}
-
 void WebGPUChild::QueueSubmit(RawId aSelfId,
                               const nsTArray<RawId>& aCommandBufferIds) {
   SendQueueSubmit(aSelfId, aCommandBufferIds);
-  for (const auto& cur : aCommandBufferIds) {
-    ffi::wgpu_client_kill_encoder_id(mClient, cur);
-  }
+}
+
+ipc::IPCResult WebGPUChild::RecvFreeAdapter(RawId id) {
+  ffi::wgpu_client_kill_adapter_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeDevice(RawId id) {
+  ffi::wgpu_client_kill_device_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreePipelineLayout(RawId id) {
+  ffi::wgpu_client_kill_pipeline_layout_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeShaderModule(RawId id) {
+  ffi::wgpu_client_kill_shader_module_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeBindGroupLayout(RawId id) {
+  ffi::wgpu_client_kill_bind_group_layout_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeBindGroup(RawId id) {
+  ffi::wgpu_client_kill_bind_group_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeCommandBuffer(RawId id) {
+  ffi::wgpu_client_kill_encoder_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeRenderPipeline(RawId id) {
+  ffi::wgpu_client_kill_render_pipeline_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeComputePipeline(RawId id) {
+  ffi::wgpu_client_kill_compute_pipeline_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeBuffer(RawId id) {
+  ffi::wgpu_client_kill_buffer_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeTexture(RawId id) {
+  ffi::wgpu_client_kill_texture_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeTextureView(RawId id) {
+  ffi::wgpu_client_kill_texture_view_id(mClient, id);
+  return IPC_OK();
+}
+ipc::IPCResult WebGPUChild::RecvFreeSampler(RawId id) {
+  ffi::wgpu_client_kill_sampler_id(mClient, id);
+  return IPC_OK();
 }
 
 }  // namespace webgpu
