@@ -1036,9 +1036,8 @@ BrowserChild::~BrowserChild() {
 
 mozilla::ipc::IPCResult BrowserChild::RecvWillChangeProcess(
     WillChangeProcessResolver&& aResolve) {
-  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    RefPtr<nsDocShell> docshell = nsDocShell::Cast(docShell);
-    docshell->SetWillChangeProcess();
+  if (mWebBrowser) {
+    mWebBrowser->SetWillChangeProcess();
   }
   aResolve(true);
   return IPC_OK();

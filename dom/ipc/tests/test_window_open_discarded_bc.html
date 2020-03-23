@@ -22,13 +22,7 @@ add_task(async function() {
       // BrowsingContext to actually become discarded after we call it, to
       // make sure that the window provider actually has a discarded BC at the
       // end of its own nested event loop.
-      SpecialPowers.Services.tm.spinEventLoopUntil(() => {
-        try {
-          return !win.opener;
-        } catch (e) {
-          return false;
-        }
-      });
+      SpecialPowers.Services.tm.spinEventLoopUntil(() => !win.opener);
     }
   }
   SpecialPowers.addObserver(observer, TOPIC);
