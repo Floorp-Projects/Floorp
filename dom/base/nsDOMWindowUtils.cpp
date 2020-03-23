@@ -2475,6 +2475,10 @@ nsDOMWindowUtils::DisableApzForElement(Element* aElement) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::ZoomToFocusedInput() {
+  if (!Preferences::GetBool("apz.zoom-to-focused-input.enabled")) {
+    return NS_OK;
+  }
+
   nsIWidget* widget = GetWidget();
   if (!widget) {
     return NS_OK;
