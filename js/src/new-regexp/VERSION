@@ -1,3 +1,2 @@
-This code was most recently imported from the following version of V8:
-
-https://github.com/v8/v8/tree/2599d3cc208a3a4873be517285220abd8416c3d7/src/regexp
+Imported using import-irregexp.py from:
+https://github.com/v8/v8/tree/560f2d8bb3f3a72d78e1a7d7654235d53fdcc83c/src/regexp
