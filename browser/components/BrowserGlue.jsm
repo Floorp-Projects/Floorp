@@ -707,6 +707,7 @@ const listeners = {
     "AboutLogins:SyncOptions": ["AboutLoginsParent"],
     "AboutLogins:TestOnlyResetOSAuth": ["AboutLoginsParent"],
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
+    "AboutLogins:VulnerableLogins": ["AboutLoginsParent"],
     ContentSearch: ["ContentSearch"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],

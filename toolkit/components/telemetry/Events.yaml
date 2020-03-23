@@ -634,7 +634,9 @@ pwmgr:
       value that specifies what order the list of logins is sorted with: {last_changed, last_used, title}.
     extra_keys:
       breached: >
-        Whether the login is marked as breached or not.
+        Whether the login is marked as breached or not. If a login is both breached and vulnerable, it will only be reported as breached.
+      vulnerable: >
+        Whether the login is marked as vulnerable or not. If a login is both breached and vulnerable, it will only be reported as breached.
       sort_key: The key that is used for sorting the login-list
     objects: [
       "existing_login",
