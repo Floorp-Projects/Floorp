@@ -92,5 +92,26 @@ test(() => {
   assert_true(!!s1,"Slot should be inside the shadow root");
 }, 'Declarative Shadow DOM: Missing closing tag');
 
+test(() => {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <div id="host">
+      <template shadowroot="open" shadowrootdelegatesfocus>
+      </template>
+    </div>
+    `;
+  var host = div.querySelector('#host');
+  assert_true(!!host.shadowRoot,"No shadow root found");
+  assert_true(host.shadowRoot.delegatesFocus,"delegatesFocus should be true");
+  div.innerHTML = `
+    <div id="host">
+      <template shadowroot="open">
+      </template>
+    </div>
+    `;
+  host = div.querySelector('#host');
+  assert_true(!!host.shadowRoot,"No shadow root found");
+  assert_false(host.shadowRoot.delegatesFocus,"delegatesFocus should be false without the shadowrootdelegatesfocus attribute");
+}, 'Declarative Shadow DOM: delegates focus attribute');
 
 </script>
