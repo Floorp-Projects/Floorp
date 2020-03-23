@@ -3,9 +3,9 @@
 for ( let prefix of ['', '(table $prefix 0 32 funcref)']) {
     let mod = new WebAssembly.Module(wasmTextToBinary(
     `(module
+       (import "m" "item" (func $item (result anyref)))
        ${prefix}
        (table $tbl 0 anyref)
-       (import $item "m" "item" (func (result anyref)))
        (func (export "run") (param $numiters i32)
          (local $i i32)
          (local $j i32)

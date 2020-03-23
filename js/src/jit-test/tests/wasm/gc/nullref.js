@@ -29,7 +29,7 @@ let effectful = { valueOf() { effect = true; },
     let valueToReturn;
     let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
       (module
-        (import $g "m" "g" (func (result nullref)))
+        (import "m" "g" (func $g (result nullref)))
         (func (export "f")
           (call $g)
           (drop)))`)),
@@ -152,28 +152,28 @@ new WebAssembly.Module(wasmTextToBinary(`
     (table $t 10 nullref)
     (table $u 10 nullref)
     (func (export "f")
-      (table.copy $u (i32.const 0) $t (i32.const 0) (i32.const 2))))`));
+      (table.copy $u $t (i32.const 0) (i32.const 0) (i32.const 2))))`));
 
 new WebAssembly.Module(wasmTextToBinary(`
   (module
     (table $t 10 nullref)
     (table $u 10 anyref)
     (func (export "f")
-      (table.copy $u (i32.const 0) $t (i32.const 0) (i32.const 2))))`));
+      (table.copy $u $t (i32.const 0) (i32.const 0) (i32.const 2))))`));
 
 new WebAssembly.Module(wasmTextToBinary(`
   (module
     (table $t 10 nullref)
     (table $u 10 funcref)
     (func (export "f")
-      (table.copy $u (i32.const 0) $t (i32.const 0) (i32.const 2))))`));
+      (table.copy $u $t (i32.const 0) (i32.const 0) (i32.const 2))))`));
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
   (module
     (table $t 10 anyref)
     (table $u 10 nullref)
     (func (export "f")
-      (table.copy $u (i32.const 0) $t (i32.const 0) (i32.const 2))))`)),
+      (table.copy $u $t (i32.const 0) (i32.const 0) (i32.const 2))))`)),
                    WebAssembly.CompileError,
                    /expression has type anyref but expected nullref/);
 

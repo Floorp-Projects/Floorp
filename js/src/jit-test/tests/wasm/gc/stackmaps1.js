@@ -17,19 +17,19 @@ const {Module,Instance} = WebAssembly;
 
 let t =
   `(module
-     (import $check3 "" "check3" (func (param anyref) (param anyref) (param anyref)))
+     (import "" "check3" (func $check3 (param anyref) (param anyref) (param anyref)))
      (type $typeOfFn0
-           (func (result i32) (param i32) (param anyref) (param i32)
-                              (param anyref) (param anyref) (param i32)))
+           (func (param i32) (param anyref) (param i32)
+                 (param anyref) (param anyref) (param i32) (result i32)))
      (table 1 1 funcref)
      (elem (i32.const 0) $fn0)
 
-     (import $alloc "" "alloc" (func (result anyref)))
+     (import "" "alloc" (func $alloc (result anyref)))
 
      ;; -- fn 0
      (func $fn0 (export "fn0")
-                (result i32) (param $arg1 i32) (param $arg2 anyref) (param $arg3 i32)
-                             (param $arg4 anyref) (param $arg5 anyref) (param $arg6 i32)
+                 (param $arg1 i32) (param $arg2 anyref) (param $arg3 i32)
+                 (param $arg4 anyref) (param $arg5 anyref) (param $arg6 i32) (result i32)
        (call $alloc)
        drop
        (i32.add (i32.add (local.get $arg1) (local.get $arg3)) (local.get $arg6))
