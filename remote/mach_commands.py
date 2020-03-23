@@ -359,7 +359,7 @@ class PuppeteerRunner(MozbuildObject):
         if proc.returncode != 0:
             logger.warning("npm exited with code %s" % proc.returncode)
 
-        if params["write_results"] and output_handler.has_unexpected:
+        if params["write_results"]:
             with open(params["write_results"], "w") as f:
                 json.dump(output_handler.new_expected(), f, indent=2,
                           separators=(",", ": "))
