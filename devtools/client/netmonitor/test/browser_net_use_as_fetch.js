@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor, toolbox } = await initNetMonitor(CURL_URL);
+  const { tab, monitor, toolbox } = await initNetMonitor(CURL_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   // GET request, no cookies (first request)

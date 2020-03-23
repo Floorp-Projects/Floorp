@@ -9,7 +9,8 @@
  */
 add_task(async function() {
   const { tab, monitor } = await initNetMonitor(
-    JSON_BASIC_URL + "?name=nogrip"
+    JSON_BASIC_URL + "?name=nogrip",
+    { requestCount: 1 }
   );
   info("Starting test... ");
 

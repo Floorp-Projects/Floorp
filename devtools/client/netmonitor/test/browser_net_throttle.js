@@ -13,7 +13,7 @@ add_task(async function() {
 async function throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
-  const { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL, { requestCount: 1 });
   const { store, windowRequire, connector } = monitor.panelWin;
   const { ACTIVITY_TYPE } = windowRequire(
     "devtools/client/netmonitor/src/constants"

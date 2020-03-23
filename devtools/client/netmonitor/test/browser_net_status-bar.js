@@ -7,7 +7,9 @@
  * Test whether the StatusBar properly renders expected labels.
  */
 add_task(async () => {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

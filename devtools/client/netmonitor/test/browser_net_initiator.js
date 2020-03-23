@@ -111,7 +111,9 @@ add_task(async function() {
   // all the requests the page is making, not only the XHRs.
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+    requestCount: 1,
+  });
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

@@ -37,7 +37,7 @@ add_task(async function() {
     '["bogus", "js", "alsobogus"]'
   );
 
-  const { monitor } = await initNetMonitor(FILTERING_URL);
+  const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

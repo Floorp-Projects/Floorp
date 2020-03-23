@@ -15,7 +15,9 @@ add_task(async function() {
 
   requestLongerTimeout(2);
 
-  const { tab, monitor } = await initNetMonitor(FILTERING_URL);
+  const { tab, monitor } = await initNetMonitor(FILTERING_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

@@ -8,7 +8,9 @@
  * the correct requests
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(POST_RAW_URL);
+  const { tab, monitor } = await initNetMonitor(POST_RAW_URL, {
+    requestCount: 1,
+  });
   const { document, store, windowRequire } = monitor.panelWin;
   const { getSelectedRequest } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"

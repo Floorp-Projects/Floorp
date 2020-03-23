@@ -8,7 +8,8 @@
  */
 add_task(async () => {
   const { tab, monitor } = await initNetMonitor(
-    HAR_EXAMPLE_URL + "html_har_import-test-page.html"
+    HAR_EXAMPLE_URL + "html_har_import-test-page.html",
+    { requestCount: 1 }
   );
 
   info("Starting test... ");

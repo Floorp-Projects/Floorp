@@ -38,7 +38,7 @@ function testAutocompleteContents(expected, document) {
 }
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(FILTERING_URL);
+  const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 

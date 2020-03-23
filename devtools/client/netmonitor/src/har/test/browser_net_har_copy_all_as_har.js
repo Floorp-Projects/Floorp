@@ -11,7 +11,9 @@ add_task(async function() {
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.
   await pushPref("network.tcp.tcp_fastopen_enable", false);
-  const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_URL, {
+    requestCount: 1,
+  });
 
   info("Starting test... ");
 

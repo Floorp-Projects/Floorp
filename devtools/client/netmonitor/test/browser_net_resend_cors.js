@@ -9,7 +9,7 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CORS_URL);
+  const { tab, monitor } = await initNetMonitor(CORS_URL, { requestCount: 1 });
   info("Starting test... ");
 
   const { store, windowRequire, connector } = monitor.panelWin;

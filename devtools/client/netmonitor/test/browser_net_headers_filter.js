@@ -7,7 +7,9 @@
  * Tests if Request-Headers and Response-Headers are correctly filtered in Headers tab.
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(SIMPLE_SJS);
+  const { tab, monitor } = await initNetMonitor(SIMPLE_SJS, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

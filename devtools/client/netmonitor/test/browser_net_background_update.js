@@ -8,7 +8,9 @@
  * are displayed when the user shows the panel again.
  */
 add_task(async () => {
-  const { tab, monitor, toolbox } = await initNetMonitor(CUSTOM_GET_URL);
+  const { tab, monitor, toolbox } = await initNetMonitor(CUSTOM_GET_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
