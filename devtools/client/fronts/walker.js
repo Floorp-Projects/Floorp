@@ -22,15 +22,6 @@ loader.lazyRequireGetter(
  * Client side of the DOM walker.
  */
 class WalkerFront extends FrontClassWithSpec(walkerSpec) {
-  /**
-   * This is kept for backward-compatibility reasons with older remote target.
-   * Targets previous to bug 916443
-   */
-  async pick() {
-    const response = await super.pick();
-    return response.node;
-  }
-
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     this._createRootNodePromise();
