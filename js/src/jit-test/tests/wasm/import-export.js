@@ -221,13 +221,13 @@ assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
 assertEq(e[""] instanceof Memory, true);
 
-var code = wasmTextToBinary('(module (table 0 funcref) (export "tbl" table))');
+var code = wasmTextToBinary('(module (table 0 funcref) (export "tbl" (table 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "tbl");
 assertEq(e.tbl instanceof Table, true);
 assertEq(e.tbl.length, 0);
 
-var code = wasmTextToBinary('(module (table 2 funcref) (export "t1" table) (export "t2" table))');
+var code = wasmTextToBinary('(module (table 2 funcref) (export "t1" (table 0)) (export "t2" (table 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t1,t2");
 assertEq(e.t1 instanceof Table, true);
@@ -235,7 +235,7 @@ assertEq(e.t2 instanceof Table, true);
 assertEq(e.t1, e.t2);
 assertEq(e.t1.length, 2);
 
-var code = wasmTextToBinary('(module (table 2 funcref) (memory 1 1) (func) (export "t" table) (export "m" (memory 0)) (export "f" (func 0)))');
+var code = wasmTextToBinary('(module (table 2 funcref) (memory 1 1) (func) (export "t" (table 0)) (export "m" (memory 0)) (export "f" (func 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "t,m,f");
 assertEq(e.f(), undefined);
@@ -243,7 +243,7 @@ assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
 assertEq(e.t.length, 2);
 
-var code = wasmTextToBinary('(module (table 1 funcref) (memory 1 1) (func) (export "m" (memory 0)) (export "f" (func 0)) (export "t" table))');
+var code = wasmTextToBinary('(module (table 1 funcref) (memory 1 1) (func) (export "m" (memory 0)) (export "f" (func 0)) (export "t" (table 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).join(), "m,f,t");
 assertEq(e.f(), undefined);
@@ -251,7 +251,7 @@ assertEq(e.t instanceof Table, true);
 assertEq(e.m instanceof Memory, true);
 +assertEq(e.t.length, 1);
 
-var code = wasmTextToBinary('(module (table 0 funcref) (export "" table))');
+var code = wasmTextToBinary('(module (table 0 funcref) (export "" (table 0)))');
 var e = new Instance(new Module(code)).exports;
 assertEq(Object.keys(e).length, 1);
 assertEq(String(Object.keys(e)), "");
@@ -268,9 +268,9 @@ var text = `(module
     (elem (i32.const 0) $f)
     (elem (i32.const 2) $g)
     (export "f1" (func $f))
-    (export "tbl1" table)
+    (export "tbl1" (table 0))
     (export "f2" (func $f))
-    (export "tbl2" table)
+    (export "tbl2" (table 0))
     (export "f3" (func $h))
     (func (export "run") (result i32) (call_indirect (type 0) (i32.const 2)))
 )`;
@@ -341,7 +341,7 @@ var e = new Instance(new Module(code), {a:{b:mem}}).exports;
 assertEq(mem, e.foo);
 assertEq(mem, e.bar);
 
-var code = wasmTextToBinary('(module (import "a" "b" (table 1 1 funcref)) (export "foo" table) (export "bar" table))');
+var code = wasmTextToBinary('(module (import "a" "b" (table 1 1 funcref)) (export "foo" (table 0)) (export "bar" (table 0)))');
 var tbl = new Table({initial:1, maximum:1, element:"funcref"});
 var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
@@ -368,7 +368,7 @@ var m = new Module(wasmTextToBinary(`(module
     (export "foo" (func $foo))
     (export "bar" (func $bar))
     (export "baz" (func $baz))
-    (export "tbl" table)
+    (export "tbl" (table 0))
 )`));
 var jsFun = () => 83;
 var wasmFun = new Instance(new Module(wasmTextToBinary('(module (func (result i32) (i32.const 42)) (export "foo" (func 0)))'))).exports.foo;
@@ -423,7 +423,7 @@ assertEq(e2.f(), 52);
 wasmFailValidateText('(module (export "a" (func 0)))', /exported function index out of bounds/);
 wasmFailValidateText('(module (export "a" global 0))', /exported global index out of bounds/);
 wasmFailValidateText('(module (export "a" (memory 0)))', /exported memory index out of bounds/);
-wasmFailValidateText('(module (export "a" table))', /exported table index out of bounds/);
+wasmFailValidateText('(module (export "a" (table 0)))', /exported table index out of bounds/);
 
 // Default memory/table rules
 
