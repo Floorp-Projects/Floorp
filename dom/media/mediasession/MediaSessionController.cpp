@@ -103,10 +103,17 @@ void MediaSessionController::UpdateActiveMediaSessionContextId() {
     candidateId = *mActiveMediaSessionContextId;
   }
 
-  for (auto iter = mMediaSessionInfoMap.ConstIter(); !iter.Done();
-       iter.Next()) {
+  for (auto iter = mMediaSessionInfoMap.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<BrowsingContext> bc = BrowsingContext::Get(iter.Key());
-    MOZ_ASSERT(bc);
+    // The browsing context which media session belongs to has been detroyed,
+    // and it wasn't be removed correctly via the IPC message. That could happen
+    // if the browsing context was destroyed before ContentPatent receives the
+    // remove message. Therefore, we should remove it and continue to iterate
+    // other elements.
+    if (!bc) {
+      iter.Remove();
+      continue;
+    }
     if (bc->IsTopContent()) {
       candidateId = iter.Key();
       break;
