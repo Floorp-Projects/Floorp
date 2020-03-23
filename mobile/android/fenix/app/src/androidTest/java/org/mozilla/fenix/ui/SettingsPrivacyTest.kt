@@ -111,7 +111,6 @@ class SettingsPrivacyTest {
             verifyDeleteBrowsingDataButton()
             verifyDeleteBrowsingDataOnQuitButton()
             verifyDataCollectionButton()
-            verifyLeakCanaryButton()
         }
     }
 

@@ -64,9 +64,9 @@ class SettingsRobot {
     fun verifyLeakCanaryButton() = assertLeakCanaryButton()
     fun verifySettingsView() = assertSettingsView()
 
-    // DEVELOPER TOOLS SECTION
-    fun verifyDeveloperToolsHeading() = assertDeveloperToolsHeading()
-
+    // ADVANCED SECTION
+    fun verifyAdvancedHeading() = assertAdvancedHeading()
+    fun verifyAddons() = assertAddons()
     fun verifyRemoteDebug() = assertRemoteDebug()
 
     // ABOUT SECTION
@@ -174,7 +174,7 @@ private fun assertSettingsView() {
     // verify that we are in the correct library view
     assertGeneralHeading()
     assertPrivacyHeading()
-    assertDeveloperToolsHeading()
+    assertAdvancedHeading()
     assertAboutHeading()
 }
 
@@ -255,13 +255,22 @@ private fun assertDeleteBrowsingDataOnQuitButton() {
 private fun assertDataCollectionButton() = onView(withText("Data collection"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertLeakCanaryButton() = onView(withText("LeakCanary"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertLeakCanaryButton() {
+    scrollToElementByText("LeakCanary")
+    onView(withText("LeakCanary"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
-// DEVELOPER TOOLS SECTION
-private fun assertDeveloperToolsHeading() {
-    scrollToElementByText("Developer tools")
-    onView(withText("Developer tools"))
+// ADVANCED SECTION
+private fun assertAdvancedHeading() {
+    scrollToElementByText("Advanced")
+    onView(withText("Advanced"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertAddons() {
+    scrollToElementByText("Add-ons")
+    onView(withText("Add-ons"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 

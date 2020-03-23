@@ -49,7 +49,6 @@ class SettingsDeveloperToolsTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            verifyDeveloperToolsHeading()
             verifyRemoteDebug()
         }
     }
