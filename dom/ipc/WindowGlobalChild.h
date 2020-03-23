@@ -49,7 +49,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   dom::BrowsingContext* BrowsingContext() override { return mBrowsingContext; }
   dom::WindowContext* WindowContext() { return mWindowContext; }
-  nsGlobalWindowInner* WindowGlobal() { return mWindowGlobal; }
+  nsGlobalWindowInner* GetWindowGlobal() { return mWindowGlobal; }
 
   // Has this actor been shut down
   bool IsClosed() { return !CanSend(); }
