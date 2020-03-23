@@ -19,6 +19,7 @@ when it is highlighted.
 
 | Name | Summary |
 |---|---|
+| [canPropagate](can-propagate.md) | `abstract val canPropagate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [label](label.md) | `abstract val label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
 
 ### Extension Functions

@@ -2,7 +2,7 @@
 
 # HighlightableMenuItem
 
-`interface HighlightableMenuItem` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuHighlight.kt#L66)
+`interface HighlightableMenuItem` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuHighlight.kt#L77)
 
 Indicates that a menu item shows a highlight.
 

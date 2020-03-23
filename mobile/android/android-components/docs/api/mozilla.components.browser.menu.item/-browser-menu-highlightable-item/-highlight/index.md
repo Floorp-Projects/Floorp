@@ -19,6 +19,7 @@ Replaced by [BrowserMenuHighlight](../../../mozilla.components.browser.menu/-bro
 | Name | Summary |
 |---|---|
 | [backgroundResource](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/background-resource.md) | `val backgroundResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [canPropagate](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/can-propagate.md) | `open val canPropagate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Indicate whether other components should consider this highlight when displaying their own highlight. |
 | [colorResource](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/color-resource.md) | `val colorResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [endImageResource](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/end-image-resource.md) | `val endImageResource: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [label](../../../mozilla.components.browser.menu/-browser-menu-highlight/-classic-highlight/label.md) | `open val label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
