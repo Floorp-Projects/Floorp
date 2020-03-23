@@ -8,7 +8,7 @@ wasmEvalText(
 	 (i64.add
 	  (block (result i64)
 	   (loop $label1 $label0
-		(drop (block $label2 i64
+		(drop (block $label2 (result i64)
 		       (br_table $label2 (i64.const 0) (local.get $arg0))))
 		(local.set $var0 (i64.mul (i64.const 2) (local.get $var0))))
 	   (tee_local $var0 (i64.add (i64.const 4) (local.get $var0))))
