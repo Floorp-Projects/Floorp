@@ -71,14 +71,17 @@ class InstallationPing(private val context: Context) {
     }
 
     /**
-     * Check that required metrics are not empty before attempting to send ping.
+     * Check that at least one of the metrics values is set before sending the ping.
+     * Note: it is normal for many of these values to not be set as campaigns do not always
+     * utilize every attribute!
      * */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun checkMetricsNotEmpty(): Boolean = listOf(
+        context.settings().adjustCampaignId,
         context.settings().adjustAdGroup,
         context.settings().adjustCreative,
         context.settings().adjustNetwork
-    ).all { it.isNotEmpty() }
+    ).any { it.isNotEmpty() }
 
     /**
      * Trigger sending the `installation` ping if it wasn't sent already.

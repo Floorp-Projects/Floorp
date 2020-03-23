@@ -37,6 +37,8 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
             true
         )
 
+        val installationPing = InstallationPing(application)
+
         config.setOnAttributionChangedListener {
             if (!it.network.isNullOrEmpty()) {
                 application.applicationContext.settings().adjustNetwork =
@@ -55,7 +57,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
                     it.campaign
             }
 
-            InstallationPing(application).checkAndSend()
+            installationPing.checkAndSend()
         }
 
         config.setLogLevel(LogLevel.SUPRESS)
