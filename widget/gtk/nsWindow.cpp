@@ -334,6 +334,7 @@ static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
 static bool gUseWaylandVsync = false;
 static bool gUseWaylandUseOpaqueRegion = true;
+static bool gUseAspectRatio = true;
 static GList* gVisibleWaylandPopupWindows = nullptr;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
@@ -6684,6 +6685,14 @@ static nsresult initialize_prefs(void) {
   gUseWaylandUseOpaqueRegion =
       Preferences::GetBool("widget.wayland.use-opaque-region", true);
 
+  if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
+    gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
+  } else {
+    static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+    gUseAspectRatio =
+        currentDesktop ? (strstr(currentDesktop, "GNOME") != nullptr) : false;
+  }
+
   return NS_OK;
 }
 
@@ -7877,10 +7886,7 @@ GtkTextDirection nsWindow::GetTextDirection() {
 }
 
 void nsWindow::LockAspectRatio(bool aShouldLock) {
-  static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  static bool setLock =
-      currentDesktop ? (strstr(currentDesktop, "GNOME") != nullptr) : false;
-  if (!setLock) {
+  if (!gUseAspectRatio) {
     return;
   }
 
