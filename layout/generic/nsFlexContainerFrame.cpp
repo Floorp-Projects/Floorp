@@ -931,20 +931,17 @@ class nsFlexContainerFrame::FlexLine final {
   nsTArray<FlexItem>& Items() { return mItems; }
   const nsTArray<FlexItem>& Items() const { return mItems; }
 
-  // Adds the given FlexItem to our array of items, and adds its hypothetical
-  // outer & inner main sizes to our totals. Use this method instead of directly
-  // modifying the item list, so that our bookkeeping remains correct.
-  void AddItem(const FlexItem& aItem, nscoord aItemInnerHypotheticalMainSize,
-               nscoord aItemOuterHypotheticalMainSize) {
-    mItems.AppendElement(aItem);
+  // Adds the last flex item's hypothetical outer main-size and
+  // margin/border/padding to our totals. This should be called exactly once for
+  // each flex item, after we've determined that this line is the correct home
+  // for that item.
+  void AddLastItemToMainSizeTotals() {
+    const FlexItem& lastItem = Items().LastElement();
 
     // Update our various bookkeeping member-vars:
-    if (aItem.IsFrozen()) {
+    if (lastItem.IsFrozen()) {
       mNumFrozenItems++;
     }
-
-    nscoord itemMBP =
-        aItemOuterHypotheticalMainSize - aItemInnerHypotheticalMainSize;
 
     // Note: If our flex item is (or contains) a table with
     // "table-layout:fixed", it may have a value near nscoord_MAX as its
@@ -956,10 +953,11 @@ class nsFlexContainerFrame::FlexLine final {
     // grow our flex items rather than shrink them when it comes time to
     // resolve flexible items. Hence, we sum up the hypothetical sizes using a
     // helper function AddChecked() to avoid overflow.
-    mTotalItemMBP = AddChecked(mTotalItemMBP, itemMBP);
+    mTotalItemMBP =
+        AddChecked(mTotalItemMBP, lastItem.MarginBorderPaddingSizeInMainAxis());
 
-    mTotalOuterHypotheticalMainSize = AddChecked(
-        mTotalOuterHypotheticalMainSize, aItemOuterHypotheticalMainSize);
+    mTotalOuterHypotheticalMainSize =
+        AddChecked(mTotalOuterHypotheticalMainSize, lastItem.OuterMainSize());
 
     // If the item added was not the first item in the line, we add in any gap
     // space as needed.
@@ -1205,8 +1203,9 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
   return (alignment | alignmentFlags);
 }
 
-UniquePtr<FlexItem> nsFlexContainerFrame::GenerateFlexItemForChild(
-    nsIFrame* aChildFrame, const ReflowInput& aParentReflowInput,
+FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
+    FlexLine& aLine, nsIFrame* aChildFrame,
+    const ReflowInput& aParentReflowInput,
     const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis) {
   // Create temporary reflow input just for sizing -- to get hypothetical
   // main-size and the computed values of min / max main-size property.
@@ -1312,9 +1311,9 @@ UniquePtr<FlexItem> nsFlexContainerFrame::GenerateFlexItemForChild(
   }
 
   // Construct the flex item!
-  auto item = MakeUnique<FlexItem>(childRI, flexGrow, flexShrink, flexBaseSize,
-                                   mainMinSize, mainMaxSize, tentativeCrossSize,
-                                   crossMinSize, crossMaxSize, aAxisTracker);
+  FlexItem* item = aLine.Items().EmplaceBack(
+      childRI, flexGrow, flexShrink, flexBaseSize, mainMinSize, mainMaxSize,
+      tentativeCrossSize, crossMinSize, crossMaxSize, aAxisTracker);
 
   // If we're inflexible, we can just freeze to our hypothetical main-size
   // up-front. Similarly, if we're a fixed-size widget, we only have one
@@ -3719,56 +3718,59 @@ void nsFlexContainerFrame::GenerateFlexLines(
       curLine = ConstructNewFlexLine();
     }
 
-    UniquePtr<FlexItem> item;
+    FlexItem* item;
     if (useMozBoxCollapseBehavior &&
         (StyleVisibility::Collapse ==
          childFrame->StyleVisibility()->mVisible)) {
       // Legacy visibility:collapse behavior: make a 0-sized strut. (No need to
       // bother with aStruts and remembering cross size.)
-      item = MakeUnique<FlexItem>(childFrame, 0, aReflowInput.GetWritingMode(),
-                                  aAxisTracker);
+      item = curLine->Items().EmplaceBack(
+          childFrame, 0, aReflowInput.GetWritingMode(), aAxisTracker);
     } else if (nextStrutIdx < aStruts.Length() &&
                aStruts[nextStrutIdx].mItemIdx == itemIdxInContainer) {
       // Use the simplified "strut" FlexItem constructor:
-      item = MakeUnique<FlexItem>(childFrame,
-                                  aStruts[nextStrutIdx].mStrutCrossSize,
-                                  aReflowInput.GetWritingMode(), aAxisTracker);
+      item = curLine->Items().EmplaceBack(
+          childFrame, aStruts[nextStrutIdx].mStrutCrossSize,
+          aReflowInput.GetWritingMode(), aAxisTracker);
       nextStrutIdx++;
     } else {
-      item = GenerateFlexItemForChild(childFrame, aReflowInput, aAxisTracker,
-                                      aHasLineClampEllipsis);
+      item = GenerateFlexItemForChild(*curLine, childFrame, aReflowInput,
+                                      aAxisTracker, aHasLineClampEllipsis);
     }
 
-    nscoord itemInnerHypotheticalMainSize = item->MainSize();
-    nscoord itemOuterHypotheticalMainSize = item->OuterMainSize();
-
-    // Check if we need to wrap |item| to a new line
-    // (i.e. check if its outer hypothetical main size pushes our line over
-    // the threshold)
-    if (wrapThreshold != NS_UNCONSTRAINEDSIZE &&  // Don't wrap if
-                                                  // unconstrained.
-        !curLine->IsEmpty()) {  // Don't wrap if this will be line's first item.
-      // If the line will be longer than wrapThreshold after adding this item,
-      // then wrap to a new line before inserting this item.
-      // NOTE: We have to account for the fact that
-      // itemOuterHypotheticalMainSize might be huge, if our item is (or
-      // contains) a table with "table-layout:fixed". So we use AddChecked()
-      // rather than (possibly-overflowing) normal addition, to be sure we don't
-      // make the wrong judgement about whether the item fits on this line.
-      nscoord newOuterSize =
-          AddChecked(curLine->TotalOuterHypotheticalMainSize(),
-                     itemOuterHypotheticalMainSize);
+    // Check if we need to wrap |item| to a new line, i.e. check if the newly
+    // appended outer hypothetical main size pushes our line over the threshold.
+    // But we don't wrap if the line-length is unconstrained, nor do we wrap if
+    // this was the first item on the line.
+    if (wrapThreshold != NS_UNCONSTRAINEDSIZE &&
+        curLine->Items().Length() > 1) {
+      // If the line will be longer than wrapThreshold because of the newly
+      // appended item, then wrap and move the item to a new line.
+      //
+      // NOTE: We have to account for the fact that the item's outer
+      // hypothetical main-size might be huge, if our item is (or contains) a
+      // table with "table-layout:fixed". So we use AddChecked() rather than
+      // (possibly-overflowing) normal addition, to be sure we don't make the
+      // wrong judgement about whether the item fits on this line.
+      nscoord newOuterSize = AddChecked(
+          curLine->TotalOuterHypotheticalMainSize(), item->OuterMainSize());
       // Account for gap between this line's previous item and this item
       newOuterSize = AddChecked(newOuterSize, aMainGapSize);
       if (newOuterSize == nscoord_MAX || newOuterSize > wrapThreshold) {
         curLine = ConstructNewFlexLine();
+
+        // Get the previous line after adding a new line because the address can
+        // change if nsTArray needs to reallocate a new space for the new line.
+        FlexLine& prevLine = aLines[aLines.Length() - 2];
+
+        // Move the item from the end of prevLine to the end of curLine.
+        item =
+            curLine->Items().AppendElement(prevLine.Items().PopLastElement());
       }
     }
 
-    // Add item to current flex line (and update the line's bookkeeping about
-    // how large its items collectively are).
-    curLine->AddItem(*item, itemInnerHypotheticalMainSize,
-                     itemOuterHypotheticalMainSize);
+    // Update the line's bookkeeping about how large its items collectively are.
+    curLine->AddLastItemToMainSizeTotals();
 
     // Honor "page-break-after", if we're multi-line and have more children:
     if (!isSingleLine && childFrame->GetNextSibling() &&
