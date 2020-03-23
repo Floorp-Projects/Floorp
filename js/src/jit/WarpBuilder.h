@@ -182,6 +182,16 @@ namespace jit {
   _(InitElemSetter)         \
   _(InitHiddenElemGetter)   \
   _(InitHiddenElemSetter)   \
+  _(In)                     \
+  _(HasOwn)                 \
+  _(Instanceof)             \
+  _(NewTarget)              \
+  _(CheckIsObj)             \
+  _(CheckIsCallable)        \
+  _(CheckObjCoercible)      \
+  _(GetImport)              \
+  _(GetPropSuper)           \
+  _(GetElemSuper)           \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -259,8 +269,11 @@ class MOZ_STACK_CLASS WarpBuilder {
                                     LexicalEnvironmentObject* templateObj);
   MInstruction* buildCallObject(MDefinition* callee, MDefinition* env,
                                 CallObject* templateObj);
+  MInstruction* buildLoadSlot(MDefinition* obj, uint32_t numFixedSlots,
+                              uint32_t slot);
 
   MConstant* globalLexicalEnvConstant();
+  MDefinition* getCallee();
 
   MOZ_MUST_USE bool buildUnaryOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildBinaryOp(BytecodeLocation loc);
@@ -275,6 +288,8 @@ class MOZ_STACK_CLASS WarpBuilder {
                                    MDefinition* id);
   MOZ_MUST_USE bool buildSetPropOp(BytecodeLocation loc, MDefinition* obj,
                                    MDefinition* id, MDefinition* val);
+  MOZ_MUST_USE bool buildGetPropSuperOp(BytecodeLocation loc, MDefinition* obj,
+                                        MDefinition* receiver, MDefinition* id);
 
   MOZ_MUST_USE bool buildInitPropGetterSetterOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildInitElemGetterSetterOp(BytecodeLocation loc);

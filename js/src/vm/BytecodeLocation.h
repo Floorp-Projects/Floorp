@@ -21,6 +21,9 @@ class RegExpObject;
 
 enum class FunctionPrefixKind;
 
+enum class CheckIsObjectKind : uint8_t;
+enum class CheckIsCallableKind : uint8_t;
+
 class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset_;
 
@@ -249,6 +252,15 @@ class BytecodeLocation {
   FunctionPrefixKind getFunctionPrefixKind() const {
     MOZ_ASSERT(is(JSOp::SetFunName));
     return FunctionPrefixKind(GET_UINT8(rawBytecode_));
+  }
+
+  CheckIsObjectKind getCheckIsObjectKind() const {
+    MOZ_ASSERT(is(JSOp::CheckIsObj));
+    return CheckIsObjectKind(GET_UINT8(rawBytecode_));
+  }
+  CheckIsCallableKind getCheckIsCallableKind() const {
+    MOZ_ASSERT(is(JSOp::CheckIsCallable));
+    return CheckIsCallableKind(GET_UINT8(rawBytecode_));
   }
 
   JSProtoKey getProtoKey() const {
