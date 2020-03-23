@@ -56,6 +56,7 @@ using namespace mozilla::layers;
 nsWebBrowser::nsWebBrowser(int aItemType)
     : mContentType(aItemType),
       mShouldEnableHistory(true),
+      mWillChangeProcess(false),
       mParentNativeWindow(nullptr),
       mProgressListener(nullptr),
       mWidgetListenerDelegate(this),
@@ -1193,6 +1194,9 @@ nsWebBrowser::SetDocShell(nsIDocShell* aDocShell) {
     if (mDocShellAsWin) {
       mDocShellAsWin->Destroy();
     }
+    if (!mWillChangeProcess && mDocShell) {
+      mDocShell->GetBrowsingContext()->Detach(/* aFromIPC */ true);
+    }
 
     mDocShell = nullptr;
     mDocShellAsReq = nullptr;
@@ -1283,6 +1287,13 @@ void nsWebBrowser::FocusDeactivate() {
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (fm && window) {
     fm->WindowLowered(window);
+  }
+}
+
+void nsWebBrowser::SetWillChangeProcess() {
+  mWillChangeProcess = true;
+  if (mDocShell) {
+    nsDocShell::Cast(mDocShell)->SetWillChangeProcess();
   }
 }
 
