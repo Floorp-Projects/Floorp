@@ -15,8 +15,8 @@ import mozilla.components.feature.share.db.RecentAppsDatabase.Companion.RECENT_A
 internal data class RecentAppEntity(
 
     @PrimaryKey
-    @ColumnInfo(name = "packageName")
-    var packageName: String,
+    @ColumnInfo(name = "activityName")
+    var activityName: String,
 
     @ColumnInfo(name = "score")
     var score: Double

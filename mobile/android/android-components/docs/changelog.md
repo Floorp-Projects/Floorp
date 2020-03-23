@@ -37,6 +37,10 @@ permalink: /changelog/
   * Added `canPropagate` param to all `BrowserMenuHighlight`s, making it optional to be displayed in other components
   * Changed `BrowserMenuItem.getHighlight` to filter the highlights which should not propagate.
 
+* **feature-share**
+    * Changed primary key of RecentAppEntity to activityName instead of packageName
+      * ⚠️ **This is a breaking change**: all calls to app.packageName should now use app.activityName
+
 # 36.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v35.0.0...v36.0.0)

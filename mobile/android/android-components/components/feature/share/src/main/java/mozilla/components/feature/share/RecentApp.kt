@@ -7,15 +7,15 @@ package mozilla.components.feature.share
 /**
  * Interface used for adapting recent apps database entities
  *
- * @property packageName - unique identifier of the app
+ * @property activityName - unique identifier of the app
  * @property score - value used for sorting in descending order the recent apps (most recent first)
  */
 interface RecentApp {
 
     /**
-     * The packageName of the recent app.
+     * The activityName of the recent app.
      */
-    val packageName: String
+    val activityName: String
 
     /**
      * The score of the recent app (calculated based on number of selections - decay)

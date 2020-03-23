@@ -17,8 +17,8 @@ internal interface RecentAppsDao {
 
     @Query("""
         SELECT * FROM recent_apps_table 
-        WHERE packageName = :packageName""")
-    fun getRecentApp(packageName: String): RecentAppEntity?
+        WHERE activityName = :activityName""")
+    fun getRecentApp(activityName: String): RecentAppEntity?
 
     @Update
     fun updateRecentApp(recentApp: RecentAppEntity)

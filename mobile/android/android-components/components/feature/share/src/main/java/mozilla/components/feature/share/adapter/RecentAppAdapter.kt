@@ -11,8 +11,8 @@ internal class RecentAppAdapter(
     internal val entity: RecentAppEntity
 ) : RecentApp {
 
-    override val packageName: String
-        get() = entity.packageName
+    override val activityName: String
+        get() = entity.activityName
 
     override val score: Double
         get() = entity.score
