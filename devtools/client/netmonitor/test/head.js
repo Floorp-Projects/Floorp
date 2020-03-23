@@ -160,11 +160,10 @@ Services.prefs.setCharPref(
     '{"name":"file","minWidth":30,"width":25},' +
     '{"name":"url","minWidth":30,"width":25},' +
     '{"name":"cause","minWidth":30,"width":10},' +
-    '{"name":"initiator","minWidth":30,"width":10},' +
     '{"name":"type","minWidth":30,"width":5},' +
     '{"name":"transferred","minWidth":30,"width":10},' +
     '{"name":"contentSize","minWidth":30,"width":5},' +
-    '{"name":"waterfall","minWidth":150,"width":15}]'
+    '{"name":"waterfall","minWidth":150,"width":25}]'
 );
 
 // Increase UI limit for responses rendered using CodeMirror in tests.
