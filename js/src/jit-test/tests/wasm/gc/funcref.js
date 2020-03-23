@@ -18,9 +18,9 @@ wasmFailValidateText(`(module (global (mut funcref) (ref.null)) (func (param any
 wasmEvalText(`(module (func (param funcref)) (func (param funcref) (call 0 (local.get 0))))`);
 wasmEvalText(`(module (func (param anyref)) (func (param funcref) (call 0 (local.get 0))))`);
 wasmFailValidateText(`(module (func (param funcref)) (func (param anyref) (call 0 (local.get 0))))`, typeErr);
-wasmEvalText(`(module (func (param funcref) (result funcref) (block funcref (local.get 0) (br 0))))`);
-wasmEvalText(`(module (func (param funcref) (result anyref) (block anyref (local.get 0) (br 0))))`);
-wasmFailValidateText(`(module (func (param anyref) (result anyref) (block funcref (local.get 0) (br 0))))`, typeErr);
+wasmEvalText(`(module (func (param funcref) (result funcref) (block (result funcref) (local.get 0) (br 0))))`);
+wasmEvalText(`(module (func (param funcref) (result anyref) (block (result anyref) (local.get 0) (br 0))))`);
+wasmFailValidateText(`(module (func (param anyref) (result anyref) (block (result funcref) (local.get 0) (br 0))))`, typeErr);
 wasmEvalText(`(module (func (param funcref funcref) (result funcref) (select (result funcref) (local.get 0) (local.get 1) (i32.const 0))))`);
 wasmEvalText(`(module (func (param anyref funcref) (result anyref) (select (result anyref) (local.get 0) (local.get 1) (i32.const 0))))`);
 wasmEvalText(`(module (func (param funcref anyref) (result anyref) (select (result anyref)(local.get 0) (local.get 1) (i32.const 0))))`);
@@ -46,7 +46,7 @@ var run = wasmEvalText(`(module
     (func (export "run") (param $a funcref) (param $b funcref) (param $c funcref) (param $test1 i32) (param $test2 i32) (result funcref)
       local.get $a
       global.set 0
-      block funcref
+      block (result funcref)
         local.get $b
         local.get $test1
         br_if 0
