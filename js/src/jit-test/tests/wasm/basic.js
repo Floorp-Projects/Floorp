@@ -197,7 +197,7 @@ wasmFullPass('(module (func (result i32) (local i32) (tee_local 0 (i32.const 42)
 wasmFullPass('(module (func (result i32) (local i32) (tee_local 0 (local.get 0))) (export "run" 0))', 0);
 
 wasmFullPass('(module (func (param $a i32) (result i32) (local.get $a)) (export "run" 0))', 0);
-wasmFullPass('(module (func (param $a i32) (local $b i32) (result i32) (block i32 (local.set $b (local.get $a)) (local.get $b))) (export "run" 0))', 42, {}, 42);
+wasmFullPass('(module (func (param $a i32) (local $b i32) (result i32) (block (result i32) (local.set $b (local.get $a)) (local.get $b))) (export "run" 0))', 42, {}, 42);
 
 wasmValidateText('(module (func (local i32) (local $a f32) (local.set 0 (i32.const 1)) (local.set $a (f32.const nan))))');
 
@@ -211,12 +211,12 @@ wasmFailValidateText('(module (func (result i32) (block (block ))))', emptyStack
 wasmFailValidateText('(module (func (local i32) (local.set 0 (block ))))', emptyStackError);
 
 wasmFullPass('(module (func (block (block ))) (export "run" 0))', undefined);
-wasmFullPass('(module (func (result i32) (block i32 (i32.const 42))) (export "run" 0))', 42);
-wasmFullPass('(module (func (result i32) (block i32 (block i32 (i32.const 42)))) (export "run" 0))', 42);
-wasmFailValidateText('(module (func (result f32) (block i32 (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFullPass('(module (func (result i32) (block (result i32) (i32.const 42))) (export "run" 0))', 42);
+wasmFullPass('(module (func (result i32) (block (result i32) (block (result i32) (i32.const 42)))) (export "run" 0))', 42);
+wasmFailValidateText('(module (func (result f32) (block (result i32) (i32.const 0))))', mismatchError("i32", "f32"));
 
-wasmFullPass('(module (func (result i32) (block i32 (drop (i32.const 13)) (block i32 (i32.const 42)))) (export "run" 0))', 42);
-wasmFailValidateText('(module (func (result f32) (param f32) (block i32 (drop (local.get 0)) (i32.const 0))))', mismatchError("i32", "f32"));
+wasmFullPass('(module (func (result i32) (block (result i32) (drop (i32.const 13)) (block (result i32) (i32.const 42)))) (export "run" 0))', 42);
+wasmFailValidateText('(module (func (result f32) (param f32) (block (result i32) (drop (local.get 0)) (i32.const 0))))', mismatchError("i32", "f32"));
 
 wasmFullPass('(module (func (result i32) (local i32) (local.set 0 (i32.const 42)) (local.get 0)) (export "run" 0))', 42);
 

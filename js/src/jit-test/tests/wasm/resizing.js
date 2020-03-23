@@ -139,7 +139,7 @@ var exports = wasmEvalText(`(module
     (func $test (result i32)
         (i32.add
             (call_indirect $v2i (i32.const 0))
-            (block i32
+            (block (result i32)
                 (call $grow)
                 (call_indirect $v2i (i32.const 1)))))
     (func $one (result i32) (i32.const 1))
@@ -170,7 +170,7 @@ var exports2 = wasmEvalText(`(module
     (func $test (result i32)
         (i32.add
             (call_indirect $v2i (i32.const 1))
-            (block i32
+            (block (result i32)
                 (call_indirect $v2v (i32.const 0))
                 (call_indirect $v2i (i32.const 2)))))
     (func $ten (result i32) (i32.const 10))
