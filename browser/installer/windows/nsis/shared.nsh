@@ -189,8 +189,8 @@
 !ifdef MOZ_DEFAULT_BROWSER_AGENT
 ${If} $TmpVal == "HKCU"
   ClearErrors
-  ReadRegDWORD HKCU "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
-                    "DidRegisterDefaultBrowserAgent" $0
+  ReadRegDWORD $0 HKCU "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
+                    "DidRegisterDefaultBrowserAgent"
   ${If} $0 != 0
   ${OrIf} ${Errors}
     Exec '"$INSTDIR\default-browser-agent.exe" update-task $AppUserModelID'
