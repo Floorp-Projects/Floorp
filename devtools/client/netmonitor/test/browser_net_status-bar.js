@@ -19,7 +19,7 @@ add_task(async () => {
     set: [["privacy.reduceTimerPrecision", false]],
   });
 
-  const requestsDone = waitForAllRequestsFinished(monitor);
+  const requestsDone = waitForNetworkEvents(monitor, 1);
   const markersDone = waitForTimelineMarkers(monitor);
   tab.linkedBrowser.reload();
   await Promise.all([requestsDone, markersDone]);
