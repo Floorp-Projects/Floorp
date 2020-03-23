@@ -16,14 +16,12 @@ class Builder:
         self.mobile = is_mobile(self.platform)
         self.max_urls = options.get("max_urls", 150)
 
-        # see Bug 1608604 - on GV we get OOM killed if we do too much...
-        if "gecko" in self.platform:
-            self.max_urls = max(self.max_urls, 30)
-        # see Bug 1619107 - we have stability issues with Fennec @ bitbar
-        elif "fennec" in self.platform:
-            self.max_urls = max(self.max_urls, 5)
-        elif self.mobile:
-            self.max_urls = max(self.max_urls, 150)
+        # see Bug 1608604 & see Bug 1619107 - we have stability issues @ bitbar
+        if self.mobile:
+            self.max_urls = min(self.max_urls, 30)
+
+        logger.info("platform: %s" % self.platform)
+        logger.info("max_urls: %s" % self.max_urls)
 
         # we're syncing only on desktop for now
         self.syncing = not self.mobile
