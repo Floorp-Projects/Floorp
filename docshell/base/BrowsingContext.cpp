@@ -513,7 +513,11 @@ void BrowsingContext::Detach(bool aFromIPC) {
         // Only the embedder process is allowed to initiate a BrowsingContext
         // detach, so if we've gotten here, the host process already knows we've
         // been detached, and there's no need to tell it again.
-        if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID())) {
+        // If the owner process is not the same as the embedder process, its
+        // BrowsingContext will be detached when its nsWebBrowser instance is
+        // destroyed.
+        if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
+            !Canonical()->IsOwnedByProcess(aParent->ChildID())) {
           aParent->SendDetachBrowsingContext(Id(), callback, callback);
         }
       });

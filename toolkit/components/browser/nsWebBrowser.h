@@ -104,6 +104,7 @@ class nsWebBrowser final : public nsIWebBrowser,
   void SetAllowDNSPrefetch(bool aAllowPrefetch);
   void FocusActivate();
   void FocusDeactivate();
+  void SetWillChangeProcess();
 
   static already_AddRefed<nsWebBrowser> Create(
       nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
@@ -143,6 +144,7 @@ class nsWebBrowser final : public nsIWebBrowser,
   nsCOMPtr<nsIWindowWatcher> mWWatch;
   const uint32_t mContentType;
   bool mShouldEnableHistory;
+  bool mWillChangeProcess;
   nativeWindow mParentNativeWindow;
   nsIWebProgressListener* mProgressListener;
   nsCOMPtr<nsIWebProgress> mWebProgress;
