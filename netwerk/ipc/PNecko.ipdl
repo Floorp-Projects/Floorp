@@ -31,7 +31,6 @@ include protocol PSocketProcessBridge;
 include protocol PDocumentChannel;
 
 include IPCStream;
-include URIParams;
 include NeckoChannelParams;
 include PBrowserOrId;
 include protocol PAltDataOutputStream;
@@ -104,7 +103,7 @@ parent:
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 
-  async SpeculativeConnect(URIParams uri, nsIPrincipal principal, bool anonymous);
+  async SpeculativeConnect(nsIURI uri, nsIPrincipal principal, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, bool isHttps,
                         OriginAttributes originAttributes, uint32_t flags);
   async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,
@@ -149,8 +148,8 @@ parent:
   /**
    * WebExtension-specific remote resource loading
    */
-  async GetExtensionStream(URIParams uri) returns (nsIInputStream stream);
-  async GetExtensionFD(URIParams uri) returns (FileDescriptor fd);
+  async GetExtensionStream(nsIURI uri) returns (nsIInputStream stream);
+  async GetExtensionFD(nsIURI uri) returns (FileDescriptor fd);
 
   async InitSocketProcessBridge()
     returns (Endpoint<PSocketProcessBridgeChild> endpoint);
