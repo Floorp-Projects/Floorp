@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.407';
-const pdfjsBuild = '25693c6b';
+const pdfjsVersion = '2.4.445';
+const pdfjsBuild = '1bc5cef2b';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.407';
+    const workerVersion = '2.4.445';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -495,8 +495,8 @@ var WorkerMessageHandler = {
     handler.on("GetViewerPreferences", function (data) {
       return pdfManager.ensureCatalog("viewerPreferences");
     });
-    handler.on("GetOpenActionDestination", function (data) {
-      return pdfManager.ensureCatalog("openActionDestination");
+    handler.on("GetOpenAction", function (data) {
+      return pdfManager.ensureCatalog("openAction");
     });
     handler.on("GetAttachments", function wphSetupGetAttachments(data) {
       return pdfManager.ensureCatalog("attachments");
@@ -681,8 +681,6 @@ exports.isNum = isNum;
 exports.isString = isString;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
-exports.isLittleEndian = isLittleEndian;
-exports.isEvalSupported = isEvalSupported;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
 exports.shadow = shadow;
@@ -693,7 +691,7 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
 exports.unreachable = unreachable;
-exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
+exports.IsEvalSupportedCached = exports.IsLittleEndianCached = exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -1234,6 +1232,14 @@ function isLittleEndian() {
   return view32[0] === 1;
 }
 
+const IsLittleEndianCached = {
+  get value() {
+    return shadow(this, "value", isLittleEndian());
+  }
+
+};
+exports.IsLittleEndianCached = IsLittleEndianCached;
+
 function isEvalSupported() {
   try {
     new Function("");
@@ -1243,6 +1249,13 @@ function isEvalSupported() {
   }
 }
 
+const IsEvalSupportedCached = {
+  get value() {
+    return shadow(this, "value", isEvalSupported());
+  }
+
+};
+exports.IsEvalSupportedCached = IsEvalSupportedCached;
 const rgbBuf = ["rgb(", 0, ",", 0, ",", 0, ")"];
 
 class Util {
@@ -1566,10 +1579,10 @@ var Dict = function DictClosure() {
     get(key1, key2, key3) {
       let value = this._map[key1];
 
-      if (value === undefined && !(key1 in this._map) && key2 !== undefined) {
+      if (value === undefined && key2 !== undefined) {
         value = this._map[key2];
 
-        if (value === undefined && !(key2 in this._map) && key3 !== undefined) {
+        if (value === undefined && key3 !== undefined) {
           value = this._map[key3];
         }
       }
@@ -1584,10 +1597,10 @@ var Dict = function DictClosure() {
     async getAsync(key1, key2, key3) {
       let value = this._map[key1];
 
-      if (value === undefined && !(key1 in this._map) && key2 !== undefined) {
+      if (value === undefined && key2 !== undefined) {
         value = this._map[key2];
 
-        if (value === undefined && !(key2 in this._map) && key3 !== undefined) {
+        if (value === undefined && key3 !== undefined) {
           value = this._map[key3];
         }
       }
@@ -1629,7 +1642,7 @@ var Dict = function DictClosure() {
       this._map[key] = value;
     },
     has: function Dict_has(key) {
-      return key in this._map;
+      return this._map[key] !== undefined;
     },
     forEach: function Dict_forEach(callback) {
       for (var key in this._map) {
@@ -2625,7 +2638,7 @@ exports.log2 = log2;
 exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
 exports.readUint32 = readUint32;
-exports.isSpace = isSpace;
+exports.isWhiteSpace = isWhiteSpace;
 exports.XRefParseException = exports.XRefEntryException = exports.MissingDataException = void 0;
 
 var _util = __w_pdfjs_require__(2);
@@ -2741,7 +2754,7 @@ function readUint32(data, offset) {
   return (data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]) >>> 0;
 }
 
-function isSpace(ch) {
+function isWhiteSpace(ch) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
 }
 
@@ -3266,7 +3279,7 @@ class PDFDocument {
 
         do {
           ch = stream.getByte();
-        } while ((0, _core_utils.isSpace)(ch));
+        } while ((0, _core_utils.isWhiteSpace)(ch));
 
         let str = "";
 
@@ -4092,16 +4105,17 @@ class Catalog {
     return (0, _util.shadow)(this, "viewerPreferences", prefs);
   }
 
-  get openActionDestination() {
+  get openAction() {
     const obj = this.catDict.get("OpenAction");
-    let openActionDest = null;
+    let openAction = null;
 
     if ((0, _primitives.isDict)(obj)) {
       const destDict = new _primitives.Dict(this.xref);
       destDict.set("A", obj);
       const resultObj = {
         url: null,
-        dest: null
+        dest: null,
+        action: null
       };
       Catalog.parseDestDictionary({
         destDict,
@@ -4109,13 +4123,27 @@ class Catalog {
       });
 
       if (Array.isArray(resultObj.dest)) {
-        openActionDest = resultObj.dest;
+        if (!openAction) {
+          openAction = Object.create(null);
+        }
+
+        openAction.dest = resultObj.dest;
+      } else if (resultObj.action) {
+        if (!openAction) {
+          openAction = Object.create(null);
+        }
+
+        openAction.action = resultObj.action;
       }
     } else if (Array.isArray(obj)) {
-      openActionDest = obj;
+      if (!openAction) {
+        openAction = Object.create(null);
+      }
+
+      openAction.dest = obj;
     }
 
-    return (0, _util.shadow)(this, "openActionDestination", openActionDest);
+    return (0, _util.shadow)(this, "openAction", openAction);
   }
 
   get attachments() {
@@ -4179,24 +4207,10 @@ class Catalog {
       }
     }
 
-    const openActionDict = this.catDict.get("OpenAction");
+    const openAction = this.catDict.get("OpenAction");
 
-    if ((0, _primitives.isDict)(openActionDict) && ((0, _primitives.isName)(openActionDict.get("Type"), "Action") || !openActionDict.has("Type"))) {
-      const actionType = openActionDict.get("S");
-
-      if ((0, _primitives.isName)(actionType, "Named")) {
-        const action = openActionDict.get("N");
-
-        if ((0, _primitives.isName)(action, "Print")) {
-          if (!javaScript) {
-            javaScript = [];
-          }
-
-          javaScript.push("print({});");
-        }
-      } else {
-        appendIfJavaScriptDict(openActionDict);
-      }
+    if ((0, _primitives.isDict)(openAction) && (0, _primitives.isName)(openAction.get("S"), "JavaScript")) {
+      appendIfJavaScriptDict(openAction);
     }
 
     return (0, _util.shadow)(this, "javaScript", javaScript);
@@ -5974,7 +5988,7 @@ class Parser {
     ch = stream.peekByte();
     stream.skip(endOffset);
 
-    if (!(0, _core_utils.isSpace)(ch)) {
+    if (!(0, _core_utils.isWhiteSpace)(ch)) {
       endOffset--;
     }
 
@@ -6081,7 +6095,7 @@ class Parser {
         const tildePos = stream.pos;
         ch = stream.peekByte();
 
-        while ((0, _core_utils.isSpace)(ch)) {
+        while ((0, _core_utils.isWhiteSpace)(ch)) {
           stream.skip();
           ch = stream.peekByte();
         }
@@ -6315,7 +6329,7 @@ class Parser {
           if (maybeLength >= 0) {
             const lastByte = stream.peekBytes(end + 1)[end];
 
-            if (!(0, _core_utils.isSpace)(lastByte)) {
+            if (!(0, _core_utils.isWhiteSpace)(lastByte)) {
               break;
             }
 
@@ -6491,6 +6505,7 @@ class Lexer {
     this.nextChar();
     this.strBuf = [];
     this.knownCommands = knownCommands;
+    this._hexStringNumWarn = 0;
     this.beginInlineImagePos = -1;
   }
 
@@ -6532,7 +6547,7 @@ class Lexer {
     }
 
     if (ch < 0x30 || ch > 0x39) {
-      if (divideBy === 10 && sign === 0 && ((0, _core_utils.isSpace)(ch) || ch === -1)) {
+      if (divideBy === 10 && sign === 0 && ((0, _core_utils.isWhiteSpace)(ch) || ch === -1)) {
         (0, _util.warn)("Lexer.getNumber - treating a single decimal point as zero.");
         return 0;
       }
@@ -6768,12 +6783,28 @@ class Lexer {
     return _primitives.Name.get(strBuf.join(""));
   }
 
+  _hexStringWarn(ch) {
+    const MAX_HEX_STRING_NUM_WARN = 5;
+
+    if (this._hexStringNumWarn++ === MAX_HEX_STRING_NUM_WARN) {
+      (0, _util.warn)("getHexString - ignoring additional invalid characters.");
+      return;
+    }
+
+    if (this._hexStringNumWarn > MAX_HEX_STRING_NUM_WARN) {
+      return;
+    }
+
+    (0, _util.warn)(`getHexString - ignoring invalid character: ${ch}`);
+  }
+
   getHexString() {
     const strBuf = this.strBuf;
     strBuf.length = 0;
     let ch = this.currentChar;
     let isFirstHex = true;
     let firstDigit, secondDigit;
+    this._hexStringNumWarn = 0;
 
     while (true) {
       if (ch < 0) {
@@ -6790,7 +6821,8 @@ class Lexer {
           firstDigit = toHexDigit(ch);
 
           if (firstDigit === -1) {
-            (0, _util.warn)(`Ignoring invalid character "${ch}" in hex string`);
+            this._hexStringWarn(ch);
+
             ch = this.nextChar();
             continue;
           }
@@ -6798,7 +6830,8 @@ class Lexer {
           secondDigit = toHexDigit(ch);
 
           if (secondDigit === -1) {
-            (0, _util.warn)(`Ignoring invalid character "${ch}" in hex string`);
+            this._hexStringWarn(ch);
+
             ch = this.nextChar();
             continue;
           }
@@ -7993,7 +8026,7 @@ var Ascii85Stream = function Ascii85StreamClosure() {
     var str = this.str;
     var c = str.getByte();
 
-    while ((0, _core_utils.isSpace)(c)) {
+    while ((0, _core_utils.isWhiteSpace)(c)) {
       c = str.getByte();
     }
 
@@ -8021,7 +8054,7 @@ var Ascii85Stream = function Ascii85StreamClosure() {
       for (i = 1; i < 5; ++i) {
         c = str.getByte();
 
-        while ((0, _core_utils.isSpace)(c)) {
+        while ((0, _core_utils.isWhiteSpace)(c)) {
           c = str.getByte();
         }
 
@@ -11846,6 +11879,116 @@ const JpegStream = function JpegStreamClosure() {
     this.eof = true;
   };
 
+  Object.defineProperty(JpegStream.prototype, "maybeValidDimensions", {
+    get: function JpegStream_maybeValidDimensions() {
+      const {
+        dict,
+        stream
+      } = this;
+      const dictHeight = dict.get("Height", "H");
+      const startPos = stream.pos;
+      let validDimensions = true,
+          foundSOF = false,
+          b;
+
+      while ((b = stream.getByte()) !== -1) {
+        if (b !== 0xff) {
+          continue;
+        }
+
+        switch (stream.getByte()) {
+          case 0xc0:
+          case 0xc1:
+          case 0xc2:
+            foundSOF = true;
+            stream.pos += 2;
+            stream.pos += 1;
+            const scanLines = stream.getUint16();
+
+            if (scanLines === dictHeight) {
+              break;
+            }
+
+            if (scanLines === 0) {
+              validDimensions = false;
+              break;
+            }
+
+            if (scanLines > dictHeight * 10) {
+              validDimensions = false;
+              break;
+            }
+
+            break;
+
+          case 0xc3:
+          case 0xc5:
+          case 0xc6:
+          case 0xc7:
+          case 0xc9:
+          case 0xca:
+          case 0xcb:
+          case 0xcd:
+          case 0xce:
+          case 0xcf:
+            foundSOF = true;
+            break;
+
+          case 0xc4:
+          case 0xcc:
+          case 0xda:
+          case 0xdb:
+          case 0xdc:
+          case 0xdd:
+          case 0xde:
+          case 0xdf:
+          case 0xe0:
+          case 0xe1:
+          case 0xe2:
+          case 0xe3:
+          case 0xe4:
+          case 0xe5:
+          case 0xe6:
+          case 0xe7:
+          case 0xe8:
+          case 0xe9:
+          case 0xea:
+          case 0xeb:
+          case 0xec:
+          case 0xed:
+          case 0xee:
+          case 0xef:
+          case 0xfe:
+            const markerLength = stream.getUint16();
+
+            if (markerLength > 2) {
+              stream.skip(markerLength - 2);
+            } else {
+              stream.skip(-2);
+            }
+
+            break;
+
+          case 0xff:
+            stream.skip(-1);
+            break;
+
+          case 0xd9:
+            foundSOF = true;
+            break;
+        }
+
+        if (foundSOF) {
+          break;
+        }
+      }
+
+      stream.pos = startPos;
+      return (0, _util.shadow)(this, "maybeValidDimensions", validDimensions);
+    },
+    configurable: true
+  });
+
   JpegStream.prototype.getIR = function (forceDataSchema = false) {
     return (0, _util.createObjectURL)(this.bytes, "image/jpeg", forceDataSchema);
   };
@@ -11994,6 +12137,14 @@ var JpegImage = function JpegImageClosure() {
               throw new DNLMarkerError("Found DNL marker (0xFFDC) while parsing scan data", scanLines);
             }
           } else if (nextByte === 0xd9) {
+            if (parseDNLMarker) {
+              const maybeScanLines = blockRow * 8;
+
+              if (maybeScanLines > 0 && maybeScanLines < frame.scanLines / 10) {
+                throw new DNLMarkerError("Found EOI marker (0xFFD9) while parsing scan data, " + "possibly caused by incorrect `scanLines` parameter", maybeScanLines);
+              }
+            }
+
             throw new EOIMarkerError("Found EOI marker (0xFFD9) while parsing scan data");
           }
 
@@ -12201,17 +12352,19 @@ var JpegImage = function JpegImageClosure() {
       }
     }
 
+    let blockRow = 0;
+
     function decodeMcu(component, decode, mcu, row, col) {
       var mcuRow = mcu / mcusPerLine | 0;
       var mcuCol = mcu % mcusPerLine;
-      var blockRow = mcuRow * component.v + row;
+      blockRow = mcuRow * component.v + row;
       var blockCol = mcuCol * component.h + col;
       var offset = getBlockBufferOffset(component, blockRow, blockCol);
       decode(component, offset);
     }
 
     function decodeBlock(component, decode, mcu) {
-      var blockRow = mcu / component.blocksPerLine | 0;
+      blockRow = mcu / component.blocksPerLine | 0;
       var blockCol = mcu % component.blocksPerLine;
       var offset = getBlockBufferOffset(component, blockRow, blockCol);
       decode(component, offset);
@@ -19915,6 +20068,8 @@ var _fonts = __w_pdfjs_require__(27);
 
 var _encodings = __w_pdfjs_require__(30);
 
+var _core_utils = __w_pdfjs_require__(7);
+
 var _unicode = __w_pdfjs_require__(33);
 
 var _standard_fonts = __w_pdfjs_require__(32);
@@ -19930,8 +20085,6 @@ var _colorspace = __w_pdfjs_require__(22);
 var _stream = __w_pdfjs_require__(11);
 
 var _glyphlist = __w_pdfjs_require__(31);
-
-var _core_utils = __w_pdfjs_require__(7);
 
 var _metrics = __w_pdfjs_require__(38);
 
@@ -20155,7 +20308,27 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                 continue;
               }
 
-              graphicState = xref.fetch(graphicState);
+              try {
+                graphicState = xref.fetch(graphicState);
+              } catch (ex) {
+                if (ex instanceof _core_utils.MissingDataException) {
+                  throw ex;
+                }
+
+                if (this.options.ignoreErrors) {
+                  if (graphicState instanceof _primitives.Ref) {
+                    processed[graphicState.toString()] = true;
+                  }
+
+                  this.handler.send("UnsupportedFeature", {
+                    featureId: _util.UNSUPPORTED_FEATURES.unknown
+                  });
+                  (0, _util.warn)(`hasBlendModes - ignoring ExtGState: "${ex}".`);
+                  continue;
+                }
+
+                throw ex;
+              }
             }
 
             if (!(graphicState instanceof _primitives.Dict)) {
@@ -20203,7 +20376,27 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               continue;
             }
 
-            xObject = xref.fetch(xObject);
+            try {
+              xObject = xref.fetch(xObject);
+            } catch (ex) {
+              if (ex instanceof _core_utils.MissingDataException) {
+                throw ex;
+              }
+
+              if (this.options.ignoreErrors) {
+                if (xObject instanceof _primitives.Ref) {
+                  processed[xObject.toString()] = true;
+                }
+
+                this.handler.send("UnsupportedFeature", {
+                  featureId: _util.UNSUPPORTED_FEATURES.unknown
+                });
+                (0, _util.warn)(`hasBlendModes - ignoring XObject: "${ex}".`);
+                continue;
+              }
+
+              throw ex;
+            }
           }
 
           if (!(0, _primitives.isStream)(xObject)) {
@@ -20373,7 +20566,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         objId = `${this.idFactory.getDocId()}_type3res_${objId}`;
       }
 
-      if (nativeImageDecoderSupport !== _util.NativeImageDecoding.NONE && !softMask && !mask && image instanceof _jpeg_stream.JpegStream && _image_utils.NativeImageDecoder.isSupported(image, this.xref, resources, this.pdfFunctionFactory)) {
+      if (nativeImageDecoderSupport !== _util.NativeImageDecoding.NONE && !softMask && !mask && image instanceof _jpeg_stream.JpegStream && _image_utils.NativeImageDecoder.isSupported(image, this.xref, resources, this.pdfFunctionFactory) && image.maybeValidDimensions) {
         return this.handler.sendWithPromise("obj", [objId, this.pageIndex, "JpegStream", image.getIR(this.options.forceDataSchema)]).then(function () {
           operatorList.addDependency(objId);
           args = [objId, w, h];
@@ -22083,7 +22276,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
           }
 
-          if (code) {
+          if (code > 0 && Number.isInteger(code)) {
             if (baseEncodingName && code === +charcode) {
               const baseEncoding = (0, _encodings.getEncoding)(baseEncodingName);
 
@@ -22507,7 +22700,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         if (type === "Type3") {
           descriptor = new _primitives.Dict(null);
           descriptor.set("FontName", _primitives.Name.get(type));
-          descriptor.set("FontBBox", dict.getArray("FontBBox"));
+          descriptor.set("FontBBox", dict.getArray("FontBBox") || [0, 0, 0, 0]);
         } else {
           var baseFontName = dict.get("BaseFont");
 
@@ -27161,7 +27354,7 @@ var Type1Font = function Type1FontClosure() {
       if (j >= signatureLength) {
         i += j;
 
-        while (i < streamBytesLength && (0, _core_utils.isSpace)(streamBytes[i])) {
+        while (i < streamBytesLength && (0, _core_utils.isWhiteSpace)(streamBytes[i])) {
           i++;
         }
 
@@ -38092,7 +38285,7 @@ var Type1Parser = function Type1ParserClosure() {
           }
         } else if (ch === 0x25) {
           comment = true;
-        } else if (!(0, _core_utils.isSpace)(ch)) {
+        } else if (!(0, _core_utils.isWhiteSpace)(ch)) {
           break;
         }
 
@@ -38109,7 +38302,7 @@ var Type1Parser = function Type1ParserClosure() {
       do {
         token += String.fromCharCode(ch);
         ch = this.nextChar();
-      } while (ch >= 0 && !(0, _core_utils.isSpace)(ch) && !isSpecial(ch));
+      } while (ch >= 0 && !(0, _core_utils.isWhiteSpace)(ch) && !isSpecial(ch));
 
       return token;
     },
@@ -42569,13 +42762,6 @@ var _primitives = __w_pdfjs_require__(4);
 
 var _ps_parser = __w_pdfjs_require__(40);
 
-const IsEvalSupportedCached = {
-  get value() {
-    return (0, _util.shadow)(this, "value", (0, _util.isEvalSupported)());
-  }
-
-};
-
 class PDFFunctionFactory {
   constructor({
     xref,
@@ -43059,7 +43245,7 @@ var PDFFunction = function PDFFunctionClosure() {
       var range = IR[2];
       var code = IR[3];
 
-      if (isEvalSupported && IsEvalSupportedCached.value) {
+      if (isEvalSupported && _util.IsEvalSupportedCached.value) {
         const compiled = new PostScriptCompiler().compile(code, domain, range);
 
         if (compiled) {
@@ -44081,7 +44267,7 @@ class PostScriptLexer {
         }
       } else if (ch === 0x25) {
         comment = true;
-      } else if (!(0, _core_utils.isSpace)(ch)) {
+      } else if (!(0, _core_utils.isWhiteSpace)(ch)) {
         break;
       }
 
@@ -44322,7 +44508,7 @@ class NativeImageDecoder {
   }
 
   canDecode(image) {
-    return image instanceof _jpeg_stream.JpegStream && NativeImageDecoder.isDecodable(image, this.xref, this.resources, this.pdfFunctionFactory);
+    return image instanceof _jpeg_stream.JpegStream && NativeImageDecoder.isDecodable(image, this.xref, this.resources, this.pdfFunctionFactory) && image.maybeValidDimensions;
   }
 
   decode(image) {
