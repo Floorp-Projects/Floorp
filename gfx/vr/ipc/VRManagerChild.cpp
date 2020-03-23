@@ -375,8 +375,6 @@ void VRManagerChild::XRFrameRequest::Call(
     RefPtr<mozilla::dom::FrameRequestCallback> callback = mCallback;
     callback->Call(aTimeStamp);
   } else {
-    // TODO (Bug 1618365) - Need to update mXRFrame according to WebXR spec
-    // before callback
     RefPtr<mozilla::dom::XRFrameRequestCallback> callback = mXRCallback;
     RefPtr<mozilla::dom::XRFrame> frame = mXRFrame;
     callback->Call(aTimeStamp, *frame);
