@@ -86,6 +86,11 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginItem.setBreaches(event.detail.value);
       break;
     }
+    case "SetVulnerableLogins": {
+      gElements.loginList.setVulnerableLogins(event.detail.value);
+      gElements.loginItem.setVulnerableLogins(event.detail.value);
+      break;
+    }
     case "Setup": {
       handleAllLogins(event.detail.value.logins);
       gElements.loginFooter.showStoreIconsForLocales(
@@ -108,6 +113,11 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     case "UpdateBreaches": {
       gElements.loginList.updateBreaches(event.detail.value);
       gElements.loginItem.updateBreaches(event.detail.value);
+      break;
+    }
+    case "UpdateVulnerableLogins": {
+      gElements.loginList.updateVulnerableLogins(event.detail.value);
+      gElements.loginItem.updateVulnerableLogins(event.detail.value);
       break;
     }
   }

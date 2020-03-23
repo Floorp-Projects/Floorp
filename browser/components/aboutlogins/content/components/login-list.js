@@ -108,6 +108,12 @@ export default class LoginList extends HTMLElement {
         !!this._breachesByLoginGUID &&
           this._breachesByLoginGUID.has(listItem.dataset.guid)
       );
+      listItem.classList.toggle(
+        "vulnerable",
+        !!this._vulnerableLoginsByLoginGUID &&
+          this._vulnerableLoginsByLoginGUID.has(listItem.dataset.guid) &&
+          !listItem.classList.contains("breached")
+      );
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
 
@@ -162,9 +168,12 @@ export default class LoginList extends HTMLElement {
           })
         );
 
-        const extra = listItem.classList.contains("breached")
-          ? { breached: "true" }
-          : {};
+        let extra = {};
+        if (listItem.classList.contains("breached")) {
+          extra = { breached: "true" };
+        } else if (listItem.classList.contains("vulnerable")) {
+          extra = { vulnerable: "true" };
+        }
         recordTelemetryEvent({
           object: "existing_login",
           method: "select",
@@ -338,8 +347,38 @@ export default class LoginList extends HTMLElement {
    *                                  for displaying breached login indicators.
    */
   setBreaches(breachesByLoginGUID) {
-    this._breachesByLoginGUID = breachesByLoginGUID;
-    if (this._breachesByLoginGUID.size === 0) {
+    this._internalSetMonitorData("_breachesByLoginGUID", breachesByLoginGUID);
+  }
+
+  /**
+   * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs that
+   *                                  should be added to the local cache of
+   *                                  breaches.
+   */
+  updateBreaches(breachesByLoginGUID) {
+    this._internalUpdateMonitorData(
+      "_breachesByLoginGUID",
+      breachesByLoginGUID
+    );
+  }
+
+  setVulnerableLogins(vulnerableLoginsByLoginGUID) {
+    this._internalSetMonitorData(
+      "_vulnerableLoginsByLoginGUID",
+      vulnerableLoginsByLoginGUID
+    );
+  }
+
+  updateVulnerableLogins(vulnerableLoginsByLoginGUID) {
+    this._internalUpdateMonitorData(
+      "_vulnerableLoginsByLoginGUID",
+      vulnerableLoginsByLoginGUID
+    );
+  }
+
+  _internalSetMonitorData(internalMemberName, mapByLoginGUID) {
+    this[internalMemberName] = mapByLoginGUID;
+    if (this[internalMemberName].size === 0) {
       this.render();
       return;
     }
@@ -350,19 +389,14 @@ export default class LoginList extends HTMLElement {
     this._selectFirstVisibleLogin();
   }
 
-  /**
-   * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs that
-   *                                  should be added to the local cache of
-   *                                  breaches.
-   */
-  updateBreaches(breachesByLoginGUID) {
-    if (!this._breachesByLoginGUID) {
-      this._breachesByLoginGUID = new Map();
+  _internalUpdateMonitorData(internalMemberName, mapByLoginGUID) {
+    if (!this[internalMemberName]) {
+      this[internalMemberName] = new Map();
     }
-    for (const [guid, breach] of [...breachesByLoginGUID]) {
-      this._breachesByLoginGUID.set(guid, breach);
+    for (const [guid, data] of [...mapByLoginGUID]) {
+      this[internalMemberName].set(guid, data);
     }
-    this.setBreaches(this._breachesByLoginGUID);
+    this._internalSetMonitorData(internalMemberName, this[internalMemberName]);
   }
 
   setSortDirection(sortDirection) {

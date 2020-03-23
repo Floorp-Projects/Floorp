@@ -178,8 +178,13 @@ ol {
   color: var(--in-content-deemphasized-text);
 }
 
-:not(.breached) > .list-item-warning-icon {
+:not(.breached):not(.vulnerable) > .list-item-warning-icon {
   display: none;
+}
+
+/* Temporary until bug 1592464 */
+.vulnerable > .list-item-warning-icon {
+  transform: rotateX(180deg);
 }
 
 .list-item-warning-icon {

@@ -34,6 +34,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "VULNERABLE_PASSWORDS_ENABLED",
+  "signon.management.page.vulnerable-passwords.enabled",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "FXA_ENABLED",
   "identity.fxaccounts.enabled",
   false
@@ -548,6 +554,14 @@ var AboutLogins = {
             "AboutLogins:UpdateBreaches",
             await LoginBreaches.getPotentialBreachesByLoginGUID([login])
           );
+          if (VULNERABLE_PASSWORDS_ENABLED) {
+            this.messageSubscribers(
+              "AboutLogins:UpdateVulnerableLogins",
+              await LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID([
+                login,
+              ])
+            );
+          }
         }
         break;
       }
@@ -792,6 +806,14 @@ var AboutLogins = {
         "AboutLogins:SetBreaches",
         await LoginBreaches.getPotentialBreachesByLoginGUID(logins)
       );
+      if (VULNERABLE_PASSWORDS_ENABLED) {
+        sendMessageFn(
+          "AboutLogins:SetVulnerableLogins",
+          await LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
+            logins
+          )
+        );
+      }
     }
 
     sendMessageFn(

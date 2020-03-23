@@ -205,31 +205,10 @@ class AboutLoginsChild extends JSWindowActorChild {
 
   receiveMessage(message) {
     switch (message.name) {
-      case "AboutLogins:AllLogins":
-        this.sendToContent("AllLogins", message.data);
-        break;
-      case "AboutLogins:LoginAdded":
-        this.sendToContent("LoginAdded", message.data);
-        break;
-      case "AboutLogins:LoginModified":
-        this.sendToContent("LoginModified", message.data);
-        break;
-      case "AboutLogins:LoginRemoved":
-        this.sendToContent("LoginRemoved", message.data);
-        break;
-      case "AboutLogins:MasterPasswordAuthRequired":
-        this.sendToContent("MasterPasswordAuthRequired", message.data);
-        break;
       case "AboutLogins:MasterPasswordResponse":
         if (masterPasswordPromise) {
           masterPasswordPromise.resolve(message.data);
         }
-        break;
-      case "AboutLogins:SendFavicons":
-        this.sendToContent("SendFavicons", message.data);
-        break;
-      case "AboutLogins:SetBreaches":
-        this.sendToContent("SetBreaches", message.data);
         break;
       case "AboutLogins:Setup":
         let waivedContent = Cu.waiveXrays(this.browsingContext.window);
@@ -241,16 +220,13 @@ class AboutLoginsChild extends JSWindowActorChild {
           message.data.importVisible;
         this.sendToContent("Setup", message.data);
         break;
-      case "AboutLogins:ShowLoginItemError":
-        this.sendToContent("ShowLoginItemError", message.data);
-        break;
-      case "AboutLogins:SyncState":
-        this.sendToContent("SyncState", message.data);
-        break;
-      case "AboutLogins:UpdateBreaches":
-        this.sendToContent("UpdateBreaches", message.data);
-        break;
+      default:
+        this.passMessageDataToContent(message);
     }
+  }
+
+  passMessageDataToContent(message) {
+    this.sendToContent(message.name.replace("AboutLogins:", ""), message.data);
   }
 
   sendToContent(messageType, detail) {
