@@ -797,7 +797,7 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Это пример текста. Он здесь для того, чтобы показать, как текст будет отображаться, когда вы увеличите или уменьшите его размер с этой настройкой.</string>
+    <string name="accessibility_text_size_sample_text_1">Это пример текста. Он здесь для того, чтобы показать, как текст будет отображаться, когда вы будете увеличивать или уменьшать его размер.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Увеличение или уменьшение размера шрифта на сайтах</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -884,7 +884,7 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">В другом браузере Firefox на этом телефоне вы вошли как %s. Вы хотите авторизоваться с помощью этого аккаунта?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">В другом браузере Firefox на этом устройстве вы вошли как %s. Вы хотите авторизоваться с помощью этого аккаунта?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Да, авторизоваться</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1237,7 +1237,7 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Информация о персональной поисковой системе</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Ссылка &quot;Узнать больше&quot;</string>
+    <string name="search_add_custom_engine_learn_more_description">Ссылка «Узнать больше»</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Введите имя поисковой системы</string>

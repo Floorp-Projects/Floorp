@@ -56,6 +56,8 @@
     <string name="browser_menu_refresh">Refrescar</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Parar</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Amestar a marcadores</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_addon_manager">Xestor de complementos</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -142,6 +144,8 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Axustes</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Lo básico</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Xeneral</string>
     <!-- Preference category for all links about Fenix -->
@@ -308,6 +312,8 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions"><![CDATA[Visita <b>firefox.com/pair</b> con Firefox nel ordenador pa consiguir el códigu QR.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Abrir la cámara</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Encaboxar</string>
 
@@ -341,6 +347,8 @@
     <string name="library_desktop_bookmarks_unfiled">Otros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Llista de llectura</string>
     <!-- Library Page Title -->
     <string name="library_title">Biblioteca</string>
     <!-- Settings Page Title -->
@@ -447,6 +455,9 @@
     <string name="bookmark_menu_delete_button">Desaniciar</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">Guardar</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Marcadores esbillaos: %1$d</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Edición d\'un marcador</string>
     <!-- Bookmark folder editing screen title -->
@@ -463,6 +474,8 @@
     <string name="bookmark_add_folder_fragment_label">Amiestu d\'una carpeta</string>
     <!-- Bookmark editing error missing title -->
     <string name="bookmark_empty_title_error">Ha tener un títulu</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">La URL nun ye válida</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">Equí nun hai marcadores</string>
     <!-- Bookmark snackbar message on deletion
@@ -503,9 +516,11 @@
     <string name="tracking_protection_off">Non</string>
 
     <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Blóquiase</string>
+    <string name="preference_option_autoplay_blocked">Bloquiase</string>
     <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Permítese</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked2">Bloquiar l\'audiu y videu</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Sí</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -552,6 +567,11 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Coleición %d</string>
 
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Unviu y compartición</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Compartición</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Compartir</string>
@@ -610,6 +630,8 @@
     <string name="snackbar_private_tab_closed">Zarróse la llingüeta privada</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Zarráronse les llingüetes privaes</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Desaniciáronse les llingüetes privaes</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DESFACER</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
@@ -741,6 +763,10 @@
     <string name="onboarding_tracking_protection_strict_button">Estricta (aconséyase)</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Bloquia más rastrexadores pa más proteición y rindimientu pero podría causar que dalgunos sitios nun funcionen afayadizamente</string>
+    <!-- text for the toolbar position card header
+        In English this is an idiom for "choose a side as in an argument or fight"
+        but it is ok to make this more literally about "choosing a position in a physical space -->
+    <string name="onboarding_toolbar_position_header">Posición</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Restolar en privao</string>
     <!-- text for the private browsing onboarding card description
@@ -884,9 +910,9 @@
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message_2">%s bloquia los rastrexadores d\'esti sitiu cuando l\'escudu ta moráu. Tócalu pa ver qué se bloquia.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">La proteición ta ACTIVADA nesti sitiu</string>
+    <string name="etp_panel_on">ACTIVÓSE nesti sitiu</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">La proteición ta DESACTIVADA nesti sitiu</string>
+    <string name="etp_panel_off">DESACTIVÓSE nesti sitiu</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">La proteición ameyorada escontra\'l rastrexu ta desactivada pa estos sitios web</string>
     <!-- About page Your rights link text -->

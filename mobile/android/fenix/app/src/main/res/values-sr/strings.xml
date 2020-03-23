@@ -72,7 +72,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Ваша библиотека</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Страница за рачунаре</string>
+    <string name="browser_menu_desktop_site">За рачунаре</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Додај на почетни екран</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -193,7 +193,7 @@
     <string name="preferences_private_browsing_options">Приватно прегледање</string>
 
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Отвара везе у приватном језичку</string>
+    <string name="preferences_open_links_in_a_private_tab">Отварај везе у приватном језичку</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Додајте пречицу за приватно прегледање</string>
     <!-- Preference for accessibility -->
@@ -304,7 +304,7 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Укључи за све странице</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">Изузеци омогућавају деактивацију заштите од праћења за одабране странице.</string>
+    <string name="exceptions_empty_message_description">Изузеци омогућавају онемогућавање заштите од праћења за одабране странице.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Сазнајте више</string>
 
@@ -316,7 +316,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Употреба и технички подаци</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Делите податке о перформансама, употреби, хардверу и прилагођавањима вашег прегледача с Mozilla-ом како бисте нам помогли у побољшању %1$s</string>
+    <string name="preferences_usage_data_description">Делите податке о перформансама, употреби, хардверу и прилагођавањима вашег прегледача с Mozilla-ом како бисте нам помогли у побољшавању апликације %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетиншки подаци</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -337,7 +337,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Укључите Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Скенирајте код за упаривање у десктоп Firefox-у</string>
+    <string name="preferences_sync_pair">Скенирајте код за упаривање у Firefox-у за рачунаре</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Пријава</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -595,9 +595,9 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Изузеци</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Укљ.</string>
+    <string name="tracking_protection_on">Укључено</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
-    <string name="tracking_protection_off">Иск.</string>
+    <string name="tracking_protection_off">Искључено</string>
     <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked">Видео и звук блокирани</string>
     <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
@@ -611,9 +611,9 @@
     <!-- Label that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked2">Блокирај видео и звук</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
-    <string name="delete_browsing_data_quit_on">Укљ.</string>
+    <string name="delete_browsing_data_quit_on">Укључено</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
-    <string name="delete_browsing_data_quit_off">Иск.</string>
+    <string name="delete_browsing_data_quit_off">Искључено</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -769,7 +769,7 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Самостална величина фонта</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Величина фонта ће пратити ваша Андроид подешавања. Онемогућите ово да бисте овде подесили величину фонта.</string>
+    <string name="preference_accessibility_auto_size_summary">Величина фонта пратиће ваша Андроид подешавања. Онемогућите ово да бисте овде подесили величину фонта.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Обриши податке прегледања</string>
@@ -952,7 +952,7 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Прегледајте без праћења</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Задржите ваше податке приватним. %s вас штити од многих честих пратилаца које прате вашу активност на мрежи.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Задржите ваше податке приватним. %s вас штити од већине честих пратилаца који надзиру вашу радње на мрежи.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Сазнајте више</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -963,7 +963,7 @@
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Уравнотежен за заштиту и перформансе.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Странице ће се учитава нормално, али је мање пратилаца блокирано.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Странице биће учитаване уобичајено, али је мање пратилаца блокирано.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Шта се блокира стандардном заштитом од праћења</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -981,7 +981,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Прилагођено</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Изаберите које пратиоце и скрипте хоћете да блокирате</string>
+    <string name="preference_enhanced_tracking_protection_custom_description">Изаберите које пратиоце и скрипте желите блокирати</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Шта се блокира прилагођеном заштитом од праћења</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1014,7 +1014,7 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Пратиоци са друштвених мрежа</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">Ограничава могућност друштвених мрежа да прате ваше активности прегледања.</string>
+    <string name="etp_social_media_trackers_description">Ограничава могућност друштвених мрежа да прате ваше радње на вебу.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Вишестранични колачићи-пратиоци</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
@@ -1099,9 +1099,9 @@
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Синхронизуј пријаве</string>
     <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Укљ.</string>
+    <string name="preferences_passwords_sync_logins_on">Укључено</string>
     <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Иск.</string>
+    <string name="preferences_passwords_sync_logins_off">Искључено</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Поново повежи</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1177,7 +1177,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Зумирање на свим страницама</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Активирајте да бисте омогућили зумирање са два прста, чак и на страницама које забрањују овакав гест.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Омогућите да бисте дозволили зумирање са два прста, чак и на страницама које забрањују овакав гест.</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Додај претраживач</string>
@@ -1264,7 +1264,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Јесте ли сигурни да желите да избришете ову ознаку?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Додај у топ странице</string>
+    <string name="browser_menu_add_to_top_sites">Додај у омиљене странице</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Потврђено од: %1$s</string>
