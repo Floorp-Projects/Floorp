@@ -7969,6 +7969,16 @@
   value: 40
   mirror: always
 
+# TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
+# If true, data: URIs will be treated as unique opaque origins, hence will use
+# a NullPrincipal as the security context.
+# Otherwise it will inherit the origin from parent node, this is the legacy
+# behavior of Firefox.
+- name: security.data_uri.unique_opaque_origin
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
 # not allowed for Firefox Desktop in firefox.js
 - name: security.allow_parent_unrestricted_js_loads
