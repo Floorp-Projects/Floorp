@@ -6,7 +6,7 @@ function testConst(type, str, expected) {
 }
 
 function testConstError(type, str) {
-  assertErrorMessage(() => wasmEvalText(`(module (func (result ${type}) (${type}.const ${str})) (export "" (func 0)))`).exports[""](), Error, /parsing wasm text/);
+  assertErrorMessage(() => wasmEvalText(`(module (func (result ${type}) (${type}.const ${str})) (export "" (func 0)))`).exports[""](), Error, /wasm text error/);
 }
 
 testConst('i32', '0', 0);
@@ -72,9 +72,9 @@ testConst('f32', '-0x0.0', -0.0);
 testConst('f32', '-0x0', -0.0);
 testConst('f32', '0x0.0p0', 0.0);
 testConst('f32', '-0x0.0p0', -0.0);
-testConst('f32', 'infinity', Infinity);
-testConst('f32', '-infinity', -Infinity);
-testConst('f32', '+infinity', Infinity);
+testConst('f32', 'inf', Infinity);
+testConst('f32', '-inf', -Infinity);
+testConst('f32', '+inf', Infinity);
 testConst('f32', 'nan', NaN);
 //testConst('f32', '-nan', NaN); // TODO: NYI
 testConst('f32', '+nan', NaN);
@@ -100,8 +100,8 @@ testConst('f32', '0x1p-147', 5.605193857299268e-45);
 testConst('f32', '0x1p-126', 1.1754943508222875e-38);
 testConst('f32', '0x0.1fffffep+131', 3.4028234663852886e+38);
 testConst('f32', '0x1.fffffep+127', 3.4028234663852886e+38);
-testConst('f32', '0x2.0p+127', Infinity);
-testConst('f32', '0x1.fffffep+128', Infinity);
+testConstError('f32', '0x2.0p+127');
+testConstError('f32', '0x1.fffffep+128');
 testConst('f32', '0x0.1fffffep+128', 4.2535293329816107e+37);
 testConst('f32', '0x1p2', 4);
 testConst('f32', '0x10p2', 64);
@@ -114,7 +114,7 @@ testConst('f32', '-0x1p+3', -8);
 testConst('f32', '0x3p-2', .75);
 testConst('f32', '-0x76.54p-32', -2.7550413506105542e-8);
 testConst('f32', '0xf.ffffffffffffffffp+123', 170141183460469231731687303715884105728);
-testConst('f32', '0xf.ffffffffffffffffp+124', Infinity);
+testConstError('f32', '0xf.ffffffffffffffffp+124');
 testConst('f32', '1.1754943508222875e-38', 1.1754943508222875e-38);
 testConst('f32', '3.4028234663852886e+38', 3.4028234663852886e+38);
 testConst('f32', '1.1754943508222875e-35', 1.1754943508222875e-35);
@@ -139,7 +139,7 @@ testConst('f32', '-5.066758603788912e-7', -5.066758603788912e-7);
 testConst('f32', '1.875000e-01', 1.875000e-01);
 testConst('f32', '-0x1.b021fb98e9a17p-104', -8.322574059965897e-32);
 testConst('f32', '0x1.08de5bf3f784cp-129', 1.5202715065429227e-39);
-testConst('f32', '0x1.d50b969fbbfb3p+388', Infinity);
+testConstError('f32', '0x1.d50b969fbbfb3p+388');
 testConst('f32', '0x3434.2p4', 2.138260e+05);
 testConst('f32', '0x1434.2p-120', 3.891074380317903e-33);
 testConst('f32', '-0x0434.234p43', -9465807272673280);
@@ -158,9 +158,9 @@ testConst('f64', '-0x0.0', -0.0);
 testConst('f64', '-0x0', -0.0);
 testConst('f64', '0x0.0p0', 0.0);
 testConst('f64', '-0x0.0p0', -0.0);
-testConst('f64', 'infinity', Infinity);
-testConst('f64', '-infinity', -Infinity);
-testConst('f64', '+infinity', Infinity);
+testConst('f64', 'inf', Infinity);
+testConst('f64', '-inf', -Infinity);
+testConst('f64', '+inf', Infinity);
 testConst('f64', 'nan', NaN);
 //testConst('f64', '-nan', NaN); // TODO: NYI
 testConst('f64', '+nan', NaN);
