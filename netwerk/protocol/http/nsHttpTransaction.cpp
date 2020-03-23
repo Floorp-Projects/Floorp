@@ -1400,9 +1400,9 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
 
   static const char HTTPHeader[] = "HTTP/1.";
   static const uint32_t HTTPHeaderLen = sizeof(HTTPHeader) - 1;
-  static const char HTTP2Header[] = "HTTP/2.0";
+  static const char HTTP2Header[] = "HTTP/2";
   static const uint32_t HTTP2HeaderLen = sizeof(HTTP2Header) - 1;
-  static const char HTTP3Header[] = "HTTP/3.0";
+  static const char HTTP3Header[] = "HTTP/3";
   static const uint32_t HTTP3HeaderLen = sizeof(HTTP3Header) - 1;
   // ShoutCast ICY is treated as HTTP/1.0
   static const char ICYHeader[] = "ICY ";
