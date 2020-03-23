@@ -4727,7 +4727,7 @@ JS_PUBLIC_API void JS_ReportErrorASCII(JSContext* cx, const char* format, ...) {
 
   AssertHeapIsIdle();
   va_start(ap, format);
-  ReportErrorVA(cx, JSREPORT_ERROR, format, ArgumentsAreASCII, ap);
+  ReportErrorVA(cx, IsWarning::No, format, ArgumentsAreASCII, ap);
   va_end(ap);
 }
 
@@ -4737,7 +4737,7 @@ JS_PUBLIC_API void JS_ReportErrorLatin1(JSContext* cx, const char* format,
 
   AssertHeapIsIdle();
   va_start(ap, format);
-  ReportErrorVA(cx, JSREPORT_ERROR, format, ArgumentsAreLatin1, ap);
+  ReportErrorVA(cx, IsWarning::No, format, ArgumentsAreLatin1, ap);
   va_end(ap);
 }
 
@@ -4746,7 +4746,7 @@ JS_PUBLIC_API void JS_ReportErrorUTF8(JSContext* cx, const char* format, ...) {
 
   AssertHeapIsIdle();
   va_start(ap, format);
-  ReportErrorVA(cx, JSREPORT_ERROR, format, ArgumentsAreUTF8, ap);
+  ReportErrorVA(cx, IsWarning::No, format, ArgumentsAreUTF8, ap);
   va_end(ap);
 }
 
@@ -4766,7 +4766,7 @@ JS_PUBLIC_API void JS_ReportErrorNumberASCIIVA(JSContext* cx,
                                                const unsigned errorNumber,
                                                va_list ap) {
   AssertHeapIsIdle();
-  ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef, errorNumber,
+  ReportErrorNumberVA(cx, IsWarning::No, errorCallback, userRef, errorNumber,
                       ArgumentsAreASCII, ap);
 }
 
@@ -4786,7 +4786,7 @@ JS_PUBLIC_API void JS_ReportErrorNumberLatin1VA(JSContext* cx,
                                                 const unsigned errorNumber,
                                                 va_list ap) {
   AssertHeapIsIdle();
-  ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef, errorNumber,
+  ReportErrorNumberVA(cx, IsWarning::No, errorCallback, userRef, errorNumber,
                       ArgumentsAreLatin1, ap);
 }
 
@@ -4806,7 +4806,7 @@ JS_PUBLIC_API void JS_ReportErrorNumberUTF8VA(JSContext* cx,
                                               const unsigned errorNumber,
                                               va_list ap) {
   AssertHeapIsIdle();
-  ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef, errorNumber,
+  ReportErrorNumberVA(cx, IsWarning::No, errorCallback, userRef, errorNumber,
                       ArgumentsAreUTF8, ap);
 }
 
@@ -4816,7 +4816,7 @@ JS_PUBLIC_API void JS_ReportErrorNumberUTF8Array(JSContext* cx,
                                                  const unsigned errorNumber,
                                                  const char** args) {
   AssertHeapIsIdle();
-  ReportErrorNumberUTF8Array(cx, JSREPORT_ERROR, errorCallback, userRef,
+  ReportErrorNumberUTF8Array(cx, IsWarning::No, errorCallback, userRef,
                              errorNumber, args);
 }
 
@@ -4828,7 +4828,7 @@ JS_PUBLIC_API void JS_ReportErrorNumberUC(JSContext* cx,
 
   AssertHeapIsIdle();
   va_start(ap, errorNumber);
-  ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef, errorNumber,
+  ReportErrorNumberVA(cx, IsWarning::No, errorCallback, userRef, errorNumber,
                       ArgumentsAreUnicode, ap);
   va_end(ap);
 }
@@ -4839,7 +4839,7 @@ JS_PUBLIC_API void JS_ReportErrorNumberUCArray(JSContext* cx,
                                                const unsigned errorNumber,
                                                const char16_t** args) {
   AssertHeapIsIdle();
-  ReportErrorNumberUCArray(cx, JSREPORT_ERROR, errorCallback, userRef,
+  ReportErrorNumberUCArray(cx, IsWarning::No, errorCallback, userRef,
                            errorNumber, args);
 }
 

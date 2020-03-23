@@ -460,12 +460,13 @@ bool js::ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                                     messageArgs, argumentsType, notep, ap);
 }
 
-bool js::ReportErrorNumberVA(JSContext* cx, unsigned flags,
+bool js::ReportErrorNumberVA(JSContext* cx, IsWarning isWarning,
                              JSErrorCallback callback, void* userRef,
                              const unsigned errorNumber,
                              ErrorArgumentsType argumentsType, va_list ap) {
   JSErrorReport report;
-  report.flags = flags;
+  report.flags =
+      isWarning == IsWarning::Yes ? JSREPORT_WARNING : JSREPORT_ERROR;
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
@@ -495,7 +496,7 @@ static bool ExpandErrorArguments(JSContext* cx, JSErrorCallback callback,
 }
 
 template <js::ErrorArgumentsType argType, typename CharT>
-static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
+static bool ReportErrorNumberArray(JSContext* cx, IsWarning isWarning,
                                    JSErrorCallback callback, void* userRef,
                                    const unsigned errorNumber,
                                    const CharT** args) {
@@ -505,7 +506,8 @@ static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
       "Mismatch between character type and argument type");
 
   JSErrorReport report;
-  report.flags = flags;
+  report.flags =
+      isWarning == IsWarning::Yes ? JSREPORT_WARNING : JSREPORT_ERROR;
   report.errorNumber = errorNumber;
   PopulateReportBlame(cx, &report);
 
@@ -519,23 +521,23 @@ static bool ReportErrorNumberArray(JSContext* cx, unsigned flags,
   return report.isWarning();
 }
 
-bool js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags,
+bool js::ReportErrorNumberUCArray(JSContext* cx, IsWarning isWarning,
                                   JSErrorCallback callback, void* userRef,
                                   const unsigned errorNumber,
                                   const char16_t** args) {
   return ReportErrorNumberArray<ArgumentsAreUnicode>(
-      cx, flags, callback, userRef, errorNumber, args);
+      cx, isWarning, callback, userRef, errorNumber, args);
 }
 
-bool js::ReportErrorNumberUTF8Array(JSContext* cx, unsigned flags,
+bool js::ReportErrorNumberUTF8Array(JSContext* cx, IsWarning isWarning,
                                     JSErrorCallback callback, void* userRef,
                                     const unsigned errorNumber,
                                     const char** args) {
-  return ReportErrorNumberArray<ArgumentsAreUTF8>(cx, flags, callback, userRef,
-                                                  errorNumber, args);
+  return ReportErrorNumberArray<ArgumentsAreUTF8>(cx, isWarning, callback,
+                                                  userRef, errorNumber, args);
 }
 
-bool js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
+bool js::ReportErrorVA(JSContext* cx, IsWarning isWarning, const char* format,
                        js::ErrorArgumentsType argumentsType, va_list ap) {
   JSErrorReport report;
 
@@ -548,7 +550,8 @@ bool js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format,
   MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII,
                 JS::StringIsASCII(message.get()));
 
-  report.flags = flags;
+  report.flags =
+      isWarning == IsWarning::Yes ? JSREPORT_WARNING : JSREPORT_ERROR;
   report.errorNumber = JSMSG_USER_DEFINED_ERROR;
   if (argumentsType == ArgumentsAreASCII || argumentsType == ArgumentsAreUTF8) {
     report.initOwnedMessage(message.release());
