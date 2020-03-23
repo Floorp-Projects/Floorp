@@ -27,7 +27,7 @@ void Texture::Cleanup() {
     mValid = false;
     WebGPUChild* bridge = mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
-      bridge->DestroyTexture(mId);
+      bridge->SendTextureDestroy(mId);
     }
   }
 }

@@ -75,6 +75,19 @@ parent:
   async Shutdown();
 
 child:
+  async FreeAdapter(RawId id);
+  async FreeDevice(RawId id);
+  async FreePipelineLayout(RawId id);
+  async FreeShaderModule(RawId id);
+  async FreeBindGroupLayout(RawId id);
+  async FreeBindGroup(RawId id);
+  async FreeCommandBuffer(RawId id);
+  async FreeRenderPipeline(RawId id);
+  async FreeComputePipeline(RawId id);
+  async FreeBuffer(RawId id);
+  async FreeTexture(RawId id);
+  async FreeTextureView(RawId id);
+  async FreeSampler(RawId id);
   async __delete__();
 };
 

@@ -24,7 +24,7 @@ void BindGroupLayout::Cleanup() {
     mValid = false;
     WebGPUChild* bridge = mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
-      bridge->DestroyBindGroupLayout(mId);
+      bridge->SendBindGroupLayoutDestroy(mId);
     }
   }
 }

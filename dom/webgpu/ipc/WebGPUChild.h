@@ -41,10 +41,8 @@ class WebGPUChild final : public PWebGPUChild {
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<RawId> AdapterRequestDevice(RawId aSelfId,
                                     const dom::GPUDeviceDescriptor& aDesc);
-  void DestroyAdapter(RawId aId);
   RawId DeviceCreateBuffer(RawId aSelfId,
                            const dom::GPUBufferDescriptor& aDesc);
-  void DestroyBuffer(RawId aId);
   static UniquePtr<ffi::WGPUTextureViewDescriptor> GetDefaultViewDescriptor(
       const dom::GPUTextureDescriptor& aDesc);
   RawId DeviceCreateTexture(RawId aSelfId,
@@ -52,36 +50,24 @@ class WebGPUChild final : public PWebGPUChild {
   RawId TextureCreateView(
       RawId aSelfId, const dom::GPUTextureViewDescriptor& aDesc,
       const ffi::WGPUTextureViewDescriptor& aDefaultViewDesc);
-  void DestroyTexture(RawId aId);
-  void DestroyTextureView(RawId aId);
   RawId DeviceCreateSampler(RawId aSelfId,
                             const dom::GPUSamplerDescriptor& aDesc);
-  void DestroySampler(RawId aId);
   RawId DeviceCreateCommandEncoder(
       RawId aSelfId, const dom::GPUCommandEncoderDescriptor& aDesc);
   RawId CommandEncoderFinish(RawId aSelfId,
                              const dom::GPUCommandBufferDescriptor& aDesc);
-  void DestroyCommandEncoder(RawId aId);
-  void DestroyCommandBuffer(RawId aId);
   RawId DeviceCreateBindGroupLayout(
       RawId aSelfId, const dom::GPUBindGroupLayoutDescriptor& aDesc);
-  void DestroyBindGroupLayout(RawId aId);
   RawId DeviceCreatePipelineLayout(
       RawId aSelfId, const dom::GPUPipelineLayoutDescriptor& aDesc);
-  void DestroyPipelineLayout(RawId aId);
   RawId DeviceCreateBindGroup(RawId aSelfId,
                               const dom::GPUBindGroupDescriptor& aDesc);
-  void DestroyBindGroup(RawId aId);
   RawId DeviceCreateShaderModule(RawId aSelfId,
                                  const dom::GPUShaderModuleDescriptor& aDesc);
-  void DestroyShaderModule(RawId aId);
   RawId DeviceCreateComputePipeline(
       RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc);
-  void DestroyComputePipeline(RawId aId);
-
   RawId DeviceCreateRenderPipeline(
       RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc);
-  void DestroyRenderPipeline(RawId aId);
 
   void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
 
@@ -106,6 +92,21 @@ class WebGPUChild final : public PWebGPUChild {
 
   ffi::WGPUClient* const mClient;
   bool mIPCOpen;
+
+ public:
+  ipc::IPCResult RecvFreeAdapter(RawId id);
+  ipc::IPCResult RecvFreeDevice(RawId id);
+  ipc::IPCResult RecvFreePipelineLayout(RawId id);
+  ipc::IPCResult RecvFreeShaderModule(RawId id);
+  ipc::IPCResult RecvFreeBindGroupLayout(RawId id);
+  ipc::IPCResult RecvFreeBindGroup(RawId id);
+  ipc::IPCResult RecvFreeCommandBuffer(RawId id);
+  ipc::IPCResult RecvFreeRenderPipeline(RawId id);
+  ipc::IPCResult RecvFreeComputePipeline(RawId id);
+  ipc::IPCResult RecvFreeBuffer(RawId id);
+  ipc::IPCResult RecvFreeTexture(RawId id);
+  ipc::IPCResult RecvFreeTextureView(RawId id);
+  ipc::IPCResult RecvFreeSampler(RawId id);
 };
 
 }  // namespace webgpu

@@ -24,7 +24,7 @@ void ShaderModule::Cleanup() {
     mValid = false;
     WebGPUChild* bridge = mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
-      bridge->DestroyShaderModule(mId);
+      bridge->SendShaderModuleDestroy(mId);
     }
   }
 }
