@@ -44,19 +44,19 @@ class RecentAppStorageTest {
 
     @Test
     fun `increment selected app count and decay all others`() {
-        val packageName = "packageName"
+        val activityName = "activityName"
         val selectedAppEntity =
-                RecentAppEntity(score = 1.0, packageName = packageName)
+                RecentAppEntity(score = 1.0, activityName = activityName)
         val otherAppEntity =
-                RecentAppEntity(score = 100.0, packageName = "other")
+                RecentAppEntity(score = 100.0, activityName = "other")
         val allRecentApps = ArrayList<RecentAppEntity>()
         allRecentApps.add(selectedAppEntity)
         allRecentApps.add(otherAppEntity)
 
-        whenever(recentAppsDao.getRecentApp(packageName)).thenReturn(selectedAppEntity)
+        whenever(recentAppsDao.getRecentApp(activityName)).thenReturn(selectedAppEntity)
         whenever(recentAppsDao.getAllRecentApps()).thenReturn(allRecentApps)
 
-        recentAppsStorage.updateRecentApp(packageName)
+        recentAppsStorage.updateRecentApp(activityName)
 
         verify(recentAppsDao).updateRecentApp(selectedAppEntity)
         assertEquals(95.0, otherAppEntity.score, 0.0001)
@@ -67,36 +67,36 @@ class RecentAppStorageTest {
     @Test
     fun `add newly installed apps to our database`() {
         val appsInDatabase = ArrayList<RecentAppEntity>()
-        val firstPackageName = "first"
-        val secondPackageName = "second"
-        val thirdPackageName = "third"
-        val fourthPackageName = "fourth"
+        val firstActivityName = "first"
+        val secondActivityName = "second"
+        val thirdActivityName = "third"
+        val fourthActivityName = "fourth"
         appsInDatabase.add(
                 RecentAppEntity(
                         score = 100.0,
-                        packageName = firstPackageName
+                        activityName = firstActivityName
                 )
         )
         appsInDatabase.add(
                 RecentAppEntity(
                         score = 20.0,
-                        packageName = secondPackageName
+                        activityName = secondActivityName
                 )
         )
         appsInDatabase.add(
                 RecentAppEntity(
                         score = 50.0,
-                        packageName = thirdPackageName
+                        activityName = thirdActivityName
                 )
         )
         val result = RecentAppEntity(
-                packageName = fourthPackageName,
+                activityName = fourthActivityName,
                 score = RecentAppsStorage.DEFAULT_COUNT
         )
 
-        val currentApps = listOf(firstPackageName, secondPackageName, thirdPackageName, fourthPackageName)
+        val currentApps = listOf(firstActivityName, secondActivityName, thirdActivityName, fourthActivityName)
 
-        whenever(recentAppsDao.getRecentApp(fourthPackageName)).thenReturn(null)
+        whenever(recentAppsDao.getRecentApp(fourthActivityName)).thenReturn(null)
 
         recentAppsStorage.updateDatabaseWithNewApps(currentApps)
 
