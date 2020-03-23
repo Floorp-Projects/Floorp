@@ -1843,7 +1843,7 @@ void KeyframeEffect::SetAnimation(Animation* aAnimation) {
 }
 
 bool KeyframeEffect::CanIgnoreIfNotVisible() const {
-  if (!AnimationUtils::IsOffscreenThrottlingEnabled()) {
+  if (!StaticPrefs::dom_animations_offscreen_throttling()) {
     return false;
   }
 
