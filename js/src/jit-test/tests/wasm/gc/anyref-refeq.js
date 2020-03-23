@@ -9,7 +9,7 @@ let { exports } = wasmEvalText(`(module
         (ref.eq (local.get $a) (local.get $b)))
 
     (func (export "ref_eq_for_control") (param $a anyref) (param $b anyref) (result f64)
-        (if f64 (ref.eq (local.get $a) (local.get $b))
+        (if (result f64) (ref.eq (local.get $a) (local.get $b))
             (f64.const 5.0)
             (f64.const 3.0))))`);
 
