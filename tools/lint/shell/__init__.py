@@ -41,7 +41,7 @@ class ShellcheckProcess(LintProcess):
                 'column': entry['column'],
                 'rule': entry['code'],
             }
-            results.append(result.from_config(self.config, *res))
+            results.append(result.from_config(self.config, **res))
 
 
 def determine_shell_from_script(path):
