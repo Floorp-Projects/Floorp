@@ -915,22 +915,18 @@ static const char* msgNames[] = {"text", "binaryString", "binaryStream",
 
 class OutboundMessage {
  public:
-  OutboundMessage(WsMsgType type, nsCString* str)
-      : mMsgType(type), mDeflated(false), mOrigLength(0) {
+  OutboundMessage(WsMsgType type, const nsACString& str)
+      : mMsg(mozilla::AsVariant(pString(str))),
+        mMsgType(type),
+        mDeflated(false) {
     MOZ_COUNT_CTOR(OutboundMessage);
-    mMsg.pString.mValue = str;
-    mMsg.pString.mOrigValue = nullptr;
-    mLength = str ? str->Length() : 0;
   }
 
   OutboundMessage(nsIInputStream* stream, uint32_t length)
-      : mMsgType(kMsgTypeStream),
-        mLength(length),
-        mDeflated(false),
-        mOrigLength(0) {
+      : mMsg(mozilla::AsVariant(StreamWithLength(stream, length))),
+        mMsgType(kMsgTypeStream),
+        mDeflated(false) {
     MOZ_COUNT_CTOR(OutboundMessage);
-    mMsg.pStream = stream;
-    mMsg.pStream->AddRef();
   }
 
   ~OutboundMessage() {
@@ -940,14 +936,11 @@ class OutboundMessage {
       case kMsgTypeBinaryString:
       case kMsgTypePing:
       case kMsgTypePong:
-        delete mMsg.pString.mValue;
-        if (mMsg.pString.mOrigValue) delete mMsg.pString.mOrigValue;
         break;
       case kMsgTypeStream:
         // for now this only gets hit if msg deleted w/o being sent
-        if (mMsg.pStream) {
-          mMsg.pStream->Close();
-          mMsg.pStream->Release();
+        if (mMsg.as<StreamWithLength>().mStream) {
+          mMsg.as<StreamWithLength>().mStream->Close();
         }
         break;
       case kMsgTypeFin:
@@ -956,47 +949,58 @@ class OutboundMessage {
   }
 
   WsMsgType GetMsgType() const { return mMsgType; }
-  int32_t Length() const { return mLength; }
-  int32_t OrigLength() const { return mDeflated ? mOrigLength : mLength; }
+  int32_t Length() {
+    pString& ref = mMsg.as<pString>();
+    return ref.mValue.Length();
+  }
+  int32_t OrigLength() {
+    pString& ref = mMsg.as<pString>();
+    return mDeflated ? ref.mOrigValue.Length() : ref.mValue.Length();
+  }
 
   uint8_t* BeginWriting() {
     MOZ_ASSERT(mMsgType != kMsgTypeStream,
                "Stream should have been converted to string by now");
-    return (uint8_t*)(mMsg.pString.mValue ? mMsg.pString.mValue->BeginWriting()
-                                          : nullptr);
+    if (!mMsg.as<pString>().mValue.IsVoid()) {
+      return (uint8_t*)mMsg.as<pString>().mValue.BeginWriting();
+    }
+    return nullptr;
   }
 
   uint8_t* BeginReading() {
     MOZ_ASSERT(mMsgType != kMsgTypeStream,
                "Stream should have been converted to string by now");
-    return (uint8_t*)(mMsg.pString.mValue ? mMsg.pString.mValue->BeginReading()
-                                          : nullptr);
+    if (!mMsg.as<pString>().mValue.IsVoid()) {
+      return (uint8_t*)mMsg.as<pString>().mValue.BeginReading();
+    }
+    return nullptr;
   }
 
   uint8_t* BeginOrigReading() {
     MOZ_ASSERT(mMsgType != kMsgTypeStream,
                "Stream should have been converted to string by now");
     if (!mDeflated) return BeginReading();
-    return (uint8_t*)(mMsg.pString.mOrigValue
-                          ? mMsg.pString.mOrigValue->BeginReading()
-                          : nullptr);
+    if (!mMsg.as<pString>().mOrigValue.IsVoid()) {
+      return (uint8_t*)mMsg.as<pString>().mOrigValue.BeginReading();
+    }
+    return nullptr;
   }
 
   nsresult ConvertStreamToString() {
     MOZ_ASSERT(mMsgType == kMsgTypeStream, "Not a stream!");
+    nsAutoCString temp;
+    {
+      StreamWithLength& ref = mMsg.as<StreamWithLength>();
+      nsresult rv = NS_ReadInputStreamToString(ref.mStream, temp, ref.mLength);
 
-    UniquePtr<nsCString> temp(new nsCString());
-    nsresult rv = NS_ReadInputStreamToString(mMsg.pStream, *temp, mLength);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (temp->Length() != mLength) {
-      return NS_ERROR_UNEXPECTED;
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (temp.Length() != ref.mLength) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      ref.mStream->Close();
     }
 
-    mMsg.pStream->Close();
-    mMsg.pStream->Release();
-    mMsg.pString.mValue = temp.release();
-    mMsg.pString.mOrigValue = nullptr;
+    mMsg = mozilla::AsVariant(pString(temp));
     mMsgType = kMsgTypeBinaryString;
 
     return NS_OK;
@@ -1008,14 +1012,14 @@ class OutboundMessage {
     MOZ_ASSERT(!mDeflated);
 
     nsresult rv;
-
-    if (mLength == 0) {
+    pString& ref = mMsg.as<pString>();
+    if (ref.mValue.Length() == 0) {
       // Empty message
       return false;
     }
 
-    UniquePtr<nsCString> temp(new nsCString());
-    rv = aCompressor->Deflate(BeginReading(), mLength, *temp);
+    nsAutoCString temp;
+    rv = aCompressor->Deflate(BeginReading(), ref.mValue.Length(), temp);
     if (NS_FAILED(rv)) {
       LOG(
           ("WebSocketChannel::OutboundMessage: Deflating payload failed "
@@ -1024,7 +1028,8 @@ class OutboundMessage {
       return false;
     }
 
-    if (!aCompressor->UsingContextTakeover() && temp->Length() > mLength) {
+    if (!aCompressor->UsingContextTakeover() &&
+        temp.Length() > ref.mValue.Length()) {
       // When "<local>_no_context_takeover" was negotiated, do not send deflated
       // payload if it's larger that the original one. OTOH, it makes sense
       // to send the larger deflated payload when the sliding window is not
@@ -1035,30 +1040,32 @@ class OutboundMessage {
           ("WebSocketChannel::OutboundMessage: Not deflating message since the "
            "deflated payload is larger than the original one [deflated=%d, "
            "original=%d]",
-           temp->Length(), mLength));
+           temp.Length(), ref.mValue.Length()));
       return false;
     }
 
-    mOrigLength = mLength;
     mDeflated = true;
-    mLength = temp->Length();
-    mMsg.pString.mOrigValue = mMsg.pString.mValue;
-    mMsg.pString.mValue = temp.release();
+    mMsg.as<pString>().mOrigValue = mMsg.as<pString>().mValue;
+    mMsg.as<pString>().mValue = temp;
     return true;
   }
 
  private:
-  union {
-    struct {
-      nsCString* mValue;
-      nsCString* mOrigValue;
-    } pString;
-    nsIInputStream* pStream;
-  } mMsg;
+  struct pString {
+    nsCString mValue;
+    nsCString mOrigValue;
+    explicit pString(const nsACString& value)
+        : mValue(value), mOrigValue(VoidCString()) {}
+  };
+  struct StreamWithLength {
+    nsCOMPtr<nsIInputStream> mStream;
+    uint32_t mLength;
+    explicit StreamWithLength(nsIInputStream* stream, uint32_t Length)
+        : mStream(stream), mLength(Length) {}
+  };
+  mozilla::Variant<pString, StreamWithLength> mMsg;
   WsMsgType mMsgType;
-  uint32_t mLength;
   bool mDeflated;
-  uint32_t mOrigLength;
 };
 
 //-----------------------------------------------------------------------------
@@ -1863,22 +1870,21 @@ void WebSocketChannel::ApplyMask(uint32_t mask, uint8_t* data, uint64_t len) {
 }
 
 void WebSocketChannel::GeneratePing() {
-  nsCString* buf = new nsCString();
-  buf->AssignLiteral("PING");
+  nsAutoCString buf;
+  buf.AssignLiteral("PING");
   EnqueueOutgoingMessage(mOutgoingPingMessages,
                          new OutboundMessage(kMsgTypePing, buf));
 }
 
 void WebSocketChannel::GeneratePong(uint8_t* payload, uint32_t len) {
-  nsCString* buf = new nsCString();
-  buf->SetLength(len);
-  if (buf->Length() < len) {
+  nsAutoCString buf;
+  buf.SetLength(len);
+  if (buf.Length() < len) {
     LOG(("WebSocketChannel::GeneratePong Allocation Failure\n"));
-    delete buf;
     return;
   }
 
-  memcpy(buf->BeginWriting(), payload, len);
+  memcpy(buf.BeginWriting(), payload, len);
   EnqueueOutgoingMessage(mOutgoingPongMessages,
                          new OutboundMessage(kMsgTypePong, buf));
 }
@@ -2379,7 +2385,8 @@ void WebSocketChannel::AbortSession(nsresult reason) {
       mRequestedClose = true;
       mStopOnClose = reason;
       mSocketThread->Dispatch(
-          new OutboundEnqueuer(this, new OutboundMessage(kMsgTypeFin, nullptr)),
+          new OutboundEnqueuer(this,
+                               new OutboundMessage(kMsgTypeFin, VoidCString())),
           nsIEventTarget::DISPATCH_NORMAL);
       return;
     }
@@ -3465,7 +3472,8 @@ WebSocketChannel::Close(uint16_t code, const nsACString& reason) {
 
     if (mDataStarted) {
       return mSocketThread->Dispatch(
-          new OutboundEnqueuer(this, new OutboundMessage(kMsgTypeFin, nullptr)),
+          new OutboundEnqueuer(this,
+                               new OutboundMessage(kMsgTypeFin, VoidCString())),
           nsIEventTarget::DISPATCH_NORMAL);
     }
 
@@ -3490,23 +3498,23 @@ NS_IMETHODIMP
 WebSocketChannel::SendMsg(const nsACString& aMsg) {
   LOG(("WebSocketChannel::SendMsg() %p\n", this));
 
-  return SendMsgCommon(&aMsg, false, aMsg.Length());
+  return SendMsgCommon(aMsg, false, aMsg.Length());
 }
 
 NS_IMETHODIMP
 WebSocketChannel::SendBinaryMsg(const nsACString& aMsg) {
   LOG(("WebSocketChannel::SendBinaryMsg() %p len=%d\n", this, aMsg.Length()));
-  return SendMsgCommon(&aMsg, true, aMsg.Length());
+  return SendMsgCommon(aMsg, true, aMsg.Length());
 }
 
 NS_IMETHODIMP
 WebSocketChannel::SendBinaryStream(nsIInputStream* aStream, uint32_t aLength) {
   LOG(("WebSocketChannel::SendBinaryStream() %p\n", this));
 
-  return SendMsgCommon(nullptr, true, aLength, aStream);
+  return SendMsgCommon(VoidCString(), true, aLength, aStream);
 }
 
-nsresult WebSocketChannel::SendMsgCommon(const nsACString* aMsg, bool aIsBinary,
+nsresult WebSocketChannel::SendMsgCommon(const nsACString& aMsg, bool aIsBinary,
                                          uint32_t aLength,
                                          nsIInputStream* aStream) {
   MOZ_ASSERT(IsOnTargetThread(), "not target thread");
@@ -3541,9 +3549,9 @@ nsresult WebSocketChannel::SendMsgCommon(const nsACString* aMsg, bool aIsBinary,
       aStream
           ? new OutboundEnqueuer(this, new OutboundMessage(aStream, aLength))
           : new OutboundEnqueuer(
-                this, new OutboundMessage(
-                          aIsBinary ? kMsgTypeBinaryString : kMsgTypeString,
-                          new nsCString(*aMsg))),
+                this,
+                new OutboundMessage(
+                    aIsBinary ? kMsgTypeBinaryString : kMsgTypeString, aMsg)),
       nsIEventTarget::DISPATCH_NORMAL);
 }
 
