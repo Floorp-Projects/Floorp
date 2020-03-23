@@ -4,7 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['idl', 'locales', 'hunspell', 'src']
+DIRS += ['idl', 'hunspell', 'src']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    # GeckoView disables hunspell spellchecker.
+    DIRS += ['locales']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
