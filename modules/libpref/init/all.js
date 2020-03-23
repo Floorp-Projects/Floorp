@@ -586,6 +586,8 @@ pref("media.audiograph.single_thread.enabled", true);
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
 pref("apz.overscroll.stretch_factor", "0.35");
 
+pref("apz.zoom-to-focused-input.enabled", true);
+
 #ifdef XP_MACOSX
   // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI
   // display.
