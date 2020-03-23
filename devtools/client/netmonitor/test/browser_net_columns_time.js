@@ -39,12 +39,8 @@ add_task(async function() {
   });
 
   const onNetworkEvents = waitForNetworkEvents(monitor, 1);
-  const onEventTimings = waitFor(
-    monitor.panelWin.api,
-    EVENTS.RECEIVED_EVENT_TIMINGS
-  );
   tab.linkedBrowser.reload();
-  await Promise.all([onNetworkEvents, onEventTimings]);
+  await onNetworkEvents;
 
   // There should be one request in the list.
   const requestItems = document.querySelectorAll(".request-list-item");
