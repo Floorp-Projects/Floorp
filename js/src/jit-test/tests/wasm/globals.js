@@ -1,9 +1,10 @@
 const { Instance, Module, LinkError } = WebAssembly;
 
 // Locally-defined globals
-assertErrorMessage(() => wasmEvalText(`(module (global))`), SyntaxError, /parsing/);
-assertErrorMessage(() => wasmEvalText(`(module (global i32))`), SyntaxError, /parsing/);
-assertErrorMessage(() => wasmEvalText(`(module (global (mut i32)))`), SyntaxError, /parsing/);
+assertErrorMessage(() => wasmEvalText(`(module (global))`), SyntaxError, /wasm text error/);
+// A global field in the text format is valid with an empty expression, but this produces an invalid module
+assertErrorMessage(() => wasmEvalText(`(module (global i32))`), WebAssembly.CompileError, /unexpected initializer expression/);
+assertErrorMessage(() => wasmEvalText(`(module (global (mut i32)))`), WebAssembly.CompileError, /unexpected initializer expression/);
 
 // Initializer expressions.
 wasmFailValidateText(`(module (global i32 (f32.const 13.37)))`, /type mismatch/);
@@ -108,10 +109,10 @@ assertEq(module.f, module.tbl.get(1));
 
 // Import/export semantics.
 module = wasmEvalText(`(module
- (import $g "globals" "x" (global i32))
+ (import "globals" "x" (global $g i32))
  (func $get (result i32) (global.get $g))
  (export "getter" (func $get))
- (export "value" global 0)
+ (export "value" (global 0))
 )`, { globals: {x: 42} }).exports;
 
 assertEq(module.getter(), 42);
@@ -168,8 +169,8 @@ for (let v of [
 module = wasmEvalText(`(module
  (import "globals" "x" (global i32))
  (global i32 (i32.const 1337))
- (export "imported" global 0)
- (export "defined" global 1)
+ (export "imported" (global 0))
+ (export "defined" (global 1))
 )`, { globals: {x: 42} }).exports;
 
 assertEq(Number(module.imported), 42);
@@ -352,15 +353,15 @@ wasmAssert(`(module
         // When a global is exported twice, the two objects are the same.
         let i = wasmEvalText(`(module
                                (global i32 (i32.const 0))
-                               (export "a" global 0)
-                               (export "b" global 0))`);
+                               (export "a" (global 0))
+                               (export "b" (global 0)))`);
         assertEq(i.exports.a, i.exports.b);
 
         // When a global is imported and then exported, the exported object is
         // the same as the imported object.
         let j = wasmEvalText(`(module
                                (import "" "a" (global i32))
-                               (export "x" global 0))`,
+                               (export "x" (global 0)))`,
                              { "": {a: i.exports.a}});
 
         assertEq(i.exports.a, j.exports.x);
@@ -371,8 +372,8 @@ wasmAssert(`(module
         let k = wasmEvalText(`(module
                                (import "" "a" (global i32))
                                (import "" "b" (global i32))
-                               (export "x" global 0)
-                               (export "y" global 1))`,
+                               (export "x" (global 0))
+                               (export "y" (global 1)))`,
                              { "": {a: i.exports.a,
                                     b: i.exports.a}});
 

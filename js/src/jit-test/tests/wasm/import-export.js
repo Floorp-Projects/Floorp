@@ -44,7 +44,7 @@ assertErrorMessage(() => new Table({initial:10000001, element:"funcref"}), Range
 new Table({ initial: 0, maximum: 10000000, element:"funcref" });
 assertErrorMessage(() => new Table({initial:0, maximum: 10000001, element:"funcref"}), RangeError, /bad Table maximum size/);
 
-const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
+const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar" (func)) (import "baz" "quux" (func)))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m1, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
 assertErrorMessage(() => new Instance(m1, {foo:{bar:{}}}), LinkError, /import object field 'bar' is not a Function/);
@@ -67,7 +67,7 @@ assertEq(new Instance(m2, {x:{y:mem3PageMax3}}) instanceof Instance, true);
 assertEq(new Instance(m2, {x:{y:mem2PageMax3}}) instanceof Instance, true);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), LinkError, /imported Memory with incompatible maximum size/);
 
-const m3 = new Module(wasmTextToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux"))'));
+const m3 = new Module(wasmTextToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux" (func)))'));
 assertErrorMessage(() => new Instance(m3), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object field 'foo' is not an Object/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), LinkError, /import object field 'bar' is not a Memory/);
@@ -76,7 +76,7 @@ assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Pag
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), LinkError, /imported Memory with incompatible maximum size/);
 assertEq(new Instance(m3, {foo:{bar:mem1PageMax1}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
-const m4 = new Module(wasmTextToBinary('(module (import "baz" "quux") (import "foo" "bar" (memory 1 1)))'));
+const m4 = new Module(wasmTextToBinary('(module (import "baz" "quux" (func)) (import "foo" "bar" (memory 1 1)))'));
 assertErrorMessage(() => new Instance(m4), TypeError, /second argument must be an object/);
 assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object field 'baz' is not an Object/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), LinkError, /import object field 'quux' is not a Function/);
@@ -111,13 +111,13 @@ wasmFailValidateText('(module (import "a" "b" (table 2 1 funcref)))', /maximum l
 // Import wasm-wasm type mismatch
 
 var e = wasmEvalText('(module (func $i2v (param i32)) (export "i2v" (func $i2v)) (func $f2v (param f32)) (export "f2v" (func $f2v)))').exports;
-var i2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param i32)))'));
-var f2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param f32)))'));
+var i2vm = new Module(wasmTextToBinary('(module (import "a" "b" (func (param i32))))'));
+var f2vm = new Module(wasmTextToBinary('(module (import "a" "b" (func (param f32))))'));
 assertEq(new Instance(i2vm, {a:{b:e.i2v}}) instanceof Instance, true);
 assertErrorMessage(() => new Instance(i2vm, {a:{b:e.f2v}}), LinkError, /imported function 'a.b' signature mismatch/);
 assertErrorMessage(() => new Instance(f2vm, {a:{b:e.i2v}}), LinkError, /imported function 'a.b' signature mismatch/);
 assertEq(new Instance(f2vm, {a:{b:e.f2v}}) instanceof Instance, true);
-var l2vm = new Module(wasmTextToBinary('(module (import "x" "y" (memory 1)) (import "c" "d" (param i64)))'));
+var l2vm = new Module(wasmTextToBinary('(module (import "x" "y" (memory 1)) (import "c" "d" (func (param i64))))'));
 assertErrorMessage(() => new Instance(l2vm, {x:{y:mem1Page}, c:{d:e.i2v}}), LinkError, /imported function 'c.d' signature mismatch/);
 
 // Import order:
@@ -301,10 +301,10 @@ assertEq(e.tbl1.get(0), e.tbl1.get(3));
 
 var args;
 var m = new Module(wasmTextToBinary(`(module
-    (export "a" (func $a)) (import $a "" "a" (param f32))
-    (export "b" (func $b)) (import $b "" "b" (param i32) (result i32))
-    (export "c" (func $c)) (import $c "" "c" (result i32))
-    (export "d" (func $d)) (import $d "" "d")
+    (export "a" (func $a)) (import "" "a" (func $a (param f32)))
+    (export "b" (func $b)) (import "" "b" (func $b (param i32) (result i32)))
+    (export "c" (func $c)) (import "" "c" (func $c (result i32)))
+    (export "d" (func $d)) (import "" "d" (func $d))
 )`));
 var js = function() { args = arguments; return 42 }
 var e = new Instance(m, {"":{a:js, b:js, c:js, d:js}}).exports;
@@ -360,9 +360,9 @@ assertEq(tbl.get(0) === e1.foo, false);
 assertEq(e1.foo === e2.foo, false);
 
 var m = new Module(wasmTextToBinary(`(module
+    (import "" "foo" (func $foo (result i32)))
+    (import "" "bar" (func $bar (result i32)))
     (table 3 funcref)
-    (import $foo "" "foo" (result i32))
-    (import $bar "" "bar" (result i32))
     (func $baz (result i32) (i32.const 13))
     (elem (i32.const 0) $foo $bar $baz)
     (export "foo" (func $foo))
@@ -414,14 +414,14 @@ assertEq(e4.baz, e4.tbl.get(2));
 
 var code1 = wasmTextToBinary('(module (func $exp (param i64) (result i64) (i64.add (local.get 0) (i64.const 10))) (export "exp" (func $exp)))');
 var e1 = new Instance(new Module(code1)).exports;
-var code2 = wasmTextToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" (func $f)))');
+var code2 = wasmTextToBinary('(module (import "a" "b" (func $i (param i64) (result i64))) (func $f (result i32) (i32.wrap/i64 (call $i (i64.const 42)))) (export "f" (func $f)))');
 var e2 = new Instance(new Module(code2), {a:{b:e1.exp}}).exports;
 assertEq(e2.f(), 52);
 
 // Non-existent export errors
 
 wasmFailValidateText('(module (export "a" (func 0)))', /exported function index out of bounds/);
-wasmFailValidateText('(module (export "a" global 0))', /exported global index out of bounds/);
+wasmFailValidateText('(module (export "a" (global 0)))', /exported global index out of bounds/);
 wasmFailValidateText('(module (export "a" (memory 0)))', /exported memory index out of bounds/);
 wasmFailValidateText('(module (export "a" (table 0)))', /exported table index out of bounds/);
 
@@ -492,8 +492,8 @@ var m = new Module(wasmTextToBinary(`
     (module
         (import "a" "mem" (memory 1))
         (import "a" "tbl" (table 1 funcref))
-        (import $memOff "a" "memOff" (global i32))
-        (import $tblOff "a" "tblOff" (global i32))
+        (import "a" "memOff" (global $memOff i32))
+        (import "a" "tblOff" (global $tblOff i32))
         (func $f)
         (func $g)
         (data (i32.const 0) "\\01")
@@ -647,7 +647,7 @@ assertEq(tbl.get(3)(), undefined);
 // Cross-instance calls
 
 var i1 = new Instance(new Module(wasmTextToBinary(`(module (func) (func (param i32) (result i32) (i32.add (local.get 0) (i32.const 1))) (func) (export "f" (func 1)))`)));
-var i2 = new Instance(new Module(wasmTextToBinary(`(module (import $imp "a" "b" (param i32) (result i32)) (func $g (result i32) (call $imp (i32.const 13))) (export "g" (func $g)))`)), {a:{b:i1.exports.f}});
+var i2 = new Instance(new Module(wasmTextToBinary(`(module (import "a" "b" (func $imp (param i32) (result i32))) (func $g (result i32) (call $imp (i32.const 13))) (export "g" (func $g)))`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.g(), 14);
 
 var i1 = new Instance(new Module(wasmTextToBinary(`(module
@@ -657,7 +657,7 @@ var i1 = new Instance(new Module(wasmTextToBinary(`(module
     (export "f" (func $f))
 )`)));
 var i2 = new Instance(new Module(wasmTextToBinary(`(module
-    (import $imp "a" "b" (result i32))
+    (import "a" "b" (func $imp (result i32)))
     (memory 1 1)
     (data (i32.const 0) "\\13")
     (table 2 2 funcref)
@@ -671,8 +671,8 @@ assertEq(i2.exports.call(0), 0x42);
 assertEq(i2.exports.call(1), 0x13);
 
 var m = new Module(wasmTextToBinary(`(module
-    (import $val "a" "val" (global i32))
-    (import $next "a" "next" (result i32))
+    (import "a" "val" (global $val i32))
+    (import "a" "next" (func $next (result i32)))
     (memory 1)
     (func $start (i32.store (i32.const 0) (global.get $val)))
     (start $start)
@@ -721,11 +721,11 @@ assertEq(e.call(), 1090);
     };
 
     i = wasmEvalText(`(module
-        (import $ffi "a" "ffi" (param i32) (result i32))
+        (import "a" "ffi" (func $ffi (param i32) (result i32)))
 
-        (import $missingOneArg "a" "sum" (param i32) (param i32) (result i32))
-        (import $missingTwoArgs "a" "sum" (param i32) (result i32))
-        (import $missingThreeArgs "a" "sum" (result i32))
+        (import "a" "sum" (func $missingOneArg (param i32) (param i32) (result i32)))
+        (import "a" "sum" (func $missingTwoArgs (param i32) (result i32)))
+        (import "a" "sum" (func $missingThreeArgs (result i32)))
 
         (func (export "foo") (param i32) (result i32)
          local.get 0
@@ -788,8 +788,8 @@ assertEq(e.call(), 1090);
     // we call it here.
     var i1 = new Instance(new Module(wasmTextToBinary(`
         (module
-            (import $imp1 "a" "f1" (result i32))
-            (import $imp2 "a" "f2" (result i32))
+            (import "a" "f1" (func $imp1 (result i32)))
+            (import "a" "f2" (func $imp2 (result i32)))
             (import "a" "m" (memory 1))
             (func $test (result i32)
                 (i32.add
@@ -809,7 +809,7 @@ assertEq(e.call(), 1090);
     // Inter-module/inter-realm wasm => wasm calls.
     var src = `
         (module
-            (import $imp "a" "othertest" (result i32))
+            (import "a" "othertest" (func $imp (result i32)))
             (import "a" "m" (memory 1))
             (func (result i32) (i32.add (call $imp) (memory.size)))
             (export "test" (func 1)))

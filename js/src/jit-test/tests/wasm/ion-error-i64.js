@@ -9,20 +9,20 @@ const ITER = 2 * TRIGGER;
 const EXCEPTION_ITER = ITER - 2;
 
 var instance = wasmEvalText(`(module
-    (func $add (export "add") (result i32) (param i32) (param i32)
+    (func (export "add") (param i32) (param i32) (result i32)
      local.get 0
      local.get 1
      i32.add
     )
 
-    (func $addi64 (export "add64") (result i64) (param i32) (param i32)
+    (func (export "add64") (param i32) (param i32) (result i64)
      local.get 0
      local.get 1
      call $add
      i64.extend_s/i32
     )
 
-    (func $add_two_i64 (export "add_two_i64") (result i64) (param i64) (param i64)
+    (func (export "add_two_i64") (param i64) (param i64) (result i64)
      local.get 0
      local.get 1
      i64.add

@@ -10,10 +10,10 @@ let SHARED = 'shared';
 let UNSHARED = '';
 let sharedError = 'memory with atomic operations without shared memory';
 
-for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],['i64','16_u'],['i64','32_u'],['i64','']]) {
+for (let [type,width,view] of [['i32','8', '_u'],['i32','16','_u'],['i32','',''],['i64','8','_u'],['i64','16','_u'],['i64','32','_u'],['i64','','']]) {
     {
 	let text = (shared) => `(module (memory 1 1 ${shared})
-				 (func (result ${type}) (${type}.atomic.load${view} (i32.const 0)))
+				 (func (result ${type}) (${type}.atomic.load${width}${view} (i32.const 0)))
 				 (export "" (func 0)))`;
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
@@ -21,7 +21,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
 
     {
 	let text = (shared) => `(module (memory 1 1 ${shared})
-				 (func (${type}.atomic.store${view} (i32.const 0) (${type}.const 1)))
+				 (func (${type}.atomic.store${width} (i32.const 0) (${type}.const 1)))
 				 (export "" (func 0)))`;
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
@@ -30,7 +30,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
     {
 	let text = (shared) => `(module (memory 1 1 ${shared})
 				 (func (result ${type})
-				  (${type}.atomic.rmw${view}.cmpxchg (i32.const 0) (${type}.const 1) (${type}.const 2)))
+				  (${type}.atomic.rmw${width}.cmpxchg${view} (i32.const 0) (${type}.const 1) (${type}.const 2)))
 				 (export "" (func 0)))`;
 	assertEq(valText(text(SHARED)), true);
 	assertEq(valText(text(UNSHARED)), false);
@@ -39,7 +39,7 @@ for (let [type,view] of [['i32','8_u'],['i32','16_u'],['i32',''],['i64','8_u'],[
     for (let op of ['add','and','or','sub','xor','xchg']) {
 	// Operate with appropriately-typed value 1 on address 0
 	let text = (shared) => `(module (memory 1 1 ${shared})
-				 (func (result ${type}) (${type}.atomic.rmw${view}.${op} (i32.const 0) (${type}.const 1)))
+				 (func (result ${type}) (${type}.atomic.rmw${width}.${op}${view} (i32.const 0) (${type}.const 1)))
 				 (export "" (func 0)))`;
 
 	assertEq(valText(text(SHARED)), true);
@@ -55,14 +55,11 @@ for (let type of ['i32', 'i64']) {
     assertEq(valText(text(UNSHARED)), false);
 }
 
-// 'wake' remains a backwards-compatible alias for 'notify'
-for ( let notify of ['wake', 'notify']) {
-    let text = (shared) => `(module (memory 1 1 ${shared})
-			     (func (result i32) (atomic.${notify} (i32.const 0) (i32.const 1)))
-			     (export "" (func 0)))`;
-    assertEq(valText(text(SHARED)), true);
-    assertEq(valText(text(UNSHARED)), false);
-}
+let text = (shared) => `(module (memory 1 1 ${shared})
+	     (func (result i32) (atomic.notify (i32.const 0) (i32.const 1)))
+	     (export "" (func 0)))`;
+assertEq(valText(text(SHARED)), true);
+assertEq(valText(text(UNSHARED)), false);
 
 // Required explicit alignment for WAIT is the size of the datum
 
@@ -168,14 +165,14 @@ function widen(TA, value, complement = true) {
 
 var RMWOperation =
 {
-    loadStoreModule(type, view, address, operand) {
+    loadStoreModule(type, width, view, address, operand) {
 	let bin = wasmTextToBinary(
 	    `(module
 	      (memory (import "" "memory") 1 1 shared)
 	      (func (export "st") (param i32)
-	       (${type}.atomic.store${view} ${address} ${operand}))
+	       (${type}.atomic.store${width} ${address} ${operand}))
 	      (func $ld (param i32) (result ${type})
-	       (${type}.atomic.load${view} ${address}))
+	       (${type}.atomic.load${width}${view} ${address}))
 	      (func (export "ld") (param i32) (result i32)
 	       (${type}.eq (call $ld (local.get 0)) ${operand})))`);
 	let mod = new WebAssembly.Module(bin);
@@ -184,12 +181,12 @@ var RMWOperation =
 	return [mem, ins.exports.ld, ins.exports.st];
     },
 
-    opModuleEffect(type, view, address, op, operand, ignored) {
+    opModuleEffect(type, width, view, address, op, operand, ignored) {
 	let bin = wasmTextToBinary(
 	    `(module
 	      (memory (import "" "memory") 1 1 shared)
 	      (func (export "f") (param i32) (result i32)
-	       (drop (${type}.atomic.rmw${view}.${op} ${address} ${operand}))
+	       (drop (${type}.atomic.rmw${width}.${op}${view} ${address} ${operand}))
 	       (i32.const 1)))`);
 	let mod = new WebAssembly.Module(bin);
 	let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
@@ -197,12 +194,12 @@ var RMWOperation =
 	return [mem, ins.exports.f];
     },
 
-    opModuleReturned(type, view, address, op, operand, expected) {
+    opModuleReturned(type, width, view, address, op, operand, expected) {
 	let bin = wasmTextToBinary(
 	    `(module
 	      (memory (import "" "memory") 1 1 shared)
 	      (func $_f (param i32) (result ${type})
-	       (${type}.atomic.rmw${view}.${op} ${address} ${operand}))
+	       (${type}.atomic.rmw${width}.${op}${view} ${address} ${operand}))
 	      (func (export "f") (param i32) (result i32)
 	       (${type}.eq (call $_f (local.get 0)) (${type}.const ${expected}))))`);
 	let mod = new WebAssembly.Module(bin);
@@ -211,24 +208,24 @@ var RMWOperation =
 	return [mem, ins.exports.f];
     },
 
-    cmpxchgModuleEffect(type, view, address, operand1, operand2, ignored) {
+    cmpxchgModuleEffect(type, width, view, address, operand1, operand2, ignored) {
 	let bin = wasmTextToBinary(
 	    `(module
 	      (memory (import "" "memory") 1 1 shared)
 	      (func (export "f") (param i32)
-	       (drop (${type}.atomic.rmw${view}.cmpxchg ${address} ${operand1} ${operand2}))))`);
+	       (drop (${type}.atomic.rmw${width}.cmpxchg${view} ${address} ${operand1} ${operand2}))))`);
 	let mod = new WebAssembly.Module(bin);
 	let mem = new WebAssembly.Memory({initial: 1, maximum: 1, shared: true});
 	let ins = new WebAssembly.Instance(mod, {"": {memory: mem}});
 	return [mem, ins.exports.f];
     },
 
-    cmpxchgModuleReturned(type, view, address, operand1, operand2, expected) {
+    cmpxchgModuleReturned(type, width, view, address, operand1, operand2, expected) {
 	let bin = wasmTextToBinary(
 	    `(module
 	      (memory (import "" "memory") 1 1 shared)
 	      (func $_f (param i32) (result ${type})
-	       (${type}.atomic.rmw${view}.cmpxchg ${address} ${operand1} ${operand2}))
+	       (${type}.atomic.rmw${width}.cmpxchg${view} ${address} ${operand1} ${operand2}))
 	      (func (export "f") (param i32) (result i32)
 	       (${type}.eq (call $_f (local.get 0)) (${type}.const ${expected}))))`);
 	let mod = new WebAssembly.Module(bin);
@@ -250,10 +247,10 @@ var RMWOperation =
 	const OPD2 = 42;	// Sometimes we'll put another operand here
 
 	for ( let [type, variations] of
-	          [["i32", [[Uint8Array,"8_u"], [Uint16Array,"16_u"], [Uint32Array,""]]],
-		   ["i64", [[Uint8Array,"8_u"], [Uint16Array,"16_u"], [Uint32Array,"32_u"], [Uint64Array,""]]]] )
+	          [["i32", [[Uint8Array,"8", "_u"], [Uint16Array,"16", "_u"], [Uint32Array,"",""]]],
+		   ["i64", [[Uint8Array,"8","_u"], [Uint16Array,"16","_u"], [Uint32Array,"32","_u"], [Uint64Array,"",""]]]] )
 	{
-	    for ( let [TA, view] of variations )
+	    for ( let [TA, width, view] of variations )
 	    {
 		for ( let addr of [`(i32.const ${LOC * TA.BYTES_PER_ELEMENT})`,
 				   `(local.get 0)`] )
@@ -262,9 +259,9 @@ var RMWOperation =
 		    {
 			let [opd_str, opd_num] = widen(TA, operand);
 			for ( let rhs of [`(${type}.const ${opd_str})`,
-					  `(${type}.load${view} (i32.const ${OPD1 * TA.BYTES_PER_ELEMENT}))`] )
+					  `(${type}.load${width}${view} (i32.const ${OPD1 * TA.BYTES_PER_ELEMENT}))`] )
 			{
-			    let [mem, ld, st] = this.loadStoreModule(type, view, addr, rhs);
+			    let [mem, ld, st] = this.loadStoreModule(type, width, view, addr, rhs);
 			    let array = new TA(mem.buffer);
 			    array.write(OPD1, opd_num);
 			    array.write(LOC, initial);
@@ -289,11 +286,11 @@ var RMWOperation =
 			let [opd_str, opd_num] = widen(TA, operand, complement);
 			let [exp_str, exp_num] = widen(TA, expected, complement);
 			for ( let rhs of [`(${type}.const ${opd_str})`,
-					  `(${type}.load${view} (i32.const ${OPD1 * TA.BYTES_PER_ELEMENT}))`] )
+					  `(${type}.load${width}${view} (i32.const ${OPD1 * TA.BYTES_PER_ELEMENT}))`] )
 			{
 			    for ( let [generateIt, checkIt] of [["opModuleEffect", false], ["opModuleReturned", true]] )
 			    {
-				let [mem, f] = this[generateIt](type, view, addr, op, rhs, ini_str);
+				let [mem, f] = this[generateIt](type, width, view, addr, op, rhs, ini_str);
 				let array = new TA(mem.buffer);
 				array.write(OPD1, opd_num);
 				array.write(LOC, ini_num);
@@ -314,14 +311,14 @@ var RMWOperation =
 			let [opd2_str, opd2_num] = widen(TA, operand2);
 			let [exp_str, exp_num] = widen(TA, expected);
 			for ( let op1 of [`(${type}.const ${opd1_str})`,
-					  `(${type}.load${view} (i32.const ${OPD1 * TA.BYTES_PER_ELEMENT}))`] )
+					  `(${type}.load${width}${view} (i32.const ${OPD1 * TA.BYTES_PER_ELEMENT}))`] )
 			{
 			    for ( let op2 of [`(${type}.const ${opd2_str})`,
-					      `(${type}.load${view} (i32.const ${OPD2 * TA.BYTES_PER_ELEMENT}))`] )
+					      `(${type}.load${width}${view} (i32.const ${OPD2 * TA.BYTES_PER_ELEMENT}))`] )
 			    {
 				for ( let [generateIt, checkIt] of [["cmpxchgModuleEffect", false], ["cmpxchgModuleReturned", true]] )
 				{
-				    let [mem, f] = this[generateIt](type, view, addr, op1, op2, ini_str);
+				    let [mem, f] = this[generateIt](type, width, view, addr, op1, op2, ini_str);
 				    let array = new TA(mem.buffer);
 				    array.write(OPD1, opd1_num);
 				    array.write(OPD2, opd2_num);
@@ -364,71 +361,71 @@ function assertNum(a, b) {
 
 var BoundsAndAlignment =
 {
-    loadModule(type, ext, offset) {
+    loadModule(type, view, width, offset) {
 	return wasmEvalText(
 	    `(module
 	      (memory 1 1 shared)
 	      (func $0 (param i32) (result ${type})
-	       (${type}.atomic.load${ext} offset=${offset} (local.get 0)))
+	       (${type}.atomic.load${width}${view} offset=${offset} (local.get 0)))
 	      (func (export "f") (param i32)
 	       (drop (call $0 (local.get 0)))))
 	    `).exports.f;
     },
 
-    loadModuleIgnored(type, ext, offset) {
+    loadModuleIgnored(type, view, width, offset) {
 	return wasmEvalText(
 	    `(module
 	      (memory 1 1 shared)
 	      (func (export "f") (param i32)
-	       (drop (${type}.atomic.load${ext} offset=${offset} (local.get 0)))))
+	       (drop (${type}.atomic.load${width}${view} offset=${offset} (local.get 0)))))
 	    `).exports.f;
     },
 
-    storeModule(type, ext, offset) {
+    storeModule(type, view, width, offset) {
 	return wasmEvalText(
 	    `(module
 	      (memory 1 1 shared)
 	      (func (export "f") (param i32)
-	       (${type}.atomic.store${ext} offset=${offset} (local.get 0) (${type}.const 37))))
+	       (${type}.atomic.store${width} offset=${offset} (local.get 0) (${type}.const 37))))
 	    `).exports.f;
     },
 
-    opModule(type, ext, offset, op) {
+    opModule(type, view, width, offset, op) {
 	return wasmEvalText(
 	    `(module
 	      (memory 1 1 shared)
 	      (func $0 (param i32) (result ${type})
-	       (${type}.atomic.rmw${ext}.${op} offset=${offset} (local.get 0) (${type}.const 37)))
+	       (${type}.atomic.rmw${width}.${op}${view} offset=${offset} (local.get 0) (${type}.const 37)))
 	      (func (export "f") (param i32)
 	       (drop (call $0 (local.get 0)))))
 	    `).exports.f;
     },
 
-    opModuleForEffect(type, ext, offset, op) {
+    opModuleForEffect(type, view, width, offset, op) {
 	return wasmEvalText(
 	    `(module
 	      (memory 1 1 shared)
 	      (func (export "f") (param i32)
-	       (drop (${type}.atomic.rmw${ext}.${op} offset=${offset} (local.get 0) (${type}.const 37)))))
+	       (drop (${type}.atomic.rmw${width}.${op}${view} offset=${offset} (local.get 0) (${type}.const 37)))))
 	    `).exports.f;
     },
 
-    cmpxchgModule(type, ext, offset) {
+    cmpxchgModule(type, view, width, offset) {
 	return wasmEvalText(
 	    `(module
 	      (memory 1 1 shared)
 	      (func $0 (param i32) (result ${type})
-	       (${type}.atomic.rmw${ext}.cmpxchg offset=${offset} (local.get 0) (${type}.const 37) (${type}.const 42)))
+	       (${type}.atomic.rmw${width}.cmpxchg${view} offset=${offset} (local.get 0) (${type}.const 37) (${type}.const 42)))
 	      (func (export "f") (param i32)
 	       (drop (call $0 (local.get 0)))))
 	    `).exports.f;
     },
 
     run() {
-	for ( let [type, variations] of [["i32", [["8_u", 1], ["16_u", 2], ["", 4]]],
-					 ["i64", [["8_u",1], ["16_u",2], ["32_u",4], ["",8]]]] )
+	for ( let [type, variations] of [["i32", [["8","_u", 1], ["16","_u", 2], ["","", 4]]],
+					 ["i64", [["8","_u",1], ["16","_u",2], ["32","_u",4], ["","",8]]]] )
 	{
-	    for ( let [ext,size] of variations )
+	    for ( let [width,view,size] of variations )
 	    {
 		// Aligned but out-of-bounds
 		let addrs = [[65536, 0, oob], [65536*2, 0, oob], [65532, 4, oob],
@@ -451,14 +448,14 @@ var BoundsAndAlignment =
 
 		for ( let [ base, offset, re ] of addrs )
 		{
-		    assertErrorMessage(() => this.loadModule(type, ext, offset)(base), RuntimeError, re);
-		    assertErrorMessage(() => this.loadModuleIgnored(type, ext, offset)(base), RuntimeError, re);
-		    assertErrorMessage(() => this.storeModule(type, ext, offset)(base), RuntimeError, re);
+		    assertErrorMessage(() => this.loadModule(type, view, width, offset)(base), RuntimeError, re);
+		    assertErrorMessage(() => this.loadModuleIgnored(type, view, width, offset)(base), RuntimeError, re);
+		    assertErrorMessage(() => this.storeModule(type, view, width, offset)(base), RuntimeError, re);
 		    for ( let op of [ "add", "sub", "and", "or", "xor", "xchg" ]) {
-			assertErrorMessage(() => this.opModule(type, ext, offset, op)(base), RuntimeError, re);
-			assertErrorMessage(() => this.opModuleForEffect(type, ext, offset, op)(base), RuntimeError, re);
+			assertErrorMessage(() => this.opModule(type, view, width, offset, op)(base), RuntimeError, re);
+			assertErrorMessage(() => this.opModuleForEffect(type, view, width, offset, op)(base), RuntimeError, re);
 		    }
-		    assertErrorMessage(() => this.cmpxchgModule(type, ext, offset)(base), RuntimeError, re);
+		    assertErrorMessage(() => this.cmpxchgModule(type, view, width, offset)(base), RuntimeError, re);
 		}
 	    }
 	}
@@ -514,7 +511,7 @@ assertErrorMessage(() => wasmEvalText(`(module
   (func (export "main")
     i32.const 1
     i32.const 2816
-    i32.atomic.rmw16_u.xchg align=2
+    i32.atomic.rmw16.xchg_u align=2
     i32.load16_s offset=83 align=1
     drop
   )

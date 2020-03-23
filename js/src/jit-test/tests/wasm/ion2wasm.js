@@ -2,7 +2,7 @@ var ITERATIONS = 10;
 var INNER_ITERATIONS = 100;
 
 let instance = wasmEvalText(`(module
-    (func (export "add") (result i32) (param i32) (param i32)
+    (func (export "add") (param i32) (param i32) (result i32)
      local.get 0
      local.get 1
      i32.add
