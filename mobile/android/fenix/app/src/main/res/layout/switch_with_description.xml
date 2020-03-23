@@ -16,6 +16,8 @@
         android:layout_marginStart="48dp"
         android:layout_marginEnd="64dp"
         android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
         android:textAppearance="@style/ListItemTextStyle"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/trackingProtectionCategoryItemDescription"
@@ -31,6 +33,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
         android:textColor="?attr/secondaryText"
         android:layout_marginBottom="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -43,12 +47,13 @@
 
     <Switch
         android:id="@+id/switch_widget"
+        style="@style/QuickSettingsText.Icon"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/library_item_icon_margin_horizontal"
-        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:layout_height="match_parent"
+        android:textOff="@string/etp_switch_off"
+        android:textOn="@string/etp_switch_on"
         app:drawableStartCompat="@drawable/ic_tracking_protection"
         app:layout_constraintBottom_toBottomOf="@id/trackingProtectionCategoryItemDescription"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/trackingProtectionCategoryTitle" />
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

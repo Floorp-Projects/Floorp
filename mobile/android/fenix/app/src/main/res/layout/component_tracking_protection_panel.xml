@@ -31,7 +31,7 @@
         <org.mozilla.fenix.trackingprotection.SwitchWithDescription
             android:id="@+id/trackingProtectionSwitch"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
             android:minHeight="@dimen/tracking_protection_item_height"
             android:text="@string/preference_enhanced_tracking_protection"
             app:layout_constraintBottom_toTopOf="@id/blocking_header"
