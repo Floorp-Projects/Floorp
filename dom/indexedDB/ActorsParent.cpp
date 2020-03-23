@@ -11342,7 +11342,14 @@ nsresult DatabaseConnection::DisableQuotaChecks() {
 
 void DatabaseConnection::EnableQuotaChecks() {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(mQuotaObject);
+  if (!mQuotaObject) {
+    MOZ_ASSERT(!mJournalQuotaObject);
+
+    // DisableQuotaChecks failed earlier, so we don't need to enable quota
+    // checks again.
+    return;
+  }
+
   MOZ_ASSERT(mJournalQuotaObject);
 
   const RefPtr<QuotaObject> quotaObject = std::move(mQuotaObject);
@@ -14452,10 +14459,10 @@ nsresult Database::StartTransactionOp::DoDatabaseWork(
   Transaction().SetActiveOnConnectionThread();
 
   if (Transaction().GetMode() == IDBTransaction::Mode::Cleanup) {
-    nsresult rv = aConnection->DisableQuotaChecks();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    DebugOnly<nsresult> rv = aConnection->DisableQuotaChecks();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DisableQuotaChecks failed, trying to continue "
+                         "cleanup transaction with quota checks enabled");
   }
 
   if (Transaction().GetMode() != IDBTransaction::Mode::ReadOnly) {
