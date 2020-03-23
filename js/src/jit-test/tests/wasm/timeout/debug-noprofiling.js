@@ -23,7 +23,7 @@ outer = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
     (type $v2v (func))
     (func (export "run")
         i32.const0
-        call_indirect $v2v)
+        call_indirect (type $v2v))
     )`)), { imports: { t } });
 
 setJitCompilerOption('simulator.always-interrupt', 1);

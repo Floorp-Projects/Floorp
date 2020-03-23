@@ -61,7 +61,7 @@ function gen_tab_impmod_t(insn)
        ;; call the selected table entry, which will either return a value,
        ;; or will cause an exception.
        local.get 0      ;; callIx
-       call_indirect 0  ;; and its return value is our return value.
+       call_indirect (type 0)  ;; and its return value is our return value.
      )
    )`;
    return t;
