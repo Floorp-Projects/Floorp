@@ -2601,9 +2601,6 @@ pref("layout.testing.overlay-scrollbars.always-visible", false);
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
-// Pref to throttle offsreen animations
-pref("dom.animations.offscreen-throttling", true);
-
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
 
