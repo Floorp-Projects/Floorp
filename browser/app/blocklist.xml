@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1584609109587">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1584737928024">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2824,10 +2824,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="eafece33-b993-443e-b944-8bcefb4389ec" id="firefox@browser-addon.xyz">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="21bbd8dd-b79e-41b8-bd18-db1592e743c9" id="{795697ee-695f-45d4-a997-6fe845b473d5}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3793,6 +3789,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="5b107267-ee8d-4ecf-b7d5-64966911681d" id="/^((\{bb5254c6-92a2-4361-b000-816bc4d34c55\})|(\{2fb3aa6a-4ab8-4071-a0f9-379100ac95a2\})|(\{0cd3acae-0589-41e3-9525-61786e493188\})|(\{3f259f0b-ad11-48c5-a7c4-a5a0897a6d1c\})|(\{02b6b8e0-f3b6-4f0a-8055-2baf79c606c1\})|(\{9419fd2e-894c-4aa8-aa14-18b5982c5889\})|(\{7d0d82e8-308b-4039-b3df-577b41483946\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="eafece33-b993-443e-b944-8bcefb4389ec" id="firefox@browser-addon.xyz">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
