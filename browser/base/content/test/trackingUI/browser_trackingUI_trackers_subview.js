@@ -82,7 +82,7 @@ async function assertSitesListed(blocked) {
   is(listItems.length, 2, "We have 2 trackers in the list");
 
   let listItem = listItems.find(
-    item => item.querySelector("label").value == "trackertest.org"
+    item => item.querySelector("label").value == "http://trackertest.org"
   );
   ok(listItem, "Has an item for trackertest.org");
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
@@ -93,7 +93,7 @@ async function assertSitesListed(blocked) {
   );
 
   listItem = listItems.find(
-    item => item.querySelector("label").value == "itisatracker.org"
+    item => item.querySelector("label").value == "https://itisatracker.org"
   );
   ok(listItem, "Has an item for itisatracker.org");
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");

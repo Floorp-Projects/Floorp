@@ -157,7 +157,7 @@ async function testSubview(hasException) {
   ok(BrowserTestUtils.is_visible(listItem), "List item is visible");
   is(
     listItem.querySelector("label").value,
-    "cryptomining.example.com",
+    "http://cryptomining.example.com",
     "Has the correct host"
   );
   is(
