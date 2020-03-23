@@ -1387,7 +1387,7 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   uint32_t argc = loc.getCallArgc();
   JSOp op = loc.getOp();
   bool constructing = IsConstructOp(op);
-  bool ignoresReturnValue = (op == JSOp::CallIgnoresRv);
+  bool ignoresReturnValue = (op == JSOp::CallIgnoresRv || loc.resultIsPopped());
 
   CallInfo callInfo(alloc(), loc.toRawBytecode(), constructing,
                     ignoresReturnValue);
@@ -1452,6 +1452,14 @@ bool WarpBuilder::build_CallIgnoresRv(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_CallIter(BytecodeLocation loc) {
+  return buildCallOp(loc);
+}
+
+bool WarpBuilder::build_FunCall(BytecodeLocation loc) {
+  return buildCallOp(loc);
+}
+
+bool WarpBuilder::build_FunApply(BytecodeLocation loc) {
   return buildCallOp(loc);
 }
 
@@ -2291,4 +2299,64 @@ bool WarpBuilder::build_FunWithProto(BytecodeLocation loc) {
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
+  MDefinition* argArr = current->pop();
+  MDefinition* argThis = current->pop();
+  MDefinition* argFunc = current->pop();
+
+  // Load dense elements of the argument array. Note that the bytecode ensures
+  // this is an array.
+  MElements* elements = MElements::New(alloc(), argArr);
+  current->add(elements);
+
+  WrappedFunction* wrappedTarget = nullptr;
+  auto* apply =
+      MApplyArray::New(alloc(), wrappedTarget, argFunc, elements, argThis);
+  current->add(apply);
+  current->push(apply);
+
+  if (loc.resultIsPopped()) {
+    apply->setIgnoresReturnValue();
+  }
+
+  return resumeAfter(apply, loc);
+}
+
+bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
+  MDefinition* newTarget = current->pop();
+  MDefinition* argArr = current->pop();
+  MDefinition* thisValue = current->pop();
+  MDefinition* callee = current->pop();
+
+  // Inline the constructor on the caller-side.
+  MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
+  current->add(createThis);
+  thisValue->setImplicitlyUsedUnchecked();
+
+  // Load dense elements of the argument array. Note that the bytecode ensures
+  // this is an array.
+  MElements* elements = MElements::New(alloc(), argArr);
+  current->add(elements);
+
+  WrappedFunction* wrappedTarget = nullptr;
+  auto* apply = MConstructArray::New(alloc(), wrappedTarget, callee, elements,
+                                     createThis, newTarget);
+  current->add(apply);
+  current->push(apply);
+  return resumeAfter(apply, loc);
+}
+
+bool WarpBuilder::build_SpreadSuperCall(BytecodeLocation loc) {
+  return build_SpreadNew(loc);
+}
+
+bool WarpBuilder::build_OptimizeSpreadCall(BytecodeLocation loc) {
+  // TODO: like IonBuilder's slow path always deoptimize for now. Consider using
+  // an IC for this so that we can optimize by inlining Baseline's CacheIR.
+  MDefinition* arr = current->peek(-1);
+  arr->setImplicitlyUsedUnchecked();
+  pushConstant(BooleanValue(false));
+  return true;
 }

@@ -194,6 +194,11 @@ class BytecodeLocation {
 
   bool isNameOp() const { return IsNameOp(getOp()); }
 
+  bool resultIsPopped() const {
+    MOZ_ASSERT(StackDefs(rawBytecode_) == 1);
+    return BytecodeIsPopped(rawBytecode_);
+  }
+
   // Accessors:
   JSOp getOp() const { return JSOp(*rawBytecode_); }
 
