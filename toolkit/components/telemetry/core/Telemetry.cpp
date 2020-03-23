@@ -105,7 +105,9 @@ using mozilla::Telemetry::CombinedStacks;
 using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::TelemetryIOInterposeObserver;
 using Telemetry::Common::AutoHashtable;
+using Telemetry::Common::GetCurrentProduct;
 using Telemetry::Common::StringHashSet;
+using Telemetry::Common::SupportedProduct;
 using Telemetry::Common::ToJSString;
 
 #if defined(MOZ_GECKO_PROFILER)
