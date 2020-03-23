@@ -105,7 +105,7 @@ assertErrorMessage(() => call(1), RuntimeError, /indirect call signature mismatc
 assertEq(call(2), 42);
 
 var tbl = new Table({initial:3, element:"funcref"});
-var call = wasmEvalText(`(module (import "a" "b" (table 3 funcref)) (export "tbl" table) (elem (i32.const 0) $f0 $f1) ${callee(0)} ${callee(1)} ${caller})`, {a:{b:tbl}}).exports.call;
+var call = wasmEvalText(`(module (import "a" "b" (table 3 funcref)) (export "tbl" (table 0)) (elem (i32.const 0) $f0 $f1) ${callee(0)} ${callee(1)} ${caller})`, {a:{b:tbl}}).exports.call;
 assertEq(call(0), 0);
 assertEq(call(1), 1);
 assertEq(tbl.get(0)(), 0);
@@ -113,7 +113,7 @@ assertEq(tbl.get(1)(), 1);
 assertErrorMessage(() => call(2), RuntimeError, /indirect call to null/);
 assertEq(tbl.get(2), null);
 
-var exp = wasmEvalText(`(module (import "a" "b" (table 3 funcref)) (export "tbl" table) (elem (i32.const 2) $f2) ${callee(2)} ${caller})`, {a:{b:tbl}}).exports;
+var exp = wasmEvalText(`(module (import "a" "b" (table 3 funcref)) (export "tbl" (table 0)) (elem (i32.const 2) $f2) ${callee(2)} ${caller})`, {a:{b:tbl}}).exports;
 assertEq(exp.tbl, tbl);
 assertEq(exp.call(0), 0);
 assertEq(exp.call(1), 1);
@@ -125,14 +125,14 @@ assertEq(tbl.get(0)(), 0);
 assertEq(tbl.get(1)(), 1);
 assertEq(tbl.get(2)(), 2);
 
-var exp1 = wasmEvalText(`(module (table 10 funcref) (export "tbl" table) (elem (i32.const 0) $f0 $f0) ${callee(0)} (export "f0" (func $f0)) ${caller})`).exports
+var exp1 = wasmEvalText(`(module (table 10 funcref) (export "tbl" (table 0)) (elem (i32.const 0) $f0 $f0) ${callee(0)} (export "f0" (func $f0)) ${caller})`).exports
 assertEq(exp1.tbl.get(0), exp1.f0);
 assertEq(exp1.tbl.get(1), exp1.f0);
 assertEq(exp1.tbl.get(2), null);
 assertEq(exp1.call(0), 0);
 assertEq(exp1.call(1), 0);
 assertErrorMessage(() => exp1.call(2), RuntimeError, /indirect call to null/);
-var exp2 = wasmEvalText(`(module (import "a" "b" (table 10 funcref)) (export "tbl" table) (elem (i32.const 1) $f1 $f1) ${callee(1)} (export "f1" (func $f1)) ${caller})`, {a:{b:exp1.tbl}}).exports
+var exp2 = wasmEvalText(`(module (import "a" "b" (table 10 funcref)) (export "tbl" (table 0)) (elem (i32.const 1) $f1 $f1) ${callee(1)} (export "f1" (func $f1)) ${caller})`, {a:{b:exp1.tbl}}).exports
 assertEq(exp1.tbl, exp2.tbl);
 assertEq(exp2.tbl.get(0), exp1.f0);
 assertEq(exp2.tbl.get(1), exp2.f1);
