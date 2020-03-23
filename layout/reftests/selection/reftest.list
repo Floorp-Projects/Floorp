@@ -52,3 +52,6 @@ fuzzy(0-7,0-4) needs-focus == rtl-selection-with-decoration.html rtl-selection-w
 needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
 fuzzy-if(OSX,0-1,0-6) fuzzy-if(Android,0-188,0-39) needs-focus == writing-mode.html writing-mode-ref.html
 needs-focus == 1478604.html 1478604-ref.html
+
+needs-focus != disabled-1.html disabled-1-notref.html
+needs-focus != disabled-2.html disabled-2-notref.html
