@@ -7,7 +7,9 @@
  * Tests if server side timings are displayed
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL);
+  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
+    requestCount: 1,
+  });
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

@@ -10,7 +10,7 @@
 add_task(async function() {
   const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
-  const { monitor } = await initNetMonitor(SORTING_URL);
+  const { monitor } = await initNetMonitor(SORTING_URL, { requestCount: 1 });
   info("Starting test... ");
 
   // It seems that this test may be slow on debug builds. This could be because

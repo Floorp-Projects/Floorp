@@ -9,7 +9,7 @@ const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
  * Test the sidepanel_changed telemetry event.
  */
 add_task(async function() {
-  const { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor } = await initNetMonitor(SIMPLE_URL, { requestCount: 1 });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

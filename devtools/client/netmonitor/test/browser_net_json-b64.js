@@ -9,7 +9,9 @@
 
 add_task(async function() {
   const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-  const { tab, monitor } = await initNetMonitor(JSON_B64_URL);
+  const { tab, monitor } = await initNetMonitor(JSON_B64_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

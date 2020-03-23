@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=null");
+  const { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=null", {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

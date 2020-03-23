@@ -21,7 +21,7 @@ registerCleanupFunction(function() {
 add_task(async function() {
   await UrlClassifierTestUtils.addTestTrackers();
 
-  const { monitor, tab } = await initNetMonitor(TEST_URI);
+  const { monitor, tab } = await initNetMonitor(TEST_URI, { requestCount: 1 });
   info("Starting  test...");
 
   const { document, store, windowRequire } = monitor.panelWin;

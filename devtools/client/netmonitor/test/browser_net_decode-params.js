@@ -7,7 +7,9 @@
  * Tests if "+" is replaces with spaces in the Params panel.
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(POST_RAW_URL_WITH_HASH);
+  const { tab, monitor } = await initNetMonitor(POST_RAW_URL_WITH_HASH, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

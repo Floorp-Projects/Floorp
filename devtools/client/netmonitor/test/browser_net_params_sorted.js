@@ -7,7 +7,9 @@
  * Tests whether keys in Params panel are sorted.
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(POST_ARRAY_DATA_URL);
+  const { tab, monitor } = await initNetMonitor(POST_ARRAY_DATA_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

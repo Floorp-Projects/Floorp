@@ -8,7 +8,9 @@
  * header is visible only if there are requests in the list.
  */
 add_task(async function() {
-  const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
+  const { monitor, tab } = await initNetMonitor(SIMPLE_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

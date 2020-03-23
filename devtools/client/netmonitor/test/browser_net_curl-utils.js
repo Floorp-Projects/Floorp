@@ -10,7 +10,9 @@
 const { Curl, CurlUtils } = require("devtools/client/shared/curl");
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CURL_UTILS_URL);
+  const { tab, monitor } = await initNetMonitor(CURL_UTILS_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { store, windowRequire, connector } = monitor.panelWin;

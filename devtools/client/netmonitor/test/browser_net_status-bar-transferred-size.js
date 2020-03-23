@@ -14,7 +14,10 @@ add_task(async () => {
     getFormattedSize,
   } = require("devtools/client/netmonitor/src/utils/format-utils");
 
-  const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, true);
+  const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, {
+    enableCache: true,
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

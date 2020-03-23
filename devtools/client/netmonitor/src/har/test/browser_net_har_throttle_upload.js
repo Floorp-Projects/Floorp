@@ -12,7 +12,8 @@ add_task(async function() {
 
 async function throttleUploadTest(actuallyThrottle) {
   const { tab, monitor } = await initNetMonitor(
-    HAR_EXAMPLE_URL + "html_har_post-data-test-page.html"
+    HAR_EXAMPLE_URL + "html_har_post-data-test-page.html",
+    { requestCount: 1 }
   );
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");

@@ -13,7 +13,9 @@ add_task(async function() {
   // Set WS frame payload limit to a lower value for testing
   await pushPref("devtools.netmonitor.ws.messageDataLimit", 100);
 
-  const { tab, monitor } = await initNetMonitor(WS_PAGE_URL);
+  const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

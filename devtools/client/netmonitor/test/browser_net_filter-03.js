@@ -21,7 +21,7 @@ const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
 ]);
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(FILTERING_URL);
+  const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.

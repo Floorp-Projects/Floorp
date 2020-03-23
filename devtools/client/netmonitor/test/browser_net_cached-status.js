@@ -11,7 +11,10 @@ add_task(async function() {
   // Disable rcwn to make cache behavior deterministic.
   await pushPref("network.http.rcwn.enabled", false);
 
-  const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, true);
+  const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, {
+    enableCache: true,
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

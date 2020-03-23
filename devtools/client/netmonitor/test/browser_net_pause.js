@@ -7,7 +7,7 @@
  * Tests if the pause/resume button works.
  */
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(PAUSE_URL);
+  const { tab, monitor } = await initNetMonitor(PAUSE_URL, { requestCount: 1 });
   info("Starting test... ");
 
   const { document, store, windowRequire, connector } = monitor.panelWin;

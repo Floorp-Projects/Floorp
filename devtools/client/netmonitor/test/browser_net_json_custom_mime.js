@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(JSON_CUSTOM_MIME_URL);
+  const { tab, monitor } = await initNetMonitor(JSON_CUSTOM_MIME_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

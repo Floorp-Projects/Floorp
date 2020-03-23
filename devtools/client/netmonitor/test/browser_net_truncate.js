@@ -11,7 +11,7 @@ add_task(async function() {
     "devtools.netmonitor.responseBodyLimit"
   );
   const URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + limit;
-  const { monitor, tab } = await initNetMonitor(URL);
+  const { monitor, tab } = await initNetMonitor(URL, { requestCount: 1 });
 
   info("Starting test... ");
 

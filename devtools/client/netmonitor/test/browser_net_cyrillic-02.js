@@ -9,7 +9,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CYRILLIC_URL);
+  const { tab, monitor } = await initNetMonitor(CYRILLIC_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;
