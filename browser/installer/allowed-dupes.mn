@@ -16,10 +16,8 @@ browser/chrome/browser/content/branding/icon32.png
 browser/chrome/browser/content/branding/icon48.png
 browser/chrome/browser/content/branding/icon64.png
 browser/chrome/browser/content/browser/defaultthemes/5.header.png
-browser/chrome/browser/content/browser/extension.svg
 browser/chrome/browser/content/browser/places/bookmarkProperties.xhtml
 browser/chrome/browser/content/browser/places/bookmarkProperties2.xhtml
-browser/chrome/browser/skin/classic/browser/addons/addon-install-confirm.svg
 browser/chrome/browser/skin/classic/browser/connection-secure.svg
 browser/chrome/browser/skin/classic/browser/controlcenter/warning-gray.svg
 # devtools reduction is bug 1311178

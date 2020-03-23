@@ -395,7 +395,7 @@
 }
 
 #identity-popup[connection=extension] .identity-popup-security-connection {
-  background-image: url(chrome://browser/skin/controlcenter/extension.svg);
+  background-image: url(chrome://mozapps/skin/extensions/extension.svg);
   -moz-context-properties: fill;
   fill: #60bf4c;
 }
