@@ -60,6 +60,7 @@ class RegExpStack;
 #define DCHECK_NOT_NULL(val) MOZ_ASSERT((val) != nullptr)
 #define DCHECK_IMPLIES(lhs, rhs) MOZ_ASSERT_IF(lhs, rhs)
 #define CHECK MOZ_RELEASE_ASSERT
+#define CHECK_LE(lhs, rhs) MOZ_RELEASE_ASSERT((lhs) <= (rhs))
 
 template <class T>
 static constexpr inline T Min(T t1, T t2) {
@@ -998,7 +999,7 @@ private:
 
 public:
   // An empty stub for telemetry we don't support
-  void IncreaseTotalRegexpCodeGenerated(int size) {}
+  void IncreaseTotalRegexpCodeGenerated(Handle<HeapObject> code) {}
 
   Counters* counters() { return &counters_; }
 
@@ -1144,6 +1145,7 @@ extern bool FLAG_trace_regexp_parser;
 extern bool FLAG_trace_regexp_peephole_optimization;
 
 #define V8_USE_COMPUTED_GOTO 1
+#define COMPILING_IRREGEXP_FOR_EXTERNAL_EMBEDDER
 
 }  // namespace internal
 }  // namespace v8
