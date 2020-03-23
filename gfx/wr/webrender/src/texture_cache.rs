@@ -293,7 +293,7 @@ impl SharedTextures {
             array_color8_linear: TextureArray::new(
                 color_formats.clone(),
                 TextureFilter::Linear,
-                16,
+                4,
             ),
             // Used for image-rendering: crisp. This is mostly favicons, which
             // are small. Some other images use it too, but those tend to be
@@ -736,7 +736,7 @@ impl TextureCache {
         // either. OpenGL on mac is not long for this earth, so this may be
         // good enough until we have WebRender on gfx-rs (on Metal).
         //
-        // On all platforms, we also clamp the number of textures per layer to 16
+        // On other platform, we also clamp the number of textures per layer
         // to avoid the cost of resizing large texture arrays (at the expense
         // of batching efficiency).
         //
@@ -751,7 +751,7 @@ impl TextureCache {
         //     with the same bug but a lower max texture size, we might need
         //     to rethink our strategy anyway, since a limit below 32MB might
         //     start to introduce performance issues.
-        max_texture_layers = max_texture_layers.min(16);
+        max_texture_layers = max_texture_layers.min(32);
 
         let mut pending_updates = TextureUpdateList::new();
 
