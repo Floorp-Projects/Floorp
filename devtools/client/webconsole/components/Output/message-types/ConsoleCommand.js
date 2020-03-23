@@ -10,6 +10,7 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 const Message = createFactory(
   require("devtools/client/webconsole/components/Output/Message")
 );
@@ -21,6 +22,11 @@ ConsoleCommand.propTypes = {
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
   maybeScrollToBottom: PropTypes.func,
+  open: PropTypes.bool,
+};
+
+ConsoleCommand.defaultProps = {
+  open: false,
 };
 
 /**
@@ -32,21 +38,43 @@ function ConsoleCommand(props) {
     timestampsVisible,
     serviceContainer,
     maybeScrollToBottom,
+    dispatch,
+    open,
   } = props;
 
-  const { indent, source, type, level, timeStamp } = message;
+  const { indent, source, type, level, timeStamp, id: messageId } = message;
+
   const messageText = trimCode(message.messageText);
+  const messageLines = messageText.split("\n");
+
+  const collapsible = messageLines.length > 5;
+
+  // Show only first 5 lines if its collapsible and closed
+  const visibleMessageText =
+    collapsible && !open
+      ? `${messageLines.slice(0, 5).join("\n")}${ELLIPSIS}`
+      : messageText;
 
   // This uses a Custom Element to syntax highlight when possible. If it's not
   // (no CodeMirror editor), then it will just render text.
-  const messageBody = createElement("syntax-highlighted", null, messageText);
+  const messageBody = createElement(
+    "syntax-highlighted",
+    null,
+    visibleMessageText
+  );
+
+  // Enable collapsing the code if it has multiple lines
 
   return Message({
+    messageId,
     source,
     type,
     level,
     topLevelClasses: [],
     messageBody,
+    collapsible,
+    open,
+    dispatch,
     serviceContainer,
     indent,
     timeStamp,
