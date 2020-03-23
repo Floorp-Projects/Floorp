@@ -79,23 +79,23 @@ var run = wasmEvalText(`(module
     end $b0
       ref.null
       local.get 1
-      call_indirect $t0
+      call_indirect (type $t0)
       return
     end $b1
       ref.null
       local.get 1
-      call_indirect $t1
+      call_indirect (type $t1)
       return
     end $b2
       ref.null
       local.get 1
-      call_indirect $t2
+      call_indirect (type $t2)
       return
     end $b3
       ref.null
       ref.null
       local.get 1
-      call_indirect $t3
+      call_indirect (type $t3)
       return
   )
 )`).exports.run;

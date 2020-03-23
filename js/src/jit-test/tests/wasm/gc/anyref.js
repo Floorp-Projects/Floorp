@@ -347,7 +347,7 @@ exports = wasmEvalText(`(module
     (func (export "call_indirect") (param $i i32) (param $ref anyref) (result anyref)
         local.get $ref
         local.get $i
-        call_indirect $table_type
+        call_indirect (type $table_type)
     )
 
     (func (export "count_f") (result i32) global.get $count_f)

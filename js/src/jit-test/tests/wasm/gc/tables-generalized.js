@@ -187,7 +187,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (table 10 anyref)
        (type $t (func (param i32) (result i32)))
        (func (result i32)
-         (call_indirect $t (i32.const 37))))`)),
+         (call_indirect (type $t) (i32.const 37))))`)),
                    WebAssembly.CompileError,
                    /indirect calls must go through a table of 'funcref'/);
 
