@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 37.0.0-SNAPSHOT (In Development)
+# 38.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/96?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/97?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+
+# 37.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/96?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v37.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v37.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/v37.0.0/master/buildSrc/src/main/java/Config.kt)
 
 * **lib-state**, **browser-state**
   * Added the ability to add `Middleware` instances to a `Store`. A `Middleware` can rewrite or intercept an `Action`, as well as dispatch additional `Action`s or perform side-effects when an `Action` gets dispatched.
