@@ -37,34 +37,24 @@ class ParallelWorker : public GCParallelTask {
 
   ParallelWorker(GCRuntime* gc, WorkFunc func, WorkItemIterator& work,
                  const SliceBudget& budget, AutoLockHelperThreadState& lock)
-      : GCParallelTask(gc),
-        func_(func),
-        work_(work),
-        budget_(budget),
-        item_(work.get()) {
-    // Consume a work item on creation so that we can stop creating workers if
-    // the number of workers exceeds the number of work items.
-    work.next();
-  }
+      : GCParallelTask(gc), func_(func), work_(work), budget_(budget) {}
 
   void run() {
     // These checks assert when run in parallel.
     AutoDisableProxyCheck noProxyCheck;
 
-    for (;;) {
-      size_t steps = func_(gc, item_);
+    AutoLockHelperThreadState lock;
+    while (!work().done()) {
+      WorkItem item = work().get();
+      work().next();
+
+      AutoUnlockHelperThreadState unlock(lock);
+      size_t steps = func_(gc, item);
+
       budget_.step(steps);
       if (budget_.isOverBudget()) {
         break;
       }
-
-      AutoLockHelperThreadState lock;
-      if (work().done()) {
-        break;
-      }
-
-      item_ = work().get();
-      work().next();
     }
   }
 
@@ -79,9 +69,6 @@ class ParallelWorker : public GCParallelTask {
 
   // The budget that determines how long to run for.
   SliceBudget budget_;
-
-  // The next work item to process.
-  WorkItem item_;
 };
 
 static constexpr size_t MaxParallelWorkers = 8;
