@@ -102,10 +102,7 @@ add_task(async function() {
   ok(shown, "AccessibleHighlighter highlighted the node");
 
   shown = await a11yWalker.highlightAccessible(a11yDoc);
-  ok(
-    !shown,
-    "AccessibleHighlighter does not highlight an accessible with no bounds"
-  );
+  ok(shown, "AccessibleHighlighter highlights the document correctly.");
   await a11yWalker.unhighlight();
 
   info("Checking AccessibleWalker picker functionality");
