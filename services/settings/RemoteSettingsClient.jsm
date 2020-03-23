@@ -177,12 +177,8 @@ class AttachmentDownloader extends Downloader {
    * current list of records.
    */
   async deleteAll() {
-    let allRecords;
-    try {
-      allRecords = await this._client.db.list();
-    } finally {
-      await this._client.db.close();
-    }
+    const allRecords = await this._client.db.list();
+    await this._client.db.close();
     return Promise.all(
       allRecords.filter(r => !!r.attachment).map(r => this.delete(r))
     );
@@ -236,7 +232,11 @@ class RemoteSettingsClient extends EventEmitter {
       this.bucketNamePref
     );
 
-    XPCOMUtils.defineLazyGetter(this, "db", () => Database(this.identifier));
+    XPCOMUtils.defineLazyGetter(
+      this,
+      "db",
+      () => new Database(this.identifier)
+    );
 
     XPCOMUtils.defineLazyGetter(
       this,
@@ -272,17 +272,12 @@ class RemoteSettingsClient extends EventEmitter {
     let timestamp = -1;
     try {
       timestamp = await this.db.getLastModified();
+      await this.db.close();
     } catch (err) {
       console.warn(
         `Error retrieving the getLastModified timestamp from ${this.identifier} RemoteSettingClient`,
         err
       );
-    } finally {
-      try {
-        await this.db.close();
-      } catch (err) {
-        console.warn(`Couldn't close db connection`);
-      }
     }
 
     return timestamp;
@@ -331,39 +326,34 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Read from the local DB.
-    let data, localRecords, timestamp, metadata;
-    try {
-      data = await this.db.list({ filters, order });
+    const data = await this.db.list({ filters, order });
 
-      if (verifySignature) {
-        console.debug(
-          `${this.identifier} verify signature of local data on read`
-        );
-        const allData = ObjectUtils.isEmpty(filters)
-          ? data
-          : await this.db.list();
-        localRecords = allData.map(r => this._cleanLocalFields(r));
-        timestamp = await this.db.getLastModified();
-        metadata = await this.db.getMetadata();
-        if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
-          // No sync occured yet, may have records from dump but no metadata.
-          console.debug(
-            `Required metadata for ${this.identifier}, fetching from server.`
-          );
-          metadata = await this.httpClient().getData();
-          await this.db.saveMetadata(metadata);
-        }
-      }
-    } finally {
-      await this.db.close();
-    }
     if (verifySignature) {
+      console.debug(
+        `${this.identifier} verify signature of local data on read`
+      );
+      const allData = ObjectUtils.isEmpty(filters)
+        ? data
+        : await this.db.list();
+      const localRecords = allData.map(r => this._cleanLocalFields(r));
+      const timestamp = await this.db.getLastModified();
+      let metadata = await this.db.getMetadata();
+      if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
+        // No sync occured yet, may have records from dump but no metadata.
+        console.debug(
+          `Required metadata for ${this.identifier}, fetching from server.`
+        );
+        metadata = await this.httpClient().getData();
+        await this.db.saveMetadata(metadata);
+      }
       await this._validateCollectionSignature(
         localRecords,
         timestamp,
         metadata
       );
     }
+
+    await this.db.close();
 
     // Filter the records based on `this.filterFunc` results.
     return this._filterEntries(data);
@@ -659,8 +649,6 @@ class RemoteSettingsClient extends EventEmitter {
     } else if (e instanceof RemoteSettingsClient.MissingSignatureError) {
       // Collection metadata has no signature info, no need to retry.
       reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
-    } else if (e instanceof Database.ShutdownError) {
-      reportStatus = UptakeTelemetry.STATUS.SHUTDOWN_ERROR;
     } else if (/unparseable/.test(e.message)) {
       reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
     } else if (/NetworkError/.test(e.message)) {
