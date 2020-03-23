@@ -38,8 +38,6 @@ function handleRequest(request, response)
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  dump("DEBUG_BUG_1585533, queryString: " + request.queryString + "\n");
-
   // (1) Store the query that will report back whether the violation report was received
   if (request.queryString == "queryresult") {
     response.processAsync();
@@ -66,12 +64,10 @@ function handleRequest(request, response)
   // (4) Finally we receive the report, let's return the request from (1)
   // signaling that we received the report correctly
   if (request.queryString == "report") {
-    dump("DEBUG_BUG_1585533, report 1\n");
     getObjectState("queryResult", function(queryResponse) {
       if (!queryResponse) {
         return;
       }
-      dump("DEBUG_BUG_1585533, report 2\n");
       queryResponse.write("report-ok");
       queryResponse.finish();
     });
