@@ -11,7 +11,12 @@ import logging
 import os
 import sys
 import textwrap
-from collections import Iterable
+
+
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
