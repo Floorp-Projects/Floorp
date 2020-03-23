@@ -13,6 +13,18 @@
   transition: border-color 0.2s ease-in-out;
 }
 
+
+/* Add a border radius match the borders of the window on Mac OS 
+ * and hide the border radius on the right if the sidebar or editor 
+ * is open. */
+:root[platform="mac"] .webconsole-app .reverse-search {
+  border-bottom-left-radius: 5px;
+}
+:root[platform="mac"] .webconsole-app:not(.jsterm-editor):not(.sidebar-visible) .reverse-search
+{
+  border-bottom-right-radius: 5px;
+}
+
 .reverse-search:focus-within {
   border-color: var(--blue-50);
 }
