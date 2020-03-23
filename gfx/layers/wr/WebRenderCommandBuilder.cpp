@@ -1056,21 +1056,6 @@ void WebRenderScrollDataCollection::AppendRoot(
   }
 }
 
-void WebRenderScrollDataCollection::AppendWrapper(
-    const RenderRootBoundary& aBoundary, size_t aLayerCountBeforeRecursing) {
-  wr::RenderRoot root = aBoundary.GetChildType();
-  size_t layerCountAfterRecursing = GetLayerCount(root);
-  MOZ_ASSERT(layerCountAfterRecursing >= aLayerCountBeforeRecursing);
-  if (layerCountAfterRecursing == aLayerCountBeforeRecursing) {
-    // nothing to wrap
-    return;
-  }
-  mInternalScrollDatas[root].emplace_back();
-  mInternalScrollDatas[root].back().InitializeRoot(layerCountAfterRecursing -
-                                                   aLayerCountBeforeRecursing);
-  mInternalScrollDatas[root].back().SetBoundaryRoot(aBoundary);
-}
-
 void WebRenderScrollDataCollection::AppendScrollData(
     const wr::DisplayListBuilder& aBuilder, WebRenderLayerManager* aManager,
     nsDisplayItem* aItem, size_t aLayerCountBeforeRecursing,
