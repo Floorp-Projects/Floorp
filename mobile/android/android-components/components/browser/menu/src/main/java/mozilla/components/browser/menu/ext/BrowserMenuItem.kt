@@ -17,6 +17,7 @@ fun List<BrowserMenuItem>.getHighlight() = asSequence()
     .mapNotNull { it as? HighlightableMenuItem }
     .filter { it.isHighlighted() }
     .map { it.highlight }
+    .filter { it.canPropagate }
     .maxBy {
         // Select the highlight with the highest priority
         when (it) {

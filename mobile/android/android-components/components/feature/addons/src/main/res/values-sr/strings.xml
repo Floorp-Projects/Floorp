@@ -9,11 +9,11 @@
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">Складиштите неограничену количину клијентских података</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">Приступите активности прегледача приликом навигације</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Приступите радњама прегледача приликом навигације</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Прочитајте и измените ознаке</string>
     <!-- Description for browser_setting permission. -->
-    <string name="mozac_feature_addons_permissions_browser_setting_description">Прочитајте и измените поставке прегледача</string>
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Прочитајте и измените подешавања прегледача</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Обришите недавну историју прегледања, колачиће и сродне податке</string>
     <!-- Description for clipboard_read permission. -->
@@ -135,11 +135,11 @@
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Инсталација %1$s није успела</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_enabled">Активирање %1$s је успело</string>
+    <string name="mozac_feature_addons_successfully_enabled">Успешно омогућен додатак %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_failed_to_enable">Активирање %1$s није успело</string>
+    <string name="mozac_feature_addons_failed_to_enable">Омогућавање додатка %1$s није успело</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_disabled">Деактивирање %1$s је успело</string>
+    <string name="mozac_feature_addons_successfully_disabled">Успешно онемогућен додатак %1$s</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">Дективирање %1$s није успело</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
