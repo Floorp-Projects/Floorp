@@ -326,6 +326,12 @@
       </menubar>
 #endif
 
+      <toolbarbutton id="clearDownloadsButton"
+                          class="tabbable"
+                          label="&clearDownloadsButton.label;"
+                          command="downloadsCmd_clearDownloads"
+                          tooltiptext="&clearDownloadsButton.tooltip;"/>
+
       <spacer id="libraryToolbarSpacer" flex="1"/>
 
       <search-textbox id="searchFilter"
@@ -333,12 +339,6 @@
                       aria-controls="placeContent"
                       oncommand="PlacesSearchBox.search(this.value);"
                       collection="bookmarks"/>
-      <toolbarbutton id="clearDownloadsButton"
-                     class="tabbable"
-                     insertbefore="libraryToolbarSpacer"
-                     label="&clearDownloadsButton.label;"
-                     command="downloadsCmd_clearDownloads"
-                     tooltiptext="&clearDownloadsButton.tooltip;"/>
     </toolbar>
   </toolbox>
 
