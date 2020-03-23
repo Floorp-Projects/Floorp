@@ -5,8 +5,15 @@
 "use strict";
 
 module.exports = {
+  // eslint-plugin-mozilla runs under node, so we need a more restrictive
+  // environment / parser setup here than the rest of mozilla-central.
   env: {
+    browser: false,
     node: true,
+  },
+  parser: "espree",
+  parserOptions: {
+    ecmaVersion: 10,
   },
 
   rules: {

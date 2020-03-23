@@ -5,8 +5,9 @@
   "license": "MPL-2.0",
   "dependencies": {},
   "devDependencies": {
-    "@babel/plugin-syntax-nullish-coalescing-operator": "^7.8.3",
-    "@babel/plugin-syntax-optional-chaining": "^7.8.3",
+    "@babel/core": "7.8.3",
+    "@babel/plugin-syntax-nullish-coalescing-operator": "7.8.3",
+    "@babel/plugin-syntax-optional-chaining": "7.8.3",
     "babel-eslint": "10.1.0",
     "eslint": "6.8.0",
     "eslint-config-prettier": "6.10.0",
