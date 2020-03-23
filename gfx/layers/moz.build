@@ -258,7 +258,6 @@ EXPORTS.mozilla.layers += [
     'wr/ClipManager.h',
     'wr/DisplayItemCache.h',
     'wr/IpcResourceUpdateQueue.h',
-    'wr/RenderRootBoundary.h',
     'wr/RenderRootStateManager.h',
     'wr/RenderRootTypes.h',
     'wr/StackingContextHelper.h',

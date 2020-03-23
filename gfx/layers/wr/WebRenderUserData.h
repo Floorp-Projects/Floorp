@@ -12,7 +12,6 @@
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/AnimationInfo.h"
-#include "mozilla/layers/RenderRootBoundary.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"

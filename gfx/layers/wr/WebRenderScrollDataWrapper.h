@@ -158,44 +158,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
                                         mLayerIndex + 1, subtreeLastIndex);
     }
 
-    if (mLayer->GetReferentRenderRoot()) {
-      MOZ_ASSERT(!mLayer->GetReferentId());
-      MOZ_ASSERT(mLayer->GetReferentRenderRoot()->GetChildType() !=
-                 mWrRootId.mRenderRoot);
-
-      WRRootId newWrRootId = WRRootId(
-          mWrRootId.mLayersId, mLayer->GetReferentRenderRoot()->GetChildType());
-      const WebRenderScrollData* childData =
-          mUpdater->GetScrollData(newWrRootId);
-      if (!childData) {
-        // The other tree might not exist yet if the scene hasn't been built.
-        return WebRenderScrollDataWrapper(*mUpdater, newWrRootId);
-      }
-      // See the comment above RenderRootBoundary for more context on what's
-      // happening here. We need to fish out the appropriate wrapper root from
-      // inside the dummy root. Note that the wrapper root should always be a
-      // direct descendant of the dummy root, so we can pass
-      // `childData->GetLayerCount()` for the `aContainingSubtreeLastIndex`
-      // parameter below.
-      Maybe<size_t> layerIndex;
-      for (size_t i = 0; i < childData->GetLayerCount(); i++) {
-        const WebRenderLayerScrollData* wrlsd = childData->GetLayerData(i);
-        if (wrlsd->GetBoundaryRoot() == mLayer->GetReferentRenderRoot()) {
-          // found it
-          layerIndex = Some(i);
-          break;
-        }
-      }
-      if (!layerIndex) {
-        // It's possible that there's no wrapper root. In that case there are
-        // no descendants
-        return WebRenderScrollDataWrapper(*mUpdater, newWrRootId);
-      }
-      return WebRenderScrollDataWrapper(mUpdater, newWrRootId, childData,
-                                        *layerIndex,
-                                        childData->GetLayerCount());
-    }
-
     // We've run out of descendants. But! If the original layer was a RefLayer,
     // then it connects to another layer tree and we need to traverse that too.
     // So return a WebRenderScrollDataWrapper for the root of the child layer
@@ -326,11 +288,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   Maybe<wr::RenderRoot> GetReferentRenderRoot() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer()) {
-      if (mLayer->GetReferentRenderRoot()) {
-        return Some(mLayer->GetReferentRenderRoot()->GetChildType());
-      }
-    }
     return Nothing();
   }
 

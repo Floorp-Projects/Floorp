@@ -18,7 +18,6 @@
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/FocusTarget.h"
-#include "mozilla/layers/RenderRootBoundary.h"
 #include "mozilla/layers/WebRenderMessageUtils.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/HashTable.h"
@@ -96,11 +95,6 @@ class WebRenderLayerScrollData final {
   }
   void SetReferentId(LayersId aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<LayersId> GetReferentId() const { return mReferentId; }
-
-  Maybe<RenderRootBoundary> GetReferentRenderRoot() const {
-    return Nothing();
-  }
-  Maybe<RenderRootBoundary> GetBoundaryRoot() const { return Nothing(); }
 
   void SetScrollbarData(const ScrollbarData& aData) { mScrollbarData = aData; }
   const ScrollbarData& GetScrollbarData() const { return mScrollbarData; }
@@ -260,10 +254,6 @@ class WebRenderScrollData final {
 }  // namespace mozilla
 
 namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::layers::RenderRootBoundary>
-    : public PlainOldDataSerializer<mozilla::layers::RenderRootBoundary> {};
 
 template <>
 struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
