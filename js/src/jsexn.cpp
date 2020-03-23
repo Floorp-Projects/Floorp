@@ -96,7 +96,7 @@ bool CopyExtraData(JSContext* cx, uint8_t** cursor, JSErrorReport* copy,
   /* Copy non-pointer members. */
   copy->isMuted = report->isMuted;
   copy->exnType = report->exnType;
-  copy->flags = report->flags;
+  copy->isWarning_ = report->isWarning_;
 
   /* Deep copy notes. */
   if (report->notes) {
@@ -627,7 +627,7 @@ bool ErrorReport::populateUncaughtExceptionReportUTF8(JSContext* cx, ...) {
 bool ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx,
                                                         va_list ap) {
   new (&ownedReport) JSErrorReport();
-  ownedReport.flags = JSREPORT_ERROR;
+  ownedReport.isWarning_ = false;
   ownedReport.errorNumber = JSMSG_UNCAUGHT_EXCEPTION;
   // XXXbz this assumes the stack we have right now is still
   // related to our exception object.  It would be better if we

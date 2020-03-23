@@ -1054,13 +1054,10 @@ extern void DestroyContext(JSContext* cx);
 extern void ReportUsageErrorASCII(JSContext* cx, HandleObject callee,
                                   const char* msg);
 
-/*
- * Prints a full report and returns true if the given report is non-nullptr
- * and the report doesn't have the JSREPORT_WARNING flag set or reportWarnings
- * is true.
- * Returns false otherwise.
- */
-extern bool PrintError(JSContext* cx, FILE* file,
+// Writes a full report to a file descriptor.
+// Does nothing for JSErrorReport which are warnings, unless
+// reportWarnings is set.
+extern void PrintError(JSContext* cx, FILE* file,
                        JS::ConstUTF8CharsZ toStringResult,
                        JSErrorReport* report, bool reportWarnings);
 
