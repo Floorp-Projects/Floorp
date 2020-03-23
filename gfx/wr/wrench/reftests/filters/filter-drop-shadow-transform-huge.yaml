@@ -7,11 +7,11 @@ root:
       items:
         - type: stacking-context
           bounds: [0, 0, 1000, 1000]
-          transform: scale-y(999999.25)
+          transform: scale-y(100)
           items:
             - type: stacking-context
               bounds: [0, 0, 1000, 1000]
-              filters: drop-shadow([999999, 999999], 999999, [255, 0, 0, 1])
+              filters: drop-shadow([0, 0], 999999, [255, 0, 0, 1])
               items:
                 - image: checkerboard(2, 16, 16)
                   bounds: [0, 0, 1000, 1000]
