@@ -33,6 +33,12 @@ permalink: /changelog/
 * **feature-session**
   * ⚠️ **This is a breaking change**: `HistoryDelegate` constructor changed to take `Lazy<HistoryStorage>` instead of `HistoryStorage`, to facilitate late initialization.
 
+* **concept-engine**
+  * Added: `DataCleanable` a new interface that decouples the behavior of clearing browser data from the `Engine` and `EngineSession`.
+
+* **feature-sitepermissions**
+  *  Fixed [#6322](https://github.com/mozilla-mobile/android-components/issues/6322), now  `SitePermissionsStorage` allows to indicate an optional reference to `DataCleanable`.
+
 * **browser-menu**
   * Added `canPropagate` param to all `BrowserMenuHighlight`s, making it optional to be displayed in other components
   * Changed `BrowserMenuItem.getHighlight` to filter the highlights which should not propagate.

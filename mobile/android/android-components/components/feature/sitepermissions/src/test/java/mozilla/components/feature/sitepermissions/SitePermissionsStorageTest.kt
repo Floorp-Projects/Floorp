@@ -9,6 +9,9 @@ import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.engine.DataCleanable
+import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
@@ -39,11 +42,13 @@ class SitePermissionsStorageTest {
 
     private lateinit var mockDAO: SitePermissionsDao
     private lateinit var storage: SitePermissionsStorage
+    private lateinit var mockDataCleanable: DataCleanable
 
     @Before
     fun setup() {
         mockDAO = mock()
-        storage = spy(SitePermissionsStorage(mock()).apply {
+        mockDataCleanable = mock()
+        storage = spy(SitePermissionsStorage(mock(), mockDataCleanable).apply {
             databaseInitializer = { mockDatabase(mockDAO) }
         })
     }
@@ -64,6 +69,9 @@ class SitePermissionsStorageTest {
         storage.update(sitePermissions)
 
         verify(mockDAO).update(any())
+        runBlocking {
+            verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
+        }
     }
 
     @Test
@@ -99,6 +107,9 @@ class SitePermissionsStorageTest {
         storage.remove(sitePermissions)
 
         verify(mockDAO).deleteSitePermissions(any())
+        runBlocking {
+            verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS), sitePermissions.origin)
+        }
     }
 
     @Test
@@ -106,6 +117,9 @@ class SitePermissionsStorageTest {
         storage.removeAll()
 
         verify(mockDAO).deleteAllSitePermissions()
+        runBlocking {
+            verify(mockDataCleanable).clearData(BrowsingData.select(BrowsingData.PERMISSIONS))
+        }
     }
 
     @Test

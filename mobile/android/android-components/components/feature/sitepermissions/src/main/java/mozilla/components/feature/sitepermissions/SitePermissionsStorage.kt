@@ -7,6 +7,12 @@ package mozilla.components.feature.sitepermissions
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.paging.DataSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import mozilla.components.concept.engine.DataCleanable
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.Engine.BrowsingData.Companion.PERMISSIONS
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.BLUETOOTH
@@ -25,13 +31,15 @@ import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity
  *
  */
 class SitePermissionsStorage(
-    context: Context
+    context: Context,
+    private val dataCleanable: DataCleanable? = null
 ) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var databaseInitializer = {
         SitePermissionsDatabase.get(context)
     }
 
+    private val coroutineScope = CoroutineScope(Main)
     private val database by lazy { databaseInitializer() }
 
     /**
@@ -51,6 +59,9 @@ class SitePermissionsStorage(
      * @param sitePermissions the sitePermissions to be updated.
      */
     fun update(sitePermissions: SitePermissions) {
+        coroutineScope.launch {
+            dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
+        }
         database
             .sitePermissionsDao()
             .update(
@@ -115,6 +126,9 @@ class SitePermissionsStorage(
      * @param sitePermissions the sitePermissions to be deleted from the storage.
      */
     fun remove(sitePermissions: SitePermissions) {
+        coroutineScope.launch {
+            dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS), sitePermissions.origin)
+        }
         database
             .sitePermissionsDao()
             .deleteSitePermissions(
@@ -126,6 +140,9 @@ class SitePermissionsStorage(
      * Deletes all sitePermissions sitePermissions.
      */
     fun removeAll() {
+        coroutineScope.launch {
+            dataCleanable?.clearData(Engine.BrowsingData.select(PERMISSIONS))
+        }
         return database
             .sitePermissionsDao()
             .deleteAllSitePermissions()
