@@ -715,6 +715,8 @@ void DataChannelConnection::SetSignals(const std::string& aTransportId) {
   mTransportId = aTransportId;
   mTransportHandler->SignalPacketReceived.connect(
       this, &DataChannelConnection::SctpDtlsInput);
+  mTransportHandler->SignalStateChange.connect(
+      this, &DataChannelConnection::TransportStateChange);
   // SignalStateChange() doesn't call you with the initial state
   if (mTransportHandler->GetState(mTransportId, false) ==
       TransportLayer::TS_OPEN) {
@@ -722,15 +724,21 @@ void DataChannelConnection::SetSignals(const std::string& aTransportId) {
     CompleteConnect();
   } else {
     DC_DEBUG(("Setting transport signals, dtls not open yet"));
-    mTransportHandler->SignalStateChange.connect(
-        this, &DataChannelConnection::TransportStateChange);
   }
 }
 
 void DataChannelConnection::TransportStateChange(
     const std::string& aTransportId, TransportLayer::State aState) {
-  if (aState == TransportLayer::TS_OPEN && aTransportId == mTransportId) {
-    CompleteConnect();
+  if (aTransportId == mTransportId) {
+    if (aState == TransportLayer::TS_OPEN) {
+      DC_DEBUG(("Transport is open!"));
+      CompleteConnect();
+    } else if (aState == TransportLayer::TS_CLOSED ||
+               aState == TransportLayer::TS_NONE ||
+               aState == TransportLayer::TS_ERROR) {
+      DC_DEBUG(("Transport is closed!"));
+      Stop();
+    }
   }
 }
 

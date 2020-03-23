@@ -1051,10 +1051,6 @@ nsresult PeerConnectionImpl::InitializeDataChannel() {
 
   if (NS_FAILED(rv)) {
     CSFLogDebug(LOGTAG, "%s: We did not negotiate datachannel", __FUNCTION__);
-    if (mDataConnection) {
-      mDataConnection->Destroy();
-      mDataConnection = nullptr;
-    }
     return NS_OK;
   }
 
