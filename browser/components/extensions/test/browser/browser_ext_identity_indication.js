@@ -29,7 +29,7 @@ function confirmExtensionPage() {
 
   is(
     getComputedStyle(identityIconEl).listStyleImage,
-    'url("chrome://mozapps/skin/extensions/extensionGeneric-16.svg")',
+    'url("chrome://mozapps/skin/extensions/extension.svg")',
     "Identity icon should be the default extension icon"
   );
 
