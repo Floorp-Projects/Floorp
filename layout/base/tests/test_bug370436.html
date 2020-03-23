@@ -12,7 +12,6 @@
 <body>
 
 <script class="testbody" type="application/javascript">
-<!--
 words = new Array()
 
 function expandStringOffsetToWord(data, offset)
@@ -35,14 +34,14 @@ function onContextMenu(e)
 
 function startTest()
 {
-  ta = document.getElementById('blah');
+  var ta = document.getElementById('blah');
   ta.focus();
   ta.selectionStart = ta.selectionEnd = ta.value.length;
 
-// Note: This test, intentionally or by accident, relies on sending button '0'
-// with contextMenu, which triggers some key-equiv stuff in
-// PresShell::AdjustContextMenuKeyEvent.
-var mouseParams = { type: 'contextmenu', button: 0 };
+  // Note: This test, intentionally or by accident, relies on sending button '0'
+  // with contextMenu, which triggers some key-equiv stuff in
+  // PresShell::AdjustContextMenuKeyEvent.
+  var mouseParams = { type: 'contextmenu', button: 0 };
 
   /* Put cursor at start and middle of "sheep" */
   synthesizeKey("KEY_ArrowUp")
@@ -79,7 +78,6 @@ var mouseParams = { type: 'contextmenu', button: 0 };
 
 SimpleTest.waitForExplicitFinish()
 SimpleTest.waitForFocus(startTest)
--->
 </script>
 
 <p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=370436">Mozilla Bug 370436</a></p>
