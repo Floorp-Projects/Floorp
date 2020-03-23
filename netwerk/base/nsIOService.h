@@ -227,7 +227,6 @@ class nsIOService final : public nsIIOService,
   Mutex mMutex;
   nsTArray<int32_t> mRestrictedPortList;
 
-  static bool sIsDataURIUniqueOpaqueOrigin;
   static bool sBlockToplevelDataUriNavigations;
 
   uint32_t mTotalRequests;

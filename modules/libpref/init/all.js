@@ -4639,13 +4639,6 @@ pref("dom.maxHardwareConcurrency", 16);
   pref("osfile.reset_worker_delay", 30000);
 #endif
 
-// TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
-// If true, data: URIs will be treated as unique opaque origins, hence will use
-// a NullPrincipal as the security context.
-// Otherwise it will inherit the origin from parent node, this is the legacy
-// behavior of Firefox.
-pref("security.data_uri.unique_opaque_origin", true);
-
 // If true, all toplevel data: URI navigations will be blocked.
 // Please note that manually entering a data: URI in the
 // URL-Bar will not be blocked when flipping this pref.

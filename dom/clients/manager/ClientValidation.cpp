@@ -6,7 +6,7 @@
 
 #include "ClientValidation.h"
 
-#include "ClientPrefs.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/net/MozURL.h"
 
 namespace mozilla {
@@ -111,7 +111,7 @@ bool ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
 
       // We have some tests that use data: URL windows without an opaque
       // origin.  This should only happen when a pref is set.
-      if (!ClientPrefsGetDataURLUniqueOpaqueOrigin() &&
+      if (!StaticPrefs::security_data_uri_unique_opaque_origin() &&
           scheme.LowerCaseEqualsLiteral("data")) {
         return true;
       }
@@ -135,7 +135,7 @@ bool ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
              scheme.LowerCaseEqualsLiteral("javascript") ||
              scheme.LowerCaseEqualsLiteral("view-source") ||
 
-             (!ClientPrefsGetDataURLUniqueOpaqueOrigin() &&
+             (!StaticPrefs::security_data_uri_unique_opaque_origin() &&
               scheme.LowerCaseEqualsLiteral("data"));
     }
     case PrincipalInfo::TNullPrincipalInfo: {
