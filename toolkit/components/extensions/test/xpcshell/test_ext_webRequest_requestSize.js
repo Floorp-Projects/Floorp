@@ -48,8 +48,7 @@ add_task(async function test_request_response_size() {
   await ext.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
-    `${gServerUrl}/dummy`,
-    { ext }
+    `${gServerUrl}/dummy`
   );
   await ext.awaitMessage("check");
   await ext.awaitMessage("done");
