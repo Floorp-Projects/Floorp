@@ -1627,9 +1627,9 @@ nsIFrame* nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
 }
 
 // static
-bool nsLayoutUtils::IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame,
-                                                  nsIFrame* aFrame,
-                                                  nsIFrame* aCommonAncestor) {
+bool nsLayoutUtils::IsProperAncestorFrameCrossDoc(
+    const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
+    const nsIFrame* aCommonAncestor) {
   if (aFrame == aAncestorFrame) return false;
   return IsAncestorFrameCrossDoc(aAncestorFrame, aFrame, aCommonAncestor);
 }
@@ -2661,19 +2661,19 @@ gfxSize nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
   return gfxSize(1, 1);
 }
 
-nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrame(nsIFrame* aFrame1,
-                                                        nsIFrame* aFrame2) {
-  AutoTArray<nsIFrame*, 100> ancestors1;
-  AutoTArray<nsIFrame*, 100> ancestors2;
-  nsIFrame* commonAncestor = nullptr;
+const nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrame(
+    const nsIFrame* aFrame1, const nsIFrame* aFrame2) {
+  AutoTArray<const nsIFrame*, 100> ancestors1;
+  AutoTArray<const nsIFrame*, 100> ancestors2;
+  const nsIFrame* commonAncestor = nullptr;
   if (aFrame1->PresContext() == aFrame2->PresContext()) {
     commonAncestor = aFrame1->PresShell()->GetRootFrame();
   }
-  for (nsIFrame* f = aFrame1; f != commonAncestor;
+  for (const nsIFrame* f = aFrame1; f != commonAncestor;
        f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     ancestors1.AppendElement(f);
   }
-  for (nsIFrame* f = aFrame2; f != commonAncestor;
+  for (const nsIFrame* f = aFrame2; f != commonAncestor;
        f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     ancestors2.AppendElement(f);
   }
@@ -2692,7 +2692,7 @@ nsIFrame* nsLayoutUtils::FindNearestCommonAncestorFrame(nsIFrame* aFrame1,
 nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoints(
     nsIFrame* aFromFrame, nsIFrame* aToFrame, uint32_t aPointCount,
     CSSPoint* aPoints) {
-  nsIFrame* nearestCommonAncestor =
+  const nsIFrame* nearestCommonAncestor =
       FindNearestCommonAncestorFrame(aFromFrame, aToFrame);
   if (!nearestCommonAncestor) {
     return NO_COMMON_ANCESTOR;
@@ -2728,8 +2728,8 @@ nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoints(
 }
 
 nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoint(
-    nsIFrame* aFromFrame, nsIFrame* aToFrame, nsPoint& aPoint) {
-  nsIFrame* nearestCommonAncestor =
+    const nsIFrame* aFromFrame, const nsIFrame* aToFrame, nsPoint& aPoint) {
+  const nsIFrame* nearestCommonAncestor =
       FindNearestCommonAncestorFrame(aFromFrame, aToFrame);
   if (!nearestCommonAncestor) {
     return NO_COMMON_ANCESTOR;
@@ -2761,8 +2761,8 @@ nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoint(
 }
 
 nsLayoutUtils::TransformResult nsLayoutUtils::TransformRect(
-    nsIFrame* aFromFrame, nsIFrame* aToFrame, nsRect& aRect) {
-  nsIFrame* nearestCommonAncestor =
+    const nsIFrame* aFromFrame, const nsIFrame* aToFrame, nsRect& aRect) {
+  const nsIFrame* nearestCommonAncestor =
       FindNearestCommonAncestorFrame(aFromFrame, aToFrame);
   if (!nearestCommonAncestor) {
     return NO_COMMON_ANCESTOR;

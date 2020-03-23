@@ -584,8 +584,8 @@ class nsLayoutUtils {
    * aFrame == aAncestorFrame.
    */
   static bool IsProperAncestorFrameCrossDoc(
-      nsIFrame* aAncestorFrame, nsIFrame* aFrame,
-      nsIFrame* aCommonAncestor = nullptr);
+      const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
+      const nsIFrame* aCommonAncestor = nullptr);
 
   /**
    * IsAncestorFrameCrossDoc checks whether aAncestorFrame is an ancestor
@@ -951,8 +951,8 @@ class nsLayoutUtils {
    * Find the nearest common ancestor frame for aFrame1 and aFrame2. The
    * ancestor frame could be cross-doc.
    */
-  static nsIFrame* FindNearestCommonAncestorFrame(nsIFrame* aFrame1,
-                                                  nsIFrame* aFrame2);
+  static const nsIFrame* FindNearestCommonAncestorFrame(
+      const nsIFrame* aFrame1, const nsIFrame* aFrame2);
 
   /**
    * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
@@ -978,16 +978,17 @@ class nsLayoutUtils {
    * Same as above function, but transform points in app units and
    * handle 1 point per call.
    */
-  static TransformResult TransformPoint(nsIFrame* aFromFrame,
-                                        nsIFrame* aToFrame, nsPoint& aPoint);
+  static TransformResult TransformPoint(const nsIFrame* aFromFrame,
+                                        const nsIFrame* aToFrame,
+                                        nsPoint& aPoint);
 
   /**
    * Transforms a rect from aFromFrame to aToFrame. In app units.
    * Returns the bounds of the actual rect if the transform requires rotation
    * or anything complex like that.
    */
-  static TransformResult TransformRect(nsIFrame* aFromFrame, nsIFrame* aToFrame,
-                                       nsRect& aRect);
+  static TransformResult TransformRect(const nsIFrame* aFromFrame,
+                                       const nsIFrame* aToFrame, nsRect& aRect);
 
   /**
    * Converts app units to pixels (with optional snapping) and appends as a
