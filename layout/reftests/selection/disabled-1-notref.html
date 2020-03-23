@@ -1,0 +1,6 @@
+<!doctype html>
+<input id="outside" value="abc">
+<iframe srcdoc="<!doctype html>Something inside <input value='some input'>"></iframe>
+<script>
+document.getElementById("outside").select();
+</script>
