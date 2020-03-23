@@ -123,7 +123,7 @@ struct DisplayPortMarginsPropertyData {
 }  // namespace mozilla
 
 // For GetDisplayPort
-enum class RelativeTo { ScrollPort, ScrollFrame };
+enum class DisplayportRelativeTo { ScrollPort, ScrollFrame };
 
 // Flags to customize the behavior of nsLayoutUtils::DrawString.
 enum class DrawStringFlags {
@@ -215,9 +215,10 @@ class nsLayoutUtils {
    * Get display port for the given element, relative to the specified entity,
    * defaulting to the scrollport.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect* aResult,
-                             RelativeTo aRelativeTo = RelativeTo::ScrollPort,
-                             bool* aOutPainted = nullptr);
+  static bool GetDisplayPort(
+      nsIContent* aContent, nsRect* aResult,
+      DisplayportRelativeTo aRelativeTo = DisplayportRelativeTo::ScrollPort,
+      bool* aOutPainted = nullptr);
 
   /**
    * Check whether the given element has a displayport.
@@ -269,7 +270,7 @@ class nsLayoutUtils {
    */
   static bool GetDisplayPortForVisibilityTesting(
       nsIContent* aContent, nsRect* aResult,
-      RelativeTo aRelativeTo = RelativeTo::ScrollPort);
+      DisplayportRelativeTo aRelativeTo = DisplayportRelativeTo::ScrollPort);
 
   enum class RepaintMode : uint8_t { Repaint, DoNotRepaint };
 

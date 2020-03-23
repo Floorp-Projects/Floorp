@@ -3887,8 +3887,8 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
     // resolution into account, so we must.
     if (rootPresContext->IsRootContentDocument() &&
         rootFrame == rootPresShell->GetRootScrollFrame()) {
-      rootCompBounds = rootCompBounds.RemoveResolution(
-          rootPresShell->GetResolution());
+      rootCompBounds =
+          rootCompBounds.RemoveResolution(rootPresShell->GetResolution());
     }
 
     rootDisplayPort = rootCompBounds;
@@ -3989,8 +3989,8 @@ bool ScrollFrameHelper::DecideScrollableLayer(
     // displayport base.
     MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
     nsRect displayPort;
-    usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayPort,
-                                                     RelativeTo::ScrollFrame);
+    usingDisplayPort = nsLayoutUtils::GetDisplayPort(
+        content, &displayPort, DisplayportRelativeTo::ScrollFrame);
 
     if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
@@ -4107,7 +4107,7 @@ bool ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const {
   // Use the right rect depending on if a display port is set.
   nsRect displayPort;
   bool usingDisplayport = nsLayoutUtils::GetDisplayPort(
-      mOuter->GetContent(), &displayPort, RelativeTo::ScrollFrame);
+      mOuter->GetContent(), &displayPort, DisplayportRelativeTo::ScrollFrame);
   return aRect.Intersects(
       ExpandRectToNearlyVisible(usingDisplayport ? displayPort : mScrollPort));
 }
