@@ -160,12 +160,12 @@ wasmFailValidateText(
 `(module
   (func $func$0
    (select
-    (if f32
+    (if (result f32)
      (i32.const 0)
      (f32.const 0)
      (i32.const 0)
     )
-    (if f32
+    (if (result f32)
      (i32.const 0)
      (f32.const 0)
      (i32.const 0)
