@@ -27,7 +27,7 @@
 
 .frames .badge {
   flex-shrink: 0;
-  margin-right: 4px;
+  margin-inline-end: 4px;
 }
 
 .frames .location {
@@ -40,7 +40,16 @@
   /* Trick to get the ellipsis at the start of the string */
   text-overflow: ellipsis;
   direction: rtl;
+}
+
+.call-stack-pane:dir(ltr) .frames .location {
+  padding-right: 10px;
   text-align: right;
+}
+
+.call-stack-pane:dir(rtl) .frames .location {
+  padding-left: 10px;
+  text-align: left;
 }
 
 .call-stack-pane .location-async-cause {
@@ -49,7 +58,6 @@
 
 .theme-light .frames .location {
   color: var(--theme-comment);
-  padding-right: 20px;
 }
 
 :root.theme-dark .frames .location {
@@ -60,7 +68,7 @@
 .frames .title {
   text-overflow: ellipsis;
   overflow: hidden;
-  padding-left: 10px;
+  padding-inline-start: 10px;
 }
 
 .frames [role="list"] [role="listitem"]:hover,
@@ -69,7 +77,9 @@
 }
 
 .frames [role="list"] [role="listitem"]:hover .location-async-cause,
-.frames [role="list"] [role="listitem"]:focus .location-async-cause {
+.frames [role="list"] [role="listitem"]:focus .location-async-cause,
+.frames [role="list"] [role="listitem"]:hover .async-label,
+.frames [role="list"] [role="listitem"]:focus .async-label {
   background-color: var(--theme-body-background);
 }
 
@@ -143,7 +153,7 @@
   display: block;
   z-index: 4;
   position: relative;
-  padding-left: 17px;
+  padding-inline-start: 17px;
   width: 100%;
   pointer-events: none;
 }
@@ -161,7 +171,7 @@
 
 .call-stack-pane .async-label {
   z-index: 1;
-  background-color: var(--theme-body-background);
+  background-color: var(--theme-sidebar-background);
   padding: 0 3px;
   display: inline-block;
 }
