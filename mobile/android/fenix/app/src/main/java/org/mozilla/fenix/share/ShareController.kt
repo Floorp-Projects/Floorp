@@ -84,7 +84,7 @@ class DefaultShareController(
 
     override fun handleShareToApp(app: AppShareOption) {
         lifecycleScope.launch(Dispatchers.IO) {
-            recentAppsStorage.updateRecentApp(app.packageName)
+            recentAppsStorage.updateRecentApp(app.activityName)
         }
 
         val intent = Intent(ACTION_SEND).apply {

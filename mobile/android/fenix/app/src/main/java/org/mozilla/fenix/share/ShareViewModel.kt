@@ -90,7 +90,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             }
             val shareAppsActivities = getIntentActivities(shareIntent, getApplication())
             var apps = buildAppsList(shareAppsActivities, getApplication())
-            recentAppsStorage.updateDatabaseWithNewApps(apps.map { app -> app.packageName })
+            recentAppsStorage.updateDatabaseWithNewApps(apps.map { app -> app.activityName })
             val recentApps = buildRecentAppsList(apps)
             apps = filterOutRecentApps(apps, recentApps)
 
@@ -117,7 +117,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         val result: MutableList<AppShareOption> = ArrayList()
         for (recentApp in recentAppsDatabase) {
             for (app in apps) {
-                if (recentApp.packageName == app.packageName) {
+                if (recentApp.activityName == app.activityName) {
                     result.add(app)
                 }
             }

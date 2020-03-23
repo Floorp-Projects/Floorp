@@ -32,7 +32,7 @@ class AppShareAdapter(
 
     private object DiffCallback : DiffUtil.ItemCallback<AppShareOption>() {
         override fun areItemsTheSame(oldItem: AppShareOption, newItem: AppShareOption) =
-            oldItem.packageName == newItem.packageName
+            oldItem.activityName == newItem.activityName
 
         override fun areContentsTheSame(oldItem: AppShareOption, newItem: AppShareOption) =
             oldItem == newItem
