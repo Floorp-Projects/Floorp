@@ -31,12 +31,11 @@ add_task(async function test_swap_protocol() {
     { uri: uri8, title: "title" },
   ]);
 
+  // uri1, uri2, and uri5 won't appear since they are duplicates of uri6, except
+  // for their prefixes.
   let allMatches = [
-    { uri: uri1, title: "title" },
-    { uri: uri2, title: "title" },
     { uri: uri3, title: "title" },
     { uri: uri4, title: "title" },
-    { uri: uri5, title: "title" },
     { uri: uri6, title: "title" },
   ];
 
@@ -47,10 +46,7 @@ add_task(async function test_swap_protocol() {
   info("http://www.site matches 'www.site' pages");
   await check_autocomplete({
     search: "http://www.site",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }],
   });
 
   info("http://site matches all site");
@@ -74,10 +70,7 @@ add_task(async function test_swap_protocol() {
   info("https://www.site matches all site");
   await check_autocomplete({
     search: "https://www.site",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }],
   });
 
   info("https://site matches all site");
@@ -89,17 +82,13 @@ add_task(async function test_swap_protocol() {
   info("www.site matches 'www.site' pages");
   await check_autocomplete({
     search: "www.site",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }],
   });
 
   info("w matches 'w' pages, including 'www'");
   await check_autocomplete({
     search: "w",
     matches: [
-      { uri: uri1, title: "title" },
       { uri: uri5, title: "title" },
       { uri: uri7, title: "title" },
       { uri: uri8, title: "title" },
@@ -110,7 +99,6 @@ add_task(async function test_swap_protocol() {
   await check_autocomplete({
     search: "http://w",
     matches: [
-      { uri: uri1, title: "title" },
       { uri: uri5, title: "title" },
       { uri: uri7, title: "title" },
       { uri: uri8, title: "title" },
@@ -126,21 +114,13 @@ add_task(async function test_swap_protocol() {
   info("ww matches no 'ww' pages, including 'www'");
   await check_autocomplete({
     search: "ww",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-      { uri: uri8, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }, { uri: uri8, title: "title" }],
   });
 
   info("http://ww matches no 'ww' pages, including 'www'");
   await check_autocomplete({
     search: "http://ww",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-      { uri: uri8, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }, { uri: uri8, title: "title" }],
   });
 
   info("http://www.ww matches nothing");
@@ -152,21 +132,13 @@ add_task(async function test_swap_protocol() {
   info("www matches 'www' pages");
   await check_autocomplete({
     search: "www",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-      { uri: uri8, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }, { uri: uri8, title: "title" }],
   });
 
   info("http://www matches 'www' pages");
   await check_autocomplete({
     search: "http://www",
-    matches: [
-      { uri: uri1, title: "title" },
-      { uri: uri5, title: "title" },
-      { uri: uri8, title: "title" },
-    ],
+    matches: [{ uri: uri5, title: "title" }, { uri: uri8, title: "title" }],
   });
 
   info("http://www.www matches nothing");

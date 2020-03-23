@@ -434,11 +434,6 @@ function addAutofillTasks(origins) {
           comment: "https://" + comment,
           style: ["autofill", "heuristic"],
         },
-        {
-          value: "http://" + url,
-          comment: "test visit for http://" + url,
-          style: ["favicon"],
-        },
       ],
     });
     await cleanup();
@@ -479,11 +474,6 @@ function addAutofillTasks(origins) {
           comment: "https://" + comment,
           style: ["autofill", "heuristic"],
         },
-        {
-          value: "http://" + url,
-          comment: "test visit for http://" + url,
-          style: ["favicon"],
-        },
       ],
     });
 
@@ -523,11 +513,6 @@ function addAutofillTasks(origins) {
           value: url,
           comment: "https://www." + comment,
           style: ["autofill", "heuristic"],
-        },
-        {
-          value: "http://" + url,
-          comment: "test visit for http://" + url,
-          style: ["favicon"],
         },
         {
           value: "https://" + url,
