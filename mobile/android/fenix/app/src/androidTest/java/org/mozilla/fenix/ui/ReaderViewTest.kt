@@ -4,19 +4,20 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
+import android.view.View
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.readerViewRobot
+import androidx.test.espresso.IdlingRegistry
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 
 /**
  *  Tests for verifying basic functionality of content context menus
@@ -29,7 +30,7 @@ import org.mozilla.fenix.ui.robots.readerViewRobot
 
 class ReaderViewTest {
     private lateinit var mockWebServer: MockWebServer
-    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private var readerViewNotificationDot: ViewVisibilityIdlingResource? = null
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -40,11 +41,17 @@ class ReaderViewTest {
             setDispatcher(AndroidAssetDispatcher())
             start()
         }
+
+        readerViewNotificationDot = ViewVisibilityIdlingResource(
+            activityIntentTestRule.activity.findViewById(R.id.notification_dot),
+            View.VISIBLE
+        )
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+        IdlingRegistry.getInstance().unregister(readerViewNotificationDot)
     }
 
     /**
@@ -63,6 +70,8 @@ class ReaderViewTest {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
             verifyPageContent(readerViewPage.content)
         }
+
+        IdlingRegistry.getInstance().register(readerViewNotificationDot)
 
         readerViewRobot {
             verifyReaderViewDetected(true)
@@ -112,6 +121,8 @@ class ReaderViewTest {
             verifyPageContent(readerViewPage.content)
         }
 
+        IdlingRegistry.getInstance().register(readerViewNotificationDot)
+
         readerViewRobot {
             verifyReaderViewDetected(true)
         }
@@ -142,6 +153,8 @@ class ReaderViewTest {
             verifyPageContent(readerViewPage.content)
         }
 
+        IdlingRegistry.getInstance().register(readerViewNotificationDot)
+
         readerViewRobot {
             verifyReaderViewDetected(true)
         }
@@ -166,7 +179,6 @@ class ReaderViewTest {
     }
 
     @Test
-    @Ignore("Intermittent failure. Fix in https://github.com/mozilla-mobile/fenix/issues/9188")
     fun verifyReaderViewAppearanceFontToggle() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
@@ -175,6 +187,8 @@ class ReaderViewTest {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
             verifyPageContent(readerViewPage.content)
         }
+
+        IdlingRegistry.getInstance().register(readerViewNotificationDot)
 
         readerViewRobot {
             verifyReaderViewDetected(true)
@@ -208,6 +222,8 @@ class ReaderViewTest {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
             verifyPageContent(readerViewPage.content)
         }
+
+        IdlingRegistry.getInstance().register(readerViewNotificationDot)
 
         readerViewRobot {
             verifyReaderViewDetected(true)
@@ -247,6 +263,8 @@ class ReaderViewTest {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
             verifyPageContent(readerViewPage.content)
         }
+
+        IdlingRegistry.getInstance().register(readerViewNotificationDot)
 
         readerViewRobot {
             verifyReaderViewDetected(true)
