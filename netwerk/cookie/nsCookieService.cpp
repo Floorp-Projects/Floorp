@@ -110,6 +110,9 @@ static const int64_t kCookiePurgeAge =
 #undef ADD_TEN_PERCENT
 #define ADD_TEN_PERCENT(i) static_cast<uint32_t>((i) + (i) / 10)
 
+#define CONSOLE_SAMESITE_CATEGORY NS_LITERAL_CSTRING("cookieSameSite")
+#define CONSOLE_GENERIC_CATEGORY NS_LITERAL_CSTRING("cookies")
+
 // default limits for the cookie list. these can be tuned by the
 // network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
 static const uint32_t kMaxNumberOfCookies = 3000;
@@ -3842,6 +3845,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
         sameSiteSet = true;
       } else {
         LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                            CONSOLE_GENERIC_CATEGORY,
                             NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
                             aCookieData.name());
       }
@@ -3861,6 +3865,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
     if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
         StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
       LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                          CONSOLE_SAMESITE_CATEGORY,
                           NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
                           aCookieData.name());
       return newCookie;
@@ -3869,6 +3874,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
     // if sameSite=lax by default is disabled, we want to warn the user.
     LogMessageToConsole(
         aChannel, aHostURI, nsIScriptError::warningFlag,
+        CONSOLE_SAMESITE_CATEGORY,
         NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecureForBeta"),
         aCookieData.name(), SAMESITE_MDN_URL);
   }
@@ -3877,10 +3883,12 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
     if (StaticPrefs::network_cookie_sameSite_laxByDefault()) {
       LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                          CONSOLE_SAMESITE_CATEGORY,
                           NS_LITERAL_CSTRING("CookieLaxForced"),
                           aCookieData.name());
     } else {
       LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
+                          CONSOLE_SAMESITE_CATEGORY,
                           NS_LITERAL_CSTRING("CookieLaxForcedForBeta"),
                           aCookieData.name(), SAMESITE_MDN_URL);
     }
@@ -3896,6 +3904,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
 // static
 void nsCookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
                                           uint32_t aErrorFlags,
+                                          const nsACString& aCategory,
                                           const nsACString& aMsg,
                                           const nsACString& aCookieName,
                                           const nsAString& aMDNURL) {
@@ -3918,7 +3927,7 @@ void nsCookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
     params.AppendElement(aMDNURL);
   }
 
-  httpChannel->AddConsoleReport(aErrorFlags, NS_LITERAL_CSTRING("Security"),
+  httpChannel->AddConsoleReport(aErrorFlags, aCategory,
                                 nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
                                 aMsg, params);
 }
