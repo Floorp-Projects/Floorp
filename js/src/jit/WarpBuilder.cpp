@@ -2160,3 +2160,75 @@ bool WarpBuilder::build_GetElemSuper(BytecodeLocation loc) {
 
   return buildGetPropSuperOp(loc, obj, receiver, id);
 }
+
+bool WarpBuilder::buildInitPropOp(BytecodeLocation loc, MDefinition* obj,
+                                  MDefinition* id, MDefinition* val) {
+  // We need a GC post barrier. We don't need a TI barrier. We pass true for
+  // guardHoles, although the prototype chain is ignored for InitProp/InitElem.
+  bool strict = false;
+  bool needsPostBarrier = true;
+  bool needsTypeBarrier = false;
+  bool guardHoles = true;
+  auto* ins =
+      MSetPropertyCache::New(alloc(), obj, id, val, strict, needsPostBarrier,
+                             needsTypeBarrier, guardHoles);
+  current->add(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_InitProp(BytecodeLocation loc) {
+  MDefinition* val = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  PropertyName* name = loc.getPropertyName(script_);
+  MConstant* id = constant(StringValue(name));
+
+  return buildInitPropOp(loc, obj, id, val);
+}
+
+bool WarpBuilder::build_InitLockedProp(BytecodeLocation loc) {
+  return build_InitProp(loc);
+}
+
+bool WarpBuilder::build_InitHiddenProp(BytecodeLocation loc) {
+  return build_InitProp(loc);
+}
+
+bool WarpBuilder::build_InitElem(BytecodeLocation loc) {
+  MDefinition* val = current->pop();
+  MDefinition* id = current->pop();
+  MDefinition* obj = current->peek(-1);
+  return buildInitPropOp(loc, obj, id, val);
+}
+
+bool WarpBuilder::build_InitHiddenElem(BytecodeLocation loc) {
+  return build_InitElem(loc);
+}
+
+bool WarpBuilder::build_InitElemArray(BytecodeLocation loc) {
+  MDefinition* val = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  // Note: getInitElemArrayIndex asserts the index fits in int32_t.
+  uint32_t index = loc.getInitElemArrayIndex();
+  MConstant* indexConst = constant(Int32Value(index));
+
+  // TODO: we can probably just use MStoreElement like IonBuilder's fast path.
+  // Simpler than IonBuilder because we don't have to worry about maintaining TI
+  // invariants.
+  return buildInitPropOp(loc, obj, indexConst, val);
+}
+
+bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
+  MDefinition* val = current->pop();
+  MDefinition* index = current->pop();
+  MDefinition* obj = current->peek(-1);
+
+  // Push index + 1.
+  MConstant* constOne = constant(Int32Value(1));
+  MAdd* nextIndex = MAdd::New(alloc(), index, constOne, MIRType::Int32);
+  current->add(nextIndex);
+  current->push(nextIndex);
+
+  return buildInitPropOp(loc, obj, index, val);
+}
