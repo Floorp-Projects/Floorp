@@ -26,6 +26,7 @@ def _generate(output, cbindgen_crate_path, metadata_crate_path,
               in_tree_dependencies):
     env = os.environ.copy()
     env['CARGO'] = str(buildconfig.substs['CARGO'])
+    env['RUSTC'] = str(buildconfig.substs['RUSTC'])
 
     p = subprocess.Popen([
         buildconfig.substs['CBINDGEN'],
