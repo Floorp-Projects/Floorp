@@ -253,31 +253,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
       JS::Handle<JSObject*> aTargetScope, JS::MutableHandle<JS::Value> aValue,
       ConsoleCallData* aData, nsTArray<nsString>* aGroupStack);
 
-  // If the first JS::Value of the array is a string, this method uses it to
-  // format a string. The supported sequences are:
-  //   %s    - string
-  //   %d,%i - integer
-  //   %f    - double
-  //   %o,%O - a JS object.
-  //   %c    - style string.
-  // The output is an array where any object is a separated item, the rest is
-  // unified in a format string.
-  // Example if the input is:
-  //   "string: %s, integer: %d, object: %o, double: %d", 's', 1, window, 0.9
-  // The output will be:
-  //   [ "string: s, integer: 1, object: ", window, ", double: 0.9" ]
-  //
-  // The aStyles array is populated with the style strings that the function
-  // finds based the format string. The index of the styles matches the indexes
-  // of elements that need the custom styling from aSequence. For elements with
-  // no custom styling the array is padded with null elements.
-  bool ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
-                        Sequence<JS::Value>& aSequence,
-                        Sequence<nsString>& aStyles) const;
-
-  void MakeFormatString(nsCString& aFormat, int32_t aInteger, int32_t aMantissa,
-                        char aCh) const;
-
   enum TimerStatus {
     eTimerUnknown,
     eTimerDone,
