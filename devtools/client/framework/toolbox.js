@@ -3602,10 +3602,6 @@ Toolbox.prototype = {
   _destroyToolbox: async function() {
     this.emit("destroy");
 
-    // This flag will be checked by Fronts in order to decide if they should
-    // skip their destroy.
-    this.target.client.isToolboxDestroy = true;
-
     this.off("select", this._onToolSelected);
     this.off("host-changed", this._refreshHostTitle);
 
