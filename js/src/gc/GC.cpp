@@ -2182,11 +2182,23 @@ static void UpdateArenaPointersTyped(MovingTracer* trc, Arena* arena) {
   }
 }
 
+static bool CanUpdateKindInBackground(AllocKind kind) {
+  // We try to update as many GC things in parallel as we can, but there are
+  // kinds for which this might not be safe:
+  //  - we assume JSObjects that are foreground finalized are not safe to
+  //    update in parallel
+  //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
+  return js::gc::IsBackgroundFinalized(kind) && !IsShapeAllocKind(kind);
+}
+
 /*
  * Update the internal pointers for all cells in an arena.
  */
 static void UpdateArenaPointers(MovingTracer* trc, Arena* arena) {
   AllocKind kind = arena->getAllocKind();
+
+  MOZ_ASSERT_IF(!CanUpdateKindInBackground(kind),
+                CurrentThreadCanAccessRuntime(trc->runtime()));
 
   switch (kind) {
 #define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, \
@@ -2308,19 +2320,6 @@ void ArenasToUpdate::next() {
 
   kind = nextAllocKind(kind);
   settle();
-}
-
-static bool CanUpdateKindInBackground(AllocKind kind) {
-  // We try to update as many GC things in parallel as we can, but there are
-  // kinds for which this might not be safe:
-  //  - we assume JSObjects that are foreground finalized are not safe to
-  //    update in parallel
-  //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
-  if (!js::gc::IsBackgroundFinalized(kind) || IsShapeAllocKind(kind)) {
-    return false;
-  }
-
-  return true;
 }
 
 static AllocKinds ForegroundUpdateKinds(AllocKinds kinds) {
