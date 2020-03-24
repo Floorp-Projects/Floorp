@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.test.ThrowProperty
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -15,8 +16,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabSessionTitleObserverTest {
@@ -85,13 +84,5 @@ class CustomTabSessionTitleObserverTest {
         override fun setOnEditListener(listener: Toolbar.OnEditListener) = Unit
         override fun displayMode() = Unit
         override fun editMode() = Unit
-    }
-
-    private class ThrowProperty<T> : ReadWriteProperty<Any, T> {
-        override fun getValue(thisRef: Any, property: KProperty<*>): T =
-            throw UnsupportedOperationException("Cannot get $property")
-
-        override fun setValue(thisRef: Any, property: KProperty<*>, value: T) =
-            throw UnsupportedOperationException("Cannot set $property")
     }
 }
