@@ -62,11 +62,23 @@ class Page extends ContentProcessDomain {
       this.enabled = true;
       this.contextObserver.on("frame-navigated", this._onFrameNavigated);
 
-      this.chromeEventHandler.addEventListener("DOMContentLoaded", this, {
+      this.chromeEventHandler.addEventListener("readystatechange", this, {
         mozSystemGroup: true,
+        capture: true,
       });
       this.chromeEventHandler.addEventListener("pagehide", this, {
         mozSystemGroup: true,
+      });
+      this.chromeEventHandler.addEventListener("unload", this, {
+        mozSystemGroup: true,
+        capture: true,
+      });
+      this.chromeEventHandler.addEventListener("DOMContentLoaded", this, {
+        mozSystemGroup: true,
+      });
+      this.chromeEventHandler.addEventListener("load", this, {
+        mozSystemGroup: true,
+        capture: true,
       });
       this.chromeEventHandler.addEventListener("pageshow", this, {
         mozSystemGroup: true,
@@ -78,11 +90,23 @@ class Page extends ContentProcessDomain {
     if (this.enabled) {
       this.contextObserver.off("frame-navigated", this._onFrameNavigated);
 
-      this.chromeEventHandler.removeEventListener("DOMContentLoaded", this, {
+      this.chromeEventHandler.removeEventListener("readystatechange", this, {
         mozSystemGroup: true,
+        capture: true,
       });
       this.chromeEventHandler.removeEventListener("pagehide", this, {
         mozSystemGroup: true,
+      });
+      this.chromeEventHandler.removeEventListener("unload", this, {
+        mozSystemGroup: true,
+        capture: true,
+      });
+      this.chromeEventHandler.removeEventListener("DOMContentLoaded", this, {
+        mozSystemGroup: true,
+      });
+      this.chromeEventHandler.removeEventListener("load", this, {
+        mozSystemGroup: true,
+        capture: true,
       });
       this.chromeEventHandler.removeEventListener("pageshow", this, {
         mozSystemGroup: true,
@@ -279,7 +303,7 @@ class Page extends ContentProcessDomain {
         }
         break;
 
-      case "pageshow":
+      case "load":
         this.emit("Page.loadEventFired", { timestamp });
         if (!isFrame) {
           this.emitLifecycleEvent(
@@ -293,8 +317,17 @@ class Page extends ContentProcessDomain {
         // XXX this should most likely be sent differently
         this.emit("Page.navigatedWithinDocument", { frameId, url });
         this.emit("Page.frameStoppedLoading", { frameId });
-
         break;
+
+      case "readystatechange":
+        if (this.content.document.readState === "loading") {
+          this.emitLifecycleEvent(
+            frameId,
+            /* loaderId */ null,
+            "init",
+            timestamp
+          );
+        }
     }
   }
 
