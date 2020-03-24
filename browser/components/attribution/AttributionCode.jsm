@@ -80,7 +80,16 @@ var AttributionCode = {
         break;
       }
     }
-    return isValid ? parsed : {};
+
+    if (isValid) {
+      return parsed;
+    }
+
+    Services.telemetry
+      .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+      .add("decode_error");
+
+    return {};
   },
 
   /**
@@ -100,15 +109,28 @@ var AttributionCode = {
 
     gCachedAttrData = {};
     if (AppConstants.platform == "win") {
+      let bytes;
       try {
-        let bytes = await OS.File.read(getAttributionFile().path);
-        let decoder = new TextDecoder();
-        let code = decoder.decode(bytes);
-        gCachedAttrData = this.parseAttributionCode(code);
+        bytes = await OS.File.read(getAttributionFile().path);
       } catch (ex) {
-        // The attribution file may already have been deleted,
-        // or it may have never been installed at all;
-        // failure to open or read it isn't an error.
+        if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+          return gCachedAttrData;
+        }
+        Services.telemetry
+          .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+          .add("read_error");
+      }
+      if (bytes) {
+        try {
+          let decoder = new TextDecoder();
+          let code = decoder.decode(bytes);
+          gCachedAttrData = this.parseAttributionCode(code);
+        } catch (ex) {
+          // TextDecoder can throw an error
+          Services.telemetry
+            .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
+            .add("decode_error");
+        }
       }
     } else if (AppConstants.platform == "macosx") {
       try {

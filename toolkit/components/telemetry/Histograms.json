@@ -10728,6 +10728,18 @@
     "kind": "boolean",
     "description": "The result of the default browser check for assist intent."
   },
+  "BROWSER_ATTRIBUTION_ERRORS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "80",
+    "kind": "categorical",
+    "labels": ["read_error", "decode_error"],
+    "description": "Count for the number of errors encountered trying to read the attribution data from the stub installer.",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1621402],
+    "alert_emails": ["aoprea@mozilla.com"],
+    "operating_systems": ["windows"]
+  },
   "MIXED_CONTENT_PAGE_LOAD": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
