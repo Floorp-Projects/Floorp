@@ -5,7 +5,9 @@
 package mozilla.components.feature.customtabs
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +19,7 @@ import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -29,7 +32,8 @@ const val SHORTCUT_CATEGORY = "mozilla.components.pwa.category.SHORTCUT"
 class CustomTabWindowFeature(
     private val activity: Activity,
     private val store: BrowserStore,
-    private val sessionId: String
+    private val sessionId: String,
+    private val crashReporter: CrashReporter? = null
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -39,7 +43,7 @@ class CustomTabWindowFeature(
      * new custom tab with the same styling and layout
      */
     @Suppress("ComplexMethod")
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = PRIVATE)
     internal fun configToIntent(config: CustomTabConfig?): CustomTabsIntent {
         val intent = CustomTabsIntent.Builder().apply {
             setInstantAppsEnabled(false)
@@ -72,7 +76,11 @@ class CustomTabWindowFeature(
                     val windowRequest = state.content.windowRequest
                     if (windowRequest?.type == WindowRequest.Type.OPEN) {
                         val intent = configToIntent(state.config)
-                        intent.launchUrl(activity, windowRequest.url.toUri())
+                        try {
+                            intent.launchUrl(activity, windowRequest.url.toUri())
+                        } catch (e: ActivityNotFoundException) {
+                            crashReporter?.submitCaughtException(e)
+                        }
                         store.dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
                     }
                 }

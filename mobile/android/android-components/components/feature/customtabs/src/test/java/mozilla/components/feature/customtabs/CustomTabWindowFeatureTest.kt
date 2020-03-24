@@ -5,6 +5,7 @@
 package mozilla.components.feature.customtabs
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -16,6 +17,7 @@ import mozilla.components.browser.state.state.CustomTabMenuItem
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -132,5 +134,20 @@ class CustomTabWindowFeatureTest {
 
     private fun assertEqualConfigs(expected: CustomTabConfig, actual: CustomTabConfig) {
         assertEquals(expected.copy(id = ""), actual.copy(id = ""))
+    }
+
+    @Test
+    fun `handles failed request to open window`() {
+        val crashReporter: CrashReporter = mock()
+        val feature = CustomTabWindowFeature(activity, store, sessionId, crashReporter)
+        feature.start()
+
+        val windowRequest: WindowRequest = mock()
+        val exception: ActivityNotFoundException = mock()
+        whenever(windowRequest.type).thenReturn(WindowRequest.Type.OPEN)
+        whenever(windowRequest.url).thenReturn("https://www.firefox.com")
+        whenever(activity.startActivity(any(), any())).thenThrow(exception)
+        store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
+        verify(crashReporter).submitCaughtException(exception)
     }
 }
