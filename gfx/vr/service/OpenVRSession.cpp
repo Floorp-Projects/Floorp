@@ -1135,7 +1135,12 @@ void OpenVRSession::GetControllerDeviceId(
       }
       MOZ_ASSERT(requiredBufferLen && err == ::vr::TrackedProp_Success);
       nsCString deviceId(charBuf);
-      if (deviceId.Find("knuckles") != kNotFound) {
+      if (deviceId.Find("vr_controller_vive") != kNotFound) {
+        aId.AssignLiteral("OpenVR Gamepad");
+        isFound = true;
+        aControllerType = VRControllerType::Vive;
+      } else if (deviceId.Find("knuckles") != kNotFound ||
+        deviceId.Find("valve_controller_knu") != kNotFound) {
         aId.AssignLiteral("OpenVR Knuckles");
         isFound = true;
         aControllerType = VRControllerType::Knuckles;
@@ -1144,22 +1149,24 @@ void OpenVRSession::GetControllerDeviceId(
         isFound = true;
         aControllerType = VRControllerType::Cosmos;
       }
-      requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
+      if (!isFound) {
+        requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
           aDeviceIndex, ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
-      if (requiredBufferLen > 128) {
-        MOZ_CRASH("Larger than the buffer size.");
-      }
-      MOZ_ASSERT(requiredBufferLen && err == ::vr::TrackedProp_Success);
-      deviceId.Assign(charBuf);
-      if (deviceId.Find("MRSOURCE") != kNotFound) {
-        aId.AssignLiteral("Spatial Controller (Spatial Interaction Source) ");
-        mIsWindowsMR = true;
-        isFound = true;
-        aControllerType = VRControllerType::WMR;
+        if (requiredBufferLen > 128) {
+          MOZ_CRASH("Larger than the buffer size.");
+        }
+        MOZ_ASSERT(requiredBufferLen && err == ::vr::TrackedProp_Success);
+        deviceId.Assign(charBuf);
+        if (deviceId.Find("MRSOURCE") != kNotFound) {
+          aId.AssignLiteral("Spatial Controller (Spatial Interaction Source) ");
+          mIsWindowsMR = true;
+          isFound = true;
+          aControllerType = VRControllerType::WMR;
+        }
       }
       if (!isFound) {
-        aId.AssignLiteral("OpenVR Gamepad");
-        aControllerType = VRControllerType::Vive;
+        aId.AssignLiteral("OpenVR Undefined");
+        aControllerType = VRControllerType::_empty;
       }
       break;
     }
