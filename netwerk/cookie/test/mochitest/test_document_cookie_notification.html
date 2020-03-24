@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for document.cookie setter + notification</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function Listener() {
+  SpecialPowers.addObserver(this, "document-set-cookie");
+}
+
+Listener.prototype = {
+  observe(aSubject, aTopic, aData) {
+    is(aTopic, "document-set-cookie", "Notification received");
+    ok(aData.startsWith("a="), "Right cookie received");
+
+    SpecialPowers.removeObserver(this, "document-set-cookie");
+    SimpleTest.finish();
+  }
+}
+
+const cl = new Listener();
+document.cookie = "a=" + Math.random();
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
