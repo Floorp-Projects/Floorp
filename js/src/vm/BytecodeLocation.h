@@ -249,6 +249,15 @@ class BytecodeLocation {
     return GET_ARGC(rawBytecode_);
   }
 
+  uint32_t getInitElemArrayIndex() const {
+    MOZ_ASSERT(is(JSOp::InitElemArray));
+    uint32_t index = GET_UINT32(rawBytecode_);
+    MOZ_ASSERT(index <= INT32_MAX,
+               "the bytecode emitter must never generate JSOp::InitElemArray "
+               "with an index exceeding int32_t range");
+    return index;
+  }
+
   FunctionPrefixKind getFunctionPrefixKind() const {
     MOZ_ASSERT(is(JSOp::SetFunName));
     return FunctionPrefixKind(GET_UINT8(rawBytecode_));

@@ -192,6 +192,13 @@ namespace jit {
   _(GetImport)              \
   _(GetPropSuper)           \
   _(GetElemSuper)           \
+  _(InitProp)               \
+  _(InitLockedProp)         \
+  _(InitHiddenProp)         \
+  _(InitElem)               \
+  _(InitHiddenElem)         \
+  _(InitElemArray)          \
+  _(InitElemInc)            \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)
@@ -288,6 +295,8 @@ class MOZ_STACK_CLASS WarpBuilder {
                                    MDefinition* id);
   MOZ_MUST_USE bool buildSetPropOp(BytecodeLocation loc, MDefinition* obj,
                                    MDefinition* id, MDefinition* val);
+  MOZ_MUST_USE bool buildInitPropOp(BytecodeLocation loc, MDefinition* obj,
+                                    MDefinition* id, MDefinition* val);
   MOZ_MUST_USE bool buildGetPropSuperOp(BytecodeLocation loc, MDefinition* obj,
                                         MDefinition* receiver, MDefinition* id);
 
