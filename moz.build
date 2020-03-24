@@ -80,19 +80,23 @@ with Files("**/reftest.list"):
 
 with Files("**/crashtest*.list"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
-    SCHEDULES.exclusive = ['reftest']
+    SCHEDULES.exclusive = ['crashtest']
+
+with Files("**/a11y.ini"):
+    SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
+    SCHEDULES.exclusive = ['mochitest-a11y']
 
 with Files("**/mochitest.ini"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
-    SCHEDULES.exclusive = ['mochitest']
+    SCHEDULES.exclusive = ['mochitest-plain']
 
 with Files("**/browser.ini"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
-    SCHEDULES.exclusive = ['mochitest']
+    SCHEDULES.exclusive = ['mochitest-browser-chrome']
 
 with Files("**/chrome.ini"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
-    SCHEDULES.exclusive = ['mochitest']
+    SCHEDULES.exclusive = ['mochitest-chrome']
 
 with Files("**/xpcshell.ini"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
@@ -104,7 +108,7 @@ with Files("**/reftest*/**"):
 
 with Files("**/crashtest*/**"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
-    SCHEDULES.exclusive = ['reftest']
+    SCHEDULES.exclusive = ['crashtest']
 
 with Files("**/mochitest*/**"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']

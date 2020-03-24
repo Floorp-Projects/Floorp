@@ -6,7 +6,7 @@
 
 with Files('**'):
     BUG_COMPONENT = ('Testing', 'Reftest')
-    SCHEDULES.exclusive = ['reftest']
+    SCHEDULES.exclusive = ['reftest', 'crashtest']
 
 XPI_NAME = 'reftest'
 USE_EXTENSION_MANIFEST = True

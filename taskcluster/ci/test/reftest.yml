@@ -45,6 +45,7 @@ job-defaults:
 
 crashtest:
     description: "Crashtest run"
+    schedules-component: crashtest
     treeherder-symbol: R(C)
     chunks:
         by-test-platform:
