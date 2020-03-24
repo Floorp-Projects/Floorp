@@ -108,6 +108,9 @@
     }
 
     connectedCallback() {
+      if (document.l10n) {
+        document.l10n.connectRoot(this.shadowRoot);
+      }
       document.documentElement.setAttribute("role", "dialog");
       this._maybeStartWizard();
 
@@ -419,6 +422,10 @@
     }
 
     _adjustWizardHeader() {
+      if (document.l10n) {
+        this._adjustFluentHeaders();
+        return;
+      }
       var label = this.currentPage.getAttribute("label");
       if (!label && this.onFirstPage && this._bundle) {
         if (AppConstants.platform == "macosx") {
@@ -445,6 +452,17 @@
       );
       if (headerDescEl) {
         headerDescEl.textContent = this.currentPage.getAttribute("description");
+      }
+    }
+
+    _adjustFluentHeaders() {
+      let value = this.currentPage.getAttribute("data-header-label-id");
+      let label = this._wizardHeader.querySelector(".wizard-header-label");
+      if (value) {
+        document.l10n.setAttributes(label, value);
+      } else {
+        label.removeAttribute("data-l10n-id");
+        label.textContent = "";
       }
     }
 

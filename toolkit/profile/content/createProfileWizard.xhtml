@@ -5,20 +5,21 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE wizard [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
-<!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/createProfileWizard.dtd">
-%profileDTD;
-]>
+<!DOCTYPE wizard>
 
 <window id="createProfileWizard"
-        title="&newprofile.title;"
+        data-l10n-id="create-profile-window"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="initWizard();"
-        style="&window.size;">
+        data-l10n-attrs="style"
+        >
+
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="toolkit/global/createProfileWizard.ftl"/>
+</linkset>
 
 <script src="chrome://global/content/customElements.js"/>
 <script src="chrome://global/content/globalOverlay.js"/>
@@ -29,44 +30,35 @@
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>
 
-  <wizardpage id="explanation">
-    <description>&profileCreationExplanation_1.text;</description>
-    <description>&profileCreationExplanation_2.text;</description>
-    <description>&profileCreationExplanation_3.text;</description>
+  <wizardpage id="explanation" data-header-label-id="create-profile-first-page-header">
+    <description data-l10n-id="profile-creation-explanation-1"></description>
+    <description data-l10n-id="profile-creation-explanation-2"></description>
+    <description data-l10n-id="profile-creation-explanation-3"></description>
     <spacer flex="1"/>
-#ifdef XP_MACOSX
-    <description>&profileCreationExplanation_4Mac.text;</description>
-#else
-#ifdef XP_UNIX
-    <description>&profileCreationExplanation_4Gnome.text;</description>
-#else
-    <description>&profileCreationExplanation_4.text;</description>
-#endif
-#endif
+    <description data-l10n-id="profile-creation-explanation-4"></description>
   </wizardpage>
 
-  <wizardpage id="createProfile">
-    <description>&profileCreationIntro.text;</description>
+  <wizardpage id="createProfile" data-header-label-id="create-profile-last-page-header">
+    <description data-l10n-id="profile-creation-intro"></description>
 
-    <label accesskey="&profilePrompt.accesskey;" control="ProfileName">&profilePrompt.label;</label>
-    <html:input id="profileName" value="&profileDefaultName;"
-                oninput="updateProfileName(this.value);"/>
+    <label data-l10n-id="profile-prompt" control="ProfileName"></label>
+    <html:input id="profileName" data-l10n-id="profile-default-name"
+                data-l10n-attrs="value" oninput="updateProfileName(this.value);"/>
 
     <separator/>
 
-    <description>&profileDirectoryExplanation.text;</description>
+    <description data-l10n-id="profile-directory-explanation"></description>
 
     <vbox class="indent" flex="1" style="overflow: auto;">
       <description id="profileDisplay">*</description>
     </vbox>
 
     <hbox>
-      <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();"
-              accesskey="&button.choosefolder.accesskey;"/>
+      <button data-l10n-id="create-profile-choose-folder" oncommand="chooseProfileFolder();"/>
 
-      <button id="useDefault" label="&button.usedefault.label;"
+      <button id="useDefault" data-l10n-id="create-profile-use-default"
               oncommand="setDisplayToDefaultFolder(); updateProfileDisplay();"
-              accesskey="&button.usedefault.accesskey;" disabled="true"/>
+              disabled="true"/>
     </hbox>
 
     <separator/>
