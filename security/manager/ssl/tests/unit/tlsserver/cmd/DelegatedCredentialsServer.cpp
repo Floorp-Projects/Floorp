@@ -37,8 +37,6 @@ const DelegatedCertHost sDelegatedCertHosts[] = {
     {"standard-enabled.example.com", "default-ee", "delegated.key", true},
     {"delegated-disabled.example.com", "delegated-ee",
      /* anything non-null */ "delegated.key", false},
-    {"delegated-weak.example.com", /* rsa default */ "default-ee",
-     "delegated-weak.key", true},
     {nullptr, nullptr, nullptr, false}};
 
 int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
@@ -116,16 +114,10 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
       return SSL_SNI_SEND_ALERT;
     }
 
-    // Use an ECDSA DC unless we're testing weak keys.
-    SSLSignatureScheme certVerifyAlg = ssl_sig_ecdsa_secp384r1_sha384;
-    if (std::string(host->mHostName) == "delegated-weak.example.com") {
-      certVerifyAlg = ssl_sig_rsa_pss_rsae_sha256;
-    }
-
     // Create and set the DC.
     if (SSL_DelegateCredential(delegatorCert.get(), delegatorPriv.get(),
-                               dcPub.get(), certVerifyAlg, kDCValidFor,
-                               PR_Now(), &dc) != SECSuccess) {
+                               dcPub.get(), ssl_sig_ecdsa_secp384r1_sha384,
+                               kDCValidFor, PR_Now(), &dc) != SECSuccess) {
       PrintPRError("SSL_DelegateCredential failed");
       return SSL_SNI_SEND_ALERT;
     }

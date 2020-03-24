@@ -148,27 +148,15 @@ Result IsCertChainRootBuiltInRoot(const UniqueCERTCertList& chain,
 
 Result IsDelegatedCredentialAcceptable(const DelegatedCredentialInfo& dcInfo,
                                        SECOidTag evOidPolicyTag) {
-  bool isRsa = dcInfo.scheme == ssl_sig_rsa_pss_rsae_sha256 ||
-               dcInfo.scheme == ssl_sig_rsa_pss_rsae_sha384 ||
-               dcInfo.scheme == ssl_sig_rsa_pss_rsae_sha512 ||
-               dcInfo.scheme == ssl_sig_rsa_pss_pss_sha256 ||
-               dcInfo.scheme == ssl_sig_rsa_pss_pss_sha384 ||
-               dcInfo.scheme == ssl_sig_rsa_pss_pss_sha512;
-
   bool isEcdsa = dcInfo.scheme == ssl_sig_ecdsa_secp256r1_sha256 ||
                  dcInfo.scheme == ssl_sig_ecdsa_secp384r1_sha384 ||
                  dcInfo.scheme == ssl_sig_ecdsa_secp521r1_sha512;
 
-  size_t minRsaKeyBits =
-      evOidPolicyTag != SEC_OID_UNKNOWN ? MIN_RSA_BITS : MIN_RSA_BITS_WEAK;
-
-  if (isRsa && dcInfo.authKeyBits < minRsaKeyBits) {
-    return Result::ERROR_INADEQUATE_KEY_SIZE;
-  }
-
-  // Since we only support acceptable EC curves, no explicit
-  // |authKeyBits| check is needed.
-  if (!isRsa && !isEcdsa) {
+  // Firefox currently does not advertise any RSA schemes for use
+  // with Delegated Credentials. As a secondary (on top of NSS)
+  // check, disallow any RSA SPKI here. When ssl_sig_rsa_pss_pss_*
+  // schemes are supported, check the modulus size and allow RSA here.
+  if (!isEcdsa) {
     return Result::ERROR_INVALID_KEY;
   }
 

@@ -2130,7 +2130,7 @@ loser:
 }
 
 // Please change getSignatureName in nsNSSCallbacks.cpp when changing the list
-// here.
+// here. See NOTE at SSL_SignatureSchemePrefSet call site.
 static const SSLSignatureScheme sEnabledSignatureSchemes[] = {
     ssl_sig_ecdsa_secp256r1_sha256, ssl_sig_ecdsa_secp384r1_sha384,
     ssl_sig_ecdsa_secp521r1_sha512, ssl_sig_rsa_pss_sha256,
@@ -2248,6 +2248,12 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
+  // NOTE: Should this list ever include ssl_sig_rsa_pss_pss_sha* (or should
+  // it become possible to enable this scheme via a pref), it is required
+  // to test that a Delegated Credential containing a small-modulus RSA-PSS SPKI
+  // is properly rejected. NSS will not advertise PKCS1 or RSAE schemes (which
+  // the |ssl_sig_rsa_pss_*| defines alias, meaning we will not currently accept
+  // any RSA DC.
   if (SECSuccess != SSL_SignatureSchemePrefSet(
                         fd, sEnabledSignatureSchemes,
                         mozilla::ArrayLength(sEnabledSignatureSchemes))) {
