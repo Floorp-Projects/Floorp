@@ -130,6 +130,10 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         this.resizeUniqueSuggestionIdCache(0)
     }
 
+    override fun containsProvider(provider: AwesomeBar.SuggestionProvider): Boolean {
+        return this.providers.find { it.id == provider.id } != null
+    }
+
     @Synchronized
     override fun onInputStarted() {
         queryProvidersForSuggestions { onInputStarted() }
