@@ -87,6 +87,10 @@ static bool ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
                              Sequence<JS::Value>& aSequence,
                              Sequence<nsString>& aStyles);
 
+static JS::Value CreateCounterOrResetCounterValue(JSContext* aCx,
+                                                  const nsAString& aCountLabel,
+                                                  uint32_t aCountValue);
+
 /**
  * Console API in workers uses the Structured Clone Algorithm to move any value
  * from the worker thread to the main-thread. Some object cannot be moved and,
@@ -2296,8 +2300,16 @@ uint32_t Console::ResetCounter(JSContext* aCx,
   return MAX_PAGE_COUNTERS;
 }
 
-JS::Value Console::CreateCounterOrResetCounterValue(
-    JSContext* aCx, const nsAString& aCountLabel, uint32_t aCountValue) const {
+// This method generates a ConsoleCounter dictionary as JS::Value. If
+// aCountValue is == MAX_PAGE_COUNTERS it generates a ConsoleCounterError
+// instead. See IncreaseCounter.
+// * aCx - this is the context that will root the returned value.
+// * aCountLabel - this label must be what IncreaseCounter received as
+//                 aTimerLabel.
+// * aCountValue - the return value of IncreaseCounter.
+static JS::Value CreateCounterOrResetCounterValue(JSContext* aCx,
+                                                  const nsAString& aCountLabel,
+                                                  uint32_t aCountValue) {
   ConsoleCommon::ClearException ce(aCx);
 
   if (aCountValue == MAX_PAGE_COUNTERS) {
