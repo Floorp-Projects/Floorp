@@ -102,7 +102,10 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
     actions.initializeStore({
       perfFront,
       receiveProfile,
-      recordingPreferences: getRecordingPreferences(pageContext),
+      recordingPreferences: getRecordingPreferences(
+        pageContext,
+        supportedFeatures
+      ),
       presets,
       supportedFeatures,
       openAboutProfiling,

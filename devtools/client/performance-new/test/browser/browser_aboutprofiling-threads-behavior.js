@@ -10,7 +10,11 @@ add_task(async function test() {
 
   // This test assumes that the Web Developer preset is set by default, which is
   // not the case on Nightly and custom builds.
-  BackgroundJSM.changePreset("aboutprofiling", "web-developer");
+  BackgroundJSM.changePreset(
+    "aboutprofiling",
+    "web-developer",
+    Services.profiler.GetFeatures()
+  );
 
   await withAboutProfiling(async document => {
     const threadTextEl = await getNearestInputFromText(

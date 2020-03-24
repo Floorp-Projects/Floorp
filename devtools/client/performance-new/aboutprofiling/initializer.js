@@ -92,7 +92,10 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
       supportedFeatures,
       presets,
       // Get the preferences from the current browser
-      recordingPreferences: getRecordingPreferences(pageContext),
+      recordingPreferences: getRecordingPreferences(
+        pageContext,
+        supportedFeatures
+      ),
       /**
        * @param {RecordingStateFromPreferences} newRecordingPreferences
        */
