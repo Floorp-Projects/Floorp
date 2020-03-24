@@ -76,6 +76,7 @@ certificate-viewer-authority-info-aia = Authority Info (AIA)
 certificate-viewer-certificate-policies = Certificate Policies
 certificate-viewer-embedded-scts = Embedded SCTs
 certificate-viewer-crl-endpoints = CRL Endpoints
+
 # This message is used as a row header in the Miscellaneous section. 
 # The associated data cell contains links to download the certificate.
 certificate-viewer-download = Download
@@ -94,3 +95,13 @@ certificate-viewer-download-pem = PEM (cert)
   .download = { $fileName }.pem
 certificate-viewer-download-pem-chain = PEM (chain)
   .download = { $fileName }-chain.pem
+certificate-viewer-export = Export
+  .download = { $fileName }.pem
+
+## Labels for tabs displayed in stand-alone about:certificate page
+
+certificate-viewer-tab-mine = Your Certificates
+certificate-viewer-tab-people = People
+certificate-viewer-tab-servers = Servers
+certificate-viewer-tab-ca = Authorities
+certificate-viewer-tab-unkonwn = Unknown
