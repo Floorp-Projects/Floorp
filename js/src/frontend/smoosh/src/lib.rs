@@ -442,8 +442,12 @@ pub unsafe extern "C" fn free_smoosh(result: SmooshResult) {
     let _ = result.scope_notes.into();
     //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
 
-    let _ = Box::from_raw(result.all_atoms as *mut Vec<&str>);
-    let _ = Box::from_raw(result.allocator as *mut bumpalo::Bump);
+    if !result.all_atoms.is_null() {
+        let _ = Box::from_raw(result.all_atoms as *mut Vec<&str>);
+    }
+    if !result.allocator.is_null() {
+        let _ = Box::from_raw(result.allocator as *mut bumpalo::Bump);
+    }
 }
 
 fn smoosh<'alloc>(
