@@ -1756,7 +1756,7 @@
 
 - name: dom.IntersectionObserverExplicitDocumentRoot.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: dom.ipc.cancel_content_js_when_navigating
