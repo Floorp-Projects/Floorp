@@ -1202,7 +1202,7 @@ static nsresult JSErrorToXPCException(JSContext* cx, const char* toStringResult,
   RefPtr<nsScriptError> data;
   if (report) {
     nsAutoString bestMessage;
-    if (report && report->message()) {
+    if (report->message()) {
       CopyUTF8toUTF16(mozilla::MakeStringSpan(report->message().c_str()),
                       bestMessage);
     } else if (toStringResult) {
@@ -1212,13 +1212,15 @@ static nsresult JSErrorToXPCException(JSContext* cx, const char* toStringResult,
     }
 
     const char16_t* linebuf = report->linebuf();
+    uint32_t flags = report->isWarning() ? nsIScriptError::warningFlag
+                                         : nsIScriptError::errorFlag;
 
     data = new nsScriptError();
     data->nsIScriptError::InitWithWindowID(
         bestMessage, NS_ConvertASCIItoUTF16(report->filename),
         linebuf ? nsDependentString(linebuf, report->linebufLength())
                 : EmptyString(),
-        report->lineno, report->tokenOffset(), report->flags,
+        report->lineno, report->tokenOffset(), flags,
         NS_LITERAL_CSTRING("XPConnect JavaScript"),
         nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
   }

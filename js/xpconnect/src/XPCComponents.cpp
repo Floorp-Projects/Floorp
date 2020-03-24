@@ -1413,6 +1413,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
     uint32_t column = err->tokenOffset();
 
     const char16_t* linebuf = err->linebuf();
+    uint32_t flags = err->isWarning() ? nsIScriptError::warningFlag
+                                      : nsIScriptError::errorFlag;
 
     nsresult rv = scripterr->InitWithWindowID(
         err->message() ? NS_ConvertUTF8toUTF16(err->message().c_str())
@@ -1420,7 +1422,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
         fileUni,
         linebuf ? nsDependentString(linebuf, err->linebufLength())
                 : EmptyString(),
-        err->lineno, column, err->flags, "XPConnect JavaScript", innerWindowID,
+        err->lineno, column, flags, "XPConnect JavaScript", innerWindowID,
         innerWindowID == 0 ? true : false);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 

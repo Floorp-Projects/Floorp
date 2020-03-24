@@ -582,10 +582,10 @@ class ErrorReport : public ErrorBase {
   nsString mSourceLine;
   nsString mErrorMsgName;
   uint64_t mWindowID;
-  uint32_t mFlags;
+  bool mIsWarning;
   bool mIsMuted;
 
-  ErrorReport() : mWindowID(0), mFlags(0), mIsMuted(false) {}
+  ErrorReport() : mWindowID(0), mIsWarning(false), mIsMuted(false) {}
 
   void Init(JSErrorReport* aReport, const char* aToStringResult, bool aIsChrome,
             uint64_t aWindowID);
@@ -612,7 +612,7 @@ class ErrorReport : public ErrorBase {
   // Log the error report to the stderr.
   void LogToStderr();
 
-  bool IsWarning() const { return !!(mFlags & JSREPORT_WARNING); };
+  bool IsWarning() const { return mIsWarning; };
 
  private:
   ~ErrorReport() = default;
