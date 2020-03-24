@@ -544,8 +544,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(
-      LayersId aLayersId, GeckoContentController* aController,
-      wr::RenderRoot aRenderRoot);
+      LayersId aLayersId, GeckoContentController* aController);
 
  public:
   // Public hook for gtests subclass
@@ -728,8 +727,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const RecursiveMutexAutoLock& aProofOfTreeLock, const ScrollNode& aLayer,
       const FrameMetrics& aMetrics, LayersId aLayersId,
       const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
-      HitTestingTreeNode* aNextSibling, TreeBuildingState& aState,
-      wr::RenderRoot aRenderRoot);
+      HitTestingTreeNode* aNextSibling, TreeBuildingState& aState);
   template <class ScrollNode>
   Maybe<ParentLayerIntRegion> ComputeClipRegion(const ScrollNode& aLayer);
 
