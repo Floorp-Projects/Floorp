@@ -280,7 +280,7 @@ impl SharedTextures {
             array_alpha8_linear: TextureArray::new(
                 TextureFormatPair::from(ImageFormat::R8),
                 TextureFilter::Linear,
-                1,
+                4,
             ),
             // Used for experimental hdr yuv texture support, but not used in
             // production Firefox.
