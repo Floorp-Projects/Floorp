@@ -18,51 +18,47 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_cookie'
 
-if CONFIG['NECKO_COOKIES']:
-    EXPORTS += [
-        'nsCookiePermission.h',
-    ]
+EXPORTS += [
+    'nsCookiePermission.h',
+]
 
-    EXPORTS.mozilla.net = [
-        'CookieJarSettings.h',
-        'CookieServiceChild.h',
-        'CookieServiceParent.h',
-        'nsCookieKey.h',
-    ]
-    UNIFIED_SOURCES += [
-        'CookieJarSettings.cpp',
-        'CookieServiceChild.cpp',
-        'CookieServiceParent.cpp',
-        'nsCookie.cpp',
-        'nsCookiePermission.cpp',
-    ]
-    # nsCookieService.cpp can't be unified because of symbol conflicts
-    SOURCES += [
-        'nsCookieService.cpp',
-    ]
-    LOCAL_INCLUDES += [
-        '/dom/base',
-        '/extensions/permissions',
-        '/intl/uconv',
-    ]
+EXPORTS.mozilla.net = [
+    'CookieJarSettings.h',
+    'CookieServiceChild.h',
+    'CookieServiceParent.h',
+    'nsCookieKey.h',
+]
+UNIFIED_SOURCES += [
+    'CookieJarSettings.cpp',
+    'CookieServiceChild.cpp',
+    'CookieServiceParent.cpp',
+    'nsCookie.cpp',
+    'nsCookiePermission.cpp',
+]
+# nsCookieService.cpp can't be unified because of symbol conflicts
+SOURCES += [
+    'nsCookieService.cpp',
+]
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/unit/xpcshell.ini',
+]
 
-    XPCSHELL_TESTS_MANIFESTS += [
-        'test/unit/xpcshell.ini',
-    ]
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini',
+]
 
-    BROWSER_CHROME_MANIFESTS += [
-        'test/browser/browser.ini',
-    ]
-
-    MOCHITEST_MANIFESTS += [
-        'test/mochitest/mochitest.ini',
-    ]
+MOCHITEST_MANIFESTS += [
+    'test/mochitest/mochitest.ini',
+]
 
 IPDL_SOURCES = [
     'PCookieService.ipdl',
 ]
 
 LOCAL_INCLUDES += [
+    '/dom/base',
+    '/extensions/permissions',
+    '/intl/uconv',
     '/netwerk/base',
     '/netwerk/protocol/http',
 ]
