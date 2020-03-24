@@ -312,7 +312,8 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 
 /* Enables the delegated credentials extension (draft-ietf-tls-subcerts). When
  * enabled, a client that supports TLS 1.3 will indicate willingness to
- * negotiate a delegated credential (DC).
+ * negotiate a delegated credential (DC). Note that client-delegated credentials
+ * are not currently supported.
  *
  * If support is indicated, the peer may use a DC to authenticate itself. The DC
  * is sent as an extension to the peer's end-entity certificate; the end-entity
@@ -322,7 +323,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * mitigate the damage in case the secret key is compromised, the DC is only
  * valid for a short time (days, hours, or even minutes).
  *
- * This library implements draft-03 of the protocol spec.
+ * This library implements draft-07 of the protocol spec.
  */
 #define SSL_ENABLE_DELEGATED_CREDENTIALS 40
 

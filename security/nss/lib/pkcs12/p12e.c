@@ -1600,10 +1600,10 @@ sec_pkcs12_encoder_start_context(SEC_PKCS12ExportContext *p12exp)
                     integrityMechType = CKM_PBA_SHA1_WITH_SHA1_HMAC;
                     break;
                 case SEC_OID_MD5:
-                    integrityMechType = CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN;
+                    integrityMechType = CKM_NSS_PBE_MD5_HMAC_KEY_GEN;
                     break;
                 case SEC_OID_MD2:
-                    integrityMechType = CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN;
+                    integrityMechType = CKM_NSS_PBE_MD2_HMAC_KEY_GEN;
                     break;
                 default:
                     goto loser;

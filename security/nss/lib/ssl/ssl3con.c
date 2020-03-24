@@ -65,6 +65,7 @@ static SECStatus ssl3_FlushHandshakeMessages(sslSocket *ss, PRInt32 flags);
 static CK_MECHANISM_TYPE ssl3_GetHashMechanismByHashType(SSLHashType hashType);
 static CK_MECHANISM_TYPE ssl3_GetMgfMechanismByHashType(SSLHashType hash);
 PRBool ssl_IsRsaPssSignatureScheme(SSLSignatureScheme scheme);
+PRBool ssl_IsRsaeSignatureScheme(SSLSignatureScheme scheme);
 PRBool ssl_IsRsaPkcs1SignatureScheme(SSLSignatureScheme scheme);
 PRBool ssl_IsDsaSignatureScheme(SSLSignatureScheme scheme);
 
@@ -1754,7 +1755,7 @@ ssl3_AESGCM(const ssl3KeyMaterial *keys,
     SECStatus rv = SECFailure;
     unsigned char nonce[12];
     unsigned int uOutLen;
-    CK_GCM_PARAMS gcmParams;
+    CK_NSS_GCM_PARAMS gcmParams; /* future use CK_GCM_PARAMS_V3 with fallback */
 
     const int tagSize = 16;
     const int explicitNonceLen = 8;
@@ -4544,6 +4545,21 @@ ssl_IsRsaPssSignatureScheme(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pss_pss_sha256:
         case ssl_sig_rsa_pss_pss_sha384:
         case ssl_sig_rsa_pss_pss_sha512:
+            return PR_TRUE;
+
+        default:
+            return PR_FALSE;
+    }
+    return PR_FALSE;
+}
+
+PRBool
+ssl_IsRsaeSignatureScheme(SSLSignatureScheme scheme)
+{
+    switch (scheme) {
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_rsae_sha384:
+        case ssl_sig_rsa_pss_rsae_sha512:
             return PR_TRUE;
 
         default:
@@ -9833,8 +9849,28 @@ ssl3_SendServerKeyExchange(sslSocket *ss)
 SECStatus
 ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, sslBuffer *buf)
 {
+    SSLSignatureScheme filtered[MAX_SIGNATURE_SCHEMES] = { 0 };
+    unsigned int filteredCount = 0;
+
+    SECStatus rv = ssl3_FilterSigAlgs(ss, minVersion, PR_FALSE,
+                                      PR_ARRAY_SIZE(filtered),
+                                      filtered, &filteredCount);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    return ssl3_EncodeFilteredSigAlgs(ss, filtered, filteredCount, buf);
+}
+
+SECStatus
+ssl3_EncodeFilteredSigAlgs(const sslSocket *ss, const SSLSignatureScheme *schemes,
+                           PRUint32 numSchemes, sslBuffer *buf)
+{
+    if (!numSchemes) {
+        PORT_SetError(SSL_ERROR_NO_SUPPORTED_SIGNATURE_ALGORITHM);
+        return SECFailure;
+    }
+
     unsigned int lengthOffset;
-    PRBool found = PR_FALSE;
     SECStatus rv;
 
     rv = sslBuffer_Skip(buf, 2, &lengthOffset);
@@ -9842,23 +9878,38 @@ ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, sslBuffer *buf)
         return SECFailure;
     }
 
-    for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
-        if (ssl_SignatureSchemeAccepted(minVersion,
-                                        ss->ssl3.signatureSchemes[i])) {
-            rv = sslBuffer_AppendNumber(buf, ss->ssl3.signatureSchemes[i], 2);
-            if (rv != SECSuccess) {
-                return SECFailure;
-            }
-            found = PR_TRUE;
+    for (unsigned int i = 0; i < numSchemes; ++i) {
+        rv = sslBuffer_AppendNumber(buf, schemes[i], 2);
+        if (rv != SECSuccess) {
+            return SECFailure;
         }
     }
+    return sslBuffer_InsertLength(buf, lengthOffset, 2);
+}
 
-    if (!found) {
-        PORT_SetError(SSL_ERROR_NO_SUPPORTED_SIGNATURE_ALGORITHM);
+SECStatus
+ssl3_FilterSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool disableRsae,
+                   unsigned int maxSchemes, SSLSignatureScheme *filteredSchemes,
+                   unsigned int *numFilteredSchemes)
+{
+    PORT_Assert(filteredSchemes);
+    PORT_Assert(numFilteredSchemes);
+    PORT_Assert(maxSchemes >= ss->ssl3.signatureSchemeCount);
+    if (maxSchemes < ss->ssl3.signatureSchemeCount) {
         return SECFailure;
     }
 
-    return sslBuffer_InsertLength(buf, lengthOffset, 2);
+    *numFilteredSchemes = 0;
+    for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+        if (disableRsae && ssl_IsRsaeSignatureScheme(ss->ssl3.signatureSchemes[i])) {
+            continue;
+        }
+        if (ssl_SignatureSchemeAccepted(minVersion,
+                                        ss->ssl3.signatureSchemes[i])) {
+            filteredSchemes[(*numFilteredSchemes)++] = ss->ssl3.signatureSchemes[i];
+        }
+    }
+    return SECSuccess;
 }
 
 static SECStatus
@@ -11347,9 +11398,9 @@ ssl3_ComputeTLSFinished(sslSocket *ss, ssl3CipherSpec *spec,
     }
 
     if (spec->version < SSL_LIBRARY_VERSION_TLS_1_2) {
-        tls_mac_params.prfMechanism = CKM_TLS_PRF;
+        tls_mac_params.prfHashMechanism = CKM_TLS_PRF;
     } else {
-        tls_mac_params.prfMechanism = ssl3_GetPrfHashMechanism(ss);
+        tls_mac_params.prfHashMechanism = ssl3_GetPrfHashMechanism(ss);
     }
     tls_mac_params.ulMacLength = 12;
     tls_mac_params.ulServerOrClient = isServer ? 1 : 2;

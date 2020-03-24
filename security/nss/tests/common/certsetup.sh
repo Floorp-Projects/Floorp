@@ -56,6 +56,11 @@ make_cert() {
         type_args=(-g 2048 --extGeneric 1.3.6.1.4.1.44363.44:not-critical:empty.txt)
         type=rsa
         ;;
+    delegator_rsa_pss2048)
+        touch empty.txt
+        type_args=(-g 2048 --pss --extGeneric 1.3.6.1.4.1.44363.44:not-critical:empty.txt)
+        type=rsa
+        ;;
   esac
   msg="create certificate: $@"
   shift 2

@@ -3908,7 +3908,7 @@ tls13_AESGCM(const ssl3KeyMaterial *keys,
              const unsigned char *additionalData,
              unsigned int additionalDataLen)
 {
-    CK_GCM_PARAMS gcmParams;
+    CK_NSS_GCM_PARAMS gcmParams; /* future use CK_GCM_PARAMS_V3 with fallback */
     unsigned char nonce[12];
 
     PORT_Assert(additionalDataLen >= 8);

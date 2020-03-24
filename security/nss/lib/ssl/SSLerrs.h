@@ -582,3 +582,6 @@ ER3(SSL_ERROR_DC_INVALID_KEY_USAGE, (SSL_ERROR_BASE + 184),
 
 ER3(SSL_ERROR_DC_EXPIRED, (SSL_ERROR_BASE + 185),
     "SSL received a delegated credential that expired.")
+
+ER3(SSL_ERROR_DC_INAPPROPRIATE_VALIDITY_PERIOD, (SSL_ERROR_BASE + 186),
+    "SSL received a delegated credential with excessive TTL.")

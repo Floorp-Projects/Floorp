@@ -1027,7 +1027,7 @@ aes_gcm(char *reqfn, int encrypt)
     unsigned int tagbits;
     unsigned int taglen = 0;
     unsigned int ivlen;
-    CK_GCM_PARAMS params;
+    CK_NSS_GCM_PARAMS params;
     SECStatus rv;
 
     aesreq = fopen(reqfn, "r");
@@ -8367,20 +8367,28 @@ kbkdf(char *path)
             /* PRF begins each new section. */
             if (strncmp(buf, "[PRF=CMAC_AES128]", 17) == 0) {
                 prf_mech = CKM_AES_CMAC;
+                KI_len = 16;
             } else if (strncmp(buf, "[PRF=CMAC_AES192]", 17) == 0) {
                 prf_mech = CKM_AES_CMAC;
+                KI_len = 24;
             } else if (strncmp(buf, "[PRF=CMAC_AES256]", 17) == 0) {
                 prf_mech = CKM_AES_CMAC;
+                KI_len = 32;
             } else if (strncmp(buf, "[PRF=HMAC_SHA1]", 15) == 0) {
                 prf_mech = CKM_SHA_1_HMAC;
+                KI_len = 20;
             } else if (strncmp(buf, "[PRF=HMAC_SHA224]", 17) == 0) {
                 prf_mech = CKM_SHA224_HMAC;
+                KI_len = 28;
             } else if (strncmp(buf, "[PRF=HMAC_SHA256]", 17) == 0) {
                 prf_mech = CKM_SHA256_HMAC;
+                KI_len = 32;
             } else if (strncmp(buf, "[PRF=HMAC_SHA384]", 17) == 0) {
                 prf_mech = CKM_SHA384_HMAC;
+                KI_len = 48;
             } else if (strncmp(buf, "[PRF=HMAC_SHA512]", 17) == 0) {
                 prf_mech = CKM_SHA512_HMAC;
+                KI_len = 64;
             } else if (strncmp(buf, "[PRF=", 5) == 0) {
                 fprintf(stderr, "Invalid or unsupported PRF mechanism: %s\n", buf);
                 goto done;
@@ -8417,15 +8425,15 @@ kbkdf(char *path)
         /* First comes COUNT. */
         if (strncmp(buf, "COUNT=", 6) == 0) {
             /* Clear all out data fields on each test. */
-            memset(KI, 0, KI_len);
-            memset(KO, 0, KO_len);
-            memset(IV, 0, IV_len);
-            memset(BeforeFixedInputData, 0, BeforeFixedInputData_len);
-            memset(AfterFixedInputData, 0, AfterFixedInputData_len);
-            memset(FixedInputData, 0, FixedInputData_len);
+            memset(KI, 0, sizeof KI);
+            memset(KO, 0, sizeof KO);
+            memset(IV, 0, sizeof IV);
+            memset(BeforeFixedInputData, 0, sizeof BeforeFixedInputData);
+            memset(AfterFixedInputData, 0, sizeof AfterFixedInputData);
+            memset(FixedInputData, 0, sizeof FixedInputData);
 
-            /* Then reset lengths. */
-            KI_len = 0;
+            /* Then reset lengths except KI: it was determined by PRF
+             * selection above. */
             KO_len = 0;
             IV_len = 0;
             BeforeFixedInputData_len = 0;
@@ -8457,18 +8465,10 @@ kbkdf(char *path)
         /* Then comes KI. */
         if (strncmp(buf, "KI = ", 5) == 0) {
             buf_offset = 5;
-            offset = 0;
 
-            /* KI's length depends on the key size of the underlying PRF, but
-             * we can't detect that as the conversion to PKCS#11 mechanisms is
-             * lossy (namely, CMAC_AES{128,192,256} all map to CKM_AES_CMAC).
-             */
-            while (buf[buf_offset] != '\0') {
+            for (offset = 0; offset < KI_len; offset++, buf_offset += 2) {
                 hex_to_byteval(buf + buf_offset, KI + offset);
-                offset += 1;
-                buf_offset += 2;
             }
-            KI_len = offset - 1;
 
             fputs(buf, kbkdf_resp);
             continue;
@@ -8481,7 +8481,7 @@ kbkdf(char *path)
             }
 
             if ((IV_len % 8) != 0) {
-                fprintf(stderr, "Assumption that IV_len was length in bits incorrect: %u - %s", IV_len, buf);
+                fprintf(stderr, "Assumption that IV_len was length in bits incorrect: %u - %s. ", IV_len, buf);
                 fprintf(stderr, "Note that NSS only supports byte-aligned inputs and not bit-aligned inputs.\n");
                 goto done;
             }

@@ -507,6 +507,7 @@ typedef enum {
     ssl_padding_xtn = 21,
     ssl_extended_master_secret_xtn = 23,
     ssl_record_size_limit_xtn = 28,
+    ssl_delegated_credentials_xtn = 34,
     ssl_session_ticket_xtn = 35,
     /* 40 was used in draft versions of TLS 1.3; it is now reserved. */
     ssl_tls13_pre_shared_key_xtn = 41,
@@ -521,7 +522,6 @@ typedef enum {
     ssl_tls13_key_share_xtn = 51,
     ssl_next_proto_nego_xtn = 13172, /* Deprecated. */
     ssl_renegotiation_info_xtn = 0xff01,
-    ssl_delegated_credentials_xtn = 0xff02,
     ssl_tls13_short_header_xtn = 0xff03, /* Deprecated. */
     ssl_tls13_encrypted_sni_xtn = 0xffce,
 } SSLExtensionType;

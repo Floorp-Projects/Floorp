@@ -694,7 +694,7 @@ sftk_modifyType(CK_ATTRIBUTE_TYPE type, CK_OBJECT_CLASS inClass)
         case CKA_VALUE_LEN:
         case CKA_ALWAYS_SENSITIVE:
         case CKA_NEVER_EXTRACTABLE:
-        case CKA_NETSCAPE_DB:
+        case CKA_NSS_DB:
             mtype = SFTK_NEVER;
             break;
 
@@ -1310,7 +1310,7 @@ static const CK_ULONG ecPubKeyAttrsCount =
 
 static const CK_ATTRIBUTE_TYPE commonPrivKeyAttrs[] = {
     CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER, CKA_UNWRAP, CKA_SUBJECT,
-    CKA_SENSITIVE, CKA_EXTRACTABLE, CKA_NETSCAPE_DB, CKA_PUBLIC_KEY_INFO
+    CKA_SENSITIVE, CKA_EXTRACTABLE, CKA_NSS_DB, CKA_PUBLIC_KEY_INFO
 };
 static const CK_ULONG commonPrivKeyAttrsCount =
     sizeof(commonPrivKeyAttrs) / sizeof(commonPrivKeyAttrs[0]);
@@ -1354,13 +1354,13 @@ static const CK_ULONG trustAttrsCount =
     sizeof(trustAttrs) / sizeof(trustAttrs[0]);
 
 static const CK_ATTRIBUTE_TYPE smimeAttrs[] = {
-    CKA_SUBJECT, CKA_NETSCAPE_EMAIL, CKA_NETSCAPE_SMIME_TIMESTAMP, CKA_VALUE
+    CKA_SUBJECT, CKA_NSS_EMAIL, CKA_NSS_SMIME_TIMESTAMP, CKA_VALUE
 };
 static const CK_ULONG smimeAttrsCount =
     sizeof(smimeAttrs) / sizeof(smimeAttrs[0]);
 
 static const CK_ATTRIBUTE_TYPE crlAttrs[] = {
-    CKA_SUBJECT, CKA_VALUE, CKA_NETSCAPE_URL, CKA_NETSCAPE_KRL
+    CKA_SUBJECT, CKA_VALUE, CKA_NSS_URL, CKA_NSS_KRL
 };
 static const CK_ULONG crlAttrsCount =
     sizeof(crlAttrs) / sizeof(crlAttrs[0]);
@@ -1554,15 +1554,15 @@ sftk_CopyTokenObject(SFTKObject *destObject, SFTKObject *srcObject)
             crv = stfk_CopyTokenAttributes(destObject, src_to, certAttrs,
                                            certAttrsCount);
             break;
-        case CKO_NETSCAPE_TRUST:
+        case CKO_NSS_TRUST:
             crv = stfk_CopyTokenAttributes(destObject, src_to, trustAttrs,
                                            trustAttrsCount);
             break;
-        case CKO_NETSCAPE_SMIME:
+        case CKO_NSS_SMIME:
             crv = stfk_CopyTokenAttributes(destObject, src_to, smimeAttrs,
                                            smimeAttrsCount);
             break;
-        case CKO_NETSCAPE_CRL:
+        case CKO_NSS_CRL:
             crv = stfk_CopyTokenAttributes(destObject, src_to, crlAttrs,
                                            crlAttrsCount);
             break;
