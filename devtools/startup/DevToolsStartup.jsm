@@ -30,7 +30,6 @@ const kDebuggerPrefs = [
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
-const PROFILER_POPUP_ENABLED_PREF = "devtools.performance.popup.enabled";
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -234,7 +233,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     });
   }
 
-  if (isProfilerButtonEnabled()) {
+  if (ProfilerMenuButton.isInNavbar()) {
     shortcuts.push(...getProfilerKeyShortcuts());
   }
 
@@ -256,14 +255,6 @@ function getProfilerKeyShortcuts() {
       modifiers: "control,shift",
     },
   ];
-}
-
-/**
- * Instead of loading the ProfilerMenuButton.jsm file, provide an independent check
- * to see if it is turned on.
- */
-function isProfilerButtonEnabled() {
-  return Services.prefs.getBoolPref(PROFILER_POPUP_ENABLED_PREF, false);
 }
 
 /**
@@ -389,13 +380,6 @@ DevToolsStartup.prototype = {
       Services.prefs.addObserver(
         DEVTOOLS_ENABLED_PREF,
         this.onEnabledPrefChanged
-      );
-
-      // Watch for the profiler to enable or disable the profiler popup, then toggle
-      // the keyboard shortcuts on and off.
-      Services.prefs.addObserver(
-        PROFILER_POPUP_ENABLED_PREF,
-        this.toggleProfilerKeyShortcuts
       );
       /* eslint-enable mozilla/balanced-observers */
 
@@ -624,38 +608,36 @@ DevToolsStartup.prototype = {
   },
 
   /**
-   * Dynamically register a profiler recording button in the
-   * customization menu. You can use this button by right clicking
-   * on Firefox toolbar and dragging it from the customization panel
-   * to the toolbar. (i.e. this isn't displayed by default to users.)
+   * Register the profiler recording button. This button will be available
+   * in the customization palette for the Firefox toolbar. In addition, it can be
+   * enabled from profiler.firefox.com.
    */
   hookProfilerRecordingButton() {
     if (this.profilerRecordingButtonCreated) {
       return;
     }
-    this.profilerRecordingButtonCreated = true;
-
+    const featureFlagPref = "devtools.performance.popup.feature-flag";
     const isPopupFeatureFlagEnabled = Services.prefs.getBoolPref(
-      "devtools.performance.popup.feature-flag",
-      AppConstants.NIGHTLY_BUILD
+      featureFlagPref
     );
+    this.profilerRecordingButtonCreated = true;
 
     // Listen for messages from the front-end. This needs to happen even if the
     // button isn't enabled yet. This will allow the front-end to turn on the
     // popup for our users, regardless of if the feature is enabled by default.
     this.initializeProfilerWebChannel();
 
-    if (!isPopupFeatureFlagEnabled) {
-      // The profiler's popup is experimental. The plan is to eventually turn it on
-      // everywhere, but while it's under active development we don't want everyone
-      // having it enabled. For now the default pref is to turn it on with Nightly,
-      // with the option to flip the pref in other releases. This feature flag will
-      // go away once it is fully shipped.
-      return;
-    }
-
-    if (isProfilerButtonEnabled()) {
-      ProfilerMenuButton.initialize();
+    if (isPopupFeatureFlagEnabled) {
+      // Initialize the CustomizableUI widget.
+      ProfilerMenuButton.initialize(this.toggleProfilerKeyShortcuts);
+    } else {
+      // The feature flag is not enabled, but watch for it to be enabled. If it is,
+      // initialize everything.
+      const enable = () => {
+        ProfilerMenuButton.initialize(this.toggleProfilerKeyShortcuts);
+        Services.prefs.removeObserver(featureFlagPref, enable);
+      };
+      Services.prefs.addObserver(featureFlagPref, enable);
     }
   },
 
@@ -832,9 +814,9 @@ DevToolsStartup.prototype = {
   /**
    * We only want to have the keyboard shortcuts active when the menu button is on.
    * This function either adds or removes the elements.
+   * @param {boolean} isEnabled
    */
-  toggleProfilerKeyShortcuts() {
-    const isEnabled = isProfilerButtonEnabled();
+  toggleProfilerKeyShortcuts(isEnabled) {
     const profilerKeyShortcuts = getProfilerKeyShortcuts();
     for (const { document } of Services.wm.getEnumerator(null)) {
       const devtoolsKeyset = document.getElementById("devtoolsKeyset");
@@ -845,6 +827,13 @@ DevToolsStartup.prototype = {
         continue;
       }
 
+      const areProfilerKeysPresent = !!document.getElementById(
+        "key_profilerStartStop"
+      );
+      if (isEnabled === areProfilerKeysPresent) {
+        // Don't double add or double remove the shortcuts.
+        continue;
+      }
       if (isEnabled) {
         this.attachKeys(document, profilerKeyShortcuts);
       } else {
@@ -854,11 +843,6 @@ DevToolsStartup.prototype = {
       // to be detached and reattached to make sure the <key> is taken into
       // account (see bug 832984).
       mainKeyset.parentNode.insertBefore(devtoolsKeyset, mainKeyset);
-    }
-
-    if (!isEnabled) {
-      // Ensure the profiler isn't left profiling in the background.
-      ProfilerPopupBackground.stopProfiler();
     }
   },
 
