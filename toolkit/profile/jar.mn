@@ -4,7 +4,7 @@
 
 toolkit.jar:
   content/mozapps/profile/createProfileWizard.js  (content/createProfileWizard.js)
-* content/mozapps/profile/createProfileWizard.xhtml (content/createProfileWizard.xhtml)
+  content/mozapps/profile/createProfileWizard.xhtml (content/createProfileWizard.xhtml)
   content/mozapps/profile/profileSelection.js     (content/profileSelection.js)
   content/mozapps/profile/profileSelection.xhtml  (content/profileSelection.xhtml)
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE

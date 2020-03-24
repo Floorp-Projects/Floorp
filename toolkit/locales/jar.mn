@@ -74,7 +74,6 @@
 #endif
   locale/@AB_CD@/mozapps/handling/handling.dtd                    (%chrome/mozapps/handling/handling.dtd)
   locale/@AB_CD@/mozapps/handling/handling.properties             (%chrome/mozapps/handling/handling.properties)
-  locale/@AB_CD@/mozapps/profile/createProfileWizard.dtd          (%chrome/mozapps/profile/createProfileWizard.dtd)
   locale/@AB_CD@/mozapps/profile/profileSelection.properties      (%chrome/mozapps/profile/profileSelection.properties)
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
   locale/@AB_CD@/mozapps/profile/profileDowngrade.dtd             (%chrome/mozapps/profile/profileDowngrade.dtd)
