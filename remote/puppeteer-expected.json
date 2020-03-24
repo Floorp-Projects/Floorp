@@ -558,7 +558,7 @@
     "PASS"
   ],
   "Firefox Browser Page Mouse should work with mobile viewports and cross process navigations": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.evaluate should transfer BigInt": [
     "PASS"
