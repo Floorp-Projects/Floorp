@@ -115,6 +115,13 @@ class ClientManagerService final {
 
   bool RemoveSource(ClientSourceParent* aSource);
 
+  // Returns true when a FutureClientSourceParent is successfully added.
+  bool ExpectFutureSource(const IPCClientInfo& aClientInfo);
+
+  // May still be called if it's possible that the FutureClientSourceParent
+  // no longer exists.
+  void ForgetFutureSource(const IPCClientInfo& aClientInfo);
+
   RefPtr<SourcePromise> FindSource(
       const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
