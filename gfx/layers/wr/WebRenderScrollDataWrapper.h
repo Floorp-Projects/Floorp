@@ -285,12 +285,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return Nothing();
   }
 
-  Maybe<wr::RenderRoot> GetReferentRenderRoot() const {
-    MOZ_ASSERT(IsValid());
-
-    return Nothing();
-  }
-
   Maybe<ParentLayerIntRect> GetClipRect() const {
     // TODO
     return Nothing();
