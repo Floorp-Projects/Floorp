@@ -83,6 +83,10 @@ static void ComposeAndStoreGroupName(JSContext* aCx,
                                      nsTArray<nsString>* aGroupStack);
 static bool UnstoreGroupName(nsAString& aName, nsTArray<nsString>* aGroupStack);
 
+static bool ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
+                             Sequence<JS::Value>& aSequence,
+                             Sequence<nsString>& aStyles);
+
 /**
  * Console API in workers uses the Structured Clone Algorithm to move any value
  * from the worker thread to the main-thread. Some object cannot be moved and,
@@ -1748,9 +1752,42 @@ bool FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence,
 
 }  // namespace
 
-bool Console::ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
-                               Sequence<JS::Value>& aSequence,
-                               Sequence<nsString>& aStyles) const {
+static void MakeFormatString(nsCString& aFormat, int32_t aInteger,
+                             int32_t aMantissa, char aCh) {
+  aFormat.Append('%');
+  if (aInteger >= 0) {
+    aFormat.AppendInt(aInteger);
+  }
+
+  if (aMantissa >= 0) {
+    aFormat.Append('.');
+    aFormat.AppendInt(aMantissa);
+  }
+
+  aFormat.Append(aCh);
+}
+
+// If the first JS::Value of the array is a string, this method uses it to
+// format a string. The supported sequences are:
+//   %s    - string
+//   %d,%i - integer
+//   %f    - double
+//   %o,%O - a JS object.
+//   %c    - style string.
+// The output is an array where any object is a separated item, the rest is
+// unified in a format string.
+// Example if the input is:
+//   "string: %s, integer: %d, object: %o, double: %d", 's', 1, window, 0.9
+// The output will be:
+//   [ "string: s, integer: 1, object: ", window, ", double: 0.9" ]
+//
+// The aStyles array is populated with the style strings that the function
+// finds based the format string. The index of the styles matches the indexes
+// of elements that need the custom styling from aSequence. For elements with
+// no custom styling the array is padded with null elements.
+static bool ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
+                             Sequence<JS::Value>& aSequence,
+                             Sequence<nsString>& aStyles) {
   // This method processes the arguments as format strings (%d, %i, %s...)
   // only if the first element of them is a valid and not-empty string.
 
@@ -1992,21 +2029,6 @@ bool Console::ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
   }
 
   return true;
-}
-
-void Console::MakeFormatString(nsCString& aFormat, int32_t aInteger,
-                               int32_t aMantissa, char aCh) const {
-  aFormat.Append('%');
-  if (aInteger >= 0) {
-    aFormat.AppendInt(aInteger);
-  }
-
-  if (aMantissa >= 0) {
-    aFormat.Append('.');
-    aFormat.AppendInt(aMantissa);
-  }
-
-  aFormat.Append(aCh);
 }
 
 // Stringify and Concat all the JS::Value in a single string using ' ' as
