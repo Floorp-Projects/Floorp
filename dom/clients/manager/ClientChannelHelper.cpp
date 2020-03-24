@@ -163,9 +163,9 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
 
   NS_DECL_ISUPPORTS
 
-  static void CreateClientForPrincipal(nsILoadInfo* aLoadInfo,
-                                       nsIPrincipal* aPrincipal,
-                                       nsISerialEventTarget* aEventTarget) {
+  virtual void CreateClientForPrincipal(nsILoadInfo* aLoadInfo,
+                                        nsIPrincipal* aPrincipal,
+                                        nsISerialEventTarget* aEventTarget) {
     // Create the new ClientSource.  This should only happen for window
     // Clients since support cross-origin redirects are blocked by the
     // same-origin security policy.
@@ -181,16 +181,41 @@ NS_IMPL_ISUPPORTS(ClientChannelHelper, nsIInterfaceRequestor,
                   nsIChannelEventSink);
 
 class ClientChannelHelperParent final : public ClientChannelHelper {
-  ~ClientChannelHelperParent() = default;
+  ~ClientChannelHelperParent() {
+    // This requires that if a load completes, the associated ClientSource is
+    // created and registers itself before this ClientChannelHelperParent is
+    // destroyed. Otherwise, we may incorrectly "forget" a future ClientSource
+    // which will actually be created.
+    SetFutureSourceInfo(Nothing());
+  }
 
   void CreateClient(nsILoadInfo* aLoadInfo, nsIPrincipal* aPrincipal) override {
     CreateClientForPrincipal(aLoadInfo, aPrincipal, mEventTarget);
   }
 
+  void SetFutureSourceInfo(Maybe<ClientInfo>&& aClientInfo) {
+    if (mRecentFutureSourceInfo) {
+      // No-op if the corresponding ClientSource has alrady been created, but
+      // it's not known if that's the case here.
+      ClientManager::ForgetFutureSource(*mRecentFutureSourceInfo);
+    }
+
+    if (aClientInfo) {
+      Unused << NS_WARN_IF(!ClientManager::ExpectFutureSource(*aClientInfo));
+    }
+
+    mRecentFutureSourceInfo = std::move(aClientInfo);
+  }
+
+  // Keep track of the most recent ClientInfo created which isn't backed by a
+  // ClientSource, which is used to notify ClientManagerService that the
+  // ClientSource won't ever actually be constructed.
+  Maybe<ClientInfo> mRecentFutureSourceInfo;
+
  public:
-  static void CreateClientForPrincipal(nsILoadInfo* aLoadInfo,
-                                       nsIPrincipal* aPrincipal,
-                                       nsISerialEventTarget* aEventTarget) {
+  void CreateClientForPrincipal(nsILoadInfo* aLoadInfo,
+                                nsIPrincipal* aPrincipal,
+                                nsISerialEventTarget* aEventTarget) override {
     // If we're managing redirects in the parent, then we don't want
     // to create a new ClientSource (since those need to live with
     // the global), so just allocate a new ClientInfo/id and we can
@@ -200,6 +225,7 @@ class ClientChannelHelperParent final : public ClientChannelHelper {
         ClientManager::CreateInfo(ClientType::Window, aPrincipal);
     if (reservedInfo) {
       aLoadInfo->SetReservedClientInfo(*reservedInfo);
+      SetFutureSourceInfo(std::move(reservedInfo));
     }
   }
   ClientChannelHelperParent(nsIInterfaceRequestor* aOuter,
@@ -294,11 +320,11 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
   rv = aChannel->GetNotificationCallbacks(getter_AddRefs(outerCallbacks));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (initialClientInfo.isNothing() && reservedClientInfo.isNothing()) {
-    T::CreateClientForPrincipal(loadInfo, channelPrincipal, aEventTarget);
-  }
-
   RefPtr<ClientChannelHelper> helper = new T(outerCallbacks, aEventTarget);
+
+  if (initialClientInfo.isNothing() && reservedClientInfo.isNothing()) {
+    helper->CreateClientForPrincipal(loadInfo, channelPrincipal, aEventTarget);
+  }
 
   // Only set the callbacks helper if we are able to reserve the client
   // successfully.
