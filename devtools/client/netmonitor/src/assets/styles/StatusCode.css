@@ -51,10 +51,10 @@
   color: var(--theme-icon-error-color);
 }
 
-.status-code-blocked img {
+.status-code-blocked-icon {
   height: 12px;
   width: 12px;
-  vertical-align: -2px;
+  background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
