@@ -35,7 +35,7 @@ GARBAGE_DIRS += config.statusd
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    config/autoconf.mk \
    mozilla-config.h \
-   netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
+   xpcom/xpcom-config.h xpcom/xpcom-private.h \
    .mozconfig.mk
 
 ifneq (mobile/android,$(MOZ_BUILD_APP))
