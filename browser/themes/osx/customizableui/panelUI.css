@@ -53,7 +53,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   margin: 1px;
 }
 
-
 /* Override OSX-specific toolkit styles for the bookmarks panel */
 menu.subviewbutton > .menu-right {
   margin-inline-end: -4px;
