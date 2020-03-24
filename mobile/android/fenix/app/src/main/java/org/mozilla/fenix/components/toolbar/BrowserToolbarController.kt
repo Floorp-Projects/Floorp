@@ -162,7 +162,7 @@ class DefaultBrowserToolbarController(
                         topSiteStorage.addTopSite(it.title, it.url)
                     }
                     MainScope().launch {
-                        FenixSnackbar.make(swipeRefresh, Snackbar.LENGTH_SHORT)
+                        FenixSnackbar.makeWithToolbarPadding(swipeRefresh, Snackbar.LENGTH_SHORT)
                             .setText(
                                 swipeRefresh.context.getString(R.string.snackbar_added_to_top_sites)
                             )
