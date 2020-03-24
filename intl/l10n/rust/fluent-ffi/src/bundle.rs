@@ -265,7 +265,8 @@ fn append_fluent_errors_to_ret_errors(ret_errors: &mut ThinVec<nsCString>, error
                     ret_errors.push(error.into());
                 }
                 ResolverError::Cyclic => {
-                    let error = "RangeError: Cyclic reference encountered while resolving a message";
+                    let error =
+                        "RangeError: Cyclic reference encountered while resolving a message";
                     ret_errors.push(error.into());
                 }
                 ResolverError::TooManyPlaceables => {
@@ -274,7 +275,10 @@ fn append_fluent_errors_to_ret_errors(ret_errors: &mut ThinVec<nsCString>, error
                 }
             },
             FluentError::Overriding { kind, id } => {
-                let error = format!("OverrideError: An entry {} of type {} is already defined in this bundle", id, kind);
+                let error = format!(
+                    "OverrideError: An entry {} of type {} is already defined in this bundle",
+                    id, kind
+                );
                 ret_errors.push(error.into());
             }
             FluentError::ParserError(pe) => {
