@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Telemetry.h"
 
 //-----------------------------------------------------------------------------
 
@@ -630,6 +631,14 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
 
       // NOTE: This results in GetProxyForURI being called
       if (pacURI) {
+        if (pacURI->SchemeIs("ftp")) {
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_NETWORK_PAC_URL_SCHEME::ftp);
+        } else {
+          Telemetry::AccumulateCategorical(
+              Telemetry::LABELS_NETWORK_PAC_URL_SCHEME::other);
+        }
+
         nsresult rv = pacURI->GetSpec(mNormalPACURISpec);
         MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         NS_NewChannel(getter_AddRefs(channel), pacURI,
