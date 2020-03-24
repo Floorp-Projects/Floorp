@@ -34,6 +34,7 @@
             android:layout_marginEnd="8dp"
             android:clickable="true"
             android:focusable="true"
+            android:contentDescription="@string/onboarding_close"
             app:srcCompat="@drawable/ic_close"
             android:tint="@color/primary_text_dark_theme"
             app:layout_constraintEnd_toEndOf="parent"

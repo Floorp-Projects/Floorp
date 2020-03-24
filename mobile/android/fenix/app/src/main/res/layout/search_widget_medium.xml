@@ -14,6 +14,7 @@
             android:id="@+id/button_search_widget_new_tab_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:contentDescription="@string/browser_menu_new_tab"
             android:layout_alignParentStart="true"
             android:scaleType="centerInside" />
 
@@ -34,6 +35,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:background="@drawable/ic_microphone_widget"
+            android:contentDescription="@string/search_widget_voice"
             android:layout_alignParentEnd="true"
             android:layout_alignTop="@id/button_search_widget_new_tab"
             android:layout_marginEnd="9dp"/>

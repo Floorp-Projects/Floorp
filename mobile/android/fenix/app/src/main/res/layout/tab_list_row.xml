@@ -84,6 +84,7 @@
             android:layout_height="48dp"
             android:alpha="0.8"
             android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close_tab"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_close" />
