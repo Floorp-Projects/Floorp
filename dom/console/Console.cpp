@@ -77,6 +77,12 @@ struct ConsoleStructuredCloneData {
   nsTArray<RefPtr<BlobImpl>> mBlobs;
 };
 
+static void ComposeAndStoreGroupName(JSContext* aCx,
+                                     const Sequence<JS::Value>& aData,
+                                     nsAString& aName,
+                                     nsTArray<nsString>* aGroupStack);
+static bool UnstoreGroupName(nsAString& aName, nsTArray<nsString>* aGroupStack);
+
 /**
  * Console API in workers uses the Structured Clone Algorithm to move any value
  * from the worker thread to the main-thread. Some object cannot be moved and,
@@ -1504,7 +1510,7 @@ void Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
   // aCx and aArguments are in the same compartment.
   JS::Rooted<JSObject*> targetScope(aCx, xpc::PrivilegedJunkScope());
   if (NS_WARN_IF(!PopulateConsoleNotificationInTheTargetScope(
-          aCx, aArguments, targetScope, &eventValue, aData))) {
+          aCx, aArguments, targetScope, &eventValue, aData, &mGroupStack))) {
     return;
   }
 
@@ -1542,7 +1548,8 @@ void Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
 bool Console::PopulateConsoleNotificationInTheTargetScope(
     JSContext* aCx, const Sequence<JS::Value>& aArguments,
     JS::Handle<JSObject*> aTargetScope,
-    JS::MutableHandle<JS::Value> aEventValue, ConsoleCallData* aData) {
+    JS::MutableHandle<JS::Value> aEventValue, ConsoleCallData* aData,
+    nsTArray<nsString>* aGroupStack) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aData);
   MOZ_ASSERT(aTargetScope);
@@ -1631,11 +1638,12 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
 
   if (aData->mMethodName == MethodGroup ||
       aData->mMethodName == MethodGroupCollapsed) {
-    ComposeAndStoreGroupName(aCx, event.mArguments.Value(), event.mGroupName);
+    ComposeAndStoreGroupName(aCx, event.mArguments.Value(), event.mGroupName,
+                             aGroupStack);
   }
 
   else if (aData->mMethodName == MethodGroupEnd) {
-    if (!UnstoreGroupName(event.mGroupName)) {
+    if (!UnstoreGroupName(event.mGroupName, aGroupStack)) {
       return false;
     }
   }
@@ -2001,9 +2009,12 @@ void Console::MakeFormatString(nsCString& aFormat, int32_t aInteger,
   aFormat.Append(aCh);
 }
 
-void Console::ComposeAndStoreGroupName(JSContext* aCx,
-                                       const Sequence<JS::Value>& aData,
-                                       nsAString& aName) {
+// Stringify and Concat all the JS::Value in a single string using ' ' as
+// separator. The new group name will be stored in aGroupStack array.
+static void ComposeAndStoreGroupName(JSContext* aCx,
+                                     const Sequence<JS::Value>& aData,
+                                     nsAString& aName,
+                                     nsTArray<nsString>* aGroupStack) {
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     if (i != 0) {
       aName.AppendLiteral(" ");
@@ -2023,17 +2034,20 @@ void Console::ComposeAndStoreGroupName(JSContext* aCx,
     aName.Append(string);
   }
 
-  mGroupStack.AppendElement(aName);
+  aGroupStack->AppendElement(aName);
 }
 
-bool Console::UnstoreGroupName(nsAString& aName) {
-  if (mGroupStack.IsEmpty()) {
+// Remove the last group name and return that name. It returns false if
+// aGroupStack is empty.
+static bool UnstoreGroupName(nsAString& aName,
+                             nsTArray<nsString>* aGroupStack) {
+  if (aGroupStack->IsEmpty()) {
     return false;
   }
 
-  uint32_t pos = mGroupStack.Length() - 1;
-  aName = mGroupStack[pos];
-  mGroupStack.RemoveElementAt(pos);
+  uint32_t pos = aGroupStack->Length() - 1;
+  aName = (*aGroupStack)[pos];
+  aGroupStack->RemoveElementAt(pos);
   return true;
 }
 
@@ -2390,7 +2404,7 @@ void Console::NotifyHandler(JSContext* aCx,
   // mConsoleEventNotifier->CallbackGlobal() is the scope where value will be
   // sent to.
   if (NS_WARN_IF(!PopulateConsoleNotificationInTheTargetScope(
-          aCx, aArguments, callableGlobal, &value, aCallData))) {
+          aCx, aArguments, callableGlobal, &value, aCallData, &mGroupStack))) {
     return;
   }
 
@@ -2427,7 +2441,8 @@ void Console::RetrieveConsoleEvents(JSContext* aCx,
     // targetScope is the destination scope and value will be populated in its
     // compartment.
     if (NS_WARN_IF(!PopulateConsoleNotificationInTheTargetScope(
-            aCx, sequence, targetScope, &value, mCallDataStorage[i]))) {
+            aCx, sequence, targetScope, &value, mCallDataStorage[i],
+            &mGroupStack))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
