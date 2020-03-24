@@ -44,6 +44,13 @@ body {
   border-top-color: rgba(255,255,255,0.15);
 }
 
+@media (max-width: 830px){
+  #categories > .category {
+    padding-inline-start: 5px;
+    margin-inline-start: 0;
+  }
+}
+
 /** Content area **/
 
 .main-content {
