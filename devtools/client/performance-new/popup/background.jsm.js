@@ -249,7 +249,9 @@ function startProfiler(pageContext) {
     features,
     threads,
     duration,
-  } = translatePreferencesToState(getRecordingPreferences(pageContext));
+  } = translatePreferencesToState(
+    getRecordingPreferences(pageContext, Services.profiler.GetFeatures())
+  );
 
   // Get the active BrowsingContext ID from browser.
   const { getActiveBrowsingContextID } = lazyRecordingUtils();
@@ -341,9 +343,10 @@ function getPrefPostfix(pageContext) {
 
 /**
  * @param {PageContext} pageContext
+ * @param {string[]} supportedFeatures
  * @returns {RecordingStateFromPreferences}
  */
-function getRecordingPreferences(pageContext) {
+function getRecordingPreferences(pageContext, supportedFeatures) {
   const postfix = getPrefPostfix(pageContext);
 
   // If you add a new preference here, please do not forget to update
@@ -352,7 +355,11 @@ function getRecordingPreferences(pageContext) {
   const presetName = Services.prefs.getCharPref(PRESET_PREF + postfix);
 
   // First try to get the values from a preset.
-  const recordingPrefs = getRecordingPrefsFromPreset(presetName, objdirs);
+  const recordingPrefs = getRecordingPrefsFromPreset(
+    presetName,
+    supportedFeatures,
+    objdirs
+  );
   if (recordingPrefs) {
     return recordingPrefs;
   }
@@ -364,14 +371,12 @@ function getRecordingPreferences(pageContext) {
   const threads = _getArrayOfStringsPref(THREADS_PREF + postfix);
   const duration = Services.prefs.getIntPref(DURATION_PREF + postfix);
 
-  const supportedFeatures = new Set(Services.profiler.GetFeatures());
-
   return {
     presetName: "custom",
     entries,
     interval,
     // Validate the features before passing them to the profiler.
-    features: features.filter(feature => supportedFeatures.has(feature)),
+    features: features.filter(feature => supportedFeatures.includes(feature)),
     threads,
     objdirs,
     duration,
@@ -380,10 +385,11 @@ function getRecordingPreferences(pageContext) {
 
 /**
  * @param {string} presetName
+ * @param {string[]} supportedFeatures
  * @param {string[]} objdirs
  * @return {RecordingStateFromPreferences | null}
  */
-function getRecordingPrefsFromPreset(presetName, objdirs) {
+function getRecordingPrefsFromPreset(presetName, supportedFeatures, objdirs) {
   if (presetName === "custom") {
     return null;
   }
@@ -394,8 +400,6 @@ function getRecordingPrefsFromPreset(presetName, objdirs) {
     return null;
   }
 
-  const supportedFeatures = new Set(Services.profiler.GetFeatures());
-
   return {
     presetName,
     entries: preset.entries,
@@ -403,7 +407,9 @@ function getRecordingPrefsFromPreset(presetName, objdirs) {
     // defines it in terms of milliseconds. Make the conversion here.
     interval: preset.interval * 1000,
     // Validate the features before passing them to the profiler.
-    features: preset.features.filter(feature => supportedFeatures.has(feature)),
+    features: preset.features.filter(feature =>
+      supportedFeatures.includes(feature)
+    ),
     threads: preset.threads,
     objdirs,
     duration: preset.duration,
@@ -458,19 +464,24 @@ function revertRecordingPreferences() {
  * easily switch between different settings.
  * @param {string} presetName
  * @param {PageContext} pageContext
+ * @param {string[]} supportedFeatures
  * @return {void}
  */
-function changePreset(pageContext, presetName) {
+function changePreset(pageContext, presetName, supportedFeatures) {
   const postfix = getPrefPostfix(pageContext);
   const objdirs = _getArrayOfStringsHostPref(OBJDIRS_PREF + postfix);
-  let recordingPrefs = getRecordingPrefsFromPreset(presetName, objdirs);
+  let recordingPrefs = getRecordingPrefsFromPreset(
+    presetName,
+    supportedFeatures,
+    objdirs
+  );
 
   if (!recordingPrefs) {
     // No recordingPrefs were found for that preset. Most likely this means this
     // is a custom preset, or it's one that we dont recognize for some reason.
     // Get the preferences from the individual preference values.
     Services.prefs.setCharPref(PRESET_PREF + postfix, presetName);
-    recordingPrefs = getRecordingPreferences(pageContext);
+    recordingPrefs = getRecordingPreferences(pageContext, supportedFeatures);
   }
 
   setRecordingPreferences(pageContext, recordingPrefs);
