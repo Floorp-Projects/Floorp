@@ -35,6 +35,8 @@ fails-if(Android&&nativeThemePref) == disabled-1.html disabled-1-ref.html
 != disabled-5.html disabled-5-notref.html
 != disabled-6.html disabled-6-notref.html
 
+!= author-padding.html author-padding-notref.html
+
 == width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html
 == width-auto-size-ltr.html width-auto-size-ltr-ref.html
 == width-exact-fit-ltr.html width-auto-size-ltr-ref.html
