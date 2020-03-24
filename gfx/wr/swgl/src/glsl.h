@@ -427,6 +427,10 @@ vec2_scalar make_vec2(float n) { return vec2_scalar{n, n}; }
 
 vec2_scalar make_vec2(float x, float y) { return vec2_scalar{x, y}; }
 
+vec2_scalar make_vec2(int32_t x, int32_t y) {
+  return vec2_scalar{float(x), float(y)};
+}
+
 template <typename N>
 vec2 make_vec2(const N& n) {
   return vec2(n);
@@ -1763,6 +1767,9 @@ typedef isampler2D_impl* isampler2D;
 struct isampler2DRGBA32I_impl : isampler2D_impl {};
 typedef isampler2DRGBA32I_impl* isampler2DRGBA32I;
 
+struct sampler2DRect_impl : samplerCommon, samplerFilter {};
+typedef sampler2DRect_impl* sampler2DRect;
+
 struct mat4_scalar;
 
 struct mat2_scalar {
@@ -2270,6 +2277,13 @@ vec4_scalar texelFetch(sampler2DR8 sampler, ivec2_scalar P, int lod) {
       0.0f, 0.0f};
 }
 
+vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
+  P = clamp2D(P, sampler);
+  assert(sampler->format == TextureFormat::RGBA8);
+  I32 offset = P.x + P.y * sampler->stride;
+  return fetchOffsetsRGBA8(sampler, offset);
+}
+
 vec4 texelFetch(sampler2DArray sampler, ivec3 P, int lod) {
   P = clamp2DArray(P, sampler);
   if (sampler->format == TextureFormat::RGBA32F) {
@@ -2643,6 +2657,17 @@ vec4 texture(sampler2D sampler, vec2 P) {
   }
 }
 
+vec4 texture(sampler2DRect sampler, vec2 P) {
+  assert(sampler->format == TextureFormat::RGBA8);
+  if (sampler->filter == TextureFilter::LINEAR) {
+    return textureLinearRGBA8(sampler,
+                              P * vec2_scalar{1.0f / sampler->width, 1.0f / sampler->height});
+  } else {
+    ivec2 coord(roundto(P.x, 1.0f), roundto(P.y, 1.0f));
+    return texelFetch(sampler, coord);
+  }
+}
+
 vec4 texture(sampler2DArray sampler, vec3 P, Float layer) {
   assert(0);
   return vec4();
@@ -2679,6 +2704,10 @@ ivec3_scalar textureSize(sampler2DArray sampler, int) {
 }
 
 ivec2_scalar textureSize(sampler2D sampler, int) {
+  return ivec2_scalar{int32_t(sampler->width), int32_t(sampler->height)};
+}
+
+ivec2_scalar textureSize(sampler2DRect sampler) {
   return ivec2_scalar{int32_t(sampler->width), int32_t(sampler->height)};
 }
 

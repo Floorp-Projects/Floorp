@@ -319,6 +319,7 @@ fn write_program_samplers(state: &mut OutputState, uniform_indices: &UniformIndi
     for (name, (_, tk, storage)) in uniform_indices.iter() {
         match tk {
             hir::TypeKind::Sampler2D
+            | hir::TypeKind::Sampler2DRect
             | hir::TypeKind::ISampler2D
             | hir::TypeKind::Sampler2DArray => {
                 write!(state, " ");
@@ -344,6 +345,7 @@ fn write_program_samplers(state: &mut OutputState, uniform_indices: &UniformIndi
     for (name, (index, tk, _)) in uniform_indices.iter() {
         match tk {
             hir::TypeKind::Sampler2D
+            | hir::TypeKind::Sampler2DRect
             | hir::TypeKind::ISampler2D
             | hir::TypeKind::Sampler2DArray => {
                 write!(state, " case {}:\n", index);
@@ -370,7 +372,8 @@ fn write_bind_textures(state: &mut OutputState, uniforms: &[hir::SymRef]) {
             hir::SymDecl::Global(hir::StorageClass::Sampler(_format), _, ty, _) => {
                 let name = sym.name.as_str();
                 match ty.kind {
-                    hir::TypeKind::Sampler2D => write!(state,
+                    hir::TypeKind::Sampler2D
+                    | hir::TypeKind::Sampler2DRect => write!(state,
                         " self->{0} = lookup_sampler(&prog->samplers.{0}_impl, prog->samplers.{0}_slot);\n",
                         name),
                     hir::TypeKind::ISampler2D => write!(state,
@@ -2678,7 +2681,8 @@ fn define_texel_fetch_ptr(
     show_indent(state);
     if let hir::SymDecl::Global(_, _, ty, _) = &sampler_sym.decl {
         match ty.kind {
-            hir::TypeKind::Sampler2D => {
+            hir::TypeKind::Sampler2D
+            | hir::TypeKind::Sampler2DRect => {
                 write!(
                     state,
                     "vec4_scalar* {}_{}_fetch = ",
