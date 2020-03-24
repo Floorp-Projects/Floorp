@@ -16,7 +16,7 @@ async refcounted protocol PChromiumCDM
   manager PGMPContent;
 child:
 
-  // cdm::ContentDecryptionModule9+10
+  // cdm::ContentDecryptionModule_10
   async Init(bool aAllowDistinctiveIdentifier,
              bool aAllowPersistentState) returns (bool aSuccess);
 
@@ -67,7 +67,7 @@ child:
 parent:
   async __delete__();
 
-  // cdm::Host9+10
+  // cdm::Host_10
   async OnResolvePromiseWithKeyStatus(uint32_t aPromiseId, uint32_t aKeyStatus);
 
   async OnResolveNewSessionPromise(uint32_t aPromiseId, nsCString aSessionId);
@@ -93,13 +93,13 @@ parent:
 
   async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
 
-  // Return values of cdm::ContentDecryptionModule9::Decrypt
+  // Return values of cdm::ContentDecryptionModule_10::Decrypt
   async Decrypted(uint32_t aId, uint32_t aStatus, Shmem aDecryptedData);
   async DecryptFailed(uint32_t aId, uint32_t aStatus);
 
   async OnDecoderInitDone(uint32_t aStatus);
 
-  // Return values of cdm::ContentDecryptionModule9::DecryptAndDecodeFrame
+  // Return values of cdm::ContentDecryptionModule_10::DecryptAndDecodeFrame
   async DecodedShmem(CDMVideoFrame aFrame, Shmem aData);
   async DecodedData(CDMVideoFrame aFrame, uint8_t[] aData);
   async DecodeFailed(uint32_t aStatus);
