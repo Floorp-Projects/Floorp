@@ -5734,7 +5734,7 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
   }
 }
 
-void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
+void Document::SetCookie(const nsAString& aCookie, ErrorResult& aRv) {
   if (mDisableCookieAccess) {
     return;
   }
@@ -5742,7 +5742,7 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
   // If the document's sandboxed origin flag is set, access to write cookies
   // is prohibited.
   if (mSandboxFlags & SANDBOXED_ORIGIN) {
-    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
 
@@ -5761,31 +5761,49 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
+  if (!mDocumentURI) {
+    return;
+  }
+
+  // The code for getting the URI matches Navigator::CookieEnabled
+  nsCOMPtr<nsIURI> principalURI;
+  NodePrincipal()->GetURI(getter_AddRefs(principalURI));
+
+  if (!principalURI) {
+    // Document's principal is not a content or null (may be system), so
+    // can't set cookies
+
+    return;
+  }
+
+  nsCOMPtr<nsIChannel> channel(mChannel);
+  if (!channel) {
+    channel = CreateDummyChannelForCookies(principalURI);
+    if (!channel) {
+      return;
+    }
+  }
+
   // not having a cookie service isn't an error
   nsCOMPtr<nsICookieService> service =
       do_GetService(NS_COOKIESERVICE_CONTRACTID);
-  if (service && mDocumentURI) {
-    // The code for getting the URI matches Navigator::CookieEnabled
-    nsCOMPtr<nsIURI> principalURI;
-    NodePrincipal()->GetURI(getter_AddRefs(principalURI));
+  if (!service) {
+    return;
+  }
 
-    if (!principalURI) {
-      // Document's principal is not a content or null (may be system), so
-      // can't set cookies
+  NS_ConvertUTF16toUTF8 cookie(aCookie);
+  nsresult rv = service->SetCookieString(principalURI, cookie, channel);
 
-      return;
-    }
+  // No warning messages here.
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
-    nsCOMPtr<nsIChannel> channel(mChannel);
-    if (!channel) {
-      channel = CreateDummyChannelForCookies(principalURI);
-      if (!channel) {
-        return;
-      }
-    }
-
-    NS_ConvertUTF16toUTF8 cookie(aCookie);
-    service->SetCookieString(principalURI, cookie, channel);
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(ToSupports(this), "document-set-cookie",
+                                     nsString(aCookie).get());
   }
 }
 
