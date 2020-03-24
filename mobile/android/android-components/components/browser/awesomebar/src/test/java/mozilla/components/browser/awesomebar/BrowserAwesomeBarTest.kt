@@ -18,6 +18,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
@@ -383,6 +384,20 @@ class BrowserAwesomeBarTest {
         awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "21", score = 0, provider = provider))
 
         assertEquals(1, awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "1", score = 0, provider = provider)))
+    }
+
+    @Test
+    fun `containsProvider - checks if provider exists`() {
+        val awesomeBar = BrowserAwesomeBar(testContext)
+        val provider1 = mockProvider()
+        `when`(provider1.id).thenReturn("1")
+
+        val provider2 = mockProvider()
+        `when`(provider2.id).thenReturn("2")
+
+        awesomeBar.addProviders(provider1)
+        assertTrue(awesomeBar.containsProvider(provider1))
+        assertFalse(awesomeBar.containsProvider(provider2))
     }
 
     @Test(expected = IllegalStateException::class)
