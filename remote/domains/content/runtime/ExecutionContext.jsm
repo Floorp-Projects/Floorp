@@ -334,89 +334,91 @@ class ExecutionContext {
    *  The serialized description of the given object
    */
   _toRemoteObject(debuggerObj) {
+    const result = {};
+
     // First handle all non-primitive values which are going to be wrapped by the
     // Debugger API into Debugger.Object instances
     if (debuggerObj instanceof Debugger.Object) {
-      const objectId = uuid();
-      this._remoteObjects.set(objectId, debuggerObj);
       const rawObj = debuggerObj.unsafeDereference();
+
+      result.objectId = uuid();
+      result.type = typeof rawObj;
+
+      this._remoteObjects.set(result.objectId, debuggerObj);
 
       // Map the Debugger API `class` attribute to CDP `subtype`
       const cls = debuggerObj.class;
-      let subtype;
       if (debuggerObj.isProxy) {
-        subtype = "proxy";
+        result.subtype = "proxy";
       } else if (cls == "Array") {
-        subtype = "array";
+        result.subtype = "array";
       } else if (cls == "RegExp") {
-        subtype = "regexp";
+        result.subtype = "regexp";
       } else if (cls == "Date") {
-        subtype = "date";
+        result.subtype = "date";
       } else if (cls == "Map") {
-        subtype = "map";
+        result.subtype = "map";
       } else if (cls == "Set") {
-        subtype = "set";
+        result.subtype = "set";
       } else if (cls == "WeakMap") {
-        subtype = "weakmap";
+        result.subtype = "weakmap";
       } else if (cls == "WeakSet") {
-        subtype = "weakset";
+        result.subtype = "weakset";
       } else if (cls == "Error") {
-        subtype = "error";
+        result.subtype = "error";
       } else if (cls == "Promise") {
-        subtype = "promise";
+        result.subtype = "promise";
       } else if (TYPED_ARRAY_CLASSES.includes(cls)) {
-        subtype = "typedarray";
+        result.subtype = "typedarray";
       } else if (Node.isInstance(rawObj)) {
-        subtype = "node";
+        result.subtype = "node";
       }
-
-      const type = typeof rawObj;
-      return { objectId, type, subtype };
+      return result;
     }
 
     // Now, handle all values that Debugger API isn't wrapping into Debugger.API.
     // This is all the primitive JS types.
-    const type = typeof debuggerObj;
+    result.type = typeof debuggerObj;
 
     // Symbol and BigInt are primitive values but aren't serializable.
     // CDP expects them to be considered as objects, with an objectId to later inspect
     // them.
-    if (type == "symbol" || type == "bigint") {
-      const objectId = uuid();
-      this._remoteObjects.set(objectId, debuggerObj);
-      return { objectId, type };
+    if (result.type == "symbol") {
+      result.description = debuggerObj.toString();
+
+      result.objectId = uuid();
+      this._remoteObjects.set(result.objectId, debuggerObj);
+
+      return result;
     }
 
     // A few primitive type can't be serialized and CDP has special case for them
-    let unserializableValue = undefined;
     if (Object.is(debuggerObj, NaN)) {
-      unserializableValue = "NaN";
+      result.unserializableValue = "NaN";
     } else if (Object.is(debuggerObj, -0)) {
-      unserializableValue = "-0";
+      result.unserializableValue = "-0";
     } else if (Object.is(debuggerObj, Infinity)) {
-      unserializableValue = "Infinity";
+      result.unserializableValue = "Infinity";
     } else if (Object.is(debuggerObj, -Infinity)) {
-      unserializableValue = "-Infinity";
+      result.unserializableValue = "-Infinity";
+    } else if (result.type == "bigint") {
+      result.unserializableValue = `${debuggerObj}n`;
     }
-    if (unserializableValue) {
-      return {
-        unserializableValue,
-      };
+
+    if (result.unserializableValue) {
+      result.description = result.unserializableValue;
+      return result;
     }
 
     // Otherwise, we serialize the primitive values as-is via `value` attribute
+    result.value = debuggerObj;
 
     // null is special as it has a dedicated subtype
-    let subtype;
     if (debuggerObj === null) {
-      subtype = "null";
+      result.subtype = "null";
     }
 
-    return {
-      type,
-      subtype,
-      value: debuggerObj,
-    };
+    return result;
   }
 
   /**
