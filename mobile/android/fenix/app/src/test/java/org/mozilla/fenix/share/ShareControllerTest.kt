@@ -99,7 +99,7 @@ class ShareControllerTest {
         val testController = DefaultShareController(activityContext, shareData, mockk(), mockk(), mockk(),
             recentAppStorage, testCoroutineScope, dismiss)
         every { activityContext.startActivity(capture(shareIntent)) } just Runs
-        every { recentAppStorage.updateRecentApp(appShareOption.packageName) } just Runs
+        every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
 
         testController.handleShareToApp(appShareOption)
 
@@ -114,7 +114,7 @@ class ShareControllerTest {
             assertThat(shareIntent.captured.component!!.className).isEqualTo(appClassName)
         }
         verifyOrder {
-            recentAppStorage.updateRecentApp(appShareOption.packageName)
+            recentAppStorage.updateRecentApp(appShareOption.activityName)
             activityContext.startActivity(shareIntent.captured)
             dismiss(ShareController.Result.SUCCESS)
         }

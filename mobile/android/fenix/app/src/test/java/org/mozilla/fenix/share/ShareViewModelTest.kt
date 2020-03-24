@@ -89,7 +89,7 @@ class ShareViewModelTest {
 
         val recentAppOptions = ArrayList<RecentApp>()
         val appEntity: RecentApp = mockk()
-        every { appEntity.packageName } returns "Package"
+        every { appEntity.activityName } returns "Activity"
         recentAppOptions.add(appEntity)
         val storage: RecentAppsStorage = mockk(relaxed = true)
         viewModel.recentAppsStorage = storage
