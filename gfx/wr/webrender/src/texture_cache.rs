@@ -41,7 +41,7 @@ const TEXTURE_REGION_PIXELS: usize =
 
 // The minimum number of bytes that we must be able to reclaim in order
 // to justify clearing the entire shared cache in order to shrink it.
-const RECLAIM_THRESHOLD_BYTES: usize = 5 * 1024 * 1024;
+const RECLAIM_THRESHOLD_BYTES: usize = 16 * 512 * 512 * 4;
 
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
@@ -315,11 +315,11 @@ impl SharedTextures {
     }
 
     /// Returns the cumulative number of GPU bytes consumed by empty regions.
-    fn empty_region_bytes(&self) -> usize {
-        self.array_alpha8_linear.empty_region_bytes() +
-        self.array_alpha16_linear.empty_region_bytes() +
-        self.array_color8_linear.empty_region_bytes() +
-        self.array_color8_nearest.empty_region_bytes()
+    fn reclaimable_region_bytes(&self) -> usize {
+        self.array_alpha8_linear.reclaimable_region_bytes() +
+        self.array_alpha16_linear.reclaimable_region_bytes() +
+        self.array_color8_linear.reclaimable_region_bytes() +
+        self.array_color8_nearest.reclaimable_region_bytes()
     }
 
     /// Clears each texture in the set, with the given set of pending updates.
@@ -904,7 +904,7 @@ impl TextureCache {
         // self.require_frame_build flag which is set if we end up calling
         // clear_shared.
         debug_assert!(!self.now.is_valid());
-        if self.shared_textures.empty_region_bytes() >= RECLAIM_THRESHOLD_BYTES {
+        if self.shared_textures.reclaimable_region_bytes() >= RECLAIM_THRESHOLD_BYTES {
             self.reached_reclaim_threshold.get_or_insert(time);
         } else {
             self.reached_reclaim_threshold = None;
@@ -912,6 +912,7 @@ impl TextureCache {
         if let Some(t) = self.reached_reclaim_threshold {
             let dur = time.duration_since(t).unwrap_or_default();
             if dur >= Duration::from_secs(5) {
+                println!("#n !! reclaim shared memory");
                 self.clear_shared();
                 self.reached_reclaim_threshold = None;
             }
@@ -935,6 +936,7 @@ impl TextureCache {
         let do_periodic_gc = time_since_last_gc >= Duration::from_secs(5) &&
             self.shared_textures.size_in_bytes() >= RECLAIM_THRESHOLD_BYTES * 2;
         if do_periodic_gc {
+            println!("#n ######## periodic GC");
             let threshold = EvictionThresholdBuilder::new(self.now)
                 .max_frames(1)
                 .max_time_s(10)
@@ -1775,7 +1777,7 @@ impl TextureArray {
     }
 
     /// Returns the number of GPU bytes consumed by empty regions.
-    fn empty_region_bytes(&self) -> usize {
+    fn reclaimable_region_bytes(&self) -> usize {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
         let empty_regions: usize = self.units.iter().map(|u| u.empty_regions).sum();
         empty_regions * TEXTURE_REGION_PIXELS * bpp
