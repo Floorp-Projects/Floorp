@@ -725,20 +725,6 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
                                           nsIFrame* aFrame,
                                           StyleAppearance aAppearance,
                                           LayoutDeviceIntMargin* aResult) {
-  if (aAppearance == StyleAppearance::Menulist ||
-      aAppearance == StyleAppearance::MenulistTextfield ||
-      aAppearance == StyleAppearance::NumberInput ||
-      aAppearance == StyleAppearance::Textarea ||
-      aAppearance == StyleAppearance::Textfield) {
-    // If we have author-specified padding for these elements, don't do the
-    // fixups below.
-    if (aFrame->PresContext()->HasAuthorSpecifiedRules(
-            aFrame, NS_AUTHOR_SPECIFIED_PADDING)) {
-      return false;
-    }
-  }
-
-  uint32_t dpi = GetDPIRatio(aFrame);
   switch (aAppearance) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
     // and have a meaningful baseline, so they can't have
@@ -748,6 +734,21 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::MozMenulistArrowButton:
       aResult->SizeTo(0, 0, 0, 0);
       return true;
+    default:
+      break;
+  }
+
+  // Respect author padding.
+  //
+  // TODO(emilio): Consider just unconditionally returning false, so that the
+  // default size of all elements matches other platforms and the UA stylesheet.
+  if (aFrame->PresContext()->HasAuthorSpecifiedRules(
+          aFrame, NS_AUTHOR_SPECIFIED_PADDING)) {
+    return false;
+  }
+
+  uint32_t dpi = GetDPIRatio(aFrame);
+  switch (aAppearance) {
     case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
@@ -767,10 +768,8 @@ bool nsNativeBasicTheme::GetWidgetPadding(nsDeviceContext* aContext,
       aResult->SizeTo(6 * dpi, 7 * dpi, 6 * dpi, 7 * dpi);
       return true;
     default:
-      break;
+      return false;
   }
-
-  return false;
 }
 
 bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
