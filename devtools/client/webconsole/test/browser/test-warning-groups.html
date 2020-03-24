@@ -9,7 +9,7 @@
     <script>
       "use strict";
 
-      /* exported loadImage, loadIframe */
+      /* exported loadImage, loadIframe, createCookie */
       function loadImage(src) {
         const img = document.createElement("img");
         img.src = src;
@@ -22,6 +22,10 @@
         const iframe = document.createElement("iframe");
         iframe.src = src;
         document.body.appendChild(iframe);
+      }
+
+      function createCookie(cookie) {
+        document.cookie = cookie;
       }
     </script>
   </body>
