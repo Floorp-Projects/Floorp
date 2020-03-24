@@ -76,13 +76,18 @@ class ExecutionContext {
    *
    * @param {String} expression
    *   The JS expression to evaluate against the JS context.
-   * @return {Object} A multi-form object depending if the execution succeed or failed.
-   *   If the expression failed to evaluate, it will return an object with an
-   *   `exceptionDetails` attribute matching the `ExceptionDetails` CDP type.
-   *   Otherwise it will return an object with `result` attribute whose type is
+   * @param {boolean} returnByValue
+   *     Whether the result is expected to be a JSON object
+   *     that should be sent by value.
+   *
+   * @return {Object} A multi-form object depending if the execution
+   *   succeed or failed. If the expression failed to evaluate,
+   *   it will return an object with an `exceptionDetails` attribute
+   *   matching the `ExceptionDetails` CDP type. Otherwise it will
+   *   return an object with `result` attribute whose type is
    *   `RemoteObject` CDP type.
    */
-  evaluate(expression) {
+  evaluate(expression, returnByValue) {
     let rv = this._debuggee.executeInGlobal(expression);
     if (!rv) {
       return {
@@ -91,12 +96,19 @@ class ExecutionContext {
         },
       };
     }
+
     if (rv.throw) {
       return this._returnError(rv.throw);
     }
-    return {
-      result: this._toRemoteObject(rv.return),
-    };
+
+    let result;
+    if (returnByValue) {
+      result = this._toRemoteObjectByValue(result);
+    } else {
+      result = this._toRemoteObject(rv.return);
+    }
+
+    return { result };
   }
 
   /**
@@ -437,6 +449,7 @@ class ExecutionContext {
    *
    * @param {Debugger.Object} obj
    *  The object to convert
+   *
    * @return {Object}
    *  The converted object
    */

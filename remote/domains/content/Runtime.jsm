@@ -223,10 +223,13 @@ class Runtime extends ContentProcessDomain {
    *     The evaluation result, and optionally exception details.
    */
   evaluate(options = {}) {
-    const { expression, contextId } = options;
+    const { expression, contextId, returnByValue = false } = options;
 
     if (typeof expression != "string") {
       throw new Error("expression: string value expected");
+    }
+    if (typeof returnByValue != "boolean") {
+      throw new Error("returnByValue: boolean value expected");
     }
 
     let context;
@@ -239,7 +242,7 @@ class Runtime extends ContentProcessDomain {
       context = this._getDefaultContextForWindow();
     }
 
-    return context.evaluate(expression);
+    return context.evaluate(expression, returnByValue);
   }
 
   getProperties({ objectId, ownProperties }) {
