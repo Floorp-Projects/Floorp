@@ -21,6 +21,7 @@
 #include "mozilla/Span.h"
 #include "PlayingRefChangeHandler.h"
 #include "nsPrintfCString.h"
+#include "Tracing.h"
 
 namespace mozilla {
 namespace dom {
@@ -407,6 +408,8 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
 // do not run until after ProcessBlocksOnPorts() has returned.
 bool WorkletNodeEngine::CallProcess(AudioNodeTrack* aTrack, JSContext* aCx,
                                     JS::Handle<JS::Value> aCallable) {
+  TRACE_AUDIO_CALLBACK();
+
   JS::RootedVector<JS::Value> argv(aCx);
   if (NS_WARN_IF(!argv.resize(3))) {
     return false;
@@ -455,6 +458,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                              bool* aFinished) {
   MOZ_ASSERT(aInput.Length() == InputCount());
   MOZ_ASSERT(aOutput.Length() == OutputCount());
+  TRACE_AUDIO_CALLBACK();
 
   bool isSilent = true;
   if (mProcessor) {

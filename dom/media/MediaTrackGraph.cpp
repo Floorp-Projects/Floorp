@@ -1142,7 +1142,6 @@ void MediaTrackGraphImpl::RunMessageAfterProcessing(
 }
 
 void MediaTrackGraphImpl::RunMessagesInQueue() {
-  TRACE_AUDIO_CALLBACK();
   MOZ_ASSERT(OnGraphThread());
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
@@ -1152,6 +1151,7 @@ void MediaTrackGraphImpl::RunMessagesInQueue() {
         mFrontMessageQueue[i].mMessages;
 
     for (uint32_t j = 0; j < messages.Length(); ++j) {
+      TRACE_AUDIO_CALLBACK();
       messages[j]->Run();
     }
   }
@@ -1394,6 +1394,7 @@ auto MediaTrackGraphImpl::OneIterationImpl(GraphTime aStateEnd,
   // Process MessagePort events.
   // These require a single thread, which has an nsThread with an event queue.
   if (mGraphRunner || !mRealtime) {
+    TRACE_AUDIO_CALLBACK_COMMENT("MessagePort events");
     NS_ProcessPendingEvents(nullptr);
   }
 
