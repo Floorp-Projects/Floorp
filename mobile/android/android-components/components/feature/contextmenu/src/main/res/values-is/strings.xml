@@ -6,6 +6,8 @@
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">Opna tengil í einkaflipa</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Opna mynd í nýjum flipa</string>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">Tengill til að hala niður</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Deila tengli</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
