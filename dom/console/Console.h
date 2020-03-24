@@ -392,7 +392,7 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
                                              const nsAString& aCountLabel,
                                              uint32_t aCountValue) const;
 
-  bool ShouldIncludeStackTrace(MethodName aMethodName) const;
+  static bool ShouldIncludeStackTrace(MethodName aMethodName);
 
   JSObject* GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal);
 
