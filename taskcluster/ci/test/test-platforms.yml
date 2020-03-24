@@ -64,6 +64,11 @@ linux1804-64-asan/opt:
         - linux1804-tests
         - web-platform-tests
 
+linux1804-64-tsan/opt:
+    build-platform: linux64-tsan/opt
+    test-sets:
+        - linux-tsan-tests
+
 linux1804-64-qr/opt:
     build-platform: linux64/opt
     test-sets:
@@ -122,11 +127,6 @@ linux64-shippable/opt:
         - raptor-profiling
         - raptor-fetch-profiling
         - talos-profiling
-
-linux64-tsan/opt:
-    build-platform: linux64-tsan/opt
-    test-sets:
-        - linux-tsan-tests
 
 # QR builds just run a subset right now.
 linux64-qr/opt:

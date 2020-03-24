@@ -805,7 +805,6 @@ def set_tier(config, tests):
                 'linux64-shippable/opt',
                 'linux64-devedition/opt',
                 'linux64-asan/opt',
-                'linux64-tsan/opt',
                 'linux64-qr/opt',
                 'linux64-qr/debug',
                 'linux64-pgo-qr/opt',
