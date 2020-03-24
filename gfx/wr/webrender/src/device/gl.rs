@@ -32,8 +32,7 @@ use std::{
     thread,
     time::Duration,
 };
-use webrender_build::shader::ProgramSourceDigest;
-use webrender_build::shader::{ShaderSourceParser, shader_source_from_file};
+use webrender_build::shader::{ProgramSourceDigest, ShaderSourceParser, shader_source_from_file};
 
 /// Sequence number for frames, as tracked by the device layer.
 #[derive(Debug, Copy, Clone, PartialEq, Ord, Eq, PartialOrd)]
@@ -988,6 +987,8 @@ pub struct Capabilities {
     pub supports_pixel_local_storage: bool,
     /// Whether advanced blend equations are supported.
     pub supports_advanced_blend_equation: bool,
+    /// Whether dual-source blending is supported.
+    pub supports_dual_source_blending: bool,
     /// Whether KHR_debug is supported for getting debug messages from
     /// the driver.
     pub supports_khr_debug: bool,
@@ -1509,6 +1510,12 @@ impl Device {
             supports_extension(&extensions, "GL_KHR_blend_equation_advanced") &&
             !is_adreno;
 
+        let supports_dual_source_blending = match gl.get_type() {
+            gl::GlType::Gl => supports_extension(&extensions,"GL_ARB_blend_func_extended") &&
+                supports_extension(&extensions,"GL_ARB_explicit_attrib_location"),
+            gl::GlType::Gles => supports_extension(&extensions,"GL_EXT_blend_func_extended"),
+        };
+
         // On the android emulator, glShaderSource can crash if the source
         // strings are not null-terminated. See bug 1591945.
         let requires_null_terminated_shader_source = is_emulator;
@@ -1542,6 +1549,7 @@ impl Device {
                 supports_blit_to_texture_array,
                 supports_pixel_local_storage,
                 supports_advanced_blend_equation,
+                supports_dual_source_blending,
                 supports_khr_debug,
                 supports_texture_swizzle,
                 supports_nonzero_pbo_offsets,

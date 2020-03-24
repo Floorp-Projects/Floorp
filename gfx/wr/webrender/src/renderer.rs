@@ -2071,13 +2071,8 @@ impl Renderer {
 
         let color_cache_formats = device.preferred_color_formats();
         let swizzle_settings = device.swizzle_settings();
-        let supports_dual_source_blending = match gl_type {
-            gl::GlType::Gl => device.supports_extension("GL_ARB_blend_func_extended") &&
-                device.supports_extension("GL_ARB_explicit_attrib_location"),
-            gl::GlType::Gles => device.supports_extension("GL_EXT_blend_func_extended"),
-        };
         let use_dual_source_blending =
-            supports_dual_source_blending &&
+            device.get_capabilities().supports_dual_source_blending &&
             options.allow_dual_source_blending &&
             // If using pixel local storage, subpixel AA isn't supported (we disable it on all
             // mobile devices explicitly anyway).
@@ -5882,6 +5877,8 @@ impl Renderer {
         self.shaders
             .borrow_mut()
             .pls_init
+            .as_mut()
+            .unwrap()
             .bind(
                 &mut self.device,
                 projection,
@@ -5910,6 +5907,8 @@ impl Renderer {
         self.shaders
             .borrow_mut()
             .pls_resolve
+            .as_mut()
+            .unwrap()
             .bind(
                 &mut self.device,
                 projection,

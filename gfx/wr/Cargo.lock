@@ -1868,6 +1868,7 @@ dependencies = [
 name = "webrender_build"
 version = "0.0.1"
 dependencies = [
+ "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
