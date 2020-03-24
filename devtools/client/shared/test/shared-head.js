@@ -86,17 +86,24 @@ try {
 // Force devtools to be initialized so menu items and keyboard shortcuts get installed
 require("devtools/client/framework/devtools-browser");
 
-// Register the test actor in all content processes.
-// test-actor.js contains the definition for the TestActor, the TestSpec and the
-// TestFront, as well as the registration code.
-
 /**
  * Observer code to register the test actor in every DevTools server which
  * starts registering its own actors.
+ *
+ * We require immediately the test actor file, because it will force to load and
+ * register the front and the spec for TestActor. Normally specs and fronts are
+ * in separate files registered in specs/index.js. But here to simplify the
+ * setup everything is in the same file and we force to load it here.
+ *
  * DevToolsServer will emit "devtools-server-initialized" after finishing its
  * initialization. We watch this observable to add our custom actor.
+ *
  * As a single test may create several DevTools servers, we keep the observer
- * alive until the loader is destroyed.
+ * alive until the test ends.
+ *
+ * To avoid leaks, the observer needs to be removed at the end of each test.
+ * The test cleanup will send the async message "remove-devtools-testactor-observer",
+ * we listen to this message to cleanup the observer.
  */
 function testActorBootstrap() {
   const TEST_ACTOR_URL =
@@ -117,22 +124,25 @@ function testActorBootstrap() {
       type: { target: true },
     });
   };
-
   Services.obs.addObserver(
     actorRegistryObserver,
     "devtools-server-initialized"
   );
 
-  const unloadObserver = function(subject) {
-    if (subject.wrappedJSObject == _require("@loader/unload")) {
-      Services.obs.removeObserver(
-        actorRegistryObserver,
-        "devtools-server-initialized"
-      );
-      Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");
-    }
+  const unloadListener = () => {
+    Services.cpmm.removeMessageListener(
+      "remove-devtools-testactor-observer",
+      unloadListener
+    );
+    Services.obs.removeObserver(
+      actorRegistryObserver,
+      "devtools-server-initialized"
+    );
   };
-  Services.obs.addObserver(unloadObserver, "devtools:loader:destroy");
+  Services.cpmm.addMessageListener(
+    "remove-devtools-testactor-observer",
+    unloadListener
+  );
 }
 
 const testActorBootstrapScript = "data:,(" + testActorBootstrap + ")()";
@@ -143,6 +153,7 @@ Services.ppmm.loadProcessScript(
 );
 
 registerCleanupFunction(() => {
+  Services.ppmm.broadcastAsyncMessage("remove-devtools-testactor-observer");
   Services.ppmm.removeDelayedProcessScript(testActorBootstrapScript);
 });
 
