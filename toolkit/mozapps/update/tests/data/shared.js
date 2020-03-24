@@ -46,7 +46,6 @@ const PREF_APP_UPDATE_SERVICE_ENABLED = "app.update.service.enabled";
 const PREF_APP_UPDATE_SOCKET_MAXERRORS = "app.update.socket.maxErrors";
 const PREF_APP_UPDATE_STAGING_ENABLED = "app.update.staging.enabled";
 const PREF_APP_UPDATE_UNSUPPORTED_URL = "app.update.unsupported.url";
-const PREF_APP_UPDATE_URL = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS = "app.update.url.details";
 const PREF_APP_UPDATE_URL_MANUAL = "app.update.url.manual";
 
@@ -241,7 +240,7 @@ function setUpdateChannel(aChannel) {
 }
 
 /**
- * Sets the app.update.url default preference.
+ * Sets the effective update url.
  *
  * @param  aURL
  *         The update url. If not specified 'URL_HOST + "/update.xml"' will be
@@ -249,8 +248,62 @@ function setUpdateChannel(aChannel) {
  */
 function setUpdateURL(aURL) {
   let url = aURL ? aURL : URL_HOST + "/update.xml";
-  debugDump("setting " + PREF_APP_UPDATE_URL + " to " + url);
-  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
+  debugDump("setting update URL to " + url);
+
+  // The Update URL is stored in appinfo. We can replace this process's appinfo
+  // directly, but that will affect only this process. Luckily, the update URL
+  // is only ever read from the update process. This means that replacing
+  // Services.appinfo is sufficient and we don't need to worry about registering
+  // a replacement factory or anything like that.
+  let origAppInfo = Services.appinfo;
+  registerCleanupFunction(() => {
+    Services.appinfo = origAppInfo;
+  });
+
+  let mockAppInfo = {
+    // nsIXULAppInfo
+    vendor: origAppInfo.vendor,
+    name: origAppInfo.name,
+    ID: origAppInfo.ID,
+    version: origAppInfo.version,
+    appBuildID: origAppInfo.appBuildID,
+    updateURL: url,
+
+    // nsIPlatformInfo
+    platformVersion: origAppInfo.platformVersion,
+    platformBuildID: origAppInfo.platformBuildID,
+
+    // nsIXULRuntime
+    inSafeMode: origAppInfo.inSafeMode,
+    logConsoleErrors: origAppInfo.logConsoleErrors,
+    OS: origAppInfo.OS,
+    XPCOMABI: origAppInfo.XPCOMABI,
+    invalidateCachesOnRestart() {},
+    shouldBlockIncompatJaws: origAppInfo.shouldBlockIncompatJaws,
+    processType: origAppInfo.processType,
+    uniqueProcessID: origAppInfo.uniqueProcessID,
+
+    // nsIWinAppHelper
+    get userCanElevate() {
+      return origAppInfo.userCanElevate;
+    },
+  };
+  let interfaces = [Ci.nsIXULAppInfo, Ci.nsIPlatformInfo, Ci.nsIXULRuntime];
+  if ("nsIWinAppHelper" in Ci) {
+    interfaces.push(Ci.nsIWinAppHelper);
+  }
+  if ("crashReporter" in origAppInfo && origAppInfo.crashReporter) {
+    // nsICrashReporter
+    mockAppInfo.crashReporter = {};
+    mockAppInfo.annotations = {};
+    mockAppInfo.annotateCrashReport = function(key, data) {
+      this.annotations[key] = data;
+    };
+    interfaces.push(Ci.nsICrashReporter);
+  }
+  mockAppInfo.QueryInterface = ChromeUtils.generateQI(interfaces);
+
+  Services.appinfo = mockAppInfo;
 }
 
 /**
