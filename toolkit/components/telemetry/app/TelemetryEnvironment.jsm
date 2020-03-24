@@ -237,7 +237,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["app.update.interval", { what: RECORD_PREF_VALUE }],
   ["app.update.service.enabled", { what: RECORD_PREF_VALUE }],
   ["app.update.silent", { what: RECORD_PREF_VALUE }],
-  ["app.update.url", { what: RECORD_PREF_VALUE }],
   ["browser.cache.disk.enable", { what: RECORD_PREF_VALUE }],
   ["browser.cache.disk.capacity", { what: RECORD_PREF_VALUE }],
   ["browser.cache.memory.enable", { what: RECORD_PREF_VALUE }],
