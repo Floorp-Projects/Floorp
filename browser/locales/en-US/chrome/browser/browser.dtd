@@ -267,7 +267,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY fullZoom.label                 "Zoom">
 
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
-<!ENTITY sidebarMenuClose.label         "Close Sidebar">
 
 <!ENTITY quitApplicationCmdWin2.label       "Exit">
 <!ENTITY quitApplicationCmdWin2.accesskey   "x">
@@ -341,8 +340,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
-
-<!ENTITY syncedTabs.sidebar.label              "Synced Tabs">
 
 <!ENTITY syncBrand.shortName.label    "Sync">
 

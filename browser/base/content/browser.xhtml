@@ -67,6 +67,7 @@
   <link rel="localization" href="browser/protectionsPanel.ftl"/>
   <link rel="localization" href="browser/appmenu.ftl"/>
   <link rel="localization" href="preview/interventions.ftl"/>
+  <link rel="localization" href="browser/sidebarMenu.ftl"/>
 
   <title
     data-l10n-id="browser-main-window-title"
@@ -256,7 +257,7 @@
       <description/>
     </panel>
 
-    <html:template id="editBookmarkPanelTemplate"> 
+    <html:template id="editBookmarkPanelTemplate">
       <panel id="editBookmarkPanel"
              class="panel-no-padding"
              type="arrow"
@@ -357,19 +358,19 @@
            position="bottomcenter topleft">
       <toolbarbutton id="sidebar-switcher-bookmarks"
                      type="checkbox"
-                     label="&bookmarksButton.label;"
+                     data-l10n-id="sidebar-menu-bookmarks"
                      class="subviewbutton subviewbutton-iconic"
                      key="viewBookmarksSidebarKb"
                      oncommand="SidebarUI.show('viewBookmarksSidebar');"/>
       <toolbarbutton id="sidebar-switcher-history"
                      type="checkbox"
-                     label="&historyButton.label;"
+                     data-l10n-id="sidebar-menu-history"
                      class="subviewbutton subviewbutton-iconic"
                      key="key_gotoHistory"
                      oncommand="SidebarUI.show('viewHistorySidebar');"/>
       <toolbarbutton id="sidebar-switcher-tabs"
                      type="checkbox"
-                     label="&syncedTabs.sidebar.label;"
+                     data-l10n-id="sidebar-menu-synced-tabs"
                      class="subviewbutton subviewbutton-iconic sync-ui-item"
                      oncommand="SidebarUI.show('viewTabsSidebar');"/>
       <toolbarseparator/>
@@ -379,7 +380,7 @@
                      class="subviewbutton"
                      oncommand="SidebarUI.reversePosition()"/>
       <toolbarseparator/>
-      <toolbarbutton label="&sidebarMenuClose.label;"
+      <toolbarbutton data-l10n-id="sidebar-menu-close"
                      class="subviewbutton"
                      oncommand="SidebarUI.hide()"/>
     </panel>
