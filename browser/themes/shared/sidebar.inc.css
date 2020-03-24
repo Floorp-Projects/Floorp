@@ -81,8 +81,9 @@
   padding: 2px 4px;
 }
 
-#sidebar-switcher-target:hover {
-  background: var(--toolbarbutton-hover-background);
+#sidebar-switcher-target:-moz-focusring:not(:hover):not([open]),
+#sidebar-close:-moz-focusring:not(:hover):not([open]) {
+  outline: 1px dotted;
 }
 
 #sidebar-switcher-target:hover:active,
