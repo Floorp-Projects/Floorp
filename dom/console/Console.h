@@ -346,17 +346,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   uint32_t ResetCounter(JSContext* aCx, const Sequence<JS::Value>& aData,
                         nsAString& aCountLabel);
 
-  // This method generates a ConsoleCounter dictionary as JS::Value. If
-  // aCountValue is == MAX_PAGE_COUNTERS it generates a ConsoleCounterError
-  // instead. See IncreaseCounter.
-  // * aCx - this is the context that will root the returned value.
-  // * aCountLabel - this label must be what IncreaseCounter received as
-  //                 aTimerLabel.
-  // * aCountValue - the return value of IncreaseCounter.
-  JS::Value CreateCounterOrResetCounterValue(JSContext* aCx,
-                                             const nsAString& aCountLabel,
-                                             uint32_t aCountValue) const;
-
   static bool ShouldIncludeStackTrace(MethodName aMethodName);
 
   JSObject* GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal);
