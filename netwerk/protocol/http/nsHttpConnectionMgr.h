@@ -525,7 +525,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
       bool aInsertAsFirstForTheSamePriority = false);
 
   nsConnectionEntry* GetOrCreateConnectionEntry(nsHttpConnectionInfo*,
-                                                bool allowWildCard);
+                                                bool allowWildCard,
+                                                bool aNoHttp3);
 
   MOZ_MUST_USE nsresult MakeNewConnection(
       nsConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo);
@@ -535,13 +536,16 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   nsClassHashtable<nsCStringHashKey, nsTArray<nsWeakPtr>> mCoalescingHash;
 
   HttpConnectionBase* FindCoalescableConnection(nsConnectionEntry* ent,
-                                                bool justKidding);
+                                                bool justKidding,
+                                                bool aNoHttp3);
   HttpConnectionBase* FindCoalescableConnectionByHashKey(nsConnectionEntry* ent,
                                                          const nsCString& key,
-                                                         bool justKidding);
+                                                         bool justKidding,
+                                                         bool aNoHttp3);
   void UpdateCoalescingForNewConn(HttpConnectionBase* conn,
                                   nsConnectionEntry* ent);
-  HttpConnectionBase* GetH2orH3ActiveConn(nsConnectionEntry* ent);
+  HttpConnectionBase* GetH2orH3ActiveConn(nsConnectionEntry* ent,
+                                          bool aNoHttp3);
 
   void ProcessSpdyPendingQ(nsConnectionEntry* ent);
   void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
