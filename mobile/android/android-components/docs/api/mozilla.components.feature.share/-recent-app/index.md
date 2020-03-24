@@ -10,7 +10,7 @@ Interface used for adapting recent apps database entities
 
 | Name | Summary |
 |---|---|
-| [packageName](package-name.md) | `abstract val packageName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The packageName of the recent app. |
+| [activityName](activity-name.md) | `abstract val activityName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The activityName of the recent app. |
 | [score](score.md) | `abstract val score: `[`Double`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html)<br>The score of the recent app (calculated based on number of selections - decay) |
 
 ### Extension Functions

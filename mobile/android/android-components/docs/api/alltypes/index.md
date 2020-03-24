@@ -166,6 +166,7 @@
 | [mozilla.components.feature.customtabs.store.CustomTabsServiceStore](../mozilla.components.feature.customtabs.store/-custom-tabs-service-store/index.md) |  |
 | [mozilla.components.feature.customtabs.CustomTabsToolbarFeature](../mozilla.components.feature.customtabs/-custom-tabs-toolbar-feature/index.md) | Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |
 | [mozilla.components.feature.addons.ui.CustomViewHolder](../mozilla.components.feature.addons.ui/-custom-view-holder/index.md) | A base view holder. |
+| [mozilla.components.concept.engine.DataCleanable](../mozilla.components.concept.engine/-data-cleanable/index.md) | Contract to indicate how objects with the ability to clear data should behave. |
 | [mozilla.components.browser.icons.loader.DataUriIconLoader](../mozilla.components.browser.icons.loader/-data-uri-icon-loader/index.md) | An [IconLoader](../mozilla.components.browser.icons.loader/-icon-loader/index.md) implementation that will base64 decode the image bytes from a data:image uri. |
 | [mozilla.components.service.glean.private.DatetimeMetricType](../mozilla.components.service.glean.private/-datetime-metric-type.md) |  |
 | [mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate](../mozilla.components.browser.menu2.candidate/-decorative-text-menu-candidate/index.md) | Menu option that displays static text. |

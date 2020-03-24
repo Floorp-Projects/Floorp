@@ -2,7 +2,7 @@
 
 # Permission
 
-`enum class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L157)
+`enum class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L174)
 
 ### Enum Values
 

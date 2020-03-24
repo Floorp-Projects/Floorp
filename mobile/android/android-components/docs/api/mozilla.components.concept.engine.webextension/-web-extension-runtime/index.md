@@ -28,5 +28,5 @@ Entry point for interacting with the web extensions.
 
 | Name | Summary |
 |---|---|
-| [Engine](../../mozilla.components.concept.engine/-engine/index.md) | `interface Engine : `[`WebExtensionRuntime`](./index.md)<br>Entry point for interacting with the engine implementation. |
+| [Engine](../../mozilla.components.concept.engine/-engine/index.md) | `interface Engine : `[`WebExtensionRuntime`](./index.md)`, `[`DataCleanable`](../../mozilla.components.concept.engine/-data-cleanable/index.md)<br>Entry point for interacting with the engine implementation. |
 | [GeckoEngine](../../mozilla.components.browser.engine.gecko/-gecko-engine/index.md) | `class GeckoEngine : `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, `[`WebExtensionRuntime`](./index.md)<br>Gecko-based implementation of Engine interface. |

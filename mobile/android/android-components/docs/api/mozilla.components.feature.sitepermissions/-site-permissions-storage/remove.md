@@ -2,7 +2,7 @@
 
 # remove
 
-`fun remove(sitePermissions: `[`SitePermissions`](../-site-permissions/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L117)
+`fun remove(sitePermissions: `[`SitePermissions`](../-site-permissions/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L128)
 
 Deletes all sitePermissions that match the sitePermissions provided as a parameter.
 

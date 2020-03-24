@@ -2,7 +2,7 @@
 
 # EngineSession
 
-`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L29)
+`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>, `[`DataCleanable`](../-data-cleanable/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L29)
 
 Class representing a single engine session.
 
@@ -34,7 +34,6 @@ In browsers usually a session corresponds to a tab.
 
 | Name | Summary |
 |---|---|
-| [clearData](clear-data.md) | `open fun clearData(data: `[`BrowsingData`](../-engine/-browsing-data/index.md)` = Engine.BrowsingData.all(), host: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, onSuccess: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears browsing data stored by the engine. |
 | [clearFindMatches](clear-find-matches.md) | `abstract fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the highlighted results of previous calls to [findAll](find-all.md) / [findNext](find-next.md). |
 | [close](close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Close the session. This may free underlying objects. Call this when you are finished using this session. |
 | [disableTrackingProtection](disable-tracking-protection.md) | `abstract fun disableTrackingProtection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Disables tracking protection for this engine session. |
@@ -53,6 +52,12 @@ In browsers usually a session corresponds to a tab.
 | [saveState](save-state.md) | `abstract fun saveState(): `[`EngineSessionState`](../-engine-session-state/index.md)<br>Saves and returns the engine state. Engine implementations are not required to persist the state anywhere else than in the returned map. Engines that already provide a serialized state can use a single entry in this map to provide this state. The only requirement is that the same map can be used to restore the original state. See [restoreState](restore-state.md) and the specific engine implementation for details. |
 | [stopLoading](stop-loading.md) | `abstract fun stopLoading(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stops loading the current session. |
 | [toggleDesktopMode](toggle-desktop-mode.md) | `abstract fun toggleDesktopMode(enable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, reload: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Enables/disables Desktop Mode with an optional ability to reload the session right after. |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [clearData](../-data-cleanable/clear-data.md) | `open fun clearData(data: `[`BrowsingData`](../-engine/-browsing-data/index.md)` = Engine.BrowsingData.all(), host: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, onSuccess: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears browsing data stored. |
 
 ### Extension Functions
 
