@@ -45,7 +45,7 @@ XULMAP(label, [](Element* aElement, Accessible* aContext) -> Accessible* {
 })
 
 XULMAP(image, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  if (nsCoreUtils::HasClickListener(aElement)) {
+  if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
     return new XULToolbarButtonAccessible(aElement, aContext->Document());
   }
 
