@@ -86,10 +86,6 @@ class ClientManagerService final {
   // optimize for insertion, removal, and lookup by UUID.
   HashMap<nsID, SourceTableEntry, nsIDHasher> mSourceTable;
 
-  // The set of handles waiting for their corresponding ClientSourceParent
-  // to be created.
-  nsDataHashtable<nsIDHashKey, nsTArray<ClientHandleParent*>> mPendingHandles;
-
   nsTArray<ClientManagerParent*> mManagerList;
 
   bool mShutdown;
@@ -119,14 +115,8 @@ class ClientManagerService final {
 
   bool RemoveSource(ClientSourceParent* aSource);
 
-  ClientSourceParent* FindSource(
+  RefPtr<SourcePromise> FindSource(
       const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
-
-  // Called when a ClientHandle is created before the corresponding
-  // ClientSource. Will call FoundSource on the ClientHandleParent when it
-  // becomes available.
-  void WaitForSource(ClientHandleParent* aHandle, const nsID& aID);
-  void StopWaitingForSource(ClientHandleParent* aHandle, const nsID& aID);
 
   void AddManager(ClientManagerParent* aManager);
 
