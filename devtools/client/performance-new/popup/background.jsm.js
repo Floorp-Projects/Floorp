@@ -127,11 +127,6 @@ const lazyProfilerMenuButton = requireLazy(() =>
   ))
 );
 
-const lazyCustomizableUI = requireLazy(() =>
-  /** @type {import("resource:///modules/CustomizableUI.jsm")} */
-  (ChromeUtils.import("resource:///modules/CustomizableUI.jsm"))
-);
-
 /** @type {Presets} */
 const presets = {
   "web-developer": {
@@ -518,7 +513,7 @@ function handleWebChannelMessage(channel, id, message, target) {
       channel.send(
         {
           type: "STATUS_RESPONSE",
-          menuButtonIsEnabled: ProfilerMenuButton.isInNavbar(),
+          menuButtonIsEnabled: ProfilerMenuButton.isEnabled(),
           requestId,
         },
         target
@@ -526,27 +521,22 @@ function handleWebChannelMessage(channel, id, message, target) {
       break;
     }
     case "ENABLE_MENU_BUTTON": {
-      const { ownerDocument } = target.browser;
-      if (!ownerDocument) {
-        throw new Error(
-          "Could not find the owner document for the current browser while enabling " +
-            "the profiler menu button"
-        );
-      }
-      // Ensure the widget is enabled.
-      Services.prefs.setBoolPref(POPUP_FEATURE_FLAG_PREF, true);
-
       // Enable the profiler menu button.
       const { ProfilerMenuButton } = lazyProfilerMenuButton();
-      ProfilerMenuButton.addToNavbar(ownerDocument);
+      if (!ProfilerMenuButton.isEnabled()) {
+        const { ownerDocument } = target.browser;
+        if (!ownerDocument) {
+          throw new Error(
+            "Could not find the owner document for the current browser while enabling " +
+              "the profiler menu button"
+          );
+        }
+        // The menu button toggle is only enabled on Nightly by default. Once the profiler
+        // is turned on once, make sure that the menu button is also available.
+        Services.prefs.setBoolPref(POPUP_FEATURE_FLAG_PREF, true);
 
-      // Dispatch the change event manually, so that the shortcuts will also be
-      // added.
-      const { CustomizableUI } = lazyCustomizableUI();
-      CustomizableUI.dispatchToolboxEvent("customizationchange");
-
-      // Open the popup with a message.
-      ProfilerMenuButton.openPopup(ownerDocument);
+        ProfilerMenuButton.toggle(ownerDocument);
+      }
 
       // Respond back that we've done it.
       channel.send(
