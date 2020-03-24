@@ -12,8 +12,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"
 
-#include "necko-config.h"
-
 #include "nsCache.h"
 #include "nsCacheRequest.h"
 #include "nsCacheEntry.h"
