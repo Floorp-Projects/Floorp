@@ -64,6 +64,7 @@ class ClientManagerService final {
    private:
     const mozilla::ipc::PrincipalInfo mPrincipalInfo;
     MozPromiseHolder<SourcePromise> mPromiseHolder;
+    RefPtr<ClientManagerService> mService = ClientManagerService::GetInstance();
   };
 
   using SourceTableEntry =
