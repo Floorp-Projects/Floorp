@@ -585,8 +585,10 @@ class nsFrame : public nsBox {
       nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
       uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
-  int16_t DisplaySelection(nsPresContext* aPresContext,
-                           bool isOkToTurnOn = false);
+  /**
+   * @return see nsISelectionController.idl's `getDisplaySelection`.
+   */
+  int16_t DetermineDisplaySelection();
 
   // Style post processing hook
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
