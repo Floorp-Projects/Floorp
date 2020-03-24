@@ -73,6 +73,7 @@ struct SECMODModuleStr {
     unsigned long evControlMask; /* control the running and shutdown of slot
                                   * events (SECMOD_WaitForAnyTokenEvent) */
     CK_VERSION cryptokiVersion;  /* version of this library */
+    CK_FLAGS flags;              /* pkcs11 v3 flags */
 };
 
 /* evControlMask flags */

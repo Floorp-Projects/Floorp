@@ -1418,21 +1418,58 @@ tls13_ClientCheckEsniXtn(sslSocket *ss)
 }
 
 /* Indicates support for the delegated credentials extension. This should be
- * hooked while processing the ClientHello.
- */
+ * hooked while processing the ClientHello. */
 SECStatus
 tls13_ClientSendDelegatedCredentialsXtn(const sslSocket *ss,
                                         TLSExtensionData *xtnData,
                                         sslBuffer *buf, PRBool *added)
 {
     /* Only send the extension if support is enabled and the client can
-     * negotiate TLS 1.3.
-     */
+     * negotiate TLS 1.3. */
     if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_3 ||
         !ss->opt.enableDelegatedCredentials) {
         return SECSuccess;
     }
 
+    /* Filter the schemes that are enabled and acceptable. Save these in
+     * the "advertised" list, then encode them to be sent. If we receive
+     * a DC in response, validate that it matches one of the advertised
+     * schemes. */
+    SSLSignatureScheme filtered[MAX_SIGNATURE_SCHEMES] = { 0 };
+    unsigned int filteredCount = 0;
+    SECStatus rv = ssl3_FilterSigAlgs(ss, ss->vrange.max,
+                                      PR_TRUE,
+                                      MAX_SIGNATURE_SCHEMES,
+                                      filtered,
+                                      &filteredCount);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    /* If no schemes available for the DC extension, don't send it. */
+    if (!filteredCount) {
+        return SECSuccess;
+    }
+
+    rv = ssl3_EncodeFilteredSigAlgs(ss, filtered, filteredCount, buf);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    SSLSignatureScheme *dcSchemesAdvertised = PORT_ZNewArray(SSLSignatureScheme,
+                                                             filteredCount);
+    if (!dcSchemesAdvertised) {
+        return SECFailure;
+    }
+    for (unsigned int i = 0; i < filteredCount; i++) {
+        dcSchemesAdvertised[i] = filtered[i];
+    }
+
+    if (xtnData->delegCredSigSchemesAdvertised) {
+        PORT_Free(xtnData->delegCredSigSchemesAdvertised);
+    }
+    xtnData->delegCredSigSchemesAdvertised = dcSchemesAdvertised;
+    xtnData->numDelegCredSigSchemesAdvertised = filteredCount;
     *added = PR_TRUE;
     return SECSuccess;
 }
@@ -1456,15 +1493,59 @@ tls13_ClientHandleDelegatedCredentialsXtn(const sslSocket *ss,
         return SECFailure;
     }
 
-    SECStatus rv = tls13_ReadDelegatedCredential(data->data, data->len,
-                                                 &xtnData->peerDelegCred);
+    sslDelegatedCredential *dc = NULL;
+    SECStatus rv = tls13_ReadDelegatedCredential(data->data, data->len, &dc);
     if (rv != SECSuccess) {
-        return SECFailure; /* code already set */
+        goto loser; /* code already set */
     }
 
+    /* When using RSA, the public key MUST NOT use the rsaEncryption OID. */
+    if (dc->expectedCertVerifyAlg == ssl_sig_rsa_pss_rsae_sha256 ||
+        dc->expectedCertVerifyAlg == ssl_sig_rsa_pss_rsae_sha384 ||
+        dc->expectedCertVerifyAlg == ssl_sig_rsa_pss_rsae_sha512) {
+        goto alert_loser;
+    }
+
+    /* The algorithm and expected_cert_verify_algorithm fields MUST be of a
+     * type advertised by the client in the SignatureSchemeList and are
+     * considered invalid otherwise.  Clients that receive invalid delegated
+     * credentials MUST terminate the connection with an "illegal_parameter"
+     * alert. */
+    PRBool found = PR_FALSE;
+    for (unsigned int i = 0; i < ss->xtnData.numDelegCredSigSchemesAdvertised; ++i) {
+        if (dc->expectedCertVerifyAlg == ss->xtnData.delegCredSigSchemesAdvertised[i]) {
+            found = PR_TRUE;
+            break;
+        }
+    }
+    if (found == PR_FALSE) {
+        goto alert_loser;
+    }
+
+    // Check the dc->alg, if necessary.
+    if (dc->alg != dc->expectedCertVerifyAlg) {
+        found = PR_FALSE;
+        for (unsigned int i = 0; i < ss->xtnData.numDelegCredSigSchemesAdvertised; ++i) {
+            if (dc->alg == ss->xtnData.delegCredSigSchemesAdvertised[i]) {
+                found = PR_TRUE;
+                break;
+            }
+        }
+        if (found == PR_FALSE) {
+            goto alert_loser;
+        }
+    }
+
+    xtnData->peerDelegCred = dc;
     xtnData->negotiated[xtnData->numNegotiated++] =
         ssl_delegated_credentials_xtn;
     return SECSuccess;
+alert_loser:
+    ssl3_ExtSendAlert(ss, alert_fatal, illegal_parameter);
+    PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+loser:
+    tls13_DestroyDelegatedCredential(dc);
+    return SECFailure;
 }
 
 /* Adds the DC extension if we're committed to authenticating with a DC. */
@@ -1475,19 +1556,13 @@ tls13_ServerSendDelegatedCredentialsXtn(const sslSocket *ss,
 {
     if (tls13_IsSigningWithDelegatedCredential(ss)) {
         const SECItem *dc = &ss->sec.serverCert->delegCred;
-
-        if (tls13_IsSigningWithDelegatedCredential(ss)) {
-            SECStatus rv;
-            rv = sslBuffer_Append(buf, dc->data, dc->len);
-            if (rv != SECSuccess) {
-                return SECFailure;
-            }
+        SECStatus rv;
+        rv = sslBuffer_Append(buf, dc->data, dc->len);
+        if (rv != SECSuccess) {
+            return SECFailure;
         }
-
         *added = PR_TRUE;
-        return SECSuccess;
     }
-
     return SECSuccess;
 }
 
@@ -1499,6 +1574,33 @@ tls13_ServerHandleDelegatedCredentialsXtn(const sslSocket *ss,
                                           TLSExtensionData *xtnData,
                                           SECItem *data)
 {
+    if (xtnData->delegCredSigSchemes) {
+        PORT_Free(xtnData->delegCredSigSchemes);
+        xtnData->delegCredSigSchemes = NULL;
+        xtnData->numDelegCredSigSchemes = 0;
+    }
+    SECStatus rv = ssl_ParseSignatureSchemes(ss, NULL,
+                                             &xtnData->delegCredSigSchemes,
+                                             &xtnData->numDelegCredSigSchemes,
+                                             &data->data, &data->len);
+    if (rv != SECSuccess) {
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+        return SECFailure;
+    }
+    if (xtnData->numDelegCredSigSchemes == 0) {
+        ssl3_ExtSendAlert(ss, alert_fatal, handshake_failure);
+        PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+        return SECFailure;
+    }
+    /* Check for trailing data. */
+    if (data->len != 0) {
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+        return SECFailure;
+    }
+
+    /* Keep track of negotiated extensions. */
     xtnData->peerRequestedDelegCred = PR_TRUE;
     xtnData->negotiated[xtnData->numNegotiated++] =
         ssl_delegated_credentials_xtn;

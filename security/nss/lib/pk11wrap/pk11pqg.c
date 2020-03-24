@@ -55,9 +55,9 @@ PK11_PQG_ParamGenV2(unsigned int L, unsigned int N,
         { CKA_BASE, NULL, 0 },
     };
     CK_ATTRIBUTE vTemplate[] = {
-        { CKA_NETSCAPE_PQG_COUNTER, NULL, 0 },
-        { CKA_NETSCAPE_PQG_SEED, NULL, 0 },
-        { CKA_NETSCAPE_PQG_H, NULL, 0 },
+        { CKA_NSS_PQG_COUNTER, NULL, 0 },
+        { CKA_NSS_PQG_SEED, NULL, 0 },
+        { CKA_NSS_PQG_H, NULL, 0 },
     };
     CK_ULONG primeBits = L;
     CK_ULONG subPrimeBits = N;
@@ -84,7 +84,7 @@ PK11_PQG_ParamGenV2(unsigned int L, unsigned int N,
         attrs++;
     }
     if (seedBits != 0) {
-        PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_SEED_BITS,
+        PK11_SETATTRS(attrs, CKA_NSS_PQG_SEED_BITS,
                       &seedBits, sizeof(seedBits));
         attrs++;
     }
@@ -266,13 +266,13 @@ PK11_PQG_VerifyParams(const PQGParams *params, const PQGVerify *vfy,
         { CKA_SUBPRIME, NULL, 0 },
         { CKA_BASE, NULL, 0 },
         { CKA_TOKEN, NULL, 0 },
-        { CKA_NETSCAPE_PQG_COUNTER, NULL, 0 },
-        { CKA_NETSCAPE_PQG_SEED, NULL, 0 },
-        { CKA_NETSCAPE_PQG_H, NULL, 0 },
+        { CKA_NSS_PQG_COUNTER, NULL, 0 },
+        { CKA_NSS_PQG_SEED, NULL, 0 },
+        { CKA_NSS_PQG_H, NULL, 0 },
     };
     CK_ATTRIBUTE *attrs;
     CK_BBOOL ckfalse = CK_FALSE;
-    CK_OBJECT_CLASS class = CKO_KG_PARAMETERS;
+    CK_OBJECT_CLASS class = CKO_DOMAIN_PARAMETERS;
     CK_KEY_TYPE keyType = CKK_DSA;
     SECStatus rv = SECSuccess;
     PK11SlotInfo *slot;
@@ -301,15 +301,15 @@ PK11_PQG_VerifyParams(const PQGParams *params, const PQGVerify *vfy,
     if (vfy) {
         if (vfy->counter != -1) {
             counter = vfy->counter;
-            PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_COUNTER,
+            PK11_SETATTRS(attrs, CKA_NSS_PQG_COUNTER,
                           &counter, sizeof(counter));
             attrs++;
         }
-        PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_SEED,
+        PK11_SETATTRS(attrs, CKA_NSS_PQG_SEED,
                       vfy->seed.data, vfy->seed.len);
         attrs++;
         if (vfy->h.len) {
-            PK11_SETATTRS(attrs, CKA_NETSCAPE_PQG_H,
+            PK11_SETATTRS(attrs, CKA_NSS_PQG_H,
                           vfy->h.data, vfy->h.len);
             attrs++;
         }

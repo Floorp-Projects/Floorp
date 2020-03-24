@@ -12,6 +12,33 @@
 #include "seccomon.h"
 #include "selfencrypt.h"
 
+SECStatus SSLInt_SetDCAdvertisedSigSchemes(PRFileDesc *fd,
+                                           const SSLSignatureScheme *schemes,
+                                           uint32_t num_sig_schemes) {
+  if (!fd) {
+    return SECFailure;
+  }
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  // Alloc and copy, libssl will free.
+  SSLSignatureScheme *dc_schemes =
+      PORT_ZNewArray(SSLSignatureScheme, num_sig_schemes);
+  if (!dc_schemes) {
+    return SECFailure;
+  }
+  memcpy(dc_schemes, schemes, sizeof(SSLSignatureScheme) * num_sig_schemes);
+
+  if (ss->xtnData.delegCredSigSchemesAdvertised) {
+    PORT_Free(ss->xtnData.delegCredSigSchemesAdvertised);
+  }
+  ss->xtnData.delegCredSigSchemesAdvertised = dc_schemes;
+  ss->xtnData.numDelegCredSigSchemesAdvertised = num_sig_schemes;
+  return SECSuccess;
+}
+
 SECStatus SSLInt_TweakChannelInfoForDC(PRFileDesc *fd, PRBool changeAuthKeyBits,
                                        PRBool changeScheme) {
   if (!fd) {

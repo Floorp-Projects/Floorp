@@ -44,5 +44,8 @@ SECStatus SSLInt_HasPendingHandshakeData(PRFileDesc *fd, PRBool *pending);
 SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size);
 SECStatus SSLInt_TweakChannelInfoForDC(PRFileDesc *fd, PRBool changeAuthKeyBits,
                                        PRBool changeScheme);
+SECStatus SSLInt_SetDCAdvertisedSigSchemes(PRFileDesc *fd,
+                                           const SSLSignatureScheme *schemes,
+                                           uint32_t num_sig_schemes);
 
 #endif  // ndef libssl_internals_h_

@@ -26,3 +26,14 @@ NSC_ModuleDBFunc;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.52 {       # NSS 3.52 release adds pkcs #11 v3.0
+;+    global:
+C_GetInterfaceList;
+FC_GetInterfaceList;
+NSC_GetInterfaceList;
+C_GetInterface;
+FC_GetInterface;
+NSC_GetInterface;
+;+    local:
+;+       *;
+;+};

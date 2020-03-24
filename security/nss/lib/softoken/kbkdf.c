@@ -599,12 +599,16 @@ kbkdf_SaveKey(SFTKObject *key, unsigned char *key_buffer, unsigned int key_len)
 CK_RV
 kbkdf_CreateKey(CK_MECHANISM_TYPE kdf_mech, CK_SESSION_HANDLE hSession, CK_DERIVED_KEY_PTR derived_key, SFTKObject **ret_key)
 {
-    /* Largely duplicated from NSC_Derive(...) */
+    /* Largely duplicated from NSC_DeriveKey(...) */
     CK_RV ret = CKR_HOST_MEMORY;
     SFTKObject *key = NULL;
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
     size_t offset = 0;
 
+    /* Slot should be non-NULL because NSC_DeriveKey(...) has already
+     * performed a sftk_SlotFromSessionHandle(...) call on this session
+     * handle. However, Coverity incorrectly flagged this (see 1607955). */
+    PR_ASSERT(slot != NULL);
     PR_ASSERT(ret_key != NULL);
     PR_ASSERT(derived_key != NULL);
     PR_ASSERT(derived_key->phKey != NULL);
@@ -646,7 +650,7 @@ kbkdf_CreateKey(CK_MECHANISM_TYPE kdf_mech, CK_SESSION_HANDLE hSession, CK_DERIV
 CK_RV
 kbkdf_FinalizeKey(CK_SESSION_HANDLE hSession, CK_DERIVED_KEY_PTR derived_key, SFTKObject *key)
 {
-    /* Largely duplicated from NSC_Derive(...) */
+    /* Largely duplicated from NSC_DeriveKey(...) */
     CK_RV ret = CKR_HOST_MEMORY;
     SFTKSession *session = NULL;
 
@@ -657,10 +661,10 @@ kbkdf_FinalizeKey(CK_SESSION_HANDLE hSession, CK_DERIVED_KEY_PTR derived_key, SF
     sessionForKey->wasDerived = PR_TRUE;
 
     session = sftk_SessionFromHandle(hSession);
-    if (session == NULL) {
-        ret = CKR_HOST_MEMORY;
-        goto done;
-    }
+
+    /* Session should be non-NULL because NSC_DeriveKey(...) has already
+     * performed a sftk_SessionFromHandle(...) call on this session handle. */
+    PR_ASSERT(session != NULL);
 
     ret = sftk_handleObject(key, session);
     if (ret != CKR_OK) {
