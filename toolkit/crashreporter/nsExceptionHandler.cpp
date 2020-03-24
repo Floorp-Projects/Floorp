@@ -551,13 +551,14 @@ class PlatformWriter {
       -1;
 #endif
 
-  PlatformWriter() : mFD(kInvalidFileDesc) {}
+  PlatformWriter() : mBuffer{}, mPos(0), mFD(kInvalidFileDesc) {}
   explicit PlatformWriter(const NativeChar* aPath) : PlatformWriter() {
     Open(aPath);
   }
 
   ~PlatformWriter() {
     if (Valid()) {
+      Flush();
 #ifdef XP_WIN
       CloseHandle(mFD);
 #elif defined(XP_UNIX)
@@ -582,12 +583,10 @@ class PlatformWriter {
     if (!Valid()) {
       return;
     }
-#ifdef XP_WIN
-    DWORD nBytes;
-    WriteFile(mFD, aBuffer, aLen, &nBytes, nullptr);
-#elif defined(XP_UNIX)
-    mozilla::Unused << sys_write(mFD, aBuffer, aLen);
-#endif
+
+    while (aLen-- > 0) {
+      WriteChar(*aBuffer++);
+    }
   }
 
   void WriteString(const char* aStr) { WriteBuffer(aStr, my_strlen(aStr)); }
@@ -600,6 +599,34 @@ class PlatformWriter {
   NativeFileDesc FileDesc() { return mFD; }
 
  private:
+  DISALLOW_COPY_AND_ASSIGN(PlatformWriter);
+
+  void WriteChar(char aChar) {
+    if (mPos == kBufferSize) {
+      Flush();
+    }
+
+    mBuffer[mPos++] = aChar;
+  }
+
+  void Flush() {
+    if (mPos > 0) {
+#ifdef XP_WIN
+      DWORD nBytes = 0;
+      while (nBytes < mPos) {
+        WriteFile(mFD, mBuffer, mPos, &nBytes, nullptr);
+      }
+#elif defined(XP_UNIX)
+      mozilla::Unused << sys_write(mFD, mBuffer, mPos);
+#endif
+      mPos = 0;
+    }
+  }
+
+  static const size_t kBufferSize = 512;
+
+  char mBuffer[kBufferSize];
+  size_t mPos;
   NativeFileDesc mFD;
 };
 
@@ -1517,13 +1544,15 @@ bool MinidumpCallback(
 #endif
   );
 
-  PlatformWriter apiData;
+  {
+    PlatformWriter apiData;
 #ifdef XP_LINUX
-  OpenAPIData(apiData, descriptor.path());
+    OpenAPIData(apiData, descriptor.path());
 #else
-  OpenAPIData(apiData, dump_path, minidump_id);
+    OpenAPIData(apiData, dump_path, minidump_id);
 #endif
-  WriteAnnotationsForMainProcessCrash(apiData, addrInfo, crashTime);
+    WriteAnnotationsForMainProcessCrash(apiData, addrInfo, crashTime);
+  }
 
   if (!doReport) {
 #ifdef XP_WIN
@@ -3149,7 +3178,7 @@ static void ReadAndValidateExceptionTimeAnnotations(
   } while (res > 0);
 }
 
-static bool WriteExtraFile(PlatformWriter pw,
+static bool WriteExtraFile(PlatformWriter& pw,
                            const AnnotationTable& aAnnotations) {
   if (!pw.Valid()) {
     return false;
@@ -3181,7 +3210,8 @@ bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
   NS_ENSURE_SUCCESS(extra->GetNativePath(path), false);
 #endif
 
-  return WriteExtraFile(PlatformWriter(path.get()), annotations);
+  PlatformWriter pw(path.get());
+  return WriteExtraFile(pw, annotations);
 }
 
 static void ReadExceptionTimeAnnotations(AnnotationTable& aAnnotations,
