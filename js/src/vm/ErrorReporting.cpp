@@ -297,14 +297,6 @@ class MOZ_RAII AutoMessageArgs {
   }
 };
 
-static void SetExnType(JSErrorReport* reportp, int16_t exnType) {
-  reportp->exnType = exnType;
-}
-
-static void SetExnType(JSErrorNotes::Note* notep, int16_t exnType) {
-  // Do nothing for JSErrorNotes::Note.
-}
-
 /*
  * The arguments from ap need to be packaged up into an array and stored
  * into the report struct.
@@ -339,7 +331,11 @@ static bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
   }
 
   if (efs) {
-    SetExnType(reportp, efs->exnType);
+    if constexpr (std::is_same<T, JSErrorReport>::value) {
+      reportp->exnType = efs->exnType;
+    }
+
+    MOZ_ASSERT(reportp->errorNumber == errorNumber);
     reportp->errorMessageName = efs->name;
 
     MOZ_ASSERT_IF(argumentsType == ArgumentsAreASCII,
