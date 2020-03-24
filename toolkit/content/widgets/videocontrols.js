@@ -216,6 +216,7 @@ this.VideoControlsImplWidget = class {
         "stalled",
         "mozvideoonlyseekbegin",
         "mozvideoonlyseekcompleted",
+        "durationchange",
       ],
 
       showHours: false,
@@ -699,6 +700,9 @@ this.VideoControlsImplWidget = class {
               this.muteButton.setAttribute("disabled", "true");
             }
             this.adjustControlSize();
+            this.updatePictureInPictureToggleDisplay();
+            break;
+          case "durationchange":
             this.updatePictureInPictureToggleDisplay();
             break;
           case "loadeddata":
@@ -2923,6 +2927,8 @@ this.NoControlsDesktopImplWidget = class {
             }
             break;
           }
+          case "durationchange":
+          // Intentional fall-through
           case "loadedmetadata": {
             this.updatePictureInPictureToggleDisplay();
             break;
@@ -2979,6 +2985,7 @@ this.NoControlsDesktopImplWidget = class {
         });
 
         this.video.addEventListener("loadedmetadata", this);
+        this.video.addEventListener("durationchange", this);
       },
 
       terminate() {
@@ -2987,6 +2994,7 @@ this.NoControlsDesktopImplWidget = class {
         });
 
         this.video.removeEventListener("loadedmetadata", this);
+        this.video.removeEventListener("durationchange", this);
       },
 
       get pipToggleEnabled() {
