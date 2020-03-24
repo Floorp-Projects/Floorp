@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
 import android.annotation.SuppressLint
 import android.content.Context
@@ -221,9 +222,11 @@ class SitePermissionsFeature(
         request: PermissionRequest
     ): SitePermissionsDialogFragment? {
 
-        // Preventing this behavior https://github.com/mozilla-mobile/android-components/issues/2668
-        if (request.isMicrophone && isMicrophoneAndroidPermissionNotGranted) {
+        // We want to warranty that all media permissions have the required system
+        // permissions are granted first, otherwise, we reject the request
+        if (request.isMedia && !request.areAllMediaPermissionsGranted) {
             request.reject()
+            session.contentPermissionRequest.consume { true }
             return null
         }
 
@@ -482,20 +485,29 @@ class SitePermissionsFeature(
     }
 
     private val PermissionRequest.host get() = uri?.toUri()?.host ?: ""
-    private val PermissionRequest.isMicrophone: Boolean
+    private val PermissionRequest.isMedia: Boolean
         get() {
-            if (containsVideoAndAudioSources()) {
-                return false
-            }
             return when (permissions.first()) {
+                is ContentVideoCamera, is ContentVideoCapture,
                 is ContentAudioCapture, is ContentAudioMicrophone -> true
                 else -> false
             }
         }
 
-    private val isMicrophoneAndroidPermissionNotGranted: Boolean
+    private val PermissionRequest.areAllMediaPermissionsGranted: Boolean
         get() {
-            return !context.isPermissionGranted(RECORD_AUDIO)
+            val systemPermissions = mutableListOf<String>()
+            permissions.forEach { permission ->
+                when (permission) {
+                    is ContentVideoCamera, is ContentVideoCapture -> {
+                        systemPermissions.add(CAMERA)
+                    }
+                    is ContentAudioCapture, is ContentAudioMicrophone -> {
+                        systemPermissions.add(RECORD_AUDIO)
+                    }
+                }
+            }
+            return systemPermissions.all { context.isPermissionGranted((it)) }
         }
 
     internal class SitePermissionsRequestObserver(

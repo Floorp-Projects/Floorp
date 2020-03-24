@@ -215,6 +215,7 @@ class SitePermissionsFeatureTest {
             mockStorage = mock()
             session.contentPermissionRequest = Consumable.from(permissionRequest)
 
+            grantPermission(Manifest.permission.CAMERA)
             grantPermission(Manifest.permission.RECORD_AUDIO)
             runBlocking {
                 val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
@@ -722,7 +723,7 @@ class SitePermissionsFeatureTest {
             }
 
             session.contentPermissionRequest = Consumable.from(permissionRequest)
-
+            grantPermission(Manifest.permission.CAMERA)
             runBlocking {
                 val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
 
@@ -760,6 +761,8 @@ class SitePermissionsFeatureTest {
         }
 
         session.contentPermissionRequest = Consumable.from(permissionRequest)
+        grantPermission(Manifest.permission.CAMERA)
+        grantPermission(Manifest.permission.RECORD_AUDIO)
 
         runBlocking {
             val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
@@ -797,6 +800,8 @@ class SitePermissionsFeatureTest {
         }
 
         session.contentPermissionRequest = Consumable.from(permissionRequest)
+        grantPermission(Manifest.permission.CAMERA)
+        grantPermission(Manifest.permission.RECORD_AUDIO)
 
         runBlocking {
             val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
@@ -942,6 +947,44 @@ class SitePermissionsFeatureTest {
         assertEquals(BLOCKED, sitePermissions.microphone)
         assertEquals(BLOCKED, sitePermissions.autoplayAudible)
         assertEquals(ALLOWED, sitePermissions.autoplayInaudible)
+    }
+
+    @Test
+    fun `any media request must be rejected WHEN system permissions are not granted first`() {
+        val permissions = listOf(
+                ContentVideoCapture("", "back camera"),
+                ContentVideoCamera("", "front camera"),
+                ContentAudioCapture(),
+                ContentAudioMicrophone()
+        )
+
+        permissions.forEach { permission ->
+            val session = getSelectedSession()
+            var grantWasCalled = false
+
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+                override val permissions: List<Permission>
+                    get() = listOf(permission)
+
+                override fun grant(permissions: List<Permission>) {
+                    grantWasCalled = true
+                }
+
+                override fun reject() = Unit
+            }
+
+            mockStorage = mock()
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+                assertNull(prompt)
+                assertFalse(grantWasCalled)
+                assertTrue(session.contentPermissionRequest.isConsumed())
+            }
+        }
     }
 
     private fun mockFragmentManager(): FragmentManager {
