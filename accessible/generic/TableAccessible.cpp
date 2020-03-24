@@ -41,6 +41,8 @@ bool TableAccessible::IsProbablyLayoutTable() {
 
   Accessible* thisacc = AsAccessible();
 
+  MOZ_ASSERT(!thisacc->IsDefunct(), "Table accessible should not be defunct");
+
   // Need to see all elements while document is being edited.
   if (thisacc->Document()->State() & states::EDITABLE) {
     RETURN_LAYOUT_ANSWER(false, "In editable document");
