@@ -1321,9 +1321,26 @@ already_AddRefed<StyleSheet> StyleSheet::Clone(
     StyleSheet* aCloneParent, dom::CSSImportRule* aCloneOwnerRule,
     dom::DocumentOrShadowRoot* aCloneDocumentOrShadowRoot,
     nsINode* aCloneOwningNode) const {
+  MOZ_ASSERT(!IsConstructed(),
+             "Cannot create a non-constructed sheet from a constructed sheet");
   RefPtr<StyleSheet> clone =
       new StyleSheet(*this, aCloneParent, aCloneOwnerRule,
                      aCloneDocumentOrShadowRoot, aCloneOwningNode);
+  return clone.forget();
+}
+
+already_AddRefed<StyleSheet> StyleSheet::CloneAdoptedSheet(
+    Document& aConstructorDocument) const {
+  MOZ_ASSERT(IsConstructed(),
+             "Cannot create a constructed sheet from a non-constructed sheet");
+  MOZ_ASSERT(aConstructorDocument.IsStaticDocument(),
+             "Should never clone adopted sheets for a non-static document");
+  RefPtr<StyleSheet> clone = new StyleSheet(*this,
+                                            /* aParentToUse */ nullptr,
+                                            /* aOwnerRuleToUse */ nullptr,
+                                            /* aDocumentOrShadowRoot */ nullptr,
+                                            /* aOwningNodeToUse */ nullptr);
+  clone->mConstructorDocument = &aConstructorDocument;
   return clone.forget();
 }
 

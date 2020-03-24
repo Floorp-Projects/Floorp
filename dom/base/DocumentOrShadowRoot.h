@@ -245,6 +245,12 @@ class DocumentOrShadowRoot {
   void RemoveSheetFromStylesIfApplicable(StyleSheet&);
   void ClearAdoptedStyleSheets();
 
+  /**
+   * Clone's the argument's adopted style sheets into this.
+   * This should only be used when cloning a static document for printing.
+   */
+  void CloneAdoptedSheetsFrom(DocumentOrShadowRoot&);
+
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
   void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
