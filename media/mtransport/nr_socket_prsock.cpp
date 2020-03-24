@@ -844,6 +844,8 @@ int NrSocket::getaddr(nr_transport_addr* addrp) {
 void NrSocket::close() {
   ASSERT_ON_THREAD(ststhread_);
   mCondition = NS_BASE_STREAM_CLOSED;
+  cancel(NR_ASYNC_WAIT_READ);
+  cancel(NR_ASYNC_WAIT_WRITE);
 }
 
 int NrSocket::connect(nr_transport_addr* addr) {
