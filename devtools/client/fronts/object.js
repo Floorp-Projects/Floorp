@@ -30,6 +30,13 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
     parentFront.manage(this);
   }
 
+  skipDestroy() {
+    // Object fronts are simple fronts, they don't need to be cleaned up on
+    // toolbox destroy. `conn` is a DebuggerClient instance, check the
+    // `isToolboxDestroy` flag to skip the destroy.
+    return this.conn && this.conn.isToolboxDestroy;
+  }
+
   getGrip() {
     return this._grip;
   }
