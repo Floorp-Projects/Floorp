@@ -10,7 +10,7 @@ import { connect } from "../../utils/connect";
 
 import AccessibleImage from "./AccessibleImage";
 
-import { getSourceClassnames } from "../../utils/source";
+import { getSourceClassnames, isPretty } from "../../utils/source";
 import { getFramework } from "../../utils/tabs";
 import { getSymbols, getTabs } from "../../selectors";
 
@@ -37,9 +37,15 @@ type Props = {
 class SourceIcon extends PureComponent<Props> {
   render() {
     const { modifier, source, symbols, framework } = this.props;
-    let iconClass = framework
-      ? framework.toLowerCase()
-      : getSourceClassnames(source, symbols);
+    let iconClass = "";
+
+    if (isPretty(source)) {
+      iconClass = "prettyPrint";
+    } else {
+      iconClass = framework
+        ? framework.toLowerCase()
+        : getSourceClassnames(source, symbols);
+    }
 
     if (modifier) {
       const modified = modifier(iconClass);
