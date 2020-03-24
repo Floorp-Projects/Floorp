@@ -153,6 +153,8 @@ add_task(async function awaitPromiseDelayedRejectWithoutWait({ client }) {
 add_task(async function contextIdInvalidValue({ client }) {
   const { Runtime } = client;
 
+  await enableRuntime(client);
+
   let errorThrown = "";
   try {
     await Runtime.evaluate({ expression: "", contextId: -1 });
@@ -193,7 +195,6 @@ add_task(async function returnAsObjectTypes({ client }) {
   const expressions = [
     { expression: "({foo:true})", type: "object", subtype: null },
     { expression: "Symbol('foo')", type: "symbol", subtype: null },
-    { expression: "BigInt(42)", type: "bigint", subtype: null },
     { expression: "new Promise(()=>{})", type: "object", subtype: "promise" },
     { expression: "new Int8Array(8)", type: "object", subtype: "typedarray" },
     { expression: "new WeakMap()", type: "object", subtype: "weakmap" },
@@ -245,16 +246,24 @@ add_task(async function returnAsObjectNotSerializable({ client }) {
 
   await enableRuntime(client);
 
-  const expressions = ["-0", "NaN", "Infinity", "-Infinity"];
-  for (const expression of expressions) {
-    const { result } = await Runtime.evaluate({ expression });
-    Assert.deepEqual(
-      result,
-      {
-        unserializableValue: expression,
-      },
-      `Evaluating unserializable '${expression}' works`
-    );
+  const notSerializableNumbers = {
+    number: ["-0", "NaN", "Infinity", "-Infinity"],
+    bigint: ["42n"],
+  };
+
+  for (const type in notSerializableNumbers) {
+    for (const expression of notSerializableNumbers[type]) {
+      const { result } = await Runtime.evaluate({ expression });
+      Assert.deepEqual(
+        result,
+        {
+          type,
+          unserializableValue: expression,
+          description: expression,
+        },
+        `Evaluating unserializable '${expression}' works`
+      );
+    }
   }
 });
 
