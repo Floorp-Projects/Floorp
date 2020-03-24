@@ -98,8 +98,8 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
             swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
                              aWorkerPrivate->ServiceWorkerScope(),
                              aWorkerPrivate->ScriptURL(), EmptyString(),
-                             EmptyString(), EmptyString(), 0, 0, JSREPORT_ERROR,
-                             JSEXN_ERR);
+                             EmptyString(), EmptyString(), 0, 0,
+                             nsIScriptError::errorFlag, JSEXN_ERR);
           }
         }
 
@@ -189,8 +189,8 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
           swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
                            aWorkerPrivate->ServiceWorkerScope(),
                            aWorkerPrivate->ScriptURL(), EmptyString(),
-                           EmptyString(), EmptyString(), 0, 0, JSREPORT_ERROR,
-                           JSEXN_ERR);
+                           EmptyString(), EmptyString(), 0, 0,
+                           nsIScriptError::errorFlag, JSEXN_ERR);
         }
       }
 

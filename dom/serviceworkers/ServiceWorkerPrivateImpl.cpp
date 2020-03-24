@@ -16,6 +16,7 @@
 #include "nsIChannel.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIObserverService.h"
+#include "nsIScriptError.h"
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
 
@@ -791,8 +792,8 @@ void ServiceWorkerPrivateImpl::ErrorReceived(const ErrorValue& aError) {
 
   swm->HandleError(nullptr, info->Principal(), info->Scope(),
                    NS_ConvertUTF8toUTF16(info->ScriptSpec()), EmptyString(),
-                   EmptyString(), EmptyString(), 0, 0, JSREPORT_ERROR,
-                   JSEXN_ERR);
+                   EmptyString(), EmptyString(), 0, 0,
+                   nsIScriptError::errorFlag, JSEXN_ERR);
 }
 
 void ServiceWorkerPrivateImpl::Terminated() {
