@@ -152,6 +152,111 @@ add_task(async function returnAsObjectUndefined({ client }) {
   );
 });
 
+add_task(async function returnByValueInvalidTypes({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  for (const returnByValue of [null, 1, "foo", [], {}]) {
+    let errorThrown = "";
+    try {
+      await Runtime.evaluate({
+        expression: "",
+        returnByValue,
+      });
+    } catch (e) {
+      errorThrown = e.message;
+    }
+    ok(errorThrown.includes("returnByValue: boolean value expected"));
+  }
+});
+
+add_task(async function returnByValue({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  const values = [
+    null,
+    42,
+    42.0,
+    "42",
+    true,
+    false,
+    { foo: true },
+    { foo: { bar: 42, str: "str", array: [1, 2, 3] } },
+    [42, "42", true],
+    [{ foo: true }],
+  ];
+
+  for (const value of values) {
+    const { result } = await Runtime.evaluate({
+      expression: `(${JSON.stringify(value)})`,
+      returnByValue: true,
+    });
+
+    Assert.deepEqual(
+      result,
+      {
+        type: typeof value,
+        value,
+        description: value != null ? value.toString() : value,
+      },
+      `Returned expected value for ${JSON.stringify(value)}`
+    );
+  }
+});
+
+add_task(async function returnByValueNotSerializable({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  const notSerializableNumbers = {
+    number: ["-0", "NaN", "Infinity", "-Infinity"],
+    bigint: ["42n"],
+  };
+
+  for (const type in notSerializableNumbers) {
+    for (const unserializableValue of notSerializableNumbers[type]) {
+      const { result } = await Runtime.evaluate({
+        expression: `(${unserializableValue})`,
+        returnByValue: true,
+      });
+
+      Assert.deepEqual(
+        result,
+        {
+          type,
+          unserializableValue,
+          description: unserializableValue,
+        },
+        `Returned expected value for ${JSON.stringify(unserializableValue)}`
+      );
+    }
+  }
+});
+
+// Test undefined individually as JSON.stringify doesn't return a string
+add_task(async function returnByValueUndefined({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  const { result } = await Runtime.evaluate({
+    expression: "undefined",
+    returnByValue: true,
+  });
+
+  Assert.deepEqual(
+    result,
+    {
+      type: "undefined",
+    },
+    "Undefined type is correct"
+  );
+});
+
 add_task(async function exceptionDetailsJavascriptError({ client }) {
   const { Runtime } = client;
 
