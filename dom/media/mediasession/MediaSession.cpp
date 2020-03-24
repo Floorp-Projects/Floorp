@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/MediaSession.h"
+#include "mozilla/EnumeratedArrayCycleCollection.h"
 
 #include "MediaSessionUtils.h"
 
@@ -12,7 +13,8 @@ namespace mozilla {
 namespace dom {
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaSession, mParent, mMediaMetadata)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaSession, mParent, mMediaMetadata,
+                                      mActionHandlers)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaSession)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaSession)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaSession)
@@ -69,13 +71,14 @@ MediaSessionPlaybackState MediaSession::PlaybackState() const {
 
 void MediaSession::SetActionHandler(MediaSessionAction aAction,
                                     MediaSessionActionHandler* aHandler) {
-  size_t index = static_cast<size_t>(aAction);
-  mActionHandlers[index] = aHandler;
+  MOZ_ASSERT(size_t(aAction) < ArrayLength(mActionHandlers));
+  mActionHandlers[aAction] = aHandler;
 }
 
 MediaSessionActionHandler* MediaSession::GetActionHandler(
     MediaSessionAction aAction) const {
-  return mActionHandlers[static_cast<size_t>(aAction)];
+  MOZ_ASSERT(size_t(aAction) < ArrayLength(mActionHandlers));
+  return mActionHandlers[aAction];
 }
 
 void MediaSession::SetPositionState(const MediaPositionState& aState,
@@ -165,9 +168,8 @@ void MediaSession::DispatchNotifyHandler(
 }
 
 bool MediaSession::IsSupportedAction(MediaSessionAction aAction) const {
-  size_t index = static_cast<size_t>(aAction);
-  MOZ_ASSERT(index < ACTIONS);
-  return mActionHandlers[index] != nullptr;
+  MOZ_ASSERT(size_t(aAction) < ArrayLength(mActionHandlers));
+  return mActionHandlers[aAction] != nullptr;
 }
 
 void MediaSession::Shutdown() {
