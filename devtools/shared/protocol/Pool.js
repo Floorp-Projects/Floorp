@@ -142,6 +142,22 @@ class Pool extends EventEmitter {
   }
 
   /**
+   * Pools can override this method in order to opt-out of a destroy sequence.
+   *
+   * For instance, Fronts are destroyed during the toolbox destroy. However when
+   * the toolbox is destroyed, the document holding the toolbox is also
+   * destroyed. So it should not be necessary to cleanup Fronts during toolbox
+   * destroy.
+   *
+   * For the time being, Fronts (or Pools in general) which want to opt-out of
+   * toolbox destroy can override this method and check the value of
+   * `this.conn.isToolboxDestroy`.
+   */
+  skipDestroy() {
+    return false;
+  }
+
+  /**
    * Destroy this item, removing it from a parent if it has one,
    * and destroying all children if necessary.
    */
@@ -158,6 +174,13 @@ class Pool extends EventEmitter {
       if (actor === this) {
         continue;
       }
+
+      // Some pool-managed values don't extend Pool and won't have skipDestroy
+      // defined. For instance, the root actor and the lazy actors.
+      if (typeof actor.skipDestroy === "function" && actor.skipDestroy()) {
+        continue;
+      }
+
       const destroy = actor.destroy;
       if (destroy) {
         // Disconnect destroy while we're destroying in case of (misbehaving)
