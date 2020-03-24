@@ -2461,7 +2461,7 @@
 
 - name: dom.arena_allocator.enabled
   type: bool
-  value: false
+  value: true
   mirror: once
 
 - name: dom.serviceWorkers.enabled
