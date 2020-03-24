@@ -12,7 +12,7 @@ const {
   propertiesEqual,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 
-const { div, img } = dom;
+const { div } = dom;
 
 const UPDATED_STATUS_PROPS = [
   "fromCache",
@@ -20,9 +20,6 @@ const UPDATED_STATUS_PROPS = [
   "status",
   "statusText",
 ];
-
-const BLOCKED_ICON =
-  "chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg";
 
 /**
  * Status code component
@@ -72,9 +69,8 @@ class StatusCode extends Component {
             "requests-list-status-code status-code status-code-blocked",
           title: L10N.getStr("networkMenu.blockedTooltip"),
         },
-        img({
-          src: BLOCKED_ICON,
-          alt: L10N.getStr("networkMenu.blockedTooltip"),
+        div({
+          className: "status-code-blocked-icon",
         })
       );
     }
