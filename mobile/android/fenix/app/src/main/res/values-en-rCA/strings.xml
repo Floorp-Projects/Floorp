@@ -107,7 +107,7 @@
     <!-- Browser menu button to put the the current page in reader mode -->
     <string name="browser_menu_read">Reader view</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">Open in App</string>
+    <string name="browser_menu_open_app_link">Open in app</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Appearance</string>
 
