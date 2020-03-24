@@ -6,15 +6,22 @@ from condprof.util import logger, get_credentials
 from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
 
 
+BOOKMARK_FREQUENCY = 5
+MAX_URLS = 150
+MAX_BOOKMARKS = 250
+
+
 class Builder:
     def __init__(self, options):
         self.options = options
         self.words = self._read_lines("words.txt")
         self.urls = self._build_url_list(self._read_lines("urls.txt"))
-        self.sync_js = "\n".join(self._read_lines("sync.js"))
+        self.sync_js = self._load_script("sync")
+        self.max_bookmarks = options.get("max_bookmarks", MAX_BOOKMARKS)
+        self.bookmark_js = self._load_script("bookmark")
         self.platform = options.get("platform", "")
         self.mobile = is_mobile(self.platform)
-        self.max_urls = options.get("max_urls", 150)
+        self.max_urls = options.get("max_urls", MAX_URLS)
 
         # see Bug 1608604 & see Bug 1619107 - we have stability issues @ bitbar
         if self.mobile:
@@ -22,6 +29,7 @@ class Builder:
 
         logger.info("platform: %s" % self.platform)
         logger.info("max_urls: %s" % self.max_urls)
+        self.bookmark_frequency = options.get("bookmark_frequency", BOOKMARK_FREQUENCY)
 
         # we're syncing only on desktop for now
         self.syncing = not self.mobile
@@ -31,6 +39,9 @@ class Builder:
                 raise ValueError("Sync operations need an FxA username and password")
         else:
             self.username, self.password = None, None
+
+    def _load_script(self, name):
+        return "\n".join(self._read_lines("%s.js" % name))
 
     def _read_lines(self, filename):
         path = os.path.join(os.path.dirname(__file__), filename)
@@ -47,9 +58,15 @@ class Builder:
                 word = word.strip()
                 if word.startswith("#"):
                     continue
-                url_list.append(url.format(word))
+                url_list.append((url.format(word), word))
         random.shuffle(url_list)
         return url_list
+
+    async def add_bookmark(self, session, url, title):
+        logger.info("Adding bookmark to %s" % url)
+        return await execute_async_script(
+            session, self.bookmark_js, url, title, self.max_bookmarks
+        )
 
     async def sync(self, session, metadata):
         if not self.syncing:
@@ -78,7 +95,7 @@ class Builder:
         await tabs.create_windows()
         visited = 0
 
-        for current, url in enumerate(self.urls):
+        for current, (url, word) in enumerate(self.urls):
             logger.info("%d/%d %s" % (current + 1, self.max_urls, url))
             retries = 0
             while retries < 3:
@@ -88,6 +105,9 @@ class Builder:
                     break
                 except asyncio.TimeoutError:
                     retries += 1
+
+            if current % self.bookmark_frequency == 0:
+                await self.add_bookmark(session, url, word)
 
             if current == self.max_urls - 1:
                 break
