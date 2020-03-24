@@ -228,6 +228,36 @@ WorkerPrivate* ClientManager::GetWorkerPrivate() const {
   return GetActor()->GetWorkerPrivate();
 }
 
+// Used to share logic between ExpectFutureSource and ForgetFutureSource.
+/* static */ bool ClientManager::ExpectOrForgetFutureSource(
+    const ClientInfo& aClientInfo,
+    bool (PClientManagerChild::*aMethod)(const IPCClientInfo&)) {
+  bool rv = true;
+
+  RefPtr<ClientManager> mgr = ClientManager::GetOrCreateForCurrentThread();
+  mgr->MaybeExecute(
+      [&](ClientManagerChild* aActor) {
+        if (!(aActor->*aMethod)(aClientInfo.ToIPC())) {
+          rv = false;
+        }
+      },
+      [&] { rv = false; });
+
+  return rv;
+}
+
+/* static */ bool ClientManager::ExpectFutureSource(
+    const ClientInfo& aClientInfo) {
+  return ExpectOrForgetFutureSource(
+      aClientInfo, &PClientManagerChild::SendExpectFutureClientSource);
+}
+
+/* static */ bool ClientManager::ForgetFutureSource(
+    const ClientInfo& aClientInfo) {
+  return ExpectOrForgetFutureSource(
+      aClientInfo, &PClientManagerChild::SendForgetFutureClientSource);
+}
+
 // static
 void ClientManager::Startup() {
   MOZ_ASSERT(NS_IsMainThread());
