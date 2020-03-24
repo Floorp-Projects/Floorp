@@ -116,6 +116,10 @@ const char kHttp3VersionHEX[] = "ff0000001b";  // this is draft 27.
 // The connection could bring the peeked data for sniffing
 #define NS_HTTP_CALL_CONTENT_SNIFFER (1 << 21)
 
+// Disallow the use of the HTTP3 protocol. This is meant for the contexts
+// such as HTTP upgrade which are not supported by HTTP3.
+#define NS_HTTP_DISALLOW_HTTP3 (1 << 22)
+
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 
 #define NS_HTTP_TRR_MODE_FROM_FLAGS(x) \

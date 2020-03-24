@@ -1113,7 +1113,7 @@ void AltSvcCache::UpdateAltServiceMapping(
 already_AddRefed<AltSvcMapping> AltSvcCache::GetAltServiceMapping(
     const nsACString& scheme, const nsACString& host, int32_t port,
     bool privateBrowsing, bool isolated, const nsACString& topWindowOrigin,
-    const OriginAttributes& originAttributes) {
+    const OriginAttributes& originAttributes, bool aHttp3Allowed) {
   EnsureStorageInited();
 
   bool isHTTPS;
@@ -1139,6 +1139,11 @@ already_AddRefed<AltSvcMapping> AltSvcCache::GetAltServiceMapping(
   if (existing && !existing->Validated()) {
     existing = nullptr;
   }
+
+  if (existing && existing->IsHttp3() && !aHttp3Allowed) {
+    existing = nullptr;
+  }
+
   return existing.forget();
 }
 

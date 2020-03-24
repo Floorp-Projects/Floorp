@@ -349,7 +349,7 @@ nsresult TRRServiceChannel::BeginConnect() {
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) &&
       (mapping = gHttpHandler->GetAltServiceMapping(
            scheme, host, port, mPrivateBrowsing, IsIsolated(),
-           GetTopWindowOrigin(), OriginAttributes()))) {
+           GetTopWindowOrigin(), OriginAttributes(), false))) {
     LOG(("TRRServiceChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n",
          this, scheme.get(), mapping->AlternateHost().get(),
          mapping->AlternatePort(), mapping->HashKey().get()));

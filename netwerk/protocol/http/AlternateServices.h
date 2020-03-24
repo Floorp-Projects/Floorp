@@ -194,7 +194,7 @@ class AltSvcCache {
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
       bool isolated, const nsACString& topWindowOrigin,
-      const OriginAttributes& originAttributes);
+      const OriginAttributes& originAttributes, bool aHttp3Allowed);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString& host, int32_t port,
                         const OriginAttributes& originAttributes,
