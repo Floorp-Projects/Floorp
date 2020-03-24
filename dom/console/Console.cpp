@@ -2300,7 +2300,8 @@ JS::Value Console::CreateCounterOrResetCounterValue(
   return value;
 }
 
-bool Console::ShouldIncludeStackTrace(MethodName aMethodName) const {
+/* static */
+bool Console::ShouldIncludeStackTrace(MethodName aMethodName) {
   switch (aMethodName) {
     case MethodError:
     case MethodException:
