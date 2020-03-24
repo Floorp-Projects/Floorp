@@ -4,124 +4,16 @@
 
 extern crate mozangle;
 extern crate webrender;
+extern crate webrender_build;
 
 use mozangle::shaders::{BuiltInResources, Output, ShaderSpec, ShaderValidator};
+use webrender_build::shader::{ShaderFeatureFlags, get_shader_features};
 
 // from glslang
 const FRAGMENT_SHADER: u32 = 0x8B30;
 const VERTEX_SHADER: u32 = 0x8B31;
 
-struct Shader {
-    name: &'static str,
-    features: &'static [&'static str],
-}
-
 const SHADER_PREFIX: &str = "#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024U\n";
-
-const BRUSH_FEATURES: &[&str] = &["", "ALPHA_PASS"];
-const CLIP_FEATURES: &[&str] = &[""];
-const FAST_CLIP_FEATURES: &[&str] = &["FAST_PATH"];
-const CACHE_FEATURES: &[&str] = &[""];
-const GRADIENT_FEATURES: &[&str] = &[ "", "DITHERING", "ALPHA_PASS", "DITHERING,ALPHA_PASS" ];
-const PRIM_FEATURES: &[&str] = &[""];
-
-const SHADERS: &[Shader] = &[
-    // Clip mask shaders
-    Shader {
-        name: "cs_clip_rectangle",
-        features: CLIP_FEATURES,
-    },
-    Shader {
-        name: "cs_clip_rectangle",
-        features: FAST_CLIP_FEATURES,
-    },
-    Shader {
-        name: "cs_clip_image",
-        features: CLIP_FEATURES,
-    },
-    Shader {
-        name: "cs_clip_box_shadow",
-        features: CLIP_FEATURES,
-    },
-    // Cache shaders
-    Shader {
-        name: "cs_blur",
-        features: &[ "ALPHA_TARGET", "COLOR_TARGET" ],
-    },
-    Shader {
-        name: "cs_border_segment",
-        features: CACHE_FEATURES,
-    },
-    Shader {
-        name: "cs_line_decoration",
-        features: CACHE_FEATURES,
-    },
-    Shader {
-        name: "cs_gradient",
-        features: CACHE_FEATURES,
-    },
-    Shader {
-        name: "cs_border_solid",
-        features: CACHE_FEATURES,
-    },
-    Shader {
-        name: "cs_svg_filter",
-        features: CACHE_FEATURES,
-    },
-    // Prim shaders
-    Shader {
-        name: "ps_split_composite",
-        features: PRIM_FEATURES,
-    },
-    Shader {
-        name: "ps_text_run",
-        features: &[ "", "GLYPH_TRANSFORM" ],
-    },
-    // Brush shaders
-    Shader {
-        name: "brush_yuv_image",
-        features: &[
-            "",
-            "YUV_NV12",
-            "YUV_PLANAR",
-            "YUV_INTERLEAVED",
-            "TEXTURE_2D,YUV_NV12",
-            "YUV_NV12,ALPHA_PASS",
-        ],
-    },
-    Shader {
-        name: "brush_solid",
-        features: BRUSH_FEATURES,
-    },
-    Shader {
-        name: "brush_image",
-        features: BRUSH_FEATURES,
-    },
-    Shader {
-        name: "brush_blend",
-        features: BRUSH_FEATURES,
-    },
-    Shader {
-        name: "brush_mix_blend",
-        features: BRUSH_FEATURES,
-    },
-    Shader {
-        name: "brush_conic_gradient",
-        features: GRADIENT_FEATURES,
-    },
-    Shader {
-        name: "brush_radial_gradient",
-        features: GRADIENT_FEATURES,
-    },
-    Shader {
-        name: "brush_linear_gradient",
-        features: GRADIENT_FEATURES,
-    },
-    Shader {
-        name: "brush_opacity",
-        features: BRUSH_FEATURES,
-    },
-];
 
 const VERSION_STRING: &str = "#version 300 es\n";
 
@@ -136,8 +28,8 @@ fn validate_shaders() {
     let fs_validator =
         ShaderValidator::new(FRAGMENT_SHADER, ShaderSpec::Gles3, Output::Essl, &resources).unwrap();
 
-    for shader in SHADERS {
-        for config in shader.features {
+    for (shader, configs) in get_shader_features(ShaderFeatureFlags::GLES) {
+        for config in configs {
             let mut features = String::new();
             features.push_str(SHADER_PREFIX);
 
@@ -146,10 +38,10 @@ fn validate_shaders() {
             }
 
             let (vs, fs) =
-                webrender::build_shader_strings(VERSION_STRING, &features, shader.name, None);
+                webrender::build_shader_strings(VERSION_STRING, &features, shader, None);
 
-            validate(&vs_validator, shader.name, vs);
-            validate(&fs_validator, shader.name, fs);
+            validate(&vs_validator, shader, vs);
+            validate(&fs_validator, shader, fs);
         }
     }
 }
