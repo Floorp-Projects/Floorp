@@ -58,8 +58,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   // CSS pixels). The displayport is 1 extra CSS pixel on all
   // sides.
 
-  RefPtr<TestAsyncPanZoomController> childApzc = new TestAsyncPanZoomController(
-      LayersId{0}, mcc, tm, wr::RenderRoot::Default);
+  RefPtr<TestAsyncPanZoomController> childApzc =
+      new TestAsyncPanZoomController(LayersId{0}, mcc, tm);
 
   const char* layerTreeSyntax = "c(c)";
   // LayerID                     0 1

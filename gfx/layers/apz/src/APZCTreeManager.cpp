@@ -343,10 +343,9 @@ void APZCTreeManager::NotifyLayerTreeRemoved(LayersId aLayersId) {
 }
 
 AsyncPanZoomController* APZCTreeManager::NewAPZCInstance(
-    LayersId aLayersId, GeckoContentController* aController,
-    wr::RenderRoot aRenderRoot) {
+    LayersId aLayersId, GeckoContentController* aController) {
   return new AsyncPanZoomController(
-      aLayersId, this, mInputQueue, aController, aRenderRoot,
+      aLayersId, this, mInputQueue, aController,
       AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }
 
@@ -423,8 +422,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     HitTestingTreeNode* next = nullptr;
     LayersId layersId = mRootLayersId;
     seenLayersIds.insert(mRootLayersId);
-    std::stack<wr::RenderRoot> renderRoots;
-    renderRoots.push(wr::RenderRoot::Default);
     ancestorTransforms.push(AncestorTransform());
     state.mParentHasPerspective.push(false);
 
@@ -464,7 +461,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
 
           HitTestingTreeNode* node = PrepareNodeForLayer(
               lock, aLayerMetrics, aLayerMetrics.Metrics(), layersId,
-              ancestorTransforms.top(), parent, next, state, renderRoots.top());
+              ancestorTransforms.top(), parent, next, state);
           MOZ_ASSERT(node);
           AsyncPanZoomController* apzc = node->GetApzc();
           aLayerMetrics.SetApzc(apzc);
@@ -522,10 +519,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
             layersId = *newLayersId;
             seenLayersIds.insert(layersId);
           }
-          if (Maybe<wr::RenderRoot> newRenderRoot =
-                  aLayerMetrics.GetReferentRenderRoot()) {
-            renderRoots.push(*newRenderRoot);
-          }
 
           indents.push(gfx::TreeAutoIndent<LOG_DEFAULT>(mApzcTreeLog));
           state.mParentHasPerspective.push(
@@ -542,9 +535,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           ancestorTransforms.pop();
           indents.pop();
           state.mParentHasPerspective.pop();
-          if (aLayerMetrics.GetReferentRenderRoot()) {
-            renderRoots.pop();
-          }
         });
 
     mApzcTreeLog << "[end]\n";
@@ -1164,8 +1154,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     const RecursiveMutexAutoLock& aProofOfTreeLock, const ScrollNode& aLayer,
     const FrameMetrics& aMetrics, LayersId aLayersId,
     const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
-    HitTestingTreeNode* aNextSibling, TreeBuildingState& aState,
-    wr::RenderRoot aRenderRoot) {
+    HitTestingTreeNode* aNextSibling, TreeBuildingState& aState) {
   bool needsApzc = true;
   if (!aMetrics.IsScrollable()) {
     needsApzc = false;
@@ -1287,7 +1276,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     // a destroyed APZC and so we need to throw that out and make a new one.
     bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
     if (newApzc) {
-      apzc = NewAPZCInstance(aLayersId, geckoContentController, aRenderRoot);
+      apzc = NewAPZCInstance(aLayersId, geckoContentController);
       apzc->SetCompositorController(aState.mCompositorController.get());
       if (crossProcessSharingController) {
         apzc->SetMetricsSharingController(crossProcessSharingController);
@@ -1319,7 +1308,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
 
     apzc->NotifyLayersUpdated(
         aLayer.Metadata(), aState.mIsFirstPaint,
-        WRRootId(aLayersId, aRenderRoot) == aState.mOriginatingWrRootId);
+        aLayersId == aState.mOriginatingWrRootId.mLayersId);
 
     // Since this is the first time we are encountering an APZC with this guid,
     // the node holding it must be the primary holder. It may be newly-created
