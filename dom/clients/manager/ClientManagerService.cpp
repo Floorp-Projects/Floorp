@@ -293,6 +293,45 @@ bool ClientManagerService::RemoveSource(ClientSourceParent* aSource) {
   return true;
 }
 
+bool ClientManagerService::ExpectFutureSource(
+    const IPCClientInfo& aClientInfo) {
+  AssertIsOnBackgroundThread();
+
+  const nsID& id = aClientInfo.id();
+  auto entryPtr = mSourceTable.lookupForAdd(id);
+
+  // Prevent overwrites.
+  if (NS_WARN_IF(static_cast<bool>(entryPtr))) {
+    return false;
+  }
+
+  return mSourceTable.add(
+      entryPtr, id,
+      SourceTableEntry(VariantIndex<0>(),
+                       FutureClientSourceParent(aClientInfo)));
+}
+
+void ClientManagerService::ForgetFutureSource(
+    const IPCClientInfo& aClientInfo) {
+  AssertIsOnBackgroundThread();
+
+  auto entryPtr = mSourceTable.lookup(aClientInfo.id());
+
+  if (entryPtr) {
+    SourceTableEntry& entry = entryPtr->value();
+
+    if (entry.is<ClientSourceParent*>()) {
+      return;
+    }
+
+    CopyableErrorResult rv;
+    rv.ThrowInvalidStateError("Client creation aborted.");
+    entry.as<FutureClientSourceParent>().RejectPromiseIfExists(rv);
+
+    mSourceTable.remove(entryPtr);
+  }
+}
+
 RefPtr<SourcePromise> ClientManagerService::FindSource(
     const nsID& aID, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
