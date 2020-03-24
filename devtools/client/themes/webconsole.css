@@ -768,6 +768,16 @@ a.learn-more-link.webconsole-learn-more-link {
   max-height: 250px;
   min-height: 100px;
 }
+/* Response panel needs an absolute height size as the 
+ * sizing of its content depends on it, it also needs override 
+ * the inline height set on the panels */
+.network.message .network-info #response-panel {
+  height: 250px !important;
+}
+
+.network.message .network-info .accordion-item:last-child .accordion-content {
+  position: static;
+}
 
 /* Hide 'Edit And Resend' button since the feature isn't
    supported in the Console panel. */
