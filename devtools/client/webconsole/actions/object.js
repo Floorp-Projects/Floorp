@@ -24,6 +24,18 @@ function storeAsGlobal(actor) {
     const res = await client.evaluateJSAsync(evalString, {
       selectedObjectActor: actor,
     });
+
+    // Select the adhoc target in the console.
+    if (hud.toolbox) {
+      const objectFront = client.getFrontByID(actor);
+      if (objectFront) {
+        const threadActorID = objectFront.targetFront?.threadFront?.actorID;
+        if (threadActorID) {
+          hud.toolbox.selectThread(threadActorID);
+        }
+      }
+    }
+
     hud.focusInput();
     hud.setInputValue(res.result);
   };
