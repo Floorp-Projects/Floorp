@@ -1,19 +1,26 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
-# License: http://pyasn1.sf.net/license.html
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
+
 try:
     import unittest2 as unittest
+
 except ImportError:
     import unittest
 
 from tests.base import BaseTestCase
 
-from pyasn1.type import tag, namedtype, univ, char
-from pyasn1.codec.ber import decoder, eoo
+from pyasn1.type import tag
+from pyasn1.type import namedtype
+from pyasn1.type import opentype
+from pyasn1.type import univ
+from pyasn1.type import char
+from pyasn1.codec.ber import decoder
+from pyasn1.codec.ber import eoo
 from pyasn1.compat.octets import ints2octs, str2octs, null
 from pyasn1.error import PyAsn1Error
 
@@ -167,8 +174,7 @@ class OctetStringDecoderTestCase(BaseTestCase):
 
     def testIndefModeChunked(self):
         assert decoder.decode(
-            ints2octs((36, 128, 4, 4, 81, 117, 105, 99, 4, 4, 107, 32, 98, 114, 4, 4, 111, 119, 110, 32, 4, 3, 102, 111,
-                       120, 0, 0))
+            ints2octs((36, 128, 4, 4, 81, 117, 105, 99, 4, 4, 107, 32, 98, 114, 4, 4, 111, 119, 110, 32, 4, 3, 102, 111, 120, 0, 0))
         ) == (str2octs('Quick brown fox'), null)
 
     def testDefModeChunkedSubst(self):
@@ -262,7 +268,7 @@ class NullDecoderTestCase(BaseTestCase):
 
 
 # Useful analysis of OID encoding issues could be found here:
-# http://www.viathinksoft.de/~daniel-marschall/asn.1/oid_facts.html
+# https://misc.daniel-marschall.de/asn.1/oid_facts.html
 class ObjectIdentifierDecoderTestCase(BaseTestCase):
     def testOne(self):
         assert decoder.decode(
@@ -327,7 +333,7 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
         except PyAsn1Error:
             pass
         else:
-            assert 0, 'Leading 0x80 tolarated'
+            assert 0, 'Leading 0x80 tolerated'
 
     def testLeading0x80Case2(self):
         try:
@@ -337,7 +343,7 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
         except PyAsn1Error:
             pass
         else:
-            assert 0, 'Leading 0x80 tolarated'
+            assert 0, 'Leading 0x80 tolerated'
 
     def testLeading0x80Case3(self):
         try:
@@ -347,7 +353,7 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
         except PyAsn1Error:
             pass
         else:
-            assert 0, 'Leading 0x80 tolarated'
+            assert 0, 'Leading 0x80 tolerated'
 
     def testLeading0x80Case4(self):
         try:
@@ -357,7 +363,7 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
         except PyAsn1Error:
             pass
         else:
-            assert 0, 'Leading 0x80 tolarated'
+            assert 0, 'Leading 0x80 tolerated'
 
     def testTagFormat(self):
         try:
@@ -373,7 +379,7 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
         except PyAsn1Error:
             pass
         else:
-            assert 0, 'zero length tolarated'
+            assert 0, 'zero length tolerated'
 
     def testIndefiniteLength(self):
         try:
@@ -381,7 +387,7 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
         except PyAsn1Error:
             pass
         else:
-            assert 0, 'indefinite length tolarated'
+            assert 0, 'indefinite length tolerated'
 
     def testReservedLength(self):
         try:
@@ -393,14 +399,12 @@ class ObjectIdentifierDecoderTestCase(BaseTestCase):
 
     def testLarge1(self):
         assert decoder.decode(
-            ints2octs((0x06, 0x11, 0x83, 0xC6, 0xDF, 0xD4, 0xCC, 0xB3, 0xFF, 0xFF, 0xFE, 0xF0, 0xB8, 0xD6, 0xB8, 0xCB,
-                       0xE2, 0xB7, 0x17))
+            ints2octs((0x06, 0x11, 0x83, 0xC6, 0xDF, 0xD4, 0xCC, 0xB3, 0xFF, 0xFF, 0xFE, 0xF0, 0xB8, 0xD6, 0xB8, 0xCB, 0xE2, 0xB7, 0x17))
         ) == ((2, 18446744073709551535184467440737095), null)
 
     def testLarge2(self):
         assert decoder.decode(
-            ints2octs((0x06, 0x13, 0x88, 0x37, 0x83, 0xC6, 0xDF, 0xD4, 0xCC, 0xB3, 0xFF, 0xFF, 0xFE, 0xF0, 0xB8, 0xD6,
-                       0xB8, 0xCB, 0xE2, 0xB6, 0x47))
+            ints2octs((0x06, 0x13, 0x88, 0x37, 0x83, 0xC6, 0xDF, 0xD4, 0xCC, 0xB3, 0xFF, 0xFF, 0xFE, 0xF0, 0xB8, 0xD6, 0xB8, 0xCB, 0xE2, 0xB6, 0x47))
         ) == ((2, 999, 18446744073709551535184467440737095), null)
 
 
@@ -425,12 +429,12 @@ class RealDecoderTestCase(BaseTestCase):
             ints2octs((9, 3, 160, 254, 1))
         ) == (univ.Real((1, 2, -8)), null)
 
-    def testBin4(self):  # check exponenta = 0
+    def testBin4(self):  # check exponent = 0
         assert decoder.decode(  # (1, 2, 0) encoded with base = 2
             ints2octs((9, 3, 128, 0, 1))
         ) == (univ.Real((1, 2, 0)), null)
 
-    def testBin5(self):  # case of 2 octs for exponenta and negative exponenta
+    def testBin5(self):  # case of 2 octs for exponent and negative exponent
         assert decoder.decode(  # (3, 2, -1020) encoded with base = 16
             ints2octs((9, 4, 161, 255, 1, 3))
         ) == (univ.Real((3, 2, -1020)), null)
@@ -482,17 +486,17 @@ class RealDecoderTestCase(BaseTestCase):
 if sys.version_info[0:2] > (2, 5):
     class UniversalStringDecoderTestCase(BaseTestCase):
         def testDecoder(self):
-            assert decoder.decode(ints2octs((28, 12, 0, 0, 0, 97, 0, 0, 0, 98, 0, 0, 0, 99))) == (char.UniversalString(sys.version_info[0] == 3 and 'abc' or unicode('abc')), null)
+            assert decoder.decode(ints2octs((28, 12, 0, 0, 0, 97, 0, 0, 0, 98, 0, 0, 0, 99))) == (char.UniversalString(sys.version_info[0] >= 3 and 'abc' or unicode('abc')), null)
 
 
 class BMPStringDecoderTestCase(BaseTestCase):
     def testDecoder(self):
-        assert decoder.decode(ints2octs((30, 6, 0, 97, 0, 98, 0, 99))) == (char.BMPString(sys.version_info[0] == 3 and 'abc' or unicode('abc')), null)
+        assert decoder.decode(ints2octs((30, 6, 0, 97, 0, 98, 0, 99))) == (char.BMPString(sys.version_info[0] >= 3 and 'abc' or unicode('abc')), null)
 
 
 class UTF8StringDecoderTestCase(BaseTestCase):
     def testDecoder(self):
-        assert decoder.decode(ints2octs((12, 3, 97, 98, 99))) == (char.UTF8String(sys.version_info[0] == 3 and 'abc' or unicode('abc')), null)
+        assert decoder.decode(ints2octs((12, 3, 97, 98, 99))) == (char.UTF8String(sys.version_info[0] >= 3 and 'abc' or unicode('abc')), null)
 
 
 class SequenceOfDecoderTestCase(BaseTestCase):
@@ -728,7 +732,7 @@ class SequenceDecoderWithSchemaTestCase(BaseTestCase):
     def testDefMode(self):
         self.__init()
         assert decoder.decode(
-            ints2octs((48, 128, 5, 0, 0, 0)), asn1Spec=self.s
+            ints2octs((48, 2, 5, 0)), asn1Spec=self.s
         ) == (self.s, null)
 
     def testIndefMode(self):
@@ -829,6 +833,296 @@ class SequenceDecoderWithSchemaTestCase(BaseTestCase):
             ints2octs((48, 128, 5, 0, 36, 128, 4, 4, 113, 117, 105, 99, 4, 4, 107, 32, 98, 114, 4, 3, 111, 119, 110, 0,
                        0, 2, 1, 1, 0, 0)), asn1Spec=self.s
         ) == (self.s, null)
+
+
+class SequenceDecoderWithUntaggedOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType('blob', univ.Any(), openType=openType)
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 6, 2, 1, 1, 2, 1, 12)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1] == 12
+
+    def testDecodeOpenTypesChoiceTwo(self):
+        s, r = decoder.decode(
+            ints2octs((48, 16, 2, 1, 2, 4, 11, 113, 117, 105, 99, 107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 2
+        assert s[1] == univ.OctetString('quick brown')
+
+    def testDecodeOpenTypesUnknownType(self):
+        try:
+            s, r = decoder.decode(
+                ints2octs((48, 6, 2, 1, 2, 6, 1, 39)), asn1Spec=self.s,
+                decodeOpenTypes=True
+            )
+
+        except PyAsn1Error:
+            pass
+
+        else:
+            assert False, 'unknown open type tolerated'
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 6, 2, 1, 3, 6, 1, 39)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1] == univ.OctetString(hexValue='060127')
+
+    def testDontDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 6, 2, 1, 1, 2, 1, 12)), asn1Spec=self.s
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1] == ints2octs((2, 1, 12))
+
+    def testDontDecodeOpenTypesChoiceTwo(self):
+        s, r = decoder.decode(
+            ints2octs((48, 16, 2, 1, 2, 4, 11, 113, 117, 105, 99, 107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s
+        )
+        assert not r
+        assert s[0] == 2
+        assert s[1] == ints2octs((4, 11, 113, 117, 105, 99, 107, 32, 98, 114, 111, 119, 110))
+
+
+class SequenceDecoderWithImplicitlyTaggedOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType(
+                    'blob', univ.Any().subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 3)), openType=openType
+                )
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 1, 131, 3, 2, 1, 12)), asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1] == 12
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 3, 131, 3, 2, 1, 12)), asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1] == univ.OctetString(hexValue='02010C')
+
+
+class SequenceDecoderWithExplicitlyTaggedOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType(
+                    'blob', univ.Any().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 3)), openType=openType
+                )
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 1, 163, 3, 2, 1, 12)), asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1] == 12
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 3, 163, 3, 2, 1, 12)), asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1] == univ.OctetString(hexValue='02010C')
+
+
+class SequenceDecoderWithUnaggedSetOfOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType('blob', univ.SetOf(componentType=univ.Any()),
+                                    openType=openType)
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 1, 49, 3, 2, 1, 12)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == 12
+
+    def testDecodeOpenTypesChoiceTwo(self):
+        s, r = decoder.decode(
+            ints2octs((48, 18, 2, 1, 2, 49, 13, 4, 11, 113, 117, 105, 99,
+                       107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 2
+        assert s[1][0] == univ.OctetString('quick brown')
+
+    def testDecodeOpenTypesUnknownType(self):
+        try:
+            s, r = decoder.decode(
+                ints2octs((48, 6, 2, 1, 2, 6, 1, 39)), asn1Spec=self.s,
+                decodeOpenTypes=True
+            )
+
+        except PyAsn1Error:
+            pass
+
+        else:
+            assert False, 'unknown open type tolerated'
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 3, 49, 3, 2, 1, 12)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1][0] == univ.OctetString(hexValue='02010c')
+
+    def testDontDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 1, 49, 3, 2, 1, 12)), asn1Spec=self.s
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == ints2octs((2, 1, 12))
+
+    def testDontDecodeOpenTypesChoiceTwo(self):
+        s, r = decoder.decode(
+            ints2octs((48, 18, 2, 1, 2, 49, 13, 4, 11, 113, 117, 105, 99,
+                       107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s
+        )
+        assert not r
+        assert s[0] == 2
+        assert s[1][0] == ints2octs((4, 11, 113, 117, 105, 99, 107, 32, 98, 114,
+                                     111, 119, 110))
+
+
+class SequenceDecoderWithImplicitlyTaggedSetOfOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType(
+                    'blob', univ.SetOf(
+                        componentType=univ.Any().subtype(
+                            implicitTag=tag.Tag(
+                                tag.tagClassContext, tag.tagFormatSimple, 3))),
+                    openType=openType
+                )
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 10, 2, 1, 1, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == 12
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 10, 2, 1, 3, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1][0] == univ.OctetString(hexValue='02010C')
+
+
+class SequenceDecoderWithExplicitlyTaggedSetOfOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType(
+                    'blob', univ.SetOf(
+                        componentType=univ.Any().subtype(
+                            explicitTag=tag.Tag(
+                                tag.tagClassContext, tag.tagFormatSimple, 3))),
+                    openType=openType
+                )
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 10, 2, 1, 1, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == 12
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs( (48, 10, 2, 1, 3, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1][0] == univ.OctetString(hexValue='02010C')
 
 
 class SetDecoderTestCase(BaseTestCase):
@@ -951,7 +1245,7 @@ class SetDecoderWithSchemaTestCase(BaseTestCase):
             ints2octs((49, 15, 5, 0, 4, 11, 113, 117, 105, 99, 107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s
         ) == (self.s, null)
 
-    def testWithOptionaIndefMode(self):
+    def testWithOptionalIndefMode(self):
         self.__initWithOptional()
         assert decoder.decode(
             ints2octs((49, 128, 5, 0, 36, 128, 4, 11, 113, 117, 105, 99, 107, 32, 98, 114, 111, 119, 110, 0, 0, 0, 0)), asn1Spec=self.s
@@ -1286,6 +1580,38 @@ class NonStringDecoderTestCase(BaseTestCase):
     def testAny(self):
         s, _ = decoder.decode(univ.Any(self.substrate), asn1Spec=self.s)
         assert self.s == s
+
+
+class ErrorOnDecodingTestCase(BaseTestCase):
+
+    def testErrorCondition(self):
+        decode = decoder.Decoder(decoder.tagMap, decoder.typeMap)
+
+        try:
+            asn1Object, rest = decode(str2octs('abc'))
+
+        except PyAsn1Error:
+            exc = sys.exc_info()[1]
+            assert isinstance(exc, PyAsn1Error), (
+                'Unexpected exception raised %r' % (exc,))
+
+        else:
+            assert False, 'Unexpected decoder result %r' % (asn1Object,)
+
+    def testRawDump(self):
+        decode = decoder.Decoder(decoder.tagMap, decoder.typeMap)
+
+        decode.defaultErrorState = decoder.stDumpRawValue
+
+        asn1Object, rest = decode(ints2octs(
+            (31, 8, 2, 1, 1, 131, 3, 2, 1, 12)))
+
+        assert isinstance(asn1Object, univ.Any), (
+            'Unexpected raw dump type %r' % (asn1Object,))
+        assert asn1Object.asNumbers() == (31, 8, 2, 1, 1), (
+            'Unexpected raw dump value %r' % (asn1Object,))
+        assert rest == ints2octs((131, 3, 2, 1, 12)), (
+            'Unexpected rest of substrate after raw dump %r' % rest)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])

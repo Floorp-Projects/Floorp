@@ -1,4 +1,4 @@
-Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

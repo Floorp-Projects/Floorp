@@ -1,10 +1,11 @@
-Metadata-Version: 1.1
+Metadata-Version: 1.2
 Name: pyasn1
-Version: 0.3.7
+Version: 0.4.8
 Summary: ASN.1 types and codecs
 Home-page: https://github.com/etingof/pyasn1
-Author: Ilya Etingof <etingof@gmail.com>
+Author: Ilya Etingof
 Author-email: etingof@gmail.com
+Maintainer: Ilya Etingof <etingof@gmail.com>
 License: BSD
 Description: Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)
 Platform: any
@@ -29,5 +30,6 @@ Classifier: Programming Language :: Python :: 3.3
 Classifier: Programming Language :: Python :: 3.4
 Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
 Classifier: Topic :: Communications
 Classifier: Topic :: Software Development :: Libraries :: Python Modules

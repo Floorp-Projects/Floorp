@@ -1,8 +1,8 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
-# License: http://pyasn1.sf.net/license.html
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
 
@@ -14,7 +14,8 @@ except ImportError:
 
 from tests.base import BaseTestCase
 
-from pyasn1.type import namedtype, univ
+from pyasn1.type import namedtype
+from pyasn1.type import univ
 from pyasn1.error import PyAsn1Error
 
 
@@ -28,7 +29,7 @@ class NamedTypeCaseBase(BaseTestCase):
         assert n == 'age' or t == univ.Integer(), 'unpack fails'
 
     def testRepr(self):
-        assert eval(repr(self.e), {'NamedType': namedtype.NamedType, 'Integer': univ.Integer}) == self.e, 'repr() fails'
+        assert 'age' in repr(self.e)
 
 
 class NamedTypesCaseBase(BaseTestCase):
@@ -42,15 +43,7 @@ class NamedTypesCaseBase(BaseTestCase):
         )
 
     def testRepr(self):
-        assert eval(
-            repr(self.e), {
-                'NamedTypes': namedtype.NamedTypes,
-                'NamedType': namedtype.NamedType,
-                'OptionalNamedType': namedtype.OptionalNamedType,
-                'Integer': univ.Integer,
-                'OctetString': univ.OctetString
-            }
-        ) == self.e, 'repr() fails'
+        assert 'first-name' in repr(self.e)
 
     def testContains(self):
         assert 'first-name' in self.e

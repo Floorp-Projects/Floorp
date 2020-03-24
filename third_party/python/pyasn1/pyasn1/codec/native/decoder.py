@@ -1,13 +1,20 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
-# License: http://pyasn1.sf.net/license.html
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# License: http://snmplabs.com/pyasn1/license.html
 #
-from pyasn1.type import base, univ, char, useful, tag
-from pyasn1 import debug, error
+from pyasn1 import debug
+from pyasn1 import error
+from pyasn1.type import base
+from pyasn1.type import char
+from pyasn1.type import tag
+from pyasn1.type import univ
+from pyasn1.type import useful
 
 __all__ = ['decode']
+
+LOG = debug.registerLoggee(__name__, flags=debug.DEBUG_DECODER)
 
 
 class AbstractScalarDecoder(object):
@@ -131,13 +138,10 @@ class Decoder(object):
         self.__typeMap = typeMap
 
     def __call__(self, pyObject, asn1Spec, **options):
-        if debug.logger & debug.flagDecoder:
-            logger = debug.logger
-        else:
-            logger = None
-        if logger:
+
+        if LOG:
             debug.scope.push(type(pyObject).__name__)
-            logger('decoder called at scope %s, working with type %s' % (debug.scope, type(pyObject).__name__))
+            LOG('decoder called at scope %s, working with type %s' % (debug.scope, type(pyObject).__name__))
 
         if asn1Spec is None or not isinstance(asn1Spec, base.Asn1Item):
             raise error.PyAsn1Error('asn1Spec is not valid (should be an instance of an ASN.1 Item, not %s)' % asn1Spec.__class__.__name__)
@@ -154,13 +158,13 @@ class Decoder(object):
             except KeyError:
                 raise error.PyAsn1Error('Unknown ASN.1 tag %s' % asn1Spec.tagSet)
 
-        if logger:
-            logger('calling decoder %s on Python type %s <%s>' % (type(valueDecoder).__name__, type(pyObject).__name__, repr(pyObject)))
+        if LOG:
+            LOG('calling decoder %s on Python type %s <%s>' % (type(valueDecoder).__name__, type(pyObject).__name__, repr(pyObject)))
 
         value = valueDecoder(pyObject, asn1Spec, self, **options)
 
-        if logger:
-            logger('decoder %s produced ASN.1 type %s <%s>' % (type(valueDecoder).__name__, type(value).__name__, repr(value)))
+        if LOG:
+            LOG('decoder %s produced ASN.1 type %s <%s>' % (type(valueDecoder).__name__, type(value).__name__, repr(value)))
             debug.scope.pop()
 
         return value
@@ -177,6 +181,8 @@ class Decoder(object):
 #: pyObject: :py:class:`object`
 #:     A scalar or nested Python objects
 #:
+#: Keyword Args
+#: ------------
 #: asn1Spec: any pyasn1 type object e.g. :py:class:`~pyasn1.type.base.PyAsn1Item` derivative
 #:     A pyasn1 type object to act as a template guiding the decoder. It is required
 #:     for successful interpretation of Python objects mapping into their ASN.1
@@ -189,6 +195,19 @@ class Decoder(object):
 #:
 #: Raises
 #: ------
-#: : :py:class:`pyasn1.error.PyAsn1Error`
+#: ~pyasn1.error.PyAsn1Error
 #:     On decoding errors
+#:
+#: Examples
+#: --------
+#: Decode native Python object into ASN.1 objects with ASN.1 schema
+#:
+#: .. code-block:: pycon
+#:
+#:    >>> seq = SequenceOf(componentType=Integer())
+#:    >>> s, _ = decode([1, 2, 3], asn1Spec=seq)
+#:    >>> str(s)
+#:    SequenceOf:
+#:     1 2 3
+#:
 decode = Decoder(tagMap, typeMap)

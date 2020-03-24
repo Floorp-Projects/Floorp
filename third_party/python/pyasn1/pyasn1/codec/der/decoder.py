@@ -1,11 +1,11 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
-# License: http://pyasn1.sf.net/license.html
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# License: http://snmplabs.com/pyasn1/license.html
 #
-from pyasn1.type import univ
 from pyasn1.codec.cer import decoder
+from pyasn1.type import univ
 
 __all__ = ['decode']
 
@@ -43,15 +43,17 @@ class Decoder(decoder.Decoder):
 
 #: Turns DER octet stream into an ASN.1 object.
 #:
-#: Takes DER octetstream and decode it into an ASN.1 object
+#: Takes DER octet-stream and decode it into an ASN.1 object
 #: (e.g. :py:class:`~pyasn1.type.base.PyAsn1Item` derivative) which
 #: may be a scalar or an arbitrary nested structure.
 #:
 #: Parameters
 #: ----------
 #: substrate: :py:class:`bytes` (Python 3) or :py:class:`str` (Python 2)
-#:     DER octetstream
+#:     DER octet-stream
 #:
+#: Keyword Args
+#: ------------
 #: asn1Spec: any pyasn1 type object e.g. :py:class:`~pyasn1.type.base.PyAsn1Item` derivative
 #:     A pyasn1 type object to act as a template guiding the decoder. Depending on the ASN.1 structure
 #:     being decoded, *asn1Spec* may or may not be required. Most common reason for
@@ -65,6 +67,28 @@ class Decoder(decoder.Decoder):
 #:
 #: Raises
 #: ------
-#: : :py:class:`pyasn1.error.PyAsn1Error`
+#: ~pyasn1.error.PyAsn1Error, ~pyasn1.error.SubstrateUnderrunError
 #:     On decoding errors
+#:
+#: Examples
+#: --------
+#: Decode DER serialisation without ASN.1 schema
+#:
+#: .. code-block:: pycon
+#:
+#:    >>> s, _ = decode(b'0\t\x02\x01\x01\x02\x01\x02\x02\x01\x03')
+#:    >>> str(s)
+#:    SequenceOf:
+#:     1 2 3
+#:
+#: Decode DER serialisation with ASN.1 schema
+#:
+#: .. code-block:: pycon
+#:
+#:    >>> seq = SequenceOf(componentType=Integer())
+#:    >>> s, _ = decode(b'0\t\x02\x01\x01\x02\x01\x02\x02\x01\x03', asn1Spec=seq)
+#:    >>> str(s)
+#:    SequenceOf:
+#:     1 2 3
+#:
 decode = Decoder(tagMap, typeMap)
