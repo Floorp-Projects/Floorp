@@ -13,6 +13,7 @@
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/EnumeratedArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -88,8 +89,10 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   RefPtr<MediaMetadata> mMediaMetadata;
-  static const size_t ACTIONS = MediaSessionActionValues::Count;
-  RefPtr<MediaSessionActionHandler> mActionHandlers[ACTIONS] = {nullptr};
+
+  EnumeratedArray<MediaSessionAction, MediaSessionAction::EndGuard_,
+                  RefPtr<MediaSessionActionHandler>>
+      mActionHandlers;
 
   // This is used as is a hint for the user agent to determine whether the
   // browsing context is playing or paused.
