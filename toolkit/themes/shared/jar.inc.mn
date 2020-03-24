@@ -25,7 +25,6 @@ toolkit.jar:
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
   skin/classic/global/passwordmgr.css                      (../../shared/passwordmgr.css)
-* skin/classic/global/scrollbox.css                        (../../shared/scrollbox.css)
   skin/classic/global/icons/arrow-left.svg                 (../../shared/icons/arrow-left.svg)
   skin/classic/global/icons/autoscroll.svg                 (../../shared/icons/autoscroll.svg)
   skin/classic/global/icons/autoscroll-horizontal.svg      (../../shared/icons/autoscroll-horizontal.svg)
