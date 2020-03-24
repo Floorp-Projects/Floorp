@@ -33,6 +33,7 @@ CppUnitTests([
     'TestEnumTypeTraits',
     'TestFastBernoulliTrial',
     'TestFloatingPoint',
+    'TestFunctionRef',
     'TestFunctionTypeTraits',
     'TestHashTable',
     'TestIntegerPrintfMacros',
