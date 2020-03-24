@@ -51,6 +51,7 @@ job-defaults:
 mochitest-plain:
     description: "Mochitest plain run"
     treeherder-symbol: M()
+    schedules-component: mochitest-plain
     loopback-video: true
     tier: default
     chunks:
@@ -85,6 +86,7 @@ mochitest-plain:
 mochitest-a11y:
     description: "Mochitest a11y run"
     treeherder-symbol: M(a11y)
+    schedules-component: mochitest-a11y
     loopback-video: true
     tier: default
     e10s: false
@@ -97,6 +99,7 @@ mochitest-browser-chrome:
     suite:
         name: mochitest-browser-chrome
     treeherder-symbol: M(bc)
+    schedules-component: mochitest-browser-chrome
     loopback-video: true
     fission-run-on-projects:
         by-test-platform:
@@ -159,6 +162,7 @@ browser-screenshots:
 mochitest-chrome:
     description: "Mochitest chrome run"
     treeherder-symbol: M(c)
+    schedules-component: mochitest-chrome
     loopback-video: true
     tier: default
     chunks:
@@ -211,6 +215,7 @@ mochitest-plain-gpu:
     suite:
         name: mochitest-plain-gpu
     treeherder-symbol: M(gpu)
+    schedules-component: mochitest-plain
     loopback-video: true
     fission-run-on-projects: []
     fission-tier: 2
@@ -250,6 +255,7 @@ mochitest-chrome-gpu:
 mochitest-media:
     description: "Mochitest media run"
     treeherder-symbol: M(mda)
+    schedules-component: mochitest-plain
     max-run-time:
         by-test-platform:
             windows10-64-ccov/.*: 7200
@@ -335,6 +341,7 @@ mochitest-valgrind:
 mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
     treeherder-symbol: M(gl1c)
+    schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
@@ -351,6 +358,7 @@ mochitest-webgl1-core:
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
     treeherder-symbol: M(gl1e)
+    schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
@@ -369,6 +377,7 @@ mochitest-webgl1-ext:
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
     treeherder-symbol: M(gl2c)
+    schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
@@ -387,6 +396,7 @@ mochitest-webgl2-core:
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
     treeherder-symbol: M(gl2e)
+    schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     chunks: 4
     e10s: true
@@ -402,6 +412,7 @@ mochitest-webgl2-ext:
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
     treeherder-symbol: M(gl2d)
+    schedules-component: mochitest-plain
     run-on-projects: []  # Don't run this for now.
     virtualization: virtual-with-gpu
     chunks: 4
@@ -418,6 +429,7 @@ mochitest-webgl2-deqp:
 mochitest-webgpu:
     description: "Mochitest webgpu run"
     treeherder-symbol: M(webgpu)
+    schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true

@@ -1574,7 +1574,10 @@ def make_job_description(config, tests):
             # so do not include the platform or any other components here
             schedules = [category]
         else:
-            schedules = [category, platform_family(test['build-platform'])]
+            schedules = [attributes['unittest_category'], platform_family(test['build-platform'])]
+            component = test.get('schedules-component')
+            if component:
+                schedules.append(component)
 
         if test.get('when'):
             # This may still be used by comm-central.
