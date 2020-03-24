@@ -3498,11 +3498,18 @@ Toolbox.prototype = {
     };
   },
 
-  _onNewSelectedNodeFront: function() {
+  _onNewSelectedNodeFront: async function() {
     // Emit a "selection-changed" event when the toolbox.selection has been set
     // to a new node (or cleared). Currently used in the WebExtensions APIs (to
     // provide the `devtools.panels.elements.onSelectionChanged` event).
     this.emit("selection-changed");
+
+    const threadFront = await this.selection?.nodeFront?.targetFront.getFront(
+      "thread"
+    );
+    if (threadFront) {
+      this.selectThread(threadFront.actorID);
+    }
   },
 
   _onInspectObject: function(packet) {
