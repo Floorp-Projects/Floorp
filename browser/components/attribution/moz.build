@@ -9,6 +9,8 @@ with Files("**"):
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
 EXTRA_JS_MODULES += [
     'AttributionCode.jsm',
 ]
