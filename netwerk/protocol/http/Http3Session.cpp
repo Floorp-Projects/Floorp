@@ -645,7 +645,7 @@ void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
 
   stream->SetRecvdReset();
 
-  // We only handle some of Http3 error as epecial, the res are just equivalent
+  // We only handle some of Http3 error as epecial, the rest are just equivalent
   // to cancel.
   if (aError == HTTP3_APP_ERROR_VERSION_FALLBACK) {
     // We will restart the request and the alt-svc will be removed
