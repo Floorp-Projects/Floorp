@@ -32,9 +32,6 @@ const STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES = 32;
 const FXA_OAUTH_OPTIONS = {
   scope: STORAGE_SYNC_SCOPE,
 };
-const HISTOGRAM_GET_OPS_SIZE = "STORAGE_SYNC_GET_OPS_SIZE";
-const HISTOGRAM_SET_OPS_SIZE = "STORAGE_SYNC_SET_OPS_SIZE";
-const HISTOGRAM_REMOVE_OPS = "STORAGE_SYNC_REMOVE_OPS";
 const SCALAR_EXTENSIONS_USING = "storage.sync.api.usage.extensions_using";
 const SCALAR_ITEMS_STORED = "storage.sync.api.usage.items_stored";
 const SCALAR_STORAGE_CONSUMED = "storage.sync.api.usage.storage_consumed";
@@ -1249,16 +1246,12 @@ class ExtensionStorageSync {
     const coll = await this.getCollection(extension, context);
     const keys = Object.keys(items);
     const ids = keys.map(keyToId);
-    const histogramSize = this._telemetry.getKeyedHistogramById(
-      HISTOGRAM_SET_OPS_SIZE
-    );
     const changes = await coll.execute(
       txn => {
         let changes = {};
         for (let [i, key] of keys.entries()) {
           const id = ids[i];
           let item = items[key];
-          histogramSize.add(extension.id, JSON.stringify(item).length);
           let { oldRecord } = txn.upsert({
             id,
             key,
@@ -1303,10 +1296,6 @@ class ExtensionStorageSync {
     if (Object.keys(changes).length) {
       this.notifyListeners(extension, changes);
     }
-    const histogram = this._telemetry.getKeyedHistogramById(
-      HISTOGRAM_REMOVE_OPS
-    );
-    histogram.add(extension.id, keys.length);
   }
 
   /* Wipe local data for all collections without causing the changes to be synced */
@@ -1341,15 +1330,11 @@ class ExtensionStorageSync {
 
   async get(extension, spec, context) {
     const coll = await this.getCollection(extension, context);
-    const histogramSize = this._telemetry.getKeyedHistogramById(
-      HISTOGRAM_GET_OPS_SIZE
-    );
     let keys, records;
     if (spec === null) {
       records = {};
       const res = await coll.list();
       for (let record of res.data) {
-        histogramSize.add(extension.id, JSON.stringify(record.data).length);
         records[record.key] = record.data;
       }
       return records;
@@ -1368,7 +1353,6 @@ class ExtensionStorageSync {
     for (let key of keys) {
       const res = await coll.getAny(keyToId(key));
       if (res.data && res.data._status != "deleted") {
-        histogramSize.add(extension.id, JSON.stringify(res.data.data).length);
         records[res.data.key] = res.data.data;
       }
     }
