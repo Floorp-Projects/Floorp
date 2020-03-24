@@ -2,7 +2,7 @@
 
 # OneTimeFxaPushReset
 
-`class OneTimeFxaPushReset` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts-push/src/main/java/mozilla/components/feature/accounts/push/FxaPushSupportFeature.kt#L295)
+`class OneTimeFxaPushReset` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts-push/src/main/java/mozilla/components/feature/accounts/push/FxaPushSupportFeature.kt#L294)
 
 Resets the fxa push scope (and therefore push subscription) if it does not follow the new format.
 

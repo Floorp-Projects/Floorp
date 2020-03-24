@@ -2,7 +2,7 @@
 
 # SitePermissionsStorage
 
-`class SitePermissionsStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L27)
+`class SitePermissionsStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L33)
 
 A storage implementation to save [SitePermissions](../-site-permissions/index.md).
 
@@ -16,7 +16,7 @@ A storage implementation to save [SitePermissions](../-site-permissions/index.md
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SitePermissionsStorage(context: <ERROR CLASS>)`<br>A storage implementation to save [SitePermissions](../-site-permissions/index.md). |
+| [&lt;init&gt;](-init-.md) | `SitePermissionsStorage(context: <ERROR CLASS>, dataCleanable: `[`DataCleanable`](../../mozilla.components.concept.engine/-data-cleanable/index.md)`? = null)`<br>A storage implementation to save [SitePermissions](../-site-permissions/index.md). |
 
 ### Functions
 

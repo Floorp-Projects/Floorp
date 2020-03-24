@@ -2,7 +2,7 @@
 
 # getSitePermissionsPaged
 
-`fun getSitePermissionsPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`SitePermissions`](../-site-permissions/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L81)
+`fun getSitePermissionsPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`SitePermissions`](../-site-permissions/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L92)
 
 Returns all saved [SitePermissions](../-site-permissions/index.md) instances as a [DataSource.Factory](#).
 

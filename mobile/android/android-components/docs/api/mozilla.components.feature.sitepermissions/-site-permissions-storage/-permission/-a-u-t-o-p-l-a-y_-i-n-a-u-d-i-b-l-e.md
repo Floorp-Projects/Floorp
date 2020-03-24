@@ -2,4 +2,4 @@
 
 # AUTOPLAY_INAUDIBLE
 
-`AUTOPLAY_INAUDIBLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L159)
+`AUTOPLAY_INAUDIBLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsStorage.kt#L176)
