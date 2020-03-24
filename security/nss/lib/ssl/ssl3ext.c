@@ -969,6 +969,8 @@ ssl3_DestroyExtensionData(TLSExtensionData *xtnData)
 {
     ssl3_FreeSniNameArray(xtnData);
     PORT_Free(xtnData->sigSchemes);
+    PORT_Free(xtnData->delegCredSigSchemes);
+    PORT_Free(xtnData->delegCredSigSchemesAdvertised);
     SECITEM_FreeItem(&xtnData->nextProto, PR_FALSE);
     tls13_DestroyKeyShares(&xtnData->remoteKeyShares);
     SECITEM_FreeItem(&xtnData->certReqContext, PR_FALSE);

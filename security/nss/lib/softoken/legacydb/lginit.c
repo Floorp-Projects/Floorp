@@ -341,7 +341,7 @@ lg_OpenCertDB(const char *configdir, const char *prefix, PRBool readOnly,
               NSSLOWCERTCertDBHandle **certdbPtr)
 {
     NSSLOWCERTCertDBHandle *certdb = NULL;
-    CK_RV crv = CKR_NETSCAPE_CERTDB_FAILED;
+    CK_RV crv = CKR_NSS_CERTDB_FAILED;
     SECStatus rv;
     char *name = NULL;
     char *appName = NULL;
@@ -401,7 +401,7 @@ lg_OpenKeyDB(const char *configdir, const char *prefix, PRBool readOnly,
     if (appName)
         PORT_Free(appName);
     if (keydb == NULL)
-        return CKR_NETSCAPE_KEYDB_FAILED;
+        return CKR_NSS_KEYDB_FAILED;
     *keydbPtr = keydb;
 
     return CKR_OK;

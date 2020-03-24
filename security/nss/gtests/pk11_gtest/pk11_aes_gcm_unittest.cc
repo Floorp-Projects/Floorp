@@ -35,7 +35,7 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<AesGcmKatValue> {
     }
 
     // Prepare AEAD params.
-    CK_GCM_PARAMS gcm_params;
+    CK_NSS_GCM_PARAMS gcm_params;
     gcm_params.pIv = iv.data();
     gcm_params.ulIvLen = iv.size();
     gcm_params.pAAD = aad.data();
@@ -124,7 +124,7 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<AesGcmKatValue> {
     std::vector<uint8_t> aad(0);
 
     // Prepare AEAD params.
-    CK_GCM_PARAMS gcm_params;
+    CK_NSS_GCM_PARAMS gcm_params;
     gcm_params.pIv = iv.data();
     gcm_params.ulIvLen = iv.size();
     gcm_params.pAAD = aad.data();
