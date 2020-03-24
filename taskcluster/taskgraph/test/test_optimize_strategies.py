@@ -51,19 +51,23 @@ def tasks(generate_tasks):
 @pytest.mark.parametrize("data,expected", [
     pytest.param({}, [], id='empty'),
     pytest.param(
-        {'tasks': ['task-1', 'task-2', 'task-3']},
+        {'tasks': {'task-1': 0.9, 'task-2': 0.1, 'task-3': 0.5}},
         ['task-2'],
         id='only tasks without test manifests selected'
     ),
     pytest.param(
-        {'groups': ['foo/test.ini']},
+        {'groups': {'foo/test.ini': 0.4}},
         ['task-0'],
         id='tasks containing group selected',
     ),
     pytest.param(
-        {'tasks': ['task-2'], 'groups': ['foo/test.ini', 'bar/test.ini']},
+        {'tasks': {'task-2': 0.2}, 'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75}},
         ['task-0', 'task-1', 'task-2'],
         id='tasks matching "tasks" or "groups" selected'),
+    pytest.param(
+        {'tasks': ['task-2'], 'groups': ['foo/test.ini', 'bar/test.ini']},
+        ['task-0', 'task-1', 'task-2'],
+        id='test old format'),
 ])
 def test_bugbug_push_schedules(responses, params, tasks, data, expected):
     query = "/push/{branch}/{head_rev}/schedules".format(**params)

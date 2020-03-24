@@ -57,8 +57,8 @@ class BugBugPushSchedules(OptimizationStrategy):
 
         test_manifests = task.attributes.get('test_manifests')
         if test_manifests is None:
-            if task.label in data.get('tasks', []):
+            if task.label in data.get('tasks', {}):
                 return False
             return True
 
-        return not bool(set(task.attributes['test_manifests']) & set(data.get('groups', [])))
+        return not bool(set(task.attributes['test_manifests']) & set(data.get('groups', {})))
