@@ -75,10 +75,11 @@ class WebExtensionPolicy final : public nsISupports,
   void InjectContentScripts(ErrorResult& aRv);
 
   bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false,
-                    bool aCheckRestricted = true) const {
+                    bool aCheckRestricted = true,
+                    bool aAllowFilePermission = false) const {
     return (!aCheckRestricted || !IsRestrictedURI(aURI)) && mHostPermissions &&
            mHostPermissions->Matches(aURI, aExplicit) &&
-           aURI.Scheme() != nsGkAtoms::file;
+           (aURI.Scheme() != nsGkAtoms::file || aAllowFilePermission);
   }
 
   bool IsPathWebAccessible(const nsAString& aPath) const {
