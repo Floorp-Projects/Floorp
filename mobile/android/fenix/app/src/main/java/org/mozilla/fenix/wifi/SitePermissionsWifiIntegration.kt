@@ -5,6 +5,7 @@
 package org.mozilla.fenix.wifi
 
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_ALLOW_ON_WIFI
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
@@ -14,7 +15,10 @@ import org.mozilla.fenix.utils.Settings
  * Handles implementation details of only setting up a WIFI connectivity listener if the current
  * user settings require it.
  */
-class WifiIntegration(private val settings: Settings, private val wifiConnectionMonitor: WifiConnectionMonitor) {
+class SitePermissionsWifiIntegration(
+    private val settings: Settings,
+    private val wifiConnectionMonitor: WifiConnectionMonitor
+) : LifecycleAwareFeature {
 
     /**
      * Adds listener for autplay setting [AUTOPLAY_ALLOW_ON_WIFI]. Sets all autoplay to allowed when
@@ -51,7 +55,7 @@ class WifiIntegration(private val settings: Settings, private val wifiConnection
     // only works while WIFI is active, so we are not using AUTOPLAY_ALLOW_ON_WIFI (or this class).
     // Once that is fixed, [start] and [maybeAddWifiConnectedListener] will need to be called on
     // activity startup.
-    fun start() { wifiConnectionMonitor.start() }
+    override fun start() { wifiConnectionMonitor.start() }
 
-    fun stop() { wifiConnectionMonitor.stop() }
+    override fun stop() { wifiConnectionMonitor.stop() }
 }

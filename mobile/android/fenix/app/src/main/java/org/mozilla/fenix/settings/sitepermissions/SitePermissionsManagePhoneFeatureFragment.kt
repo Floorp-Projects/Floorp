@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings.sitepermissions
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -30,7 +29,6 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.AL
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
@@ -122,7 +120,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
                     // TODO replace with AUTOPLAY_ALLOW_ON_WIFI when
                     // https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed. This GV bug
                     // makes ALLOW_ALL behave as ALLOW_ON_WIFI
-                    saveActionInSettings(it.context, AUTOPLAY_ALLOW_ALL)
+                    saveActionInSettings(AUTOPLAY_ALLOW_ALL)
                 }
                 // TODO replace with AUTOPLAY_ALLOW_ON_WIFI when
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed. This GV bug
@@ -144,7 +142,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
                 visibility = View.VISIBLE
                 text = getString(R.string.preference_option_autoplay_block_audio2)
                 setOnClickListener {
-                    saveActionInSettings(it.context, AUTOPLAY_BLOCK_AUDIBLE)
+                    saveActionInSettings(AUTOPLAY_BLOCK_AUDIBLE)
                 }
                 restoreState(AUTOPLAY_BLOCK_AUDIBLE)
             } else {
@@ -162,7 +160,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
                     getString(R.string.phone_feature_recommended)
                 )
                 setOnClickListener {
-                    saveActionInSettings(it.context, AUTOPLAY_BLOCK_ALL)
+                    saveActionInSettings(AUTOPLAY_BLOCK_ALL)
                 }
                 restoreState(AUTOPLAY_BLOCK_ALL)
             } else {
@@ -195,19 +193,18 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
      * See [Settings.setAutoplayUserSetting] kdoc for an explanation of why this cannot follow the
      * same code path as other permissions.
      */
-    private fun saveActionInSettings(context: Context, autoplaySetting: Int) {
+    private fun saveActionInSettings(autoplaySetting: Int) {
         settings.setAutoplayUserSetting(autoplaySetting)
         val (audible, inaudible) = when (autoplaySetting) {
-            AUTOPLAY_ALLOW_ALL -> ALLOWED to ALLOWED
+            AUTOPLAY_ALLOW_ALL,
             AUTOPLAY_ALLOW_ON_WIFI -> {
-                context.components.wifiIntegration.addWifiConnectedListener()
+                settings.setAutoplayUserSetting(AUTOPLAY_ALLOW_ON_WIFI)
                 return
             }
             AUTOPLAY_BLOCK_AUDIBLE -> BLOCKED to ALLOWED
             AUTOPLAY_BLOCK_ALL -> BLOCKED to BLOCKED
             else -> return
         }
-        context.components.wifiIntegration.removeWifiConnectedListener()
         settings.setSitePermissionsPhoneFeatureAction(AUTOPLAY_AUDIBLE, audible)
         settings.setSitePermissionsPhoneFeatureAction(AUTOPLAY_INAUDIBLE, inaudible)
     }

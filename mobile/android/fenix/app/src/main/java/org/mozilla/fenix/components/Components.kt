@@ -19,11 +19,9 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
-import org.mozilla.fenix.wifi.WifiIntegration
 import java.util.concurrent.TimeUnit
 
 private const val DAY_IN_MINUTES = 24 * 60L
@@ -110,12 +108,5 @@ class Components(private val context: Context) {
     val migrationStore by lazy { MigrationStore() }
     val performance by lazy { PerformanceComponent() }
     val push by lazy { Push(context, analytics.crashReporter) }
-    val wifiIntegration by lazy {
-        WifiIntegration(
-            settings = context.settings(),
-            wifiConnectionMonitor = WifiConnectionMonitor(
-                context as Application
-            )
-        )
-    }
+    val wifiConnectionMonitor by lazy { WifiConnectionMonitor(context as Application) }
 }
