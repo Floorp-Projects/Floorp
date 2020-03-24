@@ -615,13 +615,8 @@ class WebConsoleUI {
   }
 
   getSelectedNodeActor() {
-    const front = this.getSelectedNodeFront();
-    return front ? front.actorID : null;
-  }
-
-  getSelectedNodeFront() {
     const inspectorSelection = this.hud.getInspectorSelection();
-    return inspectorSelection ? inspectorSelection.nodeFront : null;
+    return inspectorSelection?.nodeFront?.actorID;
   }
 
   onMessageHover(type, message) {

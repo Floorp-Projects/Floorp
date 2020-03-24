@@ -17,14 +17,16 @@ class ConsoleCommands {
 
   async evaluateJSAsync(expression, options = {}) {
     const {
-      selectedNodeFront,
       selectedThreadFront,
       frameActor,
       selectedObjectActor,
+      selectedNodeActor,
     } = options;
     let front = await this.hud.currentTarget.getFront("console");
+    const selectedActor = selectedObjectActor || selectedNodeActor;
 
     // Defer to the selected paused thread front
+    // NOTE: when the context selector is enabled, this will no longer be needed
     if (frameActor) {
       const frameFront = this.getFrontByID(frameActor);
       if (frameFront) {
@@ -36,21 +38,16 @@ class ConsoleCommands {
     // all of the implicit actions like pausing, selecting a frame in the inspector,
     // etc will update the selected thread and we will no longer need to support these other
     // cases.
+
+    // Get the selected thread's, webconsole front so that we can
+    // evaluate expressions against it.
     if (selectedThreadFront) {
       front = await selectedThreadFront.targetFront.getFront("console");
-
-      // If there's a selectedObjectActor option, this means the user intend to do a
-      // given action on a specific object, so it should take precedence over selected
-      // node front.
-    } else if (selectedObjectActor) {
-      const objectFront = this.getFrontByID(selectedObjectActor);
-      if (objectFront) {
-        front = await objectFront.targetFront.getFront("console");
+    } else if (selectedActor) {
+      const selectedFront = this.getFrontByID(selectedActor);
+      if (selectedFront) {
+        front = await selectedFront.targetFront.getFront("console");
       }
-    } else if (selectedNodeFront) {
-      // Defer to the selected node's thread console front
-      front = await selectedNodeFront.targetFront.getFront("console");
-      options.selectedNodeActor = selectedNodeFront.actorID;
     }
 
     return front.evaluateJSAsync(expression, options);

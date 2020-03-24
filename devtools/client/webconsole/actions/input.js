@@ -95,7 +95,7 @@ function evaluateExpression(expression) {
       .evaluateJSAsync(expression, {
         selectedThreadFront,
         frameActor,
-        selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
+        selectedNodeActor: webConsoleUI.getSelectedNodeActor(),
         mapped,
       })
       .then(onSettled, onSettled);
@@ -259,7 +259,7 @@ function terminalInputChanged(expression, force = false) {
     const response = await client.evaluateJSAsync(expression, {
       frameActor,
       selectedThreadFront,
-      selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
+      selectedNodeActor: webConsoleUI.getSelectedNodeActor(),
       mapped,
       eager: true,
     });
