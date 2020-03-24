@@ -12,6 +12,20 @@
 ///    2nd:
 ///    cargo run --release -- /foo/bar/wr-capture/tilecache /tmp/tilecache
 /// 4. open /tmp/tilecache/index.html
+///
+/// Note: accurate interning info requires that the circular buffer doesn't wrap around.
+/// So for best results, use this workflow:
+/// a. start up blank browser; in about:config enable logging; close browser
+/// b. start new browser, quickly load the repro
+/// c. capture.
+///
+/// If that's tricky, you can also just throw more memory at it: in render_backend.rs,
+/// increase the buffer size here: 'TileCacheLogger::new(500usize)'
+///
+/// Note: some features don't work when opening index.html directly due to cross-scripting
+/// protections.  Instead use a HTTP server:
+///     python -m SimpleHTTPServer 8000
+
 
 use webrender::{TileNode, TileNodeKind, InvalidationReason, TileOffset};
 use webrender::{TileSerializer, TileCacheInstanceSerializer, TileCacheLoggerUpdateLists};
@@ -353,6 +367,8 @@ fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
 
         let prim_class = format!("tile_slice{}", tile_cache.slice);
 
+        svg.push_str(&format!("\n<g id=\"tile_slice{}_everything\">", tile_cache.slice));
+
         //println!("slice {}", tile_cache.slice);
         svg.push_str(&format!("\n<!-- tile_cache slice {} -->\n",
                               tile_cache.slice));
@@ -382,6 +398,8 @@ fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
                                       &mut invalidation_report,
                                       svg_width, svg_height, svg_settings));
         }
+
+        svg.push_str("\n</g>");
     }
 
     (
@@ -398,7 +416,7 @@ fn slices_to_svg(slices: &[Slice], prev_slices: Option<Vec<Slice>>,
     )
 }
 
-fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) {
+fn write_html(output_dir: &Path, max_slice_index: usize, svg_files: &[String], intern_files: &[String]) {
     let html_head = "<!DOCTYPE html>\n\
                      <html>\n\
                      <head>\n\
@@ -433,6 +451,26 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
                       </html>\n"
                       .to_string();
 
+    let mut html_slices_form =
+            "\n<form id=\"slicecontrols\">\n\
+                Slice\n".to_string();
+
+    for ix in 0..max_slice_index + 1 {
+        html_slices_form +=
+            &format!(
+                "<input id=\"slice_toggle{}\" \
+                        type=\"checkbox\" \
+                        onchange=\"update_slice_visibility({})\" \
+                        checked=\"checked\" />\n\
+                <label for=\"slice_toggle{}\">{}</label>\n",
+                ix,
+                max_slice_index + 1,
+                ix,
+                ix );
+    }
+
+    html_slices_form += "<form>\n";
+
     let html_body = format!(
         "{}\n\
         <div class=\"split left\">\n\
@@ -451,13 +489,15 @@ fn write_html(output_dir: &Path, svg_files: &[String], intern_files: &[String]) 
             <div id=\"text_spacebar\">Spacebar to Play</div>\n\
             <div>Use Left/Right to Step</div>\n\
             <input id=\"frame_slider\" type=\"range\" min=\"0\" max=\"{}\" value=\"0\" class=\"svg_ui_slider\" />
+            {}
         </div>",
         html_body,
         svg_files[0],
         svg_files[0],
         intern_files[0],
         svg_files[0],
-        svg_files.len() );
+        svg_files.len(),
+        html_slices_form );
 
     let html = format!("{}{}{}{}", html_head, html_body, script, html_end);
 
@@ -649,7 +689,7 @@ fn main() {
         prev_slices = Some(slices);
     }
 
-    write_html(output_dir, &svg_files, &intern_files);
+    write_html(output_dir, max_slice_index, &svg_files, &intern_files);
     write_css(output_dir, max_slice_index, &svg_settings);
 
     std::fs::write(output_dir.join("tilecache.js"), RES_JAVASCRIPT).unwrap();
