@@ -13,8 +13,14 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.ui.showInformationDialog
 import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import org.mozilla.samples.browser.R
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -24,6 +30,11 @@ import java.util.Locale
  * An activity to show the details of an add-on.
  */
 class AddonDetailsActivity : AppCompatActivity() {
+
+    private val updateAttemptStorage: DefaultAddonUpdater.UpdateAttemptStorage by lazy {
+        DefaultAddonUpdater.UpdateAttemptStorage(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_on_details)
@@ -77,6 +88,26 @@ class AddonDetailsActivity : AppCompatActivity() {
     private fun bindVersion(addon: Addon) {
         val versionView = findViewById<TextView>(R.id.version_text)
         versionView.text = addon.installedState?.version?.ifEmpty { addon.version } ?: addon.version
+
+        if (addon.isInstalled()) {
+            versionView.setOnLongClickListener {
+                showUpdaterDialog(addon)
+                true
+            }
+        }
+    }
+
+    private fun showUpdaterDialog(addon: Addon) {
+        val context = this@AddonDetailsActivity
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            val updateAttempt = updateAttemptStorage.findUpdateAttemptBy(addon.id)
+            updateAttempt?.let {
+                withContext(Dispatchers.Main) {
+                    it.showInformationDialog(context)
+                }
+            }
+        }
     }
 
     private fun bindAuthors(addon: Addon) {

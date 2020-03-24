@@ -15,6 +15,9 @@ permalink: /changelog/
 * **service-accounts-push**
   * Fixed a bug where the push subscription was incorrectly cached and caused some `GeneralError`s.
 
+  * **feature-addons**
+    * Added `DefaultAddonUpdater.UpdateAttemptStorage` allows to query the last known state for a previous attempt to update an add-on.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)

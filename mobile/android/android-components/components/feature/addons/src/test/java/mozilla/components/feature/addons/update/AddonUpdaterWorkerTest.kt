@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.update
+package mozilla.components.feature.addons.update
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
@@ -16,9 +16,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.AddonManager
-import mozilla.components.feature.addons.update.AddonUpdater
-import mozilla.components.feature.addons.update.AddonUpdaterWorker
-import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -33,6 +30,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class AddonUpdaterWorkerTest {
@@ -67,12 +65,15 @@ class AddonUpdaterWorkerTest {
 
     @Test
     fun `doWork - will return Result_success when SuccessfullyUpdated`() {
+        val updateAttemptStorage = mock<DefaultAddonUpdater.UpdateAttemptStorage>()
         val addonId = "addonId"
         val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
+
+        (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
 
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
@@ -84,6 +85,7 @@ class AddonUpdaterWorkerTest {
             val result = worker.startWork().await()
 
             assertEquals(ListenableWorker.Result.success(), result)
+            verify(updateAttemptStorage).saveOrUpdate(any())
         }
     }
 
@@ -133,12 +135,15 @@ class AddonUpdaterWorkerTest {
 
     @Test
     fun `doWork - will return Result_retry when an Error happens`() {
+        val updateAttemptStorage = mock<DefaultAddonUpdater.UpdateAttemptStorage>()
         val addonId = "addonId"
         val onFinishCaptor = argumentCaptor<((AddonUpdater.Status) -> Unit)>()
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<AddonUpdaterWorker>(testContext)
             .setInputData(AddonUpdaterWorker.createWorkerData(addonId))
             .build()
+
+        (worker as AddonUpdaterWorker).updateAttemptStorage = updateAttemptStorage
 
         GlobalAddonDependencyProvider.initialize(addonManager, mock())
 
@@ -150,6 +155,7 @@ class AddonUpdaterWorkerTest {
             val result = worker.startWork().await()
 
             assertEquals(ListenableWorker.Result.retry(), result)
+            updateAttemptStorage.saveOrUpdate(any())
         }
     }
 

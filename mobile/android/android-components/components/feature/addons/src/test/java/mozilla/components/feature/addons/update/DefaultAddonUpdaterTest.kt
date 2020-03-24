@@ -39,6 +39,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
@@ -233,6 +234,8 @@ class DefaultAddonUpdaterTest {
         val updater = DefaultAddonUpdater(testContext, frequency)
         val addonId = "addonId"
 
+        updater.updateAttempStorage = mock()
+
         val workId = updater.getUniquePeriodicWorkName(addonId)
 
         runBlocking {
@@ -252,6 +255,7 @@ class DefaultAddonUpdaterTest {
 
             workData = workManger.getWorkInfosForUniqueWork(workId).await()
             assertEquals(WorkInfo.State.CANCELLED, workData.first().state)
+            verify(updater.updateAttempStorage).remove(addonId)
         }
     }
 

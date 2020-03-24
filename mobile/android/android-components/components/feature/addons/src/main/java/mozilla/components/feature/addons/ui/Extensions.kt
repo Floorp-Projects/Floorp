@@ -4,8 +4,16 @@
 
 package mozilla.components.feature.addons.ui
 
+import android.content.Context
+import androidx.appcompat.app.AlertDialog
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.R
+import mozilla.components.feature.addons.update.AddonUpdater
+import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
+import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
+import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
 import java.text.NumberFormat
+import java.text.DateFormat
 import java.util.Locale
 
 /**
@@ -26,4 +34,41 @@ fun Map<String, String>.translate(): String {
  */
 internal fun getFormattedAmount(amount: Int): String {
     return NumberFormat.getNumberInstance(Locale.getDefault()).format(amount)
+}
+
+/**
+ * Get the localized string for an [AddonUpdater.UpdateAttempt.status].
+ */
+fun AddonUpdater.Status?.toLocalizedString(context: Context): String {
+    return when (this) {
+        SuccessfullyUpdated -> {
+            context.getString(R.string.mozac_feature_addons_updater_status_successfully_updated)
+        }
+        NoUpdateAvailable -> {
+            context.getString(R.string.mozac_feature_addons_updater_status_no_update_available)
+        }
+        is Error -> {
+            val errorLabel = context.getString(R.string.mozac_feature_addons_updater_status_error)
+            "$errorLabel $exception"
+        }
+        else -> ""
+    }
+}
+
+/**
+ * Shows a dialog containing all the information related to the given [AddonUpdater.UpdateAttempt].
+ */
+fun AddonUpdater.UpdateAttempt.showInformationDialog(context: Context) {
+    AlertDialog.Builder(context)
+            .setTitle(R.string.mozac_feature_addons_updater_dialog_title)
+            .setMessage(getDialogMessage(context))
+            .show()
+}
+
+private fun AddonUpdater.UpdateAttempt.getDialogMessage(context: Context): String {
+    val statusString = status.toLocalizedString(context)
+    val dateString = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG).format(date)
+    val lastAttemptLabel = context.getString(R.string.mozac_feature_addons_updater_dialog_last_attempt)
+    val statusLabel = context.getString(R.string.mozac_feature_addons_updater_dialog_status)
+    return "$lastAttemptLabel $dateString \n $statusLabel $statusString ".trimMargin()
 }
