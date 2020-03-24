@@ -55,54 +55,56 @@ const lazyPopupPanel = requireLazy(() =>
   ))
 );
 
+/** @type {PerformancePref["PopupEnabled"]} */
+const BUTTON_ENABLED_PREF = "devtools.performance.popup.enabled";
 const WIDGET_ID = "profiler-button";
 
 /**
- * Add the profiler button to the navbar.
- *
- * @param {ChromeDocument} document  The browser's document.
- * @return {void}
- */
-function addToNavbar(document) {
-  const { CustomizableUI } = lazyCustomizableUI();
-
-  CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
-}
-
-/**
- * Remove the widget and place it in the customization palette. This will also
- * disable the shortcuts.
- *
- * @return {void}
- */
-function remove() {
-  const { CustomizableUI } = lazyCustomizableUI();
-  CustomizableUI.removeWidgetFromArea(WIDGET_ID);
-}
-
-/**
- * See if the profiler menu button is in the navbar, or other active areas. The
- * placement is null when it's inactive in the customization palette.
- *
  * @return {boolean}
  */
-function isInNavbar() {
-  const { CustomizableUI } = lazyCustomizableUI();
-  return Boolean(CustomizableUI.getPlacementOfWidget("profiler-button"));
+function isEnabled() {
+  const { Services } = lazyServices();
+  return Services.prefs.getBoolPref(BUTTON_ENABLED_PREF, false);
 }
 
 /**
- * Opens the popup for the profiler.
- * @param {Document} document
+ * @param {HTMLDocument} document
+ * @param {boolean} isChecked
+ * @return {void}
  */
-function openPopup(document) {
-  // First find the button.
-  /** @type {HTMLButtonElement | null} */
-  const button = document.querySelector("#profiler-button");
-  if (!button) {
-    throw new Error("Could not find the profiler button.");
+function setMenuItemChecked(document, isChecked) {
+  const menuItem = document.querySelector("#menu_toggleProfilerButtonMenu");
+  if (!menuItem) {
+    return;
   }
-  button.click();
+  menuItem.setAttribute("checked", isChecked.toString());
+}
+
+/**
+ * Toggle the menu button, and initialize the widget if needed.
+ *
+ * @param {ChromeDocument} document - The browser's document.
+ * @return {void}
+ */
+function toggle(document) {
+  const { CustomizableUI } = lazyCustomizableUI();
+  const { Services } = lazyServices();
+
+  const toggledValue = !isEnabled();
+  Services.prefs.setBoolPref(BUTTON_ENABLED_PREF, toggledValue);
+
+  if (toggledValue) {
+    initialize();
+    CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
+  } else {
+    setMenuItemChecked(document, false);
+    CustomizableUI.destroyWidget(WIDGET_ID);
+
+    // The widgets are not being properly destroyed. This is a workaround
+    // until Bug 1552565 lands.
+    const element = document.getElementById("PanelUI-profiler");
+    delete (/** @type {any} */ (element._addedEventListeners));
+  }
 }
 
 /**
@@ -125,10 +127,9 @@ function updateButtonColorForElement(buttonElement) {
 /**
  * This function creates the widget definition for the CustomizableUI. It should
  * only be run if the profiler button is enabled.
- * @param {(isEnabled: boolean) => void} toggleProfilerKeyShortcuts
  * @return {void}
  */
-function initialize(toggleProfilerKeyShortcuts) {
+function initialize() {
   const { CustomizableUI } = lazyCustomizableUI();
   const { CustomizableWidgets } = lazyCustomizableWidgets();
   const { Services } = lazyServices();
@@ -152,30 +153,6 @@ function initialize(toggleProfilerKeyShortcuts) {
     cleanup: [],
     isInfoCollapsed: true,
   };
-
-  /**
-   * Handle when the customization changes for the button. This event is not
-   * very specific, and fires for any CustomizableUI widget. This event is
-   * pretty rare to fire, and only affects users of the profiler button,
-   * so it shouldn't have much overhead even if it runs a lot.
-   */
-  function handleCustomizationChange() {
-    const isEnabled = isInNavbar();
-    toggleProfilerKeyShortcuts(isEnabled);
-
-    if (!isEnabled) {
-      // The profiler menu button is no longer in the navbar, make sure that the
-      // "intro-displayed" preference is reset.
-      /** @type {PerformancePref["PopupIntroDisplayed"]} */
-      const popupIntroDisplayedPref =
-        "devtools.performance.popup.intro-displayed";
-      Services.prefs.setBoolPref(popupIntroDisplayedPref, false);
-
-      if (Services.profiler.IsActive()) {
-        Services.profiler.StopProfiler();
-      }
-    }
-  }
 
   const item = {
     id: WIDGET_ID,
@@ -242,15 +219,7 @@ function initialize(toggleProfilerKeyShortcuts) {
         Services.prefs.setBoolPref(popupIntroDisplayedPref, true);
       }
 
-      // Handle customization event changes. If the profiler is no longer in the
-      // navbar, then reset the popup intro preference.
-      const window = document.defaultView;
-      if (window) {
-        /** @type {any} */ (window).gNavToolbox.addEventListener(
-          "customizationchange",
-          handleCustomizationChange
-        );
-      }
+      setMenuItemChecked(document, true);
     },
 
     /** @type {(document: HTMLElement) => void} */
@@ -262,23 +231,13 @@ function initialize(toggleProfilerKeyShortcuts) {
       // Also run the observer right away to update the color if the profiler is
       // already running at startup.
       observer();
-
-      toggleProfilerKeyShortcuts(isInNavbar());
     },
 
-    /** @type {(document: HTMLDocument) => void} */
-    onDestroyed: document => {
+    onDestroyed: () => {
       if (observer) {
         Services.obs.removeObserver(observer, "profiler-started");
         Services.obs.removeObserver(observer, "profiler-stopped");
         observer = null;
-      }
-      const window = document.defaultView;
-      if (window) {
-        /** @type {any} */ (window).gNavToolbox.removeEventListener(
-          "customizationchange",
-          handleCustomizationChange
-        );
       }
     },
   };
@@ -287,13 +246,7 @@ function initialize(toggleProfilerKeyShortcuts) {
   CustomizableWidgets.push(item);
 }
 
-const ProfilerMenuButton = {
-  initialize,
-  addToNavbar,
-  isInNavbar,
-  openPopup,
-  remove,
-};
+const ProfilerMenuButton = { toggle, initialize, isEnabled };
 
 exports.ProfilerMenuButton = ProfilerMenuButton;
 
