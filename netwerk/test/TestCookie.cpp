@@ -19,6 +19,7 @@
 #include "nsIPrefBranch.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "nsCookie.h"
 #include "nsIURI.h"
 
 using mozilla::Unused;
@@ -1084,4 +1085,52 @@ TEST(TestCookie, TestCookieMain)
   // *** "noncompliant cookie" tests
   // *** IP address tests
   // *** speed tests
+}
+
+TEST(TestCookie, SameSiteLax)
+{
+  Preferences::SetBool("network.cookie.sameSite.laxByDefault", true);
+
+  nsresult rv;
+
+  nsCOMPtr<nsICookieService> cookieService =
+      do_GetService(kCookieServiceCID, &rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsICookieManager> cookieMgr =
+      do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
+
+  SetASameSiteCookie(cookieService, "http://samesite.test", nullptr,
+                     "unset=yes", nullptr, true);
+
+  nsTArray<RefPtr<nsICookie>> cookies;
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
+  EXPECT_EQ(cookies.Length(), (uint64_t)1);
+
+  nsCookie* cookie = static_cast<nsCookie*>(cookies[0].get());
+  EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
+  EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_LAX);
+
+  Preferences::SetCString("network.cookie.sameSite.laxByDefault.disabledHosts",
+                          "foo.com,samesite.test,bar.net");
+
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
+
+  cookies.SetLength(0);
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
+  EXPECT_EQ(cookies.Length(), (uint64_t)0);
+
+  SetASameSiteCookie(cookieService, "http://samesite.test", nullptr,
+                     "unset=yes", nullptr, true);
+
+  cookies.SetLength(0);
+  EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
+  EXPECT_EQ(cookies.Length(), (uint64_t)1);
+
+  cookie = static_cast<nsCookie*>(cookies[0].get());
+  EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
+  EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_NONE);
 }

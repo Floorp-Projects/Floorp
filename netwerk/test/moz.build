@@ -21,6 +21,10 @@ UNIFIED_SOURCES += [
     'TestUDPSocket.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/netwerk/cookie',
+]
+
 if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'TestNamedPipeService.cpp',
