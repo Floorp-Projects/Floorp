@@ -73,12 +73,12 @@ define(function(require, exports, module) {
           { className: "btn collapse", onClick: this.onCollapse },
           JSONView.Locale["jsonViewer.CollapseAll"]
         ),
-        this.props.dataSize > EXPAND_THRESHOLD
-          ? undefined
-          : ToolbarButton(
-              { className: "btn expand", onClick: this.onExpand },
+        ToolbarButton(
+          { className: "btn expand", onClick: this.onExpand },
+            this.props.dataSize > EXPAND_THRESHOLD ? 
+              JSONView.Locale["jsonViewer.ExpandAllSlow"] :
               JSONView.Locale["jsonViewer.ExpandAll"]
-            ),
+        ),
         div({ className: "devtools-separator" }),
         SearchBox({
           actions: this.props.actions,
