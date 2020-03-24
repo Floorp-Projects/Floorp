@@ -51,8 +51,7 @@ void ChromiumCDMAdapter::SetAdaptee(PRLibrary* aLib) { mLib = aLib; }
 void* ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData) {
   GMP_LOG_DEBUG("ChromiumCdmHostFunc(%d, %p)", aHostInterfaceVersion,
                 aUserData);
-  if (aHostInterfaceVersion != cdm::Host_9::kVersion &&
-      aHostInterfaceVersion != cdm::Host_10::kVersion) {
+  if (aHostInterfaceVersion != cdm::Host_10::kVersion) {
     return nullptr;
   }
   return aUserData;
@@ -104,34 +103,40 @@ GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
                                      void** aPluginAPI, uint32_t aDecryptorId) {
   GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p",
                 aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
-  bool isCDM10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
-  bool isCDM9 = !strcmp(aAPIName, CHROMIUM_CDM_API_BACKWARD_COMPAT);
-  if (isCDM9 || isCDM10) {
-    auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
-        PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
-    if (!create) {
-      GMP_LOG_DEBUG(
-          "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
-          "FAILED to find CreateCdmInstance",
-          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
-      return GMPGenericErr;
-    }
+  bool isCdm10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
 
-    int version = isCDM9 ? cdm::ContentDecryptionModule_9::kVersion
-                         : cdm::ContentDecryptionModule_10::kVersion;
-    void* cdm = create(version, EME_KEY_SYSTEM_WIDEVINE,
-                       mozilla::ArrayLength(EME_KEY_SYSTEM_WIDEVINE) - 1,
-                       &ChromiumCdmHost, aHostAPI);
-    if (!cdm) {
-      GMP_LOG_DEBUG(
-          "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
-          "FAILED to create cdm version %d",
-          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this, version);
-      return GMPGenericErr;
-    }
-    GMP_LOG_DEBUG("cdm: 0x%p, version: %d", cdm, version);
-    *aPluginAPI = cdm;
+  if (!isCdm10) {
+    MOZ_ASSERT_UNREACHABLE("We only support and expect cdm10!");
+    GMP_LOG_DEBUG(
+        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p got "
+        "unsupported CDM version!",
+        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
+    return GMPGenericErr;
   }
+  auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
+      PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
+  if (!create) {
+    GMP_LOG_DEBUG(
+        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
+        "FAILED to find CreateCdmInstance",
+        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
+    return GMPGenericErr;
+  }
+
+  const int version = cdm::ContentDecryptionModule_10::kVersion;
+  void* cdm = create(version, EME_KEY_SYSTEM_WIDEVINE,
+                     mozilla::ArrayLength(EME_KEY_SYSTEM_WIDEVINE) - 1,
+                     &ChromiumCdmHost, aHostAPI);
+  if (!cdm) {
+    GMP_LOG_DEBUG(
+        "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
+        "FAILED to create cdm version %d",
+        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this, version);
+    return GMPGenericErr;
+  }
+  GMP_LOG_DEBUG("cdm: 0x%p, version: %d", cdm, version);
+  *aPluginAPI = cdm;
+
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
 }
 
@@ -152,10 +157,8 @@ bool ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
                                   int32_t aInterfaceVersion,
                                   int32_t aHostVersion) {
   return aModuleVersion == CDM_MODULE_VERSION &&
-         (aInterfaceVersion == cdm::ContentDecryptionModule_9::kVersion ||
-          aInterfaceVersion == cdm::ContentDecryptionModule_10::kVersion) &&
-         (aHostVersion == cdm::Host_9::kVersion ||
-          aHostVersion == cdm::Host_10::kVersion);
+         aInterfaceVersion == cdm::ContentDecryptionModule_10::kVersion &&
+         aHostVersion == cdm::Host_10::kVersion;
 }
 
 #ifdef XP_WIN
