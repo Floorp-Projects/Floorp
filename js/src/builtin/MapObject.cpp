@@ -51,17 +51,6 @@ bool HashableValue::setValue(JSContext* cx, HandleValue v) {
       // Normalize the sign bit of a NaN.
       value = JS::CanonicalizedDoubleValue(d);
     }
-  } else if (v.isBigInt()) {
-    // NurseryKeysVector currently only supports objects, so we must ensure all
-    // BigInt hash-values are tenured. (bug 1608056)
-    RootedBigInt bi(cx, v.toBigInt());
-    if (IsInsideNursery(bi)) {
-      bi = BigInt::copy(cx, bi, gc::TenuredHeap);
-      if (!bi) {
-        return false;
-      }
-    }
-    value = BigIntValue(bi);
   } else {
     value = v;
   }
@@ -471,7 +460,7 @@ struct js::UnbarrieredHashPolicy {
   static void makeEmpty(Value* vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
 };
 
-using NurseryKeysVector = Vector<JSObject*, 0, SystemAllocPolicy>;
+using NurseryKeysVector = mozilla::Vector<Value, 0, SystemAllocPolicy>;
 
 template <typename TableObject>
 static NurseryKeysVector* GetNurseryKeys(TableObject* t) {
@@ -515,9 +504,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef {
         reinterpret_cast<typename ObjectT::UnbarrieredTable*>(realTable);
     NurseryKeysVector* keys = GetNurseryKeys(object);
     MOZ_ASSERT(keys);
-    for (JSObject* obj : *keys) {
-      MOZ_ASSERT(obj);
-      Value key = ObjectValue(*obj);
+    for (Value& key : *keys) {
       Value prior = key;
       MOZ_ASSERT(unbarrieredTable->hash(key) ==
                  realTable->hash(*reinterpret_cast<HashableValue*>(&key)));
@@ -531,7 +518,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef {
 template <typename ObjectT>
 inline static MOZ_MUST_USE bool WriteBarrierPostImpl(ObjectT* obj,
                                                      const Value& keyValue) {
-  if (MOZ_LIKELY(!keyValue.isObject())) {
+  if (MOZ_LIKELY(!keyValue.isObject() && !keyValue.isBigInt())) {
     MOZ_ASSERT_IF(keyValue.isGCThing(), !IsInsideNursery(keyValue.toGCThing()));
     return true;
   }
@@ -540,8 +527,7 @@ inline static MOZ_MUST_USE bool WriteBarrierPostImpl(ObjectT* obj,
     return true;
   }
 
-  JSObject* key = &keyValue.toObject();
-  if (!IsInsideNursery(key)) {
+  if (!IsInsideNursery(keyValue.toGCThing())) {
     return true;
   }
 
@@ -552,14 +538,10 @@ inline static MOZ_MUST_USE bool WriteBarrierPostImpl(ObjectT* obj,
       return false;
     }
 
-    key->storeBuffer()->putGeneric(OrderedHashTableRef<ObjectT>(obj));
+    keyValue.toGCThing()->storeBuffer()->putGeneric(OrderedHashTableRef<ObjectT>(obj));
   }
 
-  if (!keys->append(key)) {
-    return false;
-  }
-
-  return true;
+  return keys->append(keyValue);
 }
 
 inline static MOZ_MUST_USE bool WriteBarrierPost(MapObject* map,
