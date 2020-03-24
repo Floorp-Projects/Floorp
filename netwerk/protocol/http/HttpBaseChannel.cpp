@@ -2125,7 +2125,6 @@ HttpBaseChannel::GetResponseVersion(uint32_t* major, uint32_t* minor) {
 void HttpBaseChannel::NotifySetCookie(const nsACString& aCookie) {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
-    nsAutoString cookie;
     obs->NotifyObservers(static_cast<nsIChannel*>(this),
                          "http-on-response-set-cookie",
                          NS_ConvertASCIItoUTF16(aCookie).get());
