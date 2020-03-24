@@ -572,7 +572,7 @@ bool ChannelWrapper::Matches(
     bool isProxy =
         aOptions.mIsProxy && aExtension->HasPermission(nsGkAtoms::proxy);
     // Proxies are allowed access to all urls, including restricted urls.
-    if (!aExtension->CanAccessURI(urlInfo, false, !isProxy)) {
+    if (!aExtension->CanAccessURI(urlInfo, false, !isProxy, true)) {
       return false;
     }
 
@@ -583,14 +583,12 @@ bool ChannelWrapper::Matches(
         return false;
       }
 
-      if (auto origin = DocumentURLInfo()) {
-        nsAutoCString baseURL;
-        aExtension->GetBaseURL(baseURL);
-
-        if (!StringBeginsWith(origin->CSpec(), baseURL) &&
-            !aExtension->CanAccessURI(*origin)) {
-          return false;
-        }
+      auto origin = DocumentURLInfo();
+      // Extensions with the file:-permission may observe requests from file:
+      // origins, because such documents can already be modified by content
+      // scripts anyway.
+      if (origin && !aExtension->CanAccessURI(*origin, false, true, true)) {
+        return false;
       }
     }
   }
