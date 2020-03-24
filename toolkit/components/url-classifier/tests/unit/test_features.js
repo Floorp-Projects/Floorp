@@ -5,6 +5,11 @@
 "use strict";
 
 add_test(async _ => {
+  ok(
+    Services.cookies,
+    "Force the cookie service to be initialized to avoid issues later. " +
+      "See https://bugzilla.mozilla.org/show_bug.cgi?id=1621759#c3"
+  );
   Services.prefs.setBoolPref("browser.safebrowsing.passwords.enabled", true);
 
   let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(

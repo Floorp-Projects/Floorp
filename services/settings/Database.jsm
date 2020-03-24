@@ -5,10 +5,12 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   CommonUtils: "resource://services-common/utils.js",
 });
 
@@ -29,12 +31,18 @@ class IndexedDBError extends Error {
   }
 }
 
+class ShutdownError extends IndexedDBError {
+  constructor(error, method) {
+    super(error, method);
+  }
+}
+
 /**
- * Database is a tiny wrapper with the objective
+ * InternalDatabase is a tiny wrapper with the objective
  * of providing major kinto-offline-client collection API.
  * (with the objective of getting rid of kinto-offline-client)
  */
-class Database {
+class InternalDatabase {
   /* Expose the IDBError class publicly */
   static get IDBError() {
     return IndexedDBError;
@@ -404,4 +412,113 @@ function sortObjects(order, list) {
     }
     return a[field] > b[field] ? direction : -direction;
   });
+}
+
+const gPendingOperations = new Set();
+const kWrappedMethods = new Set([
+  "open",
+  "close",
+  "list",
+  "importBulk",
+  "deleteBulk",
+  "getLastModified",
+  "saveLastModified",
+  "getMetadata",
+  "saveMetadata",
+  "clear",
+  "create",
+  "update",
+  "delete",
+]);
+
+/**
+ * We need to block shutdown on any pending indexeddb operations, and also
+ * want to avoid starting new ones if we already know we're going to be
+ * shutting down. In order to do this, we wrap all the database objects
+ * we create in a proxy that lets us catch any pending operations, and remove
+ * them when finished.
+ */
+function Database(identifier) {
+  ensureShutdownBlocker();
+  let db = new InternalDatabase(identifier);
+  // This helper returns a function that gets executed when consumers runs an
+  // async operation on the underlying database. It throws if run after
+  // shutdown has started. Otherwise, it wraps the result from the "real"
+  // method call and adds it as a pending operation, removing it when the
+  // operation is done.
+  function _getWrapper(target, method) {
+    return function(...args) {
+      // For everything other than `close`, check if we're shutting down:
+      if (method != "close" && Services.startup.shuttingDown) {
+        throw new ShutdownError(
+          "The application is shutting down, can't call " + method
+        );
+      }
+      // We're not shutting down yet. Kick off the actual method call,
+      // and stash the result.
+      let promise = target[method].apply(target, args);
+      // Now put a "safe" wrapper of the promise in our shutdown tracker,
+      let safePromise = promise.catch(ex => Cu.reportError(ex));
+      let operationInfo = {
+        promise: safePromise,
+        method,
+        identifier,
+      };
+      gPendingOperations.add(operationInfo);
+      // And ensure we remove it once done.
+      safePromise.then(() => gPendingOperations.delete(operationInfo));
+      // Now return the original.
+      return promise;
+    };
+  }
+
+  return new Proxy(db, {
+    get(target, property, receiver) {
+      // For tests so they can stub methods. Otherwise, we end up fetching
+      // wrappers from the proxy, and then assigning them onto the real
+      // object when the test is finished, and then callers to that method
+      // hit infinite recursion...
+      if (property == "_wrappedDBForTestOnly") {
+        return target;
+      }
+      if (kWrappedMethods.has(property)) {
+        return _getWrapper(target, property);
+      }
+      if (typeof target[property] == "function") {
+        // If we get here, someone's tried to use some other operation that we
+        // don't yet know how to proxy. Throw to ensure we fix that:
+        throw new Error(
+          `Don't know how to process access to 'database.${property}()'` +
+            " Add to kWrappedMethods or otherwise update the proxy to deal."
+        );
+      }
+      return target[property];
+    },
+  });
+}
+
+Database.IDBError = InternalDatabase.IDBError;
+Database.ShutdownError = ShutdownError;
+
+let gShutdownBlocker = false;
+function ensureShutdownBlocker() {
+  if (gShutdownBlocker) {
+    return;
+  }
+  gShutdownBlocker = true;
+  AsyncShutdown.profileBeforeChange.addBlocker(
+    "RemoteSettingsClient - finish IDB access.",
+    () => {
+      return Promise.all(Array.from(gPendingOperations).map(op => op.promise));
+    },
+    {
+      fetchState() {
+        let info = [];
+        for (let op of gPendingOperations) {
+          info.push({ method: op.method, identifier: op.identifier });
+        }
+        return info;
+      },
+    }
+  );
 }
