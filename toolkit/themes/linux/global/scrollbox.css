@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+arrowscrollbox[scrolledtoend=true]::part(arrowscrollbox-overflow-end-indicator),
+arrowscrollbox[scrolledtostart=true]::part(arrowscrollbox-overflow-start-indicator),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-up),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
+  visibility: collapse;
+}
+
+.scrollbutton-up.menupopup-scrollbutton > .toolbarbutton-icon {
+  -moz-appearance: button-arrow-up;
+}
+
+.scrollbutton-down.menupopup-scrollbutton > .toolbarbutton-icon {
+  -moz-appearance: button-arrow-down;
+}
+
+.scrollbutton-up.menupopup-scrollbutton[orient="horizontal"] > .toolbarbutton-icon {
+  -moz-appearance: button-arrow-previous;
+}
+
+.scrollbutton-down.menupopup-scrollbutton[orient="horizontal"] > .toolbarbutton-icon {
+  -moz-appearance: button-arrow-next;
+}
+
+:-moz-any(.scrollbutton-up, .scrollbutton-down) > .toolbarbutton-text {
+  display: none;
+}
+
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-up),
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-down) {
+  -moz-appearance: none;
+  border: 1px solid ThreeDShadow;
+  padding: 0;
+}

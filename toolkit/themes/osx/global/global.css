@@ -207,3 +207,43 @@ xul|popupnotificationcontent {
 }
 
 %include ../../shared/notification-popup.inc.css
+
+/* autorepeatbuttons in menus */
+
+.menupopup-scrollbutton {
+  height: 15px;
+  position: relative;
+  list-style-image: none;
+  /* Here we're using a little magic.
+   * The arrow button is supposed to overlay the scrollbox, blocking
+   * everything under it from reaching the screen. However, the menu background
+   * is slightly transparent, so how can we block something completely without
+   * messing up the transparency? It's easy: The native theming of the
+   * "menuitem" appearance uses CGContextClearRect before drawing, which
+   * clears everything under it.
+   * Without help from native theming this effect wouldn't be achievable.
+   */
+  -moz-appearance: menuitem;
+}
+
+.scrollbutton-up.menupopup-scrollbutton {
+  padding-top: 1px; /* 4px padding-top from the .popup-internal-box. */
+  margin-bottom: -15px;
+}
+
+.scrollbutton-up.menupopup-scrollbutton > .toolbarbutton-icon {
+  -moz-appearance: button-arrow-up;
+}
+
+.scrollbutton-down.menupopup-scrollbutton {
+  padding-top: 5px;
+  margin-top: -15px;
+}
+
+.scrollbutton-down.menupopup-scrollbutton > .toolbarbutton-icon {
+  -moz-appearance: button-arrow-down;
+}
+
+.menupopup-scrollbutton[disabled="true"] {
+  visibility: collapse;
+}
