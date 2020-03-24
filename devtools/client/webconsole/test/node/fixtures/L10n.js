@@ -25,6 +25,10 @@ const strings = {
     "#1 item hidden by text filter;#1 items hidden by text filter",
   cdFunctionInvalidArgument:
     "Cannot cd() to the given window. Invalid argument.",
+  "webconsole.group.cookieSameSiteLaxByDefaultEnabled":
+    "Some cookies are misusing the sameSite attribute, so it won't work as expected",
+  "webconsole.group.cookieSameSiteLaxByDefaultDisabled":
+    "Some cookies are misusing the recommended sameSite attribute",
 };
 
 // @TODO Load the actual strings from webconsole.properties instead.

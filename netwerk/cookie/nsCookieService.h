@@ -350,7 +350,9 @@ class nsCookieService final : public nsICookieService,
       const mozilla::OriginAttributesPattern& aPattern);
 
   static void LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
-                                  uint32_t aErrorFlags, const nsACString& aMsg,
+                                  uint32_t aErrorFlags,
+                                  const nsACString& aCategory,
+                                  const nsACString& aMsg,
                                   const nsACString& aCookieName,
                                   const nsAString& aMDNURL = VoidString());
 
