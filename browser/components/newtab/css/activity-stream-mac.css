@@ -3332,9 +3332,6 @@ main {
     margin-top: -8px;
     padding: 0;
     cursor: pointer; }
-    @media (min-width: 766px) {
-      .SnippetBaseContainer .blockButton {
-        inset-inline-end: 24px; } }
   .SnippetBaseContainer:hover .blockButton {
     display: block; }
   .SnippetBaseContainer .icon {
