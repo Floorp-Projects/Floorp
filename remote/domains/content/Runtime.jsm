@@ -206,7 +206,7 @@ class Runtime extends ContentProcessDomain {
    * @param {Object} options
    * @param {string} options.expression
    *     Expression to evaluate.
-   * @param {boolean=} options.awaitPromise [unsupported]
+   * @param {boolean=} options.awaitPromise
    *     Whether execution should `await` for resulting value
    *     and return once awaited promise is resolved.
    * @param {number=} options.contextId
@@ -223,10 +223,18 @@ class Runtime extends ContentProcessDomain {
    *     The evaluation result, and optionally exception details.
    */
   evaluate(options = {}) {
-    const { expression, contextId, returnByValue = false } = options;
+    const {
+      expression,
+      awaitPromise = false,
+      contextId,
+      returnByValue = false,
+    } = options;
 
     if (typeof expression != "string") {
       throw new Error("expression: string value expected");
+    }
+    if (!["undefined", "boolean"].includes(typeof options.awaitPromise)) {
+      throw new TypeError("awaitPromise: boolean value expected");
     }
     if (typeof returnByValue != "boolean") {
       throw new Error("returnByValue: boolean value expected");
@@ -242,7 +250,7 @@ class Runtime extends ContentProcessDomain {
       context = this._getDefaultContextForWindow();
     }
 
-    return context.evaluate(expression, returnByValue);
+    return context.evaluate(expression, awaitPromise, returnByValue);
   }
 
   getProperties({ objectId, ownProperties }) {

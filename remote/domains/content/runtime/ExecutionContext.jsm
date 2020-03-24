@@ -76,6 +76,9 @@ class ExecutionContext {
    *
    * @param {String} expression
    *   The JS expression to evaluate against the JS context.
+   * @param {boolean} options.awaitPromise
+   *     Whether execution should `await` for resulting value
+   *     and return once awaited promise is resolved.
    * @param {boolean} returnByValue
    *     Whether the result is expected to be a JSON object
    *     that should be sent by value.
@@ -87,7 +90,7 @@ class ExecutionContext {
    *   return an object with `result` attribute whose type is
    *   `RemoteObject` CDP type.
    */
-  evaluate(expression, returnByValue) {
+  async evaluate(expression, awaitPromise, returnByValue) {
     let rv = this._debuggee.executeInGlobal(expression);
     if (!rv) {
       return {
@@ -101,11 +104,28 @@ class ExecutionContext {
       return this._returnError(rv.throw);
     }
 
-    let result;
+    let result = rv.return;
+
+    if (result && result.isPromise && awaitPromise) {
+      if (result.promiseState === "fulfilled") {
+        result = result.promiseValue;
+      } else if (result.promiseState === "rejected") {
+        return this._returnError(result.promiseReason);
+      } else {
+        try {
+          const promiseResult = await result.unsafeDereference();
+          result = this._debuggee.makeDebuggeeValue(promiseResult);
+        } catch (e) {
+          // The promise has been rejected
+          return this._returnError(e);
+        }
+      }
+    }
+
     if (returnByValue) {
       result = this._toRemoteObjectByValue(result);
     } else {
-      result = this._toRemoteObject(rv.return);
+      result = this._toRemoteObject(result);
     }
 
     return { result };
