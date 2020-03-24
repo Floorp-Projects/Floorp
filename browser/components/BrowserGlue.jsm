@@ -2927,7 +2927,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 92;
+    const UI_VERSION = 93;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3427,6 +3427,57 @@ BrowserGlue.prototype = {
           true
         );
       }
+    }
+
+    if (currentUIVersion < 93) {
+      // The Gecko Profiler Addon is now an internal component. Remove the old
+      // addon, and enable the new UI.
+
+      function enableProfilerButton(wasAddonActive) {
+        // Enable the feature pref. This will add it to the customization palette,
+        // but not to the the navbar.
+        Services.prefs.setBoolPref(
+          "devtools.performance.popup.feature-flag",
+          true
+        );
+
+        if (wasAddonActive) {
+          const { ProfilerMenuButton } = ChromeUtils.import(
+            "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+          );
+          if (!ProfilerMenuButton.isInNavbar()) {
+            // The profiler menu button is not enabled. Turn it on now.
+            const win = BrowserWindowTracker.getTopWindow();
+            if (win && win.document) {
+              ProfilerMenuButton.addToNavbar(win.document);
+            }
+          }
+        }
+      }
+
+      let addonPromise;
+      try {
+        addonPromise = AddonManager.getAddonByID("geckoprofiler@mozilla.com");
+      } catch (error) {
+        Cu.reportError(
+          "Could not access the AddonManager to upgrade the profile. This is most " +
+            "likely because the upgrader is being run from an xpcshell test where " +
+            "the AddonManager is not initialized."
+        );
+      }
+      Promise.resolve(addonPromise).then(addon => {
+        if (!addon) {
+          // Either the addon wasn't installed, or the call to getAddonByID failed.
+          return;
+        }
+        // Remove the old addon.
+        const wasAddonActive = addon.isActive;
+        addon
+          .uninstall()
+          .catch(Cu.reportError)
+          .then(() => enableProfilerButton(wasAddonActive))
+          .catch(Cu.reportError);
+      }, Cu.reportError);
     }
 
     // Update the migration version.
