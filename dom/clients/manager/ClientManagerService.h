@@ -82,9 +82,9 @@ class ClientManagerService final {
     }
   };
 
-  // Store the ClientSourceParent objects in a hash table.  We want to
+  // Store the possible ClientSourceParent objects in a hash table.  We want to
   // optimize for insertion, removal, and lookup by UUID.
-  nsDataHashtable<nsIDHashKey, ClientSourceParent*> mSourceTable;
+  HashMap<nsID, SourceTableEntry, nsIDHasher> mSourceTable;
 
   // The set of handles waiting for their corresponding ClientSourceParent
   // to be created.
@@ -98,6 +98,16 @@ class ClientManagerService final {
   ~ClientManagerService();
 
   void Shutdown();
+
+  // Returns nullptr if aEntry isn't a ClientSourceParent (i.e. it's a
+  // FutureClientSourceParent).
+  ClientSourceParent* MaybeUnwrapAsExistingSource(
+      const SourceTableEntry& aEntry) const;
+
+  // Returns nullptr if the ClientSourceParent doesn't exist yet (i.e. it's a
+  // FutureClientSourceParent or has already been destroyed) or is frozen.
+  ClientSourceParent* FindExistingSource(
+      const nsID& aID, const mozilla::ipc::PrincipalInfo& aPrincipalInfo) const;
 
  public:
   static already_AddRefed<ClientManagerService> GetOrCreateInstance();
