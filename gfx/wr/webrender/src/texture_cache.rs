@@ -957,6 +957,11 @@ impl TextureCache {
         self.expire_old_entries(EntryKind::Standalone, threshold);
         self.expire_old_entries(EntryKind::Picture, threshold);
 
+        self.shared_textures.array_alpha8_linear.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_alpha16_linear.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_color8_linear.release_empty_textures(&mut self.pending_updates);
+        self.shared_textures.array_color8_nearest.release_empty_textures(&mut self.pending_updates);
+
         self.shared_textures.array_alpha8_linear
             .update_profile(&mut texture_cache_profile.pages_alpha8_linear);
         self.shared_textures.array_alpha16_linear
@@ -1731,6 +1736,10 @@ impl TextureArrayUnit {
             region.slab_size == slab_size && !region.free_slots.is_empty()
         })
     }
+
+    fn is_empty(&self) -> bool {
+        self.empty_regions == self.regions.len()
+    }
 }
 
 /// A texture array contains a number of textures, each with a number of
@@ -1776,6 +1785,18 @@ impl TextureArray {
         for unit in self.units.drain() {
             updates.push_free(unit.texture_id);
         }
+    }
+
+    fn release_empty_textures(&mut self, updates: &mut TextureUpdateList) {
+        self.units.retain(|unit| {
+            if unit.is_empty() {
+                updates.push_free(unit.texture_id);
+
+                false
+            } else {
+                true
+            }
+        });
     }
 
     fn update_profile(&self, counter: &mut ResourceProfileCounter) {
