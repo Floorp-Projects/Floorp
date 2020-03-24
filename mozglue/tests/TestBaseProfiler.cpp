@@ -10,6 +10,7 @@
 #include "mozilla/leb128iterator.h"
 #include "mozilla/ModuloBuffer.h"
 #include "mozilla/PowerOfTwo.h"
+#include "mozilla/ProfileBufferChunk.h"
 #include "mozilla/Vector.h"
 
 #ifdef MOZ_BASE_PROFILER
@@ -364,6 +365,141 @@ static_assert(
 static_assert(
     !TestConstexprULEB128Reader<0xFFFFFFFFFFFFFFFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu,
                                 0xFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu>());
+
+static void TestChunk() {
+  printf("TestChunk...\n");
+
+  static_assert(!std::is_default_constructible_v<ProfileBufferChunk>,
+                "ProfileBufferChunk should not be default-constructible");
+  static_assert(
+      !std::is_constructible_v<ProfileBufferChunk, ProfileBufferChunk::Length>,
+      "ProfileBufferChunk should not be constructible from Length");
+
+  static_assert(
+      sizeof(ProfileBufferChunk::Header) ==
+          sizeof(ProfileBufferChunk::Header::mOffsetFirstBlock) +
+              sizeof(ProfileBufferChunk::Header::mOffsetPastLastBlock) +
+              sizeof(ProfileBufferChunk::Header::mDoneTimeStamp) +
+              sizeof(ProfileBufferChunk::Header::mBufferBytes) +
+              sizeof(ProfileBufferChunk::Header::mBlockCount) +
+              sizeof(ProfileBufferChunk::Header::mRangeStart) +
+              sizeof(ProfileBufferChunk::Header::mProcessId) +
+              sizeof(ProfileBufferChunk::Header::mPADDING),
+      "ProfileBufferChunk::Header may have unwanted padding, please review");
+  // Note: The above static_assert is an attempt at keeping
+  // ProfileBufferChunk::Header tightly packed, but some changes could make this
+  // impossible to achieve (most probably due to alignment) -- Just do your
+  // best!
+
+  constexpr ProfileBufferChunk::Length TestLen = 1000;
+
+  // Basic allocations of different sizes.
+  for (ProfileBufferChunk::Length len = 0; len <= TestLen; ++len) {
+    auto chunk = ProfileBufferChunk::Create(len);
+    static_assert(
+        std::is_same_v<decltype(chunk), UniquePtr<ProfileBufferChunk>>,
+        "ProfileBufferChunk::Create() should return a "
+        "UniquePtr<ProfileBufferChunk>");
+    MOZ_RELEASE_ASSERT(!!chunk, "OOM!?");
+    MOZ_RELEASE_ASSERT(chunk->BufferBytes() >= len);
+    MOZ_RELEASE_ASSERT(chunk->ChunkBytes() >=
+                       len + ProfileBufferChunk::SizeofChunkMetadata());
+    MOZ_RELEASE_ASSERT(chunk->RemainingBytes() == chunk->BufferBytes());
+    MOZ_RELEASE_ASSERT(chunk->OffsetFirstBlock() == 0);
+    MOZ_RELEASE_ASSERT(chunk->OffsetPastLastBlock() == 0);
+    MOZ_RELEASE_ASSERT(chunk->BlockCount() == 0);
+    MOZ_RELEASE_ASSERT(chunk->ProcessId() == 0);
+    MOZ_RELEASE_ASSERT(chunk->RangeStart() == 0);
+    MOZ_RELEASE_ASSERT(chunk->BufferSpan().LengthBytes() ==
+                       chunk->BufferBytes());
+    MOZ_RELEASE_ASSERT(!chunk->GetNext());
+    MOZ_RELEASE_ASSERT(!chunk->ReleaseNext());
+    MOZ_RELEASE_ASSERT(chunk->Last() == chunk.get());
+  }
+
+  // Allocate the main test Chunk.
+  auto chunkA = ProfileBufferChunk::Create(TestLen);
+  MOZ_RELEASE_ASSERT(!!chunkA, "OOM!?");
+  MOZ_RELEASE_ASSERT(chunkA->BufferBytes() >= TestLen);
+  MOZ_RELEASE_ASSERT(chunkA->ChunkBytes() >=
+                     TestLen + ProfileBufferChunk::SizeofChunkMetadata());
+  MOZ_RELEASE_ASSERT(!chunkA->GetNext());
+  MOZ_RELEASE_ASSERT(!chunkA->ReleaseNext());
+
+  constexpr ProfileBufferIndex chunkARangeStart = 12345;
+  chunkA->SetRangeStart(chunkARangeStart);
+  MOZ_RELEASE_ASSERT(chunkA->RangeStart() == chunkARangeStart);
+
+  // Get a read-only span over its buffer.
+  auto bufferA = chunkA->BufferSpan();
+  static_assert(
+      std::is_same_v<decltype(bufferA), Span<const ProfileBufferChunk::Byte>>,
+      "BufferSpan() should return a Span<const Byte>");
+  MOZ_RELEASE_ASSERT(bufferA.LengthBytes() == chunkA->BufferBytes());
+
+  // Add the initial tail block.
+  constexpr ProfileBufferChunk::Length initTailLen = 10;
+  auto initTail = chunkA->ReserveInitialBlockAsTail(initTailLen);
+  static_assert(
+      std::is_same_v<decltype(initTail), Span<ProfileBufferChunk::Byte>>,
+      "ReserveInitialBlockAsTail() should return a Span<Byte>");
+  MOZ_RELEASE_ASSERT(initTail.LengthBytes() == initTailLen);
+  MOZ_RELEASE_ASSERT(initTail.Elements() == bufferA.Elements());
+  MOZ_RELEASE_ASSERT(chunkA->OffsetFirstBlock() == initTailLen);
+  MOZ_RELEASE_ASSERT(chunkA->OffsetPastLastBlock() == initTailLen);
+
+  // Add the first complete block.
+  constexpr ProfileBufferChunk::Length block1Len = 20;
+  auto block1 = chunkA->ReserveBlock(block1Len);
+  static_assert(
+      std::is_same_v<decltype(block1), ProfileBufferChunk::ReserveReturn>,
+      "ReserveBlock() should return a ReserveReturn");
+  MOZ_RELEASE_ASSERT(block1.mBlockRangeIndex.ConvertToProfileBufferIndex() ==
+                     chunkARangeStart + initTailLen);
+  MOZ_RELEASE_ASSERT(block1.mSpan.LengthBytes() == block1Len);
+  MOZ_RELEASE_ASSERT(block1.mSpan.Elements() ==
+                     bufferA.Elements() + initTailLen);
+  MOZ_RELEASE_ASSERT(chunkA->OffsetFirstBlock() == initTailLen);
+  MOZ_RELEASE_ASSERT(chunkA->OffsetPastLastBlock() == initTailLen + block1Len);
+  MOZ_RELEASE_ASSERT(chunkA->RemainingBytes() != 0);
+
+  // Add another block to over-fill the ProfileBufferChunk.
+  const ProfileBufferChunk::Length remaining =
+      chunkA->BufferBytes() - (initTailLen + block1Len);
+  constexpr ProfileBufferChunk::Length overfill = 30;
+  const ProfileBufferChunk::Length block2Len = remaining + overfill;
+  ProfileBufferChunk::ReserveReturn block2 = chunkA->ReserveBlock(block2Len);
+  MOZ_RELEASE_ASSERT(block2.mBlockRangeIndex.ConvertToProfileBufferIndex() ==
+                     chunkARangeStart + initTailLen + block1Len);
+  MOZ_RELEASE_ASSERT(block2.mSpan.LengthBytes() == remaining);
+  MOZ_RELEASE_ASSERT(block2.mSpan.Elements() ==
+                     bufferA.Elements() + initTailLen + block1Len);
+  MOZ_RELEASE_ASSERT(chunkA->OffsetFirstBlock() == initTailLen);
+  MOZ_RELEASE_ASSERT(chunkA->OffsetPastLastBlock() == chunkA->BufferBytes());
+  MOZ_RELEASE_ASSERT(chunkA->RemainingBytes() == 0);
+
+  // Block must be marked "done" before it can be recycled.
+  chunkA->MarkDone();
+
+  // It must be marked "recycled" before data can be added to it again.
+  chunkA->MarkRecycled();
+
+  // Add an empty initial tail block.
+  Span<ProfileBufferChunk::Byte> initTail2 =
+      chunkA->ReserveInitialBlockAsTail(0);
+  MOZ_RELEASE_ASSERT(initTail2.LengthBytes() == 0);
+  MOZ_RELEASE_ASSERT(initTail2.Elements() == bufferA.Elements());
+  MOZ_RELEASE_ASSERT(chunkA->OffsetFirstBlock() == 0);
+  MOZ_RELEASE_ASSERT(chunkA->OffsetPastLastBlock() == 0);
+
+  // Block must be marked "done" before it can be destroyed.
+  chunkA->MarkDone();
+
+  chunkA->SetProcessId(123);
+  MOZ_RELEASE_ASSERT(chunkA->ProcessId() == 123);
+
+  printf("TestChunk done\n");
+}
 
 static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
   using MB = ModuloBuffer<>;
@@ -1557,6 +1693,7 @@ void TestProfilerDependencies() {
   TestPowerOfTwoMask();
   TestPowerOfTwo();
   TestLEB128();
+  TestChunk();
   TestModuloBuffer();
   TestBlocksRingBufferAPI();
   TestBlocksRingBufferUnderlyingBufferChanges();
