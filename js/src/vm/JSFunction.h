@@ -901,7 +901,7 @@ class JSFunction : public js::NativeObject {
         "U.native.func_ must be at the same offset as U.scripted.env_");
     return offsetOfNative();
   }
-  static unsigned offsetOfScriptOrLazyScript() {
+  static unsigned offsetOfBaseScript() {
     return offsetof(JSFunction, u.scripted.s.script_);
   }
 

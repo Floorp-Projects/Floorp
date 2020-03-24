@@ -310,6 +310,25 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         break;
       }
 
+      case JSOp::Lambda:
+      case JSOp::LambdaArrow: {
+        JSFunction* fun = loc.getFunction(script);
+        if (IsAsmJSModule(fun)) {
+          return abort(AbortReason::Disable, "asm.js module function lambda");
+        }
+
+        // WarpBuilder relies on these conditions.
+        MOZ_ASSERT(!fun->isSingleton());
+        MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
+
+        if (!AddOpSnapshot<WarpLambda>(alloc_, opSnapshots, offset,
+                                       fun->baseScript(), fun->flags(),
+                                       fun->nargs())) {
+          return abort(AbortReason::Alloc);
+        }
+        break;
+      }
+
       case JSOp::GetElemSuper: {
 #if defined(JS_CODEGEN_X86)
         // x86 does not have enough registers if profiling is enabled.

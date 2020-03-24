@@ -100,6 +100,7 @@ class BytecodeLocation {
   inline PropertyName* getPropertyName(const JSScript* script) const;
   inline JS::BigInt* getBigInt(const JSScript* script) const;
   inline JSObject* getObject(const JSScript* script) const;
+  inline JSFunction* getFunction(const JSScript* script) const;
   inline js::RegExpObject* getRegExp(const JSScript* script) const;
   inline js::Scope* getScope(const JSScript* script) const;
 
