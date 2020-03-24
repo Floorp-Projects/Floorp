@@ -1998,6 +1998,13 @@ pref("network.online",                      true); //online/offline
 // Set to 0 to disable moving the cookies.
 pref("network.cookie.move.interval_sec",    10);
 
+// This pref contains the list of hostnames (such as
+// "mozilla.org,example.net"). For these hosts, firefox will treat
+// sameSite=none if nothing else is specified, even if
+// network.cookie.sameSite.laxByDefault if set to true.
+// To know the correct syntax, see nsContentUtils::IsURIInList()
+pref("network.cookie.sameSite.laxByDefault.disabledHosts", "");
+
 pref("network.cookie.maxNumber", 3000);
 pref("network.cookie.maxPerHost", 180);
 // Cookies quota for each host. If cookies exceed the limit maxPerHost,
