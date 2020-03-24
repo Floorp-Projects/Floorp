@@ -85,6 +85,7 @@ struct ClientNavigateArgs
   IPCClientInfo target;
   nsCString url;
   nsCString baseURL;
+  IPCServiceWorkerDescriptor serviceWorker;
 };
 
 struct ClientPostMessageArgs
