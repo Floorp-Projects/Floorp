@@ -6,36 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Utils"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "eTLDService",
-  "@mozilla.org/network/effective-tld-service;1",
-  "nsIEffectiveTLDService"
-);
-
 var Utils = Object.freeze({
-  /**
-   * Returns true if the |url| passed in is part of the given root |domain|.
-   * For example, if |url| is "www.mozilla.org", and we pass in |domain| as
-   * "mozilla.org", this will return true. It would return false the other way
-   * around.
-   */
-  hasRootDomain(url, domain) {
-    let host;
-
-    try {
-      host = Services.io.newURI(url).host;
-    } catch (e) {
-      // The given URL probably doesn't have a host.
-      return false;
-    }
-
-    return eTLDService.hasRootDomain(host, domain);
-  },
-
   /**
    * Restores frame tree |data|, starting at the given root |frame|. As the
    * function recurses into descendant frames it will call cb(frame, data) for
