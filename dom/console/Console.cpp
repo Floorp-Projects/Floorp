@@ -253,6 +253,8 @@ class MainThreadConsoleData final {
 class ConsoleRunnable : public StructuredCloneHolderBase {
  public:
   ~ConsoleRunnable() override {
+    MOZ_ASSERT(!mClonedData.mGlobal,
+               "mClonedData.mGlobal is set and cleared in a main thread scope");
     // Clear the StructuredCloneHolderBase class.
     Clear();
   }
