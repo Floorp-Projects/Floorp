@@ -14,9 +14,5 @@ MOCHITEST_CHROME_MANIFESTS += [
   'tests/chrome/chrome.ini'
 ]
 
-EXTRA_JS_MODULES += [
-  'AboutCertViewerHandler.jsm',
-]
-
 with Files('**'):
     BUG_COMPONENT = ("Firefox", "Security")
