@@ -167,74 +167,85 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   ForceStrict = 1 << 3,
   // ----
 
+  // Parser Flags
+  //
+  // Flags that come from the parser.
+  // ----
+
   // Code is in strict mode.
   Strict = 1 << 4,
+
+  // See FunctionBox.
+  BindingsAccessedDynamically = 1 << 5,
+  FunHasExtensibleScope = 1 << 6,
+
+  // Bytecode contains JSOp::CallSiteObj
+  // (We don't relazify functions with template strings, due to observability)
+  HasCallSiteObj = 1 << 7,
+
+  // Script is parsed with a top-level goal of Module. This may be a top-level
+  // or an inner-function script.
+  HasModuleGoal = 1 << 8,
+
+  FunctionHasThisBinding = 1 << 9,
+
+  // Whether the arguments object for this script, if it needs one, should be
+  // mapped (alias formal parameters).
+  HasMappedArgsObj = 1 << 10,
+
+  // Script contains inner functions. Used to check if we can relazify the
+  // script.
+  HasInnerFunctions = 1 << 11,
+
+  NeedsHomeObject = 1 << 12,
+  IsDerivedClassConstructor = 1 << 13,
+
+  // 'this', 'arguments' and f.apply() are used. This is likely to be a
+  // wrapper.
+  IsLikelyConstructorWrapper = 1 << 14,
+
+  // Set if this function is a generator function or async generator.
+  IsGenerator = 1 << 15,
+
+  // Set if this function is an async function or async generator.
+  IsAsync = 1 << 16,
+
+  // Set if this function has a rest parameter.
+  HasRest = 1 << 17,
+
+  // See comments below.
+  ArgumentsHasVarBinding = 1 << 18,
+
+  // Script came from eval().
+  IsForEval = 1 << 19,
+
+  // Whether this is a top-level module script.
+  IsModule = 1 << 20,
+
+  // Whether the Parser declared 'arguments'.
+  ShouldDeclareArguments = 1 << 21,
+
+  // Script is for function.
+  IsFunction = 1 << 22,
+
+  // Whether this script contains a direct eval statement.
+  HasDirectEval = 1 << 23,
+  // ----
+
+  // Bytecode Emitter Flags
+  //
+  // Flags that are initialized by the BCE.
+  // ----
 
   // True if the script has a non-syntactic scope on its dynamic scope chain.
   // That is, there are objects about which we know nothing between the
   // outermost syntactic scope and the global.
-  HasNonSyntacticScope = 1 << 5,
+  HasNonSyntacticScope = 1 << 24,
 
-  // See FunctionBox.
-  BindingsAccessedDynamically = 1 << 6,
-  FunHasExtensibleScope = 1 << 7,
-
-  // Bytecode contains JSOp::CallSiteObj
-  // (We don't relazify functions with template strings, due to observability)
-  HasCallSiteObj = 1 << 8,
-
-  // Script is parsed with a top-level goal of Module. This may be a top-level
-  // or an inner-function script.
-  HasModuleGoal = 1 << 9,
-
-  FunctionHasThisBinding = 1 << 10,
-  FunctionHasExtraBodyVarScope = 1 << 11,
-
-  // Whether the arguments object for this script, if it needs one, should be
-  // mapped (alias formal parameters).
-  HasMappedArgsObj = 1 << 12,
-
-  // Script contains inner functions. Used to check if we can relazify the
-  // script.
-  HasInnerFunctions = 1 << 13,
-
-  NeedsHomeObject = 1 << 14,
-
-  IsDerivedClassConstructor = 1 << 15,
-
-  // 'this', 'arguments' and f.apply() are used. This is likely to be a
-  // wrapper.
-  IsLikelyConstructorWrapper = 1 << 16,
-
-  // Set if this function is a generator function or async generator.
-  IsGenerator = 1 << 17,
-
-  // Set if this function is an async function or async generator.
-  IsAsync = 1 << 18,
-
-  // Set if this function has a rest parameter.
-  HasRest = 1 << 19,
-
-  // See comments below.
-  ArgumentsHasVarBinding = 1 << 20,
-
-  // Script came from eval().
-  IsForEval = 1 << 21,
-
-  // Whether this is a top-level module script.
-  IsModule = 1 << 22,
+  FunctionHasExtraBodyVarScope = 1 << 25,
 
   // Whether this function needs a call object or named lambda environment.
-  NeedsFunctionEnvironmentObjects = 1 << 23,
-
-  // Whether the Parser declared 'arguments'.
-  ShouldDeclareArguments = 1 << 24,
-
-  // Script is for function.
-  IsFunction = 1 << 25,
-
-  // Whether this script contains a direct eval statement.
-  HasDirectEval = 1 << 26,
+  NeedsFunctionEnvironmentObjects = 1 << 26,
 };
 
 class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
