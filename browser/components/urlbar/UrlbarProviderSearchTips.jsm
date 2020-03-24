@@ -312,7 +312,7 @@ class ProviderSearchTips extends UrlbarProvider {
     let ignoreShowLimits = UrlbarPrefs.get("searchTips.test.ignoreShowLimits");
 
     // Don't show a tip if the browser is already showing some other notification.
-    if (isBrowserShowingNotification() && !ignoreShowLimits) {
+    if ((await isBrowserShowingNotification()) && !ignoreShowLimits) {
       return;
     }
 
@@ -370,7 +370,7 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 }
 
-function isBrowserShowingNotification() {
+async function isBrowserShowingNotification() {
   let window = BrowserWindowTracker.getTopWindow();
 
   // urlbar view and notification box (info bar)
@@ -421,7 +421,7 @@ function isBrowserShowingNotification() {
   // On startup, the default browser check normally opens after the Search Tip.
   // As a result, we can't check for the prompt's presence, but we can check if
   // it plans on opening.
-  const willPrompt = DefaultBrowserCheck.willCheckDefaultBrowser(
+  const willPrompt = await DefaultBrowserCheck.willCheckDefaultBrowser(
     /* isStartupCheck */ false
   );
   if (willPrompt) {
