@@ -163,9 +163,9 @@ async function makeSureProfilerPopupIsEnabled() {
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
   );
 
-  if (!ProfilerMenuButton.isInNavbar()) {
-    info("> The menu button is not in the nav bar, add it.");
-    ProfilerMenuButton.addToNavbar(document);
+  if (!ProfilerMenuButton.isEnabled()) {
+    info("> The menu button is not enabled, turn it on.");
+    ProfilerMenuButton.toggle(document);
 
     await waitUntil(
       () => gBrowser.ownerDocument.getElementById("profiler-button"),
@@ -178,12 +178,12 @@ async function makeSureProfilerPopupIsEnabled() {
       info(
         "Clean up after the test by disabling the profiler popup menu button."
       );
-      if (!ProfilerMenuButton.isInNavbar()) {
+      if (!ProfilerMenuButton.isEnabled()) {
         throw new Error(
-          "Expected the profiler popup to still be in the navbar during the test cleanup."
+          "Expected the profiler popup to still be enabled during the test cleanup."
         );
       }
-      ProfilerMenuButton.remove();
+      ProfilerMenuButton.toggle(document);
     });
   } else {
     info("> The menu button was already enabled.");
@@ -545,19 +545,19 @@ async function makeSureProfilerPopupIsDisabled() {
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
   );
 
-  const isOriginallyInNavBar = ProfilerMenuButton.isInNavbar();
+  const originallyIsEnabled = ProfilerMenuButton.isEnabled();
 
-  if (isOriginallyInNavBar) {
-    info("> The menu button is in the navbar, remove it for this test.");
-    ProfilerMenuButton.remove();
+  if (originallyIsEnabled) {
+    info("> The menu button is enabled, turn it off for this test.");
+    ProfilerMenuButton.toggle(document);
   } else {
-    info("> The menu button was not in the navbar yet.");
+    info("> The menu button was already disabled.");
   }
 
   registerCleanupFunction(() => {
-    info("Revert the profiler menu button to be back in its original place");
-    if (isOriginallyInNavBar !== ProfilerMenuButton.isInNavbar()) {
-      ProfilerMenuButton.remove();
+    info("Revert the profiler menu button to its original enabled state.");
+    if (originallyIsEnabled !== ProfilerMenuButton.isEnabled()) {
+      ProfilerMenuButton.toggle(document);
     }
   });
 }
