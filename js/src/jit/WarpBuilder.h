@@ -199,6 +199,9 @@ namespace jit {
   _(InitHiddenElem)         \
   _(InitElemArray)          \
   _(InitElemInc)            \
+  _(Lambda)                 \
+  _(LambdaArrow)            \
+  _(FunWithProto)           \
   _(SetRval)                \
   _(Return)                 \
   _(RetRval)

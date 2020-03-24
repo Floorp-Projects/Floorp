@@ -2232,3 +2232,63 @@ bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
 
   return buildInitPropOp(loc, obj, index, val);
 }
+
+static LambdaFunctionInfo LambdaInfoFromSnapshot(JSFunction* fun,
+                                                 const WarpLambda* snapshot) {
+  // Pass false for singletonType and useSingletonForClone as asserted in
+  // WarpOracle.
+  return LambdaFunctionInfo(fun, snapshot->baseScript(), snapshot->flags(),
+                            snapshot->nargs(), /* singletonType = */ false,
+                            /* useSingletonForClone = */ false);
+}
+
+bool WarpBuilder::build_Lambda(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  auto* snapshot = getOpSnapshot<WarpLambda>(loc);
+
+  MDefinition* env = current->environmentChain();
+
+  JSFunction* fun = loc.getFunction(script_);
+  MConstant* funConst = constant(ObjectValue(*fun));
+
+  auto* ins = MLambda::New(alloc(), /* constraints = */ nullptr, env, funConst,
+                           LambdaInfoFromSnapshot(fun, snapshot));
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_LambdaArrow(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  auto* snapshot = getOpSnapshot<WarpLambda>(loc);
+
+  MDefinition* env = current->environmentChain();
+  MDefinition* newTarget = current->pop();
+
+  JSFunction* fun = loc.getFunction(script_);
+  MConstant* funConst = constant(ObjectValue(*fun));
+
+  auto* ins =
+      MLambdaArrow::New(alloc(), /* constraints = */ nullptr, env, newTarget,
+                        funConst, LambdaInfoFromSnapshot(fun, snapshot));
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
+
+bool WarpBuilder::build_FunWithProto(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* proto = current->pop();
+  MDefinition* env = current->environmentChain();
+
+  JSFunction* fun = loc.getFunction(script_);
+  MConstant* funConst = constant(ObjectValue(*fun));
+
+  auto* ins = MFunctionWithProto::New(alloc(), env, proto, funConst);
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins, loc);
+}
