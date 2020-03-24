@@ -99,8 +99,7 @@ class ConsoleCallData final {
         mIDType(eUnknown),
         mOuterIDNumber(0),
         mInnerIDNumber(0),
-        mMethodString(aString),
-        mStatus(eUnused) {}
+        mMethodString(aString) {}
 
   void SetIDs(uint64_t aOuterID, uint64_t aInnerID) {
     MOZ_ASSERT(mIDType == eUnknown);
@@ -195,22 +194,8 @@ class ConsoleCallData final {
   Maybe<nsTArray<ConsoleStackEntry>> mReifiedStack;
   nsCOMPtr<nsIStackFrame> mStack;
 
-  // mStatus is about the lifetime of this object.
-  enum {
-    // If the object is created but it is not owned by some runnable, this is
-    // its status.
-    eUnused,
-
-    // When a runnable takes ownership of a ConsoleCallData and send it to
-    // different thread, this is its status.
-    eInUse
-  } mStatus;
-
  private:
-  ~ConsoleCallData() {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(mStatus != eInUse);
-  }
+  ~ConsoleCallData() { AssertIsOnOwningThread(); }
 };
 
 // This base class must be extended for Worker and for Worklet.
@@ -278,7 +263,7 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
     return true;
   }
 
-  // Helper methods for CallData
+  // Helper method for CallData
   void ProcessCallData(JSContext* aCx, Console* aConsole,
                        ConsoleCallData* aCallData) {
     AssertIsOnMainThread();
@@ -319,13 +304,6 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
     aConsole->ProcessCallData(aCx, aCallData, values);
   }
 
-  void ReleaseCallData(Console* aConsole, ConsoleCallData* aCallData) {
-    aConsole->AssertIsOnOwningThread();
-
-    MOZ_ASSERT(aCallData->mStatus == ConsoleCallData::eInUse);
-    aCallData->mStatus = ConsoleCallData::eUnused;
-  }
-
   // Generic
   bool WriteArguments(JSContext* aCx, const Sequence<JS::Value>& aArguments) {
     ConsoleCommon::ClearException ce(aCx);
@@ -349,7 +327,7 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
     return WriteData(aCx, value);
   }
 
-  // Helper methods for Profile calls
+  // Helper method for Profile calls
   void ProcessProfileData(JSContext* aCx, Console::MethodName aMethodName,
                           const nsAString& aAction) {
     AssertIsOnMainThread();
@@ -484,9 +462,6 @@ class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable {
 
     const WorkletLoadInfo& loadInfo = mWorkletImpl->LoadInfo();
     mCallData->SetIDs(loadInfo.OuterWindowID(), loadInfo.InnerWindowID());
-
-    // Marking this CallData as in use.
-    mCallData->mStatus = ConsoleCallData::eInUse;
   }
 
   ~ConsoleCallDataWorkletRunnable() override { MOZ_ASSERT(!mCallData); }
@@ -513,10 +488,7 @@ class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable {
     ProcessCallData(cx, mConsole, mCallData);
   }
 
-  virtual void ReleaseData() override {
-    ReleaseCallData(mConsole, mCallData);
-    mCallData = nullptr;
-  }
+  virtual void ReleaseData() override { mCallData = nullptr; }
 
   RefPtr<ConsoleCallData> mCallData;
 };
@@ -653,9 +625,6 @@ class ConsoleCallDataWorkerRunnable final : public ConsoleWorkerRunnable {
       : ConsoleWorkerRunnable(aConsole), mCallData(aCallData) {
     MOZ_ASSERT(aCallData);
     mCallData->AssertIsOnOwningThread();
-
-    // Marking this CallData as in use.
-    mCallData->mStatus = ConsoleCallData::eInUse;
   }
 
  private:
@@ -703,10 +672,7 @@ class ConsoleCallDataWorkerRunnable final : public ConsoleWorkerRunnable {
     mClonedData.mGlobal = nullptr;
   }
 
-  virtual void ReleaseData() override {
-    ReleaseCallData(mConsole, mCallData);
-    mCallData = nullptr;
-  }
+  virtual void ReleaseData() override { mCallData = nullptr; }
 
   RefPtr<ConsoleCallData> mCallData;
 };
