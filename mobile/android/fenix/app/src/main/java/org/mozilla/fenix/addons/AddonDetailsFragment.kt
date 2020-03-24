@@ -11,10 +11,17 @@ import android.text.method.LinkMovementMethod
 import android.view.View
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_add_on_details.view.*
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.ui.showInformationDialog
 import mozilla.components.feature.addons.ui.translate
+import mozilla.components.feature.addons.update.DefaultAddonUpdater.UpdateAttemptStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
 import java.text.DateFormat
@@ -25,6 +32,9 @@ import java.util.Locale
  * A fragment to show the details of an add-on.
  */
 class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
+    private val updateAttemptStorage: UpdateAttemptStorage by lazy {
+        UpdateAttemptStorage(requireContext())
+    }
 
     private val args by navArgs<AddonDetailsFragmentArgs>()
 
@@ -74,6 +84,23 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
     private fun bindVersion(addon: Addon, view: View) {
         view.version_text.text =
             addon.installedState?.version?.ifEmpty { addon.version } ?: addon.version
+        if (addon.isInstalled()) {
+            view.version_text.setOnLongClickListener {
+                showUpdaterDialog(addon)
+                true
+            }
+        }
+    }
+
+    private fun showUpdaterDialog(addon: Addon) {
+        lifecycleScope.launch(IO) {
+            val updateAttempt = updateAttemptStorage.findUpdateAttemptBy(addon.id)
+            updateAttempt?.let {
+                withContext(Main) {
+                    it.showInformationDialog(requireContext())
+                }
+            }
+        }
     }
 
     private fun bindAuthors(addon: Addon, view: View) {
