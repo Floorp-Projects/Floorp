@@ -195,24 +195,15 @@ class ConsoleCallData final {
   Maybe<nsTArray<ConsoleStackEntry>> mReifiedStack;
   nsCOMPtr<nsIStackFrame> mStack;
 
-  // mStatus is about the lifetime of this object. Console must take care of
-  // keep it alive or not following this enumeration.
+  // mStatus is about the lifetime of this object.
   enum {
-    // If the object is created but it is owned by some runnable, this is its
-    // status. It can be deleted at any time.
+    // If the object is created but it is not owned by some runnable, this is
+    // its status.
     eUnused,
 
     // When a runnable takes ownership of a ConsoleCallData and send it to
-    // different thread, this is its status. Console cannot delete it at this
-    // time.
-    eInUse,
-
-    // When a runnable owns this ConsoleCallData, we can't delete it directly.
-    // instead, we mark it with this new status and we move it in
-    // mCallDataStoragePending list in order to keep it alive an trace it
-    // correctly. Once the runnable finishs its task, it will delete this object
-    // calling ReleaseCallData().
-    eToBeDeleted
+    // different thread, this is its status.
+    eInUse
   } mStatus;
 
  private:
@@ -331,12 +322,8 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
   void ReleaseCallData(Console* aConsole, ConsoleCallData* aCallData) {
     aConsole->AssertIsOnOwningThread();
 
-    if (aCallData->mStatus == ConsoleCallData::eToBeDeleted) {
-      aConsole->ReleaseCallData(aCallData);
-    } else {
-      MOZ_ASSERT(aCallData->mStatus == ConsoleCallData::eInUse);
-      aCallData->mStatus = ConsoleCallData::eUnused;
-    }
+    MOZ_ASSERT(aCallData->mStatus == ConsoleCallData::eInUse);
+    aCallData->mStatus = ConsoleCallData::eUnused;
   }
 
   // Generic
@@ -2393,26 +2380,14 @@ bool Console::StoreCallData(JSContext* aCx, ConsoleCallData* aCallData,
 
   MOZ_ASSERT(aCallData);
   MOZ_ASSERT(!mCallDataStorage.Contains(aCallData));
-  MOZ_ASSERT(!mCallDataStoragePending.Contains(aCallData));
 
   mCallDataStorage.AppendElement(aCallData);
 
   MOZ_ASSERT(mCallDataStorage.Length() == mArgumentStorage.length());
 
   if (mCallDataStorage.Length() > STORAGE_MAX_EVENTS) {
-    RefPtr<ConsoleCallData> callData = mCallDataStorage[0];
     mCallDataStorage.RemoveElementAt(0);
     mArgumentStorage.erase(&mArgumentStorage[0]);
-
-    MOZ_ASSERT(callData->mStatus != ConsoleCallData::eToBeDeleted);
-
-    // We cannot delete this object now because we have to trace its JSValues
-    // until the pending operation (ConsoleCallDataWorkerRunnable or
-    // ConsoleCallDataWorkletRunnable) is completed.
-    if (callData->mStatus == ConsoleCallData::eInUse) {
-      callData->mStatus = ConsoleCallData::eToBeDeleted;
-      mCallDataStoragePending.AppendElement(callData);
-    }
   }
   return true;
 }
@@ -2422,7 +2397,6 @@ void Console::UnstoreCallData(ConsoleCallData* aCallData) {
 
   MOZ_ASSERT(aCallData);
   MOZ_ASSERT(mCallDataStorage.Length() == mArgumentStorage.length());
-  MOZ_ASSERT(!mCallDataStoragePending.Contains(aCallData));
 
   size_t index = mCallDataStorage.IndexOf(aCallData);
   // It can be that mCallDataStorage has been already cleaned in case the
@@ -2434,15 +2408,6 @@ void Console::UnstoreCallData(ConsoleCallData* aCallData) {
 
   mCallDataStorage.RemoveElementAt(index);
   mArgumentStorage.erase(&mArgumentStorage[index]);
-}
-
-void Console::ReleaseCallData(ConsoleCallData* aCallData) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aCallData);
-  MOZ_ASSERT(aCallData->mStatus == ConsoleCallData::eToBeDeleted);
-  MOZ_ASSERT(mCallDataStoragePending.Contains(aCallData));
-
-  mCallDataStoragePending.RemoveElement(aCallData);
 }
 
 void Console::NotifyHandler(JSContext* aCx,

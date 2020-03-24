@@ -232,9 +232,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
 
   void UnstoreCallData(ConsoleCallData* aData);
 
-  // Read in Console.cpp how this method is used.
-  void ReleaseCallData(ConsoleCallData* aCallData);
-
   // aCx and aArguments must be in the same JS compartment.
   MOZ_CAN_RUN_SCRIPT
   void NotifyHandler(JSContext* aCx, const Sequence<JS::Value>& aArguments,
@@ -457,17 +454,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;
 
   nsTArray<RefPtr<ConsoleCallData>> mCallDataStorage;
-
-  // This array is used in a particular corner-case where:
-  // 1. we are in a worker thread
-  // 2. we have more than STORAGE_MAX_EVENTS
-  // 3. but the main-thread ConsoleCallDataRunnable of the first one is still
-  // running (this means that something very bad is happening on the
-  // main-thread).
-  // When this happens we want to keep the ConsoleCallData alive for traceing
-  // its JSValues also if 'officially' this ConsoleCallData must be removed from
-  // the storage.
-  nsTArray<RefPtr<ConsoleCallData>> mCallDataStoragePending;
   // These are references to the arguments we received in each call
   // from the DOM bindings.
   // Vector<T> supports non-memmovable types such as ArgumentData
