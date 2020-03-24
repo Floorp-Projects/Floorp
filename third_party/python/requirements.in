@@ -28,6 +28,7 @@ pathlib2==2.3.2
 pip-tools==4.5.1
 pipenv==2018.5.18
 psutil==5.7.0
+pyasn1==0.4.8
 pytest==3.6.2
 python-hglib==2.4
 redo==2.0.3
