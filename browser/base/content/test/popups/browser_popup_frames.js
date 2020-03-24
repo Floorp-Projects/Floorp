@@ -33,7 +33,7 @@ add_task(async function test_opening_blocked_popups() {
 
   // Wait for the popup-blocked notification.
   let notification;
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       (notification = gBrowser
         .getNotificationBox()
@@ -70,7 +70,7 @@ add_task(async function test_opening_blocked_popups() {
     content.document.location.href = "about:blank";
   });
   await pageHideHappened;
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       !gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked"),
     "Notification should go away"
@@ -94,7 +94,7 @@ add_task(async function test_opening_blocked_popups() {
   );
 
   // Wait for the popup-blocked notification.
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       (notification = gBrowser
         .getNotificationBox()
@@ -107,7 +107,7 @@ add_task(async function test_opening_blocked_popups() {
     content.document.getElementById("popupframe").remove();
   });
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       !gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked")
   );
