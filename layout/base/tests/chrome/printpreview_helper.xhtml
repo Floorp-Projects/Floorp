@@ -31,7 +31,7 @@ function printpreview(hasMozPrintCallback) {
   gWbp = frameElts[1].docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
-    onProgressChange: function(webProgress, request, curSelfProgress, 
+    onProgressChange: function(webProgress, request, curSelfProgress,
                                maxSelfProgress, curTotalProgress,
                                maxTotalProgress) { },
     onSecurityChange: function(webProgress, request, state) { },
@@ -100,10 +100,14 @@ function runTests()
 }
 
 function compareCanvases() {
-  return window.windowUtils
-               .compareCanvases(document.getElementsByTagName("canvas")[0],
-                                document.getElementsByTagName("canvas")[1],
-                                {}) == 0;
+  const canvas1 = document.getElementsByTagName("canvas")[0];
+  const canvas2 = document.getElementsByTagName("canvas")[1];
+  const result = window.windowUtils.compareCanvases(canvas1, canvas2, {}) == 0;
+  if (!result) {
+    todo(false, "TEST CASE: " + canvas1.toDataURL());
+    todo(false, "REFERENCE: " + canvas2.toDataURL());
+  }
+  return result;
 }
 
 function addHTMLContent(parent) {
@@ -422,8 +426,20 @@ async function runTest11() {
   requestAnimationFrame(function() { setTimeout(runTest12); } );
 }
 
-// Crash test for bug 1615261
+// bug 1621415
 async function runTest12() {
+  await compareFiles("test_document_adopted_styles.html", "test_document_adopted_styles_ref.html");
+  requestAnimationFrame(function() { setTimeout(runTest13); } );
+}
+
+// bug 1621415
+async function runTest13() {
+  await compareFiles("test_shadow_root_adopted_styles.html", "test_shadow_root_adopted_styles_ref.html");
+  requestAnimationFrame(function() { setTimeout(runTest14); } );
+}
+
+// Crash test for bug 1615261
+async function runTest14() {
   frameElts[0].contentDocument.body.innerHTML =
     '<style> div { width: 100px; height: 100px; background-image: url("animated.gif"); } </style>' +
     '<div>Firefox will crash if you try and print this page</div>';
