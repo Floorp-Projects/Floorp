@@ -3434,14 +3434,14 @@ BrowserGlue.prototype = {
   },
 
   _maybeShowDefaultBrowserPrompt() {
-    const willPrompt = DefaultBrowserCheck.willCheckDefaultBrowser(
-      /* isStartupCheck */ true
+    DefaultBrowserCheck.willCheckDefaultBrowser(/* isStartupCheck */ true).then(
+      willPrompt => {
+        if (!willPrompt) {
+          return;
+        }
+        DefaultBrowserCheck.prompt(BrowserWindowTracker.getTopWindow());
+      }
     );
-    if (!willPrompt) {
-      return;
-    }
-
-    DefaultBrowserCheck.prompt(BrowserWindowTracker.getTopWindow());
   },
 
   async _migrateMatchBucketsPrefForUI66() {
@@ -4436,7 +4436,7 @@ var DefaultBrowserCheck = {
    *   If true, prefs will be set and telemetry will be recorded.
    * @returns {boolean} True if the default browser check prompt will be shown.
    */
-  willCheckDefaultBrowser(isStartupCheck) {
+  async willCheckDefaultBrowser(isStartupCheck) {
     // Perform default browser checking.
     if (!ShellService) {
       return false;
@@ -4466,6 +4466,9 @@ var DefaultBrowserCheck = {
       ? Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount")
       : 0;
 
+    // If SessionStartup's state is not initialized, checking sessionType will set
+    // its internal state to "do not restore".
+    await SessionStartup.onceInitialized;
     let willRecoverSession =
       SessionStartup.sessionType == SessionStartup.RECOVER_SESSION;
 
