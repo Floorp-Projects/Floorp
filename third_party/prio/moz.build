@@ -42,3 +42,8 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+# Use PKCS11 v2 struct definitions for now, otherwise NSS requires
+# CK_GCM_PARAMS.ulIvBits to be set. This workaround is only required
+# until NSS 3.52 RTM and upstream correctly initializes the field.
+DEFINES['NSS_PKCS11_2_0_COMPAT'] = True
