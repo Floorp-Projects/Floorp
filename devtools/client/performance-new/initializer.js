@@ -77,17 +77,7 @@ const {
  */
 async function gInit(perfFront, pageContext, openAboutProfiling) {
   const store = createStore(reducers);
-  // Get the supported features from the debuggee. If the debuggee is before
-  // Firefox 72, then return null, as the actor does not support that feature.
-  // We can't use `target.actorHasMethod`, because the target is not provided
-  // when remote debugging. Unfortunately, this approach means that if this
-  // function throws a real error, it will get swallowed here.
-  //
-  // Wrap the the getSupportedFeatures call in a Promise, as the method returns a
-  // `MaybePromise<string[]>`, and we want to be able to run catch().
-  const supportedFeatures = await Promise.resolve(
-    perfFront.getSupportedFeatures()
-  ).catch(() => null);
+  const supportedFeatures = await perfFront.getSupportedFeatures();
 
   if (!openAboutProfiling) {
     openAboutProfiling = () => {
