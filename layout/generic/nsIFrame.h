@@ -851,6 +851,9 @@ class nsIFrame : public nsQueryFrame {
   virtual void SetAdditionalComputedStyle(int32_t aIndex,
                                           ComputedStyle* aComputedStyle) = 0;
 
+  /**
+   * @param aSelectionStatus nsISelectionController::getDisplaySelection.
+   */
   already_AddRefed<ComputedStyle> ComputeSelectionStyle(
       int16_t aSelectionStatus) const;
 
