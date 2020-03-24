@@ -101,7 +101,7 @@ def make_trimmed_taskgraph_cache(graph_cache, dep_cache, target_file=None):
         return
 
     target_task_set = set()
-    if target_file:
+    if target_file and os.path.isfile(target_file):
         with open(target_file) as f:
             target_task_set = set(json.load(f).keys())
 
