@@ -198,6 +198,27 @@ void DocumentOrShadowRoot::ClearAdoptedStyleSheets() {
   mAdoptedStyleSheets.Clear();
 }
 
+void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
+    DocumentOrShadowRoot& aSource) {
+  Document& ownerDoc = *AsNode().OwnerDoc();
+  Sequence<OwningNonNull<StyleSheet>> list;
+  if (!list.SetCapacity(mAdoptedStyleSheets.Length(), fallible)) {
+    return;
+  }
+
+  // TODO(nordzilla, bug 1621415) We can improve the performance here.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1622322
+  for (auto& sheet : aSource.mAdoptedStyleSheets) {
+    DebugOnly<bool> succeeded =
+        list.AppendElement(sheet->CloneAdoptedSheet(ownerDoc), fallible);
+    MOZ_ASSERT(succeeded);
+  }
+
+  ErrorResult rv;
+  SetAdoptedStyleSheets(list, rv);
+  MOZ_ASSERT(!rv.Failed());
+}
+
 Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
   if (MOZ_UNLIKELY(aElementId.IsEmpty())) {
     nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());

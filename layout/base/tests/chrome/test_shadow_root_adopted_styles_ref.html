@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<body>
+<script>
+  document.body.attachShadow({mode: "open"}).innerHTML = `
+    <div class="target"></div>
+    <style>
+      .target { width: 100px; height: 100px; border-style: solid; border-color: blue; }
+    </style>
+  `;
+</script>

@@ -107,6 +107,7 @@ void ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther) {
       }
     }
   }
+  CloneAdoptedSheetsFrom(*aOther);
 }
 
 nsresult ShadowRoot::Bind() {

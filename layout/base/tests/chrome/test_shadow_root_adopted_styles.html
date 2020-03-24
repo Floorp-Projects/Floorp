@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<body>
+<script>
+  document.body.attachShadow({mode: "open"}).innerHTML = `
+    <div class="target"></div>
+  `;
+  const sheet = new CSSStyleSheet();
+  document.body.shadowRoot.adoptedStyleSheets = [sheet];
+  sheet.replaceSync(".target { width: 100px; height: 100px; border-style: solid; border-color: blue; }");
+</script>
