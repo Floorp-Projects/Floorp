@@ -32,14 +32,10 @@ const STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES = 32;
 const FXA_OAUTH_OPTIONS = {
   scope: STORAGE_SYNC_SCOPE,
 };
-const SCALAR_EXTENSIONS_USING = "storage.sync.api.usage.extensions_using";
-const SCALAR_ITEMS_STORED = "storage.sync.api.usage.items_stored";
-const SCALAR_STORAGE_CONSUMED = "storage.sync.api.usage.storage_consumed";
 // Default is 5sec, which seems a bit aggressive on the open internet
 const KINTO_REQUEST_TIMEOUT = 30000;
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -752,12 +748,9 @@ class ExtensionStorageSync {
   /**
    * @param {FXAccounts} fxaService (Optional) If not
    *    present, trying to sync will fail.
-   * @param {nsITelemetry} telemetry Telemetry service to use to
-   *    report sync usage.
    */
-  constructor(fxaService, telemetry) {
+  constructor(fxaService) {
     this._fxaService = fxaService;
-    this._telemetry = telemetry;
     this.cryptoCollection = new CryptoCollection(fxaService);
     this.listeners = new WeakMap();
   }
@@ -811,23 +804,6 @@ class ExtensionStorageSync {
       });
     });
     await Promise.all(promises);
-
-    // This needs access to an adapter, but any adapter will do
-    const collection = await this.cryptoCollection.getCollection();
-    const storage = await collection.db.calculateStorage();
-    this._telemetry.scalarSet(SCALAR_EXTENSIONS_USING, storage.length);
-    for (let { collectionName, size, numRecords } of storage) {
-      this._telemetry.keyedScalarSet(
-        SCALAR_ITEMS_STORED,
-        collectionName,
-        numRecords
-      );
-      this._telemetry.keyedScalarSet(
-        SCALAR_STORAGE_CONSUMED,
-        collectionName,
-        size
-      );
-    }
   }
 
   async sync(extension, collection) {
@@ -1387,7 +1363,4 @@ class ExtensionStorageSync {
   }
 }
 this.ExtensionStorageSync = ExtensionStorageSync;
-extensionStorageSync = new ExtensionStorageSync(
-  _fxaService,
-  Services.telemetry
-);
+extensionStorageSync = new ExtensionStorageSync(_fxaService);
