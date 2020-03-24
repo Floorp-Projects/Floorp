@@ -3526,7 +3526,9 @@ void CodeGenerator::visitLambda(LLambda* lir) {
 
   emitLambdaInit(output, envChain, info);
 
-  if (info.flags & FunctionFlags::EXTENDED) {
+  if (info.flags.isExtended()) {
+    MOZ_ASSERT(info.flags.allowSuperProperty() ||
+               info.flags.isSelfHostedBuiltin());
     static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2,
                   "All slots must be initialized");
     masm.storeValue(UndefinedValue(),
@@ -3568,7 +3570,7 @@ void CodeGenerator::visitLambdaArrow(LLambdaArrow* lir) {
   emitLambdaInit(output, envChain, info);
 
   // Initialize extended slots. Lexical |this| is stored in the first one.
-  MOZ_ASSERT(info.flags & FunctionFlags::EXTENDED);
+  MOZ_ASSERT(info.flags.isExtended());
   static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2,
                 "All slots must be initialized");
   static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
@@ -3593,13 +3595,13 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
     uint32_t word;
   } u;
   u.s.nargs = info.nargs;
-  u.s.flags = info.flags;
+  u.s.flags = info.flags.toRaw();
 
   static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
                 "the code below needs to be adapted");
   masm.store32(Imm32(u.word), Address(output, JSFunction::offsetOfNargs()));
-  masm.storePtr(ImmGCPtr(info.scriptOrLazyScript),
-                Address(output, JSFunction::offsetOfScriptOrLazyScript()));
+  masm.storePtr(ImmGCPtr(info.baseScript),
+                Address(output, JSFunction::offsetOfBaseScript()));
   masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
   // No post barrier needed because output is guaranteed to be allocated in
   // the nursery.
@@ -3610,11 +3612,10 @@ void CodeGenerator::emitLambdaInit(Register output, Register envChain,
 void CodeGenerator::visitFunctionWithProto(LFunctionWithProto* lir) {
   Register envChain = ToRegister(lir->environmentChain());
   Register prototype = ToRegister(lir->prototype());
-  const LambdaFunctionInfo& info = lir->mir()->info();
 
   pushArg(prototype);
   pushArg(envChain);
-  pushArg(ImmGCPtr(info.funUnsafe()));
+  pushArg(ImmGCPtr(lir->mir()->function()));
 
   using Fn =
       JSObject* (*)(JSContext*, HandleFunction, HandleObject, HandleObject);

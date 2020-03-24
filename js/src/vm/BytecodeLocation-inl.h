@@ -56,6 +56,13 @@ inline JSObject* BytecodeLocation::getObject(const JSScript* script) const {
   return script->getObject(this->rawBytecode_);
 }
 
+inline JSFunction* BytecodeLocation::getFunction(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  MOZ_ASSERT(is(JSOp::Lambda) || is(JSOp::LambdaArrow) ||
+             is(JSOp::FunWithProto));
+  return script->getFunction(this->rawBytecode_);
+}
+
 inline js::RegExpObject* BytecodeLocation::getRegExp(
     const JSScript* script) const {
   MOZ_ASSERT(this->isValid());

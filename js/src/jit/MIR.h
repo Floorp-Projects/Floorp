@@ -6798,27 +6798,29 @@ struct LambdaFunctionInfo {
   CompilerFunction fun_;
 
  public:
-  uint16_t flags;
+  js::BaseScript* baseScript;
+  js::FunctionFlags flags;
   uint16_t nargs;
-  gc::Cell* scriptOrLazyScript;
   bool singletonType;
   bool useSingletonForClone;
 
-  explicit LambdaFunctionInfo(JSFunction* fun)
+  LambdaFunctionInfo(JSFunction* fun, BaseScript* baseScript,
+                     FunctionFlags flags, uint16_t nargs, bool singletonType,
+                     bool useSingletonForClone)
       : fun_(fun),
-        flags(fun->flags().toRaw()),
-        nargs(fun->nargs()),
-        scriptOrLazyScript(fun->baseScript()),
-        singletonType(fun->isSingleton()),
-        useSingletonForClone(ObjectGroup::useSingletonForClone(fun)) {
-    // If this assert fails, make sure CodeGenerator::visitLambda does the
-    // right thing. We can't assert this off-thread in CodeGenerator,
-    // because fun->isAsync() accesses the script/lazyScript and can race
-    // with delazification on the main thread.
-    MOZ_ASSERT_IF(flags & FunctionFlags::EXTENDED,
-                  fun->isArrow() || fun->allowSuperProperty() ||
-                      fun->isSelfHostedBuiltin());
-  }
+        baseScript(baseScript),
+        flags(flags),
+        nargs(nargs),
+        singletonType(singletonType),
+        useSingletonForClone(useSingletonForClone) {}
+
+  LambdaFunctionInfo(const LambdaFunctionInfo& other)
+      : fun_(static_cast<JSFunction*>(other.fun_)),
+        baseScript(other.baseScript),
+        flags(other.flags),
+        nargs(other.nargs),
+        singletonType(other.singletonType),
+        useSingletonForClone(other.useSingletonForClone) {}
 
   // Be careful when calling this off-thread. Don't call any JSFunction*
   // methods that depend on script/lazyScript - this can race with
@@ -6829,11 +6831,10 @@ struct LambdaFunctionInfo {
     if (!roots.append(fun_)) {
       return false;
     }
-    return roots.append(fun_->baseScript());
+    return roots.append(baseScript);
   }
 
  private:
-  LambdaFunctionInfo(const LambdaFunctionInfo&) = delete;
   void operator=(const LambdaFunctionInfo&) = delete;
 };
 
@@ -6841,13 +6842,14 @@ class MLambda : public MBinaryInstruction, public SingleObjectPolicy::Data {
   const LambdaFunctionInfo info_;
 
   MLambda(TempAllocator& alloc, CompilerConstraintList* constraints,
-          MDefinition* envChain, MConstant* cst)
-      : MBinaryInstruction(classOpcode, envChain, cst),
-        info_(&cst->toObject().as<JSFunction>()) {
+          MDefinition* envChain, MConstant* cst, const LambdaFunctionInfo& info)
+      : MBinaryInstruction(classOpcode, envChain, cst), info_(info) {
     setResultType(MIRType::Object);
-    JSFunction* fun = info().funUnsafe();
-    if (!fun->isSingleton() && !ObjectGroup::useSingletonForClone(fun)) {
-      setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
+    if (!JitOptions.warpBuilder) {
+      JSFunction* fun = info.funUnsafe();
+      if (!info.singletonType && !info.useSingletonForClone) {
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
+      }
     }
   }
 
@@ -6872,14 +6874,17 @@ class MLambdaArrow
   const LambdaFunctionInfo info_;
 
   MLambdaArrow(TempAllocator& alloc, CompilerConstraintList* constraints,
-               MDefinition* envChain, MDefinition* newTarget, MConstant* cst)
+               MDefinition* envChain, MDefinition* newTarget, MConstant* cst,
+               const LambdaFunctionInfo& info)
       : MTernaryInstruction(classOpcode, envChain, newTarget, cst),
-        info_(&cst->toObject().as<JSFunction>()) {
+        info_(info) {
     setResultType(MIRType::Object);
-    JSFunction* fun = info().funUnsafe();
-    MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
-    if (!fun->isSingleton()) {
-      setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
+    if (!JitOptions.warpBuilder) {
+      JSFunction* fun = info.funUnsafe();
+      MOZ_ASSERT(!info.useSingletonForClone);
+      if (!info.singletonType) {
+        setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, fun));
+      }
     }
   }
 
@@ -6901,12 +6906,12 @@ class MLambdaArrow
 class MFunctionWithProto : public MTernaryInstruction,
                            public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>,
                                             ObjectPolicy<2>>::Data {
-  const LambdaFunctionInfo info_;
+  CompilerFunction fun_;
 
   MFunctionWithProto(MDefinition* envChain, MDefinition* prototype,
                      MConstant* cst)
       : MTernaryInstruction(classOpcode, envChain, prototype, cst),
-        info_(&cst->toObject().as<JSFunction>()) {
+        fun_(&cst->toObject().as<JSFunction>()) {
     setResultType(MIRType::Object);
   }
 
@@ -6916,12 +6921,12 @@ class MFunctionWithProto : public MTernaryInstruction,
   NAMED_OPERANDS((0, environmentChain), (1, prototype))
 
   MConstant* functionOperand() const { return getOperand(2)->toConstant(); }
-  const LambdaFunctionInfo& info() const { return info_; }
+  JSFunction* function() const { return fun_; }
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
   bool appendRoots(MRootList& roots) const override {
-    return info_.appendRoots(roots);
+    return roots.append(fun_);
   }
 
   bool possiblyCalls() const override { return true; }

@@ -25,7 +25,8 @@ class MIRGenerator;
   _(WarpRegExp)                  \
   _(WarpBuiltinProto)            \
   _(WarpGetIntrinsic)            \
-  _(WarpGetImport)
+  _(WarpGetImport)               \
+  _(WarpLambda)
 
 // WarpOpSnapshot is the base class for data attached to a single bytecode op by
 // WarpOracle. This is typically data that WarpBuilder can't read off-thread
@@ -141,6 +142,28 @@ class WarpGetImport : public WarpOpSnapshot {
   uint32_t numFixedSlots() const { return numFixedSlots_; }
   uint32_t slot() const { return slot_; }
   bool needsLexicalCheck() const { return needsLexicalCheck_; }
+};
+
+// JSFunction info we don't want to read off-thread for JSOp::Lambda and
+// JSOp::LambdaArrow.
+class WarpLambda : public WarpOpSnapshot {
+  // TODO: trace this
+  BaseScript* baseScript_;
+  FunctionFlags flags_;
+  uint16_t nargs_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpLambda;
+
+  WarpLambda(uint32_t offset, BaseScript* baseScript, FunctionFlags flags,
+             uint16_t nargs)
+      : WarpOpSnapshot(ThisKind, offset),
+        baseScript_(baseScript),
+        flags_(flags),
+        nargs_(nargs) {}
+  BaseScript* baseScript() const { return baseScript_; }
+  FunctionFlags flags() const { return flags_; }
+  uint16_t nargs() const { return nargs_; }
 };
 
 // Snapshot data for the environment object(s) created in the script's prologue.

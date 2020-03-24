@@ -11863,6 +11863,12 @@ AbortReasonOr<Ok> IonBuilder::jsop_derivedclassconstructor() {
   return resumeAfter(constructor);
 }
 
+static LambdaFunctionInfo LambdaInfoFromFunction(JSFunction* fun) {
+  return LambdaFunctionInfo(fun, fun->baseScript(), fun->flags(), fun->nargs(),
+                            fun->isSingleton(),
+                            ObjectGroup::useSingletonForClone(fun));
+}
+
 AbortReasonOr<Ok> IonBuilder::jsop_lambda(JSFunction* fun) {
   MOZ_ASSERT(usesEnvironmentChain());
   MOZ_ASSERT(!fun->isArrow());
@@ -11873,8 +11879,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_lambda(JSFunction* fun) {
 
   MConstant* cst = MConstant::NewConstraintlessObject(alloc(), fun);
   current->add(cst);
-  MLambda* ins =
-      MLambda::New(alloc(), constraints(), current->environmentChain(), cst);
+  auto* ins = MLambda::New(alloc(), constraints(), current->environmentChain(),
+                           cst, LambdaInfoFromFunction(fun));
   current->add(ins);
   current->push(ins);
 
@@ -11889,8 +11895,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_lambda_arrow(JSFunction* fun) {
   MDefinition* newTargetDef = current->pop();
   MConstant* cst = MConstant::NewConstraintlessObject(alloc(), fun);
   current->add(cst);
-  MLambdaArrow* ins = MLambdaArrow::New(
-      alloc(), constraints(), current->environmentChain(), newTargetDef, cst);
+  auto* ins =
+      MLambdaArrow::New(alloc(), constraints(), current->environmentChain(),
+                        newTargetDef, cst, LambdaInfoFromFunction(fun));
   current->add(ins);
   current->push(ins);
 
