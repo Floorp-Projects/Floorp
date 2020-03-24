@@ -130,8 +130,12 @@ function createViewControllers(state, elements) {
     },
 
     updatePresets() {
+      const { Services } = lazyServices();
       const { presets, getRecordingPreferences } = lazyBackground();
-      const { presetName } = getRecordingPreferences("aboutprofiling");
+      const { presetName } = getRecordingPreferences(
+        "aboutprofiling",
+        Services.profiler.GetFeatures()
+      );
       const preset = presets[presetName];
       if (preset) {
         elements.presetDescription.style.display = "block";
@@ -298,7 +302,11 @@ function addPopupEventHandlers(state, elements, view) {
   });
 
   addHandler(elements.presetsMenuList, "command", () => {
-    changePreset("aboutprofiling", elements.presetsMenuList.value);
+    changePreset(
+      "aboutprofiling",
+      elements.presetsMenuList.value,
+      Services.profiler.GetFeatures()
+    );
     view.updatePresets();
   });
 
