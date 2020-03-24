@@ -18,17 +18,13 @@ import org.mozilla.fenix.settings.PhoneFeature
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsFragment : PreferenceFragmentCompat() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        showToolbar(getString(R.string.preferences_site_permissions))
-    }
-
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.site_permissions_preferences, rootKey)
     }
 
     override fun onResume() {
         super.onResume()
+        showToolbar(getString(R.string.preferences_site_permissions))
         setupPreferences()
     }
 

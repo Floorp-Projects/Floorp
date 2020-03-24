@@ -57,8 +57,6 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         phoneFeature = SitePermissionsManagePhoneFeatureFragmentArgs
             .fromBundle(requireArguments())
             .permission.toPhoneFeature()
-
-        showToolbar(phoneFeature.getLabel(requireContext()))
         settings = requireContext().settings()
     }
 
@@ -84,6 +82,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        showToolbar(phoneFeature.getLabel(requireContext()))
         initBlockedByAndroidView(phoneFeature, blockedByAndroidView)
     }
 
