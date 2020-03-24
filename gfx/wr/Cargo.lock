@@ -1542,6 +1542,7 @@ dependencies = [
  "cc 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glsl-to-cxx 0.1.0",
+ "webrender_build 0.0.1",
 ]
 
 [[package]]

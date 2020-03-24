@@ -4183,6 +4183,7 @@ dependencies = [
  "cc",
  "gleam",
  "glsl-to-cxx",
+ "webrender_build",
 ]
 
 [[package]]

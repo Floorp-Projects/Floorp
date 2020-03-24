@@ -4,12 +4,14 @@
 
 extern crate cc;
 extern crate glsl_to_cxx;
+extern crate webrender_build;
 
 use std::collections::HashSet;
 use std::fmt::Write;
+use webrender_build::shader::{ShaderFeatureFlags, get_shader_features};
 
-fn write_load_shader(shader_keys: &[&str]) {
-    let shaders: Vec<_> = shader_keys.iter().map(|s| s.replace(':', "_")).collect();
+fn write_load_shader(shader_keys: &[String]) {
+    let shaders: Vec<_> = shader_keys.iter().map(|s| s.replace(',', "_")).collect();
     let mut load_shader = String::new();
     for s in &shaders {
         let _ = write!(load_shader, "#include \"{}.h\"\n", s);
@@ -48,7 +50,7 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     imported.push_str("#define SWGL 1\n");
     imported.push_str("#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024U\n");
 
-    let mut features = shader_key.split(':');
+    let mut features = shader_key.split(',');
     let basename = features.next().unwrap();
     for feature in features {
         let _ = write!(imported, "#define WR_FEATURE_{}\n", feature);
@@ -56,7 +58,7 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
 
     process_imports(shader_dir, basename, &mut HashSet::new(), &mut imported);
 
-    let shader = shader_key.replace(':', "_");
+    let shader = shader_key.replace(',', "_");
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let imp_name = format!("{}/{}.c", out_dir, shader);
@@ -94,68 +96,27 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     std::fs::write(format!("{}/{}.h", out_dir, shader), result).unwrap();
 }
 
-const WR_SHADERS: &'static [&'static str] = &[
-    "brush_blend:ALPHA_PASS",
-    "brush_blend",
-    "brush_image:ALPHA_PASS",
-    "brush_image",
-    "brush_image:REPETITION:ANTIALIASING:ALPHA_PASS",
-    "brush_image:REPETITION:ANTIALIASING",
-    "brush_linear_gradient:ALPHA_PASS",
-    "brush_linear_gradient:DITHERING:ALPHA_PASS",
-    "brush_linear_gradient:DITHERING",
-    "brush_linear_gradient",
-    "brush_mix_blend:ALPHA_PASS",
-    "brush_mix_blend",
-    "brush_opacity:ALPHA_PASS",
-    "brush_radial_gradient:ALPHA_PASS",
-    "brush_radial_gradient:DITHERING:ALPHA_PASS",
-    "brush_radial_gradient:DITHERING",
-    "brush_radial_gradient",
-    "brush_solid:ALPHA_PASS",
-    "brush_solid",
-    "brush_yuv_image",
-    "brush_yuv_image:TEXTURE_2D:YUV:NV12",
-    "brush_yuv_image:YUV",
-    "brush_yuv_image:YUV:ALPHA_PASS",
-    "brush_yuv_image:YUV:INTERLEAVED",
-    "brush_yuv_image:YUV:NV12:ALPHA_PASS",
-    "brush_yuv_image:YUV:NV12",
-    "brush_yuv_image:YUV:PLANAR",
-    "composite",
-    "composite:YUV",
-    "cs_blur:ALPHA_TARGET",
-    "cs_blur:COLOR_TARGET",
-    "cs_border_segment",
-    "cs_border_solid",
-    "cs_clip_box_shadow",
-    "cs_clip_image",
-    "cs_clip_rectangle:FAST_PATH",
-    "cs_clip_rectangle",
-    "cs_gradient",
-    "cs_line_decoration",
-    "cs_scale",
-    "cs_svg_filter",
-    "debug_color",
-    "debug_font",
-    "ps_split_composite",
-    "ps_text_run:DUAL_SOURCE_BLENDING:ALPHA_PASS",
-    "ps_text_run:GLYPH_TRANSFORM:ALPHA_PASS",
-    "ps_text_run:DUAL_SOURCE_BLENDING:GLYPH_TRANSFORM:ALPHA_PASS",
-    "ps_text_run:ALPHA_PASS",
-];
-
 fn main() {
     let shader_dir = match std::env::var("MOZ_SRC") {
         Ok(dir) => dir + "/gfx/wr/webrender/res",
         Err(_) => std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/../webrender/res",
     };
 
-    for shader in WR_SHADERS {
+    let shader_flags =
+        ShaderFeatureFlags::GL |
+        ShaderFeatureFlags::DUAL_SOURCE_BLENDING;
+    let mut shaders: Vec<String> = Vec::new();
+    for (name, features) in get_shader_features(shader_flags) {
+        shaders.extend(features.iter().map(|f| {
+            if f.is_empty() { name.to_owned() } else { format!("{},{}", name, f) }
+        }));
+    }
+
+    for shader in &shaders {
         translate_shader(shader, &shader_dir);
     }
 
-    write_load_shader(WR_SHADERS);
+    write_load_shader(&shaders);
 
     println!("cargo:rerun-if-changed=src/gl_defs.h");
     println!("cargo:rerun-if-changed=src/glsl.h");
