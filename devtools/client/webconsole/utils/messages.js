@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const l10n = require("devtools/client/webconsole/utils/l10n");
 const {
   getUrlDetails,
@@ -564,6 +565,13 @@ function getWarningGroupLabel(firstMessage) {
     return replaceURL(firstMessage.messageText, "<URL>");
   }
 
+  if (isCookieSameSiteMessage(firstMessage)) {
+    if (Services.prefs.getBoolPref("network.cookie.sameSite.laxByDefault")) {
+      return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultEnabled");
+    }
+    return l10n.getStr("webconsole.group.cookieSameSiteLaxByDefaultDisabled");
+  }
+
   return "";
 }
 
@@ -627,6 +635,10 @@ function getWarningGroupType(message) {
     return MESSAGE_TYPE.TRACKING_PROTECTION_GROUP;
   }
 
+  if (isCookieSameSiteMessage(message)) {
+    return MESSAGE_TYPE.COOKIE_SAMESITE_GROUP;
+  }
+
   return null;
 }
 
@@ -655,6 +667,7 @@ function isWarningGroup(message) {
   return (
     message.type === MESSAGE_TYPE.CONTENT_BLOCKING_GROUP ||
     message.type === MESSAGE_TYPE.TRACKING_PROTECTION_GROUP ||
+    message.type === MESSAGE_TYPE.COOKIE_SAMESITE_GROUP ||
     message.type === MESSAGE_TYPE.CORS_GROUP ||
     message.type === MESSAGE_TYPE.CSP_GROUP
   );
@@ -683,6 +696,16 @@ function isContentBlockingMessage(message) {
 function isTrackingProtectionMessage(message) {
   const { category } = message;
   return category == "Tracking Protection";
+}
+
+/**
+ * Returns true if the message is a cookie message.
+ * @param {ConsoleMessage} message
+ * @returns {Boolean}
+ */
+function isCookieSameSiteMessage(message) {
+  const { category } = message;
+  return category == "cookieSameSite";
 }
 
 function getArrayTypeNames() {
