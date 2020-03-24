@@ -3863,6 +3863,13 @@ Checker.prototype = {
 
     let url = Services.appinfo.updateURL;
 
+    if (Services.policies) {
+      let policies = Services.policies.getActivePolicies();
+      if (policies && "AppUpdateURL" in policies) {
+        url = policies.AppUpdateURL.toString();
+      }
+    }
+
     if (!url) {
       LOG("Checker:getUpdateURL - update URL not defined");
       return null;
