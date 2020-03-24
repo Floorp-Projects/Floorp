@@ -137,6 +137,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
     DEFINES['USE_SSE2'] = True
     SOURCES['AudioNodeEngineSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
+# Allow outputing trace points from Web Audio API code
+DEFINES['TRACING'] = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
