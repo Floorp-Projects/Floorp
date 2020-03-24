@@ -19,9 +19,13 @@
     <script defer="defer" type="module" src="chrome://global/content/certviewer/certDecoder.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/certviewer.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-group.js"></script>
+    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-group-container.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-item.js"></script>
+    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/certificate-tabs-section.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/error-section.js"></script>
+    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/about-certificate-section.js"></script>
+    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/about-certificate-items.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/certviewer/certviewer.css">
     <title>about:certificate</title>
@@ -30,8 +34,13 @@
     <template id="certificate-section-template" class="section">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-section.css">
       <h1 class="title"></h1>
+    </template>
+
+    <template id="certificate-tabs-template">
       <div class="certificate-tabs" role="tablist"></div>
-      <div class="info-groups"></div>
+    </template>
+
+    <template id="info-groups-template">
     </template>
 
     <template id="info-item-template">
@@ -51,6 +60,21 @@
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/error-section.css">
       <h1 class="title"></h1>
       <span class="error"></span>
+    </template>
+
+    <template id="about-certificate-template" class="section">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-section.css">
+      <h1 class="title"></h1>
+    </template>
+
+    <template id="about-certificate-items-template">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/about-certificate-section.css">
+    </template>
+
+    <template id="list-item-template">
+      <link rel="stylesheet" href="chrome://global/content/certviewer/components/list-item.css">
+      <a class="cert-url"><span class="item-name"></span></a>
+      <button class="export"></button>
     </template>
   </body>
 </html>

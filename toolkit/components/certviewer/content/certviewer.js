@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async e => {
   let url = new URL(document.URL);
   let certInfo = url.searchParams.getAll("cert");
   if (certInfo.length === 0) {
-    await render(false, true);
+    render({}, false, true);
     return;
   }
   certInfo = certInfo.map(cert => decodeURIComponent(cert));
@@ -23,7 +23,9 @@ document.addEventListener("DOMContentLoaded", async e => {
 export const updateSelectedItem = (() => {
   let state;
   return selectedItem => {
-    let certificateSection = document.querySelector("certificate-section");
+    let certificateSection =
+      document.querySelector("certificate-section") ||
+      document.querySelector("about-certificate-section");
     if (selectedItem) {
       if (state !== selectedItem) {
         state = selectedItem;
@@ -406,10 +408,20 @@ export const adjustCertInformation = cert => {
   };
 };
 
-const render = async (certs, error) => {
-  await customElements.whenDefined("certificate-section");
-  const CertificateSection = customElements.get("certificate-section");
-  document.querySelector("body").append(new CertificateSection(certs, error));
+// isAboutCertificate means to the standalone page about:certificate, which
+// uses a different customElement than opening a certain certificate
+const render = async (certs, error, isAboutCertificate = false) => {
+  if (isAboutCertificate) {
+    await customElements.whenDefined("about-certificate-section");
+    const AboutCertificateSection = customElements.get(
+      "about-certificate-section"
+    );
+    document.querySelector("body").append(new AboutCertificateSection(certs));
+  } else {
+    await customElements.whenDefined("certificate-section");
+    const CertificateSection = customElements.get("certificate-section");
+    document.querySelector("body").append(new CertificateSection(certs, error));
+  }
   return Promise.resolve();
 };
 
