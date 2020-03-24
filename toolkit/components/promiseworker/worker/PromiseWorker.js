@@ -100,7 +100,7 @@ AbstractWorker.prototype = {
   /**
    * Handle a message.
    */
-  async handleMessage(msg) {
+  handleMessage(msg) {
     let data = msg.data;
     this.log("Received message", data);
     let id = data.id;
@@ -126,7 +126,7 @@ AbstractWorker.prototype = {
     let method = data.fun;
     try {
       this.log("Calling method", method);
-      result = await this.dispatch(method, data.args);
+      result = this.dispatch(method, data.args);
       this.log("Method", method, "succeeded");
     } catch (ex) {
       exn = ex;
