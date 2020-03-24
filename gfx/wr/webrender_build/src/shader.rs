@@ -14,6 +14,8 @@ use std::path::Path;
 use std::collections::HashSet;
 use std::collections::hash_map::DefaultHasher;
 
+pub use crate::shader_features::*;
+
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Default)]
 #[cfg_attr(feature = "serialize_program", derive(Deserialize, Serialize))]
 pub struct ProgramSourceDigest(u64);
