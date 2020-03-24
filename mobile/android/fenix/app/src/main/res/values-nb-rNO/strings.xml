@@ -62,7 +62,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Rediger bokmerke</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Utvidelser</string>
+    <string name="browser_menu_add_ons">Tillegg</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Ingen utvidelser her</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -71,9 +71,9 @@
     <string name="browser_menu_whats_new">Hva er nytt</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Innstillinger</string>
-    <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Ditt bibliotek</string>
 
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Bibliotek</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Datamaskinversjon</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -87,7 +87,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Ny fane</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Lagre i samling</string>
+    <string name="browser_menu_save_to_collection_2">Lagre i samling</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Rapporter problem med nettstedet</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -606,18 +606,16 @@
     <string name="tracking_protection_on">På</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Av</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video og lyd er blokkert</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video og lyd er tillatt</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Tillat lyd og video</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Tillat lyd og video bare på Wi-Fi</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Blokker lyd og video bare på mobildata</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Lyd og video spilles av på Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Blokker lyd</string>
+    <string name="preference_option_autoplay_block_audio2">Blokker bare lyd</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Blokker video og lyd</string>
+    <string name="preference_option_autoplay_blocked3">Blokker lyd og video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">På</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

@@ -65,7 +65,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Upravit záložku</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Správce doplňků</string>
+    <string name="browser_menu_add_ons">Doplňky</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Žádné doplňky</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -75,7 +75,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Nastavení</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Knihovna</string>
+    <string name="browser_menu_library">Knihovna</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Verze pro počítač</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -89,7 +89,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Nový panel</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Uložit do sbírky</string>
+    <string name="browser_menu_save_to_collection_2">Uložit do sbírky</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Nahlásit chybu stránky</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -622,19 +622,16 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Vypnuta</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Blokováno pro videa i zvuky</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Povoleno pro videa i zvuky</string>
-
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Povolit zvuk i video</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Povolit zvuk i video jen přes Wi-Fi</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Blokovat automatické přehrávání zvuků i videí při připojení přes mobilní data</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Na Wi-Fi připojení se zvuky i videa automaticky přehrávat budou</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Blokovat zvuk</string>
+    <string name="preference_option_autoplay_block_audio2">Blokovat automatické přehrávání zvuků</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Blokovat zvuk i video</string>
+    <string name="preference_option_autoplay_blocked3">Blokovat automatické přehrávání zvuků i videí</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Zapnuto</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

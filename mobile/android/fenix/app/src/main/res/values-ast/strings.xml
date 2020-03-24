@@ -59,7 +59,7 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string name="browser_menu_bookmark">Amestar a marcadores</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Xestor de complementos</string>
+    <string name="browser_menu_add_ons">Complementos</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Equí nun hai complementos</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -69,7 +69,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Axustes</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Biblioteca de to</string>
+    <string name="browser_menu_library">Biblioteca</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Sitiu d\'escritoriu</string>
 
@@ -83,8 +83,6 @@
     <string name="browser_menu_private_tab">Llingüeta privada</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Llingüeta nueva</string>
-    <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Guardar nuna coleición</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Informar d\'un problema col sitiu</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -267,6 +265,8 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Llingüetes recibíes</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Los avisos de les llingüetes recibíes d\'otros preseos con Firefox n\'execución.</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Llingüeta de %s</string>
 
@@ -515,12 +515,14 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Non</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Bloquiase</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Permítese</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Bloquiar namás l\'audiu y videu colos datos móviles</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">L\'audiu y videu va reproducise namás per Wi-Fi</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Bloquiar namás l\'audiu</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Bloquiar l\'audiu y videu</string>
+    <string name="preference_option_autoplay_blocked3">Bloquiar l\'audiu y videu</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Sí</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -610,6 +612,10 @@
     <string name="notification_pbm_channel_name">Sesión de restolar en privao</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Toca pa zarrar les llingüetes privaes</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Abrir</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Desaniciar y abrir</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Cola potencia de</string>
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -819,7 +825,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Usar una direición de corréu</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_disconnect">Encaboxar</string>
+    <string name="sign_out_disconnect">Desconeutar</string>
 
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Encaboxar</string>
@@ -903,6 +909,8 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Buelgues</string>
 
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Evita la recoyida de datos identificables de forma esclusiva del preséu que puen usase pa rastrexar.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Conteníu que rastrexa</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->

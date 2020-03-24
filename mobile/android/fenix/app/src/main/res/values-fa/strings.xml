@@ -58,7 +58,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ویرایش نشانک</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">مدیریت افزودنی‌ها</string>
+    <string name="browser_menu_add_ons">افزونه‌ها</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">هیچ افزودنی در اینجا وجود ندارد</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -68,7 +68,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">تنظیمات</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">کتابخانه شما</string>
+    <string name="browser_menu_library">کتابخانه</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">سایت دسک تاپ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -82,7 +82,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">زبانه جدید</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">افزودن به مجموعه</string>
+    <string name="browser_menu_save_to_collection_2">افزودن به مجموعه</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">گزارش مشکل پایگاه اینترنتی</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -594,18 +594,10 @@
     <string name="tracking_protection_on">روشن</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">خاموش</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">فیلم و صدا مسدود شده</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">فیلم و صدا اجازه داده شده</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">اجازه دادن صوت و ویدئو</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">اجازه دادن صوت و ویدئو فقط روی وای‌فای</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">مسدود کردن صوت</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">مسدود کردن ویدئو و صوت</string>
+    <string name="preference_option_autoplay_blocked3">مسدود کردن صوت و ویدئو</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">روشن</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

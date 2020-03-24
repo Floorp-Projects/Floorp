@@ -58,7 +58,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Uredi zaznamek</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Upravitelj dodatkov</string>
+    <string name="browser_menu_add_ons">Dodatki</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Tukaj ni dodatkov</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -68,7 +68,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Nastavitve</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Vaša knjižnica</string>
+    <string name="browser_menu_library">Knjižnica</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Stran za namizja</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -82,7 +82,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Nov zavihek</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Shrani v zbirko</string>
+    <string name="browser_menu_save_to_collection_2">Shrani v zbirko</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Prijavi napako strani</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -108,6 +108,8 @@
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Izbrani jezik</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Iskanje</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Uporabi jezik naprave</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -119,6 +121,8 @@
     <string name="search_shortcuts_engine_settings">Nastavitve iskalnika</string>
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">Tokrat išči z iskalnikom:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Izpolni povezavo iz odložišča</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Dovoli</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -356,6 +360,8 @@
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Odprti zavihki</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Zasebna seja</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Zasebni zavihki</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -641,6 +647,8 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Piškotki</string>
 
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Izbriši podatke brskanja</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Zgodovina brskanja</string>
 
@@ -675,6 +683,8 @@
     <string name="onboarding_firefox_account_signing_in">Prijavljanje …</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Zaščitite se</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button">Običajno</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Brskajte zasebno</string>
     <!-- text for the private browsing onbording card button, that launches settings -->

@@ -64,7 +64,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Yer imini düzenle</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Eklenti Yöneticisi</string>
+    <string name="browser_menu_add_ons">Eklentiler</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Hiç eklenti yok</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -74,7 +74,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Ayarlar</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Arşiviniz</string>
+    <string name="browser_menu_library">Arşiv</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Masaüstü sitesi</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -88,7 +88,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Yeni sekme</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Koleksiyona kaydet</string>
+    <string name="browser_menu_save_to_collection_2">Koleksiyona kaydet</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Site sorununu bildir</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -603,19 +603,12 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Kapalı</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video ve ses engellendi</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video ve sese izin verildi</string>
-
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Ses ve videoya izin ver</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Ses ve videoya yalnızca kablosuz ağda izin ver</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Sesi engelle</string>
+    <string name="preference_option_autoplay_block_audio2">Yalnızca sesi engelle</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Ses ve videoyu engelle</string>
+    <string name="preference_option_autoplay_blocked3">Ses ve videoyu engelle</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Açık</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

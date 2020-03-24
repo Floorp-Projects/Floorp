@@ -66,7 +66,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">북마크 편집</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">부가 기능 관리자</string>
+    <string name="browser_menu_add_ons">부가 기능</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">부가 기능 없음</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -76,7 +76,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">설정</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">내 라이브러리</string>
+    <string name="browser_menu_library">라이브러리</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">데스크톱 사이트</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -90,7 +90,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">새 탭</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">모음집에 저장</string>
+    <string name="browser_menu_save_to_collection_2">모음집에 저장</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">사이트 이슈 보고</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -623,18 +623,16 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">꺼짐</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">비디오 및 오디오 차단됨</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">비디오 및 오디오 허용됨</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">오디오 및 비디오 허용</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Wi-Fi 에서만 오디오 및 비디오 허용</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">셀룰러 데이터에서만 오디오 및 비디오 차단</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">오디오 및 비디오가 Wi-Fi에서 재생됩니다</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">오디오 차단</string>
+    <string name="preference_option_autoplay_block_audio2">오디오만 차단</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">비디오 및 오디오 차단</string>
+    <string name="preference_option_autoplay_blocked3">오디오 및 비디오 차단</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">켜짐</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

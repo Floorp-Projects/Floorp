@@ -65,7 +65,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Lesezeichen bearbeiten</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Add-ons-Verwaltung</string>
+    <string name="browser_menu_add_ons">Add-ons</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Hier sind keine Add-ons</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -75,7 +75,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Einstellungen</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Bibliothek</string>
+    <string name="browser_menu_library">Bibliothek</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop-Website</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -89,7 +89,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Neuer Tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">In Sammlung speichern</string>
+    <string name="browser_menu_save_to_collection_2">In Sammlung speichern</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Website-Problem melden</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -617,19 +617,16 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Aus</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video und Audio blockiert</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video und Audio erlaubt</string>
-
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Audio und Video erlauben</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Audio und Video nur per WLAN zulassen</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Audio und Video nur bei Mobilfunkverbindung blockieren</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Audio und Video werden bei WLAN-Verbindung wiedergegeben</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Audio blockieren</string>
+    <string name="preference_option_autoplay_block_audio2">Nur Audio blockieren</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Video und Audio blockieren</string>
+    <string name="preference_option_autoplay_blocked3">Audio und Video blockieren</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Ein</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
