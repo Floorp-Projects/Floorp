@@ -340,28 +340,6 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
   }
 
   // Helper methods for CallData
-  bool StoreConsoleData(JSContext* aCx, ConsoleCallData* aCallData) {
-    ConsoleCommon::ClearException ce(aCx);
-
-    JS::Rooted<JSObject*> arguments(
-        aCx, JS::NewArrayObject(aCx, aCallData->mCopiedArguments.Length()));
-    if (NS_WARN_IF(!arguments)) {
-      return false;
-    }
-
-    JS::Rooted<JS::Value> arg(aCx);
-    for (uint32_t i = 0; i < aCallData->mCopiedArguments.Length(); ++i) {
-      arg = aCallData->mCopiedArguments[i];
-      if (NS_WARN_IF(
-              !JS_DefineElement(aCx, arguments, i, arg, JSPROP_ENUMERATE))) {
-        return false;
-      }
-    }
-
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
-    return WriteData(aCx, value);
-  }
-
   void ProcessCallData(JSContext* aCx, Console* aConsole,
                        ConsoleCallData* aCallData) {
     AssertIsOnMainThread();
@@ -413,8 +391,8 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
     }
   }
 
-  // Helper methods for Profile calls
-  bool StoreProfileData(JSContext* aCx, const Sequence<JS::Value>& aArguments) {
+  // Generic
+  bool WriteArguments(JSContext* aCx, const Sequence<JS::Value>& aArguments) {
     ConsoleCommon::ClearException ce(aCx);
 
     JS::Rooted<JSObject*> arguments(
@@ -436,6 +414,7 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
     return WriteData(aCx, value);
   }
 
+  // Helper methods for Profile calls
   void ProcessProfileData(JSContext* aCx, Console::MethodName aMethodName,
                           const nsAString& aAction) {
     AssertIsOnMainThread();
@@ -547,13 +526,14 @@ class ConsoleWorkletRunnable : public Runnable, public ConsoleRunnable {
 class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable {
  public:
   static already_AddRefed<ConsoleCallDataWorkletRunnable> Create(
-      JSContext* aCx, Console* aConsole, ConsoleCallData* aConsoleData) {
+      JSContext* aCx, Console* aConsole, ConsoleCallData* aConsoleData,
+      const Sequence<JS::Value>& aArguments) {
     WorkletThread::AssertIsOnWorkletThread();
 
     RefPtr<ConsoleCallDataWorkletRunnable> runnable =
         new ConsoleCallDataWorkletRunnable(aConsole, aConsoleData);
 
-    if (!runnable->StoreConsoleData(aCx, aConsoleData)) {
+    if (!runnable->WriteArguments(aCx, aArguments)) {
       return nullptr;
     }
 
@@ -613,11 +593,11 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable,
 
   ~ConsoleWorkerRunnable() override = default;
 
-  bool Dispatch(JSContext* aCx) {
+  bool Dispatch(JSContext* aCx, const Sequence<JS::Value>& aArguments) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    if (NS_WARN_IF(!PreDispatch(aCx))) {
+    if (NS_WARN_IF(!WriteArguments(aCx, aArguments))) {
       RunBackOnWorkerThreadForCleanup(workerPrivate);
       return false;
     }
@@ -715,9 +695,6 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable,
     mConsole = nullptr;
   }
 
-  // This method is called in the owning thread of the Console object.
-  virtual bool PreDispatch(JSContext* aCx) = 0;
-
   // This method is called in the main-thread.
   virtual void RunConsole(JSContext* aCx, nsIGlobalObject* aGlobal,
                           WorkerPrivate* aWorkerPrivate,
@@ -748,10 +725,6 @@ class ConsoleCallDataWorkerRunnable final : public ConsoleWorkerRunnable {
 
  private:
   ~ConsoleCallDataWorkerRunnable() override { MOZ_ASSERT(!mCallData); }
-
-  bool PreDispatch(JSContext* aCx) override {
-    return StoreConsoleData(aCx, mCallData);
-  }
 
   void RunConsole(JSContext* aCx, nsIGlobalObject* aGlobal,
                   WorkerPrivate* aWorkerPrivate,
@@ -814,7 +787,7 @@ class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable {
     RefPtr<ConsoleProfileWorkletRunnable> runnable =
         new ConsoleProfileWorkletRunnable(aConsole, aName, aAction);
 
-    if (!runnable->StoreProfileData(aCx, aArguments)) {
+    if (!runnable->WriteArguments(aCx, aArguments)) {
       return nullptr;
     }
 
@@ -861,20 +834,12 @@ class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable {
 class ConsoleProfileWorkerRunnable final : public ConsoleWorkerRunnable {
  public:
   ConsoleProfileWorkerRunnable(Console* aConsole, Console::MethodName aName,
-                               const nsAString& aAction,
-                               const Sequence<JS::Value>& aArguments)
-      : ConsoleWorkerRunnable(aConsole),
-        mName(aName),
-        mAction(aAction),
-        mArguments(aArguments) {
+                               const nsAString& aAction)
+      : ConsoleWorkerRunnable(aConsole), mName(aName), mAction(aAction) {
     MOZ_ASSERT(aConsole);
   }
 
  private:
-  bool PreDispatch(JSContext* aCx) override {
-    return StoreProfileData(aCx, mArguments);
-  }
-
   void RunConsole(JSContext* aCx, nsIGlobalObject* aGlobal,
                   WorkerPrivate* aWorkerPrivate,
                   nsPIDOMWindowOuter* aOuterWindow,
@@ -893,11 +858,6 @@ class ConsoleProfileWorkerRunnable final : public ConsoleWorkerRunnable {
 
   Console::MethodName mName;
   nsString mAction;
-
-  // This is a reference of the sequence of arguments we receive from the DOM
-  // bindings and it's rooted by them. It's only used on the owning thread in
-  // PreDispatch().
-  const Sequence<JS::Value>& mArguments;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
@@ -1276,9 +1236,9 @@ void Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
     RefPtr<ConsoleProfileWorkerRunnable> runnable =
-        new ConsoleProfileWorkerRunnable(this, aMethodName, aAction, aData);
+        new ConsoleProfileWorkerRunnable(this, aMethodName, aAction);
 
-    runnable->Dispatch(aCx);
+    runnable->Dispatch(aCx, aData);
     return;
   }
 
@@ -1570,7 +1530,7 @@ void Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   if (WorkletThread::IsOnWorkletThread()) {
     RefPtr<ConsoleCallDataWorkletRunnable> runnable =
-        ConsoleCallDataWorkletRunnable::Create(aCx, this, callData);
+        ConsoleCallDataWorkletRunnable::Create(aCx, this, callData, aData);
     if (!runnable) {
       return;
     }
@@ -1585,7 +1545,7 @@ void Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   if (StaticPrefs::dom_worker_console_dispatch_events_to_main_thread()) {
     RefPtr<ConsoleCallDataWorkerRunnable> runnable =
         new ConsoleCallDataWorkerRunnable(this, callData);
-    Unused << NS_WARN_IF(!runnable->Dispatch(aCx));
+    Unused << NS_WARN_IF(!runnable->Dispatch(aCx, aData));
   }
 }
 
