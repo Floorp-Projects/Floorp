@@ -3164,6 +3164,9 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
     );
     declare_function(state, "cos", None, Type::new(Float), vec![Type::new(Float)]);
     declare_function(state, "sin", None, Type::new(Float), vec![Type::new(Float)]);
+    declare_function(state, "tan", None, Type::new(Float), vec![Type::new(Float)]);
+    declare_function(state, "atan", None, Type::new(Float), vec![Type::new(Float)]);
+    declare_function(state, "atan", None, Type::new(Float), vec![Type::new(Float), Type::new(Float)]);
     declare_function(
         state,
         "clamp",

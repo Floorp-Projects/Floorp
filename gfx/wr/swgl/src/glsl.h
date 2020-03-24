@@ -2793,15 +2793,34 @@ float dot(vec2_scalar a, vec2_scalar b) { return a.x * b.x + a.y * b.y; }
 Float dot(vec2 a, vec2 b) { return a.x * b.x + a.y * b.y; }
 
 #define sin __glsl_sin
-#define cos __glsl_cos
 
 float sin(float x) { return sinf(x); }
 
 Float sin(Float v) { return {sinf(v.x), sinf(v.y), sinf(v.z), sinf(v.w)}; }
 
+#define cos __glsl_cos
+
 float cos(float x) { return cosf(x); }
 
 Float cos(Float v) { return {cosf(v.x), cosf(v.y), cosf(v.z), cosf(v.w)}; }
+
+#define tan __glsl_tan
+
+float tan(float x) { return tanf(x); }
+
+Float tan(Float v) { return {tanf(v.x), tanf(v.y), tanf(v.z), tanf(v.w)}; }
+
+#define atan __glsl_atan
+
+float atan(float x) { return atanf(x); }
+
+Float atan(Float v) { return {atanf(v.x), atanf(v.y), atanf(v.z), atanf(v.w)}; }
+
+float atan(float a, float b) { return atan2f(a, b); }
+
+Float atan(Float a, Float b) {
+    return {atan2f(a.x, b.x), atan2f(a.y, b.y), atan2f(a.z, b.z), atan2f(a.w, b.w)};
+}
 
 bvec4 notEqual(ivec4 a, ivec4 b) {
   return bvec4(a.x != b.x, a.y != b.y, a.z != b.z, a.w != b.w);
