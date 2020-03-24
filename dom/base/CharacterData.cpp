@@ -438,13 +438,8 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
           aParent.AsContent()->GetContainingShadow();
     }
 
-    if (IsInComposedDoc()) {
-      if (mText.IsBidi()) {
-        aContext.OwnerDoc().SetBidiEnabled();
-      }
-      if (aContext.CollectingDisplayedNodeDataDuringLoad()) {
-        aContext.OwnerDoc().AddToVisibleContentHeuristic(mText.GetLength());
-      }
+    if (IsInComposedDoc() && mText.IsBidi()) {
+      aContext.OwnerDoc().SetBidiEnabled();
     }
 
     // Clear the lazy frame construction bits.

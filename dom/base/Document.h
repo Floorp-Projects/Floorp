@@ -3525,14 +3525,6 @@ class Document : public nsINode,
   void PropagateUseCountersToPage();
   void PropagateUseCounters(Document* aParentDocument);
 
-  void AddToVisibleContentHeuristic(uint32_t aNumber) {
-    mVisibleContentHeuristic += aNumber;
-  }
-
-  uint32_t GetVisibleContentHeuristic() const {
-    return mVisibleContentHeuristic.value();
-  }
-
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
   void SetUserHasInteracted();
@@ -4811,16 +4803,6 @@ class Document : public nsINode,
 
   // The CSS property use counters.
   UniquePtr<StyleUseCounters> mStyleUseCounters;
-
-  // An ever-increasing heuristic number that is higher the more content is
-  // likely to be visible in the page.
-  //
-  // Right now it effectively measures amount of text content that has ever been
-  // connected to the document in some way, and is not under a <script> or
-  // <style>.
-  //
-  // Note that this is only measured during load.
-  SaturateUint32 mVisibleContentHeuristic{0};
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;

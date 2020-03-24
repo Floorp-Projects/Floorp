@@ -1588,7 +1588,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   // Now recurse into our kids. Ensure this happens after binding the shadow
   // root so that directionality of slots is updated.
   {
-    BindContext::NestingLevel level(aContext, *this);
     for (nsIContent* child = GetFirstChild(); child;
          child = child->GetNextSibling()) {
       rv = child->BindToTree(aContext, *this);
