@@ -47,7 +47,6 @@
         tools:text="mozilla.org" />
 
     <ImageButton
-        android:visibility="gone"
         android:id="@+id/delete_exception"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

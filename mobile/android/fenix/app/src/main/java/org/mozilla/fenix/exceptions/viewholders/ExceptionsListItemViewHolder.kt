@@ -5,11 +5,9 @@
 package org.mozilla.fenix.exceptions.viewholders
 
 import android.view.View
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.exception_item.view.*
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
 import org.mozilla.fenix.ext.components
@@ -40,7 +38,6 @@ class ExceptionsListItemViewHolder(
     fun bind(item: TrackingProtectionException) {
         this.item = item
         url.text = item.url
-        deleteButton.isVisible = FeatureFlags.deleteIndividualTrackingProtectionExceptions
         updateFavIcon(item.url)
     }
 

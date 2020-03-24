@@ -16,7 +16,6 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -77,10 +76,7 @@ class ExceptionsFragment : Fragment() {
     }
 
     private fun deleteOneItem(item: TrackingProtectionException) {
-        // This feature hasn't been uplifted yet.
-        if (FeatureFlags.deleteIndividualTrackingProtectionExceptions) {
-            trackingProtectionUseCases.removeException(item)
-        }
+        trackingProtectionUseCases.removeException(item)
         Log.e("Remove one exception", "$item")
         reloadExceptions()
     }
