@@ -1,8 +1,8 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
-# License: http://pyasn1.sf.net/license.html
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# License: http://snmplabs.com/pyasn1/license.html
 #
 # ASN.1 named integers
 #
@@ -23,26 +23,34 @@ class NamedValues(object):
 
     Parameters
     ----------
+    *args: variable number of two-element :py:class:`tuple`
 
-    \*args: variable number of two-element :py:class:`tuple` 
-    \*\*kwargs: keyword parameters of:
-        
         name: :py:class:`str`
-            Value name
-    
+            Value label
+
         value: :py:class:`int`
-                A numerical value
+            Numeric value
+
+    Keyword Args
+    ------------
+    name: :py:class:`str`
+        Value label
+
+    value: :py:class:`int`
+        Numeric value
 
     Examples
     --------
 
-    >>> nv = namedval.NamedValues('a', 'b', ('c', 0), d=1)
-    >>> nv
-    >>> {'c': 0, 'd': 1, 'a': 2, 'b': 3}
-    >>> nv[0]
-    'c'
-    >>> nv['a']
-    2
+    .. code-block:: pycon
+
+        >>> nv = NamedValues('a', 'b', ('c', 0), d=1)
+        >>> nv
+        >>> {'c': 0, 'd': 1, 'a': 2, 'b': 3}
+        >>> nv[0]
+        'c'
+        >>> nv['a']
+        2
     """
     def __init__(self, *args, **kwargs):
         self.__names = {}
@@ -96,10 +104,13 @@ class NamedValues(object):
                 number += 1
 
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, tuple(self.items()))
+        representation = ', '.join(['%s=%d' % x for x in self.items()])
 
-    def __str__(self):
-        return str(self.items())
+        if len(representation) > 64:
+            representation = representation[:32] + '...' + representation[-32:]
+
+        return '<%s object, enums %s>' % (
+            self.__class__.__name__, representation)
 
     def __eq__(self, other):
         return dict(self) == other

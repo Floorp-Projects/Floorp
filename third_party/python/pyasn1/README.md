@@ -1,8 +1,8 @@
 
 ASN.1 library for Python
 ------------------------
-[![PyPI](https://img.shields.io/pypi/v/pyasn1.svg?maxAge=2592000)](https://pypi.python.org/pypi/pyasn1)
-[![Python Versions](https://img.shields.io/pypi/pyversions/pyasn1.svg)](https://pypi.python.org/pypi/pyasn1/)
+[![PyPI](https://img.shields.io/pypi/v/pyasn1.svg?maxAge=2592000)](https://pypi.org/project/pyasn1)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyasn1.svg)](https://pypi.org/project/pyasn1/)
 [![Build status](https://travis-ci.org/etingof/pyasn1.svg?branch=master)](https://secure.travis-ci.org/etingof/pyasn1)
 [![Coverage Status](https://img.shields.io/codecov/c/github/etingof/pyasn1.svg)](https://codecov.io/github/etingof/pyasn1)
 [![GitHub license](https://img.shields.io/badge/license-BSD-blue.svg)](https://raw.githubusercontent.com/etingof/pyasn1/master/LICENSE.txt)
@@ -19,17 +19,17 @@ Features
 * Generic implementation of ASN.1 types (X.208)
 * Standards compliant BER/CER/DER codecs
 * Dumps/loads ASN.1 structures from Python types
-* 100% Python, works with Python 2.4 up to Python 3.6
+* 100% Python, works with Python 2.4 up to Python 3.7
 * MT-safe
 * Contributed ASN.1 compiler [Asn1ate](https://github.com/kimgr/asn1ate)
 
 Why using pyasn1
 ----------------
 
-ASN.1 solves the data serialization problem. This solution was
+ASN.1 solves the data serialisation problem. This solution was
 designed long ago by the wise Ancients. Back then, they did not
 have the luxury of wasting bits. That is why ASN.1 is designed
-to serialize data structures of unbounded complexity into
+to serialise data structures of unbounded complexity into
 something compact and efficient when it comes to processing
 the data.
 
@@ -90,15 +90,15 @@ can use it along the lines of similar Python type (e.g. ASN.1
 >>> record = Record()
 >>> record['id'] = 123
 >>> record['room'] = 321
->>> print(record.prettyPrint())
+>>> str(record)
 Record:
  id=123
  room=321
 >>>
 ```
 
-Part of the power of ASN.1 comes from its serialization features. You
-can serialize your data structure and send it over the network.
+Part of the power of ASN.1 comes from its serialisation features. You
+can serialise your data structure and send it over the network.
 
 ```python
 >>> from pyasn1.codec.der.encoder import encode
@@ -107,7 +107,7 @@ can serialize your data structure and send it over the network.
 00000: 30 07 02 01 7B 80 02 01 41
 ```
 
-Conversely, you can turn serialized ASN.1 content, as received from
+Conversely, you can turn serialised ASN.1 content, as received from
 network or read from a file, into a Python object which you can
 introspect, modify, encode and send back.
 
@@ -146,21 +146,21 @@ Python objects:
 ```python
 >>> from pyasn1.codec.native.decoder import decode
 >>> record = decode({'id': 123, 'room': 321, 'house': 0}, asn1Spec=Record())
->>> print(record.prettyPrint())
+>>> str(record)
 Record:
  id=123
  room=321
 >>>
 ```
 
-With ASN.1 design, serialization codecs are decoupled from data objects,
+With ASN.1 design, serialisation codecs are decoupled from data objects,
 so you could turn every single ASN.1 object into many different 
-serialized forms. As of this moment, pyasn1 supports BER, DER, CER and
+serialised forms. As of this moment, pyasn1 supports BER, DER, CER and
 Python built-ins codecs. The extremely compact PER encoding is expected
 to be introduced in the upcoming pyasn1 release.
 
 More information on pyasn1 APIs can be found in the
-[documentation](http://pyasn1.sourceforge.net),
+[documentation](http://snmplabs.com/pyasn1/),
 compiled ASN.1 modules for different protocols and file formats
 could be found in the pyasn1-modules 
 [repo](https://github.com/etingof/pyasn1-modules).
@@ -169,16 +169,16 @@ How to get pyasn1
 -----------------
 
 The pyasn1 package is distributed under terms and conditions of 2-clause
-BSD [license](http://pyasn1.sourceforge.net/license.html). Source code is freely
+BSD [license](http://snmplabs.com/pyasn1/license.html). Source code is freely
 available as a GitHub [repo](https://github.com/etingof/pyasn1).
 
-You could `pip install pyasn1` or download it from [PyPI](https://pypi.python.org/pypi/pyasn1).
+You could `pip install pyasn1` or download it from [PyPI](https://pypi.org/project/pyasn1).
 
 If something does not work as expected, 
 [open an issue](https://github.com/etingof/pyasn1/issues) at GitHub or
-post your question [on Stack Overflow](http://stackoverflow.com/questions/ask)
+post your question [on Stack Overflow](https://stackoverflow.com/questions/ask)
 or try browsing pyasn1 
 [mailing list archives](https://sourceforge.net/p/pyasn1/mailman/pyasn1-users/).
 
-Copyright (c) 2005-2017, [Ilya Etingof](mailto:etingof@gmail.com).
+Copyright (c) 2005-2019, [Ilya Etingof](mailto:etingof@gmail.com).
 All rights reserved.
