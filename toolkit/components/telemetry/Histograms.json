@@ -13221,43 +13221,6 @@
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
   },
-  "STORAGE_SYNC_GET_OPS_SIZE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
-    "expires_in_version": "77",
-    "bug_numbers": [1328974, 1513556, 1578225],
-    "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "keyed": true,
-    "description": "Track the size of results of get() operations performed this subsession. The key is the addon ID.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "STORAGE_SYNC_SET_OPS_SIZE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
-    "expires_in_version": "77",
-    "bug_numbers": [1328974, 1513556, 1578225],
-    "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "keyed": true,
-    "description": "Track the size of set() operations performed by addons this subsession. The key is the addon ID.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "STORAGE_SYNC_REMOVE_OPS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["addons-dev-internal@mozilla.com", "eglassercamp@mozilla.com", "lgreco@mozilla.com"],
-    "expires_in_version": "77",
-    "bug_numbers": [1328974, 1513556, 1578225],
-    "kind": "count",
-    "keyed": true,
-    "description": "Track the number of remove() operations addons perform this subsession. The key is the addon ID.",
-    "releaseChannelCollection": "opt-out"
-  },
   "NUMBER_OF_PROFILES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
