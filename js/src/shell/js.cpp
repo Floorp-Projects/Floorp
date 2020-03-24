@@ -10150,6 +10150,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
 #ifdef JS_ENABLE_SMOOSH
   if (op->getBoolOption("smoosh")) {
     JS::ContextOptionsRef(cx).setTrySmoosh(true);
+    js::frontend::InitSmoosh();
   }
 
   if (const char* filename = op->getStringOption("not-implemented-watchfile")) {

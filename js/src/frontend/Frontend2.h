@@ -37,6 +37,9 @@ class Smoosh {
       JS::SourceText<mozilla::Utf8Unit>& srcBuf, bool* unimplemented);
 };
 
+// Initialize SmooshMonkey globals, such as the logging system.
+void InitSmoosh();
+
 // Use the SmooshMonkey frontend to parse and free the generated AST. Returns
 // true if no error were detected while parsing.
 MOZ_MUST_USE bool SmooshParseScript(JSContext* cx, const uint8_t* bytes,

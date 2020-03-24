@@ -284,6 +284,8 @@ class AutoFreeSmooshParseResult {
   }
 };
 
+void InitSmoosh() { init_smoosh(); }
+
 void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
                               int errorNumber, ...) {
   va_list args;

@@ -58,7 +58,7 @@ quick_error! {
 }
 
 /// A wrapper type that allows you to Display a Duration
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FormattedDuration(Duration);
 
 trait OverflowOp: Sized {
