@@ -1624,7 +1624,7 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
     default:
       event.mArguments.Construct();
       if (NS_WARN_IF(
-              !ArgumentsToValueList(aArguments, event.mArguments.Value()))) {
+              !event.mArguments.Value().AppendElements(aArguments, fallible))) {
         return false;
       }
   }
@@ -1751,7 +1751,7 @@ bool Console::ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
   }
 
   if (aData.Length() == 1 || !aData[0].isString()) {
-    return ArgumentsToValueList(aData, aSequence);
+    return aSequence.AppendElements(aData, fallible);
   }
 
   JS::Rooted<JS::Value> format(aCx, aData[0]);
@@ -1766,7 +1766,7 @@ bool Console::ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
   }
 
   if (string.IsEmpty()) {
-    return ArgumentsToValueList(aData, aSequence);
+    return aSequence.AppendElements(aData, fallible);
   }
 
   nsString::const_iterator start, end;
@@ -2191,17 +2191,6 @@ JS::Value Console::CreateTimerError(JSContext* aCx, const nsAString& aLabel,
   }
 
   return value;
-}
-
-bool Console::ArgumentsToValueList(const Sequence<JS::Value>& aData,
-                                   Sequence<JS::Value>& aSequence) const {
-  for (uint32_t i = 0; i < aData.Length(); ++i) {
-    if (NS_WARN_IF(!aSequence.AppendElement(aData[i], fallible))) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 uint32_t Console::IncreaseCounter(JSContext* aCx,
