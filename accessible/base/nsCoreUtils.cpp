@@ -436,8 +436,14 @@ XULTreeElement* nsCoreUtils::GetTree(nsIContent* aContent) {
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
     XULTreeElement* aTree) {
+  if (!aTree) {
+    return nullptr;
+  }
+
   RefPtr<nsTreeColumns> cols = aTree->GetColumns();
-  if (!cols) return nullptr;
+  if (!cols) {
+    return nullptr;
+  }
 
   RefPtr<nsTreeColumn> column = cols->GetFirstColumn();
   if (column && IsColumnHidden(column)) return GetNextSensibleColumn(column);
@@ -447,9 +453,14 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
 
 uint32_t nsCoreUtils::GetSensibleColumnCount(XULTreeElement* aTree) {
   uint32_t count = 0;
+  if (!aTree) {
+    return count;
+  }
 
   RefPtr<nsTreeColumns> cols = aTree->GetColumns();
-  if (!cols) return count;
+  if (!cols) {
+    return count;
+  }
 
   nsTreeColumn* column = cols->GetFirstColumn();
 
@@ -464,6 +475,10 @@ uint32_t nsCoreUtils::GetSensibleColumnCount(XULTreeElement* aTree) {
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetSensibleColumnAt(
     XULTreeElement* aTree, uint32_t aIndex) {
+  if (!aTree) {
+    return nullptr;
+  }
+
   uint32_t idx = aIndex;
 
   nsCOMPtr<nsTreeColumn> column = GetFirstSensibleColumn(aTree);
@@ -479,6 +494,10 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetSensibleColumnAt(
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetNextSensibleColumn(
     nsTreeColumn* aColumn) {
+  if (!aColumn) {
+    return nullptr;
+  }
+
   RefPtr<nsTreeColumn> nextColumn = aColumn->GetNext();
 
   while (nextColumn && IsColumnHidden(nextColumn)) {
@@ -490,6 +509,10 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetNextSensibleColumn(
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetPreviousSensibleColumn(
     nsTreeColumn* aColumn) {
+  if (!aColumn) {
+    return nullptr;
+  }
+
   RefPtr<nsTreeColumn> prevColumn = aColumn->GetPrevious();
 
   while (prevColumn && IsColumnHidden(prevColumn)) {
@@ -500,6 +523,10 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetPreviousSensibleColumn(
 }
 
 bool nsCoreUtils::IsColumnHidden(nsTreeColumn* aColumn) {
+  if (!aColumn) {
+    return false;
+  }
+
   Element* element = aColumn->Element();
   return element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                               nsGkAtoms::_true, eCaseMatters);
