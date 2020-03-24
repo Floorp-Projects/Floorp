@@ -497,7 +497,8 @@ class CompareCookiesByIndex {
 // Return false if the cookie should be ignored for the current channel.
 bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
                                             nsCookie* aCookie,
-                                            bool aIsSafeTopLevelNav) {
+                                            bool aIsSafeTopLevelNav,
+                                            bool aLaxByDefault) {
   int32_t sameSiteAttr = 0;
   aCookie->GetSameSite(&sameSiteAttr);
 
@@ -512,8 +513,7 @@ bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
   // 2 minutes of tolerance for 'sameSite=lax by default' for cookies set
   // without a sameSite value when used for unsafe http methods.
   if (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() > 0 &&
-      StaticPrefs::network_cookie_sameSite_laxByDefault() &&
-      sameSiteAttr == nsICookie::SAMESITE_LAX &&
+      aLaxByDefault && sameSiteAttr == nsICookie::SAMESITE_LAX &&
       aCookie->RawSameSite() == nsICookie::SAMESITE_NONE &&
       currentTimeInUsec - aCookie->CreationTime() <=
           (StaticPrefs::network_cookie_sameSite_laxPlusPOST_timeout() *
@@ -3076,6 +3076,11 @@ void nsCookieService::GetCookiesForURI(
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(key);
   if (!entry) return;
 
+  bool laxByDefault =
+      StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+      !nsContentUtils::IsURIInPrefList(
+          aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
+
   // iterate the cookies!
   const nsCookieEntry::ArrayType& cookies = entry->GetCookies();
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
@@ -3087,8 +3092,9 @@ void nsCookieService::GetCookiesForURI(
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) continue;
 
-    if (aIsSameSiteForeign && !ProcessSameSiteCookieForForeignRequest(
-                                  aChannel, cookie, aIsSafeTopLevelNav)) {
+    if (aIsSameSiteForeign &&
+        !ProcessSameSiteCookieForForeignRequest(
+            aChannel, cookie, aIsSafeTopLevelNav, laxByDefault)) {
       continue;
     }
 
@@ -3774,7 +3780,12 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
   aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
   aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
 
-  if (StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+  bool laxByDefault =
+      StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+      !nsContentUtils::IsURIInPrefList(
+          aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
+
+  if (laxByDefault) {
     aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
   }
 
@@ -3862,7 +3873,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
   // the parsing.
   if (!aCookieData.isSecure() &&
       aCookieData.sameSite() == nsICookie::SAMESITE_NONE) {
-    if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+    if (laxByDefault &&
         StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
       LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
                           CONSOLE_SAMESITE_CATEGORY,
@@ -3881,7 +3892,7 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
 
   if (aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
-    if (StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+    if (laxByDefault) {
       LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
                           CONSOLE_SAMESITE_CATEGORY,
                           NS_LITERAL_CSTRING("CookieLaxForced"),
