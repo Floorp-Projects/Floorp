@@ -185,7 +185,8 @@ already_AddRefed<Promise> Client::Navigate(const nsAString& aURL,
   }
 
   ClientNavigateArgs args(mData->info(), NS_ConvertUTF16toUTF8(aURL),
-                          workerPrivate->GetLocationInfo().mHref);
+                          workerPrivate->GetLocationInfo().mHref,
+                          workerPrivate->GetServiceWorkerDescriptor().ToIPC());
   RefPtr<Client> self = this;
 
   StartClientManagerOp(
