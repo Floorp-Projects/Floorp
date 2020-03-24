@@ -27,13 +27,13 @@ void ClientHandleParent::ActorDestroy(ActorDestroyReason aReason) {
     mSource->DetachHandle(this);
     mSource = nullptr;
   } else {
-    mService->StopWaitingForSource(this, mClientId);
-  }
+    if (!mSourcePromiseHolder.IsEmpty()) {
+      CopyableErrorResult rv;
+      rv.ThrowAbortError("Client aborted");
+      mSourcePromiseHolder.Reject(rv, __func__);
+    }
 
-  if (mSourcePromise) {
-    CopyableErrorResult rv;
-    rv.ThrowAbortError("Client aborted");
-    mSourcePromise->Reject(rv, __func__);
+    mSourcePromiseRequestHolder.DisconnectIfExists();
   }
 }
 
@@ -63,13 +63,20 @@ ClientHandleParent::~ClientHandleParent() { MOZ_DIAGNOSTIC_ASSERT(!mSource); }
 void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
   mClientId = aClientInfo.id();
   mPrincipalInfo = aClientInfo.principalInfo();
-  mSource = mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo());
-  if (!mSource) {
-    mService->WaitForSource(this, aClientInfo.id());
-    return;
-  }
 
-  mSource->AttachHandle(this);
+  // Callbacks are disconnected in ActorDestroy, so capturing `this` is safe.
+  mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo())
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [this](ClientSourceParent* aSource) {
+            mSourcePromiseRequestHolder.Complete();
+            FoundSource(aSource);
+          },
+          [this](const CopyableErrorResult&) {
+            mSourcePromiseRequestHolder.Complete();
+            Unused << Send__delete__(this);
+          })
+      ->Track(mSourcePromiseRequestHolder);
 }
 
 ClientSourceParent* ClientHandleParent::GetSource() const { return mSource; }
@@ -79,20 +86,17 @@ RefPtr<SourcePromise> ClientHandleParent::EnsureSource() {
     return SourcePromise::CreateAndResolve(mSource, __func__);
   }
 
-  if (!mSourcePromise) {
-    mSourcePromise = new SourcePromise::Private(__func__);
-  }
-  return mSourcePromise;
+  return mSourcePromiseHolder.Ensure(__func__);
 }
 
 void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
   MOZ_ASSERT(aSource->Info().Id() == mClientId);
   if (!ClientMatchPrincipalInfo(aSource->Info().PrincipalInfo(),
                                 mPrincipalInfo)) {
-    if (mSourcePromise) {
+    if (!mSourcePromiseHolder.IsEmpty()) {
       CopyableErrorResult rv;
       rv.ThrowAbortError("Client aborted");
-      mSourcePromise->Reject(rv, __func__);
+      mSourcePromiseHolder.Reject(rv, __func__);
     }
     Unused << Send__delete__(this);
     return;
@@ -100,9 +104,7 @@ void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
 
   mSource = aSource;
   mSource->AttachHandle(this);
-  if (mSourcePromise) {
-    mSourcePromise->Resolve(aSource, __func__);
-  }
+  mSourcePromiseHolder.ResolveIfExists(aSource, __func__);
 }
 
 }  // namespace dom
