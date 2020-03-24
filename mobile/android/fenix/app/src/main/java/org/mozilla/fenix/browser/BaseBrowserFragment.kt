@@ -753,7 +753,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 requireComponents.analytics.metrics.track(Event.AddBookmark)
 
                 view?.let { view ->
-                    FenixSnackbar.make(view, FenixSnackbar.LENGTH_LONG)
+                    FenixSnackbar.makeWithToolbarPadding(view, FenixSnackbar.LENGTH_LONG)
                         .setText(getString(R.string.bookmark_saved_snackbar))
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(
