@@ -43,6 +43,23 @@ devtools-linux:
         - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux '64/"
         - "'xpcshell-e10s 'linux '64/"
 
+fpush-linux-android:
+    selector: fuzzy
+    description: >-
+        Runs correctness test suites on Linux and Android emulator platforms, as
+        well as builds across main platforms. The resulting jobs on TreeHerder
+        used to end up looking like a "F" shape (not so much these days) and so
+        this is typically referred to as an F-push. This is useful to do as a
+        general sanity check on changes to cross-platform Gecko code where you
+        unsure of what tests might be affected. Linux and Android (emulator)
+        test coverage are relatively cheap to run and cover a lot of the
+        codebase, while the builds on other platforms catch compilation problems
+        that might result from only building locally on one platform.
+    query:
+        - "'test-linux1804 'debug- !-shippable !-asan !-fis-"
+        - "'test-android-em 'debug"
+        - "^build !-shippable !-signing !-asan !-fuzzing !-rusttests !-base-toolchain !-aar-"
+
 perf:
     selector: fuzzy
     description: >-
