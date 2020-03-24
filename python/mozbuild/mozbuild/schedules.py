@@ -42,19 +42,17 @@ EXCLUSIVE_COMPONENTS = [
     'linux',
     'macosx',
     'windows',
-    # test suites
+    # test suite categories
     'awsy',
     'condprofile',
     'cppunittest',
     'firefox-ui',
-    'geckoview',
     'geckoview-junit',
     'gtest',
     'marionette',
     'mochitest',
     'raptor',
     'reftest',
-    'robocop',
     'talos',
     'telemetry-tests-client',
     'xpcshell',
@@ -63,6 +61,12 @@ EXCLUSIVE_COMPONENTS = [
     'web-platform-tests-crashtests',
     'web-platform-tests-reftests',
     'web-platform-tests-wdspec',
+    # specific test suites via schedules-component
+    'mochitest-a11y',
+    'mochitest-browser-chrome',
+    'mochitest-chrome',
+    'mochitest-plain',
+    'crashtest',
 ]
 EXCLUSIVE_COMPONENTS = sorted(EXCLUSIVE_COMPONENTS)
 ALL_COMPONENTS = INCLUSIVE_COMPONENTS + EXCLUSIVE_COMPONENTS
