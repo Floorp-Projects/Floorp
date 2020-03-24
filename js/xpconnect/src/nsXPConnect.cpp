@@ -216,7 +216,7 @@ void xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
     mErrorMsgName.Truncate();
   }
 
-  mFlags = aReport->flags;
+  mIsWarning = aReport->isWarning();
   mIsMuted = aReport->isMuted;
 
   if (aReport->notes) {
@@ -247,8 +247,6 @@ void xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
   mSourceId = aException->SourceId(aCx);
   mLineNumber = aException->LineNumber(aCx);
   mColumn = aException->ColumnNumber();
-
-  mFlags = JSREPORT_ERROR;
 }
 
 static LazyLogModule gJSDiagnostics("JSDiagnostics");
@@ -336,10 +334,11 @@ void xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
   }
   errorObject->SetErrorMessageName(mErrorMsgName);
 
+  uint32_t flags =
+      mIsWarning ? nsIScriptError::warningFlag : nsIScriptError::errorFlag;
   nsresult rv = errorObject->InitWithWindowID(
-      mErrorMsg, mFileName, mSourceLine, mLineNumber, mColumn, mFlags,
-      mCategory, mWindowID,
-      mCategory.Equals(NS_LITERAL_CSTRING("chrome javascript")));
+      mErrorMsg, mFileName, mSourceLine, mLineNumber, mColumn, flags, mCategory,
+      mWindowID, mCategory.Equals(NS_LITERAL_CSTRING("chrome javascript")));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = errorObject->InitSourceId(mSourceId);

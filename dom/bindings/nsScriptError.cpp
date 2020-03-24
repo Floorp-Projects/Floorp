@@ -20,11 +20,6 @@
 #include "nsIScriptError.h"
 #include "mozilla/BasePrincipal.h"
 
-static_assert(nsIScriptError::errorFlag == JSREPORT_ERROR &&
-                  nsIScriptError::warningFlag == JSREPORT_WARNING &&
-                  nsIScriptError::infoFlag == JSREPORT_USER_1,
-              "flags should be consistent");
-
 nsScriptErrorBase::nsScriptErrorBase()
     : mMessage(),
       mMessageName(),
@@ -337,7 +332,8 @@ nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult) {
   static const char error[] = "JavaScript Error";
   static const char warning[] = "JavaScript Warning";
 
-  const char* severity = !(mFlags & JSREPORT_WARNING) ? error : warning;
+  const char* severity =
+      !(mFlags & nsIScriptError::warningFlag) ? error : warning;
 
   return ToStringHelper(severity, mMessage, mSourceName, &mSourceLine,
                         mLineNumber, mColumnNumber, aResult);
