@@ -67,21 +67,18 @@ async def execute_async_script(session, script, *args):
     # switch to the right context if needed
     current_context = await session._request(url="/moz/context", method="GET")
     if current_context != "chrome":
-        logger.info("Switching to chrome context")
         await session._request(
             url="/moz/context", method="POST", data={"context": "chrome"}
         )
         switch_back = True
     else:
         switch_back = False
-    logger.info("Setting up script timeout")
     await session._request(
         url="/timeouts", method="POST", data={"script": _SCRIPT_TIMEOUT}
     )
     try:
         attempts = 0
         while True:
-            logger.info("Running triggerSync()")
             try:
                 return await session._request(
                     url="/execute/async",
