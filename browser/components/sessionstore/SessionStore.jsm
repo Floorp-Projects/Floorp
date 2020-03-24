@@ -239,7 +239,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TabState: "resource:///modules/sessionstore/TabState.jsm",
   TabStateCache: "resource:///modules/sessionstore/TabStateCache.jsm",
   TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.jsm",
-  Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
@@ -2416,13 +2415,19 @@ var SessionStoreInternal = {
 
   /**
    * On purge of domain data
-   * @param aData
-   *        String domain data
+   * @param {string} aDomain
+   *        The domain we want to purge data for
    */
-  onPurgeDomainData: function ssi_onPurgeDomainData(aData) {
+  onPurgeDomainData: function ssi_onPurgeDomainData(aDomain) {
     // does a session history entry contain a url for the given domain?
     function containsDomain(aEntry) {
-      if (Utils.hasRootDomain(aEntry.url, aData)) {
+      let host;
+      try {
+        host = Services.io.newURI(aEntry.url).host;
+      } catch (e) {
+        // The given URL probably doesn't have a host.
+      }
+      if (host && Services.eTLD.hasRootDomain(host, aDomain)) {
         return true;
       }
       return aEntry.children && aEntry.children.some(containsDomain, this);
