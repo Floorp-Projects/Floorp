@@ -356,8 +356,12 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
   nsCOMPtr<nsIURI> requestingLocation;
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
-  if (loadingPrincipal) {
-    loadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
+
+  // We need to get a Requesting Location if possible
+  // so we're casting to BasePrincipal to acess GetURI
+  auto* basePrin = BasePrincipal::Cast(loadingPrincipal);
+  if (basePrin) {
+    basePrin->GetURI(getter_AddRefs(requestingLocation));
   }
 
   // We pass in false as the first parameter to ShouldLoad(), because the
@@ -735,8 +739,11 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   }
 
   nsCOMPtr<nsIURI> requestingLocation;
-  if (principal) {
-    principal->GetURI(getter_AddRefs(requestingLocation));
+  // We need to get a Requesting Location if possible
+  // so we're casting to BasePrincipal to acess GetURI
+  auto* basePrin = BasePrincipal::Cast(principal);
+  if (basePrin) {
+    basePrin->GetURI(getter_AddRefs(requestingLocation));
   }
 
   // 2) if aRequestingContext yields a principal but no location, we check if
