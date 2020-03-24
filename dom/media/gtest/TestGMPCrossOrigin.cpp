@@ -72,7 +72,6 @@ class RunTestGMPVideoCodec : public Base {
     return ((*service).*Getter)(nullptr, &tags, aNodeId, std::move(aCallback));
   }
 
- protected:
   GMPTestMonitor& mMonitor;
 };
 
