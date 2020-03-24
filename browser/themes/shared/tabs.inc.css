@@ -704,8 +704,16 @@
 
 .tabbrowser-arrowscrollbox::part(scrollbutton-up),
 .tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+  list-style-image: url(chrome://global/skin/icons/arrow-left.svg) !important;
+  -moz-context-properties: fill, fill-opacity;
   fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+  color: inherit;
+}
+
+.tabbrowser-arrowscrollbox:-moz-locale-dir(rtl)::part(scrollbutton-up),
+.tabbrowser-arrowscrollbox:-moz-locale-dir(ltr)::part(scrollbutton-down) {
+  transform: scaleX(-1);
 }
 
 /* New tab button */

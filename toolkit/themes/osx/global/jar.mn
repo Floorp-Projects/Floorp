@@ -21,6 +21,7 @@ toolkit.jar:
   skin/classic/global/radio.css
   skin/classic/global/richlistbox.css
   skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
+  skin/classic/global/scrollbox.css
   skin/classic/global/splitter.css
   skin/classic/global/tabprompts.css
   skin/classic/global/tabbox.css
@@ -31,7 +32,15 @@ toolkit.jar:
 * skin/classic/global/tree.css
   skin/classic/global/wizard.css
 * skin/classic/global/alerts/alert.css                               (alerts/alert.css)
+  skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
+  skin/classic/global/arrow/arrow-dn-sharp.gif                       (arrow/arrow-dn-sharp.gif)
   skin/classic/global/arrow/arrow-dn.gif                             (arrow/arrow-dn.gif)
+  skin/classic/global/arrow/arrow-lft-dis.gif                        (arrow/arrow-lft-dis.gif)
+  skin/classic/global/arrow/arrow-lft-sharp.gif                      (arrow/arrow-lft-sharp.gif)
+  skin/classic/global/arrow/arrow-rit-dis.gif                        (arrow/arrow-rit-dis.gif)
+  skin/classic/global/arrow/arrow-rit-sharp.gif                      (arrow/arrow-rit-sharp.gif)
+  skin/classic/global/arrow/arrow-up-dis.gif                         (arrow/arrow-up-dis.gif)
+  skin/classic/global/arrow/arrow-up-sharp.gif                       (arrow/arrow-up-sharp.gif)
   skin/classic/global/arrow/arrow-up.gif                             (arrow/arrow-up.gif)
   skin/classic/global/arrow/panelarrow-horizontal.svg                (arrow/panelarrow-horizontal.svg)
   skin/classic/global/arrow/panelarrow-vertical.svg                  (arrow/panelarrow-vertical.svg)
