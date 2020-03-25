@@ -13,7 +13,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource:///modules/OSKeyStore.jsm", this);
+ChromeUtils.import("resource://gre/modules/OSKeyStore.jsm", this);
 ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
 
 const MANAGE_ADDRESSES_DIALOG_URL =

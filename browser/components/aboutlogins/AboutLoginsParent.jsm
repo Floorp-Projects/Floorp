@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
-  OSKeyStore: "resource:///modules/OSKeyStore.jsm",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",

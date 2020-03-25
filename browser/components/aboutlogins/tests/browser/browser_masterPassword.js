@@ -25,7 +25,7 @@ add_task(async function test() {
   // the OS auth dialog when Master Password is enabled.
   is(
     Services.prefs.getStringPref(
-      "browser.osKeyStore.unofficialBuildOnlyLogin",
+      "toolkit.osKeyStore.unofficialBuildOnlyLogin",
       ""
     ),
     "",

@@ -142,6 +142,7 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 TESTING_JS_MODULES += [
     'tests/modules/MockDocument.jsm',
+    'tests/modules/OSKeyStoreTestUtils.jsm',
     'tests/modules/PromiseTestUtils.jsm',
     'tests/modules/Task.jsm',
     'tests/xpcshell/TestIntegration.jsm',
@@ -195,6 +196,7 @@ EXTRA_JS_MODULES += [
     'NLP.jsm',
     'ObjectUtils.jsm',
     'offlineAppCache.jsm',
+    'OSKeyStore.jsm',
     'PageMenu.jsm',
     'PermissionsUtils.jsm',
     'PopupNotifications.jsm',

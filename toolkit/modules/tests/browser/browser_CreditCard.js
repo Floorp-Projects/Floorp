@@ -6,7 +6,9 @@
 const { CreditCard } = ChromeUtils.import(
   "resource://gre/modules/CreditCard.jsm"
 );
-const { OSKeyStore } = ChromeUtils.import("resource:///modules/OSKeyStore.jsm");
+const { OSKeyStore } = ChromeUtils.import(
+  "resource://gre/modules/OSKeyStore.jsm"
+);
 const { OSKeyStoreTestUtils } = ChromeUtils.import(
   "resource://testing-common/OSKeyStoreTestUtils.jsm"
 );

@@ -47,7 +47,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://formautofill/FormAutofillPreferences.jsm",
   FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
   FormAutofillUtils: "resource://formautofill/FormAutofillUtils.jsm",
-  OSKeyStore: "resource:///modules/OSKeyStore.jsm",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
 this.log = null;

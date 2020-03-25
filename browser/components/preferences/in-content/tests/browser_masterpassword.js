@@ -102,7 +102,7 @@ add_task(async function() {
   // since we don't expect a dialog here, we want the test to fail if one appears.
   is(
     Services.prefs.getStringPref(
-      "browser.osKeyStore.unofficialBuildOnlyLogin",
+      "toolkit.osKeyStore.unofficialBuildOnlyLogin",
       ""
     ),
     "",
