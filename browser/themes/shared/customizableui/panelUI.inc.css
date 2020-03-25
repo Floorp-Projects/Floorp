@@ -246,6 +246,14 @@ panelview {
   padding-bottom: 4px;
 }
 
+%ifndef XP_MACOSX
+/* Add some space at the top because there are no headers in menupopups of
+   the bookmarks menu. */
+#BMB_bookmarksPopup menupopup::part(arrowscrollbox-scrollbox) {
+  padding-top: 4px;
+}
+%endif
+
 #confirmation-hint {
   --arrowpanel-background: #0060df;
   --arrowpanel-border-color: #0060df;

@@ -56,8 +56,6 @@
       this.scrollBox.addEventListener("underflow", ev =>
         this.dispatchEvent(new Event("underflow"))
       );
-      this.scrollBox._scrollButtonUp.classList.add("menupopup-scrollbutton");
-      this.scrollBox._scrollButtonDown.classList.add("menupopup-scrollbutton");
     }
 
     get shadowRoot() {

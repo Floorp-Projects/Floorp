@@ -69,8 +69,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(prepareRunningTests);
 
-const IS_MAC = navigator.platform.indexOf("Mac") == 0;
-
 // Some tests need to wait until stopping scroll completely.  At this time,
 // setTimeout() will retry to check up to MAX_RETRY_COUNT times.
 const MAX_RETRY_COUNT = 5;
@@ -184,28 +182,10 @@ function* testArrowScrollbox(id)
                                 retry = 0;
                                 return false;
                              });
-      if (IS_MAC && expected == aExpected && expected != 0) {
-        // XXX On macOS, <scrollbox>.scrollPosition += enoughInt; may not set the scrollPosition
-        //     to scrollSize even if enoughInt is larger than scrollSize.
-        todo_is(getPos(), expected,
-                "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
-                  " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
-                  " aDeltaMode " + aDeltaMode);
-        let isInRange = false;
-        if (aDelta > 0)
-          isInRange = getPos() > aStart && getPos() < expected;
-        else
-          isInRange = getPos() < aStart && getPos() > expected;
-        ok(isInRange,
-           "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
-             " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
-             " aDeltaMode " + aDeltaMode);
-      } else {
-        is(getPos(), expected,
-           "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
-             " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
-             " aDeltaMode " + aDeltaMode);
-      }
+      is(getPos(), expected,
+         "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
+           " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
+           " aDeltaMode " + aDeltaMode);
     }
 
     scrollbox.scrollTo(aStart, aStart);
@@ -234,28 +214,10 @@ function* testArrowScrollbox(id)
                                 retry = 0;
                                 return false;
                              });
-      if (IS_MAC && expected == aExpected && expected != 0) {
-        // XXX On macOS, <scrollbox>.scrollPosition += enoughInt; may not set the scrollPosition
-        //     to scrollSize even if enoughInt is larger than scrollSize.
-        todo_is(getPos(), expected,
-                "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
-                  " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
-                  " aDeltaMode " + aDeltaMode);
-        let isInRange = false;
-        if (aDelta > 0)
-          isInRange = getPos() > aStart && getPos() < expected;
-        else
-          isInRange = getPos() < aStart && getPos() > expected;
-        ok(isInRange,
-           "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
-             " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
-             " aDeltaMode " + aDeltaMode);
-      } else {
-        is(getPos(), expected,
-           "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
-             " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
-             " aDeltaMode " + aDeltaMode);
-      }
+      is(getPos(), expected,
+         "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
+           " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
+           " aDeltaMode " + aDeltaMode);
     }
   }
 

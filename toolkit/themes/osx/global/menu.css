@@ -167,3 +167,33 @@ menuseparator {
   margin: 5px 0;
   padding: 1px 0;
 }
+
+/* ::::: scroll buttons :::::*/
+
+.popup-internal-box:not(:-moz-lwtheme)::part(scrollbutton-up),
+.popup-internal-box:not(:-moz-lwtheme)::part(scrollbutton-down) {
+  position: relative;
+  /* Here we're using a little magic.
+   * The arrow button is supposed to overlay the scrollbox, blocking
+   * everything under it from reaching the screen. However, the menu background
+   * is slightly transparent, so how can we block something completely without
+   * messing up the transparency? It's easy: The native theming of the
+   * "menuitem" appearance uses CGContextClearRect before drawing, which
+   * clears everything under it.
+   * Without help from native theming this effect wouldn't be achievable.
+   */
+  -moz-appearance: menuitem;
+}
+
+.popup-internal-box:not(:-moz-lwtheme)::part(scrollbutton-up) {
+  margin-bottom: -20px;
+}
+
+.popup-internal-box:not(:-moz-lwtheme)::part(scrollbutton-down) {
+  margin-top: -20px;
+}
+
+.popup-internal-box:not(:-moz-lwtheme)[scrolledtostart="true"]::part(scrollbutton-up),
+.popup-internal-box:not(:-moz-lwtheme)[scrolledtoend="true"]::part(scrollbutton-down) {
+  visibility: collapse;
+}
