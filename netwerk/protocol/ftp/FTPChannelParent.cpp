@@ -113,7 +113,7 @@ bool FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
 
 #ifdef DEBUG
   LOG(("FTPChannelParent DoAsyncOpen [this=%p uri=%s]\n", this,
-       aURI->GetSpecOrDefault().get()));
+       uri->GetSpecOrDefault().get()));
 #endif
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
@@ -427,12 +427,14 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest) {
     Unused << httpChan->GetLastModifiedTime(&lastModified);
   }
 
+  URIParams uriparam;
   nsCOMPtr<nsIURI> uri;
   chan->GetURI(getter_AddRefs(uri));
+  SerializeURI(uri, uriparam);
 
   if (mIPCClosed ||
       !SendOnStartRequest(channelStatus, contentLength, contentType,
-                          lastModified, entityID, uri)) {
+                          lastModified, entityID, uriparam)) {
     return NS_ERROR_UNEXPECTED;
   }
 
