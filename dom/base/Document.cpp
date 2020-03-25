@@ -16042,9 +16042,14 @@ void Document::ReportShadowDOMUsage() {
   mHasReportedShadowDOMUsage = true;
 }
 
-bool Document::StorageAccessSandboxed() const {
+// static
+bool Document::StorageAccessSandboxed(uint32_t aSandboxFlags) {
   return StaticPrefs::dom_storage_access_enabled() &&
-         (GetSandboxFlags() & SANDBOXED_STORAGE_ACCESS) != 0;
+         (aSandboxFlags & SANDBOXED_STORAGE_ACCESS) != 0;
+}
+
+bool Document::StorageAccessSandboxed() const {
+  return Document::StorageAccessSandboxed(GetSandboxFlags());
 }
 
 bool Document::GetCachedSizes(nsTabSizes* aSizes) {

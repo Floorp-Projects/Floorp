@@ -1423,6 +1423,10 @@ class Document : public nsINode,
   // flag.
   bool StorageAccessSandboxed() const;
 
+  // Helper method that returns true if storage access API is enabled and
+  // the passed flag has storage-access sandbox flag.
+  static bool StorageAccessSandboxed(uint32_t aSandboxFlags);
+
   // Returns the cookie jar settings for this and sub contexts.
   nsICookieJarSettings* CookieJarSettings();
 
