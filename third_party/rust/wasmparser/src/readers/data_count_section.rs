@@ -19,10 +19,10 @@ pub(crate) fn read_data_count_section_content(data: &[u8], offset: usize) -> Res
     let mut reader = BinaryReader::new_with_offset(data, offset);
     let count = reader.read_var_u32()?;
     if !reader.eof() {
-        return Err(BinaryReaderError {
-            message: "Unexpected content in the data count section",
-            offset: offset + reader.position,
-        });
+        return Err(BinaryReaderError::new(
+            "Unexpected content in the data count section",
+            offset + reader.position,
+        ));
     }
     Ok(count)
 }

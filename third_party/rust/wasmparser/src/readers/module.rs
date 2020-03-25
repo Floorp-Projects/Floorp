@@ -368,16 +368,16 @@ impl<'a> ModuleReader<'a> {
 
     fn verify_section_end(&self, end: usize) -> Result<()> {
         if self.reader.buffer.len() < end {
-            return Err(BinaryReaderError {
-                message: "Section body extends past end of file",
-                offset: self.reader.buffer.len(),
-            });
+            return Err(BinaryReaderError::new(
+                "Section body extends past end of file",
+                self.reader.buffer.len(),
+            ));
         }
         if self.reader.position > end {
-            return Err(BinaryReaderError {
-                message: "Section header is too big to fit into section body",
-                offset: end,
-            });
+            return Err(BinaryReaderError::new(
+                "Section header is too big to fit into section body",
+                end,
+            ));
         }
         Ok(())
     }

@@ -1,7 +1,6 @@
 //! A frontend for building Cranelift IR from other languages.
-use crate::ssa::{SSABlock, SSABuilder, SideEffects};
+use crate::ssa::{SSABuilder, SideEffects};
 use crate::variable::Variable;
-use alloc::vec::Vec;
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
 use cranelift_codegen::entity::{EntitySet, SecondaryMap};
 use cranelift_codegen::ir;
@@ -36,16 +35,16 @@ pub struct FunctionBuilder<'a> {
     srcloc: ir::SourceLoc,
 
     func_ctx: &'a mut FunctionBuilderContext,
-    position: Position,
+    position: PackedOption<Block>,
 }
 
 #[derive(Clone, Default)]
 struct BlockData {
-    /// An Block is "pristine" iff no instructions have been added since the last
+    /// A Block is "pristine" iff no instructions have been added since the last
     /// call to `switch_to_block()`.
     pristine: bool,
 
-    /// An Block is "filled" iff a terminator instruction has been inserted since
+    /// A Block is "filled" iff a terminator instruction has been inserted since
     /// the last call to `switch_to_block()`.
     ///
     /// A filled block cannot be pristine.
@@ -53,25 +52,6 @@ struct BlockData {
 
     /// Count of parameters not supplied implicitly by the SSABuilder.
     user_param_count: usize,
-}
-
-#[derive(Default)]
-struct Position {
-    block: PackedOption<Block>,
-    basic_block: PackedOption<SSABlock>,
-}
-
-impl Position {
-    fn at(block: Block, basic_block: SSABlock) -> Self {
-        Self {
-            block: PackedOption::from(block),
-            basic_block: PackedOption::from(basic_block),
-        }
-    }
-
-    fn is_default(&self) -> bool {
-        self.block.is_none() && self.basic_block.is_none()
-    }
 }
 
 impl FunctionBuilderContext {
@@ -159,25 +139,22 @@ impl<'short, 'long> InstBuilderBase<'short> for FuncInstBuilder<'short, 'long> {
                             .iter()
                             .filter(|&dest_block| unique.insert(*dest_block))
                         {
+                            // Call `declare_block_predecessor` instead of `declare_successor` for
+                            // avoiding the borrow checker.
                             self.builder.func_ctx.ssa.declare_block_predecessor(
                                 *dest_block,
-                                self.builder.position.basic_block.unwrap(),
+                                self.builder.position.unwrap(),
                                 inst,
                             );
                         }
-                        self.builder.func_ctx.ssa.declare_block_predecessor(
-                            destination,
-                            self.builder.position.basic_block.unwrap(),
-                            inst,
-                        );
+                        self.builder.declare_successor(destination, inst);
                     }
                 }
             }
         }
+
         if data.opcode().is_terminator() {
             self.builder.fill_current_block()
-        } else if data.opcode().is_branch() {
-            self.builder.move_to_next_basic_block()
         }
         (inst, &mut self.builder.func.dfg)
     }
@@ -225,7 +202,7 @@ impl<'a> FunctionBuilder<'a> {
             func,
             srcloc: Default::default(),
             func_ctx,
-            position: Position::default(),
+            position: Default::default(),
         }
     }
 
@@ -237,7 +214,7 @@ impl<'a> FunctionBuilder<'a> {
     /// Creates a new `Block` and returns its reference.
     pub fn create_block(&mut self) -> Block {
         let block = self.func.dfg.make_block();
-        self.func_ctx.ssa.declare_block_header_block(block);
+        self.func_ctx.ssa.declare_block(block);
         self.func_ctx.blocks[block] = BlockData {
             filled: false,
             pristine: true,
@@ -256,7 +233,7 @@ impl<'a> FunctionBuilder<'a> {
     pub fn switch_to_block(&mut self, block: Block) {
         // First we check that the previous block has been filled.
         debug_assert!(
-            self.position.is_default()
+            self.position.is_none()
                 || self.is_unreachable()
                 || self.is_pristine()
                 || self.is_filled(),
@@ -268,9 +245,8 @@ impl<'a> FunctionBuilder<'a> {
             "you cannot switch to a block which is already filled"
         );
 
-        let basic_block = self.func_ctx.ssa.header_block(block);
         // Then we change the cursor position.
-        self.position = Position::at(block, basic_block);
+        self.position = PackedOption::from(block);
     }
 
     /// Declares that all the predecessors of this block are known.
@@ -279,7 +255,7 @@ impl<'a> FunctionBuilder<'a> {
     /// created. Forgetting to call this method on every block will cause inconsistencies in the
     /// produced functions.
     pub fn seal_block(&mut self, block: Block) {
-        let side_effects = self.func_ctx.ssa.seal_block_header_block(block, self.func);
+        let side_effects = self.func_ctx.ssa.seal_block(block, self.func);
         self.handle_ssa_side_effects(side_effects);
     }
 
@@ -290,7 +266,7 @@ impl<'a> FunctionBuilder<'a> {
     /// function can be used at the end of translating all blocks to ensure
     /// that everything is sealed.
     pub fn seal_all_blocks(&mut self) {
-        let side_effects = self.func_ctx.ssa.seal_all_block_header_blocks(self.func);
+        let side_effects = self.func_ctx.ssa.seal_all_blocks(self.func);
         self.handle_ssa_side_effects(side_effects);
     }
 
@@ -311,7 +287,7 @@ impl<'a> FunctionBuilder<'a> {
             });
             self.func_ctx
                 .ssa
-                .use_var(self.func, var, ty, self.position.basic_block.unwrap())
+                .use_var(self.func, var, ty, self.position.unwrap())
         };
         self.handle_ssa_side_effects(side_effects);
         val
@@ -331,9 +307,7 @@ impl<'a> FunctionBuilder<'a> {
             val
         );
 
-        self.func_ctx
-            .ssa
-            .def_var(var, val, self.position.basic_block.unwrap());
+        self.func_ctx.ssa.def_var(var, val, self.position.unwrap());
     }
 
     /// Set label for Value
@@ -396,14 +370,13 @@ impl<'a> FunctionBuilder<'a> {
     pub fn ins<'short>(&'short mut self) -> FuncInstBuilder<'short, 'a> {
         let block = self
             .position
-            .block
             .expect("Please call switch_to_block before inserting instructions");
         FuncInstBuilder::new(self, block)
     }
 
     /// Make sure that the current block is inserted in the layout.
     pub fn ensure_inserted_block(&mut self) {
-        let block = self.position.block.unwrap();
+        let block = self.position.unwrap();
         if self.func_ctx.blocks[block].pristine {
             if !self.func.layout.is_block_inserted(block) {
                 self.func.layout.append_block(block);
@@ -425,7 +398,7 @@ impl<'a> FunctionBuilder<'a> {
         self.ensure_inserted_block();
         FuncCursor::new(self.func)
             .with_srcloc(self.srcloc)
-            .at_bottom(self.position.block.unwrap())
+            .at_bottom(self.position.unwrap())
     }
 
     /// Append parameters to the given `Block` corresponding to the function
@@ -496,7 +469,7 @@ impl<'a> FunctionBuilder<'a> {
 
         // Reset srcloc and position to initial states.
         self.srcloc = Default::default();
-        self.position = Position::default();
+        self.position = Default::default();
     }
 }
 
@@ -561,26 +534,26 @@ impl<'a> FunctionBuilder<'a> {
     pub fn is_unreachable(&self) -> bool {
         let is_entry = match self.func.layout.entry_block() {
             None => false,
-            Some(entry) => self.position.block.unwrap() == entry,
+            Some(entry) => self.position.unwrap() == entry,
         };
         !is_entry
-            && self.func_ctx.ssa.is_sealed(self.position.block.unwrap())
+            && self.func_ctx.ssa.is_sealed(self.position.unwrap())
             && !self
                 .func_ctx
                 .ssa
-                .has_any_predecessors(self.position.block.unwrap())
+                .has_any_predecessors(self.position.unwrap())
     }
 
     /// Returns `true` if and only if no instructions have been added since the last call to
     /// `switch_to_block`.
     pub fn is_pristine(&self) -> bool {
-        self.func_ctx.blocks[self.position.block.unwrap()].pristine
+        self.func_ctx.blocks[self.position.unwrap()].pristine
     }
 
     /// Returns `true` if and only if a terminator instruction has been inserted since the
     /// last call to `switch_to_block`.
     pub fn is_filled(&self) -> bool {
-        self.func_ctx.blocks[self.position.block.unwrap()].filled
+        self.func_ctx.blocks[self.position.unwrap()].filled
     }
 
     /// Returns a displayable object for the function as it is.
@@ -626,8 +599,15 @@ impl<'a> FunctionBuilder<'a> {
         self.ins().call(libc_memcpy, &[dest, src, size]);
     }
 
-    /// Optimised memcpy for small copies.
-    pub fn emit_small_memcpy(
+    /// Optimised memcpy or memmove for small copies.
+    ///
+    /// # Codegen safety
+    ///
+    /// The following properties must hold to prevent UB:
+    ///
+    /// * `src_align` and `dest_align` are an upper-bound on the alignment of `src` respectively `dest`.
+    /// * If `non_overlapping` is true, then this must be correct.
+    pub fn emit_small_memory_copy(
         &mut self,
         config: TargetFrontendConfig,
         dest: Value,
@@ -635,6 +615,7 @@ impl<'a> FunctionBuilder<'a> {
         size: u64,
         dest_align: u8,
         src_align: u8,
+        non_overlapping: bool,
     ) {
         // Currently the result of guess work, not actual profiling.
         const THRESHOLD: u64 = 4;
@@ -663,16 +644,27 @@ impl<'a> FunctionBuilder<'a> {
 
         if load_and_store_amount > THRESHOLD {
             let size_value = self.ins().iconst(config.pointer_type(), size as i64);
-            self.call_memcpy(config, dest, src, size_value);
+            if non_overlapping {
+                self.call_memcpy(config, dest, src, size_value);
+            } else {
+                self.call_memmove(config, dest, src, size_value);
+            }
             return;
         }
 
         let mut flags = MemFlags::new();
         flags.set_aligned();
 
-        for i in 0..load_and_store_amount {
-            let offset = (access_size * i) as i32;
-            let value = self.ins().load(int_type, flags, src, offset);
+        // Load all of the memory first. This is necessary in case `dest` overlaps.
+        // It can also improve performance a bit.
+        let registers: smallvec::SmallVec<[_; THRESHOLD as usize]> = (0..load_and_store_amount)
+            .map(|i| {
+                let offset = (access_size * i) as i32;
+                (self.ins().load(int_type, flags, src, offset), offset)
+            })
+            .collect();
+
+        for (value, offset) in registers {
             self.ins().store(flags, value, dest, offset);
         }
     }
@@ -798,55 +790,6 @@ impl<'a> FunctionBuilder<'a> {
 
         self.ins().call(libc_memmove, &[dest, source, size]);
     }
-
-    /// Optimised memmove for small moves.
-    pub fn emit_small_memmove(
-        &mut self,
-        config: TargetFrontendConfig,
-        dest: Value,
-        src: Value,
-        size: u64,
-        dest_align: u8,
-        src_align: u8,
-    ) {
-        // Currently the result of guess work, not actual profiling.
-        const THRESHOLD: u64 = 4;
-
-        let access_size = greatest_divisible_power_of_two(size);
-        assert!(
-            access_size.is_power_of_two(),
-            "`size` is not a power of two"
-        );
-        assert!(
-            access_size >= u64::from(::core::cmp::min(src_align, dest_align)),
-            "`size` is smaller than `dest` and `src`'s alignment value."
-        );
-        let load_and_store_amount = size / access_size;
-
-        if load_and_store_amount > THRESHOLD {
-            let size_value = self.ins().iconst(config.pointer_type(), size as i64);
-            self.call_memmove(config, dest, src, size_value);
-            return;
-        }
-
-        let mut flags = MemFlags::new();
-        flags.set_aligned();
-
-        // Load all of the memory first in case `dest` overlaps.
-        let registers: Vec<_> = (0..load_and_store_amount)
-            .map(|i| {
-                let offset = (access_size * i) as i32;
-                (
-                    self.ins().load(config.pointer_type(), flags, src, offset),
-                    offset,
-                )
-            })
-            .collect();
-
-        for (value, offset) in registers {
-            self.ins().store(flags, value, dest, offset);
-        }
-    }
 }
 
 fn greatest_divisible_power_of_two(size: u64) -> u64 {
@@ -855,25 +798,15 @@ fn greatest_divisible_power_of_two(size: u64) -> u64 {
 
 // Helper functions
 impl<'a> FunctionBuilder<'a> {
-    fn move_to_next_basic_block(&mut self) {
-        self.position.basic_block = PackedOption::from(
-            self.func_ctx
-                .ssa
-                .declare_block_body_block(self.position.basic_block.unwrap()),
-        );
-    }
-
-    /// An Block is 'filled' when a terminator instruction is present.
+    /// A Block is 'filled' when a terminator instruction is present.
     fn fill_current_block(&mut self) {
-        self.func_ctx.blocks[self.position.block.unwrap()].filled = true;
+        self.func_ctx.blocks[self.position.unwrap()].filled = true;
     }
 
     fn declare_successor(&mut self, dest_block: Block, jump_inst: Inst) {
-        self.func_ctx.ssa.declare_block_predecessor(
-            dest_block,
-            self.position.basic_block.unwrap(),
-            jump_inst,
-        );
+        self.func_ctx
+            .ssa
+            .declare_block_predecessor(dest_block, self.position.unwrap(), jump_inst);
     }
 
     fn handle_ssa_side_effects(&mut self, side_effects: SideEffects) {
@@ -1104,7 +1037,7 @@ block0:
             let src = builder.use_var(x);
             let dest = builder.use_var(y);
             let size = 8;
-            builder.emit_small_memcpy(target.frontend_config(), dest, src, size, 8, 8);
+            builder.emit_small_memory_copy(target.frontend_config(), dest, src, size, 8, 8, true);
             builder.ins().return_(&[dest]);
 
             builder.seal_all_blocks();
@@ -1161,7 +1094,7 @@ block0:
             let src = builder.use_var(x);
             let dest = builder.use_var(y);
             let size = 8192;
-            builder.emit_small_memcpy(target.frontend_config(), dest, src, size, 8, 8);
+            builder.emit_small_memory_copy(target.frontend_config(), dest, src, size, 8, 8, true);
             builder.ins().return_(&[dest]);
 
             builder.seal_all_blocks();

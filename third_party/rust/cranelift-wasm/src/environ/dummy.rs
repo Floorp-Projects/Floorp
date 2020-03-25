@@ -11,8 +11,8 @@ use crate::environ::{
 use crate::func_translator::FuncTranslator;
 use crate::state::ModuleTranslationState;
 use crate::translation_utils::{
-    DefinedFuncIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table,
-    TableIndex,
+    DataIndex, DefinedFuncIndex, ElemIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex,
+    SignatureIndex, Table, TableIndex,
 };
 use core::convert::TryFrom;
 use cranelift_codegen::cursor::FuncCursor;
@@ -128,6 +128,9 @@ pub struct DummyEnvironment {
     /// Instructs to collect debug data during translation.
     debug_info: bool,
 
+    /// Name of the module from the wasm file.
+    pub module_name: Option<String>,
+
     /// Function names.
     function_names: SecondaryMap<FuncIndex, String>,
 }
@@ -141,6 +144,7 @@ impl DummyEnvironment {
             func_bytecode_sizes: Vec::new(),
             return_mode,
             debug_info,
+            module_name: None,
             function_names: SecondaryMap::new(),
         }
     }
@@ -605,6 +609,22 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
         Ok(())
     }
 
+    fn declare_passive_element(
+        &mut self,
+        _elem_index: ElemIndex,
+        _segments: Box<[FuncIndex]>,
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
+    fn declare_passive_data(
+        &mut self,
+        _elem_index: DataIndex,
+        _segments: &'data [u8],
+    ) -> WasmResult<()> {
+        Ok(())
+    }
+
     fn declare_memory(&mut self, memory: Memory) -> WasmResult<()> {
         self.info.memories.push(Exportable::new(memory));
         Ok(())
@@ -707,6 +727,11 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
         };
         self.func_bytecode_sizes.push(body_bytes.len());
         self.info.function_bodies.push(func);
+        Ok(())
+    }
+
+    fn declare_module_name(&mut self, name: &'data str) -> WasmResult<()> {
+        self.module_name = Some(String::from(name));
         Ok(())
     }
 
