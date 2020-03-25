@@ -13,6 +13,7 @@
 #include "jit/WarpBuilder.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
+#include "vm/Instrumentation.h"
 
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -149,14 +150,19 @@ AbortReasonOr<WarpEnvironment> WarpOracle::createEnvironment(
   return env;
 }
 
-WarpScriptSnapshot::WarpScriptSnapshot(JSScript* script,
-                                       const WarpEnvironment& env,
-                                       WarpOpSnapshotList&& opSnapshots,
-                                       ModuleObject* moduleObject)
+WarpScriptSnapshot::WarpScriptSnapshot(
+    JSScript* script, const WarpEnvironment& env,
+    WarpOpSnapshotList&& opSnapshots, ModuleObject* moduleObject,
+    JSObject* instrumentationCallback,
+    mozilla::Maybe<int32_t> instrumentationScriptId,
+    mozilla::Maybe<bool> instrumentationActive)
     : script_(script),
       environment_(env),
       opSnapshots_(std::move(opSnapshots)),
       moduleObject_(moduleObject),
+      instrumentationCallback_(instrumentationCallback),
+      instrumentationScriptId_(instrumentationScriptId),
+      instrumentationActive_(instrumentationActive),
       isArrowFunction_(script->isFunction() && script->function()->isArrow()) {}
 
 AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
@@ -177,6 +183,10 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       mozilla::MakeScopeExit([&] { opSnapshots.clear(); });
 
   ModuleObject* moduleObject = nullptr;
+
+  mozilla::Maybe<bool> instrumentationActive;
+  mozilla::Maybe<int32_t> instrumentationScriptId;
+  JSObject* instrumentationCallback = nullptr;
 
   // Analyze the bytecode to look for opcodes we can't compile yet. Eventually
   // this loop will also be responsible for copying IC data.
@@ -340,13 +350,53 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         break;
       }
 
+      case JSOp::InstrumentationActive: {
+        // All IonScripts in the realm are discarded when instrumentation
+        // activity changes, so we can treat the value we get as a constant.
+        if (instrumentationActive.isNothing()) {
+          bool active = RealmInstrumentation::isActive(cx_->global());
+          instrumentationActive.emplace(active);
+        }
+        break;
+      }
+
+      case JSOp::InstrumentationCallback: {
+        if (!instrumentationCallback) {
+          JSObject* obj = RealmInstrumentation::getCallback(cx_->global());
+          if (IsInsideNursery(obj)) {
+            // Unfortunately the callback can be nursery allocated. If this
+            // becomes an issue we should consider triggering a minor GC after
+            // installing it.
+            return abort(AbortReason::Disable,
+                         "Nursery-allocated instrumentation callback");
+          }
+          instrumentationCallback = obj;
+        }
+        break;
+      }
+
+      case JSOp::InstrumentationScriptId: {
+        // Getting the script ID requires interacting with the Debugger used for
+        // instrumentation, but cannot run script.
+        if (instrumentationScriptId.isNothing()) {
+          int32_t id = 0;
+          if (!RealmInstrumentation::getScriptId(cx_, cx_->global(), script,
+                                                 &id)) {
+            return abort(AbortReason::Error);
+          }
+          instrumentationScriptId.emplace(id);
+        }
+        break;
+      }
+
       default:
         break;
     }
   }
 
   auto* scriptSnapshot = new (alloc_.fallible()) WarpScriptSnapshot(
-      script, environment, std::move(opSnapshots), moduleObject);
+      script, environment, std::move(opSnapshots), moduleObject,
+      instrumentationCallback, instrumentationScriptId, instrumentationActive);
   if (!scriptSnapshot) {
     return abort(AbortReason::Alloc);
   }

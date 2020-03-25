@@ -2360,3 +2360,29 @@ bool WarpBuilder::build_OptimizeSpreadCall(BytecodeLocation loc) {
   pushConstant(BooleanValue(false));
   return true;
 }
+
+bool WarpBuilder::build_Debugger(BytecodeLocation loc) {
+  // The |debugger;| statement will bail out to Baseline if the realm is a
+  // debuggee realm with an onDebuggerStatement hook.
+  MDebugger* debugger = MDebugger::New(alloc());
+  current->add(debugger);
+  return resumeAfter(debugger, loc);
+}
+
+bool WarpBuilder::build_InstrumentationActive(BytecodeLocation) {
+  bool active = snapshot_.script()->instrumentationActive();
+  pushConstant(BooleanValue(active));
+  return true;
+}
+
+bool WarpBuilder::build_InstrumentationCallback(BytecodeLocation) {
+  JSObject* callback = snapshot_.script()->instrumentationCallback();
+  pushConstant(ObjectValue(*callback));
+  return true;
+}
+
+bool WarpBuilder::build_InstrumentationScriptId(BytecodeLocation) {
+  int32_t scriptId = snapshot_.script()->instrumentationScriptId();
+  pushConstant(Int32Value(scriptId));
+  return true;
+}

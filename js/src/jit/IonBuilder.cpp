@@ -12707,13 +12707,11 @@ AbortReasonOr<Ok> IonBuilder::jsop_instanceof() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_debugger() {
+  // The |debugger;| statement will bail out to Baseline if the realm is a
+  // debuggee realm with an onDebuggerStatement hook.
   MDebugger* debugger = MDebugger::New(alloc());
   current->add(debugger);
-
-  // The |debugger;| statement will always bail out to baseline if
-  // cx->compartment()->isDebuggee(). Resume in-place and have baseline
-  // handle the details.
-  return resumeAt(debugger, pc);
+  return resumeAfter(debugger);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_implicitthis(PropertyName* name) {
