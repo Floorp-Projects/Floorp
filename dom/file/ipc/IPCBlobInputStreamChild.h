@@ -8,6 +8,7 @@
 #define mozilla_dom_IPCBlobInputStreamChild_h
 
 #include "mozilla/dom/PIPCBlobInputStreamChild.h"
+#include "mozilla/dom/IPCBlobInputStream.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
