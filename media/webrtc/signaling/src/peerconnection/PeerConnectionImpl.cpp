@@ -77,8 +77,6 @@
 #include "js/RootingAPI.h"     // JS::{{,Mutable}Handle,Rooted}
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
-#include "mozilla/dom/RTCDTMFSenderBinding.h"
-#include "mozilla/dom/RTCDTMFToneChangeEvent.h"
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
 #include "mozilla/dom/RTCRtpSenderBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -1731,85 +1729,6 @@ nsresult PeerConnectionImpl::DisablePacketDump(unsigned long level,
   return NS_OK;
 }
 
-static int GetDTMFToneCode(uint16_t c) {
-  const char* DTMF_TONECODES = "0123456789*#ABCD";
-
-  if (c == ',') {
-    // , is a special character indicating a 2 second delay
-    return -1;
-  }
-
-  const char* i = strchr(DTMF_TONECODES, c);
-  MOZ_ASSERT(i);
-  return i - DTMF_TONECODES;
-}
-
-NS_IMETHODIMP
-PeerConnectionImpl::InsertDTMF(TransceiverImpl& transceiver,
-                               const nsAString& tones, uint32_t duration,
-                               uint32_t interToneGap) {
-  PC_AUTO_ENTER_API_CALL(false);
-
-  // Check values passed in from PeerConnection.js
-  MOZ_ASSERT(duration >= 40, "duration must be at least 40");
-  MOZ_ASSERT(duration <= 6000, "duration must be at most 6000");
-  MOZ_ASSERT(interToneGap >= 30, "interToneGap must be at least 30");
-
-  JSErrorResult jrv;
-
-  // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
-  // Attempt to locate state for the DTMFSender
-  RefPtr<DTMFState> state;
-  for (auto& dtmfState : mDTMFStates) {
-    if (dtmfState->mTransceiver.get() == &transceiver) {
-      state = dtmfState;
-      break;
-    }
-  }
-
-  // No state yet, create a new one
-  if (!state) {
-    state = *mDTMFStates.AppendElement(new DTMFState);
-    state->mPCObserver = mPCObserver;
-    state->mTransceiver = &transceiver;
-  }
-  MOZ_ASSERT(state);
-
-  state->mTones = tones;
-  state->mDuration = duration;
-  state->mInterToneGap = interToneGap;
-  if (!state->mTones.IsEmpty()) {
-    state->StartPlayout(0);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PeerConnectionImpl::GetDTMFToneBuffer(mozilla::dom::RTCRtpSender& sender,
-                                      nsAString& outToneBuffer) {
-  PC_AUTO_ENTER_API_CALL(false);
-
-  JSErrorResult jrv;
-
-  // Retrieve track
-  RefPtr<MediaStreamTrack> mst = sender.GetTrack(jrv);
-  if (jrv.Failed()) {
-    NS_WARNING("Failed to retrieve track for RTCRtpSender!");
-    return jrv.StealNSResult();
-  }
-
-  // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
-  // Attempt to locate state for the DTMFSender
-  for (auto& dtmfState : mDTMFStates) {
-    if (dtmfState->mTransceiver->HasSendTrack(mst)) {
-      outToneBuffer = dtmfState->mTones;
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
                                                 MediaStreamTrack* aWithTrack) {
@@ -1826,15 +1745,6 @@ PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
     CSFLogError(LOGTAG, "Failed to update transceiver: %d",
                 static_cast<int>(rv));
     return rv;
-  }
-
-  // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
-  for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
-    if (mDTMFStates[i]->mTransceiver.get() == &aTransceiver) {
-      mDTMFStates[i]->StopPlayout();
-      mDTMFStates.RemoveElementAt(i);
-      break;
-    }
   }
 
   if (aWithTrack) {
@@ -2089,11 +1999,6 @@ void PeerConnectionImpl::RecordEndOfCallTelemetry() const {
 
 nsresult PeerConnectionImpl::CloseInt() {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
-  for (auto& dtmfState : mDTMFStates) {
-    dtmfState->StopPlayout();
-  }
 
   // We do this at the end of the call because we want to make sure we've waited
   // for all trickle ICE candidates to come in; this can happen well after we've
@@ -2875,67 +2780,6 @@ void PeerConnectionImpl::startCallTelem() {
   // If we want to track Loop calls independently here, we need two histograms.
   Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_2, 1);
 }
-
-void PeerConnectionImpl::DTMFState::StopPlayout() {
-  if (mSendTimer) {
-    mSendTimer->Cancel();
-    mSendTimer = nullptr;
-  }
-}
-
-void PeerConnectionImpl::DTMFState::StartPlayout(uint32_t aDelay) {
-  if (!mSendTimer) {
-    mSendTimer = NS_NewTimer();
-    mSendTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
-  }
-}
-
-nsresult PeerConnectionImpl::DTMFState::Notify(nsITimer* timer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  StopPlayout();
-
-  if (!mTransceiver->IsSending()) {
-    return NS_OK;
-  }
-
-  nsString eventTone;
-  if (!mTones.IsEmpty()) {
-    uint16_t toneChar = mTones.CharAt(0);
-    int tone = GetDTMFToneCode(toneChar);
-
-    eventTone.Assign(toneChar);
-
-    mTones.Cut(0, 1);
-
-    if (tone == -1) {
-      StartPlayout(2000);
-    } else {
-      // Reset delay if necessary
-      StartPlayout(mDuration + mInterToneGap);
-      mTransceiver->InsertDTMFTone(tone, mDuration);
-    }
-  }
-
-  RefPtr<dom::MediaStreamTrack> sendTrack = mTransceiver->GetSendTrack();
-  if (!sendTrack) {
-    NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
-    return NS_OK;  // Return is ignored anyhow
-  }
-
-  JSErrorResult jrv;
-  mPCObserver->OnDTMFToneChange(*sendTrack, eventTone, jrv);
-
-  if (jrv.Failed()) {
-    NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
-  }
-
-  return NS_OK;
-}
-
-PeerConnectionImpl::DTMFState::DTMFState() = default;
-PeerConnectionImpl::DTMFState::~DTMFState() { StopPlayout(); }
-
-NS_IMPL_ISUPPORTS(PeerConnectionImpl::DTMFState, nsITimerCallback)
 
 std::map<std::string, PeerConnectionAutoTimer> PeerConnectionImpl::mAutoTimers;
 }  // namespace mozilla

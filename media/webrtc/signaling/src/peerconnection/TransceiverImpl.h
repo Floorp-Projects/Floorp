@@ -32,6 +32,7 @@ class WebRtcCallWrapper;
 class JsepTrackNegotiatedDetails;
 
 namespace dom {
+class RTCDTMFSender;
 class RTCRtpTransceiver;
 struct RTCRtpSourceEntry;
 class RTCRtpReceiver;
@@ -93,8 +94,9 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   nsPIDOMWindowInner* GetParentObject() const;
   void SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver, ErrorResult& aRv);
   dom::RTCRtpReceiver* Receiver() const { return mReceiver; }
+  dom::RTCDTMFSender* GetDtmf() const { return mDtmf; }
 
-  void InsertDTMFTone(int tone, uint32_t duration);
+  bool CanSendDTMF() const;
 
   // TODO: These are for stats; try to find a cleaner way.
   RefPtr<MediaPipelineTransmit> GetSendPipeline();
@@ -108,6 +110,11 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   bool IsSending() const {
     return !mJsepTransceiver->IsStopped() &&
            mJsepTransceiver->mSendTrack.GetActive();
+  }
+
+  bool IsReceiving() const {
+    return !mJsepTransceiver->IsStopped() &&
+           mJsepTransceiver->mRecvTrack.GetActive();
   }
 
   void GetRtpSources(const int64_t aTimeNow,
@@ -154,6 +161,8 @@ class TransceiverImpl : public nsISupports, public nsWrapperCache {
   RefPtr<MediaSessionConduit> mConduit;
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;
   RefPtr<dom::RTCRtpReceiver> mReceiver;
+  // TODO(bug 1616937): Move this to RTCRtpSender
+  RefPtr<dom::RTCDTMFSender> mDtmf;
 };
 
 }  // namespace mozilla

@@ -47,12 +47,6 @@ interface PeerConnectionImpl  {
                                         MediaStreamTrack? track);
   [Throws]
   boolean checkNegotiationNeeded();
-  [Throws]
-  void insertDTMF(TransceiverImpl transceiver, DOMString tones,
-                  optional unsigned long duration = 100,
-                  optional unsigned long interToneGap = 70);
-  [Throws]
-  DOMString getDTMFToneBuffer(RTCRtpSender sender);
 
   [Throws]
   void replaceTrackNoRenegotiation(TransceiverImpl transceiverImpl,
