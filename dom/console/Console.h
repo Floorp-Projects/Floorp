@@ -238,8 +238,8 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
                      ConsoleCallData* aData);
 
   // PopulateConsoleNotificationInTheTargetScope receives aCx and aArguments in
-  // the same JS compartment and populates the ConsoleEvent object (aValue) in
-  // the aTargetScope.
+  // the same JS compartment and populates the ConsoleEvent object
+  // (aEventValue) in the aTargetScope.
   // aTargetScope can be:
   // - the system-principal scope when we want to dispatch the ConsoleEvent to
   //   nsIConsoleAPIStorage (See the comment in Console.cpp about the use of
@@ -248,10 +248,11 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   //   handler about a new ConsoleEvent.
   // - It can be the global from the JSContext when RetrieveConsoleEvents is
   //   called.
-  bool PopulateConsoleNotificationInTheTargetScope(
+  static bool PopulateConsoleNotificationInTheTargetScope(
       JSContext* aCx, const Sequence<JS::Value>& aArguments,
-      JS::Handle<JSObject*> aTargetScope, JS::MutableHandle<JS::Value> aValue,
-      ConsoleCallData* aData, nsTArray<nsString>* aGroupStack);
+      JS::Handle<JSObject*> aTargetScope,
+      JS::MutableHandle<JS::Value> aEventValue, ConsoleCallData* aData,
+      nsTArray<nsString>* aGroupStack);
 
   enum TimerStatus {
     eTimerUnknown,

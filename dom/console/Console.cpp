@@ -102,8 +102,11 @@ class ConsoleCallData final {
  public:
   NS_INLINE_DECL_REFCOUNTING(ConsoleCallData)
 
-  ConsoleCallData(Console::MethodName aName, const nsAString& aString)
-      : mMethodName(aName),
+  ConsoleCallData(Console::MethodName aName, const nsAString& aString,
+                  Console* aConsole)
+      : mConsoleID(aConsole->mConsoleID),
+        mPrefix(aConsole->mPrefix),
+        mMethodName(aName),
         mTimeStamp(JS_Now() / PR_USEC_PER_MSEC),
         mStartTimerValue(0),
         mStartTimerStatus(Console::eTimerUnknown),
@@ -145,6 +148,9 @@ class ConsoleCallData final {
   void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(ConsoleCallData);
   }
+
+  const nsString mConsoleID;
+  const nsString mPrefix;
 
   const Console::MethodName mMethodName;
   int64_t mTimeStamp;
@@ -1293,7 +1299,7 @@ void Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   ConsoleCommon::ClearException ce(aCx);
 
   RefPtr<ConsoleCallData> callData =
-      new ConsoleCallData(aMethodName, aMethodString);
+      new ConsoleCallData(aMethodName, aMethodString, this);
   if (!StoreCallData(aCx, callData, aData)) {
     return;
   }
@@ -1553,6 +1559,7 @@ void Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
   }
 }
 
+/* static */
 bool Console::PopulateConsoleNotificationInTheTargetScope(
     JSContext* aCx, const Sequence<JS::Value>& aArguments,
     JS::Handle<JSObject*> aTargetScope,
@@ -1591,10 +1598,10 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
     event.mInnerID.Value().SetAsUnsignedLongLong() = 0;
   }
 
-  event.mConsoleID = mConsoleID;
+  event.mConsoleID = aData->mConsoleID;
   event.mLevel = aData->mMethodString;
   event.mFilename = frame.mFilename;
-  event.mPrefix = mPrefix;
+  event.mPrefix = aData->mPrefix;
 
   nsCOMPtr<nsIURI> filenameURI;
   nsAutoCString pass;
