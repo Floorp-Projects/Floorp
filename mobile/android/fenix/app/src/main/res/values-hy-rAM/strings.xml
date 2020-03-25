@@ -26,8 +26,8 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description">%1$s-ը մաքրում է ձեր որոնման և զննարկման պատմությունը, երբ դուրս եք գալիս ծրագրից կամ փակում եք բոլոր գաղտնի ներդիրները: Չնայած դա ձեզ անանուն չի դարձնում ինտերնետային կայքերի կամ ձեր ինտերնետային ծառայություններ մատուցողի համար, այն ավելի հեշտ է
-        դարձնում ձեր ռցանց ակտիվության գաղտնիությունը այն դեպքում, եթե մեկ ուրիշը ևս օգտագործում է այս սարքը:</string>
-    <string name="private_browsing_common_myths">Հասմարակ առասպելներ գաղտնի կդիտարկման վերաբերյալ</string>
+        դարձնում ձեր առցանց ակտիվության գաղտնիությունը այն դեպքում, եթե մեկ ուրիշը ևս օգտագործում է այս սարքը:</string>
+    <string name="private_browsing_common_myths">Տարածված առասպելներ գաղտնի դիտարկման վերաբերյալ</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ջնջել աշխատաշրջանը</string>
 
@@ -48,7 +48,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Բացել ներդիրները</string>
+    <string name="browser_tabs_button">Բաց ներդիրներ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Վերադառնալ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -62,7 +62,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Խմբագրել Էջանիշը</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Հավելումների կառավարիչ</string>
+    <string name="browser_menu_add_ons">Հավելումներ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Հավելումներ չկան</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -72,7 +72,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Կարգավորումներ</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Ձեր գրադարանը</string>
+    <string name="browser_menu_library">Գրադարան</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Դեսքթոփ տարբերակ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -87,7 +87,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Նոր ներդիր</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Պահել հավաքածույում</string>
+    <string name="browser_menu_save_to_collection_2">Պահպանել հավաքածույում</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Զեկուցել կայքի խնդրի մասին</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -404,7 +404,7 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">Բացել ներդիրները</string>
+    <string name="tab_header_label">Բաց ներդիրներ</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Գաղտնի աշխատաշրջան</string>
     <!-- Title for the list of tabs in the current private session -->
@@ -442,7 +442,7 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">Վերանվանել հավաքածուն</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">Բացել ներդիրները</string>
+    <string name="collection_open_tabs">Բաց ներդիրներ</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Ջնջել</string>
 
@@ -600,18 +600,16 @@
 
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Անջ.</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Տեսանյութը և ձայնանյութն արգելափակված են</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Տեսանյութը և ձայնանյութն թույլատրված են</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Թույլատրել ձայնանյութը և տեսանյութը</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Թույլատրել ձայնանյութը և տեսանյութը միայն Wi-Fi-ով</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Արգելափակել ձայնանյութը և տեսանյութը միայն բջջային տվյալներում</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Ձայնանյութը և տեսանյութը կնվագարկվեն միայն Wi-Fi-ով</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Արգելափակել ձայնանյութը</string>
+    <string name="preference_option_autoplay_block_audio2">Արգելափակել միայն ձայնանյութը</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Արգելափակել տեսանյութը և ձայնանյութը</string>
+    <string name="preference_option_autoplay_blocked3">Արգելափակել ձայնանյութը և տեսանյութը</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Միաց.</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -777,7 +775,7 @@
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Ջնջել դիտարկման տվյալները</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Բացել ներդիրները</string>
+    <string name="preferences_delete_browsing_data_tabs_title">Բաց ներդիրներ</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ներդիրներ</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1164,7 +1162,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Անվտանգ դարձրեք ձեր մուտքանունները և գաղտնաբառերը</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Ստեղծեք սարքի կողպեքի նմուշ, PIN կամ գաղտնաբառ՝ ձեր պահպանված մուտքանունները և գաղտնաբառերը մատչումից պաշտպանելու համար, եթե ձեր արքը ուրիշի ձեռքն ընկնի:</string>
+    <string name="logins_warning_dialog_message">Ստեղծեք սարքի կողպեքի նմուշ, PIN կամ գաղտնաբառ՝ ձեր պահպանված մուտքանունները և գաղտնաբառերը մուտք գործելուց պաշտպանելու համար, եթե ձեր սարքը ուրիշի ձեռքն ընկնի:</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Ավելի ուշ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

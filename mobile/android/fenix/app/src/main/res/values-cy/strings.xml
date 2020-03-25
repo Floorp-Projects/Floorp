@@ -62,7 +62,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Golygu nod tudalen</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Rheolwr Ychwanegion</string>
+    <string name="browser_menu_add_ons">Ychwanegion</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Dim ychwanegion yma</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -72,7 +72,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Gosodiadau</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Eich Llyfrgell</string>
+    <string name="browser_menu_library">Llyfrgell</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Gwefan bwrdd gwaith</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -86,7 +86,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Tab newydd</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Cadw i’r Casgliad</string>
+    <string name="browser_menu_save_to_collection_2">Cadw i’r casgliad</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Adrodd ar fater gwefan</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -600,18 +600,16 @@
     <string name="tracking_protection_on">Ymlaen</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Diffodd</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Fideo a sain wedi’u rhwystro</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Fideo a sain wedi’u caniatáu</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Caniatáu sain a fideo</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Caniatáu sain a fideo ar ddiwifr yn unig</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Rhwystro sain a fideo ar ddata cellol yn unig</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Bydd sain a fideo yn chwarae ar ddiwifr</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Rhwystro sain</string>
+    <string name="preference_option_autoplay_block_audio2">Rhwystro sain yn unig</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Rhwystro sain a fideo</string>
+    <string name="preference_option_autoplay_blocked3">Rhwystro sain a fideo</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Ymlaen</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->

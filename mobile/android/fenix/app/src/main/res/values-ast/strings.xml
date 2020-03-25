@@ -371,6 +371,8 @@
     <string name="close_tab">Zarrar la llingüeta</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Zarrar la llingüeta %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Menú de llingüetes abiertes</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Zarrar toles llingüetes</string>
 
@@ -386,6 +388,8 @@
     <string name="current_session_save">Guardar</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Compartir</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Imaxe de la sesión actual</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Guardar nuna coleición</string>
     <!-- Text for the menu button to delete a collection -->
@@ -489,6 +493,10 @@
     <string name="permissions_header">Permisos</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Dir a Axustes</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Páxina d\'axustes rápidos</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Aconséyase</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -1048,6 +1056,8 @@
 
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Desbloquia pa ver los anicios de sesión guardaos</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Anicios de sesión y contraseñes seguros</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Configura un patrón de bloquéu, PIN o una contraseña pa protexer los anicios de sesión guardaos y contraseñes, y evitar qu\'otros usuarios accedan a ellos.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->

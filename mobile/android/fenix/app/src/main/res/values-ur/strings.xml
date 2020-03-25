@@ -56,7 +56,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">بُک مارک کی تدوین کریں</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">ایڈ اون منتظم</string>
+    <string name="browser_menu_add_ons">ایڈ اون</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">یہاں کوئی ایڈونس نہیں ہے</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -66,7 +66,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">سیٹنگز</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">آپ کی لائبریری</string>
+    <string name="browser_menu_library">لائبریری</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ڈیسک ٹاپ سائٹ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -79,9 +79,9 @@
     <string name="browser_menu_private_tab">نجی ٹیب</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">نیا ٹیب</string>
-    <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">مجموعہ میں محفوظ کریں</string>
 
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">مجموعہ میں محفوظ کریں</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">سائٹ مسلہ رپورٹ کریں</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -602,18 +602,16 @@
     <string name="tracking_protection_on">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">بند</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">ویڈیو اور آڈیو مسدود ہے</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">ویڈیو اور آڈیو کی اجازت ہے</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">آڈیو اور ویڈیو کی اجازت دیں</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">آڈیو اور ویڈیو کو صرف Wi-Fi پر اجازت دیں</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">صرف سیلولر ڈیٹا پر آڈیو اور ویڈیو بلاک کریں</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Wi-Fi پر آڈیو اور ویڈیو چلے گی</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">آڈیو کو مسدود کریں</string>
+    <string name="preference_option_autoplay_block_audio2">صرف آڈیو بلاک کریں</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">ویڈیو اور آڈیو کو مسدود کریں</string>
+    <string name="preference_option_autoplay_blocked3">آڈیو اور ویڈیو بلاک کریں</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">چالو</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -945,6 +943,10 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies">کوکیز</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">کراس سائٹ اور سوشل میڈیا ٹریکرز</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">تمام تیسری تنظیم کے کوکیز (ویب سائٹس کے ٹوٹنے کا سبب بن سکتی ہے)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">تمام کوکیز (ویب سائٹس کے ٹوٹنے کا سبب بن سکتی ہے)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ٹریکنگ مواد</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1107,6 +1109,9 @@
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_set_up_now">ابھی سیٹ اپ کریں</string>
 
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">اپنے آلے کو ان لاک کریں</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
     <!-- Title of the Edit search engine screen -->
@@ -1161,6 +1166,9 @@
     <string name="phone_feature_blocked_intro">اس کی اجازت دینے کے لئے:</string>
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Android کی ترتیبات پر جائیں</string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> کو چالو کرنے کے لئے ٹو گل کریں]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">مھفوظ کنکشن</string>
