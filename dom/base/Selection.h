@@ -153,6 +153,14 @@ class Selection final : public nsSupportsWeakReference,
 
  private:
   /**
+   * https://w3c.github.io/selection-api/#selectstart-event.
+   */
+  enum class DispatchSelectstartEvent {
+    No,
+    Maybe,
+  };
+
+  /**
    * Adds aRange to this Selection.  If mUserInitiated is true,
    * then aRange is first scanned for -moz-user-select:none nodes and split up
    * into multiple ranges to exclude those before adding the resulting ranges
@@ -163,8 +171,9 @@ class Selection final : public nsSupportsWeakReference,
    *                  containing it. -1 if mRanges was empty and no range was
    *                  added.
    */
-  nsresult AddRangesForSelectableNodes(nsRange* aRange, int32_t* aOutIndex,
-                                       bool aNoStartSelect = false);
+  nsresult AddRangesForSelectableNodes(
+      nsRange* aRange, int32_t* aOutIndex,
+      DispatchSelectstartEvent aDispatchSelectstartEvent);
 
   /**
    * Doesn't remove `aRange` from `mAnchorFocusRange`.
