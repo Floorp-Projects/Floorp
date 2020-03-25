@@ -100,8 +100,7 @@ static const nsLiteralCString kPreloadPermissions[] = {
     // interception when a user has disabled storage for a specific site.  Once
     // service worker interception moves to the parent process this should be
     // removed.  See bug 1428130.
-    NS_LITERAL_CSTRING("cookie"), NS_LITERAL_CSTRING("trackingprotection"),
-    NS_LITERAL_CSTRING("trackingprotection-pb"),
+    NS_LITERAL_CSTRING("cookie"),
 
     USER_INTERACTION_PERM};
 
