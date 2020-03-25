@@ -73,7 +73,7 @@ object ErrorPages {
     ): String {
         val title = context.getString(errorType.titleRes)
         val button = context.getString(errorType.refreshButtonRes)
-        val description = context.getString(errorType.messageRes)
+        val description = context.getString(errorType.messageRes, uri)
         val imageName = if (errorType.imageNameRes != null) context.getString(errorType.imageNameRes) + ".svg" else ""
         val badCertAdvanced = context.getString(R.string.mozac_browser_errorpages_security_bad_cert_advanced)
         val badCertTechInfo = context.getString(R.string.mozac_browser_errorpages_security_bad_cert_techInfo,

@@ -112,10 +112,12 @@ class ErrorPagesTest {
 
         val htmlFilename = "htmlResource.html"
 
+        val uri = "sampleUri"
+
         val errorPage = createUrlEncodedErrorPage(
             context,
             errorType,
-            null,
+            uri,
             htmlFilename
         )
 
@@ -127,7 +129,7 @@ class ErrorPagesTest {
 
         assertTrue(errorPage.startsWith("resource://android/assets/$htmlFilename"))
         assertTrue(errorPage.contains("&button=${context.resources.getString(errorType.refreshButtonRes)}"))
-        assertTrue(errorPage.contains("&description=${context.resources.getString(errorType.messageRes)}"))
+        assertTrue(errorPage.contains("&description=${context.resources.getString(errorType.messageRes, uri)}"))
         assertTrue(errorPage.contains("&image=$expectedImageName"))
     }
 }
