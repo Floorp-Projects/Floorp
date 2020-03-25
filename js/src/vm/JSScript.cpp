@@ -4056,6 +4056,10 @@ void JSScript::relazify(JSRuntime* rt) {
   MOZ_ASSERT(isUsingInterpreterTrampoline(rt));
 #endif
 
+  // Without bytecode, the script counts are invalid so destroy them if they
+  // still exist.
+  destroyScriptCounts();
+
   // Release the bytecode and gcthings list.
   // NOTE: We clear the PrivateScriptData to nullptr. This is fine because we
   //       only allowed relazification (via AllowRelazify) if the original lazy
