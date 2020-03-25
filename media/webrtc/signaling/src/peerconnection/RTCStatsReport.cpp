@@ -26,6 +26,8 @@ RTCStatsTimestampMaker::RTCStatsTimestampMaker(const GlobalObject* aGlobal) {
     // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
     mStartWallClockRaw =
         PerformanceService::GetOrCreate()->TimeOrigin(mStartMonotonic);
+    MOZ_ASSERT(window->AsGlobal());
+    mCrossOriginIsolated = window->AsGlobal()->CrossOriginIsolated();
   }
 }
 
@@ -42,10 +44,13 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
   // mRandomTimelineSeed is not set in the unit-tests.
   if (mRandomTimelineSeed) {
     msSinceStart = nsRFPService::ReduceTimePrecisionAsMSecs(
-        msSinceStart, mRandomTimelineSeed);
+        msSinceStart, mRandomTimelineSeed, /* aIsSystemPrincipal */ false,
+        mCrossOriginIsolated);
   }
-  return msSinceStart +
-         nsRFPService::ReduceTimePrecisionAsMSecs(mStartWallClockRaw, 0);
+  return msSinceStart + nsRFPService::ReduceTimePrecisionAsMSecs(
+                            mStartWallClockRaw, 0,
+                            /* aIsSystemPrincipal */ false,
+                            mCrossOriginIsolated);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCStatsReport, mParent)
