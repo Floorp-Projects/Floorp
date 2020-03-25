@@ -428,10 +428,8 @@ NeckoParent::AllocPDocumentChannelParent(
   if (error) {
     return nullptr;
   }
-  PBOverrideStatus overrideStatus =
-      PBOverrideStatusFromLoadContext(aSerialized);
   RefPtr<DocumentChannelParent> p =
-      new DocumentChannelParent(context, loadContext, overrideStatus);
+      new DocumentChannelParent(context, loadContext);
   return p.forget();
 }
 
