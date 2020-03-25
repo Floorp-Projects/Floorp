@@ -295,8 +295,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetFetchCacheMode(uint32_t* aFetchCacheMode) override;
   NS_IMETHOD SetFetchCacheMode(uint32_t aFetchCacheMode) override;
   NS_IMETHOD GetTopWindowURI(nsIURI** aTopWindowURI) override;
-  NS_IMETHOD GetContentBlockingAllowListPrincipal(
-      nsIPrincipal** aPrincipal) override;
   NS_IMETHOD SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) override;
   NS_IMETHOD GetProxyURI(nsIURI** proxyURI) override;
   virtual void SetCorsPreflightParameters(
@@ -469,10 +467,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   void SetTopWindowURI(nsIURI* aTopWindowURI) { mTopWindowURI = aTopWindowURI; }
 
-  void SetContentBlockingAllowListPrincipal(nsIPrincipal* aPrincipal) {
-    mContentBlockingAllowListPrincipal = aPrincipal;
-  }
-
   // Set referrerInfo and compute the referrer header if neccessary.
   // Pass true for aSetOriginal if this is a new referrer and should
   // overwrite the 'original' value, false if this is a mutation (like
@@ -622,7 +616,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIURI> mProxyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mTopWindowURI;
-  nsCOMPtr<nsIPrincipal> mContentBlockingAllowListPrincipal;
   nsCOMPtr<nsIStreamListener> mListener;
   // An instance of nsHTTPCompressConv
   nsCOMPtr<nsIStreamListener> mCompressListener;

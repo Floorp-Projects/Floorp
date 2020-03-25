@@ -20,8 +20,6 @@
     }                                                \
   }
 
-class nsIPrincipal;
-
 namespace mozilla {
 namespace net {
 
@@ -68,7 +66,6 @@ class ClassifierDummyChannel final : public nsIChannel,
       nsIChannel* aChannel, const std::function<void(bool)>& aCallback);
 
   ClassifierDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
-                         nsIPrincipal* aContentBlockingAllowListPrincipal,
                          nsresult aTopWindowURIResult, nsILoadInfo* aLoadInfo);
 
   void AddClassificationFlags(uint32_t aClassificationFlags, bool aThirdParty);
@@ -79,7 +76,6 @@ class ClassifierDummyChannel final : public nsIChannel,
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mTopWindowURI;
-  nsCOMPtr<nsIPrincipal> mContentBlockingAllowListPrincipal;
   nsresult mTopWindowURIResult;
 
   uint32_t mFirstPartyClassificationFlags;
