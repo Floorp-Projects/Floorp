@@ -53,15 +53,15 @@ HTMLFormElement* HTMLLabelElement::GetForm() const {
 void HTMLLabelElement::Focus(const FocusOptions& aOptions,
                              const CallerType aCallerType,
                              ErrorResult& aError) {
-  // retarget the focus method at the for content
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    RefPtr<Element> elem = GetLabeledElement();
-    if (elem) {
-      fm->SetFocus(
-          elem, nsIFocusManager::FLAG_BYELEMENTFOCUS |
-                    nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions));
+  {
+    nsIFrame* frame = GetPrimaryFrame(FlushType::Frames);
+    if (frame && frame->IsFocusable()) {
+      return nsGenericHTMLElement::Focus(aOptions, aCallerType, aError);
     }
+  }
+
+  if (RefPtr<Element> elem = GetLabeledElement()) {
+    return elem->Focus(aOptions, aCallerType, aError);
   }
 }
 
