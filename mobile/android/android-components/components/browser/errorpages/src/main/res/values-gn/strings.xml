@@ -2,7 +2,7 @@
 <resources>
 
     <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Apañuãi emyanyhẽkuévo kuatiarogue</string>
+    <string name="mozac_browser_errorpages_page_title">Apañuãi emyanyhẽvo kuatiarogue</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Eha’ãjey</string>
@@ -22,7 +22,7 @@
 
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
-        <li>Ko kuatiarogue ehechasevahína ndaikatúi ojekuaa ndojehechajeykuaái rupi mba’ekuaarã moneĩmby og̃uahẽramóva.</li>
+        <li>Ko kuatiarogue ehechaseva hína ndaikatúi ojekuaa ndojehechajeykuaái rupi mba’ekuaarã moneĩmby og̃uahẽramóva.</li>
         <li>Eñe’ẽ umi ñanduti renda jára ndive emombe’u hag̃ua ko apañuãi.</li>
       </ul>]]></string>
 
@@ -32,7 +32,7 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
         <li>Kóva ikatu oiko apañuãi mohendahavusu ñemboheko rupive, térã oĩ omohendagueséva ko mohendahavusúpe.</li>
-        <li>Eike memeramovoi ko mohendahavusúpe antes a este servidor, ko jejavy ikatu sapy’aguávante, ha eha’ãkuaajey uperire.</li>
+        <li>Eike memeramovoi mohendahavusúpe ko mohendavusu rovake, ko jejavy ikatu sapy’aguávante, ha eha’ãkuaajey uperire.</li>
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
@@ -40,7 +40,7 @@
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Oĩvaicha omyendagueséva tendápe ha anive emba’apo.</label>
         <br><br>
-        <label>Umi ñanduti renda oha’ã heraite mboajepyre rupive. %1$s ndojeroviái <b>%2$s</b> rehe pe mboajepyre me’ẽha mavave ndoikuaái, pe mboajepyre heraguapy ijehegui térã pe mohendahavusu ndoguerahaukái umi mboajepyre mbytegua iporãva.</label>]]></string>
+        <label>Umi ñanduti renda oha’ã heraite mboajepyre rupive. %1$s ndojeroviái <b>%2$s</b> rehe pe mboajepyre me’ẽha mavave ndoikuaái, pe mboajepyre heraguapy ijehegui térã pe mohendahavusu ndoguerahaukái mboajepyrekuéra mbytegua iporãva.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Guevi (jeroviaháva)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -154,6 +154,15 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Ndojejuhúi kundaharape</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Kundahára ndojuhúi mohendahavusu pe kundaharapépe g̃uarã.</p>
+      <ul>
+        <li>Ehechajey kundaharapépa ndojavýi, techapyrã,
+          <strong>ww</strong>.ejemplo.com.</li>
+          <strong>www</strong>.ejemplo.com. rendaguépe.</li>
+        <li>Ndaikatúiramo emyanyhẽ mavave kuatiarogue, ehecha oikópa Wi-Fi térã pumbyry mba’ekuaarã.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Ndaikatúi eike ñandutípe</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
@@ -177,6 +186,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Taperekoite ojekuaa’ỹva</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Pe kundaharape omoha’eño peteĩ mba’ete (techapyrã <q>wxyz://</q>) kundahára nomoneĩri, péva rupi pe kundahára ndaikatúi oikekatu tendápe.</p>
+      <ul>
+        <li>Ndépa eikese jeikeha hekoetáva térã ambue mba’epytyvõrã ndaha’éiva moñe’ẽrã. Ehechajey tekotevẽva tenda pegua.</li>
+        <li>Heta protocolo oikotevẽkuaa software térã mboguerã’i mbohapyháva pe kundahára oikuaa hag̃ua.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Marandurenda ndojejuhúiva</string>
 
@@ -195,8 +210,22 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Mohendahavusu proxy ombotove jeike</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Ko kundahára oñemboheko oipuru hag̃ua mohendahavusu proxy, hákatu pe proxy omboyke jeike.</p>
+      <ul>
+        <li>Oĩporãpa proxy ñemboheko kundahárape. Ehechajey ñemboheko ha eha’ãjey.</li>
+        <li>¿Omoneĩpa proxy mba’epuru jeike ko ñanduti guive?</li>
+        <li>Oguereko gueteri apañuãi? Eporandu ñanduti ñangarekoha térã ñanduti me’ẽhárape pytyvõrã aporekoguáva rehe.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Ndojejuhúi mohendahavusu proxy</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Ko kundahára oñemboheko oipuru hag̃ua mohendahavusu proxy, hákatu ndojejuhúi mohendahavusu proxy?</p>
+      <ul>
+        <li>Oĩporã proxy kundahára ñemboheko? Ehechajey ñemboheko ha eha’ãjey.</li>
+        <li>¿Pe mohendaha ojoajuhína ñanduti oikóvare?</li>
+        <li>Oguereko gueteri apañuãi? Eporandu ñanduti ñangarekoha térã ñanduti me’ẽhárape pytyvõrã aporekoguávare.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Apañuãi malware rendápe</string>
