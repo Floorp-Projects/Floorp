@@ -1,219 +1,720 @@
 {
-  "Firefox Browser Page JSHandle.jsonValue should not work with dates": [
-    "FAIL"
-  ],
-  "Firefox Browser target events should work": [
+  "Firefox Browser Page Accessibility should work": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.setBypassCSP should bypass CSP meta tag": [
+  "Firefox Browser Page Accessibility should report uninteresting nodes": [
     "SKIP"
   ],
-  "Firefox Browser Page Keyboard should send a character with sendCharacter": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.authenticate should fail if wrong credentials": [
+  "Firefox Browser Page Accessibility roledescription": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.waitForRequest should respect timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should work when navigating to data url": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should work with removed MutationObserver": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should await promise": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should double click the button": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.exposeFunction should work on frames before navigation": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should throw negative polling interval": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should fail when navigating to bad SSL after redirects": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.setContent should work with doctype": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer -0": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.$ should return null for non-existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should wait for network idle to succeed navigation": [
+  "Firefox Browser Page Accessibility orientation": [
     "SKIP"
   ],
-  "Firefox Browser Page BrowserContext.overridePermissions should deny permission when not listed": [
-    "FAIL"
-  ],
-  "Firefox Browser Page BrowserContext.overridePermissions should trigger permission onchange": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.waitForFileChooser should prioritize exact timeout over default timeout": [
+  "Firefox Browser Page Accessibility autocomplete": [
     "SKIP"
   ],
-  "Firefox Browser Page Keyboard should press the meta key": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setCacheEnabled should enable or disable the cache based on the state passed": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard should throw on unknown keys": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setOfflineMode should work": [
+  "Firefox Browser Page Accessibility multiselectable": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.viewport should detect touch when applying viewport with touches": [
-    "FAIL"
-  ],
-  "Firefox Browser Page FileChooser.cancel should cancel dialog": [
+  "Firefox Browser Page Accessibility keyshortcuts": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.cookies should properly report \"Strict\" sameSite cookie": [
-    "PASS"
+  "Firefox Browser Page Accessibility filtering children of leaf nodes should not report text nodes inside controls": [
+    "SKIP"
   ],
-  "Firefox Puppeteer Puppeteer.connect should support ignoreHTTPSErrors option": [
+  "Firefox Browser Page Accessibility filtering children of leaf nodes rich text editable fields should have children": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes rich text editable fields with role should have children": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes non editable textbox with role and tabIndex and label should not have children": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes checkbox with and tabIndex and label should not have children": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes checkbox without label should not have children": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should work a button": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should work an input": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should work a menu": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should return null when the element is no longer in DOM": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should support the interestingOnly option": [
     "SKIP"
   ],
   "Firefox Browser Page Browser.version should return whether we are in headless": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.addScriptTag should work with content": [
+  "Firefox Browser Page Browser.userAgent should include WebKit": [
     "PASS"
   ],
-  "Firefox Browser Page Page.waitForRequest should work with predicate": [
+  "Firefox Browser Page Browser.target should return browser target": [
     "PASS"
   ],
-  "Firefox Browser Page Page.setContent should await resources to load": [
+  "Firefox Browser Page Browser.process should return child_process instance": [
     "PASS"
   ],
-  "Firefox Browser Page JSHandle.getProperty should work": [
+  "Firefox Browser Page Browser.process should not return child_process for remote browser": [
     "PASS"
   ],
-  "Firefox Browser Page Page.exposeFunction should throw exception in page context": [
+  "Firefox Browser Page Browser.isConnected should set the browser connected state": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click the button": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click svg": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click the button if window.Node is removed": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.waitForFileChooser should work when file input is attached to DOM": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should support thrown strings as error messages": [
+  "Firefox Browser Page Page.click should click on a span with an inline element inside": [
     "PASS"
   ],
-  "Firefox Fixtures should close the browser when the node process closes": [
-    "SKIP"
+  "Firefox Browser Page Page.click should not throw UnhandledPromiseRejection when page closes": [
+    "PASS"
   ],
-  "Firefox Browser Page Frame.waitForSelector should work when node is added through innerHTML": [
+  "Firefox Browser Page Page.click should click the button after navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click with disabled javascript": [
     "FAIL"
   ],
-  "Firefox Browser Page ExecutionContext.queryObjects should work": [
-    "SKIP"
+  "Firefox Browser Page Page.click should click when one of inline box children is outside of viewport": [
+    "PASS"
   ],
-  "Firefox Browser Page Frame.evaluate should throw for detached frames": [
+  "Firefox Browser Page Page.click should select the text by triple clicking": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click offscreen buttons": [
     "FAIL"
   ],
-  "Firefox Browser Page Browser.waitForTarget should timeout waiting for a non-existent target": [
+  "Firefox Browser Page Page.click should click wrapped links": [
     "PASS"
   ],
-  "Firefox DefaultBrowserContext page.cookies() should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page JSHandle.asElement should return ElementHandle for TextNodes": [
+  "Firefox Browser Page Page.click should click on checkbox input and toggle": [
     "PASS"
   ],
-  "Firefox Browser Page Frame.waitForFunction should poll on mutation": [
-    "PASS"
-  ],
-  "Firefox Browser Page Request.isNavigationRequest should work when navigating to image": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should respect default timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should work with redirects": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should throw if networkidle is passed as an option": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should accept object handle to primitive types": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Browser.disconnect should reject waitForSelector when browser closes": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame.waitForSelector Page.waitForSelector is shortcut for main frame": [
-    "FAIL"
-  ],
-  "Firefox Browser Page input should upload the file": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Keyboard should specify repeat property": [
+  "Firefox Browser Page Page.click should click on checkbox label and toggle": [
     "FAIL"
   ],
   "Firefox Browser Page Page.click should fail to click a missing button": [
     "PASS"
   ],
-  "Firefox Browser Page Network Events Page.Events.Response": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.goto should reject when frame detaches": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.goto should work when page calls history API in beforeunload": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should have correct stack trace for timeout": [
+  "Firefox Browser Page Page.click should not hang with touch-enabled viewports": [
     "PASS"
+  ],
+  "Firefox Browser Page Page.click should scroll and click the button": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should double click the button": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click a partially obscured button": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click a rotated button": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should fire contextmenu event on right click": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click links which cause navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.click should click the button inside an iframe": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.click should click the button with fixed position inside an iframe": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.click should click the button with deviceScaleFactor set": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.cookies should return no cookies in pristine browser context": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.cookies should get a cookie": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.cookies should properly report httpOnly cookie": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.cookies should properly report \"Strict\" sameSite cookie": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.cookies should properly report \"Lax\" sameSite cookie": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.cookies should get multiple cookies": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.cookies should get cookies from multiple urls": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should isolate cookies in browser contexts": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should set multiple cookies": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should have |expires| set to |-1| for session cookies": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setCookie should set cookie with reasonable defaults": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should set a cookie with a path": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should not set a cookie on a blank page": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setCookie should not set a cookie with blank page URL": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setCookie should not set a cookie on a data URL page": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setCookie should default to setting secure cookie for HTTPS websites": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should be able to set unsecure cookie for HTTP website": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setCookie should set a cookie on a different domain": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setCookie should set cookies from a frame": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.deleteCookie should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.Events.Dialog should fire": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.Events.Dialog should allow accepting prompts": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.Events.Dialog should dismiss the prompt": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.boundingBox should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.boundingBox should handle nested frames": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.boundingBox should return null for invisible elements": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.boundingBox should force a layout": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.boundingBox should work with SVG nodes": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.boxModel should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page ElementHandle.boxModel should return null for invisible elements": [
+    "SKIP"
+  ],
+  "Firefox Browser Page ElementHandle.contentFrame should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.click should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.click should work for Shadow DOM v1": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.click should work for TextNodes": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.click should throw for detached nodes": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.click should throw for hidden nodes": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.click should throw for recursively hidden nodes": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.click should throw for <br> elements": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.hover should work": [
+    "FAIL",
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.isIntersectingViewport should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.viewport should get the proper viewport size": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.viewport should support mobile emulation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.viewport should support touch emulation": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.viewport should be detectable by Modernizr": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.viewport should detect touch when applying viewport with touches": [
+    "FAIL"
   ],
   "Firefox Browser Page Page.viewport should support landscape emulation": [
     "FAIL"
   ],
+  "Firefox Browser Page Page.emulate should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.emulate should support clicking": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.emulateMedia should be an alias for Page.emulateMediaType": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.emulateMediaType should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.emulateMediaType should throw in case of bad argument": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.emulateMediaFeatures should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.emulateMediaFeatures should throw in case of bad argument": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.emulateTimezone should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.emulateTimezone should throw for invalid timezone IDs": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluate should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer BigInt": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer NaN": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer -0": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer Infinity": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer -Infinity": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer arrays": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer arrays as arrays, not objects": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should modify global environment": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should evaluate in the page context": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return undefined for objects with symbols": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.evaluate should work with function shorthands": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should work with unicode chars": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should throw when evaluation triggers reload": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluate should await promise": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should work right after framenavigated": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should work from-inside an exposed function": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluate should reject promise with exception": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should support thrown strings as error messages": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should support thrown numbers as error messages": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return complex objects": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return BigInt": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return NaN": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return -0": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return Infinity": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return -Infinity": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should accept \"undefined\" as one of multiple parameters": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should properly serialize null fields": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should return undefined for non-serializable objects": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluate should fail for circular object": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluate should be able to throw a tricky error": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should accept a string": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should accept a string with semi colons": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should accept a string with comments": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should accept element handle as an argument": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should throw if underlying element was disposed": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should throw if elementHandles are from other frames": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.evaluate should simulate a user gesture": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.evaluate should throw a nice error after a navigation": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluate should not throw an error when evaluation does a navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should transfer 100Mb of data from page to node.js": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluate should throw error with detailed information on exception inside promise": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateOnNewDocument should evaluate before anything else on the page": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.evaluateOnNewDocument should work with CSP": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.evaluate should have different execution contexts": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.evaluate should have correct execution contexts": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.evaluate should execute after cross-site navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.executionContext should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.evaluateHandle should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.evaluate should throw for detached frames": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should handle nested frames": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should send events when frames are manipulated dynamically": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should send \"framenavigated\" when navigating on anchor URLs": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Frame Management should persist mainFrame on cross-process navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame Management should not send attach/detach events for main frame": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame Management should detach child frames on navigation": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should support framesets": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should report frame from-inside shadow DOM": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should report frame.name()": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should report frame.parent()": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame Management should report different frame instance when frame re-attaches": [
+    "FAIL"
+  ],
+  "Firefox Browser Page input should upload the file": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.waitForFileChooser should work when file input is attached to DOM": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.waitForFileChooser should work when file input is not attached to DOM": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.waitForFileChooser should respect timeout": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.waitForFileChooser should respect default timeout when there is no custom timeout": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.waitForFileChooser should prioritize exact timeout over default timeout": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.waitForFileChooser should work with no timeout": [
+    "SKIP"
+  ],
   "Firefox Browser Page Page.waitForFileChooser should return the same file chooser when there are many watchdogs simultaneously": [
     "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.accept should accept single file": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.accept should be able to read selected file": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.accept should be able to reset selected files with empty file list": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.accept should not accept multiple files for single-file input": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.accept should fail when accepting file chooser twice": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.cancel should cancel dialog": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.cancel should fail when canceling file chooser twice": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.isMultiple should work for single file pick": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.isMultiple should work for \"multiple\"": [
+    "SKIP"
+  ],
+  "Firefox Browser Page FileChooser.isMultiple should work for \"webkitdirectory\"": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should accept object handle as an argument": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should accept object handle to primitive types": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should warn on nested object handles": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should accept object handle to unserializable value": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should use the same JS wrappers": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.evaluateHandle should work with primitives": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.getProperty should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.jsonValue should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.jsonValue should not work with dates": [
+    "FAIL"
+  ],
+  "Firefox Browser Page JSHandle.jsonValue should throw for circular objects": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.getProperties should work": [
+    "PASS"
   ],
   "Firefox Browser Page JSHandle.getProperties should return even non-own properties": [
     "PASS"
   ],
-  "Firefox Browser Page Page.Events.PageError should fire": [
-    "TIMEOUT"
+  "Firefox Browser Page JSHandle.asElement should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.asElement should return null for non-elements": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.asElement should return ElementHandle for TextNodes": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.asElement should work with nullified Node": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.toString should work for primitives": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.toString should work for complicated objects": [
+    "PASS"
+  ],
+  "Firefox Browser Page JSHandle.toString should work with different subtypes": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should type into a textarea": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should press the metaKey": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should move with the arrow keys": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should send a character with ElementHandle.press": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard ElementHandle.press should support |text| option": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should send a character with sendCharacter": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should report shiftKey": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should report multiple modifiers": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should send proper codes while typing": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should send proper codes while typing with shift": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should not type canceled events": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should specify repeat property": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should type all kinds of characters": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should specify location": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should throw on unknown keys": [
+    "PASS"
+  ],
+  "Firefox Browser Page Keyboard should type emoji": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should type emoji into an iframe": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Keyboard should press the meta key": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Mouse should click the document": [
+    "PASS"
+  ],
+  "Firefox Browser Page Mouse should resize the textarea": [
+    "FAIL",
+    "PASS"
+  ],
+  "Firefox Browser Page Mouse should select the text with mouse": [
+    "FAIL",
+    "PASS"
+  ],
+  "Firefox Browser Page Mouse should trigger hover state": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Mouse should trigger hover state with removed window.Node": [
+    "FAIL"
   ],
   "Firefox Browser Page Mouse should set modifier keys on click": [
     "PASS"
   ],
-  "Firefox Browser Page Request.isNavigationRequest should work with request interception": [
+  "Firefox Browser Page Mouse should tween mouse movement": [
     "FAIL"
   ],
-  "Firefox Browser Page ElementHandle.screenshot should take into account padding and border": [
+  "Firefox Browser Page Mouse should work with mobile viewports and cross process navigations": [
     "PASS"
   ],
-  "Firefox Browser Page Page.screenshot should take fullPage screenshots": [
+  "Firefox Browser Page Page.goto should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should work with anchor navigation": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.goto should work with redirects": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should navigate to about:blank": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should return response when page changes its URL after load": [
     "FAIL"
   ],
   "Firefox Browser Page Page.goto should work with subframes return 204": [
     "PASS"
   ],
-  "Firefox Browser Page Page.setJavaScriptEnabled should work": [
+  "Firefox Browser Page Page.goto should fail when server returns 204": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.goto should navigate to empty page with domcontentloaded": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.setRequestInterception should work with file URLs": [
+  "Firefox Browser Page Page.goto should work when page calls history API in beforeunload": [
     "FAIL"
-  ],
-  "Firefox Browser Page ExecutionContext.queryObjects should fail primitive values as prototypes": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.$$eval should work": [
-    "PASS"
   ],
   "Firefox Browser Page Page.goto should navigate to empty page with networkidle0": [
     "SKIP"
@@ -221,217 +722,155 @@
   "Firefox Browser Page Page.goto should navigate to empty page with networkidle2": [
     "SKIP"
   ],
-  "Firefox Browser Page Keyboard should not type canceled events": [
-    "PASS"
+  "Firefox Browser Page Page.goto should fail when navigating to bad url": [
+    "TIMEOUT"
   ],
-  "Firefox Browser Page FileChooser.cancel should fail when canceling file chooser twice": [
-    "SKIP"
+  "Firefox Browser Page Page.goto should fail when navigating to bad SSL": [
+    "TIMEOUT"
   ],
-  "Firefox Browser Page Request.frame should work for subframe navigation request": [
-    "FAIL"
+  "Firefox Browser Page Page.goto should fail when navigating to bad SSL after redirects": [
+    "TIMEOUT"
   ],
-  "Firefox Browser Page Page.evaluate should accept a string with comments": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForNavigation should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForNavigation should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.waitForNavigation should work with both domcontentloaded and load": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitFor should timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click the button inside an iframe": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.viewport should support touch emulation": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.exposeFunction should support throwing \"null\"": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.Events.Dialog should fire": [
-    "PASS"
-  ],
-  "Firefox Browser Page Accessibility should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page ElementHandle.boundingBox should return null for invisible elements": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Response.json should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should immediately resolve promise if node exists": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Mouse should trigger hover state": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer NaN": [
-    "PASS"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should work a button": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.addStyleTag should throw when added with content to the CSP page": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Network Events should fire events in proper order": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.$$eval should not throw in case of missing selector": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addStyleTag should throw an error if loading from url fail": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should properly return navigation response when URL has cookies": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click with disabled javascript": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.waitForNavigation should work when subframe issues window.stop()": [
+  "Firefox Browser Page Page.goto should throw if networkidle is passed as an option": [
     "SKIP"
   ],
   "Firefox Browser Page Page.goto should fail when main resources failed to load": [
     "TIMEOUT"
   ],
-  "Firefox Browser Page Page.setContent should work with newline": [
+  "Firefox Browser Page Page.goto should fail when exceeding maximum navigation timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should fail when exceeding default maximum navigation timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should fail when exceeding default maximum timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should prioritize default navigation timeout over default timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should disable timeout when its set to 0": [
     "PASS"
   ],
   "Firefox Browser Page Page.goto should work when navigating to valid url": [
     "FAIL"
   ],
-  "Firefox Browser Page Frame.waitForSelector should resolve promise when node is added": [
+  "Firefox Browser Page Page.goto should work when navigating to data url": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.evaluate should transfer arrays as arrays, not objects": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard ElementHandle.press should support |text| option": [
+  "Firefox Browser Page Page.goto should work when navigating to 404": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.waitFor should not allow you to select an element with single slash xpath": [
-    "PASS"
+  "Firefox Browser Page Page.goto should return last response in redirect chain": [
+    "FAIL"
   ],
-  "Firefox Browser Page Async stacks should work": [
+  "Firefox Browser Page Page.goto should wait for network idle to succeed navigation": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.evaluate should work from-inside an exposed function": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes rich text editable fields with role should have children": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should fail navigation when aborting main resource": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.addScriptTag should work with a path and type=module": [
+  "Firefox Browser Page Page.goto should not leak listeners during navigation": [
     "PASS"
   ],
-  "Firefox Browser Page Page.emulate should support clicking": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame Management should report frame.name()": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with encoded server - 2": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.emulateMediaType should throw in case of bad argument": [
-    "PASS"
-  ],
-  "Firefox Browser Page JSHandle.jsonValue should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.cookies should get multiple cookies": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setCookie should set cookie with reasonable defaults": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.evaluate should have different execution contexts": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should work with unicode chars": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForResponse should work with predicate": [
+  "Firefox Browser Page Page.goto should not leak listeners during bad navigation": [
     "TIMEOUT"
   ],
-  "Firefox Browser Page Request.respond should redirect": [
+  "Firefox Browser Page Page.goto should not leak listeners during navigation of 11 pages": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.goto should navigate to dataURL and fire dataURL requests": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.goto should navigate to URL with hash and fire requests without hash": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.goto should work with self requesting page": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.goto should fail when navigating and show the url at the error message": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.goto should send referer": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work with both domcontentloaded and load": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work with clicking on anchor links": [
+    "TIMEOUT",
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work with history.pushState()": [
+    "FAIL",
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work with history.replaceState()": [
+    "FAIL",
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work with DOM history.back()/history.forward()": [
+    "FAIL",
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.waitForNavigation should work when subframe issues window.stop()": [
     "SKIP"
   ],
-  "Firefox Browser Page Frame.evaluate should have correct execution contexts": [
+  "Firefox Browser Page Page.goBack should work": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.Events.Console should have location when fetch fails": [
+  "Firefox Browser Page Page.goBack should work with HistoryAPI": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.emulate should work": [
+  "Firefox Browser Page Frame.goto should navigate subframes": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.goto should reject when frame detaches": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.goto should return matching responses": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForNavigation should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForNavigation should fail when frame detaches": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.reload should work": [
     "PASS"
   ],
-  "Firefox Puppeteer Puppeteer.launch userDataDir option": [
+  "Firefox Browser Page Page.Events.Request should fire for navigation requests": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.Events.Request should fire for iframes": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.Events.Request should fire for fetches": [
+    "PASS"
+  ],
+  "Firefox Browser Page Request.frame should work for main frame navigation request": [
+    "PASS"
+  ],
+  "Firefox Browser Page Request.frame should work for subframe navigation request": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.frame should work for fetch requests": [
+    "PASS"
+  ],
+  "Firefox Browser Page Request.headers should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Response.headers should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Response.fromCache should return |false| for non-cached content": [
     "SKIP"
   ],
-  "Firefox Puppeteer Puppeteer.launch should take fullPage screenshots when defaultViewport is null": [
+  "Firefox Browser Page Response.fromCache should work": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.evaluate should throw error with detailed information on exception inside promise": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setCookie should isolate cookies in browser contexts": [
-    "FAIL"
-  ],
-  "Firefox ignoreHTTPSErrors Response.securityDetails should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should return BigInt": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForRequest should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.exposeFunction should work on frames": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.cookies should return no cookies in pristine browser context": [
-    "PASS"
-  ],
-  "Firefox Browser Page Response.buffer should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should return the window as a success value": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should respect event bubbling": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.authenticate should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame.waitForXPath should allow you to select an element with single slash": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame Management should report frame from-inside shadow DOM": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.goto should return response when page changes its URL after load": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setUserAgent should work for subframes": [
-    "FAIL"
-  ],
-  "Firefox Browser Page FileChooser.isMultiple should work for \"multiple\"": [
+  "Firefox Browser Page Response.fromServiceWorker should return |false| for non-service-worker content": [
     "SKIP"
   ],
   "Firefox Browser Page Response.fromServiceWorker Response.fromServiceWorker": [
@@ -440,179 +879,281 @@
   "Firefox Browser Page Request.postData should work": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.setRequestInterception should contain referer header": [
+  "Firefox Browser Page Request.postData should be |undefined| when there is no post data": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.click should click the button with deviceScaleFactor set": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.addStyleTag should work with a path": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard should send proper codes while typing": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should scroll element into view": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.hover should work": [
-    "FAIL", "PASS"
-  ],
-  "Firefox Browser Page Page.setContent should work with HTML 4 doctype": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setCookie should set a cookie with a path": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click the button after navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForNavigation should work with DOM history.back()/history.forward()": [
-    "FAIL", "TIMEOUT"
-  ],
-  "Firefox Puppeteer Puppeteer.launch userDataDir option should restore cookies": [
-    "SKIP"
-  ],
-  "Firefox Browser Page JSHandle.toString should work for complicated objects": [
-    "PASS"
-  ],
-  "Firefox Browser Page Mouse should select the text with mouse": [
-    "FAIL", "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should accept \"undefined\" as one of multiple parameters": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should throw if underlying element was disposed": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.emulateTimezone should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should return null when the element is no longer in DOM": [
-    "SKIP"
-  ],
-  "Firefox Browser BrowserContext window.open should use parent tab context": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should not throw an error when evaluation does a navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.$$ should return empty array for non-existing elements": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should navigate to about:blank": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work when header manipulation headers with redirect": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should capture full element when larger than viewport": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Dialog should allow accepting prompts": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.click should throw for hidden nodes": [
-    "PASS"
-  ],
-  "Firefox Browser Page Mouse should click the document": [
-    "PASS"
-  ],
-  "Firefox Browser BrowserContext should have default context": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.close should reject all promises when page is closed": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with redirects for subresources": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Request.continue should redirect in a way non-observable to page": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.close should not be visible in browser.pages": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.click should throw for recursively hidden nodes": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setGeolocation should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.$ should query existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click when one of inline box children is outside of viewport": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Console should not throw when there are console messages in detached iframes": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should navigate to dataURL and fire dataURL requests": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.$eval should accept ElementHandles as arguments": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard should report shiftKey": [
-    "PASS"
-  ],
-  "Firefox Browser Page Mouse should work with mobile viewports and cross process navigations": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer BigInt": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should navigate to dataURL and fire dataURL requests": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Workers should report console logs": [
-    "SKIP"
-  ],
-  "Firefox Browser Page FileChooser.accept should be able to read selected file": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should use the same JS wrappers": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should respond to node attribute mutation": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.waitForFileChooser should work with no timeout": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.browser should return the correct browser instance": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with equal requests": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should survive cross-process navigation": [
+  "Firefox Browser Page Response.text should work": [
     "FAIL"
   ],
   "Firefox Browser Page Response.text should return uncompressed text": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.Events.DOMContentLoaded should fire when expected": [
+  "Firefox Browser Page Response.text should throw when requesting body of redirected response": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Response.text should wait until response completes": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Response.json should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Response.buffer should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Response.buffer should work with compression": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Response.statusText should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Network Events Page.Events.Request": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Network Events Page.Events.Response": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Network Events Page.Events.RequestFailed": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Network Events Page.Events.RequestFinished": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Network Events should fire events in proper order": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Network Events should support redirects": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.isNavigationRequest should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.isNavigationRequest should work with request interception": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.isNavigationRequest should work when navigating to image": [
     "PASS"
   ],
   "Firefox Browser Page Page.setExtraHTTPHeaders should work": [
     "FAIL"
   ],
+  "Firefox Browser Page Page.setExtraHTTPHeaders should throw for non-string header values": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.authenticate should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.authenticate should fail if wrong credentials": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.authenticate should allow disable authentication": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should intercept": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work when POST is redirected with 302": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work when header manipulation headers with redirect": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should be able to remove headers": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should contain referer header": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should properly return navigation response when URL has cookies": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should stop intercepting": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should show custom HTTP headers": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with redirect inside sync XHR": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with custom referer headers": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should be abortable": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should be abortable with custom error codes": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should send referer": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should fail navigation when aborting main resource": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with redirects": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with redirects for subresources": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should be able to abort redirects": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with equal requests": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should navigate to dataURL and fire dataURL requests": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should navigate to URL with hash and and fire requests without hash": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with encoded server": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with badly encoded server": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with encoded server - 2": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should throw if interception is not enabled": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setRequestInterception should work with file URLs": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.continue should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.continue should amend HTTP headers": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.continue should redirect in a way non-observable to page": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.continue should amend method": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.continue should amend post data": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.continue should amend both post data and method on navigation": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Request.respond should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Request.respond should work with status code 422": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Request.respond should redirect": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Request.respond should allow mocking binary responses": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Request.respond should stringify intercepted request response headers": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.close should reject all promises when page is closed": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.close should not be visible in browser.pages": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.close should run beforeunload if asked for": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.close should *not* run beforeunload by default": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.close should set the page close state": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.close should terminate network waiters": [
+    "SKIP"
+  ],
   "Firefox Browser Page Page.Events.Load should fire when expected": [
     "PASS"
   ],
-  "Firefox Browser Page ElementHandle.click should throw for detached nodes": [
-    "PASS"
+  "Firefox Browser Page Async stacks should work": [
+    "SKIP"
   ],
-  "Firefox ignoreHTTPSErrors Response.securityDetails Network redirects should report SecurityDetails": [
+  "Firefox Browser Page Page.Events.error should throw when page crashes": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.Events.Popup should work": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.Events.Request should fire for fetches": [
+  "Firefox Browser Page Page.Events.Popup should work with noopener": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.Events.Popup should work with clicking target=_blank": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.Events.Popup should work with fake-clicking target=_blank and rel=noopener": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.Events.Popup should work with clicking target=_blank and rel=noopener": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page BrowserContext.overridePermissions should be prompt by default": [
     "PASS"
   ],
-  "Firefox Browser Page Page.setUserAgent should work": [
+  "Firefox Browser Page BrowserContext.overridePermissions should deny permission when not listed": [
+    "FAIL"
+  ],
+  "Firefox Browser Page BrowserContext.overridePermissions should fail when bad permission is given": [
     "PASS"
+  ],
+  "Firefox Browser Page BrowserContext.overridePermissions should grant permission when listed": [
+    "FAIL"
+  ],
+  "Firefox Browser Page BrowserContext.overridePermissions should reset permissions": [
+    "FAIL"
+  ],
+  "Firefox Browser Page BrowserContext.overridePermissions should trigger permission onchange": [
+    "FAIL"
+  ],
+  "Firefox Browser Page BrowserContext.overridePermissions should isolate permissions between browser contexs": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.setGeolocation should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.setGeolocation should throw when invalid longitude": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.setOfflineMode should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.setOfflineMode should emulate navigator.onLine": [
+    "SKIP"
+  ],
+  "Firefox Browser Page ExecutionContext.queryObjects should work": [
+    "SKIP"
+  ],
+  "Firefox Browser Page ExecutionContext.queryObjects should work for non-blank page": [
+    "SKIP"
+  ],
+  "Firefox Browser Page ExecutionContext.queryObjects should fail for disposed handles": [
+    "SKIP"
+  ],
+  "Firefox Browser Page ExecutionContext.queryObjects should fail primitive values as prototypes": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.Events.Console should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.Events.Console should work for different console API calls": [
+    "FAIL"
   ],
   "Firefox Browser Page Page.Events.Console should not fail for window object": [
     "FAIL"
@@ -620,1111 +1161,352 @@
   "Firefox Browser Page Page.Events.Console should trigger correct Log": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.goBack should work": [
+  "Firefox Browser Page Page.Events.Console should have location when fetch fails": [
     "FAIL"
   ],
-  "Firefox Browser Page JSHandle.asElement should return null for non-elements": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with redirects": [
+  "Firefox Browser Page Page.Events.Console should have location for console API calls": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.select should return an array of one element when multiple is not set": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame Management should send events when frames are manipulated dynamically": [
+  "Firefox Browser Page Page.Events.Console should not throw when there are console messages in detached iframes": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.close should terminate network waiters": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame Management should not send attach/detach events for main frame": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.emulateMediaFeatures should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page BrowserContext.overridePermissions should grant permission when listed": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForXPath should throw when frame is detached": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Browser.isConnected should set the browser connected state": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work when POST is redirected with 302": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Response.headers should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Keyboard should type into a textarea": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should modify global environment": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should fail when navigating to bad SSL": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.authenticate should allow disable authentication": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Request.frame should work for fetch requests": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should survive cross-process navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should wait for visible": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Response.fromCache should return |false| for non-cached content": [
-    "SKIP"
-  ],
-  "Firefox Fixtures should dump browser process stderr": [
-    "SKIP"
-  ],
-  "Firefox Top-level requires should require top-level DeviceDescriptors": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForXPath hidden should wait for display: none": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.browserContext should return the correct browser instance": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should return the element handle": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.emulateMediaFeatures should throw in case of bad argument": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should return -0": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.click should work for TextNodes": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForXPath should run in specified frame": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.select should select multiple options": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should return complex objects": [
-    "PASS"
-  ],
-  "Firefox Browser Page Response.text should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.screenshot should run in parallel": [
-    "PASS"
-  ],
-  "Firefox Browser Page JSHandle.asElement should work with nullified Node": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should deselect all options when passed no values for a multiple select": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should fail to screenshot a detached element": [
-    "FAIL"
-  ],
-  "Firefox Browser Page JSHandle.asElement should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should work with anchor navigation": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Browser.userAgent should include WebKit": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addScriptTag should work with a url": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click a partially obscured button": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should filter out ignored default arguments": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame Management should send \"framenavigated\" when navigating on anchor URLs": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser BrowserContext should work across sessions": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setUserAgent should emulate device user-agent": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should intercept": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addStyleTag should work with content": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should warn on nested object handles": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click the button if window.Node is removed": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.$eval should throw in case of missing selector": [
-    "PASS"
-  ],
-  "Firefox Browser Page Request.isNavigationRequest should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should be able to throw a tricky error": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Popup should work with noopener": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Keyboard should specify location": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should return undefined for non-serializable objects": [
-    "SKIP"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should report the correct product": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Popup should work with clicking target=_blank and rel=noopener": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should work for an element with an offset": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.evaluate should execute after cross-site navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.boundingBox should work with SVG nodes": [
-    "PASS"
-  ],
-  "Firefox Browser Page Response.fromServiceWorker should return |false| for non-service-worker content": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Request.headers should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.$$eval should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should fail when exceeding default maximum timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitFor should wait for predicate with arguments": [
-    "PASS"
-  ],
-  "Firefox Browser Page Request.respond should allow mocking binary responses": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setCookie should not set a cookie on a blank page": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.exposeFunction should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target should report when a new page is created and closed": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Request.continue should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page FileChooser.accept should fail when accepting file chooser twice": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setExtraHTTPHeaders should throw for non-string header values": [
-    "PASS"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes rich text editable fields should have children": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame.goto should navigate subframes": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.cookies should properly report httpOnly cookie": [
-    "PASS"
-  ],
-  "Firefox Browser Page Network Events should support redirects": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target should report when a service worker is created and destroyed": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.goto should work when navigating to 404": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should work an input": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setContent should work with accents": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard should send a character with ElementHandle.press": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setCookie should have |expires| set to |-1| for session cookies": [
-    "PASS"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should support the interestingOnly option": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Accessibility roledescription": [
-    "SKIP"
-  ],
-  "Firefox Browser Page BrowserContext.overridePermissions should be prompt by default": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should disable the default viewport": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.Events.Popup should work with fake-clicking target=_blank and rel=noopener": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer arrays": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should return [] on no values": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.$x should return null for non-existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addStyleTag should throw an error if no options are provided": [
-    "PASS"
-  ],
-  "Firefox Browser Page Workers Page.workers": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Request.continue should amend both post data and method on navigation": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.boxModel should return null for invisible elements": [
-    "SKIP"
-  ],
-  "Firefox Browser Page ElementHandle.click should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click on checkbox label and toggle": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setBypassCSP should bypass CSP header": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.goto should not leak listeners during navigation of 11 pages": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should accept a string": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForFileChooser should work when file input is not attached to DOM": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.Events.Dialog should dismiss the prompt": [
-    "PASS"
-  ],
-  "Firefox Browser Page Response.buffer should work with compression": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should be able to remove headers": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.$eval should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.pdf should be able to save file": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.reload should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page ExecutionContext.queryObjects should fail for disposed handles": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with custom referer headers": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.Events.Popup should work with clicking target=_blank": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.select should return an array of matched values": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should return undefined for objects with symbols": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setGeolocation should throw when invalid longitude": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.waitForResponse should work with no timeout": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.addScriptTag should work with a path": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.error should throw when page crashes": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluateOnNewDocument should evaluate before anything else on the page": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should work when resolved right before execution context disposal": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Accessibility should report uninteresting nodes": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.Events.Popup should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.waitForFileChooser should respect timeout": [
-    "SKIP"
-  ],
-  "Firefox Puppeteer Puppeteer.launch userDataDir argument": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Browser.process should return child_process instance": [
-    "PASS"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes root option should work a menu": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should work with function shorthands": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.launch userDataDir option should restore state": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should work with strict CSP policy": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should accept object handle as an argument": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.connect should be able to reconnect to a disconnected browser": [
-    "SKIP"
-  ],
-  "Firefox Puppeteer BrowserFetcher should download and extract linux binary": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.goto should return matching responses": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setCookie should set a cookie on a different domain": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.close should set the page close state": [
-    "PASS"
-  ],
-  "Firefox ignoreHTTPSErrors should work with mixed content": [
-    "FAIL"
-  ],
-  "Firefox Browser Page BrowserContext.overridePermissions should reset permissions": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.$$ should query existing elements": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.emulateMediaType should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.waitForNavigation should work with history.pushState()": [
-    "FAIL", "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.addStyleTag should throw when added with URL to the CSP page": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.screenshot should clip rect": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.screenshot should render white background on jpeg file": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes should not report text nodes inside controls": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Request.respond should work with status code 422": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.emulateMedia should be an alias for Page.emulateMediaType": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitFor should work with multiline body": [
-    "PASS"
-  ],
-  "Firefox Browser Page Request.continue should amend method": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.viewport should support mobile emulation": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.boundingBox should force a layout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.executionContext should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForXPath should allow you to select a text node": [
-    "FAIL"
-  ],
-  "Firefox Browser Page FileChooser.isMultiple should work for \"webkitdirectory\"": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should fail for circular object": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should evaluate in the page context": [
-    "PASS"
-  ],
-  "Firefox Browser Page Accessibility multiselectable": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Network Events Page.Events.Request": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should work with primitives": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should respect timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.$eval should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setCookie should set cookies from a frame": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Keyboard should type emoji": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Accessibility orientation": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.goto should fail when exceeding default maximum navigation timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Console should work for different console API calls": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.title should return the page title": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.evaluateHandle should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should have an error message specifically for awaiting an element to be hidden": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame Management should report different frame instance when frame re-attaches": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should stop intercepting": [
-    "FAIL"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should work with no default arguments": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Browser.target should return browser target": [
+  "Firefox Browser Page Page.Events.DOMContentLoaded should fire when expected": [
     "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should be abortable": [
-    "FAIL"
-  ],
-  "Firefox Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setBypassCSP should bypass CSP in iframes as well": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Mouse should resize the textarea": [
-    "FAIL", "PASS"
-  ],
-  "Firefox Browser Page Accessibility autocomplete": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.screenshot should work": [
-    "FAIL"
   ],
-  "Firefox Browser Page FileChooser.accept should be able to reset selected files with empty file list": [
+  "Firefox Browser Page Page.metrics should get metrics from a page": [
     "SKIP"
   ],
   "Firefox Browser Page Page.metrics metrics event fired on console.timeStamp": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.Events.Console should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Keyboard should report multiple modifiers": [
+  "Firefox Browser Page Page.waitForRequest should work": [
     "PASS"
   ],
-  "Firefox Browser Page Keyboard should send proper codes while typing with shift": [
+  "Firefox Browser Page Page.waitForRequest should work with predicate": [
     "PASS"
   ],
-  "Firefox Browser Page Request.continue should amend post data": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.goto should fail when exceeding maximum navigation timeout": [
+  "Firefox Browser Page Page.waitForRequest should respect timeout": [
     "PASS"
   ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes non editable textbox with role and tabIndex and label should not have children": [
-    "SKIP"
-  ],
-  "Firefox Browser Page ElementHandle.$eval should retrieve content from subtree": [
+  "Firefox Browser Page Page.waitForRequest should respect default timeout": [
     "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should be abortable with custom error codes": [
-    "FAIL"
   ],
   "Firefox Browser Page Page.waitForRequest should work with no timeout": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should reject all promises when browser is closed": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluateHandle should accept object handle to unserializable value": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addStyleTag should work with a url": [
-    "PASS"
-  ],
-  "Firefox Browser Page Request.postData should be |undefined| when there is no post data": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Request.continue should amend HTTP headers": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.$$ should query existing elements": [
-    "PASS"
-  ],
-  "Firefox Browser Page Workers should have JSHandles for console logs": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Workers should emit created and destroyed events": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should throw when evaluation triggers reload": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.goto should send referer": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target Browser.pages should return all of the pages": [
-    "PASS"
-  ],
-  "Firefox Browser Page Request.respond should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Mouse should tween mouse movement": [
-    "FAIL"
-  ],
-  "Firefox Browser BrowserContext should fire target events": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should return -Infinity": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitFor should wait for an xpath": [
-    "SKIP"
-  ],
-  "Firefox Browser Page ElementHandle.click should throw for <br> elements": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addStyleTag should include sourcemap when path is provided": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should throw if elementHandles are from other frames": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should return the success value as a JSHandle": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should work with self requesting page": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.Events.Request should fire for iframes": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.addScriptTag should throw when added with content to the CSP page": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.waitFor should throw when unknown type": [
-    "PASS"
-  ],
-  "Firefox Browser Page Target should report when a target url changes": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Frame Management should detach child frames on navigation": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setCacheEnabled should stay disabled when toggling request interception on/off": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setContent should respect timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.emulateTimezone should throw for invalid timezone IDs": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.cookies should get cookies from multiple urls": [
-    "FAIL"
-  ],
-  "Firefox Browser Page JSHandle.toString should work with different subtypes": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Browser.disconnect should reject navigation when browser closes": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setCookie should set multiple cookies": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.$x should query existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.url should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Target should create a worker from a service worker": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.waitFor should wait for predicate": [
-    "PASS"
-  ],
-  "Firefox Browser Page Network Events Page.Events.RequestFinished": [
-    "FAIL"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should have default URL when launching browser": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.viewport should be detectable by Modernizr": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should throw on bad polling value": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should not throw when select causes navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForFunction should poll on raf": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addScriptTag should throw an error if no options are provided": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.isIntersectingViewport should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setCookie should not set a cookie on a data URL page": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should reject if executable path is invalid": [
-    "PASS"
-  ],
-  "Firefox Browser BrowserContext should wait for a target": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.$eval should accept arguments": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should not hang with zero width/height element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector hidden should wait for removal": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.exposeFunction should survive navigation": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target Browser.targets should return all of the targets": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should navigate to empty page with domcontentloaded": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should return NaN": [
-    "PASS"
-  ],
-  "Firefox Browser Page Path.$x should query existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Target should not report uninitialized pages": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForXPath should support some fancy xpath": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click the button": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should not leak listeners during navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should respect timeout": [
-    "PASS"
-  ],
-  "Firefox ignoreHTTPSErrors should work with request interception": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.select should throw if passed in non-strings": [
-    "PASS"
-  ],
-  "Firefox Browser Page Target should have an opener": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setContent should respect default navigation timeout": [
-    "PASS"
-  ],
-  "Firefox ignoreHTTPSErrors Response.securityDetails should be |null| for non-secure requests": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.screenshot should work with odd clip size on Retina displays": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Request should fire for navigation requests": [
-    "PASS"
-  ],
-  "Firefox Browser Page Workers should have an execution context": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.goto should fail when navigating and show the url at the error message": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.select should return [] on no matched values": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should be able to abort redirects": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setContent should work with tricky content": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should return Infinity": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should deselect all options when passed no values for a select without multiple": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should select only first option": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should show custom HTTP headers": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.$$ should return empty array if nothing is found": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goBack should work with HistoryAPI": [
-    "FAIL"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should return the default arguments": [
-    "PASS"
-  ],
-  "Firefox Browser.Events.disconnected should be emitted when: browser gets closed, disconnected or underlying websocket gets closed": [
-    "SKIP"
-  ],
-  "Firefox Browser Page BrowserContext.overridePermissions should fail when bad permission is given": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.goto should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should support thrown numbers as error messages": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.launch should have custom URL when launching browser": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.select should work when re-defining top-level Event class": [
-    "FAIL"
-  ],
-  "Firefox Browser Page FileChooser.accept should not accept multiple files for single-file input": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.deleteCookie should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should return null if waiting to hide non-existing element": [
-    "SKIP"
-  ],
-  "Firefox Browser BrowserContext should close all belonging targets once closing context": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click the button with fixed position inside an iframe": [
-    "SKIP"
-  ],
-  "Firefox Browser Page JSHandle.getProperties should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector hidden should wait for display: none": [
-    "SKIP"
-  ],
-  "Firefox Browser Page ElementHandle.$$eval should retrieve content from subtree": [
-    "PASS"
-  ],
-  "Firefox Browser BrowserContext should create new incognito context": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setCookie should default to setting secure cookie for HTTPS websites": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Response.fromCache should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.cookies should get a cookie": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer 100Mb of data from page to node.js": [
-    "PASS"
-  ],
-  "Firefox Browser Page Response.statusText should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.metrics should get metrics from a page": [
-    "SKIP"
-  ],
-  "Firefox Browser Page ElementHandle.contentFrame should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setContent should work with emojis": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.boundingBox should handle nested frames": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should work with a rotated element": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.boxModel should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page JSHandle.jsonValue should throw for circular objects": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addScriptTag should throw when added with URL to the CSP page": [
-    "PASS"
-  ],
-  "Firefox DefaultBrowserContext page.deleteCookie() should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer Infinity": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setBypassCSP should bypass after cross-process navigation": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setContent should work": [
-    "PASS"
-  ],
-  "Firefox Fixtures dumpio option should work with pipe option": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.screenshot should run in parallel in multiple pages": [
-    "PASS"
-  ],
-  "Firefox Browser Page FileChooser.isMultiple should work for single file pick": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should accept a string with semi colons": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should throw if interception is not enabled": [
-    "PASS"
-  ],
-  "Firefox Browser Page Touchscreen should tap the button": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click svg": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should throw when frame is detached": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should select the text by triple clicking": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click offscreen buttons": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click on checkbox input and toggle": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForResponse should respect default timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.evaluate should reject promise with exception": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.screenshot should work for an element with fractional dimensions": [
     "PASS"
   ],
   "Firefox Browser Page Page.waitForResponse should work": [
     "TIMEOUT"
   ],
-  "Firefox Browser Page Page.evaluate should work right after framenavigated": [
+  "Firefox Browser Page Page.waitForResponse should respect timeout": [
     "PASS"
   ],
-  "Firefox ignoreHTTPSErrors should work": [
+  "Firefox Browser Page Page.waitForResponse should respect default timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.waitForResponse should work with predicate": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.waitForResponse should work with no timeout": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.exposeFunction should work": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.setCookie should be able to set unsecure cookie for HTTP website": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.viewport should get the proper viewport size": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard should move with the arrow keys": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should click wrapped links": [
-    "PASS"
-  ],
-  "Firefox Browser Page Frame Management should support framesets": [
+  "Firefox Browser Page Page.exposeFunction should throw exception in page context": [
     "FAIL"
   ],
-  "Firefox Browser Page ElementHandle.screenshot should work": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addScriptTag should throw an error if loading from url fail": [
-    "PASS"
-  ],
-  "Firefox Browser Page ElementHandle.$ should return null for non-existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addScriptTag should work with a content and type=module": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.waitForFileChooser should respect default timeout when there is no custom timeout": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should send referer": [
+  "Firefox Browser Page Page.exposeFunction should support throwing \"null\"": [
     "FAIL"
   ],
-  "Firefox Browser Page Frame.waitForSelector should wait for visible recursively": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.evaluate should transfer -Infinity": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.executablePath should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page BrowserContext.overridePermissions should isolate permissions between browser contexs": [
+  "Firefox Browser Page Page.exposeFunction should be callable from-inside evaluateOnNewDocument": [
     "FAIL"
   ],
-  "Firefox Browser Page Frame.waitForFunction should survive navigations": [
+  "Firefox Browser Page Page.exposeFunction should survive navigation": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.exposeFunction should await returned promise": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.exposeFunction should work on frames": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.exposeFunction should work on frames before navigation": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.exposeFunction should work with complex objects": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.Events.PageError should fire": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Page.setUserAgent should work": [
     "PASS"
   ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes checkbox with and tabIndex and label should not have children": [
-    "SKIP"
+  "Firefox Browser Page Page.setUserAgent should work for subframes": [
+    "FAIL"
   ],
-  "Firefox Browser Page Page.evaluate should accept element handle as an argument": [
+  "Firefox Browser Page Page.setUserAgent should emulate device user-agent": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should work with doctype": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should work with HTML 4 doctype": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should respect timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should respect default navigation timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should await resources to load": [
     "PASS"
   ],
   "Firefox Browser Page Page.setContent should work fast enough": [
     "PASS"
   ],
-  "Firefox Browser Page Page.click should scroll and click the button": [
+  "Firefox Browser Page Page.setContent should work with tricky content": [
     "PASS"
   ],
-  "Firefox Browser Page Page.screenshot should allow transparency": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setCookie should work": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.waitFor should wait for selector": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame Management should persist mainFrame on cross-process navigation": [
+  "Firefox Browser Page Page.setContent should work with accents": [
     "PASS"
   ],
-  "Firefox Browser Page Workers should report errors": [
+  "Firefox Browser Page Page.setContent should work with emojis": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setContent should work with newline": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setBypassCSP should bypass CSP meta tag": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.evaluateOnNewDocument should work with CSP": [
+  "Firefox Browser Page Page.setBypassCSP should bypass CSP header": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.setBypassCSP should bypass after cross-process navigation": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.setBypassCSP should bypass CSP in iframes as well": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.addScriptTag should throw an error if no options are provided": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should work with a url": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should work with a url and type=module": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should work with a path and type=module": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should work with a content and type=module": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should throw an error if loading from url fail": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should work with a path": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should include sourcemap when path is provided": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should work with content": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addScriptTag should throw when added with content to the CSP page": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.addScriptTag should throw when added with URL to the CSP page": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should throw an error if no options are provided": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should work with a url": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should throw an error if loading from url fail": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should work with a path": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should include sourcemap when path is provided": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should work with content": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.addStyleTag should throw when added with content to the CSP page": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.addStyleTag should throw when added with URL to the CSP page": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.url should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.setJavaScriptEnabled should work": [
     "FAIL"
   ],
-  "Firefox DefaultBrowserContext page.setCookie() should work": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.click should not throw UnhandledPromiseRejection when page closes": [
+  "Firefox Browser Page Page.setCacheEnabled should enable or disable the cache based on the state passed": [
     "PASS"
   ],
-  "Firefox Browser BrowserContext should timeout waiting for a non-existent target": [
-    "PASS"
+  "Firefox Browser Page Page.setCacheEnabled should stay disabled when toggling request interception on/off": [
+    "FAIL"
   ],
-  "Firefox Puppeteer Puppeteer.connect should be able to connect multiple times to the same browser": [
+  "Firefox Browser Page Page.pdf should be able to save file": [
     "SKIP"
   ],
-  "Firefox Browser Page Touchscreen should report touches": [
+  "Firefox Browser Page Page.title should return the page title": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should select single option": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should select only first option": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should not throw when select causes navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should select multiple options": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should respect event bubbling": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should throw when element is not a <select>": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should return [] on no matched values": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should return an array of matched values": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should return an array of one element when multiple is not set": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should return [] on no values": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should deselect all options when passed no values for a multiple select": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should deselect all options when passed no values for a select without multiple": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should throw if passed in non-strings": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.select should work when re-defining top-level Event class": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.Events.Close should work with window.close": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.Events.Close should work with page.close": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.browser should return the correct browser instance": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.browserContext should return the correct browser instance": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.screenshot should work": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.screenshot should clip rect": [
     "FAIL"
   ],
   "Firefox Browser Page Page.screenshot should clip elements to the viewport": [
     "FAIL"
   ],
-  "Firefox Browser Page Frame.waitForNavigation should fail when frame detaches": [
+  "Firefox Browser Page Page.screenshot should run in parallel": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.screenshot should take fullPage screenshots": [
     "FAIL"
   ],
-  "Firefox Browser Page Page.waitForNavigation should work with history.replaceState()": [
-    "FAIL", "TIMEOUT"
-  ],
-  "Firefox Browser Page ElementHandle.click should work for Shadow DOM v1": [
+  "Firefox Browser Page Page.screenshot should run in parallel in multiple pages": [
     "PASS"
   ],
-  "Firefox Browser Page Frame.waitForFunction should poll on interval": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.close should *not* run beforeunload by default": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.setCookie should not set a cookie with blank page URL": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.click should fire contextmenu event on right click": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should navigate to URL with hash and and fire requests without hash": [
+  "Firefox Browser Page Page.screenshot should allow transparency": [
     "FAIL"
+  ],
+  "Firefox Browser Page Page.screenshot should render white background on jpeg file": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.screenshot should work with odd clip size on Retina displays": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.screenshot should return base64": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should take into account padding and border": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should capture full element when larger than viewport": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should scroll element into view": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should work with a rotated element": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should fail to screenshot a detached element": [
+    "FAIL"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should not hang with zero width/height element": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should work for an element with fractional dimensions": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.screenshot should work for an element with an offset": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.$eval should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.$eval should accept arguments": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.$eval should accept ElementHandles as arguments": [
+    "PASS"
   ],
   "Firefox Browser Page Page.$eval should throw error if no element is found": [
     "PASS"
   ],
-  "Firefox Browser Page Keyboard should type all kinds of characters": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.evaluate should simulate a user gesture": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame.waitForXPath should respect timeout": [
+  "Firefox Browser Page Page.$$eval should work": [
     "PASS"
   ],
-  "Firefox Browser Page Accessibility filtering children of leaf nodes checkbox without label should not have children": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.close should run beforeunload if asked for": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.waitForNavigation should work with clicking on anchor links": [
-    "TIMEOUT", "FAIL"
-  ],
-  "Firefox Browser Page Frame Management should report frame.parent()": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.goto should fail when navigating to bad url": [
-    "TIMEOUT"
-  ],
-  "Firefox Top-level requires should require top-level Errors": [
+  "Firefox Browser Page Page.$ should query existing element": [
     "PASS"
   ],
-  "Firefox Browser Page Page.click should click a rotated button": [
+  "Firefox Browser Page Page.$ should return null for non-existing element": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.$$ should query existing elements": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.$$ should return empty array if nothing is found": [
+    "PASS"
+  ],
+  "Firefox Browser Page Path.$x should query existing element": [
     "PASS"
   ],
   "Firefox Browser Page Path.$x should return empty array for non-existing element": [
@@ -1733,184 +1515,409 @@
   "Firefox Browser Page Path.$x should return multiple elements": [
     "PASS"
   ],
-  "Firefox Browser Page Page.evaluate should throw a nice error after a navigation": [
+  "Firefox Browser Page ElementHandle.$ should query existing element": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$ should return null for non-existing element": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$eval should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$eval should retrieve content from subtree": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$eval should throw in case of missing selector": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$$eval should work": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$$eval should retrieve content from subtree": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$$eval should not throw in case of missing selector": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$$ should query existing elements": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$$ should return empty array for non-existing elements": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$x should query existing element": [
+    "PASS"
+  ],
+  "Firefox Browser Page ElementHandle.$x should return null for non-existing element": [
+    "PASS"
+  ],
+  "Firefox Browser Page Target Browser.targets should return all of the targets": [
+    "PASS"
+  ],
+  "Firefox Browser Page Target Browser.pages should return all of the pages": [
+    "PASS"
+  ],
+  "Firefox Browser Page Target should contain browser target": [
+    "PASS"
+  ],
+  "Firefox Browser Page Target should be able to use the default page in the browser": [
+    "PASS"
+  ],
+  "Firefox Browser Page Target should report when a new page is created and closed": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Target should report when a service worker is created and destroyed": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.waitForRequest should respect default timeout": [
+  "Firefox Browser Page Target should create a worker from a service worker": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Target should create a worker from a shared worker": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Target should report when a target url changes": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Target should not report uninitialized pages": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Target should not crash while redirecting if original request was missed": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Target should have an opener": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Browser.waitForTarget should wait for a target": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Browser.waitForTarget should timeout waiting for a non-existent target": [
     "PASS"
   ],
-  "Firefox Browser Page Page.select should throw when element is not a <select>": [
+  "Firefox Browser Page Touchscreen should tap the button": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Touchscreen should report touches": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.waitFor should wait for selector": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Page.waitFor should wait for an xpath": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Page.waitFor should not allow you to select an element with single slash xpath": [
     "PASS"
   ],
-  "Firefox Browser Page Page.evaluate should properly serialize null fields": [
+  "Firefox Browser Page Page.waitFor should timeout": [
     "PASS"
   ],
-  "Firefox Browser Page Page.goto should prioritize default navigation timeout over default timeout": [
+  "Firefox Browser Page Page.waitFor should work with multiline body": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.waitFor should wait for predicate": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.waitFor should throw when unknown type": [
+    "PASS"
+  ],
+  "Firefox Browser Page Page.waitFor should wait for predicate with arguments": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should accept a string": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should work when resolved right before execution context disposal": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should poll on interval": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should poll on mutation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should poll on raf": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should work with strict CSP policy": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should throw on bad polling value": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should throw negative polling interval": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should return the success value as a JSHandle": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should return the window as a success value": [
     "PASS"
   ],
   "Firefox Browser Page Frame.waitForFunction should accept ElementHandle arguments": [
     "PASS"
   ],
-  "Firefox Browser Page Page.click should not hang with touch-enabled viewports": [
+  "Firefox Browser Page Frame.waitForFunction should respect timeout": [
     "PASS"
   ],
-  "Firefox Browser Page Page.goto should return last response in redirect chain": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Browser.process should not return child_process for remote browser": [
+  "Firefox Browser Page Frame.waitForFunction should respect default timeout": [
     "PASS"
-  ],
-  "Firefox Browser Page Target should not crash while redirecting if original request was missed": [
-    "FAIL"
   ],
   "Firefox Browser Page Frame.waitForFunction should disable timeout when its set to 0": [
     "PASS"
   ],
-  "Firefox Puppeteer Puppeteer.launch should set the default viewport": [
+  "Firefox Browser Page Frame.waitForFunction should survive cross-process navigation": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForFunction should survive navigations": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should immediately resolve promise if node exists": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should work with removed MutationObserver": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should resolve promise when node is added": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should work when node is added through innerHTML": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector Page.waitForSelector is shortcut for main frame": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should run in specified frame": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should throw when frame is detached": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should survive cross-process navigation": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should wait for visible": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.waitForResponse should respect timeout": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.addScriptTag should work with a url and type=module": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.exposeFunction should work with complex objects": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.exposeFunction should be callable from-inside evaluateOnNewDocument": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Accessibility keyshortcuts": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.exposeFunction should await returned promise": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Frame Management should handle nested frames": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target should create a worker from a shared worker": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with redirect inside sync XHR": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click links which cause navigation": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.Events.Close should work with page.close": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setOfflineMode should emulate navigator.onLine": [
+  "Firefox Browser Page Frame.waitForSelector should wait for visible recursively": [
     "SKIP"
   ],
   "Firefox Browser Page Frame.waitForSelector hidden should wait for visibility: hidden": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.addScriptTag should include sourcemap when path is provided": [
-    "PASS"
-  ],
-  "Firefox Browser Page Keyboard should press the metaKey": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Network Events Page.Events.RequestFailed": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target should be able to use the default page in the browser": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with badly encoded server": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Target should contain browser target": [
-    "PASS"
-  ],
-  "Firefox Browser Page JSHandle.toString should work for primitives": [
-    "PASS"
-  ],
-  "Firefox Puppeteer Puppeteer.connect should be able to close remote browser": [
+  "Firefox Browser Page Frame.waitForSelector hidden should wait for display: none": [
     "SKIP"
   ],
-  "Firefox Browser Page Mouse should trigger hover state with removed window.Node": [
-    "FAIL"
-  ],
-  "Firefox Puppeteer Browser.close should terminate network waiters": [
+  "Firefox Browser Page Frame.waitForSelector hidden should wait for removal": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.Events.Console should have location for console API calls": [
+  "Firefox Browser Page Frame.waitForSelector should return null if waiting to hide non-existing element": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should respect timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should have an error message specifically for awaiting an element to be hidden": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should respond to node attribute mutation": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should return the element handle": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Frame.waitForSelector should have correct stack trace for timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForXPath should support some fancy xpath": [
     "FAIL"
   ],
-  "Firefox Browser Page Request.frame should work for main frame navigation request": [
+  "Firefox Browser Page Frame.waitForXPath should respect timeout": [
+    "PASS"
+  ],
+  "Firefox Browser Page Frame.waitForXPath should run in specified frame": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForXPath should throw when frame is detached": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForXPath hidden should wait for display: none": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Frame.waitForXPath should return the element handle": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Frame.waitForXPath should allow you to select a text node": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Frame.waitForXPath should allow you to select an element with single slash": [
+    "FAIL"
+  ],
+  "Firefox Browser Page Workers Page.workers": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Workers should emit created and destroyed events": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Workers should report console logs": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Workers should have JSHandles for console logs": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Workers should have an execution context": [
+    "SKIP"
+  ],
+  "Firefox Browser Page Workers should report errors": [
+    "SKIP"
+  ],
+  "Firefox Browser BrowserContext should have default context": [
+    "FAIL"
+  ],
+  "Firefox Browser BrowserContext should create new incognito context": [
+    "FAIL"
+  ],
+  "Firefox Browser BrowserContext should close all belonging targets once closing context": [
+    "FAIL"
+  ],
+  "Firefox Browser BrowserContext window.open should use parent tab context": [
+    "FAIL"
+  ],
+  "Firefox Browser BrowserContext should fire target events": [
+    "FAIL"
+  ],
+  "Firefox Browser BrowserContext should wait for a target": [
+    "TIMEOUT"
+  ],
+  "Firefox Browser BrowserContext should timeout waiting for a non-existent target": [
     "PASS"
   ],
   "Firefox Browser BrowserContext should isolate localStorage and cookies": [
     "FAIL"
   ],
-  "Firefox Browser Page ExecutionContext.queryObjects should work for non-blank page": [
+  "Firefox Browser BrowserContext should work across sessions": [
+    "FAIL"
+  ],
+  "Firefox ignoreHTTPSErrors Response.securityDetails should work": [
+    "FAIL"
+  ],
+  "Firefox ignoreHTTPSErrors Response.securityDetails should be |null| for non-secure requests": [
+    "FAIL"
+  ],
+  "Firefox ignoreHTTPSErrors Response.securityDetails Network redirects should report SecurityDetails": [
+    "FAIL"
+  ],
+  "Firefox ignoreHTTPSErrors should work": [
+    "FAIL"
+  ],
+  "Firefox ignoreHTTPSErrors should work with request interception": [
+    "FAIL"
+  ],
+  "Firefox ignoreHTTPSErrors should work with mixed content": [
+    "FAIL"
+  ],
+  "Firefox DefaultBrowserContext page.cookies() should work": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.screenshot should return base64": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.setRequestInterception should work with encoded server": [
-    "FAIL"
-  ],
-  "Firefox Browser Page ElementHandle.$ should query existing element": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.cookies should properly report \"Lax\" sameSite cookie": [
-    "PASS"
-  ],
-  "Firefox Browser Page Page.select should select single option": [
-    "PASS"
-  ],
-  "Firefox Browser Page FileChooser.accept should accept single file": [
+  "Firefox DefaultBrowserContext page.setCookie() should work": [
     "SKIP"
   ],
-  "Firefox Browser Page ElementHandle.boundingBox should work": [
-    "FAIL"
+  "Firefox DefaultBrowserContext page.deleteCookie() should work": [
+    "SKIP"
   ],
-  "Firefox Browser Page Page.goto should navigate to URL with hash and fire requests without hash": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Keyboard should type emoji into an iframe": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Response.text should wait until response completes": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Response.text should throw when requesting body of redirected response": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.goto should fail when server returns 204": [
-    "TIMEOUT"
-  ],
-  "Firefox Browser Page Page.evaluate should accept a string": [
+  "Firefox Puppeteer BrowserFetcher should download and extract linux binary": [
     "PASS"
   ],
-  "Firefox Browser Page Page.Events.Close should work with window.close": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Browser.waitForTarget should wait for a target": [
-    "SKIP"
-  ],
-  "Firefox Browser Page Frame.waitForSelector should run in specified frame": [
-    "FAIL"
-  ],
-  "Firefox Browser Page Page.click should click on a span with an inline element inside": [
+  "Firefox Puppeteer Browser.disconnect should reject navigation when browser closes": [
     "PASS"
   ],
-  "Firefox Browser Page Page.goto should disable timeout when its set to 0": [
+  "Firefox Puppeteer Browser.disconnect should reject waitForSelector when browser closes": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Browser.close should terminate network waiters": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should reject all promises when browser is closed": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should reject if executable path is invalid": [
     "PASS"
   ],
-  "Firefox Browser Page Frame.waitForXPath should return the element handle": [
+  "Firefox Puppeteer Puppeteer.launch userDataDir option": [
     "SKIP"
   ],
-  "Firefox Browser Page Request.respond should stringify intercepted request response headers": [
+  "Firefox Puppeteer Puppeteer.launch userDataDir argument": [
     "SKIP"
   ],
-  "Firefox Browser Page Page.goto should not leak listeners during bad navigation": [
-    "TIMEOUT"
+  "Firefox Puppeteer Puppeteer.launch userDataDir option should restore state": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch userDataDir option should restore cookies": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should return the default arguments": [
+    "PASS"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should report the correct product": [
+    "PASS"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should work with no default arguments": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should filter out ignored default arguments": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should have default URL when launching browser": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should have custom URL when launching browser": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should set the default viewport": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should disable the default viewport": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.launch should take fullPage screenshots when defaultViewport is null": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.connect should be able to connect multiple times to the same browser": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.connect should be able to close remote browser": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.connect should support ignoreHTTPSErrors option": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.connect should be able to reconnect to a disconnected browser": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously": [
+    "SKIP"
+  ],
+  "Firefox Puppeteer Puppeteer.executablePath should work": [
+    "SKIP"
+  ],
+  "Firefox Top-level requires should require top-level Errors": [
+    "PASS"
+  ],
+  "Firefox Top-level requires should require top-level DeviceDescriptors": [
+    "PASS"
+  ],
+  "Firefox Browser target events should work": [
+    "SKIP"
+  ],
+  "Firefox Browser.Events.disconnected should be emitted when: browser gets closed, disconnected or underlying websocket gets closed": [
+    "SKIP"
+  ],
+  "Firefox Fixtures dumpio option should work with pipe option": [
+    "SKIP"
+  ],
+  "Firefox Fixtures should dump browser process stderr": [
+    "SKIP"
+  ],
+  "Firefox Fixtures should close the browser when the node process closes": [
+    "SKIP"
   ]
 }
