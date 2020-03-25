@@ -77,6 +77,7 @@ using namespace mozilla;
 nsresult ContentBlockingAllowList::Check(
     nsIPrincipal* aContentBlockingAllowListPrincipal, bool aIsPrivateBrowsing,
     bool& aIsAllowListed) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   aIsAllowListed = false;
 
   if (!aContentBlockingAllowListPrincipal) {
