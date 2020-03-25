@@ -42,7 +42,7 @@ function threadsReducer(state = initialReducerState, action) {
       );
 
       let { selected } = state;
-      if (selected._targetFront === action.target) {
+      if (selected?._targetFront === action.target) {
         selected = null;
       }
 
