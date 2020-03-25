@@ -1647,6 +1647,12 @@ LoadInfo::SetCspEventListener(nsICSPEventListener* aCSPEventListener) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+LoadInfo::GetInternalContentPolicyType(nsContentPolicyType* aResult) {
+  *aResult = mInternalContentPolicyType;
+  return NS_OK;
+}
+
 already_AddRefed<nsIContentSecurityPolicy> LoadInfo::GetCsp() {
   // Before querying the CSP from the client we have to check if the
   // triggeringPrincipal originates from an addon and potentially

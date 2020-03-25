@@ -557,8 +557,10 @@ interface nsILoadInfo : nsISupports
    * _INTERNAL_ values.  Please use the contentPolicyType attribute above
    * for that purpose.
    */
-  [noscript, notxpcom]
-  nsContentPolicyType internalContentPolicyType();
+  [noscript, notxpcom, nostdcall, binaryname(InternalContentPolicyType)]
+  nsContentPolicyType binaryInternalContentPolicyType();
+
+  readonly attribute nsContentPolicyType internalContentPolicyType;
 
   /**
    * Returns true if document or any of the documents ancestors
