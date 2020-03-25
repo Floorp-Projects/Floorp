@@ -564,6 +564,10 @@ class JSTerm extends Component {
       } else {
         this.setEditorWidth(null);
       }
+
+      if (this.autocompletePopup.isOpen) {
+        this.autocompletePopup.hidePopup();
+      }
     }
 
     if (
