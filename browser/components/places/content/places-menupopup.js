@@ -41,7 +41,7 @@
         </vbox>
         <arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
                         exportparts="scrollbox: arrowscrollbox-scrollbox"
-                        smoothscroll="false" part="popupbox">
+                        smoothscroll="false" part="arrowscrollbox">
           <html:slot></html:slot>
         </arrowscrollbox>
       </hbox>
@@ -602,7 +602,7 @@
           </vbox>
           <arrowscrollbox class="popup-internal-box" flex="1"
                           orient="vertical" smoothscroll="false"
-                          part="popupbox">
+                          part="arrowscrollbox">
             <html:slot/>
           </arrowscrollbox>
         </box>
