@@ -49,7 +49,7 @@ android {
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
         manifestPlaceholders = [
                 "isRaptorEnabled": "false",
-                "deepLinkScheme": "fenix"
+                "deepLinkScheme": "fenix-dev"
         ]
     }
 
@@ -87,6 +87,7 @@ android {
         fenixProduction releaseTemplate >> {
             applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            manifestPlaceholders = ["deepLinkScheme": "fenix"]
         }
         fennecProduction releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
@@ -99,7 +100,8 @@ android {
                     // fatal consequences. For example see:
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
-                    "sharedUserId": "org.mozilla.firefox.sharedID"
+                    "sharedUserId": "org.mozilla.firefox.sharedID",
+                    "deepLinkScheme": "fenix"
             ]
         }
         fennecBeta releaseTemplate >> {
@@ -113,7 +115,8 @@ android {
                     // fatal consequences. For example see:
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
-                    "sharedUserId": "org.mozilla.firefox.sharedID"
+                    "sharedUserId": "org.mozilla.firefox.sharedID",
+                    "deepLinkScheme": "fenix-beta"
             ]
         }
         fennecNightly releaseTemplate >> {
@@ -127,7 +130,8 @@ android {
                     // fatal consequences. For example see:
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
-                    "sharedUserId": "org.mozilla.fennec.sharedID"
+                    "sharedUserId": "org.mozilla.fennec.sharedID",
+                    "deepLinkScheme": "fenix-nightly"
             ]
         }
     }
