@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-@import url("chrome://global/skin/");
+@import url("chrome://global/skin/global.css");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 /* View buttons */
