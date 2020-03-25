@@ -147,7 +147,8 @@ already_AddRefed<File> Blob::ToFile(const nsAString& aName,
   mImpl->GetType(contentType);
 
   RefPtr<MultipartBlobImpl> impl =
-      MultipartBlobImpl::Create(std::move(blobImpls), aName, contentType, aRv);
+      MultipartBlobImpl::Create(std::move(blobImpls), aName, contentType,
+                                mGlobal->CrossOriginIsolated(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -216,13 +217,16 @@ already_AddRefed<Blob> Blob::Constructor(
     const BlobPropertyBag& aBag, ErrorResult& aRv) {
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl();
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
   if (aData.WasPassed()) {
     nsAutoString type(aBag.mType);
     MakeValidBlobType(type);
     impl->InitializeBlob(aData.Value(), type,
-                         aBag.mEndings == EndingType::Native, aRv);
+                         aBag.mEndings == EndingType::Native,
+                         global->CrossOriginIsolated(), aRv);
   } else {
-    impl->InitializeBlob(aRv);
+    impl->InitializeBlob(global->CrossOriginIsolated(), aRv);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {
@@ -230,9 +234,6 @@ already_AddRefed<Blob> Blob::Constructor(
   }
 
   MOZ_ASSERT(!impl->IsFile());
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
 
   RefPtr<Blob> blob = Blob::Create(global, impl);
   return blob.forget();
