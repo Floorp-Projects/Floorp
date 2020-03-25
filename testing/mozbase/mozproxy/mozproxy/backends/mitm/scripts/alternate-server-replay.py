@@ -209,11 +209,16 @@ class AlternateServerPlayback:
         stats = {"totals": dict(self.netlocs),
                  "calls": self.calls,
                  "replayed": self._replayed,
-                 "not_replayed": self._not_replayed,
+                 "not-replayed": self._not_replayed,
                  "confidence": int(confidence * 100)}
-
+        file_name = "mitm_netlocs_%s.json" % \
+                    os.path.splitext(
+                        os.path.basename(
+                            ctx.options.server_replay_files[0]
+                        )
+                    )[0]
         path = os.path.normpath(os.path.join(ctx.options.upload_dir,
-                                             "mitm_netlocs.json"))
+                                             file_name))
         try:
             with open(path, "w") as f:
                 f.write(json.dumps(stats, indent=2, sort_keys=True))
