@@ -13,6 +13,8 @@
 #include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/WindowContext.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
@@ -287,10 +289,40 @@ ContentBlocking::AllowAccessFor(
          PromiseFlatCString(origin).get()));
   }
 
+  RefPtr<dom::WindowContext> parentWindowContext =
+      aParentContext->GetCurrentWindowContext();
+  if (!parentWindowContext) {
+    LOG(
+        ("No window context found for our parent browsing context, bailing out "
+         "early"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  Maybe<net::CookieJarSettingsArgs> cookieJarSetting =
+      parentWindowContext->GetCookieJarSettings();
+  if (cookieJarSetting.isNothing()) {
+    LOG(
+        ("No cookiejar setting found for our parent window context, bailing "
+         "out early"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  uint32_t behavior = cookieJarSetting->cookieBehavior();
+  if (!net::CookieJarSettings::IsRejectThirdPartyTrackers(behavior)) {
+    LOG(
+        ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
+         "early",
+         behavior));
+    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
+  }
+
+  MOZ_ASSERT(
+      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      behavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+
   nsCOMPtr<nsPIDOMWindowOuter> parentOuter = aParentContext->GetDOMWindow();
   if (!parentOuter) {
-    // TODO: Bug 1616775 should implement the parent version of AllowAccessFor
-    // here when parent window is NOT in-process.
     LOG(
         ("No outer window found for our parent window context, bailing out "
          "early"));
@@ -305,26 +337,6 @@ ContentBlocking::AllowAccessFor(
          "early"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
-
-  Document* parentDoc = parentInner->GetExtantDoc();
-  if (!parentDoc) {
-    LOG(("No document found for our parent inner window, bailing out early"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-  int32_t behavior = parentDoc->CookieJarSettings()->GetCookieBehavior();
-
-  if (!parentDoc->CookieJarSettings()->GetRejectThirdPartyTrackers()) {
-    LOG(
-        ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
-         "early",
-         behavior));
-    return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
-  }
-
-  MOZ_ASSERT(
-      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      behavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
   if (ContentBlockingAllowList::Check(parentInner)) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
