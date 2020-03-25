@@ -2386,3 +2386,59 @@ bool WarpBuilder::build_InstrumentationScriptId(BytecodeLocation) {
   pushConstant(Int32Value(scriptId));
   return true;
 }
+
+bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
+  int32_t low = loc.getTableSwitchLow();
+  int32_t high = loc.getTableSwitchHigh();
+  size_t numCases = high - low + 1;
+
+  MDefinition* input = current->pop();
+  MTableSwitch* tableswitch = MTableSwitch::New(alloc(), input, low, high);
+  current->end(tableswitch);
+
+  MBasicBlock* switchBlock = current;
+
+  // Create |default| block.
+  {
+    BytecodeLocation defaultLoc = loc.getTableSwitchDefaultTarget();
+    if (!startNewBlock(switchBlock, defaultLoc)) {
+      return false;
+    }
+
+    size_t index;
+    if (!tableswitch->addDefault(current, &index)) {
+      return false;
+    }
+    MOZ_ASSERT(index == 0);
+
+    if (!buildForwardGoto(defaultLoc)) {
+      return false;
+    }
+  }
+
+  // Create blocks for all cases.
+  for (size_t i = 0; i < numCases; i++) {
+    BytecodeLocation caseLoc = loc.getTableSwitchCaseTarget(script_, i);
+    if (!startNewBlock(switchBlock, caseLoc)) {
+      return false;
+    }
+
+    size_t index;
+    if (!tableswitch->addSuccessor(current, &index)) {
+      return false;
+    }
+    if (!tableswitch->addCase(index)) {
+      return false;
+    }
+
+    // TODO: IonBuilder has an optimization where it replaces the switch input
+    // with the case value. This probably matters less for Warp. Re-evaluate.
+
+    if (!buildForwardGoto(caseLoc)) {
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(hasTerminatedBlock());
+  return true;
+}

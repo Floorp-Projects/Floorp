@@ -89,6 +89,10 @@ class BytecodeLocation {
 
   uint32_t getTableSwitchDefaultOffset(const JSScript* script) const;
 
+  inline BytecodeLocation getTableSwitchDefaultTarget() const;
+  inline BytecodeLocation getTableSwitchCaseTarget(const JSScript* script,
+                                                   uint32_t caseIndex) const;
+
   uint32_t useCount() const;
 
   uint32_t defCount() const;
@@ -203,8 +207,7 @@ class BytecodeLocation {
   JSOp getOp() const { return JSOp(*rawBytecode_); }
 
   BytecodeLocation getJumpTarget() const {
-    // The default target of a JSOp::TableSwitch also follows this format.
-    MOZ_ASSERT(isJump() || is(JSOp::TableSwitch));
+    MOZ_ASSERT(isJump());
     return BytecodeLocation(*this,
                             rawBytecode_ + GET_JUMP_OFFSET(rawBytecode_));
   }

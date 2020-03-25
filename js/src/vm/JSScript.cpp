@@ -4509,7 +4509,7 @@ void JSScript::assertValidJumpTargets() const {
 
     // Check table switch case labels.
     if (loc.is(JSOp::TableSwitch)) {
-      BytecodeLocation target = loc.getJumpTarget();
+      BytecodeLocation target = loc.getTableSwitchDefaultTarget();
 
       // Default target.
       MOZ_ASSERT(mainLoc <= target && target < endLoc);
@@ -4519,8 +4519,7 @@ void JSScript::assertValidJumpTargets() const {
       int32_t high = loc.getTableSwitchHigh();
 
       for (int i = 0; i < high - low + 1; i++) {
-        BytecodeLocation switchCase(this,
-                                    tableSwitchCasePC(loc.toRawBytecode(), i));
+        BytecodeLocation switchCase = loc.getTableSwitchCaseTarget(this, i);
         MOZ_ASSERT(mainLoc <= switchCase && switchCase < endLoc);
         MOZ_ASSERT(switchCase.is(JSOp::JumpTarget));
       }
