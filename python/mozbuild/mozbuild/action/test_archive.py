@@ -632,6 +632,18 @@ ARCHIVE_FILES = {
             'pattern': '**',
             'dest': 'xpcshell/profile_data',
         },
+        {
+            'source': buildconfig.topobjdir,
+            'base': 'dist/bin',
+            'pattern': 'http3server%s' % buildconfig.substs['BIN_SUFFIX'],
+            'dest': 'xpcshell/http3server',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'netwerk/test/http3serverDB',
+            'pattern': '**',
+            'dest': 'xpcshell/http3server/http3serverDB',
+        },
     ],
     'updater-dep': [
         {
