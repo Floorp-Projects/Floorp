@@ -84,6 +84,6 @@ void = "1.0.2"
 lazy_static = "1"
 log = "0.4"
 bindgen = {version = "0.53", optional = true, default-features = false}
-regex = {version = "1.0", optional = true}
+regex = {version = "1.0", optional = true, default-features = false, features = ["perf", "std"]}
 walkdir = "2.1.4"
 toml = {version = "0.4.5", optional = true, default-features = false}
