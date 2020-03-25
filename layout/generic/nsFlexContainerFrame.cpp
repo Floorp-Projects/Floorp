@@ -1666,10 +1666,10 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
  */
 class nsFlexContainerFrame::CachedBAxisMeasurement {
   struct Key {
-    LogicalSize mComputedSize;
-    nscoord mComputedMinBSize;
-    nscoord mComputedMaxBSize;
-    nscoord mAvailableBSize;
+    const LogicalSize mComputedSize;
+    const nscoord mComputedMinBSize;
+    const nscoord mComputedMaxBSize;
+    const nscoord mAvailableBSize;
 
     explicit Key(const ReflowInput& aRI)
         : mComputedSize(aRI.ComputedSize()),
@@ -1685,10 +1685,12 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
     }
   };
 
-  Key mKey;
+  const Key mKey;
 
+  // This could/should be const, but it's non-const for now just because it's
+  // assigned via a series of steps in the constructor body:
   nscoord mBSize;
-  nscoord mAscent;
+  const nscoord mAscent;
 
  public:
   CachedBAxisMeasurement(const ReflowInput& aReflowInput,
@@ -1715,25 +1717,62 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
   nscoord BSize() const { return mBSize; }
 
   nscoord Ascent() const { return mAscent; }
+};
+
+/**
+ * When we instantiate/update a CachedFlexItemData, this enum must be used to
+ * indicate the sort of reflow whose results we're capturing. This impacts
+ * what we cache & how we use the cached information.
+ */
+enum class FlexItemReflowType {
+  // A reflow to measure the block-axis size of a flex item (as an input to the
+  // flex layout algorithm).
+  Measuring,
+
+  // A reflow with the flex item's "final" size at the end of the flex layout
+  // algorithm.
+  // XXXdholbert Unused for now, but will be used in a later patch.
+  Final,
+};
+
+/**
+ * This class stores information about the previous reflow for a given flex
+ * item.  This should hopefully help us avoid redundant reflows of that
+ * flex item.
+ */
+class nsFlexContainerFrame::CachedFlexItemData {
+ public:
+  CachedFlexItemData(const ReflowInput& aReflowInput,
+                     const ReflowOutput& aReflowOutput,
+                     FlexItemReflowType aType) {
+    if (aType == FlexItemReflowType::Measuring) {
+      mBAxisMeasurement.emplace(aReflowInput, aReflowOutput);
+    }
+  }
+
+  // If the flex container needs a measuring reflow for the flex item, then the
+  // resulting block-axis measurements can be cached here.  If no measurement
+  // has been needed so far, then this member will be Nothing().
+  Maybe<CachedBAxisMeasurement> mBAxisMeasurement;
 
   // Instances of this class are stored under this frame property, on
   // frames that are flex items:
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, CachedBAxisMeasurement)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, CachedFlexItemData)
 };
 
 void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
     nsIFrame* aItemFrame) {
-  aItemFrame->RemoveProperty(CachedBAxisMeasurement::Prop());
+  aItemFrame->RemoveProperty(CachedFlexItemData::Prop());
 }
 
 const CachedBAxisMeasurement&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     FlexItem& aItem, ReflowInput& aChildReflowInput) {
-  auto* cachedResult =
-      aItem.Frame()->GetProperty(CachedBAxisMeasurement::Prop());
-  if (cachedResult) {
-    if (cachedResult->IsValidFor(aChildReflowInput)) {
-      return *cachedResult;
+  auto* cachedData = aItem.Frame()->GetProperty(CachedFlexItemData::Prop());
+
+  if (cachedData && cachedData->mBAxisMeasurement) {
+    if (cachedData->mBAxisMeasurement->IsValidFor(aChildReflowInput)) {
+      return *(cachedData->mBAxisMeasurement);
     }
     FLEX_LOG("[perf] MeasureAscentAndBSizeForFlexItem rejected cached value");
   } else {
@@ -1771,15 +1810,15 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
 
   // Update (or add) our cached measurement, so that we can hopefully skip this
   // measuring reflow the next time around:
-  if (cachedResult) {
-    *cachedResult =
-        CachedBAxisMeasurement(aChildReflowInput, childReflowOutput);
+  if (cachedData) {
+    cachedData->mBAxisMeasurement.reset();
+    cachedData->mBAxisMeasurement.emplace(aChildReflowInput, childReflowOutput);
   } else {
-    cachedResult =
-        new CachedBAxisMeasurement(aChildReflowInput, childReflowOutput);
-    aItem.Frame()->SetProperty(CachedBAxisMeasurement::Prop(), cachedResult);
+    cachedData = new CachedFlexItemData(aChildReflowInput, childReflowOutput,
+                                        FlexItemReflowType::Measuring);
+    aItem.Frame()->SetProperty(CachedFlexItemData::Prop(), cachedData);
   }
-  return *cachedResult;
+  return *(cachedData->mBAxisMeasurement);
 }
 
 /* virtual */
