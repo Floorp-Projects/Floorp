@@ -619,7 +619,7 @@ bool Location::CallerSubsumes(nsIPrincipal* aSubjectPrincipal) {
   // even though we only allow limited cross-origin access to Location objects
   // in general.
   nsCOMPtr<nsPIDOMWindowOuter> outer = bc->GetDOMWindow();
-  MOZ_DIAGNOSTIC_ASSERT(outer);
+  MOZ_ASSERT(outer);
   if (MOZ_UNLIKELY(!outer)) return false;
 
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(outer);
