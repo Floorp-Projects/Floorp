@@ -64,6 +64,8 @@ class PerformanceMainThread final : public Performance,
 
   void QueueNavigationTimingEntry() override;
 
+  bool CrossOriginIsolated() const override;
+
  protected:
   ~PerformanceMainThread();
 
@@ -84,6 +86,8 @@ class PerformanceMainThread final : public Performance,
   RefPtr<PerformanceTiming> mTiming;
   RefPtr<PerformanceNavigation> mNavigation;
   JS::Heap<JSObject*> mMozMemory;
+
+  const bool mCrossOriginIsolated;
 };
 
 }  // namespace dom
