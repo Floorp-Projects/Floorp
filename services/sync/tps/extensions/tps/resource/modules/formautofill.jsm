@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "OSKeyStore",
-  "resource:///modules/OSKeyStore.jsm"
+  "resource://gre/modules/OSKeyStore.jsm"
 );
 
 class FormAutofillBase {

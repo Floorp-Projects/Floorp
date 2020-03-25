@@ -5,7 +5,7 @@
 
 var EXPORTED_SYMBOLS = ["OSKeyStoreTestUtils"];
 
-ChromeUtils.import("resource:///modules/OSKeyStore.jsm", this);
+ChromeUtils.import("resource://gre/modules/OSKeyStore.jsm", this);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -20,7 +20,7 @@ const { TestUtils } = ChromeUtils.import(
 );
 
 var OSKeyStoreTestUtils = {
-  TEST_ONLY_REAUTH: "browser.osKeyStore.unofficialBuildOnlyLogin",
+  TEST_ONLY_REAUTH: "toolkit.osKeyStore.unofficialBuildOnlyLogin",
 
   setup() {
     this.ORIGINAL_STORE_LABEL = OSKeyStore.STORE_LABEL;
