@@ -84,12 +84,16 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
       filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
                                                                         NSDictionary* bindings) {
         AccessibleWrap* childAcc = [child getGeckoAccessible];
-        if (childAcc && childAcc->Role() == roles::MENUPOPUP &&
-            ((childAcc->VisibilityState() & states::INVISIBLE) != 0)) {
-          // Filter out all invisible XUL popup menus. Invisible elements in our browser
-          // chrome are unique in the sense that we want screen readers to ignore them.
-          // These only exist in the top level process so we don't do a similar check on proxies.
-          return NO;
+        if (childAcc) {
+          role r = childAcc->Role();
+          if ((r == roles::MENUPOPUP || r == roles::DIALOG || r == roles::ALERT) &&
+              ((childAcc->VisibilityState() & states::INVISIBLE) != 0)) {
+            // Filter out all invisible XUL popup menus, dialogs and alerts. Invisible elements in
+            // our browser chrome are unique in the sense that we want screen readers to ignore
+            // them. These only exist in the top level process so we don't do a similar check on
+            // proxies.
+            return NO;
+          }
         }
 
         return YES;
