@@ -116,7 +116,7 @@ impl FromStr for Version {
 
     fn from_str(version_string: &str) -> Result<Version, Error> {
         let mut version: Version = Default::default();
-        let version_re = Regex::new(r"^(?P<major>[[:digit:]]+)\.(?P<minor>[[:digit:]]+)(?:\.(?P<patch>[[:digit:]]+))?(?:(?P<pre0>[a-z]+)(?P<pre1>[[:digit:]]*))?$").unwrap();
+        let version_re = Regex::new(r"^(?P<major>\d+)\.(?P<minor>\d+)(?:\.(?P<patch>\d+))?(?:(?P<pre0>[a-z]+)(?P<pre1>\d*))?$").unwrap();
         if let Some(captures) = version_re.captures(version_string) {
             match captures
                 .name("major")
