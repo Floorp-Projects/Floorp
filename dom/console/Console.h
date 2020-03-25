@@ -32,6 +32,7 @@ class ConsoleInstanceDumpCallback;
 class ConsoleRunnable;
 class ConsoleCallDataRunnable;
 class ConsoleProfileRunnable;
+class MainThreadConsoleData;
 
 class Console final : public nsIObserver, public nsSupportsWeakReference {
  public:
@@ -222,9 +223,7 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
                             MethodName aMethodName,
                             const nsAString& aMethodString);
 
-  // This method must receive aCx and aArguments in the same JS::Compartment.
-  void ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
-                       const Sequence<JS::Value>& aArguments);
+  MainThreadConsoleData* GetOrCreateMainThreadData();
 
   // Returns true on success; otherwise false.
   bool StoreCallData(JSContext* aCx, ConsoleCallData* aCallData,
@@ -350,8 +349,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
 
   static bool ShouldIncludeStackTrace(MethodName aMethodName);
 
-  JSObject* GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal);
-
   void AssertIsOnOwningThread() const;
 
   bool IsShuttingDown() const;
@@ -401,9 +398,6 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
 
   // Owning/CC thread only
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  // These nsCOMPtr are touched on main thread only.
-  nsCOMPtr<nsIConsoleAPIStorage> mStorage;
-  RefPtr<JSObjectHolder> mSandbox;
 
   // Touched on the owner thread.
   nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
@@ -419,7 +413,9 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
 
   RefPtr<AnyCallback> mConsoleEventNotifier;
 
-  // This is the stack for groupping.
+  RefPtr<MainThreadConsoleData> mMainThreadData;
+  // This is the stack for grouping relating to Console-thread events, when
+  // the Console thread is not the main thread.
   nsTArray<nsString> mGroupStack;
 
   uint64_t mOuterID;
@@ -448,6 +444,7 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   friend class ConsoleRunnable;
   friend class ConsoleWorkerRunnable;
   friend class ConsoleWorkletRunnable;
+  friend class MainThreadConsoleData;
 };
 
 }  // namespace dom
