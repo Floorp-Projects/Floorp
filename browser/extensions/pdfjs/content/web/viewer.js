@@ -1066,7 +1066,6 @@ const PDFViewerApplication = {
     const openActionPromise = pdfDocument.getOpenAction().catch(function () {});
     this.toolbar.setPagesCount(pdfDocument.numPages, false);
     this.secondaryToolbar.setPagesCount(pdfDocument.numPages);
-    const store = this.store = new _view_history.ViewHistory(pdfDocument.fingerprint);
     let baseDocumentUrl;
     baseDocumentUrl = this.baseUrl;
     this.pdfLinkService.setDocument(pdfDocument, baseDocumentUrl);
@@ -1080,19 +1079,21 @@ const PDFViewerApplication = {
     } = pdfViewer;
     const pdfThumbnailViewer = this.pdfThumbnailViewer;
     pdfThumbnailViewer.setDocument(pdfDocument);
+    const storedPromise = (this.store = new _view_history.ViewHistory(pdfDocument.fingerprint)).getMultiple({
+      page: null,
+      zoom: _ui_utils.DEFAULT_SCALE_VALUE,
+      scrollLeft: "0",
+      scrollTop: "0",
+      rotation: null,
+      sidebarView: _pdf_sidebar.SidebarView.UNKNOWN,
+      scrollMode: _ui_utils.ScrollMode.UNKNOWN,
+      spreadMode: _ui_utils.SpreadMode.UNKNOWN
+    }).catch(() => {
+      return Object.create(null);
+    });
     firstPagePromise.then(pdfPage => {
       this.loadingBar.setWidth(this.appConfig.viewerContainer);
-      const storePromise = store.getMultiple({
-        page: null,
-        zoom: _ui_utils.DEFAULT_SCALE_VALUE,
-        scrollLeft: "0",
-        scrollTop: "0",
-        rotation: null,
-        sidebarView: _pdf_sidebar.SidebarView.UNKNOWN,
-        scrollMode: _ui_utils.ScrollMode.UNKNOWN,
-        spreadMode: _ui_utils.SpreadMode.UNKNOWN
-      }).catch(() => {});
-      Promise.all([_ui_utils.animationStarted, storePromise, pageLayoutPromise, pageModePromise, openActionPromise]).then(async ([timeStamp, values = {}, pageLayout, pageMode, openAction]) => {
+      Promise.all([_ui_utils.animationStarted, storedPromise, pageLayoutPromise, pageModePromise, openActionPromise]).then(async ([timeStamp, stored, pageLayout, pageMode, openAction]) => {
         const viewOnLoad = _app_options.AppOptions.get("viewOnLoad");
 
         this._initializePdfHistory({
@@ -1114,20 +1115,20 @@ const PDFViewerApplication = {
 
         let spreadMode = _app_options.AppOptions.get("spreadModeOnLoad");
 
-        if (values.page && viewOnLoad !== ViewOnLoad.INITIAL) {
-          hash = `page=${values.page}&zoom=${zoom || values.zoom},` + `${values.scrollLeft},${values.scrollTop}`;
-          rotation = parseInt(values.rotation, 10);
+        if (stored.page && viewOnLoad !== ViewOnLoad.INITIAL) {
+          hash = `page=${stored.page}&zoom=${zoom || stored.zoom},` + `${stored.scrollLeft},${stored.scrollTop}`;
+          rotation = parseInt(stored.rotation, 10);
 
           if (sidebarView === _pdf_sidebar.SidebarView.UNKNOWN) {
-            sidebarView = values.sidebarView | 0;
+            sidebarView = stored.sidebarView | 0;
           }
 
           if (scrollMode === _ui_utils.ScrollMode.UNKNOWN) {
-            scrollMode = values.scrollMode | 0;
+            scrollMode = stored.scrollMode | 0;
           }
 
           if (spreadMode === _ui_utils.SpreadMode.UNKNOWN) {
-            spreadMode = values.spreadMode | 0;
+            spreadMode = stored.spreadMode | 0;
           }
         }
 
@@ -1202,10 +1203,6 @@ const PDFViewerApplication = {
       this.toolbar.setPageNumber(pdfViewer.currentPageNumber, pdfViewer.currentPageLabel);
     });
     pagesPromise.then(async () => {
-      if (!this.supportsPrinting) {
-        return;
-      }
-
       const [openAction, javaScript] = await Promise.all([openActionPromise, pdfDocument.getJavaScript()]);
       let triggerAutoPrint = false;
 
@@ -1232,6 +1229,10 @@ const PDFViewerApplication = {
             }
           }
         }
+      }
+
+      if (!this.supportsPrinting) {
+        return;
       }
 
       if (triggerAutoPrint) {
@@ -1508,8 +1509,6 @@ const PDFViewerApplication = {
 
     eventBus._on("presentationmode", webViewerPresentationMode);
 
-    eventBus._on("openfile", webViewerOpenFile);
-
     eventBus._on("print", webViewerPrint);
 
     eventBus._on("download", webViewerDownload);
@@ -1631,8 +1630,6 @@ const PDFViewerApplication = {
     eventBus._off("presentationmodechanged", webViewerPresentationModeChanged);
 
     eventBus._off("presentationmode", webViewerPresentationMode);
-
-    eventBus._off("openfile", webViewerOpenFile);
 
     eventBus._off("print", webViewerPrint);
 
@@ -1960,14 +1957,12 @@ function webViewerHashchange(evt) {
   }
 }
 
-let webViewerFileInputChange;
+let webViewerFileInputChange, webViewerOpenFile;
 ;
 
 function webViewerPresentationMode() {
   PDFViewerApplication.requestPresentationMode();
 }
-
-function webViewerOpenFile() {}
 
 function webViewerPrint() {
   window.print();
@@ -4776,21 +4771,16 @@ class PDFDocumentProperties {
 
     this._reset();
 
-    if (closeButton) {
-      closeButton.addEventListener("click", this.close.bind(this));
-    }
-
+    closeButton.addEventListener("click", this.close.bind(this));
     this.overlayManager.register(this.overlayName, this.container, this.close.bind(this));
 
-    if (eventBus) {
-      eventBus._on("pagechanging", evt => {
-        this._currentPageNumber = evt.pageNumber;
-      });
+    eventBus._on("pagechanging", evt => {
+      this._currentPageNumber = evt.pageNumber;
+    });
 
-      eventBus._on("rotationchanging", evt => {
-        this._pagesRotation = evt.pagesRotation;
-      });
-    }
+    eventBus._on("rotationchanging", evt => {
+      this._pagesRotation = evt.pagesRotation;
+    });
 
     this._isNonMetricLocale = true;
     l10n.getLanguage().then(locale => {
@@ -7594,7 +7584,9 @@ class PDFPresentationMode {
     this.touchSwipeBind = this._touchSwipe.bind(this);
     window.addEventListener("mousemove", this.showControlsBind);
     window.addEventListener("mousedown", this.mouseDownBind);
-    window.addEventListener("wheel", this.mouseWheelBind);
+    window.addEventListener("wheel", this.mouseWheelBind, {
+      passive: false
+    });
     window.addEventListener("keydown", this.resetMouseScrollStateBind);
     window.addEventListener("contextmenu", this.contextMenuBind);
     window.addEventListener("touchstart", this.touchSwipeBind);
@@ -11425,23 +11417,22 @@ class ViewHistory {
     this.cacheSize = cacheSize;
     this._initializedPromise = this._readFromStorage().then(databaseStr => {
       const database = JSON.parse(databaseStr || "{}");
+      let index = -1;
 
-      if (!("files" in database)) {
+      if (!Array.isArray(database.files)) {
         database.files = [];
       } else {
         while (database.files.length >= this.cacheSize) {
           database.files.shift();
         }
-      }
 
-      let index = -1;
+        for (let i = 0, ii = database.files.length; i < ii; i++) {
+          const branch = database.files[i];
 
-      for (let i = 0, length = database.files.length; i < length; i++) {
-        const branch = database.files[i];
-
-        if (branch.fingerprint === this.fingerprint) {
-          index = i;
-          break;
+          if (branch.fingerprint === this.fingerprint) {
+            index = i;
+            break;
+          }
         }
       }
 
