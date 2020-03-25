@@ -184,18 +184,13 @@ class FailDelayManager {
     }
   }
 
-  ~FailDelayManager() {
-    MOZ_COUNT_DTOR(FailDelayManager);
-    for (uint32_t i = 0; i < mEntries.Length(); i++) {
-      delete mEntries[i];
-    }
-  }
+  ~FailDelayManager() { MOZ_COUNT_DTOR(FailDelayManager); }
 
   void Add(nsCString& address, int32_t port) {
     if (mDelaysDisabled) return;
 
-    FailDelay* record = new FailDelay(address, port);
-    mEntries.AppendElement(record);
+    UniquePtr<FailDelay> record(new FailDelay(address, port));
+    mEntries.AppendElement(std::move(record));
   }
 
   // Element returned may not be valid after next main thread event: don't keep
@@ -210,7 +205,7 @@ class FailDelayManager {
     // We also remove expired entries during search: iterate from end to make
     // indexing simpler
     for (int32_t i = mEntries.Length() - 1; i >= 0; --i) {
-      FailDelay* fail = mEntries[i];
+      FailDelay* fail = mEntries[i].get();
       if (fail->mAddress.Equals(address) && fail->mPort == port) {
         if (outIndex) *outIndex = i;
         result = fail;
@@ -220,7 +215,6 @@ class FailDelayManager {
         break;
       } else if (fail->IsExpired(rightNow)) {
         mEntries.RemoveElementAt(i);
-        delete fail;
       }
     }
     return result;
@@ -254,7 +248,6 @@ class FailDelayManager {
           // call
         } else if (fail->IsExpired(rightNow)) {
           mEntries.RemoveElementAt(failIndex);
-          delete fail;
         }
       }
     }
@@ -271,17 +264,16 @@ class FailDelayManager {
 
     // iterate from end, to make deletion indexing easier
     for (int32_t i = mEntries.Length() - 1; i >= 0; --i) {
-      FailDelay* entry = mEntries[i];
+      FailDelay* entry = mEntries[i].get();
       if ((entry->mAddress.Equals(address) && entry->mPort == port) ||
           entry->IsExpired(rightNow)) {
         mEntries.RemoveElementAt(i);
-        delete entry;
       }
     }
   }
 
  private:
-  nsTArray<FailDelay*> mEntries;
+  nsTArray<UniquePtr<FailDelay>> mEntries;
   bool mDelaysDisabled;
 };
 
