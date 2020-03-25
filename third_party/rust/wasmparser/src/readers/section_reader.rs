@@ -24,10 +24,10 @@ pub trait SectionReader {
         if self.eof() {
             return Ok(());
         }
-        Err(BinaryReaderError {
-            message: "Unexpected data at the end of the section",
-            offset: self.original_position(),
-        })
+        Err(BinaryReaderError::new(
+            "Unexpected data at the end of the section",
+            self.original_position(),
+        ))
     }
 }
 

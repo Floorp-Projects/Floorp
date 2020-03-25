@@ -56,6 +56,12 @@ pub enum Reloc {
     Arm64Call,
     /// RISC-V call target
     RiscvCall,
+
+    /// Elf x86_64 32 bit signed PC relative offset to two GOT entries for GD symbol.
+    ElfX86_64TlsGd,
+
+    /// Mach-O x86_64 32 bit signed PC relative offset to a `__thread_vars` entry.
+    MachOX86_64Tlv,
 }
 
 impl fmt::Display for Reloc {
@@ -71,6 +77,9 @@ impl fmt::Display for Reloc {
             Self::X86CallPLTRel4 => write!(f, "CallPLTRel4"),
             Self::X86GOTPCRel4 => write!(f, "GOTPCRel4"),
             Self::Arm32Call | Self::Arm64Call | Self::RiscvCall => write!(f, "Call"),
+
+            Self::ElfX86_64TlsGd => write!(f, "ElfX86_64TlsGd"),
+            Self::MachOX86_64Tlv => write!(f, "MachOX86_64Tlv"),
         }
     }
 }
@@ -127,7 +136,7 @@ pub trait CodeSink {
     /// Add 8 bytes to the code section.
     fn put8(&mut self, _: u64);
 
-    /// Add a relocation referencing an block at the current offset.
+    /// Add a relocation referencing a block at the current offset.
     fn reloc_block(&mut self, _: Reloc, _: CodeOffset);
 
     /// Add a relocation referencing an external symbol plus the addend at the current offset.

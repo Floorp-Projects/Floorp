@@ -1,9 +1,9 @@
 [package]
 name = "cranelift-wasm"
-version = "0.58.0"
+version = "0.60.0"
 authors = ["The Cranelift Project Developers"]
 description = "Translator from WebAssembly to Cranelift IR"
-repository = "https://github.com/bytecodealliance/cranelift"
+repository = "https://github.com/bytecodealliance/wasmtime"
 license = "Apache-2.0 WITH LLVM-exception"
 categories = ["no-std", "wasm"]
 readme = "README.md"
@@ -11,17 +11,17 @@ keywords = ["webassembly", "wasm"]
 edition = "2018"
 
 [dependencies]
-wasmparser = { version = "0.48.2", default-features = false }
-cranelift-codegen = { path = "../cranelift-codegen", version = "0.58.0", default-features = false }
-cranelift-entity = { path = "../cranelift-entity", version = "0.58.0" }
-cranelift-frontend = { path = "../cranelift-frontend", version = "0.58.0", default-features = false }
-hashbrown = { version = "0.6", optional = true }
+wasmparser = { version = "0.51.0", default-features = false }
+cranelift-codegen = { path = "../codegen", version = "0.60.0", default-features = false }
+cranelift-entity = { path = "../entity", version = "0.60.0" }
+cranelift-frontend = { path = "../frontend", version = "0.60.0", default-features = false }
+hashbrown = { version = "0.7", optional = true }
 log = { version = "0.4.6", default-features = false }
 serde = { version = "1.0.94", features = ["derive"], optional = true }
 thiserror = "1.0.4"
 
 [dev-dependencies]
-wat = "1.0.7"
+wat = "1.0.9"
 target-lexicon = "0.10"
 
 [features]
@@ -32,4 +32,3 @@ enable-serde = ["serde"]
 
 [badges]
 maintenance = { status = "experimental" }
-travis-ci = { repository = "bytecodealliance/cranelift" }
