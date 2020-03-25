@@ -84,9 +84,7 @@ class NeckoChild : public PNeckoChild {
   mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type);
 
   PClassifierDummyChannelChild* AllocPClassifierDummyChannelChild(
-      nsIURI* aURI, nsIURI* aTopWindowURI,
-      nsIPrincipal* aContentBlockingAllowListPrincipal,
-      const nsresult& aTopWindowURIResult,
+      nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
       const Maybe<LoadInfoArgs>& aLoadInfo);
 
   bool DeallocPClassifierDummyChannelChild(

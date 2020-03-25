@@ -364,9 +364,8 @@ mozilla::ipc::IPCResult NeckoChild::RecvNetworkChangeNotification(
 }
 
 PClassifierDummyChannelChild* NeckoChild::AllocPClassifierDummyChannelChild(
-    nsIURI* aURI, nsIURI* aTopWindowURI,
-    nsIPrincipal* aContentBlockingAllowListPrincipal,
-    const nsresult& aTopWindowURIResult, const Maybe<LoadInfoArgs>& aLoadInfo) {
+    nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
+    const Maybe<LoadInfoArgs>& aLoadInfo) {
   return new ClassifierDummyChannelChild();
 }
 
