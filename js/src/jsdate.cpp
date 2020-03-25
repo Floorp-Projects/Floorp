@@ -1413,7 +1413,7 @@ static ClippedTime NowAsMillis(JSContext* cx) {
   double now = PRMJ_Now();
   bool clampAndJitter = cx->realm()->behaviors().clampAndJitterTime();
   if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback) {
-    now = sReduceMicrosecondTimePrecisionCallback(now);
+    now = sReduceMicrosecondTimePrecisionCallback(now, cx);
   } else if (clampAndJitter && sResolutionUsec) {
     double clamped = floor(now / sResolutionUsec) * sResolutionUsec;
 

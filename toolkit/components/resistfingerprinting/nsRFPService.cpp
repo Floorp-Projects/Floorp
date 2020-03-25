@@ -596,12 +596,19 @@ double nsRFPService::ReduceTimePrecisionAsSecsRFP(double aTime,
 }
 
 /* static */
-double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(double aTime) {
+double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(double aTime,
+                                                       JSContext* aCx) {
+  MOZ_ASSERT(aCx);
+
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  MOZ_ASSERT(global);
+  const auto type = GetTimerPrecisionType(/* aIsSystemPrincipal */ false,
+                                          global->CrossOriginIsolated());
   return nsRFPService::ReduceTimePrecisionImpl(
       aTime, MicroSeconds, TimerResolution(),
       0, /* For absolute timestamps (all the JS engine does), supply zero
             context mixin */
-      TimerPrecisionType::Normal);
+      type);
 }
 
 /* static */
@@ -1121,7 +1128,6 @@ void nsRFPService::TypeToText(TimerPrecisionType aType, nsACString& aText) {
       aText.AssignLiteral("Unknown Enum Value");
       return;
   }
-}
 }
 
 // static

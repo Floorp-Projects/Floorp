@@ -167,7 +167,7 @@ class nsRFPService final : public nsIObserver {
                                              int64_t aContextMixin);
 
   // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
-  static double ReduceTimePrecisionAsUSecsWrapper(double aTime);
+  static double ReduceTimePrecisionAsUSecsWrapper(double aTime, JSContext* aCx);
 
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
