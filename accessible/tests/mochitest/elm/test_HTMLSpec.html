@@ -472,12 +472,14 @@
 
       obj = {
         role: ROLE_GROUPING,
+        name: "legend",
         relations: {
           RELATION_LABELLED_BY: "legend",
         },
         children: [
           {
             role: ROLE_LABEL,
+            name: "legend",
             relations: {
               RELATION_LABEL_FOR: "fieldset",
             },

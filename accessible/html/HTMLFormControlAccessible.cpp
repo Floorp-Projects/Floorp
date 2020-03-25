@@ -591,6 +591,7 @@ ENameValueFlag HTMLGroupboxAccessible::NativeName(nsString& aName) const {
   if (legendContent)
     nsTextEquivUtils::AppendTextEquivFromContent(this, legendContent, &aName);
 
+  aName.CompressWhitespace();
   return eNameOK;
 }
 
