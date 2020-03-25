@@ -74,19 +74,14 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
 
   info("Launching responsive mode");
   conditions[itemIndex].querySelector(responsiveModeToggleClass).click();
-
-  const size = await onRDMOpened;
-
+  await onRDMOpened;
   const rdmUI = ResponsiveUIManager.getResponsiveUIForTab(tab);
 
-  rdmUI.setViewportSize(size);
-
-  const onContentResize = waitForResizeTo(rdmUI, type, value);
+  await waitForResizeTo(rdmUI, type, value);
   rdmUI.transitionsEnabled = false;
 
   info("Waiting for the @media list to update");
   await onMediaChange;
-  await onContentResize;
 
   ok(
     ResponsiveUIManager.isActiveForTab(tab),
