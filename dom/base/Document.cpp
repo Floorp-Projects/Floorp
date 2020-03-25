@@ -15737,13 +15737,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
     if (StorageDisabledByAntiTracking(this, nullptr)) {
       // Note: If this has returned true, the top-level document is guaranteed
       // to not be on the Content Blocking allow list.
-      DebugOnly<bool> isOnAllowList = false;
-      // TODO: Bug 1612378 to make this fission-compatible
-      MOZ_ASSERT_IF(NS_SUCCEEDED(ContentBlockingAllowList::Check(
-                        GetInProcessParentDocument()
-                            ->GetContentBlockingAllowListPrincipal(),
-                        false, isOnAllowList)),
-                    !isOnAllowList);
+      MOZ_ASSERT(!CookieJarSettings()->GetIsOnContentBlockingAllowList());
 
       RefPtr<Document> self(this);
 
