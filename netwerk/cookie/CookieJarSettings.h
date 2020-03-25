@@ -135,6 +135,8 @@ class CookieJarSettings final : public nsICookieJarSettings {
   // internal state and it must be sent beck to the content process.
   bool HasBeenChanged() const { return mToBeMerged; }
 
+  void UpdateIsOnContentBlockingAllowList(nsIChannel* aChannel);
+
  private:
   enum State {
     // No cookie permissions are allowed to be stored in this object.
@@ -150,6 +152,7 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   uint32_t mCookieBehavior;
   CookiePermissionList mCookiePermissions;
+  bool mIsOnContentBlockingAllowList;
 
   State mState;
 
