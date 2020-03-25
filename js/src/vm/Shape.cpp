@@ -1427,11 +1427,10 @@ bool NativeObject::rollbackProperties(JSContext* cx, HandleNativeObject obj,
     if (obj->lastProperty()->isEmptyShape()) {
       MOZ_ASSERT(slotSpan == 0);
       break;
-    } else {
-      uint32_t slot = obj->lastProperty()->slot();
-      if (slot < slotSpan) {
-        break;
-      }
+    }
+    uint32_t slot = obj->lastProperty()->slot();
+    if (slot < slotSpan) {
+      break;
     }
     if (!NativeObject::removeProperty(cx, obj, obj->lastProperty()->propid())) {
       return false;
