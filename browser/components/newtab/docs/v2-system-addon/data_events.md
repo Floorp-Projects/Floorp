@@ -52,6 +52,10 @@ This ping is submitted once upon Activity Stream initialization if either about:
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7
 }
 ```
@@ -85,6 +89,10 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "addon_version": "20180710100040",
   "locale": "en-US",
   "action": "activity_stream_event",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7
 }
 ```
@@ -503,6 +511,10 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7
 }
 ```
@@ -522,6 +534,10 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7
 }
 ```
@@ -545,6 +561,10 @@ All `"activity_stream_session"` pings have the following basic shape. Some field
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "session_duration": 4199,
   "profile_creation_date": 14786,
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7
 }
 ```
@@ -643,6 +663,10 @@ This reports all the Pocket recommended articles (a list of `id`s) when the user
   "source": "pocket",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "user_prefs": 7,
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "tiles": [{"id": 10000}, {"id": 10001}, {"id": 10002}]
 }
 ```
@@ -663,6 +687,10 @@ This reports the user's interaction with those Pocket tiles.
   "locale": "en-US",
   "source": "pocket",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
 
   // "pos" is the 0-based index to record the tile's position in the Pocket section.
@@ -688,6 +716,10 @@ This reports the duration of the domain affinity calculation in milliseconds.
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "topstories.domain.affinity.calculation.ms",
   "value": 43
@@ -706,6 +738,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_TOTAL_DURATION",
   "value": 43
@@ -720,6 +756,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_GET_RECIPE_DURATION",
   "value": 43
@@ -734,6 +774,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_RECIPE_EXECUTOR_DURATION",
   "value": 43
@@ -748,6 +792,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_TAGGERS_DURATION",
   "value": 43
@@ -762,6 +810,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_DURATION",
   "value": 43
@@ -776,6 +828,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_ITEM_RELEVANCE_SCORE_DURATION",
   "value": 43
@@ -790,6 +846,10 @@ These report the duration of the domain affinity v2 calculations in milliseconds
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_HISTORY_SIZE",
   "value": 43
@@ -808,6 +868,10 @@ These report any failures during domain affinity v2 calculations, and where it f
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_GET_RECIPE_ERROR"
 }
@@ -821,6 +885,10 @@ These report any failures during domain affinity v2 calculations, and where it f
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_GENERATE_RECIPE_EXECUTOR_ERROR"
 }
@@ -834,6 +902,10 @@ These report any failures during domain affinity v2 calculations, and where it f
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "PERSONALIZATION_V2_CREATE_INTEREST_VECTOR_ERROR"
 }
@@ -855,6 +927,10 @@ This reports all the loaded content (a list of `id`s and positions) when the use
   "locale": "en-US",
   "source": ["HERO" | "CARDGRID" | "LIST"],
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
 
   // Indicating this is a `loaded content` ping (as opposed to impression) as well as the size of `tiles`
@@ -873,6 +949,10 @@ This reports all the loaded content (a list of `id`s and positions) when the use
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "LAYOUT_REQUEST_TIME",
   "value": 42
@@ -887,6 +967,10 @@ This reports all the loaded content (a list of `id`s and positions) when the use
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "SPOCS_REQUEST_TIME",
   "value": 42
@@ -901,6 +985,10 @@ This reports all the loaded content (a list of `id`s and positions) when the use
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "COMPONENT_FEED_REQUEST_TIME",
   "value": 42
@@ -915,6 +1003,10 @@ This reports all the loaded content (a list of `id`s and positions) when the use
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "DS_FEED_TOTAL_REQUEST_TIME",
   "value": 136
@@ -929,6 +1021,10 @@ This reports all the loaded content (a list of `id`s and positions) when the use
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "DS_CACHE_AGE_IN_SEC",
   "value": 1800 // 30 minutes
@@ -949,6 +1045,10 @@ This reports the internal status of Pocket SPOCS (Sponsored Contents).
   "locale": "en-US",
   "version": "68",
   "release_channel": "release",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "spoc_fills": [
     {"id": 10000, displayed: 0, reason: "frequency_cap", full_recalc: 1},
     {"id": 10001, displayed: 0, reason: "blocked_by_user", full_recalc: 1},
@@ -975,6 +1075,10 @@ This reports when the addon fails to initialize
   "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": "ADDON_INIT_FAILED",
   "value": -1
@@ -998,6 +1102,10 @@ This reports the impression of Activity Stream Router.
   "source": "SNIPPETS",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
   "event": "IMPRESSION"
@@ -1014,6 +1122,10 @@ CFR impression ping has two forms, in which the message_id could be of different
   "impression_id": "n/a",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "CFR",
   // message_id could be the ID of the recommendation, such as "wikipedia_addon"
   "message_id": "wikipedia_addon",
@@ -1029,6 +1141,10 @@ CFR impression ping has two forms, in which the message_id could be of different
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "CFR",
   // message_id should be a bucket ID in the release channel, we may not use the
   // individual ID, such as addon ID, per legal's request
@@ -1046,6 +1162,10 @@ CFR impression ping has two forms, in which the message_id could be of different
   "source": "FIRST_RUN",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "message_id": "EXTENDED_TRIPLETS_1",
   "event": "IMPRESSION",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
@@ -1065,6 +1185,10 @@ This reports the user's interaction with Activity Stream Router.
   "addon_version": "20180710100040",
   "impression_id": "n/a",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
   "event": ["CLICK_BUTTION" | "BLOCK"]
@@ -1079,6 +1203,10 @@ This reports the user's interaction with Activity Stream Router.
   "addon_version": "20180710100040",
   "impression_id": "n/a",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "ONBOARDING",
   "message_id": "onboarding_message_1",
   "event": ["IMPRESSION" | "CLICK_BUTTION" | "INSTALL" | "BLOCK"],
@@ -1095,6 +1223,10 @@ This reports the user's interaction with Activity Stream Router.
   "addon_version": "20180710100040",
   "impression_id": "n/a",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "CFR",
   // message_id could be the ID of the recommendation, such as "wikipedia_addon"
   "message_id": "wikipedia_addon",
@@ -1113,6 +1245,10 @@ This reports the user's interaction with Activity Stream Router.
   "addon_version": "20180710100040",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "CFR",
   // message_id should be a bucket ID in the release channel, we may not use the
   // individual ID, such as addon ID, per legal's request
@@ -1132,6 +1268,10 @@ This reports when an error has occurred when parsing/evaluating a JEXL targeting
   "addon_version": "20180710100040",
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "message_id": "some_message_id",
   "event": "TARGETING_EXPRESSION_ERROR",
   "event_context": ["MALFORMED_EXPRESSION" | "OTHER_ERROR"]
@@ -1148,6 +1288,10 @@ This reports a failure in the Remote Settings loader to load messages for Activi
   "client_id": "n/a",
   "addon_version": "20180710100040",
   "locale": "en-US",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "user_prefs": 7,
   "event": ["ASR_RS_NO_MESSAGES" | "ASR_RS_ERROR"],
   // The value is set to the ID of the message provider. For example: remote-cfr, remote-onboarding, etc.
@@ -1184,6 +1328,10 @@ This reports when a user has seen or clicked a badge/notification in the browser
   "release_channel": "default",
   "addon_version": "20190712095934",
   "action": "cfr_user_event",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "CFR",
   "message_id": "FXA_ACCOUNTS_BADGE",
   "event": ["CLICK" | "IMPRESSION"],
@@ -1203,6 +1351,10 @@ For message impressions we concatenate the ids of all messages in the panel.
   "release_channel": "default",
   "addon_version": "20190712095934",
   "action": "cfr_user_event",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "source": "CFR",
   "message_id": "WHATS_NEW_70",
   "event": ["CLICK" | "IMPRESSION"],
@@ -1224,6 +1376,10 @@ as other CFR messages.
   "bucket_id": "WNP_THANK_YOU"
   "event": "MOMENTS_PAGE_SET"
   "impression_id": "{d85d2268-b751-9543-b6d7-aad523bf2b26}"
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "locale": "en-US"
   "message_id": "n/a"
   "source": "CFR"
@@ -1236,6 +1392,10 @@ as other CFR messages.
   "bucket_id": "WNP_THANK_YOU",
   "event": "MOMENTS_PAGE_SET",
   "addon_version": "20200225022813",
+  "experiments": {
+    "experiment_1": {"branch": "control"},
+    "experiment_2": {"branch": "treatment"}
+  },
   "locale": "en-US",
   "client_id": "21dc1375-b24e-984b-83e9-c8a9660ae4ff"
 }

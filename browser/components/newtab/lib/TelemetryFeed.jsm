@@ -766,8 +766,7 @@ this.TelemetryFeed = class TelemetryFeed {
     if (this.telemetryEnabled && this.structuredIngestionTelemetryEnabled) {
       this.pingCentre.sendStructuredIngestionPing(
         eventObject,
-        this._generateStructuredIngestionEndpoint(namespace, pingType, version),
-        { filter: ACTIVITY_STREAM_ID }
+        this._generateStructuredIngestionEndpoint(namespace, pingType, version)
       );
     }
   }
