@@ -6,9 +6,7 @@ defaults test-pref(browser.display.document_color_use,2) test-pref(browser.displ
 # mocking. You can read more about the annotations and their specifics here:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1539212#c25
 
-# non-native-theme uses non-white background, so the white backplate shows up
-# as a difference with the reference.
-fails-if(!nativeThemePref) == backplate-select-001.html backplate-select-001-ref.html
+== backplate-select-001.html backplate-select-001-ref.html
 
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-001.html backplate-bg-image-001-ref.html # bug 1577028
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-002.html backplate-bg-image-002-ref.html
@@ -16,8 +14,7 @@ fuzzy-if(cocoaWidget,255-255,4-4) == backplate-bg-image-003.html backplate-bg-im
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-004.html backplate-bg-image-004-ref.html
 fuzzy-if(cocoaWidget,255-255,80-80) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
 
-# Seems like this test should probably be rewritten...
-fuzzy-if(cocoaWidget,255-255,2912-2912) fuzzy-if(gtkWidget,13-13,3200-3200) fuzzy-if(winWidget,15-26,3000-3200) fuzzy-if(!nativeThemePref,24-24,3200-3202) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
+fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-006.html backplate-bg-image-006-ref.html
 
 fuzzy-if(cocoaWidget,255-255,40-40) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
 fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
