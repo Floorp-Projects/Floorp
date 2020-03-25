@@ -803,12 +803,18 @@
   value: "#FFFFFF"
   mirror: never
 
-# 0 = default: always, except in high contrast mode
+# 0 = always, except in high contrast mode
 # 1 = always
 # 2 = never
+#
+# Default to 0 on windows, 1 elsewhere.
 - name: browser.display.document_color_use
   type: RelaxedAtomicUint32
+#ifdef XP_WIN
   value: 0
+#else
+  value: 1
+#endif
   mirror: always
   rust: true
 
