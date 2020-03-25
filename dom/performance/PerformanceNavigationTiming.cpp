@@ -21,12 +21,10 @@ JSObject* PerformanceNavigationTiming::WrapObject(
   return PerformanceNavigationTiming_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-#define REDUCE_TIME_PRECISION                      \
-  if (mPerformance->IsSystemPrincipal()) {         \
-    return rawValue;                               \
-  }                                                \
-  return nsRFPService::ReduceTimePrecisionAsMSecs( \
-      rawValue, mPerformance->GetRandomTimelineSeed())
+#define REDUCE_TIME_PRECISION                          \
+  return nsRFPService::ReduceTimePrecisionAsMSecs(     \
+      rawValue, mPerformance->GetRandomTimelineSeed(), \
+      mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated())
 
 DOMHighResTimeStamp PerformanceNavigationTiming::UnloadEventStart() const {
   DOMHighResTimeStamp rawValue = 0;

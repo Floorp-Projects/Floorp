@@ -46,5 +46,9 @@ uint64_t PerformanceWorker::GetRandomTimelineSeed() {
   return mWorkerPrivate->GetRandomTimelineSeed();
 }
 
+bool PerformanceWorker::CrossOriginIsolated() const {
+  return mWorkerPrivate->CrossOriginIsolated();
+}
+
 }  // namespace dom
 }  // namespace mozilla
