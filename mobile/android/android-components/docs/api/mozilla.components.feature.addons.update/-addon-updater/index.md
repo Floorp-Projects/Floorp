@@ -2,7 +2,7 @@
 
 # AddonUpdater
 
-`interface AddonUpdater` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L46)
+`interface AddonUpdater` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L52)
 
 Contract to define the behavior for updating addons.
 
@@ -12,6 +12,7 @@ Contract to define the behavior for updating addons.
 |---|---|
 | [Frequency](-frequency/index.md) | `class Frequency`<br>Indicates how often an extension should be updated. |
 | [Status](-status/index.md) | `sealed class Status`<br>Indicates the status of a request for updating an addon. |
+| [UpdateAttempt](-update-attempt/index.md) | `data class UpdateAttempt`<br>Represents an attempt to update an add-on. |
 
 ### Functions
 
