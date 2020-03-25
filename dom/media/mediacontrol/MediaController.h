@@ -68,10 +68,6 @@ class MediaController final
   uint64_t ControlledMediaNum() const;
   MediaSessionPlaybackState GetState() const;
 
-  MediaEventSource<MediaSessionPlaybackState>& PlaybackStateChangedEvent() {
-    return mPlaybackStateChangedEvent;
-  }
-
   void SetDeclaredPlaybackState(uint64_t aSessionContextId,
                                 MediaSessionPlaybackState aState) override;
 
@@ -121,8 +117,6 @@ class MediaController final
   // https://w3c.github.io/mediasession/#actual-playback-state
   MediaSessionPlaybackState mActualPlaybackState =
       MediaSessionPlaybackState::None;
-
-  MediaEventProducer<MediaSessionPlaybackState> mPlaybackStateChangedEvent;
 };
 
 }  // namespace dom
