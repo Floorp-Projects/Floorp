@@ -9,7 +9,7 @@
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">Պահել անսահմանափակ քանակությամբ սպասառուի տվյալներ</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">Մուտք գործեք զննարկչի գործունեությունը նավիգացիայի ընթացքում</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Մուտք գործել զննարկչի գործունեությունը նավիգացիայի ընթացքում</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Կարդացեք և փոփոխեք էջանիշերը</string>
     <!-- Description for browser_setting permission. -->
