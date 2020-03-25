@@ -20,7 +20,6 @@ import os
 import pprint
 import re
 import stat
-import subprocess
 import sys
 import time
 from collections import (
@@ -1297,28 +1296,6 @@ def _escape_char(c):
     return six.text_type(c.encode('unicode_escape'))
 
 
-# The default PrettyPrinter has some issues with UTF-8, so we need to override
-# some stuff here.
-class _PrettyPrinter(pprint.PrettyPrinter):
-    def format(self, object, context, maxlevels, level):
-        if not (isinstance(object, six.text_type) or
-                isinstance(object, six.binary_type)):
-            return super(_PrettyPrinter, self).format(
-                object, context, maxlevels, level)
-        # This is super hacky and weird, but the output of 'repr' actually
-        # varies based on the default I/O encoding of the process, which isn't
-        # necessarily utf-8. Instead we open a new shell and ask what the repr
-        # WOULD be assuming the default encoding is utf-8. If you can come up
-        # with a better way of doing this without simply re-implementing the
-        # logic of "repr", please replace this.
-        env = dict(os.environ)
-        env['PYTHONIOENCODING'] = 'utf-8'
-        ret = six.ensure_text(subprocess.check_output(
-            [sys.executable], input='print(repr(%s))' % repr(object),
-            universal_newlines=True, env=env, encoding='utf-8')).strip()
-        return (ret, True, False)
-
-
 if six.PY2:  # Delete when we get rid of Python 2.
     # Mapping table between raw characters below \x80 and their escaped
     # counterpart, when they differ
@@ -1333,14 +1310,16 @@ if six.PY2:  # Delete when we get rid of Python 2.
         '([' + ''.join(_INDENTED_REPR_TABLE.values()) + ']+)')
 
 
-def indented_repr(o, indent=4):
-    '''Similar to repr(), but returns an indented representation of the object
+def write_indented_repr(f, o, indent=4):
+    '''Write an indented representation (similar to repr()) of the object to the
+    given file `f`.
 
     One notable difference with repr is that the returned representation
     assumes `from __future__ import unicode_literals`.
     '''
     if six.PY3:
-        return _PrettyPrinter(indent=indent).pformat(o)
+        pprint.pprint(o, stream=f, indent=indent)
+        return
     # Delete everything below when we get rid of Python 2.
     one_indent = ' ' * indent
 
@@ -1382,7 +1361,8 @@ def indented_repr(o, indent=4):
             yield ']'
         else:
             yield repr(o)
-    return ''.join(recurse_indented_repr(o, 0))
+    result = ''.join(recurse_indented_repr(o, 0)) + '\n'
+    f.write(result)
 
 
 def patch_main():

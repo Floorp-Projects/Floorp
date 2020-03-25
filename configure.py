@@ -29,7 +29,7 @@ from mozbuild.configure import (
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.util import (
-    indented_repr,
+    write_indented_repr,
 )
 import mozpack.path as mozpath
 import six
@@ -120,7 +120,8 @@ def config_status(config):
             from __future__ import unicode_literals
         ''') % {'python': config['PYTHON']})
         for k, v in six.iteritems(sanitized_config):
-            fh.write('%s = %s\n' % (k, indented_repr(v)))
+            fh.write('%s = ' % k)
+            write_indented_repr(fh, v)
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
                  "'non_global_defines', 'substs', 'mozconfig']")
 
