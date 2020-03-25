@@ -21,6 +21,7 @@ WORKDIR /builds/worker/
 
 ENV ANDROID_SDK_VERSION='3859397' \
     ANDROID_SDK_ROOT='/builds/worker/android-sdk-linux' \
+    CURL='curl --location --retry 5' \
     GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
     LANG='en_US.UTF-8' \
     TERM='dumb' \
@@ -35,7 +36,6 @@ RUN apt-get update -qq \
     # which we cannot navigate while building the Docker image.
     && apt-get install -y tzdata \
     && apt-get install -y openjdk-8-jdk \
-                          wget \
                           expect \
                           git \
                           curl \
@@ -52,7 +52,7 @@ RUN pip install taskcluster
 
 RUN locale-gen "$LANG"
 
-RUN curl -o "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip" \
+RUN $CURL --output "$SDK_ZIP_LOCATION" "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_VERSION}.zip" \
     && unzip -d "$ANDROID_SDK_ROOT" "$SDK_ZIP_LOCATION" \
     && rm "$SDK_ZIP_LOCATION" \
     && yes | "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" --licenses \
