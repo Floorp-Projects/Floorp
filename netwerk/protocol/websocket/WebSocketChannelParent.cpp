@@ -47,18 +47,18 @@ mozilla::ipc::IPCResult WebSocketChannelParent::RecvDeleteSelf() {
 }
 
 mozilla::ipc::IPCResult WebSocketChannelParent::RecvAsyncOpen(
-    const Maybe<URIParams>& aURI, const nsCString& aOrigin,
-    const uint64_t& aInnerWindowID, const nsCString& aProtocol,
-    const bool& aSecure, const uint32_t& aPingInterval,
-    const bool& aClientSetPingInterval, const uint32_t& aPingTimeout,
-    const bool& aClientSetPingTimeout, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+    nsIURI* aURI, const nsCString& aOrigin, const uint64_t& aInnerWindowID,
+    const nsCString& aProtocol, const bool& aSecure,
+    const uint32_t& aPingInterval, const bool& aClientSetPingInterval,
+    const uint32_t& aPingTimeout, const bool& aClientSetPingTimeout,
+    const Maybe<LoadInfoArgs>& aLoadInfoArgs,
     const Maybe<PTransportProviderParent*>& aTransportProvider,
     const nsCString& aNegotiatedExtensions) {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
 
   nsresult rv;
-  nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsILoadInfo> loadInfo;
+  nsCOMPtr<nsIURI> uri;
 
   rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo));
   if (NS_FAILED(rv)) {
@@ -98,7 +98,7 @@ mozilla::ipc::IPCResult WebSocketChannelParent::RecvAsyncOpen(
       goto fail;
     }
   } else {
-    uri = DeserializeURI(aURI);
+    uri = aURI;
     if (!uri) {
       rv = NS_ERROR_FAILURE;
       goto fail;
