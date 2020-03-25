@@ -765,7 +765,7 @@ inline bool MatchingOperatingSystems(OperatingSystem aBlockedOS,
   }
 
   constexpr uint32_t kMinWin10BuildNumber = 18362;
-  if (aSystemOSBuild && aBlockedOS == OperatingSystem::RecentWindows10 &&
+  if (aBlockedOS == OperatingSystem::RecentWindows10 &&
       aSystemOS == OperatingSystem::Windows10) {
     // For allowlist purposes, we sometimes want to restrict to only recent
     // versions of Windows 10. This is a bit of a kludge but easier than adding
@@ -857,8 +857,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
     return 0;
   }
 
-  // OS build number is only used for the allowlist.
-  uint32_t osBuild = aForAllowing ? OperatingSystemBuild() : 0;
+  uint32_t osBuild = OperatingSystemBuild();
 
   // Get the adapters once then reuse below
   nsAutoString adapterVendorID[2];
