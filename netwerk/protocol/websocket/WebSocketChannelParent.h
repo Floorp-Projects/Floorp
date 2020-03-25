@@ -39,11 +39,10 @@ class WebSocketChannelParent : public PWebSocketParent,
 
  private:
   mozilla::ipc::IPCResult RecvAsyncOpen(
-      const Maybe<URIParams>& aURI, const nsCString& aOrigin,
-      const uint64_t& aInnerWindowID, const nsCString& aProtocol,
-      const bool& aSecure, const uint32_t& aPingInterval,
-      const bool& aClientSetPingInterval, const uint32_t& aPingTimeout,
-      const bool& aClientSetPingTimeout,
+      nsIURI* aURI, const nsCString& aOrigin, const uint64_t& aInnerWindowID,
+      const nsCString& aProtocol, const bool& aSecure,
+      const uint32_t& aPingInterval, const bool& aClientSetPingInterval,
+      const uint32_t& aPingTimeout, const bool& aClientSetPingTimeout,
       const Maybe<LoadInfoArgs>& aLoadInfoArgs,
       const Maybe<PTransportProviderParent*>& aTransportProvider,
       const nsCString& aNegotiatedExtensions);

@@ -455,13 +455,12 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
-  Maybe<URIParams> uri;
+  nsCOMPtr<nsIURI> uri;
   Maybe<LoadInfoArgs> loadInfoArgs;
   Maybe<PTransportProviderChild*> transportProvider;
 
   if (!mIsServerSide) {
-    uri.emplace(URIParams());
-    SerializeURI(aURI, uri.ref());
+    uri = aURI;
     nsresult rv = LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
     NS_ENSURE_SUCCESS(rv, rv);
 
