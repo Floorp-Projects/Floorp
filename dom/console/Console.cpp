@@ -2113,9 +2113,10 @@ Console::TimerStatus Console::StartTimer(JSContext* aCx, const JS::Value& aName,
   return eTimerDone;
 }
 
+/* static */
 JS::Value Console::CreateStartTimerValue(JSContext* aCx,
                                          const nsAString& aTimerLabel,
-                                         TimerStatus aTimerStatus) const {
+                                         TimerStatus aTimerStatus) {
   MOZ_ASSERT(aTimerStatus != eTimerUnknown);
 
   if (aTimerStatus != eTimerDone) {
@@ -2175,10 +2176,11 @@ Console::TimerStatus Console::LogTimer(JSContext* aCx, const JS::Value& aName,
   return eTimerDone;
 }
 
+/* static */
 JS::Value Console::CreateLogOrEndTimerValue(JSContext* aCx,
                                             const nsAString& aLabel,
                                             double aDuration,
-                                            TimerStatus aStatus) const {
+                                            TimerStatus aStatus) {
   if (aStatus != eTimerDone) {
     return CreateTimerError(aCx, aLabel, aStatus);
   }
@@ -2195,8 +2197,9 @@ JS::Value Console::CreateLogOrEndTimerValue(JSContext* aCx,
   return value;
 }
 
+/* static */
 JS::Value Console::CreateTimerError(JSContext* aCx, const nsAString& aLabel,
-                                    TimerStatus aStatus) const {
+                                    TimerStatus aStatus) {
   MOZ_ASSERT(aStatus != eTimerUnknown && aStatus != eTimerDone);
 
   RootedDictionary<ConsoleTimerError> error(aCx);
