@@ -23,10 +23,11 @@ using namespace mozilla::dom;
 /* static */
 already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
     nsTArray<RefPtr<BlobImpl>>&& aBlobImpls, const nsAString& aName,
-    const nsAString& aContentType, ErrorResult& aRv) {
+    const nsAString& aContentType, bool aCrossOriginIsolated,
+    ErrorResult& aRv) {
   RefPtr<MultipartBlobImpl> blobImpl =
       new MultipartBlobImpl(std::move(aBlobImpls), aName, aContentType);
-  blobImpl->SetLengthAndModifiedDate(aRv);
+  blobImpl->SetLengthAndModifiedDate(Some(aCrossOriginIsolated), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -40,7 +41,7 @@ already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
     ErrorResult& aRv) {
   RefPtr<MultipartBlobImpl> blobImpl =
       new MultipartBlobImpl(std::move(aBlobImpls), aContentType);
-  blobImpl->SetLengthAndModifiedDate(aRv);
+  blobImpl->SetLengthAndModifiedDate(/* aCrossOriginIsolated */ Nothing(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -174,14 +175,17 @@ already_AddRefed<BlobImpl> MultipartBlobImpl::CreateSlice(
   return impl.forget();
 }
 
-void MultipartBlobImpl::InitializeBlob(ErrorResult& aRv) {
-  SetLengthAndModifiedDate(aRv);
+void MultipartBlobImpl::InitializeBlob(bool aCrossOriginIsolated,
+                                       ErrorResult& aRv) {
+  SetLengthAndModifiedDate(Some(aCrossOriginIsolated), aRv);
   NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
 }
 
 void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
                                        const nsAString& aContentType,
-                                       bool aNativeEOL, ErrorResult& aRv) {
+                                       bool aNativeEOL,
+                                       bool aCrossOriginIsolated,
+                                       ErrorResult& aRv) {
   mContentType = aContentType;
   BlobSet blobSet;
 
@@ -227,14 +231,14 @@ void MultipartBlobImpl::InitializeBlob(const Sequence<Blob::BlobPart>& aData,
   }
 
   mBlobImpls = blobSet.GetBlobImpls();
-  SetLengthAndModifiedDate(aRv);
+  SetLengthAndModifiedDate(Some(aCrossOriginIsolated), aRv);
   NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
 }
 
-void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
+void MultipartBlobImpl::SetLengthAndModifiedDate(
+    const Maybe<bool>& aCrossOriginIsolated, ErrorResult& aRv) {
   MOZ_ASSERT(mLength == MULTIPARTBLOBIMPL_UNKNOWN_LENGTH);
-  MOZ_ASSERT_IF(mIsFile, mLastModificationDate ==
-                             MULTIPARTBLOBIMPL_UNKNOWN_LAST_MODIFIED);
+  MOZ_ASSERT_IF(mIsFile, IsLastModificationDateUnset());
 
   uint64_t totalLength = 0;
   int64_t lastModified = 0;
@@ -259,7 +263,7 @@ void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
       }
 
       if (lastModified < partLastModified) {
-        lastModified = partLastModified;
+        lastModified = partLastModified * PR_USEC_PER_MSEC;
         lastModifiedSet = true;
       }
     }
@@ -268,14 +272,17 @@ void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
   mLength = totalLength;
 
   if (mIsFile) {
-    // We cannot use PR_Now() because bug 493756 and, for this reason:
-    //   var x = new Date(); var f = new File(...);
-    //   x.getTime() < f.dateModified.getTime()
-    // could fail.
-    mLastModificationDate = nsRFPService::ReduceTimePrecisionAsUSecs(
-        lastModifiedSet ? lastModified * PR_USEC_PER_MSEC : JS_Now(), 0);
-    // mLastModificationDate is an absolute timestamp so we supply a zero
-    // context mix-in
+    if (lastModifiedSet) {
+      SetLastModificationDatePrecisely(lastModified);
+    } else {
+      MOZ_ASSERT(aCrossOriginIsolated.isSome());
+
+      // We cannot use PR_Now() because bug 493756 and, for this reason:
+      //   var x = new Date(); var f = new File(...);
+      //   x.getTime() < f.dateModified.getTime()
+      // could fail.
+      SetLastModificationDate(aCrossOriginIsolated.value(), JS_Now());
+    }
   }
 }
 
@@ -327,5 +334,5 @@ void MultipartBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {
 }
 
 void MultipartBlobImpl::SetLastModified(int64_t aLastModified) {
-  mLastModificationDate = aLastModified * PR_USEC_PER_MSEC;
+  SetLastModificationDatePrecisely(aLastModified * PR_USEC_PER_MSEC);
 }
