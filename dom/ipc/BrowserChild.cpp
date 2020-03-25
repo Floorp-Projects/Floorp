@@ -3764,8 +3764,6 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
     locationChangeData->contentStoragePrincipal() =
         document->EffectiveStoragePrincipal();
     locationChangeData->csp() = document->GetCsp();
-    locationChangeData->contentBlockingAllowListPrincipal() =
-        document->GetContentBlockingAllowListPrincipal();
     locationChangeData->referrerInfo() = document->ReferrerInfo();
     locationChangeData->isSyntheticDocument() = document->IsSyntheticDocument();
 
