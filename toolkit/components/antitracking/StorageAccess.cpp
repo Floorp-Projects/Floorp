@@ -83,6 +83,7 @@ static StorageAccess InternalStorageAllowedCheck(
     return StorageAccess::eDeny;
   }
 
+  nsCOMPtr<nsIURI> documentURI;
   if (aWindow) {
     // If the document is sandboxed, then it is not permitted to use storage
     Document* document = aWindow->GetExtantDoc();
@@ -94,6 +95,9 @@ static StorageAccess InternalStorageAllowedCheck(
     if (nsContentUtils::IsInPrivateBrowsing(document)) {
       access = StorageAccess::ePrivateBrowsing;
     }
+
+    // Get the document URI for the below about: URI check.
+    documentURI = document ? document->GetDocumentURI() : nullptr;
   }
 
   uint32_t lifetimePolicy;
@@ -141,7 +145,13 @@ static StorageAccess InternalStorageAllowedCheck(
   // be affected, which is desireable due to the lack of automated testing for
   // about: URIs with these preferences set, and the importance of the correct
   // functioning of these URIs even with custom preferences.
-  if ((aURI && aURI->SchemeIs("about")) || aPrincipal->SchemeIs("about")) {
+  //
+  // We need to check the aURI or the document URI here instead of only checking
+  // the URI from the principal. Because the principal might not have a URI if
+  // it is a system principal.
+  if ((aURI && aURI->SchemeIs("about")) ||
+      (documentURI && documentURI->SchemeIs("about")) ||
+      aPrincipal->SchemeIs("about")) {
     return access;
   }
 
