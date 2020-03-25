@@ -852,7 +852,15 @@ pref("toolkit.dump.emit", false);
 // use. This is useful so that a developer can change it while working on
 // profiler.firefox.com, or in tests. This isn't exposed directly to the user.
 pref("devtools.performance.recording.ui-base-url", "https://profiler.firefox.com");
-
+// The popup is only enabled by default on Nightly, Dev Edition, and debug buildsd since
+// it's a developer focused item. It can still be enabled by going to profiler.firefox.com,
+// but by default it is off on Release and Beta. Note that this only adds it to the
+// the customization palette, not to the navbar.
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+  pref("devtools.performance.popup.feature-flag", true);
+#else
+  pref("devtools.performance.popup.feature-flag", false);
+#endif
 // The preset to use for the recording settings. If set to "custom" then the pref
 // values below will be used.
 #if defined(NIGHTLY_BUILD) || !defined(MOZILLA_OFFICIAL)
