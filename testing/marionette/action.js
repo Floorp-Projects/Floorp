@@ -334,7 +334,7 @@ const KEY_CODE_LOOKUP = {
   "/": "Slash",
   "?": "Slash",
   "\uE00D": "Space",
-  "  ": "Space",
+  " ": "Space",
   "\uE004": "Tab",
 };
 
