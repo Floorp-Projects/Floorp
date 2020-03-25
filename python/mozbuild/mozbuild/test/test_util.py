@@ -5,8 +5,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import itertools
 import hashlib
+import io
+import itertools
 import os
 import unittest
 import six
@@ -21,11 +22,11 @@ from mozbuild.util import (
     expand_variables,
     group_unified_files,
     hash_file,
-    indented_repr,
     memoize,
     memoized_property,
     pair,
     resolve_target_to_make,
+    write_indented_repr,
     MozbuildDeletionError,
     HierarchicalStringList,
     EnumString,
@@ -819,7 +820,7 @@ class TestEnumString(unittest.TestCase):
 
 class TestIndentedRepr(unittest.TestCase):
     @unittest.skipUnless(six.PY2, 'requires Python 2')
-    def test_indented_repr_py2(self):
+    def test_write_indented_repr_py2(self):
         data = textwrap.dedent(r'''
         {
             'a': 1,
@@ -840,14 +841,17 @@ class TestIndentedRepr(unittest.TestCase):
             'pile_of_poo': '💩',
             'special_chars': '\\\'"\x08\n\t',
             'with_accents': 'éàñ',
-        }''').lstrip()
+        }
+        ''').lstrip()
 
         obj = eval(data)
+        buf = io.StringIO()
+        write_indented_repr(buf, obj)
 
-        self.assertEqual(indented_repr(obj), data)
+        self.assertEqual(buf.getvalue(), data)
 
     @unittest.skipUnless(six.PY3, 'requires Python 3')
-    def test_indented_repr(self):
+    def test_write_indented_repr(self):
         data = textwrap.dedent(r'''
         {   b'c': 'xyz',
             'a': 1,
@@ -858,11 +862,14 @@ class TestIndentedRepr(unittest.TestCase):
             'pile_of_bytes': b'\xf0\x9f\x92\xa9',
             'pile_of_poo': '💩',
             'special_chars': '\\\'"\x08\n\t',
-            'with_accents': 'éàñ'}''').lstrip()
+            'with_accents': 'éàñ'}
+        ''').lstrip()
 
         obj = eval(data)
+        buf = six.StringIO()
+        write_indented_repr(buf, obj)
 
-        self.assertEqual(indented_repr(obj), data)
+        self.assertEqual(buf.getvalue(), data)
 
 
 if __name__ == '__main__':
