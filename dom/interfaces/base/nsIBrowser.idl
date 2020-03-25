@@ -145,7 +145,6 @@ interface nsIBrowser : nsISupports
                                in AString aTitle,
                                in nsIPrincipal aContentPrincipal,
                                in nsIPrincipal aContentStoragePrincipal,
-                               in nsIPrincipal aContentBlockingAllowListPrincipal,
                                in nsIContentSecurityPolicy aCSP,
                                in nsIReferrerInfo aReferrerInfo,
                                in boolean aIsSynthetic,

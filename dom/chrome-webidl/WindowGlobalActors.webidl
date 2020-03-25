@@ -45,6 +45,7 @@ interface WindowGlobalParent : WindowContext {
 
   // Information about the currently loaded document.
   readonly attribute Principal documentPrincipal;
+  readonly attribute Principal? contentBlockingAllowListPrincipal;
   readonly attribute URI? documentURI;
 
   // Bit mask containing content blocking events that are recorded in

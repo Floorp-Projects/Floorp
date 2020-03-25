@@ -148,7 +148,6 @@ struct WebProgressLocationChangeData
   nsIURI documentURI;
   nsIPrincipal contentPrincipal;
   nsIPrincipal contentStoragePrincipal;
-  nsIPrincipal contentBlockingAllowListPrincipal;
   nsIContentSecurityPolicy csp;
   nsIReferrerInfo referrerInfo;
   uint64_t? requestContextID;

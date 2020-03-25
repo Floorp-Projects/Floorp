@@ -89,6 +89,10 @@ class WindowGlobalParent final : public WindowContext,
   // |document.domain|.
   nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 
+  nsIPrincipal* ContentBlockingAllowListPrincipal() {
+    return mDocContentBlockingAllowListPrincipal;
+  }
+
   // The BrowsingContext which this WindowGlobal has been loaded into.
   // FIXME: It's quite awkward that this method has a slightly different name
   // than the one on WindowContext.
