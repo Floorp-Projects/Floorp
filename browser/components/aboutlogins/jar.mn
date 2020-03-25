@@ -24,6 +24,7 @@ browser.jar:
   content/browser/aboutlogins/components/menu-button.js        (content/components/menu-button.js)
   content/browser/aboutlogins/icons/favicon.svg       (content/icons/favicon.svg)
   content/browser/aboutlogins/icons/hide-password.svg (content/icons/hide-password.svg)
+  content/browser/aboutlogins/icons/vulnerable-password.svg (content/icons/vulnerable-password.svg)
   content/browser/aboutlogins/icons/show-password.svg (content/icons/show-password.svg)
   content/browser/aboutlogins/icons/intro-illustration.svg (content/icons/intro-illustration.svg)
   content/browser/aboutlogins/aboutLogins.css   (content/aboutLogins.css)
