@@ -211,12 +211,12 @@
 }
 
 #webrtc-sharing-icon[sharing]:not([paused]) {
-  animation: 1.5s ease in-use-blink infinite;
+  animation: 1.5s ease webrtc-sharing-icon-in-use-blink infinite;
   -moz-context-properties: fill;
   fill: rgb(224, 41, 29);
 }
 
-@keyframes in-use-blink {
+@keyframes webrtc-sharing-icon-in-use-blink {
   50% { opacity: 0; }
 }
 
