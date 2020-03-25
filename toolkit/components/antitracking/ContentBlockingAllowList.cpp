@@ -59,25 +59,34 @@ using namespace mozilla;
     return entry.Data().mResult;
   }
 
-  nsPIDOMWindowOuter* top =
-      aWindow->GetBrowsingContext()->Top()->GetDOMWindow();
-  dom::Document* doc = top ? top->GetExtantDoc() : nullptr;
-  if (doc) {
-    bool isPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
+  // We can check the IsOnContentBlockingAllowList flag in the document's
+  // CookieJarSettings. Because this flag represents the fact that whether the
+  // top-level document is on the content blocking allow list. And this flag was
+  // propagated from the top-level as the CookieJarSettings inherits from the
+  // parent.
+  RefPtr<dom::Document> doc = nsGlobalWindowInner::Cast(aWindow)->GetDocument();
 
-    const bool result = ContentBlockingAllowList::Check(
-        doc->GetContentBlockingAllowListPrincipal(), isPrivateBrowsing);
-
-    entry.Set(ContentBlockingAllowListEntry(aWindow, result));
-
-    return result;
+  if (!doc) {
+    LOG(
+        ("Could not check the content blocking allow list because the document "
+         "wasn't available"));
+    return false;
   }
 
-  LOG(
-      ("Could not check the content blocking allow list because the top "
-       "window wasn't accessible"));
-  entry.Set(ContentBlockingAllowListEntry(aWindow, false));
-  return false;
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();
+
+  if (!cookieJarSettings) {
+    LOG(
+        ("Could not check the content blocking allow list because the cookie "
+         "jar settings wasn't available"));
+    entry.Set(ContentBlockingAllowListEntry(aWindow, false));
+    return false;
+  }
+
+  const bool result = cookieJarSettings->GetIsOnContentBlockingAllowList();
+  entry.Set(ContentBlockingAllowListEntry(aWindow, result));
+
+  return result;
 }
 
 /* static */ bool ContentBlockingAllowList::Check(nsIHttpChannel* aChannel) {
@@ -90,22 +99,20 @@ using namespace mozilla;
     return entry.Data().mResult;
   }
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIHttpChannelInternal> httpChan = do_QueryInterface(aChannel);
-  if (httpChan) {
-    nsresult rv = httpChan->GetContentBlockingAllowListPrincipal(
-        getter_AddRefs(principal));
-    if (NS_FAILED(rv) || !principal) {
-      LOG(
-          ("Could not check the content blocking allow list because the top "
-           "window wasn't accessible"));
-      entry.Set(ContentBlockingAllowListEntry(aChannel, false));
-      return false;
-    }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+
+  if (!cookieJarSettings) {
+    LOG(
+        ("Could not check the content blocking allow list because the "
+         "CookieJarSettings of the channel wasn't available"));
+    entry.Set(ContentBlockingAllowListEntry(aChannel, false));
+    return false;
   }
 
-  const bool result = ContentBlockingAllowList::Check(
-      principal, NS_UsePrivateBrowsing(aChannel));
+  const bool result = cookieJarSettings->GetIsOnContentBlockingAllowList();
   entry.Set(ContentBlockingAllowListEntry(aChannel, result));
   return result;
 }
