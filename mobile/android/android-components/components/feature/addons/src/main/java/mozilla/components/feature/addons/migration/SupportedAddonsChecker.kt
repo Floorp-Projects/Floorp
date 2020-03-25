@@ -25,12 +25,12 @@ import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.migration.SupportedAddonsChecker.Frequency
 import mozilla.components.feature.addons.ui.translatedName
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
+import mozilla.components.feature.addons.worker.shouldReport
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -246,6 +246,4 @@ internal class SupportedAddonsWorker(
 
         internal var onNotificationClickIntent: Intent = Intent()
     }
-
-    private fun Exception.shouldReport(): Boolean = cause is IOException
 }

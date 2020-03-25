@@ -35,6 +35,7 @@ import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.AddonUpdater.Frequency
 import mozilla.components.feature.addons.update.db.UpdateAttemptsDatabase
 import mozilla.components.feature.addons.update.db.toEntity
+import mozilla.components.feature.addons.worker.shouldReport
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.notification.ChannelData
@@ -595,7 +596,9 @@ internal class AddonUpdaterWorker(
                         exception
                 )
                 saveUpdateAttempt(extensionId, AddonUpdater.Status.Error(exception.message ?: "", exception))
-                GlobalAddonDependencyProvider.onCrash?.invoke(exception)
+                if (!exception.shouldReport()) {
+                    GlobalAddonDependencyProvider.onCrash?.invoke(exception)
+                }
                 continuation.resume(Result.retry())
             }
         }
