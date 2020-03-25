@@ -20,5 +20,8 @@ interface TransceiverImpl {
   [Throws]
   void syncWithJS(RTCRtpTransceiver transceiver);
   readonly attribute RTCRtpReceiver receiver;
+  // TODO(bug 1616937): We won't need this once we implement RTCRtpSender in c++
+  [ChromeOnly]
+  readonly attribute RTCDTMFSender? dtmf;
 };
 

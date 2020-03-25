@@ -61,10 +61,5 @@ interface RTCRtpTransceiver {
     boolean hasBeenUsedToSend();
     [ChromeOnly]
     void sync();
-
-    [ChromeOnly]
-    void insertDTMF(DOMString tones,
-                    optional unsigned long duration = 100,
-                    optional unsigned long interToneGap = 70);
 };
 
