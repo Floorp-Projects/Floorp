@@ -227,10 +227,10 @@ class nsWindow final : public nsBaseWidget {
   //
 
   using nsBaseWidget::Create;  // for Create signature not overridden here
-  virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
-                                       nsNativeWidget aNativeParent,
-                                       const LayoutDeviceIntRect& aRect,
-                                       nsWidgetInitData* aInitData) override;
+  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
+                                        nsNativeWidget aNativeParent,
+                                        const LayoutDeviceIntRect& aRect,
+                                        nsWidgetInitData* aInitData) override;
   virtual void Destroy() override;
   virtual nsresult ConfigureChildren(
       const nsTArray<nsIWidget::Configuration>&) override;
@@ -265,7 +265,7 @@ class nsWindow final : public nsBaseWidget {
   void* GetNativeData(uint32_t aDataType) override;
   void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
-  virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override {
+  [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 

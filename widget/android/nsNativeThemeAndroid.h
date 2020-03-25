@@ -18,9 +18,9 @@ class nsNativeThemeAndroid final : private nsNativeTheme, public nsITheme {
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect) override;
 
-  MOZ_MUST_USE LayoutDeviceIntMargin
-  GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                  StyleAppearance aAppearance) override;
+  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
+      nsDeviceContext* aContext, nsIFrame* aFrame,
+      StyleAppearance aAppearance) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
