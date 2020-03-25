@@ -2960,26 +2960,24 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetUseWebRender(true);
     reporter.SetSuccessful();
 
-    if (XRE_IsParentProcess()) {
-      Preferences::RegisterPrefixCallbackAndCall(
-          WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
-      Preferences::RegisterCallback(
-          WebRenderQualityPrefChangeCallback,
-          nsDependentCString(
-              StaticPrefs::
-                  GetPrefName_gfx_webrender_quality_force_disable_sacrificing_subpixel_aa()));
-      Preferences::RegisterCallback(
-          WebRenderMultithreadingPrefChangeCallback,
-          nsDependentCString(
-              StaticPrefs::GetPrefName_gfx_webrender_enable_multithreading()));
+    Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
+                                               WR_DEBUG_PREF);
+    Preferences::RegisterCallback(
+        WebRenderQualityPrefChangeCallback,
+        nsDependentCString(
+            StaticPrefs::
+                GetPrefName_gfx_webrender_quality_force_disable_sacrificing_subpixel_aa()));
+    Preferences::RegisterCallback(
+        WebRenderMultithreadingPrefChangeCallback,
+        nsDependentCString(
+            StaticPrefs::GetPrefName_gfx_webrender_enable_multithreading()));
 
-      Preferences::RegisterCallback(
-          WebRenderBatchingPrefChangeCallback,
-          nsDependentCString(
-              StaticPrefs::GetPrefName_gfx_webrender_batching_lookback()));
+    Preferences::RegisterCallback(
+        WebRenderBatchingPrefChangeCallback,
+        nsDependentCString(
+            StaticPrefs::GetPrefName_gfx_webrender_batching_lookback()));
 
-      UpdateAllowSacrificingSubpixelAA();
-    }
+    UpdateAllowSacrificingSubpixelAA();
   }
 #if defined(MOZ_WIDGET_GTK)
   else {
