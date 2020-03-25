@@ -226,7 +226,9 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   void ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
                        const Sequence<JS::Value>& aArguments);
 
-  void StoreCallData(ConsoleCallData* aData);
+  // Returns true on success; otherwise false.
+  bool StoreCallData(JSContext* aCx, ConsoleCallData* aCallData,
+                     const Sequence<JS::Value>& aArguments);
 
   void UnstoreCallData(ConsoleCallData* aData);
 
@@ -427,6 +429,23 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
 
   uint32_t InternalLogLevelToInteger(MethodName aName) const;
 
+  class ArgumentData {
+   public:
+    bool Initialize(JSContext* aCx, const Sequence<JS::Value>& aArguments);
+    void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
+    bool PopulateArgumentsSequence(Sequence<JS::Value>& aSequence) const;
+    JSObject* Global() const { return mGlobal; }
+
+   private:
+    void AssertIsOnOwningThread() const {
+      NS_ASSERT_OWNINGTHREAD(ArgumentData);
+    }
+
+    NS_DECL_OWNINGTHREAD;
+    JS::Heap<JSObject*> mGlobal;
+    nsTArray<JS::Heap<JS::Value>> mArguments;
+  };
+
   // Owning/CC thread only
   nsCOMPtr<nsIGlobalObject> mGlobal;
   // These nsCOMPtr are touched on main thread only.
@@ -449,6 +468,12 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   // its JSValues also if 'officially' this ConsoleCallData must be removed from
   // the storage.
   nsTArray<RefPtr<ConsoleCallData>> mCallDataStoragePending;
+  // These are references to the arguments we received in each call
+  // from the DOM bindings.
+  // Vector<T> supports non-memmovable types such as ArgumentData
+  // (without any need to jump through hoops like
+  // MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR_FOR_TEMPLATE for nsTArray).
+  Vector<ArgumentData> mArgumentStorage;
 
   RefPtr<AnyCallback> mConsoleEventNotifier;
 

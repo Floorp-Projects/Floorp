@@ -88,8 +88,8 @@ class ConsoleCallData final {
  public:
   NS_INLINE_DECL_REFCOUNTING(ConsoleCallData)
 
-  ConsoleCallData()
-      : mMethodName(Console::MethodLog),
+  ConsoleCallData(Console::MethodName aName, const nsAString& aString)
+      : mMethodName(aName),
         mTimeStamp(JS_Now() / PR_USEC_PER_MSEC),
         mStartTimerValue(0),
         mStartTimerStatus(Console::eTimerUnknown),
@@ -99,32 +99,8 @@ class ConsoleCallData final {
         mIDType(eUnknown),
         mOuterIDNumber(0),
         mInnerIDNumber(0),
+        mMethodString(aString),
         mStatus(eUnused) {}
-
-  bool Initialize(JSContext* aCx, Console::MethodName aName,
-                  const nsAString& aString,
-                  const Sequence<JS::Value>& aArguments, Console* aConsole) {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(aConsole);
-
-    // We must be registered before doing any JS operation otherwise it can
-    // happen that mCopiedArguments are not correctly traced.
-    aConsole->StoreCallData(this);
-
-    mMethodName = aName;
-    mMethodString = aString;
-
-    mGlobal = JS::CurrentGlobalOrNull(aCx);
-
-    for (uint32_t i = 0; i < aArguments.Length(); ++i) {
-      if (NS_WARN_IF(!mCopiedArguments.AppendElement(aArguments[i]))) {
-        aConsole->UnstoreCallData(this);
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   void SetIDs(uint64_t aOuterID, uint64_t aInnerID) {
     MOZ_ASSERT(mIDType == eUnknown);
@@ -153,39 +129,11 @@ class ConsoleCallData final {
     mAddonId = addonId;
   }
 
-  bool PopulateArgumentsSequence(Sequence<JS::Value>& aSequence) const {
-    AssertIsOnOwningThread();
-
-    for (uint32_t i = 0; i < mCopiedArguments.Length(); ++i) {
-      if (NS_WARN_IF(!aSequence.AppendElement(mCopiedArguments[i], fallible))) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  void Trace(const TraceCallbacks& aCallbacks, void* aClosure) {
-    ConsoleCallData* tmp = this;
-    for (uint32_t i = 0; i < mCopiedArguments.Length(); ++i) {
-      NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCopiedArguments[i])
-    }
-
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal);
-  }
-
   void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(ConsoleCallData);
   }
 
-  JS::Heap<JSObject*> mGlobal;
-
-  // This is a copy of the arguments we received from the DOM bindings. Console
-  // object traces them because this ConsoleCallData calls
-  // RegisterConsoleCallData() in the Initialize().
-  nsTArray<JS::Heap<JS::Value>> mCopiedArguments;
-
-  Console::MethodName mMethodName;
+  const Console::MethodName mMethodName;
   int64_t mTimeStamp;
 
   // These values are set in the owning thread and they contain the timestamp of
@@ -235,7 +183,7 @@ class ConsoleCallData final {
 
   nsString mAddonId;
 
-  nsString mMethodString;
+  const nsString mMethodString;
 
   // Stack management is complicated, because we want to do it as
   // lazily as possible.  Therefore, we have the following behavior:
@@ -881,14 +829,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Console)
-  for (uint32_t i = 0; i < tmp->mCallDataStorage.Length(); ++i) {
-    tmp->mCallDataStorage[i]->Trace(aCallbacks, aClosure);
+  for (uint32_t i = 0; i < tmp->mArgumentStorage.length(); ++i) {
+    tmp->mArgumentStorage[i].Trace(aCallbacks, aClosure);
   }
-
-  for (uint32_t i = 0; i < tmp->mCallDataStoragePending.Length(); ++i) {
-    tmp->mCallDataStoragePending[i]->Trace(aCallbacks, aClosure);
-  }
-
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Console)
@@ -1023,8 +966,8 @@ void Console::Shutdown() {
   mTimerRegistry.Clear();
   mCounterRegistry.Clear();
 
+  ClearStorage();
   mCallDataStorage.Clear();
-  mCallDataStoragePending.Clear();
 
   mStatus = eShuttingDown;
 }
@@ -1057,7 +1000,10 @@ Console::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void Console::ClearStorage() { mCallDataStorage.Clear(); }
+void Console::ClearStorage() {
+  mCallDataStorage.Clear();
+  mArgumentStorage.clearAndFree();
+}
 
 #define METHOD(name, string)                                          \
   /* static */ void Console::name(const GlobalObject& aGlobal,        \
@@ -1377,12 +1323,11 @@ void Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   AssertIsOnOwningThread();
 
-  RefPtr<ConsoleCallData> callData(new ConsoleCallData());
-
   ConsoleCommon::ClearException ce(aCx);
 
-  if (NS_WARN_IF(!callData->Initialize(aCx, aMethodName, aMethodString, aData,
-                                       this))) {
+  RefPtr<ConsoleCallData> callData =
+      new ConsoleCallData(aMethodName, aMethodString);
+  if (!StoreCallData(aCx, callData, aData)) {
     return;
   }
 
@@ -2434,8 +2379,17 @@ JSObject* Console::GetOrCreateSandbox(JSContext* aCx,
   return mSandbox->GetJSObject();
 }
 
-void Console::StoreCallData(ConsoleCallData* aCallData) {
+bool Console::StoreCallData(JSContext* aCx, ConsoleCallData* aCallData,
+                            const Sequence<JS::Value>& aArguments) {
   AssertIsOnOwningThread();
+
+  if (NS_WARN_IF(!mArgumentStorage.growBy(1))) {
+    return false;
+  }
+  if (!mArgumentStorage.end()[-1].Initialize(aCx, aArguments)) {
+    mArgumentStorage.shrinkBy(1);
+    return false;
+  }
 
   MOZ_ASSERT(aCallData);
   MOZ_ASSERT(!mCallDataStorage.Contains(aCallData));
@@ -2443,9 +2397,12 @@ void Console::StoreCallData(ConsoleCallData* aCallData) {
 
   mCallDataStorage.AppendElement(aCallData);
 
+  MOZ_ASSERT(mCallDataStorage.Length() == mArgumentStorage.length());
+
   if (mCallDataStorage.Length() > STORAGE_MAX_EVENTS) {
     RefPtr<ConsoleCallData> callData = mCallDataStorage[0];
     mCallDataStorage.RemoveElementAt(0);
+    mArgumentStorage.erase(&mArgumentStorage[0]);
 
     MOZ_ASSERT(callData->mStatus != ConsoleCallData::eToBeDeleted);
 
@@ -2457,20 +2414,26 @@ void Console::StoreCallData(ConsoleCallData* aCallData) {
       mCallDataStoragePending.AppendElement(callData);
     }
   }
+  return true;
 }
 
 void Console::UnstoreCallData(ConsoleCallData* aCallData) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(aCallData);
-
+  MOZ_ASSERT(mCallDataStorage.Length() == mArgumentStorage.length());
   MOZ_ASSERT(!mCallDataStoragePending.Contains(aCallData));
 
+  size_t index = mCallDataStorage.IndexOf(aCallData);
   // It can be that mCallDataStorage has been already cleaned in case the
   // processing of the argument of some Console methods triggers the
   // window.close().
+  if (index == mCallDataStorage.NoIndex) {
+    return;
+  }
 
-  mCallDataStorage.RemoveElement(aCallData);
+  mCallDataStorage.RemoveElementAt(index);
+  mArgumentStorage.erase(&mArgumentStorage[index]);
 }
 
 void Console::ReleaseCallData(ConsoleCallData* aCallData) {
@@ -2525,16 +2488,16 @@ void Console::RetrieveConsoleEvents(JSContext* aCx,
 
   JS::Rooted<JSObject*> targetScope(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  for (uint32_t i = 0; i < mCallDataStorage.Length(); ++i) {
+  for (uint32_t i = 0; i < mArgumentStorage.length(); ++i) {
     JS::Rooted<JS::Value> value(aCx);
 
-    JS::Rooted<JSObject*> sequenceScope(aCx, mCallDataStorage[i]->mGlobal);
+    JS::Rooted<JSObject*> sequenceScope(aCx, mArgumentStorage[i].Global());
     JSAutoRealm ar(aCx, sequenceScope);
 
     Sequence<JS::Value> sequence;
     SequenceRooter<JS::Value> arguments(aCx, &sequence);
 
-    if (!mCallDataStorage[i]->PopulateArgumentsSequence(sequence)) {
+    if (!mArgumentStorage[i].PopulateArgumentsSequence(sequence)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
@@ -2965,6 +2928,42 @@ uint32_t Console::InternalLogLevelToInteger(MethodName aName) const {
   }
 
   return 0;
+}
+
+bool Console::ArgumentData::Initialize(JSContext* aCx,
+                                       const Sequence<JS::Value>& aArguments) {
+  mGlobal = JS::CurrentGlobalOrNull(aCx);
+
+  for (uint32_t i = 0; i < aArguments.Length(); ++i) {
+    if (NS_WARN_IF(!mArguments.AppendElement(aArguments[i]))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void Console::ArgumentData::Trace(const TraceCallbacks& aCallbacks,
+                                  void* aClosure) {
+  ArgumentData* tmp = this;
+  for (uint32_t i = 0; i < mArguments.Length(); ++i) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mArguments[i])
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal)
+}
+
+bool Console::ArgumentData::PopulateArgumentsSequence(
+    Sequence<JS::Value>& aSequence) const {
+  AssertIsOnOwningThread();
+
+  for (uint32_t i = 0; i < mArguments.Length(); ++i) {
+    if (NS_WARN_IF(!aSequence.AppendElement(mArguments[i], fallible))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 }  // namespace dom
