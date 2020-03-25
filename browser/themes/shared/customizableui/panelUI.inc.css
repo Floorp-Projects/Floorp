@@ -233,16 +233,16 @@ panelview {
   max-width: @standaloneSubviewWidth@;
 }
 
-#BMB_bookmarksPopup::part(popupbox) {
+#BMB_bookmarksPopup::part(arrowscrollbox) {
   padding: 0;
 }
 
 /* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
-#BMB_bookmarksPopup menupopup::part(popupbox) {
+#BMB_bookmarksPopup menupopup::part(arrowscrollbox) {
   padding-bottom: 0px;
 }
 
-#BMB_bookmarksPopup menupopup[nofooterpopup=true]::part(popupbox) {
+#BMB_bookmarksPopup menupopup[nofooterpopup=true]::part(arrowscrollbox) {
   padding-bottom: 4px;
 }
 
