@@ -3773,41 +3773,24 @@ class RecommendedFooter extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "open-amo":
-        openAmoInTab(this);
+        // The element is a button but opens a URL, so record as link.
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "discomore",
+          extra: {
+            view: "discover",
+          },
+        });
+        let amoUrl = Services.urlFormatter.formatURLPref(
+          "extensions.getAddons.link.url"
+        );
+        amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);
+        windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
         break;
     }
   }
 }
 customElements.define("recommended-footer", RecommendedFooter, {
-  extends: "footer",
-});
-
-class RecommendedThemesFooter extends HTMLElement {
-  connectedCallback() {
-    if (this.childElementCount == 0) {
-      this.appendChild(importTemplate("recommended-themes-footer"));
-      let themeRecommendationRow = this.querySelector(".theme-recommendation");
-      let themeRecommendationUrl = Services.prefs.getStringPref(
-        PREF_THEME_RECOMMENDATION_URL
-      );
-      if (themeRecommendationUrl) {
-        themeRecommendationRow.querySelector("a").href = themeRecommendationUrl;
-      }
-      themeRecommendationRow.hidden = !themeRecommendationUrl;
-      this.addEventListener("click", this);
-    }
-  }
-
-  handleEvent(event) {
-    let action = event.target.getAttribute("action");
-    switch (action) {
-      case "open-amo":
-        openAmoInTab(this);
-        break;
-    }
-  }
-}
-customElements.define("recommended-themes-footer", RecommendedThemesFooter, {
   extends: "footer",
 });
 
@@ -3857,6 +3840,30 @@ class RecommendedExtensionsSection extends RecommendedSection {
   get template() {
     return "recommended-extensions-section";
   }
+
+  setAmoButtonVisibility() {
+    // Show the AMO button if there are no cards, this is mostly for the case
+    // where the user has no extensions and is offline.
+    let cards = Array.from(this.list.children);
+    let cardVisible = cards.some(card => !card.hidden);
+    this.footer.classList.toggle("hide-amo-link", cardVisible);
+  }
+
+  render() {
+    super.render();
+    let { list } = this;
+    list.cardsReady.then(() => this.setAmoButtonVisibility());
+    list.addEventListener("card-hidden", this);
+    list.addEventListener("card-shown", this);
+  }
+
+  handleEvent(e) {
+    if (e.type == "card-hidden") {
+      this.setAmoButtonVisibility();
+    } else if (e.type == "card-shown") {
+      this.footer.classList.add("hide-amo-link");
+    }
+  }
 }
 customElements.define(
   "recommended-extensions-section",
@@ -3866,6 +3873,18 @@ customElements.define(
 class RecommendedThemesSection extends RecommendedSection {
   get template() {
     return "recommended-themes-section";
+  }
+
+  render() {
+    super.render();
+    let themeRecommendationRow = this.querySelector(".theme-recommendation");
+    let themeRecommendationUrl = Services.prefs.getStringPref(
+      PREF_THEME_RECOMMENDATION_URL
+    );
+    if (themeRecommendationUrl) {
+      themeRecommendationRow.querySelector("a").href = themeRecommendationUrl;
+    }
+    themeRecommendationRow.hidden = !themeRecommendationUrl;
   }
 }
 customElements.define("recommended-themes-section", RecommendedThemesSection);
@@ -4029,25 +4048,6 @@ let addonPageHeader = null;
  */
 function getTelemetryViewName(el) {
   return el.closest("[current-view]").getAttribute("current-view");
-}
-
-/**
- * @param {Element} el The button element.
- */
-function openAmoInTab(el) {
-  // The element is a button but opens a URL, so record as link.
-  AMTelemetry.recordLinkEvent({
-    object: "aboutAddons",
-    value: "discomore",
-    extra: {
-      view: getTelemetryViewName(el),
-    },
-  });
-  let amoUrl = Services.urlFormatter.formatURLPref(
-    "extensions.getAddons.link.url"
-  );
-  amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);
-  windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
 }
 
 /**
