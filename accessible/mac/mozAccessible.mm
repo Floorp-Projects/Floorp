@@ -483,7 +483,45 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 - (NSArray*)accessibilityActionNames {
-  return @[ NSAccessibilityScrollToVisibleAction ];
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  // Create actions array
+  NSMutableArray* actions = [NSMutableArray new];
+  if (!accWrap && !proxy) return actions;
+
+  uint8_t count = 0;
+  if (accWrap) {
+    count = accWrap->ActionCount();
+  } else if (proxy) {
+    count = proxy->ActionCount();
+  }
+
+  // Check if the accessible has an existing gecko
+  // action, and add the corresponding Mac action to
+  // the actions array. `count` is guaranteed to be 0 or 1
+  if (count) {
+    nsAutoString name;
+    if (accWrap) {
+      accWrap->ActionNameAt(0, name);
+    } else if (proxy) {
+      proxy->ActionNameAt(0, name);
+    }
+    if (name.EqualsLiteral("select")) {
+      [actions addObject:NSAccessibilityPickAction];
+    } else {
+      [actions addObject:NSAccessibilityPressAction];
+    }
+  }
+
+  // Regardless of `count`, add actions that should be
+  // performable on all accessibles. If we added a press
+  // action, it will be first in the list. We append other
+  // actions here to maintain that invariant.
+  [actions addObject:NSAccessibilityScrollToVisibleAction];
+  // XXX(morgan): we should implement `show menu` as
+  // an "always performable" action. See bug 1623402.
+
+  return actions;
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action {
@@ -537,13 +575,20 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 - (void)accessibilityPerformAction:(NSString*)action {
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+  ProxyAccessible* proxy = [self getProxyAccessible];
+
   if ([action isEqualToString:NSAccessibilityScrollToVisibleAction]) {
-    RefPtr<AccessibleWrap> accWrap = [self getGeckoAccessible];
-    ProxyAccessible* proxy = [self getProxyAccessible];
     if (accWrap) {
       accWrap->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
     } else if (proxy) {
       proxy->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+    }
+  } else {
+    if (accWrap) {
+      accWrap->DoAction(0);
+    } else if (proxy) {
+      proxy->DoAction(0);
     }
   }
 }
