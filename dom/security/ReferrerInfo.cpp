@@ -1018,9 +1018,11 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
     return referrerInfo.forget();
   }
 
+  nsCOMPtr<nsIURI> principalURI;
+  aPrincipal->GetURI(getter_AddRefs(principalURI));
+
   if (!aDoc) {
-    aPrincipal->CreateReferrerInfo(ReferrerPolicy::_empty,
-                                   getter_AddRefs(referrerInfo));
+    referrerInfo = new ReferrerInfo(principalURI, ReferrerPolicy::_empty);
     return referrerInfo.forget();
   }
 
@@ -1038,16 +1040,19 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForFetch(
 
   nsCOMPtr<nsIURI> referrerURI;
 
-  if (docCurURI && docOrigURI) {
+  if (principalURI && docCurURI && docOrigURI) {
     bool equal = false;
-    aPrincipal->EqualsURI(docOrigURI, &equal);
+    principalURI->Equals(docOrigURI, &equal);
     if (equal) {
-      referrerInfo = new ReferrerInfo(docCurURI, aDoc->GetReferrerPolicy());
-      return referrerInfo.forget();
+      referrerURI = docCurURI;
     }
   }
-  aPrincipal->CreateReferrerInfo(aDoc->GetReferrerPolicy(),
-                                 getter_AddRefs(referrerInfo));
+
+  if (!referrerURI) {
+    referrerURI = principalURI;
+  }
+
+  referrerInfo = new ReferrerInfo(referrerURI, aDoc->GetReferrerPolicy());
   return referrerInfo.forget();
 }
 
