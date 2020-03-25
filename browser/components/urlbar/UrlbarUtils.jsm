@@ -30,16 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 var UrlbarUtils = {
-  // Values for browser.urlbar.insertMethod
-  INSERTMETHOD: {
-    // Just append new results.
-    APPEND: 0,
-    // Merge previous and current results if search strings are related.
-    MERGE_RELATED: 1,
-    // Always merge previous and current results.
-    MERGE: 2,
-  },
-
   // Extensions are allowed to add suggestions if they have registered a keyword
   // with the omnibox API. This is the maximum number of suggestions an extension
   // is allowed to add for a given search string.
