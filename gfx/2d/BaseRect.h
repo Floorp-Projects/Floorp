@@ -109,7 +109,7 @@ struct BaseRect {
   // (including edges) of *this and aRect. If there are no points in that
   // intersection, returns an empty rectangle with x/y set to the std::max of
   // the x/y of *this and aRect.
-  MOZ_MUST_USE Sub Intersect(const Sub& aRect) const {
+  [[nodiscard]] Sub Intersect(const Sub& aRect) const {
     Sub result;
     result.x = std::max<T>(x, aRect.x);
     result.y = std::max<T>(y, aRect.y);
@@ -152,7 +152,7 @@ struct BaseRect {
   // If both rectangles are empty, returns this.
   // WARNING! This is not safe against overflow, prefer using SafeUnion instead
   // when dealing with int-based rects.
-  MOZ_MUST_USE Sub Union(const Sub& aRect) const {
+  [[nodiscard]] Sub Union(const Sub& aRect) const {
     if (IsEmpty()) {
       return aRect;
     } else if (aRect.IsEmpty()) {
@@ -166,7 +166,7 @@ struct BaseRect {
   // Thus, empty input rectangles are allowed to affect the result.
   // WARNING! This is not safe against overflow, prefer using SafeUnionEdges
   // instead when dealing with int-based rects.
-  MOZ_MUST_USE Sub UnionEdges(const Sub& aRect) const {
+  [[nodiscard]] Sub UnionEdges(const Sub& aRect) const {
     Sub result;
     result.x = std::min(x, aRect.x);
     result.y = std::min(y, aRect.y);
@@ -609,7 +609,7 @@ struct BaseRect {
    * Clamp aPoint to this rectangle. It is allowed to end up on any
    * edge of the rectangle.
    */
-  MOZ_MUST_USE Point ClampPoint(const Point& aPoint) const {
+  [[nodiscard]] Point ClampPoint(const Point& aPoint) const {
     return Point(std::max(x, std::min(XMost(), aPoint.x)),
                  std::max(y, std::min(YMost(), aPoint.y)));
   }
@@ -619,7 +619,7 @@ struct BaseRect {
    * aRect then the dimensions that don't fit will be shrunk so that they
    * do fit. The resulting rect is returned.
    */
-  MOZ_MUST_USE Sub MoveInsideAndClamp(const Sub& aRect) const {
+  [[nodiscard]] Sub MoveInsideAndClamp(const Sub& aRect) const {
     Sub rect(std::max(aRect.x, x), std::max(aRect.y, y),
              std::min(aRect.width, width), std::min(aRect.height, height));
     rect.x = std::min(rect.XMost(), aRect.XMost()) - rect.width;

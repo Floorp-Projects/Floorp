@@ -84,11 +84,11 @@ struct BaseTransactionId {
 
   bool IsValid() const { return mId != 0; }
 
-  MOZ_MUST_USE BaseTransactionId<T> Next() const {
+  [[nodiscard]] BaseTransactionId<T> Next() const {
     return BaseTransactionId<T>{mId + 1};
   }
 
-  MOZ_MUST_USE BaseTransactionId<T> Prev() const {
+  [[nodiscard]] BaseTransactionId<T> Prev() const {
     return BaseTransactionId<T>{mId - 1};
   }
 
@@ -126,7 +126,7 @@ typedef BaseTransactionId<TransactionIdType> TransactionId;
 struct LayersObserverEpoch {
   uint64_t mId;
 
-  MOZ_MUST_USE LayersObserverEpoch Next() const {
+  [[nodiscard]] LayersObserverEpoch Next() const {
     return LayersObserverEpoch{mId + 1};
   }
 

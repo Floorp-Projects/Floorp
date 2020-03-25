@@ -273,7 +273,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   void SetupFamilyCharMap(uint32_t aGeneration,
                           const mozilla::fontlist::Pointer& aFamilyPtr);
 
-  MOZ_MUST_USE bool InitializeFamily(mozilla::fontlist::Family* aFamily);
+  [[nodiscard]] bool InitializeFamily(mozilla::fontlist::Family* aFamily);
   void InitializeFamily(uint32_t aGeneration, uint32_t aFamilyIndex);
 
   // name lookup table methods
