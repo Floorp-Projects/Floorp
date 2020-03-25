@@ -22,5 +22,5 @@ version = "0.1.3"
 #ctrlc = "3.1.1"
 lazy_static = "1.0.1"
 rand = "0.7"
-regex = { version = "1", default_features = false, features = ["perf", "std"] }
+regex = "1"
 tempfile = "3"
