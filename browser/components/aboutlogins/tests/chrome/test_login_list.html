@@ -254,21 +254,21 @@ add_task(async function test_breach_indicator() {
   vulnerableLogins.set(TEST_LOGIN_3.guid, true);
   gLoginList.setVulnerableLogins(vulnerableLogins);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
-  let breachWarningIcon = loginListItems[0].querySelector(".list-item-warning-icon");
-  let hiddenWarningIcon = loginListItems[1].querySelector(".list-item-warning-icon");
-  let vulnerableWarningIcon = loginListItems[2].querySelector(".list-item-warning-icon");
+  let alertIcon = loginListItems[0].querySelector(".alert-icon");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "The first login should be TEST_LOGIN_1");
   ok(!loginListItems[0].classList.contains("vulnerable"), "The first login should not have the .vulnerable class");
   ok(loginListItems[0].classList.contains("breached"), "The first login should have the .breached class.");
-  ok(!isHidden(breachWarningIcon), "The warning icon for a breached login should not be hidden.");
+  is(alertIcon.src, "chrome://global/skin/icons/warning.svg", "The alert icon should be the breach warning icon");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_3.guid, "The second login should be TEST_LOGIN_3");
   ok(loginListItems[1].classList.contains("vulnerable"), "The second login should have the .vulnerable class");
   ok(!loginListItems[1].classList.contains("breached"), "The second login should not have the .breached class");
-  ok(!isHidden(hiddenWarningIcon), "The warning icon for a vulnerable login should not be hidden.");
+  alertIcon = loginListItems[1].querySelector(".alert-icon");
+  is(alertIcon.src, "chrome://browser/content/aboutlogins/icons/vulnerable-password.svg", "The alert icon should be the vulnerable password icon");
   is(loginListItems[2].dataset.guid, TEST_LOGIN_2.guid, "The third login should be TEST_LOGIN_2");
+  alertIcon = loginListItems[2].querySelector(".alert-icon");
   ok(!loginListItems[2].classList.contains("vulnerable"), "The third login should not have the .vulnerable class");
   ok(!loginListItems[2].classList.contains("breached"), "The third login should not have the .breached class");
-  ok(isHidden(vulnerableWarningIcon), "The warning icon for a login with a vulnerable password should be visible.");
+  is(alertIcon.src, "chrome://mochitests/content/chrome/browser/components/aboutlogins/tests/chrome/test_login_list.html",  "The alert icon src should be empty");
 });
 
 add_task(async function test_filtered_list() {

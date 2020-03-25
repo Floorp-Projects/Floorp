@@ -62,6 +62,8 @@ login-list-item-subtitle-new-login = Enter your login credentials
 login-list-item-subtitle-missing-username = (no username)
 about-logins-list-item-breach-icon =
   .title = Breached website
+about-logins-list-item-vulnerable-password-icon =
+  .title = Vulnerable password
 
 ## Introduction screen
 
