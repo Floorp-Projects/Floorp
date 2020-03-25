@@ -57,6 +57,16 @@ entity_impl!(MemoryIndex);
 pub struct SignatureIndex(u32);
 entity_impl!(SignatureIndex);
 
+/// Index type of a passive data segment inside the WebAssembly module.
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+pub struct DataIndex(u32);
+entity_impl!(DataIndex);
+
+/// Index type of a passive element segment inside the WebAssembly module.
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+pub struct ElemIndex(u32);
+entity_impl!(ElemIndex);
+
 /// WebAssembly global.
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct Global {

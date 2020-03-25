@@ -127,10 +127,10 @@ impl<'a> BinaryReader<'a> {
         if self.position < self.buffer.len() {
             Ok(())
         } else {
-            Err(BinaryReaderError {
-                message: "Unexpected EOF",
-                offset: self.original_position(),
-            })
+            Err(BinaryReaderError::new(
+                "Unexpected EOF",
+                self.original_position(),
+            ))
         }
     }
 
@@ -138,20 +138,20 @@ impl<'a> BinaryReader<'a> {
         if self.position + len <= self.buffer.len() {
             Ok(())
         } else {
-            Err(BinaryReaderError {
-                message: "Unexpected EOF",
-                offset: self.original_position(),
-            })
+            Err(BinaryReaderError::new(
+                "Unexpected EOF",
+                self.original_position(),
+            ))
         }
     }
 
     fn read_var_u1(&mut self) -> Result<u32> {
         let b = self.read_u8()?;
         if (b & 0xFE) != 0 {
-            return Err(BinaryReaderError {
-                message: "Invalid var_u1",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "Invalid var_u1",
+                self.original_position() - 1,
+            ));
         }
         Ok(b)
     }
@@ -159,10 +159,10 @@ impl<'a> BinaryReader<'a> {
     fn read_var_i7(&mut self) -> Result<i32> {
         let b = self.read_u8()?;
         if (b & 0x80) != 0 {
-            return Err(BinaryReaderError {
-                message: "Invalid var_i7",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "Invalid var_i7",
+                self.original_position() - 1,
+            ));
         }
         Ok((b << 25) as i32 >> 25)
     }
@@ -170,10 +170,10 @@ impl<'a> BinaryReader<'a> {
     pub(crate) fn read_var_u7(&mut self) -> Result<u32> {
         let b = self.read_u8()?;
         if (b & 0x80) != 0 {
-            return Err(BinaryReaderError {
-                message: "Invalid var_u7",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "Invalid var_u7",
+                self.original_position() - 1,
+            ));
         }
         Ok(b)
     }
@@ -191,10 +191,10 @@ impl<'a> BinaryReader<'a> {
             -0x12 => Ok(Type::NullRef),
             -0x20 => Ok(Type::Func),
             -0x40 => Ok(Type::EmptyBlockType),
-            _ => Err(BinaryReaderError {
-                message: "Invalid type",
-                offset: self.original_position() - 1,
-            }),
+            _ => Err(BinaryReaderError::new(
+                "Invalid type",
+                self.original_position() - 1,
+            )),
         }
     }
 
@@ -202,10 +202,10 @@ impl<'a> BinaryReader<'a> {
     pub fn read_local_count(&mut self) -> Result<usize> {
         let local_count = self.read_var_u32()? as usize;
         if local_count > MAX_WASM_FUNCTION_LOCALS {
-            return Err(BinaryReaderError {
-                message: "local_count is out of bounds",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "local_count is out of bounds",
+                self.original_position() - 1,
+            ));
         }
         Ok(local_count)
     }
@@ -214,18 +214,17 @@ impl<'a> BinaryReader<'a> {
     pub fn read_local_decl(&mut self, locals_total: &mut usize) -> Result<(u32, Type)> {
         let count = self.read_var_u32()?;
         let value_type = self.read_type()?;
-        *locals_total =
-            locals_total
-                .checked_add(count as usize)
-                .ok_or_else(|| BinaryReaderError {
-                    message: "locals_total is out of bounds",
-                    offset: self.original_position() - 1,
-                })?;
+        *locals_total = locals_total.checked_add(count as usize).ok_or_else(|| {
+            BinaryReaderError::new(
+                "locals_total is out of bounds",
+                self.original_position() - 1,
+            )
+        })?;
         if *locals_total > MAX_WASM_FUNCTION_LOCALS {
-            return Err(BinaryReaderError {
-                message: "locals_total is out of bounds",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "locals_total is out of bounds",
+                self.original_position() - 1,
+            ));
         }
         Ok((count, value_type))
     }
@@ -237,10 +236,10 @@ impl<'a> BinaryReader<'a> {
             1 => Ok(ExternalKind::Table),
             2 => Ok(ExternalKind::Memory),
             3 => Ok(ExternalKind::Global),
-            _ => Err(BinaryReaderError {
-                message: "Invalid external kind",
-                offset: self.original_position() - 1,
-            }),
+            _ => Err(BinaryReaderError::new(
+                "Invalid external kind",
+                self.original_position() - 1,
+            )),
         }
     }
 
@@ -248,10 +247,10 @@ impl<'a> BinaryReader<'a> {
         let form = self.read_type()?;
         let params_len = self.read_var_u32()? as usize;
         if params_len > MAX_WASM_FUNCTION_PARAMS {
-            return Err(BinaryReaderError {
-                message: "function params size is out of bound",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "function params size is out of bound",
+                self.original_position() - 1,
+            ));
         }
         let mut params: Vec<Type> = Vec::with_capacity(params_len);
         for _ in 0..params_len {
@@ -259,10 +258,10 @@ impl<'a> BinaryReader<'a> {
         }
         let returns_len = self.read_var_u32()? as usize;
         if returns_len > MAX_WASM_FUNCTION_RETURNS {
-            return Err(BinaryReaderError {
-                message: "function returns size is out of bound",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "function returns size is out of bound",
+                self.original_position() - 1,
+            ));
         }
         let mut returns: Vec<Type> = Vec::with_capacity(returns_len);
         for _ in 0..returns_len {
@@ -289,10 +288,10 @@ impl<'a> BinaryReader<'a> {
         let element_type = self.read_type()?;
         let flags = self.read_var_u32()?;
         if (flags & !0x1) != 0 {
-            return Err(BinaryReaderError {
-                message: "invalid table resizable limits flags",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "invalid table resizable limits flags",
+                self.original_position() - 1,
+            ));
         }
         let limits = self.read_resizable_limits((flags & 0x1) != 0)?;
         Ok(TableType {
@@ -304,10 +303,10 @@ impl<'a> BinaryReader<'a> {
     pub(crate) fn read_memory_type(&mut self) -> Result<MemoryType> {
         let flags = self.read_var_u32()?;
         if (flags & !0x3) != 0 {
-            return Err(BinaryReaderError {
-                message: "invalid table resizable limits flags",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "invalid table resizable limits flags",
+                self.original_position() - 1,
+            ));
         }
         let limits = self.read_resizable_limits((flags & 0x1) != 0)?;
         let shared = (flags & 0x2) != 0;
@@ -359,20 +358,17 @@ impl<'a> BinaryReader<'a> {
             10 => Ok(SectionCode::Code),
             11 => Ok(SectionCode::Data),
             12 => Ok(SectionCode::DataCount),
-            _ => Err(BinaryReaderError {
-                message: "Invalid section code",
-                offset,
-            }),
+            _ => Err(BinaryReaderError::new("Invalid section code", offset)),
         }
     }
 
     fn read_br_table(&mut self) -> Result<BrTable<'a>> {
         let targets_len = self.read_var_u32()? as usize;
         if targets_len > MAX_WASM_BR_TABLE_SIZE {
-            return Err(BinaryReaderError {
-                message: "br_table size is out of bound",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "br_table size is out of bound",
+                self.original_position() - 1,
+            ));
         }
         let start = self.position;
         for _ in 0..targets_len {
@@ -465,10 +461,10 @@ impl<'a> BinaryReader<'a> {
 
         let result = (self.read_u8()? << 7) | (byte & 0x7F);
         if result >= 0x100 {
-            return Err(BinaryReaderError {
-                message: "Invalid var_u8",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "Invalid var_u8",
+                self.original_position() - 1,
+            ));
         }
         Ok(result)
     }
@@ -492,10 +488,10 @@ impl<'a> BinaryReader<'a> {
             result |= ((byte & 0x7F) as u32) << shift;
             if shift >= 25 && (byte >> (32 - shift)) != 0 {
                 // The continuation bit or unused bits are set.
-                return Err(BinaryReaderError {
-                    message: "Invalid var_u32",
-                    offset: self.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "Invalid var_u32",
+                    self.original_position() - 1,
+                ));
             }
             shift += 7;
             if (byte & 0x80) == 0 {
@@ -517,10 +513,10 @@ impl<'a> BinaryReader<'a> {
                 return Ok(());
             }
         }
-        Err(BinaryReaderError {
-            message: "Invalid var_32",
-            offset: self.original_position() - 1,
-        })
+        Err(BinaryReaderError::new(
+            "Invalid var_32",
+            self.original_position() - 1,
+        ))
     }
 
     /// Alias method for `BinaryReader::skip_var_u32`.
@@ -546,10 +542,10 @@ impl<'a> BinaryReader<'a> {
     pub fn skip_string(&mut self) -> Result<()> {
         let len = self.read_var_u32()? as usize;
         if len > MAX_WASM_STRING_SIZE {
-            return Err(BinaryReaderError {
-                message: "string size in out of bounds",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "string size in out of bounds",
+                self.original_position() - 1,
+            ));
         }
         self.skip_bytes(len)
     }
@@ -583,10 +579,10 @@ impl<'a> BinaryReader<'a> {
                 let continuation_bit = (byte & 0x80) != 0;
                 let sign_and_unused_bit = (byte << 1) as i8 >> (32 - shift);
                 if continuation_bit || (sign_and_unused_bit != 0 && sign_and_unused_bit != -1) {
-                    return Err(BinaryReaderError {
-                        message: "Invalid var_i32",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "Invalid var_i32",
+                        self.original_position() - 1,
+                    ));
                 }
                 return Ok(result);
             }
@@ -620,10 +616,10 @@ impl<'a> BinaryReader<'a> {
                 let continuation_bit = (byte & 0x80) != 0;
                 let sign_and_unused_bit = (byte << 1) as i8 >> (33 - shift);
                 if continuation_bit || (sign_and_unused_bit != 0 && sign_and_unused_bit != -1) {
-                    return Err(BinaryReaderError {
-                        message: "Invalid var_s33",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "Invalid var_s33",
+                        self.original_position() - 1,
+                    ));
                 }
                 return Ok(result);
             }
@@ -651,10 +647,10 @@ impl<'a> BinaryReader<'a> {
                 let continuation_bit = (byte & 0x80) != 0;
                 let sign_and_unused_bit = ((byte << 1) as i8) >> (64 - shift);
                 if continuation_bit || (sign_and_unused_bit != 0 && sign_and_unused_bit != -1) {
-                    return Err(BinaryReaderError {
-                        message: "Invalid var_i64",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "Invalid var_i64",
+                        self.original_position() - 1,
+                    ));
                 }
                 return Ok(result);
             }
@@ -695,25 +691,24 @@ impl<'a> BinaryReader<'a> {
     pub fn read_string(&mut self) -> Result<&'a str> {
         let len = self.read_var_u32()? as usize;
         if len > MAX_WASM_STRING_SIZE {
-            return Err(BinaryReaderError {
-                message: "string size in out of bounds",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "string size in out of bounds",
+                self.original_position() - 1,
+            ));
         }
         let bytes = self.read_bytes(len)?;
-        str::from_utf8(bytes).map_err(|_| BinaryReaderError {
-            message: "non-utf8 string",
-            offset: self.original_position() - 1,
+        str::from_utf8(bytes).map_err(|_| {
+            BinaryReaderError::new("invalid UTF-8 encoding", self.original_position() - 1)
         })
     }
 
     fn read_memarg_of_align(&mut self, max_align: u32) -> Result<MemoryImmediate> {
         let imm = self.read_memarg()?;
         if imm.flags > max_align {
-            return Err(BinaryReaderError {
-                message: "Unexpected memarg alignment",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "alignment must not be larger than natural",
+                self.original_position() - 1,
+            ));
         }
         Ok(imm)
     }
@@ -924,10 +919,10 @@ impl<'a> BinaryReader<'a> {
             },
 
             _ => {
-                return Err(BinaryReaderError {
-                    message: "Unknown 0xFE opcode",
-                    offset: self.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "Unknown 0xFE opcode",
+                    self.original_position() - 1,
+                ));
             }
         })
     }
@@ -940,10 +935,7 @@ impl<'a> BinaryReader<'a> {
             self.position = position;
             let idx = self.read_var_s33()?;
             if idx < 0 || idx > (std::u32::MAX as i64) {
-                return Err(BinaryReaderError {
-                    message: "invalid function type",
-                    offset: position,
-                });
+                return Err(BinaryReaderError::new("invalid function type", position));
             }
             Ok(TypeOrFuncType::FuncType(idx as u32))
         }
@@ -991,10 +983,10 @@ impl<'a> BinaryReader<'a> {
             0x1c => {
                 let results = self.read_var_u32()?;
                 if results != 1 {
-                    return Err(BinaryReaderError {
-                        message: "bad number of results",
-                        offset: self.position,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "bad number of results",
+                        self.position,
+                    ));
                 }
                 Operator::TypedSelect {
                     ty: self.read_type()?,
@@ -1249,10 +1241,10 @@ impl<'a> BinaryReader<'a> {
             0xfe => self.read_0xfe_operator()?,
 
             _ => {
-                return Err(BinaryReaderError {
-                    message: "Unknown opcode",
-                    offset: self.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "Unknown opcode",
+                    self.original_position() - 1,
+                ));
             }
         })
     }
@@ -1273,10 +1265,10 @@ impl<'a> BinaryReader<'a> {
                 let segment = self.read_var_u32()?;
                 let mem = self.read_u8()?;
                 if mem != 0 {
-                    return Err(BinaryReaderError {
-                        message: "reserved byte must be zero",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "reserved byte must be zero",
+                        self.original_position() - 1,
+                    ));
                 }
                 Operator::MemoryInit { segment }
             }
@@ -1287,27 +1279,27 @@ impl<'a> BinaryReader<'a> {
             0x0a => {
                 let dst = self.read_u8()?;
                 if dst != 0 {
-                    return Err(BinaryReaderError {
-                        message: "reserved byte must be zero",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "reserved byte must be zero",
+                        self.original_position() - 1,
+                    ));
                 }
                 let src = self.read_u8()?;
                 if src != 0 {
-                    return Err(BinaryReaderError {
-                        message: "reserved byte must be zero",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "reserved byte must be zero",
+                        self.original_position() - 1,
+                    ));
                 }
                 Operator::MemoryCopy
             }
             0x0b => {
                 let mem = self.read_u8()?;
                 if mem != 0 {
-                    return Err(BinaryReaderError {
-                        message: "reserved byte must be zero",
-                        offset: self.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "reserved byte must be zero",
+                        self.original_position() - 1,
+                    ));
                 }
                 Operator::MemoryFill
             }
@@ -1344,10 +1336,10 @@ impl<'a> BinaryReader<'a> {
             }
 
             _ => {
-                return Err(BinaryReaderError {
-                    message: "Unknown 0xfc opcode",
-                    offset: self.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "Unknown 0xfc opcode",
+                    self.original_position() - 1,
+                ));
             }
         })
     }
@@ -1355,10 +1347,10 @@ impl<'a> BinaryReader<'a> {
     fn read_lane_index(&mut self, max: u32) -> Result<SIMDLaneIndex> {
         let index = self.read_u8()?;
         if index >= max {
-            return Err(BinaryReaderError {
-                message: "invalid lane index",
-                offset: self.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "invalid lane index",
+                self.original_position() - 1,
+            ));
         }
         Ok(index as SIMDLaneIndex)
     }
@@ -1489,6 +1481,10 @@ impl<'a> BinaryReader<'a> {
             0x5b => Operator::I8x16SubSaturateS,
             0x5c => Operator::I8x16SubSaturateU,
             0x5d => Operator::I8x16Mul,
+            0x5e => Operator::I8x16MinS,
+            0x5f => Operator::I8x16MinU,
+            0x60 => Operator::I8x16MaxS,
+            0x61 => Operator::I8x16MaxU,
             0x62 => Operator::I16x8Neg,
             0x63 => Operator::I16x8AnyTrue,
             0x64 => Operator::I16x8AllTrue,
@@ -1502,6 +1498,10 @@ impl<'a> BinaryReader<'a> {
             0x6c => Operator::I16x8SubSaturateS,
             0x6d => Operator::I16x8SubSaturateU,
             0x6e => Operator::I16x8Mul,
+            0x6f => Operator::I16x8MinS,
+            0x70 => Operator::I16x8MinU,
+            0x71 => Operator::I16x8MaxS,
+            0x72 => Operator::I16x8MaxU,
             0x73 => Operator::I32x4Neg,
             0x74 => Operator::I32x4AnyTrue,
             0x75 => Operator::I32x4AllTrue,
@@ -1511,6 +1511,10 @@ impl<'a> BinaryReader<'a> {
             0x79 => Operator::I32x4Add,
             0x7c => Operator::I32x4Sub,
             0x7f => Operator::I32x4Mul,
+            0x80 => Operator::I32x4MinS,
+            0x81 => Operator::I32x4MinU,
+            0x82 => Operator::I32x4MaxS,
+            0x83 => Operator::I32x4MaxU,
             0x84 => Operator::I64x2Neg,
             0x85 => Operator::I64x2AnyTrue,
             0x86 => Operator::I64x2AllTrue,
@@ -1600,10 +1604,10 @@ impl<'a> BinaryReader<'a> {
             0xd9 => Operator::I8x16RoundingAverageU,
             0xda => Operator::I16x8RoundingAverageU,
             _ => {
-                return Err(BinaryReaderError {
-                    message: "Unknown 0xfd opcode",
-                    offset: self.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "Unknown 0xfd opcode",
+                    self.original_position() - 1,
+                ));
             }
         })
     }
@@ -1611,17 +1615,17 @@ impl<'a> BinaryReader<'a> {
     pub(crate) fn read_file_header(&mut self) -> Result<u32> {
         let magic_number = self.read_bytes(4)?;
         if magic_number != WASM_MAGIC_NUMBER {
-            return Err(BinaryReaderError {
-                message: "Bad magic number",
-                offset: self.original_position() - 4,
-            });
+            return Err(BinaryReaderError::new(
+                "Bad magic number",
+                self.original_position() - 4,
+            ));
         }
         let version = self.read_u32()?;
         if version != WASM_SUPPORTED_VERSION && version != WASM_EXPERIMENTAL_VERSION {
-            return Err(BinaryReaderError {
-                message: "Bad version number",
-                offset: self.original_position() - 4,
-            });
+            return Err(BinaryReaderError::new(
+                "Bad version number",
+                self.original_position() - 4,
+            ));
         }
         Ok(version)
     }
@@ -1645,10 +1649,10 @@ impl<'a> BinaryReader<'a> {
             0 => Ok(NameType::Module),
             1 => Ok(NameType::Function),
             2 => Ok(NameType::Local),
-            _ => Err(BinaryReaderError {
-                message: "Invalid name type",
-                offset: self.original_position() - 1,
-            }),
+            _ => Err(BinaryReaderError::new(
+                "Invalid name type",
+                self.original_position() - 1,
+            )),
         }
     }
 
@@ -1657,10 +1661,10 @@ impl<'a> BinaryReader<'a> {
         Ok(match ty {
             1 => LinkingType::StackPointer(self.read_var_u32()?),
             _ => {
-                return Err(BinaryReaderError {
-                    message: "Invalid linking type",
-                    offset: self.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "Invalid linking type",
+                    self.original_position() - 1,
+                ));
             }
         })
     }
@@ -1676,10 +1680,10 @@ impl<'a> BinaryReader<'a> {
             5 => Ok(RelocType::GlobalAddrI32),
             6 => Ok(RelocType::TypeIndexLEB),
             7 => Ok(RelocType::GlobalIndexLEB),
-            _ => Err(BinaryReaderError {
-                message: "Invalid reloc type",
-                offset: self.original_position() - 1,
-            }),
+            _ => Err(BinaryReaderError::new(
+                "Invalid reloc type",
+                self.original_position() - 1,
+            )),
         }
     }
 
@@ -1726,9 +1730,11 @@ impl<'a> BrTable<'a> {
         while !reader.eof() {
             table.push(reader.read_var_u32()?);
         }
-        let default_target = table.pop().ok_or_else(|| BinaryReaderError {
-            message: "br_table missing default target",
-            offset: reader.original_position(),
+        let default_target = table.pop().ok_or_else(|| {
+            BinaryReaderError::new(
+                "br_table missing default target",
+                reader.original_position(),
+            )
         })?;
         Ok((table.into_boxed_slice(), default_target))
     }

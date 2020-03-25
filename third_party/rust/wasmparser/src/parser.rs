@@ -456,10 +456,10 @@ impl<'a> Parser<'a> {
             .get_items_reader()?;
         let num_elements = reader.get_count() as usize;
         if num_elements > MAX_WASM_TABLE_ENTRIES {
-            return Err(BinaryReaderError {
-                message: "num_elements is out of bounds",
-                offset: 0, // reader.position - 1, // TODO offset
-            });
+            return Err(BinaryReaderError::new(
+                "num_elements is out of bounds",
+                0, // reader.position - 1, // TODO offset
+            ));
         }
         let mut elements = Vec::with_capacity(num_elements);
         for _ in 0..num_elements {
@@ -487,27 +487,26 @@ impl<'a> Parser<'a> {
         let mut reader = function_body.get_locals_reader()?;
         let local_count = reader.get_count() as usize;
         if local_count > MAX_WASM_FUNCTION_LOCALS {
-            return Err(BinaryReaderError {
-                message: "local_count is out of bounds",
-                offset: reader.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "local_count is out of bounds",
+                reader.original_position() - 1,
+            ));
         }
         let mut locals: Vec<(u32, Type)> = Vec::with_capacity(local_count);
         let mut locals_total: usize = 0;
         for _ in 0..local_count {
             let (count, ty) = reader.read()?;
-            locals_total =
-                locals_total
-                    .checked_add(count as usize)
-                    .ok_or_else(|| BinaryReaderError {
-                        message: "locals_total is out of bounds",
-                        offset: reader.original_position() - 1,
-                    })?;
+            locals_total = locals_total.checked_add(count as usize).ok_or_else(|| {
+                BinaryReaderError::new(
+                    "locals_total is out of bounds",
+                    reader.original_position() - 1,
+                )
+            })?;
             if locals_total > MAX_WASM_FUNCTION_LOCALS {
-                return Err(BinaryReaderError {
-                    message: "locals_total is out of bounds",
-                    offset: reader.original_position() - 1,
-                });
+                return Err(BinaryReaderError::new(
+                    "locals_total is out of bounds",
+                    reader.original_position() - 1,
+                ));
             }
             locals.push((count, ty));
         }
@@ -532,10 +531,10 @@ impl<'a> Parser<'a> {
                 return Ok(());
             }
             let reader = self.operators_reader.as_ref().expect("operator reader");
-            return Err(BinaryReaderError {
-                message: "Expected end of function marker",
-                offset: reader.original_position(),
-            });
+            return Err(BinaryReaderError::new(
+                "Expected end of function marker",
+                reader.original_position(),
+            ));
         }
         let reader = self.operators_reader.as_mut().expect("operator reader");
         let op = reader.read()?;
@@ -590,10 +589,10 @@ impl<'a> Parser<'a> {
     {
         let count = naming_reader.get_count() as usize;
         if count > limit {
-            return Err(BinaryReaderError {
-                message: "name map size is out of bound",
-                offset: naming_reader.original_position() - 1,
-            });
+            return Err(BinaryReaderError::new(
+                "name map size is out of bound",
+                naming_reader.original_position() - 1,
+            ));
         }
         let mut result = Vec::with_capacity(count);
         for _ in 0..count {
@@ -615,10 +614,10 @@ impl<'a> Parser<'a> {
                 let mut reader = locals.get_function_local_reader()?;
                 let funcs_len = reader.get_count() as usize;
                 if funcs_len > MAX_WASM_FUNCTIONS {
-                    return Err(BinaryReaderError {
-                        message: "function count is out of bounds",
-                        offset: reader.original_position() - 1,
-                    });
+                    return Err(BinaryReaderError::new(
+                        "function count is out of bounds",
+                        reader.original_position() - 1,
+                    ));
                 }
                 let mut funcs: Vec<LocalName<'a>> = Vec::with_capacity(funcs_len);
                 for _ in 0..funcs_len {

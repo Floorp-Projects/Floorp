@@ -4,10 +4,12 @@ use super::enc_tables::{needs_offset, needs_sib_byte};
 use super::registers::RU;
 use crate::binemit::{bad_encoding, CodeSink, Reloc};
 use crate::ir::condcodes::{CondCode, FloatCC, IntCC};
-use crate::ir::{Block, Constant, Function, Inst, InstructionData, JumpTable, Opcode, TrapCode};
+use crate::ir::{
+    Block, Constant, ExternalName, Function, Inst, InstructionData, JumpTable, LibCall, Opcode,
+    TrapCode,
+};
 use crate::isa::{RegUnit, StackBase, StackBaseMask, StackRef, TargetIsa};
 use crate::regalloc::RegDiversions;
-
 use cranelift_codegen_shared::isa::x86::EncodingBits;
 
 include!(concat!(env!("OUT_DIR"), "/binemit-x86.rs"));
@@ -59,6 +61,17 @@ fn rex3(rm: RegUnit, reg: RegUnit, index: RegUnit) -> u8 {
     let r = ((reg >> 3) & 1) as u8;
     let x = ((index >> 3) & 1) as u8;
     BASE_REX | b | (x << 1) | (r << 2)
+}
+
+/// Encode the RXBR' bits of the EVEX P0 byte. For an explanation of these bits, see section 2.6.1
+/// in the Intel Software Development Manual, volume 2A. These bits can be used by different
+/// addressing modes (see section 2.6.2), requiring different `vex*` functions than this one.
+fn evex2(rm: RegUnit, reg: RegUnit) -> u8 {
+    let b = (!(rm >> 3) & 1) as u8;
+    let x = (!(rm >> 4) & 1) as u8;
+    let r = (!(reg >> 3) & 1) as u8;
+    let r_ = (!(reg >> 4) & 1) as u8;
+    0x00 | r_ | (b << 1) | (x << 2) | (r << 3)
 }
 
 /// Determines whether a REX prefix should be emitted.
@@ -184,7 +197,7 @@ fn put_dynrexmp2<CS: CodeSink + ?Sized>(bits: u16, rex: u8, sink: &mut CS) {
     sink.put1(bits as u8);
 }
 
-// Emit three-byte opcode (0F 3[8A] XX) with mandatory prefix.
+/// Emit three-byte opcode (0F 3[8A] XX) with mandatory prefix.
 fn put_mp3<CS: CodeSink + ?Sized>(bits: u16, rex: u8, sink: &mut CS) {
     debug_assert_eq!(bits & 0x8800, 0x0800, "Invalid encoding bits for Mp3*");
     debug_assert_eq!(rex, BASE_REX, "Invalid registers for REX-less Mp3 encoding");
@@ -195,7 +208,7 @@ fn put_mp3<CS: CodeSink + ?Sized>(bits: u16, rex: u8, sink: &mut CS) {
     sink.put1(bits as u8);
 }
 
-// Emit three-byte opcode (0F 3[8A] XX) with mandatory prefix and REX
+/// Emit three-byte opcode (0F 3[8A] XX) with mandatory prefix and REX
 fn put_rexmp3<CS: CodeSink + ?Sized>(bits: u16, rex: u8, sink: &mut CS) {
     debug_assert_eq!(bits & 0x0800, 0x0800, "Invalid encoding bits for RexMp3*");
     let enc = EncodingBits::from(bits);
@@ -204,6 +217,168 @@ fn put_rexmp3<CS: CodeSink + ?Sized>(bits: u16, rex: u8, sink: &mut CS) {
     sink.put1(0x0f);
     sink.put1(OP3_BYTE2[(enc.mm() - 2) as usize]);
     sink.put1(bits as u8);
+}
+
+/// Emit three-byte opcode (0F 3[8A] XX) with mandatory prefix and an inferred REX prefix.
+fn put_dynrexmp3<CS: CodeSink + ?Sized>(bits: u16, rex: u8, sink: &mut CS) {
+    debug_assert_eq!(
+        bits & 0x0800,
+        0x0800,
+        "Invalid encoding bits for DynRexMp3*"
+    );
+    let enc = EncodingBits::from(bits);
+    sink.put1(PREFIX[(enc.pp() - 1) as usize]);
+    if needs_rex(bits, rex) {
+        rex_prefix(bits, rex, sink);
+    }
+    sink.put1(0x0f);
+    sink.put1(OP3_BYTE2[(enc.mm() - 2) as usize]);
+    sink.put1(bits as u8);
+}
+
+/// Defines the EVEX context for the `L'`, `L`, and `b` bits (bits 6:4 of EVEX P2 byte). Table 2-36 in
+/// section 2.6.10 (Intel Software Development Manual, volume 2A) describes how these bits can be
+/// used together for certain classes of instructions; i.e., special care should be taken to ensure
+/// that instructions use an applicable correct `EvexContext`. Table 2-39 contains cases where
+/// opcodes can result in an #UD.
+#[allow(dead_code)]
+enum EvexContext {
+    RoundingRegToRegFP {
+        rc: EvexRoundingControl,
+    },
+    NoRoundingFP {
+        sae: bool,
+        length: EvexVectorLength,
+    },
+    MemoryOp {
+        broadcast: bool,
+        length: EvexVectorLength,
+    },
+    Other {
+        length: EvexVectorLength,
+    },
+}
+
+impl EvexContext {
+    /// Encode the `L'`, `L`, and `b` bits (bits 6:4 of EVEX P2 byte) for merging with the P2 byte.
+    fn bits(&self) -> u8 {
+        match self {
+            Self::RoundingRegToRegFP { rc } => 0b001 | rc.bits() << 1,
+            Self::NoRoundingFP { sae, length } => (*sae as u8) | length.bits() << 1,
+            Self::MemoryOp { broadcast, length } => (*broadcast as u8) | length.bits() << 1,
+            Self::Other { length } => length.bits() << 1,
+        }
+    }
+}
+
+/// The EVEX format allows choosing a vector length in the `L'` and `L` bits; see `EvexContext`.
+enum EvexVectorLength {
+    V128,
+    V256,
+    V512,
+}
+
+impl EvexVectorLength {
+    /// Encode the `L'` and `L` bits for merging with the P2 byte.
+    fn bits(&self) -> u8 {
+        match self {
+            Self::V128 => 0b00,
+            Self::V256 => 0b01,
+            Self::V512 => 0b10,
+            // 0b11 is reserved (#UD).
+        }
+    }
+}
+
+/// The EVEX format allows defining rounding control in the `L'` and `L` bits; see `EvexContext`.
+enum EvexRoundingControl {
+    RNE,
+    RD,
+    RU,
+    RZ,
+}
+
+impl EvexRoundingControl {
+    /// Encode the `L'` and `L` bits for merging with the P2 byte.
+    fn bits(&self) -> u8 {
+        match self {
+            Self::RNE => 0b00,
+            Self::RD => 0b01,
+            Self::RU => 0b10,
+            Self::RZ => 0b11,
+        }
+    }
+}
+
+/// Defines the EVEX masking behavior; masking support is described in section 2.6.4 of the Intel
+/// Software Development Manual, volume 2A.
+#[allow(dead_code)]
+enum EvexMasking {
+    None,
+    Merging { k: u8 },
+    Zeroing { k: u8 },
+}
+
+impl EvexMasking {
+    /// Encode the `z` bit for merging with the P2 byte.
+    fn z_bit(&self) -> u8 {
+        match self {
+            Self::None | Self::Merging { .. } => 0,
+            Self::Zeroing { .. } => 1,
+        }
+    }
+
+    /// Encode the `aaa` bits for merging with the P2 byte.
+    fn aaa_bits(&self) -> u8 {
+        match self {
+            Self::None => 0b000,
+            Self::Merging { k } | Self::Zeroing { k } => {
+                debug_assert!(*k <= 7);
+                *k
+            }
+        }
+    }
+}
+
+/// Encode an EVEX prefix, including the instruction opcode. To match the current recipe
+/// convention, the ModR/M byte is written separately in the recipe. This EVEX encoding function
+/// only encodes the `reg` (operand 1), `vvvv` (operand 2), `rm` (operand 3) form; other forms are
+/// possible (see section 2.6.2, Intel Software Development Manual, volume 2A), requiring
+/// refactoring of this function or separate functions for each form (e.g. as for the REX prefix).
+fn put_evex<CS: CodeSink + ?Sized>(
+    bits: u16,
+    reg: RegUnit,
+    vvvvv: RegUnit,
+    rm: RegUnit,
+    context: EvexContext,
+    masking: EvexMasking,
+    sink: &mut CS,
+) {
+    let enc = EncodingBits::from(bits);
+
+    // EVEX prefix.
+    sink.put1(0x62);
+
+    debug_assert!(enc.mm() < 0b100);
+    let mut p0 = enc.mm() & 0b11;
+    p0 |= evex2(rm, reg) << 4; // bits 3:2 are always unset
+    sink.put1(p0);
+
+    let mut p1 = enc.pp() | 0b100; // bit 2 is always set
+    p1 |= (!(vvvvv as u8) & 0b1111) << 3;
+    p1 |= (enc.rex_w() & 0b1) << 7;
+    sink.put1(p1);
+
+    let mut p2 = masking.aaa_bits();
+    p2 |= (!(vvvvv as u8 >> 4) & 0b1) << 3;
+    p2 |= context.bits() << 4;
+    p2 |= masking.z_bit() << 7;
+    sink.put1(p2);
+
+    // Opcode
+    sink.put1(enc.opcode_byte());
+
+    // ModR/M byte placed in recipe
 }
 
 /// Emit a ModR/M byte for reg-reg operands.

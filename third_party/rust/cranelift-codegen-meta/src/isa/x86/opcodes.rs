@@ -77,6 +77,10 @@ pub static CMPPD: [u8; 3] = [0x66, 0x0f, 0xc2];
 /// imm8 as comparison predicate (SSE).
 pub static CMPPS: [u8; 2] = [0x0f, 0xc2];
 
+/// Convert four packed signed doubleword integers from xmm2/mem to four packed single-precision
+/// floating-point values in xmm1 (SSE2).
+pub static CVTDQ2PS: [u8; 2] = [0x0f, 0x5b];
+
 /// Convert scalar double-precision floating-point value to scalar single-precision
 /// floating-point value.
 pub static CVTSD2SS: [u8; 3] = [0xf2, 0x0f, 0x5a];
@@ -317,6 +321,12 @@ pub static PAND: [u8; 3] = [0x66, 0x0f, 0xdb];
 /// Bitwise AND NOT of xmm2/m128 and xmm1 (SSE2).
 pub static PANDN: [u8; 3] = [0x66, 0x0f, 0xdf];
 
+/// Average packed unsigned byte integers from xmm2/m128 and xmm1 with rounding (SSE2).
+pub static PAVGB: [u8; 3] = [0x66, 0x0f, 0xE0];
+
+/// Average packed unsigned word integers from xmm2/m128 and xmm1 with rounding (SSE2).
+pub static PAVGW: [u8; 3] = [0x66, 0x0f, 0xE3];
+
 /// Compare packed data for equal (SSE2).
 pub static PCMPEQB: [u8; 3] = [0x66, 0x0f, 0x74];
 
@@ -414,6 +424,10 @@ pub static PMULLW: [u8; 3] = [0x66, 0x0f, 0xd5];
 /// Multiply the packed doubleword signed integers in xmm1 and xmm2/m128 and store the low 32
 /// bits of each product in xmm1 (SSE4.1).
 pub static PMULLD: [u8; 4] = [0x66, 0x0f, 0x38, 0x40];
+
+/// Multiply the packed quadword signed integers in xmm2 and xmm3/m128 and store the low 64
+/// bits of each product in xmm1 (AVX512VL/DQ). Requires an EVEX encoding.
+pub static PMULLQ: [u8; 4] = [0x66, 0x0f, 0x38, 0x40];
 
 /// Pop top of stack into r{16,32,64}; increment stack pointer.
 pub static POP_REG: [u8; 1] = [0x58];

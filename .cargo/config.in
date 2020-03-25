@@ -47,10 +47,10 @@ git = "https://github.com/djg/cubeb-pulse-rs"
 replace-with = "vendored-sources"
 rev = "8069f8f4189982e0b38fa6dc8993dd4fab41f728"
 
-[source."https://github.com/bytecodealliance/cranelift"]
-git = "https://github.com/bytecodealliance/cranelift"
+[source."https://github.com/bytecodealliance/wasmtime"]
+git = "https://github.com/bytecodealliance/wasmtime"
 replace-with = "vendored-sources"
-rev = "98c818c129979e98a3db150f8f9698f6451b7ef7"
+rev = "5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 
 [source."https://github.com/badboy/failure"]
 git = "https://github.com/badboy/failure"

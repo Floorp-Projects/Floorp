@@ -712,22 +712,22 @@ dependencies = [
 
 [[package]]
 name = "cranelift-bforest"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 dependencies = [
- "cranelift-entity 0.58.0",
+ "cranelift-entity 0.60.0",
 ]
 
 [[package]]
 name = "cranelift-codegen"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 dependencies = [
  "byteorder",
  "cranelift-bforest",
  "cranelift-codegen-meta",
  "cranelift-codegen-shared",
- "cranelift-entity 0.58.0",
+ "cranelift-entity 0.60.0",
  "log",
  "smallvec 1.2.0",
  "target-lexicon 0.10.0",
@@ -736,17 +736,17 @@ dependencies = [
 
 [[package]]
 name = "cranelift-codegen-meta"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 dependencies = [
  "cranelift-codegen-shared",
- "cranelift-entity 0.58.0",
+ "cranelift-entity 0.60.0",
 ]
 
 [[package]]
 name = "cranelift-codegen-shared"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 
 [[package]]
 name = "cranelift-entity"
@@ -755,13 +755,13 @@ source = "git+https://github.com/PLSysSec/lucet_sandbox_compiler?rev=5e870faf6f9
 
 [[package]]
 name = "cranelift-entity"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 
 [[package]]
 name = "cranelift-frontend"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 dependencies = [
  "cranelift-codegen",
  "log",
@@ -771,15 +771,15 @@ dependencies = [
 
 [[package]]
 name = "cranelift-wasm"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/cranelift?rev=98c818c129979e98a3db150f8f9698f6451b7ef7#98c818c129979e98a3db150f8f9698f6451b7ef7"
+version = "0.60.0"
+source = "git+https://github.com/bytecodealliance/wasmtime?rev=5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c#5cfcbeb59d477e028c6fb312f1cf63aa711fcc3c"
 dependencies = [
  "cranelift-codegen",
- "cranelift-entity 0.58.0",
+ "cranelift-entity 0.60.0",
  "cranelift-frontend",
  "log",
  "thiserror",
- "wasmparser",
+ "wasmparser 0.51.4",
 ]
 
 [[package]]
@@ -4807,7 +4807,7 @@ dependencies = [
 name = "wasm-rust"
 version = "0.1.0"
 dependencies = [
- "wasmparser",
+ "wasmparser 0.48.2",
  "wat",
 ]
 
@@ -4816,6 +4816,12 @@ name = "wasmparser"
 version = "0.48.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "073da89bf1c84db000dd68ce660c1b4a08e3a2d28fd1e3394ab9e7abdde4a0f8"
+
+[[package]]
+name = "wasmparser"
+version = "0.51.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aeb1956b19469d1c5e63e459d29e7b5aa0f558d9f16fcef09736f8a265e6c10a"
 
 [[package]]
 name = "wast"
