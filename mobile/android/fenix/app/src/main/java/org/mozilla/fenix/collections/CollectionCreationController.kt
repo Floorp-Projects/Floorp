@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
@@ -86,8 +85,6 @@ class DefaultCollectionCreationController(
         analytics.metrics.track(
             Event.CollectionSaved(normalSessionSize(sessionManager), sessionBundle.size)
         )
-
-        closeTabsIfNecessary(tabs, sessionManager, tabsUseCases)
     }
 
     override fun renameCollection(collection: TabCollection, name: String) {
@@ -125,8 +122,6 @@ class DefaultCollectionCreationController(
         analytics.metrics.track(
             Event.CollectionTabsAdded(normalSessionSize(sessionManager), sessionBundle.size)
         )
-
-        closeTabsIfNecessary(tabs, sessionManager, tabsUseCases)
     }
 
     override fun saveTabsToCollection(tabs: List<Tab>) {
@@ -219,13 +214,5 @@ class DefaultCollectionCreationController(
         return sessionManager.sessions.filter { session ->
             (!session.isCustomTabSession() && !session.private)
         }.size
-    }
-
-    private fun closeTabsIfNecessary(tabs: List<Tab>, sessionManager: SessionManager, tabsUseCases: TabsUseCases) {
-        // Only close the tabs if the user is not on the BrowserFragment
-        if (store.state.previousFragmentId == R.id.browserFragment) { return }
-        tabs.asSequence()
-            .mapNotNull { tab -> sessionManager.findSessionById(tab.sessionId) }
-            .forEach { session -> tabsUseCases.removeTab(session) }
     }
 }
