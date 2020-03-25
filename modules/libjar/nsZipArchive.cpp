@@ -641,7 +641,7 @@ nsresult nsZipFind::FindNext(const char** aResult, uint16_t* aNameLen) {
 //---------------------------------------------
 nsZipItem* nsZipArchive::CreateZipItem() {
   // Arena allocate the nsZipItem
-  return (nsZipItem*)mArena.Allocate(sizeof(nsZipItem));
+  return (nsZipItem*)mArena.Allocate(sizeof(nsZipItem), mozilla::fallible);
 }
 
 //---------------------------------------------
