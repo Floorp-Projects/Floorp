@@ -37,10 +37,12 @@ const DOWNLOADS_URL =
 const SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
 const ACTIVITY_STREAM_DEBUG_PREF = "browser.newtabpage.activity-stream.debug";
+const SIMPLIFIED_WELCOME_ENABLED_PREF = "browser.aboutwelcome.enabled";
 
 function cleanup() {
   Services.prefs.clearUserPref(SEPARATE_PRIVILEGED_CONTENT_PROCESS_PREF);
   Services.prefs.clearUserPref(ACTIVITY_STREAM_DEBUG_PREF);
+  Services.prefs.clearUserPref(SIMPLIFIED_WELCOME_ENABLED_PREF);
   AboutNewTab.resetNewTabURL();
 }
 
@@ -286,6 +288,8 @@ addTestsWithPrivilegedContentProcessPref(async function test_default_url() {
 });
 
 addTestsWithPrivilegedContentProcessPref(async function test_welcome_url() {
+  // Set about:welcome to use trailhead flow
+  Services.prefs.setBoolPref(SIMPLIFIED_WELCOME_ENABLED_PREF, false);
   Assert.equal(
     aboutNewTabService.welcomeURL,
     ACTIVITY_STREAM_URL,
