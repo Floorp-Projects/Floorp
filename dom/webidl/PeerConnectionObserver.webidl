@@ -52,9 +52,6 @@ interface PeerConnectionObserver
   */
   void fireStreamEvent(MediaStream stream);
 
-  /* DTMF callback */
-  void onDTMFToneChange(MediaStreamTrack track, DOMString tone);
-
   /* Packet dump callback */
   void onPacket(unsigned long level, mozPacketDumpType type, boolean sending,
                 ArrayBuffer packet);

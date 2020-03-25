@@ -25,6 +25,7 @@
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 #include "mozilla/dom/TransceiverImplBinding.h"
 #include "RTCRtpReceiver.h"
+#include "RTCDTMFSender.h"
 
 namespace mozilla {
 
@@ -33,7 +34,7 @@ MOZ_MTLOG_MODULE("transceiverimpl")
 using LocalDirection = MediaSessionConduitLocalDirection;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TransceiverImpl, mWindow, mSendTrack,
-                                      mReceiver)
+                                      mReceiver, mDtmf)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransceiverImpl)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransceiverImpl)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransceiverImpl)
@@ -71,6 +72,11 @@ TransceiverImpl::TransceiverImpl(
   mReceiver =
       new RTCRtpReceiver(aWindow, aPrivacyNeeded, aPCHandle, aTransportHandler,
                          aJsepTransceiver, aMainThread, aStsThread, mConduit);
+
+  if (!IsVideo()) {
+    mDtmf = new RTCDTMFSender(
+        aWindow, this, static_cast<AudioSessionConduit*>(mConduit.get()));
+  }
 
   mTransmitPipeline =
       new MediaPipelineTransmit(mPCHandle, mTransportHandler, mMainThread.get(),
@@ -428,8 +434,8 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
   // currentDirection from JSEP, but not if "this transceiver has never been
   // represented in an offer/answer exchange"
   if (mJsepTransceiver->HasLevel() && mJsepTransceiver->IsNegotiated()) {
-    if (mJsepTransceiver->mRecvTrack.GetActive()) {
-      if (mJsepTransceiver->mSendTrack.GetActive()) {
+    if (IsReceiving()) {
+      if (IsSending()) {
         aJsTransceiver.SetCurrentDirection(
             dom::RTCRtpTransceiverDirection::Sendrecv, aRv);
       } else {
@@ -437,7 +443,7 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
             dom::RTCRtpTransceiverDirection::Recvonly, aRv);
       }
     } else {
-      if (mJsepTransceiver->mSendTrack.GetActive()) {
+      if (IsSending()) {
         aJsTransceiver.SetCurrentDirection(
             dom::RTCRtpTransceiverDirection::Sendonly, aRv);
       } else {
@@ -465,18 +471,39 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
   }
 }
 
-void TransceiverImpl::InsertDTMFTone(int tone, uint32_t duration) {
-  if (mJsepTransceiver->IsStopped()) {
-    return;
+bool TransceiverImpl::CanSendDTMF() const {
+  // Spec says: "If connection's RTCPeerConnectionState is not "connected"
+  // return false." We don't support that right now. This is supposed to be
+  // true once ICE is complete, and _all_ DTLS handshakes are also complete. We
+  // don't really have access to the state of _all_ of our DTLS states either.
+  // Our pipeline _does_ know whether SRTP/SRTCP is ready, which happens
+  // immediately after our transport finishes DTLS (unless there was an error),
+  // so this is pretty close.
+  // TODO (bug 1265827): Base this on RTCPeerConnectionState instead.
+  // TODO (bug 1623193): Tighten this up
+  if (!IsSending() || !mSendTrack) {
+    return false;
   }
 
-  MOZ_ASSERT(mConduit->type() == MediaSessionConduit::AUDIO);
+  // Ok, it looks like the connection is up and sending. Did we negotiate
+  // telephone-event?
+  JsepTrackNegotiatedDetails* details =
+      mJsepTransceiver->mSendTrack.GetNegotiatedDetails();
+  if (NS_WARN_IF(!details || !details->GetEncodingCount())) {
+    // What?
+    return false;
+  }
 
-  RefPtr<AudioSessionConduit> conduit(
-      static_cast<AudioSessionConduit*>(mConduit.get()));
-  // Note: We default to channel 0, not inband, and 6dB attenuation.
-  //      here. We might want to revisit these choices in the future.
-  conduit->InsertDTMFTone(0, tone, true, duration, 6);
+  for (size_t i = 0; i < details->GetEncodingCount(); ++i) {
+    const auto& encoding = details->GetEncoding(i);
+    for (const auto& codec : encoding.GetCodecs()) {
+      if (codec->mName == "telephone-event") {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 JSObject* TransceiverImpl::WrapObject(JSContext* aCx,
@@ -784,6 +811,10 @@ void TransceiverImpl::Stop() {
     mConduit->DeleteStreams();
   }
   mConduit = nullptr;
+
+  if (mDtmf) {
+    mDtmf->StopPlayout();
+  }
 }
 
 bool TransceiverImpl::IsVideo() const {

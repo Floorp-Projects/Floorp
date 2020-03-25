@@ -30,6 +30,7 @@ UNIFIED_SOURCES += [
     'PeerConnectionCtx.cpp',
     'PeerConnectionImpl.cpp',
     'PeerConnectionMedia.cpp',
+    'RTCDTMFSender.cpp',
     'RTCRtpReceiver.cpp',
     'RTCStatsIdGenerator.cpp',
     'RTCStatsReport.cpp',

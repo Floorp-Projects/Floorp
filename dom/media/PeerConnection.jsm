@@ -20,7 +20,6 @@ const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
 const PC_TRANSCEIVER_CONTRACT = "@mozilla.org/dom/rtptransceiver;1";
 const PC_COREQUEST_CONTRACT = "@mozilla.org/dom/createofferrequest;1";
-const PC_DTMF_SENDER_CONTRACT = "@mozilla.org/dom/rtcdtmfsender;1";
 
 const PC_CID = Components.ID("{bdc2e533-b308-4708-ac8e-a8bfade6d851}");
 const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
@@ -34,9 +33,6 @@ const PC_TRANSCEIVER_CID = Components.ID(
 );
 const PC_COREQUEST_CID = Components.ID(
   "{74b2122d-65a8-4824-aa9e-3d664cb75dc2}"
-);
-const PC_DTMF_SENDER_CID = Components.ID(
-  "{3610C242-654E-11E6-8EC0-6D1BE389A607}"
 );
 
 function logMsg(msg, file, line, flag, winID) {
@@ -1482,19 +1478,6 @@ class RTCPeerConnection {
     });
   }
 
-  _insertDTMF(transceiverImpl, tones, duration, interToneGap) {
-    return this._impl.insertDTMF(
-      transceiverImpl,
-      tones,
-      duration,
-      interToneGap
-    );
-  }
-
-  _getDTMFToneBuffer(sender) {
-    return this._impl.getDTMFToneBuffer(sender.__DOM_IMPL__);
-  }
-
   _replaceTrackNoRenegotiation(transceiverImpl, withTrack) {
     this._impl.replaceTrackNoRenegotiation(transceiverImpl, withTrack);
   }
@@ -1988,14 +1971,6 @@ class PeerConnectionObserver {
     this.dispatchEvent(ev);
   }
 
-  onDTMFToneChange(track, tone) {
-    var pc = this._dompc;
-    var sender = pc.getSenders().find(sender => sender.track == track);
-    sender.dtmf.dispatchEvent(
-      new pc._win.RTCDTMFToneChangeEvent("tonechange", { tone })
-    );
-  }
-
   onPacket(level, type, sending, packet) {
     var pc = this._dompc;
     if (pc._onPacket) {
@@ -2028,39 +2003,11 @@ setupPrototype(RTCPeerConnectionStatic, {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 });
 
-class RTCDTMFSender {
-  constructor(sender) {
-    this._sender = sender;
-  }
-
-  get toneBuffer() {
-    return this._sender._pc._getDTMFToneBuffer(this._sender);
-  }
-
-  get ontonechange() {
-    return this.__DOM_IMPL__.getEventHandler("ontonechange");
-  }
-
-  set ontonechange(handler) {
-    this.__DOM_IMPL__.setEventHandler("ontonechange", handler);
-  }
-
-  insertDTMF(tones, duration, interToneGap) {
-    this._sender._pc._checkClosed();
-    this._sender._transceiver.insertDTMF(tones, duration, interToneGap);
-  }
-}
-setupPrototype(RTCDTMFSender, {
-  classID: PC_DTMF_SENDER_CID,
-  contractID: PC_DTMF_SENDER_CONTRACT,
-  QueryInterface: ChromeUtils.generateQI([]),
-});
-
 class RTCRtpSender {
   constructor(pc, transceiverImpl, transceiver, track, kind, streams) {
     let dtmf = null;
     if (kind == "audio") {
-      dtmf = pc._win.RTCDTMFSender._create(pc._win, new RTCDTMFSender(this));
+      dtmf = transceiverImpl.dtmf;
     }
 
     Object.assign(this, {
@@ -2321,40 +2268,6 @@ class RTCRtpTransceiver {
   unsetMid() {
     this.mid = null;
   }
-
-  insertDTMF(tones, duration, interToneGap) {
-    if (this.stopped) {
-      throw new this._pc._win.DOMException(
-        "Transceiver is stopped!",
-        "InvalidStateError"
-      );
-    }
-
-    if (!this.sender.track) {
-      throw new this._pc._win.DOMException(
-        "RTCRtpSender has no track",
-        "InvalidStateError"
-      );
-    }
-
-    duration = Math.max(40, Math.min(duration, 6000));
-    if (interToneGap < 30) {
-      interToneGap = 30;
-    }
-
-    tones = tones.toUpperCase();
-
-    if (tones.match(/[^0-9A-D#*,]/)) {
-      throw new this._pc._win.DOMException(
-        "Invalid DTMF characters",
-        "InvalidCharacterError"
-      );
-    }
-
-    // TODO (bug 1401983): Move this API to TransceiverImpl so we don't need the
-    // extra hops through RTCPeerConnection and PeerConnectionImpl
-    this._pc._insertDTMF(this._transceiverImpl, tones, duration, interToneGap);
-  }
 }
 
 setupPrototype(RTCRtpTransceiver, {
@@ -2376,7 +2289,6 @@ setupPrototype(CreateOfferRequest, {
 
 var EXPORTED_SYMBOLS = [
   "GlobalPCList",
-  "RTCDTMFSender",
   "RTCIceCandidate",
   "RTCSessionDescription",
   "RTCPeerConnection",

@@ -63,7 +63,6 @@ namespace dom {
 class RTCCertificate;
 struct RTCConfiguration;
 struct RTCRtpSourceEntry;
-class RTCDTMFSender;
 struct RTCIceServer;
 struct RTCOfferOptions;
 struct RTCRtpParameters;
@@ -286,19 +285,6 @@ class PeerConnectionImpl final
       ErrorResult& rv);
 
   bool CheckNegotiationNeeded(ErrorResult& rv);
-
-  NS_IMETHODIMP_TO_ERRORRESULT(InsertDTMF, ErrorResult& rv,
-                               TransceiverImpl& transceiver,
-                               const nsAString& tones, uint32_t duration,
-                               uint32_t interToneGap) {
-    rv = InsertDTMF(transceiver, tones, duration, interToneGap);
-  }
-
-  NS_IMETHODIMP_TO_ERRORRESULT(GetDTMFToneBuffer, ErrorResult& rv,
-                               dom::RTCRtpSender& sender,
-                               nsAString& outToneBuffer) {
-    rv = GetDTMFToneBuffer(sender, outToneBuffer);
-  }
 
   NS_IMETHODIMP_TO_ERRORRESULT(ReplaceTrackNoRenegotiation, ErrorResult& rv,
                                TransceiverImpl& aTransceiver,
@@ -600,30 +586,6 @@ class PeerConnectionImpl final
   // storage for Telemetry data
   uint16_t mMaxReceiving[SdpMediaSection::kMediaTypes];
   uint16_t mMaxSending[SdpMediaSection::kMediaTypes];
-
-  // DTMF
-  class DTMFState : public nsITimerCallback {
-    virtual ~DTMFState();
-
-   public:
-    DTMFState();
-
-    NS_DECL_NSITIMERCALLBACK
-    NS_DECL_THREADSAFE_ISUPPORTS
-
-    void StopPlayout();
-    void StartPlayout(uint32_t aDelay);
-
-    RefPtr<PeerConnectionObserver> mPCObserver;
-    RefPtr<TransceiverImpl> mTransceiver;
-    nsCOMPtr<nsITimer> mSendTimer;
-    nsString mTones;
-    uint32_t mDuration;
-    uint32_t mInterToneGap;
-  };
-
-  // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
-  nsTArray<RefPtr<DTMFState>> mDTMFStates;
 
   std::vector<unsigned> mSendPacketDumpFlags;
   std::vector<unsigned> mRecvPacketDumpFlags;
