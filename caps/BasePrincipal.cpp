@@ -1005,12 +1005,14 @@ NS_IMETHODIMP
 BasePrincipal::CreateReferrerInfo(mozilla::dom::ReferrerPolicy aReferrerPolicy,
                                   nsIReferrerInfo** _retval) {
   nsCOMPtr<nsIURI> prinURI;
+  RefPtr<dom::ReferrerInfo> info;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
   if (NS_FAILED(rv) || !prinURI) {
-    return NS_ERROR_NOT_AVAILABLE;
+    info = new dom::ReferrerInfo(nullptr);
+    info.forget(_retval);
+    return NS_OK;
   }
-  RefPtr<dom::ReferrerInfo> info =
-      new dom::ReferrerInfo(prinURI, aReferrerPolicy);
+  info = new dom::ReferrerInfo(prinURI, aReferrerPolicy);
   info.forget(_retval);
   return NS_OK;
 }
