@@ -94,9 +94,9 @@ class nsITheme : public nsISupports {
   /**
    * Return the border for the widget, in device pixels.
    */
-  virtual MOZ_MUST_USE LayoutDeviceIntMargin
-  GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                  StyleAppearance aWidgetType) = 0;
+  [[nodiscard]] virtual LayoutDeviceIntMargin GetWidgetBorder(
+      nsDeviceContext* aContext, nsIFrame* aFrame,
+      StyleAppearance aWidgetType) = 0;
 
   /**
    * This method can return false to indicate that the CSS padding

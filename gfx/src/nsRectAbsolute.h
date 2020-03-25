@@ -40,7 +40,7 @@ struct nsRectAbsolute
     return nsRect(left, top, nscoord(SafeWidth()), nscoord(SafeHeight()));
   }
 
-  MOZ_MUST_USE nsRectAbsolute UnsafeUnion(const nsRectAbsolute& aRect) const {
+  [[nodiscard]] nsRectAbsolute UnsafeUnion(const nsRectAbsolute& aRect) const {
     return Super::Union(aRect);
   }
 
