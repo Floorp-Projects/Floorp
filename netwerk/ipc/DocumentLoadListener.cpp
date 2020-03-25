@@ -17,6 +17,7 @@
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsDocShell.h"
@@ -370,47 +371,33 @@ bool DocumentLoadListener::Open(
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
       AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(mChannel);
-  RefPtr<WindowGlobalParent> topWindow =
-      GetTopWindowExcludingExtensionAccessibleContentFrames(browsingContext,
-                                                            uriBeingLoaded);
 
   RefPtr<HttpBaseChannel> httpBaseChannel = do_QueryObject(mChannel, aRv);
   if (httpBaseChannel) {
     nsCOMPtr<nsIURI> topWindowURI;
-    nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
     if (browsingContext->IsTop()) {
       // If this is for the top level loading, the top window URI should be the
       // URI which we are loading.
       topWindowURI = uriBeingLoaded;
 
-      // We need to recompute the ContentBlockingAllowListPrincipal here for the
-      // top level channel because we might navigate from the the initial
-      // about:blank page or the existing page which may have a different origin
-      // than the URI we are going to load here. Thus, we need to recompute the
-      // prinicpal in order to get the correct
-      // ContentBlockingAllowListPrincipal.
-      OriginAttributes attrs;
-      aLoadInfo->GetOriginAttributes(&attrs);
-      ContentBlockingAllowList::RecomputePrincipal(
-          uriBeingLoaded, attrs,
-          getter_AddRefs(contentBlockingAllowListPrincipal));
-    } else if (topWindow) {
+      // Update the IsOnContentBlockingAllowList flag in the CookieJarSettings
+      // if this is a top level loading. For sub-document loading, this flag
+      // would inherit from the parent.
+      nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+      Unused << loadInfo->GetCookieJarSettings(
+          getter_AddRefs(cookieJarSettings));
+      net::CookieJarSettings::Cast(cookieJarSettings)
+          ->UpdateIsOnContentBlockingAllowList(mChannel);
+    } else if (RefPtr<WindowGlobalParent> topWindow =
+                   GetTopWindowExcludingExtensionAccessibleContentFrames(
+                       browsingContext, uriBeingLoaded)) {
       nsCOMPtr<nsIPrincipal> topWindowPrincipal =
           topWindow->DocumentPrincipal();
       if (topWindowPrincipal && !topWindowPrincipal->GetIsNullPrincipal()) {
         topWindowPrincipal->GetURI(getter_AddRefs(topWindowURI));
       }
-
-      contentBlockingAllowListPrincipal =
-          topWindow->GetContentBlockingAllowListPrincipal();
     }
     httpBaseChannel->SetTopWindowURI(topWindowURI);
-
-    if (contentBlockingAllowListPrincipal &&
-        contentBlockingAllowListPrincipal->GetIsContentPrincipal()) {
-      httpBaseChannel->SetContentBlockingAllowListPrincipal(
-          contentBlockingAllowListPrincipal);
-    }
   }
 
   nsCOMPtr<nsIIdentChannel> identChannel = do_QueryInterface(mChannel);
