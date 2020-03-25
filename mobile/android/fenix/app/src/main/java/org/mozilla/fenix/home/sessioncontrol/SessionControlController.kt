@@ -15,6 +15,7 @@ import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.tab.collections.ext.restore
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -200,27 +201,21 @@ class DefaultSessionControlController(
     override fun handleCollectionOpenTabClicked(tab: ComponentTab) {
         invokePendingDeleteJobs()
 
-        val session = tab.restore(
-            context = activity,
-            engine = activity.components.core.engine,
-            tab = tab,
-            restoreSessionId = false
+        sessionManager.restore(
+            activity,
+            activity.components.core.engine,
+            tab,
+            onTabRestored = {
+                activity.openToBrowser(BrowserDirection.FromHome)
+            },
+            onFailure = {
+                activity.openToBrowserAndLoad(
+                    searchTermOrURL = tab.url,
+                    newTab = true,
+                    from = BrowserDirection.FromHome
+                )
+            }
         )
-
-        if (session == null) {
-            // We were unable to create a snapshot, so just load the tab instead
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = tab.url,
-                newTab = true,
-                from = BrowserDirection.FromHome
-            )
-        } else {
-            sessionManager.add(
-                session,
-                true
-            )
-            activity.openToBrowser(BrowserDirection.FromHome)
-        }
 
         metrics.track(Event.CollectionTabRestored)
     }
@@ -228,24 +223,14 @@ class DefaultSessionControlController(
     override fun handleCollectionOpenTabsTapped(collection: TabCollection) {
         invokePendingDeleteJobs()
 
-        collection.tabs.reversed().forEach {
-            val session = it.restore(
-                context = activity,
-                engine = activity.components.core.engine,
-                tab = it,
-                restoreSessionId = false
-            )
-
-            if (session == null) {
-                // We were unable to create a snapshot, so just load the tab instead
-                activity.components.useCases.tabsUseCases.addTab.invoke(it.url)
-            } else {
-                sessionManager.add(
-                    session,
-                    activity.components.core.sessionManager.selectedSession == null
-                )
+        sessionManager.restore(
+            activity,
+            activity.components.core.engine,
+            collection,
+            onFailure = { url ->
+                activity.components.useCases.tabsUseCases.addTab.invoke(url)
             }
-        }
+        )
 
         scrollToTheTop()
         metrics.track(Event.CollectionAllTabsRestored)
