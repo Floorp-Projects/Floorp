@@ -6129,7 +6129,7 @@
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
   value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
 #else
   value: false
 #endif
