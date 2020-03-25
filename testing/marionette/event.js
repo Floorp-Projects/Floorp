@@ -328,6 +328,9 @@ function computeKeyCodeFromChar_(char, win) {
     case "\n":
       return KeyboardEvent.DOM_VK_RETURN;
 
+    case " ":
+      return KeyboardEvent.DOM_VK_SPACE;
+
     default:
       return 0;
   }
