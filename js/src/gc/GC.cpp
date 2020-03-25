@@ -2188,7 +2188,8 @@ static bool CanUpdateKindInBackground(AllocKind kind) {
   //  - we assume JSObjects that are foreground finalized are not safe to
   //    update in parallel
   //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
-  return js::gc::IsBackgroundFinalized(kind) && !IsShapeAllocKind(kind);
+  return js::gc::IsBackgroundFinalized(kind) && !IsShapeAllocKind(kind) &&
+         kind != AllocKind::BASE_SHAPE;
 }
 
 /*

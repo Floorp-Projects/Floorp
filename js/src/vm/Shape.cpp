@@ -1955,19 +1955,9 @@ void Shape::fixupShapeTreeAfterMovingGC() {
   MOZ_ASSERT(children.isShapeSet());
   ShapeSet* set = children.toShapeSet();
   for (ShapeSet::Enum e(*set); !e.empty(); e.popFront()) {
-    Shape* key = e.front();
-    if (IsForwarded(key)) {
-      key = Forwarded(key);
-    }
-
-    BaseShape* base = key->base();
-    if (IsForwarded(base)) {
-      base = Forwarded(base);
-    }
-    UnownedBaseShape* unowned = base->unowned();
-    if (IsForwarded(unowned)) {
-      unowned = Forwarded(unowned);
-    }
+    Shape* key = MaybeForwarded(e.front());
+    BaseShape* base = MaybeForwarded(key->base());
+    UnownedBaseShape* unowned = MaybeForwarded(base->unowned());
 
     GetterOp getter = key->getter();
     if (key->hasGetterObject()) {
