@@ -103,7 +103,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   class FlexLine;
   class FlexboxAxisTracker;
   struct StrutInfo;
-  class CachedMeasuringReflowResult;
+  class CachedBAxisMeasurement;
 
   // nsIFrame overrides
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -334,13 +334,13 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                                      bool aHasLineClampEllipsis);
 
   /**
-   * This method gets a cached measuring reflow for a flex item, or does it and
-   * caches it.
+   * This method looks up cached block-axis measurements for a flex item, or
+   * does a measuring reflow and caches those measurements.
    *
-   * This avoids exponential reflows, see the comment on
-   * CachedMeasuringReflowResult.
+   * This avoids exponential reflows - see the comment above the
+   * CachedBAxisMeasurement struct.
    */
-  const CachedMeasuringReflowResult& MeasureAscentAndBSizeForFlexItem(
+  const CachedBAxisMeasurement& MeasureAscentAndBSizeForFlexItem(
       FlexItem& aItem, ReflowInput& aChildReflowInput);
 
   /**
