@@ -427,40 +427,32 @@ description#identity-popup-content-verifier,
 
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
-#identity-popup-breakageReportView-footer,
 #protections-popup-sendReportView-footer {
   display: flex;
 }
 
-#identity-popup-breakageReportView-footer > button,
 #protections-popup-sendReportView-footer > button {
   flex: 1;
 }
 
-#identity-popup-breakageReportView-heading,
-#identity-popup-breakageReportView-body,
 #protections-popup-sendReportView-heading,
 #protections-popup-sendReportView-body {
   padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
-.identity-popup-breakageReportView-collection-section,
 .protections-popup-sendReportView-collection-section {
   margin-bottom: 16px;
 }
 
-#identity-popup-breakageReportView-body,
 #protections-popup-sendReportView-body {
   border-top: 1px solid var(--panel-separator-color);
 }
 
-#identity-popup-breakageReportView-collection-url,
 #protections-popup-sendReportView-collection-url {
   -moz-appearance: none;
   border: none;
 }
 
-#identity-popup-breakageReportView-collection-comments,
 #protections-popup-sendReportView-collection-comments {
   height: 120px;
 }
