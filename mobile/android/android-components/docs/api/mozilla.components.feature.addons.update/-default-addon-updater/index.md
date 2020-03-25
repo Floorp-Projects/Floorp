@@ -2,9 +2,15 @@
 
 # DefaultAddonUpdater
 
-`class DefaultAddonUpdater : `[`AddonUpdater`](../-addon-updater/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L141)
+`class DefaultAddonUpdater : `[`AddonUpdater`](../-addon-updater/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L152)
 
 An implementation of [AddonUpdater](../-addon-updater/index.md) that uses the work manager api for scheduling new updates.
+
+### Types
+
+| Name | Summary |
+|---|---|
+| [UpdateAttemptStorage](-update-attempt-storage/index.md) | `class UpdateAttemptStorage`<br>A storage implementation to persist [AddonUpdater.UpdateAttempt](../-addon-updater/-update-attempt/index.md)s. |
 
 ### Constructors
 
