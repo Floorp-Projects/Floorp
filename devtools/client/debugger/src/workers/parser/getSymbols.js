@@ -165,7 +165,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     });
   }
 
-  if (t.isMemberExpression(path)) {
+  if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
     const { start, end } = path.node.property.loc;
     symbols.memberExpressions.push({
       name: path.node.property.name,
@@ -312,6 +312,7 @@ function extendSnippet(
   prevPath?: SimplePath
 ) {
   const computed = path?.node.computed;
+  const optional = path?.node.optional;
   const prevComputed = prevPath?.node.computed;
   const prevArray = t.isArrayExpression(prevPath);
   const array = t.isArrayExpression(path);
@@ -339,15 +340,24 @@ function extendSnippet(
     return `${name}${expression}`;
   }
 
+  if (optional) {
+    return `${name}?.${expression}`;
+  }
+
   return `${name}.${expression}`;
 }
 
-function getMemberSnippet(node: Node, expression: string = "") {
-  if (t.isMemberExpression(node)) {
-    const { name } = node.property;
+function getMemberSnippet(
+  node: Node,
+  expression: string = "",
+  optional = false
+) {
+  if (t.isMemberExpression(node) || t.isOptionalMemberExpression(node)) {
+    const name = node.property.name;
     const snippet = getMemberSnippet(
       node.object,
-      extendSnippet(name, expression, { node })
+      extendSnippet(name, expression, { node }),
+      node.optional
     );
     return snippet;
   }
@@ -363,6 +373,9 @@ function getMemberSnippet(node: Node, expression: string = "") {
   if (t.isIdentifier(node)) {
     if (isComputedExpression(expression)) {
       return `${node.name}${expression}`;
+    }
+    if (optional) {
+      return `${node.name}?.${expression}`;
     }
     return `${node.name}.${expression}`;
   }
@@ -459,7 +472,7 @@ function getSnippet(
     return getObjectSnippet(parentPath, prevPath, expression);
   }
 
-  if (t.isMemberExpression(path)) {
+  if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
     return getMemberSnippet(path.node, expression);
   }
 

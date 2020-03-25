@@ -2044,7 +2044,7 @@ exports.encode = function(number) {
  * * https://bugzilla.mozilla.org/show_bug.cgi?id=1374505
  * * https://bugs.chromium.org/p/chromium/issues/detail?id=734880
  */
-module.exports = __webpack_require__(507).URL;
+module.exports = __webpack_require__(523).URL;
 
 
 /***/ }),
@@ -4119,18 +4119,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 507:
-/***/ (function(module, exports) {
-
-module.exports = 
-(() => { 
-  importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
-  return { URL }
-})()
-;
-
-/***/ }),
-
 /***/ 510:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4862,6 +4850,18 @@ function setAssetRootURL(assetRoot) {
 module.exports = {
   setAssetRootURL
 };
+
+/***/ }),
+
+/***/ 523:
+/***/ (function(module, exports) {
+
+module.exports = 
+(() => {
+  importScripts("resource://devtools/client/shared/vendor/whatwg-url.js");
+  return { URL }
+})()
+;
 
 /***/ }),
 

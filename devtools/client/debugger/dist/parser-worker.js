@@ -7080,12 +7080,12 @@ const sourceOptions = {
   generated: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["objectRestSpread"]
+    plugins: ["objectRestSpread", "optionalChaining", "nullishCoalescingOperator"]
   },
   original: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["jsx", "flow", "doExpressions", "decorators-legacy", "objectRestSpread", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
+    plugins: ["jsx", "flow", "doExpressions", "optionalChaining", "nullishCoalescingOperator", "decorators-legacy", "objectRestSpread", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
   }
 };
 
@@ -15651,7 +15651,7 @@ function extractSymbol(path, symbols, state) {
     });
   }
 
-  if (t.isMemberExpression(path)) {
+  if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
     const {
       start,
       end
@@ -15834,6 +15834,7 @@ function extendSnippet(name, expression, path, prevPath) {
   var _path$node$property, _path$node$property$e;
 
   const computed = path === null || path === void 0 ? void 0 : path.node.computed;
+  const optional = path === null || path === void 0 ? void 0 : path.node.optional;
   const prevComputed = prevPath === null || prevPath === void 0 ? void 0 : prevPath.node.computed;
   const prevArray = t.isArrayExpression(prevPath);
   const array = t.isArrayExpression(path);
@@ -15863,15 +15864,19 @@ function extendSnippet(name, expression, path, prevPath) {
     return `${name}${expression}`;
   }
 
+  if (optional) {
+    return `${name}?.${expression}`;
+  }
+
   return `${name}.${expression}`;
 }
 
-function getMemberSnippet(node, expression = "") {
-  if (t.isMemberExpression(node)) {
+function getMemberSnippet(node, expression = "", optional = false) {
+  if (t.isMemberExpression(node) || t.isOptionalMemberExpression(node)) {
     const name = node.property.name;
     const snippet = getMemberSnippet(node.object, extendSnippet(name, expression, {
       node
-    }));
+    }), node.optional);
     return snippet;
   }
 
@@ -15888,6 +15893,10 @@ function getMemberSnippet(node, expression = "") {
       return `${node.name}${expression}`;
     }
 
+    if (optional) {
+      return `${node.name}?.${expression}`;
+    }
+
     return `${node.name}.${expression}`;
   }
 
@@ -15895,8 +15904,6 @@ function getMemberSnippet(node, expression = "") {
 }
 
 function getObjectSnippet(path, prevPath, expression = "") {
-  var _path$parentPath;
-
   if (!path) {
     return expression;
   }
@@ -15904,13 +15911,11 @@ function getObjectSnippet(path, prevPath, expression = "") {
   const name = path.node.key.name;
   const extendedExpression = extendSnippet(name, expression, path, prevPath);
   const nextPrevPath = path;
-  const nextPath = (_path$parentPath = path.parentPath) === null || _path$parentPath === void 0 ? void 0 : _path$parentPath.parentPath;
+  const nextPath = path.parentPath && path.parentPath.parentPath;
   return getSnippet(nextPath, nextPrevPath, extendedExpression);
 }
 
 function getArraySnippet(path, prevPath, expression) {
-  var _path$parentPath2;
-
   if (!prevPath.parentPath) {
     throw new Error("Assertion failure - path should exist");
   }
@@ -15918,7 +15923,7 @@ function getArraySnippet(path, prevPath, expression) {
   const index = `${prevPath.parentPath.containerIndex}`;
   const extendedExpression = extendSnippet(index, expression, path, prevPath);
   const nextPrevPath = path;
-  const nextPath = (_path$parentPath2 = path.parentPath) === null || _path$parentPath2 === void 0 ? void 0 : _path$parentPath2.parentPath;
+  const nextPath = path.parentPath && path.parentPath.parentPath;
   return getSnippet(nextPath, nextPrevPath, extendedExpression);
 }
 
@@ -15968,7 +15973,7 @@ function getSnippet(path, prevPath, expression = "") {
     return getObjectSnippet(parentPath, prevPath, expression);
   }
 
-  if (t.isMemberExpression(path)) {
+  if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
     return getMemberSnippet(path.node, expression);
   }
 

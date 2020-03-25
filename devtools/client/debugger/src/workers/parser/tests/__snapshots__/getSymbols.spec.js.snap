@@ -1253,6 +1253,50 @@ loading: false
 framework: undefined"
 `;
 
+exports[`Parser.getSymbols optional chaining 1`] = `
+"functions:
+
+
+callExpressions:
+
+
+memberExpressions:
+[(2, 5), (2, 6)] obj?.a a
+[(3, 8), (3, 9)] obj?.a?.b b
+[(3, 5), (3, 6)] obj?.a a
+
+objectProperties:
+
+
+comments:
+
+
+identifiers:
+[(1, 6), (1, 9)] obj obj
+[(2, 0), (2, 3)] obj obj
+[(2, 5), (2, 6)] a a
+[(3, 0), (3, 3)] obj obj
+[(3, 5), (3, 6)] a a
+[(3, 8), (3, 9)] b b
+
+classes:
+
+
+imports:
+
+
+literals:
+
+
+hasJsx: false
+
+hasTypes: false
+
+loading: false
+
+framework: undefined"
+`;
+
 exports[`Parser.getSymbols proto 1`] = `
 "functions:
 [(1, 12), (1, 25)]  foo()
