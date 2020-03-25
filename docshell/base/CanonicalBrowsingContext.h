@@ -61,6 +61,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // The current active WindowGlobal.
   WindowGlobalParent* GetCurrentWindowGlobal() const;
 
+  already_AddRefed<nsIWidget> GetParentProcessWidgetContaining();
+
   already_AddRefed<WindowGlobalParent> GetEmbedderWindowGlobal() const;
 
   nsISHistory* GetSessionHistory();
