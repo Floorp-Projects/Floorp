@@ -178,20 +178,18 @@ ol {
   color: var(--in-content-deemphasized-text);
 }
 
-:not(.breached):not(.vulnerable) > .list-item-warning-icon {
-  display: none;
-}
-
-/* Temporary until bug 1592464 */
-.vulnerable > .list-item-warning-icon {
-  transform: rotateX(180deg);
-}
-
-.list-item-warning-icon {
-  -moz-context-properties: fill;
-  fill: var(--red-90);
-  min-width: 16px;
+.alert-icon {
+  width: 16px;
   margin-inline-start: 12px;
+  -moz-context-properties: fill;
+}
+
+.breached > .alert-icon {
+  fill: var(--red-90);
+}
+
+.vulnerable > .alert-icon {
+  fill: var(--grey-60);
 }
 
 @media (-moz-windows-default-theme: 0) {

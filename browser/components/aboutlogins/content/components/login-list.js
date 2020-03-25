@@ -98,7 +98,7 @@ export default class LoginList extends HTMLElement {
 
     // Show, hide, and update state of the list items per the applied search filter.
     for (let guid of this._loginGuidsSortedOrder) {
-      let { listItem } = this._logins[guid];
+      let { listItem, login } = this._logins[guid];
 
       if (guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
@@ -114,6 +114,12 @@ export default class LoginList extends HTMLElement {
           this._vulnerableLoginsByLoginGUID.has(listItem.dataset.guid) &&
           !listItem.classList.contains("breached")
       );
+      if (
+        listItem.classList.contains("breached") ||
+        listItem.classList.contains("vulnerable")
+      ) {
+        LoginListItemFactory.update(listItem, login);
+      }
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
 
@@ -381,6 +387,10 @@ export default class LoginList extends HTMLElement {
     if (this[internalMemberName].size === 0) {
       this.render();
       return;
+    }
+    for (let [loginGuid] of mapByLoginGUID) {
+      let { login, listItem } = this._logins[loginGuid];
+      LoginListItemFactory.update(listItem, login);
     }
     const breachedSortOptionElement = this._sortSelect.namedItem("breached");
     breachedSortOptionElement.hidden = false;
