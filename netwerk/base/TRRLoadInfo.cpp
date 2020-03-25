@@ -596,5 +596,11 @@ TRRLoadInfo::SetHttpsOnlyNoUpgrade(bool aHttpsOnlyNoUpgrade) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+TRRLoadInfo::GetInternalContentPolicyType(nsContentPolicyType* aResult) {
+  *aResult = mInternalContentPolicyType;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
