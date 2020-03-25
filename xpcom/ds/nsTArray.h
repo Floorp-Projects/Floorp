@@ -2771,6 +2771,12 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
   }
 
   template <typename Allocator>
+  self_type& operator=(nsTArray_Impl<elem_type, Allocator>&& aOther) {
+    base_type::operator=(std::move(aOther));
+    return *this;
+  }
+
+  template <typename Allocator>
   self_type& operator=(const nsTArray_Impl<elem_type, Allocator>& aOther) {
     base_type::operator=(aOther);
     return *this;

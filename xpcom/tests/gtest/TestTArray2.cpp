@@ -590,10 +590,30 @@ TYPED_TEST_P(TArray_MoveOnlyTest,
 }
 
 TYPED_TEST_P(TArray_MoveOnlyTest,
+             nsTArray_to_AutoTArray_AutoStorage_MoveAssign) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  AutoTArray<TypeParam, kMoveOnlyTestArrayLength> autoMoveOnlyArray;
+  autoMoveOnlyArray = std::move(moveOnlyArray);
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest,
              nsTArray_to_AutoTArray_HeapStorage_MoveConstruct) {
   auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
   AutoTArray<TypeParam, kMoveOnlyTestArrayLength - 1> autoMoveOnlyArray(
       std::move(moveOnlyArray));
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
+TYPED_TEST_P(TArray_MoveOnlyTest,
+             nsTArray_to_AutoTArray_HeapStorage_MoveAssign) {
+  auto moveOnlyArray = MakeMoveOnlyArray<nsTArray<TypeParam>>();
+  AutoTArray<TypeParam, kMoveOnlyTestArrayLength - 1> autoMoveOnlyArray;
+  autoMoveOnlyArray = std::move(moveOnlyArray);
 
   ASSERT_EQ(0u, moveOnlyArray.Length());
   ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
@@ -608,6 +628,16 @@ TYPED_TEST_P(TArray_MoveOnlyTest,
   ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
 }
 
+TYPED_TEST_P(TArray_MoveOnlyTest,
+             FallibleTArray_to_AutoTArray_HeapStorage_MoveAssign) {
+  auto moveOnlyArray = MakeMoveOnlyArray<FallibleTArray<TypeParam>>();
+  AutoTArray<TypeParam, 4> autoMoveOnlyArray;
+  autoMoveOnlyArray = std::move(moveOnlyArray);
+
+  ASSERT_EQ(0u, moveOnlyArray.Length());
+  ASSERT_EQ(kMoveOnlyTestArrayLength, autoMoveOnlyArray.Length());
+}
+
 REGISTER_TYPED_TEST_CASE_P(
     TArray_MoveOnlyTest, nsTArray_MoveConstruct, nsTArray_MoveAssign,
     nsTArray_MoveReAssign, nsTArray_to_FallibleTArray_MoveConstruct,
@@ -616,12 +646,11 @@ REGISTER_TYPED_TEST_CASE_P(
     FallibleTArray_to_nsTArray_MoveAssign, AutoTArray_AutoStorage_MoveConstruct,
     AutoTArray_AutoStorage_MoveAssign,
     nsTArray_to_AutoTArray_AutoStorage_MoveConstruct,
+    nsTArray_to_AutoTArray_AutoStorage_MoveAssign,
     nsTArray_to_AutoTArray_HeapStorage_MoveConstruct,
-    FallibleTArray_to_AutoTArray_HeapStorage_MoveConstruct);
-
-// TODO Add nsTArray_to_AutoTArray_AutoStorage_MoveAssign,
-// nsTArray_to_AutoTArray_HeapStorage_MoveAssign,
-// FallibleTArray_to_AutoTArray_HeapStorage_MoveAssign test cases.
+    nsTArray_to_AutoTArray_HeapStorage_MoveAssign,
+    FallibleTArray_to_AutoTArray_HeapStorage_MoveConstruct,
+    FallibleTArray_to_AutoTArray_HeapStorage_MoveAssign);
 
 using BothMoveOnlyTypes =
     ::testing::Types<MoveOnly_RelocateUsingMemutils,
