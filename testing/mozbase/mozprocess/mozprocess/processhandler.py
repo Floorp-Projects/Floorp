@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
-import io
 import os
 import signal
 import subprocess
@@ -128,32 +127,17 @@ class ProcessHandlerMixin(object):
                 'shell': shell,
                 'cwd': cwd,
                 'env': env,
+                'universal_newlines': universal_newlines,
                 'startupinfo': startupinfo,
                 'creationflags': creationflags,
             }
-            if six.PY2:
-                kwargs['universal_newlines'] = universal_newlines
-            if six.PY3 and sys.version_info.minor >= 6:
-                kwargs['universal_newlines'] = universal_newlines
+            if six.PY3 and universal_newlines:
                 kwargs['encoding'] = encoding
             try:
                 subprocess.Popen.__init__(self, args, **kwargs)
             except OSError:
                 print(args, file=sys.stderr)
                 raise
-            # We need to support Python 3.5 for now, which doesn't support the
-            # "encoding" argument to the Popen constructor. For now, emulate it
-            # by patching the streams so that they return consistent values.
-            # This can be removed once we remove support for Python 3.5.
-            if six.PY3 and sys.version_info.minor == 5 and universal_newlines:
-                if self.stdin is not None:
-                    self.stdin = io.TextIOWrapper(self.stdin, encoding=encoding)
-                if self.stdout is not None:
-                    self.stdout = io.TextIOWrapper(self.stdout,
-                                                   encoding=encoding)
-                if self.stderr is not None:
-                    self.stderr = io.TextIOWrapper(self.stderr,
-                                                   encoding=encoding)
 
         def debug(self, msg):
             if not MOZPROCESS_DEBUG:
@@ -1158,13 +1142,16 @@ class StoreOutput(object):
 class StreamOutput(object):
     """pass output to a stream and flush"""
 
-    def __init__(self, stream, text=True):
+    def __init__(self, stream):
         self.stream = stream
-        self.text = text
 
     def __call__(self, line):
-        ensure = six.ensure_text if self.text else six.ensure_binary
-        self.stream.write(ensure(line + '\n'))
+        try:
+            self.stream.write(line + '\n'.encode('utf8'))
+        except UnicodeDecodeError:
+            # TODO: Workaround for bug #991866 to make sure we can display when
+            # when normal UTF-8 display is failing
+            self.stream.write(line.decode('iso8859-1') + '\n')
         self.stream.flush()
 
 
@@ -1173,7 +1160,7 @@ class LogOutput(StreamOutput):
 
     def __init__(self, filename):
         self.file_obj = open(filename, 'a')
-        StreamOutput.__init__(self, self.file_obj, True)
+        StreamOutput.__init__(self, self.file_obj)
 
     def __del__(self):
         if self.file_obj is not None:
@@ -1215,12 +1202,9 @@ class ProcessHandler(ProcessHandlerMixin):
         if stream is True:
             # Print to standard output only if no outputline provided
             if not kwargs['processOutputLine']:
-                kwargs['processOutputLine'].append(
-                    StreamOutput(sys.stdout,
-                                 kwargs.get('universal_newlines', False)))
+                kwargs['processOutputLine'].append(StreamOutput(sys.stdout))
         elif stream:
-            streamoutput = StreamOutput(stream,
-                                        kwargs.get('universal_newlines', False))
+            streamoutput = StreamOutput(stream)
             kwargs['processOutputLine'].append(streamoutput)
 
         self.output = None
