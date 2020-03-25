@@ -11,7 +11,6 @@
 @interface mozButtonAccessible : mozAccessible {
 }
 - (BOOL)hasPopup;
-- (void)click;
 @end
 
 @interface mozCheckboxAccessible : mozButtonAccessible
