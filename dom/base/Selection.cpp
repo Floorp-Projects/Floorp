@@ -525,7 +525,8 @@ nsresult Selection::MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
   }
 
   *aDidAddRange = true;
-  return AddRangesForSelectableNodes(&aRange, aOutIndex);
+  return AddRangesForSelectableNodes(&aRange, aOutIndex,
+                                     DispatchSelectstartEvent::Maybe);
 }
 
 Selection::Selection(SelectionType aSelectionType,
@@ -805,9 +806,9 @@ static void UserSelectRangesToAdd(nsRange* aItem,
   }
 }
 
-nsresult Selection::AddRangesForSelectableNodes(nsRange* aRange,
-                                                int32_t* aOutIndex,
-                                                bool aNoStartSelect) {
+nsresult Selection::AddRangesForSelectableNodes(
+    nsRange* aRange, int32_t* aOutIndex,
+    const DispatchSelectstartEvent aDispatchSelectstartEvent) {
   if (!aRange) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -827,9 +828,9 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aRange,
         StaticPrefs::dom_select_events_enabled() ||
         (doc && doc->NodePrincipal()->IsSystemPrincipal());
 
-    if (!aNoStartSelect && mSelectionType == SelectionType::eNormal &&
-        selectEventsEnabled && IsCollapsed() &&
-        !IsBlockingSelectionChangeEvents()) {
+    if (aDispatchSelectstartEvent == DispatchSelectstartEvent::Maybe &&
+        mSelectionType == SelectionType::eNormal && selectEventsEnabled &&
+        IsCollapsed() && !IsBlockingSelectionChangeEvents()) {
       // First, we generate the ranges to add with a scratch range, which is a
       // clone of the original range passed in. We do this seperately, because
       // the selectstart event could have caused the world to change, and
@@ -1887,7 +1888,8 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   }
 
   if (!didAddRange) {
-    result = AddRangesForSelectableNodes(range, &rangeIndex);
+    result = AddRangesForSelectableNodes(range, &rangeIndex,
+                                         DispatchSelectstartEvent::Maybe);
     if (NS_FAILED(result)) {
       aRv.Throw(result);
       return;
@@ -2110,7 +2112,8 @@ void Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv) {
 #endif
 
   int32_t rangeIndex = -1;
-  result = AddRangesForSelectableNodes(range, &rangeIndex);
+  result = AddRangesForSelectableNodes(range, &rangeIndex,
+                                       DispatchSelectstartEvent::Maybe);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
@@ -2228,13 +2231,16 @@ utility function
 nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
   NS_ENSURE_STATE(mAnchorFocusRange);
 
-  bool collapsed = IsCollapsed();
+  const DispatchSelectstartEvent dispatchSelectstartEvent =
+      IsCollapsed() ? DispatchSelectstartEvent::Maybe
+                    : DispatchSelectstartEvent::No;
 
   nsresult res = RemoveRangeInternal(*mAnchorFocusRange);
   if (NS_FAILED(res)) return res;
 
   int32_t aOutIndex = -1;
-  res = AddRangesForSelectableNodes(aRange, &aOutIndex, !collapsed);
+  res =
+      AddRangesForSelectableNodes(aRange, &aOutIndex, dispatchSelectstartEvent);
   if (NS_FAILED(res)) return res;
   SetAnchorFocusRange(aOutIndex);
 
