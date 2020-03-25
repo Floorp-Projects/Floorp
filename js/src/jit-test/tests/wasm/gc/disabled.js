@@ -16,31 +16,11 @@ let simpleTests = [
     `(module (type $s (struct)))`,
 ];
 
-// Two distinct failure modes:
-//
-// - if we have no compiled-in support for wasm-gc we'll get a syntax error when
-//   parsing the test programs that use ref types and structures.
-//
-// - if we have compiled-in support for wasm-gc, then there are several cases
-//   encapsulated in wasmCompilationShouldFail().
-//
-// But it should always be all of one type of failure or or all of the other.
+// Test that use of reference-types or structs fails when
+// reference-types is disabled.
 
-var fail_syntax = 0;
-var fail_compile = 0;
 for (let src of simpleTests) {
-    let bin = null;
-    try {
-        bin = wasmTextToBinary(src);
-    } catch (e) {
-        assertEq(e instanceof SyntaxError, true);
-        fail_syntax++;
-        continue;
-    }
-
+    let bin = wasmTextToBinary(src);
     assertEq(validate(bin), false);
     wasmCompilationShouldFail(bin, UNRECOGNIZED_OPCODE_OR_BAD_TYPE);
-
-    fail_compile++;
 }
-assertEq((fail_syntax == 0) != (fail_compile == 0), true);
