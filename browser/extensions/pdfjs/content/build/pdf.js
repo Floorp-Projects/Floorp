@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.445';
-var pdfjsBuild = '1bc5cef2b';
+var pdfjsVersion = '2.5.23';
+var pdfjsBuild = '85838fc50';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1218,7 +1218,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.4.445',
+    apiVersion: '2.5.23',
     source: {
       data: source.data,
       url: source.url,
@@ -1275,10 +1275,6 @@ const PDFDocumentLoadingTask = function PDFDocumentLoadingTaskClosure() {
           this._worker = null;
         }
       });
-    }
-
-    then(onFulfilled, onRejected) {
-      throw new Error("Removed API method: " + "PDFDocumentLoadingTask.then, use the `promise` getter instead.");
     }
 
   }
@@ -1469,7 +1465,7 @@ exports.PDFDocumentProxy = PDFDocumentProxy;
 
 class PDFPageProxy {
   constructor(pageIndex, pageInfo, transport, pdfBug = false) {
-    this.pageIndex = pageIndex;
+    this._pageIndex = pageIndex;
     this._pageInfo = pageInfo;
     this._transport = transport;
     this._stats = pdfBug ? new _display_utils.StatTimer() : null;
@@ -1483,7 +1479,7 @@ class PDFPageProxy {
   }
 
   get pageNumber() {
-    return this.pageIndex + 1;
+    return this._pageIndex + 1;
   }
 
   get rotate() {
@@ -1523,7 +1519,7 @@ class PDFPageProxy {
     intent = null
   } = {}) {
     if (!this.annotationsPromise || this.annotationsIntent !== intent) {
-      this.annotationsPromise = this._transport.getAnnotations(this.pageIndex, intent);
+      this.annotationsPromise = this._transport.getAnnotations(this._pageIndex, intent);
       this.annotationsIntent = intent;
     }
 
@@ -1577,7 +1573,7 @@ class PDFPageProxy {
       }
 
       this._pumpOperatorList({
-        pageIndex: this.pageNumber - 1,
+        pageIndex: this._pageIndex,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true
       });
@@ -1626,7 +1622,7 @@ class PDFPageProxy {
       objs: this.objs,
       commonObjs: this.commonObjs,
       operatorList: intentState.operatorList,
-      pageNumber: this.pageNumber,
+      pageIndex: this._pageIndex,
       canvasFactory: canvasFactoryInstance,
       webGLContext,
       useRequestAnimationFrame: renderingIntent !== "print",
@@ -1693,7 +1689,7 @@ class PDFPageProxy {
       }
 
       this._pumpOperatorList({
-        pageIndex: this.pageIndex,
+        pageIndex: this._pageIndex,
         intent: renderingIntent
       });
     }
@@ -1707,7 +1703,7 @@ class PDFPageProxy {
   } = {}) {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
     return this._transport.messageHandler.sendWithStream("GetTextContent", {
-      pageIndex: this.pageNumber - 1,
+      pageIndex: this._pageIndex,
       normalizeWhitespace: normalizeWhitespace === true,
       combineTextItems: disableCombineTextItems !== true
     }, {
@@ -1750,7 +1746,7 @@ class PDFPageProxy {
 
   _destroy() {
     this.destroyed = true;
-    this._transport.pageCache[this.pageIndex] = null;
+    this._transport.pageCache[this._pageIndex] = null;
     const waitOn = [];
     Object.keys(this.intentStates).forEach(intent => {
       const intentState = this.intentStates[intent];
@@ -2681,7 +2677,7 @@ class WorkerTransport {
       }
     });
     messageHandler.on("UnsupportedFeature", this._onUnsupportedFeature.bind(this));
-    messageHandler.on("JpegDecode", data => {
+    messageHandler.on("JpegDecode", ([imageUrl, components]) => {
       if (this.destroyed) {
         return Promise.reject(new Error("Worker was destroyed"));
       }
@@ -2689,8 +2685,6 @@ class WorkerTransport {
       if (typeof document === "undefined") {
         return Promise.reject(new Error('"document" is not defined.'));
       }
-
-      const [imageUrl, components] = data;
 
       if (components !== 3 && components !== 1) {
         return Promise.reject(new Error("Only 3 components or 1 component can be returned"));
@@ -2998,10 +2992,6 @@ class RenderTask {
     this._internalRenderTask.cancel();
   }
 
-  then(onFulfilled, onRejected) {
-    throw new Error("Removed API method: " + "RenderTask.then, use the `promise` getter instead.");
-  }
-
 }
 
 const InternalRenderTask = function InternalRenderTaskClosure() {
@@ -3014,7 +3004,7 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
       objs,
       commonObjs,
       operatorList,
-      pageNumber,
+      pageIndex,
       canvasFactory,
       webGLContext,
       useRequestAnimationFrame = false,
@@ -3026,7 +3016,7 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
       this.commonObjs = commonObjs;
       this.operatorListIdx = null;
       this.operatorList = operatorList;
-      this.pageNumber = pageNumber;
+      this._pageIndex = pageIndex;
       this.canvasFactory = canvasFactory;
       this.webGLContext = webGLContext;
       this._pdfBug = pdfBug;
@@ -3057,7 +3047,7 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
       }
 
       if (this._pdfBug && globalThis.StepperManager && globalThis.StepperManager.enabled) {
-        this.stepper = globalThis.StepperManager.create(this.pageNumber - 1);
+        this.stepper = globalThis.StepperManager.create(this._pageIndex);
         this.stepper.init(this.operatorList);
         this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
       }
@@ -3096,7 +3086,7 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
         canvasInRendering.delete(this._canvas);
       }
 
-      this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this.pageNumber}`, "canvas"));
+      this.callback(error || new _display_utils.RenderingCancelledException(`Rendering cancelled, page ${this._pageIndex + 1}`, "canvas"));
     }
 
     operatorListChanged() {
@@ -3170,9 +3160,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.445';
+const version = '2.5.23';
 exports.version = version;
-const build = '1bc5cef2b';
+const build = '85838fc50';
 exports.build = build;
 
 /***/ }),
@@ -4219,12 +4209,12 @@ function compileType3Glyph(imgData) {
     c.translate(0, -height);
     c.beginPath();
 
-    for (var i = 0, ii = outlines.length; i < ii; i++) {
-      var o = outlines[i];
+    for (let k = 0, kk = outlines.length; k < kk; k++) {
+      var o = outlines[k];
       c.moveTo(o[0], o[1]);
 
-      for (var j = 2, jj = o.length; j < jj; j += 2) {
-        c.lineTo(o[j], o[j + 1]);
+      for (let l = 2, ll = o.length; l < ll; l += 2) {
+        c.lineTo(o[l], o[l + 1]);
       }
     }
 
@@ -6149,7 +6139,7 @@ var createMeshCanvas = function createMeshCanvasClosure() {
       var j = rowSize * y + x1_ * 4;
 
       for (var x = x1_; x <= x2_; x++) {
-        let k = (xa - x) / (xa - xb);
+        k = (xa - x) / (xa - xb);
 
         if (k < 0) {
           k = 0;
@@ -8520,6 +8510,20 @@ var renderTextLayer = function renderTextLayerClosure() {
     capability.resolve();
   }
 
+  function findPositiveMin(ts, offset, count) {
+    let result = 0;
+
+    for (let i = 0; i < count; i++) {
+      const t = ts[offset++];
+
+      if (t > 0) {
+        result = result ? Math.min(t, result) : t;
+      }
+    }
+
+    return result;
+  }
+
   function expand(task) {
     var bounds = task._bounds;
     var viewport = task._viewport;
@@ -8548,41 +8552,26 @@ var renderTextLayer = function renderTextLayerClosure() {
           s = m[1];
       var points = [[0, 0], [0, b.size[1]], [b.size[0], 0], b.size];
       var ts = new Float64Array(64);
-      points.forEach(function (p, i) {
+      points.forEach(function (p, j) {
         var t = _util.Util.applyTransform(p, m);
 
-        ts[i + 0] = c && (e.left - t[0]) / c;
-        ts[i + 4] = s && (e.top - t[1]) / s;
-        ts[i + 8] = c && (e.right - t[0]) / c;
-        ts[i + 12] = s && (e.bottom - t[1]) / s;
-        ts[i + 16] = s && (e.left - t[0]) / -s;
-        ts[i + 20] = c && (e.top - t[1]) / c;
-        ts[i + 24] = s && (e.right - t[0]) / -s;
-        ts[i + 28] = c && (e.bottom - t[1]) / c;
-        ts[i + 32] = c && (e.left - t[0]) / -c;
-        ts[i + 36] = s && (e.top - t[1]) / -s;
-        ts[i + 40] = c && (e.right - t[0]) / -c;
-        ts[i + 44] = s && (e.bottom - t[1]) / -s;
-        ts[i + 48] = s && (e.left - t[0]) / s;
-        ts[i + 52] = c && (e.top - t[1]) / -c;
-        ts[i + 56] = s && (e.right - t[0]) / s;
-        ts[i + 60] = c && (e.bottom - t[1]) / -c;
+        ts[j + 0] = c && (e.left - t[0]) / c;
+        ts[j + 4] = s && (e.top - t[1]) / s;
+        ts[j + 8] = c && (e.right - t[0]) / c;
+        ts[j + 12] = s && (e.bottom - t[1]) / s;
+        ts[j + 16] = s && (e.left - t[0]) / -s;
+        ts[j + 20] = c && (e.top - t[1]) / c;
+        ts[j + 24] = s && (e.right - t[0]) / -s;
+        ts[j + 28] = c && (e.bottom - t[1]) / c;
+        ts[j + 32] = c && (e.left - t[0]) / -c;
+        ts[j + 36] = s && (e.top - t[1]) / -s;
+        ts[j + 40] = c && (e.right - t[0]) / -c;
+        ts[j + 44] = s && (e.bottom - t[1]) / -s;
+        ts[j + 48] = s && (e.left - t[0]) / s;
+        ts[j + 52] = c && (e.top - t[1]) / -c;
+        ts[j + 56] = s && (e.right - t[0]) / s;
+        ts[j + 60] = c && (e.bottom - t[1]) / -c;
       });
-
-      var findPositiveMin = function (ts, offset, count) {
-        var result = 0;
-
-        for (var i = 0; i < count; i++) {
-          var t = ts[offset++];
-
-          if (t > 0) {
-            result = result ? Math.min(t, result) : t;
-          }
-        }
-
-        return result;
-      };
-
       var boxScale = 1 + Math.min(Math.abs(c), Math.abs(s));
       divProperties.paddingLeft = findPositiveMin(ts, 32, 16) / boxScale;
       divProperties.paddingTop = findPositiveMin(ts, 48, 16) / boxScale;

@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.445';
-const pdfjsBuild = '1bc5cef2b';
+const pdfjsVersion = '2.5.23';
+const pdfjsBuild = '85838fc50';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.445';
+    const workerVersion = '2.5.23';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -6602,7 +6602,7 @@ class Lexer {
     }
 
     if (eNotation) {
-      baseValue *= Math.pow(10, powerValueSign * powerValue);
+      baseValue *= 10 ** (powerValueSign * powerValue);
     }
 
     return sign * baseValue;
@@ -14802,7 +14802,7 @@ var JpxImage = function JpxImageClosure() {
 
         var subband = resolution.subbands[j];
         var gainLog2 = SubbandsGainLog2[subband.type];
-        var delta = reversible ? 1 : Math.pow(2, precision + gainLog2 - epsilon) * (1 + mu / 2048);
+        var delta = reversible ? 1 : 2 ** (precision + gainLog2 - epsilon) * (1 + mu / 2048);
         var mb = guardBits + epsilon - 1;
         copyCoefficients(coefficients, width, height, subband, delta, mb, reversible, segmentationSymbolUsed);
       }
@@ -17904,9 +17904,9 @@ const DeviceCmykCS = function DeviceCmykCSClosure() {
 const CalGrayCS = function CalGrayCSClosure() {
   function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
     const A = src[srcOffset] * scale;
-    const AG = Math.pow(A, cs.G);
+    const AG = A ** cs.G;
     const L = cs.YW * AG;
-    const val = Math.max(295.8 * Math.pow(L, 0.333333333333333333) - 40.8, 0);
+    const val = Math.max(295.8 * L ** 0.333333333333333333 - 40.8, 0);
     dest[destOffset] = val;
     dest[destOffset + 1] = val;
     dest[destOffset + 2] = val;
@@ -17980,7 +17980,7 @@ const CalRGBCS = function CalRGBCSClosure() {
   const tempNormalizeMatrix = new Float32Array(3);
   const tempConvertMatrix1 = new Float32Array(3);
   const tempConvertMatrix2 = new Float32Array(3);
-  const DECODE_L_CONSTANT = Math.pow((8 + 16) / 116, 3) / 8.0;
+  const DECODE_L_CONSTANT = ((8 + 16) / 116) ** 3 / 8.0;
 
   function matrixProduct(a, b, result) {
     result[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -18008,7 +18008,7 @@ const CalRGBCS = function CalRGBCSClosure() {
       return adjustToRange(0, 1, 12.92 * color);
     }
 
-    return adjustToRange(0, 1, (1 + 0.055) * Math.pow(color, 1 / 2.4) - 0.055);
+    return adjustToRange(0, 1, (1 + 0.055) * color ** (1 / 2.4) - 0.055);
   }
 
   function adjustToRange(min, max, value) {
@@ -18021,7 +18021,7 @@ const CalRGBCS = function CalRGBCSClosure() {
     }
 
     if (L > 8.0) {
-      return Math.pow((L + 16) / 116, 3);
+      return ((L + 16) / 116) ** 3;
     }
 
     return L * DECODE_L_CONSTANT;
@@ -18080,9 +18080,9 @@ const CalRGBCS = function CalRGBCSClosure() {
     const A = adjustToRange(0, 1, src[srcOffset] * scale);
     const B = adjustToRange(0, 1, src[srcOffset + 1] * scale);
     const C = adjustToRange(0, 1, src[srcOffset + 2] * scale);
-    const AGR = Math.pow(A, cs.GR);
-    const BGG = Math.pow(B, cs.GG);
-    const CGB = Math.pow(C, cs.GB);
+    const AGR = A ** cs.GR;
+    const BGG = B ** cs.GG;
+    const CGB = C ** cs.GB;
     const X = cs.MXA * AGR + cs.MXB * BGG + cs.MXC * CGB;
     const Y = cs.MYA * AGR + cs.MYB * BGG + cs.MYC * CGB;
     const Z = cs.MZA * AGR + cs.MZB * BGG + cs.MZC * CGB;
@@ -22797,7 +22797,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         length3,
         loadedName: baseDict.loadedName,
         composite,
-        wideChars: composite,
         fixedPitch: false,
         fontMatrix: dict.getArray("FontMatrix") || _util.FONT_IDENTITY_MATRIX,
         firstChar: firstChar || 0,
@@ -24923,7 +24922,6 @@ var Font = function FontClosure() {
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
     this.composite = properties.composite;
-    this.wideChars = properties.wideChars;
     this.cMap = properties.cMap;
     this.ascent = properties.ascent / PDF_GLYPH_SPACE_UNITS;
     this.descent = properties.descent / PDF_GLYPH_SPACE_UNITS;
@@ -25443,7 +25441,7 @@ var Font = function FontClosure() {
   }
 
   function createPostTable(properties) {
-    var angle = Math.floor(properties.italicAngle * Math.pow(2, 16));
+    var angle = Math.floor(properties.italicAngle * 2 ** 16);
     return "\x00\x03\x00\x00" + (0, _util.string32)(angle) + "\x00\x00" + "\x00\x00" + (0, _util.string32)(properties.fixedPitch) + "\x00\x00\x00\x00" + "\x00\x00\x00\x00" + "\x00\x00\x00\x00" + "\x00\x00\x00\x00";
   }
 
@@ -42831,7 +42829,7 @@ var PDFFunction = function PDFFunctionClosure() {
       var array = new Array(length);
       var codeSize = 0;
       var codeBuf = 0;
-      var sampleMul = 1.0 / (Math.pow(2.0, bps) - 1);
+      var sampleMul = 1.0 / (2.0 ** bps - 1);
       var strBytes = stream.getBytes((length * bps + 7) / 8);
       var strIdx = 0;
 
@@ -43021,7 +43019,7 @@ var PDFFunction = function PDFFunctionClosure() {
       }
 
       var samples = this.getSampleArray(size, outputSize, bps, fn);
-      return [CONSTRUCT_SAMPLED, inputSize, domain, encode, decode, samples, size, outputSize, Math.pow(2, bps) - 1, range];
+      return [CONSTRUCT_SAMPLED, inputSize, domain, encode, decode, samples, size, outputSize, 2 ** bps - 1, range];
     },
 
     constructSampledFromIR({
@@ -43123,7 +43121,7 @@ var PDFFunction = function PDFFunctionClosure() {
       var n = IR[3];
       var length = diff.length;
       return function constructInterpolatedFromIRResult(src, srcOffset, dest, destOffset) {
-        var x = n === 1 ? src[srcOffset] : Math.pow(src[srcOffset], n);
+        var x = n === 1 ? src[srcOffset] : src[srcOffset] ** n;
 
         for (var j = 0; j < length; ++j) {
           dest[destOffset + j] = c0[j] + x * diff[j];
@@ -43518,7 +43516,7 @@ var PostScriptEvaluator = function PostScriptEvaluatorClosure() {
           case "exp":
             b = stack.pop();
             a = stack.pop();
-            stack.push(Math.pow(a, b));
+            stack.push(a ** b);
             break;
 
           case "false":
