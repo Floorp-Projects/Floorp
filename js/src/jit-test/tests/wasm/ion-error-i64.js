@@ -18,7 +18,7 @@ var instance = wasmEvalText(`(module
     (func (export "add64") (param i32) (param i32) (result i64)
      local.get 0
      local.get 1
-     call $add
+     call 0
      i64.extend_s/i32
     )
 
