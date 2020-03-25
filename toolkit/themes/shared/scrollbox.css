@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+arrowscrollbox[scrolledtoend=true]::part(arrowscrollbox-overflow-end-indicator),
+arrowscrollbox[scrolledtostart=true]::part(arrowscrollbox-overflow-start-indicator),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-up),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
+  visibility: collapse;
+}
+
+/* Scroll arrows */
+
+.scrollbutton-up,
+.scrollbutton-down {
+  color: inherit !important; /* override any color changes for toolbar buttons in e.g. disabled or hover states */
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 1;
+  padding: 2px;
+}
+
+.scrollbutton-up[disabled="true"],
+.scrollbutton-down[disabled="true"] {
+  fill-opacity: 0.4;
+}
+
+.scrollbutton-up[orient="horizontal"],
+.scrollbutton-down[orient="horizontal"] {
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+
+.scrollbutton-up > .toolbarbutton-icon {
+  transform: scaleY(-1);
+}
+
+.scrollbutton-down:-moz-locale-dir(ltr)[orient="horizontal"] > .toolbarbutton-icon,
+.scrollbutton-up:-moz-locale-dir(rtl)[orient="horizontal"] > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
+.scrollbutton-up > .toolbarbutton-text,
+.scrollbutton-down > .toolbarbutton-text {
+  display: none;
+}
+
+%ifndef XP_MACOSX
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-up),
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-down) {
+  -moz-appearance: none;
+}
+%endif
