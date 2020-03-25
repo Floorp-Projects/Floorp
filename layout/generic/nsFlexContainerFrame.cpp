@@ -1636,7 +1636,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
  *   - its min/max block size (in case its ComputedBSize is unconstrained)
  *   - its AvailableBSize
  * ...and we cache the following as the "value", from the item's ReflowOutput:
- *   - its final BSize
+ *   - its final content-box BSize
  *   - its ascent
  *
  * The assumption here is that a given flex item measurement from our "value"
@@ -1693,9 +1693,15 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult {
  public:
   CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
                               const ReflowOutput& aReflowOutput)
-      : mKey(aReflowInput),
-        mBSize(aReflowOutput.BSize(aReflowInput.GetWritingMode())),
-        mAscent(aReflowOutput.BlockStartAscent()) {}
+      : mKey(aReflowInput), mAscent(aReflowOutput.BlockStartAscent()) {
+    // To get content-box bsize, we have to subtract off border & padding
+    // (and floor at 0 in case the border/padding are too large):
+    WritingMode itemWM = aReflowInput.GetWritingMode();
+    nscoord borderBoxBSize = aReflowOutput.BSize(itemWM);
+    mBSize = borderBoxBSize -
+             aReflowInput.ComputedLogicalBorderPadding().BStartEnd(itemWM);
+    mBSize = std::max(0, mBSize);
+  }
 
   /**
    * Returns true if this cached flex item measurement is valid for (i.e. can
@@ -1816,14 +1822,7 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
       MeasureAscentAndBSizeForFlexItem(aFlexItem, childRIForMeasuringBSize);
 
   aFlexItem.SetAscent(reflowResult.Ascent());
-
-  // Subtract border/padding in block axis, to get _just_
-  // the effective computed value of the BSize property.
-  nscoord childDesiredBSize =
-      reflowResult.BSize() -
-      childRIForMeasuringBSize.ComputedLogicalBorderPadding().BStartEnd(wm);
-
-  return std::max(0, childDesiredBSize);
+  return reflowResult.BSize();
 }
 
 FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
@@ -4030,25 +4029,7 @@ void nsFlexContainerFrame::SizeItemInCrossAxis(ReflowInput& aChildReflowInput,
   // -----------------------------------------------------
 
   // Tentatively store the child's desired content-box cross-size.
-  // Note that childReflowOutput is the border-box size, so we have to
-  // subtract border & padding to get the content-box size.
-  nscoord crossAxisBorderPadding = aItem.BorderPaddingSizeInCrossAxis();
-  if (reflowResult.BSize() < crossAxisBorderPadding) {
-    // Child's requested size isn't large enough for its border/padding!
-    // This is OK for the trivial nsFrame::Reflow() impl, but other frame
-    // classes should know better. So, if we get here, the child had better be
-    // an instance of nsFrame (i.e. it should return null from GetType()).
-    // XXXdholbert Once we've fixed bug 765861, we should upgrade this to an
-    // assertion that trivially passes if bug 765861's flag has been flipped.
-    NS_WARNING_ASSERTION(
-        aItem.Frame()->Type() == LayoutFrameType::None,
-        "Child should at least request space for border/padding");
-    aItem.SetCrossSize(0);
-  } else {
-    // (normal case)
-    aItem.SetCrossSize(reflowResult.BSize() - crossAxisBorderPadding);
-  }
-
+  aItem.SetCrossSize(reflowResult.BSize());
   aItem.SetAscent(reflowResult.Ascent());
 }
 
