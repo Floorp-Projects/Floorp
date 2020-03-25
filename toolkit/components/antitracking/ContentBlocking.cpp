@@ -342,6 +342,13 @@ ContentBlocking::AllowAccessFor(
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
+  // Make sure storage access isn't disabled
+  if (!aParentContext->IsTopContent() &&
+      Document::StorageAccessSandboxed(aParentContext->GetSandboxFlags())) {
+    LOG(("Our document is sandboxed"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
   nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
   nsAutoCString trackingOrigin;
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
@@ -396,13 +403,6 @@ ContentBlocking::AllowAccessFor(
                      BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
         LOG(("Our window isn't a third-party window"));
       }
-      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-    }
-
-    Document* doc = parentWindow->GetExtantDoc();
-    // Make sure storage access isn't disabled
-    if (doc && (doc->StorageAccessSandboxed())) {
-      LOG(("Our document is sandboxed"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
 
