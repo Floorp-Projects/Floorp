@@ -2300,7 +2300,9 @@ BrowserGlue.prototype = {
       ChromeUtils.idleDispatch(
         () => {
           if (!Services.startup.shuttingDown) {
-            Services.profiler.AddMarker("startupIdleTask");
+            if (Services.profiler) {
+              Services.profiler.AddMarker("startupIdleTask");
+            }
             try {
               task.task();
             } catch (ex) {
@@ -2371,7 +2373,9 @@ BrowserGlue.prototype = {
     for (let task of idleTasks) {
       ChromeUtils.idleDispatch(() => {
         if (!Services.startup.shuttingDown) {
-          Services.profiler.AddMarker("startupLateIdleTask");
+          if (Services.profiler) {
+            Services.profiler.AddMarker("startupLateIdleTask");
+          }
           try {
             task();
           } catch (ex) {
