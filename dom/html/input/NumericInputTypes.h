@@ -31,7 +31,7 @@ class NumericInputTypeBase : public ::InputType {
 };
 
 // input type=number
-class NumberInputType final : public NumericInputTypeBase {
+class NumberInputType : public NumericInputTypeBase {
  public:
   static InputType* Create(mozilla::dom::HTMLInputElement* aInputElement,
                            void* aMemory) {
@@ -43,9 +43,6 @@ class NumberInputType final : public NumericInputTypeBase {
 
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
   nsresult GetBadInputMessage(nsAString& aMessage) override;
-
-  bool ConvertNumberToString(mozilla::Decimal aValue,
-                             nsAString& aResultString) const override;
 
  protected:
   bool IsMutable() const override;
