@@ -685,8 +685,6 @@ function makeActionUrl(type, params) {
  *        An nsIAutoCompleteSearch.
  * @param prohibitSearchSuggestions
  *        Whether search suggestions are allowed for this search.
- * @param {Object} [previousResult]
- *        The result object from the previous search. if available.
  * @param {UrlbarQueryContext} [queryContext]
  *        The query context, undefined for legacy consumers.
  */
@@ -696,7 +694,6 @@ function Search(
   autocompleteListener,
   autocompleteSearch,
   prohibitSearchSuggestions,
-  previousResult,
   queryContext
 ) {
   // We want to store the original string for case sensitive searches.
@@ -820,11 +817,9 @@ function Search(
 
   // Create a new result to add eventual matches.  Note we need a result
   // regardless having matches.
-  let result =
-    previousResult ||
-    Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
-      Ci.nsIAutoCompleteSimpleResult
-    );
+  let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
+    Ci.nsIAutoCompleteSimpleResult
+  );
   result.setSearchString(searchString);
   result.setListener({
     onValueRemoved(result, spec, removeFromDB) {
@@ -840,31 +835,12 @@ function Search(
   result.setDefaultIndex(-1);
   this._result = result;
 
-  this._previousSearchMatchTypes = [];
-  for (let i = 0; previousResult && i < previousResult.matchCount; ++i) {
-    let style = previousResult.getStyleAt(i);
-    if (style.includes("heuristic")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.HEURISTIC);
-    } else if (style.includes("suggestion")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.SUGGESTION);
-    } else if (style.includes("extension")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.EXTENSION);
-    } else {
-      this._previousSearchMatchTypes.push(UrlbarUtils.RESULT_GROUP.GENERAL);
-    }
-  }
-
   // Used to limit the number of adaptive results.
   this._adaptiveCount = 0;
   this._extraAdaptiveRows = [];
 
   // Used to limit the number of remote tab results.
   this._extraRemoteTabRows = [];
-
-  // This is a replacement for this._result.matchCount, to be used when you need
-  // to check how many "current" matches have been inserted.
-  // Indeed this._result.matchCount may include matches from the previous search.
-  this._currentMatchCount = 0;
 
   // These are used to avoid adding duplicate entries to the results.
   this._usedURLs = [];
@@ -1069,7 +1045,6 @@ Search.prototype = {
     if (this._trimmedOriginalSearchString == "@") {
       let added = await this._addSearchEngineTokenAliasMatches();
       if (added) {
-        this._cleanUpNonCurrentMatches(null);
         this._autocompleteSearch.finishSearch(true);
         return;
       }
@@ -1081,7 +1056,6 @@ Search.prototype = {
     this._addingHeuristicFirstMatch = true;
     let hasHeuristic = await this._matchFirstHeuristicResult(conn);
     this._addingHeuristicFirstMatch = false;
-    this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.HEURISTIC);
     if (!this.pending) {
       return;
     }
@@ -1114,7 +1088,6 @@ Search.prototype = {
         this._leadingRestrictionToken == UrlbarTokenizer.RESTRICT.SEARCH &&
         /\s*\S?$/.test(this._trimmedOriginalSearchString);
       if (emptySearchRestriction || emptyQueryTokenAlias) {
-        this._cleanUpNonCurrentMatches(null, false);
         this._autocompleteSearch.finishSearch(true);
         return;
       }
@@ -1194,15 +1167,9 @@ Search.prototype = {
     ) {
       // Wait for the suggestions to be added.
       await searchSuggestionsCompletePromise;
-      this._cleanUpNonCurrentMatches(null);
       this._autocompleteSearch.finishSearch(true);
       return;
     }
-
-    // Clear previous search suggestions.
-    searchSuggestionsCompletePromise.then(() => {
-      this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.SUGGESTION);
-    });
 
     // Run the adaptive query first.
     await conn.executeCached(
@@ -1243,7 +1210,7 @@ Search.prototype = {
     // If we have some unused adaptive matches, add them now.
     while (
       this._extraAdaptiveRows.length &&
-      this._currentMatchCount < this._maxResults
+      this._result.matchCount < this._maxResults
     ) {
       this._addFilteredQueryMatch(this._extraAdaptiveRows.shift());
     }
@@ -1251,14 +1218,10 @@ Search.prototype = {
     // If we have some unused remote tab matches, add them now.
     while (
       this._extraRemoteTabRows.length &&
-      this._currentMatchCount < this._maxResults
+      this._result.matchCount < this._maxResults
     ) {
       this._addMatch(this._extraRemoteTabRows.shift());
     }
-
-    // Ideally we should wait until MATCH_BOUNDARY_ANYWHERE, but that query
-    // may be really slow and we may end up showing old results for too long.
-    this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.GENERAL);
 
     this._matchAboutPages();
 
@@ -1963,16 +1926,8 @@ Search.prototype = {
         this._addExtensionMatch(content, suggestion.description);
       }
     });
-    // Remove previous search matches sooner than the maximum timeout, otherwise
-    // matches may appear stale for a long time.
-    // This is necessary because WebExtensions don't have a method to notify
-    // that they are done providing results, so they could be pending forever.
-    setTimeout(
-      () => this._cleanUpNonCurrentMatches(UrlbarUtils.RESULT_GROUP.EXTENSION),
-      100
-    );
 
-    // Since the extension has no way to signale when it's done pushing
+    // Since the extension has no way to signal when it's done pushing
     // results, we add a timeout racing with the addition.
     let timeoutPromise = new Promise(resolve => {
       let timer = setTimeout(resolve, MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
@@ -2229,7 +2184,6 @@ Search.prototype = {
       match.style,
       match.finalCompleteValue
     );
-    this._currentMatchCount++;
     this._counts[match.type]++;
 
     this.notifyResult(true, match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC);
@@ -2435,22 +2389,6 @@ Search.prototype = {
         insertIndex: 0,
         count: 0,
       }));
-
-      // If we have matches from the previous search, we want to replace them
-      // in-place to reduce flickering.
-      // This requires walking the previous matches and marking their existence
-      // into the current buckets, so that, when we'll add the new matches to
-      // the buckets, we can either append or replace a match.
-      if (this._previousSearchMatchTypes.length) {
-        for (let type of this._previousSearchMatchTypes) {
-          for (let bucket of this._buckets) {
-            if (type == bucket.type && bucket.count < bucket.available) {
-              bucket.count++;
-              break;
-            }
-          }
-        }
-      }
     }
 
     let replace = 0;
@@ -2480,67 +2418,6 @@ Search.prototype = {
       comment: match.comment || "",
     };
     return { index, replace };
-  },
-
-  /**
-   * Removes matches from a previous search, that are no more returned by the
-   * current search
-   * @param type
-   *        The UrlbarUtils.RESULT_GROUP to clean up.  Pass null (or another
-   *        falsey value) to clean up all groups.
-   * @param [optional] notify
-   *        Whether to notify a result change.
-   */
-  _cleanUpNonCurrentMatches(type, notify = true) {
-    if (!this._previousSearchMatchTypes.length || !this.pending) {
-      return;
-    }
-
-    let index = 0;
-    let changed = false;
-    if (!this._buckets) {
-      // No match arrived yet, so any match of the given type should be removed
-      // from the top.
-      while (
-        this._previousSearchMatchTypes.length &&
-        (!type || this._previousSearchMatchTypes[0] == type)
-      ) {
-        this._previousSearchMatchTypes.shift();
-        this._result.removeMatchAt(0);
-        changed = true;
-      }
-    } else {
-      for (let bucket of this._buckets) {
-        if (type && bucket.type != type) {
-          index += bucket.count;
-          continue;
-        }
-        index += bucket.insertIndex;
-
-        while (bucket.count > bucket.insertIndex) {
-          this._result.removeMatchAt(index);
-          changed = true;
-          bucket.count--;
-        }
-      }
-    }
-    if (changed && notify) {
-      this.notifyResult(true);
-    }
-  },
-
-  /**
-   * If in restrict mode, cleanups non current matches for all the empty types.
-   */
-  cleanUpRestrictNonCurrentMatches() {
-    if (this.hasBehavior("restrict") && this._previousSearchMatchTypes.length) {
-      for (let type of new Set(this._previousSearchMatchTypes)) {
-        if (this._counts[type] == 0) {
-          // Don't notify, since we are about to notify completion.
-          this._cleanUpNonCurrentMatches(type, false);
-        }
-      }
-    }
   },
 
   _addOriginAutofillMatch(row) {
@@ -2971,7 +2848,7 @@ Search.prototype = {
         return;
       }
       this._notifyDelaysCount = 0;
-      let resultCode = this._currentMatchCount
+      let resultCode = this._result.matchCount
         ? "RESULT_SUCCESS"
         : "RESULT_NOMATCH";
       if (searchOngoing) {
@@ -3122,30 +2999,12 @@ UnifiedComplete.prototype = {
       searchString.length > this._lastLowResultsSearchSuggestion.length &&
       searchString.startsWith(this._lastLowResultsSearchSuggestion);
 
-    // We don't directly reuse the controller provided previousResult because:
-    //  * it is only populated when the new searchString is an extension of the
-    //    previous one. We want to handle the backspace case too.
-    //  * Bookmarks may be titled differently than history and we want to show
-    //    the right title.  For example a "foo" titled page could be bookmarked
-    //    as "foox", typing "foo" followed by "x" would show the history result
-    //    from the previous search (See bug 412730).
-    //  * Adaptive History means a result may appear even if the previous string
-    //    didn't match it.
-    // What we can do is reuse the previous result along with the bucketing
-    // system to avoid flickering. Since we know where a new match should be
-    // positioned, we  wait for a new match to arrive before replacing the
-    // previous one. This may leave stale matches from the previous search that
-    // would not be returned by the current one, thus once the current search is
-    // complete, we remove those stale matches with _cleanUpNonCurrentMatches().
-    let previousResult = null;
-
     let search = (this._currentSearch = new Search(
       searchString,
       searchParam,
       listener,
       this,
       prohibitSearchSuggestions,
-      previousResult,
       queryContext
     ));
     this.getDatabaseHandle()
@@ -3192,11 +3051,6 @@ UnifiedComplete.prototype = {
     if (!notify || !search.pending) {
       return;
     }
-
-    // If we are in restrict mode and we reused the previous search results,
-    // it's possible we didn't go through all the cleanup methods due to early
-    // bailouts. Thus we could still have nonmatching results to remove.
-    search.cleanUpRestrictNonCurrentMatches();
 
     // There is a possible race condition here.
     // When a search completes it calls finishSearch that notifies results
