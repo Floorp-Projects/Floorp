@@ -548,6 +548,11 @@ function handleRequest(req, res) {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Alt-Svc", "h2=" + req.headers["x-altsvc"]);
   }
+  // for use with test_http3.js
+  else if (u.pathname === "/http3-test") {
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Alt-Svc", "h3-27=" + req.headers["x-altsvc"]);
+  }
   // for use with test_trr.js
   else if (u.pathname === "/dns-cname") {
     // asking for cname.example.com
