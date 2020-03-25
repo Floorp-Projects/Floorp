@@ -23,7 +23,11 @@ const sourceOptions = {
   generated: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["objectRestSpread"],
+    plugins: [
+      "objectRestSpread",
+      "optionalChaining",
+      "nullishCoalescingOperator",
+    ],
   },
   original: {
     sourceType: "unambiguous",
@@ -32,6 +36,8 @@ const sourceOptions = {
       "jsx",
       "flow",
       "doExpressions",
+      "optionalChaining",
+      "nullishCoalescingOperator",
       "decorators-legacy",
       "objectRestSpread",
       "classProperties",
