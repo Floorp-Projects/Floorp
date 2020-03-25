@@ -27,8 +27,7 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
   NS_INLINE_DECL_REFCOUNTING(DocumentChannelParent, override);
 
   explicit DocumentChannelParent(dom::CanonicalBrowsingContext* aContext,
-                                 nsILoadContext* aLoadContext,
-                                 PBOverrideStatus aOverrideStatus);
+                                 nsILoadContext* aLoadContext);
 
   bool Init(const DocumentChannelCreationArgs& aArgs);
 
