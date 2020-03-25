@@ -76,25 +76,6 @@
       arrayByAddingObjectsFromArray:[super accessibilityActionNames]];
 }
 
-- (void)accessibilityPerformAction:(NSString*)action {
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  ProxyAccessible* proxy = [self getProxyAccessible];
-  if (!accWrap && !proxy) {
-    return;
-  }
-
-  if ([action isEqualToString:NSAccessibilityPressAction]) {
-    if (accWrap) {
-      accWrap->DoAction(0);
-    } else if (proxy) {
-      proxy->DoAction(0);
-    }
-    return;
-  }
-
-  [super accessibilityPerformAction:action];
-}
-
 - (NSString*)customDescription {
   return @"";
 }
