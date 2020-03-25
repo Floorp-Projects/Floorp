@@ -287,6 +287,9 @@ var SitePermissions = {
    */
   getAllByPrincipal(principal) {
     let result = [];
+    if (!principal) {
+      throw new Error("principal argument cannot be null.");
+    }
     if (!this.isSupportedPrincipal(principal)) {
       return result;
     }
@@ -388,11 +391,16 @@ var SitePermissions = {
    * @return {boolean} if the principal is supported.
    */
   isSupportedPrincipal(principal) {
-    return (
-      principal &&
-      ["http", "https", "moz-extension"].some(scheme =>
-        principal.schemeIs(scheme)
-      )
+    if (!principal) {
+      return false;
+    }
+    if (!(principal instanceof Ci.nsIPrincipal)) {
+      throw new Error(
+        "Argument passed as principal is not an instance of Ci.nsIPrincipal"
+      );
+    }
+    return ["http", "https", "moz-extension"].some(scheme =>
+      principal.schemeIs(scheme)
     );
   },
 
@@ -528,6 +536,11 @@ var SitePermissions = {
    *             (e.g. SitePermissions.SCOPE_PERSISTENT)
    */
   getForPrincipal(principal, permissionID, browser) {
+    if (!principal && !browser) {
+      throw new Error(
+        "Atleast one of the arguments, either principal or browser should not be null."
+      );
+    }
     let defaultState = this.getDefault(permissionID);
     let result = { state: defaultState, scope: this.SCOPE_PERSISTENT };
     if (this.isSupportedPrincipal(principal)) {
@@ -598,6 +611,11 @@ var SitePermissions = {
     scope = this.SCOPE_PERSISTENT,
     browser = null
   ) {
+    if (!principal && !browser) {
+      throw new Error(
+        "Atleast one of the arguments, either principal or browser should not be null."
+      );
+    }
     if (scope == this.SCOPE_GLOBAL && state == this.BLOCK) {
       GloballyBlockedPermissions.set(browser, permissionID);
       browser.dispatchEvent(
@@ -679,6 +697,11 @@ var SitePermissions = {
    *        The browser object to remove temporary permissions on.
    */
   removeFromPrincipal(principal, permissionID, browser) {
+    if (!principal && !browser) {
+      throw new Error(
+        "Atleast one of the arguments, either principal or browser should not be null."
+      );
+    }
     if (this.isSupportedPrincipal(principal)) {
       Services.perms.removeFromPrincipal(principal, permissionID);
     }
