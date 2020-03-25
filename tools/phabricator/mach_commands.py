@@ -37,6 +37,19 @@ class PhabricatorCommandProvider(MachCommandBase):
             )
             sys.exit(1)
 
+        # pip3 is part of Python since 3.4, however some distros choose to
+        # remove core components from languages.  While bootstrap should
+        # install pip3 it isn't always possible, so display a nicer error
+        # message if pip3 is missing.
+        if not shutil.which("pip3"):
+            self.log(
+                logging.ERROR,
+                "pip3_not_installed",
+                {},
+                "`pip3` is not installed. Try running `mach bootstrap`.",
+            )
+            sys.exit(1)
+
         command = ["pip3", "install", "--upgrade", "MozPhab"]
 
         if (
