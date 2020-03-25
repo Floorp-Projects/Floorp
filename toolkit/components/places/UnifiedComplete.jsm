@@ -34,9 +34,6 @@ const REGEXP_USER_CONTEXT_ID = /(?:^| )user-context-id:(\d+)/;
 // Regex used to match maxResults.
 const REGEXP_MAX_RESULTS = /(?:^| )max-results:(\d+)/;
 
-// Regex used to match insertMethod.
-const REGEXP_INSERT_METHOD = /(?:^| )insert-method:(\d+)/;
-
 // Regex used to match one or more whitespace.
 const REGEXP_SPACES = /\s+/;
 
@@ -3140,35 +3137,7 @@ UnifiedComplete.prototype = {
     // previous one. This may leave stale matches from the previous search that
     // would not be returned by the current one, thus once the current search is
     // complete, we remove those stale matches with _cleanUpNonCurrentMatches().
-
-    // Extract the insert-method param if it exists.
-    let insertMethod = UrlbarUtils.INSERTMETHOD.APPEND;
-    if (!queryContext) {
-      insertMethod = searchParam.match(REGEXP_INSERT_METHOD);
-      insertMethod = insertMethod
-        ? parseInt(insertMethod[1])
-        : UrlbarPrefs.get("insertMethod");
-    }
-
     let previousResult = null;
-    if (
-      this._currentSearch &&
-      insertMethod != UrlbarUtils.INSERTMETHOD.APPEND
-    ) {
-      let result = this._currentSearch._result;
-      // Only reuse the previous result when one of the search strings is an
-      // extension of the other one.  We could expand this to any case, but
-      // that may leave exposed unrelated matches for a longer time.
-      let previousSearchString = result.searchString;
-      let stringsRelated =
-        !!previousSearchString.length &&
-        !!searchString.length &&
-        (previousSearchString.includes(searchString) ||
-          searchString.includes(previousSearchString));
-      if (insertMethod == UrlbarUtils.INSERTMETHOD.MERGE || stringsRelated) {
-        previousResult = result;
-      }
-    }
 
     let search = (this._currentSearch = new Search(
       searchString,
