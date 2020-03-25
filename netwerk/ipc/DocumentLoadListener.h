@@ -65,7 +65,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
                                 nsILoadContext* aLoadContext,
-                                PBOverrideStatus aOverrideStatus,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
@@ -300,8 +299,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   RefPtr<ADocumentChannelBridge> mDocumentChannelBridge;
 
   nsCOMPtr<nsILoadContext> mLoadContext;
-
-  PBOverrideStatus mPBOverride;
 
   // The original URI of the current channel. If there are redirects,
   // then the value on the channel gets overwritten with the original
