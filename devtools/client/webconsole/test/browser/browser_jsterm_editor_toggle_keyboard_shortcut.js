@@ -41,5 +41,14 @@ add_task(async function() {
   is(isEditorModeEnabled(hud), true, "Editor mode was enabled again");
   is(getInputValue(hud), INPUT_VALUE, "The input value wasn't cleared");
 
+  info("Close popup on switching editor modes");
+  const popup = hud.jsterm.autocompletePopup;
+  await setInputValueForAutocompletion(hud, "a");
+  ok(popup.isOpen, "Auto complete popup is shown");
+  const onPopupClosed = popup.once("popup-closed");
+  await toggleLayout(hud);
+  await onPopupClosed;
+  ok(!popup.isOpen, "Auto complete popup is hidden on switching editor modes.");
+
   Services.prefs.clearUserPref(EDITOR_PREF);
 });
