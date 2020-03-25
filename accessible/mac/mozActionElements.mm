@@ -70,6 +70,65 @@ enum CheckboxValue {
   return ![self getGeckoAccessible] && ![self getProxyAccessible];
 }
 
+- (NSArray*)accessibilityActionNames {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSArray* actions = [super accessibilityActionNames];
+  if ([self isEnabled]) {
+    // VoiceOver expects the press action to be the first in the list.
+    if ([self hasPopup]) {
+      return [@[ NSAccessibilityPressAction, NSAccessibilityShowMenuAction ]
+          arrayByAddingObjectsFromArray:actions];
+    }
+    return [@[ NSAccessibilityPressAction ] arrayByAddingObjectsFromArray:actions];
+  }
+
+  return actions;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (NSString*)accessibilityActionDescription:(NSString*)action {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  if ([action isEqualToString:NSAccessibilityPressAction]) {
+    return @"press button";  // XXX: localize this later?
+  }
+
+  if ([self hasPopup]) {
+    if ([action isEqualToString:NSAccessibilityShowMenuAction]) return @"show menu";
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (void)accessibilityPerformAction:(NSString*)action {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([self isEnabled] && [action isEqualToString:NSAccessibilityPressAction]) {
+    // TODO: this should bring up the menu, but currently doesn't.
+    //       once msaa and atk have merged better, they will implement
+    //       the action needed to show the menu.
+    [self click];
+  } else {
+    [super accessibilityPerformAction:action];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)click {
+  // both buttons and checkboxes have only one action. we should really stop using arbitrary
+  // arrays with actions, and define constants for these actions.
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    accWrap->DoAction(0);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    proxy->DoAction(0);
+  }
+}
+
 - (BOOL)hasPopup {
   if (AccessibleWrap* accWrap = [self getGeckoAccessible])
     return accWrap->NativeState() & states::HASPOPUP;
