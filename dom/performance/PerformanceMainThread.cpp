@@ -72,7 +72,8 @@ PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                                              bool aPrincipal)
     : Performance(aWindow, aPrincipal),
       mDOMTiming(aDOMTiming),
-      mChannel(aChannel) {
+      mChannel(aChannel),
+      mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()) {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
   CreateNavigationTimingEntry();
 }
@@ -256,8 +257,9 @@ DOMHighResTimeStamp PerformanceMainThread::GetPerformanceTimingFromString(
         "out "
         "of sync");
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(retValue,
-                                                  GetRandomTimelineSeed());
+  return nsRFPService::ReduceTimePrecisionAsMSecs(
+      retValue, GetRandomTimelineSeed(), /* aIsSystemPrinciapl */ false,
+      CrossOriginIsolated());
 }
 
 void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
@@ -333,6 +335,10 @@ void PerformanceMainThread::QueueNavigationTimingEntry() {
   }
 
   QueueEntry(mDocEntry);
+}
+
+bool PerformanceMainThread::CrossOriginIsolated() const {
+  return mCrossOriginIsolated;
 }
 
 void PerformanceMainThread::GetEntries(

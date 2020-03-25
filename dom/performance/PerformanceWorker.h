@@ -58,6 +58,8 @@ class PerformanceWorker final : public Performance {
     MOZ_CRASH("This should not be called on workers.");
   }
 
+  bool CrossOriginIsolated() const override;
+
  protected:
   ~PerformanceWorker();
 
