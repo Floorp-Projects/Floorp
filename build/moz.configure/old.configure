@@ -322,10 +322,10 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
 @imports('os')
 @imports('subprocess')
 @imports('sys')
-@imports('types')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
 @imports(_from='six', _import='exec_')
+@imports(_from='six', _import='string_types')
 def old_configure(prepare_configure, prepare_configure_options, altered_path):
     cmd = prepare_configure + prepare_configure_options.options
     extra_env = prepare_configure_options.extra_env
@@ -403,7 +403,7 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
 
     for c in ('substs', 'defines'):
         raw_config[c] = [
-            (k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
+            (k[1:-1], v[1:-1] if isinstance(v, string_types) else v)
             for k, v in raw_config[c]
         ]
 
@@ -426,11 +426,12 @@ def set_old_configure_define(name, value):
 
 
 @depends(old_configure)
+@imports(_from='six', _import='iteritems')
 def post_old_configure(raw_config):
     for k, v in raw_config['substs']:
         set_old_configure_config(k, v)
 
-    for k, v in dict(raw_config['defines']).iteritems():
+    for k, v in iteritems(dict(raw_config['defines'])):
         set_old_configure_define(k, v)
 
     set_old_configure_config('non_global_defines',

@@ -391,10 +391,11 @@ add_old_configure_assignment('PYTHON', virtualenv_python2)
 def early_options():
     @dependable
     @imports('__sandbox__')
+    @imports(_from='six', _import='itervalues')
     def early_options():
         return set(
             option.env
-            for option in __sandbox__._options.itervalues()
+            for option in itervalues(__sandbox__._options)
             if option.env
         )
     return early_options
@@ -583,6 +584,10 @@ def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
             log.info('Re-executing in the virtualenv')
             if env_python:
                 del os.environ['PYTHON3']
+            # Homebrew on macOS will change Python's sys.executable to a custom
+            # value which messes with mach's virtualenv handling code. Override
+            # Homebrew's changes with the correct sys.executable value.
+            os.environ['PYTHONEXECUTABLE'] = python
             # One would prefer to use os.execl, but that's completely borked on
             # Windows.
             sys.exit(subprocess.call([python] + sys.argv))
