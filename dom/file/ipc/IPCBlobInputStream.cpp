@@ -21,8 +21,6 @@
 namespace mozilla {
 namespace dom {
 
-class IPCBlobInputStream;
-
 namespace {
 
 class InputStreamCallbackRunnable final : public CancelableRunnable {

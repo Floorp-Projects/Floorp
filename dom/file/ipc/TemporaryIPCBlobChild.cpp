@@ -6,7 +6,6 @@
 
 #include "TemporaryIPCBlobChild.h"
 #include "mozilla/dom/MutableBlobStorage.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include <private/pprio.h>
 
 namespace mozilla {
