@@ -124,14 +124,15 @@ class DebianBootstrapper(
 
         have_python3 = any([self.which('python3'), self.which('python3.6'),
                             self.which('python3.5')])
+        python3_packages = self.check_output(
+            ['apt-cache', 'pkgnames', 'python3'], universal_newlines=True)
+        python3_packages = python3_packages.splitlines()
 
-        if not have_python3:
-            python3_packages = self.check_output(
-                ['apt-cache', 'pkgnames', 'python3'], universal_newlines=True)
-            python3_packages = python3_packages.splitlines()
+        if not have_python3 and 'python3' in python3_packages:
+            packages.extend(['python3', 'python3-dev'])
 
-            if 'python3' in python3_packages:
-                packages.extend(['python3', 'python3-dev'])
+        if not self.which('pip3') and 'python3-pip' in python3_packages:
+            packages.append('python3-pip')
 
         self.apt_install(*packages)
 
