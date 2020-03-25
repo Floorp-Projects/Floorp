@@ -5,7 +5,6 @@
 package mozilla.components.feature.tab.collections.adapter
 
 import android.content.Context
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.readSnapshotItem
 import mozilla.components.concept.engine.Engine
@@ -24,18 +23,13 @@ internal class TabAdapter(
     override val url: String
         get() = entity.url
 
-    /**
-     * Restores a single tab from this collection and returns a matching [SessionManager.Snapshot].
-     */
     override fun restore(
         context: Context,
         engine: Engine,
-        tab: Tab,
         restoreSessionId: Boolean
-    ): Session? {
+    ): SessionManager.Snapshot.Item? {
         return entity.getStateFile(context.filesDir)
             .readSnapshotItem(engine, restoreSessionId, false)
-            ?.session
     }
 
     override fun equals(other: Any?): Boolean {

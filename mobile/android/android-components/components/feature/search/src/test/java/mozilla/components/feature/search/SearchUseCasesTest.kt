@@ -107,7 +107,7 @@ class SearchUseCasesTest {
         useCases.newPrivateTabSearch.invoke(searchTerms)
 
         val captor = argumentCaptor<Session>()
-        verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null))
+        verify(sessionManager).add(captor.capture(), eq(true), eq(null), eq(null), eq(null))
         assertTrue(captor.value.private)
         verify(engineSession).loadUrl(searchUrl)
     }

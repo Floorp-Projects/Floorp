@@ -137,9 +137,10 @@ class LegacySessionManager(
         session: Session,
         selected: Boolean = false,
         engineSession: EngineSession? = null,
+        engineSessionState: EngineSessionState? = null,
         parent: Session? = null
     ) = synchronized(values) {
-        addInternal(session, selected, engineSession, parent = parent, viaRestore = false)
+        addInternal(session, selected, engineSession, engineSessionState, parent = parent, viaRestore = false)
     }
 
     @Suppress("LongParameterList", "ComplexMethod")

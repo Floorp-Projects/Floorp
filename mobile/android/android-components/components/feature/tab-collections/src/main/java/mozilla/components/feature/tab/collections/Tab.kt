@@ -6,6 +6,7 @@ package mozilla.components.feature.tab.collections
 
 import android.content.Context
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 
 /**
@@ -37,7 +38,6 @@ interface Tab {
     fun restore(
         context: Context,
         engine: Engine,
-        tab: Tab,
         restoreSessionId: Boolean = false
-    ): Session?
+    ): SessionManager.Snapshot.Item?
 }
