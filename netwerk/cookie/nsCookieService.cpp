@@ -3264,17 +3264,6 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
       kMaxBytesPerCookie) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "cookie too big (> 4kb)");
-
-    AutoTArray<nsString, 2> params = {
-        NS_ConvertUTF8toUTF16(aCookieData.name())};
-
-    nsString size;
-    size.AppendInt(kMaxBytesPerCookie);
-    params.AppendElement(size);
-
-    LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
-                        CONSOLE_GENERIC_CATEGORY,
-                        NS_LITERAL_CSTRING("CookieOversize"), params);
     return newCookie;
   }
 
@@ -3297,7 +3286,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
     return newCookie;
   }
 
-  if (!CheckPath(aCookieData, aChannel, aHostURI)) {
+  if (!CheckPath(aCookieData, aHostURI)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "failed the path tests");
     return newCookie;
@@ -3866,11 +3855,10 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
         aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
         sameSiteSet = true;
       } else {
-        LogMessageToConsole(
-            aChannel, aHostURI, nsIScriptError::infoFlag,
-            CONSOLE_GENERIC_CATEGORY,
-            NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
-            AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
+        LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                            CONSOLE_GENERIC_CATEGORY,
+                            NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
+                            aCookieData.name());
       }
     }
   }
@@ -3887,11 +3875,10 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
       aCookieData.sameSite() == nsICookie::SAMESITE_NONE) {
     if (laxByDefault &&
         StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
-      LogMessageToConsole(
-          aChannel, aHostURI, nsIScriptError::infoFlag,
-          CONSOLE_SAMESITE_CATEGORY,
-          NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
-          AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
+      LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                          CONSOLE_SAMESITE_CATEGORY,
+                          NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
+                          aCookieData.name());
       return newCookie;
     }
 
@@ -3900,24 +3887,21 @@ bool nsCookieService::ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
         aChannel, aHostURI, nsIScriptError::warningFlag,
         CONSOLE_SAMESITE_CATEGORY,
         NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecureForBeta"),
-        AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookieData.name()),
-                                SAMESITE_MDN_URL});
+        aCookieData.name(), SAMESITE_MDN_URL);
   }
 
   if (aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
     if (laxByDefault) {
-      LogMessageToConsole(
-          aChannel, aHostURI, nsIScriptError::infoFlag,
-          CONSOLE_SAMESITE_CATEGORY, NS_LITERAL_CSTRING("CookieLaxForced"),
-          AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
+      LogMessageToConsole(aChannel, aHostURI, nsIScriptError::infoFlag,
+                          CONSOLE_SAMESITE_CATEGORY,
+                          NS_LITERAL_CSTRING("CookieLaxForced"),
+                          aCookieData.name());
     } else {
-      LogMessageToConsole(
-          aChannel, aHostURI, nsIScriptError::warningFlag,
-          CONSOLE_SAMESITE_CATEGORY,
-          NS_LITERAL_CSTRING("CookieLaxForcedForBeta"),
-          AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookieData.name()),
-                                  SAMESITE_MDN_URL});
+      LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
+                          CONSOLE_SAMESITE_CATEGORY,
+                          NS_LITERAL_CSTRING("CookieLaxForcedForBeta"),
+                          aCookieData.name(), SAMESITE_MDN_URL);
     }
   }
 
@@ -3933,7 +3917,8 @@ void nsCookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
                                           uint32_t aErrorFlags,
                                           const nsACString& aCategory,
                                           const nsACString& aMsg,
-                                          const nsTArray<nsString>& aParams) {
+                                          const nsACString& aCookieName,
+                                          const nsAString& aMDNURL) {
   MOZ_ASSERT(aURI);
 
   nsCOMPtr<HttpBaseChannel> httpChannel = do_QueryInterface(aChannel);
@@ -3947,9 +3932,15 @@ void nsCookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
     return;
   }
 
+  AutoTArray<nsString, 1> params = {NS_ConvertUTF8toUTF16(aCookieName)};
+
+  if (!aMDNURL.IsEmpty()) {
+    params.AppendElement(aMDNURL);
+  }
+
   httpChannel->AddConsoleReport(aErrorFlags, aCategory,
                                 nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
-                                aMsg, aParams);
+                                aMsg, params);
 }
 
 /******************************************************************************
@@ -4262,8 +4253,7 @@ nsAutoCString nsCookieService::GetPathFromURI(nsIURI* aHostURI) {
   return path;
 }
 
-bool nsCookieService::CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
-                                nsIURI* aHostURI) {
+bool nsCookieService::CheckPath(CookieStruct& aCookieData, nsIURI* aHostURI) {
   // if a path is given, check the host has permission
   if (aCookieData.path().IsEmpty() || aCookieData.path().First() != '/') {
     aCookieData.path() = GetPathFromURI(aHostURI);
@@ -4285,23 +4275,9 @@ bool nsCookieService::CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
 #endif
   }
 
-  if (aCookieData.path().Length() > kMaxBytesPerPath) {
-    AutoTArray<nsString, 2> params = {
-        NS_ConvertUTF8toUTF16(aCookieData.name())};
-
-    nsString size;
-    size.AppendInt(kMaxBytesPerPath);
-    params.AppendElement(size);
-
-    LogMessageToConsole(aChannel, aHostURI, nsIScriptError::warningFlag,
-                        CONSOLE_GENERIC_CATEGORY,
-                        NS_LITERAL_CSTRING("CookiePathOversize"), params);
+  if (aCookieData.path().Length() > kMaxBytesPerPath ||
+      aCookieData.path().Contains('\t'))
     return false;
-  }
-
-  if (aCookieData.path().Contains('\t')) {
-    return false;
-  }
 
   return true;
 }
