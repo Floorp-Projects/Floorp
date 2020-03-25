@@ -237,18 +237,35 @@ class WarpScriptSnapshot : public TempObject {
   // TODO: trace this
   ModuleObject* moduleObject_;
 
+  // Constants pushed by JSOp::Instrumentation* ops in the script.
+  // TODO: trace this
+  JSObject* instrumentationCallback_;
+  mozilla::Maybe<int32_t> instrumentationScriptId_;
+  mozilla::Maybe<bool> instrumentationActive_;
+
   // Whether this script is for an arrow function.
   bool isArrowFunction_;
 
  public:
   WarpScriptSnapshot(JSScript* script, const WarpEnvironment& env,
                      WarpOpSnapshotList&& opSnapshots,
-                     ModuleObject* moduleObject);
+                     ModuleObject* moduleObject,
+                     JSObject* instrumentationCallback,
+                     mozilla::Maybe<int32_t> instrumentationScriptId,
+                     mozilla::Maybe<bool> instrumentationActive);
 
   JSScript* script() const { return script_; }
   const WarpEnvironment& environment() const { return environment_; }
   const WarpOpSnapshotList& opSnapshots() const { return opSnapshots_; }
   ModuleObject* moduleObject() const { return moduleObject_; }
+
+  JSObject* instrumentationCallback() const {
+    MOZ_ASSERT(instrumentationCallback_);
+    return instrumentationCallback_;
+  }
+  int32_t instrumentationScriptId() const { return *instrumentationScriptId_; }
+  bool instrumentationActive() const { return *instrumentationActive_; }
+
   bool isArrowFunction() const { return isArrowFunction_; }
 };
 
