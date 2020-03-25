@@ -798,6 +798,12 @@ class nsFlexContainerFrame::FlexItem final {
   // establish the cross size?
   bool CanMainSizeInfluenceCrossSize() const;
 
+  // Indicates whether we think this flex item needs a "final" reflow
+  // (after its final flexed size & final position have been determined).
+  // Retuns true if such a reflow is needed, or false if we believe it can
+  // simply be moved to its final position and skip the reflow.
+  bool NeedsFinalReflow() const;
+
   // Gets the block frame that contains the flex item's content.  This is
   // Frame() itself or one of its descendants.
   nsBlockFrame* BlockFrame() const;
@@ -2158,6 +2164,71 @@ bool FlexItem::CanMainSizeInfluenceCrossSize() const {
 
   // Default assumption, if we haven't proven otherwise: the resolved main size
   // *can* change the cross size.
+  return true;
+}
+
+/**
+ * Returns true if aFrame or any of its children have the
+ * NS_FRAME_CONTAINS_RELATIVE_BSIZE flag set -- i.e. if any of these frames (or
+ * their descendants) might have a relative-BSize dependency on aFrame (or its
+ * ancestors).
+ */
+static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+    return true;
+  }
+  for (nsIFrame::ChildListIterator childLists(aFrame); !childLists.IsDone();
+       childLists.Next()) {
+    for (nsIFrame* childFrame : childLists.CurrentList()) {
+      if (childFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool FlexItem::NeedsFinalReflow() const {
+  // Flex item's final content-box size (in terms of its own writing-mode):
+  const LogicalSize finalSize = mIsInlineAxisMainAxis
+                                    ? LogicalSize(mWM, mMainSize, mCrossSize)
+                                    : LogicalSize(mWM, mCrossSize, mMainSize);
+
+  if (HadMeasuringReflow()) {
+    // We've already reflowed this flex item once, to measure it. In that
+    // reflow, did its frame happen to end up with the correct final size
+    // that the flex container would like it to have?
+    if (finalSize !=
+        LogicalSize(mWM, mFrame->GetContentRectRelativeToSelf().Size())) {
+      // The measuring reflow left the item with a different size than its
+      // final flexed size. So, we need to reflow to give it the correct size.
+      FLEX_LOG(
+          "[perf] Flex item needed both a measuring reflow and a final "
+          "reflow due to measured size disagreeing with final size");
+      return true;
+    }
+
+    if (FrameHasRelativeBSizeDependency(mFrame)) {
+      // This item has descendants with relative BSizes who may care that its
+      // size may now be considered "definite" in the final reflow (whereas it
+      // was indefinite during the measuring reflow).
+      FLEX_LOG(
+          "[perf] Flex item needed both a measuring reflow and a final "
+          "reflow due to BSize potentially becoming definite");
+      return true;
+    }
+    // If we get here, then this flex item had a measuring reflow, and it left
+    // us with the correct size, and none of our descendants care that our
+    // BSize may now be considered definite. So we don't need a final reflow.
+    return false;
+  }
+
+  // This item didn't receive a measuring reflow. Does it need to be reflowed
+  // at all?
+
+  // XXXdholbert in a later patch, we'll add some special cases here, making
+  // use of "finalSize" (which is why it's declared at this outer scope).  For
+  // now, we assume that we unconditionally must reflow the item.
   return true;
 }
 
@@ -3858,27 +3929,6 @@ static nscoord GetLargestLineMainSize(nsTArray<FlexLine>& aLines) {
   return largestLineOuterSize;
 }
 
-/**
- * Returns true if aFrame or any of its children have the
- * NS_FRAME_CONTAINS_RELATIVE_BSIZE flag set -- i.e. if any of these frames (or
- * their descendants) might have a relative-BSize dependency on aFrame (or its
- * ancestors).
- */
-static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
-  if (aFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
-    return true;
-  }
-  for (nsIFrame::ChildListIterator childLists(aFrame); !childLists.IsDone();
-       childLists.Next()) {
-    for (nsIFrame* childFrame : childLists.CurrentList()) {
-      if (childFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 nscoord nsFlexContainerFrame::ComputeMainSize(
     const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker,
     nscoord aTentativeMainSize, nscoord aAvailableBSizeForContent,
@@ -4804,49 +4854,23 @@ void nsFlexContainerFrame::ReflowChildren(
       // it with the right content-box size, and there is no need to do a reflow
       // to clear out a -webkit-line-clamp ellipsis, we can just reposition it
       // as-needed.
-      bool itemNeedsReflow = true;  // (Start out assuming the worst.)
-      if (item.HadMeasuringReflow()) {
-        LogicalSize finalFlexItemSize =
-            aAxisTracker.LogicalSizeFromFlexRelativeSizes(item.MainSize(),
-                                                          item.CrossSize());
-        // We've already reflowed the child once. Was the size we gave it in
-        // that reflow the same as its final (post-flexing/stretching) size?
-        if (finalFlexItemSize ==
-            LogicalSize(flexWM,
-                        item.Frame()->GetContentRectRelativeToSelf().Size())) {
-          // Even if the child's size hasn't changed, some of its descendants
-          // might care that its bsize is now considered "definite" (whereas it
-          // wasn't in our previous "measuring" reflow), if they have a
-          // relative bsize.
-          if (!FrameHasRelativeBSizeDependency(item.Frame())) {
-            // Item has the correct size (and its children don't care that
-            // it's now "definite"). Let's just make sure it's at the right
-            // position.
-            itemNeedsReflow = false;
-            MoveFlexItemToFinalPosition(aReflowInput, item, framePos,
-                                        containerSize);
-          }
-        }
-        if (itemNeedsReflow) {
-          FLEX_LOG(
-              "[perf] Flex item needed both a measuring reflow and a final "
-              "reflow");
-        }
-      }
-      if (itemNeedsReflow) {
+      if (item.NeedsFinalReflow()) {
         ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
                        containerSize, aHasLineClampEllipsis);
-      }
-
-      // If we didn't perform a final reflow of the item, we still have a
-      // -webkit-line-clamp ellipsis hanging around, but we shouldn't have one
-      // any more, we need to clear that now.  We strictly only need to do this
-      // if we didn't do a bsize measuring reflow of the item earlier (since
-      // that is normally when we deal with -webkit-line-clamp ellipses) but
-      // not all flex items need such a reflow.
-      if (!itemNeedsReflow && aHasLineClampEllipsis &&
-          GetLineClampValue() == 0) {
-        item.BlockFrame()->ClearLineClampEllipsis();
+      } else {
+        MoveFlexItemToFinalPosition(aReflowInput, item, framePos,
+                                    containerSize);
+        // We didn't perform a final reflow of the item. If we still have a
+        // -webkit-line-clamp ellipsis hanging around, but we shouldn't have
+        // one any more, we need to clear that now.  Technically, we only need
+        // to do this if we *didn't* do a bsize measuring reflow of the item
+        // earlier (since that is normally when we deal with -webkit-line-clamp
+        // ellipses) but not all flex items need such a reflow.
+        // XXXdholbert This comment implies that we could skip this if
+        // HadMeasuringReflow() is true.  Maybe we should try doing that?
+        if (aHasLineClampEllipsis && GetLineClampValue() == 0) {
+          item.BlockFrame()->ClearLineClampEllipsis();
+        }
       }
 
       // If the item has auto margins, and we were tracking the UsedMargin
