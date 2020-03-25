@@ -59,5 +59,20 @@ uint64_t BaseBlobImpl::NextSerialNumber() {
   return nextSerialNumber++;
 }
 
+void BaseBlobImpl::SetLastModificationDatePrecisely(int64_t aDate) {
+  MOZ_ASSERT(mIsFile, "Should only be called on files");
+  mLastModificationDate = aDate;
+}
+
+void BaseBlobImpl::SetLastModificationDate(bool aCrossOriginIsolated,
+                                           int64_t aDate) {
+  return SetLastModificationDatePrecisely(
+      nsRFPService::ReduceTimePrecisionAsUSecs(aDate, 0,
+                                               /* aIsSystemPrincipal */ false,
+                                               aCrossOriginIsolated));
+  // mLastModificationDate is an absolute timestamp so we supply a zero
+  // context mix-in
+}
+
 }  // namespace dom
 }  // namespace mozilla

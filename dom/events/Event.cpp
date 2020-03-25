@@ -723,20 +723,22 @@ double Event::TimeStamp() {
     double ret =
         perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->mTimeStamp);
     MOZ_ASSERT(mOwner->PrincipalOrNull());
-    if (mOwner->PrincipalOrNull()->IsSystemPrincipal()) return ret;
 
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-        ret, perf->GetRandomTimelineSeed());
+        ret, perf->GetRandomTimelineSeed(),
+        mOwner->PrincipalOrNull()->IsSystemPrincipal(),
+        mOwner->CrossOriginIsolated());
   }
 
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
   double ret = workerPrivate->TimeStampToDOMHighRes(mEvent->mTimeStamp);
-  if (workerPrivate->UsesSystemPrincipal()) return ret;
 
   return nsRFPService::ReduceTimePrecisionAsMSecs(
-      ret, workerPrivate->GetRandomTimelineSeed());
+      ret, workerPrivate->GetRandomTimelineSeed(),
+      workerPrivate->UsesSystemPrincipal(),
+      workerPrivate->CrossOriginIsolated());
 }
 
 void Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) {

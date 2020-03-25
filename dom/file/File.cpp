@@ -55,8 +55,11 @@ already_AddRefed<File> File::CreateMemoryFileWithCustomLastModified(
 already_AddRefed<File> File::CreateMemoryFileWithLastModifiedNow(
     nsIGlobalObject* aGlobal, void* aMemoryBuffer, uint64_t aLength,
     const nsAString& aName, const nsAString& aContentType) {
+  MOZ_ASSERT(aGlobal);
+
   RefPtr<MemoryBlobImpl> blobImpl = MemoryBlobImpl::CreateWithLastModifiedNow(
-      aMemoryBuffer, aLength, aName, aContentType);
+      aMemoryBuffer, aLength, aName, aContentType,
+      aGlobal->CrossOriginIsolated());
   MOZ_ASSERT(blobImpl);
 
   RefPtr<File> file = File::Create(aGlobal, blobImpl);
@@ -138,9 +141,13 @@ already_AddRefed<File> File::Constructor(const GlobalObject& aGlobal,
 
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(name);
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+
   nsAutoString type(aBag.mType);
   MakeValidBlobType(type);
-  impl->InitializeBlob(aData, type, aBag.mEndings == EndingType::Native, aRv);
+  impl->InitializeBlob(aData, type, aBag.mEndings == EndingType::Native,
+                       global->CrossOriginIsolated(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -149,9 +156,6 @@ already_AddRefed<File> File::Constructor(const GlobalObject& aGlobal,
   if (aBag.mLastModified.WasPassed()) {
     impl->SetLastModified(aBag.mLastModified.Value());
   }
-
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
 
   RefPtr<File> file = new File(global, impl);
   return file.forget();

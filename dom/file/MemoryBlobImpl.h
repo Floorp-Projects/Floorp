@@ -26,7 +26,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
   // File constructor.
   static already_AddRefed<MemoryBlobImpl> CreateWithLastModifiedNow(
       void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
-      const nsAString& aContentType);
+      const nsAString& aContentType, bool aCrossOriginIsolated);
 
   // File constructor with custom lastModified attribue value. You should
   // probably use CreateWithLastModifiedNow() instead of this one.

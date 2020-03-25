@@ -26,8 +26,8 @@ class BaseBlobImpl : public BlobImpl {
         mName(aName),
         mStart(0),
         mLength(aLength),
-        mLastModificationDate(aLastModifiedDate),
-        mSerialNumber(NextSerialNumber()) {
+        mSerialNumber(NextSerialNumber()),
+        mLastModificationDate(aLastModifiedDate) {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
   }
@@ -38,8 +38,8 @@ class BaseBlobImpl : public BlobImpl {
         mContentType(aContentType),
         mStart(0),
         mLength(aLength),
-        mLastModificationDate(0),
-        mSerialNumber(NextSerialNumber()) {
+        mSerialNumber(NextSerialNumber()),
+        mLastModificationDate(0) {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
   }
@@ -50,8 +50,8 @@ class BaseBlobImpl : public BlobImpl {
         mContentType(aContentType),
         mStart(aStart),
         mLength(aLength),
-        mLastModificationDate(0),
-        mSerialNumber(NextSerialNumber()) {
+        mSerialNumber(NextSerialNumber()),
+        mLastModificationDate(0) {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
   }
@@ -108,7 +108,7 @@ class BaseBlobImpl : public BlobImpl {
     mName = aName;
     mContentType = aContentType;
     mLength = aLength;
-    mLastModificationDate = aLastModifiedDate;
+    SetLastModificationDatePrecisely(aLastModifiedDate);
     mIsFile = !aName.IsVoid();
   }
 
@@ -130,6 +130,17 @@ class BaseBlobImpl : public BlobImpl {
    */
   static uint64_t NextSerialNumber();
 
+  void SetLastModificationDate(bool aCrossOriginIsolated, int64_t aDate);
+  void SetLastModificationDatePrecisely(int64_t aDate);
+
+#ifdef DEBUG
+  bool IsLastModificationDateUnset() const {
+    return mLastModificationDate == INT64_MAX;
+  }
+#endif
+
+  const nsString mBlobImplType;
+
   bool mIsFile;
 
   nsString mContentType;
@@ -139,9 +150,10 @@ class BaseBlobImpl : public BlobImpl {
   uint64_t mStart;
   uint64_t mLength;
 
-  int64_t mLastModificationDate;
-
   const uint64_t mSerialNumber;
+
+ private:
+  int64_t mLastModificationDate;
 };
 
 }  // namespace dom
