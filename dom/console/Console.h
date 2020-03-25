@@ -262,8 +262,8 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
     eTimerMaxReached,
   };
 
-  JS::Value CreateTimerError(JSContext* aCx, const nsAString& aTimerLabel,
-                             TimerStatus aStatus) const;
+  static JS::Value CreateTimerError(JSContext* aCx, const nsAString& aLabel,
+                                    TimerStatus aStatus);
 
   // StartTimer is called on the owning thread and populates aTimerLabel and
   // aTimerValue.
@@ -286,8 +286,9 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   // * aCx - this is the context that will root the returned value.
   // * aTimerLabel - this label must be what StartTimer received as aTimerLabel.
   // * aTimerStatus - the return value of StartTimer.
-  JS::Value CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
-                                  TimerStatus aTimerStatus) const;
+  static JS::Value CreateStartTimerValue(JSContext* aCx,
+                                         const nsAString& aTimerLabel,
+                                         TimerStatus aTimerStatus);
 
   // LogTimer follows the same pattern as StartTimer: it runs on the
   // owning thread and populates aTimerLabel and aTimerDuration, used by
@@ -311,10 +312,10 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
   // * aTimerLabel - this label must be what LogTimer received as aTimerLabel.
   // * aTimerDuration - this is what LogTimer received as aTimerDuration
   // * aTimerStatus - the return value of LogTimer.
-  JS::Value CreateLogOrEndTimerValue(JSContext* aCx,
-                                     const nsAString& aTimerLabel,
-                                     double aTimerDuration,
-                                     TimerStatus aTimerStatus) const;
+  static JS::Value CreateLogOrEndTimerValue(JSContext* aCx,
+                                            const nsAString& aLabel,
+                                            double aDuration,
+                                            TimerStatus aStatus);
 
   // The method populates a Sequence from an array of JS::Value.
   bool ArgumentsToValueList(const Sequence<JS::Value>& aData,
