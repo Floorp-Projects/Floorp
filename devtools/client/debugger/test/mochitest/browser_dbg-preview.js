@@ -15,7 +15,7 @@ async function previews(dbg, fnName, previews) {
 async function testBucketedArray(dbg) {
   const invokeResult = invokeInTab("largeArray");
   await waitForPaused(dbg);
-  const preview = await hoverOnToken(dbg, 33, 10, "popup");
+  const preview = await hoverOnToken(dbg, 34, 10, "popup");
 
   is(
     preview.properties.map(p => p.name).join(" "),
@@ -45,6 +45,7 @@ add_task(async function() {
 
   await previews(dbg, "objects", [
     { line: 27, column: 10, expression: "empty", result: "No properties" },
+    { line: 28, column: 22, expression: "obj?.foo", result: 1 },
   ]);
 
   await previews(dbg, "smalls", [

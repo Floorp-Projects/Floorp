@@ -25,6 +25,7 @@ function objects() {
   };
 
   const empty = Object.create(null);
+  const foo = obj?.foo;
 
   debugger;
 }
