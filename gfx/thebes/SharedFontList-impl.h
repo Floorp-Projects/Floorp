@@ -302,7 +302,7 @@ class FontList {
    * Used by child processes to ensure all the blocks are registered.
    * Returns false on failure.
    */
-  MOZ_MUST_USE bool UpdateShmBlocks();
+  [[nodiscard]] bool UpdateShmBlocks();
 
   /**
    * This makes a *sync* IPC call to get a shared block from the parent.
