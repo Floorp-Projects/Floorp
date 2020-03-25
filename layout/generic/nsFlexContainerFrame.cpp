@@ -35,8 +35,7 @@ using FlexItem = nsFlexContainerFrame::FlexItem;
 using FlexLine = nsFlexContainerFrame::FlexLine;
 using FlexboxAxisTracker = nsFlexContainerFrame::FlexboxAxisTracker;
 using StrutInfo = nsFlexContainerFrame::StrutInfo;
-using CachedMeasuringReflowResult =
-    nsFlexContainerFrame::CachedMeasuringReflowResult;
+using CachedBAxisMeasurement = nsFlexContainerFrame::CachedBAxisMeasurement;
 
 static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 #define FLEX_LOG(...) \
@@ -1625,8 +1624,9 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
 }
 
 /**
- * A cached result for a measuring reflow. This cache prevents us from doing
- * exponential reflows in cases of deeply nested flex and scroll frames.
+ * A cached result for a flex item's block-axis measuring reflow. This cache
+ * prevents us from doing exponential reflows in cases of deeply nested flex
+ * and scroll frames.
  *
  * We store the cached value in the flex item's frame property table, for
  * simplicity.
@@ -1664,7 +1664,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
  * size computation (see bug 1336708). This is one reason we need to use the
  * computed BSize as part of the key.
  */
-class nsFlexContainerFrame::CachedMeasuringReflowResult {
+class nsFlexContainerFrame::CachedBAxisMeasurement {
   struct Key {
     LogicalSize mComputedSize;
     nscoord mComputedMinBSize;
@@ -1691,8 +1691,8 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult {
   nscoord mAscent;
 
  public:
-  CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
-                              const ReflowOutput& aReflowOutput)
+  CachedBAxisMeasurement(const ReflowInput& aReflowInput,
+                         const ReflowOutput& aReflowOutput)
       : mKey(aReflowInput), mAscent(aReflowOutput.BlockStartAscent()) {
     // To get content-box bsize, we have to subtract off border & padding
     // (and floor at 0 in case the border/padding are too large):
@@ -1718,19 +1718,19 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult {
 
   // Instances of this class are stored under this frame property, on
   // frames that are flex items:
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, CachedMeasuringReflowResult)
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, CachedBAxisMeasurement)
 };
 
 void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
     nsIFrame* aItemFrame) {
-  aItemFrame->RemoveProperty(CachedMeasuringReflowResult::Prop());
+  aItemFrame->RemoveProperty(CachedBAxisMeasurement::Prop());
 }
 
-const CachedMeasuringReflowResult&
+const CachedBAxisMeasurement&
 nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
     FlexItem& aItem, ReflowInput& aChildReflowInput) {
   auto* cachedResult =
-      aItem.Frame()->GetProperty(CachedMeasuringReflowResult::Prop());
+      aItem.Frame()->GetProperty(CachedBAxisMeasurement::Prop());
   if (cachedResult) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
@@ -1773,12 +1773,11 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
   // measuring reflow the next time around:
   if (cachedResult) {
     *cachedResult =
-        CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
+        CachedBAxisMeasurement(aChildReflowInput, childReflowOutput);
   } else {
     cachedResult =
-        new CachedMeasuringReflowResult(aChildReflowInput, childReflowOutput);
-    aItem.Frame()->SetProperty(CachedMeasuringReflowResult::Prop(),
-                               cachedResult);
+        new CachedBAxisMeasurement(aChildReflowInput, childReflowOutput);
+    aItem.Frame()->SetProperty(CachedBAxisMeasurement::Prop(), cachedResult);
   }
   return *cachedResult;
 }
@@ -1818,11 +1817,11 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
     childRIForMeasuringBSize.mFlags.mIsBResizeForPercentages = true;
   }
 
-  const CachedMeasuringReflowResult& reflowResult =
+  const CachedBAxisMeasurement& measurement =
       MeasureAscentAndBSizeForFlexItem(aFlexItem, childRIForMeasuringBSize);
 
-  aFlexItem.SetAscent(reflowResult.Ascent());
-  return reflowResult.BSize();
+  aFlexItem.SetAscent(measurement.Ascent());
+  return measurement.BSize();
 }
 
 FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
@@ -4022,15 +4021,15 @@ void nsFlexContainerFrame::SizeItemInCrossAxis(ReflowInput& aChildReflowInput,
   }
 
   // Potentially reflow the item, and get the sizing info.
-  const CachedMeasuringReflowResult& reflowResult =
+  const CachedBAxisMeasurement& measurement =
       MeasureAscentAndBSizeForFlexItem(aItem, aChildReflowInput);
 
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
 
   // Tentatively store the child's desired content-box cross-size.
-  aItem.SetCrossSize(reflowResult.BSize());
-  aItem.SetAscent(reflowResult.Ascent());
+  aItem.SetCrossSize(measurement.BSize());
+  aItem.SetAscent(measurement.Ascent());
 }
 
 void FlexLine::PositionItemsInCrossAxis(
