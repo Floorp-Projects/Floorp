@@ -189,7 +189,7 @@ nscoord nsSplittableFrame::ConsumedBSize(WritingMode aWM) const {
 
   for (nsIFrame* prev = GetPrevContinuation(); prev;
        prev = prev->GetPrevContinuation()) {
-    bSize += prev->ContentBSize(aWM);
+    bSize += prev->ContentSize(aWM).BSize(aWM);
   }
   return bSize;
 }

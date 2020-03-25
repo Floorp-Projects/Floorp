@@ -1014,11 +1014,13 @@ class nsIFrame : public nsQueryFrame {
   nscoord BSize(mozilla::WritingMode aWritingMode) const {
     return GetLogicalSize(aWritingMode).BSize(aWritingMode);
   }
-  nscoord ContentBSize() const { return ContentBSize(GetWritingMode()); }
-  nscoord ContentBSize(mozilla::WritingMode aWritingMode) const {
+  mozilla::LogicalSize ContentSize() const {
+    return ContentSize(GetWritingMode());
+  }
+  mozilla::LogicalSize ContentSize(mozilla::WritingMode aWritingMode) const {
     auto bp = GetLogicalUsedBorderAndPadding(aWritingMode);
     bp.ApplySkipSides(GetLogicalSkipSides());
-    return std::max(0, BSize(aWritingMode) - bp.BStartEnd(aWritingMode));
+    return GetLogicalSize(aWritingMode) - bp.Size(aWritingMode);
   }
 
   /**

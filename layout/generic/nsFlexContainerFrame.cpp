@@ -2198,8 +2198,7 @@ bool FlexItem::NeedsFinalReflow() const {
     // We've already reflowed this flex item once, to measure it. In that
     // reflow, did its frame happen to end up with the correct final size
     // that the flex container would like it to have?
-    if (finalSize !=
-        LogicalSize(mWM, mFrame->GetContentRectRelativeToSelf().Size())) {
+    if (finalSize != mFrame->ContentSize(mWM)) {
       // The measuring reflow left the item with a different size than its
       // final flexed size. So, we need to reflow to give it the correct size.
       FLEX_LOG(
