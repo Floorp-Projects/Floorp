@@ -137,6 +137,10 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   void UpdateIsOnContentBlockingAllowList(nsIChannel* aChannel);
 
+  // Utility function to test if the passed cookiebahvior is
+  // BEHAVIOR_REJECT_TRACKER or BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+  static bool IsRejectThirdPartyTrackers(uint32_t aCookieBehavior);
+
  private:
   enum State {
     // No cookie permissions are allowed to be stored in this object.

@@ -137,9 +137,7 @@ NS_IMETHODIMP
 CookieJarSettings::GetRejectThirdPartyTrackers(
     bool* aRejectThirdPartyTrackers) {
   *aRejectThirdPartyTrackers =
-      mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      mCookieBehavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+      CookieJarSettings::IsRejectThirdPartyTrackers(mCookieBehavior);
   return NS_OK;
 }
 
@@ -405,6 +403,13 @@ void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
   Unused << ContentBlockingAllowList::Check(contentBlockingAllowListPrincipal,
                                             NS_UsePrivateBrowsing(aChannel),
                                             mIsOnContentBlockingAllowList);
+}
+
+// static
+bool CookieJarSettings::IsRejectThirdPartyTrackers(uint32_t aCookieBehavior) {
+  return aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+         aCookieBehavior ==
+             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 }
 
 NS_IMPL_ISUPPORTS(CookieJarSettings, nsICookieJarSettings)
