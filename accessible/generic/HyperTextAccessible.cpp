@@ -337,7 +337,7 @@ static nsIContent* GetElementAsContentOf(nsINode* aNode) {
 
 bool HyperTextAccessible::OffsetsToDOMRange(int32_t aStartOffset,
                                             int32_t aEndOffset,
-                                            nsRange* aRange) {
+                                            nsRange* aRange) const {
   DOMPoint startPoint = OffsetToDOMPoint(aStartOffset);
   if (!startPoint.node) return false;
 
@@ -370,7 +370,7 @@ bool HyperTextAccessible::OffsetsToDOMRange(int32_t aStartOffset,
   return true;
 }
 
-DOMPoint HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset) {
+DOMPoint HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset) const {
   // 0 offset is valid even if no children. In this case the associated editor
   // is empty so return a DOM point for editor root element.
   if (aOffset == 0) {
@@ -417,7 +417,7 @@ DOMPoint HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset) {
 }
 
 DOMPoint HyperTextAccessible::ClosestNotGeneratedDOMPoint(
-    const DOMPoint& aDOMPoint, nsIContent* aElementContent) {
+    const DOMPoint& aDOMPoint, nsIContent* aElementContent) const {
   MOZ_ASSERT(aDOMPoint.node, "The node must not be null");
 
   // ::before pseudo element
