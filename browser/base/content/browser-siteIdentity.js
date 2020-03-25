@@ -1505,7 +1505,6 @@ var gIdentityHandler = {
       let block = document.createXULElement("vbox");
       block.setAttribute("id", "identity-popup-popup-container");
       menulist.setAttribute("sizetopopup", "none");
-      menulist.setAttribute("class", "identity-popup-popup-menulist");
       menulist.setAttribute("id", "identity-popup-popup-menulist");
 
       for (let state of SitePermissions.getAvailableStates(aPermission.id)) {
