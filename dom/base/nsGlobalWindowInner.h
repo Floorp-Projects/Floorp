@@ -948,7 +948,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool IsSharedMemoryAllowed() const override;
 
   // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
-  bool CrossOriginIsolated() const;
+  bool CrossOriginIsolated() const override;
 
  protected:
   // Web IDL helpers
