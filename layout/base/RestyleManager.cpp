@@ -745,7 +745,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
         nsIFrame* cb = cont->GetContainingBlock();
         nsMargin newOffsets;
         WritingMode wm = cb->GetWritingMode();
-        const LogicalSize size(wm, cb->GetContentRectRelativeToSelf().Size());
+        const LogicalSize size = cb->ContentSize();
 
         ReflowInput::ComputeRelativeOffsets(wm, cont, size, newOffsets);
         NS_ASSERTION(newOffsets.left == -newOffsets.right &&
