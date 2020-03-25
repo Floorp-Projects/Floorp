@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobInputStreamStorage.h"
-#include "mozilla/SlicedInputStream.h"
+
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
