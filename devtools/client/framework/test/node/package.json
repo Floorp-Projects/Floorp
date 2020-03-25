@@ -10,7 +10,11 @@
     "test-ci": "jest --json"
   },
   "dependencies": {
-    "jest": "^23.0.0",
+    "@babel/plugin-proposal-async-generator-functions": "^7.2.0",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
+    "@babel/plugin-proposal-optional-chaining": "^7.8.3",
+    "babel-jest": "^25.1.0",
+    "jest": "^25.1.0",
     "react-test-renderer": "16.4.1",
     "react": "16.4.1",
     "react-dom": "16.4.1"
