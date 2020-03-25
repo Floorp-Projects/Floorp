@@ -62,9 +62,22 @@ TEST(Matrix, TransformAndClipRect)
 
 TEST(Matrix4x4Flagged, Mult)
 {
-  Matrix4x4Flagged a = Matrix4x4::Translation(Point(42, 42));
-  Matrix4x4 b = Matrix4x4::Scaling(2, 2, 1);
-  Matrix4x4Flagged actual = a * b;
-  Matrix4x4Flagged expected(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 84, 84, 0, 1);
-  EXPECT_EQ(expected, actual);
+  Matrix4x4Flagged simple =
+      Matrix4x4::Translation(Point(42, 42)) * Matrix4x4::Scaling(3, 3, 1);
+  // For the general matrix, put a value in every field to make sure
+  // nothing gets dropped.
+  Matrix4x4 general(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+
+  // Use Matrix4x4::operator*(Matrix4x4).
+  // For the purposes of this test, assume that's correct.
+  Matrix4x4Flagged realResult = Matrix4x4Flagged(simple.GetMatrix() * general);
+
+  // Check that Matrix4x4Flagged::operator*(Matrix4x4Flagged) produces the same
+  // result.
+  Matrix4x4Flagged flaggedResult = simple * Matrix4x4Flagged(general);
+  EXPECT_EQ(realResult, flaggedResult);
+
+  // Check that Matrix4x4Flagged::operator*(Matrix4x4) produces the same result.
+  Matrix4x4Flagged mixedResult = simple * general;
+  EXPECT_EQ(realResult, mixedResult);
 }
