@@ -124,6 +124,36 @@ bool MediaControlService::UnregisterActiveMediaController(
   return true;
 }
 
+void MediaControlService::NotifyControllerPlaybackStateChanged(
+    MediaController* aController) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      mControllerManager,
+      "controller state change happens before initializing service");
+  MOZ_DIAGNOSTIC_ASSERT(aController);
+  // The controller is not an active controller.
+  if (!mControllerManager->Contains(aController)) {
+    return;
+  }
+
+  // The controller is the main controller, propagate its playback state.
+  if (GetMainController() == aController) {
+    mControllerManager->MainControllerPlaybackStateChanged(
+        aController->GetState());
+    return;
+  }
+
+  // The controller is not the main controller, but will become a new main
+  // controller. As the service can contains multiple controllers and only one
+  // controller can be controlled by media control keys. Therefore, when
+  // controller's state becomes `playing`, then we would like to let that
+  // controller being controlled, rather than other controller which might not
+  // be playing at the time.
+  if (GetMainController() != aController &&
+      aController->GetState() == MediaSessionPlaybackState::Playing) {
+    mControllerManager->UpdateMainController(aController);
+  }
+}
+
 uint64_t MediaControlService::GetActiveControllersNum() const {
   MOZ_DIAGNOSTIC_ASSERT(mControllerManager);
   return mControllerManager->GetControllersNum();
@@ -174,7 +204,7 @@ bool MediaControlService::ControllerManager::AddController(
     return false;
   }
   mControllers.insertBack(aController);
-  UpdateMainController(aController);
+  UpdateMainControllerInternal(aController);
   return true;
 }
 
@@ -187,9 +217,29 @@ bool MediaControlService::ControllerManager::RemoveController(
   // This is LinkedListElement's method which will remove controller from
   // `mController`.
   aController->remove();
-  UpdateMainController(mControllers.isEmpty() ? nullptr
-                                              : mControllers.getLast());
+  UpdateMainControllerInternal(mControllers.isEmpty() ? nullptr
+                                                      : mControllers.getLast());
   return true;
+}
+
+void MediaControlService::ControllerManager::UpdateMainController(
+    MediaController* aController) {
+  MOZ_DIAGNOSTIC_ASSERT(aController);
+  MOZ_DIAGNOSTIC_ASSERT(mControllers.contains(aController));
+
+  // Make the main controller as the last element in the list to maintain the
+  // order of controllers because we always use the last controller in the list
+  // as the next main controller when removing current main controller from the
+  // list.
+  // Eg. If the list contains [A, B, C], and now the last element C is the main
+  // controller. When B becomes main controller later, the list would become
+  // [A, C, B]. And if A becomes main controller, list would become [C, B, A].
+  // Then, if we remove A from the list, the next main controller would be B.
+  // But if we don't maintain the controller order when main controller changes,
+  // we would pick C as the main controller because the list is still [A, B, C].
+  aController->remove();
+  mControllers.insertBack(aController);
+  UpdateMainControllerInternal(aController);
 }
 
 void MediaControlService::ControllerManager::Shutdown() {
@@ -215,7 +265,7 @@ void MediaControlService::ControllerManager::MainControllerMetadataChanged(
   mSource->SetMediaMetadata(aMetadata);
 }
 
-void MediaControlService::ControllerManager::UpdateMainController(
+void MediaControlService::ControllerManager::UpdateMainControllerInternal(
     MediaController* aController) {
   MOZ_ASSERT(NS_IsMainThread());
   mMainController = aController;
@@ -241,12 +291,7 @@ void MediaControlService::ControllerManager::UpdateMainController(
 
 void MediaControlService::ControllerManager::ConnectToMainControllerEvents() {
   MOZ_ASSERT(mMainController);
-  // Listen to main controller's event in order to get its playback state and
-  // metadata update.
-  mPlayStateChangedListener =
-      mMainController->PlaybackStateChangedEvent().Connect(
-          AbstractThread::MainThread(), this,
-          &ControllerManager::MainControllerPlaybackStateChanged);
+  // Listen to main controller's event in order to get its metadata update.
   mMetadataChangedListener = mMainController->MetadataChangedEvent().Connect(
       AbstractThread::MainThread(), this,
       &ControllerManager::MainControllerMetadataChanged);
@@ -257,7 +302,6 @@ void MediaControlService::ControllerManager::ConnectToMainControllerEvents() {
 }
 
 void MediaControlService::ControllerManager::DisconnectMainControllerEvents() {
-  mPlayStateChangedListener.DisconnectIfExists();
   mMetadataChangedListener.DisconnectIfExists();
 }
 
@@ -268,6 +312,11 @@ MediaController* MediaControlService::ControllerManager::GetMainController()
 
 uint64_t MediaControlService::ControllerManager::GetControllersNum() const {
   return mControllers.length();
+}
+
+bool MediaControlService::ControllerManager::Contains(
+    MediaController* aController) const {
+  return mControllers.contains(aController);
 }
 
 }  // namespace dom
