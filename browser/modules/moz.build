@@ -121,8 +121,6 @@ with Files("webrtcUI.jsm"):
 with Files("ZoomUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
-TESTING_JS_MODULES += ['test/OSKeyStoreTestUtils.jsm']
-
 BROWSER_CHROME_MANIFESTS += [
     'test/browser/browser.ini',
     'test/browser/formValidation/browser.ini',
@@ -147,7 +145,6 @@ EXTRA_JS_MODULES += [
     'LiveBookmarkMigrator.jsm',
     'NewTabPagePreloading.jsm',
     'OpenInTabsUtils.jsm',
-    'OSKeyStore.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',
     'PingCentre.jsm',

@@ -65,7 +65,7 @@ const { FormAutofill } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
-  OSKeyStore: "resource:///modules/OSKeyStore.jsm",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
 let AddressDataLoader = {
