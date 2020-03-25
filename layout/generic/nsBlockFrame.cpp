@@ -220,19 +220,22 @@ static nsRect GetLineTextArea(nsLineBox* aLine,
  * backplate color. Otheriwse, we use the default background color from
  * our high contrast theme.
  */
-static nscolor GetBackplateColor(nsIFrame* aFrame) {
+static Maybe<nscolor> GetBackplateColor(nsIFrame* aFrame) {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
+    if (frame->IsThemed()) {
+      return Nothing();
+    }
     auto* bg = frame->StyleBackground();
     if (bg->IsTransparent(frame)) {
       continue;
     }
     nscolor backgroundColor = bg->BackgroundColor(frame);
     if (NS_GET_A(backgroundColor) != 0) {
-      return backgroundColor;
+      return Some(backgroundColor);
     }
     break;
   }
-  return aFrame->PresContext()->DefaultBackgroundColor();
+  return Some(aFrame->PresContext()->DefaultBackgroundColor());
 }
 
 #ifdef DEBUG
@@ -6946,15 +6949,20 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             aLineArea.Intersects(aBuilder->GetVisibleRect()));
   };
 
-  // We'll try to draw an accessibility backplate behind text
-  // (to ensure it's readable over any possible background-images),
-  // if all of the following hold:
-  //    (A) the backplate feature is preffed on
-  //    (B) we are not honoring the document colors
-  const bool shouldDrawBackplate =
-      StaticPrefs::browser_display_permit_backplate() &&
-      !PresContext()->PrefSheetPrefs().mUseDocumentColors &&
-      !IsComboboxControlFrame();
+  Maybe<nscolor> backplateColor;
+
+  {
+    // We'll try to draw an accessibility backplate behind text (to ensure it's
+    // readable over any possible background-images), if all of the following
+    // hold:
+    //    (A) the backplate feature is preffed on
+    //    (B) we are not honoring the document colors
+    if (StaticPrefs::browser_display_permit_backplate() &&
+        !PresContext()->PrefSheetPrefs().mUseDocumentColors &&
+        !IsComboboxControlFrame()) {
+      backplateColor = GetBackplateColor(this);
+    }
+  }
 
   // Don't use the line cursor if we might have a descendant placeholder ...
   // it might skip lines that contain placeholders but don't themselves
@@ -6971,7 +6979,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // runs of text as a whole, which requires we iterate through all lines
   // to find our backplate size.
   nsLineBox* cursor = (hasDescendantPlaceHolders || textOverflow.isSome() ||
-                       shouldDrawBackplate)
+                       backplateColor)
                           ? nullptr
                           : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
   LineIterator line_end = LinesEnd();
@@ -7001,10 +7009,6 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nscoord lastY = INT32_MIN;
     nscoord lastYMost = INT32_MIN;
     nsRect curBackplateArea;
-    Maybe<nscolor> backplateColor;
-    if (shouldDrawBackplate) {
-      backplateColor = Some(GetBackplateColor(this));
-    }
     // A frame's display list cannot contain more than one copy of a
     // given display item unless the items are uniquely identifiable.
     // Because backplate occasionally requires multiple
@@ -7025,7 +7029,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // If we have encountered a non-inline line but were previously
         // forming a backplate, we should add the backplate to the display
         // list as-is and render future backplates disjointly.
-        MOZ_ASSERT(shouldDrawBackplate,
+        MOZ_ASSERT(backplateColor,
                    "if this master switch is off, curBackplateArea "
                    "must be empty and we shouldn't get here");
         aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
@@ -7042,8 +7046,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         }
         lastY = lineArea.y;
         lastYMost = lineArea.YMost();
-        if (lineInLine && shouldDrawBackplate &&
-            LineHasVisibleInlineContent(line)) {
+        if (lineInLine && backplateColor && LineHasVisibleInlineContent(line)) {
           nsRect lineBackplate = GetLineTextArea(line, aBuilder) +
                                  aBuilder->ToReferenceFrame(this);
           if (curBackplateArea.IsEmpty()) {
