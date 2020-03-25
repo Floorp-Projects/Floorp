@@ -31,10 +31,7 @@ XPCOMUtils.defineLazyGetter(
   "browserSessionId",
   () => TelemetrySession.getMetadata("").sessionId
 );
-// This is for PingCentre client to capture "activity-stream" experiment strings.
-// Although we could change it to anything else, such as "messaging-system", that would
-// require us to have the same value contained in the Normandy slugs.
-const ACTIVITY_STREAM_ID = "activity-stream";
+const TELEMETRY_TOPIC = "about:welcome";
 const PING_TYPE = "onboarding";
 const PING_VERSION = "1";
 const STRUCTURED_INGESTION_NAMESPACE_MS = "messaging-system";
@@ -54,7 +51,7 @@ class AboutWelcomeTelemetry {
    */
   get pingCentre() {
     Object.defineProperty(this, "pingCentre", {
-      value: new PingCentre({ topic: ACTIVITY_STREAM_ID }),
+      value: new PingCentre({ topic: TELEMETRY_TOPIC }),
     });
     return this.pingCentre;
   }
@@ -91,8 +88,7 @@ class AboutWelcomeTelemetry {
     const ping = await this._createPing(event);
     this.pingCentre.sendStructuredIngestionPing(
       ping,
-      this._generateStructuredIngestionEndpoint(),
-      { filter: ACTIVITY_STREAM_ID }
+      this._generateStructuredIngestionEndpoint()
     );
   }
 }
