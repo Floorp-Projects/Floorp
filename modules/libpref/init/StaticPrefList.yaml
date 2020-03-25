@@ -4068,6 +4068,11 @@
 #endif
   mirror: once
 
+- name: gfx.webrender.compositor.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.webrender.compositor.max_update_rects
   type: uint32_t
 #if defined(XP_WIN) || defined(XP_MACOSX)
