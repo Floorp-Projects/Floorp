@@ -1753,8 +1753,8 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
           // it's currently only clamping for RFP mode. RFP mode gives a much
           // lower time precision, so we accept the security leak here for now
           if (!perf->IsSystemPrincipal()) {
-            timeStamp = nsRFPService::ReduceTimePrecisionAsMSecs(
-                timeStamp, 0, TimerPrecisionType::RFPOnly);
+            timeStamp =
+                nsRFPService::ReduceTimePrecisionAsMSecsRFP(timeStamp, 0);
           }
         }
         // else window is partially torn down already
