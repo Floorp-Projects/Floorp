@@ -194,7 +194,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const uint32_t& aSourceRequestBlockingReason,
       const Maybe<ChildLoadInfoForwarderArgs>& aTargetLoadInfoForwarder,
       const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
-      const Maybe<URIParams>& apiRedirectUri,
+      nsIURI* apiRedirectUri,
       const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
       const bool& aChooseAppcache) override;
   virtual mozilla::ipc::IPCResult RecvDocumentChannelCleanup(
@@ -207,7 +207,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const nsresult& statusCode) override;
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(
-      const URIParams& uri,
+      nsIURI* uri,
       const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
   virtual mozilla::ipc::IPCResult RecvBytesRead(const int32_t& aCount) override;
   virtual mozilla::ipc::IPCResult RecvOpenOriginalCacheInputStream() override;
