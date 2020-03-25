@@ -4,7 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ContentBlockingAllowList.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -104,7 +107,10 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
 }
 
 CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior, State aState)
-    : mCookieBehavior(aCookieBehavior), mState(aState), mToBeMerged(false) {
+    : mCookieBehavior(aCookieBehavior),
+      mIsOnContentBlockingAllowList(false),
+      mState(aState),
+      mToBeMerged(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -161,6 +167,13 @@ CookieJarSettings::SetPartitionForeign(bool aPartitionForeign) {
     mCookieBehavior =
         nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CookieJarSettings::GetIsOnContentBlockingAllowList(
+    bool* aIsOnContentBlockingAllowList) {
+  *aIsOnContentBlockingAllowList = mIsOnContentBlockingAllowList;
   return NS_OK;
 }
 
@@ -242,6 +255,7 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
 
   aData.isFixed() = mState == eFixed;
   aData.cookieBehavior() = mCookieBehavior;
+  aData.isOnContentBlockingAllowList() = mIsOnContentBlockingAllowList;
 
   for (const RefPtr<nsIPermission>& permission : mCookiePermissions) {
     nsCOMPtr<nsIPrincipal> principal;
@@ -296,6 +310,8 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
       aData.cookieBehavior(), aData.isFixed() ? eFixed : eProgressive);
 
+  cookieJarSettings->mIsOnContentBlockingAllowList =
+      aData.isOnContentBlockingAllowList();
   cookieJarSettings->mCookiePermissions.SwapElements(list);
 
   cookieJarSettings.forget(aCookieJarSettings);
@@ -353,6 +369,42 @@ void CookieJarSettings::Merge(const CookieJarSettingsArgs& aData) {
       mCookiePermissions.AppendElement(permission);
     }
   }
+}
+
+void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
+    nsIChannel* aChannel) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aChannel);
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+#ifdef DEBUG
+  RefPtr<dom::BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc)));
+  MOZ_ASSERT(bc->IsTop());
+#endif
+
+  nsCOMPtr<nsIURI> uriBeingLoaded =
+      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(aChannel);
+  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+
+  // We need to recompute the ContentBlockingAllowListPrincipal here for the
+  // top level channel because we might navigate from the the initial
+  // about:blank page or the existing page which may have a different origin
+  // than the URI we are going to load here. Thus, we need to recompute the
+  // prinicpal in order to get the correct ContentBlockingAllowListPrincipal.
+  OriginAttributes attrs;
+  loadInfo->GetOriginAttributes(&attrs);
+  ContentBlockingAllowList::RecomputePrincipal(
+      uriBeingLoaded, attrs, getter_AddRefs(contentBlockingAllowListPrincipal));
+
+  if (!contentBlockingAllowListPrincipal ||
+      !contentBlockingAllowListPrincipal->GetIsContentPrincipal()) {
+    return;
+  }
+
+  Unused << ContentBlockingAllowList::Check(contentBlockingAllowListPrincipal,
+                                            NS_UsePrivateBrowsing(aChannel),
+                                            mIsOnContentBlockingAllowList);
 }
 
 NS_IMPL_ISUPPORTS(CookieJarSettings, nsICookieJarSettings)

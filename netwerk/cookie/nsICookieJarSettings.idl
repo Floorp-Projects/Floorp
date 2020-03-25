@@ -35,6 +35,11 @@ interface nsICookieJarSettings : nsISupports
   [infallible] attribute boolean partitionForeign;
 
   /**
+   * Whether the top-level document is on the content blocking allow list.
+   */
+  [infallible] readonly attribute boolean isOnContentBlockingAllowList;
+
+  /**
    * CookiePermission at the loading of the document for a particular
    * principal. It returns the same cookiePermission also in case it changes
    * during the life-time of the top document.
