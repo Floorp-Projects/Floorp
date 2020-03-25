@@ -231,7 +231,7 @@ nsresult FTPChannelChild::OpenContentStream(bool aAsync,
 mozilla::ipc::IPCResult FTPChannelChild::RecvOnStartRequest(
     const nsresult& aChannelStatus, const int64_t& aContentLength,
     const nsCString& aContentType, const PRTime& aLastModified,
-    const nsCString& aEntityID, nsIURI* aURI) {
+    const nsCString& aEntityID, const URIParams& aURI) {
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
   // stage, as they are set in the listener's OnStartRequest.
   MOZ_RELEASE_ASSERT(
@@ -257,7 +257,7 @@ void FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
                                        const nsCString& aContentType,
                                        const PRTime& aLastModified,
                                        const nsCString& aEntityID,
-                                       nsIURI* aURI) {
+                                       const URIParams& aURI) {
   mDuringOnStart = true;
   RefPtr<FTPChannelChild> self = this;
   auto clearDuringFlag =
@@ -284,7 +284,8 @@ void FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
   mEntityID = aEntityID;
 
   nsCString spec;
-  nsresult rv = aURI->GetSpec(spec);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  nsresult rv = uri->GetSpec(spec);
   if (NS_SUCCEEDED(rv)) {
     // Changes nsBaseChannel::URI()
     rv = NS_MutateURI(mURI).SetSpec(spec).Finalize(mURI);
