@@ -316,19 +316,22 @@
       <h2 data-l10n-id="recommended-extensions-heading" class="header-name recommended-heading"></h2>
       <taar-notice></taar-notice>
       <recommended-addon-list type="extension" hide-installed></recommended-addon-list>
-      <footer is="recommended-footer" class="view-footer hide-amo-link"></footer>
+      <footer is="recommended-footer" class="view-footer"></footer>
+    </template>
+
+    <template name="recommended-themes-footer">
+      <p data-l10n-id="recommended-theme-1" class="theme-recommendation">
+          <a data-l10n-name="link" target="_blank"></a>
+      </p>
+      <div class="amo-link-container view-footer-item">
+        <button class="primary" action="open-amo" data-l10n-id="find-more-addons"></button>
+      </div>
     </template>
 
     <template name="recommended-themes-section">
       <h2 data-l10n-id="recommended-themes-heading" class="header-name recommended-heading"></h2>
       <recommended-addon-list type="theme" hide-installed></recommended-addon-list>
-      <footer>
-        <div>
-          <p data-l10n-id="recommended-theme-1" class="theme-recommendation">
-            <a data-l10n-name="link" target="_blank"></a>
-          </p>
-        </div>
-      </footer>
+      <footer is="recommended-themes-footer" class="view-footer"></footer>
     </template>
 
     <template id="shortcut-view">
