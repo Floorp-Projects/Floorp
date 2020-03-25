@@ -241,7 +241,9 @@ void MediaController::UpdateActualPlaybackState() {
   mActualPlaybackState = newState;
   LOG("UpdateActualPlaybackState : '%s'",
       ToMediaSessionPlaybackStateStr(mActualPlaybackState));
-  mPlaybackStateChangedEvent.Notify(mActualPlaybackState);
+  if (RefPtr<MediaControlService> service = MediaControlService::GetService()) {
+    service->NotifyControllerPlaybackStateChanged(this);
+  }
 }
 
 MediaSessionPlaybackState MediaController::GetState() const {
