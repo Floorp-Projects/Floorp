@@ -247,7 +247,8 @@ html|*#webRTC-previewVideo {
   transform: scaleX(-1);
 }
 
-.identity-popup-popup-menulist {
+#identity-popup-popup-menulist,
+#identity-popup-popup-menulist > menupopup {
   min-width: 6.5em;
 }
 
