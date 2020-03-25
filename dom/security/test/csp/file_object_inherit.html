@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1457100: Test OBJECT inherits CSP if needed</title>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content= "img-src https://bug1457100.test.com"/>
+</head>
+<body>
+<object id="dataObject" data="data:text/html,object<script>var foo = 0;</script>"></object>
+
+<script type="application/javascript">
+  var dataObject = document.getElementById("dataObject");
+  dataObject.onload = function () {
+    var contentDoc = SpecialPowers.wrap(dataObject).contentDocument;
+    var cspJSON = contentDoc.cspJSON;
+    window.parent.postMessage({cspJSON}, "*");
+  }
+</script>
+
+</body>
+</html>
