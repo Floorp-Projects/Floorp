@@ -46,6 +46,16 @@ already_AddRefed<IPCBlobInputStreamParent> IPCBlobInputStreamParent::Create(
   return actor.forget();
 }
 
+template already_AddRefed<IPCBlobInputStreamParent>
+IPCBlobInputStreamParent::Create<mozilla::ipc::PBackgroundParent>(
+    nsIInputStream*, uint64_t, uint64_t, nsresult*,
+    mozilla::ipc::PBackgroundParent*);
+
+template already_AddRefed<IPCBlobInputStreamParent>
+IPCBlobInputStreamParent::Create<ContentParent>(nsIInputStream*, uint64_t,
+                                                uint64_t, nsresult*,
+                                                ContentParent*);
+
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
                                                    uint64_t aSize,
                                                    ContentParent* aManager)
