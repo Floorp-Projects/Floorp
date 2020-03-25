@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 log = { version = "0.4", features = ["std"] }
-regex = { version = "1", default-features = false, features = ["perf", "std"] }
+regex = "1"
 tempfile = "3"
 walkdir = "2"
 
