@@ -39,8 +39,9 @@ struct CookiePermissionData
 
 struct CookieJarSettingsArgs
 {
-  // Copy of the cookie behavior and permissions for the top-level document.
+  // Copy of the cookie jar settings for the top-level document.
   uint32_t cookieBehavior;
+  bool isOnContentBlockingAllowList;
   CookiePermissionData[] cookiePermissions;
   bool isFixed;
 };
