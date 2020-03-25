@@ -5,17 +5,17 @@
 from __future__ import absolute_import
 
 import glob
+import json
 import os
+import signal
+import socket
 import subprocess
 import sys
 import time
-import socket
 from subprocess import PIPE
-import signal
 
 import mozinfo
 from mozprocess import ProcessHandler
-
 from mozproxy.backends.base import Playback
 from mozproxy.utils import (
     transform_platform,
@@ -95,6 +95,7 @@ class Mitmproxy(Playback):
         self.ignore_mitmdump_exit_failure = config.get(
             "ignore_mitmdump_exit_failure", False
         )
+        self.recording_paths = None
 
         if self.config.get("playback_version") is None:
             LOG.info(
@@ -239,10 +240,8 @@ class Mitmproxy(Playback):
                 "scripts",
                 "alternate-server-replay.py",
             )
-            recording_paths = [
-                normalize_path(recording_path)
-                for recording_path in self.config["playback_files"]
-            ]
+            self.recording_paths = [normalize_path(recording_path)
+                                    for recording_path in self.config["playback_files"]]
 
             if self.config["playback_version"] in ["4.0.4", "5.0.1"]:
                 args = [
@@ -254,7 +253,7 @@ class Mitmproxy(Playback):
                     "--set",
                     "websocket=false",
                     "--set",
-                    "server_replay_files={}".format(",".join(recording_paths)),
+                    "server_replay_files={}".format(",".join(self.recording_paths)),
                     "--scripts",
                     normalize_path(script),
                 ]
@@ -344,6 +343,30 @@ class Mitmproxy(Playback):
             return True
         except socket.error:
             return False
+
+    def confidence(self):
+        file_name = "mitm_netlocs_%s.json" % os.path.splitext(
+            os.path.basename(
+                self.recording_paths[0]
+            )
+        )[0]
+        path = os.path.normpath(os.path.join(self.upload_dir,
+                                             file_name))
+        if os.path.exists(path):
+            try:
+                LOG.info("Reading confidence values from: %s" % path)
+                with open(path, "r") as f:
+                    data = json.load(f)
+                    return {"confidence": data["confidence"],
+                            "not-replayed": data["not-replayed"],
+                            "replayed": data["replayed"]
+                            }
+            except Exception:
+                LOG.info("Can't read netlocs file!", exc_info=True)
+                return None
+        else:
+            LOG.info("Netlocs file is not available! Cant find %s" % path)
+            return None
 
 
 class MitmproxyDesktop(Mitmproxy):
