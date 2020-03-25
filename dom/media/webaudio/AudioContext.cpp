@@ -721,11 +721,14 @@ double AudioContext::CurrentTime() {
     return rawTime;
   }
 
+  MOZ_ASSERT(GetParentObject()->AsGlobal());
   // The value of a MediaTrack's CurrentTime will always advance forward; it
   // will never reset (even if one rewinds a video.) Therefore we can use a
   // single Random Seed initialized at the same time as the object.
-  return nsRFPService::ReduceTimePrecisionAsSecs(rawTime,
-                                                 GetRandomTimelineSeed());
+  return nsRFPService::ReduceTimePrecisionAsSecs(
+      rawTime, GetRandomTimelineSeed(),
+      /* aIsSystemPrincipal */ false,
+      GetParentObject()->AsGlobal()->CrossOriginIsolated());
 }
 
 nsISerialEventTarget* AudioContext::GetMainThread() const {
