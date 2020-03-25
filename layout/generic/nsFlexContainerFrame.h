@@ -104,6 +104,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   class FlexboxAxisTracker;
   struct StrutInfo;
   class CachedBAxisMeasurement;
+  class CachedFlexItemData;
 
   // nsIFrame overrides
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
