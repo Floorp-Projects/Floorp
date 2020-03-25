@@ -133,6 +133,19 @@ class WebExtension(Perftest):
 
         if self.playback is not None:
             self.playback.stop()
+
+            confidence_values = self.playback.confidence()
+            if confidence_values:
+                mozproxy_replay = {
+                    u'type': u'mozproxy-replay',
+                    u'test': test["name"],
+                    u'unit': u'a.u.',
+                    u'values': confidence_values
+                }
+                self.control_server.submit_supporting_data(mozproxy_replay)
+            else:
+                LOG.info("Mozproxy replay confidence data not available!")
+
             self.playback = None
 
         self.remove_raptor_webext()

@@ -33,6 +33,7 @@ class PerftestOutput(object):
         self.summarized_supporting_data = []
         self.summarized_screenshots = []
         self.subtest_alert_on = subtest_alert_on
+        self.mozproxy_data = False
         self.browser_name = None
         self.browser_version = None
 
@@ -82,6 +83,9 @@ class PerftestOutput(object):
             data_type = data_set["type"]
             LOG.info("summarizing %s data" % data_type)
 
+            if "mozproxy" in data_type:
+                self.mozproxy_data = True
+
             if data_type not in support_data_by_type:
                 support_data_by_type[data_type] = {
                     "framework": {"name": "raptor"},
@@ -101,6 +105,15 @@ class PerftestOutput(object):
                 "alertThreshold": 2.0,
             }
 
+            # custom setting for mozproxy-replay
+            if data_type == 'mozproxy-replay':
+                suite["lowerIsBetter"] = False
+                suite["unit"] = "%"
+
+            for result in self.results:
+                if result["name"] == data_set["test"]:
+                    suite["extraOptions"] = result["extra_options"]
+
             support_data_by_type[data_type]["suites"].append(suite)
 
             # each supporting data measurement becomes a subtest, with the measurement type
@@ -115,6 +128,13 @@ class PerftestOutput(object):
                 new_subtest["lowerIsBetter"] = True
                 new_subtest["alertThreshold"] = 2.0
                 new_subtest["unit"] = data_set["unit"]
+
+                if measurement_name == "confidence":
+                    new_subtest["unit"] = "%"
+
+                if measurement_name == "replayed":
+                    new_subtest["lowerIsBetter"] = False
+
                 subtests.append(new_subtest)
                 vals.append([new_subtest["value"], new_subtest["name"]])
 
@@ -212,7 +232,7 @@ class PerftestOutput(object):
             # dumped out. TODO: Bug 1515406 - Add option to output both supplementary
             # data (i.e. power) and the regular Raptor test result
             # Both are already available as separate PERFHERDER_DATA json blobs
-            if len(self.summarized_supporting_data) == 0:
+            if len(self.summarized_supporting_data) == 0 or self.mozproxy_data:
                 LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
                 total_perfdata = 1
             else:
@@ -361,19 +381,36 @@ class PerftestOutput(object):
             return round(filters.mean(_filter(vals)), 2)
 
         if testname.startswith("supporting_data"):
-            if unit:
-                if unit in ("%",):
-                    return filters.mean(_filter(vals))
-                elif unit in ("W", "MHz"):
-                    # For power in Watts and clock frequencies,
-                    # summarize with the sum of the averages
-                    allavgs = []
-                    for (val, subtest) in vals:
-                        if "avg" in subtest:
-                            allavgs.append(val)
-                    if allavgs:
-                        return sum(allavgs)
-            return sum(_filter(vals))
+            if not unit:
+                return sum(_filter(vals))
+
+            if unit == "%":
+                return filters.mean(_filter(vals))
+
+            if unit == "a.u.":
+                if any("mozproxy-replay" in val[1] for val in vals):
+                    for val in vals:
+                        if val[1].endswith("confidence"):
+                            return val[0]
+                    raise Exception("No confidence measurement found in mozproxy supporting_data")
+
+            if unit in ("W", "MHz"):
+                # For power in Watts and clock frequencies,
+                # summarize with the sum of the averages
+                allavgs = []
+                for val, subtest in vals:
+                    if "avg" in subtest:
+                        allavgs.append(val)
+                if allavgs:
+                    return sum(allavgs)
+
+                raise Exception(
+                    "No average measurements found for supporting data with W, or MHz unit .")
+
+            if unit in ["KB", "mAh"]:
+                return sum(_filter(vals))
+
+            raise NotImplementedError("Unit %s not suported" % unit)
 
         if len(vals) > 1:
             return round(filters.geometric_mean(_filter(vals)), 2)
