@@ -291,7 +291,6 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mProgressSink.forget());
   arrayToRelease.AppendElement(mApplicationCache.forget());
   arrayToRelease.AppendElement(mPrincipal.forget());
-  arrayToRelease.AppendElement(mContentBlockingAllowListPrincipal.forget());
   arrayToRelease.AppendElement(mListener.forget());
   arrayToRelease.AppendElement(mCompressListener.forget());
 
@@ -2040,12 +2039,6 @@ nsresult HttpBaseChannel::GetTopWindowURI(nsIURI* aURIBeingLoaded,
         }
       }
 #endif
-
-      if (!mContentBlockingAllowListPrincipal) {
-        Unused << util->GetContentBlockingAllowListPrincipalFromWindow(
-            win, aURIBeingLoaded,
-            getter_AddRefs(mContentBlockingAllowListPrincipal));
-      }
     }
   }
   NS_IF_ADDREF(*aTopWindowURI = mTopWindowURI);
@@ -2057,27 +2050,6 @@ HttpBaseChannel::GetDocumentURI(nsIURI** aDocumentURI) {
   NS_ENSURE_ARG_POINTER(aDocumentURI);
   *aDocumentURI = mDocumentURI;
   NS_IF_ADDREF(*aDocumentURI);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::GetContentBlockingAllowListPrincipal(
-    nsIPrincipal** aPrincipal) {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  if (!mContentBlockingAllowListPrincipal) {
-    if (!mTopWindowURI) {
-      // If mTopWindowURI is null, it's possible that these two fields haven't
-      // been initialized yet.  GetTopWindowURI will lazily initilize both
-      // fields for us.
-      nsCOMPtr<nsIURI> throwAway;
-      Unused << GetTopWindowURI(getter_AddRefs(throwAway));
-    } else {
-      // Otherwise, the content blocking allow list principal is null (which is
-      // possible), so just return what we have...
-    }
-  }
-  nsCOMPtr<nsIPrincipal> copy = mContentBlockingAllowListPrincipal;
-  copy.forget(aPrincipal);
   return NS_OK;
 }
 
@@ -3584,9 +3556,6 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     RefPtr<HttpBaseChannel> realChannel;
     CallQueryInterface(newChannel, realChannel.StartAssignment());
     if (realChannel) {
-      realChannel->SetContentBlockingAllowListPrincipal(
-          mContentBlockingAllowListPrincipal);
-
       realChannel->SetTopWindowURI(mTopWindowURI);
     }
 
