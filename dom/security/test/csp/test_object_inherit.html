@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1457100: Test OBJECT inherits CSP if needed</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  window.removeEventListener("message", receiveMessage);
+
+  var cspJSON = event.data.cspJSON;
+  ok(cspJSON.includes("img-src"), "found img-src directive");
+  ok(cspJSON.includes("https://bug1457100.test.com"), "found img-src value");
+
+  SimpleTest.finish();
+}
+
+document.getElementById("testframe").src = "file_object_inherit.html";
+
+</script>
+</body>
+</html>
