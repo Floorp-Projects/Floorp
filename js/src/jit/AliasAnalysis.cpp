@@ -150,6 +150,7 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::GetDOMProperty:
     case MDefinition::Opcode::GetDOMMember:
     case MDefinition::Opcode::Call:
+    case MDefinition::Opcode::Throw:
     case MDefinition::Opcode::GetArgumentsObjectArg:
     case MDefinition::Opcode::SetArgumentsObjectArg:
     case MDefinition::Opcode::CompareExchangeTypedArrayElement:
