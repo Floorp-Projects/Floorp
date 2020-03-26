@@ -2222,15 +2222,6 @@ WorkerThreadPrimaryRunnable::Run() {
 
   using mozilla::ipc::BackgroundChild;
 
-  // Note: GetOrCreateForCurrentThread() must be called prior to
-  //       mWorkerPrivate->SetThread() in order to avoid accidentally consuming
-  //       worker messages here.
-  bool ipcReady = true;
-  if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
-    // Let's report the error only after SetThread().
-    ipcReady = false;
-  }
-
   class MOZ_STACK_CLASS SetThreadHelper final {
     // Raw pointer: this class is on the stack.
     WorkerPrivate* mWorkerPrivate;
@@ -2264,7 +2255,12 @@ WorkerThreadPrimaryRunnable::Run() {
 
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (!ipcReady) {
+  // These need to be initialized on the worker thread before being used on
+  // the main thread.
+  mWorkerPrivate->EnsurePerformanceStorage();
+  mWorkerPrivate->EnsurePerformanceCounter();
+
+  if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread())) {
     WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(
         mWorkerPrivate);
     return NS_ERROR_FAILURE;

@@ -339,13 +339,6 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
       return false;
     }
 
-    // PerformanceStorage & PerformanceCounter both need to be initialized
-    // on the worker thread before being used on main-thread.
-    // Let's be sure that it is created before any
-    // content loading.
-    aWorkerPrivate->EnsurePerformanceStorage();
-    aWorkerPrivate->EnsurePerformanceCounter();
-
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, std::move(mOriginStack),
                                     mScriptURL, WorkerScript, rv);

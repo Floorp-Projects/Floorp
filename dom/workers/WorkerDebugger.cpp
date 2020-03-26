@@ -92,11 +92,6 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
       return false;
     }
 
-    // Initialize performance state which might be used on the main thread, as
-    // in CompileScriptRunnable. This runnable might execute first.
-    aWorkerPrivate->EnsurePerformanceStorage();
-    aWorkerPrivate->EnsurePerformanceCounter();
-
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
 
     ErrorResult rv;
