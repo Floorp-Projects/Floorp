@@ -2341,15 +2341,15 @@ void TSFTextStore::FlushPendingActions() {
     switch (action.mType) {
       case PendingAction::Type::eKeyboardEvent:
         if (mDestroyed) {
-          MOZ_LOG(
-              sTextStoreLog, LogLevel::Warning,
-              ("0x%p   TSFTextStore::FlushPendingActions() "
-               "IGNORED pending KeyboardEvent(%s) due to already destroyed",
-               action.mKeyMsg->message == WM_KEYDOWN ? "eKeyDown" : "eKeyUp",
-               this));
+          MOZ_LOG(sTextStoreLog, LogLevel::Warning,
+                  ("0x%p   TSFTextStore::FlushPendingActions() "
+                   "IGNORED pending KeyboardEvent(%s) due to already destroyed",
+                   action.mKeyMsg.message == WM_KEYDOWN ? "eKeyDown" : "eKeyUp",
+                   this));
         }
-        MOZ_DIAGNOSTIC_ASSERT(action.mKeyMsg);
-        DispatchKeyboardEventAsProcessedByIME(*action.mKeyMsg);
+        MOZ_DIAGNOSTIC_ASSERT(action.mKeyMsg.message == WM_KEYDOWN ||
+                              action.mKeyMsg.message == WM_KEYUP);
+        DispatchKeyboardEventAsProcessedByIME(action.mKeyMsg);
         if (!widget || widget->Destroyed()) {
           break;
         }
@@ -2665,7 +2665,7 @@ void TSFTextStore::MaybeDispatchKeyboardEventAsProcessedByIME() {
          this));
     PendingAction* action = mPendingActions.AppendElement();
     action->mType = PendingAction::Type::eKeyboardEvent;
-    action->mKeyMsg = sHandlingKeyMsg;
+    memcpy(&action->mKeyMsg, sHandlingKeyMsg, sizeof(MSG));
     return;
   }
 
