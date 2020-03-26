@@ -267,7 +267,8 @@
         "id": {
           "type": "string",
           "title": "WebExtension Id",
-          "description": "The identifier (local part) of the associated WebExtension"
+          "description": "The identifier (local part) of the associated WebExtension should be of the format example@search.mozilla.org",
+          "pattern": "^[a-z0-9-._]*@search.mozilla.org$"
         },
         "locale": {
           "type": "string",
