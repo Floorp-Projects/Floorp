@@ -107,6 +107,11 @@ bool MediaControlService::RegisterActiveMediaController(
   LOG("Register media controller %" PRId64 ", currentNum=%" PRId64,
       aController->Id(), GetActiveControllersNum());
   mMediaControllerAmountChangedEvent.Notify(GetActiveControllersNum());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "media-controller-amount-changed", nullptr);
+    }
+  }
   return true;
 }
 
@@ -121,6 +126,11 @@ bool MediaControlService::UnregisterActiveMediaController(
   LOG("Unregister media controller %" PRId64 ", currentNum=%" PRId64,
       aController->Id(), GetActiveControllersNum());
   mMediaControllerAmountChangedEvent.Notify(GetActiveControllersNum());
+  if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
+    if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+      obs->NotifyObservers(nullptr, "media-controller-amount-changed", nullptr);
+    }
+  }
   return true;
 }
 

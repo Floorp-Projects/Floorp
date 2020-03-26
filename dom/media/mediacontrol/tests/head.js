@@ -256,3 +256,14 @@ function waitUntilControllerMetadataChanged() {
     "media-session-controller-metadata-changed"
   );
 }
+
+/**
+ * Wait until media controller amount changes, we would observe that by
+ * listening for `media-controller-amount-changed` notification.
+ *
+ * @return {Promise}
+ *         Resolve when observing `media-controller-amount-changed`
+ */
+function waitUntilMediaControllerAmountChanged() {
+  return BrowserUtils.promiseObserved("media-controller-amount-changed");
+}
