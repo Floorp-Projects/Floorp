@@ -5,6 +5,7 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <SwitchPreference
+        app:iconSpaceReserved="false"
         android:defaultValue="false"
         android:key="@string/pref_key_delete_browsing_data_on_quit"
         android:summary="@string/preference_summary_delete_browsing_data_on_quit_2"
