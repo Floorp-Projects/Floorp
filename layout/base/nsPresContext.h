@@ -117,9 +117,8 @@ enum class nsLayoutPhase : uint8_t {
 #endif
 
 /* Used by nsPresContext::HasAuthorSpecifiedRules */
-#define NS_AUTHOR_SPECIFIED_BACKGROUND (1 << 0)
-#define NS_AUTHOR_SPECIFIED_BORDER (1 << 1)
-#define NS_AUTHOR_SPECIFIED_PADDING (1 << 2)
+#define NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND (1 << 0)
+#define NS_AUTHOR_SPECIFIED_PADDING (1 << 1)
 
 class nsRootPresContext;
 
