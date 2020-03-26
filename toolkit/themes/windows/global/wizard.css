@@ -11,7 +11,11 @@
 }
 
 .wizard-header-box-1 {
-  padding: 5px 0;
+  padding: 5px 0px 5px 0px;
+}
+
+wizard[description=""] .wizard-header-description {
+  display: none;
 }
 
 .wizard-header-label {
@@ -23,10 +27,8 @@
   margin-inline-start: 44px;
 }
 
-:host([data-branded="true"]) .wizard-header-icon {
-  list-style-image: url("chrome://branding/content/icon128.png");
-  width: 48px;
-  height: 48px;
+wizard[branded="true"] .wizard-header-icon {
+  list-style-image: url("chrome://branding/content/icon48.png");
   margin-inline-end: 5px;
 }
 
@@ -35,7 +37,7 @@
 }
 
 .wizard-buttons-separator {
-  margin-bottom: 0 !important;
+  margin-bottom: 0px !important;
 }
 
 .wizard-buttons-box-2 {
@@ -44,9 +46,9 @@
 
 .wizard-button[dlgtype="finish"],
 .wizard-button[dlgtype="next"] {
-  margin-inline-start: 0 !important;
+  margin-inline-start: 0px !important;
 }
 
 .wizard-button[dlgtype="back"] {
-  margin-inline-end: 0 !important;
+  margin-inline-end: 0px !important;
 }
