@@ -13,7 +13,7 @@ job-defaults:
 linux64-clang-5.0:
     description: "Clang 5.0 toolchain build"
     treeherder:
-        symbol: TL(clang4.0)
+        symbol: TL(clang5.0)
     worker-type: b-linux-large
     run:
         script: build-clang.sh
