@@ -212,4 +212,20 @@ interface nsIXULRuntime : nsISupports
    * |mozilla::LauncherRegistryInfo::EnabledState| values.
    */
   readonly attribute uint32_t launcherProcessState;
+
+  /**
+   * Returns the last application version that used the current profile or null
+   * if the last version could not be found (compatibility.ini was either
+   * missing or invalid). Throws NS_ERROR_UNAVAILABLE if called from a content
+   * process.
+   */
+  readonly attribute ACString lastAppVersion;
+
+  /**
+   * Returns the last application build ID that used the current profile or null
+   * if the last build ID could not be found (compatibility.ini was either
+   * missing or invalid). Throws NS_ERROR_UNAVAILABLE if called from a content
+   * process.
+   */
+  readonly attribute ACString lastAppBuildID;
 };
