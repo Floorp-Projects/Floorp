@@ -1794,7 +1794,7 @@ SearchService.prototype = {
   _loadEngineFromCache(json) {
     try {
       let engine = new SearchEngine({
-        name: json._shortName,
+        shortName: json._shortName,
         isBuiltin: !!json._isBuiltin,
       });
       engine._initWithJSON(json);
@@ -2521,7 +2521,6 @@ SearchService.prototype = {
     let newEngine = new SearchEngine({
       name,
       isBuiltin,
-      sanitizeName: true,
     });
     newEngine._initFromMetadata(name, params);
     newEngine._loadPath = "[other]addEngineWithDetails";
@@ -2622,9 +2621,10 @@ SearchService.prototype = {
     );
 
     let engine = new SearchEngine({
-      name: engineParams.name,
+      // No need to sanitize the name, as shortName uses the WebExtension id
+      // which should already be sanitized.
+      shortName: engineParams.shortName,
       isBuiltin: engineParams.isBuiltin,
-      sanitizeName: true,
     });
     engine._initFromMetadata(engineParams.name, engineParams);
     engine._loadPath = "[other]addEngineWithDetails";

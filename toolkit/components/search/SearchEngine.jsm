@@ -747,14 +747,15 @@ EngineURL.prototype = {
  *   The options for this search engine. At least one of options.name,
  *   options.fileURI or options.uri are required.
  * @param {string} [options.name]
- *   The short name to use for the search engine.
+ *   The name to base the short name of the engine on. This is typically the
+ *   display name where a pre-defined/sanitized short name is not available.
+ * @param {string} [options.shortName]
+ *   The short name to use for the engine. This should be known to match
+ *   the basic requirements in sanitizeName for a short name.
  * @param {nsIFile} [options.fileURI]
  *   The file URI that points to the search engine data.
  * @param {nsIURI|string} [options.uri]
  *   Represents the location of the search engine data file.
- * @param {boolean} [options.sanitizeName]
- *   Only applies when options.name is specified, will santize the name so
- *   it can be used as a file name, defaults to false.
  * @param {boolean} options.isBuiltin
  *   Indicates whether the engine is a app-provided or not. If it is, it will
  *   be treated as read-only.
@@ -769,11 +770,9 @@ function SearchEngine(options = {}) {
 
   let file, uri;
   if ("name" in options) {
-    if ("sanitizeName" in options && options.sanitizeName) {
-      this._shortName = sanitizeName(options.name);
-    } else {
-      this._shortName = options.name;
-    }
+    this._shortName = sanitizeName(options.name);
+  } else if ("shortName" in options) {
+    this._shortName = options.shortName;
   } else if ("fileURI" in options && options.fileURI instanceof Ci.nsIFile) {
     file = options.fileURI;
   } else if ("uri" in options) {
