@@ -17,15 +17,17 @@
 #ifndef __ClearKeyUtils_h__
 #define __ClearKeyUtils_h__
 
+#include <assert.h>
+// stdef.h is required for content_decryption_module to work on Unix systems.
+#include <stddef.h>
 #include <stdint.h>
+
 #include <string>
 #include <vector>
-#include <assert.h>
 
-// This include is required in order for content_decryption_module to work
-// on Unix systems.
-#include "stddef.h"
 #include "content_decryption_module.h"
+#include "mozilla/Span.h"
+#include "pk11pub.h"
 
 #if 0
 void CK_Log(const char* aFmt, ...);
@@ -64,6 +66,11 @@ struct KeyIdPair {
 
 class ClearKeyUtils {
  public:
+  static bool DecryptCbcs(const std::vector<uint8_t>& aKey,
+                          const std::vector<uint8_t>& aIV,
+                          mozilla::Span<uint8_t> aSubsampleEncryptedRange,
+                          uint32_t aCryptByteBlocks, uint32_t aSkipByteBlocks);
+
   static bool DecryptAES(const std::vector<uint8_t>& aKey,
                          std::vector<uint8_t>& aData,
                          std::vector<uint8_t>& aIV);

@@ -24,6 +24,7 @@
 #include <algorithm>
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Span.h"
 
 using namespace cdm;
 
@@ -169,12 +170,62 @@ Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
   // If the sample is split up into multiple encrypted subsamples, we need to
   // stitch them into one continuous buffer for decryption.
   std::vector<uint8_t> tmp(aBufferSize);
+  static_assert(sizeof(uintptr_t) == sizeof(uint8_t*),
+                "We need uintptr_t to be exactly the same size as a pointer");
 
+  // Decrypt CBCS case:
+  if (aMetadata.mEncryptionScheme == EncryptionScheme::kCbcs) {
+    mozilla::CheckedInt<uintptr_t> data = reinterpret_cast<uintptr_t>(aBuffer);
+    if (!data.isValid()) {
+      return Status::kDecryptError;
+    }
+    const uintptr_t endBuffer =
+        reinterpret_cast<uintptr_t>(aBuffer + aBufferSize);
+
+    if (aMetadata.NumSubsamples() == 0) {
+      if (data.value() > endBuffer) {
+        return Status::kDecryptError;
+      }
+      mozilla::Span<uint8_t> encryptedSpan = mozilla::MakeSpan(
+          reinterpret_cast<uint8_t*>(data.value()), aBufferSize);
+      if (!ClearKeyUtils::DecryptCbcs(mKey, aMetadata.mIV, encryptedSpan,
+                                      aMetadata.mCryptByteBlock,
+                                      aMetadata.mSkipByteBlock)) {
+        return Status::kDecryptError;
+      }
+      return Status::kSuccess;
+    }
+
+    for (size_t i = 0; i < aMetadata.NumSubsamples(); i++) {
+      data += aMetadata.mClearBytes[i];
+      if (!data.isValid() || data.value() > endBuffer) {
+        return Status::kDecryptError;
+      }
+      mozilla::CheckedInt<uintptr_t> dataAfterCipher =
+          data + aMetadata.mCipherBytes[i];
+      if (!dataAfterCipher.isValid() || dataAfterCipher.value() > endBuffer) {
+        // Trying to read past the end of the buffer!
+        return Status::kDecryptError;
+      }
+      mozilla::Span<uint8_t> encryptedSpan = mozilla::MakeSpan(
+          reinterpret_cast<uint8_t*>(data.value()), aMetadata.mCipherBytes[i]);
+      if (!ClearKeyUtils::DecryptCbcs(mKey, aMetadata.mIV, encryptedSpan,
+                                      aMetadata.mCryptByteBlock,
+                                      aMetadata.mSkipByteBlock)) {
+        return Status::kDecryptError;
+      }
+      data += aMetadata.mCipherBytes[i];
+      if (!data.isValid()) {
+        return Status::kDecryptError;
+      }
+      return Status::kSuccess;
+    }
+  }
+
+  // Decrypt CENC case:
   if (aMetadata.NumSubsamples()) {
     // Take all encrypted parts of subsamples and stitch them into one
     // continuous encrypted buffer.
-    static_assert(sizeof(uintptr_t) == sizeof(uint8_t*),
-                  "We need uintptr_t to be exactly the same size as a pointer");
     mozilla::CheckedInt<uintptr_t> data = reinterpret_cast<uintptr_t>(aBuffer);
     const uintptr_t endBuffer =
         reinterpret_cast<uintptr_t>(aBuffer + aBufferSize);
