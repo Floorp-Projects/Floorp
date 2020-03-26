@@ -10,9 +10,11 @@
 #include "AudioContext.h"
 #include "CubebUtils.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
-#include "mozilla/dom/OfflineAudioCompletionEvent.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
+#include "mozilla/dom/OfflineAudioCompletionEvent.h"
+#include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WakeLock.h"
 #include "AudioChannelService.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
@@ -344,10 +346,14 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
           NS_WARNING(
               "AudioDestinationNode's graph never started processing audio");
         });
+
+    CreateAudioWakeLockIfNeeded();
   }
 }
 
-AudioDestinationNode::~AudioDestinationNode() = default;
+AudioDestinationNode::~AudioDestinationNode() {
+  ReleaseAudioWakeLockIfExists();
+}
 
 size_t AudioDestinationNode::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {
@@ -483,11 +489,13 @@ void AudioDestinationNode::Unmute() {
 void AudioDestinationNode::Suspend() {
   DestroyAudioChannelAgent();
   SendInt32ParameterToTrack(DestinationNodeEngine::SUSPENDED, 1);
+  ReleaseAudioWakeLockIfExists();
 }
 
 void AudioDestinationNode::Resume() {
   CreateAudioChannelAgent();
   SendInt32ParameterToTrack(DestinationNodeEngine::SUSPENDED, 0);
+  CreateAudioWakeLockIfNeeded();
 }
 
 void AudioDestinationNode::OfflineShutdown() {
@@ -612,6 +620,26 @@ void AudioDestinationNode::StopAudioCapturingTrack() {
   MOZ_ASSERT(IsCapturingAudio());
   mCaptureTrackPort->Destroy();
   mCaptureTrackPort = nullptr;
+}
+
+void AudioDestinationNode::CreateAudioWakeLockIfNeeded() {
+  if (!mWakeLock) {
+    RefPtr<power::PowerManagerService> pmService =
+        power::PowerManagerService::GetInstance();
+    NS_ENSURE_TRUE_VOID(pmService);
+
+    ErrorResult rv;
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("audio-playing"),
+                                       GetOwner(), rv);
+  }
+}
+
+void AudioDestinationNode::ReleaseAudioWakeLockIfExists() {
+  if (mWakeLock) {
+    IgnoredErrorResult rv;
+    mWakeLock->Unlock(rv);
+    mWakeLock = nullptr;
+  }
 }
 
 nsresult AudioDestinationNode::CreateAudioChannelAgent() {
