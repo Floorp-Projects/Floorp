@@ -13,7 +13,7 @@ registerTestFile("think-stereo-38000.wav");
 
 registerTestCase({
   func: function () {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(1, 120 * samplerate, samplerate);
     return oac;
   },
   name: "Empty testcase"
@@ -21,7 +21,7 @@ registerTestCase({
 
 registerTestCase({
   func: function () {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(1, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:1});
     source0.loop = true;
@@ -34,7 +34,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:2});
     source0.loop = true;
@@ -47,7 +47,7 @@ registerTestCase({
 
 registerTestCase({
   func: function () {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     var panner = oac.createPanner();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:2});
@@ -64,7 +64,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(1, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     source0.buffer = getSpecificFile({rate: 38000, channels:1});
     source0.loop = true;
@@ -77,7 +77,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     source0.buffer = getSpecificFile({rate: 38000, channels:2});
     source0.loop = true;
@@ -90,7 +90,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     var panner = oac.createPanner();
     source0.buffer = getSpecificFile({rate: 38000, channels:2});
@@ -107,7 +107,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:1});
     source0.loop = true;
@@ -120,7 +120,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(1, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:2});
     source0.loop = true;
@@ -133,7 +133,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 30 * samplerate, samplerate);
     for (var i = 0; i < 100; i++) {
       var source0 = oac.createBufferSource();
       source0.buffer = getSpecificFile({rate: 38000, channels:1});
@@ -148,7 +148,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 30 * samplerate, samplerate);
     var reference = getSpecificFile({rate: 38000, channels:1}).getChannelData(0);
     for (var i = 0; i < 100; i++) {
       var source0 = oac.createBufferSource();
@@ -171,7 +171,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 300 * samplerate, samplerate);
     var gain = oac.createGain();
     gain.gain.value = -1;
     gain.connect(oac.destination);
@@ -201,7 +201,7 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(1, 30 * samplerate, samplerate);
     var i,l;
     var decay = 10;
     var duration = 4;
@@ -231,8 +231,8 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
-    var duration = DURATION * samplerate;
+    var oac = new OfflineAudioContext(1, 30 * samplerate, samplerate);
+    var duration = 30 * samplerate;
     var audiobuffer = getSpecificFile({rate: samplerate, channels:1});
     var offset = 0;
     while (offset < duration / samplerate) {
@@ -262,7 +262,7 @@ registerTestCase({
 registerTestCase({
   func: function() {
     var samplerate = 44100;
-    var duration  = DURATION;
+    var duration  = 30;
     var oac = new OfflineAudioContext(1, duration * samplerate, 44100);
     var offset = 0;
     while (offset < duration) {
@@ -287,7 +287,7 @@ registerTestCase({
 registerTestCase({
   func: function() {
     var samplerate = 44100;
-    var duration  = DURATION;
+    var duration  = 30;
     var oac = new OfflineAudioContext(1, duration * samplerate, samplerate);
     var offset = 0;
     var osc = oac.createOscillator();
@@ -317,7 +317,7 @@ registerTestCase({
 
 registerTestCase({
   func: function () {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     var panner = oac.createStereoPanner();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:2});
@@ -333,7 +333,7 @@ registerTestCase({
 
 registerTestCase({
   func: function () {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var source0 = oac.createBufferSource();
     var panner = oac.createStereoPanner();
     source0.buffer = getSpecificFile({rate: oac.samplerate, channels:2});
@@ -350,7 +350,7 @@ registerTestCase({
 
 registerTestCase({
   func: function () {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var oac = new OfflineAudioContext(2, 120 * samplerate, samplerate);
     var osc = oac.createOscillator();
     osc.type = 'sawtooth';
     var freq = 2000;

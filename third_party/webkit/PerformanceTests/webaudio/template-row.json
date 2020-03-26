@@ -1,0 +1,79 @@
+{
+  "title": "{{benchmark}} -- {{platform}}",
+  "height": "250px",
+  "editable": true,
+  "collapse": true,
+  "panels": [
+    {
+      "title": "{{benchmark}} -- {{platform}}",
+      "error": false,
+      "span": 12,
+      "editable": true,
+      "type": "graph",
+      "id": 1,
+      "datasource": null,
+      "renderer": "flot",
+      "x-axis": true,
+      "y-axis": true,
+      "y_formats": [
+        "short",
+        "short"
+      ],
+      "grid": {
+        "leftMax": null,
+        "rightMax": null,
+        "leftMin": null,
+        "rightMin": null,
+        "threshold1": null,
+        "threshold2": null,
+        "threshold1Color": "rgba(216, 200, 27, 0.27)",
+        "threshold2Color": "rgba(234, 112, 112, 0.22)"
+      },
+      "lines": true,
+      "fill": 0,
+      "linewidth": 1,
+      "points": true,
+      "pointradius": 5,
+      "bars": false,
+      "stack": false,
+      "percentage": false,
+      "legend": {
+        "show": true,
+        "values": false,
+        "min": false,
+        "max": false,
+        "current": false,
+        "total": false,
+        "avg": false,
+        "alignAsTable": false
+      },
+      "nullPointMode": "connected",
+      "steppedLine": false,
+      "tooltip": {
+        "value_type": "cumulative",
+        "shared": false
+      },
+      "targets": [
+        {
+          "function": "mean",
+          "column": "value",
+          "series": "benchmarks.webaudio-padenot.{{benchmark}}.{{platform}}.firefox.nightly",
+          "query": "select mean(value) from \"benchmarks.webaudio-padenot.{{benchmark}}.{{platform}}.firefox.nightly\" where $timeFilter group by time($interval) order asc",
+          "hide": false
+        },
+        {
+          "function": "mean",
+          "column": "value",
+          "series": "benchmarks.webaudio-padenot.{{benchmark}}.{{platform}}.chrome.canary",
+          "query": "select mean(value) from \"benchmarks.webaudio-padenot.{{benchmark}}.{{platform}}.chrome.canary\" where $timeFilter group by time($interval) order asc",
+          "hide": false,
+          "groupby_field": ""
+        }
+      ],
+      "aliasColors": {},
+      "seriesOverrides": [],
+      "links": [],
+      "leftYAxisLabel": "Time in milliseconds, lower is better"
+    }
+  ]
+}
