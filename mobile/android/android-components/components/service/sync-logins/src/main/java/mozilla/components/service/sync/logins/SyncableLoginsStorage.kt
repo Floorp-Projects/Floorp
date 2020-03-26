@@ -15,7 +15,9 @@ import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.sync.telemetry.SyncTelemetry
+import mozilla.components.support.utils.logElapsedTime
 import org.json.JSONObject
 import java.io.Closeable
 
@@ -113,11 +115,20 @@ class SyncableLoginsStorage(
     private val context: Context,
     private val key: String
 ) : LoginsStorage, SyncableStore, AutoCloseable {
+    private val logger = Logger("SyncableLoginsStorage")
     private val coroutineContext by lazy { Dispatchers.IO }
 
     private val conn by lazy {
         LoginStorageConnection.init(key = key, dbPath = context.getDatabasePath(DB_NAME).absolutePath)
         LoginStorageConnection
+    }
+
+    /**
+     * "Warms up" this storage layer by establishing the database connection.
+     */
+    suspend fun warmUp() = withContext(coroutineContext) {
+        logElapsedTime(logger, "Warming up storage") { conn }
+        Unit
     }
 
     /**

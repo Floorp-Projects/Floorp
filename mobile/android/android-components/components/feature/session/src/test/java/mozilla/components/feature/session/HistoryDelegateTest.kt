@@ -63,6 +63,10 @@ class HistoryDelegateTest {
             var getVisitedListCalled = false
             var getVisitedPlainCalled = false
 
+            override suspend fun warmUp() {
+                fail()
+            }
+
             override suspend fun recordVisit(uri: String, visit: PageVisit) {
                 fail()
             }

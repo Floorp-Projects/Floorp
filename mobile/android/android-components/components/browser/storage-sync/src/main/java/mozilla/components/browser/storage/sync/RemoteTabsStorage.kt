@@ -17,6 +17,7 @@ import mozilla.appservices.remotetabs.RemoteTabsProvider
 import mozilla.appservices.remotetabs.SyncAuthInfo as RustSyncAuthInfo
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.support.utils.logElapsedTime
 
 /**
  * An interface which defines read/write methods for remote tabs data.
@@ -24,7 +25,11 @@ import mozilla.components.concept.sync.SyncStatus
 open class RemoteTabsStorage : Storage, SyncableStore {
     internal val api by lazy { RemoteTabsProvider() }
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
-    internal val logger = Logger("PlacesHistoryStorage")
+    internal val logger = Logger("RemoteTabsStorage")
+
+    override suspend fun warmUp() {
+        logElapsedTime(logger, "Warming up storage") { api }
+    }
 
     /**
      * Store the locally opened tabs.

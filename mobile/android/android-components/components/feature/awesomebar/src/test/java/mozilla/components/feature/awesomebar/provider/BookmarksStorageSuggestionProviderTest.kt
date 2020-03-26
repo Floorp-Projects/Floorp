@@ -115,6 +115,10 @@ class BookmarksStorageSuggestionProviderTest {
     class testableBookmarksStorage : BookmarksStorage {
         val bookmarkMap: HashMap<String, BookmarkNode> = hashMapOf()
 
+        override suspend fun warmUp() {
+            throw NotImplementedError()
+        }
+
         override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
             // "Not needed for the test"
             throw NotImplementedError()

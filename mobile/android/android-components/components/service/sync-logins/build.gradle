@@ -42,6 +42,7 @@ dependencies {
 
     implementation project(':concept-storage')
     implementation project(':support-sync-telemetry')
+    implementation project(':support-utils')
     implementation project(':service-glean')
 
     implementation Dependencies.kotlin_stdlib
