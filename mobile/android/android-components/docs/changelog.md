@@ -21,6 +21,9 @@ permalink: /changelog/
 * **feature-accounts-push**
   * Re-subscribe for Sync push support when notified by `onSubscriptionChanged` events.
 
+* **support-migration**
+  * ⚠️ **This is a breaking change**: `FennecMigrator` now takes `Lazy` references to storage layers.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
