@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.tab_list_row.*
-import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.home.OnboardingState
@@ -256,7 +255,7 @@ class SessionControlAdapter(
             }
             if (it.shouldUpdateSelected) { holder.updateSelected(it.tab.selected ?: false) }
             if (it.shouldUpdateMediaState) {
-                holder.updatePlayPauseButton(it.tab.mediaState ?: MediaState.None)
+                holder.updatePlayPauseButton(it.tab.mediaState)
             }
         }
     }

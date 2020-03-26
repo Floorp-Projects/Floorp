@@ -20,8 +20,20 @@ import androidx.transition.AutoTransition
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_collection_creation.*
-import kotlinx.android.synthetic.main.component_collection_creation.view.*
+import kotlinx.android.synthetic.main.component_collection_creation.back_button
+import kotlinx.android.synthetic.main.component_collection_creation.collection_constraint_layout
+import kotlinx.android.synthetic.main.component_collection_creation.name_collection_edittext
+import kotlinx.android.synthetic.main.component_collection_creation.save_button
+import kotlinx.android.synthetic.main.component_collection_creation.select_all_button
+import kotlinx.android.synthetic.main.component_collection_creation.view.bottom_bar_icon_button
+import kotlinx.android.synthetic.main.component_collection_creation.view.bottom_bar_text
+import kotlinx.android.synthetic.main.component_collection_creation.view.bottom_button_bar_layout
+import kotlinx.android.synthetic.main.component_collection_creation.view.collection_constraint_layout
+import kotlinx.android.synthetic.main.component_collection_creation.view.collections_list
+import kotlinx.android.synthetic.main.component_collection_creation.view.name_collection_edittext
+import kotlinx.android.synthetic.main.component_collection_creation.view.select_all_button
+import kotlinx.android.synthetic.main.component_collection_creation.view.tab_list
+import mozilla.components.browser.state.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -253,7 +265,8 @@ class CollectionCreationView(
                     tab.id.toString(),
                     tab.url,
                     tab.url.toShortUrl(view.context.components.publicSuffixList),
-                    tab.title
+                    tab.title,
+                    mediaState = MediaState.State.NONE
                 )
             }.let { tabs ->
                 collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)

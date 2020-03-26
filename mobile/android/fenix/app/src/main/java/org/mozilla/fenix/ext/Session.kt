@@ -6,21 +6,36 @@ package org.mozilla.fenix.ext
 
 import android.content.Context
 import mozilla.components.browser.session.Session
-import mozilla.components.feature.media.state.MediaState
+import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.mozilla.fenix.home.Tab
 
-fun Session.toTab(context: Context, selected: Boolean? = null, mediaState: MediaState? = null): Tab =
-    this.toTab(context.components.publicSuffixList, selected, mediaState)
+fun Session.toTab(context: Context, selected: Boolean? = null): Tab =
+    this.toTab(
+        context.components.core.store,
+        context.components.publicSuffixList,
+        selected
+    )
 
-fun Session.toTab(publicSuffixList: PublicSuffixList, selected: Boolean? = null, mediaState: MediaState? = null): Tab {
+fun Session.toTab(store: BrowserStore, publicSuffixList: PublicSuffixList, selected: Boolean? = null): Tab {
     return Tab(
         sessionId = this.id,
         url = this.url,
         hostname = this.url.toShortUrl(publicSuffixList),
         title = this.title,
         selected = selected,
-        mediaState = mediaState,
-        icon = this.icon
+        icon = this.icon,
+        mediaState = getMediaStateForSession(store, this)
     )
+}
+
+private fun getMediaStateForSession(store: BrowserStore, session: Session): MediaState.State {
+    // For now we are looking up the media state for this session in the BrowserStore. Eventually
+    // we will migrate away from Session(Manager) and can use BrowserStore and BrowserState directly.
+    return if (store.state.media.aggregate.activeTabId == session.id) {
+        store.state.media.aggregate.state
+    } else {
+        MediaState.State.NONE
+    }
 }

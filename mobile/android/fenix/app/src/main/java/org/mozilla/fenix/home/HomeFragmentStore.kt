@@ -7,7 +7,7 @@ package org.mozilla.fenix.home
 import android.graphics.Bitmap
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.feature.media.state.MediaState
+import mozilla.components.browser.state.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
@@ -29,8 +29,8 @@ data class Tab(
     val hostname: String,
     val title: String,
     val selected: Boolean? = null,
-    var mediaState: MediaState? = null,
-    val icon: Bitmap? = null
+    val icon: Bitmap? = null,
+    val mediaState: MediaState.State
 )
 
 data class TopSiteItem(

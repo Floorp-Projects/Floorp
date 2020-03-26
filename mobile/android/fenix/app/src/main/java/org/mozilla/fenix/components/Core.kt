@@ -27,9 +27,8 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
-import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
-import mozilla.components.feature.media.state.MediaStateMachine
+import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.session.HistoryDelegate
@@ -44,6 +43,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.test.Mockable
 import java.util.concurrent.TimeUnit
 
@@ -66,7 +66,7 @@ class Core(private val context: Context) {
             preferredColorScheme = getPreferredColorScheme(),
             automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
             fontInflationEnabled = context.settings().shouldUseAutoSize,
-            suspendMediaWhenInactive = !FeatureFlags.mediaIntegration,
+            suspendMediaWhenInactive = false,
             forceUserScalableContent = context.settings().forceEnableZoom
         )
 
@@ -97,7 +97,11 @@ class Core(private val context: Context) {
      * The [BrowserStore] holds the global [BrowserState].
      */
     val store by lazy {
-        BrowserStore()
+        BrowserStore(
+            middleware = listOf(
+                MediaMiddleware(context, MediaService::class.java)
+            )
+        )
     }
 
     /**
@@ -148,14 +152,6 @@ class Core(private val context: Context) {
                     .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
                     .whenGoingToBackground()
                     .whenSessionsChange()
-            }
-
-            if (FeatureFlags.mediaIntegration) {
-                MediaStateMachine.start(sessionManager)
-
-                // Enable media features like showing an ongoing notification with media controls when
-                // media in web content is playing.
-                MediaFeature(context).enable()
             }
 
             WebNotificationFeature(

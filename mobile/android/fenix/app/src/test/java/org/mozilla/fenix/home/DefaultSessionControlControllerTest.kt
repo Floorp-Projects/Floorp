@@ -17,6 +17,7 @@ import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -38,8 +39,9 @@ import mozilla.components.feature.tab.collections.Tab as ComponentTab
 class DefaultSessionControlControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
+    private val store: BrowserStore = mockk(relaxed = true)
     private val activity: HomeActivity = mockk(relaxed = true)
-    private val store: HomeFragmentStore = mockk(relaxed = true)
+    private val fragmentStore: HomeFragmentStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private val closeTab: (sessionId: String) -> Unit = mockk(relaxed = true)
@@ -71,7 +73,7 @@ class DefaultSessionControlControllerTest {
         every { activity.components.core.tabCollectionStorage } returns tabCollectionStorage
         every { activity.components.useCases.tabsUseCases } returns tabsUseCases
 
-        every { store.state } returns state
+        every { fragmentStore.state } returns state
         every { state.collections } returns emptyList()
         every { state.expandedCollections } returns emptySet()
         every { state.mode } returns Mode.Normal
@@ -79,8 +81,9 @@ class DefaultSessionControlControllerTest {
         every { activity.components.analytics.metrics } returns metrics
 
         controller = DefaultSessionControlController(
-            activity = activity,
             store = store,
+            activity = activity,
+            fragmentStore = fragmentStore,
             navController = navController,
             browsingModeManager = browsingModeManager,
             lifecycleScope = MainScope(),
@@ -235,6 +238,6 @@ class DefaultSessionControlControllerTest {
     fun handleToggleCollectionExpanded() {
         val collection: TabCollection = mockk(relaxed = true)
         controller.handleToggleCollectionExpanded(collection, true)
-        verify { store.dispatch(HomeFragmentAction.CollectionExpanded(collection, true)) }
+        verify { fragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, true)) }
     }
 }

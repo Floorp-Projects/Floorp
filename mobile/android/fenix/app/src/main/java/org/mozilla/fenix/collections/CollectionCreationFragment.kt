@@ -16,6 +16,7 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
@@ -45,10 +46,11 @@ class CollectionCreationFragment : DialogFragment() {
         val args: CollectionCreationFragmentArgs by navArgs()
 
         val sessionManager = requireComponents.core.sessionManager
+        val store = requireComponents.core.store
         val publicSuffixList = requireComponents.publicSuffixList
-        val tabs = sessionManager.getTabs(args.tabIds, publicSuffixList)
+        val tabs = sessionManager.getTabs(args.tabIds, store, publicSuffixList)
         val selectedTabs = if (args.selectedTabIds != null) {
-            sessionManager.getTabs(args.selectedTabIds, publicSuffixList).toSet()
+            sessionManager.getTabs(args.selectedTabIds, store, publicSuffixList).toSet()
         } else {
             if (tabs.size == 1) setOf(tabs.first()) else emptySet()
         }
@@ -80,7 +82,10 @@ class CollectionCreationFragment : DialogFragment() {
                 viewLifecycleOwner.lifecycleScope
             )
         )
-        collectionCreationView = CollectionCreationView(view.createCollectionWrapper, collectionCreationInteractor)
+        collectionCreationView = CollectionCreationView(
+            view.createCollectionWrapper,
+            collectionCreationInteractor
+        )
 
         return view
     }
@@ -108,9 +113,13 @@ class CollectionCreationFragment : DialogFragment() {
 }
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-fun SessionManager.getTabs(tabIds: Array<String>?, publicSuffixList: PublicSuffixList): List<Tab> {
+fun SessionManager.getTabs(
+    tabIds: Array<String>?,
+    store: BrowserStore,
+    publicSuffixList: PublicSuffixList
+): List<Tab> {
     return tabIds
         ?.mapNotNull { this.findSessionById(it) }
-        ?.map { it.toTab(publicSuffixList) }
+        ?.map { it.toTab(store, publicSuffixList) }
         ?: emptyList()
 }
