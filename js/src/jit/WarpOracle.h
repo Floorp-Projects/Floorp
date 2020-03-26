@@ -26,7 +26,8 @@ class MIRGenerator;
   _(WarpBuiltinProto)            \
   _(WarpGetIntrinsic)            \
   _(WarpGetImport)               \
-  _(WarpLambda)
+  _(WarpLambda)                  \
+  _(WarpRest)
 
 // WarpOpSnapshot is the base class for data attached to a single bytecode op by
 // WarpOracle. This is typically data that WarpBuilder can't read off-thread
@@ -164,6 +165,19 @@ class WarpLambda : public WarpOpSnapshot {
   BaseScript* baseScript() const { return baseScript_; }
   FunctionFlags flags() const { return flags_; }
   uint16_t nargs() const { return nargs_; }
+};
+
+// Template object for JSOp::Rest.
+class WarpRest : public WarpOpSnapshot {
+  // TODO: trace this
+  ArrayObject* templateObject_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpRest;
+
+  WarpRest(uint32_t offset, ArrayObject* templateObject)
+      : WarpOpSnapshot(ThisKind, offset), templateObject_(templateObject) {}
+  ArrayObject* templateObject() const { return templateObject_; }
 };
 
 // Snapshot data for the environment object(s) created in the script's prologue.
