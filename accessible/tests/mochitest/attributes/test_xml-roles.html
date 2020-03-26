@@ -38,6 +38,8 @@
 
       testAttrs("search", {"xml-roles": "searchbox"}, true);
 
+      testAttrs("code", {"xml-roles": "code"}, true);
+
       testAttrs("open-1", {"xml-roles": "open-fence"}, true);
       testAttrs("open-2", {"xml-roles": "open-fence"}, true);
       testAttrs("open-3", {"xml-roles": "open-fence"}, true);
@@ -177,6 +179,8 @@
   <div id="figure" role="figure">a figure</div>
 
   <input id="search" type="search"/>
+
+  <div id="code" role="code"></div>
 
   <!-- open-fence, separator, close-fence -->
   <math><mo id="open-1">(</mo><mi>x</mi><mo id="sep-1">,</mo><mi>y</mi><mo id="close-1">)</mo></math>
