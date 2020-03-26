@@ -27,7 +27,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:text="@string/mozac_feature_addons_learn_more"
-            app:drawableEndCompat="@drawable/mozac_ic_link"
-            app:drawableTint="?android:attr/textColorPrimary" />
+            style="@style/AboutHeaderContentText"
+            android:textColor="?aboutLink"/>
     </RelativeLayout>
 </ScrollView>

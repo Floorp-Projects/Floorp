@@ -104,7 +104,15 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                         val adapter = AddonsManagerAdapter(
                             requireContext().components.addonCollectionProvider,
                             this@AddonsManagementFragment,
-                            addons
+                            addons,
+                            style = AddonsManagerAdapter.Style(
+                                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext()),
+                                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext()),
+                                ThemeManager.resolveAttribute(
+                                    R.attr.secondaryText,
+                                    requireContext()
+                                )
+                            )
                         )
                         isInstallationInProgress = false
                         view.add_ons_progress_bar.isVisible = false

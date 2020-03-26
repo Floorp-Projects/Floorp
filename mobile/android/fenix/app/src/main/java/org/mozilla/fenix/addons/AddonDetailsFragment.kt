@@ -70,7 +70,7 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details) {
     }
 
     private fun bindWebsite(addon: Addon, view: View) {
-        view.home_page_text.setOnClickListener {
+        view.home_page_label.setOnClickListener {
             val intent =
                 Intent(Intent.ACTION_VIEW).setData(Uri.parse(addon.siteUrl))
             startActivity(intent)

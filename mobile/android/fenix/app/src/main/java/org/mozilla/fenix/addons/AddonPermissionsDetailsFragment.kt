@@ -18,6 +18,7 @@ import mozilla.components.feature.addons.ui.AddonPermissionsAdapter
 import mozilla.components.feature.addons.ui.translate
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.theme.ThemeManager
 
 private const val LEARN_MORE_URL =
     "https://support.mozilla.org/kb/permission-request-messages-firefox-extensions"
@@ -44,7 +45,12 @@ class AddonPermissionsDetailsFragment : Fragment(R.layout.fragment_add_on_permis
                 @StringRes val stringId = it
                 getString(stringId)
             }.sorted()
-            adapter = AddonPermissionsAdapter(sortedPermissions)
+            adapter = AddonPermissionsAdapter(
+                sortedPermissions,
+                style = AddonPermissionsAdapter.Style(
+                    ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+                )
+            )
         }
     }
 

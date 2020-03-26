@@ -29,9 +29,11 @@
                 android:checked="true"
                 android:clickable="true"
                 android:focusable="true"
+                android:layout_marginStart="54dp"
                 android:padding="16dp"
-                android:text="@string/mozac_feature_addons_settings_on"
-                android:textSize="18sp" />
+                android:text="@string/mozac_feature_addons_enabled"
+                android:textColor="?primaryText"
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/settings"
@@ -39,11 +41,12 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/enable_switch"
                 android:background="?android:attr/selectableItemBackground"
-                android:drawablePadding="12dp"
+                android:drawablePadding="32dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_settings"
-                android:textSize="18sp"
-                app:drawableStartCompat="@drawable/mozac_ic_preferences"
+                android:textSize="16sp"
+                android:textColor="?primaryText"
+                app:drawableStartCompat="@drawable/ic_settings"
                 app:drawableTint="?primaryText" />
 
             <TextView
@@ -52,11 +55,12 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/settings"
                 android:background="?android:attr/selectableItemBackground"
-                android:drawablePadding="12dp"
+                android:drawablePadding="32dp"
                 android:padding="16dp"
+                android:textColor="?primaryText"
                 android:text="@string/mozac_feature_addons_details"
-                android:textSize="18sp"
-                app:drawableStartCompat="@drawable/mozac_ic_information"
+                android:textSize="16sp"
+                app:drawableStartCompat="@drawable/ic_info"
                 app:drawableTint="?primaryText" />
 
             <TextView
@@ -65,11 +69,12 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/details"
                 android:background="?android:attr/selectableItemBackground"
-                android:drawablePadding="12dp"
+                android:drawablePadding="32dp"
                 android:padding="16dp"
                 android:text="@string/mozac_feature_addons_permissions"
-                android:textSize="18sp"
-                app:drawableStartCompat="@drawable/mozac_ic_permissions" />
+                android:textColor="?primaryText"
+                android:textSize="16sp"
+                app:drawableStartCompat="@drawable/ic_permission" />
 
             <Button
                 android:id="@+id/remove_add_on"

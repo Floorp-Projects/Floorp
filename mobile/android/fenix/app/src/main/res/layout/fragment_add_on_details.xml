@@ -22,6 +22,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
+            android:textColor="?primaryText"
+            android:textColorLink="?aboutLink"
             tools:text="@tools:sample/lorem/random" />
 
         <TextView
@@ -29,6 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/details"
+            style="@style/AboutHeaderContentText"
             android:text="@string/mozac_feature_addons_authors" />
 
         <TextView
@@ -37,6 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/details"
             android:layout_alignParentEnd="true"
+            style="@style/AboutHeaderContentText"
             tools:text="@tools:sample/full_names" />
 
         <View
@@ -46,7 +50,7 @@
             android:layout_below="@+id/author_label"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@color/photonGrey40"
+            android:background="?android:attr/listDivider"
             android:importantForAccessibility="no" />
 
         <TextView
@@ -54,6 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/author_divider"
+            style="@style/AboutHeaderContentText"
             android:text="@string/mozac_feature_addons_version" />
 
         <TextView
@@ -62,6 +67,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/author_divider"
             android:layout_alignParentEnd="true"
+            style="@style/AboutHeaderContentText"
             tools:text="1.2.3" />
 
         <View
@@ -71,7 +77,7 @@
             android:layout_below="@+id/version_label"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@color/photonGrey40"
+            android:background="?android:attr/listDivider"
             android:importantForAccessibility="no" />
 
         <TextView
@@ -79,6 +85,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/version_divider"
+            style="@style/AboutHeaderContentText"
             android:text="@string/mozac_feature_addons_last_updated" />
 
         <TextView
@@ -87,6 +94,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/version_divider"
             android:layout_alignParentEnd="true"
+            style="@style/AboutHeaderContentText"
             tools:text="Oct 16, 2019" />
 
         <View
@@ -96,7 +104,7 @@
             android:layout_below="@+id/last_updated_label"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@color/photonGrey40"
+            android:background="?android:attr/listDivider"
             android:importantForAccessibility="no" />
 
         <TextView
@@ -104,17 +112,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/last_updated_divider"
+            style="@style/AboutHeaderContentText"
+            android:textColor="?aboutLink"
             android:text="@string/mozac_feature_addons_home_page" />
-
-        <ImageView
-            android:id="@+id/home_page_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/last_updated_divider"
-            android:layout_alignParentEnd="true"
-            android:contentDescription="@string/mozac_feature_addons_home_page"
-            app:srcCompat="@drawable/mozac_ic_link"
-            android:tint="?android:attr/textColorPrimary" />
 
         <View
             android:id="@+id/home_page_divider"
@@ -123,7 +123,7 @@
             android:layout_below="@+id/home_page_label"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@color/photonGrey40"
+            android:background="?android:attr/listDivider"
             android:importantForAccessibility="no" />
 
         <TextView
@@ -131,6 +131,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/home_page_divider"
+            style="@style/AboutHeaderContentText"
             android:text="@string/mozac_feature_addons_rating" />
 
         <RatingBar
@@ -150,6 +151,7 @@
             android:layout_below="@+id/home_page_divider"
             android:layout_alignParentEnd="true"
             android:layout_marginStart="6dp"
+            style="@style/AboutHeaderContentText"
             tools:text="591,642" />
     </RelativeLayout>
 </ScrollView>
