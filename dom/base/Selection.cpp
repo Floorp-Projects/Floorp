@@ -860,6 +860,10 @@ nsresult Selection::AddRangesForUserSelectableNodes(
 
     MOZ_ASSERT(!newRangesNonEmpty || nsContentUtils::IsSafeToRunScript());
     if (newRangesNonEmpty && nsContentUtils::IsSafeToRunScript()) {
+      // We consider a selection to be starting if we are currently collapsed,
+      // and the selection is becoming uncollapsed, and this is caused by a
+      // user initiated event.
+
       // The spec currently doesn't say that we should dispatch this event
       // on text controls, so for now we only support doing that under a
       // pref, disabled by default.
@@ -869,9 +873,6 @@ nsresult Selection::AddRangesForUserSelectableNodes(
               nsFrameSelection::sSelectionEventsOnTextControlsEnabled, *aRange);
 
       if (selectstartEventTarget) {
-        // We consider a selection to be starting if we are currently collapsed,
-        // and the selection is becoming uncollapsed, and this is caused by a
-        // user initiated event.
         bool defaultAction = true;
 
         nsContentUtils::DispatchTrustedEvent(
