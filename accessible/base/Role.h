@@ -1061,7 +1061,12 @@ enum Role {
    */
   COMMENT = 181,
 
-  LAST_ROLE = COMMENT
+  /**
+   * A snippet of program code. ATs might want to treat this differently.
+   */
+  CODE = 182,
+
+  LAST_ROLE = CODE
 };
 
 }  // namespace roles
