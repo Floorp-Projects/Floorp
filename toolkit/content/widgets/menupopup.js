@@ -93,8 +93,8 @@
     get styles() {
       let s = `
         :host(.in-menulist) .popup-internal-box::part(scrollbutton-up),
-        :host(.in-menulist) .popup-internal-box::part(arrowscrollbox-overflow-start-indicator),
-        :host(.in-menulist) .popup-internal-box::part(arrowscrollbox-overflow-end-indicator),
+        :host(.in-menulist) .popup-internal-box::part(overflow-start-indicator),
+        :host(.in-menulist) .popup-internal-box::part(overflow-end-indicator),
         :host(.in-menulist) .popup-internal-box::part(scrollbutton-down) {
           display: none;
         }

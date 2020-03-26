@@ -4,10 +4,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-arrowscrollbox[scrolledtoend=true]::part(arrowscrollbox-overflow-end-indicator),
-arrowscrollbox[scrolledtostart=true]::part(arrowscrollbox-overflow-start-indicator),
-arrowscrollbox[notoverflowing=true]::part(scrollbutton-up),
-arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
+:host([scrolledtostart=true])::part(overflow-end-indicator),
+:host([scrolledtoend=true])::part(overflow-start-indicator),
+:host([notoverflowing=true]) .scrollbutton-up,
+:host([notoverflowing=true]) .scrollbutton-down {
   visibility: collapse;
 }
 
@@ -48,8 +48,8 @@ arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
 }
 
 %ifndef XP_MACOSX
-arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-up),
-arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-down) {
+:host(:not([clicktoscroll="true"])) .scrollbutton-up,
+:host(:not([clicktoscroll="true"])) .scrollbutton-down {
   -moz-appearance: none;
 }
 %endif
