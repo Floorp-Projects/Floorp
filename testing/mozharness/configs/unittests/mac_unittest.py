@@ -12,7 +12,7 @@ DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = False
 #####
 config = {
-    "virtualenv_modules": ['six==1.13.0', 'vcversioner==2.16.0.0'],
+    "virtualenv_modules": ['six==1.10.0', 'vcversioner==2.16.0.0'],
     ###
     "installer_path": INSTALLER_PATH,
     "xpcshell_name": XPCSHELL_NAME,
