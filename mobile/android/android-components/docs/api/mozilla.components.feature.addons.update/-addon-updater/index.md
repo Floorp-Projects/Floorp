@@ -2,7 +2,7 @@
 
 # AddonUpdater
 
-`interface AddonUpdater` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L52)
+`interface AddonUpdater` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L53)
 
 Contract to define the behavior for updating addons.
 

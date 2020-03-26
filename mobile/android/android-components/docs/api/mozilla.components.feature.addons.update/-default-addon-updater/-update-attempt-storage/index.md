@@ -2,7 +2,7 @@
 
 # UpdateAttemptStorage
 
-`class UpdateAttemptStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L504)
+`class UpdateAttemptStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L505)
 
 A storage implementation to persist [AddonUpdater.UpdateAttempt](../../-addon-updater/-update-attempt/index.md)s.
 

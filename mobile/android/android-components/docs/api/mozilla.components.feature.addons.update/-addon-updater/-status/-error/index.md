@@ -2,7 +2,7 @@
 
 # Error
 
-`data class Error : `[`Status`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L129)
+`data class Error : `[`Status`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L130)
 
 An error has happened while trying to update.
 

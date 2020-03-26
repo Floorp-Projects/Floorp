@@ -2,7 +2,7 @@
 
 # wipeLocal
 
-`suspend fun wipeLocal(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L137)
+`suspend fun wipeLocal(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L148)
 
 Overrides [LoginsStorage.wipeLocal](../../mozilla.components.concept.storage/-logins-storage/wipe-local.md)
 

@@ -2,7 +2,7 @@
 
 # UpdateAttempt
 
-`data class UpdateAttempt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L142)
+`data class UpdateAttempt` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L143)
 
 Represents an attempt to update an add-on.
 

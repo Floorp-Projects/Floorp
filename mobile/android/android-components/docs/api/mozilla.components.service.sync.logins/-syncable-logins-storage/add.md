@@ -2,7 +2,7 @@
 
 # add
 
-`suspend fun add(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L185)
+`suspend fun add(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L196)
 
 Overrides [LoginsStorage.add](../../mozilla.components.concept.storage/-logins-storage/add.md)
 

@@ -7,6 +7,7 @@
 | Name | Summary |
 |---|---|
 | [KArgumentCaptor](-k-argument-captor/index.md) | `class KArgumentCaptor<out T>` |
+| [ThrowProperty](-throw-property/index.md) | `class ThrowProperty<T> : `[`ReadWriteProperty`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-read-write-property/index.html)`<`[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, `[`T`](-throw-property/index.md#T)`>`<br>A [ReadWriteProperty](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-read-write-property/index.html) implementation for creating stub properties. |
 
 ### Functions
 

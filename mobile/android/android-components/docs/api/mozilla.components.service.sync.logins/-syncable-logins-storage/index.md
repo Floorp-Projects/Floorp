@@ -2,7 +2,7 @@
 
 # SyncableLoginsStorage
 
-`class SyncableLoginsStorage : `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L112)
+`class SyncableLoginsStorage : `[`LoginsStorage`](../../mozilla.components.concept.storage/-logins-storage/index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/SyncableLoginsStorage.kt#L114)
 
 An implementation of [LoginsStorage](../../mozilla.components.concept.storage/-logins-storage/index.md) backed by application-services' `logins` library.
 Synchronization support is provided both directly (via [sync](sync.md)) when only syncing this storage layer,
@@ -30,6 +30,7 @@ or via [getHandle](get-handle.md) when syncing multiple stores. Use the latter i
 | [sync](sync.md) | `suspend fun sync(syncInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): SyncTelemetryPing`<br>Synchronizes the logins storage layer with a remote layer. If synchronizing multiple stores, avoid using this - prefer setting up sync via FxaAccountManager instead. |
 | [touch](touch.md) | `suspend fun touch(guid: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>` |
 | [update](update.md) | `suspend fun update(login: `[`Login`](../../mozilla.components.concept.storage/-login/index.md)`): <ERROR CLASS>` |
+| [warmUp](warm-up.md) | `suspend fun warmUp(): <ERROR CLASS>`<br>"Warms up" this storage layer by establishing the database connection. |
 | [wipe](wipe.md) | `suspend fun wipe(): <ERROR CLASS>` |
 | [wipeLocal](wipe-local.md) | `suspend fun wipeLocal(): <ERROR CLASS>` |
 
