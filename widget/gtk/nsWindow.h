@@ -420,7 +420,7 @@ class nsWindow final : public nsBaseWidget {
    * Get the support of Client Side Decoration by checking
    * the XDG_CURRENT_DESKTOP environment variable.
    */
-  static CSDSupportLevel GetSystemCSDSupportLevel();
+  static CSDSupportLevel GetSystemCSDSupportLevel(bool aIsPIPWindow = false);
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
