@@ -248,7 +248,6 @@ extern const uint32_t ArgLengths[];
   _(GuardHasGetterSetter, Id, Field)                                           \
   _(GuardGroupHasUnanalyzedNewScript, Field)                                   \
   _(GuardIndexIsNonNegative, Id)                                               \
-  _(GuardIndexGreaterThanDenseCapacity, Id, Id)                                \
   _(GuardIndexGreaterThanArrayLength, Id, Id)                                  \
   _(GuardIndexIsValidUpdateOrAdd, Id, Id)                                      \
   _(GuardIndexGreaterThanDenseInitLength, Id, Id)                              \
@@ -1158,12 +1157,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardIndexGreaterThanDenseInitLength(ObjOperandId obj,
                                             Int32OperandId index) {
     writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseInitLength, obj);
-    writeOperandId(index);
-  }
-
-  void guardIndexGreaterThanDenseCapacity(ObjOperandId obj,
-                                          Int32OperandId index) {
-    writeOpWithOperandId(CacheOp::GuardIndexGreaterThanDenseCapacity, obj);
     writeOperandId(index);
   }
 
