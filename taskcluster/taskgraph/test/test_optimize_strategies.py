@@ -3,10 +3,12 @@
 
 from __future__ import absolute_import
 
+import time
+
 import pytest
 from mozunit import main
 
-from taskgraph.optimize.bugbug import BugBugPushSchedules
+from taskgraph.optimize.bugbug import BugBugPushSchedules, BugbugTimeoutException
 from taskgraph.task import Task
 
 
@@ -83,6 +85,24 @@ def test_bugbug_push_schedules(responses, params, tasks, data, expected):
     opt = BugBugPushSchedules()
     labels = [t.label for t in tasks if not opt.should_remove_task(t, params, None)]
     assert sorted(labels) == sorted(expected)
+
+
+def test_bugbug_timeout(monkeypatch, responses, params, tasks):
+    query = "/push/{branch}/{head_rev}/schedules".format(**params)
+    url = BugBugPushSchedules.BUGBUG_BASE_URL + query
+    responses.add(
+        responses.GET,
+        url,
+        json={"ready": False},
+        status=202,
+    )
+
+    # Make sure the test runs fast.
+    monkeypatch.setattr(time, 'sleep', lambda i: None)
+
+    opt = BugBugPushSchedules()
+    with pytest.raises(BugbugTimeoutException):
+        opt.should_remove_task(tasks[0], params, None)
 
 
 if __name__ == '__main__':

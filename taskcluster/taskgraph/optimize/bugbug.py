@@ -18,6 +18,10 @@ from taskgraph.util.taskcluster import requests_retry_session
 logger = logging.getLogger(__name__)
 
 
+class BugbugTimeoutException(Exception):
+    pass
+
+
 @register_strategy("bugbug-push-schedules")
 class BugBugPushSchedules(OptimizationStrategy):
     BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
@@ -44,10 +48,15 @@ class BugBugPushSchedules(OptimizationStrategy):
                 break
 
             time.sleep(self.RETRY_INTERVAL)
+            i += 1
 
         data = r.json()
         logger.debug("Bugbug scheduler service returns:\n{}".format(
                      json.dumps(data, indent=2)))
+
+        if r.status_code == 202:
+            raise BugbugTimeoutException("Timed out waiting for result from '{}'".format(url))
+
         return data
 
     def should_remove_task(self, task, params, arg):
