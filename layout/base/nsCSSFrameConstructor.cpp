@@ -4982,7 +4982,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
     // subtrees, because TextCorrespondenceRecorder in the SVG text code doesn't
     // really know how to deal with it. This kinda sucks. :(
     if (aParentFrame && aParentFrame->GetContent() != aElement.GetParent()) {
-      return nullptr;
+      return &sSuppressData;
     }
 
     // We don't use ConstructInline because we want different behavior
