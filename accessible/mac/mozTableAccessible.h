@@ -8,6 +8,7 @@
 #import "mozAccessible.h"
 
 @interface mozTablePartAccessible : mozAccessible
+- (id)accessibilityAttributeValue:(NSString*)attribute;
 - (BOOL)isLayoutTablePart;
 - (NSString*)role;
 @end
