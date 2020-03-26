@@ -230,7 +230,6 @@ void moz_container_init(MozContainer* container) {
   container->subsurface_dy = 0;
   container->surface_position_needs_update = 0;
   container->initial_draw_cbs.clear();
-  container->is_accelerated = false;
 #endif
 
   LOG(("%s [%p]\n", __FUNCTION__, (void*)container));
@@ -694,13 +693,9 @@ void moz_container_update_opaque_region(MozContainer* container,
   // When GL compositor / WebRender is used,
   // moz_container_get_wl_egl_window() is called only once when window
   // is created or resized so update opaque region now.
-  if (container->is_accelerated) {
+  if (moz_container_has_wl_egl_window(container)) {
     moz_container_set_opaque_region(container);
   }
-}
-
-void moz_container_set_accelerated(MozContainer* container) {
-  container->is_accelerated = true;
 }
 #endif
 
