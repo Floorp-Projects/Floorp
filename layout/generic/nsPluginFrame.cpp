@@ -1631,7 +1631,7 @@ nsIObjectFrame* nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext,
 }
 
 /*static*/
-void nsPluginFrame::BeginSwapDocShells(nsISupports* aSupports, void*) {
+void nsPluginFrame::BeginSwapDocShells(nsISupports* aSupports) {
   MOZ_ASSERT(aSupports, "null parameter");
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
   if (!content) {
@@ -1650,7 +1650,7 @@ void nsPluginFrame::BeginSwapDocShells(nsISupports* aSupports, void*) {
 }
 
 /*static*/
-void nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*) {
+void nsPluginFrame::EndSwapDocShells(nsISupports* aSupports) {
   MOZ_ASSERT(aSupports, "null parameter");
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
   if (!content) {

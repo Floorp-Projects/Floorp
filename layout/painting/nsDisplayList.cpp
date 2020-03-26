@@ -2786,29 +2786,24 @@ bool nsDisplayList::ComputeVisibilityForSublist(
   return anyVisible;
 }
 
-static CallState TriggerPendingAnimationsOnSubDocuments(Document& aDoc,
-                                                        void* aReadyTime) {
+static void TriggerPendingAnimations(Document& aDoc,
+                                     const TimeStamp& aReadyTime) {
+  MOZ_ASSERT(!aReadyTime.IsNull(),
+             "Animation ready time is not set. Perhaps we're using a layer"
+             " manager that doesn't update it");
   if (PendingAnimationTracker* tracker = aDoc.GetPendingAnimationTracker()) {
     PresShell* presShell = aDoc.GetPresShell();
     // If paint-suppression is in effect then we haven't finished painting
     // this document yet so we shouldn't start animations
     if (!presShell || !presShell->IsPaintingSuppressed()) {
-      const TimeStamp& readyTime = *static_cast<TimeStamp*>(aReadyTime);
-      tracker->TriggerPendingAnimationsOnNextTick(readyTime);
+      tracker->TriggerPendingAnimationsOnNextTick(aReadyTime);
     }
   }
-  aDoc.EnumerateSubDocuments(TriggerPendingAnimationsOnSubDocuments,
-                             aReadyTime);
-  return CallState::Continue;
-}
-
-static void TriggerPendingAnimations(Document& aDocument,
-                                     const TimeStamp& aReadyTime) {
-  MOZ_ASSERT(!aReadyTime.IsNull(),
-             "Animation ready time is not set. Perhaps we're using a layer"
-             " manager that doesn't update it");
-  TriggerPendingAnimationsOnSubDocuments(aDocument,
-                                         const_cast<TimeStamp*>(&aReadyTime));
+  auto recurse = [&aReadyTime](Document& aDoc) {
+    TriggerPendingAnimations(aDoc, aReadyTime);
+    return CallState::Continue;
+  };
+  aDoc.EnumerateSubDocuments(recurse);
 }
 
 LayerManager* nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView) {
