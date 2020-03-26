@@ -303,7 +303,6 @@ var StarUI = {
   _createPanelIfNeeded() {
     // Lazy load the editBookmarkPanel the first time we need to display it.
     if (!this._element("editBookmarkPanel")) {
-      MozXULElement.insertFTLIfNeeded("browser/editBookmarkOverlay.ftl");
       let template = this._element("editBookmarkPanelTemplate");
       let clone = template.content.cloneNode(true);
       template.replaceWith(clone);
