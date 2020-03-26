@@ -3723,31 +3723,6 @@ pub extern "C" fn Servo_SetExplicitStyle(element: &RawGeckoElement, style: &Comp
     data.styles.primary = Some(unsafe { ArcBorrow::from_ref(style) }.clone_arc());
 }
 
-#[no_mangle]
-pub extern "C" fn Servo_HasAuthorSpecifiedRules(
-    raw_data: &RawServoStyleSet,
-    style: &ComputedValues,
-    element: &RawGeckoElement,
-    rule_type_mask: u32,
-) -> bool {
-    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-    let element = GeckoElement(element);
-
-    let guard = (*GLOBAL_STYLE_DATA).shared_lock.read();
-    let guards = StylesheetGuards::same(&guard);
-
-    let pseudo = style.pseudo();
-    let author_colors_allowed = data.stylist.device().use_document_colors();
-
-    style.rules().has_author_specified_rules(
-        element,
-        pseudo,
-        &guards,
-        rule_type_mask,
-        author_colors_allowed,
-    )
-}
-
 fn get_pseudo_style(
     guard: &SharedRwLockReadGuard,
     element: GeckoElement,
