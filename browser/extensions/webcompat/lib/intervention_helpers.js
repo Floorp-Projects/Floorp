@@ -208,8 +208,26 @@ const GOOGLE_TLDS = [
   "co.zw",
 ];
 
-function getMatchPatternsForGoogleURL(url, path = "*") {
-  return GOOGLE_TLDS.map(domain => `*://${url}.${domain}/${path}`);
-}
+var InterventionHelpers = {
+  /**
+   * Useful helper to generate a list of domains with a fixed base domain and
+   * multiple country-TLDs or other cases with various TLDs.
+   *
+   * Example:
+   *   matchPatternsForTLDs("*://mozilla.", "/*", ["com", "org"])
+   *     => ["*://mozilla.com/*", "*://mozilla.org/*"]
+   */
+  matchPatternsForTLDs(base, suffix, tlds) {
+    return tlds.map(tld => base + tld + suffix);
+  },
 
-module.exports = getMatchPatternsForGoogleURL;
+  /**
+   * A modified version of matchPatternsForTLDs that always returns the match
+   * list for all known Google country TLDs.
+   */
+  matchPatternsForGoogle(base, suffix = "/*") {
+    return InterventionHelpers.matchPatternsForTLDs(base, suffix, GOOGLE_TLDS);
+  },
+};
+
+module.exports = InterventionHelpers;

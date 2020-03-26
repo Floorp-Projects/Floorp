@@ -36,6 +36,25 @@ const replaceStringInRequest = (
 };
 
 const CUSTOM_FUNCTIONS = {
+  detectSwipeFix: injection => {
+    const { urls, types } = injection.data;
+    const listener = (injection.data.listener = ({ requestId }) => {
+      replaceStringInRequest(
+        requestId,
+        "preventDefault:true",
+        "preventDefault:false"
+      );
+      return {};
+    });
+    browser.webRequest.onBeforeRequest.addListener(listener, { urls, types }, [
+      "blocking",
+    ]);
+  },
+  detectSwipeFixDisable: injection => {
+    const { listener } = injection.data;
+    browser.webRequest.onBeforeRequest.removeListener(listener);
+    delete injection.data.listener;
+  },
   noSniffFix: injection => {
     const { urls, contentType } = injection.data;
     const listener = (injection.data.listener = e => {
