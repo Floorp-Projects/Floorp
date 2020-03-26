@@ -18,6 +18,10 @@ body {
   background-color: var(--player-bg-color);
 }
 
+body:fullscreen {
+  -moz-window-dragging: no-drag;
+}
+
 .player-holder {
   display: flex;
   flex-direction: column;
