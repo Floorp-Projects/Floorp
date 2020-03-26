@@ -9,10 +9,7 @@
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 
-<!DOCTYPE window [
-  <!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
-  %editBookmarkOverlayDTD;
-]>
+<!DOCTYPE window>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -24,6 +21,10 @@
 <dialog id="bookmarkpropertiesdialog"
         buttons="accept, cancel"
         buttoniconaccept="save">
+
+  <linkset>
+    <html:link rel="localization" href="browser/editBookmarkOverlay.ftl"/>
+  </linkset>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="stringBundle"
