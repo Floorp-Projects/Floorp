@@ -10,6 +10,7 @@
 #include "ContentMediaController.h"
 #include "MediaEventSource.h"
 #include "mozilla/dom/MediaSessionController.h"
+#include "mozilla/LinkedList.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
 
@@ -43,7 +44,9 @@ enum class MediaControlKeysEvent : uint32_t;
  * tabs playing media at the same time, we can use the ID to query the specific
  * controller from `MediaControlService`.
  */
-class MediaController final : public MediaSessionController {
+class MediaController final
+    : public MediaSessionController,
+      public LinkedListElement<RefPtr<MediaController>> {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController, override);
 

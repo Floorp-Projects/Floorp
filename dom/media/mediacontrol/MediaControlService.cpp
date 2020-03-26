@@ -170,10 +170,10 @@ MediaControlService::ControllerManager::ControllerManager(
 bool MediaControlService::ControllerManager::AddController(
     MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
-  if (mControllers.Contains(aController)) {
+  if (mControllers.contains(aController)) {
     return false;
   }
-  mControllers.AppendElement(aController);
+  mControllers.insertBack(aController);
   UpdateMainController(aController);
   return true;
 }
@@ -181,17 +181,19 @@ bool MediaControlService::ControllerManager::AddController(
 bool MediaControlService::ControllerManager::RemoveController(
     MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
-  if (!mControllers.Contains(aController)) {
+  if (!mControllers.contains(aController)) {
     return false;
   }
-  mControllers.RemoveElement(aController);
-  UpdateMainController(
-      mControllers.IsEmpty() ? nullptr : mControllers.LastElement().get());
+  // This is LinkedListElement's method which will remove controller from
+  // `mController`.
+  aController->remove();
+  UpdateMainController(mControllers.isEmpty() ? nullptr
+                                              : mControllers.getLast());
   return true;
 }
 
 void MediaControlService::ControllerManager::Shutdown() {
-  mControllers.Clear();
+  mControllers.clear();
   DisconnectMainControllerEvents();
 }
 
@@ -265,7 +267,7 @@ MediaController* MediaControlService::ControllerManager::GetMainController()
 }
 
 uint64_t MediaControlService::ControllerManager::GetControllersNum() const {
-  return mControllers.Length();
+  return mControllers.length();
 }
 
 }  // namespace dom
