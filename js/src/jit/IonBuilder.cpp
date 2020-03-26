@@ -12032,7 +12032,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_throwsetconst() {
   MInstruction* lexicalError =
       MThrowRuntimeLexicalError::New(alloc(), JSMSG_BAD_CONST_ASSIGN);
   current->add(lexicalError);
-  return resumeAfter(lexicalError);
+  MOZ_TRY(resumeAfter(lexicalError));
+
+  // Terminate the block.
+  current->end(MUnreachable::New(alloc()));
+  setTerminatedBlock();
+
+  return Ok();
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_checklexical() {
