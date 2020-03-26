@@ -14,6 +14,7 @@
 #include "jstypes.h"
 
 #include "js/CallArgs.h"
+#include "js/HeapAPI.h"
 #include "js/Id.h"
 #include "js/TypeDecls.h"
 
@@ -738,7 +739,7 @@ struct MOZ_STATIC_CLASS JSClassOps {
 
 static constexpr const JSClassOps* JS_NULL_CLASS_OPS = nullptr;
 
-struct JSClass {
+struct alignas(js::gc::JSClassAlignBytes) JSClass {
   const char* name;
   uint32_t flags;
   const JSClassOps* cOps;

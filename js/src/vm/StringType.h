@@ -259,7 +259,7 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
    */
 
   // The low bits of flag word are reserved by GC.
-  static_assert(Base::NumFlagBitsReservedForGC <= 3,
+  static_assert(js::gc::CellFlagBitsReservedForGC <= 3,
                 "JSString::flags must reserve enough bits for Cell");
 
   static const uint32_t NON_ATOM_BIT = js::gc::Cell::JSSTRING_BIT;
