@@ -4076,8 +4076,10 @@ void JSScript::relazify(JSRuntime* rt) {
   clearFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
 
   // We should not still be in any side-tables for the debugger or
-  // code-coverage. These are checked on a realm-level in
-  // JSFunction::maybeRelazify().
+  // code-coverage. The finalizer will not be able to clean them up once
+  // bytecode is released. We check in JSFunction::maybeRelazify() for these
+  // conditions before requesting relazification.
+  MOZ_ASSERT(!coverage::IsLCovEnabled());
   MOZ_ASSERT(!hasScriptCounts());
   MOZ_ASSERT(!hasDebugScript());
 

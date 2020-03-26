@@ -1694,14 +1694,15 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   // shared with worker runtimes so relazifying functions in it will race).
   MOZ_ASSERT(!realm->isSelfHostingRealm());
 
-  // Don't relazify if the realm is being debugged.
+  // Don't relazify if the realm is being debugged. The debugger side-tables
+  // such as the set of active breakpoints require bytecode to exist.
   if (realm->isDebuggee()) {
     return;
   }
 
-  // Don't relazify if the realm and/or runtime is instrumented to
-  // collect code coverage for analysis.
-  if (realm->collectCoverageForDebug()) {
+  // Don't relazify if we are collecting coverage so that we do not lose count
+  // information.
+  if (coverage::IsLCovEnabled()) {
     return;
   }
 
