@@ -29,7 +29,7 @@ fuzzy(0-2,0-440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
-fuzzy(0-26,0-3610) fuzzy-if(d2d,0-26,0-5910) fuzzy-if(webrender,4-6,4184-4250) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
+fuzzy(0-26,0-3610) fuzzy-if(d2d,0-26,0-5910) fuzzy-if(webrender,4-6,4184-4350) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius-ref.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
