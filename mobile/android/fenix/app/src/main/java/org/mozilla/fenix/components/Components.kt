@@ -17,6 +17,7 @@ import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
@@ -69,7 +70,16 @@ class Components(private val context: Context) {
     }
 
     val addonCollectionProvider by lazy {
-        AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+        if (!BuildConfig.AMO_COLLECTION.isNullOrEmpty()) {
+            AddonCollectionProvider(
+                context,
+                core.client,
+                collectionName = BuildConfig.AMO_COLLECTION,
+                maxCacheAgeInMinutes = DAY_IN_MINUTES
+            )
+        } else {
+            AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+        }
     }
 
     @Suppress("MagicNumber")

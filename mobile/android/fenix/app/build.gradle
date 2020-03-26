@@ -47,6 +47,7 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
+        buildConfigField "String", "AMO_COLLECTION", "\"7e8d6dc651b54ab385fb8791bf9dac\""
         manifestPlaceholders = [
                 "isRaptorEnabled": "false",
                 "deepLinkScheme": "fenix-dev"
