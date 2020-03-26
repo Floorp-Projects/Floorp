@@ -110,7 +110,7 @@ class MediaControlService final : public nsIObserver {
     void ConnectToMainControllerEvents();
     void DisconnectMainControllerEvents();
 
-    nsTArray<RefPtr<MediaController>> mControllers;
+    LinkedList<RefPtr<MediaController>> mControllers;
     RefPtr<MediaController> mMainController;
 
     // These member are use to listen main controller's play state changes and
