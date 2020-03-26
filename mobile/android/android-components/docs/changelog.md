@@ -15,8 +15,11 @@ permalink: /changelog/
 * **service-accounts-push**
   * Fixed a bug where the push subscription was incorrectly cached and caused some `GeneralError`s.
 
-  * **feature-addons**
-    * Added `DefaultAddonUpdater.UpdateAttemptStorage` allows to query the last known state for a previous attempt to update an add-on.
+* **feature-addons**
+  * Added `DefaultAddonUpdater.UpdateAttemptStorage` allows to query the last known state for a previous attempt to update an add-on.
+
+* **feature-accounts-push**
+  * Re-subscribe for Sync push support when notified by `onSubscriptionChanged` events.
 
 # 37.0.0
 

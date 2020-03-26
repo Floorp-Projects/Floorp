@@ -17,6 +17,8 @@ import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
+import mozilla.components.feature.push.AutoPushSubscription
+import mozilla.components.feature.push.PushScope
 import mozilla.components.concept.sync.AccountObserver as SyncAccountObserver
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
@@ -74,7 +76,7 @@ class FxaPushSupportFeature(
     }
 
     init {
-        val autoPushObserver = AutoPushObserver(accountManager, fxaPushScope)
+        val autoPushObserver = AutoPushObserver(accountManager, pushFeature, fxaPushScope)
 
         val accountObserver = AccountObserver(
             context,
@@ -120,13 +122,7 @@ internal class AccountObserver(
             logger.debug("Subscribing for FxaPushScope ($fxaPushScope) events.")
 
             push.subscribe(fxaPushScope) { subscription ->
-                account.deviceConstellation().setDevicePushSubscriptionAsync(
-                    DevicePushSubscription(
-                        endpoint = subscription.endpoint,
-                        publicKey = subscription.publicKey,
-                        authKey = subscription.authKey
-                    )
-                )
+                account.deviceConstellation().setDevicePushSubscriptionAsync(subscription.into())
             }
         }
 
@@ -179,23 +175,42 @@ internal class ConstellationObserver(
  */
 internal class AutoPushObserver(
     private val accountManager: FxaAccountManager,
+    private val pushFeature: AutoPushFeature,
     private val fxaPushScope: String
 ) : AutoPushFeature.Observer {
     private val logger = Logger(AutoPushObserver::class.java.simpleName)
 
     override fun onMessageReceived(scope: String, message: ByteArray?) {
-        logger.info("Received new push message for $scope")
-
-        // Ignore messages that are not meant for us.
         if (scope != fxaPushScope) {
             return
         }
+
+        logger.info("Received new push message for $scope")
 
         // Ignore push messages that do not have data.
         val rawEvent = message ?: return
 
         accountManager.withConstellation {
             it.processRawEventAsync(String(rawEvent))
+        }
+    }
+
+    override fun onSubscriptionChanged(scope: PushScope) {
+        if (scope != fxaPushScope) {
+            return
+        }
+
+        logger.info("Our sync push scope ($scope) has expired. Re-subscribing..")
+
+        pushFeature.subscribe(fxaPushScope) { subscription ->
+            val account = accountManager.authenticatedAccount()
+
+            if (account == null) {
+                logger.info("We don't have any account to pass the push subscription to.")
+                return@subscribe
+            }
+
+            account.deviceConstellation().setDevicePushSubscriptionAsync(subscription.into())
         }
     }
 }
@@ -310,13 +325,7 @@ class OneTimeFxaPushReset(
 
         pushFeature.unsubscribe(pushScope)
         pushFeature.subscribe(newPushScope) { subscription ->
-            account.deviceConstellation().setDevicePushSubscriptionAsync(
-                DevicePushSubscription(
-                    endpoint = subscription.endpoint,
-                    publicKey = subscription.publicKey,
-                    authKey = subscription.authKey
-                )
-            )
+            account.deviceConstellation().setDevicePushSubscriptionAsync(subscription.into())
         }
 
         preference(context).edit().putString(PREF_FXA_SCOPE, newPushScope).apply()
@@ -327,3 +336,9 @@ internal data class VerificationState(val timestamp: Long, val totalCount: Int)
 
 @VisibleForTesting
 internal fun preference(context: Context) = context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+
+internal fun AutoPushSubscription.into() = DevicePushSubscription(
+    endpoint = this.endpoint,
+    publicKey = this.publicKey,
+    authKey = this.authKey
+)
