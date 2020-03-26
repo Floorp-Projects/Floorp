@@ -1,0 +1,30 @@
+<html>
+<head>
+    <script>
+      async function start () {
+        const element_0 = document.createElementNS('', 's')
+        const svg = document.getElementById('id_8')
+        const math = document.getElementById('id_20')
+        const selection = window.getSelection()
+        const range = new Range()
+        range.setStartAfter(math)
+        range.insertNode(svg)
+        range.selectNodeContents(element_0)
+        document.documentElement.contentEditable = true
+        range.setStart(svg, (2760506212 % svg.childNodes))
+        selection.addRange(range)
+        document.execCommand('insertOrderedList', false, null)
+        document.execCommand('insertParagraph', false, null)
+      }
+
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+</head>
+<body>
+<svg id='id_8'>
+    <metadata xml:space='preserve'>
+</svg>
+<math id='id_20'>
+</math>
+</body>
+</html>
