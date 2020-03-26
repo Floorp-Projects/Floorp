@@ -2090,6 +2090,6 @@ pref(layout.css.xul-box-display-values.content.enabled,true) == 1606130.html 160
 == 1608124-1.html 1608124-1-ref.html
 skip-if(!OSX) != 1608124-2.html 1608124-2-notref.html
 == 1613380.html 1613380-ref.html
-fuzzy(0-145,0-48535) == 1614788-1.svg 1614788-1-ref.svg # large fuzz necesary to test bug: 239,202824 is how much it differs when bug exists
+fuzzy(0-145,0-48536) == 1614788-1.svg 1614788-1-ref.svg # large fuzz necesary to test bug: 239,202824 is how much it differs when bug exists
 == blob-fallback-clip.html blob-fallback-clip-ref.html
 fuzzy-if(OSX,0-42,0-4) fuzzy-if((Android||winWidget)&&!webrender,0-115,0-2) == 1617515-1.html 1617515-1-ref.html
