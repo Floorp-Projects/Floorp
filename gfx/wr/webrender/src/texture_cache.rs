@@ -912,7 +912,6 @@ impl TextureCache {
         if let Some(t) = self.reached_reclaim_threshold {
             let dur = time.duration_since(t).unwrap_or_default();
             if dur >= Duration::from_secs(5) {
-                println!("#n !! reclaim shared memory");
                 self.clear_shared();
                 self.reached_reclaim_threshold = None;
             }
@@ -936,7 +935,6 @@ impl TextureCache {
         let do_periodic_gc = time_since_last_gc >= Duration::from_secs(5) &&
             self.shared_textures.size_in_bytes() >= RECLAIM_THRESHOLD_BYTES * 2;
         if do_periodic_gc {
-            println!("#n ######## periodic GC");
             let threshold = EvictionThresholdBuilder::new(self.now)
                 .max_frames(1)
                 .max_time_s(10)
