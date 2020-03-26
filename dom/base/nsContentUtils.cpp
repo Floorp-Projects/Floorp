@@ -5852,26 +5852,6 @@ SameOriginCheckerImpl::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 /* static */
-nsresult nsContentUtils::GetASCIIOrigin(nsIPrincipal* aPrincipal,
-                                        nsACString& aOrigin) {
-  MOZ_ASSERT(aPrincipal, "missing principal");
-
-  aOrigin.Truncate();
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (uri) {
-    return GetASCIIOrigin(uri, aOrigin);
-  }
-
-  aOrigin.AssignLiteral("null");
-
-  return NS_OK;
-}
-
-/* static */
 nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
   MOZ_ASSERT(aURI, "missing uri");
 
@@ -5928,8 +5908,10 @@ nsresult nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal,
   aOrigin.Truncate();
   nsAutoCString asciiOrigin;
 
-  nsresult rv = GetASCIIOrigin(aPrincipal, asciiOrigin);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aPrincipal->GetAsciiOrigin(asciiOrigin);
+  if (NS_FAILED(rv)) {
+    asciiOrigin.AssignLiteral("null");
+  }
 
   aOrigin = NS_ConvertUTF8toUTF16(asciiOrigin);
   return NS_OK;
