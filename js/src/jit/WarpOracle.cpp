@@ -389,6 +389,16 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         break;
       }
 
+      case JSOp::Rest: {
+        const ICEntry& entry = script->jitScript()->icEntryFromPCOffset(offset);
+        ICRest_Fallback* stub = entry.fallbackStub()->toRest_Fallback();
+        if (!AddOpSnapshot<WarpRest>(alloc_, opSnapshots, offset,
+                                     stub->templateObject())) {
+          return abort(AbortReason::Alloc);
+        }
+        break;
+      }
+
       default:
         break;
     }
