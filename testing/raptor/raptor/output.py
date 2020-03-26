@@ -407,7 +407,7 @@ class PerftestOutput(object):
                 raise Exception(
                     "No average measurements found for supporting data with W, or MHz unit .")
 
-            if unit in ["KB", "mAh"]:
+            if unit in ["KB", "mAh", "mWh"]:
                 return sum(_filter(vals))
 
             raise NotImplementedError("Unit %s not suported" % unit)
