@@ -614,7 +614,7 @@ class WebConsoleUI {
     return threadFront.getWebconsoleFront();
   }
 
-  getSelectedNodeActor() {
+  getSelectedNodeActorID() {
     const inspectorSelection = this.hud.getInspectorSelection();
     return inspectorSelection?.nodeFront?.actorID;
   }

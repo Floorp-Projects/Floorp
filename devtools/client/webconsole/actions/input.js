@@ -84,18 +84,14 @@ function evaluateExpression(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const frameActor = await webConsoleUI.getFrameActor();
-    const selectedThreadFront = toolbox && toolbox.getSelectedThreadFront();
-
     // Even if the evaluation fails,
     // we still need to pass the error response to onExpressionEvaluated.
     const onSettled = res => res;
 
     const response = await client
       .evaluateJSAsync(expression, {
-        selectedThreadFront,
-        frameActor,
-        selectedNodeActor: webConsoleUI.getSelectedNodeActor(),
+        frameActor: await webConsoleUI.getFrameActor(),
+        selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
         mapped,
       })
       .then(onSettled, onSettled);
@@ -253,13 +249,9 @@ function terminalInputChanged(expression, force = false) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const frameActor = await webConsoleUI.getFrameActor();
-    const selectedThreadFront = toolbox && toolbox.getSelectedThreadFront();
-
     const response = await client.evaluateJSAsync(expression, {
-      frameActor,
-      selectedThreadFront,
-      selectedNodeActor: webConsoleUI.getSelectedNodeActor(),
+      frameActor: await webConsoleUI.getFrameActor(),
+      selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
       mapped,
       eager: true,
     });
