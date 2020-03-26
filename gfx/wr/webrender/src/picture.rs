@@ -4721,7 +4721,7 @@ impl PicturePrimitive {
                         );
 
                         let blur_render_task_id = RenderTask::new_blur(
-                            dbg!(blur_std_deviation),
+                            blur_std_deviation,
                             picture_task_id,
                             frame_state.render_tasks,
                             RenderTargetKind::Color,
