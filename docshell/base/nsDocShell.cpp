@@ -8364,9 +8364,8 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       MOZ_ASSERT(aLoadState->PrincipalToInherit() ==
                  aLoadState->TriggeringPrincipal());
       MOZ_ASSERT(
-          (aLoadState->LoadFlags() & ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
-              INTERNAL_LOAD_FLAGS_NO_OPENER ||
-          (aLoadState->LoadFlags() & ~INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED) ==
+          aLoadState->LoadFlags() == INTERNAL_LOAD_FLAGS_NO_OPENER ||
+          aLoadState->LoadFlags() ==
               (INTERNAL_LOAD_FLAGS_NO_OPENER |
                INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
       MOZ_ASSERT(!aLoadState->PostDataStream());
@@ -12382,10 +12381,6 @@ nsresult nsDocShell::OnLinkClickSync(
   bool inOnLoadHandler = false;
   GetIsExecutingOnLoadHandler(&inOnLoadHandler);
   uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
-
-  if (aIsUserTriggered) {
-    flags |= INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED;
-  }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
   if (isElementAnchorOrArea) {
