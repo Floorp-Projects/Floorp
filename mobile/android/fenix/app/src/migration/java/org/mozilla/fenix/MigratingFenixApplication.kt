@@ -23,13 +23,13 @@ class MigratingFenixApplication : FenixApplication() {
     val migrator by lazy {
         FennecMigrator.Builder(this, this.components.analytics.crashReporter)
             .migrateOpenTabs(this.components.core.sessionManager)
-            .migrateHistory(this.components.core.historyStorage)
+            .migrateHistory(this.components.core.lazyHistoryStorage)
             .migrateBookmarks(
-                this.components.core.bookmarksStorage,
+                this.components.core.lazyBookmarksStorage,
                 this.components.core.topSiteStorage.storage
             )
-            .migrateLogins(this.components.core.passwordsStorage)
-            .migrateFxa(this.components.backgroundServices.accountManager)
+            .migrateLogins(this.components.core.lazyPasswordsStorage)
+            .migrateFxa(lazy { this.components.backgroundServices.accountManager })
             .migrateAddons(
                 this.components.core.engine,
                 this.components.addonCollectionProvider,
