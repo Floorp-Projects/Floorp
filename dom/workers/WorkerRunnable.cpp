@@ -14,6 +14,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Telemetry.h"
 

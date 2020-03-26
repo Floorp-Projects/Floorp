@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMTypes.h"
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/PerformanceUtils.h"
@@ -40,6 +41,10 @@ nsresult DocGroup::GetKey(nsIPrincipal* aPrincipal, nsACString& aKey) {
   }
 
   return rv;
+}
+
+void DocGroup::SetExecutionManager(JSExecutionManager* aManager) {
+  mExecutionManager = aManager;
 }
 
 void DocGroup::RemoveDocument(Document* aDocument) {

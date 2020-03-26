@@ -186,6 +186,9 @@ class CycleCollectedJSRuntime {
 
   static bool ContextCallback(JSContext* aCx, unsigned aOperation, void* aData);
 
+  static void* BeforeWaitCallback(uint8_t* aMemory);
+  static void AfterWaitCallback(void* aCookie);
+
   virtual void TraceNativeBlackRoots(JSTracer* aTracer){};
   void TraceNativeGrayRoots(JSTracer* aTracer);
 
