@@ -28,7 +28,7 @@ In the *android-components* repository update the version number [in the configu
 
 After changing the components code you can publish your version to your local maven repository. You can either publish all components or just a specific ones:
 
-```Bash
+```bash
 # Publish all components to your local Maven repository:
 $ ./gradlew publishToMavenLocal
 
@@ -40,11 +40,21 @@ $ ./gradlew ui-autocomplete:publishToMavenLocal
 
 In your app project locate the `repositories` block inside your build.gradle and add `mavenLocal()` to the list:
 
-```Groovy
+```groovy
 repositories {
     mavenLocal()
     google()
     jcenter()
+}
+```
+
+Also add `mavenLocal()` to the build.gradle in the 'app' module:
+
+```groovy
+buildscript {
+    repositories {
+        mavenLocal()
+    }
 }
 ```
 
