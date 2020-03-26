@@ -4138,7 +4138,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
           self->mNeedsCompositorResume = true;
           self->MaybeResumeCompositor();
         });
-        moz_container_set_accelerated(mContainer);
       }
 #endif
 
