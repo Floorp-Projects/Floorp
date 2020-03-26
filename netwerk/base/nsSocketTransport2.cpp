@@ -907,7 +907,6 @@ nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
   memcpy(&mNetAddr, addr, sizeof(NetAddr));
 
   mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
-  mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
   mState = STATE_TRANSFERRING;
   SetSocketName(fd);
   mNetAddrIsSet = true;
@@ -918,6 +917,7 @@ nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
     mFD = fd;
     mFDref = 1;
     mFDconnected = true;
+    mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
   }
 
   // make sure new socket is non-blocking
@@ -1522,11 +1522,11 @@ nsresult nsSocketTransport::InitiateSocket() {
     mFD = fd;
     mFDref = 1;
     mFDconnected = false;
+    mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
   }
 
   SOCKET_LOG(("  advancing to STATE_CONNECTING\n"));
   mState = STATE_CONNECTING;
-  mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
   SendStatus(NS_NET_STATUS_CONNECTING_TO);
 
   if (SOCKET_LOG_ENABLED()) {
@@ -1995,7 +1995,6 @@ void nsSocketTransport::OnSocketConnected() {
   SOCKET_LOG(("  advancing to STATE_TRANSFERRING\n"));
 
   mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
-  mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
   mState = STATE_TRANSFERRING;
 
   // Set the m*AddrIsSet flags only when state has reached TRANSFERRING
@@ -2019,6 +2018,7 @@ void nsSocketTransport::OnSocketConnected() {
     SetSocketName(mFD);
     mFDconnected = true;
     mFDFastOpenInProgress = false;
+    mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
   }
 
   // Ensure keepalive is configured correctly if previously enabled.
@@ -2252,9 +2252,12 @@ void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
       break;
     case MSG_TIMEOUT_CHANGED:
       SOCKET_LOG(("  MSG_TIMEOUT_CHANGED\n"));
-      mPollTimeout =
-          mTimeouts[(mState == STATE_TRANSFERRING) ? TIMEOUT_READ_WRITE
-                                                   : TIMEOUT_CONNECT];
+      {
+        MutexAutoLock lock(mLock);
+        mPollTimeout =
+            mTimeouts[(mState == STATE_TRANSFERRING) ? TIMEOUT_READ_WRITE
+                                                     : TIMEOUT_CONNECT];
+      }
       break;
     default:
       SOCKET_LOG(("  unhandled event!\n"));
@@ -2315,7 +2318,10 @@ void nsSocketTransport::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
       mInput.OnSocketReady(NS_OK);
     }
     // Update poll timeout in case it was changed
-    mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
+    {
+      MutexAutoLock lock(mLock);
+      mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
+    }
   } else if ((mState == STATE_CONNECTING) && !gIOService->IsNetTearingDown()) {
     // We do not need to do PR_ConnectContinue when we are already
     // shutting down.
@@ -2388,7 +2394,10 @@ void nsSocketTransport::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
         // Set up the select flags for connect...
         mPollFlags = (PR_POLL_EXCEPT | PR_POLL_WRITE);
         // Update poll timeout in case it was changed
-        mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
+        {
+          MutexAutoLock lock(mLock);
+          mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
+        }
       }
       //
       // The SOCKS proxy rejected our request. Find out why.
@@ -2876,6 +2885,7 @@ nsSocketTransport::GetScriptableSelfAddr(nsINetAddr** addr) {
 NS_IMETHODIMP
 nsSocketTransport::GetTimeout(uint32_t type, uint32_t* value) {
   NS_ENSURE_ARG_MAX(type, nsISocketTransport::TIMEOUT_READ_WRITE);
+  MutexAutoLock lock(mLock);
   *value = (uint32_t)mTimeouts[type];
   return NS_OK;
 }
@@ -2888,7 +2898,10 @@ nsSocketTransport::SetTimeout(uint32_t type, uint32_t value) {
               value));
 
   // truncate overly large timeout values.
-  mTimeouts[type] = (uint16_t)std::min<uint32_t>(value, UINT16_MAX);
+  {
+    MutexAutoLock lock(mLock);
+    mTimeouts[type] = (uint16_t)std::min<uint32_t>(value, UINT16_MAX);
+  }
   PostEvent(MSG_TIMEOUT_CHANGED);
   return NS_OK;
 }
