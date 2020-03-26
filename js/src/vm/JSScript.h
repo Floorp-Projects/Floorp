@@ -1909,7 +1909,6 @@ setterLevel:                                                                  \
   MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
   MUTABLE_FLAG_GETTER_SETTER(needsArgsAnalysis, NeedsArgsAnalysis)
   // NeedsArgsObj: custom logic below.
-  MUTABLE_FLAG_GETTER_SETTER(hideScriptFromDebugger, HideScriptFromDebugger)
   MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
 
 #undef IMMUTABLE_FLAG_GETTER
@@ -2154,7 +2153,7 @@ class JSScript : public js::BaseScript {
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           js::HandleScriptSourceObject sourceObject,
                           js::ImmutableScriptFlags flags,
-                          bool hideScriptFromDebugger, js::SourceExtent extent);
+                          js::SourceExtent extent);
 
   // NOTE: This should only be used while delazifying.
   static JSScript* CastFromLazy(js::BaseScript* lazy) {

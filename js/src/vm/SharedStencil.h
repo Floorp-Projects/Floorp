@@ -349,11 +349,8 @@ enum class MutableScriptFlagsEnum : uint32_t {
   NeedsArgsAnalysis = 1 << 24,
   NeedsArgsObj = 1 << 25,
 
-  // Set if the debugger's onNewScript hook has not yet been called.
-  HideScriptFromDebugger = 1 << 26,
-
   // Set if the script has opted into spew
-  SpewEnabled = 1 << 27,
+  SpewEnabled = 1 << 26,
 };
 
 class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
