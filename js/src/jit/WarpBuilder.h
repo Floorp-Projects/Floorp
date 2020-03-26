@@ -57,6 +57,7 @@ namespace jit {
   _(GetArg)                  \
   _(SetArg)                  \
   _(ToNumeric)               \
+  _(Pos)                     \
   _(Inc)                     \
   _(Dec)                     \
   _(Neg)                     \
