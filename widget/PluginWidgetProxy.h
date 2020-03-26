@@ -38,10 +38,10 @@ class PluginWidgetProxy final : public PuppetWidget {
 
   // nsIWidget
   using PuppetWidget::Create;  // for Create signature not overridden here
-  virtual MOZ_MUST_USE nsresult
-  Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-         const LayoutDeviceIntRect& aRect,
-         nsWidgetInitData* aInitData = nullptr) override;
+  [[nodiscard]] virtual nsresult Create(
+      nsIWidget* aParent, nsNativeWidget aNativeParent,
+      const LayoutDeviceIntRect& aRect,
+      nsWidgetInitData* aInitData = nullptr) override;
   virtual void Destroy() override;
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   virtual void SetParent(nsIWidget* aNewParent) override;

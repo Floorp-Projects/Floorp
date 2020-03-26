@@ -258,14 +258,14 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
-  virtual MOZ_MUST_USE nsresult
-  GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  [[nodiscard]] virtual nsresult GetRestoredBounds(
+      LayoutDeviceIntRect& aRect) override;
   virtual nsresult SetNonClientMargins(
       LayoutDeviceIntMargin& aMargins) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   virtual void EnableDragDrop(bool aEnable) override{};
   virtual nsresult AsyncEnableDragDrop(bool aEnable) override;
-  virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override {
+  [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override {
     return NS_OK;
   }
   virtual bool HasPendingInputEvent() override;
@@ -273,9 +273,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   virtual void SetDrawsInTitlebar(bool aState) override {}
   virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
   virtual void FreeNativeData(void* data, uint32_t aDataType) override {}
-  virtual MOZ_MUST_USE nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                                                int32_t aHorizontal,
-                                                int32_t aVertical) override {
+  [[nodiscard]] virtual nsresult BeginResizeDrag(
+      mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
+      int32_t aVertical) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult ActivateNativeMenuItemAt(
@@ -287,7 +287,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsresult NotifyIME(const IMENotification& aIMENotification) final;
-  virtual MOZ_MUST_USE nsresult StartPluginIME(
+  [[nodiscard]] virtual nsresult StartPluginIME(
       const mozilla::WidgetKeyboardEvent& aKeyboardEvent, int32_t aPanelX,
       int32_t aPanelY, nsString& aCommitted) override {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -297,14 +297,14 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       const mozilla::widget::CandidateWindowPosition& aPosition) override {}
   virtual void DefaultProcOfPluginEvent(
       const mozilla::WidgetPluginEvent& aEvent) override {}
-  virtual MOZ_MUST_USE nsresult
-  AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override {
+  [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
+      mozilla::WidgetKeyboardEvent& aEvent) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   bool ComputeShouldAccelerate();
   virtual bool WidgetTypeSupportsAcceleration() { return true; }
-  virtual MOZ_MUST_USE nsresult
-  OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override {
+  [[nodiscard]] virtual nsresult OnDefaultButtonLoaded(
+      const LayoutDeviceIntRect& aButtonRect) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual already_AddRefed<nsIWidget> CreateChild(

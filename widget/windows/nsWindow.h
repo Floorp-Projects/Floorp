@@ -104,10 +104,10 @@ class nsWindow final : public nsWindowBase {
 
   // nsIWidget interface
   using nsWindowBase::Create;  // for Create signature not overridden here
-  virtual MOZ_MUST_USE nsresult
-  Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-         const LayoutDeviceIntRect& aRect,
-         nsWidgetInitData* aInitData = nullptr) override;
+  [[nodiscard]] virtual nsresult Create(
+      nsIWidget* aParent, nsNativeWidget aNativeParent,
+      const LayoutDeviceIntRect& aRect,
+      nsWidgetInitData* aInitData = nullptr) override;
   virtual void Destroy() override;
   virtual void SetParent(nsIWidget* aNewParent) override;
   virtual nsIWidget* GetParent(void) override;
@@ -135,9 +135,9 @@ class nsWindow final : public nsWindowBase {
   virtual void Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) override;
   virtual mozilla::Maybe<bool> IsResizingNativeWidget() override;
-  virtual MOZ_MUST_USE nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                                                int32_t aHorizontal,
-                                                int32_t aVertical) override;
+  [[nodiscard]] virtual nsresult BeginResizeDrag(
+      mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
+      int32_t aVertical) override;
   virtual void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                            nsIWidget* aWidget, bool aActivate) override;
   virtual void SetSizeMode(nsSizeMode aMode) override;
@@ -147,8 +147,8 @@ class nsWindow final : public nsWindowBase {
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
-  virtual MOZ_MUST_USE nsresult
-  GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  [[nodiscard]] virtual nsresult GetRestoredBounds(
+      LayoutDeviceIntRect& aRect) override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   void SetBackgroundColor(const nscolor& aColor) override;
@@ -183,15 +183,15 @@ class nsWindow final : public nsWindowBase {
   virtual void CaptureMouse(bool aCapture) override;
   virtual void CaptureRollupEvents(nsIRollupListener* aListener,
                                    bool aDoCapture) override;
-  virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
+  [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override;
   virtual bool HasPendingInputEvent() override;
   virtual LayerManager* GetLayerManager(
       PLayerTransactionChild* aShadowManager = nullptr,
       LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
       LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
-  virtual MOZ_MUST_USE nsresult
-  OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
+  [[nodiscard]] virtual nsresult OnDefaultButtonLoaded(
+      const LayoutDeviceIntRect& aButtonRect) override;
   virtual nsresult SynthesizeNativeKeyEvent(
       int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
       uint32_t aModifierFlags, const nsAString& aCharacters,
