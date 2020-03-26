@@ -726,7 +726,7 @@ function setCertErrorDetails(event) {
       // and adjusting the date per the interval would make the cert valid, warn the user:
       if (
         Math.abs(difference) > 60 * 60 * 24 &&
-        now - lastFetched <= 60 * 60 * 24 * 5 &&
+        now - lastFetched <= 60 * 60 * 24 * 5 * 1000 &&
         certRange.notBefore < approximateDate &&
         certRange.notAfter > approximateDate
       ) {
@@ -807,6 +807,14 @@ function setCertErrorDetails(event) {
           let sd2 = document.getElementById("errorShortDescText2");
           // eslint-disable-next-line no-unsanitized/property
           sd2.innerHTML = errDesc2.innerHTML;
+          if (
+            Math.abs(difference) <= 60 * 60 * 24 &&
+            now - lastFetched <= 60 * 60 * 24 * 5 * 1000
+          ) {
+            errWhatToDo = document.getElementById(
+              "es_nssBadCert_SSL_ERROR_BAD_CERT_DOMAIN"
+            );
+          }
         }
 
         if (es) {
