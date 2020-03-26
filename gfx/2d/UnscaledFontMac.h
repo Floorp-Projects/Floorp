@@ -50,7 +50,10 @@ class UnscaledFontMac final : public UnscaledFont {
                                               uint32_t aVariationCount,
                                               const FontVariation* aVariations);
 
-  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
+  bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
+
+  static already_AddRefed<UnscaledFont> CreateFromFontDescriptor(
+      const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
  private:
   CGFontRef mFont;
