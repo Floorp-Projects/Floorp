@@ -10050,35 +10050,30 @@ class MNewTarget : public MNullaryInstruction {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MRestCommon {
+class MRest : public MUnaryInstruction, public UnboxedInt32Policy<0>::Data {
   unsigned numFormals_;
   CompilerGCPointer<ArrayObject*> templateObject_;
 
- protected:
-  MRestCommon(unsigned numFormals, ArrayObject* templateObject)
-      : numFormals_(numFormals), templateObject_(templateObject) {}
-
- public:
-  unsigned numFormals() const { return numFormals_; }
-  ArrayObject* templateObject() const { return templateObject_; }
-};
-
-class MRest : public MUnaryInstruction,
-              public MRestCommon,
-              public UnboxedInt32Policy<0>::Data {
   MRest(TempAllocator& alloc, CompilerConstraintList* constraints,
         MDefinition* numActuals, unsigned numFormals,
         ArrayObject* templateObject)
       : MUnaryInstruction(classOpcode, numActuals),
-        MRestCommon(numFormals, templateObject) {
+        numFormals_(numFormals),
+        templateObject_(templateObject) {
     setResultType(MIRType::Object);
-    setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, templateObject));
+    if (!JitOptions.warpBuilder) {
+      setResultTypeSet(
+          MakeSingletonTypeSet(alloc, constraints, templateObject));
+    }
   }
 
  public:
   INSTRUCTION_HEADER(Rest)
   TRIVIAL_NEW_WRAPPERS_WITH_ALLOC
   NAMED_OPERANDS((0, numActuals))
+
+  unsigned numFormals() const { return numFormals_; }
+  ArrayObject* templateObject() const { return templateObject_; }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool possiblyCalls() const override { return true; }

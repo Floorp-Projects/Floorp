@@ -213,6 +213,7 @@ namespace jit {
   _(InstrumentationCallback) \
   _(InstrumentationScriptId) \
   _(TableSwitch)             \
+  _(Rest)                    \
   _(SetRval)                 \
   _(Return)                  \
   _(RetRval)
