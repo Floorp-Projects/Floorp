@@ -192,6 +192,7 @@ impl Size {
     Serialize,
     ToAnimatedValue,
     ToAnimatedZero,
+    ToComputedValue,
     ToResolvedValue,
     ToShmem,
 )]
