@@ -1055,4 +1055,9 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_COMMENT = 181;
 
+  /**
+   * A snippet of program code. ATs might want to treat this differently.
+   */
+  const unsigned long ROLE_CODE = 182;
+
 };

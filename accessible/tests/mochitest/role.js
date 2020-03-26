@@ -17,6 +17,7 @@ const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
 const ROLE_CHECKBUTTON = nsIAccessibleRole.ROLE_CHECKBUTTON;
 const ROLE_CHECK_MENU_ITEM = nsIAccessibleRole.ROLE_CHECK_MENU_ITEM;
 const ROLE_CHROME_WINDOW = nsIAccessibleRole.ROLE_CHROME_WINDOW;
+const ROLE_CODE = nsIAccessibleRole.ROLE_CODE;
 const ROLE_COLUMNHEADER = nsIAccessibleRole.ROLE_COLUMNHEADER;
 const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;

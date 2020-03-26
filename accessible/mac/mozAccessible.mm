@@ -952,6 +952,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     case roles::CONTENT_INSERTION:
       return @"AXInsertStyleGroup";
 
+    case roles::CODE:
+      return @"AXCodeStyleGroup";
+
     case roles::TOGGLE_BUTTON:
       return @"AXToggle";
 
