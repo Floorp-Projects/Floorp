@@ -740,19 +740,23 @@ var ThirdPartyCookies = {
     }
 
     this.subViewHeading.hidden = false;
-    if (!this.enabled || gProtectionsHandler.hasException) {
+    if (!this.enabled) {
       this.subView.setAttribute("title", this.strings.subViewTitleNotBlocking);
       return;
     }
 
     let title;
+    let siteException = gProtectionsHandler.hasException;
+    let titleStringPrefix = `protections.${
+      siteException ? "notBlocking" : "blocking"
+    }.cookies.`;
     switch (this.behaviorPref) {
       case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-        title = "protections.blocking.cookies.3rdParty.title";
+        title = titleStringPrefix + "3rdParty.title";
         this.subViewHeading.hidden = true;
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT:
-        title = "protections.blocking.cookies.all.title";
+        title = titleStringPrefix + "all.title";
         this.subViewHeading.hidden = true;
         break;
       case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
@@ -761,7 +765,9 @@ var ThirdPartyCookies = {
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
-        title = "protections.blocking.cookies.trackers.title";
+        title = siteException
+          ? "protections.notBlocking.crossSiteTrackingCookies.title"
+          : "protections.blocking.cookies.trackers.title";
         break;
       default:
         Cu.reportError(
