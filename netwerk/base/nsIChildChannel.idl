@@ -30,6 +30,5 @@ interface nsIChildChannel : nsISupports
    * we have to inform the child side of the protocol of that fact by a special
    * method.
    */
-  void completeRedirectSetup(in nsIStreamListener aListener,
-                             in nsISupports aContext);
+  void completeRedirectSetup(in nsIStreamListener aListener);
 };
