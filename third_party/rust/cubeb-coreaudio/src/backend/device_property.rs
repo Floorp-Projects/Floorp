@@ -21,6 +21,23 @@ pub fn get_device_uid(
     }
 }
 
+pub fn get_device_model_uid(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<StringRef, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::ModelUID, devtype);
+    let mut size = mem::size_of::<CFStringRef>();
+    let mut uid: CFStringRef = ptr::null();
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut uid);
+    if err == NO_ERR {
+        Ok(StringRef::new(uid as _))
+    } else {
+        Err(err)
+    }
+}
+
 pub fn get_device_source(
     id: AudioDeviceID,
     devtype: DeviceType,
@@ -276,6 +293,7 @@ pub enum Property {
     DeviceStreamFormat,
     DeviceStreams,
     DeviceUID,
+    ModelUID,
     HardwareDefaultInputDevice,
     HardwareDefaultOutputDevice,
     HardwareDevices,
@@ -298,6 +316,7 @@ impl From<Property> for AudioObjectPropertySelector {
             Property::DeviceStreamFormat => kAudioDevicePropertyStreamFormat,
             Property::DeviceStreams => kAudioDevicePropertyStreams,
             Property::DeviceUID => kAudioDevicePropertyDeviceUID,
+            Property::ModelUID => kAudioDevicePropertyModelUID,
             Property::HardwareDefaultInputDevice => kAudioHardwarePropertyDefaultInputDevice,
             Property::HardwareDefaultOutputDevice => kAudioHardwarePropertyDefaultOutputDevice,
             Property::HardwareDevices => kAudioHardwarePropertyDevices,
