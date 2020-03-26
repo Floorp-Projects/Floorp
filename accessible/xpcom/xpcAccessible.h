@@ -67,6 +67,8 @@ class xpcAccessible : public nsIAccessible {
                              nsIAccessible** aAccessible) final;
   NS_IMETHOD GetDeepestChildAtPoint(int32_t aX, int32_t aY,
                                     nsIAccessible** aAccessible) final;
+  NS_IMETHOD GetDeepestChildAtPointInProcess(int32_t aX, int32_t aY,
+                                             nsIAccessible** aAccessible) final;
 
   NS_IMETHOD SetSelected(bool aSelect) final;
   NS_IMETHOD TakeSelection() final;

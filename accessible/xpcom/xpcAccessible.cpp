@@ -587,6 +587,22 @@ xpcAccessible::GetDeepestChildAtPoint(int32_t aX, int32_t aY,
 }
 
 NS_IMETHODIMP
+xpcAccessible::GetDeepestChildAtPointInProcess(int32_t aX, int32_t aY,
+                                               nsIAccessible** aAccessible) {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nullptr;
+
+  AccessibleOrProxy generic = IntlGeneric();
+  if (generic.IsNull() || generic.IsProxy()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_IF_ADDREF(*aAccessible = ToXPC(
+                   Intl()->ChildAtPoint(aX, aY, Accessible::eDeepestChild)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 xpcAccessible::SetSelected(bool aSelect) {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
