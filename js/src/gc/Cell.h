@@ -105,21 +105,23 @@ class CellColor {
 // heap extend either gc::Cell or gc::TenuredCell. If a type is always tenured,
 // prefer the TenuredCell class as base.
 //
-// The first word (a pointer or uintptr_t) of each Cell must reserve the low bit
-// for GC purposes. In addition to that, nursery Cells must reserve the low
-// Cell::ReservedBits bits for GC purposes. The remaining bits are available to
-// sub-classes and typically store a pointer to another gc::Cell.
+// The first word (a pointer or uintptr_t) of each Cell must reserve the low
+// three bits for GC purposes. The remaining bits are available to sub-classes
+// and typically store a pointer to another gc::Cell.
 //
 // During moving GC operation a Cell may be marked as forwarded. This indicates
 // that a gc::RelocationOverlay is currently stored in the Cell's memory and
 // should be used to find the new location of the Cell.
 struct alignas(gc::CellAlignBytes) Cell {
  public:
-  // The low bits of the first word of each Cell are reserved for GC flags.
-  static constexpr int ReservedBits = 3;
-  static constexpr uintptr_t RESERVED_MASK = BitMask(ReservedBits);
+  static_assert(gc::CellFlagBitsReservedForGC >= 3,
+                "Not enough flag bits reserved for GC");
 
-  // Indicates if the cell is currently a RelocationOverlay
+  static constexpr uintptr_t RESERVED_MASK =
+      BitMask(gc::CellFlagBitsReservedForGC);
+
+  // Indicates if the cell has been forwarded (moved) by generational or
+  // compacting GC and is now a RelocationOverlay.
   static constexpr uintptr_t FORWARD_BIT = Bit(0);
 
   // When a Cell is in the nursery, this will indicate if it is a JSString (1)
@@ -544,7 +546,7 @@ bool TenuredCell::isAligned() const {
 //  | Length | Flags |
 //  ------------------
 //
-// The low bits of the flags word (see NumFlagBitsReservedForGC) are reserved
+// The low bits of the flags word (see CellFlagBitsReservedForGC) are reserved
 // for GC. Derived classes must ensure they don't use these flags for non-GC
 // purposes.
 template <class BaseCell>
@@ -563,8 +565,6 @@ class CellWithLengthAndFlags : public BaseCell {
 #endif
 
  protected:
-  static constexpr size_t NumFlagBitsReservedForGC = Cell::ReservedBits;
-
   uint32_t lengthField() const {
 #if JS_BITS_PER_WORD == 32
     return length_;

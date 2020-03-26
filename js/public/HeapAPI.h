@@ -74,6 +74,14 @@ const size_t ArenaZoneOffset = sizeof(size_t);
 const size_t ArenaHeaderSize =
     sizeof(size_t) + 2 * sizeof(uintptr_t) + sizeof(size_t) + sizeof(uintptr_t);
 
+// The first word of a GC thing has certain requirements from the GC and is used
+// to store flags in the low bits.
+const size_t CellFlagBitsReservedForGC = 3;
+
+// The first word can be used to store JSClass pointers for some thing kinds, so
+// these must be suitably aligned.
+const size_t JSClassAlignBytes = size_t(1) << CellFlagBitsReservedForGC;
+
 /*
  * Live objects are marked black or gray. Everything reachable from a JS root is
  * marked black. Objects marked gray are eligible for cycle collection.
