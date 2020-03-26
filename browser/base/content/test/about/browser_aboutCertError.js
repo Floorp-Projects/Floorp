@@ -465,21 +465,25 @@ add_task(async function checkBadStsCertHeadline() {
       bc = bc.children[0];
     }
 
-    let titleContent = await SpecialPowers.spawn(bc, [], async function() {
+    await SpecialPowers.spawn(bc, [useFrame], async _useFrame => {
       let titleText = content.document.querySelector(".title-text");
-      return titleText.textContent;
+      await ContentTaskUtils.waitForCondition(
+        () => titleText.textContent,
+        "Error page title is initialized"
+      );
+      let titleContent = titleText.textContent;
+      if (_useFrame) {
+        ok(
+          titleContent.endsWith("Security Issue"),
+          "Did Not Connect: Potential Security Issue"
+        );
+      } else {
+        ok(
+          titleContent.endsWith("Risk Ahead"),
+          "Warning: Potential Security Risk Ahead"
+        );
+      }
     });
-    if (useFrame) {
-      ok(
-        titleContent.endsWith("Security Issue"),
-        "Did Not Connect: Potential Security Issue"
-      );
-    } else {
-      ok(
-        titleContent.endsWith("Risk Ahead"),
-        "Warning: Potential Security Risk Ahead"
-      );
-    }
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });

@@ -14,15 +14,11 @@
 
 <!-- Specific error messages -->
 
-<!ENTITY connectionFailure.title "Unable to connect">
 <!ENTITY connectionFailure.longDesc "&sharedLongDesc;">
 
-<!ENTITY deniedPortAccess.title "This address is restricted">
 <!ENTITY deniedPortAccess.longDesc "">
 
 <!ENTITY dnsNotFound.pageTitle "Server Not Found">
-<!-- Localization note (dnsNotFound.title1) - "Hmm" is a sound made when considering or puzzling over something. You don't have to include it in your translation if your language does not have a written word like this. -->
-<!ENTITY dnsNotFound.title1 "Hmm. We’re having trouble finding that site.">
 <!ENTITY dnsNotFound.longDesc1 "
 <strong>If that address is correct, here are three other things you can try:</strong>
 <ul>
@@ -32,7 +28,6 @@
 </ul>
 ">
 
-<!ENTITY fileNotFound.title "File not found">
 <!ENTITY fileNotFound.longDesc "
 <ul>
   <li>Check the file name for capitalization or other typing errors.</li>
@@ -40,14 +35,12 @@
 </ul>
 ">
 
-<!ENTITY fileAccessDenied.title "Access to the file was denied">
 <!ENTITY fileAccessDenied.longDesc "
 <ul>
   <li>It may have been removed, moved, or file permissions may be preventing access.</li>
 </ul>
 ">
 
-<!ENTITY generic.title "Oops.">
 <!ENTITY generic.longDesc "
 <p>&brandShortName; can’t load this page for some reason.</p>
 ">
@@ -60,50 +53,39 @@
 <!ENTITY openPortalLoginPage.label2 "Open Network Login Page">
 
 <!ENTITY malformedURI.pageTitle "Invalid URL">
-<!-- Localization note (malformedURI.title1) - "Hmm" is a sound made when considering or puzzling over something. You don't have to include it in your translation if your language does not have a written word like this. -->
-<!ENTITY malformedURI.title1 "Hmm. That address doesn’t look right.">
 
-<!ENTITY netInterrupt.title "The connection was interrupted">
 <!ENTITY netInterrupt.longDesc "&sharedLongDesc;">
 
-<!ENTITY notCached.title "Document Expired">
 <!ENTITY notCached.longDesc "<p>The requested document is not available in &brandShortName;’s cache.</p><ul><li>As a security precaution, &brandShortName; does not automatically re-request sensitive documents.</li><li>Click Try Again to re-request the document from the website.</li></ul>">
 
-<!ENTITY netOffline.title "Offline mode">
 <!ENTITY netOffline.longDesc2 "
 <ul>
   <li>Press &quot;Try Again&quot; to switch to online mode and reload the page.</li>
 </ul>
 ">
 
-<!ENTITY contentEncodingError.title "Content Encoding Error">
 <!ENTITY contentEncodingError.longDesc "
 <ul>
   <li>Please contact the website owners to inform them of this problem.</li>
 </ul>
 ">
 
-<!ENTITY unsafeContentType.title "Unsafe File Type">
 <!ENTITY unsafeContentType.longDesc "
 <ul>
   <li>Please contact the website owners to inform them of this problem.</li>
 </ul>
 ">
 
-<!ENTITY netReset.title "The connection was reset">
 <!ENTITY netReset.longDesc "&sharedLongDesc;">
 
-<!ENTITY netTimeout.title "The connection has timed out">
 <!ENTITY netTimeout.longDesc "&sharedLongDesc;">
 
-<!ENTITY unknownProtocolFound.title "The address wasn’t understood">
 <!ENTITY unknownProtocolFound.longDesc "
 <ul>
   <li>You might need to install other software to open this address.</li>
 </ul>
 ">
 
-<!ENTITY proxyConnectFailure.title "The proxy server is refusing connections">
 <!ENTITY proxyConnectFailure.longDesc "
 <ul>
   <li>Check the proxy settings to make sure that they are correct.</li>
@@ -112,7 +94,6 @@
 </ul>
 ">
 
-<!ENTITY proxyResolveFailure.title "Unable to find the proxy server">
 <!ENTITY proxyResolveFailure.longDesc "
 <ul>
   <li>Check the proxy settings to make sure that they are correct.</li>
@@ -122,7 +103,6 @@
 </ul>
 ">
 
-<!ENTITY redirectLoop.title "The page isn’t redirecting properly">
 <!ENTITY redirectLoop.longDesc "
 <ul>
   <li>This problem can sometimes be caused by disabling or refusing to accept
@@ -130,7 +110,6 @@
 </ul>
 ">
 
-<!ENTITY unknownSocketType.title "Unexpected response from server">
 <!ENTITY unknownSocketType.longDesc "
 <ul>
   <li>Check to make sure your system has the Personal Security Manager
@@ -139,7 +118,6 @@
 </ul>
 ">
 
-<!ENTITY nssFailure2.title "Secure Connection Failed">
 <!ENTITY nssFailure2.longDesc2 "
 <ul>
   <li>The page you are trying to view cannot be shown because the authenticity of the received data could not be verified.</li>
@@ -147,8 +125,6 @@
 </ul>
 ">
 
-<!ENTITY certerror.longpagetitle2 "Warning: Potential Security Risk Ahead">
-<!ENTITY certerror.sts.longpagetitle  "Did Not Connect: Potential Security Issue">
 <!-- Localization note (certerror.introPara2) - The text content of the span tag
 will be replaced at runtime with the name of the server to which the user
 was trying to connect. -->
@@ -186,13 +162,10 @@ was trying to connect. -->
 </ul>
 ">
 
-<!ENTITY cspBlocked.title "Blocked by Content Security Policy">
 <!ENTITY cspBlocked.longDesc "<p>&brandShortName; prevented this page from loading in this way because the page has a content security policy that disallows it.</p>">
 
-<!ENTITY xfoBlocked.title "Blocked by X-Frame-Options Policy">
 <!ENTITY xfoBlocked.longDesc "<p>&brandShortName; prevented this page from loading in this context because the page has an X-Frame-Options policy that disallows it.</p>">
 
-<!ENTITY corruptedContentErrorv2.title "Corrupted Content Error">
 <!ENTITY corruptedContentErrorv2.longDesc "<p>The page you are trying to view cannot be shown because an error in the data transmission was detected.</p><ul><li>Please contact the website owners to inform them of this problem.</li></ul>">
 
 <!ENTITY securityOverride.exceptionButton1Label "Accept the Risk and Continue">
@@ -200,10 +173,8 @@ was trying to connect. -->
 <!ENTITY errorReporting.automatic2 "Report errors like this to help Mozilla identify and block malicious sites">
 <!ENTITY errorReporting.learnMore "Learn more…">
 
-<!ENTITY remoteXUL.title "Remote XUL">
 <!ENTITY remoteXUL.longDesc "<p><ul><li>Please contact the website owners to inform them of this problem.</li></ul></p>">
 
-<!ENTITY sslv3Used.title "Unable to Connect Securely">
 <!-- LOCALIZATION NOTE (sslv3Used.longDesc2) - Do not translate
      "SSL_ERROR_UNSUPPORTED_VERSION". -->
 <!ENTITY sslv3Used.longDesc2 "Advanced info: SSL_ERROR_UNSUPPORTED_VERSION">
@@ -213,21 +184,18 @@ was trying to connect. -->
 <!ENTITY certerror.whatShouldIDo.badStsCertExplanation1 "<span class='hostname'></span> has a security policy called HTTP Strict Transport Security (HSTS), which means that &brandShortName; can only connect to it securely. You can’t add an exception to visit this site.">
 <!ENTITY certerror.copyToClipboard.label "Copy text to clipboard">
 
-<!ENTITY inadequateSecurityError.title "Your connection is not secure">
 <!-- LOCALIZATION NOTE (inadequateSecurityError.longDesc) - Do not translate
      "NS_ERROR_NET_INADEQUATE_SECURITY". -->
 <!ENTITY inadequateSecurityError.longDesc "<p><span class='hostname'></span> uses security technology that is outdated and vulnerable to attack. An attacker could easily reveal information which you thought to be safe. The website administrator will need to fix the server first before you can visit the site.</p><p>Error code: NS_ERROR_NET_INADEQUATE_SECURITY</p>">
 
 <!ENTITY blockedByPolicy.title "Blocked Page">
 
-<!ENTITY certerror.mitm.title "Software is Preventing &brandShortName; From Safely Connecting to This Site">
 <!ENTITY certerror.mitm.longDesc "<span class='hostname'></span> is most likely a safe site, but a secure connection could not be established. This issue is caused by <span class='mitm-name'/>, which is either software on your computer or your network.">
 <!ENTITY certerror.mitm.whatCanYouDoAboutIt1 "If your antivirus software includes a feature that scans encrypted connections (often called “web scanning” or “https scanning”), you can disable that feature. If that doesn’t work, you can remove and reinstall the antivirus software.">
 <!ENTITY certerror.mitm.whatCanYouDoAboutIt2 "If you are on a corporate network, you can contact your IT department.">
 <!ENTITY certerror.mitm.whatCanYouDoAboutIt3 "If you are not familiar with <span class='mitm-name'/>, then this could be an attack and you should not continue to the site.">
 <!ENTITY certerror.mitm.sts.whatCanYouDoAboutIt3 "If you are not familiar with <span class='mitm-name'/>, then this could be an attack, and there is nothing you can do to access the site.">
 
-<!ENTITY clockSkewError.title "Your Computer Clock is Wrong">
 <!ENTITY clockSkewError.longDesc "Your computer thinks it is <span id='wrongSystemTime_systemDate1'/>, which prevents &brandShortName; from connecting securely. To visit <span class='hostname'></span>, update your computer clock in your system settings to the current date, time, and time zone, and then refresh <span class='hostname'></span>.">
 
 <!ENTITY prefReset.longDesc "It looks like your network security settings might be causing this. Do you want the default settings to be restored?">
@@ -237,5 +205,4 @@ was trying to connect. -->
 <!ENTITY enableTls10.note "TLS 1.0 and TLS 1.1 will be permanently disabled in a future release.">
 <!ENTITY enableTls10.label "Enable TLS 1.0 and 1.1">
 
-<!ENTITY networkProtocolError.title "Network Protocol Error">
 <!ENTITY networkProtocolError.longDesc "<p>The page you are trying to view cannot be shown because an error in the network protocol was detected.</p><ul><li>Please contact the website owners to inform them of this problem.</li></ul>">
