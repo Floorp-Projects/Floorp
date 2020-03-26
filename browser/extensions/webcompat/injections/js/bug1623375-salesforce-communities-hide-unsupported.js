@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Salesforce Communities - Hide unsupported message in Firefox for Android
+ * Bug 1623375 - Salesforce Communities - Hide unsupported message in Firefox for Android
  *
  * Sites based on Salesforce Communities are showing unsupported message.
  * See the full list here:
