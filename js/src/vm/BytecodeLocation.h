@@ -212,6 +212,12 @@ class BytecodeLocation {
                             rawBytecode_ + GET_JUMP_OFFSET(rawBytecode_));
   }
 
+  BytecodeLocation getEndOfTryLocation() const {
+    MOZ_ASSERT(is(JSOp::Try));
+    return BytecodeLocation(*this,
+                            rawBytecode_ + GET_CODE_OFFSET(rawBytecode_));
+  }
+
   // Return the 'low' parameter to the tableswitch opcode
   int32_t getTableSwitchLow() const {
     MOZ_ASSERT(is(JSOp::TableSwitch));
