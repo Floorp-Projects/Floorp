@@ -307,6 +307,7 @@ ContentBlocking::AllowAccessFor(
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
+  // Only add storage permission when there is a reason to do so.
   uint32_t behavior = cookieJarSetting->cookieBehavior();
   if (!net::CookieJarSettings::IsRejectThirdPartyTrackers(behavior)) {
     LOG(
@@ -338,12 +339,15 @@ ContentBlocking::AllowAccessFor(
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
+  // No need to continue when we are already in the allow list.
   if (ContentBlockingAllowList::Check(parentInner)) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
+  bool isParentTopLevel = aParentContext->IsTopContent();
+
   // Make sure storage access isn't disabled
-  if (!aParentContext->IsTopContent() &&
+  if (!isParentTopLevel &&
       Document::StorageAccessSandboxed(aParentContext->GetSandboxFlags())) {
     LOG(("Our document is sandboxed"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
@@ -355,19 +359,13 @@ ContentBlocking::AllowAccessFor(
 
   RefPtr<nsGlobalWindowInner> parentWindow =
       nsGlobalWindowInner::Cast(parentInner);
-  nsGlobalWindowOuter* outerParentWindow =
-      nsGlobalWindowOuter::Cast(parentWindow->GetOuterWindow());
-  if (NS_WARN_IF(!outerParentWindow)) {
-    LOG(("No outer window found for our parent window, bailing out early"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
 
   LOG(("The current resource is %s-party",
-       outerParentWindow->IsTopLevelWindow() ? "first" : "third"));
+       isParentTopLevel ? "first" : "third"));
 
   nsresult rv;
   // We are a first party resource.
-  if (outerParentWindow->IsTopLevelWindow()) {
+  if (isParentTopLevel) {
     nsAutoCString origin;
     rv = aPrincipal->GetAsciiOrigin(origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
