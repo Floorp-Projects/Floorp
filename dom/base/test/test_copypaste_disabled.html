@@ -3,22 +3,23 @@
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <script src="copypaste.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
-<style>
-@font-face {
-  font-family: Ahem;
-  src: url("Ahem.ttf");
-}
-body { font-family: Ahem; font-size: 20px; }
-input, textarea {
-  font: inherit;
-  -moz-appearance: none;
-  padding: 0;
-  border: 0;
-  scrollbar-width: none;
-}
-</style>
-
-<input id="disabled-input" disabled value="abcd"> efgh <br> <textarea rows=1 id="disabled-textarea" disabled>ijkl</textarea> mnop
+<div id="content">
+  <style>
+  @font-face {
+    font-family: Ahem;
+    src: url("Ahem.ttf");
+  }
+  body { font-family: Ahem; font-size: 20px; margin: 0; }
+  input, textarea {
+    font: inherit;
+    -moz-appearance: none;
+    padding: 0;
+    border: 0;
+    scrollbar-width: none;
+  }
+  </style>
+  <input id="disabled-input" disabled value="abcd"> efgh <br> <textarea rows=1 id="disabled-textarea" disabled>ijkl</textarea> mnop <br>
+</div>
 
 <script>
 function dragSelect(e, x1, x2, x3) {
@@ -78,12 +79,29 @@ SimpleTest.waitForFocus(async function() {
     return data.value;
   }
 
-  for (let id of ["disabled-input", "disabled-textarea"]) {
-    let element = document.getElementById(id);
-    dragSelect(element, 0, 60);
-    await copySelectionToClipboard();
-    testClipboardValue("text/unicode", element.value.substr(0, 3));
+  async function runTestsOn(doc) {
+    for (let id of ["disabled-input", "disabled-textarea"]) {
+      let element = doc.getElementById(id);
+      dragSelect(element, 0, 60);
+      await copySelectionToClipboard();
+      testClipboardValue("text/unicode", element.value.substr(0, 3));
+    }
   }
+
+  await runTestsOn(document)
+
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("frameborder", "0");
+  iframe.srcdoc = `<!doctype html>${document.getElementById("content").outerHTML}`;
+  let iframeLoad = new Promise(resolve => {
+    iframe.addEventListener("load", resolve, { once: true });
+  });
+  document.body.appendChild(iframe);
+
+  await iframeLoad;
+  iframe.width = window.innerWidth;
+  iframe.height = window.innerHeight;
+  await runTestsOn(iframe.contentDocument);
 
   SimpleTest.finish();
 });
