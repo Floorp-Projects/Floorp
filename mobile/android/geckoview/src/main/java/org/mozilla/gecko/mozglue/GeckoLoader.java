@@ -10,6 +10,7 @@ import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -322,14 +323,16 @@ public final class GeckoLoader {
         final StringBuilder message = new StringBuilder("LOAD ");
         message.append(lib);
 
+        final String packageDataDir = context.getApplicationInfo().dataDir;
+
         // These might differ. If so, we know why the library won't load!
         HardwareUtils.init(context);
         message.append(": ABI: " + HardwareUtils.getLibrariesABI() + ", " + getCPUABI());
-        message.append(": Data: " + context.getApplicationInfo().dataDir);
+        message.append(": Data: " + packageDataDir);
 
         try {
             final boolean appLibExists = new File("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so").exists();
-            final boolean dataDataExists = new File("/data/data/" + androidPackageName + "/lib/lib" + lib + ".so").exists();
+            final boolean dataDataExists = new File(packageDataDir + "/lib/lib" + lib + ".so").exists();
             message.append(", ax=" + appLibExists);
             message.append(", ddx=" + dataDataExists);
         } catch (Throwable e) {
@@ -337,8 +340,8 @@ public final class GeckoLoader {
         }
 
         try {
-            final String dashOne = "/data/data/" + androidPackageName + "-1";
-            final String dashTwo = "/data/data/" + androidPackageName + "-2";
+            final String dashOne = packageDataDir + "-1";
+            final String dashTwo = packageDataDir + "-2";
             final boolean dashOneExists = new File(dashOne).exists();
             final boolean dashTwoExists = new File(dashTwo).exists();
             message.append(", -1x=" + dashOneExists);
@@ -407,6 +410,7 @@ public final class GeckoLoader {
         }
     }
 
+    @SuppressLint("SdCardPath")
     public static void doLoadLibrary(final Context context, final String lib) {
         final Throwable e = doLoadLibraryExpected(context, lib);
         if (e == null) {
