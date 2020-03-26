@@ -816,9 +816,8 @@ Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register dest,
 Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register dest,
                                                       Register lhs, Imm32 imm,
                                                       Condition c) {
-  MOZ_ASSERT(dest != ScratchRegister);
-  MOZ_ASSERT(lhs != ScratchRegister);
   ScratchRegisterScope scratch(asMasm());
+  MOZ_ASSERT(lhs != scratch);
 
   switch (c) {
     case Above:
