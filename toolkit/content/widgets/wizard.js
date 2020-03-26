@@ -59,19 +59,14 @@
         { mozSystemGroup: true }
       );
 
-      /*
-        XXX(ntim): We import button.css here for the wizard-buttons children
-        This won't be needed after bug 1624888.
-      */
       this.attachShadow({ mode: "open" }).appendChild(
         MozXULElement.parseXULToFragment(`
-        <html:link rel="stylesheet" href="chrome://global/skin/button.css"/>
-        <html:link rel="stylesheet" href="chrome://global/skin/wizard.css"/>
+        <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
         <hbox class="wizard-header"></hbox>
         <deck class="wizard-page-box" flex="1">
-          <html:slot name="wizardpage"/>
+          <slot xmlns="http://www.w3.org/1999/xhtml" name="wizardpage"></slot>
         </deck>
-        <html:slot/>
+        <slot xmlns="http://www.w3.org/1999/xhtml"></slot>
         <wizard-buttons class="wizard-buttons"></wizard-buttons>
     `)
       );
