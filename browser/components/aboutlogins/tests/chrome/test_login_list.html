@@ -520,7 +520,9 @@ add_task(async function test_sorted_list() {
 
   // sort by breached when there are breached logins
   gLoginList.setBreaches(TEST_BREACHES_MAP);
-  loginSort.value = "breached";
+  loginSort.value = "alerts";
+  let vulnerableLogins = new Map();
+  gLoginList.setVulnerableLogins(vulnerableLogins);
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   is(loginListItems[0].classList.contains("breached"), true, "Breached login should be displayed at top of list");
@@ -528,7 +530,7 @@ add_task(async function test_sorted_list() {
 
   // sort by name when there are no breached logins
   gLoginList.setBreaches(new Map());
-  loginSort.value = "breached";
+  loginSort.value = "alerts";
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   title1 = gLoginList._logins[loginListItems[0].dataset.guid].login.title;
