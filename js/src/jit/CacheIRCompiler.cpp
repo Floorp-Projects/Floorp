@@ -3099,31 +3099,6 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIndexGreaterThanDenseCapacity() {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-  AutoScratchRegister scratch(allocator, masm);
-  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Load obj->elements.
-  masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-  // Ensure index >= capacity.
-  Label outOfBounds;
-  Address capacity(scratch, ObjectElements::offsetOfCapacity());
-  masm.spectreBoundsCheck32(index, capacity, spectreScratch, &outOfBounds);
-  masm.jump(failure->label());
-  masm.bind(&outOfBounds);
-
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardIndexGreaterThanArrayLength() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
