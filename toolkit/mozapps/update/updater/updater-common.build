@@ -78,6 +78,13 @@ if have_progressui == 0:
 
 SOURCES += sorted(srcs)
 
+if CONFIG['MOZ_TSAN']:
+    # Since mozglue is not linked to the updater,
+    # we need to include our own TSan suppression list.
+    SOURCES += [
+        'TsanOptions.cpp',
+    ]
+
 DEFINES['NS_NO_XPCOM'] = True
 DisableStlWrapping()
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
