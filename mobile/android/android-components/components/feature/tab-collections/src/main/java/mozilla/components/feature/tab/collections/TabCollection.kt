@@ -6,6 +6,7 @@ package mozilla.components.feature.tab.collections
 
 import android.content.Context
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 
 /**
@@ -28,7 +29,8 @@ interface TabCollection {
     val tabs: List<Tab>
 
     /**
-     * Restores all tabs in this collection and returns a matching list of [Session] objects.
+     * Restores all tabs in this collection and returns a matching list of
+     * [SessionManager.Snapshot.Item] objects.
      *
      * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
      * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
@@ -38,10 +40,11 @@ interface TabCollection {
         context: Context,
         engine: Engine,
         restoreSessionId: Boolean = false
-    ): List<Session>
+    ): List<SessionManager.Snapshot.Item>
 
     /**
-     * Restores a subset of the tabs in this collection and returns a matching list of [Session] objects.
+     * Restores a subset of the tabs in this collection and returns a matching list of
+     * [SessionManager.Snapshot.Item] objects.
      *
      * @param restoreSessionId If true the original [Session.id] of [Session]s will be restored. Otherwise a new ID
      * will be generated. An app may prefer to use a new ID if it expects sessions to get restored multiple times -
@@ -52,5 +55,5 @@ interface TabCollection {
         engine: Engine,
         tabs: List<Tab>,
         restoreSessionId: Boolean = false
-    ): List<Session>
+    ): List<SessionManager.Snapshot.Item>
 }

@@ -1281,6 +1281,58 @@ class SessionManagerMigrationTest {
         verify(engineSession3, never()).close()
         verify(engineSession4, never()).close()
     }
+
+    @Test
+    fun `Adding session with engine session state`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val state: EngineSessionState = mock()
+        val session = Session("https://www.mozilla.org")
+
+        manager.add(session, engineSessionState = state)
+
+        assertEquals(state, session.engineSessionHolder.engineSessionState)
+        assertNull(session.engineSessionHolder.engineSession)
+
+        assertEquals(state, store.state.tabs[0].engineState.engineSessionState)
+        assertNull(store.state.tabs[0].engineState.engineSession)
+    }
+
+    @Test
+    fun `Adding session with engine session and engine session state`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val state: EngineSessionState = mock()
+        val engineSession: EngineSession = mock()
+        val session = Session("https://www.mozilla.org")
+
+        manager.add(session, engineSession = engineSession, engineSessionState = state)
+
+        assertNull(session.engineSessionHolder.engineSessionState)
+        assertEquals(engineSession, session.engineSessionHolder.engineSession)
+
+        assertNull(store.state.tabs[0].engineState.engineSessionState)
+        assertEquals(engineSession, session.engineSessionHolder.engineSession)
+    }
+
+    @Test
+    fun `Adding session with engine session`() {
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store)
+
+        val engineSession: EngineSession = mock()
+        val session = Session("https://www.mozilla.org")
+
+        manager.add(session, engineSession = engineSession)
+
+        assertNull(session.engineSessionHolder.engineSessionState)
+        assertEquals(engineSession, session.engineSessionHolder.engineSession)
+
+        assertNull(store.state.tabs[0].engineState.engineSessionState)
+        assertEquals(engineSession, session.engineSessionHolder.engineSession)
+    }
 }
 
 private fun createMockEngineSessionWithState(): EngineSession {

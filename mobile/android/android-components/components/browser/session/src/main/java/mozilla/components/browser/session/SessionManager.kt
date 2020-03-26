@@ -147,10 +147,12 @@ class SessionManager(
         session: Session,
         selected: Boolean = false,
         engineSession: EngineSession? = null,
+        engineSessionState: EngineSessionState? = null,
         parent: Session? = null
     ) {
         // Add store to Session so that it can dispatch actions whenever it changes.
         session.store = store
+
         if (parent != null) {
             require(all.contains(parent)) { "The parent does not exist" }
             session.parentId = parent.id
@@ -171,7 +173,17 @@ class SessionManager(
             )
         }
 
-        delegate.add(session, selected, engineSession, parent)
+        if (engineSessionState != null && engineSession == null) {
+            // If the caller passed us an engine session state then also notify the store. We only
+            // do this if there is no engine session, because this mirrors the behavior in
+            // LegacySessionManager, which will either link an engine session or keep its state.
+            store?.syncDispatch(UpdateEngineSessionStateAction(
+                session.id,
+                engineSessionState
+            ))
+        }
+
+        delegate.add(session, selected, engineSession, engineSessionState, parent)
     }
 
     /**

@@ -63,7 +63,7 @@ class CustomTabIntentProcessorTest {
         whenever(intent.putExtra(any<String>(), any<String>())).thenReturn(intent)
 
         handler.process(intent)
-        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null))
+        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null), eq(null))
         verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
         verify(intent).putExtra(eq(EXTRA_SESSION_ID), any<String>())
 
@@ -92,7 +92,7 @@ class CustomTabIntentProcessorTest {
         whenever(intent.putExtra(any<String>(), any<String>())).thenReturn(intent)
 
         handler.process(intent)
-        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null))
+        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null), eq(null))
         verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
         verify(intent).putExtra(eq(EXTRA_SESSION_ID), any<String>())
 
