@@ -902,18 +902,12 @@ class UnscaledFont : public SupportsThreadSafeWeakPtr<UnscaledFont> {
 
   typedef void (*FontFileDataOutput)(const uint8_t* aData, uint32_t aLength,
                                      uint32_t aIndex, void* aBaton);
-  typedef void (*WRFontDescriptorOutput)(const uint8_t* aData, uint32_t aLength,
-                                         uint32_t aIndex, void* aBaton);
   typedef void (*FontInstanceDataOutput)(const uint8_t* aData, uint32_t aLength,
                                          void* aBaton);
   typedef void (*FontDescriptorOutput)(const uint8_t* aData, uint32_t aLength,
                                        uint32_t aIndex, void* aBaton);
 
   virtual bool GetFontFileData(FontFileDataOutput, void*) { return false; }
-
-  virtual bool GetWRFontDescriptor(WRFontDescriptorOutput, void*) {
-    return false;
-  }
 
   virtual bool GetFontInstanceData(FontInstanceDataOutput, void*) {
     return false;

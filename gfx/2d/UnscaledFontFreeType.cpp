@@ -77,17 +77,6 @@ bool UnscaledFontFreeType::GetFontDescriptor(FontDescriptorOutput aCb,
   return true;
 }
 
-bool UnscaledFontFreeType::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
-                                               void* aBaton) {
-  if (mFile.empty()) {
-    return false;
-  }
-
-  aCb(reinterpret_cast<const uint8_t*>(mFile.data()), mFile.size(), mIndex,
-      aBaton);
-  return true;
-}
-
 RefPtr<SharedFTFace> UnscaledFontFreeType::InitFace() {
   if (mFace) {
     return mFace;

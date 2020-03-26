@@ -40,7 +40,10 @@ class UnscaledFontDWrite final : public UnscaledFont {
       const wr::FontInstancePlatformOptions* aPlatformOptions,
       const FontVariation* aVariations, uint32_t aNumVariations) override;
 
-  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
+  bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
+
+  static already_AddRefed<UnscaledFont> CreateFromFontDescriptor(
+      const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
 
  private:
   bool InitBold();
