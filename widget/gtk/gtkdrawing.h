@@ -444,8 +444,7 @@ const ToggleGTKMetrics* GetToggleMetrics(WidgetNodeType aWidgetType);
  */
 gint moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-/** Get the extra size for the focus ring for outline:auto.
- * widget:             [IN]  the widget to get the focus metrics for
+/** Returns the size of the focus ring for outline:auto.
  * focus_h_width:      [OUT] the horizontal width
  * focus_v_width:      [OUT] the vertical width
  *

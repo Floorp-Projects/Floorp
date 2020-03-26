@@ -243,13 +243,10 @@ static gint moz_gtk_get_focus_outline_size(GtkStyleContext* style,
                                            gint* focus_h_width,
                                            gint* focus_v_width) {
   GtkBorder border;
-  GtkBorder padding;
   gtk_style_context_get_border(style, gtk_style_context_get_state(style),
                                &border);
-  gtk_style_context_get_padding(style, gtk_style_context_get_state(style),
-                                &padding);
-  *focus_h_width = border.left + padding.left;
-  *focus_v_width = border.top + padding.top;
+  *focus_h_width = border.left;
+  *focus_v_width = border.top;
   return MOZ_GTK_SUCCESS;
 }
 
