@@ -231,9 +231,8 @@ bool nsNumberControlFrame::SpinnerDownButtonIsDepressed() const {
       ->NumberSpinnerDownButtonIsDepressed();
 }
 
-#define STYLES_DISABLING_NATIVE_THEMING                          \
-  NS_AUTHOR_SPECIFIED_BACKGROUND | NS_AUTHOR_SPECIFIED_PADDING | \
-      NS_AUTHOR_SPECIFIED_BORDER
+#define STYLES_DISABLING_NATIVE_THEMING \
+  NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND | NS_AUTHOR_SPECIFIED_PADDING
 
 bool nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const {
   MOZ_ASSERT(mSpinUp && mSpinDown,
