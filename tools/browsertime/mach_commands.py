@@ -544,14 +544,15 @@ class MachBrowsertime(MachCommandBase):
     @CommandArgument('--update-upstream-url', default='')
     @CommandArgument('--setup', default=False, action='store_true')
     @CommandArgument('--clobber', default=False, action='store_true')
-    @CommandArgument('--skip-cache', action='store_true',
-                     help='Skip all local caches to force re-fetching remote artifacts.',
-                     default=False)
+    @CommandArgument('--skip-cache', default=False, action='store_true',
+                     help='Skip all local caches to force re-fetching remote artifacts.')
     @CommandArgument('--check', default=False, action='store_true')
+    @CommandArgument('--browsertime-help', default=False, action='store_true',
+                     help='Show the browsertime help message.')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def browsertime(self, args, verbose=False,
                     update_upstream_url='', setup=False, clobber=False,
-                    skip_cache=False, check=False):
+                    skip_cache=False, check=False, browsertime_help=False):
         self._set_log_level(verbose)
 
         if update_upstream_url:
@@ -564,6 +565,9 @@ class MachBrowsertime(MachCommandBase):
 
         if check:
             return self.check()
+
+        if browsertime_help:
+            args.append('--help')
 
         self._activate_virtualenv()
         default_args = self.extra_default_args(args)
