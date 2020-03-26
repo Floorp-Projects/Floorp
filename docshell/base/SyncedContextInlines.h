@@ -17,13 +17,32 @@ namespace dom {
 namespace syncedcontext {
 
 template <typename Context>
+static nsCString FormatValidationError(IndexSet aFailedFields,
+                                       const char* prefix) {
+  MOZ_ASSERT(!aFailedFields.isEmpty());
+  nsCString error(prefix);
+  bool first = true;
+  for (auto idx : aFailedFields) {
+    if (!first) {
+      error.Append(", ");
+    }
+    first = false;
+    error.Append(Context::FieldIndexToName(idx));
+  }
+  return error;
+}
+
+template <typename Context>
 nsresult Transaction<Context>::Commit(Context* aOwner) {
   if (NS_WARN_IF(aOwner->IsDiscarded())) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!Validate(aOwner, nullptr)) {
-    MOZ_CRASH("Attempt to commit invalid transaction");
+  IndexSet failedFields = Validate(aOwner, nullptr);
+  if (!failedFields.isEmpty()) {
+    nsCString error = FormatValidationError<Context>(
+        failedFields, "CanSet failed for field(s): ");
+    MOZ_CRASH_UNSAFE_PRINTF("%s", error.get());
   }
 
   if (XRE_IsContentProcess()) {
@@ -66,8 +85,12 @@ mozilla::ipc::IPCResult Transaction<Context>::CommitFromIPC(
   Context* owner = aOwner.get();
 
   // Validate that the set from content is allowed before continuing.
-  if (!Validate(owner, aSource)) {
-    return IPC_FAIL(aSource, "Invalid Transaction from Child");
+  IndexSet failedFields = Validate(owner, aSource);
+  if (!failedFields.isEmpty()) {
+    nsCString error = FormatValidationError<Context>(
+        failedFields,
+        "Invalid Transaction from Child - CanSet failed for field(s): ");
+    return IPC_FAIL(aSource, error.get());
   }
 
   BrowsingContextGroup* group = owner->Group();
@@ -116,16 +139,17 @@ void Transaction<Context>::Apply(Context* aOwner) {
 }
 
 template <typename Context>
-bool Transaction<Context>::Validate(Context* aOwner, ContentParent* aSource) {
-  bool ok = true;
+IndexSet Transaction<Context>::Validate(Context* aOwner,
+                                        ContentParent* aSource) {
+  IndexSet failedFields;
   // Validate that the set from content is allowed before continuing.
   EachIndex([&](auto idx) {
     const auto& field = GetAt(idx, mMaybeFields);
     if (field && NS_WARN_IF(!aOwner->CanSet(idx, *field, aSource))) {
-      ok = false;
+      failedFields += idx;
     }
   });
-  return ok;
+  return failedFields;
 }
 
 template <typename Context>
