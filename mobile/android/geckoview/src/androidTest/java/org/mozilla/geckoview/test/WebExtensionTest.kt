@@ -538,7 +538,7 @@ class WebExtensionTest : BaseSessionTest() {
                 { tabsExtension.setTabDelegate(null) },
                 object : WebExtension.TabDelegate {
             override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
-                val extensionCreatedSession = GeckoSession(sessionRule.session.settings)
+                val extensionCreatedSession = sessionRule.createClosedSession(sessionRule.session.settings)
 
                 extensionCreatedSession.webExtensionController.setTabDelegate(tabsExtension, object : WebExtension.SessionTabDelegate {
                     override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
@@ -578,9 +578,7 @@ class WebExtensionTest : BaseSessionTest() {
     fun testSetTabActive() {
         val onCloseRequestResult = GeckoResult<Void>()
         val tabsExtension = WebExtension(TABS_ACTIVATE_REMOVE_BACKGROUND, controller)
-        val newTabSession = GeckoSession(sessionRule.session.settings)
-
-        newTabSession.open(sessionRule.runtime)
+        val newTabSession = sessionRule.createOpenSession(sessionRule.session.settings)
 
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtension.SessionTabDelegate::class,
@@ -639,12 +637,10 @@ class WebExtensionTest : BaseSessionTest() {
                 controller.setAllowedInPrivateBrowsing(tabsExtensionPB, true))
 
 
-        val newTabSession = GeckoSession(sessionRule.session.settings)
-        newTabSession.open(sessionRule.runtime)
+        val newTabSession = sessionRule.createOpenSession(sessionRule.session.settings)
 
-        val newPrivateSession = GeckoSession(
+        val newPrivateSession = sessionRule.createOpenSession(
                 GeckoSessionSettings.Builder().usePrivateMode(true).build())
-        newPrivateSession.open(sessionRule.runtime)
 
         val privateBrowsingNewTabSession = GeckoResult<Void>()
 
