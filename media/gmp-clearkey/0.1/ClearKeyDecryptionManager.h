@@ -42,14 +42,16 @@ class CryptoMetaData {
       return;
     }
 
+    mEncryptionScheme = aInputBuffer->encryption_scheme;
     Assign(mKeyId, aInputBuffer->key_id, aInputBuffer->key_id_size);
     Assign(mIV, aInputBuffer->iv, aInputBuffer->iv_size);
+    mCryptByteBlock = aInputBuffer->pattern.crypt_byte_block;
+    mSkipByteBlock = aInputBuffer->pattern.skip_byte_block;
 
     for (uint32_t i = 0; i < aInputBuffer->num_subsamples; ++i) {
       const cdm::SubsampleEntry& subsample = aInputBuffer->subsamples[i];
-
-      mCipherBytes.push_back(subsample.cipher_bytes);
       mClearBytes.push_back(subsample.clear_bytes);
+      mCipherBytes.push_back(subsample.cipher_bytes);
     }
   }
 
@@ -63,8 +65,11 @@ class CryptoMetaData {
     return mClearBytes.size();
   }
 
+  cdm::EncryptionScheme mEncryptionScheme;
   std::vector<uint8_t> mKeyId;
   std::vector<uint8_t> mIV;
+  uint32_t mCryptByteBlock;
+  uint32_t mSkipByteBlock;
   std::vector<uint32_t> mClearBytes;
   std::vector<uint32_t> mCipherBytes;
 };
