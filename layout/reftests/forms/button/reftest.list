@@ -50,5 +50,3 @@ fails-if(Android&&nativeThemePref) == disabled-1.html disabled-1-ref.html
 == dynamic-text-indent.html dynamic-text-indent-ref.html
 
 == 1349646.html 1349646-ref.html
-
-== appearance-revert.html appearance-revert-ref.html

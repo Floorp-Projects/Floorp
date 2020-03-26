@@ -13,7 +13,7 @@ use crate::media_queries::Device;
 use crate::properties::{ComputedValues, StyleBuilder};
 use crate::properties::{LonghandId, LonghandIdSet, CSSWideKeyword};
 use crate::properties::{PropertyDeclaration, PropertyDeclarationId, DeclarationImportanceIterator};
-use crate::properties::{CASCADE_PROPERTY, ComputedValueFlags};
+use crate::properties::CASCADE_PROPERTY;
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
@@ -411,7 +411,6 @@ struct Cascade<'a, 'b: 'a> {
     context: &'a mut computed::Context<'b>,
     cascade_mode: CascadeMode<'a>,
     seen: LonghandIdSet,
-    author_specified: LonghandIdSet,
     reverted: PerOrigin<LonghandIdSet>,
 }
 
@@ -421,7 +420,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             context,
             cascade_mode,
             seen: LonghandIdSet::default(),
-            author_specified: LonghandIdSet::default(),
             reverted: Default::default(),
         }
     }
@@ -559,9 +557,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             }
 
             self.seen.insert(physical_longhand_id);
-            if origin == Origin::Author {
-                self.author_specified.insert(physical_longhand_id);
-            }
 
             let unset = css_wide_keyword.map_or(false, |css_wide_keyword| {
                 match css_wide_keyword {
@@ -684,15 +679,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             if let Some(svg) = builder.get_svg_if_mutated() {
                 svg.fill_arrays();
             }
-
-            if !builder.get_box().clone__moz_appearance().is_none() {
-                if self.author_specified.contains_any(LonghandIdSet::border_background_properties()) {
-                    builder.add_flags(ComputedValueFlags::HAS_AUTHOR_SPECIFIED_BORDER_BACKGROUND);
-                }
-                if self.author_specified.contains_any(LonghandIdSet::padding_properties()) {
-                    builder.add_flags(ComputedValueFlags::HAS_AUTHOR_SPECIFIED_PADDING);
-                }
-            }
         }
 
         #[cfg(feature = "servo")]
@@ -713,26 +699,12 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             None => return false,
         };
 
-        let builder = &mut self.context.builder;
-
-        let cached_style = match cache.find(guards, &builder) {
+        let cached_style = match cache.find(guards, &self.context.builder) {
             Some(style) => style,
             None => return false,
         };
 
-        builder.copy_reset_from(cached_style);
-
-        // We're using the same reset style as another element, and we'll skip
-        // applying the relevant properties. So we need to do the relevant
-        // bookkeeping here to keep these two bits correct.
-        //
-        // Note that all the properties involved are non-inherited, so we don't
-        // need to do anything else other than just copying the bits over.
-        let reset_props_bits =
-            ComputedValueFlags::HAS_AUTHOR_SPECIFIED_BORDER_BACKGROUND |
-            ComputedValueFlags::HAS_AUTHOR_SPECIFIED_PADDING;
-        builder.add_flags(cached_style.flags & reset_props_bits);
-
+        self.context.builder.copy_reset_from(cached_style);
         true
     }
 

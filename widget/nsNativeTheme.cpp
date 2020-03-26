@@ -292,7 +292,8 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
           aAppearance == StyleAppearance::MenulistButton) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(
-             aFrame, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND);
+             aFrame,
+             NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
 bool nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates) {

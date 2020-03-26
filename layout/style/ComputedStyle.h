@@ -122,19 +122,6 @@ class ComputedStyle {
     return mPseudoType != PseudoStyleType::NotPseudo;
   }
 
-  // Whether there are author-specified rules for padding properties.
-  // Only returns something meaningful if the appearance property is not `none`.
-  bool HasAppearanceAndAuthorSpecifiedPadding() const {
-    return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_PADDING);
-  }
-
-  // Whether there are author-specified rules for border or background
-  // properties.
-  // Only returns something meaningful if the appearance property is not `none`.
-  bool HasAppearanceAndAuthorSpecifiedBorderOrBackground() const {
-    return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_BORDER_BACKGROUND);
-  }
-
   // Does this ComputedStyle or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests

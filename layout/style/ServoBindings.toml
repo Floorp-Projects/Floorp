@@ -167,6 +167,8 @@ rusty-enums = [
     "mozilla::StyleMaskComposite",
 ]
 whitelist-vars = [
+    "NS_AUTHOR_SPECIFIED_.*",
+    "NS_THEME_.*",
     "NS_ATTRVALUE_.*",
     "NODE_.*",
     "ELEMENT_.*",
