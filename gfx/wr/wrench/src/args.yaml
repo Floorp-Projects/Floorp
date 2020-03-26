@@ -175,6 +175,27 @@ subcommands:
               help: name of the file to save benchmarks to
               required: true
               index: 1
+          - benchmark:
+              help: benchmark list filename (default is benchmarks/benchmarks.list)
+              required: false
+              index: 2
+          - auto-filename:
+              long: auto-filename
+              help: generate output filename from date and time (user provided filename is the directory prefix)
+              required: false
+          - csv:
+              long: csv
+              help: save benchmark results as .csv (default is json)
+              required: false
+          - warmup_frames:
+              long: warmup_frames
+              takes_value: true
+              help: number of frames to skip before recording timings
+              required: false
+          - sample_count:
+              long: sample_count
+              takes_value: true
+              help: number of samples to capture
     - compare_perf:
         about: compare two benchmark files
         args:

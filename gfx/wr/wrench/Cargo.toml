@@ -21,6 +21,7 @@ yaml-rust = "0.4"
 serde_json = "1.0"
 ron = "0.1.5"
 time = "0.1"
+chrono = "0.2"
 crossbeam = "0.2"
 osmesa-sys = { version = "0.1.2", optional = true }
 osmesa-src = { git = "https://github.com/servo/osmesa-src", optional = true }
