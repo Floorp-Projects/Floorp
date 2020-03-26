@@ -1400,7 +1400,7 @@ class BuildDriver(MozbuildObject):
         # and subsections of the objdir related to python and testing before
         # proceeding.
         clobberer = Clobberer(self.topsrcdir, self.topobjdir)
-        clobber_output = io.BytesIO()
+        clobber_output = io.StringIO()
         res = clobberer.maybe_do_clobber(os.getcwd(), False,
                                          clobber_output)
         required, performed, message = res
