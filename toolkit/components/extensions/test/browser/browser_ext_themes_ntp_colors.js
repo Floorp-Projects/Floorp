@@ -124,7 +124,7 @@ add_task(async function test_support_ntp_colors() {
     SpecialPowers.clearUserPref("browser.newtab.preload");
   });
   NewTabPagePreloading.removePreloadedBrowser(window);
-  for (let url of ["about:newtab", "about:home"]) {
+  for (let url of ["about:newtab", "about:home", "about:welcome"]) {
     info("Opening url: " + url);
     await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
       await test_ntp_theme(
