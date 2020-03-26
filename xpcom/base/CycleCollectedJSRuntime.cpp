@@ -1068,12 +1068,126 @@ void mozilla::TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer) {
   participant->Trace(aHolder, JsGcTracer(), aTracer);
 }
 
+#ifdef DEBUG
+
+// A tracer that checks that a JS holder only holds JS GC things in a single
+// JS::Zone.
+struct CheckZoneTracer : public TraceCallbacks {
+  const char* mClassName;
+  mutable JS::Zone* mZone = nullptr;
+
+  explicit CheckZoneTracer(const char* aClassName) : mClassName(aClassName) {}
+
+  void checkZone(JS::Zone* aZone, const char* aName) const {
+    if (!mZone) {
+      mZone = aZone;
+      return;
+    }
+
+    if (aZone == mZone) {
+      return;
+    }
+
+    // Most JS holders only contain pointers to GC things in a single zone. In
+    // the future this will allow us to improve GC performance by only tracing
+    // holders in zones that are being collected.
+    //
+    // If you added a holder that has pointers into multiple zones please try to
+    // remedy this. Some options are:
+    //
+    //  - wrap all JS GC things into the same compartment
+    //  - split GC thing pointers between separate cycle collected objects
+    //
+    // If all else fails, flag the class as containing pointers into multiple
+    // zones by using NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS.
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "JS holder %s contains pointers to GC things in more than one zone ("
+        "found in %s)\n",
+        mClassName, aName);
+  }
+
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JS::Value value = aPtr->unbarrieredGet();
+    if (value.isObject()) {
+      checkZone(js::GetObjectZoneFromAnyThread(&value.toObject()), aName);
+    } else if (value.isString()) {
+      checkZone(JS::GetStringZone(value.toString()), aName);
+    } else if (value.isGCThing()) {
+      checkZone(JS::GetTenuredGCThingZone(value.toGCCellPtr()), aName);
+    }
+  }
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    jsid id = aPtr->unbarrieredGet();
+    if (JSID_IS_GCTHING(id)) {
+      checkZone(JS::GetTenuredGCThingZone(JSID_TO_GCTHING(id)), aName);
+    }
+  }
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JSObject* obj = aPtr->unbarrieredGet();
+    if (obj) {
+      checkZone(js::GetObjectZoneFromAnyThread(obj), aName);
+    }
+  }
+  virtual void Trace(nsWrapperCache* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JSObject* obj = aPtr->GetWrapperPreserveColor();
+    if (obj) {
+      checkZone(js::GetObjectZoneFromAnyThread(obj), aName);
+    }
+  }
+  virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JSObject* obj = aPtr->unbarrieredGetPtr();
+    if (obj) {
+      checkZone(js::GetObjectZoneFromAnyThread(obj), aName);
+    }
+  }
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JSString* str = aPtr->unbarrieredGet();
+    if (str) {
+      checkZone(JS::GetStringZone(str), aName);
+    }
+  }
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JSScript* script = aPtr->unbarrieredGet();
+    if (script) {
+      checkZone(JS::GetTenuredGCThingZone(JS::GCCellPtr(script)), aName);
+    }
+  }
+  virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
+                     void* aClosure) const override {
+    JSFunction* fun = aPtr->unbarrieredGet();
+    if (fun) {
+      checkZone(js::GetObjectZoneFromAnyThread(JS_GetFunctionObject(fun)),
+                aName);
+    }
+  }
+};
+
+static inline void CheckHolderIsSingleZone(
+    void* aHolder, nsCycleCollectionParticipant* aParticipant) {
+  CheckZoneTracer tracer(aParticipant->ClassName());
+  aParticipant->Trace(aHolder, tracer, nullptr);
+}
+
+#endif
+
 void CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer) {
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
   TraceAdditionalNativeGrayRoots(aTracer);
 
   mJSHolders.ForEach([aTracer](void* holder, nsScriptObjectTracer* tracer) {
+#ifdef DEBUG
+    if (!tracer->IsMultiZoneJSHolder()) {
+      CheckHolderIsSingleZone(holder, tracer);
+    }
+#endif
     tracer->Trace(holder, JsGcTracer(), aTracer);
   });
 }
