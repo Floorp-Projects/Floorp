@@ -9,9 +9,6 @@ config = {
     'max_build_output_timeout': 60 * 80,
 
     'env': {
-        'BINSCOPE': os.path.join(
-            os.environ['ProgramFiles'], 'Microsoft BinScope 2014', 'Binscope.exe'
-        ),
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
         'MOZ_CRASHREPORTER_NO_REPORT': '1',

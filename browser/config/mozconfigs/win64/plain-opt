@@ -11,6 +11,7 @@ CBINDGEN="${MOZ_FETCHES_DIR}/cbindgen/cbindgen"
 
 NASM="${MOZ_FETCHES_DIR}/nasm/nasm.exe"
 NODEJS="${MOZ_FETCHES_DIR}/node/node.exe"
+WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
 
 ac_add_options --target=x86_64-pc-mingw32
 
