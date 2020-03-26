@@ -10,7 +10,8 @@
   <vbox id="editBookmarkPanelRows">
     <vbox id="editBMPanel_nameRow"
           collapsed="true">
-      <label data-l10n-id="bookmark-overlay-name"
+      <label value="&editBookmarkOverlay.name.label;"
+             accesskey="&editBookmarkOverlay.name.accesskey;"
              control="editBMPanel_namePicker"/>
       <html:input id="editBMPanel_namePicker"
                   onchange="gEditItemOverlay.onNamePickerChange().catch(Cu.reportError);"/>
@@ -18,7 +19,8 @@
 
     <vbox id="editBMPanel_locationRow"
           collapsed="true">
-      <label data-l10n-id="bookmark-overlay-location"
+      <label value="&editBookmarkOverlay.location.label;"
+             accesskey="&editBookmarkOverlay.location.accesskey;"
              control="editBMPanel_locationField"/>
       <html:input id="editBMPanel_locationField"
                   class="uri-element"
@@ -27,7 +29,7 @@
 
     <vbox id="editBMPanel_folderRow"
           collapsed="true">
-      <label data-l10n-id="bookmark-overlay-folder"
+      <label value="&editBookmarkOverlay.folder.label;"
              control="editBMPanel_folderMenuList"/>
       <hbox flex="1" align="center">
         <menulist id="editBMPanel_folderMenuList"
@@ -44,15 +46,16 @@
                       class="menuitem-iconic folder-icon"/>
             <menuseparator id="editBMPanel_chooseFolderSeparator"/>
             <menuitem id="editBMPanel_chooseFolderMenuItem"
-                      data-l10n-id="bookmark-overlay-choose"
+                      label="&editBookmarkOverlay.choose.label;"
                       class="menuitem-iconic folder-icon"/>
             <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
           </menupopup>
         </menulist>
         <button id="editBMPanel_foldersExpander"
                 class="expander-down panel-button"
-                data-l10n-id="bookmark-overlay-folders-expander"
-                data-l10n-attrs="tooltiptextdown, tooltiptextup"
+                tooltiptext="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
+                tooltiptextdown="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
+                tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
                 oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"/>
       </hbox>
     </vbox>
@@ -61,15 +64,17 @@
           collapsed="true">
       <!-- editBMPanel_folderTree will go here when this is shown -->
       <hbox id="editBMPanel_newFolderBox">
-        <button data-1l0n-id="bookmark-overlay-new-folder-button"
+        <button label="&editBookmarkOverlay.newFolderButton.label;"
                 id="editBMPanel_newFolderButton"
+                accesskey="&editBookmarkOverlay.newFolderButton.accesskey;"
                 oncommand="gEditItemOverlay.newFolder().catch(Cu.reportError);"/>
       </hbox>
     </vbox>
 
     <vbox id="editBMPanel_tagsRow"
           collapsed="true">
-      <label data-l10n-id="bookmark-overlay-tags"
+      <label value="&editBookmarkOverlay.tags.label;"
+             accesskey="&editBookmarkOverlay.tags.accesskey;"
              control="editBMPanel_tagsField"/>
       <hbox flex="1" align="center" role="combobox">
         <html:input id="editBMPanel_tagsField"
@@ -80,13 +85,13 @@
                  completedefaultindex="true"
                  completeselectedindex="true"
                  tabscrolling="true"
-                 data-l10n-id="bookmark-overlay-tags-empty-description"
-                 data-l10n-attrs="placeholder"
+                 placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
                  onchange="gEditItemOverlay.onTagsFieldChange();"/>
         <button id="editBMPanel_tagsSelectorExpander"
                 class="expander-down panel-button"
-                data-l10n-id="bookmark-overlay-tags-expander"
-                data-l10n-attrs="tooltiptextdown, tooltiptextup"
+                tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
+                tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
+                tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
                 oncommand="gEditItemOverlay.toggleTagsSelector().catch(Cu.reportError);"/>
         <popupset>
           <panel is="autocomplete-richlistbox-popup"
@@ -111,7 +116,8 @@
 
     <vbox id="editBMPanel_keywordRow"
           collapsed="true">
-      <label data-l10n-id="bookmark-overlay-keyword"
+      <label value="&editBookmarkOverlay.keyword.label;"
+             accesskey="&editBookmarkOverlay.keyword.accesskey;"
              control="editBMPanel_keywordField"/>
       <html:input id="editBMPanel_keywordField"
                   onchange="gEditItemOverlay.onKeywordFieldChange();"/>

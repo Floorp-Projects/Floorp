@@ -38,6 +38,7 @@
     locale/browser/downloads/downloads.properties  (%chrome/browser/downloads/downloads.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
+    locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/safebrowsing/safebrowsing.properties   (%chrome/browser/safebrowsing/safebrowsing.properties)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
