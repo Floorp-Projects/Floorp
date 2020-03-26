@@ -743,7 +743,7 @@ NullHttpChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* _retval) {
   }
 
   nsAutoCString origin;
-  nsContentUtils::GetASCIIOrigin(aOrigin, origin);
+  aOrigin->GetAsciiOrigin(origin);
 
   if (mTimingAllowOriginHeader == origin) {
     *_retval = true;
