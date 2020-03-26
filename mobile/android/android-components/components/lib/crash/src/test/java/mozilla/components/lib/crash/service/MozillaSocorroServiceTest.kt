@@ -272,6 +272,41 @@ class MozillaSocorroServiceTest {
     }
 
     @Test
+    fun `MozillaSocorroService caught exception request with no app version`() {
+        val mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(200)
+            .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"))
+        mockWebServer.start()
+        val serverUrl = mockWebServer.url("/")
+        val service = spy(MozillaSocorroService(
+            testContext,
+            "Test App",
+            "{1234-1234-1234}",
+            "0.1",
+            "1.0",
+            "Mozilla Test",
+            serverUrl = serverUrl.toString()
+        ))
+
+        val throwable = RuntimeException("Test")
+        service.report(throwable)
+
+        val fileInputStream = ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
+        val inputStream = GZIPInputStream(fileInputStream)
+        val reader = InputStreamReader(inputStream)
+        val bufferedReader = BufferedReader(reader)
+        val request = bufferedReader.readText()
+
+        assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
+        assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
+        assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
+        assert(request.contains("name=Version\r\n\r\nN/A"))
+
+        verify(service).report(throwable)
+        verify(service).sendReport(throwable, null, null, false, false)
+    }
+
+    @Test
     fun `MozillaSocorroService handles caught exception with no stacktrace correctly`() {
         val mockWebServer = MockWebServer()
         mockWebServer.enqueue(MockResponse().setResponseCode(200)
