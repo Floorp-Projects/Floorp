@@ -1276,47 +1276,68 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
   WSFragment* afterRun =
       aEndObject->FindNearestRun(aEndObject->mScanStartPoint, true);
 
-  // trim after run of any leading ws
-  if (afterRun && (afterRun->mType & WSType::leadingWS)) {
-    nsresult rv = aEndObject->DeleteRange(aEndObject->mScanStartPoint,
-                                          afterRun->EndPoint());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("WSRunObject::DeleteRange() failed");
-      return rv;
-    }
+  if (!beforeRun && !afterRun) {
+    return NS_OK;
   }
-  // adjust normal ws in afterRun if needed
-  if (afterRun && afterRun->mType == WSType::normalWS && !aEndObject->mPRE) {
-    if ((beforeRun && (beforeRun->mType & WSType::leadingWS)) ||
-        (!beforeRun && StartsFromHardLineBreak())) {
-      // make sure leading char of following ws is an nbsp, so that it will show
-      // up
-      EditorDOMPointInText nextCharOfStartOfEnd =
-          aEndObject->GetNextCharPoint(aEndObject->mScanStartPoint);
-      if (nextCharOfStartOfEnd.IsSet() &&
-          !nextCharOfStartOfEnd.IsEndOfContainer() &&
-          nextCharOfStartOfEnd.IsCharASCIISpace()) {
-        nsresult rv = aEndObject->InsertNBSPAndRemoveFollowingASCIIWhitespaces(
-            nextCharOfStartOfEnd);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
-              "failed");
-          return rv;
+
+  if (afterRun) {
+    // trim after run of any leading ws
+    if (afterRun->mType & WSType::leadingWS) {
+      // mScanStartPoint will be referred bellow so that we need to keep
+      // it a valid point.
+      AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
+      nsresult rv = aEndObject->DeleteRange(aEndObject->mScanStartPoint,
+                                            afterRun->EndPoint());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("WSRunObject::DeleteRange() failed");
+        return rv;
+      }
+    }
+    // adjust normal ws in afterRun if needed
+    else if (afterRun->mType == WSType::normalWS && !aEndObject->mPRE) {
+      if ((beforeRun && (beforeRun->mType & WSType::leadingWS)) ||
+          (!beforeRun && StartsFromHardLineBreak())) {
+        // make sure leading char of following ws is an nbsp, so that it will
+        // show up
+        EditorDOMPointInText nextCharOfStartOfEnd =
+            aEndObject->GetNextCharPoint(aEndObject->mScanStartPoint);
+        if (nextCharOfStartOfEnd.IsSet() &&
+            !nextCharOfStartOfEnd.IsEndOfContainer() &&
+            nextCharOfStartOfEnd.IsCharASCIISpace()) {
+          // mScanStartPoint will be referred bellow so that we need to keep
+          // it a valid point.
+          AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
+          nsresult rv =
+              aEndObject->InsertNBSPAndRemoveFollowingASCIIWhitespaces(
+                  nextCharOfStartOfEnd);
+          if (NS_FAILED(rv)) {
+            NS_WARNING(
+                "WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces() "
+                "failed");
+            return rv;
+          }
         }
       }
     }
   }
+
+  if (!beforeRun) {
+    return NS_OK;
+  }
+
   // trim before run of any trailing ws
-  if (beforeRun && (beforeRun->mType & WSType::trailingWS)) {
+  if (beforeRun->mType & WSType::trailingWS) {
     nsresult rv = DeleteRange(beforeRun->StartPoint(), mScanStartPoint);
     if (NS_FAILED(rv)) {
       NS_WARNING("WSRunObject::DeleteRange() failed");
       return rv;
     }
-  } else if (beforeRun && beforeRun->mType == WSType::normalWS && !mPRE) {
-    if ((afterRun && (afterRun->mType & WSType::trailingWS)) ||
-        (afterRun && afterRun->mType == WSType::normalWS) ||
+    return NS_OK;
+  }
+
+  if (beforeRun->mType == WSType::normalWS && !mPRE) {
+    if ((afterRun && ((afterRun->mType & WSType::trailingWS) ||
+                      afterRun->mType == WSType::normalWS)) ||
         (!afterRun && aEndObject->EndsByBlockBoundary())) {
       // make sure trailing char of starting ws is an nbsp, so that it will show
       // up
@@ -1362,6 +1383,9 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
     EditorDOMPointInText atNextCharOfStart = GetNextCharPoint(mScanStartPoint);
     if (atNextCharOfStart.IsSet() && !atNextCharOfStart.IsEndOfContainer() &&
         atNextCharOfStart.IsCharASCIISpace()) {
+      // mScanStartPoint will be referred bellow so that we need to keep
+      // it a valid point.
+      AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
       nsresult rv =
           InsertNBSPAndRemoveFollowingASCIIWhitespaces(atNextCharOfStart);
       if (NS_FAILED(rv)) {
