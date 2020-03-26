@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "8.0.0",
+  "version": "9.0.0",
 
   "applications": {
     "gecko": {
@@ -77,7 +77,7 @@
   "background": {
     "scripts": [
       "lib/module_shim.js",
-      "lib/google.js",
+      "lib/intervention_helpers.js",
       "data/injections.js",
       "data/picture_in_picture_overrides.js",
       "data/ua_overrides.js",

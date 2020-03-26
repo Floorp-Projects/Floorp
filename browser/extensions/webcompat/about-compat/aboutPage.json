@@ -1,4 +1,6 @@
-[{
+[
+  {
     "namespace": "aboutCompat",
     "description": "Enables the about:compat page"
-}]
+  }
+]

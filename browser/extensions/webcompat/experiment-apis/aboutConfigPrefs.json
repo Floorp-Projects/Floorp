@@ -6,16 +6,20 @@
       {
         "name": "onPrefChange",
         "type": "function",
-        "parameters": [{
-          "name": "name",
-          "type": "string",
-          "description": "The preference which changed"
-        }],
-        "extraParameters": [{
-          "name": "name",
-          "type": "string",
-          "description": "The preference to monitor"
-        }]
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference which changed"
+          }
+        ],
+        "extraParameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference to monitor"
+          }
+        ]
       }
     ],
     "functions": [
@@ -23,11 +27,13 @@
         "name": "getPref",
         "type": "function",
         "description": "Get a preference's value",
-        "parameters": [{
-          "name": "name",
-          "type": "string",
-          "description": "The preference name"
-        }],
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
+          }
+        ],
         "async": true
       },
       {

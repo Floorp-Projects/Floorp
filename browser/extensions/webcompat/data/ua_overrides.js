@@ -7,8 +7,8 @@
 /* globals browser, module, require */
 
 // This is a hack for the tests.
-if (typeof getMatchPatternsForGoogleURL === "undefined") {
-  var getMatchPatternsForGoogleURL = require("../lib/google");
+if (typeof InterventionHelpers === "undefined") {
+  var InterventionHelpers = require("../lib/intervention_helpers");
 }
 
 /**
@@ -31,32 +31,6 @@ const AVAILABLE_UA_OVERRIDES = [
           UAHelpers.getPrefix(originalUA) +
           " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36 for WebCompat"
         );
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1564594 - Create UA override for Enhanced Search on Firefox Android
-     *
-     * Enables the Chrome Google Search experience for Fennec users.
-     */
-    id: "bug1564594",
-    platform: "android",
-    domain: "Enhanced Search",
-    bug: "1567945",
-    config: {
-      matches: [
-        ...getMatchPatternsForGoogleURL("images.google"),
-        ...getMatchPatternsForGoogleURL("maps.google"),
-        ...getMatchPatternsForGoogleURL("news.google"),
-        ...getMatchPatternsForGoogleURL("www.google"),
-      ],
-      blocks: [...getMatchPatternsForGoogleURL("www.google", "serviceworker")],
-      permanentPref: "enable_enhanced_search",
-      telemetryKey: "enhancedSearch",
-      experiment: ["enhanced-search", "enhanced-search-control"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -241,7 +215,7 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://zhidao.baidu.com/*",
       ],
       uaTransformer: originalUA => {
-        return originalUA + " AppleWebKit/537.36 (KHTML, like Gecko)";
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -450,28 +424,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1577240 - UA override for heb.com on Firefox for Android
-     * WebCompat issue #33613 - https://webcompat.com/issues/33613
-     *
-     * heb.com shows desktop site on Firefox for Android for some pages based on
-     * UA detection. Spoofing as Chrome allows to get mobile site.
-     */
-    id: "bug1577240",
-    platform: "android",
-    domain: "heb.com",
-    bug: "1577240",
-    config: {
-      matches: ["*://*.heb.com/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1577250 - UA override for homebook.pl on Firefox for Android
      * WebCompat issue #24044 - https://webcompat.com/issues/24044
      *
@@ -593,22 +545,87 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1442050 - UA overrides for my.nintendo.com
-     * Webcompat issue #12887 - https://webcompat.com/issues/12887
+     * Bug 1621065 - UA overrides for bracketchallenge.ncaa.com
+     * Webcompat issue #49886 - https://webcompat.com/issues/49886
      *
-     * Nintendo ships a broken version of their mobile interface to mobile
-     * browsers that are not Chrome or Safari. In our tests, appending the
-     * "AppleWebKit" identifier to the UA string results in a version that
-     * works very well.
+     * The NCAA bracket challenge website mistakenly classifies
+     * any non-Chrome browser on Android as "is_old_android". As a result,
+     * a modal is shown telling them they have security flaws. We have
+     * attempted to reach out for a fix (and clarification).
      */
-    id: "bug1442050",
+    id: "bug1621065",
     platform: "android",
-    domain: "nintendo.com",
-    bug: "1442050",
+    domain: "bracketchallenge.ncaa.com",
+    bug: "1621065",
     config: {
-      matches: ["*://my.nintendo.com/*"],
+      matches: ["*://bracketchallenge.ncaa.com/*"],
       uaTransformer: originalUA => {
-        return originalUA + " AppleWebKit";
+        return originalUA + " Chrome";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1622063 - UA override for wp1-ext.usps.gov
+     * Webcompat issue #29867 - https://webcompat.com/issues/29867
+     *
+     * The Job Search site for USPS does not work for Firefox Mobile
+     * browsers (a 500 is returned).
+     */
+    id: "bug1622063",
+    platform: "android",
+    domain: "wp1-ext.usps.gov",
+    bug: "1622063",
+    config: {
+      matches: ["*://wp1-ext.usps.gov/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1622059 - UA overrides for img.weblogssl.com breakage
+     * Webcompat issue #49166 - https://webcompat.com/issues/49166
+     * Webcompat issue #48650 - https://webcompat.com/issues/48650
+     * Webcompat issue #48787 - https://webcompat.com/issues/48787
+     *
+     * These pages throw due to some poor UA sniffing assumptions, so
+     * we add a "Version/99.0" token so comments will be visible. They
+     * all share a common file hosted at:
+     * https://img.weblogssl.com/LPbackend/prod/v2/js
+     */
+    id: "bug1622059",
+    platform: "android",
+    domain: "img.weblogssl.com",
+    bug: "1622059",
+    config: {
+      matches: [
+        "*://www.genbeta.com/*",
+        "*://www.xataka.com/*",
+        "*://www.xatakandroid.com/*",
+      ],
+      uaTransformer: originalUA => {
+        return originalUA + " Version/99.0";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1622081 - UA override for m2.bmo.com
+     * Webcompat issue #45019 - https://webcompat.com/issues/45019
+     *
+     * Unless the UA string contains "Chrome", m2.bmo.com will
+     * display a modal saying the browser is out-of-date.
+     */
+    id: "bug1622081",
+    platform: "android",
+    domain: "m2.bmo.com",
+    bug: "1622081",
+    config: {
+      matches: ["*://m2.bmo.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome";
       },
     },
   },
