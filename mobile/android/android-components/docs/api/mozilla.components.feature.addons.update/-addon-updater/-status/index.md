@@ -2,7 +2,7 @@
 
 # Status
 
-`sealed class Status` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L108)
+`sealed class Status` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L109)
 
 Indicates the status of a request for updating an addon.
 

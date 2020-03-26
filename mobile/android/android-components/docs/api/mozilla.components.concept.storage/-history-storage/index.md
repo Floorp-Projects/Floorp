@@ -30,6 +30,7 @@ An interface which defines read/write methods for history data.
 |---|---|
 | [cleanup](../-storage/cleanup.md) | `abstract fun cleanup(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Cleans up background work and database connections |
 | [runMaintenance](../-storage/run-maintenance.md) | `abstract suspend fun runMaintenance(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Runs internal database maintenance tasks |
+| [warmUp](../-storage/warm-up.md) | `abstract suspend fun warmUp(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Make sure underlying database connections are established. |
 
 ### Extension Functions
 

@@ -2,4 +2,4 @@
 
 # status
 
-`val status: `[`Status`](../-status/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L142)
+`val status: `[`Status`](../-status/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L143)
