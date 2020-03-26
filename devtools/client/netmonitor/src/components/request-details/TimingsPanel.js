@@ -108,7 +108,13 @@ class TimingsPanel extends Component {
     const { firstRequestStartedMs } = this.props;
 
     if (!eventTimings) {
-      return null;
+      return div(
+        {
+          className:
+            "tabpanel-summary-container timings-container empty-notice",
+        },
+        L10N.getStr("netmonitor.timings.noTimings")
+      );
     }
 
     const { timings, offsets } = eventTimings;
