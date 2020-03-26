@@ -6,8 +6,7 @@ add_task(async function parent_to_remote() {
     await BrowserTestUtils.browserLoaded(browser);
     let newBC = browser.browsingContext;
 
-    isnot(originalBC.id, newBC.id,
-          "Should have replaced the BrowsingContext");
+    isnot(originalBC.id, newBC.id, "Should have replaced the BrowsingContext");
   });
 });
 
@@ -19,7 +18,6 @@ add_task(async function remote_to_parent() {
     await BrowserTestUtils.browserLoaded(browser);
     let newBC = browser.browsingContext;
 
-    isnot(originalBC.id, newBC.id,
-          "Should have replaced the BrowsingContext");
+    isnot(originalBC.id, newBC.id, "Should have replaced the BrowsingContext");
   });
 });
