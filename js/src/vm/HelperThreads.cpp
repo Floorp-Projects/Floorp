@@ -1864,7 +1864,9 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
   // The Debugger only needs to be told about the topmost script that was
   // compiled.
-  DebugAPI::onNewScript(cx, script);
+  if (!parseTask->options.hideScriptFromDebugger) {
+    DebugAPI::onNewScript(cx, script);
+  }
 
   return script;
 }
@@ -1899,14 +1901,16 @@ bool GlobalHelperThreadState::finishMultiParseTask(
     return false;
   }
 
-  // The Debugger only needs to be told about the topmost script that was
+  // The Debugger only needs to be told about the topmost scripts that were
   // compiled.
-  JS::RootedScript rooted(cx);
-  for (auto& script : scripts) {
-    MOZ_ASSERT(script->isGlobalCode());
+  if (!parseTask->options.hideScriptFromDebugger) {
+    JS::RootedScript rooted(cx);
+    for (auto& script : scripts) {
+      MOZ_ASSERT(script->isGlobalCode());
 
-    rooted = script;
-    DebugAPI::onNewScript(cx, rooted);
+      rooted = script;
+      DebugAPI::onNewScript(cx, rooted);
+    }
   }
 
   return true;

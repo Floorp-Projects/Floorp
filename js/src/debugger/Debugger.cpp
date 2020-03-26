@@ -2361,7 +2361,7 @@ static bool RememberSourceURL(JSContext* cx, HandleScript script) {
   return NewbornArrayPush(cx, holder, StringValue(filenameString));
 }
 
-void DebugAPI::slowPathOnNewScript(JSContext* cx, HandleScript script) {
+void DebugAPI::onNewScript(JSContext* cx, HandleScript script) {
   if (!script->realm()->isDebuggee()) {
     // Remember the URLs associated with scripts in non-system realms,
     // in case the debugger is attached later.

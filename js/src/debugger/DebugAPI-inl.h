@@ -32,22 +32,6 @@ bool DebugAPI::hasAnyBreakpointsOrStepMode(JSScript* script) {
 }
 
 /* static */
-void DebugAPI::onNewScript(JSContext* cx, HandleScript script) {
-  // We early return in slowPathOnNewScript for self-hosted scripts, so we can
-  // ignore those in our assertion here.
-  MOZ_ASSERT_IF(!script->realm()->creationOptions().invisibleToDebugger() &&
-                    !script->selfHosted(),
-                script->realm()->firedOnNewGlobalObject);
-
-  // The script may not be ready to be interrogated by the debugger.
-  if (script->hideScriptFromDebugger()) {
-    return;
-  }
-
-  slowPathOnNewScript(cx, script);
-}
-
-/* static */
 void DebugAPI::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global) {
   MOZ_ASSERT(!global->realm()->firedOnNewGlobalObject);
 #ifdef DEBUG
