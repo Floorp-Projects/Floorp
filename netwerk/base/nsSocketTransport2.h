@@ -397,7 +397,7 @@ class nsSocketTransport final : public nsASocketHandler,
   friend class nsSocketInputStream;
   friend class nsSocketOutputStream;
 
-  // socket timeouts are not protected by any lock.
+  // socket timeouts are protected by mLock.
   uint16_t mTimeouts[2];
 
   // linger options to use when closing
