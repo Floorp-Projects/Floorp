@@ -193,7 +193,7 @@ interface nsIAccessible : nsISupports
    *
    * @param x  screen's x coordinate
    * @param y  screen's y coordinate
-   * @return   the deepest accessible child containing the given point
+   * @return   the direct accessible child containing the given point
    */
   nsIAccessible getChildAtPoint(in long x, in long y);
 
@@ -208,6 +208,20 @@ interface nsIAccessible : nsISupports
    * @return   the deepest accessible child containing the given point
    */
   nsIAccessible getDeepestChildAtPoint(in long x, in long y);
+
+/**
+   * Like GetDeepestChildAtPoint, but restricted to the current process.
+   * If the point is within a remote document, the accessible for the browser
+   * element containing that document will be returned; i.e. this will not
+   * descend into the document. If called on an accessible inside a remote
+   * document, this will fail.
+   *
+   * @param x  screen's x coordinate
+   * @param y  screen's y coordinate
+   * @return   the deepest accessible child in this process containing the given
+   *           point
+   */
+  nsIAccessible getDeepestChildAtPointInProcess(in long x, in long y);
 
   /**
    * Nth accessible child using zero-based index or last child if index less than zero
