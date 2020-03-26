@@ -595,6 +595,22 @@ static void moz_container_set_opaque_region(MozContainer* container) {
   container->opaque_region_needs_update = false;
 }
 
+static int moz_gtk_widget_get_scale_factor(MozContainer* container) {
+  static auto sGtkWidgetGetScaleFactor =
+      (gint(*)(GtkWidget*))dlsym(RTLD_DEFAULT, "gtk_widget_get_scale_factor");
+  return sGtkWidgetGetScaleFactor
+             ? sGtkWidgetGetScaleFactor(GTK_WIDGET(container))
+             : 1;
+}
+
+void moz_container_set_scale_factor(MozContainer* container) {
+  if (!container->surface) {
+    return;
+  }
+  wl_surface_set_buffer_scale(container->surface,
+                              moz_gtk_widget_get_scale_factor(container));
+}
+
 struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
   LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
               (void*)container, (void*)container->surface,
@@ -645,6 +661,8 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
   }
 
   moz_container_set_opaque_region(container);
+  moz_container_set_scale_factor(container);
+
   return container->surface;
 }
 
@@ -659,7 +677,6 @@ struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
   if (!surface) {
     return nullptr;
   }
-  wl_surface_set_buffer_scale(surface, scale);
   if (!container->eglwindow) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
     container->eglwindow =

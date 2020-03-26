@@ -112,8 +112,7 @@ void moz_container_move_resize(MozContainer* container, int dx, int dy,
                                int width, int height);
 void moz_container_egl_window_set_size(MozContainer* container, int width,
                                        int height);
-void moz_container_scale_changed(MozContainer* container,
-                                 GtkAllocation* aAllocation);
+void moz_container_set_scale_factor(MozContainer* container);
 void moz_container_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
