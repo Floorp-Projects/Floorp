@@ -55,10 +55,16 @@ bool nsFrameLoaderOwner::ShouldPreserveBrowsingContext(
     return false;
   }
 
-  // Don't preserve contexts if this is a chrome (parent process) window
-  // that is changing from remote to local.
-  if (XRE_IsParentProcess() && aOptions.mRemoteType.IsVoid()) {
-    return false;
+  if (XRE_IsParentProcess()) {
+    // Don't preserve for remote => parent loads.
+    if (aOptions.mRemoteType.IsVoid()) {
+      return false;
+    }
+
+    // Don't preserve for parent => remote loads.
+    if (mFrameLoader && !mFrameLoader->IsRemoteFrame()) {
+      return false;
+    }
   }
 
   // We will preserve our browsing context if either fission is enabled, or the
