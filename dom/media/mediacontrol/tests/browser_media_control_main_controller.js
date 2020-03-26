@@ -91,20 +91,29 @@ add_task(async function testDeterminingMainController() {
    * part3 : [tab2, tab1, tab0] -> [tab2, tab1] -> [tab2] -> []
    */
   info(`# [tab2, tab1, tab0] -> [tab2, tab1] -> [tab2] -> [] #`);
-  info(`remove tab0`);
-  await BrowserTestUtils.removeTab(tab0);
+  info(`remove tab0 and wait until main controller changes`);
+  await Promise.all([
+    waitUntilMainMediaControllerChanged(),
+    BrowserTestUtils.removeTab(tab0),
+  ]);
 
   info(`currrent metadata should be equal to tab1's metadata`);
   await isCurrentMetadataEqualTo(tab1.metadata);
 
-  info(`remove tab1`);
-  await BrowserTestUtils.removeTab(tab1);
+  info(`remove tab1 and wait until main controller changes`);
+  await Promise.all([
+    waitUntilMainMediaControllerChanged(),
+    BrowserTestUtils.removeTab(tab1),
+  ]);
 
   info(`currrent metadata should be equal to tab2's metadata`);
   await isCurrentMetadataEqualTo(tab2.metadata);
 
-  info(`remove tab2`);
-  await BrowserTestUtils.removeTab(tab2);
+  info(`remove tab2 and wait until main controller changes`);
+  await Promise.all([
+    waitUntilMainMediaControllerChanged(),
+    BrowserTestUtils.removeTab(tab2),
+  ]);
   isCurrentMetadataEmpty();
 });
 
