@@ -22,6 +22,10 @@ var CaptivePortalWatcher = {
   // This flag exists so that tests can appropriately simulate a recheck.
   _waitingForRecheck: false,
 
+  // This holds a weak reference to the captive portal tab so we can close the tab
+  // after successful login if we're redirected to the canonicalURL.
+  _previousCaptivePortalTab: null,
+
   get _captivePortalNotification() {
     return gHighPriorityNotificationBox.getNotificationWithValue(
       this.PORTAL_NOTIFICATION_VALUE
@@ -108,6 +112,45 @@ var CaptivePortalWatcher = {
     }
   },
 
+  onLocationChange(browser) {
+    if (!this._previousCaptivePortalTab) {
+      return;
+    }
+
+    let tab = this._previousCaptivePortalTab.get();
+    if (!tab || !tab.linkedBrowser) {
+      return;
+    }
+
+    if (browser != tab.linkedBrowser) {
+      return;
+    }
+
+    // There is a race between the release of captive portal i.e.
+    // the time when success/abort events are fired and the time when
+    // the captive portal tab redirects to the canonicalURL. We check for
+    // both conditions to be true and also check that we haven't already removed
+    // the captive portal tab in the success/abort event handlers before we remove
+    // it in the callback below. A tick is added to avoid removing the tab before
+    // onLocationChange handlers across browser code are executed.
+    Services.tm.dispatchToMainThread(() => {
+      if (!this._previousCaptivePortalTab) {
+        return;
+      }
+
+      tab = this._previousCaptivePortalTab.get();
+      let canonicalURI = Services.io.newURI(this.canonicalURL);
+      if (
+        tab &&
+        tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI) &&
+        (this._cps.state == this._cps.UNLOCKED_PORTAL ||
+          this._cps.state == this._cps.UNKNOWN)
+      ) {
+        gBrowser.removeTab(tab);
+      }
+    });
+  },
+
   _captivePortalDetected() {
     if (this._delayedCaptivePortalDetectedInProgress) {
       return;
@@ -178,9 +221,24 @@ var CaptivePortalWatcher = {
   },
 
   _captivePortalGone() {
-    this._captivePortalTab = null;
     this._cancelDelayedCaptivePortal();
     this._removeNotification();
+
+    if (!this._captivePortalTab) {
+      return;
+    }
+
+    let tab = this._captivePortalTab.get();
+    let canonicalURI = Services.io.newURI(this.canonicalURL);
+    if (
+      tab &&
+      tab.linkedBrowser &&
+      tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)
+    ) {
+      this._previousCaptivePortalTab = null;
+      gBrowser.removeTab(tab);
+    }
+    this._captivePortalTab = null;
   },
 
   _cancelDelayedCaptivePortal() {
@@ -286,28 +344,9 @@ var CaptivePortalWatcher = {
         disableTRR: true,
       });
       this._captivePortalTab = Cu.getWeakReference(tab);
+      this._previousCaptivePortalTab = Cu.getWeakReference(tab);
     }
 
     gBrowser.selectedTab = tab;
-
-    let canonicalURI = Services.io.newURI(this.canonicalURL);
-
-    // When we are no longer captive, close the tab if it's at the canonical URL.
-    let tabCloser = () => {
-      Services.obs.removeObserver(tabCloser, "captive-portal-login-abort");
-      Services.obs.removeObserver(tabCloser, "captive-portal-login-success");
-      if (
-        !tab ||
-        tab.closing ||
-        !tab.parentNode ||
-        !tab.linkedBrowser ||
-        !tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)
-      ) {
-        return;
-      }
-      gBrowser.removeTab(tab);
-    };
-    Services.obs.addObserver(tabCloser, "captive-portal-login-abort");
-    Services.obs.addObserver(tabCloser, "captive-portal-login-success");
   },
 };
