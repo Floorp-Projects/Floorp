@@ -5,7 +5,8 @@
 
 <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="192dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="192dp"
         android:layout_height="50dp"
         android:background="@drawable/rounded_white_corners"
         android:layout_gravity="center">
@@ -24,11 +25,13 @@
             android:layout_width="match_parent"
             android:layout_height="32dp"
             android:gravity="center_vertical"
+            android:textAlignment="viewStart"
             android:textSize="15sp"
             android:textColor="@color/search_widget_text"
             android:letterSpacing="-0.025"
             android:layout_marginStart="9dp"
-            android:layout_marginTop="9dp"/>
+            android:layout_marginTop="9dp"
+            tools:ignore="RtlCompat" />
 
     <ImageButton
             android:id="@+id/button_search_widget_voice"
