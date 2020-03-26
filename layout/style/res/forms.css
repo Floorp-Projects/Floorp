@@ -909,6 +909,7 @@ input[type=range]::-moz-focus-outer {
  * set the width/height of this pseudo-element.
  */
 input[type=range]::-moz-range-track {
+  -moz-appearance: range-track !important;
   /* Prevent styling that would change the type of frame we construct. */
   display: block !important;
   float: none !important;
@@ -934,6 +935,7 @@ input[type=range][orient=vertical]::-moz-range-track {
  * is ignored.
  */
 input[type=range]::-moz-range-progress {
+  -moz-appearance: range-progress !important;
   /* Prevent styling that would change the type of frame we construct. */
   display: block !important;
   float: none !important;

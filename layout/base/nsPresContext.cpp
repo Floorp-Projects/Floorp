@@ -1628,28 +1628,23 @@ void nsPresContext::CountReflows(const char* aName, nsIFrame* aFrame) {
 
 bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                             uint32_t aRuleTypeMask) const {
-  Element* elem = aFrame->GetContent()->AsElement();
+  MOZ_ASSERT(aFrame->StyleDisplay()->HasAppearance(),
+             "This should only be used to disable native appearance");
+  const bool padding = aRuleTypeMask & NS_AUTHOR_SPECIFIED_PADDING;
+  const bool borderBackground =
+      aRuleTypeMask & NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND;
+  const auto& style = *aFrame->Style();
 
-  // We need to handle non-generated content pseudos too, so we use
-  // the parent of generated content pseudo to be consistent.
-  if (elem->GetPseudoElementType() != PseudoStyleType::NotPseudo) {
-    MOZ_ASSERT(elem->GetParent(), "Pseudo element has no parent element?");
-    elem = elem->GetParent()->AsElement();
-  }
-  if (MOZ_UNLIKELY(!elem->HasServoData())) {
-    // Probably shouldn't happen, but does. See bug 1387953
-    return false;
+  if (padding && style.HasAppearanceAndAuthorSpecifiedPadding()) {
+    return true;
   }
 
-  // Anonymous boxes are more complicated, and we just assume that they
-  // cannot have any author-specified rules here.
-  if (aFrame->Style()->IsAnonBox()) {
-    return false;
+  if (borderBackground &&
+      style.HasAppearanceAndAuthorSpecifiedBorderOrBackground()) {
+    return true;
   }
 
-  auto* set = PresShell()->StyleSet()->RawSet();
-  return Servo_HasAuthorSpecifiedRules(set, aFrame->Style(), elem,
-                                       aRuleTypeMask);
+  return false;
 }
 
 gfxUserFontSet* nsPresContext::GetUserFontSet() {
