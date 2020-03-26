@@ -669,9 +669,9 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
 
   if (aPrincipal) {
     nsAutoCString origin;
-    rv = nsContentUtils::GetASCIIOrigin(aPrincipal, origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    rv = aPrincipal->GetAsciiOrigin(origin);
+    if (NS_FAILED(rv)) {
+      origin.AssignLiteral("null");
     }
 
     aUri.Append(origin);
