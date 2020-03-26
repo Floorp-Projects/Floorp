@@ -5495,7 +5495,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
         cx, JSScript::Create(
                 cx, fun, compilationInfo.sourceObject,
                 ImmutableScriptFlags::fromCompileOptions(transitiveOptions),
-                transitiveOptions.hideScriptFromDebugger, funbox->extent));
+                funbox->extent));
     if (!innerScript) {
       return false;
     }
