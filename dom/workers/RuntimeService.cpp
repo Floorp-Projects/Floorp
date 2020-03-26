@@ -288,6 +288,10 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmCranelift(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_cranelift")))
 #endif
+#ifdef ENABLE_WASM_MULTI_VALUE
+      .setWasmMultiValue(
+          GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_multi_value")))
+#endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_gc")))
 #endif
