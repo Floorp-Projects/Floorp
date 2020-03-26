@@ -150,8 +150,21 @@ void MediaControlService::NotifyControllerPlaybackStateChanged(
   // be playing at the time.
   if (GetMainController() != aController &&
       aController->GetState() == MediaSessionPlaybackState::Playing) {
-    mControllerManager->UpdateMainController(aController);
+    mControllerManager->UpdateMainControllerIfNeeded(aController);
   }
+}
+
+void MediaControlService::NotifyControllerBeingUsedInPictureInPictureMode(
+    MediaController* aController) {
+  MOZ_DIAGNOSTIC_ASSERT(aController);
+  MOZ_DIAGNOSTIC_ASSERT(
+      mControllerManager,
+      "using controller in PIP mode before initializing service");
+  // The controller is not an active controller.
+  if (!mControllerManager->Contains(aController)) {
+    return;
+  }
+  mControllerManager->UpdateMainControllerIfNeeded(aController);
 }
 
 uint64_t MediaControlService::GetActiveControllersNum() const {
@@ -204,7 +217,7 @@ bool MediaControlService::ControllerManager::AddController(
     return false;
   }
   mControllers.insertBack(aController);
-  UpdateMainControllerInternal(aController);
+  UpdateMainControllerIfNeeded(aController);
   return true;
 }
 
@@ -217,29 +230,68 @@ bool MediaControlService::ControllerManager::RemoveController(
   // This is LinkedListElement's method which will remove controller from
   // `mController`.
   aController->remove();
-  UpdateMainControllerInternal(mControllers.isEmpty() ? nullptr
-                                                      : mControllers.getLast());
+  // If main controller is removed from the list, the last controller in the
+  // list would become the main controller. Or reset the main controller when
+  // the list is already empty.
+  if (GetMainController() == aController) {
+    UpdateMainControllerInternal(
+        mControllers.isEmpty() ? nullptr : mControllers.getLast());
+  }
   return true;
 }
 
-void MediaControlService::ControllerManager::UpdateMainController(
+void MediaControlService::ControllerManager::UpdateMainControllerIfNeeded(
     MediaController* aController) {
+  MOZ_DIAGNOSTIC_ASSERT(aController);
+
+  if (GetMainController() == aController) {
+    LOG_MAINCONTROLLER("This controller is alreay the main controller");
+    return;
+  }
+
+  if (GetMainController() && GetMainController()->IsInPictureInPictureMode() &&
+      !aController->IsInPictureInPictureMode()) {
+    LOG_MAINCONTROLLER(
+        "Main controller is being used in PIP mode, so we won't replace it "
+        "with non-PIP controller");
+    return ReorderGivenController(aController,
+                                  InsertOptions::eInsertBeforeTail);
+  }
+  ReorderGivenController(aController, InsertOptions::eInsertToTail);
+  UpdateMainControllerInternal(aController);
+}
+
+void MediaControlService::ControllerManager::ReorderGivenController(
+    MediaController* aController, InsertOptions aOption) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   MOZ_DIAGNOSTIC_ASSERT(mControllers.contains(aController));
 
-  // Make the main controller as the last element in the list to maintain the
-  // order of controllers because we always use the last controller in the list
-  // as the next main controller when removing current main controller from the
-  // list.
-  // Eg. If the list contains [A, B, C], and now the last element C is the main
-  // controller. When B becomes main controller later, the list would become
-  // [A, C, B]. And if A becomes main controller, list would become [C, B, A].
-  // Then, if we remove A from the list, the next main controller would be B.
-  // But if we don't maintain the controller order when main controller changes,
-  // we would pick C as the main controller because the list is still [A, B, C].
-  aController->remove();
-  mControllers.insertBack(aController);
-  UpdateMainControllerInternal(aController);
+  if (aOption == InsertOptions::eInsertToTail) {
+    // Make the main controller as the last element in the list to maintain the
+    // order of controllers because we always use the last controller in the
+    // list as the next main controller when removing current main controller
+    // from the list. Eg. If the list contains [A, B, C], and now the last
+    // element C is the main controller. When B becomes main controller later,
+    // the list would become [A, C, B]. And if A becomes main controller, list
+    // would become [C, B, A]. Then, if we remove A from the list, the next main
+    // controller would be B. But if we don't maintain the controller order when
+    // main controller changes, we would pick C as the main controller because
+    // the list is still [A, B, C].
+    aController->remove();
+    return mControllers.insertBack(aController);
+  }
+
+  if (aOption == InsertOptions::eInsertBeforeTail) {
+    // This happens when the latest playing controller can't become the main
+    // controller because we have already had other controller being used in
+    // PIP mode, which would always be regarded as the main controller.
+    // However, we would still like to adjust its order in the list. Eg, we have
+    // a list [A, B, C, D, E] and E is the main controller. If we want to
+    // reorder B to the front of E, then the list would become [A, C, D, B, E].
+    MOZ_ASSERT(GetMainController() != aController);
+    aController->remove();
+    return GetMainController()->setPrevious(aController);
+  }
 }
 
 void MediaControlService::ControllerManager::Shutdown() {

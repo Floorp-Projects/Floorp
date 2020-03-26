@@ -254,6 +254,10 @@ void MediaController::SetIsInPictureInPictureMode(
   LOG("Set IsInPictureInPictureMode to %s",
       aIsInPictureInPictureMode ? "true" : "false");
   mIsInPictureInPictureMode = aIsInPictureInPictureMode;
+  if (RefPtr<MediaControlService> service = MediaControlService::GetService();
+      service && mIsInPictureInPictureMode) {
+    service->NotifyControllerBeingUsedInPictureInPictureMode(this);
+  }
 }
 
 bool MediaController::IsInPictureInPictureMode() const {
