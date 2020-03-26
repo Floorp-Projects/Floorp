@@ -2384,7 +2384,8 @@ impl PrimitiveStore {
                     surface.device_pixel_scale,
                     frame_context.spatial_tree,
                 );
-                surface_rect = rc.composite_mode.inflate_picture_rect(surface_rect, surface.inflation_factor);
+
+                surface_rect = rc.composite_mode.inflate_picture_rect(surface_rect, surface.scale_factors);
                 surface_rect = snap_pic_to_raster.snap_rect(&surface_rect);
             }
 
