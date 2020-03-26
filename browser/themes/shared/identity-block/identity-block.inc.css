@@ -41,12 +41,14 @@
 }
 
 #identity-box:hover:not(.no-hover):not([open=true]),
+#notification-popup-box:hover,
 #tracking-protection-icon-container:hover:not([open=true]) {
   background-color: hsla(0,0%,70%,.2);
   fill-opacity: .8;
 }
 
 #identity-box:hover:active:not(.no-hover),
+#notification-popup-box:hover:active,
 #identity-box[open=true],
 #tracking-protection-icon-container:hover:active,
 #tracking-protection-icon-container[open=true] {
