@@ -21,10 +21,6 @@ def register(graph_config):
     _import_modules(["job", "worker_types", "target_tasks"])
     _fill_treeherder_groups(graph_config)
 
-    extend_parameters_schema({
-        Required("head_tag"): basestring,
-    })
-
 
 def _import_modules(modules):
     for module in modules:
@@ -40,7 +36,5 @@ def _fill_treeherder_groups(graph_config):
 
 
 def get_decision_parameters(graph_config, parameters):
-    parameters["head_tag"] = os.environ.get("MOBILE_HEAD_TAG", "")
-
     if parameters["tasks_for"] == "github-release":
         parameters["target_tasks_method"] = "release"
