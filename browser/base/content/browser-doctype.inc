@@ -16,5 +16,3 @@
 %syncBrandDTD;
 <!ENTITY % brandingsDTD SYSTEM "chrome://browser/locale/brandings.dtd">
 %brandingsDTD;
-<!ENTITY % editBookmarkOverlayDTD SYSTEM "chrome://browser/locale/places/editBookmarkOverlay.dtd">
-%editBookmarkOverlayDTD;
