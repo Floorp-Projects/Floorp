@@ -26,7 +26,6 @@ import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
-@Suppress("Deprecation")
 class RustPushConnectionTest {
 
     @Ignore("Requires push-forUnitTests; seems unnecessary to introduce it for this one test.")

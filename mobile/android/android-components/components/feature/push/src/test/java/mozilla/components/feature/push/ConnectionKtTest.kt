@@ -16,7 +16,6 @@ import org.junit.Test
 
 class ConnectionKtTest {
     @Test
-    @Suppress("Deprecation")
     fun `transform response to PushSubscription`() {
         val response = SubscriptionResponse(
             "992a0f0542383f1ea5ef51b7cf4ae6c4",
