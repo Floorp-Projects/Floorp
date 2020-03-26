@@ -139,7 +139,7 @@ function autocompleteDataFetch({
   expressionVars,
 }) {
   return async ({ dispatch, webConsoleUI }) => {
-    const selectedNodeActor = webConsoleUI.getSelectedNodeActor();
+    const selectedNodeActor = webConsoleUI.getSelectedNodeActorID();
     const id = generateRequestId();
     dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
 
