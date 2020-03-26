@@ -830,33 +830,6 @@ function SearchEngine(options = {}) {
       this._shortName = shortName.slice(0, -4);
     }
     this._loadPath = this.getAnonymizedLoadPath(file, uri);
-
-    if (!shortName && !this._isBuiltin) {
-      // We are in the process of downloading and installing the engine.
-      // We'll have the shortName and id once we are done parsing it.
-      return;
-    }
-
-    // Build the id used for the legacy metadata storage, so that we
-    // can do a one-time import of data from old profiles.
-    if (
-      this._isDefault ||
-      (uri && uri.spec.startsWith(SearchUtils.APP_SEARCH_PREFIX))
-    ) {
-      // The second part of the check is to catch engines from language packs.
-      // They aren't default engines (because they aren't app-shipped), but we
-      // still need to give their id an [app] prefix for backward compat.
-      this._id = "[app]/" + this._shortName + ".xml";
-    } else if (!this._isBuiltin) {
-      this._id = "[profile]/" + this._shortName + ".xml";
-    } else {
-      // If the engine is neither a default one, nor a user-installed one,
-      // it must be extension-shipped, so use the full path as id.
-      SearchUtils.log(
-        "Setting _id to full path for engine from " + this._loadPath
-      );
-      this._id = file ? file.path : uri.spec;
-    }
   }
 }
 
@@ -1878,12 +1851,6 @@ SearchEngine.prototype = {
 
   /**
    * Return the built-in identifier of app-provided engines.
-   *
-   * Note that this identifier is substantially similar to _id, with the
-   * following exceptions:
-   *
-   * * There is no trailing file extension.
-   * * There is no [app] prefix.
    *
    * @returns {string|null}
    *   Returns a valid if this is a built-in engine, null otherwise.

@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const BROWSER_SEARCH_PREF = "browser.search.";
 
 var SearchUtils = {
-  APP_SEARCH_PREFIX: "resource://search-plugins/",
-
   BROWSER_SEARCH_PREF,
 
   SETTINGS_KEY: "search-config",

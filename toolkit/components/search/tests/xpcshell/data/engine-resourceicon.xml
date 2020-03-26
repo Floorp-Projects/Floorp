@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
 <ShortName>engine-resourceicon</ShortName>
-<Image width="16" height="16">resource://search-plugins/icon16.png</Image>
-<Image width="32" height="32">resource://search-plugins/icon32.png</Image>
+<Image width="16" height="16">resource://search-extensions/icon16.png</Image>
+<Image width="32" height="32">resource://search-extensions/icon32.png</Image>
 <Url type="text/html" method="GET" template="http://www.google.com/search">
   <Param name="q" value="{searchTerms}"/>
 </Url>
