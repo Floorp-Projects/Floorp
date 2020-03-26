@@ -122,6 +122,7 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetIsSystemPrincipal(bool* aResult) override;
   NS_IMETHOD SchemeIs(const char* aScheme, bool* aResult) override;
   NS_IMETHOD IsURIInPrefList(const char* aPref, bool* aResult) override;
+  NS_IMETHOD IsL10nAllowed(nsIURI* aURI, bool* aResult) override;
   NS_IMETHOD GetAboutModuleFlags(uint32_t* flags) override;
   NS_IMETHOD GetIsAddonOrExpandedAddonPrincipal(bool* aResult) override;
   NS_IMETHOD GetOriginAttributes(JSContext* aCx,

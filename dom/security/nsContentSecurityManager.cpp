@@ -287,11 +287,11 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
       nsIContentPolicy::TYPE_INTERNAL_DTD) {
     RefPtr<Document> doc;
     aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
-    return nsContentUtils::PrincipalAllowsL10n(
-               *aLoadInfo->TriggeringPrincipal(),
-               doc ? doc->GetDocumentURI() : nullptr)
-               ? NS_OK
-               : NS_ERROR_DOM_BAD_URI;
+    bool allowed = false;
+    aLoadInfo->TriggeringPrincipal()->IsL10nAllowed(
+        doc ? doc->GetDocumentURI() : nullptr, &allowed);
+
+    return allowed ? NS_OK : NS_ERROR_DOM_BAD_URI;
   }
 
   // This is used in order to allow a privileged DOMParser to parse documents
