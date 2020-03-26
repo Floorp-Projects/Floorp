@@ -368,8 +368,9 @@ class MarkupContextMenu {
       "temp" + i;
     }`;
 
-    const selectedNodeActor = this.selection.nodeFront.actorID;
-    const res = await hud.evaluateJSAsync(evalString, { selectedNodeActor });
+    const res = await hud.evaluateJSAsync(evalString, {
+      selectedNodeActor: this.selection.nodeFront.actorID,
+    });
     hud.setInputValue(res.result);
     this.inspector.emit("console-var-ready");
   }
