@@ -19,7 +19,6 @@ import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.window.WindowRequest
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -33,7 +32,7 @@ class CustomTabWindowFeature(
     private val activity: Activity,
     private val store: BrowserStore,
     private val sessionId: String,
-    private val crashReporter: CrashReporter? = null
+    @VisibleForTesting internal val handleError: (Exception) -> Unit
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -76,10 +75,15 @@ class CustomTabWindowFeature(
                     val windowRequest = state.content.windowRequest
                     if (windowRequest?.type == WindowRequest.Type.OPEN) {
                         val intent = configToIntent(state.config)
+                        // This could only fail if the above intent is for our application
+                        // and we are not registered to handle its schemes.
+                        // Let's log this to better asses how often this happens in real world and
+                        // if we need to add new schemes to properly support this workflow.
+                        // See Fenix #8412
                         try {
                             intent.launchUrl(activity, windowRequest.url.toUri())
                         } catch (e: ActivityNotFoundException) {
-                            crashReporter?.submitCaughtException(e)
+                            handleError(e)
                         }
                         store.dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
                     }

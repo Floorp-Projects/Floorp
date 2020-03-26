@@ -68,7 +68,9 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
             requireActivity(),
             components.store,
             sessionId!!
-        )
+        ) {
+            // No-op. Client may override this
+        }
         lifecycle.addObserver(windowFeature)
 
         if (manifest != null) {
