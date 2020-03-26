@@ -1012,8 +1012,9 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
     BuildKeyNameFromFontName(key);
     bool bad = mBadUnderlineFamilyNames.ContainsSorted(key);
     bool classic = aForceClassicFams && aForceClassicFams->ContainsSorted(key);
+    FontVisibility visibility = FontVisibility::Unknown;  // TODO
     aFamilies.AppendElement(fontlist::Family::InitData(
-        key, name, i, false, aCollection != mSystemFonts, bad, classic));
+        key, name, i, visibility, aCollection != mSystemFonts, bad, classic));
   }
 }
 
@@ -1503,7 +1504,9 @@ void gfxDWriteFontList::GetFontsFromCollection(
       continue;
     }
 
-    fam = new gfxDWriteFontFamily(familyName, family,
+    FontVisibility visibility = FontVisibility::Unknown;  // TODO
+
+    fam = new gfxDWriteFontFamily(familyName, visibility, family,
                                   aCollection == mSystemFonts);
     if (!fam) {
       continue;
@@ -2081,8 +2084,8 @@ already_AddRefed<FontInfoData> gfxDWriteFontList::CreateFontInfoData() {
 }
 
 gfxFontFamily* gfxDWriteFontList::CreateFontFamily(
-    const nsACString& aName) const {
-  return new gfxDWriteFontFamily(aName, nullptr);
+    const nsACString& aName, FontVisibility aVisibility) const {
+  return new gfxDWriteFontFamily(aName, aVisibility, nullptr);
 }
 
 #ifdef MOZ_BUNDLED_FONTS

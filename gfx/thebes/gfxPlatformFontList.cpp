@@ -355,9 +355,10 @@ void gfxPlatformFontList::ApplyWhitelist(
   AutoTArray<fontlist::Family::InitData, 128> accepted;
   bool keptNonHidden = false;
   for (auto& f : aFamilies) {
-    if (f.mHidden || familyNamesWhitelist.Contains(f.mKey)) {
+    if (f.mVisibility == FontVisibility::Hidden ||
+        familyNamesWhitelist.Contains(f.mKey)) {
       accepted.AppendElement(f);
-      if (!f.mHidden) {
+      if (f.mVisibility != FontVisibility::Hidden) {
         keptNonHidden = true;
       }
     }
@@ -371,13 +372,14 @@ void gfxPlatformFontList::ApplyWhitelist(
 }
 
 bool gfxPlatformFontList::AddWithLegacyFamilyName(const nsACString& aLegacyName,
-                                                  gfxFontEntry* aFontEntry) {
+                                                  gfxFontEntry* aFontEntry,
+                                                  FontVisibility aVisibility) {
   bool added = false;
   nsAutoCString key;
   ToLowerCase(aLegacyName, key);
   gfxFontFamily* family = mOtherFamilyNames.GetWeak(key);
   if (!family) {
-    family = CreateFontFamily(aLegacyName);
+    family = CreateFontFamily(aLegacyName, aVisibility);
     family->SetHasStyles(true);  // we don't want the family to search for
                                  // faces, we're adding them directly here
     mOtherFamilyNames.Put(key, RefPtr{family});
@@ -758,6 +760,9 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
   MutexAutoLock lock(mFontFamiliesMutex);
   for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<gfxFontFamily>& family = iter.Data();
+    if (family->IsHidden()) {
+      continue;
+    }
     if (family->FilterForFontList(aLangGroup, aGenericFamily)) {
       nsAutoCString localizedFamilyName;
       family->LocalizedName(localizedFamilyName);
@@ -986,8 +991,8 @@ bool gfxPlatformFontList::FindAndAddFamilies(
   nsAutoCString key;
   GenerateFontListKey(aFamily, key);
 
+  bool allowHidden = bool(aFlags & FindFamiliesFlags::eSearchHiddenFamilies);
   if (SharedFontList()) {
-    bool allowHidden = bool(aFlags & FindFamiliesFlags::eSearchHiddenFamilies);
     fontlist::Family* family = SharedFontList()->FindFamily(key, allowHidden);
     if (family) {
       aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
@@ -1046,10 +1051,16 @@ bool gfxPlatformFontList::FindAndAddFamilies(
 
   // lookup in canonical (i.e. English) family name list
   gfxFontFamily* familyEntry = mFontFamilies.GetWeak(key);
+  if (familyEntry && familyEntry->IsHidden() && !allowHidden) {
+    return false;
+  }
 
   // if not found, lookup in other family names list (mostly localized names)
   if (!familyEntry) {
     familyEntry = mOtherFamilyNames.GetWeak(key);
+  }
+  if (familyEntry && familyEntry->IsHidden() && !allowHidden) {
+    return false;
   }
 
   // if still not found and other family names not yet fully initialized,
@@ -1069,6 +1080,9 @@ bool gfxPlatformFontList::FindAndAddFamilies(
         mOtherNamesMissed = MakeUnique<nsTHashtable<nsCStringHashKey>>(2);
       }
       mOtherNamesMissed->PutEntry(key);
+    }
+    if (familyEntry && familyEntry->IsHidden() && !allowHidden) {
+      return false;
     }
   }
 
@@ -1098,6 +1112,9 @@ bool gfxPlatformFontList::FindAndAddFamilies(
       // the mOtherFamilyNames list; then retry the legacy-family search.
       if (base && base->CheckForLegacyFamilyNames(this)) {
         familyEntry = mOtherFamilyNames.GetWeak(key);
+      }
+      if (familyEntry && familyEntry->IsHidden() && !allowHidden) {
+        return false;
       }
     }
   }
