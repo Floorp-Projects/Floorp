@@ -383,24 +383,17 @@ ContentBlocking::AllowAccessFor(
 
   } else {
     // We should be a 3rd party source.
-    bool isThirdParty = false;
-    if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-      isThirdParty =
-          nsContentUtils::IsThirdPartyTrackingResourceWindow(parentWindow);
+    // Make sure we are either a third-party tracker or a third-party
+    // window (depends upon the cookie bahavior).
+    if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+        !nsContentUtils::IsThirdPartyTrackingResourceWindow(parentWindow)) {
+      LOG(("Our window isn't a third-party tracking window"));
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     } else if (behavior == nsICookieService::
-                               BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
-      isThirdParty = nsContentUtils::IsThirdPartyWindowOrChannel(
-          parentWindow, nullptr, nullptr);
-    }
-
-    if (!isThirdParty) {
-      if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-        LOG(("Our window isn't a third-party tracking window"));
-      } else if (behavior ==
-                 nsICookieService::
-                     BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
-        LOG(("Our window isn't a third-party window"));
-      }
+                               BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+               !nsContentUtils::IsThirdPartyWindowOrChannel(parentWindow,
+                                                            nullptr, nullptr)) {
+      LOG(("Our window isn't a third-party window"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
 
