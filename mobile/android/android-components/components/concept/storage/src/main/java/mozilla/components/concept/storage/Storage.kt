@@ -8,6 +8,10 @@ package mozilla.components.concept.storage
  * An interface which provides generic operations for storing browser data like history and bookmarks.
  */
 interface Storage {
+    /**
+     * Make sure underlying database connections are established.
+     */
+    suspend fun warmUp()
 
     /**
      * Runs internal database maintenance tasks

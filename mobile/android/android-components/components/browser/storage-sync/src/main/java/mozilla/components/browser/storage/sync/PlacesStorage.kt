@@ -19,6 +19,7 @@ import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.logElapsedTime
 
 /**
  * A base class for concrete implementations of PlacesStorages
@@ -38,6 +39,13 @@ abstract class PlacesStorage(context: Context) : Storage, SyncableStore {
 
     internal val writer: PlacesWriterConnection by lazy { places.writer() }
     internal val reader: PlacesReaderConnection by lazy { places.reader() }
+
+    override suspend fun warmUp() {
+        logElapsedTime(logger, "Warming up places storage") {
+            writer
+            reader
+        }
+    }
 
     /**
      * Internal database maintenance tasks. Ideally this should be called once a day.

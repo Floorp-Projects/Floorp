@@ -30,6 +30,10 @@ class InMemoryHistoryStorage : HistoryStorage {
     @VisibleForTesting
     internal val pageMeta: HashMap<String, PageObservation> = hashMapOf()
 
+    override suspend fun warmUp() {
+        // No-op for an in-memory store
+    }
+
     override suspend fun recordVisit(uri: String, visit: PageVisit) {
         val now = System.currentTimeMillis()
         if (visit.redirectSource != RedirectSource.NOT_A_SOURCE) {
