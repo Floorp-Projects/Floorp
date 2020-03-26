@@ -10,6 +10,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
@@ -20,6 +21,20 @@ JSExecutionManager* JSExecutionManager::mCurrentMTManager;
 const uint32_t kTimeSliceExpirationMS = 50;
 
 using RequestState = JSExecutionManager::RequestState;
+
+static StaticRefPtr<JSExecutionManager> sSABSerializationManager;
+
+void JSExecutionManager::Initialize() {
+  if (StaticPrefs::dom_workers_serialized_sab_access()) {
+    sSABSerializationManager = MakeRefPtr<JSExecutionManager>(1);
+  }
+}
+
+void JSExecutionManager::Shutdown() { sSABSerializationManager = nullptr; }
+
+JSExecutionManager* JSExecutionManager::GetSABSerializationManager() {
+  return sSABSerializationManager.get();
+}
 
 RequestState JSExecutionManager::RequestJSThreadExecution() {
   if (NS_IsMainThread()) {
