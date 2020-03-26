@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.EngineSession
  * Interface for classes that want to intercept load requests to allow custom behavior.
  */
 interface RequestInterceptor {
+
     /**
      * An alternative response for an intercepted request.
      */
@@ -77,4 +78,15 @@ interface RequestInterceptor {
      * provided error type.
      */
     fun onErrorRequest(session: EngineSession, errorType: ErrorType, uri: String?): ErrorResponse? = null
+
+    /**
+     * Returns whether or not this [RequestInterceptor] should intercept load
+     * requests initiated by the app (via direct calls to [EngineSession.loadUrl]).
+     * All other requests triggered by users interacting with web content
+     * (e.g. following links) or redirects will always be intercepted.
+     *
+     * @return true if app initiated requests should be intercepted,
+     * otherwise false. Defaults to false.
+     */
+    fun interceptsAppInitiatedRequests() = false
 }

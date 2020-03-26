@@ -371,23 +371,30 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
-            val isSameDomain = this@GeckoEngineSession.currentUrl?.tryGetHostFromUrl() ==
-                request.uri.tryGetHostFromUrl()
-            val response = settings.requestInterceptor?.onLoadRequest(
-                this@GeckoEngineSession,
-                request.uri,
-                request.hasUserGesture,
-                isSameDomain
-            )?.apply {
-                when (this) {
-                    is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
-                    is InterceptionResponse.Url -> loadUrl(url)
-                    is InterceptionResponse.AppIntent -> {
-                        notifyObservers {
-                            onLaunchIntentRequest(url = url, appIntent = appIntent)
+            val interceptor = settings.requestInterceptor
+            val response = if (
+                interceptor != null && (!request.isDirectNavigation || interceptor.interceptsAppInitiatedRequests())
+            ) {
+                val engineSession = this@GeckoEngineSession
+                val isSameDomain = engineSession.currentUrl?.tryGetHostFromUrl() == request.uri.tryGetHostFromUrl()
+                interceptor.onLoadRequest(
+                    engineSession,
+                    request.uri,
+                    request.hasUserGesture,
+                    isSameDomain
+                )?.apply {
+                    when (this) {
+                        is InterceptionResponse.Content -> loadData(data, mimeType, encoding)
+                        is InterceptionResponse.Url -> loadUrl(url)
+                        is InterceptionResponse.AppIntent -> {
+                            notifyObservers {
+                                onLaunchIntentRequest(url = url, appIntent = appIntent)
+                            }
                         }
                     }
                 }
+            } else {
+                null
             }
 
             return if (response != null) {
