@@ -22,13 +22,14 @@
 
     get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/toolbarbutton.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/scrollbox.css"/>
       <toolbarbutton class="scrollbutton-up" part="scrollbutton-up"/>
-      <spacer part="arrowscrollbox-overflow-start-indicator"/>
+      <spacer part="overflow-start-indicator"/>
       <scrollbox part="scrollbox" flex="1">
         <html:slot/>
       </scrollbox>
-      <spacer part="arrowscrollbox-overflow-end-indicator"/>
+      <spacer part="overflow-end-indicator"/>
       <toolbarbutton class="scrollbutton-down" part="scrollbutton-down"/>
     `;
     }
