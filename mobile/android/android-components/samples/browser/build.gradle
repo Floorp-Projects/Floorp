@@ -98,7 +98,6 @@ dependencies {
     implementation project(':feature-webcompat')
     implementation project(':feature-webnotifications')
     implementation project(':feature-addons')
-    implementation project(':lib-crash')
 
     implementation project(':ui-autocomplete')
 
