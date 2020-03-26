@@ -79,6 +79,16 @@ fun BrowserState.findTabOrCustomTabOrSelectedTab(tabId: String? = null): Session
 }
 
 /**
+ * Finds and returns the tab with the given url. Returns null if no matching tab could be found.
+ *
+ * @param url A mandatory url of the searched tab.
+ * @return The tab with the provided url
+ */
+fun BrowserState.findTabByUrl(url: String): TabSessionState? {
+    return tabs.firstOrNull { tab -> tab.content.url == url }
+}
+
+/**
  * List of private tabs.
  */
 val BrowserState.privateTabs: List<TabSessionState>
