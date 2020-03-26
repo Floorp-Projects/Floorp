@@ -998,6 +998,7 @@ impl Tile {
         //           but it should be a fairly rare invalidation case.
         if self.current_descriptor.local_valid_rect != self.prev_descriptor.local_valid_rect {
             self.invalidate(None, InvalidationReason::ValidRectChanged);
+            state.composite_state.dirty_rects_are_valid = false;
         }
     }
 
