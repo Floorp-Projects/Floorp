@@ -1560,8 +1560,10 @@ void NativeKey::InitWithKeyOrChar() {
           ComputeVirtualKeyCodeFromScanCodeEx();
       NS_ASSERTION(mVirtualKeyCode, "Failed to compute virtual keycode");
       break;
-    default:
-      MOZ_CRASH("Unsupported message");
+    default: {
+      MOZ_CRASH_UNSAFE_PRINTF("Unsupported message: 0x%04X", mMsg.message);
+      break;
+    }
   }
 
   if (!mVirtualKeyCode) {
