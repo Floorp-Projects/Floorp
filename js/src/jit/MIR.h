@@ -4067,6 +4067,21 @@ class MToNumeric : public MUnaryInstruction, public BoxInputsPolicy::Data {
   ALLOW_CLONE(MToNumeric)
 };
 
+// This corresponds to JS::ToNumber(value).
+class MToNumber : public MUnaryInstruction, public BoxInputsPolicy::Data {
+  explicit MToNumber(MDefinition* arg) : MUnaryInstruction(classOpcode, arg) {
+    // Note: this returns a Value instead of double to prevent unnecessary int32
+    // to double conversions.
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ToNumber)
+  TRIVIAL_NEW_WRAPPERS
+
+  ALLOW_CLONE(MToNumber)
+};
+
 // Applies ECMA's ToNumber on a primitive (either typed or untyped) and expects
 // the result to be precisely representable as an Int32, otherwise bails.
 //
