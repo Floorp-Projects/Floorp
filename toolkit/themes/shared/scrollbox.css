@@ -4,8 +4,8 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-:host([scrolledtostart=true])::part(overflow-end-indicator),
-:host([scrolledtoend=true])::part(overflow-start-indicator),
+:host([scrolledtostart=true])::part(overflow-start-indicator),
+:host([scrolledtoend=true])::part(overflow-end-indicator),
 :host([notoverflowing=true]) .scrollbutton-up,
 :host([notoverflowing=true]) .scrollbutton-down {
   visibility: collapse;
