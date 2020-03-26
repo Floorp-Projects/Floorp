@@ -24,6 +24,7 @@ XREAppData& XREAppData::operator=(const StaticXREAppData& aOther) {
   profile = aOther.profile;
   UAName = aOther.UAName;
   sourceURL = aOther.sourceURL;
+  updateURL = aOther.updateURL;
 
   return *this;
 }

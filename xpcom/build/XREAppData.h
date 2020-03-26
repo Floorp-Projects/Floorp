@@ -178,6 +178,11 @@ class XREAppData {
    */
   CharPtr sourceURL;
 
+  /**
+   * The URL to use to check for updates.
+   */
+  CharPtr updateURL;
+
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   /**
    * Chromium sandbox BrokerServices.
@@ -219,6 +224,7 @@ struct StaticXREAppData {
   const char* profile;
   const char* UAName;
   const char* sourceURL;
+  const char* updateURL;
 };
 
 }  // namespace mozilla

@@ -2605,7 +2605,7 @@ mozilla::ipc::IPCResult ContentChild::RecvUnlinkGhosts() {
 mozilla::ipc::IPCResult ContentChild::RecvAppInfo(
     const nsCString& version, const nsCString& buildID, const nsCString& name,
     const nsCString& UAName, const nsCString& ID, const nsCString& vendor,
-    const nsCString& sourceURL) {
+    const nsCString& sourceURL, const nsCString& updateURL) {
   mAppInfo.version.Assign(version);
   mAppInfo.buildID.Assign(buildID);
   mAppInfo.name.Assign(name);
@@ -2613,6 +2613,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAppInfo(
   mAppInfo.ID.Assign(ID);
   mAppInfo.vendor.Assign(vendor);
   mAppInfo.sourceURL.Assign(sourceURL);
+  mAppInfo.updateURL.Assign(updateURL);
 
   return IPC_OK();
 }
