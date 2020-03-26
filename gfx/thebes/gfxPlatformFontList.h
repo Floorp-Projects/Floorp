@@ -437,7 +437,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   static void FontWhitelistPrefChanged(const char* aPref, void* aClosure);
 
   bool AddWithLegacyFamilyName(const nsACString& aLegacyName,
-                               gfxFontEntry* aFontEntry);
+                               gfxFontEntry* aFontEntry,
+                               FontVisibility aVisibility);
 
   static const char* GetGenericName(
       mozilla::StyleGenericFontFamily aGenericType);
@@ -698,7 +699,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // Create a new gfxFontFamily of the appropriate subclass for the platform,
   // used when AddWithLegacyFamilyName needs to create a new family.
-  virtual gfxFontFamily* CreateFontFamily(const nsACString& aName) const = 0;
+  virtual gfxFontFamily* CreateFontFamily(const nsACString& aName,
+                                          FontVisibility aVisibility) const = 0;
 
   /**
    * For the post-startup font info loader task.
