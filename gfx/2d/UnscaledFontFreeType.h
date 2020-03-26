@@ -39,11 +39,12 @@ class UnscaledFontFreeType : public UnscaledFont {
 
   bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
 
-  bool GetWRFontDescriptor(WRFontDescriptorOutput aCb, void* aBaton) override;
-
   RefPtr<SharedFTFace> InitFace();
 
 #ifdef MOZ_WIDGET_ANDROID
+  static already_AddRefed<UnscaledFont> CreateFromFontDescriptor(
+      const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
+
   already_AddRefed<ScaledFont> CreateScaledFont(
       Float aGlyphSize, const uint8_t* aInstanceData,
       uint32_t aInstanceDataLength, const FontVariation* aVariations,

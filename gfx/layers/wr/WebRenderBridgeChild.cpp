@@ -329,7 +329,7 @@ Maybe<wr::FontKey> WebRenderBridgeChild::GetFontKeyForUnscaledFont(
     // then and only then fall back to getting the raw font file data. If that
     // fails, then the only thing left to do is signal failure by returning a
     // null font key.
-    if (!aUnscaled->GetWRFontDescriptor(WriteFontDescriptor, &sink) &&
+    if (!aUnscaled->GetFontDescriptor(WriteFontDescriptor, &sink) &&
         !aUnscaled->GetFontFileData(WriteFontFileData, &sink)) {
       return Nothing();
     }

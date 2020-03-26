@@ -374,8 +374,8 @@ bool UnscaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback,
   return true;
 }
 
-bool UnscaledFontMac::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
-                                          void* aBaton) {
+bool UnscaledFontMac::GetFontDescriptor(FontDescriptorOutput aCb,
+                                        void* aBaton) {
   if (mIsDataFont) {
     return false;
   }
@@ -653,6 +653,28 @@ cairo_font_face_t* ScaledFontMac::CreateCairoFontFace(
   return cairo_quartz_font_face_create_for_cgfont(mFont);
 }
 #endif
+
+already_AddRefed<UnscaledFont> UnscaledFontMac::CreateFromFontDescriptor(
+    const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
+  if (aDataLength == 0) {
+    gfxWarning() << "Mac font descriptor is truncated.";
+    return nullptr;
+  }
+  CFStringRef name =
+      CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)aData,
+                              aDataLength, kCFStringEncodingUTF8, false);
+  if (!name) {
+    return nullptr;
+  }
+  CGFontRef font = CGFontCreateWithFontName(name);
+  CFRelease(name);
+  if (!font) {
+    return nullptr;
+  }
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontMac(font);
+  CFRelease(font);
+  return unscaledFont.forget();
+}
 
 }  // namespace gfx
 }  // namespace mozilla

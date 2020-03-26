@@ -381,8 +381,8 @@ static bool GetFontFileName(RefPtr<IDWriteFontFace> aFontFace,
   return true;
 }
 
-bool UnscaledFontDWrite::GetWRFontDescriptor(WRFontDescriptorOutput aCb,
-                                             void* aBaton) {
+bool UnscaledFontDWrite::GetFontDescriptor(FontDescriptorOutput aCb,
+                                           void* aBaton) {
   if (!mFont) {
     return false;
   }
@@ -709,6 +709,43 @@ void ScaledFontDWrite::PrepareCairoScaledFont(cairo_scaled_font_t* aFont) {
   }
 }
 #endif
+
+already_AddRefed<UnscaledFont> UnscaledFontDWrite::CreateFromFontDescriptor(
+    const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
+  if (aDataLength == 0) {
+    gfxWarning() << "DWrite font descriptor is truncated.";
+    return nullptr;
+  }
+
+  RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
+  if (!factory) {
+    return nullptr;
+  }
+  RefPtr<IDWriteFontFile> fontFile;
+  HRESULT hr = factory->CreateFontFileReference((const WCHAR*)aData, nullptr,
+                                                getter_AddRefs(fontFile));
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+  BOOL isSupported;
+  DWRITE_FONT_FILE_TYPE fileType;
+  DWRITE_FONT_FACE_TYPE faceType;
+  UINT32 numFaces;
+  hr = fontFile->Analyze(&isSupported, &fileType, &faceType, &numFaces);
+  if (FAILED(hr) || !isSupported || aIndex >= numFaces) {
+    return nullptr;
+  }
+  IDWriteFontFile* fontFiles[1] = {fontFile.get()};
+  RefPtr<IDWriteFontFace> fontFace;
+  hr = factory->CreateFontFace(faceType, 1, fontFiles, aIndex,
+                               DWRITE_FONT_SIMULATIONS_NONE,
+                               getter_AddRefs(fontFace));
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontDWrite(fontFace, nullptr);
+  return unscaledFont.forget();
+}
 
 }  // namespace gfx
 }  // namespace mozilla

@@ -181,5 +181,17 @@ bool ScaledFontFreeType::HasVariationSettings() {
              static_cast<UnscaledFontFreeType*>(mUnscaledFont.get())->GetFace();
 }
 
+already_AddRefed<UnscaledFont> UnscaledFontFreeType::CreateFromFontDescriptor(
+    const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex) {
+  if (aDataLength == 0) {
+    gfxWarning() << "FreeType font descriptor is truncated.";
+    return nullptr;
+  }
+  const char* path = reinterpret_cast<const char*>(aData);
+  RefPtr<UnscaledFont> unscaledFont =
+      new UnscaledFontFreeType(std::string(path, aDataLength), aIndex);
+  return unscaledFont.forget();
+}
+
 }  // namespace gfx
 }  // namespace mozilla

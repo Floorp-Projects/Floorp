@@ -26,6 +26,7 @@
 #ifdef XP_DARWIN
 #  include "ScaledFontMac.h"
 #  include "NativeFontResourceMac.h"
+#  include "UnscaledFontMac.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -37,12 +38,14 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "ScaledFontFreeType.h"
 #  include "NativeFontResourceFreeType.h"
+#  include "UnscaledFontFreeType.h"
 #endif
 
 #ifdef WIN32
 #  include "DrawTargetD2D1.h"
 #  include "ScaledFontDWrite.h"
 #  include "NativeFontResourceDWrite.h"
+#  include "UnscaledFontDWrite.h"
 #  include <d3d10_1.h>
 #  include <stdlib.h>
 #  include "HelpersD2D.h"
@@ -595,14 +598,24 @@ already_AddRefed<UnscaledFont> Factory::CreateUnscaledFontFromFontDescriptor(
     uint32_t aIndex) {
   switch (aType) {
 #ifdef WIN32
+    case FontType::DWRITE:
+      return UnscaledFontDWrite::CreateFromFontDescriptor(aData, aDataLength,
+                                                          aIndex);
     case FontType::GDI:
       return UnscaledFontGDI::CreateFromFontDescriptor(aData, aDataLength,
                                                        aIndex);
-#endif
-#ifdef MOZ_WIDGET_GTK
+#elif defined(XP_DARWIN)
+    case FontType::MAC:
+      return UnscaledFontMac::CreateFromFontDescriptor(aData, aDataLength,
+                                                       aIndex);
+#elif defined(MOZ_WIDGET_GTK)
     case FontType::FONTCONFIG:
       return UnscaledFontFontconfig::CreateFromFontDescriptor(
           aData, aDataLength, aIndex);
+#elif defined(MOZ_WIDGET_ANDROID)
+    case FontType::FREETYPE:
+      return UnscaledFontFreeType::CreateFromFontDescriptor(aData, aDataLength,
+                                                            aIndex);
 #endif
     default:
       gfxWarning() << "Invalid type specified for UnscaledFont font descriptor";
