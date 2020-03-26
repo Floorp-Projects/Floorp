@@ -306,10 +306,10 @@ class nsDocumentViewer final : public nsIContentViewer,
   NS_DECL_NSIWEBBROWSERPRINT
 #endif
 
-  typedef void (*CallChildFunc)(nsDocumentViewer* aViewer, void* aClosure);
-  void CallChildren(CallChildFunc aFunc, void* aClosure);
+  using CallChildFunc = FunctionRef<void(nsDocumentViewer*)>;
+  void CallChildren(CallChildFunc aFunc);
 
-  typedef void (*PresContextFunc)(nsPresContext*, void* aClosure);
+  using PresContextFunc = FunctionRef<void(nsPresContext*)>;
   /**
    * Calls a `CallChildFunc` on all children, a `PresContextFunc`
    * on all external documents' pres contexts  of our document, and then
@@ -321,8 +321,7 @@ class nsDocumentViewer final : public nsIContentViewer,
    *
    * FIXME(emilio): Better name for this appreciated.
    */
-  void PropagateToPresContextsHelper(CallChildFunc, PresContextFunc,
-                                     void* aClosure);
+  void PropagateToPresContextsHelper(CallChildFunc, PresContextFunc);
 
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
@@ -509,23 +508,26 @@ class AutoPrintEventDispatcher {
   }
 
  private:
+  static CallState CollectDocuments(Document& aDoc,
+                                    nsTArray<nsCOMPtr<Document>>& aDocs) {
+    aDocs.AppendElement(&aDoc);
+    auto recurse = [&aDocs](Document& aSubDoc) {
+      return CollectDocuments(aSubDoc, aDocs);
+    };
+    aDoc.EnumerateSubDocuments(recurse);
+    return CallState::Continue;
+  }
+
   void DispatchEventToWindowTree(const nsAString& aEvent) {
     nsTArray<nsCOMPtr<Document>> targets;
     if (mTop) {
-      CollectDocuments(*mTop, &targets);
+      CollectDocuments(*mTop, targets);
     }
     for (nsCOMPtr<Document>& doc : targets) {
       nsContentUtils::DispatchTrustedEvent(doc, doc->GetWindow(), aEvent,
                                            CanBubble::eNo, Cancelable::eNo,
                                            nullptr);
     }
-  }
-
-  static CallState CollectDocuments(Document& aDocument, void* aData) {
-    static_cast<nsTArray<nsCOMPtr<Document>>*>(aData)->AppendElement(
-        &aDocument);
-    aDocument.EnumerateSubDocuments(CollectDocuments, aData);
-    return CallState::Continue;
   }
 
   nsCOMPtr<Document> mTop;
@@ -2666,51 +2668,41 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsINode* aNode) {
 }
 
 void nsDocumentViewer::PropagateToPresContextsHelper(CallChildFunc aChildFunc,
-                                                     PresContextFunc aPcFunc,
-                                                     void* aClosure) {
-  CallChildren(aChildFunc, aClosure);
+                                                     PresContextFunc aPcFunc) {
+  CallChildren(aChildFunc);
 
-  {
-    struct ResourceDocClosure {
-      PresContextFunc mFunc;
-      void* mParentClosure;
-    } resourceDocClosure{aPcFunc, aClosure};
-
-    if (mDocument) {
-      mDocument->EnumerateExternalResources(
-          [](Document& aDoc, void* aClosure) -> CallState {
-            auto* closure = static_cast<ResourceDocClosure*>(aClosure);
-            if (nsPresContext* pc = aDoc.GetPresContext()) {
-              closure->mFunc(pc, closure->mParentClosure);
-            }
-            return CallState::Continue;
-          },
-          &resourceDocClosure);
-    }
+  if (mDocument) {
+    auto resourceDoc = [aPcFunc](Document& aResourceDoc) {
+      if (nsPresContext* pc = aResourceDoc.GetPresContext()) {
+        aPcFunc(pc);
+      }
+      return CallState::Continue;
+    };
+    mDocument->EnumerateExternalResources(resourceDoc);
   }
 
   if (mPresContext) {
-    aPcFunc(mPresContext, aClosure);
+    aPcFunc(mPresContext);
   }
 }
 
-void nsDocumentViewer::CallChildren(CallChildFunc aFunc, void* aClosure) {
+void nsDocumentViewer::CallChildren(CallChildFunc aFunc) {
   nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (docShell) {
-    int32_t i;
-    int32_t n;
-    docShell->GetInProcessChildCount(&n);
-    for (i = 0; i < n; i++) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      docShell->GetInProcessChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      NS_ASSERTION(childAsShell, "null child in docshell");
-      if (childAsShell) {
-        nsCOMPtr<nsIContentViewer> childCV;
-        childAsShell->GetContentViewer(getter_AddRefs(childCV));
-        if (childCV) {
-          (*aFunc)(static_cast<nsDocumentViewer*>(childCV.get()), aClosure);
-        }
+  if (!docShell) {
+    return;
+  }
+  int32_t n = 0;
+  docShell->GetInProcessChildCount(&n);
+  for (int32_t i = 0; i < n; i++) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    docShell->GetInProcessChildAt(i, getter_AddRefs(child));
+    nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+    NS_ASSERTION(childAsShell, "null child in docshell");
+    if (childAsShell) {
+      nsCOMPtr<nsIContentViewer> childCV;
+      childAsShell->GetContentViewer(getter_AddRefs(childCV));
+      if (childCV) {
+        aFunc(static_cast<nsDocumentViewer*>(childCV.get()));
       }
     }
   }
@@ -2730,14 +2722,13 @@ nsDocumentViewer::SetTextZoom(float aTextZoom) {
   bool textZoomChange = (mTextZoom != aTextZoom);
   mTextZoom = aTextZoom;
 
-  PropagateToPresContextsHelper(
-      [](nsDocumentViewer* aChild, void* aClosure) {
-        aChild->SetTextZoom(*static_cast<float*>(aClosure));
-      },
-      [](nsPresContext* aPc, void* aClosure) {
-        aPc->SetTextZoom(*static_cast<float*>(aClosure));
-      },
-      &aTextZoom);
+  auto childFn = [aTextZoom](nsDocumentViewer* aChild) {
+    aChild->SetTextZoom(aTextZoom);
+  };
+  auto presContextFn = [aTextZoom](nsPresContext* aPc) {
+    aPc->SetTextZoom(aTextZoom);
+  };
+  PropagateToPresContextsHelper(childFn, presContextFn);
 
   // Dispatch TextZoomChange event only if text zoom value has changed.
   if (textZoomChange) {
@@ -2811,14 +2802,13 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
 
   mPageZoom = aFullZoom;
 
-  PropagateToPresContextsHelper(
-      [](nsDocumentViewer* aChild, void* aClosure) {
-        aChild->SetFullZoom(*static_cast<float*>(aClosure));
-      },
-      [](nsPresContext* aPc, void* aClosure) {
-        aPc->SetFullZoom(*static_cast<float*>(aClosure));
-      },
-      &aFullZoom);
+  auto childFn = [aFullZoom](nsDocumentViewer* aChild) {
+    aChild->SetFullZoom(aFullZoom);
+  };
+  auto presContextFn = [aFullZoom](nsPresContext* aPc) {
+    aPc->SetFullZoom(aFullZoom);
+  };
+  PropagateToPresContextsHelper(childFn, presContextFn);
 
   // Dispatch FullZoomChange event only if fullzoom value really has changed.
   if (fullZoomChange) {
@@ -2873,15 +2863,13 @@ nsDocumentViewer::SetOverrideDPPX(float aDPPX) {
 
   mOverrideDPPX = aDPPX;
 
-  PropagateToPresContextsHelper(
-      [](nsDocumentViewer* aChild, void* aClosure) {
-        aChild->SetOverrideDPPX(*static_cast<float*>(aClosure));
-      },
-      [](nsPresContext* aPc, void* aClosure) {
-        aPc->SetOverrideDPPX(*static_cast<float*>(aClosure));
-      },
-      &aDPPX);
-
+  auto childFn = [aDPPX](nsDocumentViewer* aChild) {
+    aChild->SetOverrideDPPX(aDPPX);
+  };
+  auto presContextFn = [aDPPX](nsPresContext* aPc) {
+    aPc->SetOverrideDPPX(aDPPX);
+  };
+  PropagateToPresContextsHelper(childFn, presContextFn);
   return NS_OK;
 }
 
@@ -2900,11 +2888,11 @@ nsDocumentViewer::SetAuthorStyleDisabled(bool aStyleDisabled) {
     mPresShell->SetAuthorStyleDisabled(aStyleDisabled);
   }
 
-  CallChildren(
-      [](nsDocumentViewer* aChild, void* aClosure) {
-        aChild->SetAuthorStyleDisabled(*static_cast<bool*>(aClosure));
-      },
-      &aStyleDisabled);
+  auto children = [aStyleDisabled](nsDocumentViewer* aChild) {
+    aChild->SetAuthorStyleDisabled(aStyleDisabled);
+  };
+
+  CallChildren(children);
   return NS_OK;
 }
 
@@ -2919,14 +2907,13 @@ nsDocumentViewer::GetAuthorStyleDisabled(bool* aStyleDisabled) {
 }
 
 void nsDocumentViewer::EmulateMediumInternal(nsAtom* aMedia) {
-  PropagateToPresContextsHelper(
-      [](nsDocumentViewer* aChild, void* aClosure) {
-        aChild->EmulateMediumInternal(static_cast<nsAtom*>(aClosure));
-      },
-      [](nsPresContext* aPc, void* aClosure) {
-        aPc->EmulateMedium(static_cast<nsAtom*>(aClosure));
-      },
-      aMedia);
+  auto childFn = [&](nsDocumentViewer* aChild) {
+    aChild->EmulateMediumInternal(aMedia);
+  };
+  auto presContextFn = [&](nsPresContext* aPc) {
+    aPc->EmulateMedium(aMedia);
+  };
+  PropagateToPresContextsHelper(childFn, presContextFn);
 }
 
 NS_IMETHODIMP
@@ -2969,16 +2956,13 @@ nsDocumentViewer::EmulatePrefersColorScheme(PrefersColorScheme aScheme) {
 
 void nsDocumentViewer::EmulatePrefersColorSchemeInternal(
     const ColorSchemeOverride& aOverride) {
-  PropagateToPresContextsHelper(
-      [](nsDocumentViewer* aChild, void* aClosure) {
-        aChild->EmulatePrefersColorSchemeInternal(
-            *static_cast<const ColorSchemeOverride*>(aClosure));
-      },
-      [](nsPresContext* aPc, void* aClosure) {
-        aPc->SetOverridePrefersColorScheme(
-            *static_cast<const ColorSchemeOverride*>(aClosure));
-      },
-      const_cast<ColorSchemeOverride*>(&aOverride));
+  auto childFn = [&aOverride](nsDocumentViewer* aChild) {
+    aChild->EmulatePrefersColorSchemeInternal(aOverride);
+  };
+  auto presContextFn = [&aOverride](nsPresContext* aPc) {
+    aPc->SetOverridePrefersColorScheme(aOverride);
+  };
+  PropagateToPresContextsHelper(childFn, presContextFn);
 }
 
 NS_IMETHODIMP nsDocumentViewer::GetForceCharacterSet(
@@ -2995,12 +2979,6 @@ NS_IMETHODIMP nsDocumentViewer::GetForceCharacterSet(
 /* [noscript,notxpcom] Encoding getForceCharset (); */
 NS_IMETHODIMP_(const Encoding*)
 nsDocumentViewer::GetForceCharset() { return mForceCharacterSet; }
-
-static void SetChildForceCharacterSet(nsDocumentViewer* aChild,
-                                      void* aClosure) {
-  auto encoding = static_cast<const Encoding*>(aClosure);
-  aChild->SetForceCharset(encoding);
-}
 
 NS_IMETHODIMP
 nsDocumentViewer::SetForceCharacterSet(const nsACString& aForceCharacterSet) {
@@ -3020,8 +2998,11 @@ nsDocumentViewer::SetForceCharacterSet(const nsACString& aForceCharacterSet) {
 NS_IMETHODIMP_(void)
 nsDocumentViewer::SetForceCharset(const Encoding* aEncoding) {
   mForceCharacterSet = aEncoding;
+  auto childFn = [aEncoding](nsDocumentViewer* aChild) {
+    aChild->SetForceCharset(aEncoding);
+  };
   // now set the force char set on all children of mContainer
-  CallChildren(SetChildForceCharacterSet, (void*)aEncoding);
+  CallChildren(childFn);
 }
 
 NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSet(
@@ -3050,28 +3031,19 @@ nsDocumentViewer::GetHintCharset() {
 NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSetSource(
     int32_t* aHintCharacterSetSource) {
   NS_ENSURE_ARG_POINTER(aHintCharacterSetSource);
-
   *aHintCharacterSetSource = mHintCharsetSource;
   return NS_OK;
-}
-
-static void SetChildHintCharacterSetSource(nsDocumentViewer* aChild,
-                                           void* aClosure) {
-  aChild->SetHintCharacterSetSource(NS_PTR_TO_INT32(aClosure));
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::SetHintCharacterSetSource(int32_t aHintCharacterSetSource) {
   mHintCharsetSource = aHintCharacterSetSource;
-  // now set the hint char set source on all children of mContainer
-  CallChildren(SetChildHintCharacterSetSource,
-               NS_INT32_TO_PTR(aHintCharacterSetSource));
+  auto childFn = [aHintCharacterSetSource](nsDocumentViewer* aChild) {
+    aChild->SetHintCharacterSetSource(aHintCharacterSetSource);
+  };
+  // now set the force char set on all children of mContainer
+  CallChildren(childFn);
   return NS_OK;
-}
-
-static void SetChildHintCharacterSet(nsDocumentViewer* aChild, void* aClosure) {
-  auto encoding = static_cast<const Encoding*>(aClosure);
-  aChild->SetHintCharset(encoding);
 }
 
 NS_IMETHODIMP
@@ -3092,27 +3064,26 @@ nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet) {
 NS_IMETHODIMP_(void)
 nsDocumentViewer::SetHintCharset(const Encoding* aEncoding) {
   mHintCharset = aEncoding;
-  // now set the hint char set on all children of mContainer
-  CallChildren(SetChildHintCharacterSet, (void*)aEncoding);
-}
-
-static void AppendChildSubtree(nsDocumentViewer* aChild, void* aClosure) {
-  nsTArray<nsCOMPtr<nsIContentViewer>>& array =
-      *static_cast<nsTArray<nsCOMPtr<nsIContentViewer>>*>(aClosure);
-  aChild->AppendSubtree(array);
+  auto childFn = [aEncoding](nsDocumentViewer* aChild) {
+    aChild->SetHintCharset(aEncoding);
+  };
+  // now set the force char set on all children of mContainer
+  CallChildren(childFn);
 }
 
 NS_IMETHODIMP nsDocumentViewer::AppendSubtree(
     nsTArray<nsCOMPtr<nsIContentViewer>>& aArray) {
   aArray.AppendElement(this);
-  CallChildren(AppendChildSubtree, &aArray);
+  auto childFn = [&aArray](nsDocumentViewer* aChild) {
+    aChild->AppendSubtree(aArray);
+  };
+  CallChildren(childFn);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::PausePainting() {
-  CallChildren([](nsDocumentViewer* aChild, void*) { aChild->PausePainting(); },
-               nullptr);
+  CallChildren([](nsDocumentViewer* aChild) { aChild->PausePainting(); });
 
   if (PresShell* presShell = GetPresShell()) {
     presShell->PausePainting();
@@ -3123,9 +3094,7 @@ nsDocumentViewer::PausePainting() {
 
 NS_IMETHODIMP
 nsDocumentViewer::ResumePainting() {
-  CallChildren(
-      [](nsDocumentViewer* aChild, void*) { aChild->ResumePainting(); },
-      nullptr);
+  CallChildren([](nsDocumentViewer* aChild) { aChild->ResumePainting(); });
 
   if (PresShell* presShell = GetPresShell()) {
     presShell->ResumePainting();

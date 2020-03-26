@@ -183,12 +183,12 @@ class nsPluginFrame final : public nsFrame,
    * There will be a call to EndSwapDocShells after we were moved to the
    * new view tree.
    */
-  static void BeginSwapDocShells(nsISupports* aSupports, void*);
+  static void BeginSwapDocShells(nsISupports* aSupports);
   /**
    * If aSupports has a nsPluginFrame, then set it up after a DocShell swap.
    * @see nsSubDocumentFrame::EndSwapDocShells.
    */
-  static void EndSwapDocShells(nsISupports* aSupports, void*);
+  static void EndSwapDocShells(nsISupports* aSupports);
 
   nsIWidget* GetWidget() override {
     if (!mInnerView) {
