@@ -27,9 +27,9 @@ class nsNativeBasicTheme : private nsNativeTheme, public nsITheme {
                                         mozilla::layers::RenderRootStateManager*
      aManager, nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect&
      aRect) override;*/
-  MOZ_MUST_USE LayoutDeviceIntMargin
-  GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                  StyleAppearance aAppearance) override;
+  [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
+      nsDeviceContext* aContext, nsIFrame* aFrame,
+      StyleAppearance aAppearance) override;
   bool GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* aFrame,
                         StyleAppearance aAppearance,
                         LayoutDeviceIntMargin* aResult) override;

@@ -437,10 +437,10 @@ class nsIWidget : public nsISupports {
    * @param     aInitData     data that is used for widget initialization
    *
    */
-  virtual MOZ_MUST_USE nsresult
-  Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-         const LayoutDeviceIntRect& aRect,
-         nsWidgetInitData* aInitData = nullptr) = 0;
+  [[nodiscard]] virtual nsresult Create(
+      nsIWidget* aParent, nsNativeWidget aNativeParent,
+      const LayoutDeviceIntRect& aRect,
+      nsWidgetInitData* aInitData = nullptr) = 0;
 
   /*
    * As above, but with aRect specified in DesktopPixel units (for top-level
@@ -450,10 +450,10 @@ class nsIWidget : public nsISupports {
    * mapping is not straightforward or the native platform needs to use the
    * desktop pixel values directly.
    */
-  virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
-                                       nsNativeWidget aNativeParent,
-                                       const DesktopIntRect& aRect,
-                                       nsWidgetInitData* aInitData = nullptr) {
+  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent,
+                                        nsNativeWidget aNativeParent,
+                                        const DesktopIntRect& aRect,
+                                        nsWidgetInitData* aInitData = nullptr) {
     LayoutDeviceIntRect devPixRect =
         RoundedToInt(aRect * GetDesktopToDeviceScale());
     return Create(aParent, aNativeParent, devPixRect, aInitData);
@@ -914,8 +914,8 @@ class nsIWidget : public nsISupports {
    * @param aRect   On return it holds the  x, y, width and height of
    *                this widget.
    */
-  virtual MOZ_MUST_USE nsresult
-  GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
+  [[nodiscard]] virtual nsresult GetRestoredBounds(
+      LayoutDeviceIntRect& aRect) = 0;
 
   /**
    * Get this widget's client area bounds, if the window has a 3D border
@@ -1483,7 +1483,7 @@ class nsIWidget : public nsISupports {
    *                    conventions. If set to -1, cycles indefinitely until
    *                    window is brought into the foreground.
    */
-  virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) = 0;
+  [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) = 0;
 
   /**
    * Ask whether there user input events pending.  All input events are
@@ -1518,9 +1518,9 @@ class nsIWidget : public nsISupports {
   /**
    * Begin a window resizing drag, based on the event passed in.
    */
-  virtual MOZ_MUST_USE nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
-                                                int32_t aHorizontal,
-                                                int32_t aVertical) = 0;
+  [[nodiscard]] virtual nsresult BeginResizeDrag(
+      mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
+      int32_t aVertical) = 0;
 
   enum Modifiers {
     CAPS_LOCK = 0x00000001,  // when CapsLock is active
@@ -1824,7 +1824,7 @@ class nsIWidget : public nsISupports {
    * @param aResult - the current text selection. Is empty if no selection.
    * @return nsresult - whether or not aResult was assigned the selected text.
    */
-  virtual MOZ_MUST_USE nsresult GetSelectionAsPlaintext(nsAString& aResult) {
+  [[nodiscard]] virtual nsresult GetSelectionAsPlaintext(nsAString& aResult) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1845,9 +1845,9 @@ class nsIWidget : public nsISupports {
    *                    (should be just under the plugin)
    * aCommitted         The string committed during IME -- otherwise empty
    */
-  virtual MOZ_MUST_USE nsresult
-  StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
-                 int32_t aPanelX, int32_t aPanelY, nsString& aCommitted) = 0;
+  [[nodiscard]] virtual nsresult StartPluginIME(
+      const mozilla::WidgetKeyboardEvent& aKeyboardEvent, int32_t aPanelX,
+      int32_t aPanelY, nsString& aCommitted) = 0;
 
   /**
    * Tells the widget whether or not a plugin (inside the widget) has the
@@ -1906,8 +1906,8 @@ class nsIWidget : public nsISupports {
    * keystrokes that trigger native key bindings (which require a native
    * event).
    */
-  virtual MOZ_MUST_USE nsresult
-  AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
+  [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
+      mozilla::WidgetKeyboardEvent& aEvent) = 0;
 
   /**
    * Retrieve edit commands when the key combination of aEvent is used
@@ -1934,8 +1934,8 @@ class nsIWidget : public nsISupports {
    * Call this method when a dialog is opened which has a default button.
    * The button's rectangle should be supplied in aButtonRect.
    */
-  virtual MOZ_MUST_USE nsresult
-  OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
+  [[nodiscard]] virtual nsresult OnDefaultButtonLoaded(
+      const LayoutDeviceIntRect& aButtonRect) = 0;
 
   /**
    * Return true if this process shouldn't use platform widgets, and
