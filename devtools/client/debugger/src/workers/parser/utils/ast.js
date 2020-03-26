@@ -71,7 +71,7 @@ export function parse(text: ?string, opts?: Object): any {
 // Custom parser for parse-script-tags that adapts its input structure to
 // our parser's signature
 function htmlParser({ source, line }) {
-  return parse(source, { startLine: line });
+  return parse(source, { startLine: line, ...sourceOptions.generated });
 }
 
 const VUE_COMPONENT_START = /^\s*</;

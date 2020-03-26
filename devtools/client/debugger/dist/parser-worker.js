@@ -7113,7 +7113,8 @@ function htmlParser({
   line
 }) {
   return parse(source, {
-    startLine: line
+    startLine: line,
+    ...sourceOptions.generated
   });
 }
 
@@ -15684,7 +15685,9 @@ function extractSymbol(path, symbols, state) {
   }
 
   if (t.isCallExpression(path)) {
-    const callee = path.node.callee;
+    const {
+      callee
+    } = path.node;
     const args = path.node.arguments;
 
     if (t.isMemberExpression(callee)) {
@@ -15753,7 +15756,9 @@ function extractSymbol(path, symbols, state) {
     }
 
     if (path.node.typeAnnotation) {
-      const column = path.node.typeAnnotation.loc.start.column;
+      const {
+        column
+      } = path.node.typeAnnotation.loc.start;
       end = { ...end,
         column
       };
@@ -15908,7 +15913,9 @@ function getObjectSnippet(path, prevPath, expression = "") {
     return expression;
   }
 
-  const name = path.node.key.name;
+  const {
+    name
+  } = path.node.key;
   const extendedExpression = extendSnippet(name, expression, path, prevPath);
   const nextPrevPath = path;
   const nextPath = path.parentPath && path.parentPath.parentPath;
@@ -15934,7 +15941,9 @@ function getSnippet(path, prevPath, expression = "") {
 
   if (t.isVariableDeclaration(path)) {
     const node = path.node.declarations[0];
-    const name = node.id.name;
+    const {
+      name
+    } = node.id;
     return extendSnippet(name, expression, path, prevPath);
   }
 
@@ -17828,7 +17837,9 @@ function getFunctionName(node, parent) {
   }) || t.isClassMethod(node, {
     computed: false
   })) {
-    const key = node.key;
+    const {
+      key
+    } = node;
 
     if (t.isIdentifier(key)) {
       return key.name;
@@ -17852,7 +17863,9 @@ function getFunctionName(node, parent) {
   t.isClassProperty(parent, {
     value: node
   }) && !parent.computed) {
-    const key = parent.key;
+    const {
+      key
+    } = parent;
 
     if (t.isIdentifier(key)) {
       return key.name;
@@ -41663,7 +41676,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // createClass or extend
 function fromCallExpression(callExpression) {
   const whitelist = ["extend", "createClass"];
-  const callee = callExpression.node.callee;
+  const {
+    callee
+  } = callExpression.node;
 
   if (!callee) {
     return null;
@@ -41687,7 +41702,9 @@ function fromCallExpression(callExpression) {
     return null;
   }
 
-  const left = assignment.node.left;
+  const {
+    left
+  } = assignment.node;
 
   if (left.name) {
     return name;
@@ -41703,7 +41720,9 @@ function fromCallExpression(callExpression) {
 
 
 function fromPrototype(assignment) {
-  const left = assignment.node.left;
+  const {
+    left
+  } = assignment.node;
 
   if (!left) {
     return null;
@@ -41992,7 +42011,9 @@ const scopeCollectionVisitor = {
         refs: []
       };
     } else if (t.isFunction(node)) {
-      let scope = state.scope;
+      let {
+        scope
+      } = state;
 
       if (t.isFunctionExpression(node) && isNode(node.id, "Identifier")) {
         scope = pushTempScope(state, "block", "Function Expression", {
@@ -42390,8 +42411,10 @@ function buildMetaBindings(sourceId, node, ancestors, parentIndex = ancestors.le
   const grandparent = ancestors[parentIndex - 1].node; // Consider "0, foo" to be equivalent to "foo".
 
   if (t.isSequenceExpression(parent) && parent.expressions.length === 2 && t.isNumericLiteral(parent.expressions[0]) && parent.expressions[1] === node) {
-    let start = parent.loc.start;
-    let end = parent.loc.end;
+    let {
+      start,
+      end
+    } = parent.loc;
 
     if (t.isCallExpression(grandparent, {
       callee: parent
