@@ -14,13 +14,12 @@
         onload="MigrationWizard.init()"
         onunload="MigrationWizard.uninit()"
         style="width: 40em;"
-        buttons="accept,cancel"
-        branded="true">
+        buttons="accept,cancel">
 
 <script src="chrome://global/content/customElements.js"/>
 <script src="chrome://browser/content/migration/migration.js"/>
 
-<wizard>
+<wizard data-branded="true">
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;">
 #ifdef XP_WIN
