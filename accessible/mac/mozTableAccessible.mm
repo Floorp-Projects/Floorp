@@ -9,6 +9,17 @@
 #import "nsCocoaUtils.h"
 
 @implementation mozTablePartAccessible
+
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  if ([attribute isEqualToString:NSAccessibilityTitleAttribute]) return @"";
+
+  return [super accessibilityAttributeValue:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
 - (BOOL)isLayoutTablePart;
 {
   if (Accessible* accWrap = [self getGeckoAccessible]) {
