@@ -43,8 +43,6 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['experiment-apis'] += [
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug0000000-testbed-css-injection.css',
-  'injections/css/bug1432935-discordapp.com-webkit-scorllbar-white-line.css',
-  'injections/css/bug1518781-twitch.tv-webkit-scrollbar.css',
   'injections/css/bug1526977-sreedharscce.in-login-fix.css',
   'injections/css/bug1561371-mail.google.com-allow-horizontal-scrolling.css',
   'injections/css/bug1567610-dns.google.com-moz-fit-content.css',
@@ -55,7 +53,6 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
   'injections/css/bug1574973-patch.com-dropdown-menu-fix.css',
   'injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css',
   'injections/css/bug1575011-holiday-weather.com-scrolling-fix.css',
-  'injections/css/bug1575017-dunkindonuts.com-flex-basis.css',
   'injections/css/bug1577270-binance.com-calc-height-fix.css',
   'injections/css/bug1577297-kitkat.com.au-slider-width-fix.css',
   'injections/css/bug1605611-maps.google.com-directions-time.css',
@@ -70,17 +67,17 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1457335-histography.io-ua-change.js',
   'injections/js/bug1472075-bankofamerica.com-ua-change.js',
   'injections/js/bug1570856-medium.com-menu-isTier1.js',
-  'injections/js/bug1577245-salesforce-communities-hide-unsupported.js',
   'injections/js/bug1579159-m.tailieu.vn-pdfjs-worker-disable.js',
   'injections/js/bug1605611-maps.google.com-directions-time.js',
   'injections/js/bug1610358-pcloud.com-appVersion-change.js',
+  'injections/js/bug1623375-salesforce-communities-hide-unsupported.js',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
   'lib/about_compat_broker.js',
   'lib/custom_functions.js',
-  'lib/google.js',
   'lib/injections.js',
+  'lib/intervention_helpers.js',
   'lib/module_shim.js',
   'lib/picture_in_picture_overrides.js',
   'lib/ua_overrides.js',
