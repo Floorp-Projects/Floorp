@@ -2,23 +2,9 @@ The files in this directory provide simple line-editing and history
 support for the standalone javascript engine, through the 'editline'
 library.
 
-editline has only been enabled for those platforms on which it is
-known to build; to try it on a different platform, define JS_EDITLINE
-before building.  Line editing (and js.c) is not a supported feature
-of the javascript library, so your mileage my vary.
-
-The editline API is a compatible subset of the FSF readline API; if
-you have readline installed and would like to link to that instead,
-define JS_READLINE.  Note that the readline library is distributed
-under the GPL, so any resulting binaries are not legally
-distributable.
-
 The editline files used here have been modified to work with the js
 build system and to quiet some compiler warnings, and also to remove
 filename-completion support.
-
-If anyone knows of a more recent version of these files, or a site on
-which they are being maintained, please let me know!
 
 Mike McCabe, mccabe@netscape.com
 
