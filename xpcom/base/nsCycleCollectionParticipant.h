@@ -119,7 +119,9 @@ class NS_NO_VTABLE nsCycleCollectionParticipant {
   using Flags = uint8_t;
   static constexpr Flags FlagMightSkip = 1u << 0;
   static constexpr Flags FlagTraverseShouldTrace = 1u << 1;
-  static constexpr Flags AllFlags = FlagMightSkip | FlagTraverseShouldTrace;
+  static constexpr Flags FlagMultiZoneJSHolder = 1u << 2;
+  static constexpr Flags AllFlags =
+      FlagMightSkip | FlagTraverseShouldTrace | FlagMultiZoneJSHolder;
 
   constexpr explicit nsCycleCollectionParticipant(Flags aFlags)
       : mFlags(aFlags) {
@@ -219,6 +221,8 @@ class NS_NO_VTABLE nsCycleCollectionParticipant {
   }
 
   NS_IMETHOD_(void) DeleteCycleCollectable(void* aPtr) = 0;
+
+  bool IsMultiZoneJSHolder() const { return mFlags & FlagMultiZoneJSHolder; }
 
  protected:
   NS_IMETHOD_(bool) CanSkipReal(void* aPtr, bool aRemovingAllowed) {
@@ -881,6 +885,14 @@ T* DowncastCCParticipant(void* aPtr) {
 
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class) \
   _class::NS_CYCLE_COLLECTION_INNERCLASS _class::NS_CYCLE_COLLECTION_INNERNAME;
+
+// Most JS holder classes should only contain pointers to JS GC things in a
+// single JS zone, but there are some exceptions. Such classes should use this
+// macro to tell the system about this.
+#define NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(_class) \
+  _class::NS_CYCLE_COLLECTION_INNERCLASS                           \
+      _class::NS_CYCLE_COLLECTION_INNERNAME(                       \
+          nsCycleCollectionParticipant::FlagMultiZoneJSHolder);
 
 // NB: This is not something you usually want to use.  It is here to allow
 // adding things to the CC graph to help debugging via CC logs, but it does not
