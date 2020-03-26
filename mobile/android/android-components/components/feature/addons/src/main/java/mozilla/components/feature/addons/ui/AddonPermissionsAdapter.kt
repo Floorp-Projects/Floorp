@@ -8,16 +8,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.addons.R
 
 /**
  * An adapter for displaying the permissions of an add-on.
  *
- * @property permissions The list of [Addon] permissions to display.
+ * @property permissions The list of [mozilla.components.feature.addons.Addon] permissions to display.
+ * @property style Indicates how permission items should look like.
  */
 class AddonPermissionsAdapter(
-    private val permissions: List<String>
+    private val permissions: List<String>,
+    private val style: Style? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PermissionViewHolder {
         val context = parent.context
@@ -35,7 +39,10 @@ class AddonPermissionsAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder as PermissionViewHolder
         val permission = permissions[position]
-        holder.textView.text = permission
+        with(holder.textView) {
+            text = permission
+            style?.maybeSetItemTextColor(this)
+        }
     }
 
     /**
@@ -45,4 +52,16 @@ class AddonPermissionsAdapter(
         val view: View,
         val textView: TextView
     ) : RecyclerView.ViewHolder(view)
+
+    /**
+     * Allows to customize how permission items should look like.
+     */
+    data class Style(@ColorRes val itemsTextColor: Int? = null) {
+        internal fun maybeSetItemTextColor(textView: TextView) {
+            itemsTextColor?.let {
+                val color = ContextCompat.getColor(textView.context, it)
+                textView.setTextColor(color)
+            }
+        }
+    }
 }

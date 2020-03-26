@@ -7,6 +7,7 @@ package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -146,19 +147,48 @@ class AddonsManagerAdapterTest {
             translatableDescription = mapOf("en-US" to "description", "de" to "Beschreibung", "es" to "descripción"),
             translatableSummary = mapOf("en-US" to "summary", "de" to "Kurzfassung", "es" to "resumen")
         )
-        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList())
+
+        whenever(titleView.context).thenReturn(testContext)
+        whenever(summaryView.context).thenReturn(testContext)
+
+        val style = AddonsManagerAdapter.Style(
+            sectionsTextColor = android.R.color.black,
+            addonNameTextColor = android.R.color.transparent,
+            addonSummaryTextColor = android.R.color.white
+        )
+        val adapter = AddonsManagerAdapter(mock(), addonsManagerAdapterDelegate, emptyList(), style)
 
         adapter.bindAddon(addonViewHolder, addon)
 
         verify(ratingAccessibleView).setText("4.50/5")
         verify(titleView).setText("name")
+        verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.addonNameTextColor!!))
         verify(summaryView).setText("summary")
+        verify(summaryView).setTextColor(ContextCompat.getColor(testContext, style.addonSummaryTextColor!!))
         assertNotNull(addonViewHolder.itemView.tag)
 
         addonViewHolder.itemView.performClick()
         verify(addonsManagerAdapterDelegate).onAddonItemClicked(addon)
         addButton.performClick()
         verify(addonsManagerAdapterDelegate).onInstallAddonButtonClicked(addon)
+    }
+
+    @Test
+    fun `bind section`() {
+        val titleView: TextView = mock()
+        val addonViewHolder = CustomViewHolder.SectionViewHolder(View(testContext), titleView)
+
+        whenever(titleView.context).thenReturn(testContext)
+
+        val style = AddonsManagerAdapter.Style(
+                sectionsTextColor = android.R.color.black
+        )
+        val adapter = AddonsManagerAdapter(mock(), mock(), emptyList(), style)
+
+        adapter.bindSection(addonViewHolder, Section(R.string.mozac_feature_addons_disabled_section))
+
+        verify(titleView).setText(R.string.mozac_feature_addons_disabled_section)
+        verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.sectionsTextColor!!))
     }
 
     @Test

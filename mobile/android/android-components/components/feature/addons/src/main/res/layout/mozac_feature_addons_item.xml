@@ -53,17 +53,17 @@
             android:id="@+id/add_on_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="6dp"
+            android:layout_marginBottom="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textStyle="bold"
+            android:textSize="16sp"
             tools:text="uBlock Origin" />
 
         <TextView
             android:id="@+id/add_on_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="14sp"
             tools:text="An efficient blocker: easy on memory and CPU footprint, and yet can load and enforce thousands more filters than other popular blockers out there." />
 
         <LinearLayout

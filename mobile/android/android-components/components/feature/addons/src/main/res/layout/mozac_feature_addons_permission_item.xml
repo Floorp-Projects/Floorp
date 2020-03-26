@@ -19,12 +19,13 @@
         android:layout_height="wrap_content"
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
+        android:textSize="16sp"
         android:textColor="?android:attr/textColorPrimary"
         tools:text="Access your data for all websites" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/photonGrey40"
+        android:background="?android:attr/listDivider"
         android:importantForAccessibility="no" />
 </LinearLayout>
