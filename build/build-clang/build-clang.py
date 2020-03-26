@@ -276,6 +276,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             cmake_args += ["-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly"]
         if is_linux():
             cmake_args += ["-DLLVM_BINUTILS_INCDIR=%s/include" % gcc_dir]
+            cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
         if is_windows():
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
