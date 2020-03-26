@@ -184,11 +184,6 @@
   value: false
   mirror: always
 
-- name: accessibility.xpcom.traverse_outerdoc
-  type: bool
-  value: false
-  mirror: always
-
 #ifdef ANDROID
   #---------------------------------------------------------------------------
   # Prefs starting with "android."
