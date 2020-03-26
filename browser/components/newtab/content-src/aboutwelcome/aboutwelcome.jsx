@@ -49,7 +49,7 @@ class AboutWelcome extends React.PureComponent {
   render() {
     const { props } = this;
     return (
-      <div className="welcomeContainer">
+      <div className="outer-wrapper welcomeContainer">
         <div className="welcomeContainerInner">
           <main>
             <HeroText title={props.title} subtitle={props.subtitle} />

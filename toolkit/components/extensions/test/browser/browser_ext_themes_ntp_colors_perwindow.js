@@ -183,7 +183,7 @@ add_task(async function test_per_window_ntp_theme() {
       win.NewTabPagePreloading.removePreloadedBrowser(win);
       // These pages were initially chosen because LightweightThemeChild.jsm
       // treats them specially.
-      for (let url of ["about:newtab", "about:home"]) {
+      for (let url of ["about:newtab", "about:home", "about:welcome"]) {
         info("Opening url: " + url);
         await BrowserTestUtils.withNewTab(
           { gBrowser: win.gBrowser, url },
