@@ -1820,12 +1820,13 @@ void nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable) {
   }
 }
 
-static CallState ReduceAnimations(Document& aDocument, void* aData) {
-  if (aDocument.GetPresContext() &&
-      aDocument.GetPresContext()->EffectCompositor()->NeedsReducing()) {
-    aDocument.GetPresContext()->EffectCompositor()->ReduceAnimations();
+static CallState ReduceAnimations(Document& aDocument) {
+  if (nsPresContext* pc = aDocument.GetPresContext()) {
+    if (pc->EffectCompositor()->NeedsReducing()) {
+      pc->EffectCompositor()->ReduceAnimations();
+    }
   }
-  aDocument.EnumerateSubDocuments(ReduceAnimations, nullptr);
+  aDocument.EnumerateSubDocuments(ReduceAnimations);
   return CallState::Continue;
 }
 
@@ -2005,7 +2006,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
     if (i == 1) {
       nsAutoMicroTask mt;
-      ReduceAnimations(*mPresContext->Document(), nullptr);
+      ReduceAnimations(*mPresContext->Document());
     }
 
     // Check if running the microtask checkpoint caused the pres context to

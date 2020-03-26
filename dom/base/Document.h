@@ -9,7 +9,7 @@
 #include "mozilla/EventStates.h"  // for EventStates
 #include "mozilla/FlushType.h"    // for enum
 #include "mozilla/MozPromise.h"   // for MozPromise
-#include "mozilla/Saturate.h"     // for SaturateUint32
+#include "mozilla/FunctionRef.h"  // for FunctionRef
 #include "nsAutoPtr.h"            // for member
 #include "nsCOMArray.h"           // for member
 #include "nsCompatibility.h"      // for member
@@ -296,7 +296,7 @@ class DocHeaderData {
 };
 
 class ExternalResourceMap {
-  typedef CallState (*SubDocEnumFunc)(Document& aDocument, void* aData);
+  using SubDocEnumFunc = FunctionRef<CallState(Document&)>;
 
  public:
   /**
@@ -339,7 +339,7 @@ class ExternalResourceMap {
    * Enumerate the resource documents.  See
    * Document::EnumerateExternalResources.
    */
-  void EnumerateResources(SubDocEnumFunc aCallback, void* aData);
+  void EnumerateResources(SubDocEnumFunc aCallback);
 
   /**
    * Traverse ourselves for cycle-collection
@@ -2276,8 +2276,8 @@ class Document : public nsINode,
    * enumerating, or CallState::Stop to stop.  This will never get passed a null
    * aDocument.
    */
-  typedef CallState (*SubDocEnumFunc)(Document&, void* aData);
-  void EnumerateSubDocuments(SubDocEnumFunc aCallback, void* aData);
+  using SubDocEnumFunc = FunctionRef<CallState(Document&)>;
+  void EnumerateSubDocuments(SubDocEnumFunc aCallback);
 
   /**
    * Collect all the descendant documents for which |aCalback| returns true.
@@ -2590,7 +2590,7 @@ class Document : public nsINode,
    * enumerating, or CallState::Stop to stop.  This callback will never get
    * passed a null aDocument.
    */
-  void EnumerateExternalResources(SubDocEnumFunc aCallback, void* aData);
+  void EnumerateExternalResources(SubDocEnumFunc aCallback);
 
   dom::ExternalResourceMap& ExternalResourceMap() {
     return mExternalResourceMap;
@@ -2658,9 +2658,8 @@ class Document : public nsINode,
   void RegisterActivityObserver(nsISupports* aSupports);
   bool UnregisterActivityObserver(nsISupports* aSupports);
   // Enumerate all the observers in mActivityObservers by the aEnumerator.
-  typedef void (*ActivityObserverEnumerator)(nsISupports*, void*);
-  void EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
-                                  void* aData);
+  using ActivityObserverEnumerator = FunctionRef<void(nsISupports*)>;
+  void EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator);
 
   // Indicates whether mAnimationController has been (lazily) initialized.
   // If this returns true, we're promising that GetAnimationController()

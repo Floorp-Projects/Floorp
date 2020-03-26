@@ -760,8 +760,7 @@ Document* ExternalResourceMap::RequestResource(
   return nullptr;
 }
 
-void ExternalResourceMap::EnumerateResources(SubDocEnumFunc aCallback,
-                                             void* aData) {
+void ExternalResourceMap::EnumerateResources(SubDocEnumFunc aCallback) {
   nsTArray<RefPtr<Document>> docs(mMap.Count());
   for (const auto& entry : mMap) {
     if (Document* doc = entry.GetData()->mDocument) {
@@ -770,7 +769,7 @@ void ExternalResourceMap::EnumerateResources(SubDocEnumFunc aCallback,
   }
 
   for (auto& doc : docs) {
-    if (aCallback(*doc, aData) == CallState::Stop) {
+    if (aCallback(*doc) == CallState::Stop) {
       return;
     }
   }
@@ -6830,44 +6829,40 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
   }
 }
 
-static void CheckIfContainsEMEContent(nsISupports* aSupports,
-                                      void* aContainsEME) {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
-    bool* contains = static_cast<bool*>(aContainsEME);
-    if (mediaElem->GetMediaKeys()) {
-      *contains = true;
-    }
-  }
-}
-
 bool Document::ContainsEMEContent() {
   bool containsEME = false;
-  EnumerateActivityObservers(CheckIfContainsEMEContent,
-                             static_cast<void*>(&containsEME));
-  return containsEME;
-}
 
-static void CheckIfContainsMSEContent(nsISupports* aSupports,
-                                      void* aContainsMSE) {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
-    bool* contains = static_cast<bool*>(aContainsMSE);
-    RefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
-    if (ms) {
-      *contains = true;
+  auto check = [&containsEME](nsISupports* aSupports) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
+    if (auto* mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
+      if (mediaElem->GetMediaKeys()) {
+        containsEME = true;
+      }
     }
-  }
+  };
+
+  EnumerateActivityObservers(check);
+  return containsEME;
 }
 
 bool Document::ContainsMSEContent() {
   bool containsMSE = false;
-  EnumerateActivityObservers(CheckIfContainsMSEContent,
-                             static_cast<void*>(&containsMSE));
+
+  auto check = [&containsMSE](nsISupports* aSupports) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
+    if (auto* mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
+      RefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
+      if (ms) {
+        containsMSE = true;
+      }
+    }
+  };
+
+  EnumerateActivityObservers(check);
   return containsMSE;
 }
 
-static void NotifyActivityChanged(nsISupports* aSupports, void* aUnused) {
+static void NotifyActivityChanged(nsISupports* aSupports) {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
   if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
     mediaElem->NotifyOwnerDocumentActivityChanged();
@@ -6919,7 +6914,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
   mInChromeDocShell =
       aContainer && aContainer->GetBrowsingContext()->IsChrome();
 
-  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged);
 
   // IsTopLevelWindowInactive depends on the docshell, so
   // update the cached value now that it's available.
@@ -7064,7 +7059,7 @@ void Document::SetScriptGlobalObject(
   // call, the document becomes not hidden. At the time, MediaDecoder needs
   // to know it and needs to start updating decoding.
   if (oldState != mVisibilityState) {
-    EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+    EnumerateActivityObservers(NotifyActivityChanged);
   }
 
   // The global in the template contents owner document should be the same.
@@ -8629,9 +8624,8 @@ Document* Document::RequestExternalResource(
       aURI, aReferrerInfo, aRequestingNode, this, aPendingLoad);
 }
 
-void Document::EnumerateExternalResources(SubDocEnumFunc aCallback,
-                                          void* aData) {
-  mExternalResourceMap.EnumerateResources(aCallback, aData);
+void Document::EnumerateExternalResources(SubDocEnumFunc aCallback) {
+  mExternalResourceMap.EnumerateResources(aCallback);
 }
 
 SMILAnimationController* Document::GetAnimationController() {
@@ -10096,12 +10090,12 @@ void Document::FlushExternalResources(FlushType aType) {
     return;
   }
 
-  EnumerateExternalResources(
-      [](Document& aDoc, void* aData) -> CallState {
-        aDoc.FlushPendingNotifications(*static_cast<FlushType*>(aData));
-        return CallState::Continue;
-      },
-      &aType);
+  auto flush = [aType](Document& aDoc) {
+    aDoc.FlushPendingNotifications(aType);
+    return CallState::Continue;
+  };
+
+  EnumerateExternalResources(flush);
 }
 
 void Document::SetXMLDeclaration(const char16_t* aVersion,
@@ -10326,7 +10320,7 @@ void Document::Sanitize() {
   }
 }
 
-void Document::EnumerateSubDocuments(SubDocEnumFunc aCallback, void* aData) {
+void Document::EnumerateSubDocuments(SubDocEnumFunc aCallback) {
   if (!mSubDocuments) {
     return;
   }
@@ -10341,7 +10335,7 @@ void Document::EnumerateSubDocuments(SubDocEnumFunc aCallback, void* aData) {
     }
   }
   for (auto& subdoc : subdocs) {
-    if (aCallback(*subdoc, aData) == CallState::Stop) {
+    if (aCallback(*subdoc) == CallState::Stop) {
       break;
     }
   }
@@ -10597,7 +10591,7 @@ void Document::RemovedFromDocShell() {
   if (mRemovedFromDocShell) return;
 
   mRemovedFromDocShell = true;
-  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged);
 
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
@@ -10823,12 +10817,6 @@ void Document::DispatchPageTransition(EventTarget* aDispatchTarget,
                                     nullptr);
 }
 
-static CallState NotifyPageShow(Document& aDocument, void* aData) {
-  const bool* aPersistedPtr = static_cast<const bool*>(aData);
-  aDocument.OnPageShow(*aPersistedPtr, nullptr);
-  return CallState::Continue;
-}
-
 void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
                           bool aOnlySystemGroup) {
   const bool inFrameLoaderSwap = !!aDispatchStartTarget;
@@ -10862,8 +10850,13 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
     UpdateVisibilityState();
   }
 
-  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
-  EnumerateExternalResources(NotifyPageShow, &aPersisted);
+  EnumerateActivityObservers(NotifyActivityChanged);
+
+  auto notifyExternal = [aPersisted](Document& aExternalResource) {
+    aExternalResource.OnPageShow(aPersisted, nullptr);
+    return CallState::Continue;
+  };
+  EnumerateExternalResources(notifyExternal);
 
   if (mAnimationController) {
     mAnimationController->OnPageShow();
@@ -10887,12 +10880,6 @@ void Document::OnPageShow(bool aPersisted, EventTarget* aDispatchStartTarget,
     DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"),
                            inFrameLoaderSwap, aPersisted, aOnlySystemGroup);
   }
-}
-
-static CallState NotifyPageHide(Document& aDocument, void* aData) {
-  const bool* aPersistedPtr = static_cast<const bool*>(aData);
-  aDocument.OnPageHide(*aPersistedPtr, nullptr);
-  return CallState::Continue;
 }
 
 static void DispatchFullscreenChange(Document& aDocument, nsINode* aTarget) {
@@ -10973,8 +10960,12 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     UpdateVisibilityState();
   }
 
-  EnumerateExternalResources(NotifyPageHide, &aPersisted);
-  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+  auto notifyExternal = [aPersisted](Document& aExternalResource) {
+    aExternalResource.OnPageHide(aPersisted, nullptr);
+    return CallState::Continue;
+  };
+  EnumerateExternalResources(notifyExternal);
+  EnumerateActivityObservers(NotifyActivityChanged);
 
   ClearPendingFullscreenRequests(this);
   if (FullscreenStackTop()) {
@@ -11305,12 +11296,6 @@ void Document::GetReadyState(nsAString& aReadyState) const {
   }
 }
 
-static CallState SuppressEventHandlingInDocument(Document& aDocument,
-                                                 void* aData) {
-  aDocument.SuppressEventHandling(*static_cast<uint32_t*>(aData));
-  return CallState::Continue;
-}
-
 void Document::SuppressEventHandling(uint32_t aIncrease) {
   mEventsSuppressed += aIncrease;
   UpdateFrameRequestCallbackSchedulingState();
@@ -11318,7 +11303,12 @@ void Document::SuppressEventHandling(uint32_t aIncrease) {
     ScriptLoader()->AddExecuteBlocker();
   }
 
-  EnumerateSubDocuments(SuppressEventHandlingInDocument, &aIncrease);
+  auto suppressInSubDoc = [aIncrease](Document& aSubDoc) {
+    aSubDoc.SuppressEventHandling(aIncrease);
+    return CallState::Continue;
+  };
+
+  EnumerateSubDocuments(suppressInSubDoc);
 }
 
 static void FireOrClearDelayedEvents(nsTArray<nsCOMPtr<Document>>& aDocuments,
@@ -11628,23 +11618,22 @@ class nsDelayedEventDispatcher : public Runnable {
   nsTArray<nsCOMPtr<Document>> mDocuments;
 };
 
-static CallState GetAndUnsuppressSubDocuments(Document& aDocument,
-                                              void* aData) {
+static void GetAndUnsuppressSubDocuments(Document& aDocument, nsTArray<nsCOMPtr<Document>>& aDocuments) {
   if (aDocument.EventHandlingSuppressed() > 0) {
     aDocument.DecreaseEventSuppression();
     aDocument.ScriptLoader()->RemoveExecuteBlocker();
   }
-
-  auto* docs = static_cast<nsTArray<nsCOMPtr<Document>>*>(aData);
-
-  docs->AppendElement(&aDocument);
-  aDocument.EnumerateSubDocuments(GetAndUnsuppressSubDocuments, aData);
-  return CallState::Continue;
+  aDocuments.AppendElement(&aDocument);
+  auto recurse = [&aDocuments](Document& aSubDoc) {
+    GetAndUnsuppressSubDocuments(aSubDoc, aDocuments);
+    return CallState::Continue;
+  };
+  aDocument.EnumerateSubDocuments(recurse);
 }
 
 void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
   nsTArray<nsCOMPtr<Document>> documents;
-  GetAndUnsuppressSubDocuments(*this, &documents);
+  GetAndUnsuppressSubDocuments(*this, documents);
 
   if (aFireEvents) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -11705,13 +11694,11 @@ void Document::FireOrClearPostMessageEvents(bool aFireEvents) {
 
 void Document::SetSuppressedEventListener(EventListener* aListener) {
   mSuppressedEventListener = aListener;
-  EnumerateSubDocuments(
-      [](Document& aDocument, void* aData) {
-        aDocument.SetSuppressedEventListener(
-            static_cast<EventListener*>(aData));
-        return CallState::Continue;
-      },
-      aListener);
+  auto setOnSubDocs = [&](Document& aDocument) {
+    aDocument.SetSuppressedEventListener(aListener);
+    return CallState::Continue;
+  };
+  EnumerateSubDocuments(setOnSubDocs);
 }
 
 nsISupports* Document::GetCurrentContentSink() {
@@ -11970,7 +11957,7 @@ bool Document::UnregisterActivityObserver(nsISupports* aSupports) {
 }
 
 void Document::EnumerateActivityObservers(
-    ActivityObserverEnumerator aEnumerator, void* aData) {
+    ActivityObserverEnumerator aEnumerator) {
   if (!mActivityObservers) {
     return;
   }
@@ -11981,7 +11968,7 @@ void Document::EnumerateActivityObservers(
   }
 
   for (auto& observer : observers) {
-    aEnumerator(observer.get(), aData);
+    aEnumerator(observer.get());
   }
 }
 
@@ -12262,20 +12249,16 @@ mozilla::dom::ImageTracker* Document::ImageTracker() {
   return mImageTracker;
 }
 
-static CallState AllSubDocumentPluginEnum(Document& aDocument, void* userArg) {
-  nsTArray<nsIObjectLoadingContent*>* plugins =
-      reinterpret_cast<nsTArray<nsIObjectLoadingContent*>*>(userArg);
-  MOZ_ASSERT(plugins);
-  aDocument.GetPlugins(*plugins);
-  return CallState::Continue;
-}
-
 void Document::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) {
   aPlugins.SetCapacity(aPlugins.Length() + mPlugins.Count());
   for (auto iter = mPlugins.ConstIter(); !iter.Done(); iter.Next()) {
     aPlugins.AppendElement(iter.Get()->GetKey());
   }
-  EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
+  auto recurse = [&aPlugins] (Document& aSubDoc) {
+    aSubDoc.GetPlugins(aPlugins);
+    return CallState::Continue;
+  };
+  EnumerateSubDocuments(recurse);
 }
 
 void Document::ScheduleSVGUseElementShadowTreeUpdate(
@@ -13063,17 +13046,16 @@ void Document::AsyncExitFullscreen(Document* aDoc) {
   }
 }
 
-static CallState CountFullscreenSubDocuments(Document& aDoc, void* aData) {
-  if (aDoc.FullscreenStackTop()) {
-    uint32_t* count = static_cast<uint32_t*>(aData);
-    (*count)++;
-  }
-  return CallState::Continue;
-}
-
 static uint32_t CountFullscreenSubDocuments(Document& aDoc) {
   uint32_t count = 0;
-  aDoc.EnumerateSubDocuments(CountFullscreenSubDocuments, &count);
+  // FIXME(emilio): Should this be recursive and dig into our nested subdocs?
+  auto subDoc = [&count](Document& aSubDoc) {
+    if (aSubDoc.FullscreenStackTop()) {
+      count++;
+    }
+    return CallState::Continue;
+  };
+  aDoc.EnumerateSubDocuments(subDoc);
   return count;
 }
 
@@ -13086,49 +13068,40 @@ bool Document::IsFullscreenLeaf() {
   return CountFullscreenSubDocuments(*this) == 0;
 }
 
-static bool GetFullscreenLeaf(Document& aDoc, void* aData) {
+static Document* GetFullscreenLeaf(Document& aDoc) {
   if (aDoc.IsFullscreenLeaf()) {
-    Document** result = static_cast<Document**>(aData);
-    *result = &aDoc;
-    return false;
+    return &aDoc;
   }
-  if (aDoc.FullscreenStackTop()) {
-    aDoc.EnumerateSubDocuments(
-        [](Document& aDocument, void* aData) {
-          return GetFullscreenLeaf(aDocument, aData) ? CallState::Continue
-                                                     : CallState::Stop;
-        },
-        aData);
+  if (!aDoc.FullscreenStackTop()) {
+    return nullptr;
   }
-  return true;
+  Document* leaf = nullptr;
+  auto recurse = [&leaf](Document& aSubDoc) {
+    leaf = GetFullscreenLeaf(aSubDoc);
+    return leaf ? CallState::Stop : CallState::Continue;
+  };
+  aDoc.EnumerateSubDocuments(recurse);
+  return leaf;
 }
 
 static Document* GetFullscreenLeaf(Document* aDoc) {
-  Document* leaf = nullptr;
-  GetFullscreenLeaf(*aDoc, &leaf);
-  if (leaf) {
+  if (Document* leaf = GetFullscreenLeaf(*aDoc)) {
     return leaf;
   }
   // Otherwise we could be either in a non-fullscreen doc tree, or we're
   // below the fullscreen doc. Start the search from the root.
   Document* root = nsContentUtils::GetRootDocument(aDoc);
-  // Check that the root is actually fullscreen so we don't waste time walking
-  // around its descendants.
-  if (!root->FullscreenStackTop()) {
-    return nullptr;
-  }
-  GetFullscreenLeaf(*root, &leaf);
-  return leaf;
+  return GetFullscreenLeaf(*root);
 }
 
-static CallState ResetFullscreen(Document& aDocument, void* aData) {
+static CallState ResetFullscreen(Document& aDocument) {
   if (Element* fsElement = aDocument.FullscreenStackTop()) {
     NS_ASSERTION(CountFullscreenSubDocuments(aDocument) <= 1,
                  "Should have at most 1 fullscreen subdocument.");
     aDocument.CleanupFullscreenState();
     NS_ASSERTION(!aDocument.FullscreenStackTop(), "Should reset fullscreen");
     DispatchFullscreenChange(aDocument, fsElement);
-    aDocument.EnumerateSubDocuments(ResetFullscreen, nullptr);
+    aDocument.EnumerateSubDocuments(ResetFullscreen);
   }
   return CallState::Continue;
 }
@@ -13198,7 +13171,7 @@ void Document::ExitFullscreenInDocTree(Document* aMaybeNotARootDoc) {
   Document* fullscreenLeaf = GetFullscreenLeaf(root);
 
   // Walk the tree of fullscreen documents, and reset their fullscreen state.
-  ResetFullscreen(*root, nullptr);
+  ResetFullscreen(*root);
 
   NS_ASSERTION(!root->FullscreenStackTop(),
                "Fullscreen root should no longer be a fullscreen doc...");
@@ -14123,7 +14096,7 @@ void Document::UpdateVisibilityState() {
     nsContentUtils::DispatchTrustedEvent(this, ToSupports(this),
                                          NS_LITERAL_STRING("visibilitychange"),
                                          CanBubble::eYes, Cancelable::eNo);
-    EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+    EnumerateActivityObservers(NotifyActivityChanged);
   }
 
   if (mVisibilityState == dom::VisibilityState::Visible) {
@@ -14595,12 +14568,10 @@ void Document::ReportUseCounters() {
     if (Document* doc = GetLatestStaticClone()) {
       doc->ReportUseCounters();
     }
-    EnumerateExternalResources(
-        [](Document& aDoc, void*) -> CallState {
-          aDoc.ReportUseCounters();
-          return CallState::Continue;
-        },
-        nullptr);
+    EnumerateExternalResources([](Document& aDoc) {
+      aDoc.ReportUseCounters();
+      return CallState::Continue;
+    });
   }
 
   PropagateUseCountersToPage();
@@ -14770,15 +14741,12 @@ DOMIntersectionObserver& Document::EnsureLazyLoadImageObserver() {
   return *mLazyLoadImageObserver;
 }
 
-static CallState NotifyLayerManagerRecreatedCallback(Document& aDocument,
-                                                     void*) {
-  aDocument.NotifyLayerManagerRecreated();
-  return CallState::Continue;
-}
-
 void Document::NotifyLayerManagerRecreated() {
-  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
-  EnumerateSubDocuments(NotifyLayerManagerRecreatedCallback, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged);
+  EnumerateSubDocuments([] (Document& aSubDoc) {
+    aSubDoc.NotifyLayerManagerRecreated();
+    return CallState::Continue;
+  });
 }
 
 XPathEvaluator* Document::XPathEvaluator() {
@@ -14863,15 +14831,17 @@ already_AddRefed<Element> Document::CreateHTMLElement(nsAtom* aTag) {
   return element.forget();
 }
 
-static CallState MarkDocumentTreeToBeInSyncOperation(Document& aDoc,
-                                                     void* aData) {
-  auto* documents = static_cast<nsTArray<nsCOMPtr<Document>>*>(aData);
+static CallState MarkDocumentTreeToBeInSyncOperation(
+    Document& aDoc, nsTArray<RefPtr<Document>>& aDocuments) {
   aDoc.SetIsInSyncOperation(true);
   if (nsCOMPtr<nsPIDOMWindowInner> window = aDoc.GetInnerWindow()) {
     window->TimeoutManager().BeginSyncOperation();
   }
-  documents->AppendElement(&aDoc);
-  aDoc.EnumerateSubDocuments(MarkDocumentTreeToBeInSyncOperation, aData);
+  aDocuments.AppendElement(&aDoc);
+  auto recurse = [&aDocuments](Document& aSubDoc) {
+    return MarkDocumentTreeToBeInSyncOperation(aSubDoc, aDocuments);
+  };
+  aDoc.EnumerateSubDocuments(recurse);
   return CallState::Continue;
 }
 
@@ -14886,7 +14856,7 @@ nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc) {
     if (nsPIDOMWindowOuter* win = aDoc->GetWindow()) {
       if (nsCOMPtr<nsPIDOMWindowOuter> top = win->GetInProcessTop()) {
         if (RefPtr<Document> doc = top->GetExtantDoc()) {
-          MarkDocumentTreeToBeInSyncOperation(*doc, &mDocuments);
+          MarkDocumentTreeToBeInSyncOperation(*doc, mDocuments);
         }
       }
     }

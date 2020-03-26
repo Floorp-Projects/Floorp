@@ -6408,7 +6408,7 @@ nsIFrame* PresShell::EventHandler::GetNearestFrameContainingPresShell(
   return frame;
 }
 
-static CallState FlushThrottledStyles(Document& aDocument, void* aData) {
+static CallState FlushThrottledStyles(Document& aDocument) {
   PresShell* presShell = aDocument.GetPresShell();
   if (presShell && presShell->IsVisible()) {
     if (nsPresContext* presContext = presShell->GetPresContext()) {
@@ -6416,7 +6416,7 @@ static CallState FlushThrottledStyles(Document& aDocument, void* aData) {
     }
   }
 
-  aDocument.EnumerateSubDocuments(FlushThrottledStyles, nullptr);
+  aDocument.EnumerateSubDocuments(FlushThrottledStyles);
   return CallState::Continue;
 }
 
@@ -7336,7 +7336,7 @@ nsIFrame* PresShell::EventHandler::MaybeFlushThrottledStyles(
   AutoWeakFrame weakFrameForPresShell(aFrameForPresShell);
   {  // scope for scriptBlocker.
     nsAutoScriptBlocker scriptBlocker;
-    FlushThrottledStyles(*rootDocument, nullptr);
+    FlushThrottledStyles(*rootDocument);
   }
 
   if (weakFrameForPresShell.IsAlive()) {
@@ -8959,14 +8959,13 @@ nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
   return NS_OK;
 }
 
-static void FreezeElement(nsISupports* aSupports, void* /* unused */) {
-  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aSupports));
-  if (olc) {
+static void FreezeElement(nsISupports* aSupports) {
+  if (nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aSupports)) {
     olc->StopPluginInstance();
   }
 }
 
-static CallState FreezeSubDocument(Document& aDocument, void*) {
+static CallState FreezeSubDocument(Document& aDocument) {
   if (PresShell* presShell = aDocument.GetPresShell()) {
     presShell->Freeze();
   }
@@ -8978,7 +8977,7 @@ void PresShell::Freeze() {
 
   MaybeReleaseCapturingContent();
 
-  mDocument->EnumerateActivityObservers(FreezeElement, nullptr);
+  mDocument->EnumerateActivityObservers(FreezeElement);
 
   if (mCaret) {
     SetCaretEnabled(false);
@@ -8987,7 +8986,7 @@ void PresShell::Freeze() {
   mPaintingSuppressed = true;
 
   if (mDocument) {
-    mDocument->EnumerateSubDocuments(FreezeSubDocument, nullptr);
+    mDocument->EnumerateSubDocuments(FreezeSubDocument);
   }
 
   nsPresContext* presContext = GetPresContext();
@@ -9029,20 +9028,6 @@ void PresShell::FireOrClearDelayedEvents(bool aFireEvents) {
   }
 }
 
-static void ThawElement(nsISupports* aSupports, void* aShell) {
-  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(aSupports));
-  if (olc) {
-    olc->AsyncStartPluginInstance();
-  }
-}
-
-static CallState ThawSubDocument(Document& aDocument, void* aData) {
-  if (PresShell* presShell = aDocument.GetPresShell()) {
-    presShell->Thaw();
-  }
-  return CallState::Continue;
-}
-
 void PresShell::Thaw() {
   nsPresContext* presContext = GetPresContext();
   if (presContext &&
@@ -9050,10 +9035,19 @@ void PresShell::Thaw() {
     presContext->RefreshDriver()->Thaw();
   }
 
-  mDocument->EnumerateActivityObservers(ThawElement, this);
+  mDocument->EnumerateActivityObservers([](nsISupports* aSupports) {
+    if (nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aSupports)) {
+      olc->AsyncStartPluginInstance();
+    }
+  });
 
   if (mDocument) {
-    mDocument->EnumerateSubDocuments(ThawSubDocument, nullptr);
+    mDocument->EnumerateSubDocuments([](Document& aSubDoc) {
+      if (PresShell* presShell = aSubDoc.GetPresShell()) {
+        presShell->Thaw();
+      }
+      return CallState::Continue;
+    });
   }
 
   // Get the activeness of our presshell, as this might have changed
@@ -10528,25 +10522,14 @@ void PresShell::QueryIsActive() {
   }
 }
 
-// Helper for propagating mIsActive changes to external resources
-static CallState SetExternalResourceIsActive(Document& aDocument,
-                                             void* aClosure) {
-  if (PresShell* presShell = aDocument.GetPresShell()) {
-    presShell->SetIsActive(*static_cast<bool*>(aClosure));
-  }
-  return CallState::Continue;
-}
-
-static void SetPluginIsActive(nsISupports* aSupports, void* aClosure) {
+static void SetPluginIsActive(nsISupports* aSupports, bool aIsActive) {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
   if (!content) {
     return;
   }
 
-  nsIFrame* frame = content->GetPrimaryFrame();
-  nsIObjectFrame* objectFrame = do_QueryFrame(frame);
-  if (objectFrame) {
-    objectFrame->SetIsDocumentActive(*static_cast<bool*>(aClosure));
+  if (nsIObjectFrame* objectFrame = do_QueryFrame(content->GetPrimaryFrame())) {
+    objectFrame->SetIsDocumentActive(aIsActive);
   }
 }
 
@@ -10565,10 +10548,22 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
     presContext->RefreshDriver()->SetThrottled(!mIsActive);
   }
 
-  // Propagate state-change to my resource documents' PresShells
-  mDocument->EnumerateExternalResources(SetExternalResourceIsActive,
-                                        &aIsActive);
-  mDocument->EnumerateActivityObservers(SetPluginIsActive, &aIsActive);
+  {
+    // Propagate state-change to my resource documents' PresShells
+    auto recurse = [aIsActive](Document& aResourceDoc) {
+      if (PresShell* presShell = aResourceDoc.GetPresShell()) {
+        presShell->SetIsActive(aIsActive);
+      }
+      return CallState::Continue;
+    };
+    mDocument->EnumerateExternalResources(recurse);
+  }
+  {
+    auto visitPlugin = [aIsActive](nsISupports* aSupports) {
+      SetPluginIsActive(aSupports, aIsActive);
+    };
+    mDocument->EnumerateActivityObservers(visitPlugin);
+  }
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY
   if (aIsActive) {
@@ -11304,18 +11299,16 @@ PresShell::EventHandler::HandlingTimeAccumulator::~HandlingTimeAccumulator() {
   }
 }
 
-static CallState EndPaintHelper(Document& aDocument, void* aData) {
-  if (PresShell* presShell = aDocument.GetPresShell()) {
-    presShell->EndPaint();
-  }
-  return CallState::Continue;
-}
-
 void PresShell::EndPaint() {
   ClearPendingVisualScrollUpdate();
 
   if (mDocument) {
-    mDocument->EnumerateSubDocuments(EndPaintHelper, nullptr);
+    mDocument->EnumerateSubDocuments([](Document& aSubDoc) {
+      if (PresShell* presShell = aSubDoc.GetPresShell()) {
+        presShell->EndPaint();
+      }
+      return CallState::Continue;
+    });
   }
 }
 
