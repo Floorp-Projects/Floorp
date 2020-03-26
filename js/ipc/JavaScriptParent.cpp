@@ -73,7 +73,6 @@ bool JavaScriptParent::allowMessage(JSContext* cx) {
 
     if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs &&
         ForbidUnsafeBrowserCPOWs()) {
-      Telemetry::Accumulate(Telemetry::BROWSER_SHIM_USAGE_BLOCKED, 1);
       JS_ReportErrorASCII(cx, "unsafe CPOW usage forbidden");
       return false;
     }
