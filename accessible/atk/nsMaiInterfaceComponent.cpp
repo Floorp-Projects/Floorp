@@ -12,7 +12,9 @@
 #include "nsCoreUtils.h"
 #include "nsMai.h"
 #include "mozilla/Likely.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "mozilla/dom/BrowserParent.h"
 
 using namespace mozilla::a11y;
 
@@ -86,45 +88,51 @@ static gboolean scrollToPointCB(AtkComponent* aComponent, AtkCoordType coords,
 
 AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
                                       AtkCoordType aCoordType) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) {
-    if (accWrap->IsDefunct() || nsAccUtils::MustPrune(accWrap)) {
+  AccessibleOrProxy acc = GetInternalObj(aAtkObj);
+  if (acc.IsNull()) {
+    // This might be an ATK Socket.
+    acc = GetAccessibleWrap(aAtkObj);
+    if (acc.IsNull()) {
       return nullptr;
     }
-
-    // Accessible::ChildAtPoint(x,y) is in screen pixels.
-    if (aCoordType == ATK_XY_WINDOW) {
-      nsIntPoint winCoords =
-          nsCoreUtils::GetScreenCoordsForWindow(accWrap->GetNode());
-      aX += winCoords.x;
-      aY += winCoords.y;
-    }
-
-    Accessible* accAtPoint =
-        accWrap->ChildAtPoint(aX, aY, Accessible::eDirectChild);
-    if (!accAtPoint) {
-      return nullptr;
-    }
-
-    AtkObject* atkObj = AccessibleWrap::GetAtkObject(accAtPoint);
-    if (atkObj) {
-      g_object_ref(atkObj);
-    }
-
-    return atkObj;
+  }
+  if (acc.IsAccessible() && acc.AsAccessible()->IsDefunct()) {
+    return nullptr;
   }
 
-  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
-    ProxyAccessible* result =
-        proxy->AccessibleAtPoint(aX, aY, aCoordType == ATK_XY_WINDOW);
-    AtkObject* atkObj = result ? GetWrapperFor(result) : nullptr;
-    if (atkObj) {
-      g_object_ref(atkObj);
+  // AccessibleOrProxy::ChildAtPoint(x,y) is in screen pixels.
+  if (aCoordType == ATK_XY_WINDOW) {
+    nsINode* node = nullptr;
+    if (acc.IsAccessible()) {
+      node = acc.AsAccessible()->GetNode();
+    } else {
+      // Use the XUL browser embedding this remote document.
+      auto browser = static_cast<mozilla::dom::BrowserParent*>(
+          acc.AsProxy()->Document()->Manager());
+      node = browser->GetOwnerElement();
     }
-    return atkObj;
+    MOZ_ASSERT(node);
+    nsIntPoint winCoords = nsCoreUtils::GetScreenCoordsForWindow(node);
+    aX += winCoords.x;
+    aY += winCoords.y;
   }
 
-  return nullptr;
+  AccessibleOrProxy accAtPoint =
+      acc.ChildAtPoint(aX, aY, Accessible::eDeepestChild);
+  if (accAtPoint.IsNull()) {
+    return nullptr;
+  }
+  roles::Role role = accAtPoint.Role();
+  if (role == roles::TEXT_LEAF || role == roles::STATICTEXT) {
+    // We don't include text leaf nodes in the ATK tree, so return the parent.
+    accAtPoint = accAtPoint.Parent();
+    MOZ_ASSERT(!accAtPoint.IsNull(), "Text leaf should always have a parent");
+  }
+  AtkObject* atkObj = GetWrapperFor(accAtPoint);
+  if (atkObj) {
+    g_object_ref(atkObj);
+  }
+  return atkObj;
 }
 
 void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
