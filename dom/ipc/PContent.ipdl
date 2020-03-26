@@ -1185,15 +1185,6 @@ parent:
         returns (ContentDeviceData aData);
 
     /**
-     * Request a buffer containing the contents of the output color profile.
-     * If set, this is the file pointed to by
-     * gfx.color_management.display_profile, otherwise it contains a
-     * platform-specific default
-     */
-    sync GetOutputColorProfileData()
-        returns (uint8_t[] aOutputColorProfileData);
-
-    /**
      * A shared font list (see gfx/thebes/SharedFontList.*) contains a list
      * of shared-memory blocks that are used to store all the font list data.
      * The font list created in the parent process is the only one that can

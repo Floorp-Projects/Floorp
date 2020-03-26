@@ -4988,13 +4988,6 @@ mozilla::ipc::IPCResult ContentParent::RecvGetGraphicsDeviceInitData(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvGetOutputColorProfileData(
-    nsTArray<uint8_t>* aOutputColorProfileData) {
-  (*aOutputColorProfileData) =
-      gfxPlatform::GetPlatform()->GetCMSOutputProfileData();
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvGetFontListShmBlock(
     const uint32_t& aGeneration, const uint32_t& aIndex,
     mozilla::ipc::SharedMemoryBasic::Handle* aOut) {
