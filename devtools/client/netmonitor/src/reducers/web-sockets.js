@@ -120,6 +120,8 @@ function clearFrames(state) {
     frames: nextState.frames,
     // Preserving the currentChannelId as there would not be another reset of channelId
     currentChannelId: nextState.currentChannelId,
+    // Preserving the columns as they are set from pref
+    columns: nextState.columns,
     frameFilterType: nextState.frameFilterType,
     frameFilterText: nextState.frameFilterText,
   };
