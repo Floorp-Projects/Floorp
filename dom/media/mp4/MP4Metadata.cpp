@@ -90,21 +90,23 @@ static intptr_t read_source(uint8_t* buffer, uintptr_t size, void* userdata) {
 MP4Metadata::MP4Metadata(ByteStream* aSource)
     : mSource(aSource), mSourceAdaptor(aSource) {
   DDLINKCHILD("source", aSource);
-
-  Mp4parseIo io = {read_source, &mSourceAdaptor};
-  mParser.reset(mp4parse_new(&io));
-  MOZ_ASSERT(mParser);
 }
 
 MP4Metadata::~MP4Metadata() = default;
 
 nsresult MP4Metadata::Parse() {
-  Mp4parseStatus rv = mp4parse_read(mParser.get());
-  if (rv != MP4PARSE_STATUS_OK) {
+  Mp4parseIo io = {read_source, &mSourceAdaptor};
+  Mp4parseParser* parser = nullptr;
+  Mp4parseStatus status = mp4parse_new(&io, &parser);
+  if (status == MP4PARSE_STATUS_OK && parser) {
+    mParser.reset(parser);
+    MOZ_ASSERT(mParser);
+  } else {
+    MOZ_ASSERT(!mParser);
     MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,
-            ("Parse failed, return code %d\n", rv));
-    return rv == MP4PARSE_STATUS_OOM ? NS_ERROR_OUT_OF_MEMORY
-                                     : NS_ERROR_DOM_MEDIA_METADATA_ERR;
+            ("Parse failed, return code %d\n", status));
+    return status == MP4PARSE_STATUS_OOM ? NS_ERROR_OUT_OF_MEMORY
+                                         : NS_ERROR_DOM_MEDIA_METADATA_ERR;
   }
 
   UpdateCrypto();

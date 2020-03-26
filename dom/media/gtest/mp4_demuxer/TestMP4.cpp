@@ -55,55 +55,52 @@ TEST(rust, MP4MetadataEmpty)
 {
   Mp4parseStatus rv;
   Mp4parseIo io;
+  Mp4parseParser* parser = nullptr;
 
   // Shouldn't be able to read with no context.
-  rv = mp4parse_read(nullptr);
+  rv = mp4parse_new(nullptr, nullptr);
   EXPECT_EQ(rv, MP4PARSE_STATUS_BAD_ARG);
 
   // Shouldn't be able to wrap an Mp4parseIo with null members.
   io = {nullptr, nullptr};
-  Mp4parseParser* context = mp4parse_new(&io);
-  EXPECT_EQ(context, nullptr);
+  rv = mp4parse_new(&io, &parser);
+  EXPECT_EQ(rv, MP4PARSE_STATUS_BAD_ARG);
+  EXPECT_EQ(parser, nullptr);
 
   io = {nullptr, &io};
-  context = mp4parse_new(&io);
-  EXPECT_EQ(context, nullptr);
+  rv = mp4parse_new(&io, &parser);
+  EXPECT_EQ(rv, MP4PARSE_STATUS_BAD_ARG);
+  EXPECT_EQ(parser, nullptr);
 
   // FIXME: this should probably be accepted.
   io = {error_reader, nullptr};
-  context = mp4parse_new(&io);
-  EXPECT_EQ(context, nullptr);
+  rv = mp4parse_new(&io, &parser);
+  EXPECT_EQ(rv, MP4PARSE_STATUS_BAD_ARG);
+  EXPECT_EQ(parser, nullptr);
 
   // Read method errors should propagate.
   io = {error_reader, &io};
-  context = mp4parse_new(&io);
-  ASSERT_NE(context, nullptr);
-  rv = mp4parse_read(context);
+  rv = mp4parse_new(&io, &parser);
+  ASSERT_EQ(parser, nullptr);
   EXPECT_EQ(rv, MP4PARSE_STATUS_IO);
-  mp4parse_free(context);
 
   // Short buffers should fail.
   read_vector buf(0);
   io = {vector_reader, &buf};
-  context = mp4parse_new(&io);
-  ASSERT_NE(context, nullptr);
-  rv = mp4parse_read(context);
+  rv = mp4parse_new(&io, &parser);
+  ASSERT_EQ(parser, nullptr);
   EXPECT_EQ(rv, MP4PARSE_STATUS_INVALID);
-  mp4parse_free(context);
 
   buf.buffer.reserve(4097);
-  context = mp4parse_new(&io);
-  ASSERT_NE(context, nullptr);
-  rv = mp4parse_read(context);
+  rv = mp4parse_new(&io, &parser);
+  ASSERT_EQ(parser, nullptr);
   EXPECT_EQ(rv, MP4PARSE_STATUS_INVALID);
-  mp4parse_free(context);
 
   // Empty buffers should fail.
   buf.buffer.resize(4097, 0);
-  context = mp4parse_new(&io);
-  rv = mp4parse_read(context);
+  rv = mp4parse_new(&io, &parser);
+  ASSERT_EQ(parser, nullptr);
   EXPECT_EQ(rv, MP4PARSE_STATUS_UNSUPPORTED);
-  mp4parse_free(context);
 }
 
 TEST(rust, MP4Metadata)
@@ -119,16 +116,15 @@ TEST(rust, MP4Metadata)
   fclose(f);
 
   Mp4parseIo io = {vector_reader, &reader};
-  Mp4parseParser* context = mp4parse_new(&io);
-  ASSERT_NE(nullptr, context);
-
-  Mp4parseStatus rv = mp4parse_read(context);
+  Mp4parseParser* parser = nullptr;
+  Mp4parseStatus rv = mp4parse_new(&io, &parser);
+  ASSERT_NE(nullptr, parser);
   EXPECT_EQ(MP4PARSE_STATUS_OK, rv);
 
   uint32_t tracks = 0;
-  rv = mp4parse_get_track_count(context, &tracks);
+  rv = mp4parse_get_track_count(parser, &tracks);
   EXPECT_EQ(MP4PARSE_STATUS_OK, rv);
   EXPECT_EQ(2U, tracks);
 
-  mp4parse_free(context);
+  mp4parse_free(parser);
 }

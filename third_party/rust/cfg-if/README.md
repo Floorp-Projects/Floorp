@@ -1,7 +1,5 @@
 # cfg-if
 
-[![Build Status](https://travis-ci.org/alexcrichton/cfg-if.svg?branch=master)](https://travis-ci.org/alexcrichton/cfg-if)
-
 [Documentation](https://docs.rs/cfg-if)
 
 A macro to ergonomically define an item depending on a large number of #[cfg]
@@ -16,10 +14,7 @@ cfg-if = "0.1"
 ## Example
 
 ```rust
-#[macro_use]
-extern crate cfg_if;
-
-cfg_if! {
+cfg_if::cfg_if! {
     if #[cfg(unix)] {
         fn foo() { /* unix specific functionality */ }
     } else if #[cfg(target_pointer_width = "32")] {
@@ -48,5 +43,5 @@ at your option.
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
+for inclusion in `cfg-if` by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.

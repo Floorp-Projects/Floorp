@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate cfg_if;
-
-cfg_if! {
+cfg_if::cfg_if! {
     if #[cfg(foo)] {
         fn works() -> bool { false }
     } else if #[cfg(test)] {
