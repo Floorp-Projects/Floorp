@@ -3895,6 +3895,8 @@ gfxFloat gfxFont::SynthesizeSpaceWidth(uint32_t aCh) {
       return GetAdjustedSize() / 10;  // hair space
     case 0x202f:
       return GetAdjustedSize() / 5;  // narrow no-break space
+    case 0x3000:
+      return GetAdjustedSize();  // ideographic space
     default:
       return -1.0;
   }
