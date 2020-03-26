@@ -1555,7 +1555,7 @@ import android.view.inputmethod.EditorInfo;
                 "password".equalsIgnoreCase(typeHint)) {
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
         } else if (typeHint.equalsIgnoreCase("url") ||
-                typeHint.equalsIgnoreCase("mozAwesomebar")) {
+                modeHint.equals("mozAwesomebar")) {
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
         } else if (typeHint.equalsIgnoreCase("email")) {
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
@@ -1567,16 +1567,16 @@ import android.view.inputmethod.EditorInfo;
                                  InputType.TYPE_NUMBER_VARIATION_NORMAL;
         } else {
             // We look at modeHint
-            if (modeHint.equalsIgnoreCase("tel")) {
+            if (modeHint.equals("tel")) {
                 outAttrs.inputType = InputType.TYPE_CLASS_PHONE;
-            } else if (modeHint.equalsIgnoreCase("url")) {
+            } else if (modeHint.equals("url")) {
                 outAttrs.inputType = InputType.TYPE_TEXT_VARIATION_URI;
-            } else if (modeHint.equalsIgnoreCase("email")) {
+            } else if (modeHint.equals("email")) {
                 outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-            } else if (modeHint.equalsIgnoreCase("numeric")) {
+            } else if (modeHint.equals("numeric")) {
                 outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
                                      InputType.TYPE_NUMBER_VARIATION_NORMAL;
-            } else if (modeHint.equalsIgnoreCase("decimal")) {
+            } else if (modeHint.equals("decimal")) {
                 outAttrs.inputType = InputType.TYPE_CLASS_NUMBER |
                                      InputType.TYPE_NUMBER_FLAG_DECIMAL;
             } else {
