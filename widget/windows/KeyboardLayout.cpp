@@ -2645,7 +2645,6 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
   }
 
   if (!mModKeyState.IsControl() && !mModKeyState.IsAlt() &&
-      !(mModKeyState.GetModifiers() & MODIFIER_ALTGRAPH) &&
       !mModKeyState.IsWin() && mIsPrintableKey) {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
@@ -2909,10 +2908,12 @@ bool NativeKey::NeedsToHandleWithoutFollowingCharMessages() const {
 
   // If any modifier keys which may cause printable keys becoming non-printable
   // are not pressed, we don't need special handling for the key.
-  // Note that AltGraph may map a printable key to input no character.
-  // In such case, we need to eKeyPress event for backward compatibility.
+  // Note that if the key does not produce a character with AltGr and when
+  // AltGr key is pressed, we don't need to dispatch eKeyPress event for it
+  // because AltGr shouldn't be used for a modifier for a shortcut without
+  // Ctrl, Alt or Win.  That means that we should treat it in same path for
+  // Shift key.
   if (!mModKeyState.IsControl() && !mModKeyState.IsAlt() &&
-      !(mModKeyState.GetModifiers() & MODIFIER_ALTGRAPH) &&
       !mModKeyState.IsWin()) {
     return false;
   }
