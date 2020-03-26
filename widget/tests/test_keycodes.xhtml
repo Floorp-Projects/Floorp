@@ -22,6 +22,7 @@
   <key id="question" key='?' modifiers="accel" command="unexpectedCommand"/>
   <key id="unshiftedX" key="x" modifiers="accel" command="unexpectedCommand"/>
   <key id="shiftedX" key="X" modifiers="accel,shift" command="unexpectedCommand"/>
+  <key id="ctrlAltA" key="A" modifiers="accel,alt" command="unexpectedCommand"/>
   <key id="unshiftedPlus" key="+" modifiers="accel" command="unexpectedCommand"/>
   <key id="reservedUnshiftedKey" key="'" modifiers="accel" command="unexpectedCommand"/>
   <key id="reservedShiftedKey" key='"' modifiers="accel" command="unexpectedCommand"/>
@@ -4388,9 +4389,12 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_0,
                    modifiers:{altGrKey:1}, chars:"@"},
                   "@", "Digit0", KeyboardEvent.DOM_VK_0, "@", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    // AltGr + Digit1 does not cause text input in French layout.  In this case,
+    // AltGr shouldn't be used for a modifier of shortcut.  Therefore, not
+    // receiving `keypress` event even in the system group is fine.
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_1,
                    modifiers:{altGrKey:1}, chars:""},
-                  "&", "Digit1", KeyboardEvent.DOM_VK_1, "&", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+                  "&", "Digit1", KeyboardEvent.DOM_VK_1, "", SHOULD_DELIVER_KEYDOWN_KEYUP, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     //yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_2,
     //               modifiers:{altGrKey:1}, chars:""},
     //              "Dead", "Digit2", KeyboardEvent.DOM_VK_2, "2", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD); // Dead-key
@@ -4429,6 +4433,9 @@ function* runKeyEventTests()
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_0,
                    modifiers:{ctrlKey:1, altKey:1, shiftKey:1}, chars:"", isInputtingCharacters:false},
                   "0", "Digit0", KeyboardEvent.DOM_VK_0, "0", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    // Different from AltGr + Digit1 case, Ctrl + Alt + Digit1 should be
+    // available as a shortcut key.  Therefore, `keypress` event needs to be
+    // fired.
     yield testKey({layout:KEYBOARD_LAYOUT_FRENCH, keyCode:WIN_VK_1,
                    modifiers:{ctrlKey:1, altKey:1}, chars:"", isInputtingCharacters:false},
                   "&", "Digit1", KeyboardEvent.DOM_VK_1, "&", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
@@ -4996,18 +5003,23 @@ function* runXULKeyTests()
 
       function checkFiredEvents()
       {
-        is(keyEvents.length, 8, testName + "wrong number events fired");
+        let expectKeyPressEvent = aKeyElementId != "" ||
+                                  ((aEvent.modifiers.ctrlKey || aEvent.modifiers.altKey || aEvent.modifiers.metaKey) &&
+                                   (!IS_WIN || !aEvent.modifiers.altGrKey));
+        is(keyEvents.length, expectKeyPressEvent ? 8 : 4, testName + "wrong number events fired");
         is(JSON.stringify(keyEvents[0]), JSON.stringify({ type: "keydown", group: "default", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the default event group #0");
         is(JSON.stringify(keyEvents[1]), JSON.stringify({ type: "keydown", group: "default", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the default event group #1");
 
         is(JSON.stringify(keyEvents[2]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the system event group #2");
         is(JSON.stringify(keyEvents[3]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keydown event should be fired on chrome in the system event group #3");
 
-        is(JSON.stringify(keyEvents[4]), JSON.stringify({ type: "keypress", group: "default", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the default event group #4");
-        is(JSON.stringify(keyEvents[5]), JSON.stringify({ type: "keypress", group: "default", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the default event group #5");
+        if (expectKeyPressEvent) {
+          is(JSON.stringify(keyEvents[4]), JSON.stringify({ type: "keypress", group: "default", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the default event group #4");
+          is(JSON.stringify(keyEvents[5]), JSON.stringify({ type: "keypress", group: "default", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the default event group #5");
 
-        is(JSON.stringify(keyEvents[6]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the system event group #6");
-        is(JSON.stringify(keyEvents[7]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the system event group #7");
+          is(JSON.stringify(keyEvents[6]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the system event group #6");
+          is(JSON.stringify(keyEvents[7]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(buttonParent) }), testName + "keypress event should be fired on chrome in the system event group #7");
+        }
       }
 
       checkFiredEvents();
@@ -5140,6 +5152,28 @@ function* runXULKeyTests()
                          "unshiftedPlus");
     yield testKeyElement({layout:KEYBOARD_LAYOUT_THAI, keyCode:WIN_VK_OEM_PLUS,
                           modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
+                         "");
+  }
+
+  // bug 1596916
+  if (IS_WIN) {
+    // Ctrl + Alt + foo should be performed only when AltGr key is not
+    // pressed, i.e., only when Ctrl key and left Alt key are pressed if
+    // active keyboard layout has AltGr key.
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
+                          modifiers:{altGrKey:1}, chars:""},
+                         "");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
+                          modifiers:{ctrlKey:1, altGrKey:1}, chars:""},
+                         "");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
+                          modifiers:{altKey:1, altGrKey:1}, chars:""},
+                         "");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
+                          modifiers:{ctrlKey:1, altKey:1}, chars:""},
+                         "ctrlAltA");
+    yield testKeyElement({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
+                          modifiers:{ctrlKey:1, altKey:1, altGrKey:1}, chars:""},
                          "");
   }
 
@@ -5295,11 +5329,17 @@ function* runTextInputTests()
     }
     textbox.addEventListener("keypress", onKeypress, true);
 
-    return synthesizeKey(aEvent, "textbox", function() {
+    return synthesizeKey(aEvent, "textbox", () => {
       textbox.removeEventListener("keypress", onKeypress, true);
       if (aExpectText == "") {
-        is(keypress, 1,
-           currentTestName + " should cause one keypress event because it doesn't cause inputting text");
+        if (aEvent.modifiers.ctrlKey || aEvent.modifiers.altKey) {
+          is(keypress, 1,
+             currentTestName + " should cause one keypress event because it should be available for shortcut key");
+        } else {
+          is(keypress, 0,
+             currentTestName + " should cause no keypress event because simple key press only with Shift/AltGraph " +
+               "or without any modifiers shouldn't match with a shortcut key");
+        }
       } else {
         is(keypress, aExpectText.length,
            currentTestName + " should cause " + aExpectText.length + " keypress events");
@@ -5334,6 +5374,16 @@ function* runTextInputTests()
                   "A");
     // When Ctrl+Alt are pressed, any text should not be inputted.
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,
+                   modifiers:{ctrlKey:1, altKey:1}, chars:""},
+                  "");
+    // AltGr should input only when it's mapped to a character
+    yield testKey({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_0,
+                   modifiers:{altGrKey:1}, chars:"}"},
+                  "}");
+    yield testKey({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
+                   modifiers:{altGrKey:1}, chars:""},
+                  "");
+    yield testKey({layout:KEYBOARD_LAYOUT_GERMAN, keyCode:WIN_VK_A,
                    modifiers:{ctrlKey:1, altKey:1}, chars:""},
                   "");
 
