@@ -361,10 +361,18 @@ class AliasSet {
     WasmGlobalCell = 1 << 10,           // A wasm global cell
     WasmTableElement = 1 << 11,         // An element of a wasm table
     WasmStackResult = 1 << 12,  // A stack result from the current function
-    Last = WasmStackResult,
+
+    // JSContext's exception state. This is used on instructions like MThrow
+    // that throw exceptions (other than OOM) but have no other side effect, to
+    // ensure that they get their own up-to-date resume point. (This resume
+    // point will be used when constructing the Baseline frame during exception
+    // bailouts.)
+    ExceptionState = 1 << 13,
+
+    Last = ExceptionState,
     Any = Last | (Last - 1),
 
-    NumCategories = 13,
+    NumCategories = 14,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -1974,17 +1982,16 @@ class MReturn : public MAryControlInstruction<1, 0>,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MThrow : public MAryControlInstruction<1, 0>,
-               public BoxInputsPolicy::Data {
-  explicit MThrow(MDefinition* ins) : MAryControlInstruction(classOpcode) {
-    initOperand(0, ins);
-  }
+class MThrow : public MUnaryInstruction, public BoxInputsPolicy::Data {
+  explicit MThrow(MDefinition* ins) : MUnaryInstruction(classOpcode, ins) {}
 
  public:
   INSTRUCTION_HEADER(Throw)
   TRIVIAL_NEW_WRAPPERS
 
-  virtual AliasSet getAliasSet() const override { return AliasSet::None(); }
+  virtual AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::ExceptionState);
+  }
   bool possiblyCalls() const override { return true; }
 };
 
