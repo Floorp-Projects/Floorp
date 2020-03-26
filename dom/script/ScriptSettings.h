@@ -14,6 +14,7 @@
 #include "nsIPrincipal.h"
 #include "xpcpublic.h"
 
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/Maybe.h"
 
 #include "jsapi.h"
@@ -383,6 +384,7 @@ class MOZ_STACK_CLASS AutoEntryScript : public AutoJSAPI {
 #ifdef MOZ_GECKO_PROFILER
   AutoProfilerLabel mAutoProfilerLabel;
 #endif
+  AutoRequestJSThreadExecution mJSThreadExecution;
 };
 
 /*
@@ -422,6 +424,8 @@ class AutoNoJSAPI : protected ScriptSettingsStackEntry,
   // fix JSAutoNullableRealm to not hold on to a JSContext either, or
   // something.
   JSContext* mCx;
+
+  AutoYieldJSThreadExecution mExecutionYield;
 };
 
 }  // namespace dom

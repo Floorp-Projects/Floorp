@@ -12,6 +12,7 @@ DIRS += ['remoteworkers', 'sharedworkers']
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ChromeWorker.h',
+    'JSExecutionManager.h',
     'Worker.h',
     'WorkerCommon.h',
     'WorkerDebugger.h',
@@ -45,6 +46,7 @@ XPIDL_SOURCES += [
 UNIFIED_SOURCES += [
     'ChromeWorker.cpp',
     'ChromeWorkerScope.cpp',
+    'JSExecutionManager.cpp',
     'MessageEventRunnable.cpp',
     'Principal.cpp',
     'RegisterBindings.cpp',

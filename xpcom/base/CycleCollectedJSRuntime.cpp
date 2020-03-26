@@ -75,6 +75,7 @@
 #include "mozilla/TimelineMarker.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
@@ -592,6 +593,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
 
   JS_SetObjectsTenuredCallback(aCx, JSObjectsTenuredCb, this);
   JS::SetOutOfMemoryCallback(aCx, OutOfMemoryCallback, this);
+  JS::SetWaitCallback(mJSRuntime, BeforeWaitCallback, AfterWaitCallback,
+                      sizeof(dom::AutoYieldJSThreadExecution));
   JS::SetWarningReporter(aCx, MozCrashWarningReporter);
 
   js::AutoEnterOOMUnsafeRegion::setAnnotateOOMAllocationSizeCallback(
@@ -1006,6 +1009,22 @@ void CycleCollectedJSRuntime::OutOfMemoryCallback(JSContext* aContext,
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Runtime() == self);
 
   self->OnOutOfMemory();
+}
+
+/* static */
+void* CycleCollectedJSRuntime::BeforeWaitCallback(uint8_t* aMemory) {
+  MOZ_ASSERT(aMemory);
+
+  // aMemory is stack allocated memory to contain our RAII object. This allows
+  // for us to avoid allocations on the heap during this callback.
+  return new (aMemory) dom::AutoYieldJSThreadExecution;
+}
+
+/* static */
+void CycleCollectedJSRuntime::AfterWaitCallback(void* aCookie) {
+  MOZ_ASSERT(aCookie);
+  static_cast<dom::AutoYieldJSThreadExecution*>(aCookie)
+      ->~AutoYieldJSThreadExecution();
 }
 
 struct JsGcTracer : public TraceCallbacks {

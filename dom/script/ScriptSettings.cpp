@@ -9,6 +9,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
@@ -580,7 +581,8 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
           "", aReason, JS::ProfilingCategoryPair::JS,
           uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS))
 #endif
-{
+      ,
+      mJSThreadExecution(aGlobalObject, aIsMainThread) {
   MOZ_ASSERT(aGlobalObject);
 
   if (aIsMainThread) {

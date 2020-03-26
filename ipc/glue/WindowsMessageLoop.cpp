@@ -15,6 +15,7 @@
 #include "WinUtils.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/PaintTracker.h"
 #include "mozilla/UniquePtr.h"
@@ -1066,6 +1067,10 @@ bool MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages) {
 
 bool MessageChannel::WaitForInterruptNotify() {
   mMonitor->AssertCurrentThreadOwns();
+
+  // Receiving the interrupt notification may require JS to execute on a
+  // worker.
+  dom::AutoYieldJSThreadExecution yield;
 
   if (!gUIThreadId) {
     mozilla::ipc::windows::InitUIThread();

@@ -1096,6 +1096,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     return NS_OK;
   }
 
+  Maybe<dom::AutoNoJSAPI> noJSAPI;
   if (mIsMainThread) {
     DoMainThreadSpecificProcessing(reallyWait);
   }
@@ -1105,7 +1106,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   // We only want to create an AutoNoJSAPI on threads that actually do DOM stuff
   // (including workers).  Those are exactly the threads that have an
   // mScriptObserver.
-  Maybe<dom::AutoNoJSAPI> noJSAPI;
   bool callScriptObserver = !!mScriptObserver;
   if (callScriptObserver) {
     noJSAPI.emplace();
