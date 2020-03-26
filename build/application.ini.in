@@ -49,3 +49,8 @@ EnableProfileMigrator=1
 Enabled=1
 ServerURL=https://crash-reports.mozilla.com/submit?id=@MOZ_APP_ID@&version=@MOZ_APP_VERSION@&buildid=@MOZ_BUILDID@
 #endif
+
+#if MOZ_UPDATER
+[AppUpdate]
+URL=https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml
+#endif

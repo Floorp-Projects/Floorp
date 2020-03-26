@@ -110,6 +110,7 @@ class ContentChild final
     nsCString ID;
     nsCString vendor;
     nsCString sourceURL;
+    nsCString updateURL;
   };
 
   nsresult ProvideWindowCommon(BrowserChild* aTabOpener,
@@ -394,7 +395,7 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvAppInfo(
       const nsCString& version, const nsCString& buildID, const nsCString& name,
       const nsCString& UAName, const nsCString& ID, const nsCString& vendor,
-      const nsCString& sourceURL);
+      const nsCString& sourceURL, const nsCString& updateURL);
 
   mozilla::ipc::IPCResult RecvRemoteType(const nsString& aRemoteType);
 

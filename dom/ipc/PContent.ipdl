@@ -590,7 +590,7 @@ child:
     async ShutdownA11y();
 
     async AppInfo(nsCString version, nsCString buildID, nsCString name, nsCString UAName,
-                  nsCString ID, nsCString vendor, nsCString sourceURL);
+                  nsCString ID, nsCString vendor, nsCString sourceURL, nsCString updateURL);
 
     /**
      * Send the remote type associated with the content process.
