@@ -107,6 +107,18 @@ jobs:
                 sha256: 406a12c0d0a2e92d44a8d444fd1b32bcc29a8810e9631427161a7cb411f60172
             patch: cmake-wheezy.diff
 
+    deb10-cmake:
+        description: "Cmake backport for Debian buster"
+        treeherder:
+            symbol: Deb10(cmake)
+        run:
+            using: debian-package
+            dist: buster
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20200202T210747Z/pool/main/c/cmake/cmake_3.16.3-1.dsc
+                sha256: ecfa7cbc93dc6a9749022ccd9538843f4a0e2e77a14bb2f87e325aaf3c36b519
+            pre-build-command: apt-get install debhelper/buster-backports
+
     deb7-make:
         description: "Make backport for Debian wheezy"
         treeherder:
