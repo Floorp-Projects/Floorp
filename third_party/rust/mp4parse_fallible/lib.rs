@@ -15,9 +15,17 @@ pub trait FallibleVec<T> {
     /// Err(()) if it fails, which can only be due to lack of memory.
     fn try_push(&mut self, value: T) -> Result<(), ()>;
 
-    /// Expand the vector size. Return Ok(()) on success, Err(()) if it
-    /// fails.
-    fn try_reserve(&mut self, new_cap: usize) -> Result<(), ()>;
+    /// Reserves capacity for at least `additional` more elements to
+    /// be inserted in the vector. Does nothing if capacity is already
+    /// sufficient. Return Ok(()) on success, Err(()) if it fails either
+    /// due to lack of memory, or overflowing the `usize` used to store
+    /// the capacity.
+    fn try_reserve(&mut self, additional: usize) -> Result<(), ()>;
+
+    /// Clones and appends all elements in a slice to the Vec.
+    /// Returns Ok(()) on success, Err(()) if it fails, which can
+    /// only be due to lack of memory.
+    fn try_extend_from_slice(&mut self, other: &[T]) -> Result<(), ()> where T: Clone;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -39,10 +47,21 @@ impl<T> FallibleVec<T> for Vec<T> {
     }
 
     #[inline]
-    fn try_reserve(&mut self, cap: usize) -> Result<(), ()> {
-        let new_cap = cap + self.capacity();
-        try_extend_vec(self, new_cap)?;
-        debug_assert!(self.capacity() == new_cap);
+    fn try_reserve(&mut self, additional: usize) -> Result<(), ()> {
+        let available = self.capacity().checked_sub(self.len()).expect("capacity >= len");
+        if additional > available {
+            let increase = additional.checked_sub(available).expect("additional > available");
+            let new_cap = self.capacity().checked_add(increase).ok_or(())?;
+            try_extend_vec(self, new_cap)?;
+            debug_assert!(self.capacity() == new_cap);
+        }
+        Ok(())
+    }
+
+    #[inline]
+    fn try_extend_from_slice(&mut self, other: &[T]) -> Result<(), ()> where T: Clone {
+        FallibleVec::try_reserve(self, other.len())?;
+        self.extend_from_slice(other);
         Ok(())
     }
 }
@@ -83,10 +102,46 @@ fn try_extend_vec<T>(vec: &mut Vec<T>, new_cap: usize) -> Result<(), ()> {
 }
 
 #[test]
-fn oom_test() {
+fn oom() {
     let mut vec: Vec<char> = Vec::new();
-    match vec.try_reserve(std::usize::MAX) {
+    match FallibleVec::try_reserve(&mut vec, std::usize::MAX) {
         Ok(_) => panic!("it should be OOM"),
         _ => (),
     }
+}
+
+#[test]
+fn try_reserve() {
+    let mut vec = vec![1];
+    let old_cap = vec.capacity();
+    let new_cap = old_cap + 1;
+    FallibleVec::try_reserve(&mut vec, new_cap).unwrap();
+    assert!(vec.capacity() >= new_cap);
+}
+
+#[test]
+fn try_reserve_idempotent() {
+    let mut vec = vec![1];
+    let old_cap = vec.capacity();
+    let new_cap = old_cap + 1;
+    FallibleVec::try_reserve(&mut vec, new_cap).unwrap();
+    let cap_after_reserve = vec.capacity();
+    FallibleVec::try_reserve(&mut vec, new_cap).unwrap();
+    assert_eq!(cap_after_reserve, vec.capacity());
+}
+
+#[test]
+fn capacity_overflow() {
+    let mut vec = vec![1];
+    match FallibleVec::try_reserve(&mut vec, std::usize::MAX) {
+        Ok(_) => panic!("capacity calculation should overflow"),
+        _ => (),
+    }
+}
+
+#[test]
+fn extend_from_slice() {
+    let mut vec = b"foo".to_vec();
+    FallibleVec::try_extend_from_slice(&mut vec, b"bar").unwrap();
+    assert_eq!(&vec, b"foobar");
 }
