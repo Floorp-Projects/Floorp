@@ -173,6 +173,10 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
     return abort(AbortReason::Error);
   }
 
+  if (script->jitScript()->hasTryFinally()) {
+    return abort(AbortReason::Disable, "Try-finally not supported");
+  }
+
   WarpEnvironment environment;
   MOZ_TRY_VAR(environment, createEnvironment(script));
 

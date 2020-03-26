@@ -215,6 +215,9 @@ namespace jit {
   _(InstrumentationScriptId) \
   _(TableSwitch)             \
   _(Rest)                    \
+  _(Try)                     \
+  _(Throw)                   \
+  _(ThrowSetConst)           \
   _(SetRval)                 \
   _(Return)                  \
   _(RetRval)
