@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-addons**
+  * Added `AddonPermissionsAdapter.Style` and `AddonsManagerAdapter.Style` classes to allow UI customization.
+
 * **service-accounts-push**
   * Fixed a bug where the push subscription was incorrectly cached and caused some `GeneralError`s.
 

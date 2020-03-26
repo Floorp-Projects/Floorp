@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
@@ -45,12 +46,14 @@ private const val VIEW_HOLDER_TYPE_ADDON = 2
  * @property addonCollectionProvider Provider of AMO collection API.
  * @property addonsManagerDelegate Delegate that will provides method for handling the add-on items.
  * @property addons The list of add-on based on the AMO store.
+ * @property style Indicates how items should look like.
  */
 @Suppress("TooManyFunctions", "LargeClass")
 class AddonsManagerAdapter(
     private val addonCollectionProvider: AddonCollectionProvider,
     private val addonsManagerDelegate: AddonsManagerAdapterDelegate,
-    addons: List<Addon>
+    addons: List<Addon>,
+    private val style: Style? = null
 ) : RecyclerView.Adapter<CustomViewHolder>() {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val items: List<Any>
@@ -75,7 +78,6 @@ class AddonsManagerAdapter(
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.mozac_feature_addons_section_item, parent, false)
         val titleView = view.findViewById<TextView>(R.id.title)
-
         return SectionViewHolder(view, titleView)
     }
 
@@ -140,8 +142,10 @@ class AddonsManagerAdapter(
         }
     }
 
-    private fun bindSection(holder: SectionViewHolder, section: Section) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun bindSection(holder: SectionViewHolder, section: Section) {
         holder.titleView.setText(section.title)
+        style?.maybeSetStatusTextColor(holder.titleView)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -210,6 +214,8 @@ class AddonsManagerAdapter(
         }
 
         fetchIcon(addon, holder.iconView)
+        style?.maybeSetAddonNameTextColor(holder.titleView)
+        style?.maybeSetAddonSummaryTextColor(holder.summaryView)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -278,10 +284,43 @@ class AddonsManagerAdapter(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal inner class Section(@StringRes val title: Int)
+    internal data class Section(@StringRes val title: Int)
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal inner class NotYetSupportedSection(@StringRes val title: Int)
+    internal data class NotYetSupportedSection(@StringRes val title: Int)
+
+    /**
+     * Allows to customize how items should look like.
+     */
+    data class Style(
+        @ColorRes
+        val sectionsTextColor: Int? = null,
+        @ColorRes
+        val addonNameTextColor: Int? = null,
+        @ColorRes
+        val addonSummaryTextColor: Int? = null
+    ) {
+        internal fun maybeSetStatusTextColor(textView: TextView) {
+            sectionsTextColor?.let {
+                val color = ContextCompat.getColor(textView.context, it)
+                textView.setTextColor(color)
+            }
+        }
+
+        internal fun maybeSetAddonNameTextColor(textView: TextView) {
+            addonNameTextColor?.let {
+                val color = ContextCompat.getColor(textView.context, it)
+                textView.setTextColor(color)
+            }
+        }
+
+        internal fun maybeSetAddonSummaryTextColor(textView: TextView) {
+            addonSummaryTextColor?.let {
+                val color = ContextCompat.getColor(textView.context, it)
+                textView.setTextColor(color)
+            }
+        }
+    }
 }
 
 private fun Addon.inUnsupportedSection() = isInstalled() && !isSupported()
