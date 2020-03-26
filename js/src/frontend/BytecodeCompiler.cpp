@@ -187,12 +187,17 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
  *
  * See: finishSingleParseTask/finishMultiParseTask for the off-thread case.
  */
-static void tellDebuggerAboutCompiledScript(JSContext* cx,
+static void tellDebuggerAboutCompiledScript(JSContext* cx, bool hideScript,
                                             Handle<JSScript*> script) {
   if (cx->isHelperThreadContext()) {
     return;
   }
-  DebugAPI::onNewScript(cx, script);
+
+  // If hideScript then script may not be ready to be interrogated by the
+  // debugger.
+  if (!hideScript) {
+    DebugAPI::onNewScript(cx, script);
+  }
 }
 
 template <typename Unit>
@@ -212,7 +217,9 @@ static JSScript* CreateGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(compilationInfo.cx, compilationInfo.script);
+  tellDebuggerAboutCompiledScript(
+      compilationInfo.cx, compilationInfo.options.hideScriptFromDebugger,
+      compilationInfo.script);
 
   assertException.reset();
   return compilationInfo.script;
@@ -268,7 +275,9 @@ static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(compilationInfo.cx, compilationInfo.script);
+  tellDebuggerAboutCompiledScript(
+      compilationInfo.cx, compilationInfo.options.hideScriptFromDebugger,
+      compilationInfo.script);
 
   assertException.reset();
   return compilationInfo.script;
@@ -807,7 +816,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     *sourceObjectOut = compilationInfo.sourceObject;
   }
 
-  tellDebuggerAboutCompiledScript(cx, script);
+  tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger, script);
 
   assertException.reset();
   return script;
@@ -859,7 +868,8 @@ static ModuleObject* InternalParseModule(
     return nullptr;
   }
 
-  tellDebuggerAboutCompiledScript(cx, compilationInfo.script);
+  tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
+                                  compilationInfo.script);
 
   assertException.reset();
   return module;
@@ -1163,7 +1173,8 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
       compilationInfo.sourceObject->source()->setParameterListEnd(
           *parameterListEnd);
     }
-    tellDebuggerAboutCompiledScript(cx, compilationInfo.script);
+    tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
+                                    compilationInfo.script);
   }
 
   assertException.reset();

@@ -183,7 +183,7 @@ class DebugAPI {
   /*** Methods for calling installed debugger handlers. ***********************/
 
   // Called when a new script becomes accessible to debuggers.
-  static inline void onNewScript(JSContext* cx, HandleScript script);
+  static void onNewScript(JSContext* cx, HandleScript script);
 
   // Called when a new wasm instance becomes accessible to debuggers.
   static inline void onNewWasmInstance(
@@ -350,7 +350,6 @@ class DebugAPI {
  private:
   static bool stepModeEnabledSlow(JSScript* script);
   static bool hasBreakpointsAtSlow(JSScript* script, jsbytecode* pc);
-  static void slowPathOnNewScript(JSContext* cx, HandleScript script);
   static void slowPathOnNewGlobalObject(JSContext* cx,
                                         Handle<GlobalObject*> global);
   static void slowPathNotifyParticipatesInGC(uint64_t majorGCNumber,

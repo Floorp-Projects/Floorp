@@ -437,8 +437,6 @@ JS_PUBLIC_API void JS::ExposeScriptToDebugger(JSContext* cx,
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
-  MOZ_ASSERT(script->hideScriptFromDebugger());
-  script->clearHideScriptFromDebugger();
   DebugAPI::onNewScript(cx, script);
 }
 
