@@ -1441,11 +1441,12 @@ import android.view.inputmethod.EditorInfo;
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is 11 or greater, for datetime/month/week as well.
         int state;
-        if (typeHint != null && (typeHint.equalsIgnoreCase("date") ||
-                                 typeHint.equalsIgnoreCase("time") ||
-                                 typeHint.equalsIgnoreCase("month") ||
-                                 typeHint.equalsIgnoreCase("week") ||
-                                 typeHint.equalsIgnoreCase("datetime-local"))) {
+        if ((typeHint != null && (typeHint.equalsIgnoreCase("date") ||
+                                  typeHint.equalsIgnoreCase("time") ||
+                                  typeHint.equalsIgnoreCase("month") ||
+                                  typeHint.equalsIgnoreCase("week") ||
+                                  typeHint.equalsIgnoreCase("datetime-local"))) ||
+            (modeHint != null && modeHint.equals("none"))) {
             state = SessionTextInput.EditableListener.IME_STATE_DISABLED;
         } else {
             state = originalState;
@@ -1532,6 +1533,13 @@ import android.view.inputmethod.EditorInfo;
         // Some keyboards require us to fill out outAttrs even if we return null.
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
+
+        if (modeHint.equals("none")) {
+            // inputmode=none hides VKB at force.
+            outAttrs.inputType = InputType.TYPE_NULL;
+            toggleSoftInput(/* force */ true, SessionTextInput.EditableListener.IME_STATE_DISABLED);
+            return;
+        }
 
         if (state == SessionTextInput.EditableListener.IME_STATE_DISABLED) {
             outAttrs.inputType = InputType.TYPE_NULL;
