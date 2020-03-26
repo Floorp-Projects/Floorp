@@ -11,11 +11,7 @@
 }
 
 .wizard-header-box-1 {
-  padding: 5px 0px 5px 0px;
-}
-
-wizard[description=""] .wizard-header-description {
-  display: none;
+  padding: 5px 0;
 }
 
 .wizard-header-label {
@@ -27,8 +23,10 @@ wizard[description=""] .wizard-header-description {
   margin-inline-start: 44px;
 }
 
-wizard[branded="true"] .wizard-header-icon {
-  list-style-image: url("chrome://branding/content/icon48.png");
+:host([data-branded="true"]) .wizard-header-icon {
+  list-style-image: url("chrome://branding/content/icon128.png");
+  width: 48px;
+  height: 48px;
   margin-inline-end: 5px;
 }
 
@@ -37,7 +35,7 @@ wizard[branded="true"] .wizard-header-icon {
 }
 
 .wizard-buttons-separator {
-  margin-bottom: 0px !important;
+  margin-bottom: 0 !important;
 }
 
 .wizard-buttons-box-2 {
@@ -46,9 +44,9 @@ wizard[branded="true"] .wizard-header-icon {
 
 .wizard-button[dlgtype="finish"],
 .wizard-button[dlgtype="next"] {
-  margin-inline-start: 0px !important;
+  margin-inline-start: 0 !important;
 }
 
 .wizard-button[dlgtype="back"] {
-  margin-inline-end: 0px !important;
+  margin-inline-end: 0 !important;
 }
