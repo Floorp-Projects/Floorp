@@ -61,6 +61,9 @@ coverity:
             - type: file
               name: public/code-review/coverity.json
               path: /builds/worker/coverity.json
+            - type: file
+              name: public/code-review/coverity-orig.json
+              path: /builds/worker/workspace/coverity/cov-results.json
 
 coverity-full-analysis:
     description: Run Coverity based static-analysis on the entire Gecko repo
