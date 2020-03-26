@@ -86,7 +86,7 @@ public class TestCrashHandler extends Service {
 
             @Override
             public void onServiceDisconnected(ComponentName className) {
-                mService = null;
+                disconnect();
             }
         };
 
@@ -138,6 +138,8 @@ public class TestCrashHandler extends Service {
         public void disconnect() {
             if (mDoUnbind) {
                 mContext.unbindService(mConnection);
+                mService = null;
+                mDoUnbind = false;
             }
             mThread.quitSafely();
         }
