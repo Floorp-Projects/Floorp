@@ -1905,6 +1905,9 @@ void gfxWindowsPlatform::ImportContentDeviceData(
     DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ImportDeviceInfo(aData.d3d11());
   }
+
+  // aData->cmsOutputProfileData() will be read during color profile init,
+  // not as part of this import function
 }
 
 void gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut) {
@@ -1921,6 +1924,9 @@ void gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut) {
     DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ExportDeviceInfo(&aOut->d3d11());
   }
+
+  aOut->cmsOutputProfileData() =
+      gfxPlatform::GetPlatform()->GetCMSOutputProfileData();
 }
 
 bool gfxWindowsPlatform::CheckVariationFontSupport() {
