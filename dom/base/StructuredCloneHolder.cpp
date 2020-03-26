@@ -15,6 +15,7 @@
 #include "mozilla/dom/ClonedErrorHolder.h"
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
 #include "mozilla/dom/StructuredCloneBlob.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/File.h"
@@ -23,14 +24,17 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/PMessagePort.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebIDLSerializable.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -113,6 +117,38 @@ bool StructuredCloneCallbacksCanTransfer(JSContext* aCx,
                                           aSameProcessScopeRequired);
 }
 
+bool StructuredCloneCallbacksSharedArrayBuffer(JSContext* cx, bool aReceiving,
+                                               void* aClosure) {
+  if (!StaticPrefs::dom_workers_serialized_sab_access()) {
+    return true;
+  }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+
+  if (workerPrivate) {
+    workerPrivate->SetExecutionManager(
+        JSExecutionManager::GetSABSerializationManager());
+  } else if (NS_IsMainThread()) {
+    nsIGlobalObject* global = GetCurrentGlobal();
+
+    nsPIDOMWindowInner* innerWindow = nullptr;
+    if (global) {
+      innerWindow = global->AsInnerWindow();
+    }
+
+    DocGroup* docGroup = nullptr;
+    if (innerWindow) {
+      docGroup = innerWindow->GetDocGroup();
+    }
+
+    if (docGroup) {
+      docGroup->SetExecutionManager(
+          JSExecutionManager::GetSABSerializationManager());
+    }
+  }
+  return true;
+}
+
 void StructuredCloneCallbacksError(JSContext* aCx, uint32_t aErrorId,
                                    void* aClosure, const char* aErrorMessage) {
   NS_WARNING("Failed to clone data.");
@@ -145,10 +181,14 @@ void AssertTagValues() {
 }  // anonymous namespace
 
 const JSStructuredCloneCallbacks StructuredCloneHolder::sCallbacks = {
-    StructuredCloneCallbacksRead,          StructuredCloneCallbacksWrite,
-    StructuredCloneCallbacksError,         StructuredCloneCallbacksReadTransfer,
-    StructuredCloneCallbacksWriteTransfer, StructuredCloneCallbacksFreeTransfer,
-    StructuredCloneCallbacksCanTransfer,   nullptr,
+    StructuredCloneCallbacksRead,
+    StructuredCloneCallbacksWrite,
+    StructuredCloneCallbacksError,
+    StructuredCloneCallbacksReadTransfer,
+    StructuredCloneCallbacksWriteTransfer,
+    StructuredCloneCallbacksFreeTransfer,
+    StructuredCloneCallbacksCanTransfer,
+    StructuredCloneCallbacksSharedArrayBuffer,
 };
 
 // StructuredCloneHolderBase class

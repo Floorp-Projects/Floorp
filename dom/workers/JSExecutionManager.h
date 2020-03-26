@@ -78,6 +78,11 @@ class JSExecutionManager {
 
   enum class RequestState { Granted, ExecutingAlready };
 
+  static void Initialize();
+  static void Shutdown();
+
+  static JSExecutionManager* GetSABSerializationManager();
+
  private:
   friend class AutoRequestJSThreadExecution;
   friend class AutoYieldJSThreadExecution;

@@ -2482,6 +2482,11 @@
   value: false
   mirror: always
 
+- name: dom.workers.serialized-sab-access
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # External.AddSearchProvider is deprecated and it will be removed in the next
 # cycles.
 - name: dom.sidebar.enabled
