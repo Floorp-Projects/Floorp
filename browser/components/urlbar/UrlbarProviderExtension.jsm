@@ -325,6 +325,11 @@ class UrlbarProviderExtension extends UrlbarProvider {
       extResult.payload.engine = engine.name;
     }
 
+    let type = UrlbarProviderExtension.RESULT_TYPES[extResult.type];
+    if (type == UrlbarUtils.RESULT_TYPE.TIP) {
+      extResult.payload.type = extResult.payload.type || "extension";
+    }
+
     let result = new UrlbarResult(
       UrlbarProviderExtension.RESULT_TYPES[extResult.type],
       UrlbarProviderExtension.SOURCE_TYPES[extResult.source],

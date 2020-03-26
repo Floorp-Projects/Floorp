@@ -278,7 +278,6 @@ function makeUrlbarResult(tokens, info) {
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-            device: [action.params.deviceName, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: [info.icon],
           })
         );

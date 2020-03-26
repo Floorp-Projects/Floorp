@@ -18,7 +18,7 @@ const TEST_RESULTS = [
     {
       text: "This is a test tip.",
       buttonText: "Done",
-      data: "test",
+      type: "test",
       helpUrl: "about:about",
     }
   ),
@@ -78,7 +78,7 @@ add_task(async function threeTips() {
         {
           text: "This is a test tip.",
           buttonText: "Done",
-          data: "test",
+          type: "test",
           helpUrl: `about:about#${i}`,
         }
       )
@@ -167,7 +167,7 @@ add_task(async function threeTips_nonRestricting() {
         {
           text: "This is a test tip.",
           buttonText: "Done",
-          data: "test",
+          type: "test",
           helpUrl: `about:about#${i}`,
         }
       )

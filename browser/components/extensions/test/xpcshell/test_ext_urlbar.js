@@ -212,6 +212,7 @@ add_task(async function test_onProviderResultsRequested() {
             payload: {
               title: "Test remote_tab-tabs result",
               url: "http://example.com/remote_tab-tabs",
+              device: "device",
             },
           },
           {
@@ -315,6 +316,7 @@ add_task(async function test_onProviderResultsRequested() {
         displayUrl:
           (UrlbarPrefs.get("update1.view.stripHttps") ? "http://" : "") +
           "example.com/remote_tab-tabs",
+        device: "device",
       },
     },
     {
@@ -340,6 +342,7 @@ add_task(async function test_onProviderResultsRequested() {
         buttonText: "Test tip-local result button text",
         buttonUrl: "http://example.com/tip-button",
         helpUrl: "http://example.com/tip-help",
+        type: "extension",
       },
     },
     {

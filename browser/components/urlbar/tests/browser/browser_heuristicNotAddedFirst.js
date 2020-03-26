@@ -38,7 +38,7 @@ add_task(async function slowHeuristicSelected() {
     {
       text: "This is a test tip.",
       buttonText: "Done",
-      data: "test",
+      type: "test",
       helpUrl: "http://example.com/",
     }
   );
@@ -111,7 +111,7 @@ add_task(async function oneOffRemainsSelected() {
     {
       text: "This is a test tip.",
       buttonText: "Done",
-      data: "test",
+      type: "test",
       helpUrl: "http://example.com/",
     }
   );
