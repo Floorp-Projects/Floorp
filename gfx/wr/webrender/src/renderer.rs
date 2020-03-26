@@ -2434,6 +2434,7 @@ impl Renderer {
         } else if device.supports_extension("GL_EXT_debug_marker") {
             GpuDebugMethod::MarkerEXT
         } else {
+            println!("Warning: asking to enable_gpu_markers but no supporting extension was found");
             GpuDebugMethod::None
         };
 

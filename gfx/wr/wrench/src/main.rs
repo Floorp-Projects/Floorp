@@ -710,10 +710,35 @@ fn main() {
         // Perf mode wants to benchmark the total cost of drawing
         // a new displaty list each frame.
         wrench.rebuild_display_lists = true;
-        let harness = PerfHarness::new(&mut wrench, &mut window, rx.unwrap());
-        let base_manifest = Path::new("benchmarks/benchmarks.list");
-        let filename = subargs.value_of("filename").unwrap();
-        harness.run(base_manifest, filename);
+
+        let as_csv = subargs.is_present("csv");
+        let auto_filename = subargs.is_present("auto-filename");
+
+        let warmup_frames = subargs.value_of("warmup_frames").map(|s| s.parse().unwrap());
+        let sample_count = subargs.value_of("sample_count").map(|s| s.parse().unwrap());
+
+        let harness = PerfHarness::new(&mut wrench,
+                                       &mut window,
+                                       rx.unwrap(),
+                                       warmup_frames,
+                                       sample_count);
+
+        let benchmark = match subargs.value_of("benchmark") {
+            Some(path) => path,
+            None => "benchmarks/benchmarks.list"
+        };
+        println!("Benchmark: {}", benchmark);
+        let base_manifest = Path::new(benchmark);
+
+        let mut filename = subargs.value_of("filename").unwrap().to_string();
+        if auto_filename {
+            let timestamp = chrono::Local::now().format("%Y-%m-%d-%H-%M-%S");
+            filename.push_str(
+                &format!("/wrench-perf-{}.{}",
+                            timestamp,
+                            if as_csv { "csv" } else { "json" }));
+        }
+        harness.run(base_manifest, &filename, as_csv);
         return;
     } else if let Some(subargs) = args.subcommand_matches("compare_perf") {
         let first_filename = subargs.value_of("first_filename").unwrap();
