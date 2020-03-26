@@ -125,15 +125,29 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
     # Trick to make a @depends function out of an immediate value.
     progs = dependable(progs)
     paths = dependable(paths)
+    allow_missing = dependable(allow_missing)
 
+    # Avoid displaying the "Checking for" message when the inputs are such
+    # that we don't actually want anything to be checked. It is a bit
+    # convoluted because of how `when` works.
+    # We first wrap all the inputs except allow_missing (which doesn't count
+    # for whether to display the "Checking for" message).
     @depends_if(input, progs, paths, when=when)
-    @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
-    def check(value, progs, paths):
+    def inputs(input, progs, paths):
         if progs is None:
             progs = ()
 
         if not isinstance(progs, (tuple, list)):
             configure_error('progs must resolve to a list or tuple!')
+
+        return namespace(value=input, progs=progs, paths=paths)
+
+    @depends(inputs, allow_missing, when=inputs)
+    @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
+    def check(inputs, allow_missing):
+        value = inputs.value
+        progs = inputs.progs
+        paths = inputs.paths
 
         if paths_have_priority:
             for path in paths:
