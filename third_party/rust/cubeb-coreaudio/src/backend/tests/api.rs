@@ -117,7 +117,7 @@ fn test_minimum_resampling_input_frames() {
 
     let frames = 100;
     let times = input_rate / output_rate;
-    let expected = (frames as f64 * times).ceil() as i64;
+    let expected = (frames as f64 * times).ceil() as usize;
 
     assert_eq!(
         minimum_resampling_input_frames(input_rate, output_rate, frames),
@@ -1340,6 +1340,7 @@ fn test_get_device_presentation_latency() {
 }
 
 // create_cubeb_device_info
+// destroy_cubeb_device_info
 // ------------------------------------
 #[test]
 fn test_create_cubeb_device_info() {
@@ -1394,7 +1395,8 @@ fn test_create_cubeb_device_info() {
         assert_eq!(info.devid as AudioObjectID, id);
         assert!(!info.device_id.is_null());
         assert!(!info.friendly_name.is_null());
-        assert_eq!(info.group_id, info.device_id);
+        assert!(!info.group_id.is_null());
+
         // TODO: Hit a kAudioHardwareUnknownPropertyError for AirPods
         // assert!(!info.vendor_name.is_null());
 
@@ -1451,6 +1453,25 @@ fn test_create_device_info_with_unknown_type() {
 }
 
 #[test]
+#[should_panic]
+fn test_device_destroy_empty_device() {
+    let mut device = ffi::cubeb_device_info::default();
+
+    assert!(device.device_id.is_null());
+    assert!(device.group_id.is_null());
+    assert!(device.friendly_name.is_null());
+    assert!(device.vendor_name.is_null());
+
+    // `friendly_name` must be set.
+    destroy_cubeb_device_info(&mut device);
+
+    assert!(device.device_id.is_null());
+    assert!(device.group_id.is_null());
+    assert!(device.friendly_name.is_null());
+    assert!(device.vendor_name.is_null());
+}
+
+#[test]
 fn test_create_device_from_hwdev_with_inout_type() {
     test_create_device_from_hwdev_with_inout_type_by_scope(Scope::Input);
     test_create_device_from_hwdev_with_inout_type_by_scope(Scope::Output);
@@ -1482,56 +1503,6 @@ fn test_is_aggregate_device() {
     let non_aggregate_name_cstring = CString::new("Hello World!").unwrap();
     info.friendly_name = non_aggregate_name_cstring.as_ptr();
     assert!(!is_aggregate_device(&info));
-}
-
-// destroy_cubeb_device_info
-// ------------------------------------
-#[test]
-fn test_device_destroy() {
-    let mut device = ffi::cubeb_device_info::default();
-
-    let device_id = CString::new("test: device id").unwrap();
-    let friendly_name = CString::new("test: friendly name").unwrap();
-    let vendor_name = CString::new("test: vendor name").unwrap();
-
-    device.device_id = device_id.into_raw();
-    // The group_id is a mirror to device_id in our implementation, so we could skip it.
-    device.group_id = device.device_id;
-    device.friendly_name = friendly_name.into_raw();
-    device.vendor_name = vendor_name.into_raw();
-
-    destroy_cubeb_device_info(&mut device);
-
-    assert!(device.device_id.is_null());
-    assert!(device.group_id.is_null());
-    assert!(device.friendly_name.is_null());
-    assert!(device.vendor_name.is_null());
-}
-
-#[test]
-#[should_panic]
-fn test_device_destroy_with_different_device_id_and_group_id() {
-    let mut device = ffi::cubeb_device_info::default();
-    device.device_id = 0xdeaddead as *const _;
-    device.group_id = 0xdeadbeef as *const _;
-    destroy_cubeb_device_info(&mut device);
-}
-
-#[test]
-fn test_device_destroy_empty_device() {
-    let mut device = ffi::cubeb_device_info::default();
-
-    assert!(device.device_id.is_null());
-    assert!(device.group_id.is_null());
-    assert!(device.friendly_name.is_null());
-    assert!(device.vendor_name.is_null());
-
-    destroy_cubeb_device_info(&mut device);
-
-    assert!(device.device_id.is_null());
-    assert!(device.group_id.is_null());
-    assert!(device.friendly_name.is_null());
-    assert!(device.vendor_name.is_null());
 }
 
 // get_devices_of_type
