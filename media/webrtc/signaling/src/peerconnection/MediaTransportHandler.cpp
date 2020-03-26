@@ -936,7 +936,7 @@ void MediaTransportHandler::OnRtcpStateChange(const std::string& aTransportId,
 
 RefPtr<dom::RTCStatsPromise> MediaTransportHandlerSTS::GetIceStats(
     const std::string& aTransportId, DOMHighResTimeStamp aNow) {
-  return InvokeAsync(
+  return mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
         UniquePtr<dom::RTCStatsCollection> stats(new dom::RTCStatsCollection);
