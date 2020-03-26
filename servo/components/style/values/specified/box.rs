@@ -1630,11 +1630,7 @@ pub enum Appearance {
     RadioLabel,
     /// nsRangeFrame and its subparts
     Range,
-    RangeThumb, // FIXME: This should not be exposed to content.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    RangeProgress,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
-    RangeTrack,
+    RangeThumb,
     /// The resizer background area in a status bar for the resizer widget in
     /// the corner of a window.
     #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
@@ -1858,14 +1854,6 @@ pub enum Appearance {
     /// A dummy variant that should be last to let the GTK widget do hackery.
     #[css(skip)]
     Count,
-}
-
-impl Appearance {
-    /// Returns whether we're the `none` value.
-    #[inline]
-    pub fn is_none(self) -> bool {
-        self == Appearance::None
-    }
 }
 
 /// A kind of break between two boxes.
