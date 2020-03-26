@@ -16,11 +16,7 @@ add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.mediacontrol.testingevents.enabled", true],
-      // As `main-media-controller-playback-changed` is dispatched asynchronously, if
-      // we want to receive it after pausing media, we should postpone the time of
-      // triggering the stop timer. That value should be changed to 0 after landing
-      // bug1620113.
-      ["media.mediacontrol.stopcontrol.timer.ms", 2000],
+      ["media.mediacontrol.stopcontrol.timer.ms", 0],
     ],
   });
 });
