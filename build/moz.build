@@ -81,7 +81,7 @@ if CONFIG['MOZ_APP_BASENAME']:
     if CONFIG['MOZ_APP_PROFILE']:
         appini_defines['MOZ_APP_PROFILE'] = CONFIG['MOZ_APP_PROFILE']
 
-    for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR'):
+    for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR', 'MOZ_UPDATER'):
         if CONFIG[var]:
             appini_defines[var] = True
 

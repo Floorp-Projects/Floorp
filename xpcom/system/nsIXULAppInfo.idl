@@ -56,4 +56,9 @@ interface nsIXULAppInfo : nsIPlatformInfo
    * @returns an empty string if XREAppData.sourceURL is not set.
    */
   readonly attribute ACString sourceURL;
+
+  /**
+   * @see XREAppData.updateURL
+   */
+  readonly attribute ACString updateURL;
 };
