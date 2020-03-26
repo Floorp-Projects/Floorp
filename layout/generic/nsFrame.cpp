@@ -3214,16 +3214,16 @@ void nsIFrame::BuildDisplayListForStackingContext(
         nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this,
                                                               &dirtyRect);
     switch (decision) {
-      case nsDisplayTransform::FullPrerender:
+      case nsDisplayTransform::PrerenderDecision::Full:
         allowAsyncAnimation = true;
         visibleRect = dirtyRect;
         break;
-      case nsDisplayTransform::PartialPrerender:
+      case nsDisplayTransform::PrerenderDecision::Partial:
         allowAsyncAnimation = true;
         visibleRect = dirtyRect;
         [[fallthrough]];
-        // fall through to the NoPrerender case
-      case nsDisplayTransform::NoPrerender: {
+        // fall through to the PrerenderDecision::No case
+      case nsDisplayTransform::PrerenderDecision::No: {
         const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
         if (overflow.IsEmpty() && !extend3DContext) {
           return;
