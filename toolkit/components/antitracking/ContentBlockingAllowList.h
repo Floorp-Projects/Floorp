@@ -7,6 +7,8 @@
 #ifndef mozilla_contentblockingallowlist_h
 #define mozilla_contentblockingallowlist_h
 
+#include "mozilla/dom/BrowsingContext.h"
+
 class nsICookieJarSettings;
 class nsIHttpChannel;
 class nsIPrincipal;
@@ -44,6 +46,7 @@ class ContentBlockingAllowList final {
   static bool Check(nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing);
   static bool Check(nsPIDOMWindowInner* aWindow);
   static bool Check(nsICookieJarSettings* aCookieJarSettings);
+  static nsresult Check(mozilla::dom::BrowsingContext* aBrowsingContext, bool& aIsAllowListed);
 
   friend class ContentBlocking;
 };
