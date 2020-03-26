@@ -32,6 +32,7 @@ import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.locale.LocaleAwareApplication
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
+import mozilla.components.support.utils.logElapsedTime
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.fenix.FeatureFlags.webPushIntegration
 import org.mozilla.fenix.components.Components
@@ -155,9 +156,11 @@ open class FenixApplication : LocaleAwareApplication() {
         components.performance.visualCompletenessTaskManager.add {
             GlobalScope.launch(Dispatchers.IO) {
                 logger.info("Initializing storage after visual completeness...")
-                components.core.lazyHistoryStorage.value
-                components.core.lazyBookmarksStorage.value
-                components.core.lazyPasswordsStorage.value
+                logElapsedTime(logger, "Storage initialization") {
+                    components.core.historyStorage.warmUp()
+                    components.core.bookmarksStorage.warmUp()
+                    components.core.passwordsStorage.warmUp()
+                }
             }
         }
     }
