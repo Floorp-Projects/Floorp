@@ -223,7 +223,6 @@ void HttpChannelChild::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(listener.forget());
 
   arrayToRelease.AppendElement(mInterceptedRedirectListener.forget());
-  arrayToRelease.AppendElement(mInterceptedRedirectContext.forget());
 
   NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
@@ -1541,11 +1540,9 @@ void HttpChannelChild::ContinueDoNotifyListener() {
 
 void HttpChannelChild::FinishInterceptedRedirect() {
   nsresult rv;
-  MOZ_ASSERT(!mInterceptedRedirectContext, "the context should be null!");
   rv = AsyncOpen(mInterceptedRedirectListener);
 
   mInterceptedRedirectListener = nullptr;
-  mInterceptedRedirectContext = nullptr;
 
   if (mInterceptingChannel) {
     mInterceptingChannel->CleanupRedirectingChannel(rv);
@@ -1946,7 +1943,7 @@ bool HttpChannelChild::Redirect3Complete(OverrideRunnable* aRunnable) {
       httpChannelChild->mOverrideRunnable = aRunnable;
       httpChannelChild->mInterceptingChannel = this;
     }
-    rv = mRedirectChannelChild->CompleteRedirectSetup(mListener, nullptr);
+    rv = mRedirectChannelChild->CompleteRedirectSetup(mListener);
   }
 
   if (!httpChannelChild || !httpChannelChild->mShouldParentIntercept) {
@@ -2076,8 +2073,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
 }
 
 NS_IMETHODIMP
-HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
-                                        nsISupports* aContext) {
+HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
   LOG(("HttpChannelChild::FinishRedirectSetup [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2099,8 +2095,6 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
     //  4. [optional] Call OverrideWithSynthesizedResponse on the redirected
     //  channel if the call came from OverrideRunnable.
     mInterceptedRedirectListener = aListener;
-    mInterceptedRedirectContext = aContext;
-
     // This will send a message to the parent notifying it that we are closing
     // down. After closing the IPC channel, we will proceed to execute
     // FinishInterceptedRedirect() which AsyncOpen's the channel again.

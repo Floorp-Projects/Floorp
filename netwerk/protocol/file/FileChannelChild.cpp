@@ -32,8 +32,7 @@ FileChannelChild::ConnectParent(uint32_t id) {
 }
 
 NS_IMETHODIMP
-FileChannelChild::CompleteRedirectSetup(nsIStreamListener* listener,
-                                        nsISupports* ctx) {
+FileChannelChild::CompleteRedirectSetup(nsIStreamListener* listener) {
   nsresult rv;
 
   rv = AsyncOpen(listener);

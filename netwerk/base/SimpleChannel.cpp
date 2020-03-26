@@ -80,14 +80,12 @@ SimpleChannelChild::ConnectParent(uint32_t aId) {
 }
 
 NS_IMETHODIMP
-SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
-                                          nsISupports* aContext) {
+SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
   if (CanSend()) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   nsresult rv;
-  MOZ_ASSERT(!aContext, "aContext should be null!");
   rv = AsyncOpen(aListener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

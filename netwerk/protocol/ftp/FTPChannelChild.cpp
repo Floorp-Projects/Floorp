@@ -623,8 +623,7 @@ FTPChannelChild::ConnectParent(uint32_t aId) {
 }
 
 NS_IMETHODIMP
-FTPChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
-                                       nsISupports* aContext) {
+FTPChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
   LOG(("FTPChannelChild::CompleteRedirectSetup [this=%p]\n", this));
 
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
