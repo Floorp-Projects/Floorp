@@ -32,8 +32,12 @@ async function testBucketedArray(dbg) {
 // simple value, which will show a tooltip.
 add_task(async function() {
   const dbg = await initDebugger("doc-preview.html", "preview.js");
-  await selectSource(dbg, "preview.js");
 
+  await previews(dbg, "testInline", [
+    { line: 17, column: 16, expression: "obj?.prop", result: 2 },
+  ]);
+
+  await selectSource(dbg, "preview.js");
   await testBucketedArray(dbg);
 
   await previews(dbg, "empties", [
