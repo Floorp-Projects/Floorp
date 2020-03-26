@@ -33,6 +33,7 @@ add_task(async function urlToTip() {
           text: "This is a test tip.",
           buttonText: "OK",
           helpUrl: "http://example.com/",
+          type: "test",
         }
       ),
     ],
@@ -134,6 +135,7 @@ add_task(async function tipToURL() {
           text: "This is a test tip.",
           buttonText: "OK",
           helpUrl: "http://example.com/",
+          type: "test",
         }
       ),
     ],

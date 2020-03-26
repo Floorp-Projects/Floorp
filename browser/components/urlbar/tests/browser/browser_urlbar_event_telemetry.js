@@ -1147,7 +1147,7 @@ let tipMatches = [
     {
       text: "This is a test intervention.",
       buttonText: "Done",
-      data: "test",
+      type: "test",
       helpUrl: "about:about",
     }
   ),

@@ -81,6 +81,7 @@ add_task(async function test() {
           icon: "",
           text: "This is a test tip.",
           buttonText: "OK",
+          type: "test",
         }
       ),
       { heuristic: true }

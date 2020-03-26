@@ -173,7 +173,6 @@ add_task(async function pickHelpButton() {
         type: UrlbarProviderInterventions.TIP_TYPE.CLEAR,
         text: "This is a test tip.",
         buttonText: "Done",
-        data: "test",
         helpUrl,
       }
     ),
