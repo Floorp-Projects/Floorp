@@ -7,6 +7,8 @@ package mozilla.components.feature.customtabs
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
 import android.content.res.Resources
+import android.provider.Browser
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
@@ -31,6 +33,25 @@ class CustomTabIntentProcessor(
         return safeIntent.action == ACTION_VIEW && isCustomTabIntent(safeIntent)
     }
 
+    @VisibleForTesting
+    internal fun getAdditionalHeaders(intent: SafeIntent): Map<String, String>? {
+        val pairs = intent.getBundleExtra(Browser.EXTRA_HEADERS)
+        val headers = mutableMapOf<String, String>()
+        pairs?.keySet()?.forEach { key ->
+            val header = pairs.getString(key)
+            if (header != null) {
+                headers[key] = header
+            } else {
+                throw IllegalArgumentException("getAdditionalHeaders() intent bundle contains wrong key value pair")
+            }
+        }
+        return if (headers.isEmpty()) {
+            null
+        } else {
+            headers
+        }
+    }
+
     override suspend fun process(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         val url = safeIntent.dataString
@@ -40,7 +61,7 @@ class CustomTabIntentProcessor(
             session.customTabConfig = createCustomTabConfigFromIntent(intent, resources)
 
             sessionManager.add(session)
-            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())
+            loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external(), getAdditionalHeaders(safeIntent))
             intent.putSessionId(session.id)
 
             true

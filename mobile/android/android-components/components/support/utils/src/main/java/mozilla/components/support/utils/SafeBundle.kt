@@ -23,6 +23,9 @@ class SafeBundle(val unsafe: Bundle) {
     fun getString(name: String): String? =
         safeAccess { getString(name) }
 
+    fun keySet(): Set<String>? =
+        safeAccess { keySet() }
+
     fun <T : Parcelable> getParcelable(name: String): T? =
         safeAccess { getParcelable<T>(name) }
 

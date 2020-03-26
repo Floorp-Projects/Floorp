@@ -28,7 +28,14 @@ class SessionUseCases(
      * Contract for use cases that load a provided URL.
      */
     interface LoadUrlUseCase {
-        fun invoke(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())
+        /**
+         * Loads the provided URL using the currently selected session.
+         */
+        fun invoke(
+            url: String,
+            flags: LoadUrlFlags = LoadUrlFlags.none(),
+            additionalHeaders: Map<String, String>? = null
+        )
     }
 
     class DefaultLoadUrlUseCase internal constructor(
@@ -43,9 +50,14 @@ class SessionUseCases(
          *
          * @param url The URL to be loaded using the selected session.
          * @param flags The [LoadUrlFlags] to use when loading the provided url.
+         * @param additionalHeaders the extra headers to use when loading the provided url.
          */
-        override operator fun invoke(url: String, flags: LoadUrlFlags) {
-            this.invoke(url, sessionManager.selectedSession, flags)
+        override operator fun invoke(
+            url: String,
+            flags: LoadUrlFlags,
+            additionalHeaders: Map<String, String>?
+        ) {
+            this.invoke(url, sessionManager.selectedSession, flags, additionalHeaders)
         }
 
         /**
@@ -56,14 +68,17 @@ class SessionUseCases(
          * @param url The URL to be loaded using the provided session.
          * @param session the session for which the URL should be loaded.
          * @param flags The [LoadUrlFlags] to use when loading the provided url.
+         * @param additionalHeaders the extra headers to use when loading the provided url.
          */
         operator fun invoke(
             url: String,
             session: Session? = sessionManager.selectedSession,
-            flags: LoadUrlFlags = LoadUrlFlags.none()
+            flags: LoadUrlFlags = LoadUrlFlags.none(),
+            additionalHeaders: Map<String, String>? = null
         ) {
             val loadSession = session ?: onNoSession.invoke(url)
-            sessionManager.getOrCreateEngineSession(loadSession).loadUrl(url, flags = flags)
+            sessionManager.getOrCreateEngineSession(loadSession)
+                .loadUrl(url, flags = flags, additionalHeaders = additionalHeaders)
         }
     }
 
