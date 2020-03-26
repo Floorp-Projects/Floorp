@@ -10,11 +10,13 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.app.Service
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
@@ -441,14 +443,39 @@ abstract class AbstractFetchDownloadService : Service() {
 
         val resolver = applicationContext.contentResolver
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val item = resolver.insert(collection, values)
 
-        val pfd = resolver.openFileDescriptor(item!!, "w")
-        ParcelFileDescriptor.AutoCloseOutputStream(pfd).use(block)
+        // Query if we have a pending download with the same name. This can happen
+        // if a download was interrupted, failed or cancelled before the file was
+        // written to disk. Our logic above will have generated a unique file name
+        // based on existing files on the device, but we might already have a row
+        // for the download in the content resolver.
+        var downloadUri: Uri? = null
+        resolver.query(
+            MediaStore.setIncludePending(collection),
+            arrayOf(MediaStore.Downloads._ID),
+            "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+            arrayOf("${download.fileName}"),
+            null
+        )?.use {
+            if (it.count > 0) {
+                val idColumnIndex = it.getColumnIndex(MediaStore.Downloads._ID)
+                it.moveToFirst()
+                downloadUri = ContentUris.withAppendedId(collection, it.getLong(idColumnIndex))
+            }
+        }
 
-        values.clear()
-        values.put(MediaStore.Downloads.IS_PENDING, 0)
-        resolver.update(item, values, null, null)
+        if (downloadUri == null) {
+            downloadUri = resolver.insert(collection, values)
+        }
+
+        downloadUri?.let {
+            val pfd = resolver.openFileDescriptor(it, "w")
+            ParcelFileDescriptor.AutoCloseOutputStream(pfd).use(block)
+
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(it, values, null, null)
+        } ?: throw IOException("Failed to register download with content resolver")
     }
 
     @TargetApi(Build.VERSION_CODES.P)
