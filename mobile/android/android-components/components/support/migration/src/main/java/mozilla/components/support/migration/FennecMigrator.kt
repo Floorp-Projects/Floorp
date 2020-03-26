@@ -210,12 +210,12 @@ class FennecMigrator private constructor(
     private val context: Context,
     private val crashReporter: CrashReporter,
     private val migrations: List<VersionedMigration>,
-    private val historyStorage: PlacesHistoryStorage?,
-    private val bookmarksStorage: PlacesBookmarksStorage?,
-    private val loginsStorage: SyncableLoginsStorage?,
+    private val historyStorage: Lazy<PlacesHistoryStorage>?,
+    private val bookmarksStorage: Lazy<PlacesBookmarksStorage>?,
+    private val loginsStorage: Lazy<SyncableLoginsStorage>?,
     private val sessionManager: SessionManager?,
     private val searchEngineManager: SearchEngineManager?,
-    private val accountManager: FxaAccountManager?,
+    private val accountManager: Lazy<FxaAccountManager>?,
     private val engine: Engine?,
     private val addonCollectionProvider: AddonCollectionProvider?,
     private val addonUpdater: AddonUpdater?,
@@ -232,13 +232,13 @@ class FennecMigrator private constructor(
      */
     @Suppress("TooManyFunctions")
     class Builder(private val context: Context, private val crashReporter: CrashReporter) {
-        private var historyStorage: PlacesHistoryStorage? = null
-        private var bookmarksStorage: PlacesBookmarksStorage? = null
-        private var loginsStorage: SyncableLoginsStorage? = null
+        private var historyStorage: Lazy<PlacesHistoryStorage>? = null
+        private var bookmarksStorage: Lazy<PlacesBookmarksStorage>? = null
+        private var loginsStorage: Lazy<SyncableLoginsStorage>? = null
         private var loginsStorageKey: String? = null
         private var sessionManager: SessionManager? = null
         private var searchEngineManager: SearchEngineManager? = null
-        private var accountManager: FxaAccountManager? = null
+        private var accountManager: Lazy<FxaAccountManager>? = null
         private var engine: Engine? = null
         private var addonCollectionProvider: AddonCollectionProvider? = null
         private var addonUpdater: AddonUpdater? = null
@@ -262,7 +262,10 @@ class FennecMigrator private constructor(
          * @param storage An instance of [PlacesHistoryStorage], used for storing data.
          * @param version Version of the migration; defaults to the current version.
          */
-        fun migrateHistory(storage: PlacesHistoryStorage, version: Int = Migration.History.currentVersion): Builder {
+        fun migrateHistory(
+            storage: Lazy<PlacesHistoryStorage>,
+            version: Int = Migration.History.currentVersion
+        ): Builder {
             check(migrations.find { it.migration is Migration.FxA } == null) {
                 "FxA migration, if desired, must run after history"
             }
@@ -281,7 +284,7 @@ class FennecMigrator private constructor(
          * @param version Version of the migration; defaults to the current version.
          */
         fun migrateBookmarks(
-            storage: PlacesBookmarksStorage,
+            storage: Lazy<PlacesBookmarksStorage>,
             topSiteStorage: TopSiteStorage? = null,
             version: Int = Migration.Bookmarks.currentVersion
         ): Builder {
@@ -311,7 +314,7 @@ class FennecMigrator private constructor(
          * @param storage An instance of [AsyncLoginsStorage], used for storing data.
          */
         fun migrateLogins(
-            storage: SyncableLoginsStorage,
+            storage: Lazy<SyncableLoginsStorage>,
             version: Int = Migration.Logins.currentVersion
         ): Builder {
             check(migrations.find { it.migration is Migration.FxA } == null) {
@@ -366,7 +369,7 @@ class FennecMigrator private constructor(
          * @param accountManager An instance of [FxaAccountManager] used for authenticating using a migrated account.
          * @param version Version of the migration; defaults to the current version.
          */
-        fun migrateFxa(accountManager: FxaAccountManager, version: Int = Migration.FxA.currentVersion): Builder {
+        fun migrateFxa(accountManager: Lazy<FxaAccountManager>, version: Int = Migration.FxA.currentVersion): Builder {
             this.accountManager = accountManager
             migrations.add(VersionedMigration(Migration.FxA, version))
             return this
@@ -657,7 +660,7 @@ class FennecMigrator private constructor(
 
         val migrationMetrics = try {
             logger.debug("Migrating history...")
-            historyStorage.importFromFennec(browserDbPath)
+            historyStorage.value.importFromFennec(browserDbPath)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateHistoryException(e))
             MigrationHistory.failureReason.add(FailureReasonTelemetryCodes.HISTORY_RUST_EXCEPTION.code)
@@ -702,7 +705,7 @@ class FennecMigrator private constructor(
 
         val migrationMetrics = try {
             logger.debug("Migrating bookmarks...")
-            bookmarksStorage.importFromFennec(browserDbPath)
+            bookmarksStorage.value.importFromFennec(browserDbPath)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateBookmarksException(e)
@@ -746,7 +749,7 @@ class FennecMigrator private constructor(
                 crashReporter,
                 signonsDbPath = "${profile.path}/$signonsDbName",
                 key4DbPath = "${profile.path}/$key4DbName",
-                loginsStorage = loginsStorage!!
+                loginsStorage = loginsStorage!!.value
             )
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateLoginsException(e))
@@ -864,7 +867,7 @@ class FennecMigrator private constructor(
 
     @Suppress("ComplexMethod", "LongMethod")
     private suspend fun migrateFxA(): Result<FxaMigrationResult> {
-        val result = FennecFxaMigration.migrate(fxaState!!, context, accountManager!!)
+        val result = FennecFxaMigration.migrate(fxaState!!, context, accountManager!!.value)
 
         if (result is Result.Failure<FxaMigrationResult>) {
             val migrationFailureWrapper = result.throwables.first() as FxaMigrationException
@@ -1169,7 +1172,7 @@ class FennecMigrator private constructor(
         }
 
         val importedPinnedSites = try {
-            bookmarksStorage.readPinnedSitesFromFennec(browserDbPath)
+            bookmarksStorage.value.readPinnedSitesFromFennec(browserDbPath)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigratePinnedSitesException(e)

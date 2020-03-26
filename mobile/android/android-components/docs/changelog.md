@@ -18,6 +18,9 @@ permalink: /changelog/
   * **feature-addons**
     * Added `DefaultAddonUpdater.UpdateAttemptStorage` allows to query the last known state for a previous attempt to update an add-on.
 
+* **support-migration**
+  * ⚠️ **This is a breaking change**: `FennecMigrator` now takes `Lazy` references to storage layers.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
