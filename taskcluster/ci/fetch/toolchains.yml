@@ -471,4 +471,4 @@ fix-stacks:
     fetch:
         type: git
         repo: https://github.com/mozilla/fix-stacks/
-        revision: 15304c4cf0bcd6e4feeadd065dba4af25c0d3e87
+        revision: 22bd8d55956d5403e1e2d2c14fd07d8ab74b5807
