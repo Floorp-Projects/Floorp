@@ -679,7 +679,7 @@ class TSFTextStore final : public ITextStoreACP,
     // For eCompositionUpdate
     RefPtr<TextRangeArray> mRanges;
     // For eKeyboardEvent
-    const MSG* mKeyMsg;
+    MSG mKeyMsg;
     // For eSetSelection
     bool mSelectionReversed;
     // For eCompositionUpdate
