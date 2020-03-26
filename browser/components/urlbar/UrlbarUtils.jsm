@@ -59,36 +59,25 @@ var UrlbarUtils = {
   },
 
   // Defines UrlbarResult types.
-  // If you add new result types, consider checking if consumers of
-  // "urlbar-user-start-navigation" need update as well.
   RESULT_TYPE: {
     // An open tab.
-    // Payload: { icon, url, userContextId }
     TAB_SWITCH: 1,
     // A search suggestion or engine.
-    // Payload: { icon, suggestion, keyword, query }
     SEARCH: 2,
     // A common url/title tuple, may be a bookmark with tags.
-    // Payload: { icon, url, title, tags }
     URL: 3,
     // A bookmark keyword.
-    // Payload: { icon, url, keyword, postData }
     KEYWORD: 4,
     // A WebExtension Omnibox result.
-    // Payload: { icon, keyword, title, content }
     OMNIBOX: 5,
     // A tab from another synced device.
-    // Payload: { url, icon, device, title }
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
-    // `type` is a string and is required.  It will be used in the names of keys
-    // in the `urlbar.tips` keyed scalar telemetry (see telemetry.rst).  If you
-    // add a new type, then you are also adding new `urlbar.tips` keys and
-    // therefore need an expanded data collection review.
-    // textData and buttonTextData are objects containing an l10n id and args.
-    // If a tip is untranslated it's possible to provide text and buttonText.
-    // Payload: { type, icon, textData, buttonTextData, [buttonUrl], [helpUrl] }
     TIP: 7,
+
+    // When you add a new type, also add its schema to
+    // UrlbarUtils.RESULT_PAYLOAD_SCHEMA below.  Also consider checking if
+    // consumers of "urlbar-user-start-navigation" need updating.
   },
 
   // This defines the source of results returned by a provider. Each provider
@@ -157,6 +146,16 @@ var UrlbarUtils = {
   // Regex matching single words (no spaces, dots or url-like chars).
   // We accept a trailing dot though.
   REGEXP_SINGLE_WORD: /^[^\s.?@:/]+\.?$/,
+
+  /**
+   * Returns the payload schema for the given type of result.
+   *
+   * @param {number} type One of the UrlbarUtils.RESULT_TYPE values.
+   * @returns {object} The schema for the given type.
+   */
+  getPayloadSchema(type) {
+    return UrlbarUtils.RESULT_PAYLOAD_SCHEMA[type];
+  },
 
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
@@ -556,6 +555,232 @@ XPCOMUtils.defineLazyGetter(UrlbarUtils, "strings", () => {
     "chrome://global/locale/autocomplete.properties"
   );
 });
+
+/**
+ * Payload JSON schemas for each result type.  Payloads are validated against
+ * these schemas using JsonSchemaValidator.jsm.
+ */
+UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
+  [UrlbarUtils.RESULT_TYPE.TAB_SWITCH]: {
+    type: "object",
+    required: ["url"],
+    properties: {
+      displayUrl: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      title: {
+        type: "string",
+      },
+      url: {
+        type: "string",
+      },
+      userContextId: {
+        type: "number",
+      },
+    },
+  },
+  [UrlbarUtils.RESULT_TYPE.SEARCH]: {
+    type: "object",
+    properties: {
+      displayUrl: {
+        type: "string",
+      },
+      engine: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      inPrivateWindow: {
+        type: "boolean",
+      },
+      isPrivateEngine: {
+        type: "boolean",
+      },
+      keyword: {
+        type: "string",
+      },
+      keywordOffer: {
+        type: "number", // UrlbarUtils.KEYWORD_OFFER
+      },
+      query: {
+        type: "string",
+      },
+      suggestion: {
+        type: "string",
+      },
+      title: {
+        type: "string",
+      },
+      url: {
+        type: "string",
+      },
+    },
+  },
+  [UrlbarUtils.RESULT_TYPE.URL]: {
+    type: "object",
+    required: ["url"],
+    properties: {
+      displayUrl: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      tags: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      title: {
+        type: "string",
+      },
+      url: {
+        type: "string",
+      },
+    },
+  },
+  [UrlbarUtils.RESULT_TYPE.KEYWORD]: {
+    type: "object",
+    required: ["keyword", "url"],
+    properties: {
+      displayUrl: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      input: {
+        type: "string",
+      },
+      keyword: {
+        type: "string",
+      },
+      postData: {
+        type: "string",
+      },
+      title: {
+        type: "string",
+      },
+      url: {
+        type: "string",
+      },
+    },
+  },
+  [UrlbarUtils.RESULT_TYPE.OMNIBOX]: {
+    type: "object",
+    required: ["keyword"],
+    properties: {
+      content: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      keyword: {
+        type: "string",
+      },
+      title: {
+        type: "string",
+      },
+    },
+  },
+  [UrlbarUtils.RESULT_TYPE.REMOTE_TAB]: {
+    type: "object",
+    required: ["device", "url"],
+    properties: {
+      device: {
+        type: "string",
+      },
+      displayUrl: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      title: {
+        type: "string",
+      },
+      url: {
+        type: "string",
+      },
+    },
+  },
+  [UrlbarUtils.RESULT_TYPE.TIP]: {
+    type: "object",
+    required: ["type"],
+    properties: {
+      // Prefer `buttonTextData` if your string is translated.  This is for
+      // untranslated strings.
+      buttonText: {
+        type: "string",
+      },
+      // l10n { id, args }
+      buttonTextData: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: {
+            type: "string",
+          },
+          args: {
+            type: "array",
+          },
+        },
+      },
+      buttonUrl: {
+        type: "string",
+      },
+      helpUrl: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      // Prefer `text` if your string is translated.  This is for untranslated
+      // strings.
+      text: {
+        type: "string",
+      },
+      // l10n { id, args }
+      textData: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: {
+            type: "string",
+          },
+          args: {
+            type: "array",
+          },
+        },
+      },
+      // `type` is used in the names of keys in the `urlbar.tips` keyed scalar
+      // telemetry (see telemetry.rst).  If you add a new type, then you are
+      // also adding new `urlbar.tips` keys and therefore need an expanded data
+      // collection review.
+      type: {
+        type: "string",
+        enum: [
+          "extension",
+          "intervention_clear",
+          "intervention_refresh",
+          "intervention_update_ask",
+          "intervention_update_refresh",
+          "intervention_update_restart",
+          "intervention_update_web",
+          "searchTip_onboard",
+          "searchTip_redirect",
+          "test", // for tests only
+        ],
+      },
+    },
+  },
+};
 
 /**
  * UrlbarQueryContext defines a user's autocomplete input from within the urlbar.

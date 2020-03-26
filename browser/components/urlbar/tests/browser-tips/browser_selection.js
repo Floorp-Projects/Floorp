@@ -22,7 +22,7 @@ add_task(async function tipIsSecondResult() {
         icon: "",
         text: "This is a test intervention.",
         buttonText: "Done",
-        data: "test",
+        type: "test",
         helpUrl: HELP_URL,
         buttonUrl: TIP_URL,
       }
@@ -131,7 +131,7 @@ add_task(async function tipIsOnlyResult() {
         icon: "",
         text: "This is a test intervention.",
         buttonText: "Done",
-        data: "test",
+        type: "test",
         helpUrl:
           "https://support.mozilla.org/en-US/kb/delete-browsing-search-download-history-firefox",
       }
@@ -218,7 +218,7 @@ add_task(async function tipHasNoHelpButton() {
         icon: "",
         text: "This is a test intervention.",
         buttonText: "Done",
-        data: "test",
+        type: "test",
       }
     ),
   ];
