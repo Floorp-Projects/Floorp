@@ -15,12 +15,12 @@ internal object MediaReducer {
      */
     fun reduce(state: BrowserState, action: MediaAction): BrowserState {
         return when (action) {
-            is MediaAction.AddMediaAction -> state.updateMediaList(action.tabId) {
-                it.add(action.media)
+            is MediaAction.AddMediaAction -> state.updateMediaList(action.tabId) { list ->
+                list + action.media
             }
 
-            is MediaAction.RemoveMediaAction -> state.updateMediaList(action.tabId) {
-                it.removeAll { element -> element.id == action.media.id }
+            is MediaAction.RemoveMediaAction -> state.updateMediaList(action.tabId) { list ->
+                list.filter { element -> element.id != action.media.id }
             }
 
             is MediaAction.RemoveTabMediaAction -> {
@@ -53,19 +53,12 @@ internal object MediaReducer {
 
 private fun BrowserState.updateMediaList(
     tabId: String,
-    update: (MutableList<MediaState.Element>) -> Unit
+    update: (List<MediaState.Element>) -> List<MediaState.Element>
 ): BrowserState {
-    return copy(media = media.copy(
-        elements = media.elements.toMutableMap().apply {
-            val list = this[tabId]?.toMutableList() ?: mutableListOf()
-            update(list)
+    val elements = update(media.elements[tabId] ?: emptyList())
 
-            if (list.isEmpty()) {
-                remove(tabId)
-            } else {
-                put(tabId, list)
-            }
-        }
+    return copy(media = media.copy(
+        elements = (media.elements + (tabId to elements)).filterValues { it.isNotEmpty() }
     ))
 }
 
@@ -75,16 +68,17 @@ private fun BrowserState.updateMediaElement(
     update: (MediaState.Element) -> MediaState.Element
 ): BrowserState {
     return copy(media = media.copy(
-        elements = media.elements.toMutableMap().apply {
-            val list = this[tabId]
-            if (list != null) {
-                this[tabId] = list.map {
-                    if (it.id == mediaId) {
-                        update(it)
+        elements = media.elements.mapValues { entry ->
+            if (entry.key == tabId) {
+                entry.value.map { element ->
+                    if (element.id == mediaId) {
+                        update(element)
                     } else {
-                        it
+                        element
                     }
                 }
+            } else {
+                entry.value
             }
         }
     ))
