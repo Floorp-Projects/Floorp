@@ -812,9 +812,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // Don't unlink mRequest or mSource in
 // NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED!
-#define NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS(_subclassName)            \
-  NS_IMPL_CYCLE_COLLECTION_CLASS(_subclassName)                               \
-                                                                              \
+#define NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS_METHODS(_subclassName)    \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_subclassName, IDBCursor) \
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)                                \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                       \
@@ -830,9 +828,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
   NS_IMPL_ADDREF_INHERITED(_subclassName, IDBCursor)                          \
   NS_IMPL_RELEASE_INHERITED(_subclassName, IDBCursor)
 
+#define NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS(_subclassName) \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(_subclassName)                    \
+  NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS_METHODS(_subclassName)
+
+#define NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_MULTI_ZONE_JSHOLDER_SUBCLASS( \
+    _subclassName)                                                       \
+  NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(_subclassName)      \
+  NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS_METHODS(_subclassName)
+
 NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS(IDBObjectStoreCursor)
 NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS(IDBObjectStoreKeyCursor)
-NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS(IDBIndexCursor)
+NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_MULTI_ZONE_JSHOLDER_SUBCLASS(IDBIndexCursor)
 NS_IMPL_CYCLE_COLLECTION_IDBCURSOR_SUBCLASS(IDBIndexKeyCursor)
 
 template <IDBCursor::Type CursorType>
