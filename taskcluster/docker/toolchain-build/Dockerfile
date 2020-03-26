@@ -29,6 +29,7 @@ RUN apt-get update && \
       libbz2-dev \
       libcurl4-openssl-dev \
       libssl-dev \
+      libxml2-dev \
       libtool \
       libucl-dev \
       ninja-build \

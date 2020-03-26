@@ -26,6 +26,7 @@ RUN apt-get update && \
       gnupg \
       jq \
       libucl1 \
+      libxml2 \
       patch \
       p7zip-full \
       scons \
