@@ -42,7 +42,7 @@ use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use std::slice;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
@@ -204,15 +204,18 @@ fn create_device_info(id: AudioDeviceID, devtype: DeviceType) -> Result<device_i
 
     let default_device_id = audiounit_get_default_device_id(devtype);
     if default_device_id == kAudioObjectUnknown {
+        cubeb_log!("Could not find default audio device for {:?}", devtype);
         return Err(Error::error());
     }
 
     if id == kAudioObjectUnknown {
         info.id = default_device_id;
+        cubeb_log!("Creating a default device info.");
         info.flags |= device_flags::DEV_SELECTED_DEFAULT;
     }
 
     if info.id == default_device_id {
+        cubeb_log!("Requesting default system device.");
         info.flags |= device_flags::DEV_SYSTEM_DEFAULT;
     }
 
@@ -327,13 +330,17 @@ fn get_volume(unit: AudioUnit) -> Result<f32> {
     }
 }
 
-fn minimum_resampling_input_frames(input_rate: f64, output_rate: f64, output_frames: i64) -> i64 {
+fn minimum_resampling_input_frames(
+    input_rate: f64,
+    output_rate: f64,
+    output_frames: usize,
+) -> usize {
     assert!(!approx_eq!(f64, input_rate, 0_f64));
     assert!(!approx_eq!(f64, output_rate, 0_f64));
     if approx_eq!(f64, input_rate, output_rate) {
         return output_frames;
     }
-    (input_rate * output_frames as f64 / output_rate).ceil() as i64
+    (input_rate * output_frames as f64 / output_rate).ceil() as usize
 }
 
 fn audiounit_make_silent(io_data: &mut AudioBuffer) {
@@ -447,7 +454,7 @@ extern "C" fn audiounit_input_callback(
 
         // Advance input frame counter.
         stm.frames_read
-            .fetch_add(i64::from(input_frames), atomic::Ordering::SeqCst);
+            .fetch_add(input_frames as usize, atomic::Ordering::SeqCst);
 
         cubeb_logv!(
             "({:p}) input: buffers {}, size {}, channels {}, rendered frames {}, total frames {}.",
@@ -639,46 +646,68 @@ extern "C" fn audiounit_output_callback(
             }
         };
 
+        let prev_frames_written = stm.frames_written.load(Ordering::SeqCst);
+
         stm.frames_written
-            .fetch_add(i64::from(output_frames), Ordering::SeqCst);
+            .fetch_add(output_frames as usize, Ordering::SeqCst);
 
         // Also get the input buffer if the stream is duplex
         let (input_buffer, mut input_frames) = if !stm.core_stream_data.input_unit.is_null() {
             assert!(stm.core_stream_data.input_linear_buffer.is_some());
             assert_ne!(stm.core_stream_data.input_desc.mChannelsPerFrame, 0);
+            let input_channels = stm.core_stream_data.input_desc.mChannelsPerFrame as usize;
             // If the output callback came first and this is a duplex stream, we need to
             // fill in some additional silence in the resampler.
             // Otherwise, if we had more than expected callbacks in a row, or we're
             // currently switching, we add some silence as well to compensate for the
             // fact that we're lacking some input data.
-            let frames_written = stm.frames_written.load(Ordering::SeqCst);
             let input_frames_needed = minimum_resampling_input_frames(
                 stm.core_stream_data.input_hw_rate,
                 f64::from(stm.core_stream_data.output_stream_params.rate()),
-                frames_written,
+                output_frames as usize,
             );
-            let missing_frames = input_frames_needed - stm.frames_read.load(Ordering::SeqCst);
-            let elements = (missing_frames
-                * i64::from(stm.core_stream_data.input_desc.mChannelsPerFrame))
-                as usize;
-            if missing_frames > 0 {
+            let buffered_input_frames = stm
+                .core_stream_data
+                .input_linear_buffer
+                .as_ref()
+                .unwrap()
+                .elements()
+                / input_channels;
+            // Else if the input has buffered a lot already because the output started late, we
+            // need to trim the input buffer
+            if prev_frames_written == 0 && buffered_input_frames > input_frames_needed as usize {
+                let samples_to_pop =
+                    (buffered_input_frames - input_frames_needed as usize) * input_channels;
                 stm.core_stream_data
                     .input_linear_buffer
                     .as_mut()
                     .unwrap()
-                    .push_zeros(elements);
-                stm.frames_read.store(input_frames_needed, Ordering::SeqCst);
+                    .pop(samples_to_pop);
+                stm.frames_read
+                    .fetch_sub((samples_to_pop / input_channels) as usize, Ordering::SeqCst);
+            }
+
+            if input_frames_needed > buffered_input_frames {
+                let silent_frames_to_push = input_frames_needed - buffered_input_frames;
+                let silent_samples_to_push = silent_frames_to_push * input_channels;
+                stm.core_stream_data
+                    .input_linear_buffer
+                    .as_mut()
+                    .unwrap()
+                    .push_zeros(silent_samples_to_push);
+                stm.frames_read
+                    .fetch_add(input_frames_needed, Ordering::SeqCst);
                 cubeb_log!(
-                    "({:p}) {} pushed {} frames of input silence.",
+                    "({:p}) Missing Frames: {} pushed {} frames of input silence.",
                     stm.core_stream_data.stm_ptr,
                     if stm.frames_read.load(Ordering::SeqCst) == 0 {
-                        "Input hasn't started,"
+                        "input hasn't started,"
                     } else if stm.switching_device.load(Ordering::SeqCst) {
-                        "Device switching,"
+                        "device switching,"
                     } else {
-                        "Drop out,"
+                        "drop out,"
                     },
-                    missing_frames
+                    silent_frames_to_push
                 );
             }
             let input_frames = stm
@@ -1477,11 +1506,25 @@ fn create_cubeb_device_info(
         Ok(uid) => {
             let c_string = uid.into_cstring();
             dev_info.device_id = c_string.into_raw();
-            dev_info.group_id = dev_info.device_id;
         }
         Err(e) => {
             cubeb_log!(
                 "Cannot get the uid for device {} in {:?} scope. Error: {}",
+                devid,
+                devtype,
+                e
+            );
+        }
+    }
+
+    match get_device_model_uid(devid, devtype) {
+        Ok(uid) => {
+            let c_string = uid.into_cstring();
+            dev_info.group_id = c_string.into_raw();
+        }
+        Err(e) => {
+            cubeb_log!(
+                "Cannot get the model uid for device {} in {:?} scope. Error: {}",
                 devid,
                 devtype,
                 e
@@ -1598,21 +1641,25 @@ fn is_aggregate_device(device_info: &ffi::cubeb_device_info) -> bool {
 }
 
 fn destroy_cubeb_device_info(device: &mut ffi::cubeb_device_info) {
-    // This should be mapped to the memory allocation in create_cubeb_device_info.
+    // This should be mapped to the memory allocation in `create_cubeb_device_info`.
+    // The `device_id`, `group_id`, `vendor_name` can be null pointer if the queries
+    // failed, while `friendly_name` will be assigned to a default empty "" string.
     // Set the pointers to null in case it points to some released memory.
     unsafe {
         if !device.device_id.is_null() {
-            // group_id is a mirror to device_id, so we could skip it.
-            assert!(!device.group_id.is_null());
-            assert_eq!(device.device_id, device.group_id);
             let _ = CString::from_raw(device.device_id as *mut _);
             device.device_id = ptr::null();
+        }
+
+        if !device.group_id.is_null() {
+            let _ = CString::from_raw(device.group_id as *mut _);
             device.group_id = ptr::null();
         }
-        if !device.friendly_name.is_null() {
-            let _ = CString::from_raw(device.friendly_name as *mut _);
-            device.friendly_name = ptr::null();
-        }
+
+        assert!(!device.friendly_name.is_null());
+        let _ = CString::from_raw(device.friendly_name as *mut _);
+        device.friendly_name = ptr::null();
+
         if !device.vendor_name.is_null() {
             let _ = CString::from_raw(device.vendor_name as *mut _);
             device.vendor_name = ptr::null();
@@ -3086,9 +3133,9 @@ struct AudioUnitStream<'ctx> {
     frames_queued: u64,
     // How many frames got read from the input since the stream started (includes
     // padded silence)
-    frames_read: AtomicI64,
+    frames_read: AtomicUsize,
     // How many frames got written to the output device since the stream started
-    frames_written: AtomicI64,
+    frames_written: AtomicUsize,
     shutdown: AtomicBool,
     draining: AtomicBool,
     reinit_pending: AtomicBool,
@@ -3119,8 +3166,8 @@ impl<'ctx> AudioUnitStream<'ctx> {
             device_changed_callback: Mutex::new(None),
             frames_played: AtomicU64::new(0),
             frames_queued: 0,
-            frames_read: AtomicI64::new(0),
-            frames_written: AtomicI64::new(0),
+            frames_read: AtomicUsize::new(0),
+            frames_written: AtomicUsize::new(0),
             shutdown: AtomicBool::new(true),
             draining: AtomicBool::new(false),
             reinit_pending: AtomicBool::new(false),

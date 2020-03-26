@@ -35,6 +35,12 @@ after finishing normal tests.
 Most of the tests are executed in `run_tests.sh`.
 Only those tests commented with *FIXIT* are left.
 
+### Git Hooks
+
+You can install _git hooks_ by running `install_git_hook.sh`.
+Then _pre-push_ script will be run and do the `cargo fmt` and `cargo clippy` check
+before the commits are pushed to remote.
+
 ### Run Sanitizers
 
 Run _AddressSanitizer (ASan), LeakSanitizer (LSan), MemorySanitizer (MSan), ThreadSanitizer (TSan)_
