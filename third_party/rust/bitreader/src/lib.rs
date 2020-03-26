@@ -30,7 +30,7 @@
 //! ```
 //! You can naturally read bits from longer buffer of data than just a single byte.
 //!
-//! As you read bits, the internal cursor of BitReader moves on along the stream of bits. Little
+//! As you read bits, the internal cursor of BitReader moves on along the stream of bits. Big
 //! endian format is assumed when reading the multi-byte values. BitReader supports reading maximum
 //! of 64 bits at a time (with read_u64). Reading signed values directly is not supported at the
 //! moment.
@@ -46,10 +46,19 @@
 //! Note that the code will likely not work correctly if the slice is longer than 2^61 bytes, but
 //! exceeding that should be pretty unlikely. Let's get back to this when people read exabytes of
 //! information one bit at a time.
-
-use std::fmt;
-use std::error::Error;
-use std::result;
+#![no_std]
+cfg_if::cfg_if!{
+    if #[cfg(feature = "std")] {
+        extern crate std;
+        use std::prelude::v1::*;
+        use std::fmt;
+        use std::error::Error;
+        use std::result;
+    } else {
+        use core::result;
+        use core::fmt;
+    }
+}
 
 #[cfg(test)]
 mod tests;
@@ -105,60 +114,79 @@ impl<'a> BitReader<'a> {
 
     /// Read at most 8 bits into a u8.
     pub fn read_u8(&mut self, bit_count: u8) -> Result<u8> {
-        let value = try!(self.read_value(bit_count, 8));
+        let value = self.read_value(bit_count, 8)?;
         Ok((value & 0xff) as u8)
+    }
+
+    /// Fills the entire `output_bytes` slice. If there aren't enough bits remaining
+    /// after the internal cursor's current position, the cursor won't be moved forward
+    /// and the contents of `output_bytes` won't be modified.
+    pub fn read_u8_slice(&mut self, output_bytes: &mut [u8]) -> Result<()> {
+        let requested = output_bytes.len() as u64 * 8;
+        if requested > self.remaining() {
+            Err(BitReaderError::NotEnoughData {
+                position: self.position,
+                length: (self.bytes.len() * 8) as u64,
+                requested: requested,
+            })
+        } else {
+            for byte in output_bytes.iter_mut() {
+                *byte = self.read_u8(8)?;
+            }
+            Ok(())
+        }
     }
 
     /// Read at most 16 bits into a u16.
     pub fn read_u16(&mut self, bit_count: u8) -> Result<u16> {
-        let value = try!(self.read_value(bit_count, 16));
+        let value = self.read_value(bit_count, 16)?;
         Ok((value & 0xffff) as u16)
     }
 
     /// Read at most 32 bits into a u32.
     pub fn read_u32(&mut self, bit_count: u8) -> Result<u32> {
-        let value = try!(self.read_value(bit_count, 32));
+        let value = self.read_value(bit_count, 32)?;
         Ok((value & 0xffffffff) as u32)
     }
 
     /// Read at most 64 bits into a u64.
     pub fn read_u64(&mut self, bit_count: u8) -> Result<u64> {
-        let value = try!(self.read_value(bit_count, 64));
+        let value = self.read_value(bit_count, 64)?;
         Ok(value)
     }
 
     /// Read at most 8 bits into a i8.
     /// Assumes the bits are stored in two's complement format.
     pub fn read_i8(&mut self, bit_count: u8) -> Result<i8> {
-        let value = try!(self.read_signed_value(bit_count, 8));
+        let value = self.read_signed_value(bit_count, 8)?;
         Ok((value & 0xff) as i8)
     }
 
     /// Read at most 16 bits into a i16.
     /// Assumes the bits are stored in two's complement format.
     pub fn read_i16(&mut self, bit_count: u8) -> Result<i16> {
-        let value = try!(self.read_signed_value(bit_count, 16));
+        let value = self.read_signed_value(bit_count, 16)?;
         Ok((value & 0xffff) as i16)
     }
 
     /// Read at most 32 bits into a i32.
     /// Assumes the bits are stored in two's complement format.
     pub fn read_i32(&mut self, bit_count: u8) -> Result<i32> {
-        let value = try!(self.read_signed_value(bit_count, 32));
+        let value = self.read_signed_value(bit_count, 32)?;
         Ok((value & 0xffffffff) as i32)
     }
 
     /// Read at most 64 bits into a i64.
     /// Assumes the bits are stored in two's complement format.
     pub fn read_i64(&mut self, bit_count: u8) -> Result<i64> {
-        let value = try!(self.read_signed_value(bit_count, 64));
+        let value = self.read_signed_value(bit_count, 64)?;
         Ok(value)
     }
 
     /// Read a single bit as a boolean value.
     /// Interprets 1 as true and 0 as false.
     pub fn read_bool(&mut self) -> Result<bool> {
-        match try!(self.read_value(1, 1)) {
+        match self.read_value(1, 1)? {
             0 => Ok(false),
             _ => Ok(true),
         }
@@ -183,6 +211,12 @@ impl<'a> BitReader<'a> {
         self.position - self.relative_offset
     }
 
+    /// Returns the number of bits not yet read from the underlying slice.
+    pub fn remaining(&self) -> u64 {
+        let total_bits = self.bytes.len() as u64 * 8;
+        total_bits - self.position
+    }
+
     /// Helper to make sure the "bit cursor" is exactly at the beginning of a byte, or at specific
     /// multi-byte alignment position.
     ///
@@ -198,7 +232,7 @@ impl<'a> BitReader<'a> {
     }
 
     fn read_signed_value(&mut self, bit_count: u8, maximum_count: u8) -> Result<i64> {
-        let unsigned = try!(self.read_value(bit_count, maximum_count));
+        let unsigned = self.read_value(bit_count, maximum_count)?;
         // Fill the bits above the requested bits with all ones or all zeros,
         // depending on the sign bit.
         let sign_bit = unsigned >> (bit_count - 1) & 1;
@@ -263,6 +297,7 @@ pub enum BitReaderError {
     }
 }
 
+#[cfg(feature = "std")]
 impl Error for BitReaderError {
     fn description(&self) -> &str {
         match *self {
@@ -339,7 +374,7 @@ impl_read_into!(i64, read_i64);
 // We can't cast to bool, so this requires a separate method.
 impl ReadInto for bool {
     fn read(reader: &mut BitReader, bits: u8) -> Result<Self> {
-        match try!(reader.read_u8(bits)) {
+        match reader.read_u8(bits)? {
             0 => Ok(false),
             _ => Ok(true),
         }

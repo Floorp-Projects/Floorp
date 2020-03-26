@@ -8,5 +8,5 @@ macro_rules! check_parser_state {
             debug!("bad parser state: {} content bytes left", $src.limit());
             return Err(Error::InvalidData("unread box content or bad parser sync"));
         }
-    }
+    };
 }

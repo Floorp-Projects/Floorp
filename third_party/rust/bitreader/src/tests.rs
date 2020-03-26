@@ -21,6 +21,9 @@ fn read_buffer() {
     assert_eq!(reader.read_u8(1).unwrap(), 0b0);
     assert_eq!(reader.read_u8(2).unwrap(), 0b11);
 
+    assert_eq!(reader.position(), 4);
+    assert_eq!(reader.remaining(), 60);
+
     assert_eq!(reader.read_u8(4).unwrap(), 0b0101);
 
     assert!(reader.is_aligned(1));
@@ -28,6 +31,9 @@ fn read_buffer() {
     assert_eq!(reader.read_u8(3).unwrap(), 0b11);
     assert_eq!(reader.read_u16(10).unwrap(), 0b01_0101_0101);
     assert_eq!(reader.read_u8(3).unwrap(), 0b100);
+
+    assert_eq!(reader.position(), 24);
+    assert_eq!(reader.remaining(), 40);
 
     assert!(reader.is_aligned(1));
 
@@ -149,4 +155,53 @@ fn boolean_values() {
         assert_eq!(reader.read_bool().unwrap(), v & 0x02 == 2);
         assert_eq!(reader.read_bool().unwrap(), v & 0x01 == 1);
     }
+}
+
+#[test]
+fn read_slice() {
+    let bytes = &[
+        0b1111_0000, 0b0000_1111, 0b1111_0000,
+        0b0000_1000, 0b0000_0100, 0b0000_0011,
+        0b1111_1100, 0b0000_0011, 0b1101_1000,
+    ];
+    let mut reader = BitReader::new(bytes);
+    assert_eq!(reader.read_u8(4).unwrap(), 0b1111);
+    // Just some pattern that's definitely not in the bytes array
+    let mut output = [0b1010_1101; 3];
+    reader.read_u8_slice(&mut output).unwrap();
+    assert_eq!(&output, &[0u8, 255u8, 0u8]);
+
+    assert_eq!(reader.read_u8(1).unwrap(), 1);
+
+    reader.read_u8_slice(&mut output[1..2]).unwrap();
+    assert_eq!(&output, &[0u8, 0u8, 0u8]);
+
+    assert_eq!(reader.read_u8(1).unwrap(), 1);
+
+    output = [0b1010_1101; 3];
+    reader.read_u8_slice(&mut output).unwrap();
+    assert_eq!(&output, &[0u8, 255u8, 0u8]);
+
+    reader.read_u8_slice(&mut output[0..1]).unwrap();
+    assert_eq!(output[0], 0b1111_0110);
+
+    assert_eq!(reader.read_u8(2).unwrap(), 0);
+}
+
+#[test]
+fn read_slice_too_much() {
+    let bytes = &[
+        0b1111_1111, 0b1111_1111, 0b1111_1111, 0b1111_1111,
+    ];
+    let mut reader = BitReader::new(bytes);
+    assert_eq!(reader.read_u8(1).unwrap(), 1);
+
+    let mut output = [0u8; 4];
+    let should_be_error = reader.read_u8_slice(&mut output);
+    assert_eq!(should_be_error.unwrap_err(), BitReaderError::NotEnoughData {
+        position: 1,
+        length: (bytes.len() * 8) as u64,
+        requested: (&output.len() * 8) as u64
+    });
+    assert_eq!(&output, &[0u8; 4]);
 }

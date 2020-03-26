@@ -4,7 +4,7 @@
 set -e
 
 # Default version.
-VER="3e0f34a2eb53c6d892b5061f76c8290e5d39e920"
+VER="63ca8c6bde27b39dea87fb15e2922a23cb38c8df"
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -13,8 +13,8 @@ fi
 
 echo "Fetching sources..."
 rm -rf _upstream
-git clone https://github.com/mozilla/mp4parse-rust _upstream/mp4parse
-git clone https://github.com/alfredoyang/mp4parse_fallible _upstream/mp4parse_fallible
+git clone --recurse-submodules https://github.com/mozilla/mp4parse-rust _upstream/mp4parse
+
 pushd _upstream/mp4parse
 git checkout ${VER}
 echo "Verifying sources..."
@@ -32,11 +32,7 @@ cp _upstream/mp4parse/mp4parse/tests/*.mp4 mp4parse/tests/
 find mp4parse_capi -not -name cbindgen.toml -delete
 mkdir -p mp4parse_capi/src
 cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/
-cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
 cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
-rm -rf mp4parse_fallible
-mkdir -p mp4parse_fallible
-cp _upstream/mp4parse_fallible/* mp4parse_fallible/
 
 echo "Applying patches..."
 patch -p3 < mp4parse-cargo.patch

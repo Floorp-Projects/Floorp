@@ -18,7 +18,7 @@ exclude = [
   "*.mp4",
 ]
 
-build = false
+build = false # See bug 1611431 - Generate mp4parse-rust bindings as part of mach build
 
 [badges]
 travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
@@ -30,10 +30,9 @@ mp4parse = {version = "0.11.2", path = "../mp4parse"}
 num-traits = "0.2.0"
 
 [dev-dependencies]
-env_logger = "0.5.3"
+env_logger = "0.7.1"
 
 [features]
-fuzz = ["mp4parse/fuzz"]
 # Enable mp4parse_fallible to use fallible memory allocation rather than
 # panicking on OOM.  Note that this is only safe within Gecko where the system
 # allocator has been globally overridden (see BMO 1457359).
