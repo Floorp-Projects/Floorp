@@ -41,7 +41,6 @@ struct ContentDeviceData
 {
   DevicePrefs prefs;
   D3D11DeviceStatus d3d11;
-  uint8_t[] cmsOutputProfileData;
 };
 
 // Represents the state of a feature that has failed to initialize.

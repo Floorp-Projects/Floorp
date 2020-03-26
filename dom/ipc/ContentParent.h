@@ -1150,9 +1150,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(
       ContentDeviceData* aOut);
 
-  mozilla::ipc::IPCResult RecvGetOutputColorProfileData(
-      nsTArray<uint8_t>* aOutputColorProfileData);
-
   mozilla::ipc::IPCResult RecvGetFontListShmBlock(
       const uint32_t& aGeneration, const uint32_t& aIndex,
       mozilla::ipc::SharedMemoryBasic::Handle* aOut);
