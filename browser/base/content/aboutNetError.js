@@ -163,6 +163,31 @@ function disallowCertOverridesIfNeeded() {
   }
 }
 
+async function setErrorPageStrings(err) {
+  let title = err + "-title";
+
+  let isCertError = err == "nssBadCert";
+  let className = getCSSClass();
+  if (isCertError && (window !== window.top || className == "badStsCert")) {
+    title = err + "-sts-title";
+  }
+
+  let [errorCodeTitle] = await document.l10n.formatValues([
+    {
+      id: title,
+    },
+  ]);
+
+  let titleElement = document.querySelector(".title-text");
+  if (!errorCodeTitle) {
+    console.error("No strings exist for this error type");
+    document.l10n.setAttributes(titleElement, "generic-title");
+    return;
+  }
+
+  document.l10n.setAttributes(titleElement, title);
+}
+
 function initPage() {
   var err = getErrorCode();
   // List of error pages with an illustration.
@@ -206,15 +231,12 @@ function initPage() {
 
   // if it's an unknown error or there's no title or description
   // defined, get the generic message
-  var errTitle = document.getElementById("et_" + l10nErrId);
   var errDesc = document.getElementById("ed_" + l10nErrId);
-  if (!errTitle || !errDesc) {
-    errTitle = document.getElementById("et_generic");
+  if (!errDesc) {
     errDesc = document.getElementById("ed_generic");
   }
 
-  // eslint-disable-next-line no-unsanitized/property
-  document.querySelector(".title-text").innerHTML = errTitle.innerHTML;
+  setErrorPageStrings(err);
 
   var sd = document.getElementById("errorShortDescText");
   if (sd) {
@@ -621,6 +643,7 @@ function setCertErrorDetails(event) {
   let clockSkew = false;
   document.body.setAttribute("code", failedCertInfo.errorCodeString);
 
+  let titleElement = document.querySelector(".title-text");
   let desc;
   switch (failedCertInfo.errorCodeString) {
     case "SSL_ERROR_BAD_CERT_DOMAIN":
@@ -684,9 +707,8 @@ function setCertErrorDetails(event) {
 
       learnMoreLink.href = baseURL + "security-error";
 
-      let title = document.getElementById("et_mitm");
+      document.l10n.setAttributes(titleElement, "certerror-mitm-title");
       desc = document.getElementById("ed_mitm");
-      document.querySelector(".title-text").textContent = title.textContent;
       // eslint-disable-next-line no-unsanitized/property
       document.getElementById("errorShortDescText").innerHTML = desc.innerHTML;
 
@@ -760,11 +782,8 @@ function setCertErrorDetails(event) {
       ).textContent = systemDate;
       if (clockSkew) {
         document.body.classList.add("illustrated", "clockSkewError");
-        let clockErrTitle = document.getElementById("et_clockSkewError");
+        document.l10n.setAttributes(titleElement, "clockSkewError-title");
         let clockErrDesc = document.getElementById("ed_clockSkewError");
-        // eslint-disable-next-line no-unsanitized/property
-        document.querySelector(".title-text").textContent =
-          clockErrTitle.textContent;
         desc = document.getElementById("errorShortDescText");
         document.getElementById("errorShortDesc").style.display = "block";
         document.getElementById("certificateErrorReporting").style.display =
