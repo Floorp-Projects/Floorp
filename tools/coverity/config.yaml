@@ -29,6 +29,7 @@ coverity_checkers:
   NESTING_INDENT_MISMATCH:
     reliability: high
   STRAY_SEMICOLON:
+    publish: false
     reliability: medium
   RESOURCE_LEAK:
     reliability: medium
