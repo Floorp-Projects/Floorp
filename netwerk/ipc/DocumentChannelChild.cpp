@@ -323,7 +323,7 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
   if (NS_SUCCEEDED(rv)) {
     if (nsCOMPtr<nsIChildChannel> childChannel =
             do_QueryInterface(redirectChannel)) {
-      rv = childChannel->CompleteRedirectSetup(mListener, nullptr);
+      rv = childChannel->CompleteRedirectSetup(mListener);
     } else {
       rv = redirectChannel->AsyncOpen(mListener);
     }

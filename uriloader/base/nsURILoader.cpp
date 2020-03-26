@@ -727,7 +727,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel* channel, uint32_t aFlags,
     // be opened again. However, it does need its listener hooked up
     // correctly.
     if (nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(channel)) {
-      return childChannel->CompleteRedirectSetup(loader, nullptr);
+      return childChannel->CompleteRedirectSetup(loader);
     }
 
     // It's possible for the redirected channel to not implement

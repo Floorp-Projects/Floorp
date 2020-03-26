@@ -1074,8 +1074,7 @@ nsViewSourceChannel::ConnectParent(uint32_t aRegistarId) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener,
-                                           nsISupports* aContext) {
+nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener) {
   NS_ENSURE_TRUE(mChildChannel, NS_ERROR_NULL_POINTER);
 
   mListener = aListener;
@@ -1093,7 +1092,7 @@ nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener,
   }
 
   nsresult rv = NS_OK;
-  rv = mChildChannel->CompleteRedirectSetup(this, aContext);
+  rv = mChildChannel->CompleteRedirectSetup(this);
 
   if (NS_FAILED(rv) && loadGroup) {
     loadGroup->RemoveRequest(static_cast<nsIViewSourceChannel*>(this), nullptr,
