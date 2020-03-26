@@ -1999,6 +1999,17 @@ check_prog('DUMP_SYMS', ['dump_syms'], allow_missing=True, paths=toolchain_searc
 check_prog('PDBSTR', ['pdbstr.exe'], allow_missing=True, paths=toolchain_search_path,
            when=compile_environment & target_is_windows)
 
+@depends('MOZ_AUTOMATION', c_compiler)
+def allow_missing_winchecksec(automation, c_compiler):
+    if not automation:
+        return True
+    if c_compiler and c_compiler.type != 'clang-cl':
+        return True
+
+check_prog('WINCHECKSEC', ['winchecksec.exe'], paths=toolchain_search_path,
+           allow_missing=allow_missing_winchecksec,
+           when=compile_environment & target_is_windows & host_is_windows)
+
 # Fork server
 @depends(target, build_project)
 def forkserver_default(target, build_project):

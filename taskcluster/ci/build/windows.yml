@@ -8,6 +8,7 @@ job-defaults:
         tooltool-downloads: internal
     fetches:
         toolchain:
+            - win64-winchecksec
             - win64-dump-syms
             - win64-pdbstr
 
