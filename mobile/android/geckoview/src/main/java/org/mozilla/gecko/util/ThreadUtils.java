@@ -90,6 +90,22 @@ public final class ThreadUtils {
         return sUiHandler;
     }
 
+    /**
+     * Runs the provided runnable on the UI thread. If this method is called on the UI thread
+     * the runnable will be executed synchronously.
+     *
+     * @param runnable the runnable to be executed.
+     */
+    public static void runOnUiThread(final Runnable runnable) {
+        // We're on the UI thread already, let's just run this
+        if (isOnUiThread()) {
+            runnable.run();
+            return;
+        }
+
+        postToUiThread(runnable);
+    }
+
     public static void postToUiThread(final Runnable runnable) {
         sUiHandler.post(runnable);
     }
