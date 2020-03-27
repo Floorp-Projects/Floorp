@@ -10,6 +10,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/WarpOracle.h"
+#include "vm/Opcodes.h"
 
 #include "jit/JitScript-inl.h"
 #include "vm/BytecodeIterator-inl.h"
@@ -356,23 +357,25 @@ bool WarpBuilder::buildBody() {
 
     JSOp op = loc.getOp();
 
-#define BUILD_OP(OP)                            \
+#define BUILD_OP(OP, ...)                       \
   case JSOp::OP:                                \
     if (MOZ_UNLIKELY(!this->build_##OP(loc))) { \
       return false;                             \
     }                                           \
     break;
-    switch (op) {
-      WARP_OPCODE_LIST(BUILD_OP)
-      default:
-        // WarpOracle should have aborted compilation.
-        MOZ_CRASH("Unexpected op");
-    }
+    switch (op) { FOR_EACH_OPCODE(BUILD_OP) }
 #undef BUILD_OP
   }
 
   return true;
 }
+
+#define DEF_OP(OP)                                 \
+  bool WarpBuilder::build_##OP(BytecodeLocation) { \
+    MOZ_CRASH("Unsupported op");                   \
+  }
+WARP_UNSUPPORTED_OPCODE_LIST(DEF_OP)
+#undef DEF_OP
 
 bool WarpBuilder::buildEpilogue() { return true; }
 

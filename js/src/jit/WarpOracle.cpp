@@ -14,6 +14,7 @@
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/Instrumentation.h"
+#include "vm/Opcodes.h"
 
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -192,31 +193,11 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
   mozilla::Maybe<int32_t> instrumentationScriptId;
   JSObject* instrumentationCallback = nullptr;
 
-  // Analyze the bytecode to look for opcodes we can't compile yet. Eventually
-  // this loop will also be responsible for copying IC data.
+  // Analyze the bytecode. Abort compilation for unsupported ops and create
+  // WarpOpSnapshots.
   for (BytecodeLocation loc : AllBytecodesIterable(script)) {
     JSOp op = loc.getOp();
-    switch (op) {
-#define OP_CASE(OP) case JSOp::OP:
-      WARP_OPCODE_LIST(OP_CASE)
-#undef OP_CASE
-      break;
-
-      default:
-#ifdef DEBUG
-        return abort(AbortReason::Disable, "Unsupported opcode: %s",
-                     CodeName(op));
-#else
-        return abort(AbortReason::Disable, "Unsupported opcode: %u",
-                     uint8_t(op));
-#endif
-    }
-
     uint32_t offset = loc.bytecodeToOffset(script);
-
-    // Allocate op snapshots for data we'll need off-thread.
-    // TODO: merge this switch-statement with the previous one when we overhaul
-    // WARP_OPCODE_LIST.
     switch (op) {
       case JSOp::Arguments:
         if (script->needsArgsObj()) {
@@ -403,8 +384,206 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         break;
       }
 
-      default:
+      case JSOp::Nop:
+      case JSOp::NopDestructuring:
+      case JSOp::TryDestructuring:
+      case JSOp::Lineno:
+      case JSOp::DebugLeaveLexicalEnv:
+      case JSOp::Undefined:
+      case JSOp::Void:
+      case JSOp::Null:
+      case JSOp::Hole:
+      case JSOp::Uninitialized:
+      case JSOp::IsConstructing:
+      case JSOp::False:
+      case JSOp::True:
+      case JSOp::Zero:
+      case JSOp::One:
+      case JSOp::Int8:
+      case JSOp::Uint16:
+      case JSOp::Uint24:
+      case JSOp::Int32:
+      case JSOp::Double:
+      case JSOp::ResumeIndex:
+      case JSOp::BigInt:
+      case JSOp::String:
+      case JSOp::Symbol:
+      case JSOp::Pop:
+      case JSOp::PopN:
+      case JSOp::Dup:
+      case JSOp::Dup2:
+      case JSOp::DupAt:
+      case JSOp::Swap:
+      case JSOp::Pick:
+      case JSOp::Unpick:
+      case JSOp::GetLocal:
+      case JSOp::SetLocal:
+      case JSOp::InitLexical:
+      case JSOp::GetArg:
+      case JSOp::SetArg:
+      case JSOp::ToNumeric:
+      case JSOp::Pos:
+      case JSOp::Inc:
+      case JSOp::Dec:
+      case JSOp::Neg:
+      case JSOp::BitNot:
+      case JSOp::Add:
+      case JSOp::Sub:
+      case JSOp::Mul:
+      case JSOp::Div:
+      case JSOp::Mod:
+      case JSOp::Pow:
+      case JSOp::BitAnd:
+      case JSOp::BitOr:
+      case JSOp::BitXor:
+      case JSOp::Lsh:
+      case JSOp::Rsh:
+      case JSOp::Ursh:
+      case JSOp::Eq:
+      case JSOp::Ne:
+      case JSOp::Lt:
+      case JSOp::Le:
+      case JSOp::Gt:
+      case JSOp::Ge:
+      case JSOp::StrictEq:
+      case JSOp::StrictNe:
+      case JSOp::JumpTarget:
+      case JSOp::LoopHead:
+      case JSOp::IfEq:
+      case JSOp::IfNe:
+      case JSOp::And:
+      case JSOp::Or:
+      case JSOp::Case:
+      case JSOp::Default:
+      case JSOp::Coalesce:
+      case JSOp::Goto:
+      case JSOp::DebugCheckSelfHosted:
+      case JSOp::DynamicImport:
+      case JSOp::Not:
+      case JSOp::ToString:
+      case JSOp::DefVar:
+      case JSOp::DefLet:
+      case JSOp::DefConst:
+      case JSOp::DefFun:
+      case JSOp::BindVar:
+      case JSOp::MutateProto:
+      case JSOp::Callee:
+      case JSOp::ClassConstructor:
+      case JSOp::DerivedConstructor:
+      case JSOp::ToAsyncIter:
+      case JSOp::ToId:
+      case JSOp::Typeof:
+      case JSOp::TypeofExpr:
+      case JSOp::ObjWithProto:
+      case JSOp::GetAliasedVar:
+      case JSOp::SetAliasedVar:
+      case JSOp::InitAliasedLexical:
+      case JSOp::EnvCallee:
+      case JSOp::Iter:
+      case JSOp::IterNext:
+      case JSOp::MoreIter:
+      case JSOp::EndIter:
+      case JSOp::IsNoIter:
+      case JSOp::Call:
+      case JSOp::CallIgnoresRv:
+      case JSOp::CallIter:
+      case JSOp::FunCall:
+      case JSOp::FunApply:
+      case JSOp::New:
+      case JSOp::SuperCall:
+      case JSOp::GetName:
+      case JSOp::GetGName:
+      case JSOp::BindName:
+      case JSOp::BindGName:
+      case JSOp::GetProp:
+      case JSOp::CallProp:
+      case JSOp::Length:
+      case JSOp::GetElem:
+      case JSOp::CallElem:
+      case JSOp::SetProp:
+      case JSOp::StrictSetProp:
+      case JSOp::SetName:
+      case JSOp::StrictSetName:
+      case JSOp::SetGName:
+      case JSOp::StrictSetGName:
+      case JSOp::InitGLexical:
+      case JSOp::SetElem:
+      case JSOp::StrictSetElem:
+      case JSOp::DelProp:
+      case JSOp::StrictDelProp:
+      case JSOp::DelElem:
+      case JSOp::StrictDelElem:
+      case JSOp::SetFunName:
+      case JSOp::PushLexicalEnv:
+      case JSOp::PopLexicalEnv:
+      case JSOp::FreshenLexicalEnv:
+      case JSOp::RecreateLexicalEnv:
+      case JSOp::ImplicitThis:
+      case JSOp::GImplicitThis:
+      case JSOp::CheckClassHeritage:
+      case JSOp::CheckThis:
+      case JSOp::CheckThisReinit:
+      case JSOp::CheckReturn:
+      case JSOp::CheckLexical:
+      case JSOp::CheckAliasedLexical:
+      case JSOp::InitHomeObject:
+      case JSOp::SuperBase:
+      case JSOp::SuperFun:
+      case JSOp::NewArray:
+      case JSOp::NewObject:
+      case JSOp::NewObjectWithGroup:
+      case JSOp::NewInit:
+      case JSOp::InitPropGetter:
+      case JSOp::InitPropSetter:
+      case JSOp::InitHiddenPropGetter:
+      case JSOp::InitHiddenPropSetter:
+      case JSOp::InitElemGetter:
+      case JSOp::InitElemSetter:
+      case JSOp::InitHiddenElemGetter:
+      case JSOp::InitHiddenElemSetter:
+      case JSOp::In:
+      case JSOp::HasOwn:
+      case JSOp::Instanceof:
+      case JSOp::NewTarget:
+      case JSOp::CheckIsObj:
+      case JSOp::CheckIsCallable:
+      case JSOp::CheckObjCoercible:
+      case JSOp::GetPropSuper:
+      case JSOp::InitProp:
+      case JSOp::InitLockedProp:
+      case JSOp::InitHiddenProp:
+      case JSOp::InitElem:
+      case JSOp::InitHiddenElem:
+      case JSOp::InitElemArray:
+      case JSOp::InitElemInc:
+      case JSOp::FunWithProto:
+      case JSOp::SpreadCall:
+      case JSOp::SpreadNew:
+      case JSOp::SpreadSuperCall:
+      case JSOp::OptimizeSpreadCall:
+      case JSOp::Debugger:
+      case JSOp::TableSwitch:
+      case JSOp::Try:
+      case JSOp::Throw:
+      case JSOp::ThrowSetConst:
+      case JSOp::SetRval:
+      case JSOp::Return:
+      case JSOp::RetRval:
+        // Supported by WarpBuilder. Nothing to do.
         break;
+
+        // Unsupported ops. Don't use a 'default' here, we want to trigger a
+        // compiler warning when adding a new JSOp.
+#define DEF_CASE(OP) case JSOp::OP:
+        WARP_UNSUPPORTED_OPCODE_LIST(DEF_CASE)
+#undef DEF_CASE
+#ifdef DEBUG
+        return abort(AbortReason::Disable, "Unsupported opcode: %s",
+                     CodeName(op));
+#else
+        return abort(AbortReason::Disable, "Unsupported opcode: %u",
+                     uint8_t(op));
+#endif
     }
   }
 
