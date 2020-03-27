@@ -520,20 +520,16 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
         // The code below doesn't need to execute immediately, so we'll add them to the visual
         // completeness task queue to be run later.
-        val taskManager = context.components.performance.visualCompletenessTaskManager
-
-        // We have to initialize Glean *on* the main thread, because it registers lifecycle
-        // observers. However, the activation ping must be sent *off* of the main thread,
-        // because it calls Google ad APIs that must be called *off* of the main thread.
-        // These two things actually happen in parallel, but that should be ok because Glean
-        // can handle events being recorded before it's initialized.
-        taskManager.add {
+        context.components.performance.visualCompletenessQueue.runIfReadyOrQueue {
+            // We have to initialize Glean *on* the main thread, because it registers lifecycle
+            // observers. However, the activation ping must be sent *off* of the main thread,
+            // because it calls Google ad APIs that must be called *off* of the main thread.
+            // These two things actually happen in parallel, but that should be ok because Glean
+            // can handle events being recorded before it's initialized.
             Glean.registerPings(Pings)
-        }
 
-        // setStartupMetrics is not a fast function. It does not need to be done before we can consider
-        // ourselves initialized. So, let's do it, well, later.
-        taskManager.add {
+            // setStartupMetrics is not a fast function. It does not need to be done before we can consider
+            // ourselves initialized. So, let's do it, well, later.
             setStartupMetrics()
         }
     }

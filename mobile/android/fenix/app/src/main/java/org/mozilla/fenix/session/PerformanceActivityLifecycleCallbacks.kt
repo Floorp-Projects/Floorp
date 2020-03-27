@@ -11,7 +11,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 import org.mozilla.fenix.settings.account.AuthIntentReceiverActivity
-import org.mozilla.fenix.utils.StartupTaskManager
+import org.mozilla.fenix.utils.RunWhenReadyQueue
 import org.mozilla.fenix.widget.VoiceSearchActivity
 
 /**
@@ -19,7 +19,7 @@ import org.mozilla.fenix.widget.VoiceSearchActivity
  */
 @SuppressWarnings("EmptyFunctionBlock")
 class PerformanceActivityLifecycleCallbacks(
-    private val visualCompletenessTaskManager: StartupTaskManager
+    private val visualCompletenessQueue: RunWhenReadyQueue
 ) : Application.ActivityLifecycleCallbacks {
 
     override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
@@ -42,7 +42,7 @@ class PerformanceActivityLifecycleCallbacks(
     }
 
     /**
-     * This starts the StartupTaskManager, eitther delayed or right away, if the activity is a
+     * This marks visualCompletenessQueue as ready, either delayed or right away, if the activity is a
      * terminal activity. If not, do nothing.
      */
     private fun ifNecessaryPostVisualCompleteness(activity: Activity) {
@@ -51,13 +51,13 @@ class PerformanceActivityLifecycleCallbacks(
         }
 
         if (activity is HomeActivity) {
-            // We should delay the visualCompletenessTaskManager when reaching the HomeActivity
+            // We should delay the visualCompletenessQueue when reaching the HomeActivity
             // to ensure all tasks are delayed until after visual completeness
-            activity.postVisualCompletenessQueue(visualCompletenessTaskManager)
+            activity.postVisualCompletenessQueue(visualCompletenessQueue)
         } else if (shouldStartVisualCompletenessQueueImmediately()) {
             // If we do not go through the home activity, we have to start the tasks
             // immediately to avoid spending time implementing it.
-            visualCompletenessTaskManager.start()
+            visualCompletenessQueue.ready()
         }
     }
 

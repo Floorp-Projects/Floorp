@@ -70,7 +70,7 @@ import org.mozilla.fenix.settings.logins.SavedLoginsFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
-import org.mozilla.fenix.utils.StartupTaskManager
+import org.mozilla.fenix.utils.RunWhenReadyQueue
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : LocaleAwareAppCompatActivity() {
@@ -81,7 +81,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     private var isVisuallyComplete = false
 
-    private var visualCompletenessTaskManager: StartupTaskManager? = null
+    private var visualCompletenessQueue: RunWhenReadyQueue? = null
 
     private var sessionObserver: SessionManager.Observer? = null
 
@@ -118,7 +118,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 // This delay is temporary. We are delaying 5 seconds until the performance
                 // team can locate the real point of visual completeness.
                 it.postDelayed({
-                    visualCompletenessTaskManager!!.start()
+                    visualCompletenessQueue!!.ready()
                 }, delay)
             }
         }
@@ -399,9 +399,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
      * The root container is null at this point, so let the HomeActivity know that
      * we are visually complete.
      */
-    fun postVisualCompletenessQueue(visualCompletenessTaskManager: StartupTaskManager) {
+    fun postVisualCompletenessQueue(visualCompletenessQueue: RunWhenReadyQueue) {
         isVisuallyComplete = true
-        this.visualCompletenessTaskManager = visualCompletenessTaskManager
+        this.visualCompletenessQueue = visualCompletenessQueue
     }
 
     companion object {

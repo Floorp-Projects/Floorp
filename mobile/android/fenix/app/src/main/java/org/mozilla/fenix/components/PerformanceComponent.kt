@@ -4,11 +4,11 @@
 
 package org.mozilla.fenix.components
 
-import org.mozilla.fenix.utils.StartupTaskManager
+import org.mozilla.fenix.utils.RunWhenReadyQueue
 
 /**
  * Component group for all functionality related to performance.
  */
 class PerformanceComponent {
-    val visualCompletenessTaskManager by lazy { StartupTaskManager() }
+    val visualCompletenessQueue by lazy { RunWhenReadyQueue() }
 }

@@ -150,12 +150,12 @@ open class FenixApplication : LocaleAwareApplication() {
         // }
 
         registerActivityLifecycleCallbacks(
-            PerformanceActivityLifecycleCallbacks(components.performance.visualCompletenessTaskManager)
+            PerformanceActivityLifecycleCallbacks(components.performance.visualCompletenessQueue)
         )
 
-        components.performance.visualCompletenessTaskManager.add {
+        components.performance.visualCompletenessQueue.runIfReadyOrQueue {
             GlobalScope.launch(Dispatchers.IO) {
-                logger.info("Initializing storage after visual completeness...")
+                logger.info("Running post-visual completeness tasks...")
                 logElapsedTime(logger, "Storage initialization") {
                     components.core.historyStorage.warmUp()
                     components.core.bookmarksStorage.warmUp()
