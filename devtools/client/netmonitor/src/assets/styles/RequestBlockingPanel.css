@@ -121,8 +121,7 @@
   border: none;
 }
 
-.request-blocking-list li:hover .request-blocking-remove-button,
-.request-blocking-list li:focus-within .request-blocking-remove-button {
+.request-blocking-list li:hover .request-blocking-remove-button {
   opacity: 1;
 }
 
@@ -138,8 +137,7 @@
   fill: var(--theme-icon-color);
 }
 
-.request-blocking-remove-button:hover::before,
-.request-blocking-remove-button:focus::before {
+.request-blocking-remove-button:hover::before {
   fill: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }
