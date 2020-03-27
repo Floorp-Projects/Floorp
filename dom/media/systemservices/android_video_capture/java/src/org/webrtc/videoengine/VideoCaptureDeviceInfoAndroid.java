@@ -20,6 +20,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WebRTCJNITarget;
+import org.mozilla.gecko.permissions.Permissions;
 
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat;

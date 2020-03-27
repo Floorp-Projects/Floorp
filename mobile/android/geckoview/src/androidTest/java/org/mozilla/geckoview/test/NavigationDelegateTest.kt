@@ -44,8 +44,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                                                request: LoadRequest):
                                                GeckoResult<AllowOrDeny>? {
                         assertThat("URI should be " + testUri, request.uri, equalTo(testUri))
-                        assertThat("App requested this load", request.isDirectNavigation,
-                                equalTo(true))
                         return null
                     }
 
@@ -284,8 +282,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                         equalTo(forEachCall(request.uri, redirectUri)))
                 assertThat("Trigger URL should be null", request.triggerUri,
                            nullValue())
-                assertThat("From app should be correct", request.isDirectNavigation,
-                        equalTo(forEachCall(true, false)))
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
                         equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -313,8 +309,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                                        request: LoadRequest):
                     GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
-                assertThat("App requested this load", request.isDirectNavigation,
-                        equalTo(true))
                 assertThat("URI should not be null", request.uri, notNullValue())
                 assertThat("URI should match", request.uri,
                         startsWith(GeckoSessionTestRule.TEST_ENDPOINT))
@@ -347,8 +341,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                         equalTo(forEachCall(request.uri, redirectUri)))
                 assertThat("Trigger URL should be null", request.triggerUri,
                            nullValue())
-                assertThat("From app should be correct", request.isDirectNavigation,
-                        equalTo(forEachCall(true, false)))
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
                         equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -388,8 +380,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
                 assertThat("URL should match", request.uri, equalTo(forEachCall(uri, redirectUri)))
-                assertThat("From app should be correct", request.isDirectNavigation,
-                        equalTo(forEachCall(true, false)))
                 return null
             }
         })
@@ -719,8 +709,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("URI should match", request.uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Trigger URL should be null", request.triggerUri,
                            nullValue())
-                assertThat("App requested this load", request.isDirectNavigation,
-                        equalTo(true))
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
@@ -919,8 +907,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                            nullValue())
                 assertThat("Target should match", request.target,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return null
             }
 
@@ -968,8 +954,6 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return null
             }
 
@@ -1002,8 +986,6 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return null
             }
 
@@ -1081,8 +1063,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                            endsWith(NEW_SESSION_HTML_PATH))
                 assertThat("Target should be correct", request.target,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return null
             }
 
@@ -1244,8 +1224,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                                        GeckoResult<AllowOrDeny>? {
                 assertThat("URI must match", request.uri,
                            endsWith(forEachCall(NEW_SESSION_CHILD_HTML_PATH, NEW_SESSION_HTML_PATH)))
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return null
             }
 
@@ -1446,8 +1424,6 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return null
             }
 
@@ -1537,8 +1513,6 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("Should have a user gesture", request.hasUserGesture, equalTo(true))
-                assertThat("Load should not be direct", request.isDirectNavigation,
-                        equalTo(false))
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
         })

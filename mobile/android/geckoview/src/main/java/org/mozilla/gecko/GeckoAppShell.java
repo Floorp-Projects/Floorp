@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -1378,6 +1380,61 @@ public class GeckoAppShell {
         }
     }
 
+    public static void listOfOpenFiles() {
+        int pidColumn = -1;
+        int nameColumn = -1;
+
+        // run lsof and parse its output
+        Process process = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader in = null;
+        try {
+            String filter = GeckoProfile.get(getApplicationContext()).getDir().toString();
+            Log.d(LOGTAG, "[OPENFILE] Filter: " + filter);
+
+            process = Runtime.getRuntime().exec("lsof");
+            inputStreamReader = new InputStreamReader(process.getInputStream());
+            in = new BufferedReader(inputStreamReader, 2048);
+
+            String headerOutput = in.readLine();
+            StringTokenizer st = new StringTokenizer(headerOutput);
+            int token = 0;
+            while (st.hasMoreTokens()) {
+                String next = st.nextToken();
+                if (next.equalsIgnoreCase("PID"))
+                    pidColumn = token;
+                else if (next.equalsIgnoreCase("NAME"))
+                    nameColumn = token;
+                token++;
+            }
+
+            // alright, the rest are open file entries.
+            Map<Integer, String> pidNameMap = new TreeMap<Integer, String>();
+            String output = null;
+            while ((output = in.readLine()) != null) {
+                String[] split = output.split("\\s+");
+                if (split.length <= pidColumn || split.length <= nameColumn)
+                    continue;
+                final Integer pid = Integer.valueOf(split[pidColumn]);
+                String name = pidNameMap.get(pid);
+                if (name == null) {
+                    name = getAppNameByPID(pid.intValue());
+                    pidNameMap.put(pid, name);
+                }
+                String file = split[nameColumn];
+                if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(file) && file.startsWith(filter))
+                    Log.d(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + file);
+            }
+        } catch (Exception e) {
+        } finally {
+            IOUtils.safeStreamClose(in);
+            IOUtils.safeStreamClose(inputStreamReader);
+            if (process != null) {
+                process.destroy();
+            }
+        }
+    }
+
     @WrapForJNI(calledFrom = "gecko")
     private static byte[] getIconForExtension(final String aExt, final int iconSize) {
         try {
@@ -1617,7 +1674,7 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static void enableNetworkNotifications() {
-        ThreadUtils.runOnUiThread(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 GeckoNetworkManager.getInstance().enableNotifications();
@@ -1627,7 +1684,7 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static void disableNetworkNotifications() {
-        ThreadUtils.runOnUiThread(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 GeckoNetworkManager.getInstance().disableNotifications();

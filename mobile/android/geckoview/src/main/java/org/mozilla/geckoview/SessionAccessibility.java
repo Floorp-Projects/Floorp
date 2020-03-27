@@ -970,7 +970,7 @@ public class SessionAccessibility {
 
         @WrapForJNI(calledFrom = "gecko", stubName = "SendEvent")
         private void sendEventNative(final int eventType, final int sourceId, final int className, final GeckoBundle eventData) {
-            ThreadUtils.runOnUiThread(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     sendEvent(eventType, sourceId, className, eventData);
