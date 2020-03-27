@@ -757,12 +757,12 @@ nsBaseChannel::OnTransportStatus(nsITransport* transport, nsresult status,
   if (!HasLoadFlag(LOAD_BACKGROUND)) {
     nsAutoString statusArg;
     if (GetStatusArg(status, statusArg)) {
-      mProgressSink->OnStatus(this, nullptr, status, statusArg.get());
+      mProgressSink->OnStatus(this, status, statusArg.get());
     }
   }
 
   if (progress) {
-    mProgressSink->OnProgress(this, nullptr, progress, progressMax);
+    mProgressSink->OnProgress(this, progress, progressMax);
   }
 
   return NS_OK;
