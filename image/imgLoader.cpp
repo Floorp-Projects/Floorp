@@ -549,8 +549,8 @@ NS_IMPL_ISUPPORTS(nsProgressNotificationProxy, nsIProgressEventSink,
                   nsIChannelEventSink, nsIInterfaceRequestor)
 
 NS_IMETHODIMP
-nsProgressNotificationProxy::OnProgress(nsIRequest* request, nsISupports* ctxt,
-                                        int64_t progress, int64_t progressMax) {
+nsProgressNotificationProxy::OnProgress(nsIRequest* request, int64_t progress,
+                                        int64_t progressMax) {
   nsCOMPtr<nsILoadGroup> loadGroup;
   request->GetLoadGroup(getter_AddRefs(loadGroup));
 
@@ -561,12 +561,11 @@ nsProgressNotificationProxy::OnProgress(nsIRequest* request, nsISupports* ctxt,
   if (!target) {
     return NS_OK;
   }
-  return target->OnProgress(mImageRequest, ctxt, progress, progressMax);
+  return target->OnProgress(mImageRequest, progress, progressMax);
 }
 
 NS_IMETHODIMP
-nsProgressNotificationProxy::OnStatus(nsIRequest* request, nsISupports* ctxt,
-                                      nsresult status,
+nsProgressNotificationProxy::OnStatus(nsIRequest* request, nsresult status,
                                       const char16_t* statusArg) {
   nsCOMPtr<nsILoadGroup> loadGroup;
   request->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -578,7 +577,7 @@ nsProgressNotificationProxy::OnStatus(nsIRequest* request, nsISupports* ctxt,
   if (!target) {
     return NS_OK;
   }
-  return target->OnStatus(mImageRequest, ctxt, status, statusArg);
+  return target->OnStatus(mImageRequest, status, statusArg);
 }
 
 NS_IMETHODIMP

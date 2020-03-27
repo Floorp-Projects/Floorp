@@ -8659,8 +8659,7 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
     nsAutoCString host;
     mURI->GetHost(host);
     if (!(mLoadFlags & LOAD_BACKGROUND)) {
-      mProgressSink->OnStatus(this, nullptr, status,
-                              NS_ConvertUTF8toUTF16(host).get());
+      mProgressSink->OnStatus(this, status, NS_ConvertUTF8toUTF16(host).get());
     } else {
       nsCOMPtr<nsIParentChannel> parentChannel;
       NS_QueryNotificationCallbacks(this, parentChannel);
@@ -8671,7 +8670,7 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
       // LOAD_BACKGROUND is checked again in |HttpChannelChild|, so the final
       // consumer won't get this event.
       if (SameCOMIdentity(parentChannel, mProgressSink)) {
-        mProgressSink->OnStatus(this, nullptr, status,
+        mProgressSink->OnStatus(this, status,
                                 NS_ConvertUTF8toUTF16(host).get());
       }
     }
@@ -8686,7 +8685,7 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
         GetCallback(mProgressSink);
       }
       if (mProgressSink) {
-        mProgressSink->OnProgress(this, nullptr, progress, progressMax);
+        mProgressSink->OnProgress(this, progress, progressMax);
       }
     }
   }
