@@ -162,6 +162,25 @@ const presets = {
     threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
     duration: 0,
   },
+  media: {
+    label: "Media",
+    description: "Recommended preset for diagnosing audio and video problems.",
+    entries: 10000000,
+    interval: 1,
+    features: ["js", "leaf", "stackwalk"],
+    threads: [
+      "GeckoMain",
+      "Compositor",
+      "Renderer",
+      "RenderBackend",
+      "AudioIPC",
+      "MediaPDecoder",
+      "MediaTimer",
+      "MediaPlayback",
+      "MediaDecoderStateMachine",
+    ],
+    duration: 0,
+  },
 };
 
 /**
