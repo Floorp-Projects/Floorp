@@ -742,18 +742,6 @@ class Selection final : public nsSupportsWeakReference,
 
   StyledRange* FindRangeData(nsRange* aRange);
 
-  /**
-   * Preserves the sorting and disjunctiveness of mStyledRanges.mRanges.
-   *
-   * @param aOutIndex will point to the index of the added range, or if aRange
-   *                  is already contained, to the one containing it. Hence
-   *                  it'll always be in [0, mStyledRanges.mRanges.Length()).
-   */
-  // TODO: annotate with `MOZ_CAN_RUN_SCRIPT`
-  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1625429).
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  MaybeAddRangeAndTruncateOverlaps(nsRange* aRange, int32_t* aOutIndex);
-
   Document* GetDocument() const;
   nsPIDOMWindowOuter* GetWindow() const;
   HTMLEditor* GetHTMLEditor() const;
@@ -828,6 +816,18 @@ class Selection final : public nsSupportsWeakReference,
 
     bool HasEqualRangeBoundariesAt(const nsRange& aRange,
                                    int32_t aRangeIndex) const;
+
+    /**
+     * Preserves the sorting and disjunctiveness of mRanges.
+     *
+     * @param aOutIndex will point to the index of the added range, or if aRange
+     *                  is already contained, to the one containing it. Hence
+     *                  it'll always be in [0, mRanges.Length()).
+     */
+    // TODO: annotate with `MOZ_CAN_RUN_SCRIPT`
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1625429).
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult MaybeAddRangeAndTruncateOverlaps(
+        nsRange* aRange, int32_t* aOutIndex, Selection& aSelection);
 
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
