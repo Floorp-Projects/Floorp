@@ -405,10 +405,6 @@ struct BaselineStackBuilder {
 #  error "Bad architecture!"
 #endif
   }
-
-  void setCheckGlobalDeclarationConflicts() {
-    header_->checkGlobalDeclarationConflicts = true;
-  }
 };
 
 #ifdef DEBUG
@@ -683,8 +679,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     flags |= BaselineFrame::DEBUGGEE;
   }
 
-  const bool isPrologueBailout = IsPrologueBailout(iter, excInfo);
-
   // Initialize BaselineFrame's envChain and argsObj
   JSObject* envChain = nullptr;
   Value returnValue = UndefinedValue();
@@ -757,14 +751,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         MOZ_ASSERT(!script->isForEval());
         MOZ_ASSERT(!script->hasNonSyntacticScope());
         envChain = &(script->global().lexicalEnvironment());
-
-        // We have possibly bailed out before Ion could do the global
-        // declaration conflicts check. Since it's invalid to resume
-        // into the prologue, set a flag so FinishBailoutToBaseline
-        // can do the conflict check.
-        if (isPrologueBailout) {
-          builder.setCheckGlobalDeclarationConflicts();
-        }
       }
     }
 
@@ -1098,7 +1084,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     // Compute the native address (within the Baseline Interpreter) that we will
     // resume at and initialize the frame's interpreter fields.
     uint8_t* resumeAddr;
-    if (isPrologueBailout) {
+    if (IsPrologueBailout(iter, excInfo)) {
       JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
       MOZ_ASSERT(pc == script->code());
       blFrame->setInterpreterFieldsForPrologue(script);
@@ -1834,17 +1820,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   // Ensure the frame has a call object if it needs one.
   if (!EnsureHasEnvironmentObjects(cx, topFrame)) {
     return false;
-  }
-
-  // Check for global declaration conflicts if necessary.
-  if (bailoutInfo->checkGlobalDeclarationConflicts) {
-    Rooted<LexicalEnvironmentObject*> lexicalEnv(
-        cx, &cx->global()->lexicalEnvironment());
-    RootedScript script(cx, topFrame->script());
-    if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv,
-                                         cx->global())) {
-      return false;
-    }
   }
 
   // Monitor the top stack value if we are resuming after a JOF_TYPESET op.

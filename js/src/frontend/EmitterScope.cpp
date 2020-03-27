@@ -788,8 +788,13 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
     return internEmptyGlobalScopeAsBody(bce);
   }
 
-  // Resolve binding names and emit DEF{VAR,LET,CONST} prologue ops.
+  // Resolve binding names and emit Def{Var,Let,Const} prologue ops.
   if (globalsc->bindings) {
+    // Check for declaration conflicts before the Def* ops.
+    if (!bce->emit1(JSOp::CheckGlobalOrEvalDecl)) {
+      return false;
+    }
+
     for (DynamicBindingIter bi(globalsc); bi; bi++) {
       NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
       JSAtom* name = bi.name();
@@ -868,6 +873,11 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
     // TODO: We may optimize strict eval bindings in the future to be on
     // the frame. For now, handle everything dynamically.
     if (!hasEnvironment() && evalsc->bindings) {
+      // Check for declaration conflicts before the DefVar ops.
+      if (!bce->emit1(JSOp::CheckGlobalOrEvalDecl)) {
+        return false;
+      }
+
       for (DynamicBindingIter bi(evalsc); bi; bi++) {
         MOZ_ASSERT(bi.bindingOp() == JSOp::DefVar);
 

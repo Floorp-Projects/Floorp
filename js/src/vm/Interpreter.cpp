@@ -3504,6 +3504,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(DefFun)
 
+    CASE(CheckGlobalOrEvalDecl) {
+      HandleObject env = REGS.fp()->environmentChain();
+      if (!CheckGlobalOrEvalDeclarationConflicts(cx, env, script)) {
+        goto error;
+      }
+    }
+    END_CASE(CheckGlobalOrEvalDecl)
+
     CASE(Lambda) {
       /* Load the specified function object literal. */
       ReservedRooted<JSFunction*> fun(

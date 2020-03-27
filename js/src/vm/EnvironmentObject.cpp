@@ -3693,9 +3693,14 @@ static bool CheckArgumentsRedeclaration(JSContext* cx, HandleScript script) {
 static bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
                                           HandleObject scopeChain,
                                           HandleObject varObj) {
-  if (!script->bodyScope()->as<EvalScope>().hasBindings()) {
-    return true;
-  }
+  // Strict eval has its own call objects and we shouldn't end up here.
+  //
+  // Non-strict eval may introduce 'var' bindings that conflict with lexical
+  // bindings in an enclosing lexical scope.
+  MOZ_ASSERT(!script->bodyScope()->hasEnvironment());
+  MOZ_ASSERT(!script->strict());
+
+  MOZ_ASSERT(script->bodyScope()->as<EvalScope>().hasBindings());
 
   RootedObject obj(cx, scopeChain);
 
@@ -3762,15 +3767,8 @@ bool js::CheckGlobalOrEvalDeclarationConflicts(JSContext* cx,
   RootedObject varObj(cx, &GetVariablesObject(envChain));
 
   if (script->isForEval()) {
-    // Strict eval has its own call objects.
-    //
-    // Non-strict eval may introduce 'var' bindings that conflict with
-    // lexical bindings in an enclosing lexical scope.
-    if (!script->bodyScope()->hasEnvironment()) {
-      MOZ_ASSERT(!script->strict());
-      if (!CheckEvalDeclarationConflicts(cx, script, envChain, varObj)) {
-        return false;
-      }
+    if (!CheckEvalDeclarationConflicts(cx, script, envChain, varObj)) {
+      return false;
     }
   } else {
     Rooted<LexicalEnvironmentObject*> lexicalEnv(

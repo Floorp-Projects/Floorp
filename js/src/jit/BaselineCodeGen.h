@@ -261,10 +261,8 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitDebugPrologue();
   MOZ_MUST_USE bool emitDebugEpilogue();
 
-  template <typename F1, typename F2>
-  MOZ_MUST_USE bool initEnvironmentChainHelper(const F1& initFunctionEnv,
-                                               const F2& initGlobalOrEvalEnv,
-                                               Register scratch);
+  template <typename F>
+  MOZ_MUST_USE bool initEnvironmentChainHelper(const F& initFunctionEnv);
   MOZ_MUST_USE bool initEnvironmentChain();
 
   MOZ_MUST_USE bool emitTraceLoggerEnter();
