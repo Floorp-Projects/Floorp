@@ -156,7 +156,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       props
     } = this;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "outer-wrapper welcomeContainer"
+      className: "welcomeContainer"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcomeContainerInner"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_HeroText__WEBPACK_IMPORTED_MODULE_2__["HeroText"], {
