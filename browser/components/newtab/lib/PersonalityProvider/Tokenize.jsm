@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// We load this into a worker using importScripts, and in tests using import.
+// We use var to avoid name collision errors.
+// eslint-disable-next-line no-var
+var EXPORTED_SYMBOLS = ["tokenize", "toksToTfIdfVector"];
+
 // Unicode specifies certain mnemonics for code pages and character classes.
 // They call them "character properties" https://en.wikipedia.org/wiki/Unicode_character_property .
 // These mnemonics are have been adopted by many regular expression libraries,
@@ -82,5 +87,3 @@ function toksToTfIdfVector(tokens, vocab_idfs) {
 
   return tfidfs;
 }
-
-const EXPORTED_SYMBOLS = ["tokenize", "toksToTfIdfVector"];

@@ -138,12 +138,12 @@ describe("RecommendationProviderSwitcher", () => {
   });
 
   describe("#calculateItemRelevanceScore", () => {
-    it("should use personalized score with affinity provider", () => {
+    it("should use personalized score with affinity provider", async () => {
       const item = {};
       feed.affinityProvider = {
-        calculateItemRelevanceScore: () => 0.5,
+        calculateItemRelevanceScore: async () => 0.5,
       };
-      feed.calculateItemRelevanceScore(item);
+      await feed.calculateItemRelevanceScore(item);
       assert.equal(item.score, 0.5);
     });
   });

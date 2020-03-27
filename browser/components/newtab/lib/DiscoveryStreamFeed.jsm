@@ -566,16 +566,19 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     });
   }
 
-  // I wonder, can this be better as a reducer?
-  // See Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1606717
-  placementsForEach(callback) {
+  getPlacements() {
     const { placements } = this.store.getState().DiscoveryStream.spocs;
     // Backwards comp for before we had placements, assume just a single spocs placement.
     if (!placements || !placements.length) {
-      [{ name: "spocs" }].forEach(callback);
-    } else {
-      placements.forEach(callback);
+      return [{ name: "spocs" }];
     }
+    return placements;
+  }
+
+  // I wonder, can this be better as a reducer?
+  // See Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1606717
+  placementsForEach(callback) {
+    this.getPlacements().forEach(callback);
   }
 
   // Bug 1567271 introduced meta data on a list of spocs.
@@ -662,7 +665,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     let blockedItems = [];
     let belowMinScore = [];
     let flightDupes = [];
-    this.placementsForEach(placement => {
+    const spocsResultPromises = this.getPlacements().map(async placement => {
       const freshSpocs = spocsState.spocs[placement.name];
 
       if (!freshSpocs) {
@@ -710,9 +713,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       );
       blockedItems = [...blockedItems, ...blocks];
 
-      let { data: transformResult, filtered: transformFilter } = this.transform(
-        blockedResults
-      );
+      let {
+        data: transformResult,
+        filtered: transformFilter,
+      } = await this.transform(blockedResults);
       let {
         below_min_score: minScoreFilter,
         flight_duplicate: dupes,
@@ -730,6 +734,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         },
       };
     });
+    await Promise.all(spocsResultPromises);
 
     sendUpdate({
       type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
@@ -853,11 +858,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
-  scoreItems(items) {
+  async scoreItems(items) {
     const filtered = [];
     const scoreStart = perfService.absNow();
-    const data = items
-      .map(item => this.scoreItem(item))
+
+    const data = (await Promise.all(items.map(item => this.scoreItem(item))))
       // Remove spocs that are scored too low.
       .filter(s => {
         if (s.score >= s.min_score) {
@@ -875,14 +880,14 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return { data, filtered };
   }
 
-  scoreItem(item) {
+  async scoreItem(item) {
     item.score = item.item_score;
     item.min_score = item.min_score || 0;
     if (item.score !== 0 && !item.score) {
       item.score = 1;
     }
     if (this.personalized) {
-      this.providerSwitcher.calculateItemRelevanceScore(item);
+      await this.providerSwitcher.calculateItemRelevanceScore(item);
     }
     return item;
   }
@@ -908,7 +913,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return { data, filtered };
   }
 
-  transform(spocs) {
+  async transform(spocs) {
     if (spocs && spocs.length) {
       const spocsPerDomain =
         this.store.getState().DiscoveryStream.spocs.spocs_per_domain || 1;
@@ -916,10 +921,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       const flightDuplicates = [];
 
       // This order of operations is intended.
-      // scoreItems must be first because it creates this.score.
-      const { data: items, filtered: belowMinScoreItems } = this.scoreItems(
-        spocs
-      );
+      const {
+        data: items,
+        filtered: belowMinScoreItems,
+      } = await this.scoreItems(spocs);
       // This removes flight dupes.
       // We do this only after scoring and sorting because that way
       // we can keep the first item we see, and end up keeping the highest scored.
@@ -1075,7 +1080,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (this.isExpired({ cachedData, key: "feed", url: feedUrl, isStartup })) {
       const feedResponse = await this.fetchFromEndpoint(feedUrl);
       if (feedResponse) {
-        const { data: scoredItems } = this.scoreItems(
+        const { data: scoredItems } = await this.scoreItems(
           feedResponse.recommendations
         );
         const { recsExpireTime } = feedResponse.settings;
@@ -1168,42 +1173,43 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async scoreFeeds(feedsState) {
     if (feedsState.data) {
-      const feedsResult = Object.keys(feedsState.data).reduce((feeds, url) => {
+      const feeds = {};
+      const feedsPromises = Object.keys(feedsState.data).map(url => {
         let feed = feedsState.data[url];
-        const { data: scoredItems } = this.scoreItems(
-          feed.data.recommendations
-        );
-        const { recsExpireTime } = feed.data.settings;
-        const recommendations = this.rotate(scoredItems, recsExpireTime);
-
-        feed = {
-          ...feed,
-          data: {
-            ...feed.data,
-            recommendations,
-          },
-        };
-
-        feeds[url] = feed;
-
-        this.store.dispatch(
-          ac.AlsoToPreloaded({
-            type: at.DISCOVERY_STREAM_FEED_UPDATE,
+        const feedPromise = this.scoreItems(feed.data.recommendations);
+        feedPromise.then(({ data: scoredItems }) => {
+          const { recsExpireTime } = feed.data.settings;
+          const recommendations = this.rotate(scoredItems, recsExpireTime);
+          feed = {
+            ...feed,
             data: {
-              feed,
-              url,
+              ...feed.data,
+              recommendations,
             },
-          })
-        );
-        return feeds;
-      }, {});
-      await this.cache.set("feeds", feedsResult);
+          };
+
+          feeds[url] = feed;
+
+          this.store.dispatch(
+            ac.AlsoToPreloaded({
+              type: at.DISCOVERY_STREAM_FEED_UPDATE,
+              data: {
+                feed,
+                url,
+              },
+            })
+          );
+        });
+        return feedPromise;
+      });
+      await Promise.all(feedsPromises);
+      await this.cache.set("feeds", feeds);
     }
   }
 
   async scoreSpocs(spocsState) {
     let belowMinScore = [];
-    this.placementsForEach(placement => {
+    const spocsResultPromises = this.getPlacements().map(async placement => {
       const nextSpocs = spocsState.data[placement.name] || {};
       const { items } = nextSpocs;
 
@@ -1211,9 +1217,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         return;
       }
 
-      const { data: scoreResult, filtered: minScoreFilter } = this.scoreItems(
-        items
-      );
+      const {
+        data: scoreResult,
+        filtered: minScoreFilter,
+      } = await this.scoreItems(items);
 
       belowMinScore = [...belowMinScore, ...minScoreFilter];
 
@@ -1225,6 +1232,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         },
       };
     });
+    await Promise.all(spocsResultPromises);
 
     // Update cache here so we don't need to re calculate scores on loads from cache.
     // Related Bug 1606276

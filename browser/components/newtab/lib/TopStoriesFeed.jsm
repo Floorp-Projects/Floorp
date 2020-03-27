@@ -28,7 +28,7 @@ const { UserDomainAffinityProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/UserDomainAffinityProvider.jsm"
 );
 const { PersonalityProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PersonalityProvider.jsm"
+  "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm"
 );
 const { PersistentCache } = ChromeUtils.import(
   "resource://activity-stream/lib/PersistentCache.jsm"
