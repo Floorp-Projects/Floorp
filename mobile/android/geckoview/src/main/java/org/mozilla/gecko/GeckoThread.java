@@ -33,8 +33,6 @@ import android.support.annotation.UiThread;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -140,8 +138,6 @@ public class GeckoThread extends Thread {
     public static final int FLAG_PRELOAD_CHILD = 1 << 1; // Preload child during main thread start.
     public static final int FLAG_ENABLE_NATIVE_CRASHREPORTER = 1 << 2; // Enable native crash reporting.
 
-    public static final long DEFAULT_TIMEOUT = 5000;
-
     /* package */ static final String EXTRA_ARGS = "args";
     private static final String EXTRA_PREFS_FD = "prefsFd";
     private static final String EXTRA_PREF_MAP_FD = "prefMapFd";
@@ -226,36 +222,6 @@ public class GeckoThread extends Thread {
         mInitialized = true;
         notifyAll();
         return true;
-    }
-
-    private static boolean canUseProfile(final Context context, final GeckoProfile profile,
-                                         final String profileName, final File profileDir) {
-        if (profileDir != null && !profileDir.isDirectory()) {
-            return false;
-        }
-
-        if (profile == null) {
-            // We haven't initialized; any profile is okay as long as we follow the guest mode setting.
-            return GeckoProfile.shouldUseGuestMode(context) ==
-                    GeckoProfile.isGuestProfile(context, profileName, profileDir);
-        }
-
-        // We already initialized and have a profile; see if it matches ours.
-        try {
-            return profileDir == null ? profileName.equals(profile.getName()) :
-                    profile.getDir().getCanonicalPath().equals(profileDir.getCanonicalPath());
-        } catch (final IOException e) {
-            Log.e(LOGTAG, "Cannot compare profile " + profileName);
-            return false;
-        }
-    }
-
-    public static boolean canUseProfile(final String profileName, final File profileDir) {
-        if (profileName == null) {
-            throw new IllegalArgumentException("Null profile name");
-        }
-        return canUseProfile(GeckoAppShell.getApplicationContext(), getActiveProfile(),
-                             profileName, profileDir);
     }
 
     public static boolean launch() {

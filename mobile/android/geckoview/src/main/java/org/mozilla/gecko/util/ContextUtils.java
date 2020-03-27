@@ -32,26 +32,6 @@ public class ContextUtils {
         return getCurrentPackageInfo(context, 0);
     }
 
-    public static boolean isPackageInstalled(final Context context, final String packageName) {
-        try {
-            PackageManager pm = context.getPackageManager();
-            pm.getPackageInfo(packageName, 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
-
-    public static boolean isInstalledFromGooglePlay(final Context context) {
-        final String installerPackageName = context.getPackageManager().getInstallerPackageName(context.getPackageName());
-
-        if (TextUtils.isEmpty(installerPackageName)) {
-            return false;
-        }
-
-        return INSTALLER_GOOGLE_PLAY.equals(installerPackageName);
-    }
-
     public static boolean isApplicationDebuggable(final @NonNull Context context) {
         final ApplicationInfo applicationInfo = context.getApplicationInfo();
         return (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
