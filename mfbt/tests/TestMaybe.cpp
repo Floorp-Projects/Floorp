@@ -170,6 +170,29 @@ struct UncopyableUnmovableValue {
   Status mStatus;
 };
 
+static_assert(std::is_literal_type_v<Maybe<int>>);
+static_assert(std::is_trivially_copy_constructible_v<Maybe<int>>);
+static_assert(std::is_trivially_copy_assignable_v<Maybe<int>>);
+
+static_assert(42 == Some(42).value());
+static_assert(42 == Some(42).valueOr(43));
+static_assert(42 == Maybe<int>{}.valueOr(42));
+static_assert(42 == Some(42).valueOrFrom([] { return 43; }));
+static_assert(42 == Maybe<int>{}.valueOrFrom([] { return 42; }));
+static_assert(Some(43) == [] {
+  auto val = Some(42);
+  val.apply([](int& val) { val += 1; });
+  return val;
+}());
+static_assert(Some(43) == Some(42).map([](int val) { return val + 1; }));
+
+struct TriviallyDestructible {
+  TriviallyDestructible() {  // not trivially constructible
+  }
+};
+
+static_assert(std::is_trivially_destructible_v<Maybe<TriviallyDestructible>>);
+
 static bool TestBasicFeatures() {
   // Check that a Maybe<T> is initialized to Nothing.
   Maybe<BasicValue> mayValue;
@@ -254,96 +277,225 @@ static bool TestBasicFeatures() {
   return true;
 }
 
+template <typename T>
+static void TestCopyMaybe() {
+  {
+    MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+    Maybe<T> src = Some(T());
+    Maybe<T> dstCopyConstructed = src;
+
+    MOZ_RELEASE_ASSERT(2 == sUndestroyedObjects);
+    MOZ_RELEASE_ASSERT(dstCopyConstructed->GetStatus() == eWasCopyConstructed);
+  }
+
+  {
+    MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+    Maybe<T> src = Some(T());
+    Maybe<T> dstCopyAssigned;
+    dstCopyAssigned = src;
+
+    MOZ_RELEASE_ASSERT(2 == sUndestroyedObjects);
+    MOZ_RELEASE_ASSERT(dstCopyAssigned->GetStatus() == eWasCopyConstructed);
+  }
+}
+
+template <typename T>
+static void TestMoveMaybe() {
+  {
+    MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+    Maybe<T> src = Some(T());
+    Maybe<T> dstMoveConstructed = std::move(src);
+
+    MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+    MOZ_RELEASE_ASSERT(dstMoveConstructed->GetStatus() == eWasMoveConstructed);
+  }
+
+  {
+    MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+    Maybe<T> src = Some(T());
+    Maybe<T> dstMoveAssigned;
+    dstMoveAssigned = std::move(src);
+
+    MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+    MOZ_RELEASE_ASSERT(dstMoveAssigned->GetStatus() == eWasMoveConstructed);
+  }
+}
+
 static bool TestCopyAndMove() {
-  // Check that we get moves when possible for types that can support both moves
-  // and copies.
-  Maybe<BasicValue> mayBasicValue = Some(BasicValue(1));
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMoveConstructed);
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetTag() == 1);
-  mayBasicValue = Some(BasicValue(2));
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMoveAssigned);
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetTag() == 2);
-  mayBasicValue.reset();
-  mayBasicValue.emplace(BasicValue(3));
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMoveConstructed);
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetTag() == 3);
+  MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
 
-  // Check that we get copies when moves aren't possible.
-  Maybe<BasicValue> mayBasicValue2 = Some(*mayBasicValue);
-  MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyConstructed);
-  MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 3);
-  mayBasicValue->SetTag(4);
-  mayBasicValue2 = mayBasicValue;
-  // This test should work again when we fix bug 1052940.
-  // MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyAssigned);
-  MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 4);
-  mayBasicValue->SetTag(5);
-  mayBasicValue2.reset();
-  mayBasicValue2.emplace(*mayBasicValue);
-  MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyConstructed);
-  MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 5);
+  {
+    // Check that we get moves when possible for types that can support both
+    // moves and copies.
+    {
+      Maybe<BasicValue> mayBasicValue = Some(BasicValue(1));
+      MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMoveConstructed);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetTag() == 1);
+      mayBasicValue = Some(BasicValue(2));
+      MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMoveAssigned);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetTag() == 2);
+      mayBasicValue.reset();
+      MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+      mayBasicValue.emplace(BasicValue(3));
+      MOZ_RELEASE_ASSERT(1 == sUndestroyedObjects);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMoveConstructed);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetTag() == 3);
 
-  // Check that std::move() works. (Another sanity check for move support.)
-  Maybe<BasicValue> mayBasicValue3 = Some(std::move(*mayBasicValue));
-  MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMoveConstructed);
-  MOZ_RELEASE_ASSERT(mayBasicValue3->GetTag() == 5);
-  MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMovedFrom);
-  mayBasicValue2->SetTag(6);
-  mayBasicValue3 = Some(std::move(*mayBasicValue2));
-  MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMoveAssigned);
-  MOZ_RELEASE_ASSERT(mayBasicValue3->GetTag() == 6);
-  MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasMovedFrom);
-  Maybe<BasicValue> mayBasicValue4;
-  mayBasicValue4.emplace(std::move(*mayBasicValue3));
-  MOZ_RELEASE_ASSERT(mayBasicValue4->GetStatus() == eWasMoveConstructed);
-  MOZ_RELEASE_ASSERT(mayBasicValue4->GetTag() == 6);
-  MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMovedFrom);
+      // Check that we get copies when moves aren't possible.
+      Maybe<BasicValue> mayBasicValue2 = Some(*mayBasicValue);
+      MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyConstructed);
+      MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 3);
+      mayBasicValue->SetTag(4);
+      mayBasicValue2 = mayBasicValue;
+      // This test should work again when we fix bug 1052940.
+      // MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyAssigned);
+      MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 4);
+      mayBasicValue->SetTag(5);
+      mayBasicValue2.reset();
+      mayBasicValue2.emplace(*mayBasicValue);
+      MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyConstructed);
+      MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 5);
 
-  // Check that we always get copies for types that don't support moves.
-  Maybe<UnmovableValue> mayUnmovableValue = Some(UnmovableValue());
-  MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyConstructed);
-  mayUnmovableValue = Some(UnmovableValue());
-  MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyAssigned);
-  mayUnmovableValue.reset();
-  mayUnmovableValue.emplace(UnmovableValue());
-  MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyConstructed);
+      // Check that std::move() works. (Another sanity check for move support.)
+      Maybe<BasicValue> mayBasicValue3 = Some(std::move(*mayBasicValue));
+      MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMoveConstructed);
+      MOZ_RELEASE_ASSERT(mayBasicValue3->GetTag() == 5);
+      MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMovedFrom);
+      mayBasicValue2->SetTag(6);
+      mayBasicValue3 = Some(std::move(*mayBasicValue2));
+      MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMoveAssigned);
+      MOZ_RELEASE_ASSERT(mayBasicValue3->GetTag() == 6);
+      MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasMovedFrom);
+      Maybe<BasicValue> mayBasicValue4;
+      mayBasicValue4.emplace(std::move(*mayBasicValue3));
+      MOZ_RELEASE_ASSERT(mayBasicValue4->GetStatus() == eWasMoveConstructed);
+      MOZ_RELEASE_ASSERT(mayBasicValue4->GetTag() == 6);
+      MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMovedFrom);
+    }
 
-  static_assert(std::is_copy_constructible_v<Maybe<UnmovableValue>>);
-  static_assert(std::is_copy_assignable_v<Maybe<UnmovableValue>>);
-  // XXX Why do these static_asserts not hold?
-  // static_assert(!std::is_move_constructible_v<Maybe<UnmovableValue>>);
-  // static_assert(!std::is_move_assignable_v<Maybe<UnmovableValue>>);
+    TestCopyMaybe<BasicValue>();
+    TestMoveMaybe<BasicValue>();
+  }
 
-  // Check that types that only support moves, but not copies, work.
-  Maybe<UncopyableValue> mayUncopyableValue = Some(UncopyableValue());
-  MOZ_RELEASE_ASSERT(mayUncopyableValue->GetStatus() == eWasMoveConstructed);
-  mayUncopyableValue = Some(UncopyableValue());
-  MOZ_RELEASE_ASSERT(mayUncopyableValue->GetStatus() == eWasMoveAssigned);
-  mayUncopyableValue.reset();
-  mayUncopyableValue.emplace(UncopyableValue());
-  MOZ_RELEASE_ASSERT(mayUncopyableValue->GetStatus() == eWasMoveConstructed);
-  mayUncopyableValue = Nothing();
+  MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
 
-  static_assert(!std::is_copy_constructible_v<Maybe<UncopyableValue>>);
-  static_assert(!std::is_copy_assignable_v<Maybe<UncopyableValue>>);
-  static_assert(std::is_move_constructible_v<Maybe<UncopyableValue>>);
-  static_assert(std::is_move_assignable_v<Maybe<UncopyableValue>>);
+  {
+    // Check that we always get copies for types that don't support moves.
+    {
+      Maybe<UnmovableValue> mayUnmovableValue = Some(UnmovableValue());
+      MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyConstructed);
+      mayUnmovableValue = Some(UnmovableValue());
+      MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyAssigned);
+      mayUnmovableValue.reset();
+      mayUnmovableValue.emplace(UnmovableValue());
+      MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyConstructed);
+    }
 
-  // Check that types that support neither moves or copies work.
-  Maybe<UncopyableUnmovableValue> mayUncopyableUnmovableValue;
-  mayUncopyableUnmovableValue.emplace();
-  MOZ_RELEASE_ASSERT(mayUncopyableUnmovableValue->GetStatus() ==
-                     eWasDefaultConstructed);
-  mayUncopyableUnmovableValue.reset();
-  mayUncopyableUnmovableValue.emplace(0);
-  MOZ_RELEASE_ASSERT(mayUncopyableUnmovableValue->GetStatus() ==
-                     eWasConstructed);
-  mayUncopyableUnmovableValue = Nothing();
+    TestCopyMaybe<UnmovableValue>();
 
-  static_assert(!std::is_copy_constructible_v<Maybe<UncopyableUnmovableValue>>);
-  static_assert(!std::is_copy_assignable_v<Maybe<UncopyableUnmovableValue>>);
-  static_assert(!std::is_move_constructible_v<Maybe<UncopyableUnmovableValue>>);
-  static_assert(!std::is_move_assignable_v<Maybe<UncopyableUnmovableValue>>);
+    static_assert(std::is_copy_constructible_v<Maybe<UnmovableValue>>);
+    static_assert(std::is_copy_assignable_v<Maybe<UnmovableValue>>);
+    // XXX Why do these static_asserts not hold?
+    // static_assert(!std::is_move_constructible_v<Maybe<UnmovableValue>>);
+    // static_assert(!std::is_move_assignable_v<Maybe<UnmovableValue>>);
+  }
+
+  MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+  {
+    // Check that types that only support moves, but not copies, work.
+    {
+      Maybe<UncopyableValue> mayUncopyableValue = Some(UncopyableValue());
+      MOZ_RELEASE_ASSERT(mayUncopyableValue->GetStatus() ==
+                         eWasMoveConstructed);
+      mayUncopyableValue = Some(UncopyableValue());
+      MOZ_RELEASE_ASSERT(mayUncopyableValue->GetStatus() == eWasMoveAssigned);
+      mayUncopyableValue.reset();
+      mayUncopyableValue.emplace(UncopyableValue());
+      MOZ_RELEASE_ASSERT(mayUncopyableValue->GetStatus() ==
+                         eWasMoveConstructed);
+      mayUncopyableValue = Nothing();
+    }
+
+    TestMoveMaybe<BasicValue>();
+
+    static_assert(!std::is_copy_constructible_v<Maybe<UncopyableValue>>);
+    static_assert(!std::is_copy_assignable_v<Maybe<UncopyableValue>>);
+    static_assert(std::is_move_constructible_v<Maybe<UncopyableValue>>);
+    static_assert(std::is_move_assignable_v<Maybe<UncopyableValue>>);
+  }
+
+  MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
+
+  {  // Check that types that support neither moves or copies work.
+    Maybe<UncopyableUnmovableValue> mayUncopyableUnmovableValue;
+    mayUncopyableUnmovableValue.emplace();
+    MOZ_RELEASE_ASSERT(mayUncopyableUnmovableValue->GetStatus() ==
+                       eWasDefaultConstructed);
+    mayUncopyableUnmovableValue.reset();
+    mayUncopyableUnmovableValue.emplace(0);
+    MOZ_RELEASE_ASSERT(mayUncopyableUnmovableValue->GetStatus() ==
+                       eWasConstructed);
+    mayUncopyableUnmovableValue = Nothing();
+
+    static_assert(
+        !std::is_copy_constructible_v<Maybe<UncopyableUnmovableValue>>);
+    static_assert(!std::is_copy_assignable_v<Maybe<UncopyableUnmovableValue>>);
+    static_assert(
+        !std::is_move_constructible_v<Maybe<UncopyableUnmovableValue>>);
+    static_assert(!std::is_move_assignable_v<Maybe<UncopyableUnmovableValue>>);
+  }
+
+  {
+    // Test copy and move with a trivially copyable and trivially destructible
+    // type.
+    {
+      constexpr Maybe<int> src = Some(42);
+      constexpr Maybe<int> dstCopyConstructed = src;
+
+      static_assert(src.isSome());
+      static_assert(dstCopyConstructed.isSome());
+      static_assert(42 == *src);
+      static_assert(42 == *dstCopyConstructed);
+      static_assert(42 == dstCopyConstructed.value());
+    }
+
+    {
+      const Maybe<int> src = Some(42);
+      Maybe<int> dstCopyAssigned;
+      dstCopyAssigned = src;
+
+      MOZ_RELEASE_ASSERT(src.isSome());
+      MOZ_RELEASE_ASSERT(dstCopyAssigned.isSome());
+      MOZ_RELEASE_ASSERT(42 == *src);
+      MOZ_RELEASE_ASSERT(42 == *dstCopyAssigned);
+    }
+
+    {
+      Maybe<int> src = Some(42);
+      const Maybe<int> dstMoveConstructed = std::move(src);
+
+      MOZ_RELEASE_ASSERT(!src.isSome());
+      MOZ_RELEASE_ASSERT(dstMoveConstructed.isSome());
+      MOZ_RELEASE_ASSERT(42 == *dstMoveConstructed);
+    }
+
+    {
+      Maybe<int> src = Some(42);
+      Maybe<int> dstMoveAssigned;
+      dstMoveAssigned = std::move(src);
+
+      MOZ_RELEASE_ASSERT(!src.isSome());
+      MOZ_RELEASE_ASSERT(dstMoveAssigned.isSome());
+      MOZ_RELEASE_ASSERT(42 == *dstMoveAssigned);
+    }
+  }
 
   return true;
 }
