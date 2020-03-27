@@ -40,7 +40,6 @@
       ];
     </script>
     <script id="processors" type="worklet">
-
       registerProcessor("set",
       class SetParamProcessor extends AudioWorkletProcessor {
         static get parameterDescriptors() {
@@ -96,6 +95,16 @@
           throw "This should be TypeError";
         }
       }
+      // Test a processor that has a no get parameterDescriptors.
+      try {
+        registerProcessor("no-params",
+        class NoParamProcessor extends AudioWorkletProcessor {
+          constructor() { super(); }
+          process() { }
+        });
+      } catch (e) {
+        throw "Construction should have worked.";
+      }
     </script>
     <script>
       setup({ explicit_done: true });
@@ -149,9 +158,14 @@
           }, `Attempting to create an AudioWorkletNode with an non
               iterable for parameter descriptor should not work`);
         })
-        .then(function() {
-          done();
-        });
+      .then(function() {
+        test(() => {
+          new AudioWorkletNode(ac, "no-params");
+        }, `Attempting to create an AudioWorkletNode from a processor
+            that does not have a parameterDescriptors getter should work`);
+      }).then(function() {
+        done();
+      });
     </script>
   </body>
 </html>
