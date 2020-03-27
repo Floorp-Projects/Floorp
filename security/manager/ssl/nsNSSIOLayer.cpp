@@ -1721,29 +1721,34 @@ static bool hasExplicitKeyUsageNonRepudiation(CERTCertificate* cert) {
 
 class ClientAuthDataRunnable : public SyncRunnableBase {
  public:
-  ClientAuthDataRunnable(CERTCertificate** pRetCert, SECKEYPrivateKey** pRetKey,
-                         nsNSSSocketInfo* info,
+  ClientAuthDataRunnable(nsNSSSocketInfo* info,
                          const UniqueCERTCertificate& serverCert,
                          nsTArray<nsCString>& caNamesStrings)
-      : mRV(SECFailure),
-        mErrorCodeToReport(SEC_ERROR_NO_MEMORY),
-        mPRetCert(pRetCert),
-        mPRetKey(pRetKey),
-        mSocketInfo(info),
+      : mSocketInfo(info),
         mServerCert(serverCert.get()),
-        mCANamesStrings(std::move(caNamesStrings)) {}
+        mCANamesStrings(std::move(caNamesStrings)),
+        mSelectedCertificate(nullptr),
+        mSelectedKey(nullptr) {}
 
-  SECStatus mRV;                      // out
-  PRErrorCode mErrorCodeToReport;     // out
-  CERTCertificate** const mPRetCert;  // in/out
-  SECKEYPrivateKey** const mPRetKey;  // in/out
+  // Take the selected certificate. Will be null if none was selected or if an
+  // error prevented selecting one.
+  UniqueCERTCertificate TakeSelectedCertificate() {
+    return std::move(mSelectedCertificate);
+  }
+  // Take the private key for the selected certificate. Will be null if no
+  // certificate was selected or an error prevented selecting one or getting
+  // the corresponding key.
+  UniqueSECKEYPrivateKey TakeSelectedKey() { return std::move(mSelectedKey); }
+
  protected:
   virtual void RunOnTargetThread() override;
 
  private:
-  nsNSSSocketInfo* const mSocketInfo;   // in
-  CERTCertificate* const mServerCert;   // in
-  nsTArray<nsCString> mCANamesStrings;  // in
+  nsNSSSocketInfo* const mSocketInfo;
+  CERTCertificate* const mServerCert;
+  nsTArray<nsCString> mCANamesStrings;
+  UniqueCERTCertificate mSelectedCertificate;
+  UniqueSECKEYPrivateKey mSelectedKey;
 };
 
 nsTArray<nsCString> DecodeCANames(CERTDistNames* caNames) {
@@ -1797,6 +1802,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     return SECFailure;
   }
 
+  *pRetCert = nullptr;
+  *pRetKey = nullptr;
+
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT,
                        NS_LITERAL_STRING("requested"), 1);
 
@@ -1816,8 +1824,6 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[%p] Not returning client cert due to denyClientCert attribute\n",
              socket));
-    *pRetCert = nullptr;
-    *pRetKey = nullptr;
     return SECSuccess;
   }
 
@@ -1828,71 +1834,56 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("[%p] Not returning client cert due to previous join\n", socket));
-    *pRetCert = nullptr;
-    *pRetKey = nullptr;
     return SECSuccess;
   }
 
   nsTArray<nsCString> caNamesStrings(DecodeCANames(caNames));
   // XXX: This should be done asynchronously; see bug 696976
-  RefPtr<ClientAuthDataRunnable> runnable(new ClientAuthDataRunnable(
-      pRetCert, pRetKey, info, serverCert, caNamesStrings));
+  RefPtr<ClientAuthDataRunnable> runnable(
+      new ClientAuthDataRunnable(info, serverCert, caNamesStrings));
   nsresult rv = runnable->DispatchToMainThreadAndWait();
   if (NS_FAILED(rv)) {
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
     return SECFailure;
   }
 
-  if (runnable->mRV != SECSuccess) {
-    PR_SetError(runnable->mErrorCodeToReport, 0);
-  } else if (*runnable->mPRetCert || *runnable->mPRetKey) {
+  // These are non-owning references.
+  UniqueCERTCertificate selectedCertificate(
+      runnable->TakeSelectedCertificate());
+  UniqueSECKEYPrivateKey selectedKey(runnable->TakeSelectedKey());
+  if (selectedCertificate && selectedKey) {
+    *pRetCert = selectedCertificate.release();
+    *pRetKey = selectedKey.release();
     // Make joinConnection prohibit joining after we've sent a client cert
     info->SetSentClientCert();
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_CLIENT_CERT,
                          NS_LITERAL_STRING("sent"), 1);
   }
 
-  return runnable->mRV;
+  return SECSuccess;
 }
 
 void ClientAuthDataRunnable::RunOnTargetThread() {
   // We check the value of a pref in this runnable, so this runnable should only
   // be run on the main thread.
   MOZ_ASSERT(NS_IsMainThread());
-
-  UniqueCERTCertificate cert;
-  UniqueSECKEYPrivateKey privKey;
   void* wincx = mSocketInfo;
 
-  mRV = SECFailure;
-  *mPRetCert = nullptr;
-  *mPRetKey = nullptr;
-  mErrorCodeToReport = SEC_ERROR_LIBRARY_FAILURE;
-
-  if (NS_FAILED(CheckForSmartCardChanges())) {
+  if (NS_WARN_IF(NS_FAILED(CheckForSmartCardChanges()))) {
     return;
   }
 
-  nsCOMPtr<nsIX509Cert> socketClientCert;
-  mSocketInfo->GetClientCert(getter_AddRefs(socketClientCert));
-
   // If a client cert preference was set on the socket info, use that and skip
   // the client cert UI and/or search of the user's past cert decisions.
+  nsCOMPtr<nsIX509Cert> socketClientCert;
+  mSocketInfo->GetClientCert(getter_AddRefs(socketClientCert));
   if (socketClientCert) {
-    cert.reset(socketClientCert->GetCert());
-    if (!cert) {
+    mSelectedCertificate.reset(socketClientCert->GetCert());
+    if (NS_WARN_IF(!mSelectedCertificate)) {
       return;
     }
-
-    // Get the private key
-    privKey.reset(PK11_FindKeyByAnyCert(cert.get(), wincx));
-    if (!privKey) {
-      return;
-    }
-
-    *mPRetCert = cert.release();
-    *mPRetKey = privKey.release();
-    mRV = SECSuccess;
+    mSelectedKey.reset(
+        PK11_FindKeyByAnyCert(mSelectedCertificate.get(), wincx));
     return;
   }
 
@@ -1903,13 +1894,15 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
 
   nsTArray<char*> caNamesStringPointers(
       GetDependentStringPointers(mCANamesStrings));
-  mRV = CERT_FilterCertListByCANames(
+  SECStatus srv = CERT_FilterCertListByCANames(
       certList.get(), caNamesStringPointers.Length(),
       caNamesStringPointers.Elements(), certUsageSSLClient);
-  if (mRV != SECSuccess) {
+  if (NS_WARN_IF(srv != SECSuccess)) {
     return;
   }
   if (CERT_LIST_EMPTY(certList)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("no client certificates available after filtering by CA"));
     return;
   }
 
@@ -1920,170 +1913,146 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
     // loop through the list until we find a cert with a key
     for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
          !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
-      // if the certificate has restriction and we do not satisfy it we do not
-      // use it
-      privKey.reset(PK11_FindKeyByAnyCert(node->cert, wincx));
-      if (privKey) {
+      UniqueSECKEYPrivateKey tmpKey(PK11_FindKeyByAnyCert(node->cert, wincx));
+      if (tmpKey) {
         if (hasExplicitKeyUsageNonRepudiation(node->cert)) {
-          privKey = nullptr;
           // Not a preferred cert
           if (!lowPrioNonrepCert) {  // did not yet find a low prio cert
             lowPrioNonrepCert.reset(CERT_DupCertificate(node->cert));
           }
         } else {
           // this is a good cert to present
-          cert.reset(CERT_DupCertificate(node->cert));
-          break;
+          mSelectedCertificate.reset(CERT_DupCertificate(node->cert));
+          mSelectedKey = std::move(tmpKey);
+          return;
         }
       }
       if (PR_GetError() == SEC_ERROR_BAD_PASSWORD) {
         // problem with password: bail
-        goto loser;
+        break;
       }
     }
 
-    if (!cert && lowPrioNonrepCert) {
-      cert = std::move(lowPrioNonrepCert);
-      privKey.reset(PK11_FindKeyByAnyCert(cert.get(), wincx));
+    if (lowPrioNonrepCert) {
+      mSelectedCertificate = std::move(lowPrioNonrepCert);
+      mSelectedKey.reset(
+          PK11_FindKeyByAnyCert(mSelectedCertificate.get(), wincx));
     }
+    return;
+  }
 
-    if (!cert) {
-      goto loser;
-    }
-  } else {  // Not Auto => ask
-    // Get the SSL Certificate
+  // Not Auto => ask
+  // Get the SSL Certificate
+  const nsACString& hostname = mSocketInfo->GetHostName();
+  nsCOMPtr<nsIClientAuthRemember> cars = nullptr;
 
-    const nsACString& hostname = mSocketInfo->GetHostName();
+  if (mSocketInfo->GetProviderTlsFlags() == 0) {
+    cars = do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
+  }
 
-    nsCOMPtr<nsIClientAuthRemember> cars = nullptr;
-
-    if (mSocketInfo->GetProviderTlsFlags() == 0) {
-      cars = do_GetService(NS_CLIENTAUTHREMEMBER_CONTRACTID);
-    }
-
-    bool hasRemembered = false;
+  if (cars) {
     nsCString rememberedDBKey;
-    if (cars) {
-      bool found;
-      nsresult rv = cars->HasRememberedDecision(
-          hostname, mSocketInfo->GetOriginAttributes(), mServerCert,
-          rememberedDBKey, &found);
-      if (NS_SUCCEEDED(rv) && found) {
-        hasRemembered = true;
-      }
+    bool found;
+    nsresult rv = cars->HasRememberedDecision(
+        hostname, mSocketInfo->GetOriginAttributes(), mServerCert,
+        rememberedDBKey, &found);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
     }
-
-    if (hasRemembered && !rememberedDBKey.IsEmpty()) {
+    if (found && !rememberedDBKey.IsEmpty()) {
       nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-      if (certdb) {
-        nsCOMPtr<nsIX509Cert> foundCert;
-        nsresult rv =
-            certdb->FindCertByDBKey(rememberedDBKey, getter_AddRefs(foundCert));
-        if (NS_SUCCEEDED(rv) && foundCert) {
-          nsNSSCertificate* objCert =
-              BitwiseCast<nsNSSCertificate*, nsIX509Cert*>(foundCert.get());
-          if (objCert) {
-            cert.reset(objCert->GetCert());
-          }
+      if (NS_WARN_IF(!certdb)) {
+        return;
+      }
+      nsCOMPtr<nsIX509Cert> foundCert;
+      nsresult rv =
+          certdb->FindCertByDBKey(rememberedDBKey, getter_AddRefs(foundCert));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+      if (foundCert) {
+        nsNSSCertificate* objCert =
+            BitwiseCast<nsNSSCertificate*, nsIX509Cert*>(foundCert.get());
+        if (NS_WARN_IF(!objCert)) {
+          return;
         }
-
-        if (!cert) {
-          hasRemembered = false;
+        mSelectedCertificate.reset(objCert->GetCert());
+        if (NS_WARN_IF(!mSelectedCertificate)) {
+          return;
         }
+        mSelectedKey.reset(
+            PK11_FindKeyByAnyCert(mSelectedCertificate.get(), wincx));
+        return;
       }
-    }
-
-    if (!hasRemembered) {
-      // user selects a cert to present
-      nsCOMPtr<nsIClientAuthDialogs> dialogs;
-      UniquePORTString corg(CERT_GetOrgName(&mServerCert->subject));
-      nsAutoCString org(corg.get());
-
-      UniquePORTString cissuer(CERT_GetOrgName(&mServerCert->issuer));
-      nsAutoCString issuer(cissuer.get());
-
-      nsCOMPtr<nsIMutableArray> certArray = nsArrayBase::Create();
-      if (!certArray) {
-        goto loser;
-      }
-
-      for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
-           !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
-        nsCOMPtr<nsIX509Cert> tempCert = nsNSSCertificate::Create(node->cert);
-        if (!tempCert) {
-          goto loser;
-        }
-
-        nsresult rv = certArray->AppendElement(tempCert);
-        if (NS_FAILED(rv)) {
-          goto loser;
-        }
-      }
-
-      // Throw up the client auth dialog and get back the index of the selected
-      // cert
-      nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
-                                  NS_GET_IID(nsIClientAuthDialogs),
-                                  NS_CLIENTAUTHDIALOGS_CONTRACTID);
-
-      if (NS_FAILED(rv)) {
-        goto loser;
-      }
-
-      uint32_t selectedIndex = 0;
-      bool certChosen = false;
-
-      // even if the user has canceled, we want to remember that, to avoid
-      // repeating prompts
-      bool wantRemember = false;
-      rv = dialogs->ChooseCertificate(hostname, mSocketInfo->GetPort(), org,
-                                      issuer, certArray, &selectedIndex,
-                                      &wantRemember, &certChosen);
-      if (NS_FAILED(rv)) {
-        goto loser;
-      }
-
-      if (certChosen) {
-        nsCOMPtr<nsIX509Cert> selectedCert =
-            do_QueryElementAt(certArray, selectedIndex);
-        if (!selectedCert) {
-          goto loser;
-        }
-        cert.reset(selectedCert->GetCert());
-      }
-
-      if (cars && wantRemember) {
-        rv = cars->RememberDecision(
-            hostname, mSocketInfo->GetOriginAttributes(), mServerCert,
-            certChosen ? cert.get() : nullptr);
-        Unused << NS_WARN_IF(NS_FAILED(rv));
-      }
-    }
-
-    if (!cert) {
-      goto loser;
-    }
-
-    // go get the private key
-    privKey.reset(PK11_FindKeyByAnyCert(cert.get(), wincx));
-    if (!privKey) {
-      goto loser;
     }
   }
-  goto done;
 
-loser:
-  if (mRV == SECSuccess) {
-    mRV = SECFailure;
+  // ask the user to select a certificate
+  nsCOMPtr<nsIClientAuthDialogs> dialogs;
+  UniquePORTString corg(CERT_GetOrgName(&mServerCert->subject));
+  nsAutoCString org(corg.get());
+
+  UniquePORTString cissuer(CERT_GetOrgName(&mServerCert->issuer));
+  nsAutoCString issuer(cissuer.get());
+
+  nsCOMPtr<nsIMutableArray> certArray = nsArrayBase::Create();
+  if (NS_WARN_IF(!certArray)) {
+    return;
   }
-done:
-  int error = PR_GetError();
 
-  *mPRetCert = cert.release();
-  *mPRetKey = privKey.release();
+  for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
+       !CERT_LIST_END(node, certList); node = CERT_LIST_NEXT(node)) {
+    nsCOMPtr<nsIX509Cert> tempCert = nsNSSCertificate::Create(node->cert);
+    if (NS_WARN_IF(!tempCert)) {
+      return;
+    }
+    nsresult rv = certArray->AppendElement(tempCert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  }
 
-  if (mRV == SECFailure) {
-    mErrorCodeToReport = error;
+  // Throw up the client auth dialog and get back the index of the selected
+  // cert
+  nsresult rv =
+      getNSSDialogs(getter_AddRefs(dialogs), NS_GET_IID(nsIClientAuthDialogs),
+                    NS_CLIENTAUTHDIALOGS_CONTRACTID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  uint32_t selectedIndex = 0;
+  bool certChosen = false;
+
+  // even if the user has canceled, we want to remember that, to avoid
+  // repeating prompts
+  bool wantRemember = false;
+  rv = dialogs->ChooseCertificate(hostname, mSocketInfo->GetPort(), org, issuer,
+                                  certArray, &selectedIndex, &wantRemember,
+                                  &certChosen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (certChosen) {
+    nsCOMPtr<nsIX509Cert> selectedCert =
+        do_QueryElementAt(certArray, selectedIndex);
+    if (NS_WARN_IF(!selectedCert)) {
+      return;
+    }
+    mSelectedCertificate.reset(selectedCert->GetCert());
+    if (NS_WARN_IF(!mSelectedCertificate)) {
+      return;
+    }
+    mSelectedKey.reset(
+        PK11_FindKeyByAnyCert(mSelectedCertificate.get(), wincx));
+  }
+
+  if (cars && wantRemember) {
+    rv = cars->RememberDecision(
+        hostname, mSocketInfo->GetOriginAttributes(), mServerCert,
+        certChosen ? mSelectedCertificate.get() : nullptr);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }
 
