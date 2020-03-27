@@ -389,7 +389,7 @@ class Theme {
       lwtData.window = getWinUtils(
         windowTracker.getWindow(windowId)
       ).outerWindowID;
-      windowOverrides.delete(windowId);
+      windowOverrides.set(windowId, emptyTheme);
     } else {
       windowOverrides.clear();
       defaultTheme = emptyTheme;
@@ -473,12 +473,12 @@ this.theme = class extends ExtensionAPI {
             if (!browserWindow) {
               return Promise.reject(`Invalid window ID: ${windowId}`);
             }
-
-            let theme = windowOverrides.get(windowId) || defaultTheme;
-            if (theme.extension !== extension) {
-              return;
-            }
           } else if (defaultTheme.extension !== extension) {
+            return;
+          }
+
+          if (!defaultTheme && !windowOverrides.has(windowId)) {
+            // If no theme has been initialized, nothing to do.
             return;
           }
 
