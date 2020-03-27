@@ -204,7 +204,7 @@ public class GeckoScreenOrientation {
         if (ThreadUtils.isOnUiThread()) {
             notifier.run();
         } else {
-            ThreadUtils.runOnUiThread(notifier);
+            ThreadUtils.postToUiThread(notifier);
         }
     }
 

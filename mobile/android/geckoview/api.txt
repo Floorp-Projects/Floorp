@@ -783,7 +783,6 @@ package org.mozilla.geckoview {
   public static class GeckoSession.NavigationDelegate.LoadRequest {
     ctor protected LoadRequest();
     field public final boolean hasUserGesture;
-    field public final boolean isDirectNavigation;
     field public final boolean isRedirect;
     field public final int target;
     field @Nullable public final String triggerUri;
