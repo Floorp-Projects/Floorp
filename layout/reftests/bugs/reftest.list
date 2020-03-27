@@ -2074,7 +2074,7 @@ skip-if(!asyncPan) == 1544895.html 1544895-ref.html
 == 1547759-1.html 1547759-1-ref.html
 == 1548809.html 1548809-ref.html
 != 1552789-1.html 1552789-ref-1.html
-pref(image.downscale-during-decode.enabled,true) skip-if(Android&&webrender) == 1553571-1.html 1553571-1-ref.html
+pref(image.downscale-during-decode.enabled,true) == 1553571-1.html 1553571-1-ref.html
 == 1558937-1.html 1558937-1-ref.html
 != 1563484.html 1563484-notref.html
 == 1563484.html 1563484-ref.html
