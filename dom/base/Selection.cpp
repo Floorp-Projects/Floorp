@@ -695,7 +695,8 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
                                         aRange.EndOffset());
 }
 
-int32_t Selection::FindInsertionPoint(
+// static
+int32_t Selection::StyledRanges::FindInsertionPoint(
     const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
     int32_t aPointOffset,
     int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&)) {
@@ -1024,9 +1025,9 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   // Insert the new element into our "leftovers" array
   // `aRange` is positioned, so it has to have a start container.
-  int32_t insertionPoint{FindInsertionPoint(&temp, *aRange->GetStartContainer(),
-                                            aRange->StartOffset(),
-                                            CompareToRangeStart)};
+  int32_t insertionPoint{StyledRanges::FindInsertionPoint(
+      &temp, *aRange->GetStartContainer(), aRange->StartOffset(),
+      CompareToRangeStart)};
 
   if (!temp.InsertElementAt(insertionPoint, StyledRange(aRange))) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1180,8 +1181,8 @@ nsresult Selection::GetIndicesForInterval(
 
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
-  int32_t endsBeforeIndex{FindInsertionPoint(&mStyledRanges.mRanges, *aEndNode,
-                                             aEndOffset, &CompareToRangeStart)};
+  int32_t endsBeforeIndex{StyledRanges::FindInsertionPoint(
+      &mStyledRanges.mRanges, *aEndNode, aEndOffset, &CompareToRangeStart)};
 
   if (endsBeforeIndex == 0) {
     const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
@@ -1202,7 +1203,7 @@ nsresult Selection::GetIndicesForInterval(
   }
   aEndIndex = endsBeforeIndex;
 
-  int32_t beginsAfterIndex{FindInsertionPoint(
+  int32_t beginsAfterIndex{StyledRanges::FindInsertionPoint(
       &mStyledRanges.mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
 
   if (beginsAfterIndex == (int32_t)mStyledRanges.mRanges.Length())

@@ -740,22 +740,6 @@ class Selection final : public nsSupportsWeakReference,
                                                      bool* aDidAddRange,
                                                      int32_t* aOutIndex);
 
-  /**
-   * Binary searches the given sorted array of ranges for the insertion point
-   * for the given node/offset. The given comparator is used, and the index
-   * where the point should appear in the array is returned.
-
-   * If there is an item in the array equal to the input point (aPointNode,
-   * aPointOffset), we will return the index of this item.
-   *
-   * @return the index where the point should appear in the array. In
-   *         [0, `aElementArray->Length()`].
-   */
-  static int32_t FindInsertionPoint(
-      const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
-      int32_t aPointOffset,
-      int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&));
-
   bool HasEqualRangeBoundariesAt(const nsRange& aRange,
                                  int32_t aRangeIndex) const;
   /**
@@ -824,6 +808,22 @@ class Selection final : public nsSupportsWeakReference,
 
   struct StyledRanges {
     nsresult RemoveRangeAndUnregisterSelection(nsRange& aRange);
+
+    /**
+     * Binary searches the given sorted array of ranges for the insertion point
+     * for the given node/offset. The given comparator is used, and the index
+     * where the point should appear in the array is returned.
+
+     * If there is an item in the array equal to the input point (aPointNode,
+     * aPointOffset), we will return the index of this item.
+     *
+     * @return the index where the point should appear in the array. In
+     *         [0, `aElementArray->Length()`].
+     */
+    static int32_t FindInsertionPoint(
+        const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
+        int32_t aPointOffset,
+        int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&));
 
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
