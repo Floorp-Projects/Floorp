@@ -1,0 +1,15 @@
+<!doctype html>
+<script>
+onbeforeunload = function() {
+  opener.onChildBeforeUnload();
+};
+onload = function() {
+  location.href = "this-protocol-is-unlikely-to-exist://foo";
+  setTimeout(function() {
+    opener.onChildLoadTimedOut();
+  }, 1000);
+};
+onunload = function() {
+  opener.onChildUnload();
+};
+</script>
