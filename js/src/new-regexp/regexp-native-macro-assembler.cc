@@ -85,6 +85,102 @@ void SMRegExpMacroAssembler::Bind(Label* label) {
   masm_.bind(label->inner());
 }
 
+void SMRegExpMacroAssembler::CheckCharacterImpl(Imm32 c, Label* on_cond,
+                                                Assembler::Condition cond) {
+  masm_.branch32(cond, current_character_, c, LabelOrBacktrack(on_cond));
+}
+
+void SMRegExpMacroAssembler::CheckCharacter(uint32_t c, Label* on_equal) {
+  CheckCharacterImpl(Imm32(c), on_equal, Assembler::Equal);
+}
+
+void SMRegExpMacroAssembler::CheckNotCharacter(uint32_t c,
+                                               Label* on_not_equal) {
+  CheckCharacterImpl(Imm32(c), on_not_equal, Assembler::NotEqual);
+}
+
+void SMRegExpMacroAssembler::CheckCharacterGT(uc16 c, Label* on_greater) {
+  CheckCharacterImpl(Imm32(c), on_greater, Assembler::GreaterThan);
+}
+
+void SMRegExpMacroAssembler::CheckCharacterLT(uc16 c, Label* on_less) {
+  CheckCharacterImpl(Imm32(c), on_less, Assembler::LessThan);
+}
+
+// Bitwise-and the current character with mask and then check for a
+// match with c.
+void SMRegExpMacroAssembler::CheckCharacterAfterAndImpl(uint32_t c,
+                                                        uint32_t mask,
+                                                        Label* on_cond,
+                                                        bool is_not) {
+  if (c == 0) {
+    Assembler::Condition cond = is_not ? Assembler::NonZero : Assembler::Zero;
+    masm_.branchTest32(cond, current_character_, Imm32(mask),
+                       LabelOrBacktrack(on_cond));
+  } else {
+    Assembler::Condition cond = is_not ? Assembler::NotEqual : Assembler::Equal;
+    masm_.move32(Imm32(mask), temp0_);
+    masm_.and32(current_character_, temp0_);
+    masm_.branch32(cond, temp0_, Imm32(c), LabelOrBacktrack(on_cond));
+  }
+}
+
+void SMRegExpMacroAssembler::CheckCharacterAfterAnd(uint32_t c,
+                                                    uint32_t mask,
+                                                    Label* on_equal) {
+  CheckCharacterAfterAndImpl(c, mask, on_equal, /*is_not =*/false);
+}
+
+void SMRegExpMacroAssembler::CheckNotCharacterAfterAnd(uint32_t c,
+                                                       uint32_t mask,
+                                                       Label* on_not_equal) {
+  CheckCharacterAfterAndImpl(c, mask, on_not_equal, /*is_not =*/true);
+}
+
+
+// Subtract minus from the current character, then bitwise-and the
+// result with mask, then check for a match with c.
+void SMRegExpMacroAssembler::CheckNotCharacterAfterMinusAnd(
+    uc16 c, uc16 minus, uc16 mask, Label* on_not_equal) {
+  masm_.computeEffectiveAddress(Address(current_character_, -minus), temp0_);
+  if (c == 0) {
+    masm_.branchTest32(Assembler::NonZero, temp0_, Imm32(mask),
+                       LabelOrBacktrack(on_not_equal));
+  } else {
+    masm_.and32(Imm32(mask), temp0_);
+    masm_.branch32(Assembler::NotEqual, temp0_, Imm32(c),
+                   LabelOrBacktrack(on_not_equal));
+  }
+}
+
+// If the current position matches the position stored on top of the backtrack
+// stack, pops the backtrack stack and branches to the given label.
+void SMRegExpMacroAssembler::CheckGreedyLoop(Label* on_equal) {
+  js::jit::Label fallthrough;
+  masm_.branchPtr(Assembler::NotEqual, Address(backtrack_stack_pointer_, 0),
+                  current_position_, &fallthrough);
+  masm_.addPtr(Imm32(sizeof(void*)), backtrack_stack_pointer_);  // Pop.
+  JumpOrBacktrack(on_equal);
+  masm_.bind(&fallthrough);
+}
+
+void SMRegExpMacroAssembler::CheckCharacterInRangeImpl(
+    uc16 from, uc16 to, Label* on_cond, Assembler::Condition cond) {
+  // x is in [from,to] if unsigned(x - from) <= to - from
+  masm_.computeEffectiveAddress(Address(current_character_, -from), temp0_);
+  masm_.branch32(cond, temp0_, Imm32(to - from), LabelOrBacktrack(on_cond));
+}
+
+void SMRegExpMacroAssembler::CheckCharacterInRange(uc16 from, uc16 to,
+                                                   Label* on_in_range) {
+  CheckCharacterInRangeImpl(from, to, on_in_range, Assembler::BelowOrEqual);
+}
+
+void SMRegExpMacroAssembler::CheckCharacterNotInRange(uc16 from, uc16 to,
+                                                      Label* on_not_in_range) {
+  CheckCharacterInRangeImpl(from, to, on_not_in_range, Assembler::Above);
+}
+
 void SMRegExpMacroAssembler::Fail() {
   masm_.movePtr(ImmWord(js::RegExpRunStatus_Success_NotFound), temp0_);
   masm_.jump(&exit_label_);
