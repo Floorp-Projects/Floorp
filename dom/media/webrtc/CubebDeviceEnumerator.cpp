@@ -243,9 +243,9 @@ already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromID(
   if (mInputDevices.IsEmpty() || mManualInputInvalidation) {
     EnumerateAudioDevices(Side::INPUT);
   }
-  for (RefPtr<AudioDeviceInfo>& device : mInputDevices) {
-    if (device->DeviceID() == aID) {
-      RefPtr<AudioDeviceInfo> other = device;
+  for (uint32_t i = 0; i < mInputDevices.Length(); i++) {
+    if (mInputDevices[i]->DeviceID() == aID) {
+      RefPtr<AudioDeviceInfo> other = mInputDevices[i];
       return other.forget();
     }
   }
@@ -253,9 +253,9 @@ already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromID(
   if (mOutputDevices.IsEmpty() || mManualOutputInvalidation) {
     EnumerateAudioDevices(Side::OUTPUT);
   }
-  for (RefPtr<AudioDeviceInfo>& device : mOutputDevices) {
-    if (device->DeviceID() == aID) {
-      RefPtr<AudioDeviceInfo> other = device;
+  for (uint32_t i = 0; i < mOutputDevices.Length(); i++) {
+    if (mOutputDevices[i]->DeviceID() == aID) {
+      RefPtr<AudioDeviceInfo> other = mOutputDevices[i];
       return other.forget();
     }
   }
@@ -283,30 +283,9 @@ already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
   if (devices.IsEmpty() || manualInvalidation) {
     EnumerateAudioDevices(aSide);
   }
-  for (RefPtr<AudioDeviceInfo>& device : devices) {
-    if (device->Name().Equals(aName)) {
-      RefPtr<AudioDeviceInfo> other = device;
-      return other.forget();
-    }
-  }
-
-  return nullptr;
-}
-
-RefPtr<AudioDeviceInfo> CubebDeviceEnumerator::DefaultDevice(Side aSide) {
-  MutexAutoLock lock(mMutex);
-
-  nsTArray<RefPtr<AudioDeviceInfo>>& devices =
-      (aSide == Side::INPUT) ? mInputDevices : mOutputDevices;
-  bool manualInvalidation = (aSide == Side::INPUT) ? mManualInputInvalidation
-                                                   : mManualOutputInvalidation;
-
-  if (devices.IsEmpty() || manualInvalidation) {
-    EnumerateAudioDevices(aSide);
-  }
-  for (RefPtr<AudioDeviceInfo>& device : devices) {
-    if (device->Preferred()) {
-      RefPtr<AudioDeviceInfo> other = device;
+  for (uint32_t i = 0; i < devices.Length(); i++) {
+    if (devices[i]->Name().Equals(aName)) {
+      RefPtr<AudioDeviceInfo> other = devices[i];
       return other.forget();
     }
   }
