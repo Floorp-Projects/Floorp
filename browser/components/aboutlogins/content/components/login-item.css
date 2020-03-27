@@ -353,35 +353,6 @@ input[name="password"] {
   width: 24px;
 }
 
-.dismiss-alert {
-  border: none;
-  padding: 0;
-  margin: 0;
-  position: absolute;
-  inset-inline-end: 12px;
-  inset-block-start: 12px;
-  min-width: auto;
-  min-height: auto;
-  line-height: 0;
-  background-color: transparent;
-}
-
-.dismiss-alert:enabled:hover {
-  background-color: var(--grey-90-a20);
-}
-
-.dismiss-alert:enabled:hover:active {
-  background-color: var(--grey-90-a30);
-}
-
-.dismiss-alert-icon {
-  -moz-context-properties: fill, fill-opacity;
-  fill-opacity: 0;
-  fill: currentColor;
-  width: 16px;
-  height: 16px;
-}
-
 .error-message {
   color: #fff;
   background-color: var(--red-60);

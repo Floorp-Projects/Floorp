@@ -111,12 +111,6 @@ class AboutLoginsChild extends JSWindowActorChild {
         });
         break;
       }
-      case "AboutLoginsDismissBreachAlert": {
-        this.sendAsyncMessage("AboutLogins:DismissBreachAlert", {
-          login: event.detail,
-        });
-        break;
-      }
       case "AboutLoginsGetHelp": {
         this.sendAsyncMessage("AboutLogins:GetHelp");
         break;
