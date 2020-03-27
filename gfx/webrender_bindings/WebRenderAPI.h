@@ -641,9 +641,6 @@ class DisplayListBuilder final {
    */
   bool ReuseItem(nsPaintedDisplayItem* aItem);
 
-  void UpdateCacheState(const bool aPartialDisplayListBuildFailed);
-  void UpdateCacheSize();
-
   uint64_t CurrentClipChainId() const {
     return mCurrentSpaceAndClipChain.clip_chain;
   }
