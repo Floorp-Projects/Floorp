@@ -388,21 +388,26 @@ export default class LoginList extends HTMLElement {
     );
   }
 
-  _internalSetMonitorData(internalMemberName, mapByLoginGUID) {
+  _internalSetMonitorData(
+    internalMemberName,
+    mapByLoginGUID,
+    updateSortAndSelectedLogin = true
+  ) {
     this[internalMemberName] = mapByLoginGUID;
-    if (this[internalMemberName].size === 0) {
-      this.render();
-      return;
+    if (this[internalMemberName].size) {
+      for (let [loginGuid] of mapByLoginGUID) {
+        let { login, listItem } = this._logins[loginGuid];
+        LoginListItemFactory.update(listItem, login);
+      }
+      if (updateSortAndSelectedLogin) {
+        const alertsSortOptionElement = this._sortSelect.namedItem("alerts");
+        alertsSortOptionElement.hidden = false;
+        this._sortSelect.selectedIndex = alertsSortOptionElement.index;
+        this._applySortAndScrollToTop();
+        this._selectFirstVisibleLogin();
+      }
     }
-    for (let [loginGuid] of mapByLoginGUID) {
-      let { login, listItem } = this._logins[loginGuid];
-      LoginListItemFactory.update(listItem, login);
-    }
-    const alertsSortOptionElement = this._sortSelect.namedItem("alerts");
-    alertsSortOptionElement.hidden = false;
-    this._sortSelect.selectedIndex = alertsSortOptionElement.index;
-    this._applySortAndScrollToTop();
-    this._selectFirstVisibleLogin();
+    this.render();
   }
 
   _internalUpdateMonitorData(internalMemberName, mapByLoginGUID) {
@@ -410,9 +415,17 @@ export default class LoginList extends HTMLElement {
       this[internalMemberName] = new Map();
     }
     for (const [guid, data] of [...mapByLoginGUID]) {
-      this[internalMemberName].set(guid, data);
+      if (data) {
+        this[internalMemberName].set(guid, data);
+      } else {
+        this[internalMemberName].delete(guid);
+      }
     }
-    this._internalSetMonitorData(internalMemberName, this[internalMemberName]);
+    this._internalSetMonitorData(
+      internalMemberName,
+      this[internalMemberName],
+      false
+    );
   }
 
   setSortDirection(sortDirection) {
