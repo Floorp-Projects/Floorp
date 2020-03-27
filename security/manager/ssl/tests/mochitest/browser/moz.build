@@ -13,7 +13,6 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 # when they're automatically generated.)
 #test_certificates = (
 #    'ca.pem',
-#    'client-cert-via-intermediate.pem',
 #    'code-ee.pem',
 #    'ee-from-expired-ca.pem',
 #    'ee-from-untrusted-ca.pem',
@@ -24,7 +23,6 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 #    'has-non-empty-subject.pem',
 #    'has-o.pem',
 #    'has-ou.pem',
-#    'intermediate.pem',
 #    'invalid.pem',
 #    'longOID.pem',
 #    'md5-ee.pem',
