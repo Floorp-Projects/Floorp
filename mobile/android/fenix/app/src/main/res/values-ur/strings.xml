@@ -928,21 +928,33 @@
     <string name="preference_enhanced_tracking_protection_standard">معیاری (سفارش شدا)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">تحفظ اور کارکردگی کیلئے متوازن۔</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">صفحات عمومی طور سے لوڈ ہوں گے، لیکن کچھ ٹریکر کو مسدود کریں گے۔</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">معیاری سراغ کاری تحفظ کے ذریعہ کیا مسدود ہے</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">سخت</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">سخت (طے شدہ)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">مضبوط سراغ کاری تحفظ اور تیز کارکردگی، پر شاید کچھ سائٹیں ٹھیک طرح سے کام نہیں کریں گی۔</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">سخت (سفارش شدا)</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">سخت سراغ کاری تحفظ کے ذریعہ کیا مسدود ہے</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">مخصوص</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description">منتخب کریں کہ کون سے ٹریکرز اور اسکرپٹ کو مسدود کرنا ہے</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">مخصوص سراغ کاری تحفظ کے ذریعہ کیا مسدود ہے</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">کوکیز</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">کراس سائٹ اور سوشل میڈیا ٹریکرز</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">نا دیکھے گئے سائٹوں کے کوکیز</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">تمام تیسری تنظیم کے کوکیز (ویب سائٹس کے ٹوٹنے کا سبب بن سکتی ہے)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -965,6 +977,8 @@
 
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">سوشل میڈیا ٹریکرز</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ویب پر آپ کی براؤزنگ کی سرگرمی کو ٹریک کرنے والے سوشل نیٹورک کی صلاحیت کو محدود کرتا ہے۔</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">کراس-سائٹ ٹریکنگ کوکیز</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1135,11 +1149,15 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">مزید سیکھیں</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">مخصوص تلاش انجن کی تفصلات</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">مزید لنک سیکھیں</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">تلاش انجن کا نام داخل کریں</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” نام والا تلاش انجن پہلے سے موجود ہے۔</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">ایک تلاشی سٹرنگ داخل کریں</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->

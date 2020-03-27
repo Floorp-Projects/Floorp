@@ -61,7 +61,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">စာမှတ်ကို ပြင်ရန်</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Add-ons Manager</string>
+    <string name="browser_menu_add_ons">အတ်အွန်များ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">ဤနေရာတွင် add-ons မရှိပါ</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -72,7 +72,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">အပြင်အဆင်များ</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">သင့် စာကြည့်တိုက်</string>
+    <string name="browser_menu_library">စာကြည့်တိုက်</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop site</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -86,7 +86,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">တပ်ဗ် အသစ်</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">စုဆောင်းမှုထဲသို့သိမ်းဆည်းပါ</string>
+    <string name="browser_menu_save_to_collection_2">စုဆောင်းမှုသို့သိမ်းဆည်းပါ</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">ဆိုဘ်ပြဿနာကိုတင်ပြပါ</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -602,18 +602,16 @@
     <string name="tracking_protection_on">ဖွင့်ပါ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ပိတ်ပါ</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">ဗွီဒီယိုနှင့်အသံပိတ်ဆို့ခြင်း</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">ဗီဒီယိုနှင့်အသံခွင့်ပြုသည်</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">အသံနှင့်ဗီဒီယိုကိုခွင့်ပြုပါ။</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">ဝိုင်ဖိုင်တွင်သာ အသံနှင့်ဗီဒီယိုကိုခွင့်ပြုပါ။</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">ဆယ်လူလာ ဒေတာတွင် အသံ နှင့် ဗွီဒီယိုကို သာပိတ်ပါ</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">အသံ နှင့် ဗွီဒီယို ကိုဝိုင်ဖိုင်တွင် ဖွင့်နိုင်သည်</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">အသံပိတ်ပါ။</string>
+    <string name="preference_option_autoplay_block_audio2">အသံကိုသာပိတ်ပါ</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">ဗီဒီယိုနှင့်အသံကိုပိတ်ပါ။</string>
+    <string name="preference_option_autoplay_blocked3">အသံ နှင့် ဗီဒီယိုကို ခွင့်ပြုပါ။</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ဖွင့်ပါ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
