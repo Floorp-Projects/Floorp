@@ -182,7 +182,10 @@ JSObject* WorkerGlobalScope::WrapObject(JSContext* aCx,
   MOZ_CRASH("We should never get here!");
 }
 
-void WorkerGlobalScope::NoteTerminating() { StartDying(); }
+void WorkerGlobalScope::NoteTerminating() {
+  DisconnectEventTargetObjects();
+  StartDying();
+}
 
 already_AddRefed<Console> WorkerGlobalScope::GetConsole(ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
