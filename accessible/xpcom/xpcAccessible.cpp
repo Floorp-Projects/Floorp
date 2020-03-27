@@ -384,6 +384,11 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
 }
 
 NS_IMETHODIMP
+xpcAccessible::GetNativeInterface(nsISupports** aNativeInterface) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 xpcAccessible::GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
                          int32_t* aHeight) {
   NS_ENSURE_ARG_POINTER(aX);
