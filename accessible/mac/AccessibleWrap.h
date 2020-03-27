@@ -90,12 +90,6 @@ class AccessibleWrap : public Accessible {
   bool mNativeInited;
 };
 
-#if defined(__OBJC__)
-void FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType);
-#else
-void FireNativeEvent(id aNativeAcc, uint32_t aEventType);
-#endif
-
 Class GetTypeFromRole(roles::Role aRole);
 
 }  // namespace a11y
