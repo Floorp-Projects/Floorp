@@ -3,6 +3,7 @@ component {8e993c34-fdd6-432c-967e-f995d888777f} GeckoViewStartup.js
 contract @mozilla.org/geckoview/startup;1 {8e993c34-fdd6-432c-967e-f995d888777f}
 category app-startup GeckoViewStartup service,@mozilla.org/geckoview/startup;1
 category profile-after-change GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
+category browser-idle-startup-tasks-finished GeckoViewStartup @mozilla.org/geckoview/startup;1 process=main
 
 # GeckoViewPermission.js
 component {42f3c238-e8e8-4015-9ca2-148723a8afcf} GeckoViewPermission.js
