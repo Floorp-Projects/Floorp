@@ -587,12 +587,12 @@ already_AddRefed<nsIContentSecurityPolicy> TRRLoadInfo::GetCspToInherit() {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetHttpsOnlyNoUpgrade(bool* aHttpsOnlyNoUpgrade) {
+TRRLoadInfo::GetHttpsOnlyStatus(uint32_t* aHttpsOnlyStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::SetHttpsOnlyNoUpgrade(bool aHttpsOnlyNoUpgrade) {
+TRRLoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
