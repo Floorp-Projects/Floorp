@@ -90,7 +90,11 @@ class Mitmproxy(Playback):
         self.port = None
         self.mitmproxy_proc = None
         self.mitmdump_path = None
-        self.browser_path = os.path.normpath(config.get("binary"))
+
+        self.browser_path = ""
+        if config.get("binary", None):
+            self.browser_path = os.path.normpath(config.get("binary"))
+
         self.policies_dir = None
         self.ignore_mitmdump_exit_failure = config.get(
             "ignore_mitmdump_exit_failure", False

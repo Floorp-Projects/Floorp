@@ -20,7 +20,7 @@ job-defaults:
                 by-test-platform:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
                     default: []
-            refbrow: []
+            default: []
     tier: 3
     target:
         by-app:
@@ -40,7 +40,6 @@ job-defaults:
                     default:
                         index: gecko.v2.mozilla-esr68.latest.mobile.android-api-16-opt
                         name: build/target.apk
-            geckoview: geckoview_example.apk
             refbrow:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
@@ -49,6 +48,7 @@ job-defaults:
                     default:
                         index: project.mobile.reference-browser.v2.raptor.latest.arm
                         name: target.apk
+            default: geckoview_example.apk
     e10s: true
     virtualization: hardware
     activity:
@@ -57,12 +57,14 @@ job-defaults:
             geckoview: org.mozilla.geckoview_example.GeckoViewActivity
             fennec: org.mozilla.gecko.BrowserApp
             refbrow: org.mozilla.reference.browser.BrowserTestActivity
+            default: None
     binary-path:
         by-app:
             fenix: org.mozilla.fenix.performancetest
             geckoview: org.mozilla.geckoview_example
             fennec: org.mozilla.fennec_aurora
             refbrow: org.mozilla.reference.browser.raptor
+            default: None
     mozharness:
         script: raptor_script.py
         config:
@@ -107,7 +109,7 @@ browsertime-tp6m:
             default:
                 - amazon
                 - youtube
-    apps: ["geckoview", "fenix", "fennec"]
+    apps: ["geckoview", "fenix", "fennec", "chrome-m"]
     run-on-projects:
         by-raptor-test:
             amazon:

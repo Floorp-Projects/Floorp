@@ -15,7 +15,11 @@ from mozlog.commandline import add_logging_group
 (FENNEC,
  GECKOVIEW,
  REFBROW,
- FENIX) = FIREFOX_ANDROID_APPS = ["fennec", "geckoview", "refbrow", "fenix"]
+ FENIX,
+ CHROME_ANDROID) = FIREFOX_ANDROID_APPS = [
+    "fennec", "geckoview", "refbrow", "fenix", "chrome-m"
+]
+
 CHROMIUM_DISTROS = [CHROME, CHROMIUM]
 APPS = {
     FIREFOX: {
@@ -37,6 +41,10 @@ APPS = {
     FENIX: {
         "long_name": "Firefox Android Fenix Browser",
         "default_activity": "org.mozilla.fenix.IntentReceiverActivity",
+        "default_intent": "android.intent.action.VIEW"},
+    CHROME_ANDROID: {
+        "long_name": "Google Chrome on Android",
+        "default_activity": "com.android.chrome/com.google.android.apps.chrome.Main",
         "default_intent": "android.intent.action.VIEW"}
 }
 INTEGRATED_APPS = list(APPS.keys())
@@ -182,8 +190,18 @@ def create_parser(mach_interface=False):
 
 def verify_options(parser, args):
     ctx = vars(args)
-    if args.binary is None:
+    if args.binary is None and args.app != "chrome-m":
         parser.error("--binary is required!")
+
+    # if running chrome android tests, make sure it's on browsertime and
+    # that the chromedriver path was provided
+    if args.app == "chrome-m":
+        if not args.browsertime:
+            parser.error("--browsertime is required to run android chrome tests")
+        if not args.browsertime_chromedriver:
+            parser.error(
+                "--browsertime-chromedriver path is required for android chrome tests"
+            )
 
     # if running on a desktop browser make sure the binary exists
     if args.app in DESKTOP_APPS:
