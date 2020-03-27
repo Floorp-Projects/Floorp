@@ -25,6 +25,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 this.LoginBreaches = {
   REMOTE_SETTINGS_COLLECTION: "fxmonitor-breaches",
 
+  async recordDismissal(loginGuid) {
+    await Services.logins.initializationPromise;
+    const storageJSON =
+      Services.logins.wrappedJSObject._storage.wrappedJSObject;
+
+    return storageJSON.recordBreachAlertDismissal(loginGuid);
+  },
+
   async update(breaches = null) {
     const logins = await LoginHelper.getAllUserFacingLogins();
     await this.getPotentialBreachesByLoginGUID(logins, breaches);
