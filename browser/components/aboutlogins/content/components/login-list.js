@@ -388,26 +388,21 @@ export default class LoginList extends HTMLElement {
     );
   }
 
-  _internalSetMonitorData(
-    internalMemberName,
-    mapByLoginGUID,
-    updateSortAndSelectedLogin = true
-  ) {
+  _internalSetMonitorData(internalMemberName, mapByLoginGUID) {
     this[internalMemberName] = mapByLoginGUID;
-    if (this[internalMemberName].size) {
-      for (let [loginGuid] of mapByLoginGUID) {
-        let { login, listItem } = this._logins[loginGuid];
-        LoginListItemFactory.update(listItem, login);
-      }
-      if (updateSortAndSelectedLogin) {
-        const alertsSortOptionElement = this._sortSelect.namedItem("alerts");
-        alertsSortOptionElement.hidden = false;
-        this._sortSelect.selectedIndex = alertsSortOptionElement.index;
-        this._applySortAndScrollToTop();
-        this._selectFirstVisibleLogin();
-      }
+    if (this[internalMemberName].size === 0) {
+      this.render();
+      return;
     }
-    this.render();
+    for (let [loginGuid] of mapByLoginGUID) {
+      let { login, listItem } = this._logins[loginGuid];
+      LoginListItemFactory.update(listItem, login);
+    }
+    const alertsSortOptionElement = this._sortSelect.namedItem("alerts");
+    alertsSortOptionElement.hidden = false;
+    this._sortSelect.selectedIndex = alertsSortOptionElement.index;
+    this._applySortAndScrollToTop();
+    this._selectFirstVisibleLogin();
   }
 
   _internalUpdateMonitorData(internalMemberName, mapByLoginGUID) {
@@ -415,17 +410,9 @@ export default class LoginList extends HTMLElement {
       this[internalMemberName] = new Map();
     }
     for (const [guid, data] of [...mapByLoginGUID]) {
-      if (data) {
-        this[internalMemberName].set(guid, data);
-      } else {
-        this[internalMemberName].delete(guid);
-      }
+      this[internalMemberName].set(guid, data);
     }
-    this._internalSetMonitorData(
-      internalMemberName,
-      this[internalMemberName],
-      false
-    );
+    this._internalSetMonitorData(internalMemberName, this[internalMemberName]);
   }
 
   setSortDirection(sortDirection) {

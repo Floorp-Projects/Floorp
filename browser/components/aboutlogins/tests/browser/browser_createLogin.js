@@ -189,10 +189,6 @@ add_task(async function test_create_login() {
       let usernameInput = loginItem.shadowRoot.querySelector(
         "input[name='username']"
       );
-      await ContentTaskUtils.waitForCondition(
-        () => usernameInput.placeholder,
-        "waiting for placeholder to get set"
-      );
       ok(
         usernameInput.placeholder,
         "there should be a placeholder on the username input when not in edit mode"
@@ -251,13 +247,9 @@ add_task(async function test_create_login() {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
-      let login;
-      await ContentTaskUtils.waitForCondition(() => {
-        login = Object.values(loginList._logins).find(
-          obj => obj.login.origin == aOriginTuple[1]
-        ).login;
-        return login.origin == aOriginTuple[1];
-      }, "waiting for the login origin to get updated");
+      let login = Object.values(loginList._logins).find(
+        obj => obj.login.origin == aOriginTuple[1]
+      ).login;
       is(
         login.origin,
         aOriginTuple[1],
