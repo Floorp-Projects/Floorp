@@ -119,14 +119,12 @@ static const uintptr_t IS_PROXY = 1;
 // returns NO if for some reason we were unable to focus the element.
 - (BOOL)focus;
 
-// notifications sent out to listening accessible providers.
-- (void)didReceiveFocus;
-- (void)valueDidChange;
-- (void)selectedTextDidChange;
-- (void)selectionDidChange;
-- (void)documentLoadComplete;
-- (void)menuOpened;
-- (void)menuClosed;
+// Given a gecko accessibility event type, post the relevant
+// system accessibility notification.
+- (void)firePlatformEvent:(uint32_t)eventType;
+
+// Post the given accessibility system notification
+- (void)postNotification:(NSString*)notification;
 
 // internal method to retrieve a child at a given index.
 - (id)childAt:(uint32_t)i;
