@@ -32,6 +32,11 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
  protected:
   virtual ~xpcAccessibleMacInterface();
 
+  // Return true if our native object responds to this selector and
+  // if it implements isAccessibilitySelectorAllowed check that it returns true
+  // too.
+  bool SupportsSelector(SEL aSelector);
+
   // Convert an NSObject (which can be anything, string, number, array, etc.)
   // into a properly typed js value populated in the aResult handle.
   nsresult NSObjectToJsValue(id aObj, JSContext* aCx,
