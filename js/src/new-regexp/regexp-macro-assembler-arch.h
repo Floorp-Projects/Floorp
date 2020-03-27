@@ -43,6 +43,21 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void GoTo(Label* label);
   virtual void PushBacktrack(Label* label);
 
+  virtual void CheckCharacter(uint32_t c, Label* on_equal);
+  virtual void CheckNotCharacter(uint32_t c, Label* on_not_equal);
+  virtual void CheckCharacterGT(uc16 limit, Label* on_greater);
+  virtual void CheckCharacterLT(uc16 limit, Label* on_less);
+  virtual void CheckCharacterAfterAnd(uint32_t c, uint32_t mask,
+                                      Label* on_equal);
+  virtual void CheckNotCharacterAfterAnd(uint32_t c, uint32_t mask,
+                                         Label* on_not_equal);
+  virtual void CheckNotCharacterAfterMinusAnd(uc16 c, uc16 minus, uc16 mask,
+                                              Label* on_not_equal);
+  virtual void CheckGreedyLoop(Label* on_tos_equals_current_position);
+  virtual void CheckCharacterInRange(uc16 from, uc16 to, Label* on_in_range);
+  virtual void CheckCharacterNotInRange(uc16 from, uc16 to,
+                                        Label* on_not_in_range);
+
 
  private:
   // Push a register on the backtrack stack.
@@ -50,6 +65,15 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
 
   // Pop a value from the backtrack stack.
   void Pop(js::jit::Register target);
+
+  void CheckAtStartImpl(int cp_offset, Label* on_cond,
+                        js::jit::Assembler::Condition cond);
+  void CheckCharacterImpl(js::jit::Imm32 c, Label* on_cond,
+                          js::jit::Assembler::Condition cond);
+  void CheckCharacterAfterAndImpl(uint32_t c, uint32_t and_with, Label* on_cond,
+                                  bool negate);
+  void CheckCharacterInRangeImpl(uc16 from, uc16 to, Label* on_cond,
+                                 js::jit::Assembler::Condition cond);
 
   void JumpOrBacktrack(Label* to);
 
