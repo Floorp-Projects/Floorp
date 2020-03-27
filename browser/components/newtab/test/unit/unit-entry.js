@@ -61,6 +61,12 @@ const TEST_GLOBAL = {
     platform: "win",
   },
   UpdateUtils: { getUpdateChannel() {} },
+  BasePromiseWorker: class {
+    constructor() {
+      this.ExceptionHandlers = [];
+    }
+    post() {}
+  },
   BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {
     defineModuleGetter() {},
@@ -183,6 +189,8 @@ const TEST_GLOBAL = {
       writeAtomic() {},
       makeDir() {},
       stat() {},
+      Error: {},
+      read() {},
       exists() {},
       remove() {},
       removeEmptyDir() {},

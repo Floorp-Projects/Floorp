@@ -1,5 +1,8 @@
-import { NmfTextTagger } from "lib/NmfTextTagger.jsm";
-import { tokenize } from "lib/Tokenize.jsm";
+import { NmfTextTagger } from "lib/PersonalityProvider/NmfTextTagger.jsm";
+import {
+  tokenize,
+  toksToTfIdfVector,
+} from "lib/PersonalityProvider/Tokenize.jsm";
 
 const EPSILON = 0.00001;
 
@@ -992,7 +995,7 @@ describe("NMF Tagger", () => {
       },
     };
 
-    let instance = new NmfTextTagger(model);
+    let instance = new NmfTextTagger(model, toksToTfIdfVector);
 
     let testCases = [
       {

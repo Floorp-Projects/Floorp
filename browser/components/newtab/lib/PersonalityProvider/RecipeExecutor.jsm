@@ -1,11 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-const { tokenize } = ChromeUtils.import(
-  "resource://activity-stream/lib/Tokenize.jsm"
-);
+// We load this into a worker using importScripts, and in tests using import.
+// We use var to avoid name collision errors.
+// eslint-disable-next-line no-var
+var EXPORTED_SYMBOLS = ["RecipeExecutor"];
 
 /**
  * RecipeExecutor is the core feature engineering pipeline for the in-browser
@@ -29,8 +31,8 @@ const { tokenize } = ChromeUtils.import(
  * RecipeExecutor.ITEM_BUILDER_REGISTRY, while combiner functions are whitelisted
  * in RecipeExecutor.ITEM_COMBINER_REGISTRY .
  */
-this.RecipeExecutor = class RecipeExecutor {
-  constructor(nbTaggers, nmfTaggers) {
+const RecipeExecutor = class RecipeExecutor {
+  constructor(nbTaggers, nmfTaggers, tokenize) {
     this.ITEM_BUILDER_REGISTRY = {
       nb_tag: this.naiveBayesTag,
       conditionally_nmf_tag: this.conditionallyNmfTag,
@@ -63,6 +65,7 @@ this.RecipeExecutor = class RecipeExecutor {
     };
     this.nbTaggers = nbTaggers;
     this.nmfTaggers = nmfTaggers;
+    this.tokenize = tokenize;
   }
 
   /**
@@ -138,7 +141,7 @@ this.RecipeExecutor = class RecipeExecutor {
    */
   naiveBayesTag(item, config) {
     let text = this._assembleText(item, config.fields);
-    let tokens = tokenize(text);
+    let tokens = this.tokenize(text);
     let tags = {};
     let extended_tags = {};
 
@@ -256,20 +259,20 @@ this.RecipeExecutor = class RecipeExecutor {
     if (domain.startsWith("www.")) {
       domain = domain.substring(4);
     }
-    let toks = tokenize(domain);
-    let pathToks = tokenize(
+    let toks = this.tokenize(domain);
+    let pathToks = this.tokenize(
       decodeURIComponent(url.pathname.replace(/\+/g, " "))
     );
     for (let tok of pathToks) {
       toks.push(tok);
     }
     for (let pair of url.searchParams.entries()) {
-      let k = tokenize(decodeURIComponent(pair[0].replace(/\+/g, " ")));
+      let k = this.tokenize(decodeURIComponent(pair[0].replace(/\+/g, " ")));
       for (let tok of k) {
         toks.push(tok);
       }
       if (pair[1] !== null && pair[1] !== "") {
-        let v = tokenize(decodeURIComponent(pair[1].replace(/\+/g, " ")));
+        let v = this.tokenize(decodeURIComponent(pair[1].replace(/\+/g, " ")));
         for (let tok of v) {
           toks.push(tok);
         }
@@ -326,7 +329,7 @@ this.RecipeExecutor = class RecipeExecutor {
       return null;
     }
 
-    item[config.dest] = tokenize(item[config.field]);
+    item[config.dest] = this.tokenize(item[config.field]);
 
     return item;
   }
@@ -1087,14 +1090,16 @@ this.RecipeExecutor = class RecipeExecutor {
    */
   executeRecipe(item, recipe) {
     let newItem = item;
-    for (let step of recipe) {
-      let op = this.ITEM_BUILDER_REGISTRY[step.function];
-      if (op === undefined) {
-        return null;
-      }
-      newItem = op.call(this, newItem, step);
-      if (newItem === null) {
-        break;
+    if (recipe) {
+      for (let step of recipe) {
+        let op = this.ITEM_BUILDER_REGISTRY[step.function];
+        if (op === undefined) {
+          return null;
+        }
+        newItem = op.call(this, newItem, step);
+        if (newItem === null) {
+          break;
+        }
       }
     }
     return newItem;
@@ -1119,5 +1124,3 @@ this.RecipeExecutor = class RecipeExecutor {
     return newItem1;
   }
 };
-
-const EXPORTED_SYMBOLS = ["RecipeExecutor"];

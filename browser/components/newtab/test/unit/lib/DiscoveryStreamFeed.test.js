@@ -1105,13 +1105,13 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#transform", () => {
-    it("should return initial data if spocs are empty", () => {
-      const { data: result } = feed.transform({ spocs: [] });
+    it("should return initial data if spocs are empty", async () => {
+      const { data: result } = await feed.transform({ spocs: [] });
 
       assert.equal(result.spocs.length, 0);
     });
-    it("should sort based on item_score", () => {
-      const { data: result } = feed.transform([
+    it("should sort based on item_score", async () => {
+      const { data: result } = await feed.transform([
         { id: 2, flight_id: 2, item_score: 0.8, min_score: 0.1 },
         { id: 3, flight_id: 3, item_score: 0.7, min_score: 0.1 },
         { id: 1, flight_id: 1, item_score: 0.9, min_score: 0.1 },
@@ -1123,8 +1123,8 @@ describe("DiscoveryStreamFeed", () => {
         { id: 3, flight_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1 },
       ]);
     });
-    it("should remove items with scores lower than min_score", () => {
-      const { data: result, filtered } = feed.transform([
+    it("should remove items with scores lower than min_score", async () => {
+      const { data: result, filtered } = await feed.transform([
         { id: 2, flight_id: 2, item_score: 0.8, min_score: 0.9 },
         { id: 3, flight_id: 3, item_score: 0.7, min_score: 0.7 },
         { id: 1, flight_id: 1, item_score: 0.9, min_score: 0.8 },
@@ -1139,15 +1139,15 @@ describe("DiscoveryStreamFeed", () => {
         { id: 2, flight_id: 2, item_score: 0.8, min_score: 0.9, score: 0.8 },
       ]);
     });
-    it("should add a score prop to spocs", () => {
-      const { data: result } = feed.transform([
+    it("should add a score prop to spocs", async () => {
+      const { data: result } = await feed.transform([
         { flight_id: 1, item_score: 0.9, min_score: 0.1 },
       ]);
 
       assert.equal(result[0].score, 0.9);
     });
-    it("should filter out duplicate flights", () => {
-      const { data: result, filtered } = feed.transform([
+    it("should filter out duplicate flights", async () => {
+      const { data: result, filtered } = await feed.transform([
         { id: 1, flight_id: 2, item_score: 0.8, min_score: 0.1 },
         { id: 2, flight_id: 3, item_score: 0.6, min_score: 0.1 },
         { id: 3, flight_id: 1, item_score: 0.9, min_score: 0.1 },
@@ -1166,14 +1166,14 @@ describe("DiscoveryStreamFeed", () => {
         { id: 2, flight_id: 3, item_score: 0.6, min_score: 0.1, score: 0.6 },
       ]);
     });
-    it("should filter out duplicate flight while using spocs_per_domain", () => {
+    it("should filter out duplicate flight while using spocs_per_domain", async () => {
       sandbox.stub(feed.store, "getState").returns({
         DiscoveryStream: {
           spocs: { spocs_per_domain: 2 },
         },
       });
 
-      const { data: result, filtered } = feed.transform([
+      const { data: result, filtered } = await feed.transform([
         { id: 1, flight_id: 2, item_score: 0.8, min_score: 0.1 },
         { id: 2, flight_id: 3, item_score: 0.6, min_score: 0.1 },
         { id: 3, flight_id: 1, item_score: 0.6, min_score: 0.1 },
@@ -2900,8 +2900,8 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
   describe("#scoreItems", () => {
-    it("should score items using item_score and min_score", () => {
-      const { data: result, filtered } = feed.scoreItems([
+    it("should score items using item_score and min_score", async () => {
+      const { data: result, filtered } = await feed.scoreItems([
         { item_score: 0.8, min_score: 0.1 },
         { item_score: 0.5, min_score: 0.6 },
         { item_score: 0.7, min_score: 0.1 },
@@ -2916,20 +2916,20 @@ describe("DiscoveryStreamFeed", () => {
         { item_score: 0.5, min_score: 0.6, score: 0.5 },
       ]);
     });
-    it("should fire dispatchRelevanceScoreDuration if available", () => {
+    it("should fire dispatchRelevanceScoreDuration if available", async () => {
       feed.providerSwitcher.dispatchRelevanceScoreDuration = sandbox
         .stub()
         .returns();
       feed._prefCache.config = {
         personalized: true,
       };
-      feed.scoreItems([]);
+      await feed.scoreItems([]);
 
       assert.calledOnce(feed.providerSwitcher.dispatchRelevanceScoreDuration);
     });
   });
   describe("#scoreItem", () => {
-    it("should call calculateItemRelevanceScore with affinity provider", () => {
+    it("should call calculateItemRelevanceScore with affinity provider", async () => {
       const item = {};
       feed._prefCache.config = {
         personalized: true,
@@ -2937,10 +2937,10 @@ describe("DiscoveryStreamFeed", () => {
       feed.providerSwitcher.calculateItemRelevanceScore = sandbox
         .stub()
         .returns();
-      feed.scoreItem(item);
+      await feed.scoreItem(item);
       assert.calledOnce(feed.providerSwitcher.calculateItemRelevanceScore);
     });
-    it("should use item_score score without affinity provider score", () => {
+    it("should use item_score score without affinity provider score", async () => {
       const item = {
         item_score: 0.6,
       };
@@ -2950,10 +2950,10 @@ describe("DiscoveryStreamFeed", () => {
       feed.affinityProvider = {
         calculateItemRelevanceScore: () => {},
       };
-      const result = feed.scoreItem(item);
+      const result = await feed.scoreItem(item);
       assert.equal(result.score, 0.6);
     });
-    it("should add min_score of 0 if undefined", () => {
+    it("should add min_score of 0 if undefined", async () => {
       const item = {};
       feed._prefCache.config = {
         personalized: true,
@@ -2961,7 +2961,7 @@ describe("DiscoveryStreamFeed", () => {
       feed.affinityProvider = {
         calculateItemRelevanceScore: () => 0.5,
       };
-      const result = feed.scoreItem(item);
+      const result = await feed.scoreItem(item);
       assert.equal(result.min_score, 0);
     });
   });

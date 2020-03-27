@@ -1,15 +1,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-const { toksToTfIdfVector } = ChromeUtils.import(
-  "resource://activity-stream/lib/Tokenize.jsm"
-);
+// We load this into a worker using importScripts, and in tests using import.
+// We use var to avoid name collision errors.
+// eslint-disable-next-line no-var
+var EXPORTED_SYMBOLS = ["NmfTextTagger"];
 
-this.NmfTextTagger = class NmfTextTagger {
-  constructor(model) {
+const NmfTextTagger = class NmfTextTagger {
+  constructor(model, toksToTfIdfVector) {
     this.model = model;
+    this.toksToTfIdfVector = toksToTfIdfVector;
   }
 
   /**
@@ -20,7 +23,7 @@ this.NmfTextTagger = class NmfTextTagger {
    * consumer of this data determine what classes are most valuable.
    */
   tagTokens(tokens) {
-    let fv = toksToTfIdfVector(tokens, this.model.vocab_idfs);
+    let fv = this.toksToTfIdfVector(tokens, this.model.vocab_idfs);
     let fve = Object.values(fv);
 
     // normalize by the sum of the vector
@@ -60,5 +63,3 @@ this.NmfTextTagger = class NmfTextTagger {
     return predictions;
   }
 };
-
-const EXPORTED_SYMBOLS = ["NmfTextTagger"];
