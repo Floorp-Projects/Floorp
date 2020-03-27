@@ -367,3 +367,22 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
 
   return NS_OK;
 }
+
+void xpcAccessibleMacInterface::FireEvent(id aNativeObj, id aNotification) {
+  if (nsCOMPtr<nsIObserverService> obsService = services::GetObserverService()) {
+    nsCOMPtr<nsISimpleEnumerator> observers;
+    // Get all observers for the mac event topic.
+    obsService->EnumerateObservers(NS_ACCESSIBLE_MAC_EVENT_TOPIC, getter_AddRefs(observers));
+    if (observers) {
+      bool hasObservers = false;
+      observers->HasMoreElements(&hasObservers);
+      // If we have observers, notify them.
+      if (hasObservers) {
+        nsCOMPtr<nsIAccessibleMacInterface> xpcIface = new xpcAccessibleMacInterface(aNativeObj);
+        nsAutoString notificationStr;
+        nsCocoaUtils::GetStringForNSString(aNotification, notificationStr);
+        obsService->NotifyObservers(xpcIface, NS_ACCESSIBLE_MAC_EVENT_TOPIC, notificationStr.get());
+      }
+    }
+  }
+}
