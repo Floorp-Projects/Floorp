@@ -670,7 +670,7 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
 
   if (mNotLost) {
     auto& state = State();
-    state.mDrawingBufferSize = {};
+    state.mDrawingBufferSize = Nothing();
 
     Run<RPROC(Resize)>(size);
 
@@ -4658,7 +4658,7 @@ void ClientWebGLContext::LinkProgram(WebGLProgramJS& prog) const {
   }
 
   prog.mResult = std::make_shared<webgl::LinkResult>();
-  prog.mUniformLocByName = {};
+  prog.mUniformLocByName = Nothing();
   prog.mUniformBlockBindings = {};
   Run<RPROC(LinkProgram)>(prog.mId);
 }

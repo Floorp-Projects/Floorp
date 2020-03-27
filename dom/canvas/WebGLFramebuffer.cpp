@@ -874,7 +874,7 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
       } else {
         fnClearBuffer();
       }
-      imageInfo->mUninitializedSlices = {};
+      imageInfo->mUninitializedSlices = Nothing();
     }
     return;
   }
@@ -888,7 +888,7 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
     if (!imageInfo || !imageInfo->mUninitializedSlices) return false;
 
     clearBits |= attachClearBits;
-    imageInfo->mUninitializedSlices = {};  // Just mark it now.
+    imageInfo->mUninitializedSlices = Nothing();  // Just mark it now.
     return true;
   };
 
@@ -1263,8 +1263,9 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
   if (srcFB) {
     const auto& info = *srcFB->GetCompletenessInfo();
     if (info.zLayerCount != 1) {
-      webgl->GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
-                           "Source framebuffer cannot have more than one multiview layer.");
+      webgl->GenerateError(
+          LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
+          "Source framebuffer cannot have more than one multiview layer.");
       return;
     }
     srcColorFormat = nullptr;
@@ -1323,8 +1324,9 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
 
     const auto& info = *dstFB->GetCompletenessInfo();
     if (info.isMultiview) {
-      webgl->GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
-                           "Destination framebuffer cannot have multiview attachments.");
+      webgl->GenerateError(
+          LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
+          "Destination framebuffer cannot have multiview attachments.");
       return;
     }
     dstSize = {info.width, info.height};
