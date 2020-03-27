@@ -435,12 +435,12 @@ appUpdater.prototype = {
   /**
    * See nsIProgressEventSink.idl
    */
-  onStatus(aRequest, aStatus, aStatusArg) {},
+  onStatus(aRequest, aContext, aStatus, aStatusArg) {},
 
   /**
    * See nsIProgressEventSink.idl
    */
-  onProgress(aRequest, aProgress, aProgressMax) {
+  onProgress(aRequest, aContext, aProgress, aProgressMax) {
     this.downloadStatus.textContent = DownloadUtils.getTransferTotal(
       aProgress,
       aProgressMax
