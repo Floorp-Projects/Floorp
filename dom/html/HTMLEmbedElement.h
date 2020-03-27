@@ -26,7 +26,6 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLEmbedElement, embed)
-  virtual int32_t TabIndexDefault() override;
 
 #ifdef XP_MACOSX
   // EventTarget
