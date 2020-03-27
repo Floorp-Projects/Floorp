@@ -73,13 +73,14 @@ async function setup(formUrl = HTTPS_FORM_URL) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
   iframe.src = formUrl;
+  let processedPromise = promiseFormsProcessed();
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
     }, {once: true});
   });
 
-  await promiseFormsProcessed();
+  await processedPromise;
 
   hostname = await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     return this.content.document.documentURIObject.host;
