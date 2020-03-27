@@ -546,9 +546,9 @@ Selection::~Selection() { Disconnect(); }
 void Selection::Disconnect() {
   SetAnchorFocusRange(-1);
 
-  uint32_t count = mRanges.Length();
+  uint32_t count = mStyledRanges.mRanges.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    mRanges[i].mRange->UnregisterSelection();
+    mStyledRanges.mRanges[i].mRange->UnregisterSelection();
   }
 
   if (mAutoScrollTimer) {
@@ -596,9 +596,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
   {
-    uint32_t i, count = tmp->mRanges.Length();
+    uint32_t i, count = tmp->mStyledRanges.mRanges.Length();
     for (i = 0; i < count; ++i) {
-      NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRanges[i].mRange)
+      NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyledRanges.mRanges[i].mRange)
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorFocusRange)
@@ -646,12 +646,12 @@ const RangeBoundary& Selection::FocusRef() const {
 }
 
 void Selection::SetAnchorFocusRange(int32_t indx) {
-  if (indx >= (int32_t)mRanges.Length()) return;
+  if (indx >= (int32_t)mStyledRanges.mRanges.Length()) return;
   if (indx < 0)  // release all
   {
     mAnchorFocusRange = nullptr;
   } else {
-    mAnchorFocusRange = mRanges[indx].mRange;
+    mAnchorFocusRange = mStyledRanges.mRanges[indx].mRange;
   }
 }
 
@@ -839,7 +839,7 @@ nsresult Selection::AddRangesForUserSelectableNodes(
   }
 
   AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
-  *aOutIndex = int32_t(mRanges.Length()) - 1;
+  *aOutIndex = int32_t(mStyledRanges.mRanges.Length()) - 1;
 
   Document* doc = GetDocument();
   bool selectEventsEnabled = StaticPrefs::dom_select_events_enabled() ||
@@ -945,8 +945,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   *aOutIndex = -1;
 
   // a common case is that we have no ranges yet
-  if (mRanges.Length() == 0) {
-    if (!mRanges.AppendElement(StyledRange(aRange))) {
+  if (mStyledRanges.mRanges.Length() == 0) {
+    if (!mStyledRanges.mRanges.AppendElement(StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const RefPtr<Selection> selection{this};
@@ -971,11 +971,12 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   } else if (startIndex == -1) {
     // All ranges end before the given range. We can insert our range at
     // the end of the array, knowing there are no overlaps (handled below)
-    startIndex = mRanges.Length();
+    startIndex = mStyledRanges.mRanges.Length();
     endIndex = startIndex;
   }
 
-  // If the range is already contained in mRanges, silently succeed
+  // If the range is already contained in mStyledRanges.mRanges, silently
+  // succeed
   const bool sameRange = HasEqualRangeBoundariesAt(*aRange, startIndex);
   if (sameRange) {
     *aOutIndex = startIndex;
@@ -984,7 +985,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   if (startIndex == endIndex) {
     // The new range doesn't overlap any existing ranges
-    if (!mRanges.InsertElementAt(startIndex, StyledRange(aRange))) {
+    if (!mStyledRanges.mRanges.InsertElementAt(startIndex,
+                                               StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     const RefPtr<Selection> selection{this};
@@ -1000,19 +1002,19 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   // between these indices are fully overlapped by the new range, and so can be
   // removed
   nsTArray<StyledRange> overlaps;
-  if (!overlaps.InsertElementAt(0, mRanges[startIndex]))
+  if (!overlaps.InsertElementAt(0, mStyledRanges.mRanges[startIndex]))
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (endIndex - 1 != startIndex) {
-    if (!overlaps.InsertElementAt(1, mRanges[endIndex - 1]))
+    if (!overlaps.InsertElementAt(1, mStyledRanges.mRanges[endIndex - 1]))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Remove all the overlapping ranges
   for (int32_t i = startIndex; i < endIndex; ++i) {
-    mRanges[i].mRange->UnregisterSelection();
+    mStyledRanges.mRanges[i].mRange->UnregisterSelection();
   }
-  mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
+  mStyledRanges.mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
   nsTArray<StyledRange> temp;
   for (int32_t i = overlaps.Length() - 1; i >= 0; i--) {
@@ -1030,8 +1032,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Merge the leftovers back in to mRanges
-  if (!mRanges.InsertElementsAt(startIndex, temp))
+  // Merge the leftovers back in to mStyledRanges.mRanges
+  if (!mStyledRanges.mRanges.InsertElementsAt(startIndex, temp))
     return NS_ERROR_OUT_OF_MEMORY;
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
@@ -1050,24 +1052,24 @@ nsresult Selection::RemoveRangeInternal(nsRange& aRange) {
   // comparisons are so fast.
   int32_t idx = -1;
   uint32_t i;
-  for (i = 0; i < mRanges.Length(); i++) {
-    if (mRanges[i].mRange == &aRange) {
+  for (i = 0; i < mStyledRanges.mRanges.Length(); i++) {
+    if (mStyledRanges.mRanges[i].mRange == &aRange) {
       idx = (int32_t)i;
       break;
     }
   }
   if (idx < 0) return NS_ERROR_DOM_NOT_FOUND_ERR;
 
-  mRanges.RemoveElementAt(idx);
+  mStyledRanges.mRanges.RemoveElementAt(idx);
   aRange.UnregisterSelection();
   return NS_OK;
 }
 
 nsresult Selection::RemoveCollapsedRanges() {
   uint32_t i = 0;
-  while (i < mRanges.Length()) {
-    if (mRanges[i].mRange->Collapsed()) {
-      nsresult rv = RemoveRangeInternal(*mRanges[i].mRange);
+  while (i < mStyledRanges.mRanges.Length()) {
+    if (mStyledRanges.mRanges[i].mRange->Collapsed()) {
+      nsresult rv = RemoveRangeInternal(*mStyledRanges.mRanges[i].mRange);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       ++i;
@@ -1079,11 +1081,11 @@ nsresult Selection::RemoveCollapsedRanges() {
 nsresult Selection::Clear(nsPresContext* aPresContext) {
   SetAnchorFocusRange(-1);
 
-  for (uint32_t i = 0; i < mRanges.Length(); ++i) {
-    mRanges[i].mRange->UnregisterSelection();
-    SelectFrames(aPresContext, mRanges[i].mRange, false);
+  for (uint32_t i = 0; i < mStyledRanges.mRanges.Length(); ++i) {
+    mStyledRanges.mRanges[i].mRange->UnregisterSelection();
+    SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, false);
   }
-  mRanges.Clear();
+  mStyledRanges.mRanges.Clear();
 
   // Reset direction so for more dependable table selection range handling
   SetDirection(eDirNext);
@@ -1099,8 +1101,9 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
 
 bool Selection::HasEqualRangeBoundariesAt(const nsRange& aRange,
                                           int32_t aRangeIndex) const {
-  if (aRangeIndex >= 0 && aRangeIndex < (int32_t)mRanges.Length()) {
-    const nsRange* range = mRanges[aRangeIndex].mRange;
+  if (aRangeIndex >= 0 &&
+      aRangeIndex < (int32_t)mStyledRanges.mRanges.Length()) {
+    const nsRange* range = mStyledRanges.mRanges[aRangeIndex].mRange;
     return range->HasEqualBoundaries(aRange);
   }
   return false;
@@ -1146,7 +1149,7 @@ nsresult Selection::GetRangesForIntervalArray(
   if (startIndex == -1 || endIndex == -1) return NS_OK;
 
   for (int32_t i = startIndex; i < endIndex; i++) {
-    if (!aRanges->AppendElement(mRanges[i].mRange))
+    if (!aRanges->AppendElement(mStyledRanges.mRanges[i].mRange))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1168,18 +1171,18 @@ nsresult Selection::GetIndicesForInterval(
   aStartIndex = -1;
   aEndIndex = -1;
 
-  if (mRanges.Length() == 0) return NS_OK;
+  if (mStyledRanges.mRanges.Length() == 0) return NS_OK;
 
   const bool intervalIsCollapsed =
       aBeginNode == aEndNode && aBeginOffset == aEndOffset;
 
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
-  int32_t endsBeforeIndex{FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
-                                             &CompareToRangeStart)};
+  int32_t endsBeforeIndex{FindInsertionPoint(&mStyledRanges.mRanges, *aEndNode,
+                                             aEndOffset, &CompareToRangeStart)};
 
   if (endsBeforeIndex == 0) {
-    const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
+    const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
 
     // If the interval is strictly before the range at index 0, we can optimize
     // by returning now - all ranges start after the given interval
@@ -1187,35 +1190,35 @@ nsresult Selection::GetIndicesForInterval(
       return NS_OK;
     }
 
-    // We now know that the start point of mRanges[0].mRange equals the end of
-    // the interval. Thus, when aAllowadjacent is true, the caller is always
-    // interested in this range. However, when excluding adjacencies, we must
-    // remember to include the range when both it and the given interval are
-    // collapsed to the same point
+    // We now know that the start point of mStyledRanges.mRanges[0].mRange
+    // equals the end of the interval. Thus, when aAllowadjacent is true, the
+    // caller is always interested in this range. However, when excluding
+    // adjacencies, we must remember to include the range when both it and the
+    // given interval are collapsed to the same point
     if (!aAllowAdjacent && !(endRange->Collapsed() && intervalIsCollapsed))
       return NS_OK;
   }
   aEndIndex = endsBeforeIndex;
 
   int32_t beginsAfterIndex{FindInsertionPoint(
-      &mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
+      &mStyledRanges.mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
 
-  if (beginsAfterIndex == (int32_t)mRanges.Length())
+  if (beginsAfterIndex == (int32_t)mStyledRanges.mRanges.Length())
     return NS_OK;  // optimization: all ranges are strictly before us
 
   if (aAllowAdjacent) {
     // At this point, one of the following holds:
-    //   endsBeforeIndex == mRanges.Length(),
+    //   endsBeforeIndex == mStyledRanges.mRanges.Length(),
     //   endsBeforeIndex points to a range whose start point does not equal the
     //     given interval's start point
     //   endsBeforeIndex points to a range whose start point equals the given
     //     interval's start point
     // In the final case, there can be two such ranges, a collapsed range, and
-    // an adjacent range (they will appear in mRanges in that order). For this
-    // final case, we need to increment endsBeforeIndex, until one of the
-    // first two possibilites hold
-    while (endsBeforeIndex < (int32_t)mRanges.Length()) {
-      const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
+    // an adjacent range (they will appear in mStyledRanges.mRanges in that
+    // order). For this final case, we need to increment endsBeforeIndex, until
+    // one of the first two possibilites hold
+    while (endsBeforeIndex < (int32_t)mStyledRanges.mRanges.Length()) {
+      const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
       if (!endRange->StartRef().Equals(aEndNode, aEndOffset)) {
         break;
       }
@@ -1229,14 +1232,14 @@ nsresult Selection::GetIndicesForInterval(
     //   beginsOnOrAfter points to a range whose end point equals the given
     //     interval's end point
     // In the final case, there can be two such ranges, an adjacent range, and
-    // a collapsed range (they will appear in mRanges in that order). For this
-    // final case, we only need to take action if both those ranges exist, and
-    // we are pointing to the collapsed range - we need to point to the
-    // adjacent range
-    const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
+    // a collapsed range (they will appear in mStyledRanges.mRanges in that
+    // order). For this final case, we only need to take action if both those
+    // ranges exist, and we are pointing to the collapsed range - we need to
+    // point to the adjacent range
+    const nsRange* beginRange = mStyledRanges.mRanges[beginsAfterIndex].mRange;
     if (beginsAfterIndex > 0 && beginRange->Collapsed() &&
         beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
-      beginRange = mRanges[beginsAfterIndex - 1].mRange;
+      beginRange = mStyledRanges.mRanges[beginsAfterIndex - 1].mRange;
       if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
         beginsAfterIndex--;
       }
@@ -1246,7 +1249,7 @@ nsresult Selection::GetIndicesForInterval(
     // need to take action is when the range at beginsAfterIndex ends on
     // the given interval's start point, but that range isn't collapsed (a
     // collapsed range should be included in the returned results).
-    const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
+    const nsRange* beginRange = mStyledRanges.mRanges[beginsAfterIndex].mRange;
     if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset) &&
         !beginRange->Collapsed()) {
       beginsAfterIndex++;
@@ -1256,8 +1259,8 @@ nsresult Selection::GetIndicesForInterval(
     // In particular, endsBeforeIndex may point to a collaped range which
     // represents the point at the end of the interval - this range should be
     // included
-    if (endsBeforeIndex < (int32_t)mRanges.Length()) {
-      const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
+    if (endsBeforeIndex < (int32_t)mStyledRanges.mRanges.Length()) {
+      const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
       if (endRange->StartRef().Equals(aEndNode, aEndOffset) &&
           endRange->Collapsed()) {
         endsBeforeIndex++;
@@ -1265,7 +1268,8 @@ nsresult Selection::GetIndicesForInterval(
     }
   }
 
-  NS_ASSERTION(beginsAfterIndex <= endsBeforeIndex, "Is mRanges not ordered?");
+  NS_ASSERTION(beginsAfterIndex <= endsBeforeIndex,
+               "Is mStyledRanges.mRanges not ordered?");
   NS_ENSURE_STATE(beginsAfterIndex <= endsBeforeIndex);
 
   aStartIndex = beginsAfterIndex;
@@ -1405,8 +1409,8 @@ nsresult Selection::SelectFramesOfInclusiveDescendantsOfContent(
 }
 
 void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
-  for (size_t i = 0; i < mRanges.Length(); ++i) {
-    nsRange* range = mRanges[i].mRange;
+  for (size_t i = 0; i < mStyledRanges.mRanges.Length(); ++i) {
+    nsRange* range = mStyledRanges.mRanges[i].mRange;
     MOZ_ASSERT(range->IsInSelection());
     SelectFrames(aPresContext, range, range->IsInSelection());
   }
@@ -1565,7 +1569,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
   }
 
   // it is common to have no ranges, to optimize that
-  if (mRanges.Length() == 0) {
+  if (mStyledRanges.mRanges.Length() == 0) {
     return aDetailsHead;
   }
 
@@ -1641,14 +1645,15 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
 
 NS_IMETHODIMP
 Selection::Repaint(nsPresContext* aPresContext) {
-  int32_t arrCount = (int32_t)mRanges.Length();
+  int32_t arrCount = (int32_t)mStyledRanges.mRanges.Length();
 
   if (arrCount < 1) return NS_OK;
 
   int32_t i;
 
   for (i = 0; i < arrCount; i++) {
-    nsresult rv = SelectFrames(aPresContext, mRanges[i].mRange, true);
+    nsresult rv =
+        SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, true);
 
     if (NS_FAILED(rv)) {
       return rv;
@@ -1719,8 +1724,9 @@ void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
 
 StyledRange* Selection::FindRangeData(nsRange* aRange) {
   NS_ENSURE_TRUE(aRange, nullptr);
-  for (uint32_t i = 0; i < mRanges.Length(); i++) {
-    if (mRanges[i].mRange == aRange) return &mRanges[i];
+  for (uint32_t i = 0; i < mStyledRanges.mRanges.Length(); i++) {
+    if (mStyledRanges.mRanges[i].mRange == aRange)
+      return &mStyledRanges.mRanges[i];
   }
   return nullptr;
 }
@@ -1927,7 +1933,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     return;
   }
 
-  MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mRanges.Length()));
+  MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mStyledRanges.mRanges.Length()));
 
   SetAnchorFocusRange(rangeIndex);
 
@@ -2008,7 +2014,7 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     SelectFrames(presContext, affectedRanges[i], true);
   }
 
-  int32_t cnt = mRanges.Length();
+  int32_t cnt = mStyledRanges.mRanges.Length();
   if (&aRange == mAnchorFocusRange) {
     // Reset anchor to LAST range or clear it if there are no ranges.
     SetAnchorFocusRange(cnt - 1);
@@ -2173,7 +2179,7 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
   }
 
   // Get the first range
-  nsRange* firstRange = mRanges[0].mRange;
+  nsRange* firstRange = mStyledRanges.mRanges[0].mRange;
   if (!firstRange) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2209,7 +2215,7 @@ void Selection::CollapseToEnd(ErrorResult& aRv) {
   }
 
   // Get the last range
-  nsRange* lastRange = mRanges[cnt - 1].mRange;
+  nsRange* lastRange = mStyledRanges.mRanges[cnt - 1].mRange;
   if (!lastRange) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2249,7 +2255,7 @@ nsRange* Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv) {
 
 nsRange* Selection::GetRangeAt(int32_t aIndex) const {
   StyledRange empty(nullptr);
-  return mRanges.SafeElementAt(aIndex, empty).mRange;
+  return mStyledRanges.mRanges.SafeElementAt(aIndex, empty).mRange;
 }
 
 /*
@@ -2606,7 +2612,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
     }
   }
 
-  if (mRanges.Length() > 1) {
+  if (mStyledRanges.mRanges.Length() > 1) {
     SelectFramesInAllRanges(presContext);
   }
 
@@ -2660,7 +2666,7 @@ void Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv) {
 bool Selection::ContainsNode(nsINode& aNode, bool aAllowPartial,
                              ErrorResult& aRv) {
   nsresult rv;
-  if (mRanges.Length() == 0) {
+  if (mStyledRanges.mRanges.Length() == 0) {
     return false;
   }
 
@@ -3009,7 +3015,7 @@ void Selection::RemoveSelectionListener(
 
 Element* Selection::GetCommonEditingHostForAllRanges() {
   Element* editingHost = nullptr;
-  for (StyledRange& rangeData : mRanges) {
+  for (StyledRange& rangeData : mStyledRanges.mRanges) {
     nsRange* range = rangeData.mRange;
     MOZ_ASSERT(range);
     nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
@@ -3412,7 +3418,7 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   // we need to select frames with the result in such case.
   if (mUserInitiated) {
     RefPtr<nsPresContext> presContext = GetPresContext();
-    if (mRanges.Length() > 1 && presContext) {
+    if (mStyledRanges.mRanges.Length() > 1 && presContext) {
       SelectFramesInAllRanges(presContext);
     }
   }
