@@ -161,7 +161,14 @@ export default class LoginItem extends HTMLElement {
       !this._vulnerableLoginsMap.has(this._login.guid) ||
       !this._breachAlert.hidden;
     if (!this._vulnerableAlert.hidden) {
-      // TODO
+      this._vulnerableAlertLink.href = this._login.origin;
+      document.l10n.setAttributes(
+        this._vulnerableAlertLink,
+        "about-logins-vulnerable-alert-link",
+        {
+          hostname: this._login.displayOrigin,
+        }
+      );
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
