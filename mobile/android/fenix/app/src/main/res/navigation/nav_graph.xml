@@ -90,10 +90,6 @@
             app:destination="@id/historyFragment" />
         <action
             android:id="@+id/action_homeFragment_to_settingsFragment"
-            app:enterAnim="@anim/fade_in_up"
-            app:exitAnim="@anim/fade_out"
-            app:popExitAnim="@anim/fade_out_down"
-            app:popEnterAnim="@anim/fade_in"
             app:destination="@id/settingsFragment" />
         <action
             android:id="@+id/action_homeFragment_to_createCollectionFragment"
