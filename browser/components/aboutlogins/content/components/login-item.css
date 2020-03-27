@@ -353,6 +353,20 @@ input[name="password"] {
   width: 24px;
 }
 
+.alert-learn-more-link:hover,
+.alert-learn-more-link:visited,
+.alert-learn-more-link {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-end: 32px;
+  color: inherit;
+  font-size: 13px;
+}
+
+.vulnerable-alert > .alert-learn-more-link {
+  color: var(--in-content-deemphasized-text);
+}
+
 .error-message {
   color: #fff;
   background-color: var(--red-60);
