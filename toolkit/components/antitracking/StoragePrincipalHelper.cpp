@@ -48,9 +48,11 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
   if (!toplevelPrincipal) {
     return false;
   }
-
+  // Cast to BasePrincipal to continue to get acess to GetUri()
+  auto* basePrin = BasePrincipal::Cast(toplevelPrincipal);
   nsCOMPtr<nsIURI> principalURI;
-  rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
+
+  rv = basePrin->GetURI(getter_AddRefs(principalURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
