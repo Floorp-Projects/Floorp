@@ -870,12 +870,13 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
 }
 
 MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-                         const nsString& aGroupID, const nsString& aRawID)
-    : MediaDevice(aOther, aID, aGroupID, aRawID, aOther->mName) {}
+                         const nsString& aGroupID, const nsString& aRawID,
+                         const nsString& aRawGroupID)
+    : MediaDevice(aOther, aID, aGroupID, aRawID, aRawGroupID, aOther->mName) {}
 
 MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
                          const nsString& aGroupID, const nsString& aRawID,
-                         const nsString& aName)
+                         const nsString& aRawGroupID, const nsString& aName)
     : mSource(aOther->mSource),
       mSinkInfo(aOther->mSinkInfo),
       mKind(aOther->mKind),
@@ -886,6 +887,7 @@ MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
       mID(aID),
       mGroupID(aGroupID),
       mRawID(aRawID),
+      mRawGroupID(aRawGroupID),
       mRawName(aOther->mRawName) {
   MOZ_ASSERT(aOther);
 }
@@ -1005,6 +1007,13 @@ NS_IMETHODIMP
 MediaDevice::GetGroupId(nsAString& aGroupID) {
   MOZ_ASSERT(NS_IsMainThread());
   aGroupID.Assign(mGroupID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaDevice::GetRawGroupId(nsAString& aRawGroupID) {
+  MOZ_ASSERT(NS_IsMainThread());
+  aRawGroupID.Assign(mRawGroupID);
   return NS_OK;
 }
 
@@ -1677,8 +1686,8 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
       }
     }
     if (updateGroupId) {
-      aVideo =
-          new MediaDevice(aVideo, aVideo->mID, newVideoGroupID, aVideo->mRawID);
+      aVideo = new MediaDevice(aVideo, aVideo->mID, newVideoGroupID,
+                               aVideo->mRawID, aVideo->mRawGroupID);
       return true;
     }
     return false;
@@ -2929,6 +2938,7 @@ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
 
       nsString groupId;
       device->GetGroupId(groupId);
+      nsString rawGroupId = groupId;
       // Use window id to salt group id in order to make it session based as
       // required by the spec. This does not provide unique group ids through
       // out a browser restart. However, this is not agaist the spec.
@@ -2942,7 +2952,7 @@ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
       if (name.Find(NS_LITERAL_STRING("AirPods")) != -1) {
         name = NS_LITERAL_STRING("AirPods");
       }
-      device = new MediaDevice(device, id, groupId, rawId, name);
+      device = new MediaDevice(device, id, groupId, rawId, rawGroupId, name);
     }
   }
 }
@@ -4351,7 +4361,6 @@ void SourceListener::SetEnabledFor(MediaTrack* aTrack, bool aEnable) {
             if (mWindowListener) {
               mWindowListener->ChromeAffectingStateChanged();
             }
-
             if (!state.mOffWhileDisabled) {
               // If the feature to turn a device off while disabled is itself
               // disabled we shortcut the device operation and tell the
