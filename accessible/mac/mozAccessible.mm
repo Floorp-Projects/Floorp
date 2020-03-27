@@ -146,6 +146,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   NSMutableArray* additional = [NSMutableArray array];
   [additional addObject:NSAccessibilityDOMIdentifierAttribute];
   switch (mRole) {
+    case roles::SUMMARY:
+      [additional addObject:NSAccessibilityExpandedAttribute];
+      break;
     case roles::MATHML_ROOT:
       [additional addObject:NSAccessibilityMathRootIndexAttribute];
       [additional addObject:NSAccessibilityMathRootRadicandAttribute];
@@ -267,6 +270,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 #endif
 
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) return [self children];
+  if ([attribute isEqualToString:NSAccessibilityExpandedAttribute]) {
+    return [NSNumber numberWithBool:([self state] & states::EXPANDED) != 0];
+  }
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) return [self parent];
 
 #ifdef DEBUG_hakan
@@ -1002,6 +1008,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
     {@"AXApplicationTimer", NS_LITERAL_STRING("timer")},
     {@"AXContentSeparator", NS_LITERAL_STRING("separator")},
     {@"AXDefinition", NS_LITERAL_STRING("definition")},
+    {@"AXDetails", NS_LITERAL_STRING("details")},
     {@"AXDocument", NS_LITERAL_STRING("document")},
     {@"AXDocumentArticle", NS_LITERAL_STRING("article")},
     {@"AXDocumentMath", NS_LITERAL_STRING("math")},
@@ -1015,6 +1022,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
     {@"AXLandmarkRegion", NS_LITERAL_STRING("region")},
     {@"AXLandmarkSearch", NS_LITERAL_STRING("search")},
     {@"AXSearchField", NS_LITERAL_STRING("searchTextField")},
+    {@"AXSummary", NS_LITERAL_STRING("summary")},
     {@"AXTabPanel", NS_LITERAL_STRING("tabPanel")},
     {@"AXTerm", NS_LITERAL_STRING("term")},
     {@"AXUserInterfaceTooltip", NS_LITERAL_STRING("tooltip")}};
