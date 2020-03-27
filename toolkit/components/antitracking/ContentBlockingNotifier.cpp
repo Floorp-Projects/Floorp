@@ -222,8 +222,7 @@ void NotifyBlockingDecision(nsIChannel* aReportingChannel,
   // ALLOW, and we can also stop processing this event.
   if (nsGlobalWindowOuter::Cast(aWindow)->GetPrincipal() ==
       nsContentUtils::GetSystemPrincipal()) {
-    MOZ_DIAGNOSTIC_ASSERT(aDecision ==
-                          ContentBlockingNotifier::BlockingDecision::eAllow);
+    MOZ_ASSERT(aDecision == ContentBlockingNotifier::BlockingDecision::eAllow);
     return;
   }
 
