@@ -103,7 +103,16 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
           }],
         [["--app"],
          {"default": "firefox",
-          "choices": ["firefox", "chrome", "chromium", "fennec", "geckoview", "refbrow", "fenix"],
+          "choices": [
+            "firefox",
+            "chrome",
+            "chrome-m",
+            "chromium",
+            "fennec",
+            "geckoview",
+            "refbrow",
+            "fenix"
+          ],
           "dest": "app",
           "help": "Name of the application we are testing (default: firefox)."
           }],
@@ -353,7 +362,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.extra_prefs = self.config.get('extra_prefs')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
+        self.chromium_dist_path = None
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
+        self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
@@ -489,7 +500,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                 # When running locally we already set the Chromium binary above, in init.
                 # In production, we already installed Chromium, so set the binary path
                 # to our install.
-                kw_options['binary'] = self.chromium_dist_path
+                kw_options['binary'] = self.chromium_dist_path or ""
 
         # Options overwritten from **kw
         if 'test' in self.config:
@@ -648,11 +659,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self._install_view_gecko_profile_req()
 
     def install(self):
-        if self.app in self.firefox_android_browsers:
-            self.device.uninstall_app(self.binary_path)
-            self.install_apk(self.installer_path)
-        else:
-            super(Raptor, self).install()
+        if not self.config.get('noinstall', False):
+            if self.app in self.firefox_android_browsers:
+                self.device.uninstall_app(self.binary_path)
+                self.install_apk(self.installer_path)
+            else:
+                super(Raptor, self).install()
 
     def _install_view_gecko_profile_req(self):
         # If running locally and gecko profiing is on, we will be using the
@@ -740,7 +752,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
             return bool(debug_opts.intersection(cmdline))
 
-        if self.app in self.firefox_android_browsers:
+        if self.app in self.android_browsers:
             self.logcat_start()
 
         command = [python, run_tests] + options + mozlog_opts
@@ -753,7 +765,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                                                 output_parser=parser,
                                                 env=env)
 
-        if self.app in self.firefox_android_browsers:
+        if self.app in self.android_browsers:
             self.logcat_stop()
 
         if parser.minidump_output:

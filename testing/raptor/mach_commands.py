@@ -27,7 +27,7 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 BENCHMARK_REPOSITORY = 'https://github.com/mozilla/perf-automation'
 BENCHMARK_REVISION = 'e19a0865c946ae2f9a64dd25614b1c275a3996b2'
 
-FIREFOX_ANDROID_BROWSERS = ["fennec", "geckoview", "refbrow", "fenix"]
+ANDROID_BROWSERS = ["fennec", "geckoview", "refbrow", "fenix", "chrome-m"]
 
 
 class RaptorRunner(MozbuildObject):
@@ -60,7 +60,7 @@ class RaptorRunner(MozbuildObject):
         self.cpu_test = kwargs['cpu_test']
         self.device_name = kwargs['device_name']
 
-        if Conditions.is_android(self) or kwargs["app"] in FIREFOX_ANDROID_BROWSERS:
+        if Conditions.is_android(self) or kwargs["app"] in ANDROID_BROWSERS:
             self.binary_path = None
         else:
             self.binary_path = kwargs.get("binary") or self.get_binary_path()
@@ -214,7 +214,7 @@ class MachRaptor(MachCommandBase):
         build_obj = self
 
         is_android = Conditions.is_android(build_obj) or \
-            kwargs['app'] in FIREFOX_ANDROID_BROWSERS
+            kwargs['app'] in ANDROID_BROWSERS
 
         if is_android:
             from mozrunner.devices.android_device import (verify_android_device, InstallIntent)
