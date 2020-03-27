@@ -1302,7 +1302,7 @@ static const nsRoleMapEntry sLandmarkRoleMap = {
     eNoAction,         eNoLiveAttr,    kGenericAccType, kNoReqStates};
 
 nsRoleMapEntry aria::gEmptyRoleMap = {
-    nsGkAtoms::_empty, roles::NOTHING, kUseMapRole,     eNoValue,
+    nsGkAtoms::_empty, roles::TEXT_CONTAINER, kUseMapRole,     eNoValue,
     eNoAction,         eNoLiveAttr,    kGenericAccType, kNoReqStates};
 
 /**
