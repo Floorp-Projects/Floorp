@@ -978,7 +978,8 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   // If the range is already contained in mStyledRanges.mRanges, silently
   // succeed
-  const bool sameRange = HasEqualRangeBoundariesAt(*aRange, startIndex);
+  const bool sameRange =
+      mStyledRanges.HasEqualRangeBoundariesAt(*aRange, startIndex);
   if (sameRange) {
     *aOutIndex = startIndex;
     return NS_OK;
@@ -1102,11 +1103,10 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
   return NS_OK;
 }
 
-bool Selection::HasEqualRangeBoundariesAt(const nsRange& aRange,
-                                          int32_t aRangeIndex) const {
-  if (aRangeIndex >= 0 &&
-      aRangeIndex < (int32_t)mStyledRanges.mRanges.Length()) {
-    const nsRange* range = mStyledRanges.mRanges[aRangeIndex].mRange;
+bool Selection::StyledRanges::HasEqualRangeBoundariesAt(
+    const nsRange& aRange, int32_t aRangeIndex) const {
+  if (aRangeIndex >= 0 && aRangeIndex < (int32_t)mRanges.Length()) {
+    const nsRange* range = mRanges[aRangeIndex].mRange;
     return range->HasEqualBoundaries(aRange);
   }
   return false;
