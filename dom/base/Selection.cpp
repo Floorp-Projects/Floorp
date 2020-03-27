@@ -3017,9 +3017,9 @@ void Selection::RemoveSelectionListener(
   mSelectionListeners.RemoveElement(aListenerToRemove);  // Releases
 }
 
-Element* Selection::GetCommonEditingHostForAllRanges() {
+Element* Selection::StyledRanges::GetCommonEditingHostForAllRanges() {
   Element* editingHost = nullptr;
-  for (StyledRange& rangeData : mStyledRanges.mRanges) {
+  for (StyledRange& rangeData : mRanges) {
     nsRange* range = rangeData.mRange;
     MOZ_ASSERT(range);
     nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
@@ -3081,7 +3081,8 @@ nsresult Selection::NotifySelectionListeners() {
     // element, we don't need to move focus.
     if (window && document && !document->HasFlag(NODE_IS_EDITABLE) &&
         GetHTMLEditor()) {
-      RefPtr<Element> newEditingHost = GetCommonEditingHostForAllRanges();
+      RefPtr<Element> newEditingHost =
+          mStyledRanges.GetCommonEditingHostForAllRanges();
       nsFocusManager* fm = nsFocusManager::GetFocusManager();
       nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
       nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
