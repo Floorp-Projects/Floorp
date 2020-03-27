@@ -15,7 +15,7 @@
 
 #include "mozilla/Attributes.h"
 
-extern "C" MFBT_API void* moz_xmalloc(size_t size) MOZ_ALLOCATOR;
+extern "C" MFBT_API void* moz_xmalloc(size_t size) MOZ_INFALLIBLE_ALLOCATOR;
 
 namespace std {
 struct nothrow_t;

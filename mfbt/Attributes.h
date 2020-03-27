@@ -353,8 +353,11 @@
  */
 #if defined(__GNUC__) || defined(__clang__)
 #  define MOZ_ALLOCATOR __attribute__((malloc, warn_unused_result))
+#  define MOZ_INFALLIBLE_ALLOCATOR \
+    __attribute__((malloc, warn_unused_result, returns_nonnull))
 #else
 #  define MOZ_ALLOCATOR
+#  define MOZ_INFALLIBLE_ALLOCATOR
 #endif
 
 /**
