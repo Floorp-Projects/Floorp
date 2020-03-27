@@ -3277,7 +3277,8 @@ nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result) {
 //
 
 NS_IMETHODIMP
-XMLHttpRequestMainThread::OnProgress(nsIRequest* aRequest, int64_t aProgress,
+XMLHttpRequestMainThread::OnProgress(nsIRequest* aRequest,
+                                     nsISupports* aContext, int64_t aProgress,
                                      int64_t aProgressMax) {
   // When uploading, OnProgress reports also headers in aProgress and
   // aProgressMax. So, try to remove the headers, if possible.
@@ -3302,17 +3303,18 @@ XMLHttpRequestMainThread::OnProgress(nsIRequest* aRequest, int64_t aProgress,
   }
 
   if (mProgressEventSink) {
-    mProgressEventSink->OnProgress(aRequest, aProgress, aProgressMax);
+    mProgressEventSink->OnProgress(aRequest, aContext, aProgress, aProgressMax);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-XMLHttpRequestMainThread::OnStatus(nsIRequest* aRequest, nsresult aStatus,
+XMLHttpRequestMainThread::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
+                                   nsresult aStatus,
                                    const char16_t* aStatusArg) {
   if (mProgressEventSink) {
-    mProgressEventSink->OnStatus(aRequest, aStatus, aStatusArg);
+    mProgressEventSink->OnStatus(aRequest, aContext, aStatus, aStatusArg);
   }
 
   return NS_OK;
