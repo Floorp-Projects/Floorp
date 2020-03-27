@@ -10,7 +10,7 @@
 #include "AudioNodeTrack.h"
 #include "AudioWorkletImpl.h"
 #include "jsapi.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "js/ForOfIterator.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/AudioWorkletProcessor.h"
 #include "mozilla/dom/BindingCallContext.h"
@@ -125,26 +125,19 @@ void AudioWorkletGlobalScope::RegisterProcessor(
     aRv.NoteJSContextException(aCx);
     return;
   }
-  /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565464
+  /*
    * 7. Let parameterDescriptorSequence be the result of the conversion
    *    from parameterDescriptorsValue to an IDL value of type
    *    sequence<AudioParamDescriptor>.
-   *
-   * This is now obsolete:
-   * 8. If descriptors is neither an array nor undefined, throw a
-   *    TypeError and abort these steps.
    */
-  bool isArray = false;
-  if (!JS::IsArrayObject(aCx, descriptors, &isArray)) {
-    // I would assume isArray won't be set to true if JS::IsArrayObject
-    // failed, but just in case, force it to false
-    isArray = false;
-    JS_ClearPendingException(aCx);
+  JS::ForOfIterator iter(aCx);
+  if (!iter.init(descriptors, JS::ForOfIterator::AllowNonIterable)) {
+    aRv.NoteJSContextException(aCx);
+    return;
   }
-
-  if (!descriptors.isUndefined() && !isArray) {
-    aRv.ThrowTypeError<MSG_NOT_ARRAY_NOR_UNDEFINED>(
-        ".constructor.parameterDescriptors of argument 2");
+  if (!iter.valueIsIterable()) {
+    aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
+        "AudioWorkletProcessor.parameterDescriptors");
     return;
   }
 
@@ -165,7 +158,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
    *     (name - descriptors) to the node name to parameter descriptor
    *     map of the associated BaseAudioContext.
    */
-  AudioParamDescriptorMap map = DescriptorsFromJS(aCx, descriptors, aRv);
+  AudioParamDescriptorMap map = DescriptorsFromJS(aCx, &iter, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -199,41 +192,38 @@ float AudioWorkletGlobalScope::SampleRate() const {
 }
 
 AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
-    JSContext* aCx, const JS::Rooted<JS::Value>& aDescriptors,
-    ErrorResult& aRv) {
-  // We already checked if aDescriptors is an array or undefined in step 8 of
-  // registerProcessor, so we should be confident aDescriptors if valid here
-  if (aDescriptors.isUndefined()) {
-    return AudioParamDescriptorMap();
-  }
-  MOZ_ASSERT(aDescriptors.isObject());
-
+    JSContext* aCx, JS::ForOfIterator* aIter, ErrorResult& aRv) {
   AudioParamDescriptorMap res;
   // To check for duplicates
   nsTHashtable<nsStringHashKey> namesSet;
 
-  JS::Rooted<JSObject*> aDescriptorsArray(aCx, &aDescriptors.toObject());
-  uint32_t length = 0;
-  if (!JS::GetArrayLength(aCx, aDescriptorsArray, &length)) {
-    aRv.NoteJSContextException(aCx);
-    return AudioParamDescriptorMap();
+  JS::Rooted<JS::Value> nextValue(aCx);
+  bool done = false;
+  size_t i = 0;
+  while (true) {
+    if (!aIter->next(&nextValue, &done)) {
+      aRv.NoteJSContextException(aCx);
+      return AudioParamDescriptorMap();
+    }
+    if (done) {
+      break;
+    }
+
+    BindingCallContext callCx(aCx, "AudioWorkletGlobalScope.registerProcessor");
+    nsPrintfCString sourceDescription("Element %zu in parameterDescriptors", i);
+    i++;
+    AudioParamDescriptor* descriptor = res.AppendElement(fallible);
+    if (!descriptor) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return AudioParamDescriptorMap();
+    }
+    if (!descriptor->Init(callCx, nextValue, sourceDescription.get())) {
+      aRv.NoteJSContextException(aCx);
+      return AudioParamDescriptorMap();
+    }
   }
 
-  BindingCallContext callCx(aCx, "AudioWorkletGlobalScope.registerProcessor");
-  for (uint32_t i = 0; i < length; ++i) {
-    JS::Rooted<JS::Value> descriptorElement(aCx);
-    if (!JS_GetElement(aCx, aDescriptorsArray, i, &descriptorElement)) {
-      aRv.NoteJSContextException(aCx);
-      return AudioParamDescriptorMap();
-    }
-
-    AudioParamDescriptor descriptor;
-    nsPrintfCString sourceDescription("Element %u in parameterDescriptors", i);
-    if (!descriptor.Init(callCx, descriptorElement, sourceDescription.get())) {
-      aRv.NoteJSContextException(aCx);
-      return AudioParamDescriptorMap();
-    }
-
+  for (const auto& descriptor : res) {
     if (namesSet.Contains(descriptor.mName)) {
       aRv.ThrowNotSupportedError(
           NS_LITERAL_CSTRING("Duplicated name \"") +
@@ -242,8 +232,13 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
       return AudioParamDescriptorMap();
     }
 
+    if (!namesSet.PutEntry(descriptor.mName, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return AudioParamDescriptorMap();
+    }
+
     if (descriptor.mMinValue > descriptor.mMaxValue) {
-      aRv.ThrowNotSupportedError(
+      aRv.ThrowInvalidStateError(
           NS_LITERAL_CSTRING("In parameterDescriptors, ") +
           NS_ConvertUTF16toUTF8(descriptor.mName) +
           NS_LITERAL_CSTRING(" minValue should be smaller than maxValue."));
@@ -252,21 +247,11 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
 
     if (descriptor.mDefaultValue < descriptor.mMinValue ||
         descriptor.mDefaultValue > descriptor.mMaxValue) {
-      aRv.ThrowNotSupportedError(
+      aRv.ThrowInvalidStateError(
           NS_LITERAL_CSTRING("In parameterDescriptors, ") +
           NS_ConvertUTF16toUTF8(descriptor.mName) +
           NS_LITERAL_CSTRING(" defaultValue is out of the range defined by "
                              "minValue and maxValue."));
-      return AudioParamDescriptorMap();
-    }
-
-    if (!res.AppendElement(descriptor)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return AudioParamDescriptorMap();
-    }
-
-    if (!namesSet.PutEntry(descriptor.mName, fallible)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return AudioParamDescriptorMap();
     }
   }
