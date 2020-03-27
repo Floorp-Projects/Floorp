@@ -118,6 +118,24 @@ public final class GeckoSharedPrefs {
         return context.getSharedPreferences(CRASH_PREFS_NAME, 0);
     }
 
+    public static SharedPreferences forProfile(final Context context) {
+        return forProfile(context, EnumSet.noneOf(Flags.class));
+    }
+
+    /**
+     * Returns a SharedPreferences instance scoped to the current profile
+     * in the app. You can disable migrations by using the DISABLE_MIGRATIONS
+     * flag.
+     */
+    public static SharedPreferences forProfile(final Context context, final EnumSet<Flags> flags) {
+        String profileName = GeckoProfile.get(context).getName();
+        if (profileName == null) {
+            throw new IllegalStateException("Could not get current profile name");
+        }
+
+        return forProfileName(context, profileName, flags);
+    }
+
     public static SharedPreferences forProfileName(final Context context,
                                                    final String profileName) {
         return forProfileName(context, profileName, EnumSet.noneOf(Flags.class));
