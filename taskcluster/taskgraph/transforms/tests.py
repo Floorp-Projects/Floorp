@@ -953,26 +953,20 @@ def setup_browsertime(config, tests):
 
         fs = {
             'by-test-platform': {
-                'android.*': ['linux64-chromedriver', 'linux64-ffmpeg-4.1.4'],
-                'linux.*': [
-                    'linux64-ffmpeg-4.1.4'
-                ],
-                'macosx.*': [
-                    'mac64-ffmpeg-4.1.1'
-                ],
-                'windows.*aarch64.*': [
-                    'win64-ffmpeg-4.1.1'
-                ],
-                'windows.*-32.*': [
-                    'win64-ffmpeg-4.1.1'
-                ],
-                'windows.*-64.*': [
-                    'win64-ffmpeg-4.1.1'
-                ],
+                'android.*': ['linux64-ffmpeg-4.1.4'],
+                'linux.*': ['linux64-ffmpeg-4.1.4'],
+                'macosx.*': ['mac64-ffmpeg-4.1.1'],
+                'windows.*aarch64.*': ['win64-ffmpeg-4.1.1'],
+                'windows.*-32.*': ['win64-ffmpeg-4.1.1'],
+                'windows.*-64.*': ['win64-ffmpeg-4.1.1'],
             },
         }
 
         cd_fetches = {
+            'android.*': [
+                'linux64-chromedriver-80',
+                'linux64-chromedriver-81'
+            ],
             'linux.*': [
                 'linux64-chromedriver-79',
                 'linux64-chromedriver-80',
@@ -1000,10 +994,16 @@ def setup_browsertime(config, tests):
             ],
         }
 
-        if '--app=chrome' in extra_options or '--app=chromium' in extra_options:
+        if '--app=chrome' in extra_options \
+           or '--app=chromium' in extra_options \
+           or '--app=chrome-m' in extra_options:
             # Only add the chromedriver fetches when chrome/chromium is running
             for platform in cd_fetches:
                 fs['by-test-platform'][platform].extend(cd_fetches[platform])
+
+        # Disable the Raptor install step
+        if '--app=chrome-m' in extra_options:
+            extra_options.append('--noinstall')
 
         test.setdefault('fetches', {}).setdefault('fetch', []).extend(
             evaluate_keyed_by(fs, 'fetches.fetch', test))
@@ -1062,6 +1062,7 @@ def get_mobile_project(test):
         'fennec',
         'geckoview',
         'refbrow',
+        'chrome-m'
     )
 
     for name in mobile_projects:

@@ -166,7 +166,7 @@ class Browsertime(Perftest):
         ]
 
         btime_args = self.browsertime_args
-        if self.config["app"] in ("chrome", "chromium"):
+        if self.config["app"] in ("chrome", "chromium", 'chrome-m'):
             btime_args.extend(self.setup_chrome_args(test))
 
         browsertime_script.extend(btime_args)
@@ -293,7 +293,7 @@ class Browsertime(Perftest):
 
         LOG.info("timeout (s): {}".format(timeout))
         LOG.info("browsertime cwd: {}".format(os.getcwd()))
-        LOG.info("browsertime cmd: {}".format(" ".join(cmd)))
+        LOG.info("browsertime cmd: {}".format(" ".join([str(c) for c in cmd])))
         if self.browsertime_video:
             LOG.info("browsertime_ffmpeg: {}".format(self.browsertime_ffmpeg))
 
