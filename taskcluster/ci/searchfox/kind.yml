@@ -131,6 +131,7 @@ jobs:
                 - win64-cbindgen
                 - win64-nasm
                 - win64-dump-syms
+                - win64-winchecksec
 
     android-armv7-searchfox/debug:
         description: "Android ARMv7 Debug Searchfox"
