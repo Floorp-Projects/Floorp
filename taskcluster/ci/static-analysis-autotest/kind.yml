@@ -97,3 +97,4 @@ jobs:
                 - win64-nasm
                 - win64-node
                 - win64-dump-syms
+                - win64-winchecksec
