@@ -215,7 +215,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
     MOZ_ASSERT(aSelection);
     MOZ_ASSERT(aSelection->GetType() == SelectionType::eNormal);
 
-    if (aSelection->mRanges.Length() <= 1) {
+    if (aSelection->mStyledRanges.mRanges.Length() <= 1) {
       return;
     }
 
@@ -224,7 +224,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
     }
     bool userSelection = aSelection->mUserInitiated;
 
-    nsTArray<StyledRange>& ranges = aSelection->mRanges;
+    nsTArray<StyledRange>& ranges = aSelection->mStyledRanges.mRanges;
     if (!userSelection || aMultiRangeSelection) {
       // Scripted command or the user is starting a new explicit multi-range
       // selection.
@@ -284,11 +284,11 @@ struct MOZ_RAII AutoPrepareFocusRange {
     RefPtr<nsPresContext> presContext = aSelection->GetPresContext();
     size_t i = len;
     while (i--) {
-      range = aSelection->mRanges[i].mRange;
+      range = aSelection->mStyledRanges.mRanges[i].mRange;
       if (range->IsGenerated()) {
         range->UnregisterSelection();
         aSelection->SelectFrames(presContext, range, false);
-        aSelection->mRanges.RemoveElementAt(i);
+        aSelection->mStyledRanges.mRanges.RemoveElementAt(i);
       }
     }
     if (aSelection->mFrameSelection) {
