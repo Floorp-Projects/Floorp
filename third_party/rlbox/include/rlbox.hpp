@@ -583,8 +583,7 @@ private:
   // Template needed to ensure that function isn't instantiated for unsupported
   // types like function pointers which causes compile errors...
   template<typename T2 = T>
-  inline std::unique_ptr<T_CopyAndVerifyRangeEl[]> copy_and_verify_range_helper(
-    std::size_t count) const
+  inline const void* verify_range_helper(std::size_t count) const
   {
     static_assert(std::is_pointer_v<T>);
     static_assert(detail::is_fundamental_or_enum_v<T_CopyAndVerifyRangeEl>);
@@ -600,6 +599,18 @@ private:
 
     detail::check_range_doesnt_cross_app_sbx_boundary<T_Sbx>(
       start, count * sizeof(T_CopyAndVerifyRangeEl));
+
+    return start;
+  }
+
+  template<typename T2 = T>
+  inline std::unique_ptr<T_CopyAndVerifyRangeEl[]> copy_and_verify_range_helper(
+    std::size_t count) const
+  {
+    const void* start = verify_range_helper(count);
+    if (start == nullptr) {
+      return nullptr;
+    }
 
     auto target = std::make_unique<T_CopyAndVerifyRangeEl[]>(count);
 
@@ -678,10 +689,10 @@ public:
    * @brief Copy a tainted pointer from sandbox and verify the address.
    *
    * This function is useful if you need to verify physical bits representing
-   * the address of a pointed to since copy_and_verify performs a deep copy and
-   * changes the address bits.
+   * the address of a pointer. Other APIs such as copy_and_verify performs a
+   * deep copy and changes the address bits.
    *
-   * @param verifer Function used to verify the copied value.
+   * @param verifier Function used to verify the copied value.
    * @tparam T_Func the type of the verifier ``T_Ret(*)(uintptr_t)``
    * @return Whatever the verifier function returns.
    */
@@ -691,6 +702,29 @@ public:
     static_assert(std::is_pointer_v<T>,
                   "copy_and_verify_address must be used on pointers");
     auto val = reinterpret_cast<uintptr_t>(impl().get_raw_value());
+    return verifier(val);
+  }
+
+  /**
+   * @brief Copy a tainted pointer to a buffer from sandbox and verify the
+   * address.
+   *
+   * This function is useful if you need to verify physical bits representing
+   * the address of a buffer. Other APIs such as copy_and_verify performs a
+   * deep copy and changes the address bits.
+   *
+   * @param verifier Function used to verify the copied value.
+   * @param size Size of the buffer. Buffer with length size is expected to fit
+   * inside sandbox memory.
+   * @tparam T_Func the type of the verifier ``T_Ret(*)(uintptr_t)``
+   * @return Whatever the verifier function returns.
+   */
+  template<typename T_Func>
+  inline auto copy_and_verify_buffer_address(T_Func verifier, std::size_t size)
+  {
+    static_assert(std::is_pointer_v<T>,
+                  "copy_and_verify_address must be used on pointers");
+    auto val = reinterpret_cast<uintptr_t>(verify_range_helper(size));
     return verifier(val);
   }
 };
