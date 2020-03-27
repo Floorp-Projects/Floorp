@@ -312,6 +312,10 @@ input[name="password"] {
   position: relative;
 }
 
+.alert-date {
+  display: block;;
+}
+
 .alert-link {
   color: inherit;
   text-decoration: underline;
