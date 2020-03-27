@@ -39,6 +39,7 @@
 #include <algorithm>
 #include "sslexp.h"
 #include "mozilla/net/SSLTokensCache.h"
+#include "mozilla/StaticPrefs_network.h"
 
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
@@ -1441,6 +1442,16 @@ nsresult nsSocketTransport::InitiateSocket() {
   opt.value.non_blocking = true;
   status = PR_SetSocketOption(fd, &opt);
   NS_ASSERTION(status == PR_SUCCESS, "unable to make socket non-blocking");
+
+  if (mUsingQuic) {
+    opt.option = PR_SockOpt_RecvBufferSize;
+    opt.value.recv_buffer_size =
+        StaticPrefs::network_http_http3_recvBufferSize();
+    status = PR_SetSocketOption(fd, &opt);
+    if (status != PR_SUCCESS) {
+      SOCKET_LOG(("  Couldn't set recv buffer size"));
+    }
+  }
 
   if (!mUsingQuic) {
     if (mReuseAddrPort) {
