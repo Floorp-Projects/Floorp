@@ -173,6 +173,11 @@ interface nsIAccessible : nsISupports
   readonly attribute nsIPersistentProperties attributes;
 
   /**
+   * Platform specific interface for accessible
+   */
+  readonly attribute nsISupports nativeInterface;
+
+  /**
    * Returns grouping information. Used for tree items, list items, tab panel
    * labels, radio buttons, etc. Also used for collectons of non-text objects.
    *
