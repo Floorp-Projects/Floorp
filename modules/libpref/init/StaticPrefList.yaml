@@ -1999,12 +1999,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Whether window.onappinstalled from "W3C Web Manifest" is enabled
-- name: dom.manifest.onappinstalled
-  type: bool
-  value: false
-  mirror: always
-
 # Enable mapped array buffer by default.
 - name: dom.mapped_arraybuffer.enabled
   type: bool
