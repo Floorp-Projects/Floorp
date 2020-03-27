@@ -153,7 +153,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
                       APZTestData* aOutData) override;
   void SetConfirmedTargetAPZC(
       const LayersId& aLayersId, const uint64_t& aInputBlockId,
-      const nsTArray<SLGuidAndRenderRoot>& aTargets) override;
+      const nsTArray<ScrollableLayerGuid>& aTargets) override;
 
   AsyncCompositionManager* GetCompositionManager(
       LayerTransactionParent* aParent) override;

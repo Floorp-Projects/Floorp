@@ -67,7 +67,6 @@ struct FrameMetrics;
 class LayerManager;
 class LayerManagerComposite;
 class PLayerTransactionChild;
-struct SLGuidAndRenderRoot;
 class WebRenderBridgeChild;
 }  // namespace layers
 namespace gfx {
@@ -352,7 +351,6 @@ class nsIWidget : public nsISupports {
   typedef mozilla::layers::LayerManagerComposite LayerManagerComposite;
   typedef mozilla::layers::LayersBackend LayersBackend;
   typedef mozilla::layers::PLayerTransactionChild PLayerTransactionChild;
-  typedef mozilla::layers::SLGuidAndRenderRoot SLGuidAndRenderRoot;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::ZoomConstraints ZoomConstraints;
   typedef mozilla::widget::IMEMessage IMEMessage;
@@ -1437,7 +1435,7 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetConfirmedTargetAPZC(
       uint64_t aInputBlockId,
-      const nsTArray<SLGuidAndRenderRoot>& aTargets) const = 0;
+      const nsTArray<ScrollableLayerGuid>& aTargets) const = 0;
 
   /**
    * Returns true if APZ is in use, false otherwise.
@@ -1704,13 +1702,13 @@ class nsIWidget : public nsISupports {
    * @return true if APZ has been successfully notified
    */
   virtual bool StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
-                                    const SLGuidAndRenderRoot& aGuid) = 0;
+                                    const ScrollableLayerGuid& aGuid) = 0;
 
   /**
    * Notify APZ to stop autoscrolling.
    * @param aGuid identifies the scroll frame which is being autoscrolled.
    */
-  virtual void StopAsyncAutoscroll(const SLGuidAndRenderRoot& aGuid) = 0;
+  virtual void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) = 0;
 
   // If this widget supports out-of-process compositing, it can override
   // this method to provide additional information to the compositor.

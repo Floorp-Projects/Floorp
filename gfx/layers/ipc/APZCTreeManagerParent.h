@@ -33,7 +33,7 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
 
   mozilla::ipc::IPCResult RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap);
 
-  mozilla::ipc::IPCResult RecvZoomToRect(const SLGuidAndRenderRoot& aGuid,
+  mozilla::ipc::IPCResult RecvZoomToRect(const ScrollableLayerGuid& aGuid,
                                          const CSSRect& aRect,
                                          const uint32_t& aFlags);
 
@@ -41,10 +41,10 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
       const uint64_t& aInputBlockId, const bool& aPreventDefault);
 
   mozilla::ipc::IPCResult RecvSetTargetAPZC(
-      const uint64_t& aInputBlockId, nsTArray<SLGuidAndRenderRoot>&& aTargets);
+      const uint64_t& aInputBlockId, nsTArray<ScrollableLayerGuid>&& aTargets);
 
   mozilla::ipc::IPCResult RecvUpdateZoomConstraints(
-      const SLGuidAndRenderRoot& aGuid,
+      const ScrollableLayerGuid& aGuid,
       const MaybeZoomConstraints& aConstraints);
 
   mozilla::ipc::IPCResult RecvSetDPI(const float& aDpiValue);
@@ -53,19 +53,19 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
       const uint64_t& aInputBlockId, nsTArray<TouchBehaviorFlags>&& aValues);
 
   mozilla::ipc::IPCResult RecvStartScrollbarDrag(
-      const SLGuidAndRenderRoot& aGuid, const AsyncDragMetrics& aDragMetrics);
+      const ScrollableLayerGuid& aGuid, const AsyncDragMetrics& aDragMetrics);
 
   mozilla::ipc::IPCResult RecvStartAutoscroll(
-      const SLGuidAndRenderRoot& aGuid, const ScreenPoint& aAnchorLocation);
+      const ScrollableLayerGuid& aGuid, const ScreenPoint& aAnchorLocation);
 
-  mozilla::ipc::IPCResult RecvStopAutoscroll(const SLGuidAndRenderRoot& aGuid);
+  mozilla::ipc::IPCResult RecvStopAutoscroll(const ScrollableLayerGuid& aGuid);
 
   mozilla::ipc::IPCResult RecvSetLongTapEnabled(const bool& aTapGestureEnabled);
 
   void ActorDestroy(ActorDestroyReason aWhy) override {}
 
  private:
-  bool IsGuidValid(const SLGuidAndRenderRoot& aGuid);
+  bool IsGuidValid(const ScrollableLayerGuid& aGuid);
 
   LayersId mLayersId;
   RefPtr<APZCTreeManager> mTreeManager;
