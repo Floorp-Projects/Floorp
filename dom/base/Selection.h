@@ -182,11 +182,6 @@ class Selection final : public nsSupportsWeakReference,
       nsRange* aRange, int32_t* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
-  /**
-   * Doesn't remove `aRange` from `mAnchorFocusRange`.
-   */
-  nsresult RemoveRangeInternal(nsRange& aRange);
-
  public:
   nsresult RemoveCollapsedRanges();
   nsresult Clear(nsPresContext* aPresContext);
@@ -828,6 +823,8 @@ class Selection final : public nsSupportsWeakReference,
   void Disconnect();
 
   struct StyledRanges {
+    nsresult RemoveRangeAndUnregisterSelection(nsRange& aRange);
+
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
     //
