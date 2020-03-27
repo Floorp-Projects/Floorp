@@ -31,8 +31,8 @@ set_config('MOZ_RUST_DEFAULT_FLAGS', rust_flags)
 js_option('--disable-new-pass-manager',
           help='Use the legacy LLVM pass manager in clang builds')
 
-@depends('--enable-new-pass-manager', c_compiler, host, target, 'MOZ_PGO')
-def new_pass_manager_flags(enabled, compiler, host, target, pgo):
+@depends('--enable-new-pass-manager', c_compiler, host, target, 'MOZ_PGO', enable_fuzzing)
+def new_pass_manager_flags(enabled, compiler, host, target, pgo, enable_fuzzing):
     if host.os == 'OSX':
         # Some native Mac builds hang with the new pass manager. Given the
         # inability to test in CI, don't take the risk of further breakage.
@@ -42,6 +42,9 @@ def new_pass_manager_flags(enabled, compiler, host, target, pgo):
         # builds hang. Variants like asan and ccov work fine, but it would be
         # too tedious to test them all here. PGO is the only thing that matters
         # enough to make an exception for.
+        return None
+    if enable_fuzzing and compiler.version < '10.0.0':
+        # Clang 9 does not seem to play well with libFuzzer
         return None
     if enabled and compiler.version >= '9.0.0':
         if compiler.type == 'clang':
