@@ -14,21 +14,22 @@ add_task(async function run_test() {
   // from test_content_phc.js.
   await do_content_crash(
     function() {
-      crashType = CrashTestUtils.CRASH_PHC_DOUBLE_FREE;
+      crashType = CrashTestUtils.CRASH_PHC_BOUNDS_VIOLATION;
     },
     function(mdump, extra) {
-      Assert.equal(extra.PHCKind, "FreedPage");
+      Assert.equal(extra.PHCKind, "GuardPage");
 
       // This is a string holding a decimal address.
       Assert.ok(/^\d+$/.test(extra.PHCBaseAddress));
 
-      // CRASH_PHC_DOUBLE_FREE uses 64 for the size.
-      Assert.equal(extra.PHCUsableSize, 64);
+      // CRASH_PHC_BOUNDS_VIOLATION uses 96 for the size.
+      Assert.equal(extra.PHCUsableSize, 96);
 
-      // These are strings holding comma-separated lists of decimal addresses.
-      // Sometimes on Mac they have a single entry.
+      // This is a string holding a comma-separated list of decimal addresses.
+      // Sometimes on Mac it has a single entry.
       Assert.ok(/^(\d+,)*\d+$/.test(extra.PHCAllocStack));
-      Assert.ok(/^(\d+,)*\d+$/.test(extra.PHCFreeStack));
+
+      Assert.ok(!extra.hasOwnProperty("PHCFreeStack"));
     }
   );
 });
