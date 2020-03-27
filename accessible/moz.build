@@ -38,6 +38,7 @@ BROWSER_CHROME_MANIFESTS += [
   'tests/browser/events/browser.ini',
   'tests/browser/fission/browser.ini',
   'tests/browser/general/browser.ini',
+  'tests/browser/mac/browser.ini',
   'tests/browser/scroll/browser.ini',
   'tests/browser/states/browser.ini',
   'tests/browser/tree/browser.ini'
