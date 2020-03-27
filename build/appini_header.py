@@ -32,8 +32,8 @@ def main(output, file):
                 'App:id', 'Gecko:minversion', 'Gecko:maxversion', 'AppUpdate:url')
     missing = [var for var in expected if var not in appdata]
     if missing:
-        print >>sys.stderr, \
-            "Missing values in %s: %s" % (file, ', '.join(missing))
+        print("Missing values in %s: %s" % (file, ', '.join(missing)),
+              file=sys.stderr)
         sys.exit(1)
 
     if 'Crash Reporter:serverurl' not in appdata:
@@ -68,4 +68,5 @@ if __name__ == '__main__':
     if len(sys.argv) != 1:
         main(sys.stdout, sys.argv[1])
     else:
-        print >>sys.stderr, "Usage: %s /path/to/application.ini" % sys.argv[0]
+        print("Usage: %s /path/to/application.ini" % sys.argv[0],
+              file=sys.stderr)
