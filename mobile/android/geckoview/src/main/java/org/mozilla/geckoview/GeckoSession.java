@@ -476,7 +476,8 @@ public class GeckoSession implements Parcelable {
                               message.getString("triggerUri"),
                               message.getInt("where"),
                               message.getInt("flags"),
-                              message.getBoolean("hasUserGesture"));
+                              message.getBoolean("hasUserGesture"),
+                              /* isDirectNavigation */ false);
 
                     if (!IntentUtils.isUriSafeForScheme(request.uri)) {
                         callback.sendError("Blocked unsafe intent URI");
@@ -1633,10 +1634,11 @@ public class GeckoSession implements Parcelable {
         final NavigationDelegate.LoadRequest request =
                 new NavigationDelegate.LoadRequest(
                         uri,
-                        null,
-                        1, // OPEN_CURRENTWINDOW
-                        0, // No flags
-                        false);
+                        null, /* triggerUri */
+                        1, /* geckoTarget: OPEN_CURRENTWINDOW */
+                        0, /* flags */
+                        false, /* hasUserGesture */
+                        true /* isDirectNavigation */);
 
         shouldLoadUri(request).accept(allowOrDeny -> {
             if (allowOrDeny == AllowOrDeny.DENY) {
@@ -3565,12 +3567,14 @@ public class GeckoSession implements Parcelable {
                                       @Nullable final String triggerUri,
                                       final int geckoTarget,
                                       final int flags,
-                                      final boolean hasUserGesture) {
+                                      final boolean hasUserGesture,
+                                      final boolean isDirectNavigation) {
                 this.uri = uri;
                 this.triggerUri = triggerUri;
                 this.target = convertGeckoTarget(geckoTarget);
                 this.isRedirect = (flags & LOAD_REQUEST_IS_REDIRECT) != 0;
                 this.hasUserGesture = hasUserGesture;
+                this.isDirectNavigation = isDirectNavigation;
             }
 
             /**
@@ -3582,6 +3586,7 @@ public class GeckoSession implements Parcelable {
                 target = 0;
                 isRedirect = false;
                 hasUserGesture = false;
+                isDirectNavigation = false;
             }
 
             // This needs to match nsIBrowserDOMWindow.idl
@@ -3627,6 +3632,12 @@ public class GeckoSession implements Parcelable {
              */
             public final boolean hasUserGesture;
 
+            /**
+             * This load request was initiated by a direct navigation from the
+             * application. E.g. when calling {@link GeckoSession#loadUri}.
+             */
+            public final boolean isDirectNavigation;
+
             @Override
             public String toString() {
                 final StringBuilder out = new StringBuilder("LoadRequest { ");
@@ -3636,6 +3647,7 @@ public class GeckoSession implements Parcelable {
                     .append(", target: " + target)
                     .append(", isRedirect: " + isRedirect)
                     .append(", hasUserGesture: " + hasUserGesture)
+                    .append(", fromLoadUri: " + hasUserGesture)
                     .append(" }");
                 return out.toString();
             }
