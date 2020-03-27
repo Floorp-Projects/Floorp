@@ -31,14 +31,68 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual int stack_limit_slack();
   virtual IrregexpImplementation Implementation();
 
+  virtual bool Succeed();
+  virtual void Fail();
 
-private:
+  virtual void AdvanceCurrentPosition(int by);
+  virtual void PopCurrentPosition();
+  virtual void PushCurrentPosition();
+
+
+ private:
+  // Push a register on the backtrack stack.
+  void Push(js::jit::Register value);
+
+  // Pop a value from the backtrack stack.
+  void Pop(js::jit::Register target);
+
+  inline int char_size() { return static_cast<int>(mode_); }
+  inline js::jit::Scale factor() {
+    return mode_ == UC16 ? js::jit::TimesTwo : js::jit::TimesOne;
+  }
+
   JSContext* cx_;
   js::jit::StackMacroAssembler& masm_;
+
+  /*
+   * This assembler uses the following registers:
+   *
+   * - current_character_:
+   *     Contains the character (or characters) currently being examined.
+   *     Must be loaded using LoadCurrentCharacter before using any of the
+   *     dispatch methods. After a matching pass for a global regexp,
+   *     temporarily stores the index of capture start.
+   * - current_position_:
+   *     Current position in input *as negative byte offset from end of string*.
+   * - input_end_pointer_:
+   *     Points to byte after last character in the input. current_position_ is
+   *     relative to this.
+   * - backtrack_stack_pointer_:
+   *     Points to tip of the (heap-allocated) backtrack stack. The stack grows
+   *     downward (like the native stack).
+   * - temp0_, temp1_, temp2_:
+   *     Scratch registers.
+   *
+   * The native stack pointer is used to access arguments (InputOutputData),
+   * local variables (FrameData), and irregexp's internal virtual registers
+   * (see register_location).
+   */
+
+  js::jit::Register current_character_;
+  js::jit::Register current_position_;
+  js::jit::Register input_end_pointer_;
+  js::jit::Register backtrack_stack_pointer_;
+  js::jit::Register temp0_, temp1_, temp2_;
+
+  js::jit::Label entry_label_;
+  js::jit::Label start_label_;
+  js::jit::Label success_label_;
+  js::jit::Label exit_label_;
 
   Mode mode_;
   int num_registers_;
   int num_capture_registers_;
+  js::jit::LiveGeneralRegisterSet savedRegisters_;
 };
 
 }  // namespace internal
