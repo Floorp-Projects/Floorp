@@ -185,7 +185,10 @@ tasks:
             $if: "tasks_for == 'action'"
             then: very-low
             else: lowest  # tasks_for == 'hg-push'
-        retries: 5
+        retries:
+          $if: "tasks_for == 'hg-push'"
+          then: 0
+          else: 5
 
         payload:
           env:
