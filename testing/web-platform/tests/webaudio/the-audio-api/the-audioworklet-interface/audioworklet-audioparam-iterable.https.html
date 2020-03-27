@@ -79,20 +79,46 @@
       // Test a processor that has a get parameterDescriptors, but it returns
       // something that is not iterable.
       try {
-      registerProcessor("invalid",
-      class InvalidParamProcessor extends AudioWorkletProcessor {
-        static get parameterDescriptors() {
-          return 4;
-        }
-        constructor() { super(); }
-        process() { }
-      });
-      throw "This should not have been reached.";
+        registerProcessor("invalid",
+        class InvalidParamProcessor extends AudioWorkletProcessor {
+          static get parameterDescriptors() {
+            return 4;
+          }
+          constructor() { super(); }
+          process() { }
+        });
+        throw "This should not have been reached.";
       } catch (e) {
         // unclear how to signal success here, but we can signal failure in the
         // developer console
         if (e.name != "TypeError") {
           throw "This should be TypeError";
+        }
+      }
+      // Test a processor that has a get parameterDescriptors, with a duplicate
+      // param name something that is not iterable.
+      try {
+        registerProcessor("duplicate-param-name",
+        class DuplicateParamProcessor extends AudioWorkletProcessor {
+          static get parameterDescriptors() {
+            var p = {
+                name: "a",
+                defaultValue: 1,
+                minValue: 0,
+                maxValue: 1,
+                automationRate: "k-rate",
+            };
+            return [p,p];
+          }
+          constructor() { super(); }
+          process() { }
+        });
+        throw "This should not have been reached.";
+      } catch (e) {
+        // unclear how to signal success here, but we can signal failure in the
+        // developer console
+        if (e.name != "NotSupportedError") {
+          throw "This should be NotSupportedError";
         }
       }
       // Test a processor that has a no get parameterDescriptors.
@@ -163,6 +189,14 @@
           new AudioWorkletNode(ac, "no-params");
         }, `Attempting to create an AudioWorkletNode from a processor
             that does not have a parameterDescriptors getter should work`);
+      })
+      .then(function() {
+        test(function() {
+          assert_throws_dom("InvalidStateError", function() {
+            new AudioWorkletNode(ac, "duplicate-param-name");
+          });
+        }, `Attempting to create an AudioWorkletNode with two parameter
+            descriptor with the same name should not work`);
       }).then(function() {
         done();
       });
