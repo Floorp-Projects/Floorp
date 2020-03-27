@@ -121,14 +121,14 @@ Maybe<double> WebGLContext::GetVertexAttrib(GLuint index, GLenum pname) {
   switch (pname) {
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_INTEGER:
       if (!IsWebGL2()) {
-        ret = {};
+        ret = Nothing();
       }
       break;
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
       if (!IsWebGL2() &&
           !IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays)) {
-        ret = {};
+        ret = Nothing();
       }
       break;
   }

@@ -59,7 +59,7 @@ RefPtr<SurfacePoolCAWrapperForGL> SurfacePoolCA::LockedPool::GetWrapperForGL(Sur
 void SurfacePoolCA::LockedPool::DestroyGLResourcesForContext(GLContext* aGL) {
   ForEachEntry([&](SurfacePoolEntry& entry) {
     if (entry.mGLResources && entry.mGLResources->mGLContext == aGL) {
-      entry.mGLResources = {};
+      entry.mGLResources = Nothing();
     }
   });
   mDepthBuffers.RemoveElementsBy(

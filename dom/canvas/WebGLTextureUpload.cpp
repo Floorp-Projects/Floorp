@@ -545,7 +545,7 @@ static bool EnsureImageDataInitializedForUpload(
       hasUninitialized |= (*imageInfo->mUninitializedSlices)[z];
     }
     if (!hasUninitialized) {
-      imageInfo->mUninitializedSlices = {};
+      imageInfo->mUninitializedSlices = Nothing();
     }
     return true;
   }
