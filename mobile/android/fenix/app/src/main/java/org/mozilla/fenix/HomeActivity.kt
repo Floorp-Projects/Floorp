@@ -146,13 +146,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        lifecycleScope.launch {
-            with(components.backgroundServices) {
+        components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
+            lifecycleScope.launch {
                 // Make sure accountManager is initialized.
-                accountManager.initAsync().await()
+                components.backgroundServices.accountManager.initAsync().await()
                 // If we're authenticated, kick-off a sync and a device state refresh.
-                accountManager.authenticatedAccount()?.let {
-                    accountManager.syncNowAsync(SyncReason.Startup, debounce = true)
+                components.backgroundServices.accountManager.authenticatedAccount()?.let {
+                    components.backgroundServices.accountManager.syncNowAsync(SyncReason.Startup, debounce = true)
                 }
             }
         }
