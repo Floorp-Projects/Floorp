@@ -2008,7 +2008,7 @@ def allow_missing_winchecksec(automation, c_compiler):
 
 check_prog('WINCHECKSEC', ['winchecksec.exe'], paths=toolchain_search_path,
            allow_missing=allow_missing_winchecksec,
-           when=compile_environment & target_is_windows & host_is_windows)
+           when=compile_environment & target_is_windows)
 
 # Fork server
 @depends(target, build_project)
