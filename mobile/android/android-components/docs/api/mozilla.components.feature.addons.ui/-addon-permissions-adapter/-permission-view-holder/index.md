@@ -2,7 +2,7 @@
 
 # PermissionViewHolder
 
-`class PermissionViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonPermissionsAdapter.kt#L44)
+`class PermissionViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonPermissionsAdapter.kt#L51)
 
 A view holder for displaying the permissions of an add-on.
 

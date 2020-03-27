@@ -2,17 +2,23 @@
 
 # AddonsManagerAdapter
 
-`class AddonsManagerAdapter : Adapter<`[`CustomViewHolder`](../-custom-view-holder/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonsManagerAdapter.kt#L50)
+`class AddonsManagerAdapter : Adapter<`[`CustomViewHolder`](../-custom-view-holder/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonsManagerAdapter.kt#L52)
 
 An adapter for displaying add-on items. This will display information related to the state of
 an add-on such as recommended, unsupported or installed. In addition, it will perform actions
 such as installing an add-on.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [Style](-style/index.md) | `data class Style`<br>Allows to customize how items should look like. |
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AddonsManagerAdapter(addonCollectionProvider: `[`AddonCollectionProvider`](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md)`, addonsManagerDelegate: `[`AddonsManagerAdapterDelegate`](../-addons-manager-adapter-delegate/index.md)`, addons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>)`<br>An adapter for displaying add-on items. This will display information related to the state of an add-on such as recommended, unsupported or installed. In addition, it will perform actions such as installing an add-on. |
+| [&lt;init&gt;](-init-.md) | `AddonsManagerAdapter(addonCollectionProvider: `[`AddonCollectionProvider`](../../mozilla.components.feature.addons.amo/-addon-collection-provider/index.md)`, addonsManagerDelegate: `[`AddonsManagerAdapterDelegate`](../-addons-manager-adapter-delegate/index.md)`, addons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>, style: `[`Style`](-style/index.md)`? = null)`<br>An adapter for displaying add-on items. This will display information related to the state of an add-on such as recommended, unsupported or installed. In addition, it will perform actions such as installing an add-on. |
 
 ### Functions
 

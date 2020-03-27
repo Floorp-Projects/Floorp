@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L53)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L52)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -41,7 +41,6 @@ Value type that represents the state of a browser session. Changes can be observ
 | [launchIntentMetadata](launch-intent-metadata.md) | `var launchIntentMetadata: `[`LaunchIntentMetadata`](../../mozilla.components.browser.session.engine.request/-launch-intent-metadata/index.md)<br>Set when a launch intent is received. |
 | [loadRequestMetadata](load-request-metadata.md) | `var loadRequestMetadata: `[`LoadRequestMetadata`](../../mozilla.components.browser.session.engine.request/-load-request-metadata/index.md)<br>Set when a load request is received, indicating if the request came from web content, or via a redirect. |
 | [loading](loading.md) | `var loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Loading state, true if this session's url is currently loading, otherwise false. |
-| [media](media.md) | `var media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../mozilla.components.concept.engine.media/-media/index.md)`>`<br>List of [Media](../../mozilla.components.concept.engine.media/-media/index.md) on the currently visited page. |
 | [private](private.md) | `val private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [progress](progress.md) | `var progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The progress loading the current URL. |
 | [readerMode](reader-mode.md) | `var readerMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Reader mode state, whether or not reader view is enabled, otherwise false. |
