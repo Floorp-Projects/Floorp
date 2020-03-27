@@ -61,6 +61,9 @@ const createDummyRecommendation = ({
               value: "Cancel",
               attributes: { accesskey: "C" },
             },
+            action: {
+              type: "CANCEL",
+            },
           },
           {
             label: {
@@ -217,6 +220,8 @@ add_task(async function setup() {
 
   registerCleanupFunction(() => {
     CFRPageActions._fetchLatestAddonVersion = _fetchLatestAddonVersion;
+    clearNotifications();
+    CFRPageActions.clearRecommendations();
   });
 });
 
@@ -385,6 +390,68 @@ add_task(async function test_cfr_notification_minimize() {
     .getElementById("contextual-feature-recommendation-notification")
     .button.click();
   await hidePanel;
+});
+
+add_task(async function test_cfr_notification_minimize_2() {
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  let response = await trigger_cfr_panel(browser, "example.com");
+  Assert.ok(
+    response,
+    "Should return true if addRecommendation checks were successful"
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => gURLBar.hasAttribute("cfr-recommendation-state"),
+    "Wait for the notification to show up and have a state"
+  );
+  Assert.ok(
+    gURLBar.getAttribute("cfr-recommendation-state") === "expanded",
+    "CFR recomendation state is correct"
+  );
+
+  // Open the panel and click to dismiss to ensure cleanup
+  const showPanel = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  let hidePanel = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphidden"
+  );
+
+  Assert.ok(
+    document.getElementById("contextual-feature-recommendation-notification")
+      .secondaryButton,
+    "There should be a cancel button"
+  );
+
+  // Click the Not Now button
+  document
+    .getElementById("contextual-feature-recommendation-notification")
+    .secondaryButton.click();
+
+  await hidePanel;
+
+  Assert.ok(
+    document.getElementById("contextual-feature-recommendation-notification"),
+    "The notification should not dissapear"
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => gURLBar.getAttribute("cfr-recommendation-state") === "collapsed",
+    "Clicking the secondary button should collapse the notification"
+  );
+
+  clearNotifications();
+  CFRPageActions.clearRecommendations();
 });
 
 add_task(async function test_cfr_addon_install() {
