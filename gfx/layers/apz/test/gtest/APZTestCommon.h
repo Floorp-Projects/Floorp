@@ -239,17 +239,6 @@ class TestAPZCTreeManager : public APZCTreeManager {
    **/
   void CancelAnimation() { EXPECT_TRUE(false); }
 
-  using APZCTreeManager::SetTargetAPZC;  // silence clang warning about overload
-  void SetTargetAPZC(uint64_t aInputBlockId,
-                     const nsTArray<ScrollableLayerGuid>& aTargets) {
-    nsTArray<SLGuidAndRenderRoot> wrapped;
-    for (const ScrollableLayerGuid& target : aTargets) {
-      wrapped.AppendElement(
-          SLGuidAndRenderRoot(target, wr::RenderRoot::Default));
-    }
-    this->SetTargetAPZC(aInputBlockId, wrapped);
-  }
-
  protected:
   AsyncPanZoomController* NewAPZCInstance(
       LayersId aLayersId, GeckoContentController* aController) override;

@@ -3556,8 +3556,7 @@ bool BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
   if (mRemoteLayerTreeOwner.IsInitialized()) {
     layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
-                               gfxUtils::GetContentRenderRoot());
+      ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
 
       // The anchor coordinates that are passed in are relative to the origin
       // of the screen, but we are sending them to APZ which only knows about
@@ -3585,8 +3584,7 @@ void BrowserParent::StopApzAutoscroll(nsViewID aScrollId,
   if (mRemoteLayerTreeOwner.IsInitialized()) {
     layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
-                               gfxUtils::GetContentRenderRoot());
+      ScrollableLayerGuid guid(layersId, aPresShellId, aScrollId);
 
       widget->StopAsyncAutoscroll(guid);
     }

@@ -664,9 +664,8 @@ using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
 static bool PrepareForSetTargetAPZCNotification(
     nsIWidget* aWidget, const LayersId& aLayersId, nsIFrame* aRootFrame,
     const LayoutDeviceIntPoint& aRefPoint,
-    nsTArray<SLGuidAndRenderRoot>* aTargets) {
-  SLGuidAndRenderRoot guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID,
-                           wr::RenderRoot::Default);
+    nsTArray<ScrollableLayerGuid>* aTargets) {
+  ScrollableLayerGuid guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID);
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aWidget, aRefPoint, aRootFrame);
   EnumSet<FrameForPointOption> options;
@@ -689,13 +688,6 @@ static bool PrepareForSetTargetAPZCNotification(
       scrollAncestor ? GetDisplayportElementFor(scrollAncestor)
                      : GetRootDocumentElementFor(aWidget);
 
-  if (XRE_IsContentProcess()) {
-    guid.mRenderRoot = gfxUtils::GetContentRenderRoot();
-  } else {
-    guid.mRenderRoot = gfxUtils::RecursivelyGetRenderRootForFrame(
-        target ? target : aRootFrame);
-  }
-
   if (MOZ_LOG_TEST(sApzHlpLog, LogLevel::Debug)) {
     nsAutoString dpElementDesc;
     if (dpElement) {
@@ -707,8 +699,7 @@ static bool PrepareForSetTargetAPZCNotification(
   }
 
   bool guidIsValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
-      dpElement, &(guid.mScrollableLayerGuid.mPresShellId),
-      &(guid.mScrollableLayerGuid.mScrollId));
+      dpElement, &(guid.mPresShellId), &(guid.mScrollId));
   aTargets->AppendElement(guid);
 
   if (!guidIsValid) {
@@ -747,7 +738,7 @@ static bool PrepareForSetTargetAPZCNotification(
 
 static void SendLayersDependentApzcTargetConfirmation(
     PresShell* aPresShell, uint64_t aInputBlockId,
-    const nsTArray<SLGuidAndRenderRoot>& aTargets) {
+    const nsTArray<ScrollableLayerGuid>& aTargets) {
   LayerManager* lm = aPresShell->GetLayerManager();
   if (!lm) {
     return;
@@ -777,7 +768,7 @@ static void SendLayersDependentApzcTargetConfirmation(
 
 DisplayportSetListener::DisplayportSetListener(
     nsIWidget* aWidget, PresShell* aPresShell, const uint64_t& aInputBlockId,
-    const nsTArray<SLGuidAndRenderRoot>& aTargets)
+    const nsTArray<ScrollableLayerGuid>& aTargets)
     : mWidget(aWidget),
       mPresShell(aPresShell),
       mInputBlockId(aInputBlockId),
@@ -848,7 +839,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
       rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
 
       bool waitForRefresh = false;
-      nsTArray<SLGuidAndRenderRoot> targets;
+      nsTArray<ScrollableLayerGuid> targets;
 
       if (const WidgetTouchEvent* touchEvent = aEvent.AsTouchEvent()) {
         for (size_t i = 0; i < touchEvent->mTouches.Length(); i++) {

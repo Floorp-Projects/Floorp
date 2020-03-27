@@ -23,7 +23,6 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ipc/ByteBufUtils.h"
 #include "mozilla/layers/APZInputBridge.h"
-#include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -554,22 +553,6 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
             ReadParam(aMsg, aIter, &aResult->mTargetGuid) &&
             ReadParam(aMsg, aIter, &aResult->mInputBlockId) &&
             ReadParam(aMsg, aIter, &aResult->mHitRegionWithApzAwareListeners));
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::layers::SLGuidAndRenderRoot> {
-  typedef mozilla::layers::SLGuidAndRenderRoot paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mScrollableLayerGuid);
-    WriteParam(aMsg, aParam.mRenderRoot);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mScrollableLayerGuid) &&
-            ReadParam(aMsg, aIter, &aResult->mRenderRoot));
   }
 };
 

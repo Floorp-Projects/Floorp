@@ -564,7 +564,7 @@ void ContentCompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
 
 void ContentCompositorBridgeParent::SetConfirmedTargetAPZC(
     const LayersId& aLayersId, const uint64_t& aInputBlockId,
-    const nsTArray<SLGuidAndRenderRoot>& aTargets) {
+    const nsTArray<ScrollableLayerGuid>& aTargets) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(aLayersId);

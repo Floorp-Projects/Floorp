@@ -9,7 +9,6 @@
 
 #include <stdint.h>  // for uint64_t, uint32_t
 
-#include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/LayersTypes.h"          // for TouchBehaviorFlags
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, etc
 #include "mozilla/layers/ZoomConstraints.h"      // for ZoomConstraints
@@ -56,7 +55,7 @@ class IAPZCTreeManager {
    * up. |aRect| must be given in CSS pixels, relative to the document.
    * |aFlags| is a combination of the ZoomToRectBehavior enum values.
    */
-  virtual void ZoomToRect(const SLGuidAndRenderRoot& aGuid,
+  virtual void ZoomToRect(const ScrollableLayerGuid& aGuid,
                           const CSSRect& aRect,
                           const uint32_t aFlags = DEFAULT_BEHAVIOR) = 0;
 
@@ -82,7 +81,7 @@ class IAPZCTreeManager {
    * should be set to ScrollableLayerGuid::NULL_SCROLL_ID.
    */
   virtual void SetTargetAPZC(uint64_t aInputBlockId,
-                             const nsTArray<SLGuidAndRenderRoot>& aTargets) = 0;
+                             const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
 
   /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
@@ -90,7 +89,7 @@ class IAPZCTreeManager {
    * the given |aGuid| are cleared.
    */
   virtual void UpdateZoomConstraints(
-      const SLGuidAndRenderRoot& aGuid,
+      const ScrollableLayerGuid& aGuid,
       const Maybe<ZoomConstraints>& aConstraints) = 0;
 
   virtual void SetDPI(float aDpiValue) = 0;
@@ -107,13 +106,13 @@ class IAPZCTreeManager {
   virtual void SetAllowedTouchBehavior(
       uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aValues) = 0;
 
-  virtual void StartScrollbarDrag(const SLGuidAndRenderRoot& aGuid,
+  virtual void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                                   const AsyncDragMetrics& aDragMetrics) = 0;
 
-  virtual bool StartAutoscroll(const SLGuidAndRenderRoot& aGuid,
+  virtual bool StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                const ScreenPoint& aAnchorLocation) = 0;
 
-  virtual void StopAutoscroll(const SLGuidAndRenderRoot& aGuid) = 0;
+  virtual void StopAutoscroll(const ScrollableLayerGuid& aGuid) = 0;
 
   /**
    * Function used to disable LongTap gestures.
