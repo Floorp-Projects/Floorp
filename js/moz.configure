@@ -616,17 +616,15 @@ set_define('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(la
 # and atomics it can go away.
 # =====================================================
 
-@depends(milestone.is_nightly)
-def default_wasm_threads(is_nightly):
-    return is_nightly
+js_option('--disable-shared-memory', help='Disable JS/WebAssembly shared memory and atomics')
 
-js_option('--enable-wasm-threads',
-          default=default_wasm_threads,
-          help='{Enable|Disable} WebAssembly shared memory and atomics')
+@depends('--disable-shared-memory')
+def enable_shared_memory(value):
+    if value:
+        return True
 
-set_config('ENABLE_WASM_THREADS', depends_if('--enable-wasm-threads')(lambda x: True))
-set_define('ENABLE_WASM_THREADS', depends_if('--enable-wasm-threads')(lambda x: True))
-
+set_config('ENABLE_SHARED_MEMORY', enable_shared_memory)
+set_define('ENABLE_SHARED_MEMORY', enable_shared_memory)
 
 
 # Initial support for new regexp engine
