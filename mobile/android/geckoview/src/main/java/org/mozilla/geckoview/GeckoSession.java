@@ -1667,7 +1667,7 @@ public class GeckoSession implements Parcelable {
 
         final GeckoResult<AllowOrDeny> result = new GeckoResult<>();
 
-        ThreadUtils.getUiHandler().post(() -> {
+        ThreadUtils.runOnUiThread(() -> {
             final GeckoResult<AllowOrDeny> delegateResult =
                     delegate.onLoadRequest(this, request);
 
@@ -1998,7 +1998,7 @@ public class GeckoSession implements Parcelable {
             mEventDispatcher.dispatch("GeckoView:FlushSessionState", null);
         }
 
-        ThreadUtils.postToUiThread(
+        ThreadUtils.runOnUiThread(
             () -> getAutofillSupport().onActiveChanged(active)
         );
     }
@@ -5637,12 +5637,7 @@ public class GeckoSession implements Parcelable {
 
                 // Delay calling onCompositorReady to avoid deadlock due
                 // to synchronous call to the compositor.
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        onCompositorReady();
-                    }
-                });
+                ThreadUtils.postToUiThread(this::onCompositorReady);
                 break;
             }
 
