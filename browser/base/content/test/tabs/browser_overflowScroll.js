@@ -50,7 +50,7 @@ add_task(async function() {
   });
 
   ok(
-    !scrollbox.hasAttribute("notoverflowing"),
+    arrowScrollbox.hasAttribute("overflowing"),
     "Tab strip should be overflowing"
   );
 

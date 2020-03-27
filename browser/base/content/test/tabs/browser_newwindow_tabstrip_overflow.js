@@ -24,7 +24,7 @@ add_task(async function withoutLWT() {
     "tab container not overflowing"
   );
   ok(
-    win.gBrowser.tabContainer.arrowScrollbox.hasAttribute("notoverflowing"),
+    !win.gBrowser.tabContainer.arrowScrollbox.hasAttribute("overflowing"),
     "arrow scrollbox not overflowing"
   );
   await BrowserTestUtils.closeWindow(win);
@@ -38,7 +38,7 @@ add_task(async function withLWT() {
     "tab container not overflowing"
   );
   ok(
-    win.gBrowser.tabContainer.arrowScrollbox.hasAttribute("notoverflowing"),
+    !win.gBrowser.tabContainer.arrowScrollbox.hasAttribute("overflowing"),
     "arrow scrollbox not overflowing"
   );
   await BrowserTestUtils.closeWindow(win);
