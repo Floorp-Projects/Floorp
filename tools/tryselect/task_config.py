@@ -233,6 +233,28 @@ class Rebuild(TryConfig):
         }
 
 
+class Routes(TryConfig):
+    arguments = [
+        [
+            ["--route"],
+            {
+                "action": "append",
+                "dest": "routes",
+                "help": (
+                    "Additional route to add to the tasks "
+                    "(note: these will not be added to the decision task)"
+                ),
+            },
+        ],
+    ]
+
+    def try_config(self, routes, **kwargs):
+        if routes:
+            return {
+                'routes': routes,
+            }
+
+
 class ChemspillPrio(TryConfig):
 
     arguments = [
@@ -416,6 +438,7 @@ all_task_configs = {
     'path': Path,
     'pernosco': Pernosco,
     'rebuild': Rebuild,
+    'routes': Routes,
     'strategy': OptimizeStrategies,
     'worker-overrides': WorkerOverrides,
 }
