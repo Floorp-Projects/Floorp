@@ -4,8 +4,8 @@
 
 package org.mozilla.gecko.process;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.IXPCOMEventTarget;
 import org.mozilla.gecko.util.XPCOMEventTarget;
 
 import android.content.ComponentName;
@@ -13,29 +13,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.content.ServiceConnection;
-import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
+import java.lang.reflect.Method;
 import java.util.BitSet;
 import java.util.concurrent.Executor;
-import java.util.EnumMap;
-import java.util.Map.Entry;
 
 /* package */ final class ServiceAllocator {
-    private static final String LOGTAG = "ServiceAllocator";
     private static final int MAX_NUM_ISOLATED_CONTENT_SERVICES = 50;
 
-    private static boolean hasQApis() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
-    }
+    private static final Method sBindIsolatedService = resolveBindIsolatedService();
+    private static final Method sBindServiceWithExecutor = resolveBindServiceWithExecutor();
 
     /**
      * Possible priority levels that are available to child services. Each one maps to a flag that
      * is passed into Context.bindService().
      */
-    @WrapForJNI
     public static enum PriorityLevel {
         FOREGROUND (Context.BIND_IMPORTANT),
         BACKGROUND (0),
@@ -52,125 +46,28 @@ import java.util.Map.Entry;
         }
     }
 
-    private interface BindServiceDelegate {
-        boolean bindService(ServiceConnection binding, PriorityLevel priority);
-        String getServiceName();
-    }
-
     /**
      * Abstract class that holds the essential per-service data that is required to work with
      * ServiceAllocator. ServiceAllocator clients should extend this class when implementing their
      * per-service connection objects.
      */
-    public static abstract class InstanceInfo {
-        private class Binding implements ServiceConnection {
-            /**
-             * This implementation of ServiceConnection.onServiceConnected simply bounces the
-             * connection notification over to the launcher thread (if it is not already on it).
-             */
-            @Override
-            public final void onServiceConnected(final ComponentName name,
-                                                 final IBinder service) {
-                XPCOMEventTarget.runOnLauncherThread(() -> {
-                    onBinderConnectedInternal(service);
-                });
-            }
-
-            /**
-             * This implementation of ServiceConnection.onServiceDisconnected simply bounces the
-             * disconnection notification over to the launcher thread (if it is not already on it).
-             */
-            @Override
-            public final void onServiceDisconnected(final ComponentName name) {
-                XPCOMEventTarget.runOnLauncherThread(() -> {
-                    onBinderConnectionLostInternal();
-                });
-            }
-        }
-
-        private class DefaultBindDelegate implements BindServiceDelegate {
-            @Override
-            public boolean bindService(@NonNull final ServiceConnection binding, @NonNull final PriorityLevel priority) {
-                final Context context = GeckoAppShell.getApplicationContext();
-                final Intent intent = new Intent();
-                intent.setClassName(context, getServiceName());
-                return bindServiceDefault(context, intent, binding, getAndroidFlags(priority));
-            }
-
-            @Override
-            public String getServiceName() {
-                return getSvcClassNameDefault(InstanceInfo.this);
-            }
-        }
-
-        private class IsolatedBindDelegate implements BindServiceDelegate {
-            @Override
-            public boolean bindService(@NonNull final ServiceConnection binding, @NonNull final PriorityLevel priority) {
-                final Context context = GeckoAppShell.getApplicationContext();
-                final Intent intent = new Intent();
-                intent.setClassName(context, getServiceName());
-                return bindServiceIsolated(context, intent, getAndroidFlags(priority),
-                                           getIdAsString(), binding);
-            }
-
-            @Override
-            public String getServiceName() {
-                return ServiceUtils.buildIsolatedSvcName(getType());
-            }
-        }
-
+    public static abstract class InstanceInfo implements ServiceConnection {
         private final ServiceAllocator mAllocator;
         private final GeckoProcessType mType;
         private final Integer mId;
-        private final EnumMap<PriorityLevel, Binding> mBindings;
-        private final BindServiceDelegate mBindDelegate;
-
-        private boolean mCalledConnected = false;
-        private boolean mCalledConnectionLost = false;
-        private boolean mIsDefunct = false;
-
-        private PriorityLevel mCurrentPriority;
-        private int mRelativeImportance = 0;
+        // Priority level is not yet adjustable, so mPriority is final for now
+        private final PriorityLevel mPriority;
 
         protected InstanceInfo(@NonNull final ServiceAllocator allocator, @NonNull final GeckoProcessType type,
                                @NonNull final PriorityLevel priority) {
             mAllocator = allocator;
             mType = type;
             mId = mAllocator.allocate(type);
-            mBindings = new EnumMap<PriorityLevel, Binding>(PriorityLevel.class);
-            mBindDelegate = getBindServiceDelegate();
-
-            mCurrentPriority = priority;
-        }
-
-        private BindServiceDelegate getBindServiceDelegate() {
-            if (mType != GeckoProcessType.CONTENT) {
-                // Non-content services just use default binding
-                return this.new DefaultBindDelegate();
-            }
-
-            // Content services defer to the alloc policy
-            return mAllocator.mContentAllocPolicy.getBindServiceDelegate(this);
+            mPriority = priority;
         }
 
         public PriorityLevel getPriorityLevel() {
-            XPCOMEventTarget.assertOnLauncherThread();
-            return mCurrentPriority;
-        }
-
-        public boolean setPriorityLevel(@NonNull final PriorityLevel newPriority,
-                                        final int relativeImportance) {
-            XPCOMEventTarget.assertOnLauncherThread();
-            mCurrentPriority = newPriority;
-            mRelativeImportance = relativeImportance;
-
-            // If we haven't bound yet then we can just return
-            if (mBindings.size() == 0) {
-                return true;
-            }
-
-            // Otherwise we need to update our bindings
-            return updateBindings();
+            return mPriority;
         }
 
         /**
@@ -201,191 +98,72 @@ import java.util.Map.Entry;
         }
 
         protected boolean bindService() {
-            if (mIsDefunct) {
-                throw new AssertionError("Attempt to bind a defunct InstanceInfo!");
-            }
-
-            return updateBindings();
+            return mAllocator.bindService(this);
         }
 
-        /**
-         * Unbinds the service described by |this| and releases our unique ID. This method may
-         * safely be called multiple times even if we are already defunct.
-         */
         protected void unbindService() {
-            XPCOMEventTarget.assertOnLauncherThread();
-
-            // This could happen if a service death races with our attempt to shut it down.
-            if (mIsDefunct) {
-                return;
-            }
-
-            final Context context = GeckoAppShell.getApplicationContext();
-
-            RuntimeException lastException = null;
-
-            // Make a clone of mBindings to iterate over since we're going to mutate the original
-            final EnumMap<PriorityLevel, Binding> cloned = mBindings.clone();
-            for (final Entry<PriorityLevel, Binding> entry : cloned.entrySet()) {
-                try {
-                    context.unbindService(entry.getValue());
-                } catch (final IllegalArgumentException e) {
-                    // The binding was already dead. That's okay.
-                } catch (final RuntimeException e) {
-                    lastException = e;
-                    continue;
-                }
-
-                mBindings.remove(entry.getKey());
-            }
-
-            if (mBindings.size() == 0) {
-                mIsDefunct = true;
-                mAllocator.release(this);
-                onReleaseResources();
-                return;
-            }
-
-            final String svcName = mBindDelegate.getServiceName();
-            final StringBuilder builder = new StringBuilder("Unable to release service\"");
-            builder.append(svcName).append("\" because ").append(mBindings.size()).append(" bindings could not be dropped");
-            Log.e(LOGTAG, builder.toString());
-
-            if (lastException != null) {
-                throw lastException;
-            }
-        }
-
-        private void onBinderConnectedInternal(@NonNull final IBinder service) {
-            XPCOMEventTarget.assertOnLauncherThread();
-            // We only care about the first time this is called; subsequent bindings can be ignored.
-            if (mCalledConnected) {
-                return;
-            }
-
-            mCalledConnected = true;
-
-            onBinderConnected(service);
-        }
-
-        private void onBinderConnectionLostInternal() {
-            XPCOMEventTarget.assertOnLauncherThread();
-            // We only care about the first time this is called; subsequent connection errors can be ignored.
-            if (mCalledConnectionLost) {
-                return;
-            }
-
-            mCalledConnectionLost = true;
-
-            onBinderConnectionLost();
-        }
-
-        protected abstract void onBinderConnected(@NonNull final IBinder service);
-        protected abstract void onReleaseResources();
-
-        // Optionally overridable by subclasses, but this is a sane default
-        protected void onBinderConnectionLost() {
-            // The binding has lost its connection, but the binding itself might still be active.
-            // Gecko itself will request a process restart, so here we attempt to unbind so that
-            // Android does not try to automatically restart and reconnect the service.
-            unbindService();
+            mAllocator.unbindService(this);
         }
 
         /**
-         * This function relies on the fact that the PriorityLevel enum is ordered from highest
-         * priority to lowest priority. We examine the ordinal of the current priority setting,
-         * and then iterate across all possible priority levels, adjusting as necessary.
-         * Any priority levels whose ordinals are less than then current priority level ordinal must
-         * be unbound, while all priority levels whose ordinals are greater than or equal to the
-         * current priority level ordinal must be bound.
+         * This implementation of ServiceConnection.onServiceConnected simply bounces the
+         * connection notification over to the launcher thread (if it is not already on it).
          */
-        private boolean updateBindings() {
-            XPCOMEventTarget.assertOnLauncherThread();
-            int numBindSuccesses = 0;
-            int numBindFailures = 0;
-            int numUnbindSuccesses = 0;
-            int numUnbindFailures = 0;
-
-            final Context context = GeckoAppShell.getApplicationContext();
-
-            // This code assumes that the order of the PriorityLevel enum is highest to lowest
-            final int curPriorityOrdinal = mCurrentPriority.ordinal();
-            final PriorityLevel[] levels = PriorityLevel.values();
-
-            for (int curLevelIdx = 0; curLevelIdx < levels.length; ++curLevelIdx) {
-                final PriorityLevel curLevel = levels[curLevelIdx];
-                final Binding existingBinding = mBindings.get(curLevel);
-                final boolean hasExistingBinding = existingBinding != null;
-
-                if (curLevelIdx < curPriorityOrdinal) {
-                    // Remove if present
-                    if (hasExistingBinding) {
-                        try {
-                            context.unbindService(existingBinding);
-                            ++numUnbindSuccesses;
-                            mBindings.remove(curLevel);
-                        } catch (final IllegalArgumentException e) {
-                            // The binding was already dead. That's okay.
-                            ++numUnbindSuccesses;
-                            mBindings.remove(curLevel);
-                        } catch (final Throwable e) {
-                            final String svcName = mBindDelegate.getServiceName();
-                            final StringBuilder builder = new StringBuilder(svcName);
-                            builder.append(" updateBindings failed to unbind due to exception: ").append(e);
-                            Log.w(LOGTAG, builder.toString());
-                            ++numUnbindFailures;
-                        }
-                    }
-                } else {
-                    // Normally we only need to do a bind if we do not yet have an existing binding
-                    // for this priority level.
-                    boolean bindNeeded = !hasExistingBinding;
-
-                    // We only update the service group when the binding for this level already
-                    // exists and no binds have occurred yet during the current updateBindings call.
-                    if (hasExistingBinding && hasQApis() && (numBindSuccesses + numBindFailures) == 0) {
-                        // NB: Right now we're passing 0 as the |group| argument, indicating that
-                        // the process is not grouped with any other processes. Once we support
-                        // Fission we should re-evaluate this.
-                        context.updateServiceGroup(existingBinding, 0, mRelativeImportance);
-                        // Now we need to call bindService with the existing binding to make this
-                        // change take effect.
-                        bindNeeded = true;
-                    }
-
-                    if (bindNeeded) {
-                        final Binding useBinding = hasExistingBinding ? existingBinding : this.new Binding();
-                        if (mBindDelegate.bindService(useBinding, curLevel)) {
-                            ++numBindSuccesses;
-                            if (!hasExistingBinding) {
-                                mBindings.put(curLevel, useBinding);
-                            }
-                        } else {
-                            ++numBindFailures;
-                        }
-                    }
-                }
+        @Override
+        public final void onServiceConnected(final ComponentName name,
+                                             final IBinder service) {
+            final IXPCOMEventTarget launcherThread = XPCOMEventTarget.launcherThread();
+            if (launcherThread.isOnCurrentThread()) {
+                // If we were able to specify an Executor during binding then we are already on
+                // the launcher thread; there is no reason to bounce through its event queue.
+                onBinderConnected(service);
+                return;
             }
 
-            final String svcName = mBindDelegate.getServiceName();
-            final StringBuilder builder = new StringBuilder(svcName);
-            builder.append(" updateBindings: ").append(mCurrentPriority).append(" priority, ")
-                   .append(mRelativeImportance).append(" importance, ")
-                   .append(numBindSuccesses).append(" successful binds, ")
-                   .append(numBindFailures).append(" failed binds, ")
-                   .append(numUnbindSuccesses).append(" successful unbinds, ")
-                   .append(numUnbindFailures).append(" failed unbinds");
-            Log.d(LOGTAG, builder.toString());
-
-            return numBindFailures == 0 && numUnbindFailures == 0;
+            launcherThread.execute(() -> {
+                onBinderConnected(service);
+            });
         }
+
+        /**
+         * This implementation of ServiceConnection.onServiceDisconnected simply bounces the
+         * disconnection notification over to the launcher thread (if it is not already on it).
+         */
+        @Override
+        public final void onServiceDisconnected(final ComponentName name) {
+            final IXPCOMEventTarget launcherThread = XPCOMEventTarget.launcherThread();
+            if (launcherThread.isOnCurrentThread()) {
+                // If we were able to specify an Executor during binding then we are already on
+                // the launcher thread; there is no reason to bounce through its event queue.
+                onBinderConnectionLost();
+                return;
+            }
+
+            launcherThread.execute(() -> {
+                onBinderConnectionLost();
+            });
+        }
+
+        /**
+         * Called on the launcher thread to inform the client that the service's Binder has been
+         * connected. This method is named differently from its ServiceConnection counterpart for
+         * the sake of clarity.
+         */
+        protected abstract void onBinderConnected(@NonNull final IBinder service);
+
+        /**
+         * Called on the launcher thread to inform the client that the service's Binder has been
+         * lost. This method is named differently from its ServiceConnection counterpart for the
+         * sake of clarity. Note that this method is *not* called during a clean unbind.
+         */
+        protected abstract void onBinderConnectionLost();
     }
 
     private interface ContentAllocationPolicy {
         /**
-         * @return BindServiceDelegate that will be used for binding a new content service.
+         * Bind a new content service.
          */
-        BindServiceDelegate getBindServiceDelegate(InstanceInfo info);
+        boolean bindService(Context context, InstanceInfo info);
 
         /**
          * Allocate an unused service ID for use by the caller.
@@ -414,9 +192,13 @@ import java.util.Map.Entry;
             mAllocator = new BitSet(mMaxNumSvcs);
         }
 
+        /**
+         * This implementation of bindService uses the default implementation as provided by
+         * ServiceAllocator.
+         */
         @Override
-        public BindServiceDelegate getBindServiceDelegate(@NonNull final InstanceInfo info) {
-            return info.new DefaultBindDelegate();
+        public boolean bindService(@NonNull final Context context, @NonNull final InstanceInfo info) {
+            return ServiceAllocator.bindServiceDefault(context, ServiceAllocator.getSvcClassNameDefault(info), info);
         }
 
         @Override
@@ -458,9 +240,13 @@ import java.util.Map.Entry;
         private int mNextIsolatedSvcId = 0;
         private int mCurNumIsolatedSvcs = 0;
 
+        /**
+         * This implementation of bindService uses the isolated bindService implementation as
+         * provided by ServiceAllocator.
+         */
         @Override
-        public BindServiceDelegate getBindServiceDelegate(@NonNull final InstanceInfo info) {
-            return info.new IsolatedBindDelegate();
+        public boolean bindService(@NonNull final Context context, @NonNull final InstanceInfo info) {
+            return ServiceAllocator.bindServiceIsolated(context, ServiceUtils.buildIsolatedSvcName(info.getType()), info);
         }
 
         /**
@@ -495,6 +281,37 @@ import java.util.Map.Entry;
      * The policy used for allocating content processes.
      */
     private ContentAllocationPolicy mContentAllocPolicy = null;
+
+    /**
+     * Clients should call this method to bind their services. This method automagically does the
+     * right things depending on the state of info.
+     * @param info The InstanceInfo-derived object that contains essential information for setting
+     * up the child service.
+     */
+    public boolean bindService(@NonNull final InstanceInfo info) {
+        XPCOMEventTarget.assertOnLauncherThread();
+        final Context context = GeckoAppShell.getApplicationContext();
+        if (!info.isContent()) {
+            // Non-content services just use standard binding.
+            return bindServiceDefault(context, getSvcClassNameDefault(info), info);
+        }
+
+        // Content services defer to the alloc policy to determine how to bind.
+        return mContentAllocPolicy.bindService(context, info);
+    }
+
+    /**
+     * Unbinds the service described by |info| and releases its unique ID.
+     */
+    public void unbindService(@NonNull final InstanceInfo info) {
+        XPCOMEventTarget.assertOnLauncherThread();
+        final Context context = GeckoAppShell.getApplicationContext();
+        try {
+            context.unbindService(info);
+        } finally {
+            release(info);
+        }
+    }
 
     /**
      * Allocate a service ID.
@@ -542,7 +359,7 @@ import java.util.Map.Entry;
      * @return true if this service type may use isolated binding, otherwise false.
      */
     private static boolean canBindIsolated(@NonNull final GeckoProcessType type) {
-        if (!hasQApis()) {
+        if (sBindIsolatedService == null) {
             return false;
         }
 
@@ -569,18 +386,67 @@ import java.util.Map.Entry;
      * Wrapper for bindService() that utilizes the Context.bindService() overload that accepts an
      * Executor argument, when available. Otherwise it falls back to the legacy overload.
      */
-    private static boolean bindServiceDefault(@NonNull final Context context, @NonNull final Intent intent, @NonNull final ServiceConnection conn, final int flags) {
-        if (hasQApis()) {
-            // We always specify the launcher thread as our Executor.
-            return context.bindService(intent, flags, XPCOMEventTarget.launcherThread(), conn);
+    private static boolean bindServiceDefault(@NonNull final Context context, @NonNull final String svcClassName, @NonNull final InstanceInfo info) {
+        final Intent intent = new Intent();
+        intent.setClassName(context, svcClassName);
+
+        if (sBindServiceWithExecutor != null) {
+            return bindServiceWithExecutor(context, intent, info);
         }
 
-        return context.bindService(intent, conn, flags);
+        return context.bindService(intent, info, getAndroidFlags(info.getPriorityLevel()));
     }
 
-    private static boolean bindServiceIsolated(@NonNull final Context context, @NonNull final Intent intent, final int flags, @NonNull final String instanceId, @NonNull final ServiceConnection conn) {
-        // We always specify the launcher thread as our Executor.
-        return context.bindIsolatedService(intent, flags, instanceId, XPCOMEventTarget.launcherThread(), conn);
+    /**
+     * Wrapper that calls the reflected Context.bindIsolatedService() method.
+     */
+    private static boolean bindServiceIsolated(@NonNull final Context context, @NonNull final String svcClassName, @NonNull final InstanceInfo info) {
+        final Intent intent = new Intent();
+        intent.setClassName(context, svcClassName);
+
+        final String instanceId = info.getIdAsString();
+
+        try {
+            final Boolean result = (Boolean) sBindIsolatedService.invoke(context, intent, getAndroidFlags(info.getPriorityLevel()),
+                                                                         instanceId, XPCOMEventTarget.launcherThread(), info);
+            return result.booleanValue();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Wrapper that calls the reflected Context.bindService() overload that accepts an Executor argument.
+     * We always specify the launcher thread as our Executor.
+     */
+    private static boolean bindServiceWithExecutor(@NonNull final Context context, @NonNull final Intent intent, @NonNull final InstanceInfo info) {
+        try {
+            final Boolean result = (Boolean) sBindServiceWithExecutor.invoke(context, intent, getAndroidFlags(info.getPriorityLevel()),
+                                                                             XPCOMEventTarget.launcherThread(), info);
+            return result.booleanValue();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Method resolveBindIsolatedService() {
+        try {
+            return Context.class.getDeclaredMethod("bindIsolatedService", Intent.class, Integer.class, String.class, Executor.class, ServiceConnection.class);
+        } catch (NoSuchMethodException e) {
+            return null;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Method resolveBindServiceWithExecutor() {
+        try {
+            return Context.class.getDeclaredMethod("bindService", Intent.class, Integer.class, Executor.class, ServiceConnection.class);
+        } catch (NoSuchMethodException e) {
+            return null;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
