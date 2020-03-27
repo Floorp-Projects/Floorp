@@ -127,6 +127,9 @@
 
         <service android:name=".downloads.DownloadService" />
 
+        <service android:name=".media.MediaService"
+            android:exported="false" />
+
     </application>
 
 </manifest>

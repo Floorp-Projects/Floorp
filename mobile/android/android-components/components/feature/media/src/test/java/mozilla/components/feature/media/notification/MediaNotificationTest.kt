@@ -10,12 +10,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.concept.engine.media.Media
-import mozilla.components.feature.media.MediaFeature
-import mozilla.components.feature.media.MockMedia
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.feature.media.R
-import mozilla.components.feature.media.state.MediaState
+import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -43,15 +42,19 @@ class MediaNotificationTest {
 
     @Test
     fun `media notification for playing state`() {
-        val state = MediaState.Playing(
-            Session("https://www.mozilla.org", id = "test-tab").apply {
-                title = "Mozilla"
-            },
-            listOf(
-                MockMedia(Media.PlaybackState.PLAYING)
-            ))
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla")
+            ),
+            media = MediaState(
+                aggregate = MediaState.Aggregate(
+                    MediaState.State.PLAYING,
+                    "test-tab"
+                )
+            )
+        )
 
-        val notification = MediaNotification(context)
+        val notification = MediaNotification(context, AbstractMediaService::class.java)
             .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
@@ -60,23 +63,27 @@ class MediaNotificationTest {
         assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
 
         shadowOf(notification.contentIntent).savedIntent!!.also { intent ->
-            assertEquals(MediaFeature.ACTION_SWITCH_TAB, intent.action)
-            assertTrue(intent.extras!!.containsKey(MediaFeature.EXTRA_TAB_ID))
-            assertEquals("test-tab", intent.getStringExtra(MediaFeature.EXTRA_TAB_ID))
+            assertEquals(AbstractMediaService.ACTION_SWITCH_TAB, intent.action)
+            assertTrue(intent.extras!!.containsKey(AbstractMediaService.EXTRA_TAB_ID))
+            assertEquals("test-tab", intent.getStringExtra(AbstractMediaService.EXTRA_TAB_ID))
         }
     }
 
     @Test
     fun `media notification for paused state`() {
-        val state = MediaState.Paused(
-            Session("https://www.mozilla.org", id = "test-tab").apply {
-                title = "Mozilla"
-            },
-            listOf(
-                MockMedia(Media.PlaybackState.PAUSE)
-            ))
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla")
+            ),
+            media = MediaState(
+                aggregate = MediaState.Aggregate(
+                    MediaState.State.PAUSED,
+                    "test-tab"
+                )
+            )
+        )
 
-        val notification = MediaNotification(context)
+        val notification = MediaNotification(context, AbstractMediaService::class.java)
             .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
@@ -85,22 +92,30 @@ class MediaNotificationTest {
         assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
 
         shadowOf(notification.contentIntent).savedIntent!!.also { intent ->
-            assertEquals(MediaFeature.ACTION_SWITCH_TAB, intent.action)
-            assertTrue(intent.extras!!.containsKey(MediaFeature.EXTRA_TAB_ID))
-            assertEquals("test-tab", intent.getStringExtra(MediaFeature.EXTRA_TAB_ID))
+            assertEquals(AbstractMediaService.ACTION_SWITCH_TAB, intent.action)
+            assertTrue(intent.extras!!.containsKey(AbstractMediaService.EXTRA_TAB_ID))
+            assertEquals("test-tab", intent.getStringExtra(AbstractMediaService.EXTRA_TAB_ID))
         }
     }
 
+    @Test
     fun `media notification for none state`() {
         // This notification is only used to call into startForeground() to fulfil the API contract.
         // It gets immediately replaced or removed.
 
-        val state = MediaState.None
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", title = "Mozilla")
+            ),
+            media = MediaState(
+                aggregate = MediaState.Aggregate(
+                    MediaState.State.NONE,
+                    "test-tab"
+                )
+            )
+        )
 
-        MediaNotification(context)
-            .create(state, mock())
-
-        val notification = MediaNotification(context)
+        val notification = MediaNotification(context, AbstractMediaService::class.java)
             .create(state, mock())
 
         assertEquals("", notification.text)
@@ -109,13 +124,19 @@ class MediaNotificationTest {
 
     @Test
     fun `media notification for playing state with session without title`() {
-        val state = MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(
-                MockMedia(Media.PlaybackState.PLAYING)
-            ))
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab")
+            ),
+            media = MediaState(
+                aggregate = MediaState.Aggregate(
+                    MediaState.State.PLAYING,
+                    "test-tab"
+                )
+            )
+        )
 
-        val notification = MediaNotification(context)
+        val notification = MediaNotification(context, AbstractMediaService::class.java)
             .create(state, mock())
 
         assertEquals("https://www.mozilla.org", notification.text)
@@ -126,15 +147,19 @@ class MediaNotificationTest {
 
     @Test
     fun `media notification for playing state in private mode`() {
-        val state = MediaState.Playing(
-                Session("https://www.mozilla.org", private = true).apply {
-                    title = "Mozilla"
-                },
-                listOf(
-                    MockMedia(Media.PlaybackState.PLAYING)
-                ))
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", private = true)
+            ),
+            media = MediaState(
+                aggregate = MediaState.Aggregate(
+                    MediaState.State.PLAYING,
+                    "test-tab"
+                )
+            )
+        )
 
-        val notification = MediaNotification(context)
+        val notification = MediaNotification(context, AbstractMediaService::class.java)
             .create(state, mock())
 
         assertEquals("", notification.text)
@@ -145,15 +170,19 @@ class MediaNotificationTest {
 
     @Test
     fun `media notification for paused state in private mode`() {
-        val state = MediaState.Paused(
-                Session("https://www.mozilla.org", private = true).apply {
-                    title = "Mozilla"
-                },
-                listOf(
-                        MockMedia(Media.PlaybackState.PAUSE)
-                ))
+        val state = BrowserState(
+            tabs = listOf(
+                createTab("https://www.mozilla.org", id = "test-tab", private = true)
+            ),
+            media = MediaState(
+                aggregate = MediaState.Aggregate(
+                    MediaState.State.PAUSED,
+                    "test-tab"
+                )
+            )
+        )
 
-        val notification = MediaNotification(context)
+        val notification = MediaNotification(context, AbstractMediaService::class.java)
                 .create(state, mock())
 
         assertEquals("", notification.text)

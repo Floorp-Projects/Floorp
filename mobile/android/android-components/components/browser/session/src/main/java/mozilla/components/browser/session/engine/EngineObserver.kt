@@ -14,7 +14,9 @@ import mozilla.components.browser.session.engine.request.LaunchIntentMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestMetadata
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
+import mozilla.components.browser.session.ext.toElement
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
@@ -38,6 +40,7 @@ internal class EngineObserver(
     private val session: Session,
     private val store: BrowserStore? = null
 ) : EngineSession.Observer {
+    private val mediaMap: MutableMap<Media, MediaObserver> = mutableMapOf()
 
     override fun onNavigateBack() {
         session.searchTerms = ""
@@ -238,16 +241,29 @@ internal class EngineObserver(
     }
 
     override fun onMediaAdded(media: Media) {
-        session.media = session.media.toMutableList().also {
-            it.add(media)
-        }
+        val store = store ?: return
+
+        val mediaElement = media.toElement()
+
+        store.dispatch(MediaAction.AddMediaAction(session.id, mediaElement))
+
+        val observer = MediaObserver(media, mediaElement, store, session.id)
+        media.register(observer)
+
+        mediaMap[media] = observer
     }
 
     override fun onMediaRemoved(media: Media) {
-        session.media = session.media.toMutableList().also {
-            it.remove(media)
+        val store = store ?: return
+
+        val observer = mediaMap[media]
+        if (observer != null) {
+            media.unregister(observer)
+
+            store.dispatch(MediaAction.RemoveMediaAction(session.id, observer.element))
         }
-        media.unregisterObservers()
+
+        mediaMap.remove(media)
     }
 
     override fun onWebAppManifestLoaded(manifest: WebAppManifest) {

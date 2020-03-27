@@ -37,7 +37,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.support.base.observer.Consumable
@@ -102,8 +101,6 @@ class Session(
         fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
-        fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
-        fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
         fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
         fun onReaderModeChanged(session: Session, enabled: Boolean) = Unit
@@ -302,25 +299,6 @@ class Session(
      */
     var webAppManifest: WebAppManifest? by Delegates.observable<WebAppManifest?>(null) { _, _, new ->
         notifyObservers { onWebAppManifestChanged(this@Session, new) }
-    }
-
-    /**
-     * List of [Media] on the currently visited page.
-     */
-    var media: List<Media> by Delegates.observable(emptyList()) { _, old, new ->
-        if (old.size > new.size) {
-            val removed = old - new
-            require(removed.size == 1) { "Expected only one item to be removed, but was ${removed.size}" }
-            notifyObservers {
-                onMediaRemoved(this@Session, new, removed[0])
-            }
-        } else if (new.size > old.size) {
-            val added = new - old
-            require(added.size == 1) { "Expected only one item to be added, but was ${added.size}" }
-            notifyObservers {
-                onMediaAdded(this@Session, new, added[0])
-            }
-        }
     }
 
     /**

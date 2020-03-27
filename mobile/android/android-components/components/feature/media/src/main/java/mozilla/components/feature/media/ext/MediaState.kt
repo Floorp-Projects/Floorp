@@ -5,36 +5,82 @@
 package mozilla.components.feature.media.ext
 
 import android.support.v4.media.session.PlaybackStateCompat
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.media.Media
-import mozilla.components.feature.media.state.MediaState
 
 /**
- * Gets the list of [Media] associated with this [MediaState].
+ * The minimum duration (in seconds) for media so that we bother with showing a media notification.
  */
-internal fun MediaState.getMedia(): List<Media> {
-    return when (this) {
-        is MediaState.Playing -> media
-        is MediaState.Paused -> media
-        else -> emptyList()
-    }
+private const val MINIMUM_DURATION_SECONDS = 5
+
+/**
+ * Returns a list of [MediaState.Element.id] of playing media on the tab with the given [tabId].
+ */
+fun MediaState.getPlayingMediaIdsForTab(tabId: String?): List<String> {
+    return this.elements[tabId]
+        ?.filter { it.state == Media.State.PLAYING }
+        ?.map { it.id }
+        ?: emptyList()
 }
 
 /**
- * Get the [Session] that caused this [MediaState] (if any).
+ * Find a [SessionState] with playing [Media] and return this [Pair] or `null` if no such
+ * [SessionState] could be found.
  */
-fun MediaState.getSession(): Session? {
-    return when (this) {
-        is MediaState.Playing -> session
-        is MediaState.Paused -> session
-        else -> null
+fun MediaState.findPlayingSession(): Pair<String, List<MediaState.Element>>? {
+    elements.forEach { (session, media) ->
+        val playingMedia = media.filter { it.state == Media.State.PLAYING }
+        if (playingMedia.isNotEmpty()) {
+            return Pair(session, playingMedia)
+        }
     }
+    return null
 }
 
 /**
- * Returns true if this [MediaState] is associated with a Custom Tab [Session].
+ * Does this list contain [Media] that is sufficient long to justify showing media controls for it?
  */
-fun MediaState.isForCustomTabSession() = getSession()?.isCustomTabSession() ?: false
+internal fun List<MediaState.Element>.hasMediaWithSufficientLongDuration(): Boolean {
+    forEach { element ->
+        if (element.metadata.duration < 0) {
+            return true
+        }
+
+        if (element.metadata.duration > MINIMUM_DURATION_SECONDS) {
+            return true
+        }
+    }
+
+    return false
+}
+
+/**
+ * Get the list of paused [Media] for the tab with the provided [tabId].
+ */
+fun MediaState.getPausedMedia(tabId: String?): List<MediaState.Element> {
+    val media = elements[tabId] ?: emptyList()
+    return media.filter { it.state == Media.State.PAUSED }
+}
+
+/**
+ * Get the [SessionState] that caused this [MediaState] (if any).
+ */
+fun BrowserState.getActiveMediaTab(): SessionState? {
+    return media.aggregate.activeTabId?.let { id -> findTabOrCustomTab(id) }
+}
+
+/**
+ * Returns true if this [MediaState] is associated with a Custom Tab [SessionState].
+ */
+internal fun BrowserState.isMediaStateForCustomTab(): Boolean {
+    return media.aggregate.activeTabId?.let { id ->
+        findCustomTab(id) != null
+    } ?: false
+}
 
 /**
  * Turns the [MediaState] into a [PlaybackStateCompat] to be used with a `MediaSession`.
@@ -46,36 +92,48 @@ internal fun MediaState.toPlaybackState() =
                 PlaybackStateCompat.ACTION_PLAY or
                 PlaybackStateCompat.ACTION_PAUSE)
         .setState(
-            when (this) {
-                is MediaState.Playing -> PlaybackStateCompat.STATE_PLAYING
-                is MediaState.Paused -> PlaybackStateCompat.STATE_PAUSED
-                is MediaState.None -> PlaybackStateCompat.STATE_NONE
+            when (aggregate.state) {
+                MediaState.State.PLAYING -> PlaybackStateCompat.STATE_PLAYING
+                MediaState.State.PAUSED -> PlaybackStateCompat.STATE_PAUSED
+                MediaState.State.NONE -> PlaybackStateCompat.STATE_NONE
             },
             // Time state not exposed yet:
             // https://github.com/mozilla-mobile/android-components/issues/2458
             PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-            when (this) {
+            when (aggregate.state) {
                 // The actual playback speed is not exposed yet:
                 // https://github.com/mozilla-mobile/android-components/issues/2459
-                is MediaState.Playing -> 1.0f
+                MediaState.State.PLAYING -> 1.0f
                 else -> 0.0f
             })
         .build()
 
 /**
- * If this state is [MediaState.Playing] then pause all playing [Media].
+ * Returns the list of active [MediaState.Element]s.
  */
-fun MediaState.pauseIfPlaying() {
-    if (this is MediaState.Playing) {
-        media.pause()
+fun MediaState.getActiveElements(): List<MediaState.Element> {
+    val tabId = aggregate.activeTabId
+    return if (tabId != null) {
+        return elements[tabId]?.filter { it.id in aggregate.activeMedia } ?: emptyList()
+    } else {
+        emptyList()
     }
 }
 
 /**
- * If this state is [MediaState.Paused] then resume playing all paused [Media].
+ * If this state is [MediaState.State.PLAYING] then pause all playing [Media].
+ */
+fun MediaState.pauseIfPlaying() {
+    if (aggregate.state == MediaState.State.PLAYING) {
+        getActiveElements().pause()
+    }
+}
+
+/**
+ * If this state is [MediaState.State.PAUSED] then resume playing all paused [Media].
  */
 fun MediaState.playIfPaused() {
-    if (this is MediaState.Paused) {
-        media.play()
+    if (aggregate.state == MediaState.State.PAUSED) {
+        getActiveElements().play()
     }
 }

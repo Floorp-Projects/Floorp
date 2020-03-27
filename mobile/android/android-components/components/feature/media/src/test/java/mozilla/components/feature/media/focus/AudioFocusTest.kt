@@ -6,18 +6,18 @@ package mozilla.components.feature.media.focus
 
 import android.media.AudioManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.concept.engine.media.Media
-import mozilla.components.feature.media.MockMedia
-import mozilla.components.feature.media.state.MediaState
-import mozilla.components.feature.media.state.MediaStateMachine
+import mozilla.components.browser.state.action.MediaAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.MediaState
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.media.createMockMediaElement
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -35,15 +35,26 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val state = spy(MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(MockMedia(Media.PlaybackState.PLAYING))))
+        val media = createMockMediaElement()
 
-        val audioFocus = AudioFocus(audioManager)
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
+
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
         audioFocus.request(state)
 
         verify(audioManager).requestAudioFocus(any())
-        verifyNoMoreInteractions(state)
+        verifyNoMoreInteractions(media.controller)
     }
 
     @Test
@@ -51,13 +62,22 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_FAILED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val media = MockMedia(Media.PlaybackState.PLAYING)
+        val media = createMockMediaElement()
 
-        val state = spy(MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media)))
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
 
-        val audioFocus = AudioFocus(audioManager)
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
         audioFocus.request(state)
 
         verify(audioManager).requestAudioFocus(any())
@@ -69,13 +89,22 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_DELAYED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val media = MockMedia(Media.PlaybackState.PLAYING)
+        val media = createMockMediaElement()
 
-        val state = spy(MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media)))
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
 
-        val audioFocus = AudioFocus(audioManager)
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
         audioFocus.request(state)
 
         verify(audioManager).requestAudioFocus(any())
@@ -84,27 +113,40 @@ class AudioFocusTest {
 
     @Test
     fun `Will pause and resume on and after transient focus loss`() {
-        val media = MockMedia(Media.PlaybackState.PLAYING)
-
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val audioFocus = AudioFocus(audioManager)
+        val media = createMockMediaElement()
+
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
+
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
 
         verifyNoMoreInteractions(media.controller)
-
-        MediaStateMachine.state = MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media))
 
         audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
 
         verify(media.controller).pause()
         verifyNoMoreInteractions(media.controller)
 
-        MediaStateMachine.state = MediaState.Paused(
-            Session("https://www.mozilla.org"),
-            listOf(media))
+        store.dispatch(MediaAction.UpdateMediaAggregateAction(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PAUSED,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            )
+        )).joinBlocking()
 
         audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_GAIN)
 
@@ -117,18 +159,33 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_DELAYED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val media = MockMedia(Media.PlaybackState.PLAYING)
+        val media = createMockMediaElement()
 
-        val audioFocus = AudioFocus(audioManager)
-        audioFocus.request(MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media)))
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
+
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
+        audioFocus.request(state)
 
         verify(media.controller).pause()
 
-        MediaStateMachine.state = MediaState.Paused(
-                Session("https://www.mozilla.org"),
-                listOf(media))
+        store.dispatch(MediaAction.UpdateMediaAggregateAction(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PAUSED,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            )
+        )).joinBlocking()
 
         audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_GAIN)
 
@@ -140,30 +197,59 @@ class AudioFocusTest {
         doReturn(999)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val state = spy(MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(MockMedia(Media.PlaybackState.PLAYING))))
+        val media = createMockMediaElement()
 
-        val audioFocus = AudioFocus(audioManager)
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
+
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
         audioFocus.request(state)
     }
 
     @Test
     fun `An unknown focus change event will be ignored`() {
-        val media = MockMedia(Media.PlaybackState.PLAYING)
-
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val audioFocus = AudioFocus(audioManager)
+        val media = createMockMediaElement()
+
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
+
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
 
         verifyNoMoreInteractions(media.controller)
 
-        MediaStateMachine.state = MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media))
+        store.dispatch(MediaAction.UpdateMediaAggregateAction(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            )
+        )).joinBlocking()
 
         audioFocus.onAudioFocusChange(999)
+        verifyNoMoreInteractions(media.controller)
     }
 
     @Test
@@ -171,16 +257,24 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val media = MockMedia(Media.PlaybackState.PLAYING)
+        val media = createMockMediaElement()
 
-        val audioFocus = AudioFocus(audioManager)
-        audioFocus.request(MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media)))
+        val state = MediaState(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PLAYING,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            ),
+            elements = mapOf(
+                "test-tab" to listOf(media)
+            )
+        )
 
-        MediaStateMachine.state = MediaState.Playing(
-            Session("https://www.mozilla.org"),
-            listOf(media))
+        val store = BrowserStore(BrowserState(media = state))
+
+        val audioFocus = AudioFocus(audioManager, store)
+
+        audioFocus.request(state)
 
         verifyNoMoreInteractions(media.controller)
 
@@ -188,12 +282,15 @@ class AudioFocusTest {
 
         verify(media.controller).pause()
 
-        MediaStateMachine.state = MediaState.Paused(
-            Session("https://www.mozilla.org"),
-            listOf(media))
+        store.dispatch(MediaAction.UpdateMediaAggregateAction(
+            aggregate = MediaState.Aggregate(
+                MediaState.State.PAUSED,
+                "test-tab",
+                activeMedia = listOf(media.id)
+            )
+        )).joinBlocking()
 
         audioFocus.onAudioFocusChange(AudioManager.AUDIOFOCUS_GAIN)
-
         verifyNoMoreInteractions(media.controller)
     }
 }
