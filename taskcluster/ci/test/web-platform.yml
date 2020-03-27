@@ -119,6 +119,7 @@ web-platform-tests-wdspec:
     mozharness:
         extra-options:
             - --test-type=wdspec
+            - --setpref=toolkit.asyncshutdown.log=true
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['release', 'try']
@@ -142,11 +143,13 @@ web-platform-tests-wdspec-headless:
             by-test-platform:
                 windows.*:
                     - --test-type=wdspec
+                    - --setpref=toolkit.asyncshutdown.log=true
                     - --headless
                     - --headless-width=1600
                     - --headless-height=1200
                 default:
                     - --test-type=wdspec
+                    - --setpref=toolkit.asyncshutdown.log=true
                     - --headless
 
 web-platform-tests-crashtests:
