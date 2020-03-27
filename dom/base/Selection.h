@@ -740,8 +740,6 @@ class Selection final : public nsSupportsWeakReference,
                                                      bool* aDidAddRange,
                                                      int32_t* aOutIndex);
 
-  bool HasEqualRangeBoundariesAt(const nsRange& aRange,
-                                 int32_t aRangeIndex) const;
   StyledRange* FindRangeData(nsRange* aRange);
 
   /**
@@ -825,6 +823,9 @@ class Selection final : public nsSupportsWeakReference,
                                    const nsINode* aEndNode, int32_t aEndOffset,
                                    bool aAllowAdjacent, int32_t& aStartIndex,
                                    int32_t& aEndIndex) const;
+
+    bool HasEqualRangeBoundariesAt(const nsRange& aRange,
+                                   int32_t aRangeIndex) const;
 
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
