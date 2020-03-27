@@ -105,9 +105,11 @@ nsresult TRR::DohEncode(nsCString& aBody, bool aDisableECS) {
       // too long label!
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    aBody += static_cast<unsigned char>(labelLength);
-    nsDependentCSubstring label = Substring(mHost, offset, labelLength);
-    aBody.Append(label);
+    if (labelLength > 0) {
+      aBody += static_cast<unsigned char>(labelLength);
+      nsDependentCSubstring label = Substring(mHost, offset, labelLength);
+      aBody.Append(label);
+    }
     if (!dotFound) {
       aBody += '\0';  // terminate with a final zero
       break;
@@ -859,7 +861,10 @@ nsresult TRR::DohDecode(nsCString& aHost) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    if (qname.Equals(aHost)) {
+    // We check if the qname matches the host or the FQDN version of the host
+    if (qname.Equals(aHost) ||
+        (aHost.Length() == qname.Length() + 1 && aHost.Last() == '.' &&
+         StringBeginsWith(aHost, qname))) {
       // RDATA
       // - A (TYPE 1):  4 bytes
       // - AAAA (TYPE 28): 16 bytes
