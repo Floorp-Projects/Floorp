@@ -36,6 +36,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.RunWhenReadyQueue
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
@@ -50,6 +51,9 @@ class BackgroundServices(
     bookmarkStorage: Lazy<PlacesBookmarksStorage>,
     passwordsStorage: Lazy<SyncableLoginsStorage>
 ) {
+    // Allows executing tasks which depend on the account manager, but do not need to eagerly initialize it.
+    val accountManagerAvailableQueue = RunWhenReadyQueue()
+
     fun defaultDeviceName(context: Context): String =
         context.getString(
             R.string.default_device_name,
@@ -98,7 +102,7 @@ class BackgroundServices(
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter)
 
-    val accountManager = makeAccountManager(context, serverConfig, deviceConfig, syncConfig)
+    val accountManager by lazy { makeAccountManager(context, serverConfig, deviceConfig, syncConfig) }
 
     @VisibleForTesting(otherwise = PRIVATE)
     fun makeAccountManager(
@@ -148,6 +152,8 @@ class BackgroundServices(
             accountManager,
             accountManager.initAsync()
         )
+    }.also {
+        accountManagerAvailableQueue.ready()
     }
 
     /**
