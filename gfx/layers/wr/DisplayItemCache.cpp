@@ -5,20 +5,79 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DisplayItemCache.h"
+#include "nsDisplayList.h"
 
 namespace mozilla {
 namespace layers {
 
-static const size_t kInitialCacheSize = 1024;
-static const size_t kMaximumCacheSize = 10240;
-static const size_t kCacheThreshold = 1;
-
 DisplayItemCache::DisplayItemCache()
-    : mMaximumSize(0), mConsecutivePartialDisplayLists(0) {
-  if (XRE_IsContentProcess() &&
-      StaticPrefs::gfx_webrender_enable_item_cache_AtStartup()) {
-    SetCapacity(kInitialCacheSize, kMaximumCacheSize);
+    : mDisplayList(nullptr),
+      mMaximumSize(0),
+      mPipelineId{},
+      mCaching(false),
+      mInvalid(false) {}
+
+void DisplayItemCache::SetDisplayList(nsDisplayListBuilder* aBuilder,
+                                      nsDisplayList* aList) {
+  if (!IsEnabled()) {
+    return;
   }
+
+  MOZ_ASSERT(aBuilder);
+  MOZ_ASSERT(aList);
+
+  const bool listChanged = mDisplayList != aList;
+  const bool partialBuild = !aBuilder->PartialBuildFailed();
+
+  if (listChanged && partialBuild) {
+    // If the display list changed during a partial update, it means that
+    // |SetDisplayList()| has missed one rebuilt display list.
+    mDisplayList = nullptr;
+    return;
+  }
+
+  if (listChanged || !partialBuild) {
+    // The display list has been changed or rebuilt.
+    mDisplayList = aList;
+    mInvalid = true;
+  }
+
+  UpdateState();
+}
+
+void DisplayItemCache::SetPipelineId(const wr::PipelineId& aPipelineId) {
+  mInvalid = mInvalid || !(mPipelineId == aPipelineId);
+  mPipelineId = aPipelineId;
+}
+
+void DisplayItemCache::UpdateState() {
+  // |mCaching == true| if:
+  // 1) |SetDisplayList()| is called with a fully rebuilt display list
+  // followed by
+  // 2a) |SetDisplayList()| is called with a partially updated display list
+  // or
+  // 2b) |SkipWaitingForPartialDisplayList()| is called
+  mCaching = !mInvalid;
+
+#if 0
+  Stats().Print();
+  Stats().Reset();
+#endif
+
+  if (IsEmpty()) {
+    // The cache is empty so nothing needs to be updated.
+    mInvalid = false;
+    return;
+  }
+
+  // Clear the cache if the current state is invalid.
+  if (mInvalid) {
+    ClearCache();
+  } else {
+    FreeUnusedSlots();
+  }
+
+  mInvalid = false;
 }
 
 void DisplayItemCache::ClearCache() {
@@ -77,20 +136,12 @@ void DisplayItemCache::SetCapacity(const size_t aInitialSize,
 }
 
 Maybe<uint16_t> DisplayItemCache::AssignSlot(nsPaintedDisplayItem* aItem) {
-  if (kCacheThreshold > mConsecutivePartialDisplayLists) {
-    // Wait for |kCacheThreshold| partial display list builds, before caching
-    // display items. This is meant to avoid caching overhead for interactions
-    // or pages that do not work well with retained display lists.
-    // TODO: This is a speculative optimization to minimize regressions.
-    return Nothing();
-  }
-
-  if (!aItem->CanBeReused() || !aItem->CanBeCached()) {
-    // Do not try to cache items that cannot be reused.
+  if (!mCaching || !aItem->CanBeReused() || !aItem->CanBeCached()) {
     return Nothing();
   }
 
   auto& slot = aItem->CacheIndex();
+
   if (!slot) {
     slot = GetNextFreeSlot();
     if (!slot) {
@@ -140,28 +191,6 @@ Maybe<uint16_t> DisplayItemCache::CanReuseItem(
   }
 
   return slotIndex;
-}
-
-void DisplayItemCache::UpdateState(const bool aPartialDisplayListBuildFailed,
-                                   const wr::PipelineId& aPipelineId) {
-  const bool pipelineIdChanged = UpdatePipelineId(aPipelineId);
-  const bool invalidate = pipelineIdChanged || aPartialDisplayListBuildFailed;
-
-  mConsecutivePartialDisplayLists =
-      invalidate ? 0 : mConsecutivePartialDisplayLists + 1;
-
-  if (IsEmpty()) {
-    // The cache is empty so nothing needs to be updated.
-    return;
-  }
-
-  // Clear the cache if the partial display list build failed, or if the
-  // pipeline id changed.
-  if (invalidate) {
-    ClearCache();
-  } else {
-    FreeUnusedSlots();
-  }
 }
 
 }  // namespace layers
