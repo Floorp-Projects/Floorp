@@ -1135,6 +1135,10 @@ MarkupView.prototype = {
       window: this.win,
     });
 
+    // Keep a pointer on shortcuts to destroy them when destroying the markup
+    // view.
+    this._shortcuts = shortcuts;
+
     this._onShortcut = this._onShortcut.bind(this);
 
     // Process localizable keys
@@ -2299,6 +2303,11 @@ MarkupView.prototype = {
     if (this._undo) {
       this._undo.destroy();
       this._undo = null;
+    }
+
+    if (this._shortcuts) {
+      this._shortcuts.destroy();
+      this._shortcuts = null;
     }
 
     this.popup.destroy();
