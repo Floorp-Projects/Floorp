@@ -125,28 +125,40 @@ void AudioWorkletGlobalScope::RegisterProcessor(
     aRv.NoteJSContextException(aCx);
     return;
   }
+
+  AudioParamDescriptorMap map;
   /*
-   * 7. Let parameterDescriptorSequence be the result of the conversion
-   *    from parameterDescriptorsValue to an IDL value of type
-   *    sequence<AudioParamDescriptor>.
+   * 7. If parameterDescriptorsValue is not undefined
    */
-  JS::ForOfIterator iter(aCx);
-  if (!iter.init(descriptors, JS::ForOfIterator::AllowNonIterable)) {
-    aRv.NoteJSContextException(aCx);
-    return;
-  }
-  if (!iter.valueIsIterable()) {
-    aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
-        "AudioWorkletProcessor.parameterDescriptors");
-    return;
+  if (!descriptors.isUndefined()) {
+    /*
+     * 7.1. Let parameterDescriptorSequence be the result of the conversion
+     *    from parameterDescriptorsValue to an IDL value of type
+     *    sequence<AudioParamDescriptor>.
+     */
+    JS::Rooted<JS::Value> objectValue(aCx, descriptors);
+    JS::ForOfIterator iter(aCx);
+    if (!iter.init(objectValue, JS::ForOfIterator::AllowNonIterable)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    if (!iter.valueIsIterable()) {
+      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
+          "AudioWorkletProcessor.parameterDescriptors");
+      return;
+    }
+    /*
+     * 7.2 and 7.3 (and substeps)
+     */
+    map = DescriptorsFromJS(aCx, &iter, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
   /**
-   * 9. Let definition be a new AudioWorkletProcessor definition with:
-   *    - node name being name
-   *    - processor class constructor being processorCtor
-   * 10. Add the key-value pair (name - definition) to the node name to
-   *     processor definition map of the associated AudioWorkletGlobalScope.
+   * 8. Append the key-value pair name → processorCtor to node name to processor
+   * constructor map of the associated AudioWorkletGlobalScope.
    */
   if (!mNameToProcessorMap.Put(aName, RefPtr{&aProcessorCtor}, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -154,15 +166,10 @@ void AudioWorkletGlobalScope::RegisterProcessor(
   }
 
   /**
-   * 11. Queue a task to the control thread to add the key-value pair
+   * 9. Queue a task to the control thread to add the key-value pair
    *     (name - descriptors) to the node name to parameter descriptor
    *     map of the associated BaseAudioContext.
    */
-  AudioParamDescriptorMap map = DescriptorsFromJS(aCx, &iter, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "AudioWorkletGlobalScope: parameter descriptors",
       [impl = mImpl, name = nsString(aName), map = std::move(map)]() mutable {
