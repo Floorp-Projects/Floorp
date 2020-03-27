@@ -134,7 +134,7 @@ class TokenizerBase {
    * Return false iff the last Check*() call has returned false or when we've
    * read past the end of the input string.
    */
-  MOZ_MUST_USE bool HasFailed() const;
+  [[nodiscard]] bool HasFailed() const;
 
  protected:
   explicit TokenizerBase(const TChar* aWhitespaces = nullptr,
@@ -249,8 +249,7 @@ class TTokenizer : public TokenizerBase<TChar> {
    * parsed token.  Each call to Next() reads another token from the input and
    * shifts the cursor. Returns false if we have passed the end of the input.
    */
-  MOZ_MUST_USE
-  bool Next(typename base::Token& aToken);
+  [[nodiscard]] bool Next(typename base::Token& aToken);
 
   /**
    * Parse the token on the input read cursor position, check its type is equal
@@ -258,16 +257,14 @@ class TTokenizer : public TokenizerBase<TChar> {
    * true.  Otherwise, leave the input read cursor position intact and return
    * false.
    */
-  MOZ_MUST_USE
-  bool Check(const typename base::TokenType aTokenType,
-             typename base::Token& aResult);
+  [[nodiscard]] bool Check(const typename base::TokenType aTokenType,
+                           typename base::Token& aResult);
   /**
    * Same as above method, just compares both token type and token value passed
    * in aToken. When both the type and the value equals, shift the cursor and
    * return true.  Otherwise return false.
    */
-  MOZ_MUST_USE
-  bool Check(const typename base::Token& aToken);
+  [[nodiscard]] bool Check(const typename base::Token& aToken);
 
   /**
    * SkipWhites method (below) may also skip new line characters automatically.
@@ -301,14 +298,14 @@ class TTokenizer : public TokenizerBase<TChar> {
   /**
    * Check whitespace character is present.
    */
-  MOZ_MUST_USE
-  bool CheckWhite() { return Check(base::Token::Whitespace()); }
+  [[nodiscard]] bool CheckWhite() { return Check(base::Token::Whitespace()); }
   /**
    * Check there is a single character on the read cursor position.  If so,
    * shift the read cursor position and return true.  Otherwise false.
    */
-  MOZ_MUST_USE
-  bool CheckChar(const TChar aChar) { return Check(base::Token::Char(aChar)); }
+  [[nodiscard]] bool CheckChar(const TChar aChar) {
+    return Check(base::Token::Char(aChar));
+  }
   /**
    * This is a customizable version of CheckChar.  aClassifier is a function
    * called with value of the character on the current input read position.  If
@@ -316,44 +313,40 @@ class TTokenizer : public TokenizerBase<TChar> {
    * Otherwise false. The user classifiction function is not called when we are
    * at or past the end and false is immediately returned.
    */
-  MOZ_MUST_USE
-  bool CheckChar(bool (*aClassifier)(const TChar aChar));
+  [[nodiscard]] bool CheckChar(bool (*aClassifier)(const TChar aChar));
   /**
    * Check for a whole expected word.
    */
-  MOZ_MUST_USE
-  bool CheckWord(const typename base::TAString& aWord) {
+  [[nodiscard]] bool CheckWord(const typename base::TAString& aWord) {
     return Check(base::Token::Word(aWord));
   }
   /**
    * Shortcut for literal const word check with compile time length calculation.
    */
   template <uint32_t N>
-  MOZ_MUST_USE bool CheckWord(const TChar (&aWord)[N]) {
+  [[nodiscard]] bool CheckWord(const TChar (&aWord)[N]) {
     return Check(
         base::Token::Word(typename base::TDependentString(aWord, N - 1)));
   }
   /**
    * Checks \r, \n or \r\n.
    */
-  MOZ_MUST_USE
-  bool CheckEOL() { return Check(base::Token::NewLine()); }
+  [[nodiscard]] bool CheckEOL() { return Check(base::Token::NewLine()); }
   /**
    * Checks we are at the end of the input string reading.  If so, shift past
    * the end and returns true.  Otherwise does nothing and returns false.
    */
-  MOZ_MUST_USE
-  bool CheckEOF() { return Check(base::Token::EndOfFile()); }
+  [[nodiscard]] bool CheckEOF() { return Check(base::Token::EndOfFile()); }
 
   /**
    * These are shortcuts to obtain the value immediately when the token type
    * matches.
    */
-  MOZ_MUST_USE bool ReadChar(TChar* aValue);
-  MOZ_MUST_USE bool ReadChar(bool (*aClassifier)(const TChar aChar),
-                             TChar* aValue);
-  MOZ_MUST_USE bool ReadWord(typename base::TAString& aValue);
-  MOZ_MUST_USE bool ReadWord(typename base::TDependentSubstring& aValue);
+  [[nodiscard]] bool ReadChar(TChar* aValue);
+  [[nodiscard]] bool ReadChar(bool (*aClassifier)(const TChar aChar),
+                              TChar* aValue);
+  [[nodiscard]] bool ReadWord(typename base::TAString& aValue);
+  [[nodiscard]] bool ReadWord(typename base::TDependentSubstring& aValue);
 
   /**
    * This is an integer read helper.  It returns false and doesn't move the read
@@ -364,7 +357,7 @@ class TTokenizer : public TokenizerBase<TChar> {
    * and the cursor is moved forward.
    */
   template <typename T>
-  MOZ_MUST_USE bool ReadInteger(T* aValue) {
+  [[nodiscard]] bool ReadInteger(T* aValue) {
     MOZ_RELEASE_ASSERT(aValue);
 
     typename base::TAString::const_char_iterator rollback = mRollback;
@@ -393,7 +386,7 @@ class TTokenizer : public TokenizerBase<TChar> {
   template <typename T, typename V = typename EnableIf<
                             IsSigned<typename RemovePointer<T>::Type>::value,
                             typename RemovePointer<T>::Type>::Type>
-  MOZ_MUST_USE bool ReadSignedInteger(T* aValue) {
+  [[nodiscard]] bool ReadSignedInteger(T* aValue) {
     MOZ_RELEASE_ASSERT(aValue);
 
     typename base::TAString::const_char_iterator rollback = mRollback;
@@ -483,12 +476,12 @@ class TTokenizer : public TokenizerBase<TChar> {
    * Calling Rollback() after ReadUntil() will return the read cursor to the
    * position it had before ReadUntil was called.
    */
-  MOZ_MUST_USE bool ReadUntil(typename base::Token const& aToken,
-                              typename base::TDependentSubstring& aResult,
-                              ClaimInclusion aInclude = EXCLUDE_LAST);
-  MOZ_MUST_USE bool ReadUntil(typename base::Token const& aToken,
-                              typename base::TAString& aResult,
-                              ClaimInclusion aInclude = EXCLUDE_LAST);
+  [[nodiscard]] bool ReadUntil(typename base::Token const& aToken,
+                               typename base::TDependentSubstring& aResult,
+                               ClaimInclusion aInclude = EXCLUDE_LAST);
+  [[nodiscard]] bool ReadUntil(typename base::Token const& aToken,
+                               typename base::TAString& aResult,
+                               ClaimInclusion aInclude = EXCLUDE_LAST);
 
  protected:
   // All these point to the original buffer passed to the TTokenizer's

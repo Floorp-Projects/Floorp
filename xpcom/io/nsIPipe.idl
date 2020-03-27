@@ -127,7 +127,7 @@ class nsIOutputStream;
  *        this mode can be useful in some cases, but should always be used with
  *        caution.  the default value for this parameter is a finite value.
  */
-extern MOZ_MUST_USE nsresult
+[[nodiscard]] extern nsresult
 NS_NewPipe2(nsIAsyncInputStream **pipeIn,
             nsIAsyncOutputStream **pipeOut,
             bool nonBlockingInput = false,
@@ -160,7 +160,7 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
  * @param nonBlockingOutput
  *        true specifies non-blocking output stream behavior
  */
-extern MOZ_MUST_USE nsresult
+[[nodiscard]] extern nsresult
 NS_NewPipe(nsIInputStream **pipeIn,
            nsIOutputStream **pipeOut,
            uint32_t segmentSize = 0,

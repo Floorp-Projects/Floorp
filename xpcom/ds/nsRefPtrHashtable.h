@@ -59,8 +59,8 @@ class nsRefPtrHashtable
 
   template <typename U,
             typename = std::enable_if_t<std::is_base_of_v<PtrType, U>>>
-  MOZ_MUST_USE bool Put(KeyType aKey, RefPtr<U>&& aData,
-                        const mozilla::fallible_t&);
+  [[nodiscard]] bool Put(KeyType aKey, RefPtr<U>&& aData,
+                         const mozilla::fallible_t&);
 
   /**
    * Remove the entry associated with aKey (if any), optionally _moving_ its
