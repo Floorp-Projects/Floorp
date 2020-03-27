@@ -52,6 +52,9 @@ class xpcAccessible : public nsIAccessible {
   NS_IMETHOD GetKeyboardShortcut(nsAString& aKeyBinding) final;
 
   NS_IMETHOD GetAttributes(nsIPersistentProperties** aAttributes) final;
+
+  NS_IMETHOD GetNativeInterface(nsISupports** aNativeInterface) final;
+
   NS_IMETHOD GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
                        int32_t* aHeight) final;
   NS_IMETHOD GetBoundsInCSSPixels(int32_t* aX, int32_t* aY, int32_t* aWidth,
