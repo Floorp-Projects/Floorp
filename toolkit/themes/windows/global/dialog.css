@@ -6,6 +6,8 @@
   == Styles used by the XUL dialog element.
   ======================================================================= */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* ::::: dialog ::::: */
 
 :host {
