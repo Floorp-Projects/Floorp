@@ -171,6 +171,7 @@ class FuzzyParser(BaseTryParser):
         'path',
         'pernosco',
         'rebuild',
+        'routes',
         'worker-overrides',
     ]
 
@@ -398,6 +399,10 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         args.append("paths={}".format(':'.join(test_paths)))
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
-    return push_to_try('fuzzy', message.format(msg=msg),
-                       try_task_config=generate_try_task_config('fuzzy', selected, try_config),
-                       push=push, closed_tree=closed_tree)
+    return push_to_try('fuzzy',
+                       message.format(msg=msg),
+                       try_task_config=generate_try_task_config('fuzzy',
+                                                                selected,
+                                                                try_config),
+                       push=push,
+                       closed_tree=closed_tree)
