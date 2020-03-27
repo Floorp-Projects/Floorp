@@ -75,21 +75,24 @@ MOZ_BEGIN_EXTERN_C
  * passing that pointer to |free()|.
  */
 
-MFBT_API void* moz_xmalloc(size_t size) MOZ_ALLOCATOR;
+MFBT_API void* moz_xmalloc(size_t size) MOZ_INFALLIBLE_ALLOCATOR;
 
-MFBT_API void* moz_xcalloc(size_t nmemb, size_t size) MOZ_ALLOCATOR;
+MFBT_API void* moz_xcalloc(size_t nmemb, size_t size) MOZ_INFALLIBLE_ALLOCATOR;
 
-MFBT_API void* moz_xrealloc(void* ptr, size_t size) MOZ_ALLOCATOR;
+MFBT_API void* moz_xrealloc(void* ptr, size_t size) MOZ_INFALLIBLE_ALLOCATOR;
 
-MFBT_API char* moz_xstrdup(const char* str) MOZ_ALLOCATOR;
+MFBT_API char* moz_xstrdup(const char* str) MOZ_INFALLIBLE_ALLOCATOR;
 
 #if defined(HAVE_STRNDUP)
-MFBT_API char* moz_xstrndup(const char* str, size_t strsize) MOZ_ALLOCATOR;
+MFBT_API char* moz_xstrndup(const char* str,
+                            size_t strsize) MOZ_INFALLIBLE_ALLOCATOR;
 #endif /* if defined(HAVE_STRNDUP) */
 
-MFBT_API void* moz_xmemdup(const void* ptr, size_t size) MOZ_ALLOCATOR;
+MFBT_API void* moz_xmemdup(const void* ptr,
+                           size_t size) MOZ_INFALLIBLE_ALLOCATOR;
 
-MFBT_API void* moz_xmemalign(size_t boundary, size_t size) MOZ_ALLOCATOR;
+MFBT_API void* moz_xmemalign(size_t boundary,
+                             size_t size) MOZ_INFALLIBLE_ALLOCATOR;
 
 MFBT_API size_t moz_malloc_usable_size(void* ptr);
 
