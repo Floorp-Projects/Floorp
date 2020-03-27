@@ -17,12 +17,12 @@ class APZUpdater;
 
 class APZCTreeManagerParent : public PAPZCTreeManagerParent {
  public:
-  APZCTreeManagerParent(WRRootId aWrRootId,
+  APZCTreeManagerParent(LayersId aLayersId,
                         RefPtr<APZCTreeManager> aAPZCTreeManager,
                         RefPtr<APZUpdater> mAPZUpdater);
   virtual ~APZCTreeManagerParent();
 
-  LayersId GetLayersId() const { return mWrRootId.mLayersId; }
+  LayersId GetLayersId() const { return mLayersId; }
 
   /**
    * Called when the layer tree that this protocol is connected to
@@ -67,7 +67,7 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
  private:
   bool IsGuidValid(const SLGuidAndRenderRoot& aGuid);
 
-  WRRootId mWrRootId;
+  LayersId mLayersId;
   RefPtr<APZCTreeManager> mTreeManager;
   RefPtr<APZUpdater> mUpdater;
 };
