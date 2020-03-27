@@ -162,6 +162,12 @@ open class FenixApplication : LocaleAwareApplication() {
                     components.core.passwordsStorage.warmUp()
                 }
             }
+            // Account manager initialization needs to happen on the main thread.
+            GlobalScope.launch(Dispatchers.Main) {
+                logElapsedTime(logger, "Kicking-off account manager") {
+                    components.backgroundServices.accountManager
+                }
+            }
         }
     }
 
