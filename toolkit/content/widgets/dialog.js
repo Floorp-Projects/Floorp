@@ -103,14 +103,14 @@
         <button dlgtype="help" hidden="true"/>
         <button dlgtype="extra2" hidden="true"/>
         <button dlgtype="extra1" hidden="true"/>
-        <spacer part="button-spacer" flex="1"/>
+        <spacer class="button-spacer" part="button-spacer" flex="1"/>
         <button dlgtype="cancel"/>
         <button dlgtype="accept"/>
       </hbox>`
         : `
       <hbox class="dialog-button-box" pack="end">
         <button dlgtype="extra2" hidden="true"/>
-        <spacer part="button-spacer" flex="1" hidden="true"/>
+        <spacer class="button-spacer" part="button-spacer" flex="1" hidden="true"/>
         <button dlgtype="accept"/>
         <button dlgtype="extra1" hidden="true"/>
         <button dlgtype="cancel"/>
@@ -457,7 +457,7 @@
 
         // show the spacer on Windows only when the extra2 button is present
         if (AppConstants.platform == "win") {
-          let spacer = this.shadowRoot.querySelector(".spacer");
+          let spacer = this.shadowRoot.querySelector(".button-spacer");
           spacer.removeAttribute("hidden");
           spacer.setAttribute("flex", shown.extra2 ? "1" : "0");
         }
