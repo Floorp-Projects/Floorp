@@ -104,6 +104,7 @@ pub struct InitBitsRequest {
     monitor_thread: Cell<Option<RefPtr<nsIThread>>>,
     monitor_timeout_ms: u32,
     observer: RefPtr<nsIRequestObserver>,
+    context: Option<RefPtr<nsISupports>>,
     // started indicates whether or not OnStartRequest has been fired.
     started: Cell<bool>,
     // finished indicates whether or not we have called
@@ -155,6 +156,7 @@ impl BitsRequest {
             monitor_thread: Cell::new(Some(monitor_thread.clone())),
             monitor_timeout_ms,
             observer,
+            context,
             started: Cell::new(false),
             finished: Cell::new(false),
             cancel_action: Cell::new(CancelAction::NotInProgress),
@@ -240,9 +242,14 @@ impl BitsRequest {
 
     pub fn on_progress(&self, transferred_bytes: i64, total_bytes: i64) {
         if let Some(progress_event_sink) = self.observer.query_interface::<nsIProgressEventSink>() {
+            let context: *const nsISupports = match self.context.as_ref() {
+                Some(context) => &**context,
+                None => ptr::null(),
+            };
             unsafe {
                 progress_event_sink.OnProgress(
                     self.coerce(),
+                    context,
                     transferred_bytes,
                     total_bytes,
                 );

@@ -115,6 +115,7 @@ class nsIncrementalDownload final : public nsIIncrementalDownload,
   nsresult ClearRequestHeader(nsIHttpChannel* channel);
 
   nsCOMPtr<nsIRequestObserver> mObserver;
+  nsCOMPtr<nsISupports> mObserverContext;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mFinalURI;
@@ -173,7 +174,8 @@ void nsIncrementalDownload::UpdateProgress() {
   mLastProgressUpdate = PR_Now();
 
   if (mProgressSink)
-    mProgressSink->OnProgress(this, mCurrentSize + mChunkLen, mTotalSize);
+    mProgressSink->OnProgress(this, mObserverContext, mCurrentSize + mChunkLen,
+                              mTotalSize);
 }
 
 nsresult nsIncrementalDownload::CallOnStartRequest() {
@@ -194,6 +196,7 @@ void nsIncrementalDownload::CallOnStopRequest() {
 
   mObserver->OnStopRequest(this, mStatus);
   mObserver = nullptr;
+  mObserverContext = nullptr;
 }
 
 nsresult nsIncrementalDownload::StartTimer(int32_t interval) {
@@ -465,6 +468,7 @@ nsIncrementalDownload::Start(nsIRequestObserver* observer,
   if (NS_FAILED(rv)) return rv;
 
   mObserver = observer;
+  mObserverContext = context;
   mProgressSink = do_QueryInterface(observer);  // ok if null
 
   mIsPending = true;
