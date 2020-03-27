@@ -904,7 +904,9 @@ nsresult Selection::AddRangesForUserSelectableNodes(
       GetDirection() == eDirPrevious ? 0 : rangesToAdd.Length() - 1;
   for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
     int32_t index;
-    nsresult rv = MaybeAddRangeAndTruncateOverlaps(rangesToAdd[i], &index);
+    const RefPtr<Selection> selection{this};
+    nsresult rv = mStyledRanges.MaybeAddRangeAndTruncateOverlaps(
+        rangesToAdd[i], &index, *selection);
     NS_ENSURE_SUCCESS(rv, rv);
     if (i == newAnchorFocusIndex) {
       *aOutIndex = index;
@@ -934,11 +936,13 @@ nsresult Selection::AddRangesForSelectableNodes(
                                            aDispatchSelectstartEvent);
   }
 
-  return MaybeAddRangeAndTruncateOverlaps(aRange, aOutIndex);
+  const RefPtr<Selection> selection{this};
+  return mStyledRanges.MaybeAddRangeAndTruncateOverlaps(aRange, aOutIndex,
+                                                        *selection);
 }
 
-nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
-                                                     int32_t* aOutIndex) {
+nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
+    nsRange* aRange, int32_t* aOutIndex, Selection& aSelection) {
   MOZ_ASSERT(aRange);
   MOZ_ASSERT(aRange->IsPositioned());
   MOZ_ASSERT(aOutIndex);
@@ -946,22 +950,21 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   *aOutIndex = -1;
 
   // a common case is that we have no ranges yet
-  if (mStyledRanges.mRanges.Length() == 0) {
-    if (!mStyledRanges.mRanges.AppendElement(StyledRange(aRange))) {
+  if (mRanges.Length() == 0) {
+    if (!mRanges.AppendElement(StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    const RefPtr<Selection> selection{this};
-    aRange->RegisterSelection(*selection);
+    aRange->RegisterSelection(aSelection);
 
     *aOutIndex = 0;
     return NS_OK;
   }
 
   int32_t startIndex, endIndex;
-  nsresult rv = mStyledRanges.GetIndicesForInterval(
-      aRange->GetStartContainer(), aRange->StartOffset(),
-      aRange->GetEndContainer(), aRange->EndOffset(), false, startIndex,
-      endIndex);
+  nsresult rv =
+      GetIndicesForInterval(aRange->GetStartContainer(), aRange->StartOffset(),
+                            aRange->GetEndContainer(), aRange->EndOffset(),
+                            false, startIndex, endIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (endIndex == -1) {
@@ -972,14 +975,13 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   } else if (startIndex == -1) {
     // All ranges end before the given range. We can insert our range at
     // the end of the array, knowing there are no overlaps (handled below)
-    startIndex = mStyledRanges.mRanges.Length();
+    startIndex = mRanges.Length();
     endIndex = startIndex;
   }
 
-  // If the range is already contained in mStyledRanges.mRanges, silently
+  // If the range is already contained in mRanges, silently
   // succeed
-  const bool sameRange =
-      mStyledRanges.HasEqualRangeBoundariesAt(*aRange, startIndex);
+  const bool sameRange = HasEqualRangeBoundariesAt(*aRange, startIndex);
   if (sameRange) {
     *aOutIndex = startIndex;
     return NS_OK;
@@ -987,12 +989,10 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   if (startIndex == endIndex) {
     // The new range doesn't overlap any existing ranges
-    if (!mStyledRanges.mRanges.InsertElementAt(startIndex,
-                                               StyledRange(aRange))) {
+    if (!mRanges.InsertElementAt(startIndex, StyledRange(aRange))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    const RefPtr<Selection> selection{this};
-    aRange->RegisterSelection(*selection);
+    aRange->RegisterSelection(aSelection);
     *aOutIndex = startIndex;
     return NS_OK;
   }
@@ -1004,19 +1004,19 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   // between these indices are fully overlapped by the new range, and so can be
   // removed
   nsTArray<StyledRange> overlaps;
-  if (!overlaps.InsertElementAt(0, mStyledRanges.mRanges[startIndex]))
+  if (!overlaps.InsertElementAt(0, mRanges[startIndex]))
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (endIndex - 1 != startIndex) {
-    if (!overlaps.InsertElementAt(1, mStyledRanges.mRanges[endIndex - 1]))
+    if (!overlaps.InsertElementAt(1, mRanges[endIndex - 1]))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Remove all the overlapping ranges
   for (int32_t i = startIndex; i < endIndex; ++i) {
-    mStyledRanges.mRanges[i].mRange->UnregisterSelection();
+    mRanges[i].mRange->UnregisterSelection();
   }
-  mStyledRanges.mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
+  mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
   nsTArray<StyledRange> temp;
   for (int32_t i = overlaps.Length() - 1; i >= 0; i--) {
@@ -1026,23 +1026,22 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   // Insert the new element into our "leftovers" array
   // `aRange` is positioned, so it has to have a start container.
-  int32_t insertionPoint{StyledRanges::FindInsertionPoint(
-      &temp, *aRange->GetStartContainer(), aRange->StartOffset(),
-      CompareToRangeStart)};
+  int32_t insertionPoint{FindInsertionPoint(&temp, *aRange->GetStartContainer(),
+                                            aRange->StartOffset(),
+                                            CompareToRangeStart)};
 
   if (!temp.InsertElementAt(insertionPoint, StyledRange(aRange))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Merge the leftovers back in to mStyledRanges.mRanges
-  if (!mStyledRanges.mRanges.InsertElementsAt(startIndex, temp))
+  // Merge the leftovers back in to mRanges
+  if (!mRanges.InsertElementsAt(startIndex, temp))
     return NS_ERROR_OUT_OF_MEMORY;
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
-    const RefPtr<Selection> selection{this};
+    MOZ_KnownLive(temp[i].mRange)->RegisterSelection(aSelection);
     // `MOZ_KnownLive` is required because of
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1622253.
-    MOZ_KnownLive(temp[i].mRange)->RegisterSelection(*selection);
   }
 
   *aOutIndex = startIndex + insertionPoint;
