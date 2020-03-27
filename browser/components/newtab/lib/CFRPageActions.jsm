@@ -826,6 +826,8 @@ class PageAction {
             event,
             ...(modelVersion ? { event_context: { modelVersion } } : {}),
           });
+          // We want to collapse if needed when we dismiss
+          this._collapse();
         },
       };
     };
