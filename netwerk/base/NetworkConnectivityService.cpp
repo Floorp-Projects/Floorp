@@ -209,7 +209,9 @@ static inline already_AddRefed<nsIChannel> SetupIPCheckChannel(bool ipv4) {
   {
     // Prevent HTTPS-Only Mode from upgrading the OCSP request.
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    loadInfo->SetHttpsOnlyNoUpgrade(true);
+    uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
   }
 
   NS_ENSURE_SUCCESS(rv, nullptr);
