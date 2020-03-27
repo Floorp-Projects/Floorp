@@ -81,11 +81,16 @@ export default class LoginItem extends HTMLElement {
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
     this._timeUsed = this.shadowRoot.querySelector(".time-used");
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
-    this._breachAlertLink = this._breachAlert.querySelector(
-      ".breach-alert-link"
+    this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
+    this._dismissBreachAlert = this._breachAlert.querySelector(
+      ".dismiss-alert"
     );
-    this._dismissBreachAlert = this.shadowRoot.querySelector(
-      ".dismiss-breach-alert"
+    this._vulnerableAlert = this.shadowRoot.querySelector(".vulnerable-alert");
+    this._vulnerableAlertLink = this._vulnerableAlert.querySelector(
+      ".alert-link"
+    );
+    this._dismissVulnerableAlert = this._vulnerableAlert.querySelector(
+      ".dismiss-alert"
     );
 
     this.render();
@@ -114,6 +119,8 @@ export default class LoginItem extends HTMLElement {
   focus() {
     if (!this._breachAlert.hidden) {
       this._breachAlertLink.focus();
+    } else if (!this._vulnerableAlert.hidden) {
+      this._vulnerableAlertLink.focus();
     } else if (!this._editButton.disabled) {
       this._editButton.focus();
     } else if (!this._deleteButton.disabled) {
@@ -148,6 +155,13 @@ export default class LoginItem extends HTMLElement {
     if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       this._breachAlertLink.href = breachDetails.breachAlertURL;
+    }
+    this._vulnerableAlert.hidden =
+      !this._vulnerableLoginsMap ||
+      !this._vulnerableLoginsMap.has(this._login.guid) ||
+      !this._breachAlert.hidden;
+    if (!this._vulnerableAlert.hidden) {
+      // TODO
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
@@ -265,6 +279,10 @@ export default class LoginItem extends HTMLElement {
       object: "existing_login",
       method: "dismiss_breach_alert",
     });
+  }
+
+  dismissVulnerableAlert() {
+    // TODO: Implement this
   }
 
   showLoginItemError(error) {
@@ -418,8 +436,12 @@ export default class LoginItem extends HTMLElement {
           });
           return;
         }
-        if (classList.contains("dismiss-breach-alert")) {
-          this.dismissBreachAlert();
+        if (classList.contains("dismiss-alert")) {
+          if (event.currentTarget.closest(".breach-alert")) {
+            this.dismissBreachAlert();
+          } else if (event.currentTarget.closest(".vulnerable-alert")) {
+            this.dismissVulnerableAlert();
+          }
           return;
         }
         if (classList.contains("edit-button")) {
@@ -460,11 +482,15 @@ export default class LoginItem extends HTMLElement {
         if (classList.contains("origin-input")) {
           this._handleOriginClick();
         }
-        if (classList.contains("breach-alert-link")) {
-          this._recordTelemetryEvent({
-            object: "existing_login",
-            method: "learn_more_breach",
-          });
+        if (classList.contains("alert-link")) {
+          if (event.currentTarget.closest(".breach-alert")) {
+            this._recordTelemetryEvent({
+              object: "existing_login",
+              method: "learn_more_breach",
+            });
+          } else if (event.currentTarget.closest(".vulnerable-alert")) {
+            // TODO: Add telemetry event
+          }
         }
         break;
       }
