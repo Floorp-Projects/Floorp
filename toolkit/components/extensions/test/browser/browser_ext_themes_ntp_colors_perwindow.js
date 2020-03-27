@@ -51,10 +51,44 @@ function test_ntp_theme(browser, theme, isBrightText) {
 /**
  * Test whether a given browser has the default theme applied
  * @param {Object} browser to test against
+ * @param {string} url being tested
  * @returns {Promise} The task as a promise
  */
-function test_ntp_default_theme(browser) {
+function test_ntp_default_theme(browser, url) {
   Services.ppmm.sharedData.flush();
+  if (url === "about:welcome") {
+    return SpecialPowers.spawn(
+      browser,
+      [
+        {
+          background: hexToCSS("#EDEDF0"),
+          color: hexToCSS("#0C0C0D"),
+        },
+      ],
+      function({ background, color }) {
+        let doc = content.document;
+        ok(
+          !doc.body.hasAttribute("lwt-newtab"),
+          "About:welcome page should not have lwt-newtab attribute"
+        );
+        ok(
+          !doc.body.hasAttribute("lwt-newtab-brighttext"),
+          `About:welcome page should not have lwt-newtab-brighttext attribute`
+        );
+
+        is(
+          content.getComputedStyle(doc.body).backgroundColor,
+          background,
+          "About:welcome page background should be reset."
+        );
+        is(
+          content.getComputedStyle(doc.querySelector(".outer-wrapper")).color,
+          color,
+          "About:welcome page text color should be reset."
+        );
+      }
+    );
+  }
   return SpecialPowers.spawn(
     browser,
     [
@@ -183,7 +217,7 @@ add_task(async function test_per_window_ntp_theme() {
       win.NewTabPagePreloading.removePreloadedBrowser(win);
       // These pages were initially chosen because LightweightThemeChild.jsm
       // treats them specially.
-      for (let url of ["about:newtab", "about:home"]) {
+      for (let url of ["about:newtab", "about:home", "about:welcome"]) {
         info("Opening url: " + url);
         await BrowserTestUtils.withNewTab(
           { gBrowser: win.gBrowser, url },
@@ -191,7 +225,7 @@ add_task(async function test_per_window_ntp_theme() {
             if (theme) {
               await test_ntp_theme(browser, theme, isBrightText);
             } else {
-              await test_ntp_default_theme(browser);
+              await test_ntp_default_theme(browser, url);
             }
           }
         );
@@ -203,8 +237,10 @@ add_task(async function test_per_window_ntp_theme() {
   // BrowserTestUtils.withNewTab waits for about:newtab to load
   // so we disable preloading before running the test.
   await SpecialPowers.setBoolPref("browser.newtab.preload", false);
+  await SpecialPowers.setBoolPref("browser.aboutwelcome.enabled", true);
   registerCleanupFunction(() => {
     SpecialPowers.clearUserPref("browser.newtab.preload");
+    SpecialPowers.clearUserPref("browser.aboutwelcome.enabled");
   });
 
   await extension.startup();
