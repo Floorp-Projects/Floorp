@@ -46,7 +46,8 @@ class AboutLoginsChild extends JSWindowActorChild {
           AppConstants.MOZILLA_OFFICIAL
         );
 
-        let waivedContent = Cu.waiveXrays(this.browsingContext.window);
+        let win = this.browsingContext.window;
+        let waivedContent = Cu.waiveXrays(win);
         let that = this;
         let AboutLoginsUtils = {
           doLoginsMatch(loginA, loginB) {
@@ -85,14 +86,10 @@ class AboutLoginsChild extends JSWindowActorChild {
             cloneFunctions: true,
           }
         );
-
-        const SUPPORT_URL =
-          Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          "firefox-lockwise";
-        let loginIntro = Cu.waiveXrays(
-          this.document.querySelector("login-intro")
+        let aboutLoginsUtilsReadyEvent = new win.CustomEvent(
+          "AboutLoginsUtilsReady"
         );
-        loginIntro.supportURL = SUPPORT_URL;
+        win.dispatchEvent(aboutLoginsUtilsReadyEvent);
         break;
       }
       case "AboutLoginsCopyLoginDetail": {
@@ -212,6 +209,9 @@ class AboutLoginsChild extends JSWindowActorChild {
           message.data.passwordRevealVisible;
         waivedContent.AboutLoginsUtils.importVisible =
           message.data.importVisible;
+        waivedContent.AboutLoginsUtils.supportBaseURL = Services.urlFormatter.formatURLPref(
+          "app.support.baseURL"
+        );
         this.sendToContent("Setup", message.data);
         break;
       default:
