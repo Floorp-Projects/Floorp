@@ -42,6 +42,7 @@ internal const val UNCAUGHT_EXCEPTION_TYPE = "uncaught exception"
 internal const val FATAL_NATIVE_CRASH_TYPE = "fatal native crash"
 internal const val NON_FATAL_NATIVE_CRASH_TYPE = "non-fatal native crash"
 
+internal const val DEFAULT_VERSION_NAME = "N/A"
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
  *
@@ -66,20 +67,22 @@ class MozillaSocorroService(
     private val buildId: String = BuildConfig.MOZ_APP_BUILDID,
     private val vendor: String = BuildConfig.MOZ_APP_VENDOR,
     private var serverUrl: String? = null,
-    private var versionName: String = "N/A",
+    private var versionName: String = DEFAULT_VERSION_NAME,
     private val releaseChannel: String = BuildConfig.MOZ_UPDATE_CHANNEL
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
 
     init {
-        try {
-            versionName = applicationContext.packageManager
-                .getPackageInfo(applicationContext.packageName, 0).versionName
-        } catch (e: PackageManager.NameNotFoundException) {
-            Logger.error("package name not found, failed to get application version")
-        } catch (e: IllegalStateException) {
-            Logger.error("failed to get application version")
+        if (versionName == DEFAULT_VERSION_NAME) {
+            try {
+                versionName = applicationContext.packageManager
+                    .getPackageInfo(applicationContext.packageName, 0).versionName
+            } catch (e: PackageManager.NameNotFoundException) {
+                Logger.error("package name not found, failed to get application version")
+            } catch (e: IllegalStateException) {
+                Logger.error("failed to get application version")
+            }
         }
 
         if (serverUrl == null) {
