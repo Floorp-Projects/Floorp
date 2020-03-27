@@ -1132,8 +1132,7 @@ PAPZCTreeManagerParent* CompositorBridgeParent::AllocPAPZCTreeManagerParent(
   MOZ_ASSERT(state.mParent.get() == this);
   MOZ_ASSERT(!state.mApzcTreeManagerParent);
   state.mApzcTreeManagerParent = new APZCTreeManagerParent(
-      WRRootId(mRootLayerTreeID, wr::RenderRoot::Default), mApzcTreeManager,
-      mApzUpdater);
+      mRootLayerTreeID, mApzcTreeManager, mApzUpdater);
 
   return state.mApzcTreeManagerParent;
 }
@@ -1146,13 +1145,13 @@ bool CompositorBridgeParent::DeallocPAPZCTreeManagerParent(
 
 void CompositorBridgeParent::AllocateAPZCTreeManagerParent(
     const MonitorAutoLock& aProofOfLayerTreeStateLock,
-    const WRRootId& aWrRootId, LayerTreeState& aState) {
+    const LayersId& aLayersId, LayerTreeState& aState) {
   MOZ_ASSERT(aState.mParent == this);
   MOZ_ASSERT(mApzcTreeManager);
   MOZ_ASSERT(mApzUpdater);
   MOZ_ASSERT(!aState.mApzcTreeManagerParent);
   aState.mApzcTreeManagerParent =
-      new APZCTreeManagerParent(aWrRootId, mApzcTreeManager, mApzUpdater);
+      new APZCTreeManagerParent(aLayersId, mApzcTreeManager, mApzUpdater);
 }
 
 PAPZParent* CompositorBridgeParent::AllocPAPZParent(const LayersId& aLayersId) {
@@ -1393,39 +1392,37 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvGetFrameUniformity(
 }
 
 void CompositorBridgeParent::SetTestAsyncScrollOffset(
-    const WRRootId& aWrRootId, const ScrollableLayerGuid::ViewID& aScrollId,
+    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     const CSSPoint& aPoint) {
   if (mApzUpdater) {
-    MOZ_ASSERT(aWrRootId.IsValid());
-    mApzUpdater->SetTestAsyncScrollOffset(aWrRootId.mLayersId, aScrollId,
-                                          aPoint);
+    MOZ_ASSERT(aLayersId.IsValid());
+    mApzUpdater->SetTestAsyncScrollOffset(aLayersId, aScrollId, aPoint);
   }
 }
 
 void CompositorBridgeParent::SetTestAsyncZoom(
-    const WRRootId& aWrRootId, const ScrollableLayerGuid::ViewID& aScrollId,
+    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     const LayerToParentLayerScale& aZoom) {
   if (mApzUpdater) {
-    MOZ_ASSERT(aWrRootId.IsValid());
-    mApzUpdater->SetTestAsyncZoom(aWrRootId.mLayersId, aScrollId, aZoom);
+    MOZ_ASSERT(aLayersId.IsValid());
+    mApzUpdater->SetTestAsyncZoom(aLayersId, aScrollId, aZoom);
   }
 }
 
-void CompositorBridgeParent::FlushApzRepaints(const WRRootId& aWrRootId) {
+void CompositorBridgeParent::FlushApzRepaints(const LayersId& aLayersId) {
   MOZ_ASSERT(mApzUpdater);
-  MOZ_ASSERT(aWrRootId.IsValid());
+  MOZ_ASSERT(aLayersId.IsValid());
   mApzUpdater->RunOnControllerThread(
-      aWrRootId.mLayersId,
-      NS_NewRunnableFunction(
-          "layers::CompositorBridgeParent::FlushApzRepaints",
-          [=]() { APZCTreeManager::FlushApzRepaints(aWrRootId.mLayersId); }));
+      aLayersId, NS_NewRunnableFunction(
+                     "layers::CompositorBridgeParent::FlushApzRepaints",
+                     [=]() { APZCTreeManager::FlushApzRepaints(aLayersId); }));
 }
 
-void CompositorBridgeParent::GetAPZTestData(const WRRootId& aWrRootId,
+void CompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
                                             APZTestData* aOutData) {
   if (mApzUpdater) {
-    MOZ_ASSERT(aWrRootId.IsValid());
-    mApzUpdater->GetAPZTestData(aWrRootId.mLayersId, aOutData);
+    MOZ_ASSERT(aLayersId.IsValid());
+    mApzUpdater->GetAPZTestData(aLayersId, aOutData);
   }
 }
 
