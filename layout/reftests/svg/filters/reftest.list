@@ -135,3 +135,4 @@ fuzzy(0-1,0-10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFr
 # These failures are caused by bug 1586055
 fails-if(webrender) == outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
 fails-if(webrender) == outside-sourcegraphic-3.svg outside-sourcegraphic-ref.svg
+== nested-filter.html nested-filter-ref.html
