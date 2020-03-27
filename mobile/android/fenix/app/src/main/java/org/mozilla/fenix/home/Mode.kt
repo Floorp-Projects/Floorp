@@ -50,7 +50,7 @@ class CurrentMode(
     private val dispatchModeChanges: (mode: Mode) -> Unit
 ) : AccountObserver {
 
-    private val accountManager = context.components.backgroundServices.accountManager
+    private val accountManager by lazy { context.components.backgroundServices.accountManager }
 
     fun getCurrentMode() = if (onboarding.userHasBeenOnboarded()) {
         Mode.fromBrowsingMode(browsingModeManager.mode)
