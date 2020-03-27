@@ -58,29 +58,6 @@ struct WRRootId {
   };
 };
 
-// This struct provides a way to select which APZUpdater queue a particular
-// message is associated with. A layers subtree may have multiple render roots
-// that are treated independently within WebRender, and each message that goes
-// into the APZUpdater queue may deal with one or more of these render roots
-// within a given layers subtree. This structure allows representing these
-// relationships, and allows the APZUpdater to ensure that the ordering
-// dependencies between messages are preserved and messages get processed in
-// the correct order relative to each other.
-struct UpdaterQueueSelector {
-  LayersId mLayersId;
-  wr::RenderRootSet mRenderRoots;
-
-  UpdaterQueueSelector() = default;
-
-  explicit UpdaterQueueSelector(LayersId aLayersId) : mLayersId(aLayersId) {}
-
-  UpdaterQueueSelector(LayersId aLayersId, wr::RenderRoot aRenderRoot)
-      : mLayersId(aLayersId), mRenderRoots(aRenderRoot) {}
-
-  explicit UpdaterQueueSelector(const WRRootId& aNodeId)
-      : mLayersId(aNodeId.mLayersId), mRenderRoots(aNodeId.mRenderRoot) {}
-};
-
 // This a simple structure that wraps a ScrollableLayerGuid and a RenderRoot.
 // It is needed on codepaths shared with WebRender, where we need to propagate
 // the RenderRoot information along with the ScrollableLayerGuid (as each

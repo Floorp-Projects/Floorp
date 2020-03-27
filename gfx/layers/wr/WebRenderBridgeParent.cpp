@@ -1104,8 +1104,7 @@ void WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus) {
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateFocusState(rootLayersId, WRRootId(GetLayersId(), *mRenderRoot),
-                          aFocus);
+    apz->UpdateFocusState(rootLayersId, GetLayersId(), aFocus);
   }
 }
 
@@ -1118,10 +1117,8 @@ void WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateScrollDataAndTreeState(
-        WRRootId(rootLayersId, wr::RenderRoot::Default),
-        WRRootId(GetLayersId(), RenderRootForExternal(aRenderRoot)), aEpoch,
-        std::move(aData));
+    apz->UpdateScrollDataAndTreeState(rootLayersId, GetLayersId(), aEpoch,
+                                      std::move(aData));
   }
 }
 
@@ -1134,10 +1131,8 @@ void WebRenderBridgeParent::UpdateAPZScrollOffsets(
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateScrollOffsets(
-        WRRootId(rootLayersId, wr::RenderRoot::Default),
-        WRRootId(GetLayersId(), RenderRootForExternal(aRenderRoot)),
-        std::move(aUpdates), aPaintSequenceNumber);
+    apz->UpdateScrollOffsets(rootLayersId, GetLayersId(), std::move(aUpdates),
+                             aPaintSequenceNumber);
   }
 }
 
