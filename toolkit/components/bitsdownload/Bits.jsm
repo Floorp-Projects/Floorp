@@ -648,7 +648,6 @@ async function servicePromise(errorAction, observer, actionFn) {
       },
       onProgress: function wrappedObserver_onProgress(
         request,
-        context,
         progress,
         progressMax
       ) {
@@ -656,20 +655,15 @@ async function servicePromise(errorAction, observer, actionFn) {
           if (!wrappedRequest) {
             wrappedRequest = new BitsRequest(request);
           }
-          observer.onProgress(wrappedRequest, context, progress, progressMax);
+          observer.onProgress(wrappedRequest, progress, progressMax);
         }
       },
-      onStatus: function wrappedObserver_onStatus(
-        request,
-        context,
-        status,
-        statusArg
-      ) {
+      onStatus: function wrappedObserver_onStatus(request, status, statusArg) {
         if (isProgressEventSink) {
           if (!wrappedRequest) {
             wrappedRequest = new BitsRequest(request);
           }
-          observer.onStatus(wrappedRequest, context, status, statusArg);
+          observer.onStatus(wrappedRequest, status, statusArg);
         }
       },
       QueryInterface: ChromeUtils.generateQI([
