@@ -69,25 +69,6 @@
     "bug_numbers": [1493445],
     "description": "Record number of times particular features on about:config are used"
   },
-  "ADDON_SHIM_USAGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 15,
-    "keyed": true,
-    "description": "Reasons why add-on shims were used, keyed by add-on ID."
-  },
-  "ADDON_FORBIDDEN_CPOW_USAGE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "keyed": true,
-    "description": "Counts the number of times a given add-on used CPOWs when it was marked as e10s compatible.",
-    "bug_numbers": [1214824],
-    "alert_emails": ["wmccloskey@mozilla.com"]
-  },
   "APPLICATION_REPUTATION_BINARY_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
