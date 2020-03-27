@@ -11,216 +11,59 @@
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
 #include "jit/WarpOracle.h"
+#include "vm/Opcodes.h"
 
 namespace js {
 namespace jit {
 
-// JS bytecode ops supported by WarpBuilder. Once we support most opcodes
-// this should be replaced with the FOR_EACH_OPCODE macro.
-#define WARP_OPCODE_LIST(_)  \
-  _(Nop)                     \
-  _(NopDestructuring)        \
-  _(TryDestructuring)        \
-  _(Lineno)                  \
-  _(DebugLeaveLexicalEnv)    \
-  _(Undefined)               \
-  _(Void)                    \
-  _(Null)                    \
-  _(Hole)                    \
-  _(Uninitialized)           \
-  _(IsConstructing)          \
-  _(False)                   \
-  _(True)                    \
-  _(Zero)                    \
-  _(One)                     \
-  _(Int8)                    \
-  _(Uint16)                  \
-  _(Uint24)                  \
-  _(Int32)                   \
-  _(Double)                  \
-  _(ResumeIndex)             \
-  _(BigInt)                  \
-  _(String)                  \
-  _(Symbol)                  \
-  _(RegExp)                  \
-  _(Pop)                     \
-  _(PopN)                    \
-  _(Dup)                     \
-  _(Dup2)                    \
-  _(DupAt)                   \
-  _(Swap)                    \
-  _(Pick)                    \
-  _(Unpick)                  \
-  _(GetLocal)                \
-  _(SetLocal)                \
-  _(InitLexical)             \
-  _(GetArg)                  \
-  _(SetArg)                  \
-  _(ToNumeric)               \
-  _(Pos)                     \
-  _(Inc)                     \
-  _(Dec)                     \
-  _(Neg)                     \
-  _(BitNot)                  \
-  _(Add)                     \
-  _(Sub)                     \
-  _(Mul)                     \
-  _(Div)                     \
-  _(Mod)                     \
-  _(Pow)                     \
-  _(BitAnd)                  \
-  _(BitOr)                   \
-  _(BitXor)                  \
-  _(Lsh)                     \
-  _(Rsh)                     \
-  _(Ursh)                    \
-  _(Eq)                      \
-  _(Ne)                      \
-  _(Lt)                      \
-  _(Le)                      \
-  _(Gt)                      \
-  _(Ge)                      \
-  _(StrictEq)                \
-  _(StrictNe)                \
-  _(JumpTarget)              \
-  _(LoopHead)                \
-  _(IfEq)                    \
-  _(IfNe)                    \
-  _(And)                     \
-  _(Or)                      \
-  _(Case)                    \
-  _(Default)                 \
-  _(Coalesce)                \
-  _(Goto)                    \
-  _(DebugCheckSelfHosted)    \
-  _(DynamicImport)           \
-  _(Not)                     \
-  _(ToString)                \
-  _(DefVar)                  \
-  _(DefLet)                  \
-  _(DefConst)                \
-  _(DefFun)                  \
-  _(BindVar)                 \
-  _(MutateProto)             \
-  _(Callee)                  \
-  _(ClassConstructor)        \
-  _(DerivedConstructor)      \
-  _(ToAsyncIter)             \
-  _(ToId)                    \
-  _(Typeof)                  \
-  _(TypeofExpr)              \
-  _(Arguments)               \
-  _(ObjWithProto)            \
-  _(GetAliasedVar)           \
-  _(SetAliasedVar)           \
-  _(InitAliasedLexical)      \
-  _(EnvCallee)               \
-  _(Iter)                    \
-  _(IterNext)                \
-  _(MoreIter)                \
-  _(EndIter)                 \
-  _(IsNoIter)                \
-  _(Call)                    \
-  _(CallIgnoresRv)           \
-  _(CallIter)                \
-  _(FunCall)                 \
-  _(FunApply)                \
-  _(New)                     \
-  _(SuperCall)               \
-  _(FunctionThis)            \
-  _(GlobalThis)              \
-  _(GetName)                 \
-  _(GetGName)                \
-  _(BindName)                \
-  _(BindGName)               \
-  _(GetProp)                 \
-  _(CallProp)                \
-  _(Length)                  \
-  _(GetElem)                 \
-  _(CallElem)                \
-  _(SetProp)                 \
-  _(StrictSetProp)           \
-  _(SetName)                 \
-  _(StrictSetName)           \
-  _(SetGName)                \
-  _(StrictSetGName)          \
-  _(InitGLexical)            \
-  _(SetElem)                 \
-  _(StrictSetElem)           \
-  _(DelProp)                 \
-  _(StrictDelProp)           \
-  _(DelElem)                 \
-  _(StrictDelElem)           \
-  _(SetFunName)              \
-  _(PushLexicalEnv)          \
-  _(PopLexicalEnv)           \
-  _(FreshenLexicalEnv)       \
-  _(RecreateLexicalEnv)      \
-  _(ImplicitThis)            \
-  _(GImplicitThis)           \
-  _(CheckClassHeritage)      \
-  _(CheckThis)               \
-  _(CheckThisReinit)         \
-  _(CheckReturn)             \
-  _(CheckLexical)            \
-  _(CheckAliasedLexical)     \
-  _(InitHomeObject)          \
-  _(SuperBase)               \
-  _(SuperFun)                \
-  _(BuiltinProto)            \
-  _(GetIntrinsic)            \
-  _(ImportMeta)              \
-  _(CallSiteObj)             \
-  _(NewArray)                \
-  _(NewArrayCopyOnWrite)     \
-  _(NewObject)               \
-  _(NewObjectWithGroup)      \
-  _(NewInit)                 \
-  _(Object)                  \
-  _(InitPropGetter)          \
-  _(InitPropSetter)          \
-  _(InitHiddenPropGetter)    \
-  _(InitHiddenPropSetter)    \
-  _(InitElemGetter)          \
-  _(InitElemSetter)          \
-  _(InitHiddenElemGetter)    \
-  _(InitHiddenElemSetter)    \
-  _(In)                      \
-  _(HasOwn)                  \
-  _(Instanceof)              \
-  _(NewTarget)               \
-  _(CheckIsObj)              \
-  _(CheckIsCallable)         \
-  _(CheckObjCoercible)       \
-  _(GetImport)               \
-  _(GetPropSuper)            \
-  _(GetElemSuper)            \
-  _(InitProp)                \
-  _(InitLockedProp)          \
-  _(InitHiddenProp)          \
-  _(InitElem)                \
-  _(InitHiddenElem)          \
-  _(InitElemArray)           \
-  _(InitElemInc)             \
-  _(Lambda)                  \
-  _(LambdaArrow)             \
-  _(FunWithProto)            \
-  _(SpreadCall)              \
-  _(SpreadNew)               \
-  _(SpreadSuperCall)         \
-  _(OptimizeSpreadCall)      \
-  _(Debugger)                \
-  _(InstrumentationActive)   \
-  _(InstrumentationCallback) \
-  _(InstrumentationScriptId) \
-  _(TableSwitch)             \
-  _(Rest)                    \
-  _(Try)                     \
-  _(Throw)                   \
-  _(ThrowSetConst)           \
-  _(SetRval)                 \
-  _(Return)                  \
-  _(RetRval)
+// JSOps not yet supported by WarpBuilder. See warning at the end of the list.
+#define WARP_UNSUPPORTED_OPCODE_LIST(_)  \
+  /* Intentionally not implemented */    \
+  _(ForceInterpreter)                    \
+  /* With */                             \
+  _(EnterWith)                           \
+  _(LeaveWith)                           \
+  /* Eval */                             \
+  _(Eval)                                \
+  _(StrictEval)                          \
+  _(SpreadEval)                          \
+  _(StrictSpreadEval)                    \
+  /* Super */                            \
+  _(SetPropSuper)                        \
+  _(SetElemSuper)                        \
+  _(StrictSetPropSuper)                  \
+  _(StrictSetElemSuper)                  \
+  /* Environments (bug 1366470) */       \
+  _(PushVarEnv)                          \
+  /* Compound assignment */              \
+  _(GetBoundName)                        \
+  /* Generators / Async (bug 1317690) */ \
+  _(IsGenClosing)                        \
+  _(InitialYield)                        \
+  _(Yield)                               \
+  _(FinalYieldRval)                      \
+  _(Resume)                              \
+  _(ResumeKind)                          \
+  _(CheckResumeKind)                     \
+  _(AfterYield)                          \
+  _(Await)                               \
+  _(TrySkipAwait)                        \
+  _(Generator)                           \
+  _(AsyncAwait)                          \
+  _(AsyncResolve)                        \
+  /* Catch/finally */                    \
+  _(Exception)                           \
+  _(Finally)                             \
+  _(Gosub)                               \
+  _(Retsub)                              \
+  /* Misc */                             \
+  _(DelName)                             \
+  _(GetRval)                             \
+  _(SetIntrinsic)                        \
+  _(ThrowMsg)
+// === !! WARNING WARNING WARNING !! ===
+// Do you really want to sacrifice performance by not implementing this
+// operation in the optimizing compiler?
 
 class MIRGenerator;
 class MIRGraph;
@@ -328,8 +171,8 @@ class MOZ_STACK_CLASS WarpBuilder {
   bool usesEnvironmentChain() const;
   MDefinition* walkEnvironmentChain(uint32_t numHops);
 
-#define BUILD_OP(OP) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
-  WARP_OPCODE_LIST(BUILD_OP)
+#define BUILD_OP(OP, ...) MOZ_MUST_USE bool build_##OP(BytecodeLocation loc);
+  FOR_EACH_OPCODE(BUILD_OP)
 #undef BUILD_OP
 
  public:
