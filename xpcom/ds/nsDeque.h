@@ -99,7 +99,7 @@ class nsDeque {
    * @param   aItem item to store in deque
    * @return  true if succeeded, false if failed to resize deque as needed
    */
-  MOZ_MUST_USE bool Push(void* aItem, const fallible_t&);
+  [[nodiscard]] bool Push(void* aItem, const fallible_t&);
 
   /**
    * Inserts new member at the front of the deque.
@@ -118,7 +118,7 @@ class nsDeque {
    * @param   aItem item to store in deque
    * @return  true if succeeded, false if failed to resize deque as needed
    */
-  MOZ_MUST_USE bool PushFront(void* aItem, const fallible_t&);
+  [[nodiscard]] bool PushFront(void* aItem, const fallible_t&);
 
   /**
    * Remove and return the last item in the container.

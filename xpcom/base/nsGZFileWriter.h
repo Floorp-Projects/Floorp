@@ -24,16 +24,17 @@ class nsGZFileWriter final : public nsIGZFileWriter {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGZFILEWRITER
 
-  /**
-   * nsIGZFileWriter exposes two non-virtual overloads of Write().  We
-   * duplicate them here so that you can call these overloads on a pointer to
-   * the concrete nsGZFileWriter class.
-   */
-  MOZ_MUST_USE nsresult Write(const char* aStr) {
+      /**
+       * nsIGZFileWriter exposes two non-virtual overloads of Write().  We
+       * duplicate them here so that you can call these overloads on a pointer
+       * to the concrete nsGZFileWriter class.
+       */
+      [[nodiscard]] nsresult
+      Write(const char* aStr) {
     return nsIGZFileWriter::Write(aStr);
   }
 
-  MOZ_MUST_USE nsresult Write(const char* aStr, uint32_t aLen) {
+  [[nodiscard]] nsresult Write(const char* aStr, uint32_t aLen) {
     return nsIGZFileWriter::Write(aStr, aLen);
   }
 

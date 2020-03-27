@@ -1439,8 +1439,8 @@ class nsTArray_Impl
   }
 
   template <class Allocator>
-  MOZ_MUST_USE bool Assign(const nsTArray_Impl<E, Allocator>& aOther,
-                           const mozilla::fallible_t&) {
+  [[nodiscard]] bool Assign(const nsTArray_Impl<E, Allocator>& aOther,
+                            const mozilla::fallible_t&) {
     return Assign<Allocator, FallibleAlloc>(aOther);
   }
 
@@ -1502,10 +1502,11 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                                            const Item* aArray,
-                                            size_type aArrayLen,
-                                            const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
+                                             size_type aCount,
+                                             const Item* aArray,
+                                             size_type aArrayLen,
+                                             const mozilla::fallible_t&) {
     return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aArray,
                                                   aArrayLen);
   }
@@ -1528,16 +1529,18 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                                            const nsTArray<Item>& aArray,
-                                            const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
+                                             size_type aCount,
+                                             const nsTArray<Item>& aArray,
+                                             const mozilla::fallible_t&) {
     return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aArray);
   }
 
   template <class Item>
-  MOZ_MUST_USE elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                                            mozilla::Span<const Item> aSpan,
-                                            const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
+                                             size_type aCount,
+                                             mozilla::Span<const Item> aSpan,
+                                             const mozilla::fallible_t&) {
     return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aSpan);
   }
 
@@ -1551,9 +1554,10 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                                            const Item& aItem,
-                                            const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
+                                             size_type aCount,
+                                             const Item& aItem,
+                                             const mozilla::fallible_t&) {
     return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aItem);
   }
 
@@ -1573,10 +1577,10 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* InsertElementsAt(index_type aIndex,
-                                           const Item* aArray,
-                                           size_type aArrayLen,
-                                           const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementsAt(index_type aIndex,
+                                            const Item* aArray,
+                                            size_type aArrayLen,
+                                            const mozilla::fallible_t&) {
     return InsertElementsAt<Item, FallibleAlloc>(aIndex, aArray, aArrayLen);
   }
 
@@ -1598,16 +1602,16 @@ class nsTArray_Impl
 
  public:
   template <class Item, class Allocator>
-  MOZ_MUST_USE elem_type* InsertElementsAt(
+  [[nodiscard]] elem_type* InsertElementsAt(
       index_type aIndex, const nsTArray_Impl<Item, Allocator>& aArray,
       const mozilla::fallible_t&) {
     return InsertElementsAt<Item, Allocator, FallibleAlloc>(aIndex, aArray);
   }
 
   template <class Item>
-  MOZ_MUST_USE elem_type* InsertElementsAt(index_type aIndex,
-                                           mozilla::Span<const Item> aSpan,
-                                           const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementsAt(index_type aIndex,
+                                            mozilla::Span<const Item> aSpan,
+                                            const mozilla::fallible_t&) {
     return InsertElementsAt<Item, FallibleAlloc>(aIndex, aSpan);
   }
 
@@ -1619,8 +1623,8 @@ class nsTArray_Impl
   elem_type* InsertElementAt(index_type aIndex);
 
  public:
-  MOZ_MUST_USE
-  elem_type* InsertElementAt(index_type aIndex, const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementAt(index_type aIndex,
+                                           const mozilla::fallible_t&) {
     return InsertElementAt<FallibleAlloc>(aIndex);
   }
 
@@ -1631,8 +1635,8 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* InsertElementAt(index_type aIndex, Item&& aItem,
-                                          const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementAt(index_type aIndex, Item&& aItem,
+                                           const mozilla::fallible_t&) {
     return InsertElementAt<Item, FallibleAlloc>(aIndex,
                                                 std::forward<Item>(aItem));
   }
@@ -1703,9 +1707,9 @@ class nsTArray_Impl
 
  public:
   template <class Item, class Comparator>
-  MOZ_MUST_USE elem_type* InsertElementSorted(Item&& aItem,
-                                              const Comparator& aComp,
-                                              const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementSorted(Item&& aItem,
+                                               const Comparator& aComp,
+                                               const mozilla::fallible_t&) {
     return InsertElementSorted<Item, Comparator, FallibleAlloc>(
         std::forward<Item>(aItem), aComp);
   }
@@ -1721,8 +1725,8 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* InsertElementSorted(Item&& aItem,
-                                              const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementSorted(Item&& aItem,
+                                               const mozilla::fallible_t&) {
     return InsertElementSorted<Item, FallibleAlloc>(std::forward<Item>(aItem));
   }
 
@@ -1748,14 +1752,14 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElements(const Item* aArray, size_type aArrayLen,
                             const mozilla::fallible_t&) {
     return AppendElements<Item, FallibleAlloc>(aArray, aArrayLen);
   }
 
   template <class Item>
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElements(mozilla::Span<const Item> aSpan,
                             const mozilla::fallible_t&) {
     return AppendElements<Item, FallibleAlloc>(aSpan.Elements(),
@@ -1772,7 +1776,7 @@ class nsTArray_Impl
 
  public:
   template <class Item, class Allocator>
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElements(const nsTArray_Impl<Item, Allocator>& aArray,
                             const mozilla::fallible_t&) {
     return AppendElements<Item, Allocator, FallibleAlloc>(aArray);
@@ -1786,7 +1790,7 @@ class nsTArray_Impl
 
  public:
   template <class Item, class Allocator, typename ActualAlloc = Alloc>
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray,
                             const mozilla::fallible_t&) {
     return AppendElements<Item, Allocator>(std::move(aArray));
@@ -1799,8 +1803,8 @@ class nsTArray_Impl
 
  public:
   template <class... Args>
-  MOZ_MUST_USE elem_type* EmplaceBack(const mozilla::fallible_t&,
-                                      Args&&... aArgs) {
+  [[nodiscard]] elem_type* EmplaceBack(const mozilla::fallible_t&,
+                                       Args&&... aArgs) {
     return EmplaceBackInternal<FallibleAlloc, Args...>(
         std::forward<Args>(aArgs)...);
   }
@@ -1812,7 +1816,7 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElement(Item&& aItem, const mozilla::fallible_t&) {
     return AppendElement<Item, FallibleAlloc>(std::forward<Item>(aItem));
   }
@@ -1837,7 +1841,7 @@ class nsTArray_Impl
   }
 
  public:
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElements(size_type aCount, const mozilla::fallible_t&) {
     return AppendElements<FallibleAlloc>(aCount);
   }
@@ -1852,7 +1856,7 @@ class nsTArray_Impl
   }
 
  public:
-  /* MOZ_MUST_USE */
+  /* [[nodiscard]] */
   elem_type* AppendElement(const mozilla::fallible_t&) {
     return AppendElement<FallibleAlloc>();
   }
@@ -1900,8 +1904,7 @@ class nsTArray_Impl
   void RemoveLastElement() { RemoveElementAt(Length() - 1); }
 
   // Removes the last element of the array and returns a copy of it.
-  MOZ_MUST_USE
-  elem_type PopLastElement() {
+  [[nodiscard]] elem_type PopLastElement() {
     elem_type elem = std::move(LastElement());
     RemoveLastElement();
     return elem;
@@ -2209,8 +2212,8 @@ class nsTArray_Impl
   }
 
  public:
-  MOZ_MUST_USE
-  bool SetCapacity(size_type aCapacity, const mozilla::fallible_t&) {
+  [[nodiscard]] bool SetCapacity(size_type aCapacity,
+                                 const mozilla::fallible_t&) {
     return SetCapacity<FallibleAlloc>(aCapacity);
   }
 
@@ -2236,8 +2239,7 @@ class nsTArray_Impl
   }
 
  public:
-  MOZ_MUST_USE
-  bool SetLength(size_type aNewLen, const mozilla::fallible_t&) {
+  [[nodiscard]] bool SetLength(size_type aNewLen, const mozilla::fallible_t&) {
     return SetLength<FallibleAlloc>(aNewLen);
   }
 
@@ -2271,8 +2273,8 @@ class nsTArray_Impl
   }
 
  public:
-  MOZ_MUST_USE
-  bool EnsureLengthAtLeast(size_type aMinLen, const mozilla::fallible_t&) {
+  [[nodiscard]] bool EnsureLengthAtLeast(size_type aMinLen,
+                                         const mozilla::fallible_t&) {
     return EnsureLengthAtLeast<FallibleAlloc>(aMinLen);
   }
 
@@ -2300,9 +2302,8 @@ class nsTArray_Impl
   }
 
  public:
-  MOZ_MUST_USE
-  elem_type* InsertElementsAt(index_type aIndex, size_type aCount,
-                              const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementsAt(index_type aIndex, size_type aCount,
+                                            const mozilla::fallible_t&) {
     return InsertElementsAt<FallibleAlloc>(aIndex, aCount);
   }
 
@@ -2320,9 +2321,9 @@ class nsTArray_Impl
 
  public:
   template <class Item>
-  MOZ_MUST_USE elem_type* InsertElementsAt(index_type aIndex, size_type aCount,
-                                           const Item& aItem,
-                                           const mozilla::fallible_t&) {
+  [[nodiscard]] elem_type* InsertElementsAt(index_type aIndex, size_type aCount,
+                                            const Item& aItem,
+                                            const mozilla::fallible_t&) {
     return InsertElementsAt<Item, FallibleAlloc>(aIndex, aCount, aItem);
   }
 

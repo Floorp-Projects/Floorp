@@ -158,8 +158,7 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    * @return    pointer to the entry retrieved; nullptr only if memory can't
    *            be allocated
    */
-  MOZ_MUST_USE
-  EntryType* PutEntry(KeyType aKey, const fallible_t&) {
+  [[nodiscard]] EntryType* PutEntry(KeyType aKey, const fallible_t&) {
     return static_cast<EntryType*>(
         mTable.Add(EntryType::KeyToPointer(aKey), mozilla::fallible));
   }
@@ -173,8 +172,8 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    * @return    true if a new entry was created, or false if an existing entry
    *            was found
    */
-  MOZ_MUST_USE
-  bool EnsureInserted(KeyType aKey, EntryType** aEntry = nullptr) {
+  [[nodiscard]] bool EnsureInserted(KeyType aKey,
+                                    EntryType** aEntry = nullptr) {
     auto oldCount = Count();
     EntryType* entry = PutEntry(aKey);
     if (aEntry) {
@@ -523,14 +522,12 @@ class nsTHashtable<nsPtrHashKey<T>>
     return reinterpret_cast<EntryType*>(Base::PutEntry(aKey));
   }
 
-  MOZ_MUST_USE
-  EntryType* PutEntry(T* aKey, const mozilla::fallible_t&) {
+  [[nodiscard]] EntryType* PutEntry(T* aKey, const mozilla::fallible_t&) {
     return reinterpret_cast<EntryType*>(
         Base::PutEntry(aKey, mozilla::fallible));
   }
 
-  MOZ_MUST_USE
-  bool EnsureInserted(T* aKey, EntryType** aEntry = nullptr) {
+  [[nodiscard]] bool EnsureInserted(T* aKey, EntryType** aEntry = nullptr) {
     return Base::EnsureInserted(
         aKey, reinterpret_cast<::detail::VoidPtrHashKey**>(aEntry));
   }
