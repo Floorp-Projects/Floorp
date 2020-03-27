@@ -97,39 +97,6 @@ BreakpointActor.prototype = {
       script.clearBreakpoint(this, offset);
     }
 
-    // When replaying, logging breakpoints are handled using an API to get logged
-    // messages from throughout the recording.
-    if (this.threadActor.dbg.replaying && this.options.logGroupId) {
-      const { logGroupId } = this.options;
-
-      if (oldOptions && oldOptions.logGroupId == logGroupId) {
-        return;
-      }
-      for (const offset of offsets) {
-        const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
-        script.replayVirtualConsoleLog({
-          offset,
-          text: this.options.logValue,
-          condition: this.options.condition,
-          messageCallback: (executionPoint, rv) => {
-            const message = {
-              filename: script.url,
-              lineNumber,
-              columnNumber,
-              executionPoint,
-              arguments: rv,
-              logpointId: logGroupId,
-            };
-            this.threadActor._parent._consoleActor.onConsoleAPICall(message);
-          },
-          validCallback: () => {
-            return this.options && this.options.logGroupId == logGroupId;
-          },
-        });
-      }
-      return;
-    }
-
     // In all other cases, this is used as a script breakpoint handler.
     for (const offset of offsets) {
       script.setBreakpoint(offset, this);

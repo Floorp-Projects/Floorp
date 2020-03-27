@@ -166,24 +166,6 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   }
 
   /**
-   * Warp through time to an execution point in the past or future.
-   *
-   * @param object aTarget
-   *        Description of the warp destination.
-   */
-  timeWarp(target) {
-    const warp = () => {
-      this._doResume({ type: "warp", target }, true);
-    };
-    if (this.paused) {
-      return warp();
-    }
-
-    this.interrupt();
-    return this.once("paused", warp);
-  }
-
-  /**
    * Interrupt a running thread.
    */
   _doInterrupt(when) {

@@ -13,7 +13,6 @@ import type {
   ThreadContext,
   Previews,
   HighlightedCalls,
-  ExecutionPoint,
 } from "../../types";
 
 import type { PromiseAction } from "../utils/middleware/promise";
@@ -173,9 +172,4 @@ export type PauseAction =
     |}
   | {|
       +type: "UNHIGHLIGHT_CALLS",
-    |}
-  | {|
-      +type: "SET_FRAME_POSITIONS",
-      +frame: Frame,
-      +positions: Array<ExecutionPoint>,
     |};

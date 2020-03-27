@@ -118,14 +118,6 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
-  // early return for replay
-  if (dbg.replaying) {
-    if (options.eager) {
-      throw new Error("Eager evaluations are not supported while replaying");
-    }
-    return evalReplay(frame, dbg, evalString);
-  }
-
   const { dbgWindow, bindSelf } = getDbgWindow(options, dbg, webConsole);
   const helpers = getHelpers(dbgWindow, options, webConsole);
   let { bindings, helperCache } = bindCommands(
@@ -502,28 +494,6 @@ function getFrameDbg(options, webConsole) {
     "evalWithDebugger",
     Error("The frame actor was not found: " + options.frameActor)
   );
-}
-
-function evalReplay(frame, dbg, string) {
-  // If the debugger is replaying then we can't yet introduce new bindings
-  // for the eval, so compute the result now.
-  let result;
-  if (frame) {
-    try {
-      result = frame.eval(string);
-    } catch (e) {
-      result = { throw: e };
-    }
-  } else {
-    result = { throw: "Cannot evaluate while replaying without a frame" };
-  }
-  return {
-    result: result,
-    helperResult: null,
-    dbg: dbg,
-    frame: frame,
-    window: null,
-  };
 }
 
 function getDbgWindow(options, dbg, webConsole) {

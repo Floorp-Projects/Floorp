@@ -45,13 +45,10 @@ function ConsoleApiCall(props) {
     serviceContainer,
     timestampsVisible,
     repeat,
-    pausedExecutionPoint,
-    isPaused,
     maybeScrollToBottom,
   } = props;
   const {
     id: messageId,
-    executionPoint,
     indent,
     source,
     type,
@@ -140,9 +137,6 @@ function ConsoleApiCall(props) {
 
   return Message({
     messageId,
-    executionPoint,
-    pausedExecutionPoint,
-    isPaused,
     open,
     collapsible,
     collapseTitle,

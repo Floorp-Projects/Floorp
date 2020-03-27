@@ -45,11 +45,6 @@ loader.lazyRequireGetter(
   "SmartTrace",
   "devtools/client/shared/components/SmartTrace"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "pointPrecedes",
-  "resource://devtools/shared/execution-point-utils.js"
-);
 
 class Message extends Component {
   static get propTypes() {
@@ -70,8 +65,6 @@ class Message extends Component {
       attachment: PropTypes.any,
       stacktrace: PropTypes.any,
       messageId: PropTypes.string,
-      executionPoint: PropTypes.object,
-      pausedExecutionPoint: PropTypes.object,
       scrollToMessage: PropTypes.bool,
       exceptionDocURL: PropTypes.string,
       request: PropTypes.object,
@@ -86,9 +79,6 @@ class Message extends Component {
         openContextMenu: PropTypes.func.isRequired,
         openLink: PropTypes.func.isRequired,
         sourceMapService: PropTypes.any,
-        canRewind: PropTypes.func.isRequired,
-        jumpToExecutionPoint: PropTypes.func,
-        onMessageHover: PropTypes.func,
       }),
       notes: PropTypes.arrayOf(
         PropTypes.shape({
@@ -96,7 +86,6 @@ class Message extends Component {
           frame: PropTypes.any,
         })
       ),
-      isPaused: PropTypes.bool,
       maybeScrollToBottom: PropTypes.func,
       message: PropTypes.object.isRequired,
     };
@@ -113,7 +102,6 @@ class Message extends Component {
     this.onLearnMoreClick = this.onLearnMoreClick.bind(this);
     this.toggleMessage = this.toggleMessage.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
-    this.onMouseEvent = this.onMouseEvent.bind(this);
     this.renderIcon = this.renderIcon.bind(this);
   }
 
@@ -172,40 +160,19 @@ class Message extends Component {
   }
 
   onContextMenu(e) {
-    const {
-      serviceContainer,
-      source,
-      request,
-      messageId,
-      executionPoint,
-    } = this.props;
+    const { serviceContainer, source, request, messageId } = this.props;
     const messageInfo = {
       source,
       request,
       messageId,
-      executionPoint,
     };
     serviceContainer.openContextMenu(e, messageInfo);
     e.stopPropagation();
     e.preventDefault();
   }
 
-  onMouseEvent(ev) {
-    const { message, serviceContainer, executionPoint } = this.props;
-    if (serviceContainer.canRewind() && executionPoint) {
-      serviceContainer.onMessageHover(ev.type, message);
-    }
-  }
-
   renderIcon() {
-    const {
-      level,
-      messageId,
-      executionPoint,
-      serviceContainer,
-      inWarningGroup,
-      type,
-    } = this.props;
+    const { level, inWarningGroup, type } = this.props;
 
     if (inWarningGroup) {
       return undefined;
@@ -213,11 +180,6 @@ class Message extends Component {
 
     return MessageIcon({
       level,
-      onRewindClick:
-        serviceContainer.canRewind() && executionPoint
-          ? () =>
-              serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
-          : null,
       type,
     });
   }
@@ -300,7 +262,6 @@ class Message extends Component {
       collapseTitle,
       source,
       type,
-      isPaused,
       level,
       indent,
       inWarningGroup,
@@ -310,8 +271,6 @@ class Message extends Component {
       stacktrace,
       serviceContainer,
       exceptionDocURL,
-      executionPoint,
-      pausedExecutionPoint,
       messageId,
       notes,
     } = this.props;
@@ -319,18 +278,6 @@ class Message extends Component {
     topLevelClasses.push("message", source, type, level);
     if (open) {
       topLevelClasses.push("open");
-    }
-
-    if (isPaused) {
-      topLevelClasses.push("paused");
-
-      if (
-        pausedExecutionPoint &&
-        executionPoint &&
-        !pointPrecedes(executionPoint, pausedExecutionPoint)
-      ) {
-        topLevelClasses.push("paused-before");
-      }
     }
 
     const timestampEl = this.renderTimestamp();
@@ -451,16 +398,10 @@ class Message extends Component {
       ? messageBody
       : [messageBody];
 
-    const mouseEvents =
-      serviceContainer.canRewind() && executionPoint
-        ? { onMouseEnter: this.onMouseEvent, onMouseLeave: this.onMouseEvent }
-        : {};
-
     return dom.div(
       {
         className: topLevelClasses.join(" "),
         onContextMenu: this.onContextMenu,
-        ...mouseEvents,
         ref: node => {
           this.messageNode = node;
         },

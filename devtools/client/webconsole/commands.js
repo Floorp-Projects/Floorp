@@ -5,10 +5,9 @@
 "use strict";
 
 class ConsoleCommands {
-  constructor({ devToolsClient, hud, threadFront }) {
+  constructor({ devToolsClient, hud }) {
     this.devToolsClient = devToolsClient;
     this.hud = hud;
-    this.threadFront = threadFront;
   }
 
   getFrontByID(id) {
@@ -30,10 +29,6 @@ class ConsoleCommands {
     }
 
     return front.evaluateJSAsync(expression, options);
-  }
-
-  timeWarp(executionPoint) {
-    return this.threadFront.timeWarp(executionPoint);
   }
 }
 
