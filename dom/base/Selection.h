@@ -740,8 +740,6 @@ class Selection final : public nsSupportsWeakReference,
                                                      bool* aDidAddRange,
                                                      int32_t* aOutIndex);
 
-  StyledRange* FindRangeData(nsRange* aRange);
-
   Document* GetDocument() const;
   nsPIDOMWindowOuter* GetWindow() const;
   HTMLEditor* GetHTMLEditor() const;
@@ -749,6 +747,8 @@ class Selection final : public nsSupportsWeakReference,
   void Disconnect();
 
   struct StyledRanges {
+    StyledRange* FindRangeData(nsRange* aRange);
+
     nsresult RemoveRangeAndUnregisterSelection(nsRange& aRange);
 
     /**
