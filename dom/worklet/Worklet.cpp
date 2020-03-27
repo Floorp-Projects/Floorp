@@ -451,10 +451,6 @@ Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(mImpl);
   MOZ_ASSERT(NS_IsMainThread());
-
-#ifdef RELEASE_OR_BETA
-  MOZ_CRASH("This code should not go to release/beta yet!");
-#endif
 }
 
 Worklet::~Worklet() { mImpl->NotifyWorkletFinished(); }

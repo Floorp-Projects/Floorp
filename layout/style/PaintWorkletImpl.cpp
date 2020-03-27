@@ -22,7 +22,11 @@ namespace mozilla {
 
 PaintWorkletImpl::PaintWorkletImpl(nsPIDOMWindowInner* aWindow,
                                    nsIPrincipal* aPrincipal)
-    : WorkletImpl(aWindow, aPrincipal) {}
+    : WorkletImpl(aWindow, aPrincipal) {
+#ifdef RELEASE_OR_BETA
+  MOZ_CRASH("This code should not go to release/beta yet!");
+#endif
+}
 
 PaintWorkletImpl::~PaintWorkletImpl() = default;
 
