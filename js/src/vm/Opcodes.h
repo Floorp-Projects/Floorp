@@ -3159,8 +3159,9 @@
      * before anything else that might add bindings to the environment, and
      * only once per binding. There must be a correct entry for the new binding
      * in `script->bodyScope()`. (All this ensures that at run time, there is
-     * no existing conflicting binding. We check before running the script, in
-     * `js::CheckGlobalOrEvalDeclarationConflicts`.)
+     * no existing conflicting binding. This is checked by the
+     * `JSOp::CheckGlobalOrEvalDecl` bytecode instruction that must appear
+     * before `JSOp::Def{Var,Let,Const,Fun}`.)
      *
      * Throw a SyntaxError if the current VariableEnvironment is the global
      * environment and a binding with the same name exists on the global
@@ -3220,6 +3221,22 @@
      *   Stack: =>
      */ \
     MACRO(DefConst, def_const, NULL, 5, 0, 0, JOF_ATOM) \
+    /*
+     * Check for conflicting bindings before `JSOp::Def{Var,Let,Const,Fun}` in
+     * global or sloppy eval scripts.
+     *
+     * Implements: [GlobalDeclarationInstantiation][1] steps 5, 6, 10 and 12,
+     * and [EvalDeclarationInstantiation][2] steps 5 and 8.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
+     * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
+     *
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
+     *   Operands:
+     *   Stack: =>
+     */ \
+    MACRO(CheckGlobalOrEvalDecl, check_global_or_eval_decl, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Look up a variable on the environment chain and delete it. Push `true`
      * on success (if a binding was deleted, or if no such binding existed in
@@ -3479,7 +3496,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \

@@ -888,21 +888,6 @@ AbortReasonOr<Ok> IonBuilder::build() {
   // what we can in an infallible manner.
   MOZ_TRY(rewriteParameters());
 
-  // Check for redeclaration errors for global scripts.
-  if (!info().funMaybeLazy() && !info().module() &&
-      script()->bodyScope()->is<GlobalScope>() &&
-      script()->bodyScope()->as<GlobalScope>().hasBindings()) {
-    MGlobalNameConflictsCheck* redeclCheck =
-        MGlobalNameConflictsCheck::New(alloc());
-    current->add(redeclCheck);
-    MResumePoint* entryRpCopy =
-        MResumePoint::Copy(alloc(), current->entryResumePoint());
-    if (!entryRpCopy) {
-      return abort(AbortReason::Alloc);
-    }
-    redeclCheck->setResumePoint(entryRpCopy);
-  }
-
   // It's safe to start emitting actual IR, so now build the env chain.
   MOZ_TRY(initEnvironmentChain());
   if (info().needsArgsObj()) {
@@ -1883,6 +1868,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
 
     case JSOp::DefFun:
       return jsop_deffun();
+
+    case JSOp::CheckGlobalOrEvalDecl:
+      return jsop_checkGlobalOrEvalDecl();
 
     case JSOp::Eq:
     case JSOp::Ne:
@@ -12026,6 +12014,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_deffun() {
   current->add(deffun);
 
   return resumeAfter(deffun);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_checkGlobalOrEvalDecl() {
+  MOZ_ASSERT(!script()->isForEval(), "Eval scripts not supported");
+  auto* redeclCheck = MGlobalNameConflictsCheck::New(alloc());
+  current->add(redeclCheck);
+  return resumeAfter(redeclCheck);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_throwsetconst() {

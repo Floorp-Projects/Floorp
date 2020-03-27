@@ -1181,6 +1181,13 @@ bool WarpBuilder::build_DefFun(BytecodeLocation loc) {
   return resumeAfter(deffun, loc);
 }
 
+bool WarpBuilder::build_CheckGlobalOrEvalDecl(BytecodeLocation loc) {
+  MOZ_ASSERT(!script_->isForEval(), "Eval scripts not supported");
+  auto* redeclCheck = MGlobalNameConflictsCheck::New(alloc());
+  current->add(redeclCheck);
+  return resumeAfter(redeclCheck, loc);
+}
+
 bool WarpBuilder::build_BindVar(BytecodeLocation) {
   MOZ_ASSERT(usesEnvironmentChain());
 

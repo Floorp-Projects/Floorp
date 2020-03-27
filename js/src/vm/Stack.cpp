@@ -203,19 +203,9 @@ bool InterpreterFrame::prologue(JSContext* cx) {
   MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
   MOZ_ASSERT(cx->realm() == script->realm());
 
-  if (isEvalFrame() || isGlobalFrame()) {
-    HandleObject env = environmentChain();
-    if (!CheckGlobalOrEvalDeclarationConflicts(cx, env, script)) {
-      return false;
-    }
+  if (!isFunctionFrame()) {
     return probes::EnterScript(cx, script, nullptr, this);
   }
-
-  if (isModuleFrame()) {
-    return probes::EnterScript(cx, script, nullptr, this);
-  }
-
-  MOZ_ASSERT(isFunctionFrame());
 
   // At this point, we've yet to push any environments. Check that they
   // match the enclosing scope.
