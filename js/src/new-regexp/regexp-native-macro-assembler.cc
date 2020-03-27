@@ -16,10 +16,13 @@
 namespace v8 {
 namespace internal {
 
+using js::jit::AbsoluteAddress;
 using js::jit::Address;
 using js::jit::AllocatableGeneralRegisterSet;
+using js::jit::Assembler;
 using js::jit::GeneralRegisterSet;
 using js::jit::Imm32;
+using js::jit::ImmPtr;
 using js::jit::ImmWord;
 using js::jit::Register;
 using js::jit::StackMacroAssembler;
@@ -62,12 +65,47 @@ void SMRegExpMacroAssembler::AdvanceCurrentPosition(int by) {
   }
 }
 
+void SMRegExpMacroAssembler::Backtrack() {
+  // Check for an interrupt. We have to restart from the beginning if we
+  // are interrupted, so we only check for urgent interrupts.
+  js::jit::Label noInterrupt;
+  masm_.branchTest32(
+      Assembler::Zero, AbsoluteAddress(cx_->addressOfInterruptBits()),
+      Imm32(uint32_t(js::InterruptReason::CallbackUrgent)), &noInterrupt);
+  masm_.movePtr(ImmWord(js::RegExpRunStatus_Error), temp0_);
+  masm_.jump(&exit_label_);
+  masm_.bind(&noInterrupt);
+
+  // Pop code location from backtrack stack and jump to location.
+  Pop(temp0_);
+  masm_.jump(temp0_);
+}
+
+void SMRegExpMacroAssembler::Bind(Label* label) {
+  masm_.bind(label->inner());
+}
+
 void SMRegExpMacroAssembler::Fail() {
   masm_.movePtr(ImmWord(js::RegExpRunStatus_Success_NotFound), temp0_);
   masm_.jump(&exit_label_);
 }
 
+void SMRegExpMacroAssembler::GoTo(Label* to) {
+  masm_.jump(LabelOrBacktrack(to));
+}
+
 void SMRegExpMacroAssembler::PopCurrentPosition() { Pop(current_position_); }
+
+void SMRegExpMacroAssembler::PushBacktrack(Label* label) {
+  MOZ_ASSERT(!label->is_bound());
+  MOZ_ASSERT(!label->patchOffset_.bound());
+  label->patchOffset_ = masm_.movWithPatch(ImmPtr(nullptr), temp0_);
+  MOZ_ASSERT(label->patchOffset_.bound());
+
+  Push(temp0_);
+
+  CheckBacktrackStackLimit();
+}
 
 void SMRegExpMacroAssembler::PushCurrentPosition() { Push(current_position_); }
 
@@ -90,6 +128,32 @@ void SMRegExpMacroAssembler::Pop(Register target) {
 
   masm_.loadPtr(Address(backtrack_stack_pointer_, 0), target);
   masm_.addPtr(Imm32(sizeof(void*)), backtrack_stack_pointer_);
+}
+
+void SMRegExpMacroAssembler::JumpOrBacktrack(Label* to) {
+  if (to) {
+    masm_.jump(to->inner());
+  } else {
+    Backtrack();
+  }
+}
+
+// Generate a quick inline test for backtrack stack overflow.
+// If the test fails, call an OOL handler to try growing the stack.
+void SMRegExpMacroAssembler::CheckBacktrackStackLimit() {
+  js::jit::Label no_stack_overflow;
+  masm_.branchPtr(
+      Assembler::BelowOrEqual,
+      AbsoluteAddress(isolate()->regexp_stack()->limit_address_address()),
+      backtrack_stack_pointer_, &no_stack_overflow);
+
+  masm_.call(&stack_overflow_label_);
+
+  // Exit with an exception if the call failed
+  masm_.branchTest32(Assembler::Zero, temp0_, temp0_,
+                     &exit_with_exception_label_);
+
+  masm_.bind(&no_stack_overflow);
 }
 
 // This is only used by tracing code.

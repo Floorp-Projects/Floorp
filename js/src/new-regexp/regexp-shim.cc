@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "new-regexp/regexp-shim.h"
+#include "new-regexp/regexp-stack.h"
 
 namespace v8 {
 namespace internal {
@@ -148,6 +149,10 @@ void Isolate::trace(JSTracer* trc) {
 // empty string and don't print anything.
 std::unique_ptr<char[]> String::ToCString() {
   return std::unique_ptr<char[]>();
+}
+
+byte* Isolate::top_of_regexp_stack() const {
+  return reinterpret_cast<byte*>(regexpStack_->memory_top_address_address());
 }
 
 Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
