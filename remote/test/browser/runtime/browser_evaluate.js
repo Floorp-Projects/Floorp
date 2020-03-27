@@ -467,19 +467,3 @@ add_task(async function exceptionDetailsThrowValue({ client }) {
     "Exception details are passed as a RemoteObject"
   );
 });
-
-async function enableRuntime(client) {
-  const { Runtime } = client;
-
-  // Enable watching for new execution context
-  await Runtime.enable();
-  info("Runtime domain has been enabled");
-
-  // Calling Runtime.enable will emit executionContextCreated for the existing contexts
-  const { context } = await Runtime.executionContextCreated();
-  ok(!!context.id, "The execution context has an id");
-  ok(context.auxData.isDefault, "The execution context is the default one");
-  ok(!!context.auxData.frameId, "The execution context has a frame id set");
-
-  return context.id;
-}
