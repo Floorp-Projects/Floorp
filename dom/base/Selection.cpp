@@ -958,10 +958,10 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   }
 
   int32_t startIndex, endIndex;
-  nsresult rv =
-      GetIndicesForInterval(aRange->GetStartContainer(), aRange->StartOffset(),
-                            aRange->GetEndContainer(), aRange->EndOffset(),
-                            false, startIndex, endIndex);
+  nsresult rv = mStyledRanges.GetIndicesForInterval(
+      aRange->GetStartContainer(), aRange->StartOffset(),
+      aRange->GetEndContainer(), aRange->EndOffset(), false, startIndex,
+      endIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (endIndex == -1) {
@@ -1144,9 +1144,9 @@ nsresult Selection::GetRangesForIntervalArray(
 
   aRanges->Clear();
   int32_t startIndex, endIndex;
-  nsresult res =
-      GetIndicesForInterval(aBeginNode, aBeginOffset, aEndNode, aEndOffset,
-                            aAllowAdjacent, startIndex, endIndex);
+  nsresult res = mStyledRanges.GetIndicesForInterval(
+      aBeginNode, aBeginOffset, aEndNode, aEndOffset, aAllowAdjacent,
+      startIndex, endIndex);
   NS_ENSURE_SUCCESS(res, res);
 
   if (startIndex == -1 || endIndex == -1) return NS_OK;
@@ -1159,7 +1159,7 @@ nsresult Selection::GetRangesForIntervalArray(
   return NS_OK;
 }
 
-nsresult Selection::GetIndicesForInterval(
+nsresult Selection::StyledRanges::GetIndicesForInterval(
     const nsINode* aBeginNode, int32_t aBeginOffset, const nsINode* aEndNode,
     int32_t aEndOffset, bool aAllowAdjacent, int32_t& aStartIndex,
     int32_t& aEndIndex) const {
@@ -1174,18 +1174,18 @@ nsresult Selection::GetIndicesForInterval(
   aStartIndex = -1;
   aEndIndex = -1;
 
-  if (mStyledRanges.mRanges.Length() == 0) return NS_OK;
+  if (mRanges.Length() == 0) return NS_OK;
 
   const bool intervalIsCollapsed =
       aBeginNode == aEndNode && aBeginOffset == aEndOffset;
 
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
-  int32_t endsBeforeIndex{StyledRanges::FindInsertionPoint(
-      &mStyledRanges.mRanges, *aEndNode, aEndOffset, &CompareToRangeStart)};
+  int32_t endsBeforeIndex{FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
+                                             &CompareToRangeStart)};
 
   if (endsBeforeIndex == 0) {
-    const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
+    const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
 
     // If the interval is strictly before the range at index 0, we can optimize
     // by returning now - all ranges start after the given interval
@@ -1193,7 +1193,7 @@ nsresult Selection::GetIndicesForInterval(
       return NS_OK;
     }
 
-    // We now know that the start point of mStyledRanges.mRanges[0].mRange
+    // We now know that the start point of mRanges[0].mRange
     // equals the end of the interval. Thus, when aAllowadjacent is true, the
     // caller is always interested in this range. However, when excluding
     // adjacencies, we must remember to include the range when both it and the
@@ -1203,25 +1203,25 @@ nsresult Selection::GetIndicesForInterval(
   }
   aEndIndex = endsBeforeIndex;
 
-  int32_t beginsAfterIndex{StyledRanges::FindInsertionPoint(
-      &mStyledRanges.mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
+  int32_t beginsAfterIndex{FindInsertionPoint(
+      &mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
 
-  if (beginsAfterIndex == (int32_t)mStyledRanges.mRanges.Length())
+  if (beginsAfterIndex == (int32_t)mRanges.Length())
     return NS_OK;  // optimization: all ranges are strictly before us
 
   if (aAllowAdjacent) {
     // At this point, one of the following holds:
-    //   endsBeforeIndex == mStyledRanges.mRanges.Length(),
+    //   endsBeforeIndex == mRanges.Length(),
     //   endsBeforeIndex points to a range whose start point does not equal the
     //     given interval's start point
     //   endsBeforeIndex points to a range whose start point equals the given
     //     interval's start point
     // In the final case, there can be two such ranges, a collapsed range, and
-    // an adjacent range (they will appear in mStyledRanges.mRanges in that
+    // an adjacent range (they will appear in mRanges in that
     // order). For this final case, we need to increment endsBeforeIndex, until
     // one of the first two possibilites hold
-    while (endsBeforeIndex < (int32_t)mStyledRanges.mRanges.Length()) {
-      const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
+    while (endsBeforeIndex < (int32_t)mRanges.Length()) {
+      const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
       if (!endRange->StartRef().Equals(aEndNode, aEndOffset)) {
         break;
       }
@@ -1235,14 +1235,14 @@ nsresult Selection::GetIndicesForInterval(
     //   beginsOnOrAfter points to a range whose end point equals the given
     //     interval's end point
     // In the final case, there can be two such ranges, an adjacent range, and
-    // a collapsed range (they will appear in mStyledRanges.mRanges in that
+    // a collapsed range (they will appear in mRanges in that
     // order). For this final case, we only need to take action if both those
     // ranges exist, and we are pointing to the collapsed range - we need to
     // point to the adjacent range
-    const nsRange* beginRange = mStyledRanges.mRanges[beginsAfterIndex].mRange;
+    const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
     if (beginsAfterIndex > 0 && beginRange->Collapsed() &&
         beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
-      beginRange = mStyledRanges.mRanges[beginsAfterIndex - 1].mRange;
+      beginRange = mRanges[beginsAfterIndex - 1].mRange;
       if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
         beginsAfterIndex--;
       }
@@ -1252,7 +1252,7 @@ nsresult Selection::GetIndicesForInterval(
     // need to take action is when the range at beginsAfterIndex ends on
     // the given interval's start point, but that range isn't collapsed (a
     // collapsed range should be included in the returned results).
-    const nsRange* beginRange = mStyledRanges.mRanges[beginsAfterIndex].mRange;
+    const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
     if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset) &&
         !beginRange->Collapsed()) {
       beginsAfterIndex++;
@@ -1262,8 +1262,8 @@ nsresult Selection::GetIndicesForInterval(
     // In particular, endsBeforeIndex may point to a collaped range which
     // represents the point at the end of the interval - this range should be
     // included
-    if (endsBeforeIndex < (int32_t)mStyledRanges.mRanges.Length()) {
-      const nsRange* endRange = mStyledRanges.mRanges[endsBeforeIndex].mRange;
+    if (endsBeforeIndex < (int32_t)mRanges.Length()) {
+      const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
       if (endRange->StartRef().Equals(aEndNode, aEndOffset) &&
           endRange->Collapsed()) {
         endsBeforeIndex++;
@@ -1271,8 +1271,7 @@ nsresult Selection::GetIndicesForInterval(
     }
   }
 
-  NS_ASSERTION(beginsAfterIndex <= endsBeforeIndex,
-               "Is mStyledRanges.mRanges not ordered?");
+  NS_ASSERTION(beginsAfterIndex <= endsBeforeIndex, "Is mRanges not ordered?");
   NS_ENSURE_STATE(beginsAfterIndex <= endsBeforeIndex);
 
   aStartIndex = beginsAfterIndex;
