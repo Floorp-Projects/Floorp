@@ -2412,11 +2412,15 @@
         );
       }
 
-      var evt = new CustomEvent("TabBrowserInserted", {
-        bubbles: true,
-        detail: { insertedOnTabCreation: aInsertedOnTabCreation },
-      });
-      aTab.dispatchEvent(evt);
+      // Only fire this event if the tab is already in the DOM
+      // and will be handled by a listener.
+      if (aTab.isConnected) {
+        var evt = new CustomEvent("TabBrowserInserted", {
+          bubbles: true,
+          detail: { insertedOnTabCreation: aInsertedOnTabCreation },
+        });
+        aTab.dispatchEvent(evt);
+      }
     },
 
     _mayDiscardBrowser(aTab, aForceDiscard) {
@@ -3027,11 +3031,24 @@
         this.tabContainer._setPositionalAttributes();
         TabBarVisibility.update();
 
-        // Fire a TabOpen event for all unpinned tabs, except reused selected
-        // tabs. If tabToSelect is a tab, we didn't reuse the selected tab.
         for (let tab of tabs) {
-          if (!tab.pinned && (tabToSelect || !tab.selected)) {
-            this._fireTabOpen(tab, {});
+          // If tabToSelect is a tab, we didn't reuse the selected tab.
+          if (tabToSelect || !tab.selected) {
+            // Fire a TabOpen event for all unpinned tabs, except reused selected
+            // tabs.
+            if (!tab.pinned) {
+              this._fireTabOpen(tab, {});
+            }
+
+            // Fire a TabBrowserInserted event on all tabs that have a connected,
+            // real browser, except for reused selected tabs.
+            if (tab.linkedPanel) {
+              var evt = new CustomEvent("TabBrowserInserted", {
+                bubbles: true,
+                detail: { insertedOnTabCreation: true },
+              });
+              tab.dispatchEvent(evt);
+            }
           }
         }
       }
