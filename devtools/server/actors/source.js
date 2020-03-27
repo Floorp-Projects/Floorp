@@ -215,13 +215,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       return toResolvedContent(buffer);
     }
 
-    // If we are replaying then we can only use source saved during the
-    // original recording. If we try to fetch it now it may have changed or
-    // may no longer exist.
-    if (this.dbg.replaying) {
-      return this.dbg.replayingContent(this.url);
-    }
-
     // Use `source.text` if it exists, is not the "no source" string, and
     // the content type of the source is JavaScript or it is synthesized
     // wasm. It will be "no source" if the Debugger API wasn't able to load

@@ -99,7 +99,6 @@ class CSSWarning extends Component {
     const {
       id: messageId,
       indent,
-      executionPoint,
       cssSelectors,
       source,
       type,
@@ -146,7 +145,6 @@ class CSSWarning extends Component {
       attachment,
       collapsible: !!cssSelectors.length,
       dispatch,
-      executionPoint,
       exceptionDocURL,
       frame,
       indent,

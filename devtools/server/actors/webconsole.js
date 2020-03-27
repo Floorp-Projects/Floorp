@@ -210,10 +210,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     this.traits = {};
-
-    if (this.dbg.replaying && !isWorker) {
-      this.dbg.onConsoleMessage = this.onReplayingMessage.bind(this);
-    }
   },
   /**
    * Debugger instance.
@@ -442,10 +438,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       );
     }
 
-    if (this.dbg.replaying && !isWorker) {
-      this.dbg.onConsoleMessage = null;
-    }
-
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalWindow = null;
@@ -502,11 +494,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         Debuggee value for |value|.
    */
   makeDebuggeeValue: function(value, useObjectGlobal) {
-    if (this.dbg.replaying) {
-      // If we are replaying then any values we are operating on should already
-      // be debuggee values.
-      return value;
-    }
     if (useObjectGlobal && isObject(value)) {
       try {
         const global = Cu.getGlobalForObject(value);
@@ -629,11 +616,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       inspectFromAnnotation,
     });
   },
-
-  /**
-   * When using a replaying debugger, all messages we have seen so far.
-   */
-  replayingMessages: null,
 
   // Request handlers for known packet types.
 
@@ -929,23 +911,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     const messages = [];
 
-    let replayingMessages = [];
-    if (this.dbg.replaying) {
-      replayingMessages = this.dbg.findAllConsoleMessages();
-    }
-
     while (messageTypes.length > 0) {
       const type = messageTypes.shift();
       switch (type) {
         case "ConsoleAPI": {
-          replayingMessages.forEach(msg => {
-            if (msg.messageType == "ConsoleAPI") {
-              const message = this.prepareConsoleMessageForRemote(msg);
-              message._type = type;
-              messages.push(message);
-            }
-          });
-
           if (!this.consoleAPIListener) {
             break;
           }
@@ -976,14 +945,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           break;
         }
         case "PageError": {
-          replayingMessages.forEach(msg => {
-            if (msg.messageType == "PageError") {
-              const message = this.preparePageErrorForRemote(msg);
-              message._type = type;
-              messages.push(message);
-            }
-          });
-
           if (!this.consoleServiceListener) {
             break;
           }
@@ -1612,22 +1573,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   // Event handlers for various listeners.
 
   /**
-   * Handle console messages sent to us from a replaying process via the
-   * debugger.
-   */
-  onReplayingMessage: function(msg) {
-    if (msg.messageType == "ConsoleAPI") {
-      this.onConsoleAPICall(msg);
-    }
-
-    if (msg.messageType == "PageError") {
-      this.emit("pageError", {
-        pageError: this.preparePageErrorForRemote(msg),
-      });
-    }
-  },
-
-  /**
    * Handler for messages received from the ConsoleServiceListener. This method
    * sends the nsIConsoleMessage to the remote Web Console client.
    *
@@ -1747,7 +1692,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       private: pageError.isFromPrivateWindow,
       stacktrace: stack,
       notes: notesArray,
-      executionPoint: pageError.executionPoint,
       chromeContext: pageError.isFromChromeContext,
       cssSelectors: pageError.cssSelectors,
     };
