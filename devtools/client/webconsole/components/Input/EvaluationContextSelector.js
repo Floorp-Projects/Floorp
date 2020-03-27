@@ -44,7 +44,7 @@ class EvaluationContextSelector extends Component {
       updateInstantEvaluationResultForCurrentExpression:
         PropTypes.func.isRequired,
       selectedThread: PropTypes.object,
-      threads: PropTypes.object,
+      threads: PropTypes.array,
       webConsoleUI: PropTypes.object.isRequired,
     };
   }
