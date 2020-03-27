@@ -1,3 +1,4 @@
+.. _linux-build-documentation:
 
 Linux build preparation
 =======================
