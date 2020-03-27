@@ -1045,22 +1045,23 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
   return NS_OK;
 }
 
-nsresult Selection::RemoveRangeInternal(nsRange& aRange) {
+nsresult Selection::StyledRanges::RemoveRangeAndUnregisterSelection(
+    nsRange& aRange) {
   // Find the range's index & remove it. We could use FindInsertionPoint to
   // get O(log n) time, but that requires many expensive DOM comparisons.
   // For even several thousand items, this is probably faster because the
   // comparisons are so fast.
   int32_t idx = -1;
   uint32_t i;
-  for (i = 0; i < mStyledRanges.mRanges.Length(); i++) {
-    if (mStyledRanges.mRanges[i].mRange == &aRange) {
+  for (i = 0; i < mRanges.Length(); i++) {
+    if (mRanges[i].mRange == &aRange) {
       idx = (int32_t)i;
       break;
     }
   }
   if (idx < 0) return NS_ERROR_DOM_NOT_FOUND_ERR;
 
-  mStyledRanges.mRanges.RemoveElementAt(idx);
+  mRanges.RemoveElementAt(idx);
   aRange.UnregisterSelection();
   return NS_OK;
 }
@@ -1069,7 +1070,8 @@ nsresult Selection::RemoveCollapsedRanges() {
   uint32_t i = 0;
   while (i < mStyledRanges.mRanges.Length()) {
     if (mStyledRanges.mRanges[i].mRange->Collapsed()) {
-      nsresult rv = RemoveRangeInternal(*mStyledRanges.mRanges[i].mRange);
+      nsresult rv = mStyledRanges.RemoveRangeAndUnregisterSelection(
+          *mStyledRanges.mRanges[i].mRange);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       ++i;
@@ -1970,7 +1972,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 
 void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     nsRange& aRange, ErrorResult& aRv) {
-  nsresult rv = RemoveRangeInternal(aRange);
+  nsresult rv = mStyledRanges.RemoveRangeAndUnregisterSelection(aRange);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -2268,7 +2270,8 @@ nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
       IsCollapsed() ? DispatchSelectstartEvent::Maybe
                     : DispatchSelectstartEvent::No;
 
-  nsresult res = RemoveRangeInternal(*mAnchorFocusRange);
+  nsresult res =
+      mStyledRanges.RemoveRangeAndUnregisterSelection(*mAnchorFocusRange);
   if (NS_FAILED(res)) return res;
 
   int32_t aOutIndex = -1;
