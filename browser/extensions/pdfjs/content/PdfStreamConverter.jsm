@@ -385,15 +385,15 @@ class ChromeActions {
     return !!prefBrowser && prefGfx;
   }
 
-  supportsDocumentColors() {
-    return getIntPref("browser.display.document_color_use", 0) !== 2;
-  }
-
   supportedMouseWheelZoomModifierKeys() {
     return {
       ctrlKey: getIntPref("mousewheel.with_control.action", 3) === 3,
       metaKey: getIntPref("mousewheel.with_meta.action", 1) === 3,
     };
+  }
+
+  isInAutomation() {
+    return Cu.isInAutomation;
   }
 
   reportTelemetry(data) {
