@@ -19,7 +19,7 @@
         android:paddingTop="16dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="@string/mozac_feature_addons_not_yet_supported_caption" />
+        android:text="@string/mozac_feature_addons_not_yet_supported_caption2" />
 
     <TextView
         android:id="@+id/learn_more_label"
