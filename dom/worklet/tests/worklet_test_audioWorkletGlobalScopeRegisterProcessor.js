@@ -253,8 +253,9 @@ registerProcessor("empty-worklet-processor", EmptyWorkletProcessor);
 // Test class with constructor but not process function
 registerProcessor("no-worklet-processor", NoProcessWorkletProcessor);
 
-// Test class with parameterDescriptors not being array nor undefined
-// "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.parameterDescriptors is neither an array nor undefined."
+// Test class with parameterDescriptors being iterable, but the elements are not
+// dictionaries.
+// "TypeError: AudioWorkletGlobalScope.registerProcessor: Element 0 in parameterDescriptors can't be converted to a dictionary.",
 try {
   registerProcessor(
     "bad-descriptors-worklet-processor",

@@ -16,7 +16,7 @@ function configureTest() {
     "TypeError: AudioWorkletGlobalScope.registerProcessor: Argument 2 is not a constructor.",
     "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: Argument 1 should not be an empty string.",
     "TypeError: AudioWorkletGlobalScope.registerProcessor: Argument 2 is not an object.",
-    "TypeError: AudioWorkletGlobalScope.registerProcessor: .constructor.parameterDescriptors of argument 2 is neither an array nor undefined.",
+    "TypeError: AudioWorkletGlobalScope.registerProcessor: Element 0 in parameterDescriptors can't be converted to a dictionary.",
     "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: Argument 1 is invalid: a class with the same name is already registered.",
     "TypeError: AudioWorkletGlobalScope.registerProcessor: Missing required 'name' member of AudioParamDescriptor.",
     "TypeError: AudioWorkletGlobalScope.registerProcessor: 'defaultValue' member of AudioParamDescriptor is not a finite floating-point value.",
@@ -24,9 +24,9 @@ function configureTest() {
     "TypeError: AudioWorkletGlobalScope.registerProcessor: 'maxValue' member of AudioParamDescriptor is not a finite floating-point value.",
     "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: Duplicated name \"test\" in parameterDescriptors.",
     "TypeError: AudioWorkletGlobalScope.registerProcessor: Element 0 in parameterDescriptors can't be converted to a dictionary.",
-    "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
-    "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
-    "NotSupportedError: AudioWorkletGlobalScope.registerProcessor: In parameterDescriptors, test minValue should be smaller than maxValue.",
+    "InvalidStateError: AudioWorkletGlobalScope.registerProcessor: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
+    "InvalidStateError: AudioWorkletGlobalScope.registerProcessor: In parameterDescriptors, test defaultValue is out of the range defined by minValue and maxValue.",
+    "InvalidStateError: AudioWorkletGlobalScope.registerProcessor: In parameterDescriptors, test minValue should be smaller than maxValue.",
     ];
 
   var expected_errors_i = 0;
