@@ -103,7 +103,7 @@ LoadInfo::LoadInfo(
       mDocumentHasLoaded(false),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
-      mHttpsOnlyNoUpgrade(false),
+      mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mIsFromProcessingFrameAttributes(false) {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -366,7 +366,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mDocumentHasLoaded(false),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
-      mHttpsOnlyNoUpgrade(false),
+      mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -467,7 +467,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mDocumentHasLoaded(false),
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
-      mHttpsOnlyNoUpgrade(false),
+      mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
       mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -568,7 +568,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
           rhs.mAllowListFutureDocumentsCreatedFromThisRedirectChain),
       mCspNonce(rhs.mCspNonce),
       mSkipContentSniffing(rhs.mSkipContentSniffing),
-      mHttpsOnlyNoUpgrade(rhs.mHttpsOnlyNoUpgrade),
+      mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes) {}
 
 LoadInfo::LoadInfo(
@@ -606,7 +606,7 @@ LoadInfo::LoadInfo(
     bool aDocumentHasLoaded,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     const nsAString& aCspNonce, bool aSkipContentSniffing,
-    bool aHttpsOnlyNoUpgrade, uint32_t aRequestBlockingReason,
+    uint32_t aHttpsOnlyStatus, uint32_t aRequestBlockingReason,
     nsINode* aLoadingContext)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
@@ -663,7 +663,7 @@ LoadInfo::LoadInfo(
           aAllowListFutureDocumentsCreatedFromThisRedirectChain),
       mCspNonce(aCspNonce),
       mSkipContentSniffing(aSkipContentSniffing),
-      mHttpsOnlyNoUpgrade(aHttpsOnlyNoUpgrade),
+      mHttpsOnlyStatus(aHttpsOnlyStatus),
       mIsFromProcessingFrameAttributes(false) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
@@ -1470,14 +1470,14 @@ LoadInfo::SetSkipContentSniffing(bool aSkipContentSniffing) {
 }
 
 NS_IMETHODIMP
-LoadInfo::GetHttpsOnlyNoUpgrade(bool* aHttpsOnlyNoUpgrade) {
-  *aHttpsOnlyNoUpgrade = mHttpsOnlyNoUpgrade;
+LoadInfo::GetHttpsOnlyStatus(uint32_t* aHttpsOnlyStatus) {
+  *aHttpsOnlyStatus = mHttpsOnlyStatus;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-LoadInfo::SetHttpsOnlyNoUpgrade(bool aHttpsOnlyNoUpgrade) {
-  mHttpsOnlyNoUpgrade = aHttpsOnlyNoUpgrade;
+LoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
+  mHttpsOnlyStatus = aHttpsOnlyStatus;
   return NS_OK;
 }
 
