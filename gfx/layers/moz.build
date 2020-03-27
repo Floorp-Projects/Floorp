@@ -95,7 +95,6 @@ EXPORTS.mozilla.layers += [
     'AnimationInfo.h',
     'apz/public/APZInputBridge.h',
     'apz/public/APZSampler.h',
-    'apz/public/APZTypes.h',
     'apz/public/APZUpdater.h',
     'apz/public/CompositorController.h',
     'apz/public/GeckoContentController.h',

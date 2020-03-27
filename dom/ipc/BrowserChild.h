@@ -585,7 +585,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                  bool aPreventDefault) const;
   void SetTargetAPZC(
       uint64_t aInputBlockId,
-      const nsTArray<layers::SLGuidAndRenderRoot>& aTargets) const;
+      const nsTArray<layers::ScrollableLayerGuid>& aTargets) const;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvHandleTap(
       const layers::GeckoContentController::TapType& aType,

@@ -153,11 +153,10 @@ void ChromeProcessController::HandleDoubleTap(
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
           document->GetDocumentElement(), &presShellId, &viewId)) {
     APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<SLGuidAndRenderRoot, CSSRect, uint32_t>(
+        NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
             "IAPZCTreeManager::ZoomToRect", mAPZCTreeManager,
             &IAPZCTreeManager::ZoomToRect,
-            SLGuidAndRenderRoot(aGuid.mLayersId, presShellId, viewId,
-                                wr::RenderRoot::Default),
+            ScrollableLayerGuid(aGuid.mLayersId, presShellId, viewId),
             zoomToRect, ZoomToRectBehavior::DEFAULT_BEHAVIOR));
   }
 }

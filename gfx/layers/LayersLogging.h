@@ -12,7 +12,6 @@
 #include "mozilla/gfx/Point.h"        // for IntSize, etc
 #include "mozilla/gfx/TiledRegion.h"  // for TiledRegion
 #include "mozilla/gfx/Types.h"        // for SamplingFilter, SurfaceFormat
-#include "mozilla/layers/APZTypes.h"  // for SLGuidAndRenderRoot
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
 #include "mozilla/layers/WebRenderLayersLogging.h"
 #include "mozilla/layers/ZoomConstraints.h"
@@ -183,9 +182,6 @@ void AppendToString(std::stringstream& aStream, const FrameMetrics& m,
                     bool detailed = false);
 
 void AppendToString(std::stringstream& aStream, const ScrollableLayerGuid& s,
-                    const char* pfx = "", const char* sfx = "");
-
-void AppendToString(std::stringstream& aStream, const SLGuidAndRenderRoot& s,
                     const char* pfx = "", const char* sfx = "");
 
 void AppendToString(std::stringstream& aStream, const ZoomConstraints& z,
