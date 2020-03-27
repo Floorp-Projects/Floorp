@@ -83,6 +83,7 @@ const int16_t CRASH_X64CFI_EPILOG = 19;
 const int16_t CRASH_X64CFI_EOF = 20;
 const int16_t CRASH_PHC_USE_AFTER_FREE = 21;
 const int16_t CRASH_PHC_DOUBLE_FREE = 22;
+const int16_t CRASH_PHC_BOUNDS_VIOLATION = 23;
 
 #if XP_WIN && HAVE_64BIT_BUILD && defined(_M_X64) && !defined(__MINGW32__)
 
@@ -196,7 +197,7 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       // Do a UAF, triggering a crash.
       uint8_t* p = GetPHCAllocation(32);
       free(p);
-      *p = 0;
+      p[0] = 0;
       // not reached
     }
     case CRASH_PHC_DOUBLE_FREE: {
@@ -204,6 +205,12 @@ extern "C" NS_EXPORT void Crash(int16_t how) {
       uint8_t* p = GetPHCAllocation(64);
       free(p);
       free(p);
+      // not reached
+    }
+    case CRASH_PHC_BOUNDS_VIOLATION: {
+      // Do a bounds violation, triggering a crash.
+      uint8_t* p = GetPHCAllocation(96);
+      p[96] = 0;
       // not reached
     }
 #endif
