@@ -217,8 +217,7 @@ void APZUpdater::UpdateScrollDataAndTreeState(
               return;
             }
             self->mApz->UpdateHitTestingTree(
-                WebRenderScrollDataWrapper(*self, aRootLayerTreeId,
-                                           &(root->second)),
+                WebRenderScrollDataWrapper(*self, &(root->second)),
                 isFirstPaint, aOriginatingWrRootId.mLayersId,
                 paintSequenceNumber);
           }));
@@ -241,8 +240,8 @@ void APZUpdater::UpdateScrollOffsets(WRRootId aRootLayerTreeId,
                              return;
                            }
                            self->mApz->UpdateHitTestingTree(
-                               WebRenderScrollDataWrapper(
-                                   *self, aRootLayerTreeId, &(root->second)),
+                               WebRenderScrollDataWrapper(*self,
+                                                          &(root->second)),
                                /*isFirstPaint*/ false,
                                aOriginatingWrRootId.mLayersId,
                                aPaintSequenceNumber);
