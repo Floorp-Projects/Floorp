@@ -8703,6 +8703,10 @@
   mirror: always
 
 #ifdef MOZ_WAYLAND
+#ifdef NIGHTLY_BUILD
+# Keep those pref hidden on non-nightly builds to avoid people accidentally
+# turning it on.
+
 # Use DMABuf backend for Basic compositor.
 # For testing purposes only.
 - name: widget.wayland-dmabuf-basic-compositor.enabled
@@ -8716,6 +8720,7 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+#endif
 
 # Use DMABuf backend for WebGL on Wayland.
 - name: widget.wayland-dmabuf-webgl.enabled

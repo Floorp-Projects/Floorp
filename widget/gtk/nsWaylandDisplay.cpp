@@ -481,8 +481,11 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
   }
 
   sIsDMABufConfigured = true;
-  if (!StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() &&
+  if (
+#ifdef NIGHTLY_BUILD
+      !StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() &&
       !StaticPrefs::widget_wayland_dmabuf_textures_enabled() &&
+#endif
       !StaticPrefs::widget_wayland_dmabuf_webgl_enabled() &&
       !StaticPrefs::widget_wayland_dmabuf_vaapi_enabled()) {
     // Disabled by user, just quit.
@@ -507,6 +510,7 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
   return true;
 }
 
+#ifdef NIGHTLY_BUILD
 bool nsWaylandDisplay::IsDMABufBasicEnabled() {
   return IsDMABufEnabled() &&
          StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled();
@@ -515,6 +519,10 @@ bool nsWaylandDisplay::IsDMABufTexturesEnabled() {
   return IsDMABufEnabled() &&
          StaticPrefs::widget_wayland_dmabuf_textures_enabled();
 }
+#else
+bool nsWaylandDisplay::IsDMABufBasicEnabled() { return false; }
+bool nsWaylandDisplay::IsDMABufTexturesEnabled() { return false; }
+#endif
 bool nsWaylandDisplay::IsDMABufWebGLEnabled() {
   return IsDMABufEnabled() &&
          StaticPrefs::widget_wayland_dmabuf_webgl_enabled();
