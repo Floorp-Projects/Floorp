@@ -108,8 +108,8 @@ interface WebGLShaderPrecisionFormat {
     readonly attribute GLint precision;
 };
 
-typedef (Float32Array or sequence<GLfloat>) Float32List;
-typedef (Int32Array or sequence<GLint>) Int32List;
+typedef ([AllowShared] Float32Array or sequence<GLfloat>) Float32List;
+typedef ([AllowShared] Int32Array or sequence<GLint>) Int32List;
 
 // Shared mixin for the things that WebGLRenderingContext and
 // WebGL2RenderingContext have in common.  This doesn't have all the things they
