@@ -17,7 +17,6 @@ EXTRA_JS_MODULES.sessionstore = [
     'RunState.jsm',
     'SessionCookies.jsm',
     'SessionFile.jsm',
-    'SessionHistoryListener.jsm',
     'SessionMigration.jsm',
     'SessionSaver.jsm',
     'SessionStartup.jsm',
