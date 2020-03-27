@@ -201,12 +201,6 @@ var gIdentityHandler = {
     ]);
   },
 
-  get _identityIconLabels() {
-    delete this._identityIconLabels;
-    return (this._identityIconLabels = document.getElementById(
-      "identity-icon-labels"
-    ));
-  },
   get _identityIconLabel() {
     delete this._identityIconLabel;
     return (this._identityIconLabel = document.getElementById(
@@ -218,12 +212,6 @@ var gIdentityHandler = {
     return (this._overrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService));
-  },
-  get _identityIconCountryLabel() {
-    delete this._identityIconCountryLabel;
-    return (this._identityIconCountryLabel = document.getElementById(
-      "identity-icon-country-label"
-    ));
   },
   get _identityIcon() {
     delete this._identityIcon;
@@ -342,17 +330,6 @@ var gIdentityHandler = {
       false
     );
     return this._useGrayLockIcon;
-  },
-
-  get _showExtendedValidation() {
-    delete this._showExtendedValidation;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_showExtendedValidation",
-      "security.identityblock.show_extended_validation",
-      false
-    );
-    return this._showExtendedValidation;
   },
 
   /**
@@ -646,9 +623,6 @@ var gIdentityHandler = {
    */
   get pointerlockFsWarningClassName() {
     // Note that the fullscreen warning does not handle _isSecureInternalUI.
-    if (this._uriHasHost && this._isEV && this._showExtendedValidation) {
-      return "verifiedIdentity";
-    }
     if (this._uriHasHost && this._isSecureConnection) {
       return "verifiedDomain";
     }
@@ -688,45 +662,12 @@ var gIdentityHandler = {
   _refreshIdentityIcons() {
     let icon_label = "";
     let tooltip = "";
-    let icon_country_label = "";
-    let icon_labels_dir = "ltr";
 
     if (this._isSecureInternalUI) {
       // This is a secure internal Firefox page.
       this._identityBox.className = "chromeUI";
       let brandBundle = document.getElementById("bundle_brand");
       icon_label = brandBundle.getString("brandShorterName");
-    } else if (this._uriHasHost && this._isEV && this._showExtendedValidation) {
-      // This is a secure connection with EV.
-      this._identityBox.className = "verifiedIdentity";
-      if (this._isMixedActiveContentBlocked) {
-        this._identityBox.classList.add("mixedActiveBlocked");
-      }
-
-      if (!this._isCertUserOverridden) {
-        // If it's identified, then we can populate the dialog with credentials
-        let iData = this.getIdentityData();
-        tooltip = gNavigatorBundle.getFormattedString(
-          "identity.identified.verifier",
-          [iData.caOrg]
-        );
-        icon_label = iData.subjectOrg;
-        if (iData.country) {
-          icon_country_label = "(" + iData.country + ")";
-        }
-
-        // If the organization name starts with an RTL character, then
-        // swap the positions of the organization and country code labels.
-        // The Unicode ranges reflect the definition of the UTF16_CODE_UNIT_IS_BIDI
-        // macro in intl/unicharutil/util/nsBidiUtils.h. When bug 218823 gets
-        // fixed, this test should be replaced by one adhering to the
-        // Unicode Bidirectional Algorithm proper (at the paragraph level).
-        icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc\ud802\ud803\ud83a\ud83b]/.test(
-          icon_label
-        )
-          ? "rtl"
-          : "ltr";
-      }
     } else if (this._pageExtensionPolicy) {
       // This is a WebExtension page.
       this._identityBox.className = "extensionPage";
@@ -735,7 +676,6 @@ var gIdentityHandler = {
         "identity.extension.label",
         [extensionName]
       );
-      icon_labels_dir = "";
     } else if (this._uriHasHost && this._isSecureConnection) {
       // This is a secure connection.
       this._identityBox.className = "verifiedDomain";
@@ -825,15 +765,8 @@ var gIdentityHandler = {
       );
     }
 
-    this._identityIconLabels.setAttribute("tooltiptext", tooltip);
+    this._identityIconLabel.setAttribute("tooltiptext", tooltip);
     this._identityIconLabel.setAttribute("value", icon_label);
-    this._identityIconCountryLabel.setAttribute("value", icon_country_label);
-    // Set cropping and direction
-    this._identityIconLabel.setAttribute(
-      "crop",
-      icon_country_label ? "end" : "center"
-    );
-    this._identityIconLabel.parentNode.style.direction = icon_labels_dir;
     // Hide completely if the organization label is empty
     this._identityIconLabel.parentNode.collapsed = !icon_label;
   },
@@ -1014,14 +947,14 @@ var gIdentityHandler = {
 
     // Fill in the CA name if we have a valid TLS certificate.
     if (this._isSecureConnection || this._isCertUserOverridden) {
-      verifier = this._identityIconLabels.tooltipText;
+      verifier = this._identityIconLabel.tooltipText;
     }
 
     // Fill in organization information if we have a valid EV certificate.
     if (this._isEV) {
       let iData = this.getIdentityData();
       owner = iData.subjectOrg;
-      verifier = this._identityIconLabels.tooltipText;
+      verifier = this._identityIconLabel.tooltipText;
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city) {

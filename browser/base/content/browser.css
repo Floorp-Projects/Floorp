@@ -724,7 +724,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   min-width: 280px;
 }
 
-#identity-icon-labels {
+#identity-icon-label {
   max-width: 10em;
 }
 
@@ -738,7 +738,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   :root[customizing] #urlbar-container {
     min-width: 245px;
   }
-  #identity-icon-labels {
+  #identity-icon-label {
     max-width: 50px;
   }
   /* Contenxtual identity labels are user-customizable and can be very long,
@@ -765,20 +765,12 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   #nav-bar[downloadsbuttonshown] #urlbar-container {
     min-width: 225px;
   }
-  #identity-icon-labels {
+  #identity-icon-label {
     max-width: 40px;
   }
   #urlbar-zoom-button {
     display: none;
   }
-}
-
-#identity-icon-country-label {
-  direction: ltr;
-}
-
-#identity-box.verifiedIdentity > #identity-icon-labels > #identity-icon-label {
-  margin-inline-end: 0.25em !important;
 }
 
 /* Flexible spacer sizing (gets overridden in the navbar) */
