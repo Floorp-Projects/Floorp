@@ -6354,6 +6354,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||
                aStatus == NS_ERROR_REDIRECT_LOOP ||
                aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
+               aStatus == NS_ERROR_UNKNOWN_PROTOCOL ||
                aStatus == NS_ERROR_NET_INTERRUPT ||
                aStatus == NS_ERROR_NET_RESET ||
                aStatus == NS_ERROR_PROXY_BAD_GATEWAY ||
@@ -6370,33 +6371,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       // Errors to be shown for any frame
       DisplayLoadError(aStatus, url, nullptr, aChannel);
-    } else if (aStatus == NS_ERROR_UNKNOWN_PROTOCOL) {
-      // For unknown protocols we only display an error if the load is triggered
-      // by the browser itself, or we're replacing the initial document (and
-      // nothing else). Showing the error for page-triggered navigations causes
-      // annoying behavior for users, see bug 1528305.
-      //
-      // We could, maybe, try to detect if this is in response to some user
-      // interaction (like clicking a link, or something else) and maybe show
-      // the error page in that case. But this allows for ctrl+clicking and such
-      // to see the error page.
-      nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-      Document* doc = GetDocument();
-      if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
-          StaticPrefs::dom_no_unknown_protocol_error_enabled() &&
-          doc && !doc->IsInitialDocument()) {
-        nsTArray<nsString> params;
-        if (NS_FAILED(NS_GetSanitizedURIStringFromURI(
-                url, *params.AppendElement()))) {
-          params.LastElement().AssignLiteral(u"(unknown uri)");
-        }
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), doc,
-            nsContentUtils::eDOM_PROPERTIES,
-            "UnknownProtocolNavigationPrevented", params);
-      } else {
-        DisplayLoadError(aStatus, url, nullptr, aChannel);
-      }
     } else if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
       // Non-caching channels will simply return NS_ERROR_OFFLINE.
       // Caching channels would have to look at their flags to work
