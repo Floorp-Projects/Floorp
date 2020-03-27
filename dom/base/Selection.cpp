@@ -1637,7 +1637,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
     newHead->mStart = start;
     newHead->mEnd = end;
     newHead->mSelectionType = aSelectionType;
-    StyledRange* rd = FindRangeData(range);
+    StyledRange* rd = mStyledRanges.FindRangeData(range);
     if (rd) {
       newHead->mTextRangeStyle = rd->mTextRangeStyle;
     }
@@ -1725,11 +1725,12 @@ void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
   }
 }
 
-StyledRange* Selection::FindRangeData(nsRange* aRange) {
+StyledRange* Selection::StyledRanges::FindRangeData(nsRange* aRange) {
   NS_ENSURE_TRUE(aRange, nullptr);
-  for (uint32_t i = 0; i < mStyledRanges.mRanges.Length(); i++) {
-    if (mStyledRanges.mRanges[i].mRange == aRange)
-      return &mStyledRanges.mRanges[i];
+  for (uint32_t i = 0; i < mRanges.Length(); i++) {
+    if (mRanges[i].mRange == aRange) {
+      return &mRanges[i];
+    }
   }
   return nullptr;
 }
@@ -1737,7 +1738,7 @@ StyledRange* Selection::FindRangeData(nsRange* aRange) {
 nsresult Selection::SetTextRangeStyle(nsRange* aRange,
                                       const TextRangeStyle& aTextRangeStyle) {
   NS_ENSURE_ARG_POINTER(aRange);
-  StyledRange* rd = FindRangeData(aRange);
+  StyledRange* rd = mStyledRanges.FindRangeData(aRange);
   if (rd) {
     rd->mTextRangeStyle = aTextRangeStyle;
   }
