@@ -234,6 +234,12 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   uint64_t WindowID() const;
 
   void FirstPartyStorageAccessGranted();
+
+  // WorkerPrivate wants to be able to forbid script when its state machine
+  // demands it.
+  friend WorkerPrivate;
+  void WorkerPrivateSaysForbidScript() { StartForbiddingScript(); }
+  void WorkerPrivateSaysAllowScript() { StopForbiddingScript(); }
 };
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {

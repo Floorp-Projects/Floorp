@@ -131,6 +131,16 @@ class DOMEventTargetHelper : public dom::EventTarget,
     return nsPIDOMWindowOuter::GetFromCurrentInner(GetOwner());
   }
 
+  // A global permanently becomes invalid when DisconnectEventTargetObjects() is
+  // called.  Normally this means:
+  // - For the main thread, when nsGlobalWindowInner::FreeInnerObjects is
+  //   called.
+  // - For a worker thread, when clearing the main event queue.  (Which we do
+  //   slightly later than when the spec notionally calls for it to be done.)
+  //
+  // A global may also become temporarily invalid when:
+  // - For the main thread, if the window is no longer the WindowProxy's current
+  //   inner window due to being placed in the bfcache.
   nsresult CheckCurrentGlobalCorrectness() const;
 
   nsPIDOMWindowInner* GetOwner() const { return mOwnerWindow; }
