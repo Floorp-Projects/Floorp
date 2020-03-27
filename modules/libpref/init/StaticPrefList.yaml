@@ -2076,13 +2076,6 @@
   value: @IS_ANDROID@
   mirror: always
 
-# Whether we shouldn't show an error page for unknown protocols (and should
-# show a console warning instead).
-- name: dom.no_unknown_protocol_error.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for Window.paintWorklet enabled?
 - name: dom.paintWorklet.enabled
   type: bool
