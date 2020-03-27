@@ -175,8 +175,8 @@ class Selection final : public nsSupportsWeakReference,
    *
    * @param aOutIndex points to the range last added, if at least one was added.
    *                  If aRange is already contained, it points to the range
-   *                  containing it. -1 if mRanges was empty and no range was
-   *                  added.
+   *                  containing it. -1 if mStyledRanges.mRanges was empty and
+   * no range was added.
    */
   MOZ_MUST_USE nsresult AddRangesForSelectableNodes(
       nsRange* aRange, int32_t* aOutIndex,
@@ -206,7 +206,7 @@ class Selection final : public nsSupportsWeakReference,
   nsresult Extend(nsINode* aContainer, int32_t aOffset);
 
   /**
-   * See mRanges.
+   * See mStyledRanges.mRanges.
    */
   nsRange* GetRangeAt(int32_t aIndex) const;
 
@@ -279,7 +279,7 @@ class Selection final : public nsSupportsWeakReference,
    * IsCollapsed -- is the whole selection just one point, or unset?
    */
   bool IsCollapsed() const {
-    uint32_t cnt = mRanges.Length();
+    uint32_t cnt = mStyledRanges.mRanges.Length();
     if (cnt == 0) {
       return true;
     }
@@ -288,7 +288,7 @@ class Selection final : public nsSupportsWeakReference,
       return false;
     }
 
-    return mRanges[0].mRange->Collapsed();
+    return mStyledRanges.mRanges[0].mRange->Collapsed();
   }
 
   // *JS() methods are mapped to Selection.*().
@@ -312,7 +312,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   void DeleteFromDocument(mozilla::ErrorResult& aRv);
 
-  uint32_t RangeCount() const { return mRanges.Length(); }
+  uint32_t RangeCount() const { return mStyledRanges.mRanges.Length(); }
 
   void GetType(nsAString& aOutType) const;
 
@@ -713,9 +713,9 @@ class Selection final : public nsSupportsWeakReference,
   };
 
   /**
-   * Set mAnchorFocusRange to mRanges[aIndex] if aIndex is a valid index.
-   * Set mAnchorFocusRange to nullptr if aIndex is negative.
-   * Otherwise, i.e., if aIndex is positive but out of bounds of mRanges, do
+   * Set mAnchorFocusRange to mStyledRanges.mRanges[aIndex] if aIndex is a valid
+   * index. Set mAnchorFocusRange to nullptr if aIndex is negative. Otherwise,
+   * i.e., if aIndex is positive but out of bounds of mStyledRanges.mRanges, do
    * nothing.
    */
   void SetAnchorFocusRange(int32_t aIndex);
@@ -738,8 +738,8 @@ class Selection final : public nsSupportsWeakReference,
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
   /**
-   * @param aOutIndex points to the index of the range in mRanges. If
-   *                  aDidAddRange is true, it is in [0, mRanges.Length()).
+   * @param aOutIndex points to the index of the range in mStyledRanges.mRanges.
+   * If aDidAddRange is true, it is in [0, mStyledRanges.mRanges.Length()).
    */
   MOZ_CAN_RUN_SCRIPT nsresult MaybeAddTableCellRange(nsRange& aRange,
                                                      bool* aDidAddRange,
@@ -765,11 +765,11 @@ class Selection final : public nsSupportsWeakReference,
                                  int32_t aRangeIndex) const;
   /**
    * Works on the same principle as GetRangesForIntervalArray, however
-   * instead this returns the indices into mRanges between which the
-   * overlapping ranges lie.
+   * instead this returns the indices into mStyledRanges.mRanges between which
+   * the overlapping ranges lie.
    *
    * @param aStartIndex will be less or equal than aEndIndex.
-   * @param aEndIndex can be in [-1, mRanges.Length()].
+   * @param aEndIndex can be in [-1, mStyledRanges.mRanges.Length()].
    */
   nsresult GetIndicesForInterval(const nsINode* aBeginNode,
                                  int32_t aBeginOffset, const nsINode* aEndNode,
@@ -779,11 +779,11 @@ class Selection final : public nsSupportsWeakReference,
   StyledRange* FindRangeData(nsRange* aRange);
 
   /**
-   * Preserves the sorting and disjunctiveness of mRanges.
+   * Preserves the sorting and disjunctiveness of mStyledRanges.mRanges.
    *
    * @param aOutIndex will point to the index of the added range, or if aRange
    *                  is already contained, to the one containing it. Hence
-   *                  it'll always be in [0, mRanges.Length()).
+   *                  it'll always be in [0, mStyledRanges.mRanges.Length()).
    */
   nsresult MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
                                             int32_t* aOutIndex);
@@ -827,20 +827,24 @@ class Selection final : public nsSupportsWeakReference,
 
   void Disconnect();
 
-  // These are the ranges inside this selection. They are kept sorted in order
-  // of DOM start position.
-  //
-  // This data structure is sorted by the range beginnings. As the ranges are
-  // disjoint, it is also implicitly sorted by the range endings. This allows
-  // us to perform binary searches when searching for existence of a range,
-  // giving us O(log n) search time.
-  //
-  // Inserting a new range requires finding the overlapping interval, requiring
-  // two binary searches plus up to an additional 6 DOM comparisons. If this
-  // proves to be a performance concern, then an interval tree may be a
-  // possible solution, allowing the calculation of the overlap interval in
-  // O(log n) time, though this would require rebalancing and other overhead.
-  AutoTArray<StyledRange, 1> mRanges;
+  struct StyledRanges {
+    // These are the ranges inside this selection. They are kept sorted in order
+    // of DOM start position.
+    //
+    // This data structure is sorted by the range beginnings. As the ranges are
+    // disjoint, it is also implicitly sorted by the range endings. This allows
+    // us to perform binary searches when searching for existence of a range,
+    // giving us O(log n) search time.
+    //
+    // Inserting a new range requires finding the overlapping interval,
+    // requiring two binary searches plus up to an additional 6 DOM comparisons.
+    // If this proves to be a performance concern, then an interval tree may be
+    // a possible solution, allowing the calculation of the overlap interval in
+    // O(log n) time, though this would require rebalancing and other overhead.
+    AutoTArray<StyledRange, 1> mRanges;
+  };
+
+  StyledRanges mStyledRanges;
 
   RefPtr<nsRange> mAnchorFocusRange;
   RefPtr<nsFrameSelection> mFrameSelection;
