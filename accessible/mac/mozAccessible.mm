@@ -20,6 +20,7 @@
 #include "mozilla/a11y/PDocAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "OuterDocAccessible.h"
+#include "nsChildView.h"
 
 #include "nsRect.h"
 #include "nsCocoaUtils.h"
@@ -518,8 +519,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // action, it will be first in the list. We append other
   // actions here to maintain that invariant.
   [actions addObject:NSAccessibilityScrollToVisibleAction];
-  // XXX(morgan): we should implement `show menu` as
-  // an "always performable" action. See bug 1623402.
+  [actions addObject:NSAccessibilityShowMenuAction];
 
   return actions;
 }
@@ -584,6 +584,28 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     } else if (proxy) {
       proxy->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
     }
+  } else if ([action isEqualToString:NSAccessibilityShowMenuAction]) {
+    DesktopIntRect geckoRect;
+    id objOrView = nil;
+    if (accWrap) {
+      geckoRect = DesktopIntRect::FromUnknownRect(accWrap->Bounds());
+      objOrView =
+          GetObjectOrRepresentedView(GetNativeFromGeckoAccessible(accWrap->RootAccessible()));
+    } else if (proxy) {
+      geckoRect = DesktopIntRect::FromUnknownRect(proxy->Bounds());
+      objOrView = GetObjectOrRepresentedView(
+          GetNativeFromGeckoAccessible(proxy->OuterDocOfRemoteBrowser()->RootAccessible()));
+    }
+
+    NSRect cocoaRect =
+        NSMakeRect(geckoRect.x, geckoRect.YMost(), geckoRect.width, geckoRect.height);
+    LayoutDeviceIntPoint p =
+        LayoutDeviceIntPoint(NSToIntRound(NSMidX(cocoaRect)), NSToIntRound(NSMidY(cocoaRect)));
+    nsIWidget* widget = [objOrView widget];
+    // XXX: NSRightMouseDown is depreciated in 10.12, should be
+    // changed to NSEventTypeRightMouseDown after refactoring.
+    widget->SynthesizeNativeMouseEvent(p, NSRightMouseDown, 0, nullptr);
+
   } else {
     if (accWrap) {
       accWrap->DoAction(0);
