@@ -4197,6 +4197,12 @@ mozilla::ipc::IPCResult ContentChild::RecvLoadURI(
     return IPC_OK();
   }
   BrowsingContext* context = aContext.get();
+  if (!context->IsInProcess()) {
+    // The DocShell has been torn down or the BrowsingContext has changed
+    // process in the middle of the load request. There's not much we can do at
+    // this point, so just give up.
+    return IPC_OK();
+  }
 
   context->LoadURI(nullptr, aLoadState, aSetNavigating);
 
