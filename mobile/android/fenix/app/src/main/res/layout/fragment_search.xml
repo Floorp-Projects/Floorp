@@ -109,7 +109,6 @@
         android:id="@+id/divider_line"
         android:layout_width="match_parent"
         android:layout_height="1.5dp"
-        android:layout_marginStart="8dp"
         android:background="?neutralFaded"
         app:layout_constraintEnd_toEndOf="@id/fill_link_from_clipboard"
         app:layout_constraintStart_toStartOf="@id/fill_link_from_clipboard"
