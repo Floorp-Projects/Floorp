@@ -14,8 +14,6 @@
     "resource://gre/modules/Services.jsm"
   );
 
-  const kDTDs = ["chrome://global/locale/wizard.dtd"];
-
   // Note: MozWizard currently supports adding, but not removing MozWizardPage
   //       children.
   class MozWizard extends MozXULElement {
@@ -519,7 +517,17 @@
       this._wizard = this.getRootNode().host;
 
       this.textContent = "";
-      this.appendChild(MozXULElement.parseXULToFragment(this._markup, kDTDs));
+      this.appendChild(MozXULElement.parseXULToFragment(this._markup));
+
+      MozXULElement.insertFTLIfNeeded("toolkit/global/wizard.ftl");
+      document.addEventListener(
+        "DOMContentLoaded",
+        e => {
+          document.l10n.connectRoot(this);
+          document.l10n.translateRoots();
+        },
+        { once: true }
+      );
 
       this._wizardButtonDeck = this.querySelector(".wizard-next-deck");
 
@@ -558,17 +566,17 @@
           <hbox class="wizard-buttons-btm">
             <button class="wizard-button" dlgtype="extra1" hidden="true"/>
             <button class="wizard-button" dlgtype="extra2" hidden="true"/>
-            <button label="&button-cancel-mac.label;"
+            <button data-l10n-id="wizard-macos-button-cancel"
                     class="wizard-button" dlgtype="cancel"/>
             <spacer flex="1"/>
-            <button label="&button-back-mac.label;"
-                    accesskey="&button-back-mac.accesskey;"
+            <button data-l10n-id="wizard-macos-button-back"
+                    accesskey="wizard-macos-button-back"
                     class="wizard-button wizard-nav-button" dlgtype="back"/>
-            <button label="&button-next-mac.label;"
-                    accesskey="&button-next-mac.accesskey;"
+            <button data-l10n-id="wizard-macos-button-next"
+                    accesskey="wizard-macos-button-next"
                     class="wizard-button wizard-nav-button" dlgtype="next"
                     default="true" />
-            <button label="&button-finish-mac.label;" class="wizard-button"
+            <button data-l10n-id="wizard-macos-button-finish" class="wizard-button"
                     dlgtype="finish" default="true" />
           </hbox>
         </vbox>`;
@@ -577,44 +585,44 @@
       let buttons =
         AppConstants.platform == "linux"
           ? `
-      <button label="&button-cancel-unix.label;"
+      <button data-l10n-id="wizard-linux-button-cancel"
               class="wizard-button"
               dlgtype="cancel"/>
       <spacer style="width: 24px;"/>
-      <button label="&button-back-unix.label;"
-              accesskey="&button-back-unix.accesskey;"
+      <button data-l10n-id="wizard-linux-button-back"
+              accesskey="wizard-linux-button-back"
               class="wizard-button" dlgtype="back"/>
       <deck class="wizard-next-deck">
         <hbox>
-          <button label="&button-finish-unix.label;"
+          <button data-l10n-id="wizard-linux-button-finish"
                   class="wizard-button"
                   dlgtype="finish" default="true" flex="1"/>
         </hbox>
         <hbox>
-          <button label="&button-next-unix.label;"
-                  accesskey="&button-next-unix.accesskey;"
+          <button data-l10n-id="wizard-linux-button-next"
+                  accesskey="wizard-linux-button-next"
                   class="wizard-button" dlgtype="next"
                   default="true" flex="1"/>
         </hbox>
       </deck>`
           : `
-      <button label="&button-back-win.label;"
-              accesskey="&button-back-win.accesskey;"
+      <button data-l10n-id="wizard-win-button-back"
+              accesskey="wizard-win-button-back"
               class="wizard-button" dlgtype="back"/>
       <deck class="wizard-next-deck">
         <hbox>
-          <button label="&button-finish-win.label;"
+          <button data-l10n-id="wizard-win-button-finish"
                   class="wizard-button"
                   dlgtype="finish" default="true" flex="1"/>
         </hbox>
         <hbox>
-          <button label="&button-next-win.label;"
-                  accesskey="&button-next-win.accesskey;"
+          <button data-l10n-id="wizard-win-button-next"
+                  accesskey="wizard-win-button-next"
                   class="wizard-button" dlgtype="next"
                   default="true" flex="1"/>
         </hbox>
       </deck>
-      <button label="&button-cancel-win.label;"
+      <button data-l10n-id="wizard-win-button-cancel"
               class="wizard-button"
               dlgtype="cancel"/>`;
 

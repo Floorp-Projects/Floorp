@@ -51,7 +51,6 @@
   locale/@AB_CD@/global/textcontext.dtd                 (%chrome/global/textcontext.dtd)
   locale/@AB_CD@/global/videocontrols.dtd               (%chrome/global/videocontrols.dtd)
   locale/@AB_CD@/global/viewSource.properties           (%chrome/global/viewSource.properties)
-  locale/@AB_CD@/global/wizard.dtd                      (%chrome/global/wizard.dtd)
   locale/@AB_CD@/global/wizard.properties               (%chrome/global/wizard.properties)
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/unix/ os=LikeUnix os=Android
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/mac/ os=Darwin
