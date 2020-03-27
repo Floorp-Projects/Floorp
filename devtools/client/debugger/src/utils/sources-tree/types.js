@@ -28,3 +28,8 @@ export type TreeDirectory = {
 };
 
 export type ParentMap = WeakMap<TreeNode, TreeDirectory>;
+
+export type SourcesGroups = {
+  sourcesInside: Source[],
+  sourcesOuside: Source[],
+};
