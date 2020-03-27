@@ -59,8 +59,8 @@ const gfx::IntRect AnimationState::UpdateStateInternal(
     // If mHasBeenDecoded is false then we'll get another UpdateState call
     // when the decode finishes.
     if (mHasBeenDecoded) {
-      Maybe<uint32_t> frameCount = FrameCount();
-      MOZ_ASSERT(frameCount.isSome());
+      const DebugOnly<Maybe<uint32_t>> frameCount = FrameCount();
+      MOZ_ASSERT(static_cast<const Maybe<uint32_t>&>(frameCount).isSome());
       mIsCurrentlyDecoded = aResult.Surface().IsFullyDecoded();
     }
   }
