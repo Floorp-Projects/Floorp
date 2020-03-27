@@ -1150,51 +1150,28 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
 }
 
 template <>
-template <typename F1, typename F2>
+template <typename F>
 bool BaselineCompilerCodeGen::initEnvironmentChainHelper(
-    const F1& initFunctionEnv, const F2& initGlobalOrEvalEnv,
-    Register scratch) {
+    const F& initFunctionEnv) {
   if (handler.function()) {
     return initFunctionEnv();
   }
-  if (handler.module()) {
-    return true;
-  }
-  return initGlobalOrEvalEnv();
+  return true;
 }
 
 template <>
-template <typename F1, typename F2>
+template <typename F>
 bool BaselineInterpreterCodeGen::initEnvironmentChainHelper(
-    const F1& initFunctionEnv, const F2& initGlobalOrEvalEnv,
-    Register scratch) {
-  // There are three cases:
-  //
-  // 1) Function script: use code emitted by initFunctionEnv.
-  // 2) Module script: no-op.
-  // 3) Global or eval script: use code emitted by initGlobalOrEvalEnv.
+    const F& initFunctionEnv) {
+  // For function scripts use the code emitted by initFunctionEnv. For other
+  // scripts this is a no-op.
 
-  Label notFunction, done;
-  masm.loadPtr(frame.addressOfCalleeToken(), scratch);
-  masm.branchTestPtr(Assembler::NonZero, scratch, Imm32(CalleeTokenScriptBit),
-                     &notFunction);
+  Label done;
+  masm.branchTestPtr(Assembler::NonZero, frame.addressOfCalleeToken(),
+                     Imm32(CalleeTokenScriptBit), &done);
   {
     if (!initFunctionEnv()) {
       return false;
-    }
-    masm.jump(&done);
-  }
-  masm.bind(&notFunction);
-  {
-    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch);
-    masm.branchTest32(Assembler::NonZero,
-                      Address(scratch, JSScript::offsetOfImmutableFlags()),
-                      Imm32(uint32_t(JSScript::ImmutableFlags::IsModule)),
-                      &done);
-    {
-      if (!initGlobalOrEvalEnv()) {
-        return false;
-      }
     }
   }
 
@@ -1222,25 +1199,7 @@ bool BaselineCodeGen<Handler>::initEnvironmentChain() {
         initEnv, R2.scratchReg());
   };
 
-  auto initGlobalOrEvalEnv = [this]() {
-    // EnvironmentChain pointer in BaselineFrame has already been initialized
-    // in prologue, but we need to check for redeclaration errors in global and
-    // eval scripts.
-
-    prepareVMCall();
-
-    pushScriptArg();
-    masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
-    pushArg(R0.scratchReg());
-
-    const CallVMPhase phase = CallVMPhase::BeforePushingLocals;
-
-    using Fn = bool (*)(JSContext*, HandleObject, HandleScript);
-    return callVMNonOp<Fn, js::CheckGlobalOrEvalDeclarationConflicts>(phase);
-  };
-
-  return initEnvironmentChainHelper(initFunctionEnv, initGlobalOrEvalEnv,
-                                    R2.scratchReg());
+  return initEnvironmentChainHelper(initFunctionEnv);
 }
 
 template <typename Handler>
@@ -4044,6 +4003,20 @@ bool BaselineCodeGen<Handler>::emit_DefFun() {
 
   using Fn = bool (*)(JSContext*, HandleScript, HandleObject, HandleFunction);
   return callVM<Fn, DefFunOperation>();
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_CheckGlobalOrEvalDecl() {
+  frame.syncStack(0);
+
+  prepareVMCall();
+
+  pushScriptArg();
+  masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
+  pushArg(R0.scratchReg());
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleScript);
+  return callVM<Fn, js::CheckGlobalOrEvalDeclarationConflicts>();
 }
 
 template <typename Handler>

@@ -552,6 +552,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_defvar();
   AbortReasonOr<Ok> jsop_deflexical();
   AbortReasonOr<Ok> jsop_deffun();
+  AbortReasonOr<Ok> jsop_checkGlobalOrEvalDecl();
   AbortReasonOr<Ok> jsop_notearg();
   AbortReasonOr<Ok> jsop_throwsetconst();
   AbortReasonOr<Ok> jsop_checklexical();
