@@ -4,10 +4,9 @@
 
 package org.mozilla.gecko.process;
 
-import org.mozilla.gecko.util.ContextUtils;
-
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.support.annotation.NonNull;
@@ -92,7 +91,14 @@ import android.support.annotation.NonNull;
      * Obtain the list of all services defined for |context|.
      */
     private static ServiceInfo[] getServiceList(@NonNull final Context context) {
-        return ContextUtils.getCurrentPackageInfo(context, PackageManager.GET_SERVICES).services;
+        final PackageInfo packageInfo;
+        try {
+            packageInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), PackageManager.GET_SERVICES);
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new AssertionError("Should not happen: Can't get package info of own package");
+        }
+        return packageInfo.services;
     }
 
     /**
