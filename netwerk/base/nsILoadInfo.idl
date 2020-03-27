@@ -416,37 +416,10 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean skipContentSniffing;
 
   /**
-   * (default) If this flag is set, it has not yet been determined if the
-   * HTTPS-Only mode will upgrade the request.
+   * If httpsOnlyNoUpgrade is true, the request won't get upgraded by the
+   * HTTPS-Only Mode.
    */
-  const unsigned long HTTPS_ONLY_UNINITIALIZED = (1 << 0);
-
-  /**
-   * Indicates that the request will get upgraded, and the HTTPS-Only
-   * StreamListener got registered.
-   */
-  const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED = (1 << 1);
-
-  /**
-   * Indicates that this is the first time the request gets upgraded, and thus
-   * the HTTPS-Only StreamListener hasn't been registered yet. Even though there
-   * might be multiple channels per request that have to be upgraded (e.g.,
-   * because of redirects), the StreamListener only has to be attached to one
-   * channel.
-   */
-  const unsigned long HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED = (1 << 2);
-
-  /**
-   * This flag can be manually set if the HTTPS-Only mode should exempt the
-   * request and not upgrade it. (e.g in the case of OCSP.
-   */
-  const unsigned long HTTPS_ONLY_EXEMPT = (1 << 3);
-
-  /**
-   * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get
-   * set on requests that should be excempt from an upgrade.
-   */
-  [infallible] attribute unsigned long httpsOnlyStatus;
+  [infallible] attribute boolean httpsOnlyNoUpgrade;
 
   /**
    * True if this request is embedded in a context that can't be third-party
