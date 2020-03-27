@@ -87,7 +87,6 @@ const intermittently_loaded_whitelist = {
 
     // Session store.
     "resource://gre/modules/sessionstore/SessionHistory.jsm",
-    "resource:///modules/sessionstore/SessionHistoryListener.jsm",
 
     "resource://specialpowers/SpecialPowersChild.jsm",
     "resource://specialpowers/WrapPrivileged.jsm",
