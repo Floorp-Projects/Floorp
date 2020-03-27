@@ -22,6 +22,7 @@
 #include <cctype>
 
 #include "jit/Label.h"
+#include "jit/shared/Assembler-shared.h"
 #include "js/Value.h"
 #include "new-regexp/util/flags.h"
 #include "new-regexp/util/vector.h"
@@ -974,9 +975,9 @@ using Factory = Isolate;
 class Isolate {
  public:
   //********** Isolate code **********//
-  RegExpStack* regexp_stack() const { return regexp_stack_; }
-  bool has_pending_exception() { return cx()->isExceptionPending(); }
-  void StackOverflow() { js::ReportOverRecursed(cx()); }
+  RegExpStack* regexp_stack() const { return regexpStack_; }
+  byte* top_of_regexp_stack() const;
+  void StackOverflow() {}
 
 #ifndef V8_INTL_SUPPORT
   unibrow::Mapping<unibrow::Ecma262UnCanonicalize>* jsregexp_uncanonicalize() {
@@ -1055,7 +1056,7 @@ private:
   friend class HandleScope;
 
   JSContext* cx_;
-  RegExpStack* regexp_stack_;
+  RegExpStack* regexpStack_;
   Counters counters_;
 };
 
@@ -1113,7 +1114,7 @@ class Label {
  public:
   Label() : inner_(js::jit::Label()) {}
 
-  operator js::jit::Label*() { return &inner_; }
+  js::jit::Label* inner() { return &inner_; }
 
   void Unuse() { inner_.reset(); }
 
@@ -1127,6 +1128,9 @@ class Label {
 
  private:
   js::jit::Label inner_;
+  js::jit::CodeOffset patchOffset_;
+
+  friend class SMRegExpMacroAssembler;
 };
 
 // TODO: Map flags to jitoptions
