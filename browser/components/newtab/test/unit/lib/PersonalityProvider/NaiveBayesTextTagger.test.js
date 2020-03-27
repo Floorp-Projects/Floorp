@@ -1,5 +1,8 @@
-import { NaiveBayesTextTagger } from "lib/NaiveBayesTextTagger.jsm";
-import { tokenize } from "lib/Tokenize.jsm";
+import { NaiveBayesTextTagger } from "lib/PersonalityProvider/NaiveBayesTextTagger.jsm";
+import {
+  tokenize,
+  toksToTfIdfVector,
+} from "lib/PersonalityProvider/Tokenize.jsm";
 
 const EPSILON = 0.00001;
 
@@ -58,7 +61,7 @@ describe("Naive Bayes Tagger", () => {
         words: [10, 5.070533913528382],
       },
     };
-    let instance = new NaiveBayesTextTagger(model);
+    let instance = new NaiveBayesTextTagger(model, toksToTfIdfVector);
 
     let testCases = [
       {

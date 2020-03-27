@@ -1,4 +1,5 @@
-import { RecipeExecutor } from "lib/RecipeExecutor.jsm";
+import { RecipeExecutor } from "lib/PersonalityProvider/RecipeExecutor.jsm";
+import { tokenize } from "lib/PersonalityProvider/Tokenize.jsm";
 
 class MockTagger {
   constructor(mode, tagScoreMap) {
@@ -113,7 +114,8 @@ describe("RecipeExecutor", () => {
         tag33: 0.5,
       }),
       tag4: new MockTagger("nmf", { tag41: 0.99 }),
-    }
+    },
+    tokenize
   );
   let item = null;
 
