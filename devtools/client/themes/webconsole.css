@@ -736,7 +736,7 @@ a.learn-more-link.webconsole-learn-more-link {
   line-height: inherit;
 }
 
-.webconsole-app .message.network .url {
+.webconsole-app .message.network .message-flex-body .message-body .url {
   color: var(--theme-comment);
   font-style: inherit;
 }
