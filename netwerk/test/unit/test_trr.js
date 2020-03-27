@@ -1719,7 +1719,7 @@ add_task(async function test_resolve_not_confirmed() {
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${h2Port}/doh?responseIP=2::ffff`
+    `https://foo.example.com:${h2Port}/doh?responseIP=7.7.7.7`
   );
   Services.prefs.setCharPref(
     "network.trr.confirmationNS",
@@ -1728,5 +1728,46 @@ add_task(async function test_resolve_not_confirmed() {
 
   await new DNSListener("example.org", "127.0.0.1");
 
+  // Check that the confirmation eventually completes.
+  let count = 100;
+  while (count > 0) {
+    let [inRequest, inRecord, inStatus] = await new DNSListener(
+      `ip${count}.example.org`,
+      undefined,
+      false
+    );
+    let responseIP = inRecord.getNextAddrAsString();
+    if (responseIP == "7.7.7.7") {
+      break;
+    }
+    count--;
+  }
+
+  Assert.greater(count, 0, "Finished confirmation before 100 iterations");
+
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
+});
+
+// Tests that we handle FQDN encoding and decoding properly
+add_task(async function test_fqdn() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=9.8.7.6`
+  );
+  await new DNSListener("fqdn.example.org.", "9.8.7.6");
+});
+
+add_task(async function test_fqdn_get() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setBoolPref("network.trr.useGET", true);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=9.8.7.6`
+  );
+  await new DNSListener("fqdn_get.example.org.", "9.8.7.6");
+
+  Services.prefs.setBoolPref("network.trr.useGET", false);
 });
