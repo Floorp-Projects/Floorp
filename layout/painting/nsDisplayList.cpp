@@ -8293,7 +8293,16 @@ bool nsDisplayBackgroundColor::CanUseAsyncAnimations(
 /* static */
 auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsRect* aDirtyRect)
-    -> PrerenderDecision {
+    -> PrerenderInfo {
+  PrerenderInfo result;
+  // If we are in a preserve-3d tree, and we've disallowed async animations, we
+  // return No prerender decision directly.
+  if ((aFrame->Extend3DContext() ||
+       aFrame->Combines3DTransformWithAncestors()) &&
+      !aBuilder->GetPreserves3DAllowAsyncAnimation()) {
+    return result;
+  }
+
   // Elements whose transform has been modified recently, or which
   // have a compositor-animated transform, can be prerendered. An element
   // might have only just had its transform animated in which case
@@ -8308,7 +8317,13 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
         AnimationPerformanceWarning(
             AnimationPerformanceWarning::Type::TransformFrameInactive));
 
-    return PrerenderDecision::No;
+    // This case happens when we're sure that the frame is not animated and its
+    // preserve-3d ancestors are not, either. So we don't need to pre-render.
+    // However, this decision shouldn't affect the decisions for other frames in
+    // the preserve-3d context. We need this flag to determine whether we should
+    // block async animations on other frames in the current preserve-3d tree.
+    result.mHasAnimations = false;
+    return result;
   }
 
   // We should not allow prerender if any ancestor container element has
@@ -8334,7 +8349,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
        container = nsLayoutUtils::GetCrossDocParentFrame(container)) {
     const nsStyleSVGReset* svgReset = container->StyleSVGReset();
     if (svgReset->HasMask() || svgReset->HasClipPath()) {
-      return PrerenderDecision::No;
+      return result;
     }
   }
 
@@ -8342,7 +8357,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // we are already rendering the entire content.
   nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
   if (aDirtyRect->Contains(overflow)) {
-    return PrerenderDecision::Full;
+    result.mDecision = PrerenderDecision::Full;
+    return result;
   }
 
   float viewportRatioX =
@@ -8376,29 +8392,15 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   uint64_t frameArea = uint64_t(frameSize.width) * frameSize.height;
   if (frameArea <= maxLimitArea && frameSize <= absoluteLimit) {
     *aDirtyRect = overflow;
-    return PrerenderDecision::Full;
-  }
-
-  // Frames participating any preserve-3d rendering context are force to
-  // full prerender here if we failed the previous if-conditions.
-  // If the current frame doesn't have animations and any of its parent has
-  // animations, we still hit this path because
-  // ActiveLayerTracker::IsTransformMaybeAnimated() catches the existing
-  // animations on the parent frames in the preserve-3d rendering context.
-  // FIXME: For now, we force all the frame in the 3D rendering context to use
-  // FullPrerender, so this may have an issue if one of the frame is too large
-  // and it has animations (which may make the calculation of visible and dirty
-  // rects not correct.).
-  if (aFrame->Extend3DContext() || aFrame->Combines3DTransformWithAncestors()) {
-    // Use overflow as dirty and force to use full prerender.
-    *aDirtyRect = overflow;
-    return PrerenderDecision::Full;
+    result.mDecision = PrerenderDecision::Full;
+    return result;
   }
 
   if (StaticPrefs::layout_animation_prerender_partial()) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
                                                              overflow, maxSize);
-    return PrerenderDecision::Partial;
+    result.mDecision = PrerenderDecision::Partial;
+    return result;
   }
 
   if (frameArea > maxLimitArea) {
@@ -8426,7 +8428,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
             }));
   }
 
-  return PrerenderDecision::No;
+  return result;
 }
 
 /* If the matrix is singular, or a hidden backface is shown, the frame won't be
