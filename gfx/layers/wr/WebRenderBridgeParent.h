@@ -327,7 +327,6 @@ class WebRenderBridgeParent final
 
   bool IsRootWebRenderBridgeParent() const;
   LayersId GetLayersId() const;
-  WRRootId GetWRRootId() const;
 
   void SetCompositionRecorder(
       UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);

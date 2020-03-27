@@ -14,9 +14,9 @@ namespace mozilla {
 namespace layers {
 
 APZCTreeManagerParent::APZCTreeManagerParent(
-    WRRootId aWrRootId, RefPtr<APZCTreeManager> aAPZCTreeManager,
+    LayersId aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager,
     RefPtr<APZUpdater> aAPZUpdater)
-    : mWrRootId(aWrRootId),
+    : mLayersId(aLayersId),
       mTreeManager(std::move(aAPZCTreeManager)),
       mUpdater(std::move(aAPZUpdater)) {
   MOZ_ASSERT(mTreeManager != nullptr);
@@ -38,10 +38,9 @@ void APZCTreeManagerParent::ChildAdopted(
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetKeyboardMap(
     const KeyboardMap& aKeyboardMap) {
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
-      NewRunnableMethod<KeyboardMap>(
-          "layers::IAPZCTreeManager::SetKeyboardMap", mTreeManager,
-          &IAPZCTreeManager::SetKeyboardMap, aKeyboardMap));
+      mLayersId, NewRunnableMethod<KeyboardMap>(
+                     "layers::IAPZCTreeManager::SetKeyboardMap", mTreeManager,
+                     &IAPZCTreeManager::SetKeyboardMap, aKeyboardMap));
 
   return IPC_OK();
 }
@@ -64,11 +63,10 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvZoomToRect(
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvContentReceivedInputBlock(
     const uint64_t& aInputBlockId, const bool& aPreventDefault) {
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
-      NewRunnableMethod<uint64_t, bool>(
-          "layers::IAPZCTreeManager::ContentReceivedInputBlock", mTreeManager,
-          &IAPZCTreeManager::ContentReceivedInputBlock, aInputBlockId,
-          aPreventDefault));
+      mLayersId, NewRunnableMethod<uint64_t, bool>(
+                     "layers::IAPZCTreeManager::ContentReceivedInputBlock",
+                     mTreeManager, &IAPZCTreeManager::ContentReceivedInputBlock,
+                     aInputBlockId, aPreventDefault));
 
   return IPC_OK();
 }
@@ -76,7 +74,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvContentReceivedInputBlock(
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetTargetAPZC(
     const uint64_t& aInputBlockId, nsTArray<SLGuidAndRenderRoot>&& aTargets) {
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
+      mLayersId,
       NewRunnableMethod<uint64_t,
                         StoreCopyPassByRRef<nsTArray<SLGuidAndRenderRoot>>>(
           "layers::IAPZCTreeManager::SetTargetAPZC", mTreeManager,
@@ -99,7 +97,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvUpdateZoomConstraints(
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetDPI(
     const float& aDpiValue) {
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
+      mLayersId,
       NewRunnableMethod<float>("layers::IAPZCTreeManager::SetDPI", mTreeManager,
                                &IAPZCTreeManager::SetDPI, aDpiValue));
   return IPC_OK();
@@ -108,7 +106,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetDPI(
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
     const uint64_t& aInputBlockId, nsTArray<TouchBehaviorFlags>&& aValues) {
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
+      mLayersId,
       NewRunnableMethod<uint64_t,
                         StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>(
           "layers::IAPZCTreeManager::SetAllowedTouchBehavior", mTreeManager,
@@ -138,12 +136,12 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStartAutoscroll(
   // Unlike RecvStartScrollbarDrag(), this message comes from the parent
   // process (via nsBaseWidget::mAPZC) rather than from the child process
   // (via BrowserChild::mApzcTreeManager), so there is no need to check the
-  // layers id against mWrRootId (and in any case, it wouldn't match, because
-  // mWrRootId stores the parent process's layers id, while nsBaseWidget is
+  // layers id against mLayersId (and in any case, it wouldn't match, because
+  // mLayersId stores the parent process's layers id, while nsBaseWidget is
   // sending the child process's layers id).
 
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
+      mLayersId,
       NewRunnableMethod<SLGuidAndRenderRoot, ScreenPoint>(
           "layers::IAPZCTreeManager::StartAutoscroll", mTreeManager,
           &IAPZCTreeManager::StartAutoscroll, aGuid, aAnchorLocation));
@@ -156,10 +154,9 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStopAutoscroll(
   // See RecvStartAutoscroll() for why we don't check the layers id.
 
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
-      NewRunnableMethod<SLGuidAndRenderRoot>(
-          "layers::IAPZCTreeManager::StopAutoscroll", mTreeManager,
-          &IAPZCTreeManager::StopAutoscroll, aGuid));
+      mLayersId, NewRunnableMethod<SLGuidAndRenderRoot>(
+                     "layers::IAPZCTreeManager::StopAutoscroll", mTreeManager,
+                     &IAPZCTreeManager::StopAutoscroll, aGuid));
 
   return IPC_OK();
 }
@@ -167,7 +164,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStopAutoscroll(
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetLongTapEnabled(
     const bool& aLongTapEnabled) {
   mUpdater->RunOnControllerThread(
-      mWrRootId.mLayersId,
+      mLayersId,
       NewRunnableMethod<bool>(
           "layers::IAPZCTreeManager::SetLongTapEnabled", mTreeManager,
           &IAPZCTreeManager::SetLongTapEnabled, aLongTapEnabled));
@@ -176,18 +173,9 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetLongTapEnabled(
 }
 
 bool APZCTreeManagerParent::IsGuidValid(const SLGuidAndRenderRoot& aGuid) {
-  if (aGuid.mScrollableLayerGuid.mLayersId != mWrRootId.mLayersId) {
+  if (aGuid.mScrollableLayerGuid.mLayersId != mLayersId) {
     NS_ERROR("Unexpected layers id");
     return false;
-  }
-  if (mWrRootId.mRenderRoot == wr::RenderRoot::Content) {
-    // If this APZCTreeManagerParent is for a content process IPDL bridge, then
-    // all the render root references that come over the bridge must be for
-    // the content render root.
-    if (aGuid.mRenderRoot != wr::RenderRoot::Content) {
-      NS_ERROR("Unexpected render root");
-      return false;
-    }
   }
   return true;
 }
