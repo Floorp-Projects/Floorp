@@ -1377,7 +1377,7 @@ promise_test(async t => {
 promise_test(async t => {
   const container = addDiv(t, { style: 'transform-style: preserve-3d;' });
   const targetA = addDiv(t, { style: 'transform-style: preserve-3d' });
-  const targetB = addDiv(t, { style: 'transform-style: preserve-3d '});
+  const targetB = addDiv(t, { style: 'transform-style: preserve-3d' });
   const targetC = addDiv(t);
   container.appendChild(targetA);
   targetA.append(targetB);
@@ -1401,6 +1401,94 @@ promise_test(async t => {
     'compositor');
 }, 'Transform-like animations in the 3d rendering context should runs on the ' +
    'compositor');
+
+promise_test(async t => {
+  const container = addDiv(t, { style: 'transform-style: preserve-3d;' });
+  const target = addDiv(t, { style: 'transform-style: preserve-3d;' });
+  const innerA = addDiv(t, { style: 'width: 50px; height: 50px;' });
+  // The frame of innerB is too large, so this makes its ancenstors and children
+  // in the 3d context be not allowed the async animations.
+  const innerB = addDiv(t, { style: 'rotate: 0 1 1 100deg; ' +
+                                    'transform-style: preserve-3d; ' +
+                                    'text-indent: -9999em' });
+  const innerB2 = addDiv(t, { style: 'rotate: 0 1 1 45deg;' });
+  const innerBText = document.createTextNode("innerB");
+  container.appendChild(target);
+  target.appendChild(innerA);
+  target.appendChild(innerB);
+  innerB.appendChild(innerBText);
+  innerB.appendChild(innerB2);
+
+  const animation1 = target.animate({ rotate: ['0 0 1 0deg', '1 1 1 45deg'] },
+                                    100 * MS_PER_SEC);
+
+  const animation2 = innerA.animate({ rotate: ['0 0 1 0deg', '0 1 1 100deg'] },
+                                    100 * MS_PER_SEC);
+
+  const animation3 = innerB2.animate({ rotate: ['0 0 1 0deg', '0 1 1 90deg'] },
+                                     100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation1);
+  await waitForAnimationReadyToRestyle(animation2);
+  await waitForAnimationReadyToRestyle(animation3);
+  await waitForPaints();
+
+  assert_animation_is_not_running_on_compositor(animation1,
+    'rotate animation in the 3d rendering context should not be running on ' +
+    'the compositor because one of its inner frames is too large');
+  assert_animation_is_running_on_compositor(animation2,
+    'rotate animation in the 3d rendering context is still running on ' +
+    'the compositor because its display item is created earlier');
+  assert_animation_is_not_running_on_compositor(animation3,
+    'rotate animation in the 3d rendering context should not be running on ' +
+    'the compositor because one of its parent frames is too large');
+
+  innerBText.remove();
+}, 'Transform-like animations in the 3d rendering context should not runs on ' +
+   'the compositor if it is the ancestor of ones whose frames are too large ' +
+   'or its ancestor is not allowed to run on the compositor');
+
+promise_test(async t => {
+  const container = addDiv(t, { style: 'transform-style: preserve-3d;' });
+  const target = addDiv(t, { style: 'transform-style: preserve-3d;' });
+  // The frame of innerA is too large, so this makes its ancenstors and children
+  // in the 3d context be not allowed the async animations.
+  const innerA = addDiv(t, { style: 'transform-style: preserve-3d; ' +
+                                    'text-indent: -9999em' });
+  const innerAText = document.createTextNode("innerA");
+  const innerB = addDiv(t, { style: 'width: 50px; height: 50px;' });
+  container.appendChild(target);
+  target.appendChild(innerA);
+  target.appendChild(innerB);
+  innerA.appendChild(innerAText);
+
+  const animation1 = target.animate({ rotate: ['0 0 1 0deg', '1 1 1 45deg'] },
+                                    100 * MS_PER_SEC);
+
+  const animation2 = innerA.animate({ rotate: ['0 0 1 0deg', '0 1 1 100deg'] },
+                                    100 * MS_PER_SEC);
+
+  const animation3 = innerB.animate({ rotate: ['0 0 1 0deg', '0 1 1 90deg'] },
+                                    100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation1);
+  await waitForAnimationReadyToRestyle(animation2);
+  await waitForAnimationReadyToRestyle(animation3);
+  await waitForPaints();
+
+  assert_animation_is_not_running_on_compositor(animation1,
+    'rotate animation in the 3d rendering context should not be running on ' +
+    'the compositor because one of its inner frames is too large');
+  assert_animation_is_not_running_on_compositor(animation2,
+    'rotate animation in the 3d rendering context should not be running on ' +
+    'the compositor because its frame size is too large');
+  assert_animation_is_not_running_on_compositor(animation3,
+    'rotate animation in the 3d rendering context should not be running on ' +
+    'the compositor because its previous sibling frame is too large');
+
+  innerAText.remove();
+}, 'Transform-like animations in the 3d rendering context should not runs on ' +
+   'the compositor if its previous sibling frame size is too large');
 
 </script>
 </body>
