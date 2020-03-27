@@ -270,7 +270,6 @@ function transformConsoleAPICallPacket(packet) {
     userProvidedStyles: message.styles,
     prefix: message.prefix,
     private: message.private,
-    executionPoint: message.executionPoint,
     logpointId: message.logpointId,
     chromeContext: message.chromeContext,
   });
@@ -337,7 +336,6 @@ function transformPageErrorPacket(packet) {
     timeStamp: pageError.timeStamp,
     notes: pageError.notes,
     private: pageError.private,
-    executionPoint: pageError.executionPoint,
     chromeContext: pageError.chromeContext,
     // Backward compatibility: cssSelectors might not be available when debugging
     // Firefox 67 or older.
@@ -433,7 +431,6 @@ function getRepeatId(message) {
       userProvidedStyles: message.userProvidedStyles,
       private: message.private,
       stacktrace: message.stacktrace,
-      executionPoint: message.executionPoint,
     },
     function(_, value) {
       if (typeof value === "bigint") {

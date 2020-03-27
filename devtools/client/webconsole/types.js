@@ -47,7 +47,6 @@ exports.ConsoleMessage = function(props) {
       groupId: null,
       errorMessageName: null,
       exceptionDocURL: null,
-      executionPoint: undefined,
       cssSelectors: "",
       userProvidedStyles: null,
       notes: null,

@@ -23,7 +23,6 @@ import type {
   SourceId,
   SourceActor,
   Range,
-  ExecutionPoint,
 } from "../../types";
 
 import type {
@@ -514,10 +513,6 @@ function getFrontByID(actorID: String) {
   return devToolsClient.getFrontByID(actorID);
 }
 
-function timeWarp(position: ExecutionPoint) {
-  currentThreadFront().timeWarp(position);
-}
-
 function fetchAncestorFramePositions(index: number) {
   currentThreadFront().fetchAncestorFramePositions(index);
 }
@@ -568,7 +563,6 @@ const clientCommands = {
   getEventListenerBreakpointTypes,
   lookupTarget,
   getFrontByID,
-  timeWarp,
   fetchAncestorFramePositions,
 };
 
