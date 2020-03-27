@@ -245,17 +245,6 @@ class AboutLoginsParent extends JSWindowActorParent {
         Services.logins.removeLogin(login);
         break;
       }
-      case "AboutLogins:DismissBreachAlert": {
-        const login = message.data.login;
-
-        await LoginBreaches.recordDismissal(login.guid);
-        const logins = await AboutLogins.getAllLogins();
-        const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-          logins
-        );
-        this.sendAsyncMessage("AboutLogins:SetBreaches", breachesByLoginGUID);
-        break;
-      }
       case "AboutLogins:HideFooter": {
         Services.prefs.setBoolPref(HIDE_MOBILE_FOOTER_PREF, true);
         break;
