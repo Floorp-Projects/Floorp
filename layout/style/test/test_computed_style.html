@@ -206,10 +206,10 @@ var noframe_container = document.getElementById("content");
       "radial-gradient(at 10% 100%, rgb(255, 255, 255), rgb(0, 0, 0))",
       "radial gradient 1" ],
     [ "radial-gradient(#ffffff, black)",
-      "radial-gradient(at 50% 50%, rgb(255, 255, 255), rgb(0, 0, 0))",
+      "radial-gradient(rgb(255, 255, 255), rgb(0, 0, 0))",
       "radial gradient 2" ],
     [ "radial-gradient(farthest-corner, #ffffff, black)",
-      "radial-gradient(at 50% 50%, rgb(255, 255, 255), rgb(0, 0, 0))",
+      "radial-gradient(rgb(255, 255, 255), rgb(0, 0, 0))",
       "radial gradient 3" ],
     [ "linear-gradient(red, blue)",
       "linear-gradient(rgb(255, 0, 0), rgb(0, 0, 255))",
@@ -628,7 +628,7 @@ var noframe_container = document.getElementById("content");
 
     // Radial gradients (should be serialized using modern unprefixed style):
     [ "-webkit-radial-gradient(contain, red, blue)",
-      "-webkit-radial-gradient(50% 50%, closest-side, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "-webkit-radial-gradient(closest-side, rgb(255, 0, 0), rgb(0, 0, 255))",
       "-webkit-radial-gradient with legacy 'contain' keyword" ],
   ];
 
