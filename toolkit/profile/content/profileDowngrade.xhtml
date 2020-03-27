@@ -22,11 +22,10 @@
 <dialog buttons="accept,extra1" buttonpack="end"
         buttonlabelextra1="&window.create;"
 #ifdef XP_WIN
-        buttonlabelaccept="&window.quit-win;"
+        buttonlabelaccept="&window.quit-win;">
 #else
-        buttonlabelaccept="&window.quit-nonwin;"
+        buttonlabelaccept="&window.quit-nonwin;">
 #endif
-        nobuttonspacer="true">
 
   <script src="profileDowngrade.js"/>
   <script src="chrome://global/content/customElements.js"/>
