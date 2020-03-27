@@ -32,6 +32,10 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
  protected:
   virtual ~xpcAccessibleMacInterface();
 
+  // Convert an NSObject (which can be anything, string, number, array, etc.)
+  // into a properly typed js value populated in the aResult handle.
+  nsresult NSObjectToJsValue(id aObj, JSContext* aCx,
+                             JS::MutableHandleValue aResult);
   id mNativeObject;
 
  private:
