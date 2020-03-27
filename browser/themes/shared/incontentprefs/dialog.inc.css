@@ -17,13 +17,14 @@ dialog {
   -moz-box-flex: 1;
 }
 
-.contentPane {
-  /* This allows the focus ring to display fully when scrolling is enabled.
-    Note: dialog.js CE have a matching style for dialog-content-box */
+.contentPane,
+dialog::part(content-box) {
+  /* This allows the focus ring to display fully when scrolling is enabled. */
   padding: 4px;
 }
 
-.contentPane.doScroll {
+.contentPane.doScroll,
+dialog.doScroll::part(content-box) {
   overflow-y: auto;
 }
 

@@ -6,21 +6,16 @@
   == Styles used by the XUL dialog element.
   ======================================================================= */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
 /* ::::: dialog ::::: */
 
-dialog { 
-  padding-top: 8px;
-  padding-bottom: 10px;
-  padding-inline-start: 8px;
-  padding-inline-end: 10px;
+:host {
+  padding-block: 8px 10px;
+  padding-inline: 8px 10px;
 }
 
 /* ::::: dialog buttons ::::: */
 
-.dialog-button {
+button {
   font: menu;
   margin-top: 6px;
 }
-

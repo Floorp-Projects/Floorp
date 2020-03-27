@@ -2,24 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-#commonDialog > image {
-  margin-inline-end: 14px !important;
-}
-
-#commonDialog > .dialog-button-box {
-  margin-inline-start: 80px;
-}
-
-dialog { 
+:host {
   -moz-appearance: dialog;
   padding: 14px;
 }
 
 /* ::::: dialog buttons ::::: */
 
-.dialog-button {
+button {
   font: menu;
 }
-

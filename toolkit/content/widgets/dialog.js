@@ -99,23 +99,23 @@
       let buttons = AppConstants.XP_UNIX
         ? `
       <hbox class="dialog-button-box">
-        <button dlgtype="disclosure" class="dialog-button" hidden="true"/>
-        <button dlgtype="help" class="dialog-button" hidden="true"/>
-        <button dlgtype="extra2" class="dialog-button" hidden="true"/>
-        <button dlgtype="extra1" class="dialog-button" hidden="true"/>
-        <spacer class="spacer" flex="1"/>
-        <button dlgtype="cancel" class="dialog-button"/>
-        <button dlgtype="accept" class="dialog-button"/>
+        <button dlgtype="disclosure" hidden="true"/>
+        <button dlgtype="help" hidden="true"/>
+        <button dlgtype="extra2" hidden="true"/>
+        <button dlgtype="extra1" hidden="true"/>
+        <spacer part="button-spacer" flex="1"/>
+        <button dlgtype="cancel"/>
+        <button dlgtype="accept"/>
       </hbox>`
         : `
       <hbox class="dialog-button-box" pack="end">
-        <button dlgtype="extra2" class="dialog-button" hidden="true"/>
-        <spacer class="spacer" flex="1" hidden="true"/>
-        <button dlgtype="accept" class="dialog-button"/>
-        <button dlgtype="extra1" class="dialog-button" hidden="true"/>
-        <button dlgtype="cancel" class="dialog-button"/>
-        <button dlgtype="help" class="dialog-button" hidden="true"/>
-        <button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+        <button dlgtype="extra2" hidden="true"/>
+        <spacer part="button-spacer" flex="1" hidden="true"/>
+        <button dlgtype="accept"/>
+        <button dlgtype="extra1" hidden="true"/>
+        <button dlgtype="cancel"/>
+        <button dlgtype="help" hidden="true"/>
+        <button dlgtype="disclosure" hidden="true"/>
       </hbox>`;
 
       let key =
@@ -128,23 +128,10 @@
             keycode="&openHelp.commandkey;"/>`;
 
       return `
-      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
+      <html:link rel="stylesheet" href="chrome://global/skin/button.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/dialog.css"/>
       ${this.hasAttribute("subdialog") ? this.inContentStyle : ""}
-      <html:style>
-        :host([nobuttonspacer]) .spacer {
-          display: none;
-        }
-        :host([subdialog]) > .dialog-content-box {
-          /* This allows the focus ring to display fully when scrolling is enabled.
-            See matching style in dialog.inc.css.
-          */
-          padding: 4px;
-        }
-        :host(.doScroll) > .dialog-content-box {
-          overflow-y: auto;
-        }
-      </html:style>
-      <vbox class="box-inherit dialog-content-box" flex="1">
+      <vbox class="box-inherit dialog-content-box" part="content-box" flex="1">
         <html:slot></html:slot>
       </vbox>
       ${buttons}
