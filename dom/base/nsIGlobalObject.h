@@ -51,13 +51,11 @@ class nsIGlobalObject : public nsISupports,
   mozilla::LinkedList<mozilla::DOMEventTargetHelper> mEventTargetObjects;
 
   bool mIsDying;
-  bool mIsScriptForbidden;
 
  protected:
   bool mIsInnerWindow;
 
-  nsIGlobalObject()
-      : mIsDying(false), mIsScriptForbidden(false), mIsInnerWindow(false) {}
+  nsIGlobalObject() : mIsDying(false), mIsInnerWindow(false) {}
 
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGLOBALOBJECT_IID)
@@ -77,14 +75,6 @@ class nsIGlobalObject : public nsISupports,
    * a window from going away.
    */
   bool IsDying() const { return mIsDying; }
-
-  /**
-   * Is it currently forbidden to call into script?  JS-implemented WebIDL is
-   * a special case that's always allowed because it has the system principal,
-   * and callers should indicate this.
-   */
-  bool IsScriptForbidden(JSObject* aCallback,
-                         bool aIsJSImplementedWebIDL = false) const;
 
   /**
    * Return the JSObject for this global, if it still has one.  Otherwise return
@@ -189,9 +179,6 @@ class nsIGlobalObject : public nsISupports,
   virtual ~nsIGlobalObject();
 
   void StartDying() { mIsDying = true; }
-
-  void StartForbiddingScript() { mIsScriptForbidden = true; }
-  void StopForbiddingScript() { mIsScriptForbidden = false; }
 
   void DisconnectEventTargetObjects();
 
