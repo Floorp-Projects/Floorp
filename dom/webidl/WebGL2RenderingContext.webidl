@@ -25,7 +25,7 @@ interface WebGLSync {
 interface WebGLTransformFeedback {
 };
 
-typedef (Uint32Array or sequence<GLuint>) Uint32List;
+typedef ([AllowShared] Uint32Array or sequence<GLuint>) Uint32List;
 
 // WebGL2 spec has this as an empty interface that pulls in everything
 // via WebGL2RenderingContextBase.
