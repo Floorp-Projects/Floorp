@@ -85,6 +85,9 @@ add_task(async function test_launch_login_item() {
   BrowserTestUtils.removeTab(newTab);
 
   await SpecialPowers.spawn(browser, [], async () => {
+    await ContentTaskUtils.waitForCondition(() => {
+      return !content.document.querySelector("confirmation-dialog").hidden;
+    }, "waiting for confirmation-dialog to appear");
     ok(
       !content.document.querySelector("confirmation-dialog").hidden,
       "discard-changes confirmation-dialog should be visible after logging in to a site with a modified login present in the form"
