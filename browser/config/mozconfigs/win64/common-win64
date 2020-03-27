@@ -28,12 +28,11 @@ mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/x64:${MOZ_FETCHES_DIR}/nsis
 
 unset VC_PATH
 
-else # ! Linux
+fi
+
 export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
 if [ ! -f "${WINCHECKSEC}" ]; then
     unset WINCHECKSEC
-fi
-
 fi
 
 export PDBSTR="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"

@@ -29,12 +29,11 @@ mk_add_options "export WINEPATH=${VSPATH}/VC/bin/Hostx64/x64"
 
 unset VC_PATH
 
-else # ! Linux
+fi
+
 export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
 if [ ! -f "${WINCHECKSEC}" ]; then
     unset WINCHECKSEC
-fi
-
 fi
 
 export PDBSTR="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"
@@ -42,4 +41,10 @@ if [ -f "${PDBSTR}" ]; then
     chmod +x "${PDBSTR}"
 else
     unset PDBSTR
+fi
+
+# Temporary signal to toolchain.configure that our compiler is patched to
+# support CFG, until such support can be assumed.
+if test -z "$USE_ARTIFACT"; then
+  ac_add_options --enable-hardening
 fi

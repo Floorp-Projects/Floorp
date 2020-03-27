@@ -28,8 +28,14 @@ except KeyError:
           "not set, can't check DEP/ASLR etc. status.")
     sys.exit(1)
 
+wine = buildconfig.substs.get('WINE')
+if wine:
+    cmd = [wine, winchecksec_path]
+else:
+    cmd = [winchecksec_path]
+
 try:
-    result = subprocess.check_output([winchecksec_path, '-j', binary_path],
+    result = subprocess.check_output(cmd + ['-j', binary_path],
                                      universal_newlines=True)
 
 except subprocess.CalledProcessError as e:
