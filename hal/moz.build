@@ -40,8 +40,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         '/widget/android',
     ]
     UNIFIED_SOURCES += [
+        'android/AndroidProcessPriority.cpp',
         'android/AndroidSensor.cpp',
-        'fallback/FallbackProcessPriority.cpp',
     ]
     # AndroidHal.cpp cannot be built in unified mode because it relies on HalImpl.h.
     SOURCES += [
