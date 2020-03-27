@@ -97,8 +97,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
    */
   bool IsInSelection() const { return !!mSelection; }
 
-  // TODO: annotate this with `MOZ_CAN_RUN_SCRIPT` instead.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void RegisterSelection(
+  MOZ_CAN_RUN_SCRIPT void RegisterSelection(
       mozilla::dom::Selection& aSelection);
 
   void UnregisterSelection();

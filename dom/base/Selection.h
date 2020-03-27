@@ -749,8 +749,10 @@ class Selection final : public nsSupportsWeakReference,
    *                  is already contained, to the one containing it. Hence
    *                  it'll always be in [0, mStyledRanges.mRanges.Length()).
    */
-  nsresult MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
-                                            int32_t* aOutIndex);
+  // TODO: annotate with `MOZ_CAN_RUN_SCRIPT`
+  // (https://bugzilla.mozilla.org/show_bug.cgi?id=1625429).
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  MaybeAddRangeAndTruncateOverlaps(nsRange* aRange, int32_t* aOutIndex);
 
   Document* GetDocument() const;
   nsPIDOMWindowOuter* GetWindow() const;

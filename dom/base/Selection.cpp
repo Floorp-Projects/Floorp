@@ -1040,7 +1040,9 @@ nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
     const RefPtr<Selection> selection{this};
-    temp[i].mRange->RegisterSelection(*selection);
+    // `MOZ_KnownLive` is required because of
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1622253.
+    MOZ_KnownLive(temp[i].mRange)->RegisterSelection(*selection);
   }
 
   *aOutIndex = startIndex + insertionPoint;
