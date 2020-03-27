@@ -556,7 +556,7 @@ RefPtr<DrawTarget> DrawTargetRecording::CreateClippedDrawTarget(
   RefPtr<DrawTarget> similarDT;
   similarDT = new DrawTargetRecording(this, mRect, aFormat);
   mRecorder->RecordEvent(
-      RecordedCreateClippedDrawTarget(similarDT.get(), aBounds, aFormat));
+      RecordedCreateClippedDrawTarget(this, similarDT.get(), aBounds, aFormat));
   similarDT->SetTransform(mTransform);
   return similarDT;
 }
