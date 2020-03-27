@@ -912,6 +912,10 @@ DisplayListBuilder::DisplayListBuilder(PipelineId aId,
       mDisplayItemCache(aCache) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
+
+  if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
+    mDisplayItemCache->SetPipelineId(aId);
+  }
 }
 
 DisplayListBuilder::~DisplayListBuilder() {
@@ -967,6 +971,11 @@ void DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
 void DisplayListBuilder::Finalize(
     layers::RenderRootDisplayListData& aOutTransaction) {
   MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
+
+  if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
+    wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
+  }
+
   wr::VecU8 dl;
   wr_api_finalize_builder(SubBuilder(aOutTransaction.mRenderRoot).mWrState,
                           &aOutTransaction.mContentSize,
@@ -1527,24 +1536,6 @@ bool DisplayListBuilder::ReuseItem(nsPaintedDisplayItem* aItem) {
   }
 
   return false;
-}
-
-void DisplayListBuilder::UpdateCacheState(
-    const bool aPartialDisplayListBuildFailed) {
-  if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
-    mDisplayItemCache->UpdateState(aPartialDisplayListBuildFailed,
-                                   CurrentPipelineId());
-#if 0
-    mDisplayItemCache->Stats().Print();
-    mDisplayItemCache->Stats().Reset();
-#endif
-  }
-}
-
-void DisplayListBuilder::UpdateCacheSize() {
-  if (mDisplayItemCache && mDisplayItemCache->IsEnabled()) {
-    wr_dp_set_cache_size(mWrState, mDisplayItemCache->CurrentSize());
-  }
 }
 
 Maybe<layers::ScrollableLayerGuid::ViewID>
