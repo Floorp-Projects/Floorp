@@ -297,37 +297,60 @@ input[name="password"] {
 
 .vulnerable-alert,
 .breach-alert {
-  border-radius: 8px;
+  border-radius: var(--panel-border-radius);
   border: 1px solid var(--in-content-border-color);
-  background-color: var(--yellow-10);
-  color: #0C0C0D;
-  box-shadow: 0 2px 8px 0 rgba(12,12,13,0.1);
+  box-shadow: 0 2px 8px 0 var(--grey-90-a10);
   font-size: .9em;
   font-weight: 300;
   line-height: 1.4;
   padding-block: 12px;
-  padding-inline-start: 36px;
-  padding-inline-end: 92px;
+  padding-inline-start: 64px;
+  padding-inline-end: 32px;
   margin-block-end: 40px;
   position: relative;
 }
 
-.alert-date {
-  display: block;;
+.breach-alert {
+  background-color: var(--red-70);
+  color: #fff;
 }
 
+.vulnerable-alert {
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
+}
+
+.alert-title {
+  font-size: 22px;
+  font-weight: normal;
+  line-height: 1em;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.alert-date {
+  display: block;
+  font-weight: 600;
+}
+
+.alert-link:visited,
 .alert-link {
+  font-weight: 600;
+}
+
+.breach-alert > .alert-link:visited,
+.breach-alert > .alert-link {
   color: inherit;
   text-decoration: underline;
-  font-weight: 600;
 }
 
 .alert-icon {
   position: absolute;
-  inset-block-start: 10px;
-  inset-inline-start: 10px;
+  inset-block-start: 16px;
+  inset-inline-start: 32px;
   -moz-context-properties: fill;
-  fill: var(--red-90);
+  fill: currentColor;
+  width: 24px;
 }
 
 .dismiss-alert {
