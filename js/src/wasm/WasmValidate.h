@@ -677,7 +677,7 @@ class Decoder {
       case uint8_t(TypeCode::AnyRef):
       case uint8_t(TypeCode::FuncRef):
       case uint8_t(TypeCode::NullRef):
-        return RefType::fromTypeCode(TypeCode(uncheckedReadVarU32()));
+        return RefType::fromTypeCode(TypeCode(code));
       default:
         return ValType::fromNonRefTypeCode(TypeCode(code));
     }
