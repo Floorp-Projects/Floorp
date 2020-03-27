@@ -145,7 +145,7 @@ add_task(async function test_get_current() {
       browser.test.log("Testing getCurrent() after theme.reset(windowId)");
       await browser.theme.reset(firstWin.id);
       testTheme2(await browser.theme.getCurrent());
-      testEmptyTheme(await browser.theme.getCurrent(firstWin.id));
+      testTheme1(await browser.theme.getCurrent(firstWin.id));
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log(
@@ -154,8 +154,8 @@ add_task(async function test_get_current() {
       focusChanged = ensureWindowFocused(firstWin.id);
       await browser.windows.update(firstWin.id, { focused: true });
       await focusChanged;
-      testEmptyTheme(await browser.theme.getCurrent());
-      testEmptyTheme(await browser.theme.getCurrent(firstWin.id));
+      testTheme1(await browser.theme.getCurrent());
+      testTheme1(await browser.theme.getCurrent(firstWin.id));
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after theme.update(windowId)");
