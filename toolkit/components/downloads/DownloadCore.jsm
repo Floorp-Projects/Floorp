@@ -2052,6 +2052,7 @@ DownloadCopySaver.prototype = {
         getInterface: ChromeUtils.generateQI([Ci.nsIProgressEventSink]),
         onProgress: function DCSE_onProgress(
           aRequest,
+          aContext,
           aProgress,
           aProgressMax
         ) {

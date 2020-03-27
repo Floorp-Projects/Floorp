@@ -68,7 +68,7 @@ var progressCallback = {
     delete this._listener;
   },
 
-  onProgress(request, progress, progressMax) {
+  onProgress(request, context, progress, progressMax) {
     Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     this._last_callback_handled = TYPE_ONPROGRESS;
 
@@ -77,7 +77,7 @@ var progressCallback = {
     max = progressMax;
   },
 
-  onStatus(request, status, statusArg) {
+  onStatus(request, context, status, statusArg) {
     if (!this._got_onstartrequest) {
       // Ensure that all messages before onStartRequest are onStatus
       if (this._last_callback_handled) {
