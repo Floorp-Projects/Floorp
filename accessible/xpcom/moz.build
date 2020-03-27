@@ -52,6 +52,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'xpcAccessibleMacInterface.mm'
     ]
+    EXPORTS += [
+        'xpcAccessibleMacInterface.h',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
         '/accessible/android',

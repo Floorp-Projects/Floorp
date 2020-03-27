@@ -29,6 +29,11 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLEMACINTERFACE
 
+  // This sends notifications via nsIObserverService to be consumed by our
+  // mochitests. aNativeObj is a NSAccessibility protocol object,
+  // and aNotification is a NSString.
+  static void FireEvent(id aNativeObj, id aNotification);
+
  protected:
   virtual ~xpcAccessibleMacInterface();
 
