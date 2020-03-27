@@ -38,7 +38,7 @@ function URLFetcher(url, timeout) {
   // We except this from being classified
   xhr.channel.loadFlags |= Ci.nsIChannel.LOAD_BYPASS_URL_CLASSIFIER;
   // Prevent HTTPS-Only Mode from upgrading the request.
-  xhr.channel.loadInfo.httpsOnlyNoUpgrade = true;
+  xhr.channel.loadInfo.httpsOnlyStatus |= Ci.nsILoadInfo.HTTPS_ONLY_EXEMPT;
 
   // We don't want to follow _any_ redirects
   xhr.channel.QueryInterface(Ci.nsIHttpChannel).redirectionLimit = 0;

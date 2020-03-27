@@ -18,14 +18,16 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
     return false;
   }
   // 2. Check if NoUpgrade-flag is set in LoadInfo
-  if (aLoadInfo->GetHttpsOnlyNoUpgrade()) {
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
     // Let's log to the console, that we didn't upgrade this request
     uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
-    AutoTArray<nsString, 2> params = {
+    AutoTArray<nsString, 1> params = {
         NS_ConvertUTF8toUTF16(aURI->GetSpecOrDefault())};
     nsHTTPSOnlyUtils::LogLocalizedString(
-        "HTTPSOnlyNoUpgrade", params, nsIScriptError::infoFlag, innerWindowId,
-        !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId, aURI);
+        "HTTPSOnlyNoUpgradeException", params, nsIScriptError::infoFlag,
+        innerWindowId, !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId,
+        aURI);
     return false;
   }
 
@@ -45,6 +47,14 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
       "HTTPSOnlyUpgradeRequest", params, nsIScriptError::warningFlag,
       innerWindowId, !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId,
       aURI);
+
+  // If the status was not determined before, we now indicate that the request
+  // will get upgraded, but no event-listener has been registered yet.
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED) {
+    httpsOnlyStatus ^= nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
+    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED;
+    aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+  }
 
   return true;
 }
@@ -79,32 +89,8 @@ void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
                                               aInnerWindowID, aURI);
   } else {
     // Send to browser console
-    LogSimpleConsoleError(message, category.get(), aFromPrivateWindow,
-                          true /* from chrome context */, aFlags);
+    nsContentUtils::LogSimpleConsoleError(
+        message, category.get(), aFromPrivateWindow,
+        true /* from chrome context */, aFlags);
   }
-}
-
-/* static */
-void nsHTTPSOnlyUtils::LogSimpleConsoleError(const nsAString& aErrorText,
-                                             const char* aCategory,
-                                             bool aFromPrivateWindow,
-                                             bool aFromChromeContext,
-                                             uint32_t aErrorFlags) {
-  nsCOMPtr<nsIScriptError> scriptError =
-      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-  if (!scriptError) {
-    return;
-  }
-  nsCOMPtr<nsIConsoleService> console =
-      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  if (!console) {
-    return;
-  }
-  nsresult rv = scriptError->Init(aErrorText, EmptyString(), EmptyString(), 0,
-                                  0, aErrorFlags, aCategory, aFromPrivateWindow,
-                                  aFromChromeContext);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  console->LogMessage(scriptError);
 }
