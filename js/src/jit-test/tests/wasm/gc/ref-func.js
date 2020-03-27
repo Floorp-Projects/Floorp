@@ -128,16 +128,6 @@ assertErrorMessage(() => new WebAssembly.Module(
                    WebAssembly.CompileError,
                    /declared segment's element type must be subtype of funcref/);
 
-// declared element segment of type funcref with elemexpr can carry a null
-// value, but the null value must be rejected.
-
-assertErrorMessage(() => new WebAssembly.Module(
-    moduleWithSections([generalElemSection([{ flag: DeclaredElemExpr,
-                                              typeCode: AnyFuncCode,
-                                              elems: [[RefNullCode]] }])])),
-                   WebAssembly.CompileError,
-                   /declared element segments cannot contain ref.null/);
-
 // Test case for bug 1596026: when taking the ref.func of an imported function,
 // the value obtained should not be the JS function.  This would assert (even in
 // a release build), so the test is merely that the code runs.

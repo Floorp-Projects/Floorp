@@ -5,19 +5,11 @@ wasmFullPass(`
 	(module
 		(func $f1)
 		(elem declare $f1)
+		(elem declare funcref (ref.null))
 		(func $run)
 		(export "run" (func $run))
 	)
 `);
-
-// Declared segments cannot use ref.null
-assertThrowsInstanceOf(() => {
-	new WebAssembly.Module(wasmTextToBinary(`
-		(module
-			(elem declare (ref.null))
-		)
-	`))
-}, WebAssembly.CompileError);
 
 // Declared segments cannot be used by bulk-memory operations
 function test(ins) {
