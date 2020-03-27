@@ -7,21 +7,25 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/blocklist.css"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
-<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/blocklist.dtd">
-%extensionsDTD;
-]>
+<!DOCTYPE window>
 
-<window windowtype="Addons:Blocklist" title="&blocklist.title;" align="stretch"
+<window windowtype="Addons:Blocklist"
+        data-l10n-id="blocklist-window"
+        data-l10n-attrs="title,style"
+        align="stretch"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="init();"
-        style="&blocklist.style;">
+        >
+
 <dialog id="BlocklistDialog"
         buttons="accept,cancel"
-        buttonlabelaccept="&blocklist.accept.label;"
-        buttonaccesskeyaccept="&blocklist.accept.accesskey;">
+        buttonidaccept="blocklist-accept">
+
+<linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="toolkit/extensions/blocklist.ftl"/>
+</linkset>
 
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://mozapps/content/extensions/blocklist.js"/>
@@ -31,15 +35,15 @@
       <image class="error-icon"/>
     </vbox>
     <vbox flex="1">
-      <label>&blocklist.summary;</label>
+      <label data-l10n-id="blocklist-label-summary" />
       <separator class="thin"/>
       <richlistbox id="addonList" flex="1" style="-moz-user-focus: none;"/>
       <separator class="thin"/>
-      <description id="bothMessage" hidden="true" class="bold">&blocklist.softandhard;</description>
-      <description id="hardBlockMessage" hidden="true" class="bold">&blocklist.hardblocked;</description>
-      <description id="softBlockMessage" hidden="true" class="bold">&blocklist.softblocked;</description>
+      <description id="bothMessage"  class="bold" hidden="true" data-l10n-id="blocklist-soft-and-hard"/>
+      <description id="hardBlockMessage"  class="bold" hidden="true" data-l10n-id="blocklist-hard-blocked"/>
+      <description id="softBlockMessage"  class="bold" hidden="true" data-l10n-id="blocklist-soft-blocked"/>
       <hbox pack="start">
-        <label id="moreInfo" value="&blocklist.moreinfo;" is="text-link"/>
+        <label id="moreInfo" data-l10n-attrs="blocklist-more-information" is="text-link"/>
       </hbox>
     </vbox>
   </hbox>
