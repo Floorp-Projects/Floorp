@@ -6,6 +6,8 @@
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">Hape lidhjen në skedë private</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Hape figurën në skedë të re</string>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">Lidhje shkarkimi</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Ndani lidhje me të tjerët</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
