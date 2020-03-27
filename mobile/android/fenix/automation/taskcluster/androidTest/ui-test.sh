@@ -79,7 +79,7 @@ elif [[ "${device_type}" == "x86-start-test" ]]; then
 elif [[ "${device_type}" == "arm-start-test" ]]; then
     flank_template="${PATH_TEST}/flank-armeabi-v7a-start-test.yml"
 else
-    echo "NOT FOUND"
+    echo "FAILURE: flank config file not found!"
     exitcode=1
 fi
 
@@ -95,7 +95,7 @@ function failure_check() {
     echo
     echo
     if [[ $exitcode -ne 0 ]]; then
-        echo "ERROR: UI test run failed, please check above URL"
+        echo "FAILURE: UI test run failed, please check above URL"
     else
 	echo "All UI test(s) have passed!"
     fi
