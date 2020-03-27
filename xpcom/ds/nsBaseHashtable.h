@@ -179,8 +179,8 @@ class nsBaseHashtable
     }
   }
 
-  MOZ_MUST_USE bool Put(KeyType aKey, const UserDataType& aData,
-                        const fallible_t&) {
+  [[nodiscard]] bool Put(KeyType aKey, const UserDataType& aData,
+                         const fallible_t&) {
     EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
     if (!ent) {
       return false;
@@ -202,7 +202,8 @@ class nsBaseHashtable
     }
   }
 
-  MOZ_MUST_USE bool Put(KeyType aKey, UserDataType&& aData, const fallible_t&) {
+  [[nodiscard]] bool Put(KeyType aKey, UserDataType&& aData,
+                         const fallible_t&) {
     EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
     if (!ent) {
       return false;
@@ -269,7 +270,7 @@ class nsBaseHashtable
       mEntry = nullptr;
     }
 
-    MOZ_MUST_USE DataType& Data() {
+    [[nodiscard]] DataType& Data() {
       MOZ_ASSERT(!!*this, "must have an entry to access its value");
       return mEntry->mData;
     }
@@ -307,7 +308,7 @@ class nsBaseHashtable
    * lookups.  If you want to insert a new entry if one does not exist, then use
    * LookupForAdd instead, see below.
    */
-  MOZ_MUST_USE LookupResult Lookup(KeyType aKey) {
+  [[nodiscard]] LookupResult Lookup(KeyType aKey) {
     return LookupResult(this->GetEntry(aKey), *this);
   }
 
@@ -365,7 +366,7 @@ class nsBaseHashtable
       mEntry = nullptr;
     }
 
-    MOZ_MUST_USE DataType& Data() {
+    [[nodiscard]] DataType& Data() {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       MOZ_ASSERT(mEntry);
       return mEntry->mData;
@@ -397,7 +398,7 @@ class nsBaseHashtable
    * hashtable if one doesn't exist before but would like to avoid two hashtable
    * lookups.
    */
-  MOZ_MUST_USE EntryPtr LookupForAdd(KeyType aKey) {
+  [[nodiscard]] EntryPtr LookupForAdd(KeyType aKey) {
     auto count = Count();
     EntryType* ent = this->PutEntry(aKey);
     return EntryPtr(*this, ent, count == Count());
