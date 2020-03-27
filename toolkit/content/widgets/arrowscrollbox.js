@@ -143,7 +143,7 @@
         );
       }
 
-      this.setAttribute("notoverflowing", "true");
+      this.removeAttribute("overflowing");
       this.initializeAttributeInheritance();
       this._updateScrollButtonsDisabledState();
     }
@@ -557,7 +557,7 @@
     }
 
     _updateScrollButtonsDisabledState() {
-      if (this.hasAttribute("notoverflowing")) {
+      if (!this.hasAttribute("overflowing")) {
         this.setAttribute("scrolledtoend", "true");
         this.setAttribute("scrolledtostart", "true");
         return;
@@ -582,7 +582,7 @@
           let scrolledToStart = false;
           let scrolledToEnd = false;
 
-          if (this.hasAttribute("notoverflowing")) {
+          if (!this.hasAttribute("overflowing")) {
             scrolledToStart = true;
             scrolledToEnd = true;
           } else {
@@ -645,7 +645,7 @@
 
     on_wheel(event) {
       // Don't consume the event if we can't scroll.
-      if (this.hasAttribute("notoverflowing")) {
+      if (!this.hasAttribute("overflowing")) {
         return;
       }
 
@@ -750,10 +750,7 @@
       // Ignore underflow events:
       // - from nested scrollable elements
       // - corresponding to an overflow event that we ignored
-      if (
-        event.target != this.scrollbox ||
-        this.hasAttribute("notoverflowing")
-      ) {
+      if (event.target != this.scrollbox || !this.hasAttribute("overflowing")) {
         return;
       }
 
@@ -771,7 +768,7 @@
         return;
       }
 
-      this.setAttribute("notoverflowing", "true");
+      this.removeAttribute("overflowing");
       this._updateScrollButtonsDisabledState();
     }
 
@@ -796,7 +793,7 @@
         return;
       }
 
-      this.removeAttribute("notoverflowing");
+      this.setAttribute("overflowing", "true");
       this._updateScrollButtonsDisabledState();
     }
 
