@@ -38,12 +38,3 @@
   padding: 0 16px;
   margin: 0;
 }
-
-
-/* Align the last dialog button with the end of the warning box */
-.dialog-button-box {
-  margin-inline-end: 0;
-}
-.dialog-button[dlgtype="cancel"] {
-  margin-inline-end: 0;
-}
