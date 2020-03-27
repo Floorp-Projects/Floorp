@@ -1,0 +1,23 @@
+<html style="background: red">
+<body>
+  <svg height="100px" width="100px">
+    <defs>
+      <filter filterUnits="userSpaceOnUse" id="merge" color-interpolation-filters="sRGB">
+        <feMerge>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+    </defs>
+    <g filter="url(#merge)">
+      <g transform="translate(0, 25)">>
+        <defs>
+          <mask id="m" maskUnits="userSpaceOnUse">
+            <rect x=10 y=10 width=51 height=45 fill="white"></rect>
+          </mask>
+        </defs>
+        <rect fill="yellow" x=0 y=0 width=100 height=100 mask="url(#m)"></rect>
+      </g>
+    </g>
+  </svg>
+</body>
+</html>
