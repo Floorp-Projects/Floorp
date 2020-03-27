@@ -27,7 +27,7 @@ job-template:
     run-on-tasks-for: []
     worker-type: b-android
     treeherder:
-        tier: 3
+        tier: 2
         kind: other
     worker:
         docker-image: {in-tree: visual-metrics}

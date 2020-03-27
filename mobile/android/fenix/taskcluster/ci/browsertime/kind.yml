@@ -220,11 +220,6 @@ jobs:
         treeherder:
             symbol: 'Btime(tp6m-25-c)'
 
-    tp6m-26-cold:
-        test-name: aframe
-        treeherder:
-            symbol: 'Btime(tp6m-26-c)'
-
     tp6m-27-cold:
         test-name: cnn
         treeherder:
