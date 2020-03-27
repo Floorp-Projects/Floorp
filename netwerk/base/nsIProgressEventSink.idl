@@ -36,6 +36,9 @@ interface nsIProgressEventSink : nsISupports
      *
      * @param aRequest
      *        the request being observed (may QI to nsIChannel).
+     * @param aContext
+     *        if aRequest is a channel, then this parameter is the listener
+     *        context passed to nsIChannel::asyncOpen.
      * @param aProgress
      *        numeric value in the range 0 to aProgressMax indicating the
      *        number of bytes transfered thus far.
@@ -44,6 +47,7 @@ interface nsIProgressEventSink : nsISupports
      *        transfered (or -1 if total is unknown).
      */
     void onProgress(in nsIRequest aRequest,
+                    in nsISupports aContext,
                     in long long aProgress,
                     in long long aProgressMax);
 
@@ -53,6 +57,9 @@ interface nsIProgressEventSink : nsISupports
      *
      * @param aRequest
      *        the request being observed (may QI to nsIChannel).
+     * @param aContext
+     *        if aRequest is a channel, then this parameter is the listener
+     *        context passed to nsIChannel::asyncOpen.
      * @param aStatus
      *        status code (not necessarily an error code) indicating the
      *        state of the channel (usually the state of the underlying
@@ -66,6 +73,7 @@ interface nsIProgressEventSink : nsISupports
      *        indicates the host:port associated with the status code.
      */
     void onStatus(in nsIRequest aRequest,
+                  in nsISupports aContext,
                   in nsresult aStatus,
                   in wstring aStatusArg);
 
