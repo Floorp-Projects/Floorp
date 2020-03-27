@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko.selection
 import android.app.Activity
 import android.content.Context
 import android.view.MenuItem
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 
@@ -17,7 +18,8 @@ import org.mozilla.geckoview.BasicSelectionActionDelegate
  */
 open class GeckoSelectionActionDelegate(
     activity: Activity,
-    private val customDelegate: SelectionActionDelegate
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val customDelegate: SelectionActionDelegate
 ) : BasicSelectionActionDelegate(activity) {
 
     companion object {

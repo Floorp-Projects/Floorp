@@ -37,6 +37,9 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: add parameter `handleError` to `CustomTabWindowFeature` constructor
     * This is used to show an error when the url can't be handled
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * Fixed a memory leak when using a `SelectionActionDelegate` on `GeckoEngineView`.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
