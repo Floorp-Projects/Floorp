@@ -2515,10 +2515,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
             initType = RefType::func();
             break;
           case uint16_t(Op::RefNull):
-            if (kind == ElemSegmentKind::Declared) {
-              return d.fail(
-                  "declared element segments cannot contain ref.null");
-            }
             initType = RefType::null();
             needIndex = false;
             break;
