@@ -1081,39 +1081,6 @@ struct RoleDescrComparator {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)valueDidChange {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-#ifdef DEBUG_hakan
-  NSLog(@"%@'s value changed!", self);
-#endif
-  // sending out a notification is expensive, so we don't do it other than for really important
-  // objects, like mozTextAccessible.
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)selectedTextDidChange {
-  // Do nothing. mozTextAccessible will.
-}
-
-- (void)documentLoadComplete {
-  id realSelf = GetObjectOrRepresentedView(self);
-  NSAccessibilityPostNotification(realSelf, NSAccessibilityFocusedUIElementChangedNotification);
-  NSAccessibilityPostNotification(realSelf, @"AXLoadComplete");
-  NSAccessibilityPostNotification(realSelf, @"AXLayoutComplete");
-}
-
-- (void)menuOpened {
-  id realSelf = GetObjectOrRepresentedView(self);
-  NSAccessibilityPostNotification(realSelf, @"AXMenuOpened");
-}
-
-- (void)menuClosed {
-  id realSelf = GetObjectOrRepresentedView(self);
-  NSAccessibilityPostNotification(realSelf, @"AXMenuClosed");
-}
-
 - (NSString*)help {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -1184,28 +1151,38 @@ struct RoleDescrComparator {
   return (([self state] & states::UNAVAILABLE) == 0);
 }
 
-// The root accessible calls this when the focused node was
-// changed to us.
-- (void)didReceiveFocus {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-#ifdef DEBUG_hakan
-  NSLog(@"%@ received focus!", self);
-#endif
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilityFocusedUIElementChangedNotification);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+- (void)firePlatformEvent:(uint32_t)eventType {
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      [self postNotification:NSAccessibilityFocusedUIElementChangedNotification];
+      break;
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
+      [self postNotification:NSAccessibilityFocusedUIElementChangedNotification];
+      [self postNotification:@"AXLoadComplete"];
+      [self postNotification:@"AXLayoutComplete"];
+      break;
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+      [self postNotification:@"AXMenuOpened"];
+      break;
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
+      [self postNotification:@"AXMenuClosed"];
+      break;
+    case nsIAccessibleEvent::EVENT_SELECTION:
+    case nsIAccessibleEvent::EVENT_SELECTION_ADD:
+    case nsIAccessibleEvent::EVENT_SELECTION_REMOVE:
+      [self postNotification:NSAccessibilitySelectedChildrenChangedNotification];
+      break;
+  }
 }
 
-- (void)selectionDidChange {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+- (void)postNotification:(NSString*)notification {
+  if (gfxPlatform::IsHeadless()) {
+    // Using a headless toolkit for tests and whatnot, posting accessibility
+    // notification won't work.
+    return;
+  }
 
-  // One of our selected children changed.
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilitySelectedChildrenChangedNotification);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self), notification);
 }
 
 - (NSWindow*)window {
@@ -1258,7 +1235,7 @@ struct RoleDescrComparator {
 
   mGeckoAccessible = 0;
 
-  NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
+  [self postNotification:NSAccessibilityUIElementDestroyedNotification];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
