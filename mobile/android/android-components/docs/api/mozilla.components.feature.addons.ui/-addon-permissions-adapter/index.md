@@ -2,7 +2,7 @@
 
 # AddonPermissionsAdapter
 
-`class AddonPermissionsAdapter : Adapter<ViewHolder>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonPermissionsAdapter.kt#L19)
+`class AddonPermissionsAdapter : Adapter<ViewHolder>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonPermissionsAdapter.kt#L22)
 
 An adapter for displaying the permissions of an add-on.
 
@@ -11,12 +11,13 @@ An adapter for displaying the permissions of an add-on.
 | Name | Summary |
 |---|---|
 | [PermissionViewHolder](-permission-view-holder/index.md) | `class PermissionViewHolder : ViewHolder`<br>A view holder for displaying the permissions of an add-on. |
+| [Style](-style/index.md) | `data class Style`<br>Allows to customize how permission items should look like. |
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AddonPermissionsAdapter(permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>)`<br>An adapter for displaying the permissions of an add-on. |
+| [&lt;init&gt;](-init-.md) | `AddonPermissionsAdapter(permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, style: `[`Style`](-style/index.md)`? = null)`<br>An adapter for displaying the permissions of an add-on. |
 
 ### Functions
 

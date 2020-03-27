@@ -2,7 +2,7 @@
 
 # icon
 
-`val icon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L439)
+`val icon: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L417)
 
 An icon for the currently visible page.
 

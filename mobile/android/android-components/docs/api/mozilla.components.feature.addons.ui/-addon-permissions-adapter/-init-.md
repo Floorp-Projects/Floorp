@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AddonPermissionsAdapter(permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>)`
+`AddonPermissionsAdapter(permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, style: `[`Style`](-style/index.md)`? = null)`
 
 An adapter for displaying the permissions of an add-on.
 

@@ -14,3 +14,8 @@ The [Store](-store/index.md) will create a chain of [Middleware](./-middleware.m
 [Middleware](./-middleware.md) can decide to continue the chain (by calling `next`), intercept the chain (by not
 invoking `next`). A [Middleware](./-middleware.md) has no knowledge of what comes before or after it in the chain.
 
+### Inheritors
+
+| Name | Summary |
+|---|---|
+| [MediaMiddleware](../mozilla.components.feature.media.middleware/-media-middleware/index.md) | `class MediaMiddleware : `[`Middleware`](./-middleware.md)`<`[`BrowserState`](../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../mozilla.components.browser.state.action/-browser-action.md)`>`<br>[Middleware](./-middleware.md) implementation for updating the [MediaState.Aggregate](../mozilla.components.browser.state.state/-media-state/-aggregate/index.md) and launching an [MediaServiceLauncher](#) |

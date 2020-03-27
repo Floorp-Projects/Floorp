@@ -14,6 +14,7 @@
 | [CustomTabSessionState](-custom-tab-session-state/index.md) | `data class CustomTabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a Custom Tab. |
 | [EngineState](-engine-state/index.md) | `data class EngineState`<br>Value type that holds the browser engine state of a session. |
 | [ExternalAppType](-external-app-type/index.md) | `enum class ExternalAppType`<br>Represents different contexts that a custom tab session can be displayed in. |
+| [MediaState](-media-state/index.md) | `data class MediaState`<br>Value type that represents the state of the media elements and playback states. |
 | [ReaderState](-reader-state/index.md) | `data class ReaderState`<br>Value type that represents the state of reader mode/view. |
 | [SecurityInfoState](-security-info-state/index.md) | `data class SecurityInfoState`<br>A value type holding security information for a Session. |
 | [SessionState](-session-state/index.md) | `interface SessionState`<br>Interface for states that contain a [ContentState](-content-state/index.md) and can be accessed via an [id](-session-state/id.md). |
