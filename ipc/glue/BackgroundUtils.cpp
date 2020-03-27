@@ -580,7 +580,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetDocumentHasLoaded(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       cspNonce, aLoadInfo->GetSkipContentSniffing(),
-      aLoadInfo->GetHttpsOnlyStatus(),
+      aLoadInfo->GetHttpsOnlyNoUpgrade(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo));
 
@@ -778,7 +778,7 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.documentHasLoaded(),
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.httpsOnlyStatus(), loadInfoArgs.requestBlockingReason(),
+      loadInfoArgs.httpsOnlyNoUpgrade(), loadInfoArgs.requestBlockingReason(),
       loadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
@@ -794,8 +794,8 @@ void LoadInfoToParentLoadInfoForwarder(
   if (!aLoadInfo) {
     *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
         false, false, Nothing(), nsILoadInfo::TAINTING_BASIC,
-        false,                                  // SkipContentSniffing
-        nsILoadInfo::HTTPS_ONLY_UNINITIALIZED,  // httpsOnlyStatus
+        false,  // SkipContentSniffing
+        false,  // HttpsOnlyNoUpgrade
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
@@ -830,7 +830,7 @@ void LoadInfoToParentLoadInfoForwarder(
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(),
       aLoadInfo->GetBypassCORSChecks(), ipcController, tainting,
-      aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
+      aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyNoUpgrade(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -869,7 +869,7 @@ nsresult MergeParentLoadInfoForwarder(
   rv = aLoadInfo->SetSkipContentSniffing(aForwarderArgs.skipContentSniffing());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aLoadInfo->SetHttpsOnlyStatus(aForwarderArgs.httpsOnlyStatus());
+  rv = aLoadInfo->SetHttpsOnlyNoUpgrade(aForwarderArgs.httpsOnlyNoUpgrade());
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(
