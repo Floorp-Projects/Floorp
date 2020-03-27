@@ -239,7 +239,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     private fun withClipboard(content: String = "", lambda: () -> Unit) {
         val oldClip = clipboard.primaryClip
         try {
-            clipboard.setPrimaryClip(ClipData.newPlainText("", content))
+            clipboard.primaryClip = ClipData.newPlainText("", content)
 
             sessionRule.addExternalDelegateUntilTestEnd(
                     ClipboardManager.OnPrimaryClipChangedListener::class,
@@ -248,7 +248,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                     ClipboardManager.OnPrimaryClipChangedListener {})
             lambda()
         } finally {
-            clipboard.setPrimaryClip(oldClip ?: ClipData.newPlainText("", ""))
+            clipboard.primaryClip = oldClip ?: ClipData.newPlainText("", "")
         }
     }
 
