@@ -36,18 +36,15 @@
 #else
 // Linux
 
-#  include "mozilla/RefPtr.h"
 #  include "mozilla/GuardObjects.h"
 #  include <stdint.h>
 #  include <setjmp.h>
 
-class nsZipHandle;
-
 class MOZ_RAII MmapAccessScope {
  public:
-  MmapAccessScope(void* aBuf, uint32_t aBufLen);
-  explicit MmapAccessScope(nsZipHandle* aZipHandle);
-  ~MmapAccessScope();
+  MFBT_API MmapAccessScope(void* aBuf, uint32_t aBufLen,
+                           const char* aFilename = nullptr);
+  MFBT_API ~MmapAccessScope();
 
   MmapAccessScope(const MmapAccessScope&) = delete;
   MmapAccessScope& operator=(const MmapAccessScope&) = delete;
@@ -63,14 +60,26 @@ class MOZ_RAII MmapAccessScope {
 
  private:
   void* mBuf;
+  const char* mFilename;
   uint32_t mBufLen;
-  RefPtr<nsZipHandle> mZipHandle;
   MmapAccessScope* mPreviousScope;
 };
 
-#  define MMAP_FAULT_HANDLER_BEGIN_HANDLE(fd) \
-    {                                         \
-      MmapAccessScope mmapScope(fd);          \
+#  define MMAP_FAULT_HANDLER_BEGIN_HANDLE(fd)                  \
+    {                                                          \
+      void* mmapScopeBuf = nullptr;                            \
+      nsCString mmapScopeFilename;                             \
+      uint32_t mmapScopeBufLen = 0;                            \
+      if (fd && fd->mMap) {                                    \
+        mmapScopeBuf = (void*)fd->mFileStart;                  \
+        mmapScopeBufLen = fd->mTotalLen;                       \
+      }                                                        \
+      if (fd && fd->mFile) {                                   \
+        nsCOMPtr<nsIFile> file = fd->mFile.GetBaseFile();      \
+        file->GetNativeLeafName(mmapScopeFilename);            \
+      }                                                        \
+      MmapAccessScope mmapScope(mmapScopeBuf, mmapScopeBufLen, \
+                                mmapScopeFilename.get());      \
       if (sigsetjmp(mmapScope.mJmpBuf, 0) == 0) {
 #  define MMAP_FAULT_HANDLER_BEGIN_BUFFER(buf, bufLen)   \
     {                                                    \

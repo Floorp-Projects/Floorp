@@ -8,12 +8,42 @@
 
 #if defined(XP_UNIX) && !defined(XP_DARWIN)
 
-#  include "nsZipArchive.h"
-#  include "mozilla/Atomics.h"
-#  include "mozilla/StaticMutex.h"
+#  include "PlatformMutex.h"
 #  include "MainThreadUtils.h"
+#  include "mozilla/Atomics.h"
+#  include "mozilla/GuardObjects.h"
 #  include "mozilla/ThreadLocal.h"
 #  include <signal.h>
+
+class MmapMutex : private mozilla::detail::MutexImpl {
+ public:
+  MmapMutex() : mozilla::detail::MutexImpl() {}
+  void Lock() { mozilla::detail::MutexImpl::lock(); }
+  void Unlock() { mozilla::detail::MutexImpl::unlock(); }
+};
+
+class StaticMmapMutex {
+ public:
+  void Lock() { Mutex()->Lock(); }
+
+  void Unlock() { Mutex()->Unlock(); }
+
+ private:
+  MmapMutex* Mutex() {
+    if (mMutex) {
+      return mMutex;
+    }
+
+    MmapMutex* mutex = new MmapMutex();
+    if (!mMutex.compareExchange(nullptr, mutex)) {
+      delete mutex;
+    }
+
+    return mMutex;
+  }
+
+  mozilla::Atomic<MmapMutex*, mozilla::SequentiallyConsistent> mMutex;
+};
 
 static MOZ_THREAD_LOCAL(MmapAccessScope*) sMmapAccessScope;
 
@@ -31,7 +61,6 @@ static void MmapSIGBUSHandler(int signum, siginfo_t* info, void* context) {
 
     // The address is inside the buffer, handle the failure.
     siglongjmp(mas->mJmpBuf, signum);
-    return;
   }
 
   // This signal is not caused by accessing region protected by MmapAccessScope.
@@ -49,7 +78,20 @@ static void MmapSIGBUSHandler(int signum, siginfo_t* info, void* context) {
 }
 
 mozilla::Atomic<bool> gSIGBUSHandlerInstalled(false);
-mozilla::StaticMutex gSIGBUSHandlerMutex;
+StaticMmapMutex gSIGBUSHandlerMutex;
+
+class MOZ_RAII MmapMutexAutoLock {
+ public:
+  explicit MmapMutexAutoLock(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    gSIGBUSHandlerMutex.Lock();
+  }
+
+  ~MmapMutexAutoLock() { gSIGBUSHandlerMutex.Unlock(); }
+
+ private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 void InstallMmapFaultHandler() {
   // This function is called from MmapAccessScope's constructor because there is
@@ -60,7 +102,7 @@ void InstallMmapFaultHandler() {
     return;
   }
 
-  mozilla::StaticMutexAutoLock lock(gSIGBUSHandlerMutex);
+  MmapMutexAutoLock lock;
 
   // We must check it again, because the handler could be installed on another
   // thread when we were waiting for the lock.
@@ -81,29 +123,15 @@ void InstallMmapFaultHandler() {
   gSIGBUSHandlerInstalled = true;
 }
 
-MmapAccessScope::MmapAccessScope(void* aBuf, uint32_t aBufLen) {
+MmapAccessScope::MmapAccessScope(void* aBuf, uint32_t aBufLen,
+                                 const char* aFilename) {
   // Install signal handler if it wasn't installed yet.
   InstallMmapFaultHandler();
 
   // We'll handle the signal only if the crashing address is inside this buffer.
   mBuf = aBuf;
   mBufLen = aBufLen;
-
-  SetThreadLocalScope();
-}
-
-MmapAccessScope::MmapAccessScope(nsZipHandle* aZipHandle)
-    : mBuf(nullptr), mBufLen(0) {
-  // Install signal handler if it wasn't installed yet.
-  InstallMmapFaultHandler();
-
-  // It's OK if aZipHandle is null (e.g. called from nsJARInputStream::Read
-  // when mFd was already release), because no access to mmapped memory is made
-  // in this case.
-  if (aZipHandle && aZipHandle->mMap) {
-    // Handle SIGBUS only when it's an mmaped zip file.
-    mZipHandle = aZipHandle;
-  }
+  mFilename = aFilename;
 
   SetThreadLocalScope();
 }
@@ -129,48 +157,15 @@ void MmapAccessScope::SetThreadLocalScope() {
 }
 
 bool MmapAccessScope::IsInsideBuffer(void* aPtr) {
-  bool isIn;
-
-  if (mZipHandle) {
-    isIn =
-        aPtr >= mZipHandle->mFileStart &&
-        aPtr < (void*)((char*)mZipHandle->mFileStart + mZipHandle->mTotalLen);
-  } else {
-    isIn = aPtr >= mBuf && aPtr < (void*)((char*)mBuf + mBufLen);
-  }
-
-  return isIn;
+  return aPtr >= mBuf && aPtr < (void*)((char*)mBuf + mBufLen);
 }
 
 void MmapAccessScope::CrashWithInfo(void* aPtr) {
-  if (!mZipHandle) {
-    // All we have is the buffer and the crashing address.
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "SIGBUS received when accessing mmaped zip file [buffer=%p, "
-        "buflen=%" PRIu32 ", address=%p]",
-        mBuf, mBufLen, aPtr);
-  }
-
-  nsCOMPtr<nsIFile> file = mZipHandle->mFile.GetBaseFile();
-  nsCString fileName;
-  file->GetNativeLeafName(fileName);
-
-  // Get current file size
-  int fileSize = -1;
-  if (PR_Seek64(mZipHandle->mNSPRFileDesc, 0, PR_SEEK_SET) != -1) {
-    fileSize = PR_Available64(mZipHandle->mNSPRFileDesc);
-  }
-
-  // MOZ_CRASH_UNSAFE_PRINTF has limited number of arguments, so append fileSize
-  // to fileName
-  fileName.Append(", filesize=");
-  fileName.AppendInt(fileSize);
-
+  // All we have is the buffer and the crashing address.
   MOZ_CRASH_UNSAFE_PRINTF(
-      "SIGBUS received when accessing mmaped zip file [file=%s, buffer=%p, "
-      "buflen=%" PRIu32 ", address=%p]",
-      fileName.get(), (char*)mZipHandle->mFileStart, mZipHandle->mTotalLen,
-      aPtr);
+      "SIGBUS received when accessing mmaped file [buffer=%p, "
+      "buflen=%u, address=%p, filename=%s]",
+      mBuf, mBufLen, aPtr, mFilename);
 }
 
 #endif
