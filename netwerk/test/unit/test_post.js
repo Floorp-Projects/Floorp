@@ -45,14 +45,14 @@ var listenerCallback = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onProgress(request, context, progress, progressMax) {
+  onProgress(request, progress, progressMax) {
     // this works because the response is 0 bytes and does not trigger onprogress
     if (progress === progressMax) {
       correctOnProgress = true;
     }
   },
 
-  onStatus(request, context, status, statusArg) {},
+  onStatus(request, status, statusArg) {},
 };
 
 function run_test() {
