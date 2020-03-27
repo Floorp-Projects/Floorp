@@ -166,7 +166,7 @@ bool WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel,
           *out_initFailed = true;
           return false;
         }
-        cur.mUninitializedSlices = {};
+        cur.mUninitializedSlices = Nothing();
       }
     }
 
@@ -457,7 +457,7 @@ bool WebGLTexture::EnsureImageDataInitialized(const TexImageTarget target,
   if (!ZeroTextureData(mContext, mGLName, target, level, imageInfo)) {
     return false;
   }
-  imageInfo.mUninitializedSlices = {};
+  imageInfo.mUninitializedSlices = Nothing();
   return true;
 }
 
