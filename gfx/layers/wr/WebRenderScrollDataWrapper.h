@@ -160,8 +160,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     // tree.
     if (mLayer->GetReferentId()) {
       return WebRenderScrollDataWrapper(
-          *mUpdater, mUpdater->GetScrollData(WRRootId(
-                         *mLayer->GetReferentId(), wr::RenderRoot::Default)));
+          *mUpdater, mUpdater->GetScrollData(*mLayer->GetReferentId()));
     }
 
     return WebRenderScrollDataWrapper(*mUpdater);

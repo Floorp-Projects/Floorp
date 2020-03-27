@@ -60,7 +60,7 @@ class APZUpdater {
 
   void ClearTree(LayersId aRootLayersId);
   void UpdateFocusState(LayersId aRootLayerTreeId,
-                        WRRootId aOriginatingWrRootId,
+                        LayersId aOriginatingLayersId,
                         const FocusTarget& aFocusTarget);
   void UpdateHitTestingTree(Layer* aRoot, bool aIsFirstPaint,
                             LayersId aOriginatingLayersId,
@@ -73,8 +73,8 @@ class APZUpdater {
    * This function will store the new scroll data and update the focus state and
    * hit-testing tree.
    */
-  void UpdateScrollDataAndTreeState(WRRootId aRootLayerTreeId,
-                                    WRRootId aOriginatingWrRootId,
+  void UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
+                                    LayersId aOriginatingLayersId,
                                     const wr::Epoch& aEpoch,
                                     WebRenderScrollData&& aScrollData);
   /**
@@ -83,26 +83,26 @@ class APZUpdater {
    * side). This function will update the stored scroll offsets and the
    * hit-testing tree.
    */
-  void UpdateScrollOffsets(WRRootId aRootLayerTreeId,
-                           WRRootId aOriginatingWrRootId,
+  void UpdateScrollOffsets(LayersId aRootLayerTreeId,
+                           LayersId aOriginatingLayersId,
                            ScrollUpdatesMap&& aUpdates,
                            uint32_t aPaintSequenceNumber);
 
-  void NotifyLayerTreeAdopted(WRRootId aWrRootId,
+  void NotifyLayerTreeAdopted(LayersId aLayersId,
                               const RefPtr<APZUpdater>& aOldUpdater);
-  void NotifyLayerTreeRemoved(WRRootId aWrRootId);
+  void NotifyLayerTreeRemoved(LayersId aLayersId);
 
-  bool GetAPZTestData(WRRootId aWrRootId, APZTestData* aOutData);
+  bool GetAPZTestData(LayersId aLayersId, APZTestData* aOutData);
 
-  void SetTestAsyncScrollOffset(WRRootId aWrRootId,
+  void SetTestAsyncScrollOffset(LayersId aLayersId,
                                 const ScrollableLayerGuid::ViewID& aScrollId,
                                 const CSSPoint& aOffset);
-  void SetTestAsyncZoom(WRRootId aWrRootId,
+  void SetTestAsyncZoom(LayersId aLayersId,
                         const ScrollableLayerGuid::ViewID& aScrollId,
                         const LayerToParentLayerScale& aZoom);
 
   // This can only be called on the updater thread.
-  const WebRenderScrollData* GetScrollData(WRRootId aWrRootId) const;
+  const WebRenderScrollData* GetScrollData(LayersId aLayersId) const;
 
   /**
    * This can be used to assert that the current thread is the
@@ -116,19 +116,12 @@ class APZUpdater {
    * this function is called from the updater thread itself then the task is
    * run immediately without getting queued.
    *
-   * Conceptually each (layers tree, render root) tuple has a separate task
-   * queue. (In the case where WebRender is disabled, the render root is
-   * always the default render root). This makes it so that even if one
-   * (layers tree, render root) is blocked waiting for a scene build in
-   * WebRender, other tasks can still be processed. However, there may be
-   * tasks that are tied to multiple render roots within a given layers tree,
-   * and which would therefore block on all the associated (layers tree,
-   * render root) queues. The aSelector argument allows expressing the set of
-   * render roots the task is tied to so that this ordering dependency can be
-   * respected.
+   * The layers id argument should be the id of the layer tree that is
+   * requesting this task to be run. Conceptually each layer tree has a separate
+   * task queue, so that if one layer tree is blocked waiting for a scene build
+   * then tasks for the other layer trees can still be processed.
    */
-  void RunOnUpdaterThread(UpdaterQueueSelector aSelector,
-                          already_AddRefed<Runnable> aTask);
+  void RunOnUpdaterThread(LayersId aLayersId, already_AddRefed<Runnable> aTask);
 
   /**
    * Returns true if currently on the APZUpdater's "updater thread".
@@ -143,9 +136,9 @@ class APZUpdater {
    * directly on the updater thread), that is when the task gets dispatched to
    * the controller thread. The controller thread then actually runs the task.
    *
-   * See the RunOnUpdaterThread method for details on the aSelector argument.
+   * See the RunOnUpdaterThread method for details on the layers id argument.
    */
-  void RunOnControllerThread(UpdaterQueueSelector aSelector,
+  void RunOnControllerThread(LayersId aLayersId,
                              already_AddRefed<Runnable> aTask);
 
   void MarkAsDetached(LayersId aLayersId);
@@ -164,41 +157,40 @@ class APZUpdater {
   bool mDestroyed;
   bool mIsUsingWebRender;
 
-  // Map from WRRoot id to WebRenderScrollData. This can only be touched on
+  // Map from layers id to WebRenderScrollData. This can only be touched on
   // the updater thread.
-  std::unordered_map<WRRootId, WebRenderScrollData, WRRootId::HashFn>
+  std::unordered_map<LayersId, WebRenderScrollData, LayersId::HashFn>
       mScrollData;
 
-  // Stores epoch state for a particular WRRoot id. This structure is only
+  // Stores epoch state for a particular layers id. This structure is only
   // accessed on the updater thread.
   struct EpochState {
     // The epoch for the most recent scroll data sent from the content side.
     wr::Epoch mRequired;
     // The epoch for the most recent scene built and swapped in on the WR side.
     Maybe<wr::Epoch> mBuilt;
-    // True if and only if the WRRoot id is the root WRRoot id for the
+    // True if and only if the layers id is the root layers id for the
     // compositor
     bool mIsRoot;
 
     EpochState();
 
-    // Whether or not the state for this WRRoot id is such that it blocks
-    // processing of tasks. This happens if the root tree or a "visible"
-    // render root has scroll data for an epoch newer than what has been
-    // built. A "visible" render root is one that is attached to the full
+    // Whether or not the state for this layers id is such that it blocks
+    // processing of tasks for the layer tree. This happens if the root layers
+    // id or a "visible" layers id has scroll data for an epoch newer than what
+    // has been built. A "visible" layers id is one that is attached to the full
     // layer tree (i.e. there is a chain of reflayer items from the root layer
-    // tree to the relevant layer subtree) on a WR document whose scene has
-    // been built. This is not always the case; for instance a content process
-    // may send the compositor layers for a document before the chrome has
-    // attached the remote iframe to the root UI document. Since WR only
-    // builds pipelines for "visible" render roots, |mBuilt| being populated
-    // means that the render root is "visible".
+    // tree to the relevant layer subtree). This is not always the case; for
+    // instance a content process may send the compositor layers for a document
+    // before the chrome has attached the remote iframe to the root document.
+    // Since WR only builds pipelines for "visible" layers ids, |mBuilt| being
+    // populated means that the layers id is "visible".
     bool IsBlocked() const;
   };
 
-  // Map from WRRoot id to epoch state.
+  // Map from layers id to epoch state.
   // This data structure can only be touched on the updater thread.
-  std::unordered_map<WRRootId, EpochState, WRRootId::HashFn> mEpochData;
+  std::unordered_map<LayersId, EpochState, LayersId::HashFn> mEpochData;
 
   // Used to manage the mapping from a WR window id to APZUpdater. These are
   // only used if WebRender is enabled. Both sWindowIdMap and mWindowId should
@@ -219,28 +211,22 @@ class APZUpdater {
   // care about the contents.
   Maybe<PlatformThreadId> mUpdaterThreadId;
 
-  // Helper struct that pairs each queued runnable with the layers id and render
-  // roots that it is associated with. This allows us to easily implement the
-  // conceptual separation of mUpdaterQueue into independent queues per (layers
-  // id, render root) pair. Note that when the UpdaterQueueSelector has multiple
-  // render roots, the task blocks on *all* of the queues for the (layers
-  // id, render root) pairs.
+  // Helper struct that pairs each queued runnable with the layers id that it is
+  // associated with. This allows us to easily implement the conceptual
+  // separation of mUpdaterQueue into independent queues per layers id.
   struct QueuedTask {
-    UpdaterQueueSelector mSelector;
+    LayersId mLayersId;
     RefPtr<Runnable> mRunnable;
   };
 
   // Lock used to protect mUpdaterQueue
   Mutex mQueueLock;
   // Holds a queue of tasks to be run on the updater thread, when the updater
-  // thread is a WebRender thread, since it is conceptually separated into
-  // multiple ones, one per (layers id, render root). Tasks for a given
-  // conceptual queue will always run in FIFO order, and tasks that are tied
-  // to multiple queues (by virtue of having multiple render roots in their
-  // UpdaterQueueSelector) can cause one queue to be blocked on another in
-  // order to preserve FIFO ordering. In the common case, though, where there
-  // is exactly one render root per task, there is no guaranteed ordering for
-  // tasks with different render roots.
+  // thread is a WebRender thread, since it won't have a message loop we can
+  // dispatch to. Note that although this is a single queue it is conceptually
+  // separated into multiple ones, one per layers id. Tasks for a given layers
+  // id will always run in FIFO order, but there is no guaranteed ordering for
+  // tasks with different layers ids.
   std::deque<QueuedTask> mUpdaterQueue;
 };
 
