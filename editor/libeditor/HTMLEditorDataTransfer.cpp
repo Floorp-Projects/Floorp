@@ -263,6 +263,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   EditorRawDOMPoint streamEndPoint =
       streamStartParent ? EditorRawDOMPoint(streamEndParent, streamEndOffset)
                         : EditorRawDOMPoint::AtEndOf(fragmentAsNode);
+
+  Unused << streamStartPoint;
+  Unused << streamEndPoint;
+
   HTMLEditor::CollectTopMostChildNodesCompletelyInRange(
       EditorRawDOMPoint(streamStartParent, streamStartOffset),
       EditorRawDOMPoint(streamEndParent, streamEndOffset),
