@@ -1674,7 +1674,7 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static void enableNetworkNotifications() {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 GeckoNetworkManager.getInstance().enableNotifications();
@@ -1684,7 +1684,7 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static void disableNetworkNotifications() {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 GeckoNetworkManager.getInstance().disableNotifications();

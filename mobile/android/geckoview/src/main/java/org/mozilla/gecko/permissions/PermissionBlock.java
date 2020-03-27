@@ -132,7 +132,7 @@ public class PermissionBlock {
         }
 
         if (mOnUiThread && !ThreadUtils.isOnUiThread()) {
-            ThreadUtils.postToUiThread(runnable);
+            ThreadUtils.runOnUiThread(runnable);
         } else if (mOnBackgroundThread && !ThreadUtils.isOnBackgroundThread()) {
             ThreadUtils.postToBackgroundThread(runnable);
         } else {
