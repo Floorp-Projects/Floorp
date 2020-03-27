@@ -215,6 +215,16 @@ function update(
     case "LOAD_SOURCE_TEXT":
       return updateLoadedState(state, action);
 
+    case "BLACKBOX_SOURCES":
+      if (action.status === "done") {
+        const { shouldBlackBox } = action;
+        const { sources } = action.value;
+
+        updateBlackBoxListSources(sources, shouldBlackBox);
+        return updateBlackboxFlagSources(state, sources, shouldBlackBox);
+      }
+      break;
+
     case "BLACKBOX":
       if (action.status === "done") {
         const { id, url } = action.source;
@@ -495,8 +505,27 @@ function updateBlackboxFlag(
   };
 }
 
-function updateBlackBoxList(url, isBlackBoxed) {
-  const tabs = getBlackBoxList();
+function updateBlackboxFlagSources(state, sources, shouldBlackBox) {
+  const sourcesToUpdate = [];
+
+  for (const source of sources) {
+    if (!hasResource(state.sources, source.id)) {
+      // TODO: We may want to consider throwing here once we have a better
+      // handle on async action flow control.
+      continue;
+    }
+
+    sourcesToUpdate.push({
+      id: source.id,
+      isBlackBoxed: shouldBlackBox,
+    });
+  }
+  state.sources = updateResources(state.sources, sourcesToUpdate);
+
+  return state;
+}
+
+function updateBlackboxTabs(tabs, url, isBlackBoxed) {
   const i = tabs.indexOf(url);
   if (i >= 0) {
     if (!isBlackBoxed) {
@@ -505,6 +534,21 @@ function updateBlackBoxList(url, isBlackBoxed) {
   } else if (isBlackBoxed) {
     tabs.push(url);
   }
+}
+
+function updateBlackBoxList(url, isBlackBoxed) {
+  const tabs = getBlackBoxList();
+  updateBlackboxTabs(tabs, url, isBlackBoxed);
+  prefs.tabsBlackBoxed = tabs;
+}
+
+function updateBlackBoxListSources(sources, shouldBlackBox) {
+  const tabs = getBlackBoxList();
+
+  sources.forEach(source => {
+    updateBlackboxTabs(tabs, source.url, shouldBlackBox);
+  });
+
   prefs.tabsBlackBoxed = tabs;
 }
 
