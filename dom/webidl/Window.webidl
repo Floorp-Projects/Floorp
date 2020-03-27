@@ -118,7 +118,6 @@ typedef OfflineResourceList ApplicationCache;
                     offscreenBuffering,
                     OffscreenCanvas,
                     OffscreenCanvasRenderingContext2D,
-                    onappinstalled,
                     onbeforeinstallprompt,
                     oncancel,
                     ondeviceorientationabsolute,
@@ -268,12 +267,6 @@ typedef OfflineResourceList ApplicationCache;
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
-
-// https://www.w3.org/TR/appmanifest/#onappinstalled-attribute
-partial interface Window {
-  [Pref="dom.manifest.onappinstalled"]
-  attribute EventHandler onappinstalled;
-};
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 interface mixin WindowSessionStorage {
