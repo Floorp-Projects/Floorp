@@ -16,6 +16,9 @@ job-defaults:
                 default:
                     - marionette/prod_config.py
                     - remove_executables.py
+        extra-options:
+            - --setpref=toolkit.asyncshutdown.log=true
+
     run-on-projects: built-projects
     tier: default
     fission-tier: 2
