@@ -7,6 +7,9 @@
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows' and CONFIG['COMPILE_ENVIRONMENT']:
     DIRS += ['gecko', 'msaa', 'ia2']
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += ['nsIAccessibleMacInterface.idl']
+
 XPIDL_SOURCES += [
     'nsIAccessibilityService.idl',
     'nsIAccessible.idl',
