@@ -2361,11 +2361,6 @@ VARIABLES = {
            library.
         """),
 
-    'NO_COMPONENTS_MANIFEST': (bool, bool,
-                               """Do not create a binary-component manifest entry for the
-        corresponding XPCOMBinaryComponent.
-        """),
-
     'USE_NASM': (bool, bool,
                  """Use the nasm assembler to assemble assembly files from SOURCES.
 
