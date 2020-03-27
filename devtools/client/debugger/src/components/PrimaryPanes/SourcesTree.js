@@ -8,6 +8,7 @@
 import React, { Component } from "react";
 import classnames from "classnames";
 import { connect } from "../../utils/connect";
+import { difference } from "lodash";
 
 // Selectors
 import {
@@ -36,9 +37,11 @@ import {
   getDirectories,
   isDirectory,
   findSourceTreeNodes,
-  getSourceFromNode,
-  nodeHasChildren,
   updateTree,
+  getSource,
+  getChildren,
+  getAllSources,
+  getSourcesInsideGroup,
 } from "../../utils/sources-tree";
 import { parse } from "../../utils/url";
 import { getRawSourceURL } from "../../utils/source";
@@ -47,6 +50,7 @@ import type {
   TreeNode,
   TreeDirectory,
   ParentMap,
+  SourcesGroups,
 } from "../../utils/sources-tree/types";
 import type { Source, Context, Thread } from "../../types";
 import type {
@@ -91,17 +95,6 @@ function shouldAutoExpand(depth, item, debuggeeUrl, projectRoot) {
 
   const { host } = parse(debuggeeUrl);
   return item.name === host;
-}
-
-function findSource({ threads, sources }, itemPath, source) {
-  const targetThread = threads.find(thread => itemPath.includes(thread.actor));
-  if (targetThread && source) {
-    const { actor } = targetThread;
-    if (sources[actor]) {
-      return sources[actor][source.id];
-    }
-  }
-  return source;
 }
 
 class SourcesTree extends Component<Props, State> {
@@ -190,15 +183,9 @@ class SourcesTree extends Component<Props, State> {
     this.selectItem(item);
   };
 
-  // NOTE: we get the source from sources because item.contents is cached
-  getSource(item: TreeNode): ?Source {
-    const source = getSourceFromNode(item);
-    return findSource(this.props, item.path, source);
-  }
-
   getPath = (item: TreeNode): string => {
     const { path } = item;
-    const source = this.getSource(item);
+    const source = getSource(item, this.props);
 
     if (!source || isDirectory(item)) {
       return path;
@@ -243,8 +230,12 @@ class SourcesTree extends Component<Props, State> {
     return sourceTree.contents;
   };
 
-  getChildren = (item: $Shape<TreeDirectory>) => {
-    return nodeHasChildren(item) ? item.contents : [];
+  getSourcesGroups = (item: TreeNode): SourcesGroups => {
+    const sourcesAll = getAllSources(this.props);
+    const sourcesInside = getSourcesInsideGroup(item, this.props);
+    const sourcesOuside = difference(sourcesAll, sourcesInside);
+
+    return { sourcesInside, sourcesOuside };
   };
 
   renderItem = (
@@ -267,10 +258,11 @@ class SourcesTree extends Component<Props, State> {
         expanded={expanded}
         focusItem={this.onFocus}
         selectItem={this.selectItem}
-        source={this.getSource(item)}
+        source={getSource(item, this.props)}
         debuggeeUrl={debuggeeUrl}
         projectRoot={projectRoot}
         setExpanded={setExpanded}
+        getSourcesGroups={this.getSourcesGroups}
       />
     );
   };
@@ -285,7 +277,7 @@ class SourcesTree extends Component<Props, State> {
       autoExpandDepth: 1,
       expanded,
       focused,
-      getChildren: this.getChildren,
+      getChildren: getChildren,
       getParent: (item: $Shape<TreeNode>) => parentMap.get(item),
       getPath: this.getPath,
       getRoots: () => this.getRoots(sourceTree, projectRoot),

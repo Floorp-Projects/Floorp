@@ -56,6 +56,16 @@ export type SourceAction =
         +isBlackBoxed: boolean,
       |}
     >
+  | PromiseAction<
+      {|
+        +type: "BLACKBOX_SOURCES",
+        +cx: Context,
+        +shouldBlackBox: boolean,
+      |},
+      {|
+        +sources: Source[],
+      |}
+    >
   | {|
       +type: "MOVE_TAB",
       +url: string,
