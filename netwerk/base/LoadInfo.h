@@ -163,7 +163,7 @@ class LoadInfo final : public nsILoadInfo {
            bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
            bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
            const nsAString& aCspNonce, bool aSkipContentSniffing,
-           bool aHttpsOnlyNoUpgrade, uint32_t aRequestBlockingReason,
+           uint32_t aHttpsOnlyStatus, uint32_t aRequestBlockingReason,
            nsINode* aLoadingContext);
   LoadInfo(const LoadInfo& rhs);
 
@@ -259,7 +259,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mAllowListFutureDocumentsCreatedFromThisRedirectChain;
   nsString mCspNonce;
   bool mSkipContentSniffing;
-  bool mHttpsOnlyNoUpgrade;
+  uint32_t mHttpsOnlyStatus;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.

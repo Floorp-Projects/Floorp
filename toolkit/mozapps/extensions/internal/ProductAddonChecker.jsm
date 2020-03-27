@@ -355,7 +355,10 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
     xhr.responseType = "arraybuffer";
     try {
       xhr.open("GET", url);
-      xhr.channel.loadInfo.httpsOnlyNoUpgrade = options.httpsOnlyNoUpgrade;
+      if (options.httpsOnlyNoUpgrade) {
+        xhr.channel.loadInfo.httpsOnlyStatus |=
+          Ci.nsILoadInfo.HTTPS_ONLY_EXEMPT;
+      }
       // Use conservative TLS settings. See bug 1325501.
       // TODO move to ServiceRequest.
       if (xhr.channel instanceof Ci.nsIHttpChannelInternal) {
