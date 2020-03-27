@@ -24,8 +24,8 @@ const DB_VERSION = 2;
  * Wrap IndexedDB errors to catch them more easily.
  */
 class IndexedDBError extends Error {
-  constructor(error, method = "", identifier = "") {
-    super(`IndexedDB: ${identifier} ${method} ${error.message}`);
+  constructor(error, method = "") {
+    super(`IndexedDB: ${method} ${error.message}`);
     this.name = error.name;
     this.stack = error.stack;
   }
@@ -56,10 +56,7 @@ class InternalDatabase {
   async open() {
     if (!this._idb) {
       // Open and initialize/upgrade if needed.
-      // Note: we do not `await` here, we just store the promise.
-      // This avoids re-entering here while we're waiting on one of these
-      // `open` calls.
-      this._idb = openIDB(DB_NAME, DB_VERSION, event => {
+      this._idb = await openIDB(DB_NAME, DB_VERSION, event => {
         const db = event.target.result;
         if (event.oldVersion < 1) {
           // Records store
@@ -88,7 +85,7 @@ class InternalDatabase {
 
   async close() {
     if (this._idb) {
-      (await this._idb).close();
+      this._idb.close();
     }
     this._idb = null;
   }
@@ -98,28 +95,23 @@ class InternalDatabase {
     const objFilters = transformSubObjectFilters(filters);
     let results = [];
     try {
-      await executeIDB(
-        await this.open(),
-        "records",
-        store => {
-          const request = store
-            .index("cid")
-            .openCursor(IDBKeyRange.only(this.identifier));
-          request.onsuccess = event => {
-            const cursor = event.target.result;
-            if (cursor) {
-              const { value } = cursor;
-              if (filterObject(objFilters, value)) {
-                results.push(value);
-              }
-              cursor.continue();
+      await executeIDB(await this.open(), "records", store => {
+        const request = store
+          .index("cid")
+          .openCursor(IDBKeyRange.only(this.identifier));
+        request.onsuccess = event => {
+          const cursor = event.target.result;
+          if (cursor) {
+            const { value } = cursor;
+            if (filterObject(objFilters, value)) {
+              results.push(value);
             }
-          };
-        },
-        { mode: "readonly" }
-      );
+            cursor.continue();
+          }
+        };
+      });
     } catch (e) {
-      throw new IndexedDBError(e, "list()", this.identifier);
+      throw new IndexedDBError(e, "list()");
     }
     // Remove IDB key field from results.
     for (const result of results) {
@@ -147,7 +139,7 @@ class InternalDatabase {
         }
       });
     } catch (e) {
-      throw new IndexedDBError(e, "importBulk()", this.identifier);
+      throw new IndexedDBError(e, "importBulk()");
     }
   }
 
@@ -169,7 +161,7 @@ class InternalDatabase {
         }
       });
     } catch (e) {
-      throw new IndexedDBError(e, "deleteBulk()", this.identifier);
+      throw new IndexedDBError(e, "deleteBulk()");
     }
   }
 
@@ -185,7 +177,7 @@ class InternalDatabase {
         { mode: "readonly" }
       );
     } catch (e) {
-      throw new IndexedDBError(e, "getLastModified()", this.identifier);
+      throw new IndexedDBError(e, "getLastModified()");
     }
     return entry ? entry.value : null;
   }
@@ -201,7 +193,7 @@ class InternalDatabase {
         }
       });
     } catch (e) {
-      throw new IndexedDBError(e, "saveLastModified()", this.identifier);
+      throw new IndexedDBError(e, "saveLastModified()");
     }
     return value;
   }
@@ -218,7 +210,7 @@ class InternalDatabase {
         { mode: "readonly" }
       );
     } catch (e) {
-      throw new IndexedDBError(e, "getMetadata()", this.identifier);
+      throw new IndexedDBError(e, "getMetadata()");
     }
     return entry ? entry.metadata : null;
   }
@@ -230,7 +222,7 @@ class InternalDatabase {
       );
       return metadata;
     } catch (e) {
-      throw new IndexedDBError(e, "saveMetadata()", this.identifier);
+      throw new IndexedDBError(e, "saveMetadata()");
     }
   }
 
@@ -251,7 +243,7 @@ class InternalDatabase {
         return request;
       });
     } catch (e) {
-      throw new IndexedDBError(e, "clear()", this.identifier);
+      throw new IndexedDBError(e, "clear()");
     }
   }
 
@@ -268,7 +260,7 @@ class InternalDatabase {
         store.add({ ...record, _cid: this.identifier });
       });
     } catch (e) {
-      throw new IndexedDBError(e, "create()", this.identifier);
+      throw new IndexedDBError(e, "create()");
     }
     return record;
   }
@@ -279,7 +271,7 @@ class InternalDatabase {
         store.put({ ...record, _cid: this.identifier });
       });
     } catch (e) {
-      throw new IndexedDBError(e, "update()", this.identifier);
+      throw new IndexedDBError(e, "update()");
     }
   }
 
@@ -289,7 +281,7 @@ class InternalDatabase {
         store.delete([this.identifier, recordId]); // [_cid, id]
       });
     } catch (e) {
-      throw new IndexedDBError(e, "delete()", this.identifier);
+      throw new IndexedDBError(e, "delete()");
     }
   }
 }
@@ -324,7 +316,6 @@ async function openIDB(dbname, version, callback) {
   });
 }
 
-let gPendingReadOnlyTransactions = new Set();
 /**
  * Helper to wrap some IDBObjectStore operations into a promise.
  *
@@ -336,11 +327,8 @@ let gPendingReadOnlyTransactions = new Set();
  */
 async function executeIDB(db, storeName, callback, options = {}) {
   const { mode = "readwrite" } = options;
-  const transaction = db.transaction([storeName], mode);
-  if (mode == "readonly") {
-    gPendingReadOnlyTransactions.add(transaction);
-  }
-  let promise = new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([storeName], mode);
     const store = transaction.objectStore(storeName);
     let result;
     try {
@@ -353,13 +341,6 @@ async function executeIDB(db, storeName, callback, options = {}) {
       reject(new IndexedDBError(event.target.error));
     transaction.oncomplete = event => resolve(result);
   });
-  if (mode == "readonly") {
-    promise.then(
-      () => gPendingReadOnlyTransactions.delete(transaction),
-      () => gPendingReadOnlyTransactions.delete(transaction)
-    );
-  }
-  return promise;
 }
 
 function _isUndefined(value) {
@@ -528,11 +509,6 @@ function ensureShutdownBlocker() {
   AsyncShutdown.profileBeforeChange.addBlocker(
     "RemoteSettingsClient - finish IDB access.",
     () => {
-      // Duplicate the list (to avoid it being modified) and then
-      // abort all read-only transactions.
-      for (let transaction of Array.from(gPendingReadOnlyTransactions)) {
-        transaction.abort();
-      }
       return Promise.all(Array.from(gPendingOperations).map(op => op.promise));
     },
     {
