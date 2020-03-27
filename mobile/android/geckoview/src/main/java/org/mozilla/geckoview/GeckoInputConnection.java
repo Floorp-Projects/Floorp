@@ -450,7 +450,7 @@ import java.lang.reflect.Proxy;
 
     @Override // SessionTextInput.EditableListener
     public void onDefaultKeyEvent(final KeyEvent event) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 GeckoInputConnection.this.performDefaultKeyAction(event);

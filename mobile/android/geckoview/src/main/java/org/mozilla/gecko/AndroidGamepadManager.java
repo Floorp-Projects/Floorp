@@ -147,7 +147,7 @@ public class AndroidGamepadManager {
 
     @WrapForJNI
     private static void start(final Context context) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 doStart(context);
@@ -166,7 +166,7 @@ public class AndroidGamepadManager {
 
     @WrapForJNI
     private static void stop(final Context context) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 doStop(context);
@@ -186,7 +186,7 @@ public class AndroidGamepadManager {
 
     @WrapForJNI
     private static void onGamepadAdded(final int deviceId, final int serviceId) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 handleGamepadAdded(deviceId, serviceId);

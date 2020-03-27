@@ -204,7 +204,7 @@ public final class GeckoRuntime implements Parcelable {
             final URI actual = URI.create(baseUrl).resolve(url);
             GeckoResult<String> result = new GeckoResult<>();
             // perform the onOpenWindow call in the UI thread
-            ThreadUtils.postToUiThread(() -> {
+            ThreadUtils.runOnUiThread(() -> {
                 sRuntime
                     .mServiceWorkerDelegate
                     .onOpenWindow(actual.toString())
@@ -672,9 +672,9 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     @WrapForJNI
-    @UiThread
+    @AnyThread
     private void notifyOnShow(final WebNotification notification) {
-        ThreadUtils.getUiHandler().post(() -> {
+        ThreadUtils.runOnUiThread(() -> {
             if (mNotificationDelegate != null) {
                 mNotificationDelegate.onShowNotification(notification);
             }
@@ -682,9 +682,9 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     @WrapForJNI
-    @UiThread
+    @AnyThread
     private void notifyOnClose(final WebNotification notification) {
-        ThreadUtils.getUiHandler().post(() -> {
+        ThreadUtils.runOnUiThread(() -> {
             if (mNotificationDelegate != null) {
                 mNotificationDelegate.onCloseNotification(notification);
             }
