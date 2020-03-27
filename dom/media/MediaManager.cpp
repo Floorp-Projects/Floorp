@@ -4368,9 +4368,38 @@ void SourceListener::SetEnabledFor(MediaTrack* aTrack, bool aEnable) {
               return DeviceOperationPromise::CreateAndResolve(NS_OK, __func__);
             }
 
+            nsString inputDeviceGroupId;
+            state.mDevice->GetRawGroupId(inputDeviceGroupId);
+
             return MediaManager::PostTask<DeviceOperationPromise>(
-                __func__, [self, device = state.mDevice, aEnable](
+                __func__, [self, device = state.mDevice, aEnable, inputDeviceGroupId](
                               MozPromiseHolder<DeviceOperationPromise>& h) {
+                  // Only take this branch when muting, to avoid muting, in case
+                  // the default audio output device has changed and we need to
+                  // really call `Start` on the source. The AudioInput source
+                  // start/stop are idempotent, so this works.
+                  if (device->mKind == dom::MediaDeviceKind::Audioinput && !aEnable) {
+                    // Don't turn off the microphone of a device that is on the same
+                    // physical device as the output.
+                    CubebDeviceEnumerator* enumerator = CubebDeviceEnumerator::GetInstance();
+                    // Get the current graph's device info. This is always the
+                    // default audio output device for now.
+                    RefPtr<AudioDeviceInfo> outputDevice =
+                      enumerator->DefaultDevice(CubebDeviceEnumerator::Side::OUTPUT);
+                    if (outputDevice->GroupID().Equals(inputDeviceGroupId)) {
+                      LOG("Device group id match when %s, "
+                          "not turning the input device off (%s)",
+                          aEnable ? "unmuting" : "muting",
+                          NS_ConvertUTF16toUTF8(outputDevice->GroupID()).get());
+                      h.Resolve(NS_OK, __func__);
+                      return;
+                    }
+                  }
+
+                  LOG("Device group id don't match when %s, "
+                      "not turning the audio input device off (%s)",
+                      aEnable ? "unmuting" : "muting",
+                      NS_ConvertUTF16toUTF8(inputDeviceGroupId).get());
                   h.Resolve(aEnable ? device->Start() : device->Stop(),
                             __func__);
                 });
