@@ -1071,6 +1071,9 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
   } else {
     MOZ_DIAGNOSTIC_ASSERT(aAccessor);
     MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
+    if (!aAccessor) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
     if (!aAccessor->CanAccess(this)) {
       return NS_ERROR_DOM_PROP_ACCESS_DENIED;
