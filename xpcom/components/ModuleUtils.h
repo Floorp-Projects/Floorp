@@ -7,6 +7,8 @@
 #ifndef mozilla_GenericModule_h
 #define mozilla_GenericModule_h
 
+#include <type_traits>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Module.h"
 
@@ -75,7 +77,7 @@ struct RemoveAlreadyAddRefed<already_AddRefed<T>> {
     using T =                                                                  \
         mozilla::detail::RemoveAlreadyAddRefed<decltype(_GetterProc())>::Type; \
     static_assert(                                                             \
-        mozilla::IsSame<already_AddRefed<T>, decltype(_GetterProc())>::value,  \
+        std::is_same_v<already_AddRefed<T>, decltype(_GetterProc())>,          \
         "Singleton constructor must return already_AddRefed");                 \
     static_assert(                                                             \
         std::is_base_of<_InstanceClass, T>::value,                             \

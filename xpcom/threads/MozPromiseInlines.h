@@ -7,6 +7,8 @@
 #if !defined(MozPromiseInlines_h_)
 #  define MozPromiseInlines_h_
 
+#  include <type_traits>
+
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/dom/PrimitiveConversions.h"
 #  include "mozilla/dom/PromiseNativeHandler.h"
@@ -20,7 +22,7 @@ template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 RefPtr<MozPromise<ResolveValueT, RejectValueT, IsExclusive>>
 MozPromise<ResolveValueT, RejectValueT, IsExclusive>::FromDomPromise(
     dom::Promise* aDOMPromise) {
-  static_assert(IsSame<RejectValueType, nsresult>::value,
+  static_assert(std::is_same_v<RejectValueType, nsresult>,
                 "Reject type must be nsresult");
   RefPtr<Private> p = new Private(__func__);
   RefPtr<dom::DomPromiseListener> listener = new dom::DomPromiseListener(

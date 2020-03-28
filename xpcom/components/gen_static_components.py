@@ -357,7 +357,7 @@ class ModuleEntry(object):
       using T =
           RemoveAlreadyAddRefed<decltype(%(constructor)s())>::Type;
       static_assert(
-          mozilla::IsSame<already_AddRefed<T>, decltype(%(constructor)s())>::value,
+          std::is_same_v<already_AddRefed<T>, decltype(%(constructor)s())>,
           "Singleton constructor must return already_AddRefed");
       static_assert(
           std::is_base_of<%(type)s, T>::value,
