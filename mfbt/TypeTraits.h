@@ -753,40 +753,6 @@ namespace detail {
 enum Voidness { TIsVoid, TIsNotVoid };
 
 template <typename T, Voidness V = IsVoid<T>::value ? TIsVoid : TIsNotVoid>
-struct AddLvalueReferenceHelper;
-
-template <typename T>
-struct AddLvalueReferenceHelper<T, TIsVoid> {
-  typedef void Type;
-};
-
-template <typename T>
-struct AddLvalueReferenceHelper<T, TIsNotVoid> {
-  typedef T& Type;
-};
-
-}  // namespace detail
-
-/**
- * AddLvalueReference adds an lvalue & reference to T if one isn't already
- * present. (Note: adding an lvalue reference to an rvalue && reference in
- * essence replaces the && with a &&, per C+11 reference collapsing rules. For
- * example, int&& would become int&.)
- *
- * The final computed type will only *not* be an lvalue reference if T is void.
- *
- * mozilla::AddLvalueReference<int>::Type is int&;
- * mozilla::AddLvalueRference<volatile int&>::Type is volatile int&;
- * mozilla::AddLvalueReference<void*>::Type is void*&;
- * mozilla::AddLvalueReference<void>::Type is void;
- * mozilla::AddLvalueReference<struct S&&>::Type is struct S&.
- */
-template <typename T>
-struct AddLvalueReference : detail::AddLvalueReferenceHelper<T> {};
-
-namespace detail {
-
-template <typename T, Voidness V = IsVoid<T>::value ? TIsVoid : TIsNotVoid>
 struct AddRvalueReferenceHelper;
 
 template <typename T>
