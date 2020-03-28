@@ -33,7 +33,7 @@ Related documentation
 
 -  `bugzilla.mozilla.org documentation <https://bmo.readthedocs.org/>`__
 -  `bugzilla.mozilla.org field
-   defintions <https://wiki.mozilla.org/BMO/UserGuide/BugFields>`__
+   definitions <https://wiki.mozilla.org/BMO/UserGuide/BugFields>`__
 -  `Lando
    documentation <https://moz-conduit.readthedocs.io/en/latest/lando-user.html>`__
 -  `Mozilla Phabricator (Code Review)

@@ -60,7 +60,7 @@ Firefox::General and Toolkit::General
 
 Bugs in Firefox::General are fitted with Bug Bug’s model to see if
 there’s another component with a high liklihood of fit, and if a
-threshold confidence is achived, the bug is moved to that component.
+threshold confidence is achieved, the bug is moved to that component.
 
 Members of the community also review bugs in this component and try to
 move them to a component.
@@ -79,7 +79,7 @@ are:
 
 -  All open bugs, in your components without a pending ``needinfo`` flag
    or a ``stalled`` keyword since start of current release cycle which
-   do not have a priorty set
+   do not have a priority set
 -  All bugs with active review requests in your component which have not
    been modified in five days
 -  All bugs with reviewed, but unlanded patches in your components
@@ -179,7 +179,7 @@ Automatic Triage Overrides
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a bug is tracked for a release, i.e. the ``tracking_firefoxNN``
-flag is set to ``+`` or ``blocking`` triage decisions will be overriden,
+flag is set to ``+`` or ``blocking`` triage decisions will be overridden,
 or made as follows:
 
 -  If a bug is tracked for or blocking beta, release or ESR, its
