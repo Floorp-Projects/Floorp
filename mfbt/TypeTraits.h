@@ -270,40 +270,6 @@ struct IsPod<T*> : TrueType {};
 
 namespace detail {
 
-template <typename T, bool = IsFloatingPoint<T>::value,
-          bool = IsIntegral<T>::value,
-          typename NoCV = typename RemoveCV<T>::Type>
-struct IsSignedHelper;
-
-// Floating point is signed.
-template <typename T, typename NoCV>
-struct IsSignedHelper<T, true, false, NoCV> : TrueType {};
-
-// Integral is conditionally signed.
-template <typename T, typename NoCV>
-struct IsSignedHelper<T, false, true, NoCV>
-    : IntegralConstant<bool, bool(NoCV(-1) < NoCV(1))> {};
-
-// Non-floating point, non-integral is not signed.
-template <typename T, typename NoCV>
-struct IsSignedHelper<T, false, false, NoCV> : FalseType {};
-
-}  // namespace detail
-
-/**
- * IsSigned determines whether a type is a signed arithmetic type.  |char| is
- * considered a signed type if it has the same representation as |signed char|.
- *
- * mozilla::IsSigned<int>::value is true;
- * mozilla::IsSigned<const unsigned int>::value is false;
- * mozilla::IsSigned<unsigned char>::value is false;
- * mozilla::IsSigned<float>::value is true.
- */
-template <typename T>
-struct IsSigned : detail::IsSignedHelper<T> {};
-
-namespace detail {
-
 struct DoIsDestructibleImpl {
   template <typename T, typename = decltype(DeclVal<T&>().~T())>
   static TrueType test(int);
