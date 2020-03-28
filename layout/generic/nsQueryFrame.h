@@ -25,23 +25,22 @@
 #define NS_QUERYFRAME_HEAD(class)               \
   void* class ::QueryFrame(FrameIID id) const { \
     switch (id) {
-#define NS_QUERYFRAME_ENTRY(class)                                            \
-  case class ::kFrameIID: {                                                   \
-    static_assert(                                                            \
-        mozilla::IsSame<class, class ::Has_NS_DECL_QUERYFRAME_TARGET>::value, \
-        #class " must declare itself as a queryframe target");                \
-    return const_cast<class*>(static_cast<const class*>(this));               \
+#define NS_QUERYFRAME_ENTRY(class)                                    \
+  case class ::kFrameIID: {                                           \
+    static_assert(                                                    \
+        std::is_same_v<class, class ::Has_NS_DECL_QUERYFRAME_TARGET>, \
+        #class " must declare itself as a queryframe target");        \
+    return const_cast<class*>(static_cast<const class*>(this));       \
   }
 
-#define NS_QUERYFRAME_ENTRY_CONDITIONAL(class, condition)                \
-  case class ::kFrameIID:                                                \
-    if (condition) {                                                     \
-      static_assert(                                                     \
-          mozilla::IsSame<class,                                         \
-                          class ::Has_NS_DECL_QUERYFRAME_TARGET>::value, \
-          #class " must declare itself as a queryframe target");         \
-      return const_cast<class*>(static_cast<const class*>(this));        \
-    }                                                                    \
+#define NS_QUERYFRAME_ENTRY_CONDITIONAL(class, condition)               \
+  case class ::kFrameIID:                                               \
+    if (condition) {                                                    \
+      static_assert(                                                    \
+          std::is_same_v<class, class ::Has_NS_DECL_QUERYFRAME_TARGET>, \
+          #class " must declare itself as a queryframe target");        \
+      return const_cast<class*>(static_cast<const class*>(this));       \
+    }                                                                   \
     break;
 
 #define NS_QUERYFRAME_TAIL_INHERITING(class) \
@@ -99,10 +98,9 @@ class do_QueryFrameHelper {
 
   template <class Dest>
   operator Dest*() {
-    static_assert(
-        mozilla::IsSame<std::remove_const_t<Dest>,
-                        typename Dest::Has_NS_DECL_QUERYFRAME_TARGET>::value,
-        "Dest must declare itself as a queryframe target");
+    static_assert(std::is_same_v<std::remove_const_t<Dest>,
+                                 typename Dest::Has_NS_DECL_QUERYFRAME_TARGET>,
+                  "Dest must declare itself as a queryframe target");
     if (!mRawPtr) {
       return nullptr;
     }
