@@ -9,6 +9,7 @@
 
 #include <jni.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/RefPtr.h"
@@ -361,21 +362,18 @@ class ProxyNativeCall {
   // "this arg" refers to the Class::LocalRef (for static methods) or
   // Owner::LocalRef (for instance methods) that we optionally (as indicated
   // by HasThisArg) pass into the destination C++ function.
-  typedef
-      typename mozilla::Conditional<IsStatic, Class, Owner>::Type ThisArgClass;
-  typedef typename mozilla::Conditional<IsStatic, jclass, jobject>::Type
-      ThisArgJNIType;
+  using ThisArgClass = std::conditional_t<IsStatic, Class, Owner>;
+  using ThisArgJNIType = std::conditional_t<IsStatic, jclass, jobject>;
 
   // Type signature of the destination C++ function, which matches the
   // Method template parameter in NativeStubImpl::Wrap.
-  typedef typename mozilla::Conditional<
+  using NativeCallType = std::conditional_t<
       IsStatic,
-      typename mozilla::Conditional<HasThisArg,
-                                    void (*)(const Class::LocalRef&, Args...),
-                                    void (*)(Args...)>::Type,
-      typename mozilla::Conditional<
+      std::conditional_t<HasThisArg, void (*)(const Class::LocalRef&, Args...),
+                         void (*)(Args...)>,
+      std::conditional_t<
           HasThisArg, void (Impl::*)(const typename Owner::LocalRef&, Args...),
-          void (Impl::*)(Args...)>::Type>::Type NativeCallType;
+          void (Impl::*)(Args...)>>;
 
   // Destination C++ function.
   NativeCallType mNativeCall;
@@ -570,17 +568,17 @@ class NativeStub<Traits, Impl, jni::Args<Args...>> {
     using JNIType = void;
   };
   using ReturnJNIType =
-      typename Conditional<isVoid, VoidType,
-                           TypeAdapter<ReturnType>>::Type::JNIType;
+      typename std::conditional_t<isVoid, VoidType,
+                                  TypeAdapter<ReturnType>>::JNIType;
 
   using ReturnTypeForNonVoidInstance =
-      typename Conditional<!isStatic && !isVoid, ReturnType, VoidType>::Type;
+      std::conditional_t<!isStatic && !isVoid, ReturnType, VoidType>;
   using ReturnTypeForVoidInstance =
-      typename Conditional<!isStatic && isVoid, ReturnType, VoidType&>::Type;
+      std::conditional_t<!isStatic && isVoid, ReturnType, VoidType&>;
   using ReturnTypeForNonVoidStatic =
-      typename Conditional<isStatic && !isVoid, ReturnType, VoidType>::Type;
+      std::conditional_t<isStatic && !isVoid, ReturnType, VoidType>;
   using ReturnTypeForVoidStatic =
-      typename Conditional<isStatic && isVoid, ReturnType, VoidType&>::Type;
+      std::conditional_t<isStatic && isVoid, ReturnType, VoidType&>;
 
   static_assert(Traits::dispatchTarget == DispatchTarget::CURRENT || isVoid,
                 "Dispatched calls must have void return type");

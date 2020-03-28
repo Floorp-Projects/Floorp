@@ -297,22 +297,6 @@ struct EnableIf<true, T> {
   typedef T Type;
 };
 
-/**
- * Conditional selects a class between two, depending on a given boolean value.
- *
- * mozilla::Conditional<true, A, B>::Type is A;
- * mozilla::Conditional<false, A, B>::Type is B;
- */
-template <bool Condition, typename A, typename B>
-struct Conditional {
-  typedef A Type;
-};
-
-template <class A, class B>
-struct Conditional<false, A, B> {
-  typedef B Type;
-};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */

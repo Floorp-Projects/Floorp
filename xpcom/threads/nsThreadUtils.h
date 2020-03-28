@@ -740,17 +740,16 @@ class TimerBehaviour<RunnableKind::IdleWithTimer> {
 template <class ClassType, typename ReturnType = void, bool Owning = true,
           mozilla::RunnableKind Kind = mozilla::RunnableKind::Standard>
 class nsRunnableMethod
-    : public mozilla::Conditional<
+    : public std::conditional_t<
           Kind == mozilla::RunnableKind::Standard, mozilla::Runnable,
-          typename mozilla::Conditional<
-              Kind == mozilla::RunnableKind::Cancelable,
-              mozilla::CancelableRunnable, mozilla::IdleRunnable>::Type>::Type,
+          std::conditional_t<Kind == mozilla::RunnableKind::Cancelable,
+                             mozilla::CancelableRunnable,
+                             mozilla::IdleRunnable>>,
       protected mozilla::detail::TimerBehaviour<Kind> {
-  using BaseType = typename mozilla::Conditional<
+  using BaseType = std::conditional_t<
       Kind == mozilla::RunnableKind::Standard, mozilla::Runnable,
-      typename mozilla::Conditional<Kind == mozilla::RunnableKind::Cancelable,
-                                    mozilla::CancelableRunnable,
-                                    mozilla::IdleRunnable>::Type>::Type;
+      std::conditional_t<Kind == mozilla::RunnableKind::Cancelable,
+                         mozilla::CancelableRunnable, mozilla::IdleRunnable>>;
 
  public:
   nsRunnableMethod(const char* aName) : BaseType(aName) {}
@@ -1047,53 +1046,66 @@ struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0)) {};
 
 template <typename TWithoutPointer>
 struct NonnsISupportsPointerStorageClass
-    : mozilla::Conditional<
+    : std::conditional<
           std::is_const_v<TWithoutPointer>,
           StoreConstPtrPassByConstPtr<
               typename mozilla::RemoveConst<TWithoutPointer>::Type>,
-          StorePtrPassByPtr<TWithoutPointer>> {};
+          StorePtrPassByPtr<TWithoutPointer>> {
+  using Type = typename NonnsISupportsPointerStorageClass::conditional::type;
+};
 
 template <typename TWithoutPointer>
 struct PointerStorageClass
-    : mozilla::Conditional<
+    : std::conditional<
           HasRefCountMethods<TWithoutPointer>::value,
           StoreRefPtrPassByPtr<TWithoutPointer>,
-          typename NonnsISupportsPointerStorageClass<TWithoutPointer>::Type> {};
+          typename NonnsISupportsPointerStorageClass<TWithoutPointer>::Type> {
+  using Type = typename PointerStorageClass::conditional::type;
+};
 
 template <typename TWithoutRef>
 struct LValueReferenceStorageClass
-    : mozilla::Conditional<
-          std::is_const_v<TWithoutRef>,
-          StoreConstRefPassByConstLRef<
-              typename mozilla::RemoveConst<TWithoutRef>::Type>,
-          StoreRefPassByLRef<TWithoutRef>> {};
+    : std::conditional<std::is_const_v<TWithoutRef>,
+                       StoreConstRefPassByConstLRef<
+                           typename mozilla::RemoveConst<TWithoutRef>::Type>,
+                       StoreRefPassByLRef<TWithoutRef>> {
+  using Type = typename LValueReferenceStorageClass::conditional::type;
+};
 
 template <typename T>
 struct SmartPointerStorageClass
-    : mozilla::Conditional<
+    : std::conditional<
           mozilla::IsRefcountedSmartPointer<T>::value,
           StoreRefPtrPassByPtr<typename mozilla::RemoveSmartPointer<T>::Type>,
-          StoreCopyPassByConstLRef<T>> {};
+          StoreCopyPassByConstLRef<T>> {
+  using Type = typename SmartPointerStorageClass::conditional::type;
+};
 
 template <typename T>
 struct NonLValueReferenceStorageClass
-    : mozilla::Conditional<std::is_rvalue_reference_v<T>,
-                           StoreCopyPassByRRef<std::remove_reference_t<T>>,
-                           typename SmartPointerStorageClass<T>::Type> {};
+    : std::conditional<std::is_rvalue_reference_v<T>,
+                       StoreCopyPassByRRef<std::remove_reference_t<T>>,
+                       typename SmartPointerStorageClass<T>::Type> {
+  using Type = typename NonLValueReferenceStorageClass::conditional::type;
+};
 
 template <typename T>
 struct NonPointerStorageClass
-    : mozilla::Conditional<std::is_lvalue_reference_v<T>,
-                           typename LValueReferenceStorageClass<
-                               std::remove_reference_t<T>>::Type,
-                           typename NonLValueReferenceStorageClass<T>::Type> {};
+    : std::conditional<std::is_lvalue_reference_v<T>,
+                       typename LValueReferenceStorageClass<
+                           std::remove_reference_t<T>>::Type,
+                       typename NonLValueReferenceStorageClass<T>::Type> {
+  using Type = typename NonPointerStorageClass::conditional::type;
+};
 
 template <typename T>
 struct NonParameterStorageClass
-    : mozilla::Conditional<
+    : std::conditional<
           std::is_pointer_v<T>,
           typename PointerStorageClass<std::remove_pointer_t<T>>::Type,
-          typename NonPointerStorageClass<T>::Type> {};
+          typename NonPointerStorageClass<T>::Type> {
+  using Type = typename NonParameterStorageClass::conditional::type;
+};
 
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
@@ -1116,8 +1128,10 @@ struct NonParameterStorageClass
 // clean-up in destructor, and with associated IsParameterStorageClass<>.
 template <typename T>
 struct ParameterStorage
-    : mozilla::Conditional<IsParameterStorageClass<T>::value, T,
-                           typename NonParameterStorageClass<T>::Type> {};
+    : std::conditional<IsParameterStorageClass<T>::value, T,
+                       typename NonParameterStorageClass<T>::Type> {
+  using Type = typename ParameterStorage::conditional::type;
+};
 
 template <class T>
 static auto HasSetDeadlineTest(int) -> SFINAE1True<decltype(
