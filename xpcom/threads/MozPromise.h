@@ -81,7 +81,7 @@ struct MethodTrait : MethodTraitsHelper<std::remove_reference_t<T>> {};
 
 template <typename MethodType>
 using TakesArgument =
-    IntegralConstant<bool, detail::MethodTrait<MethodType>::ArgSize != 0>;
+    std::integral_constant<bool, detail::MethodTrait<MethodType>::ArgSize != 0>;
 
 template <typename MethodType, typename TargetType>
 using ReturnTypeIs =
@@ -562,8 +562,9 @@ class MozPromise : public MozPromiseBase {
         typename detail::MethodTrait<ResolveMethodType>::ReturnType>::Type;
     using R2 = typename RemoveSmartPointer<
         typename detail::MethodTrait<RejectMethodType>::ReturnType>::Type;
-    using SupportChaining = IntegralConstant<bool, IsMozPromise<R1>::value &&
-                                                       IsSame<R1, R2>::value>;
+    using SupportChaining =
+        std::integral_constant<bool, IsMozPromise<R1>::value &&
+                                         IsSame<R1, R2>::value>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
@@ -626,7 +627,8 @@ class MozPromise : public MozPromiseBase {
 
     using R1 = typename RemoveSmartPointer<typename detail::MethodTrait<
         ResolveRejectMethodType>::ReturnType>::Type;
-    using SupportChaining = IntegralConstant<bool, IsMozPromise<R1>::value>;
+    using SupportChaining =
+        std::integral_constant<bool, IsMozPromise<R1>::value>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
@@ -685,8 +687,9 @@ class MozPromise : public MozPromiseBase {
         typename detail::MethodTrait<ResolveFunction>::ReturnType>::Type;
     using R2 = typename RemoveSmartPointer<
         typename detail::MethodTrait<RejectFunction>::ReturnType>::Type;
-    using SupportChaining = IntegralConstant<bool, IsMozPromise<R1>::value &&
-                                                       IsSame<R1, R2>::value>;
+    using SupportChaining =
+        std::integral_constant<bool, IsMozPromise<R1>::value &&
+                                         IsSame<R1, R2>::value>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
@@ -756,7 +759,8 @@ class MozPromise : public MozPromiseBase {
 
     using R1 = typename RemoveSmartPointer<
         typename detail::MethodTrait<ResolveRejectFunction>::ReturnType>::Type;
-    using SupportChaining = IntegralConstant<bool, IsMozPromise<R1>::value>;
+    using SupportChaining =
+        std::integral_constant<bool, IsMozPromise<R1>::value>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
