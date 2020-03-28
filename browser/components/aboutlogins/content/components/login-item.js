@@ -130,7 +130,9 @@ export default class LoginItem extends HTMLElement {
     }
   }
 
-  async render() {
+  async render(
+    { onlyUpdateErrorsAndAlerts } = { onlyUpdateErrorsAndAlerts: false }
+  ) {
     if (this._error) {
       if (this._error.errorMessage.includes("This login already exists")) {
         document.l10n.setAttributes(
@@ -192,6 +194,9 @@ export default class LoginItem extends HTMLElement {
         "href",
         window.AboutLoginsUtils.supportBaseURL + "lockwise-alerts"
       );
+    }
+    if (onlyUpdateErrorsAndAlerts) {
+      return;
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
@@ -285,7 +290,7 @@ export default class LoginItem extends HTMLElement {
 
   _internalSetMonitorData(internalMemberName, mapByLoginGUID) {
     this[internalMemberName] = mapByLoginGUID;
-    this.render();
+    this.render({ onlyUpdateErrorsAndAlerts: true });
   }
 
   _internalUpdateMonitorData(internalMemberName, mapByLoginGUID) {
@@ -293,7 +298,11 @@ export default class LoginItem extends HTMLElement {
       this[internalMemberName] = new Map();
     }
     for (const [guid, data] of [...mapByLoginGUID]) {
-      this[internalMemberName].set(guid, data);
+      if (data) {
+        this[internalMemberName].set(guid, data);
+      } else {
+        this[internalMemberName].delete(guid);
+      }
     }
     this._internalSetMonitorData(internalMemberName, this[internalMemberName]);
   }
