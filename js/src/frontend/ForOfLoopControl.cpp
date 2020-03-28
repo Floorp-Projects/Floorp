@@ -11,7 +11,7 @@
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/EmitterScope.h"     // EmitterScope
 #include "frontend/IfEmitter.h"        // InternalIfEmitter
-#include "vm/JSScript.h"               // JSTRY_FOR_OF_ITERCLOSE
+#include "vm/JSScript.h"               // TryNoteKind::ForOfIterClose
 #include "vm/Opcodes.h"                // JSOp
 
 using namespace js;
@@ -142,7 +142,7 @@ bool ForOfLoopControl::emitIteratorCloseInInnermostScopeWithTryNote(
     return false;
   }
   BytecodeOffset end = bce->bytecodeSection().offset();
-  return bce->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
+  return bce->addTryNote(TryNoteKind::ForOfIterClose, 0, start, end);
 }
 
 bool ForOfLoopControl::emitIteratorCloseInScope(

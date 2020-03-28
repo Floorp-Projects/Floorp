@@ -349,7 +349,7 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
        *  should not be. If IteratorClose throws, we don't want to
        *  catch it here.
        *
-       *  To make this work, we use JSTRY_FOR_OF_ITERCLOSE try-notes,
+       *  To make this work, we use TryNoteKind::ForOfIterClose try-notes,
        *  which cover the range of the abnormal completion. When
        *  looking up trynotes, a for-of iterclose note indicates that
        *  the enclosing for-of has just been terminated. As a result,
@@ -390,15 +390,15 @@ class MOZ_STACK_CLASS BaseTryNoteIter {
        *    the outer try-catch. (This occurs if an exception is thrown while
        *    closing the outer iterator.)
        */
-      if (tn_->kind == JSTRY_FOR_OF_ITERCLOSE) {
+      if (tn_->kind() == TryNoteKind::ForOfIterClose) {
         uint32_t iterCloseDepth = 1;
         do {
           ++tn_;
           MOZ_ASSERT(tn_ != tnEnd_);
           if (pcInRange()) {
-            if (tn_->kind == JSTRY_FOR_OF_ITERCLOSE) {
+            if (tn_->kind() == TryNoteKind::ForOfIterClose) {
               iterCloseDepth++;
-            } else if (tn_->kind == JSTRY_FOR_OF) {
+            } else if (tn_->kind() == TryNoteKind::ForOf) {
               iterCloseDepth--;
             }
           }

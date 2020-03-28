@@ -3091,19 +3091,19 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
 
 static const char* TryNoteName(TryNoteKind kind) {
   switch (kind) {
-    case JSTRY_CATCH:
+    case TryNoteKind::Catch:
       return "catch";
-    case JSTRY_FINALLY:
+    case TryNoteKind::Finally:
       return "finally";
-    case JSTRY_FOR_IN:
+    case TryNoteKind::ForIn:
       return "for-in";
-    case JSTRY_FOR_OF:
+    case TryNoteKind::ForOf:
       return "for-of";
-    case JSTRY_LOOP:
+    case TryNoteKind::Loop:
       return "loop";
-    case JSTRY_FOR_OF_ITERCLOSE:
+    case TryNoteKind::ForOfIterClose:
       return "for-of-iterclose";
-    case JSTRY_DESTRUCTURING:
+    case TryNoteKind::Destructuring:
       return "destructuring";
   }
 
@@ -3118,8 +3118,7 @@ static MOZ_MUST_USE bool TryNotes(JSContext* cx, HandleScript script,
   }
 
   for (const TryNote& tn : script->trynotes()) {
-    if (!sp->jsprintf(" %-16s %6u %8u %8u\n",
-                      TryNoteName(static_cast<TryNoteKind>(tn.kind)),
+    if (!sp->jsprintf(" %-16s %6u %8u %8u\n", TryNoteName(tn.kind()),
                       tn.stackDepth, tn.start, tn.start + tn.length)) {
       return false;
     }

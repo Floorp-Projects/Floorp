@@ -12,6 +12,7 @@
 #include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
 #include "vm/Scope.h"
+#include "vm/TryNoteKind.h"  // TryNoteKind
 
 using namespace js;
 using namespace js::frontend;
@@ -135,7 +136,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   // Emit code to assign result.value to the iteration variable.
   //
   // Note that ES 13.7.5.13, step 5.c says getting result.value does not
-  // call IteratorClose, so start JSTRY_ITERCLOSE after the GetProp.
+  // call IteratorClose, so start TryNoteKind::ForOfIterClose after the GetProp.
   if (!bce_->emitAtomOp(JSOp::GetProp, bce_->cx->names().value)) {
     //              [stack] NEXT ITER VALUE
     return false;
@@ -195,7 +196,7 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
     return false;
   }
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, JSTRY_FOR_OF)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, TryNoteKind::ForOf)) {
     //              [stack] NEXT ITER
     return false;
   }

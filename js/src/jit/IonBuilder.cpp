@@ -7555,9 +7555,9 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newPendingLoopHeader(
         }
       }
 
-      switch (tn.kind) {
-        case JSTRY_DESTRUCTURING:
-        case JSTRY_FOR_IN: {
+      switch (tn.kind()) {
+        case TryNoteKind::Destructuring:
+        case TryNoteKind::ForIn: {
           // For for-in loops we add the iterator object to iterators_. For
           // destructuring loops we add the "done" value that's on top of the
           // stack and used in the exception handler.
