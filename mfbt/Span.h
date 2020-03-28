@@ -487,7 +487,7 @@ class Span {
   template <
       class Container,
       class = span_details::enable_if_t<
-          mozilla::IsConst<element_type>::value &&
+          std::is_const_v<element_type> &&
           !span_details::is_span<Container>::value &&
           mozilla::IsConvertible<typename Container::pointer, pointer>::value &&
           mozilla::IsConvertible<
@@ -801,9 +801,8 @@ AsBytes(Span<ElementType, Extent> s) {
 /**
  * View span as Span<uint8_t>.
  */
-template <
-    class ElementType, size_t Extent,
-    class = span_details::enable_if_t<!mozilla::IsConst<ElementType>::value>>
+template <class ElementType, size_t Extent,
+          class = span_details::enable_if_t<!std::is_const_v<ElementType>>>
 Span<uint8_t, span_details::calculate_byte_size<ElementType, Extent>::value>
 AsWritableBytes(Span<ElementType, Extent> s) {
   return {reinterpret_cast<uint8_t*>(s.data()), s.size_bytes()};
