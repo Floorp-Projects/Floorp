@@ -301,7 +301,7 @@ static MOZ_MUST_USE bool ReadableStream_getReader(JSContext* cx, unsigned argc,
   }
 
   // Step 2: If mode is undefined, return
-  //         ? AcquireReadableStreamDefaultReader(this).
+  //         ? AcquireReadableStreamDefaultReader(this, true).
   Rooted<JSObject*> reader(cx);
   if (modeVal.isUndefined()) {
     reader = CreateReadableStreamDefaultReader(cx, unwrappedStream,
@@ -325,7 +325,7 @@ static MOZ_MUST_USE bool ReadableStream_getReader(JSContext* cx, unsigned argc,
     }
 
     // Step 4: If mode is "byob",
-    //         return ? AcquireReadableStreamBYOBReader(this).
+    //         return ? AcquireReadableStreamBYOBReader(this, true).
     reader = CreateReadableStreamBYOBReader(cx, unwrappedStream,
                                             ForAuthorCodeBool::Yes);
   }

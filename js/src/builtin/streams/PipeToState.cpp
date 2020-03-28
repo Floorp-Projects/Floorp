@@ -15,7 +15,7 @@
 
 #include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
-#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader
+#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter
 #include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
@@ -76,8 +76,8 @@ using js::PipeToState;
   //         ! AcquireReadableStreamDefaultReader(source).
   // We don't implement byte streams, so we always acquire a default reader.
   {
-    ReadableStreamDefaultReader* reader =
-        CreateReadableStreamDefaultReader(cx, unwrappedSource);
+    ReadableStreamDefaultReader* reader = CreateReadableStreamDefaultReader(
+        cx, unwrappedSource, ForAuthorCodeBool::No);
     if (!reader) {
       return nullptr;
     }
