@@ -41,14 +41,17 @@ class SessionManagerMigrationTest {
         assertTrue(store.state.tabs.isEmpty())
 
         sessionManager.add(Session("https://www.mozilla.org", private = true))
+        sessionManager.add(Session("https://www.firefox.com", contextId = "1"))
 
-        assertEquals(1, sessionManager.sessions.size)
-        assertEquals(1, store.state.tabs.size)
+        assertEquals(2, sessionManager.sessions.size)
+        assertEquals(2, store.state.tabs.size)
 
-        val tab = store.state.tabs[0]
-
-        assertEquals("https://www.mozilla.org", tab.content.url)
-        assertTrue(tab.content.private)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
+        assertTrue(store.state.tabs[0].content.private)
+        assertFalse(store.state.tabs[1].content.private)
+        assertNull(store.state.tabs[0].contextId)
+        assertEquals("1", store.state.tabs[1].contextId)
     }
 
     @Test
@@ -77,6 +80,8 @@ class SessionManagerMigrationTest {
         assertEquals(3, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
         assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
+        assertNull(store.state.tabs[0].contextId)
+        assertNull(store.state.tabs[1].contextId)
     }
 
     @Test
@@ -158,7 +163,7 @@ class SessionManagerMigrationTest {
 
         val sessionManager = SessionManager(engine = mock(), store = store)
         sessionManager.add(Session("https://www.mozilla.org"))
-        sessionManager.add(Session("https://www.firefox.com"))
+        sessionManager.add(Session("https://www.firefox.com", contextId = "1"))
         sessionManager.add(Session("https://www.getpocket.com").apply { customTabConfig = mock() })
 
         assertEquals(2, sessionManager.sessions.size)
@@ -202,7 +207,7 @@ class SessionManagerMigrationTest {
         val sessionManager = SessionManager(engine = mock(), store = store)
 
         sessionManager.add(Session("https://www.mozilla.org"))
-        sessionManager.add(Session("https://www.firefox.com"))
+        sessionManager.add(Session("https://www.firefox.com", contextId = "1"))
 
         sessionManager.select(sessionManager.sessions[1])
 
@@ -211,6 +216,8 @@ class SessionManagerMigrationTest {
 
         assertEquals("https://www.firefox.com", sessionManager.selectedSessionOrThrow.url)
         assertEquals("https://www.firefox.com", selectedTab.content.url)
+        assertEquals("1", sessionManager.selectedSessionOrThrow.contextId)
+        assertEquals("1", selectedTab.contextId)
     }
 
     @Test

@@ -23,7 +23,8 @@ class SnapshotSerializerTest {
         val originalSession = Session(
             "https://www.mozilla.org",
             source = Session.Source.ACTION_VIEW,
-            id = "test-id").apply {
+            id = "test-id",
+            contextId = "test-context-id").apply {
             title = "Hello World"
             readerMode = true
         }
@@ -34,6 +35,7 @@ class SnapshotSerializerTest {
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
         assertEquals("test-id", restoredSession.id)
+        assertEquals("test-context-id", restoredSession.contextId)
         assertEquals("Hello World", restoredSession.title)
         assertTrue(restoredSession.readerMode)
     }
@@ -53,6 +55,20 @@ class SnapshotSerializerTest {
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
         assertEquals("test-id", restoredSession.id)
         assertFalse(restoredSession.readerMode)
+    }
+
+    @Test
+    fun `Deserialize minimal session (without contextId)`() {
+        val json = JSONObject().apply {
+            put("url", "https://www.mozilla.org")
+            put("source", "ACTION_VIEW")
+            put("uuid", "test-id")
+            put("parentUuid", "")
+        }
+
+        val restoredSession = deserializeSession(json, restoreId = true, restoreParentId = false)
+
+        assertNull(restoredSession.contextId)
     }
 
     @Test

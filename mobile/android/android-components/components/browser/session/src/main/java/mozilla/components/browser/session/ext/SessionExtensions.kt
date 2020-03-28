@@ -22,7 +22,8 @@ fun Session.toTabSessionState(): TabSessionState {
         toContentState(),
         toTrackingProtectionState(),
         parentId = parentId,
-        readerState = toReaderState()
+        readerState = toReaderState(),
+        contextId = contextId
     )
 }
 
@@ -30,8 +31,15 @@ fun Session.toTabSessionState(): TabSessionState {
  * Creates a matching [CustomTabSessionState] from a custom tab [Session].
  */
 fun Session.toCustomTabSessionState(): CustomTabSessionState {
-    val config = customTabConfig ?: throw IllegalStateException("Session is not a custom tab session")
-    return CustomTabSessionState(id, toContentState(), toTrackingProtectionState(), config)
+    val config =
+        customTabConfig ?: throw IllegalStateException("Session is not a custom tab session")
+    return CustomTabSessionState(
+        id,
+        toContentState(),
+        toTrackingProtectionState(),
+        config,
+        contextId = contextId
+    )
 }
 
 private fun Session.toContentState(): ContentState {

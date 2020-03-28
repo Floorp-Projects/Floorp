@@ -151,6 +151,27 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `AddNewTabUseCase uses provided contextId`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val useCases = TabsUseCases(sessionManager)
+
+        assertEquals(0, sessionManager.size)
+
+        useCases.addTab("https://www.mozilla.org", contextId = "1")
+
+        assertEquals(1, sessionManager.size)
+        assertEquals("https://www.mozilla.org", sessionManager.selectedSessionOrThrow.url)
+        assertEquals("1", sessionManager.selectedSessionOrThrow.contextId)
+        assertEquals(Source.NEW_TAB, sessionManager.selectedSessionOrThrow.source)
+        assertFalse(sessionManager.selectedSessionOrThrow.private)
+
+        verify(engineSession).loadUrl("https://www.mozilla.org")
+    }
+
+    @Test
     fun `AddNewPrivateTabUseCase will not load URL if flag is set to false`() {
         val sessionManager = spy(SessionManager(mock()))
         val engineSession: EngineSession = mock()

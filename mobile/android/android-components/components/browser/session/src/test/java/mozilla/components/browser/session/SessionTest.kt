@@ -410,6 +410,17 @@ class SessionTest {
     }
 
     @Test
+    fun `session returns context ID`() {
+        val session1 = Session("https://www.mozilla.org")
+        val session2 = Session("https://www.mozilla.org", contextId = "1")
+        val session3 = Session("https://www.mozilla.org", contextId = "2")
+
+        assertNull(session1.contextId)
+        assertEquals("1", session2.contextId)
+        assertEquals("2", session3.contextId)
+    }
+
+    @Test
     fun `HitResult will be set on Session`() {
         val hitResult: HitResult = mock()
         `when`(hitResult.src).thenReturn("https://mozilla.org")

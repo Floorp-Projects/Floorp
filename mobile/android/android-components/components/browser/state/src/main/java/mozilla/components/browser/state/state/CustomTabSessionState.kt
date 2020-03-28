@@ -15,6 +15,7 @@ import java.util.UUID
  * @property config the [CustomTabConfig] used to create this custom tab.
  * @property extensionState a map of web extension ids and extensions, that contains the overridden
  * values for this tab.
+ * @property contextId the session context ID of this custom tab.
  */
 data class CustomTabSessionState(
     override val id: String = UUID.randomUUID().toString(),
@@ -22,17 +23,23 @@ data class CustomTabSessionState(
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
     val config: CustomTabConfig,
     override val engineState: EngineState = EngineState(),
-    override val extensionState: Map<String, WebExtensionState> = emptyMap()
+    override val extensionState: Map<String, WebExtensionState> = emptyMap(),
+    override val contextId: String? = null
 ) : SessionState
 
+/**
+ * Convenient function for creating a custom tab.
+ */
 fun createCustomTab(
     url: String,
     id: String = UUID.randomUUID().toString(),
-    config: CustomTabConfig = CustomTabConfig()
+    config: CustomTabConfig = CustomTabConfig(),
+    contextId: String? = null
 ): CustomTabSessionState {
     return CustomTabSessionState(
         id = id,
         content = ContentState(url),
-        config = config
+        config = config,
+        contextId = contextId
     )
 }

@@ -46,7 +46,7 @@ class SessionStorageTest {
     @Test
     fun `Restored snapshot should contain sessions of saved snapshot`() {
         val session1 = Session("http://mozilla.org", id = "session1")
-        val session2 = Session("http://getpocket.com", id = "session2")
+        val session2 = Session("http://getpocket.com", id = "session2", contextId = "2")
         val session3 = Session("http://getpocket.com", id = "session3")
         session3.parentId = "session1"
 
@@ -87,16 +87,19 @@ class SessionStorageTest {
         assertEquals(session1.url, restoredSnapshot.sessions[0].session.url)
         assertEquals(session1.id, restoredSnapshot.sessions[0].session.id)
         assertNull(restoredSnapshot.sessions[0].session.parentId)
+        assertNull(restoredSnapshot.sessions[0].session.contextId)
 
         assertEquals(session2, restoredSnapshot.sessions[1].session)
         assertEquals(session2.url, restoredSnapshot.sessions[1].session.url)
         assertEquals(session2.id, restoredSnapshot.sessions[1].session.id)
         assertNull(restoredSnapshot.sessions[1].session.parentId)
+        assertEquals(session2.contextId, restoredSnapshot.sessions[1].session.contextId)
 
         assertEquals(session3, restoredSnapshot.sessions[2].session)
         assertEquals(session3.url, restoredSnapshot.sessions[2].session.url)
         assertEquals(session3.id, restoredSnapshot.sessions[2].session.id)
         assertEquals("session1", restoredSnapshot.sessions[2].session.parentId)
+        assertNull(restoredSnapshot.sessions[2].session.contextId)
 
         val restoredEngineSession = restoredSnapshot.sessions[0].engineSessionState
         assertNotNull(restoredEngineSession)

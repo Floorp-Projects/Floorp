@@ -105,6 +105,7 @@ class TabsUseCases(
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parentId the id of the parent tab to use for the newly created tab.
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
+         * @param contextId the session context id to use for this tab.
          * @param engineSession (optional) engine session to use for this tab.
          */
         @Suppress("LongParameterList")
@@ -114,9 +115,10 @@ class TabsUseCases(
             startLoading: Boolean = true,
             parentId: String? = null,
             flags: LoadUrlFlags = LoadUrlFlags.none(),
+            contextId: String? = null,
             engineSession: EngineSession? = null
         ): Session {
-            val session = Session(url, false, Source.NEW_TAB)
+            val session = Session(url, false, Source.NEW_TAB, contextId = contextId)
             val parent = parentId?.let { sessionManager.findSessionById(parentId) }
             sessionManager.add(session, selected = selectTab, engineSession = engineSession, parent = parent)
 
