@@ -1,0 +1,27 @@
+[package]
+name = "http3server"
+version = "0.1.1"
+authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+neqo-transport = { tag = "v0.2.2", git = "https://github.com/mozilla/neqo" }
+neqo-common = { tag = "v0.2.2", git = "https://github.com/mozilla/neqo" }
+neqo-http3 = { tag = "v0.2.2", git = "https://github.com/mozilla/neqo" }
+mio = "0.6.17"
+mio-extras = "2.0.5"
+log = "0.4.0"
+
+[dependencies.neqo-crypto]
+tag = "v0.2.2"
+git = "https://github.com/mozilla/neqo"
+default-features = false
+features = ["gecko"]
+
+# Make sure to use bindgen's runtime-loading of libclang, as it allows for a wider range of clang versions to be used
+[build-dependencies]
+bindgen = {version = "0.53.2", default-features = false, features = ["runtime"] }
+
+[[bin]]
+name = "http3server"
+path = "src/main.rs"
