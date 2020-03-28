@@ -65,16 +65,10 @@ async function addLogin(login) {
       Ci.nsIWritablePropertyBag2
     );
     matchData.setPropertyAsAUTF8String("guid", login.guid);
-
-    let logins = Services.logins.searchLogins(matchData);
-    if (!logins.length) {
+    if (!Services.logins.searchLogins(matchData).length) {
       return;
     }
-    // Use the login that was returned from searchLogins
-    // in case the initial login object was changed by the test code,
-    // since removeLogin makes sure that the login argument exactly
-    // matches the login that it will be removing.
-    Services.logins.removeLogin(logins[0]);
+    Services.logins.removeLogin(login);
   });
   return login;
 }
