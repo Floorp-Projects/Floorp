@@ -83,9 +83,15 @@ export default class LoginItem extends HTMLElement {
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
     this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
+    this._breachAlertLearnMoreLink = this._breachAlert.querySelector(
+      ".alert-learn-more-link"
+    );
     this._vulnerableAlert = this.shadowRoot.querySelector(".vulnerable-alert");
     this._vulnerableAlertLink = this._vulnerableAlert.querySelector(
       ".alert-link"
+    );
+    this._vulnerableAlertLearnMoreLink = this._vulnerableAlert.querySelector(
+      ".alert-learn-more-link"
     );
 
     this.render();
@@ -148,7 +154,13 @@ export default class LoginItem extends HTMLElement {
       !this._breachesMap || !this._breachesMap.has(this._login.guid);
     if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
-      this._breachAlertLink.href = breachDetails.breachAlertURL;
+      this._breachAlertLearnMoreLink.href = breachDetails.breachAlertURL;
+      this._breachAlertLink.href = this._login.origin;
+      document.l10n.setAttributes(
+        this._breachAlertLink,
+        "about-logins-breach-alert-link",
+        { hostname: this._login.displayOrigin }
+      );
       if (breachDetails.BreachDate) {
         let breachDate = new Date(breachDetails.BreachDate);
         this._breachAlertDate.hidden = isNaN(breachDate);
@@ -175,6 +187,10 @@ export default class LoginItem extends HTMLElement {
         {
           hostname: this._login.displayOrigin,
         }
+      );
+      this._vulnerableAlertLearnMoreLink.setAttribute(
+        "href",
+        window.AboutLoginsUtils.supportBaseURL + "lockwise-alerts"
       );
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
