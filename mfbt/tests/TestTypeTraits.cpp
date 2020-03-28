@@ -16,7 +16,6 @@ using mozilla::AddRvalueReference;
 using mozilla::Decay;
 using mozilla::DeclVal;
 using mozilla::IsArray;
-using mozilla::IsClass;
 using mozilla::IsConvertible;
 using mozilla::IsDestructible;
 using mozilla::IsFunction;
@@ -125,15 +124,6 @@ TEST_IS_NOT_SCALAR(U)
 #undef ASSERT_IS_NOT_SCALAR
 
 }  // namespace CPlusPlus11IsScalar
-
-struct S1 {};
-union U1 {
-  int mX;
-};
-
-static_assert(!IsClass<int>::value, "int isn't a class");
-static_assert(IsClass<const S1>::value, "S is a class");
-static_assert(!IsClass<U1>::value, "U isn't a class");
 
 static_assert(!IsSigned<bool>::value, "bool shouldn't be signed");
 static_assert(IsUnsigned<bool>::value, "bool should be unsigned");

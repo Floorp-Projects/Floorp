@@ -89,9 +89,8 @@ class nsAutoOwningThread {
 
 #  define NS_LOG_RELEASE(_p, _rc, _type) NS_LogRelease((_p), (_rc), (_type))
 
-#  include "mozilla/TypeTraits.h"
-#  define MOZ_ASSERT_CLASSNAME(_type)             \
-    static_assert(mozilla::IsClass<_type>::value, \
+#  define MOZ_ASSERT_CLASSNAME(_type)     \
+    static_assert(std::is_class_v<_type>, \
                   "Token '" #_type "' is not a class type.")
 
 #  define MOZ_ASSERT_NOT_ISUPPORTS(_type)                                     \
