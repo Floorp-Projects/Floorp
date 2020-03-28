@@ -12,10 +12,11 @@
   </head>
   <div style="height: 44.5px"></div>
   <div style="position: relative; font-size: 0; background: lightblue">
-    <img id=target loading="lazy" data-sizes="auto" src="resources/image.png">
+    <img id=target loading="lazy" data-sizes="auto">
   </div>
 </html>
 <script src="/common/reftest-wait.js"></script>
 <script>
   target.onload = takeScreenshot;
+  target.src = "resources/image.png";
 </script>
