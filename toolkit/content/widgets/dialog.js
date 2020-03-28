@@ -397,35 +397,6 @@
             }
           }
         }
-        // allow specifying alternate icons in the dialog header
-        if (!button.hasAttribute("icon")) {
-          // if there's an icon specified, use that
-          if (this.hasAttribute("buttonicon" + dlgtype)) {
-            button.setAttribute(
-              "icon",
-              this.getAttribute("buttonicon" + dlgtype)
-            );
-          }
-          // otherwise set defaults
-          else {
-            switch (dlgtype) {
-              case "accept":
-                button.setAttribute("icon", "accept");
-                break;
-              case "cancel":
-                button.setAttribute("icon", "cancel");
-                break;
-              case "disclosure":
-                button.setAttribute("icon", "properties");
-                break;
-              case "help":
-                button.setAttribute("icon", "help");
-                break;
-              default:
-                break;
-            }
-          }
-        }
       }
 
       // ensure that hitting enter triggers the default button command
