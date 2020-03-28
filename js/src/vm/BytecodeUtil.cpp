@@ -911,12 +911,12 @@ bool BytecodeParser::parse() {
         for (const TryNote& tn : script_->trynotes()) {
           if (tn.start == offset + JSOpLength_Try) {
             uint32_t catchOffset = tn.start + tn.length;
-            if (tn.kind == JSTRY_CATCH) {
+            if (tn.kind() == TryNoteKind::Catch) {
               if (!addJump(catchOffset, stackDepth, offsetStack, pc,
                            JumpKind::TryCatch)) {
                 return false;
               }
-            } else if (tn.kind == JSTRY_FINALLY) {
+            } else if (tn.kind() == TryNoteKind::Finally) {
               if (!addJump(catchOffset, stackDepth, offsetStack, pc,
                            JumpKind::TryFinally)) {
                 return false;
