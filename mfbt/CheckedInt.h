@@ -194,8 +194,7 @@ constexpr bool HasSignBit(T aX) {
   // Notice that signed-to-unsigned conversions are always well-defined in the
   // standard, as the value congruent modulo 2**n as expected. By contrast,
   // unsigned-to-signed is only well-defined if the value is representable.
-  return bool(typename MakeUnsigned<T>::Type(aX) >>
-              PositionOfSignBit<T>::value);
+  return bool(std::make_unsigned_t<T>(aX) >> PositionOfSignBit<T>::value);
 }
 
 // Bitwise ops may return a larger type, so it's good to use this inline
@@ -282,9 +281,9 @@ constexpr bool IsAddValid(T aX, T aY) {
   // These bitwise operations can return a larger integer type, if T was a
   // small type like int8_t, so we explicitly cast to T.
 
-  typename MakeUnsigned<T>::Type ux = aX;
-  typename MakeUnsigned<T>::Type uy = aY;
-  typename MakeUnsigned<T>::Type result = ux + uy;
+  std::make_unsigned_t<T> ux = aX;
+  std::make_unsigned_t<T> uy = aY;
+  std::make_unsigned_t<T> result = ux + uy;
   return IsSigned<T>::value
              ? HasSignBit(BinaryComplement(T((result ^ aX) & (result ^ aY))))
              : BinaryComplement(aX) >= aY;
@@ -300,9 +299,9 @@ constexpr bool IsSubValid(T aX, T aY) {
   // Subtraction is valid if either aX and aY have same sign, or aX-aY and aX
   // have same sign. Since the value of aX-aY is undefined if we have a signed
   // type, we compute it using the unsigned type of the same size.
-  typename MakeUnsigned<T>::Type ux = aX;
-  typename MakeUnsigned<T>::Type uy = aY;
-  typename MakeUnsigned<T>::Type result = ux - uy;
+  std::make_unsigned_t<T> ux = aX;
+  std::make_unsigned_t<T> uy = aY;
+  std::make_unsigned_t<T> result = ux - uy;
 
   return IsSigned<T>::value
              ? HasSignBit(BinaryComplement(T((result ^ aX) & (aX ^ aY))))

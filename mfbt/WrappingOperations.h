@@ -102,7 +102,7 @@ WrapToSigned(UnsignedType aValue) {
 namespace detail {
 
 template <typename T>
-constexpr T ToResult(typename MakeUnsigned<T>::Type aUnsigned) {
+constexpr T ToResult(std::make_unsigned_t<T> aUnsigned) {
   // We could *always* return WrapToSigned and rely on unsigned conversion to
   // undo the wrapping when |T| is unsigned, but this seems clearer.
   return IsSigned<T>::value ? WrapToSigned(aUnsigned) : aUnsigned;
@@ -111,7 +111,7 @@ constexpr T ToResult(typename MakeUnsigned<T>::Type aUnsigned) {
 template <typename T>
 struct WrappingAddHelper {
  private:
-  using UnsignedT = typename MakeUnsigned<T>::Type;
+  using UnsignedT = std::make_unsigned_t<T>;
 
  public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
@@ -159,7 +159,7 @@ namespace detail {
 template <typename T>
 struct WrappingSubtractHelper {
  private:
-  using UnsignedT = typename MakeUnsigned<T>::Type;
+  using UnsignedT = std::make_unsigned_t<T>;
 
  public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW
@@ -205,7 +205,7 @@ namespace detail {
 template <typename T>
 struct WrappingMultiplyHelper {
  private:
-  using UnsignedT = typename MakeUnsigned<T>::Type;
+  using UnsignedT = std::make_unsigned_t<T>;
 
  public:
   MOZ_NO_SANITIZE_UNSIGNED_OVERFLOW

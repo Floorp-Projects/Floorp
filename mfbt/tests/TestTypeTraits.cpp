@@ -25,7 +25,6 @@ using mozilla::IsPointer;
 using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
-using mozilla::MakeUnsigned;
 using mozilla::RemoveExtent;
 using mozilla::RemovePointer;
 
@@ -400,40 +399,6 @@ static_assert(
     IsSame<decltype(DeclVal<TestWithNoDefaultConstructor>().foo()), int>::value,
     "decltype should work using a DeclVal'd struct without a default "
     "constructor");
-
-static_assert(
-    IsSame<MakeUnsigned<const signed char>::Type, const unsigned char>::value,
-    "const signed char won't unsignify correctly");
-static_assert(IsSame<MakeUnsigned<volatile signed short>::Type,
-                     volatile unsigned short>::value,
-              "volatile signed short won't unsignify correctly");
-static_assert(IsSame<MakeUnsigned<const volatile signed int>::Type,
-                     const volatile unsigned int>::value,
-              "const volatile signed int won't unsignify correctly");
-static_assert(IsSame<MakeUnsigned<signed long>::Type, unsigned long>::value,
-              "signed long won't unsignify correctly");
-
-static_assert(
-    IsSame<MakeUnsigned<const unsigned char>::Type, const unsigned char>::value,
-    "const unsigned char won't unsignify correctly");
-
-static_assert(IsSame<MakeUnsigned<volatile unsigned short>::Type,
-                     volatile unsigned short>::value,
-              "volatile unsigned short won't unsignify correctly");
-static_assert(IsSame<MakeUnsigned<const volatile unsigned int>::Type,
-                     const volatile unsigned int>::value,
-              "const volatile unsigned int won't unsignify correctly");
-static_assert(IsSame<MakeUnsigned<unsigned long>::Type, unsigned long>::value,
-              "signed long won't unsignify correctly");
-
-static_assert(IsSame<MakeUnsigned<char>::Type, unsigned char>::value,
-              "char won't unsignify correctly");
-static_assert(
-    IsSame<MakeUnsigned<volatile char>::Type, volatile unsigned char>::value,
-    "volatile char won't unsignify correctly");
-static_assert(
-    IsSame<MakeUnsigned<const char>::Type, const unsigned char>::value,
-    "const char won't unsignify correctly");
 
 static_assert(IsSame<RemoveExtent<int>::Type, int>::value,
               "removing extent from non-array must return the non-array");

@@ -12,6 +12,8 @@
 #ifndef mozilla_Latin1_h
 #define mozilla_Latin1_h
 
+#include <type_traits>
+
 #include "mozilla/JsRust.h"
 #include "mozilla/Span.h"
 #include "mozilla/Tuple.h"
@@ -32,7 +34,10 @@ namespace detail {
 constexpr size_t kShortStringLimitForInlinePaths = 16;
 
 template <typename Char>
-class MakeUnsignedChar : public MakeUnsigned<Char> {};
+class MakeUnsignedChar {
+ public:
+  using Type = std::make_unsigned_t<Char>;
+};
 
 template <>
 class MakeUnsignedChar<char16_t> {
