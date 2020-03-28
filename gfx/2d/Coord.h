@@ -13,6 +13,7 @@
 #include "BaseCoord.h"
 
 #include <cmath>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -104,13 +105,13 @@ struct IntCoordTyped
 
 template <class units, class F>
 struct CoordTyped : public BaseCoord<F, CoordTyped<units, F> >,
-                    public CoordOperatorsHelper<!IsSame<F, int32_t>::value,
+                    public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
                                                 CoordTyped<units, F>, int32_t>,
-                    public CoordOperatorsHelper<!IsSame<F, uint32_t>::value,
+                    public CoordOperatorsHelper<!std::is_same_v<F, uint32_t>,
                                                 CoordTyped<units, F>, uint32_t>,
-                    public CoordOperatorsHelper<!IsSame<F, double>::value,
+                    public CoordOperatorsHelper<!std::is_same_v<F, double>,
                                                 CoordTyped<units, F>, double>,
-                    public CoordOperatorsHelper<!IsSame<F, float>::value,
+                    public CoordOperatorsHelper<!std::is_same_v<F, float>,
                                                 CoordTyped<units, F>, float> {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
