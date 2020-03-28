@@ -236,8 +236,15 @@ for (let testData of testCases) {
       await SpecialPowers.pushPrefEnv({
         set: [["signon.passwordEditCapture.enabled", testData.prefEnabled]],
       });
-      info("testing with: " + JSON.stringify(testData));
-      await testPasswordChange(testData);
+      for (let passwordFieldType of ["password", "text"]) {
+        info(
+          "testing with type=" +
+            passwordFieldType +
+            ": " +
+            JSON.stringify(testData)
+        );
+        await testPasswordChange(testData, { passwordFieldType });
+      }
       await SpecialPowers.popPrefEnv();
     },
   };
@@ -255,12 +262,10 @@ async function waitForPromise(promise, timeoutMs = 5000) {
   await Promise.race([promise, timedOut]);
 }
 
-async function testPasswordChange({
-  logins = [],
-  formDefaults = {},
-  formChanges = {},
-  expected,
-}) {
+async function testPasswordChange(
+  { logins = [], formDefaults = {}, formChanges = {}, expected },
+  { passwordFieldType }
+) {
   await LoginTestUtils.clearData();
   await cleanupDoorhanger();
 
@@ -285,7 +290,7 @@ async function testPasswordChange({
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       info("Waiting for form-processed message");
       await formProcessedPromise;
-      await initForm(browser, formDefaults);
+      await initForm(browser, formDefaults, { passwordFieldType });
       await checkForm(browser, expected.initialForm);
       info("form checked");
 
@@ -355,7 +360,16 @@ async function testPasswordChange({
   );
 }
 
-async function initForm(browser, formDefaults) {
+async function initForm(browser, formDefaults, passwordFieldType) {
+  await ContentTask.spawn(
+    browser,
+    { passwordInputSelector, passwordFieldType },
+    async function({ passwordInputSelector, passwordFieldType }) {
+      content.document.querySelector(
+        passwordInputSelector
+      ).type = passwordFieldType;
+    }
+  );
   await ContentTask.spawn(browser, formDefaults, async function(
     selectorValues
   ) {

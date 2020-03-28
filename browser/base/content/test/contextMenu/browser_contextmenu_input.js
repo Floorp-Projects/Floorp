@@ -83,9 +83,6 @@ add_task(async function test_text_input_spellcheck() {
     ],
     {
       waitForSpellCheck: true,
-      // Need to dynamically add/remove the "password" type or LoginManager
-      // will think that the form inputs on the page are part of a login
-      // and will add fill-login context menu items.
       async preCheckContextMenuFn() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
@@ -261,9 +258,10 @@ add_task(async function test_password_input() {
     ],
     {
       skipFocusChange: true,
-      // Need to dynamically add/remove the "password" type or LoginManager
-      // will think that the form inputs on the page are part of a login
-      // and will add fill-login context menu items.
+      // Need to dynamically add the "password" type or LoginManager
+      // will think that the form inputs on the page are part of a login form
+      // and will add fill-login context menu items. The element needs to be
+      // re-created as type=text afterwards since it uses hasBeenTypePassword.
       async preCheckContextMenuFn() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
@@ -283,7 +281,7 @@ add_task(async function test_password_input() {
           async function() {
             let doc = content.document;
             let input = doc.getElementById("input_password");
-            input.type = "text";
+            input.outerHTML = `<input id=\"input_password\">`;
             input.clientTop; // force layout flush
           }
         );
