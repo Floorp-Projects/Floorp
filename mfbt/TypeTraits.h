@@ -232,29 +232,6 @@ struct RemoveCV {
 
 /* 20.9.7.2 Reference modifications [meta.trans.ref] */
 
-/**
- * Converts reference types to the underlying types.
- *
- * mozilla::RemoveReference<T>::Type is T;
- * mozilla::RemoveReference<T&>::Type is T;
- * mozilla::RemoveReference<T&&>::Type is T;
- */
-
-template <typename T>
-struct RemoveReference {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveReference<T&> {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveReference<T&&> {
-  typedef T Type;
-};
-
 namespace detail {
 
 enum Voidness { TIsVoid, TIsNotVoid };

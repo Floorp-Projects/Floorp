@@ -171,12 +171,11 @@ struct CompactPair : private detail::CompactPairHelper<A, B> {
  * will return a CompactPair<Foo, Bar>.
  */
 template <typename A, typename B>
-CompactPair<typename RemoveCV<typename RemoveReference<A>::Type>::Type,
-            typename RemoveCV<typename RemoveReference<B>::Type>::Type>
+CompactPair<typename RemoveCV<std::remove_reference_t<A>>::Type,
+            typename RemoveCV<std::remove_reference_t<B>>::Type>
 MakeCompactPair(A&& aA, B&& aB) {
-  return CompactPair<
-      typename RemoveCV<typename RemoveReference<A>::Type>::Type,
-      typename RemoveCV<typename RemoveReference<B>::Type>::Type>(
+  return CompactPair<typename RemoveCV<std::remove_reference_t<A>>::Type,
+                     typename RemoveCV<std::remove_reference_t<B>>::Type>(
       std::forward<A>(aA), std::forward<B>(aB));
 }
 
