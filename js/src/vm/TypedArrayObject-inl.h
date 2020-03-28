@@ -16,6 +16,7 @@
 #include "mozilla/FloatingPoint.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "jsnum.h"
 
@@ -129,9 +130,8 @@ inline uint64_t ConvertNumber<uint64_t, double>(double src) {
 template <typename To, typename From>
 inline To ConvertNumber(From src) {
   static_assert(
-      !mozilla::IsFloatingPoint<From>::value ||
-          (mozilla::IsFloatingPoint<From>::value &&
-           mozilla::IsFloatingPoint<To>::value),
+      !std::is_floating_point_v<From> ||
+          (std::is_floating_point_v<From> && std::is_floating_point_v<To>),
       "conversion from floating point to int should have been handled by "
       "specializations above");
   return To(src);

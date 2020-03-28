@@ -10,6 +10,7 @@
 #include <fstream>
 #include <mutex>
 #include <prinrval.h>
+#include <type_traits>
 #ifdef _WINDOWS
 #  include <process.h>
 #  define getpid _getpid
@@ -100,7 +101,7 @@ void FuzzIntegralType(T* v, bool largeValues) {
  */
 template <typename T>
 void FuzzFloatingPointType(T* v, bool largeValues) {
-  static_assert(mozilla::IsFloatingPoint<T>::value == true,
+  static_assert(std::is_floating_point_v<T> == true,
                 "T must be a floating point type");
   switch (FuzzingTraits::Random(6)) {
     case 0:

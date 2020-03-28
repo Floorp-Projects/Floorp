@@ -545,7 +545,7 @@ struct ParamTraits<nsTArray<E>> {
   // a data structure T for which IsPod<T>::value is true, yet also have a
   // ParamTraits<T> specialization.
   static const bool sUseWriteBytes =
-      (mozilla::IsIntegral<E>::value || mozilla::IsFloatingPoint<E>::value);
+      (mozilla::IsIntegral<E>::value || std::is_floating_point_v<E>);
 
   static void Write(Message* aMsg, const paramType& aParam) {
     uint32_t length = aParam.Length();
@@ -648,7 +648,7 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
   // a data structure T for which IsPod<T>::value is true, yet also have a
   // ParamTraits<T> specialization.
   static const bool sUseWriteBytes =
-      (mozilla::IsIntegral<E>::value || mozilla::IsFloatingPoint<E>::value);
+      (mozilla::IsIntegral<E>::value || std::is_floating_point_v<E>);
 
   static void Write(Message* aMsg, const paramType& aParam) {
     uint32_t length = aParam.length();
@@ -729,7 +729,7 @@ struct ParamTraits<std::vector<E>> {
   // a data structure T for which IsPod<T>::value is true, yet also have a
   // ParamTraits<T> specialization.
   static const bool sUseWriteBytes =
-      (mozilla::IsIntegral<E>::value || mozilla::IsFloatingPoint<E>::value);
+      (mozilla::IsIntegral<E>::value || std::is_floating_point_v<E>);
 
   static void Write(Message* aMsg, const paramType& aParam) {
     uint32_t length = aParam.size();

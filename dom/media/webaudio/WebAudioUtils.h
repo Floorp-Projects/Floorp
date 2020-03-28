@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <limits>
+#include <type_traits>
 #include "mozilla/TypeTraits.h"
 #include "mozilla/FloatingPoint.h"
 #include "MediaSegment.h"
@@ -157,7 +158,7 @@ IntType TruncateFloatToInt(FloatType f) {
   using std::numeric_limits;
   static_assert(mozilla::IsIntegral<IntType>::value == true,
                 "IntType must be an integral type");
-  static_assert(mozilla::IsFloatingPoint<FloatType>::value == true,
+  static_assert(std::is_floating_point_v<FloatType> == true,
                 "FloatType must be a floating point type");
 
   if (mozilla::IsNaN(f)) {

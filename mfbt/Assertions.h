@@ -416,6 +416,7 @@ MOZ_END_EXTERN_C
 
 #ifdef __cplusplus
 #  include "mozilla/TypeTraits.h"
+#  include <type_traits>
 namespace mozilla {
 namespace detail {
 
@@ -428,7 +429,7 @@ struct AssertionConditionType {
   static_assert(!IsFunction<ValueT>::value,
                 "Expected boolean assertion condition, got a function! Did "
                 "you intend to call that function?");
-  static_assert(!IsFloatingPoint<ValueT>::value,
+  static_assert(!std::is_floating_point_v<ValueT>,
                 "It's often a bad idea to assert that a floating-point number "
                 "is nonzero, because such assertions tend to intermittently "
                 "fail. Shouldn't your code gracefully handle this case instead "
