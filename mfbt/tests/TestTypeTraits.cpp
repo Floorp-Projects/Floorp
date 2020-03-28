@@ -7,7 +7,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
-using mozilla::AddPointer;
 using mozilla::AddRvalueReference;
 using mozilla::DeclVal;
 using mozilla::IsArray;
@@ -156,17 +155,6 @@ static_assert(IsSame<RemovePointer<void (*)()>::Type, void()>::value,
 static_assert(IsSame<RemovePointer<bool TestRemovePointer::*>::Type,
                      bool TestRemovePointer::*>::value,
               "removing pointer from bool S::* must return bool S::*");
-
-static_assert(IsSame<AddPointer<int>::Type, int*>::value,
-              "adding pointer to int must return int*");
-static_assert(IsSame<AddPointer<int*>::Type, int**>::value,
-              "adding pointer to int* must return int**");
-static_assert(IsSame<AddPointer<int&>::Type, int*>::value,
-              "adding pointer to int& must return int*");
-static_assert(IsSame<AddPointer<int* const>::Type, int* const*>::value,
-              "adding pointer to int* const must return int* const*");
-static_assert(IsSame<AddPointer<int* volatile>::Type, int* volatile*>::value,
-              "adding pointer to int* volatile must return int* volatile*");
 
 /*
  * Android's broken [u]intptr_t inttype macros are broken because its PRI*PTR
