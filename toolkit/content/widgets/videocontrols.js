@@ -342,7 +342,7 @@ this.VideoControlsImplWidget = class {
           // We have to check again if the media has audio here.
           if (!this.isAudioOnly && !this.video.mozHasAudio) {
             this.muteButton.setAttribute("noAudio", "true");
-            this.muteButton.setAttribute("disabled", "true");
+            this.muteButton.disabled = true;
           }
         }
 
@@ -697,7 +697,7 @@ this.VideoControlsImplWidget = class {
             );
             if (!this.isAudioOnly && !this.video.mozHasAudio) {
               this.muteButton.setAttribute("noAudio", "true");
-              this.muteButton.setAttribute("disabled", "true");
+              this.muteButton.disabled = true;
             }
             this.adjustControlSize();
             this.updatePictureInPictureToggleDisplay();
@@ -2571,7 +2571,7 @@ this.VideoControlsImplWidget = class {
       %videocontrolsDTD;
       ]>
       <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
-        <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
+        <link rel="stylesheet" href="chrome://global/skin/media/videocontrols.css" />
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div id="statusOverlay" class="statusOverlay stackItem" hidden="true">
             <div id="statusIcon" class="statusIcon"></div>
@@ -2830,7 +2830,7 @@ this.NoControlsMobileImplWidget = class {
       %videocontrolsDTD;
       ]>
       <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
-        <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
+        <link rel="stylesheet" href="chrome://global/skin/media/videocontrols.css" />
         <div id="controlsContainer" class="controlsContainer" role="none" hidden="true">
           <div class="controlsOverlay stackItem">
             <div class="controlsSpacerStack">
@@ -2885,7 +2885,7 @@ this.NoControlsPictureInPictureImplWidget = class {
       %videocontrolsDTD;
       ]>
       <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
-        <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
+        <link rel="stylesheet" href="chrome://global/skin/media/videocontrols.css" />
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div class="pictureInPictureOverlay stackItem" status="pictureInPicture">
             <div id="statusIcon" class="statusIcon" type="pictureInPicture"></div>
@@ -3032,7 +3032,7 @@ this.NoControlsDesktopImplWidget = class {
       %videocontrolsDTD;
       ]>
       <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
-        <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
+        <link rel="stylesheet" href="chrome://global/skin/media/videocontrols.css" />
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div class="controlsOverlay stackItem">
             <button id="pictureInPictureToggleButton" class="pictureInPictureToggleButton">
