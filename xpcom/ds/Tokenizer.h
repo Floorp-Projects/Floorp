@@ -386,8 +386,8 @@ class TTokenizer : public TokenizerBase<TChar> {
    * Same as above, but accepts an integer with an optional minus sign.
    */
   template <typename T, typename V = typename EnableIf<
-                            std::is_signed_v<typename RemovePointer<T>::Type>,
-                            typename RemovePointer<T>::Type>::Type>
+                            std::is_signed_v<std::remove_pointer_t<T>>,
+                            std::remove_pointer_t<T>>::Type>
   [[nodiscard]] bool ReadSignedInteger(T* aValue) {
     MOZ_RELEASE_ASSERT(aValue);
 

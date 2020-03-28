@@ -41,8 +41,7 @@ class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
 
 namespace {
 
-template <typename T,
-          bool = IsRefcounted<typename RemovePointer<T>::Type>::value,
+template <typename T, bool = IsRefcounted<std::remove_pointer_t<T>>::value,
           bool = (IsConvertible<T, nsISupports*>::value ||
                   IsConvertible<T*, nsISupports*>::value)>
 struct StorageTypeHelper {
