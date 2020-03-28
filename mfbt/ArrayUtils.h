@@ -23,7 +23,6 @@
 #  include "mozilla/Alignment.h"
 #  include "mozilla/Array.h"
 #  include "mozilla/EnumeratedArray.h"
-#  include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

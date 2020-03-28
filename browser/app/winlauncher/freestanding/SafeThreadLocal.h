@@ -11,7 +11,6 @@
 
 #include "mozilla/NativeNt.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 namespace freestanding {

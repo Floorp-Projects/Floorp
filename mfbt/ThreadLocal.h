@@ -17,7 +17,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

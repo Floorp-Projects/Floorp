@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "mozilla/TupleCycleCollection.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 

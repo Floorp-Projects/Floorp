@@ -61,7 +61,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include <limits>

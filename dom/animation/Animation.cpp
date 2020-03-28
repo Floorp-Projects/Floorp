@@ -20,7 +20,6 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/Maybe.h"       // For Maybe
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/TypeTraits.h"  // For std::forward<>
 #include "nsAnimationManager.h"  // For CSSAnimation
 #include "nsComputedDOMStyle.h"
 #include "nsDOMMutationObserver.h"    // For nsAutoAnimationMutationBatch

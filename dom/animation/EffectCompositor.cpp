@@ -27,7 +27,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/TypeTraits.h"  // For std::forward<>
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"

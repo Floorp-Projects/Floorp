@@ -52,7 +52,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"

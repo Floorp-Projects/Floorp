@@ -7,7 +7,6 @@
 
 #include <type_traits>
 
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "DecoderData.h"
 #include "Index.h"

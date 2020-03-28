@@ -15,7 +15,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Types.h"
-#include "mozilla/TypeTraits.h"
 
 #include <limits>
 #include <stdint.h>

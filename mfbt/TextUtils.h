@@ -11,7 +11,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Latin1.h"
-#include "mozilla/TypeTraits.h"
 
 #ifdef MOZ_HAS_JSRUST
 // Can't include mozilla/Encoding.h here.

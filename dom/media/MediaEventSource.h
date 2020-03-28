@@ -14,7 +14,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include "nsISupportsImpl.h"

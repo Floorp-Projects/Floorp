@@ -7,7 +7,6 @@
 #include "FileDescriptor.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 #include "nsDebug.h"
 
 #ifdef XP_WIN

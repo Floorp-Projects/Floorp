@@ -14,7 +14,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleVersionInfo.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WinDllServices.h"

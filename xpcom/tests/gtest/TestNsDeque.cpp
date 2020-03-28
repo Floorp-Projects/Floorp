@@ -7,7 +7,6 @@
 #include "gtest/gtest.h"
 #include "nsDeque.h"
 #include "nsCRT.h"
-#include "mozilla/TypeTraits.h"
 #include <stdio.h>
 #include <functional>
 #include <type_traits>

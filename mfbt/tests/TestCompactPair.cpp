@@ -7,7 +7,6 @@
 #include <type_traits>
 
 #include "mozilla/CompactPair.h"
-#include "mozilla/TypeTraits.h"
 
 using mozilla::CompactPair;
 using mozilla::MakeCompactPair;

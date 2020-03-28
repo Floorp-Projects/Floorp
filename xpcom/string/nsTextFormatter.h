@@ -35,7 +35,6 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "mozilla/Span.h"
-#include "mozilla/TypeTraits.h"
 
 #ifdef XPCOM_GLUE
 #  error \

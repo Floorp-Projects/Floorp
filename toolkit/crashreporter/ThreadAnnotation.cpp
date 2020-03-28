@@ -8,7 +8,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 #include "prthread.h"

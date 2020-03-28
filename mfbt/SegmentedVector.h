@@ -29,7 +29,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
