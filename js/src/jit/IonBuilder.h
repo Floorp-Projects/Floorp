@@ -663,7 +663,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_instrumentation_scriptid();
   AbortReasonOr<Ok> jsop_coalesce();
   AbortReasonOr<Ok> jsop_objwithproto();
-  AbortReasonOr<Ok> jsop_builtinproto();
+  AbortReasonOr<Ok> jsop_functionproto();
   AbortReasonOr<Ok> jsop_checkreturn();
   AbortReasonOr<Ok> jsop_checkthis();
   AbortReasonOr<Ok> jsop_checkthisreinit();

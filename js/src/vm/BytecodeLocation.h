@@ -285,11 +285,6 @@ class BytecodeLocation {
     return CheckIsCallableKind(GET_UINT8(rawBytecode_));
   }
 
-  JSProtoKey getProtoKey() const {
-    MOZ_ASSERT(is(JSOp::BuiltinProto));
-    return JSProtoKey(GET_UINT8(rawBytecode_));
-  }
-
   uint32_t getNewArrayLength() const {
     MOZ_ASSERT(is(JSOp::NewArray));
     return GET_UINT32(rawBytecode_);

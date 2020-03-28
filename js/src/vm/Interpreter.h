@@ -576,7 +576,7 @@ JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
 
 JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
 
-JSObject* BuiltinProtoOperation(JSContext* cx, jsbytecode* pc);
+JSObject* FunctionProtoOperation(JSContext* cx);
 
 bool ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind);
 

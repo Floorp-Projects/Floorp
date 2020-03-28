@@ -4059,14 +4059,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(CheckClassHeritage)
 
-    CASE(BuiltinProto) {
-      JSObject* builtin = BuiltinProtoOperation(cx, REGS.pc);
+    CASE(FunctionProto) {
+      JSObject* builtin = FunctionProtoOperation(cx);
       if (!builtin) {
         goto error;
       }
       PUSH_OBJECT(*builtin);
     }
-    END_CASE(BuiltinProto)
+    END_CASE(FunctionProto)
 
     CASE(FunWithProto) {
       ReservedRooted<JSObject*> proto(&rootObject1, &REGS.sp[-1].toObject());
@@ -4644,12 +4644,8 @@ JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
   return GetOrCreateModuleMetaObject(cx, module);
 }
 
-JSObject* js::BuiltinProtoOperation(JSContext* cx, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::BuiltinProto);
-  MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
-
-  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
-  return GlobalObject::getOrCreatePrototype(cx, key);
+JSObject* js::FunctionProtoOperation(JSContext* cx) {
+  return GlobalObject::getOrCreatePrototype(cx, JSProto_Function);
 }
 
 bool js::ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind) {
