@@ -77,8 +77,6 @@ export default class LoginListItemFactory {
         alertIcon,
         "about-logins-list-item-vulnerable-password-icon"
       );
-    } else {
-      alertIcon.src = "";
     }
   }
 }
