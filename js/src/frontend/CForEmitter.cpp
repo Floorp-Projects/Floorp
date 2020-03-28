@@ -8,9 +8,10 @@
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/EmitterScope.h"     // EmitterScope
+#include "frontend/SourceNotes.h"      // SRC_*, SrcNote
+#include "vm/JSScript.h"               // JSTRY_LOOP
 #include "vm/Opcodes.h"                // JSOp
 #include "vm/Scope.h"                  // ScopeKind
-#include "vm/TryNoteKind.h"            // TryNoteKind
 
 using namespace js;
 using namespace js::frontend;
@@ -165,7 +166,7 @@ bool CForEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   // Emit the loop-closing jump.
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, TryNoteKind::Loop)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, JSTRY_LOOP)) {
     //              [stack]
     return false;
   }

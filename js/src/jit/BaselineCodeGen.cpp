@@ -4744,7 +4744,7 @@ bool BaselineCodeGen<Handler>::emit_TypeofExpr() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_ThrowMsg() {
   prepareVMCall();
-  pushUint8BytecodeOperandArg(R2.scratchReg());
+  pushUint16BytecodeOperandArg(R2.scratchReg());
 
   using Fn = bool (*)(JSContext*, const unsigned);
   return callVM<Fn, js::ThrowMsgOperation>();
@@ -6402,22 +6402,24 @@ bool BaselineCodeGen<Handler>::emit_InitHomeObject() {
 }
 
 template <>
-bool BaselineCompilerCodeGen::emit_FunctionProto() {
-  // The function prototype is a constant for a given global.
-  JSObject* funProto = FunctionProtoOperation(cx);
-  if (!funProto) {
+bool BaselineCompilerCodeGen::emit_BuiltinProto() {
+  // The builtin prototype is a constant for a given global.
+  JSObject* builtin = BuiltinProtoOperation(cx, handler.pc());
+  if (!builtin) {
     return false;
   }
-  frame.push(ObjectValue(*funProto));
+  frame.push(ObjectValue(*builtin));
   return true;
 }
 
 template <>
-bool BaselineInterpreterCodeGen::emit_FunctionProto() {
+bool BaselineInterpreterCodeGen::emit_BuiltinProto() {
   prepareVMCall();
 
-  using Fn = JSObject* (*)(JSContext*);
-  if (!callVM<Fn, FunctionProtoOperation>()) {
+  pushBytecodePCArg();
+
+  using Fn = JSObject* (*)(JSContext*, jsbytecode*);
+  if (!callVM<Fn, BuiltinProtoOperation>()) {
     return false;
   }
 

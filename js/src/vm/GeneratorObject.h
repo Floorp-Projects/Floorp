@@ -10,7 +10,6 @@
 #include "js/Class.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
-#include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Stack.h"
@@ -18,6 +17,8 @@
 namespace js {
 
 extern const JSClass GeneratorFunctionClass;
+
+enum class GeneratorResumeKind { Next, Throw, Return };
 
 class AbstractGeneratorObject : public NativeObject {
  public:

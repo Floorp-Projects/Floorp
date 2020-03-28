@@ -12,7 +12,6 @@
 
 #include "jstypes.h"
 #include "js/CompileOptions.h"
-#include "vm/TryNoteKind.h"  // TryNoteKind
 
 /*
  * Data shared between the vm and stencil structures.
@@ -21,32 +20,65 @@
 namespace js {
 
 /*
+ * [SMDOC] Try Notes
+ *
+ * Trynotes are attached to regions that are involved with
+ * exception unwinding. They can be broken up into four categories:
+ *
+ * 1. CATCH and FINALLY: Basic exception handling. A CATCH trynote
+ *    covers the range of the associated try. A FINALLY trynote covers
+ *    the try and the catch.
+
+ * 2. FOR_IN and DESTRUCTURING: These operations create an iterator
+ *    which must be cleaned up (by calling IteratorClose) during
+ *    exception unwinding.
+ *
+ * 3. FOR_OF and FOR_OF_ITERCLOSE: For-of loops handle unwinding using
+ *    catch blocks. These trynotes are used for for-of breaks/returns,
+ *    which create regions that are lexically within a for-of block,
+ *    but logically outside of it. See TryNoteIter::settle for more
+ *    details.
+ *
+ * 4. LOOP: This represents normal for/while/do-while loops. It is
+ *    unnecessary for exception unwinding, but storing the boundaries
+ *    of loops here is helpful for heuristics that need to know
+ *    whether a given op is inside a loop.
+ */
+enum TryNoteKind {
+  JSTRY_CATCH,
+  JSTRY_FINALLY,
+  JSTRY_FOR_IN,
+  JSTRY_DESTRUCTURING,
+  JSTRY_FOR_OF,
+  JSTRY_FOR_OF_ITERCLOSE,
+  JSTRY_LOOP
+};
+
+/*
  * Exception handling record.
  */
 struct TryNote {
-  uint32_t kind_;      /* one of TryNoteKind */
+  uint32_t kind;       /* one of TryNoteKind */
   uint32_t stackDepth; /* stack depth upon exception handler entry */
   uint32_t start;      /* start of the try statement or loop relative
                           to script->code() */
   uint32_t length;     /* length of the try statement or loop */
 
   TryNote(uint32_t kind, uint32_t stackDepth, uint32_t start, uint32_t length)
-      : kind_(kind), stackDepth(stackDepth), start(start), length(length) {}
+      : kind(kind), stackDepth(stackDepth), start(start), length(length) {}
 
   TryNote() = default;
 
-  TryNoteKind kind() const { return TryNoteKind(kind_); }
-
   bool isLoop() const {
-    switch (kind()) {
-      case TryNoteKind::Loop:
-      case TryNoteKind::ForIn:
-      case TryNoteKind::ForOf:
+    switch (kind) {
+      case JSTRY_LOOP:
+      case JSTRY_FOR_IN:
+      case JSTRY_FOR_OF:
         return true;
-      case TryNoteKind::Catch:
-      case TryNoteKind::Finally:
-      case TryNoteKind::ForOfIterClose:
-      case TryNoteKind::Destructuring:
+      case JSTRY_CATCH:
+      case JSTRY_FINALLY:
+      case JSTRY_FOR_OF_ITERCLOSE:
+      case JSTRY_DESTRUCTURING:
         return false;
     }
     MOZ_CRASH("Unexpected try note kind");
@@ -362,7 +394,7 @@ class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
 // ----
 //   (REQUIRED) Flags structure
 //   (REQUIRED) Array of jsbytecode constituting code()
-//   (REQUIRED) Array of SrcNote constituting notes()
+//   (REQUIRED) Array of jssrcnote constituting notes()
 // ----
 //   (OPTIONAL) Array of uint32_t optional-offsets
 //  optArrayOffset:
@@ -520,7 +552,8 @@ class alignas(uint32_t) ImmutableScriptData final {
       JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
       uint32_t bodyScopeIndex, uint32_t numICEntries,
       uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
-      mozilla::Span<const jsbytecode> code, mozilla::Span<const SrcNote> notes,
+      mozilla::Span<const jsbytecode> code,
+      mozilla::Span<const jssrcnote> notes,
       mozilla::Span<const uint32_t> resumeOffsets,
       mozilla::Span<const ScopeNote> scopeNotes,
       mozilla::Span<const TryNote> tryNotes);
@@ -562,8 +595,8 @@ class alignas(uint32_t) ImmutableScriptData final {
   mozilla::Span<jsbytecode> codeSpan() { return {code(), codeLength()}; }
 
   uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
-  SrcNote* notes() { return offsetToPointer<SrcNote>(noteOffset()); }
-  mozilla::Span<SrcNote> notesSpan() { return {notes(), noteLength()}; }
+  jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
+  mozilla::Span<jssrcnote> notesSpan() { return {notes(), noteLength()}; }
 
   mozilla::Span<uint32_t> resumeOffsets() {
     return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),

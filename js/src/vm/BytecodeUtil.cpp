@@ -28,7 +28,7 @@
 #include "jstypes.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
+#include "frontend/SourceNotes.h"
 #include "gc/PublicIterators.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
@@ -911,12 +911,12 @@ bool BytecodeParser::parse() {
         for (const TryNote& tn : script_->trynotes()) {
           if (tn.start == offset + JSOpLength_Try) {
             uint32_t catchOffset = tn.start + tn.length;
-            if (tn.kind() == TryNoteKind::Catch) {
+            if (tn.kind == JSTRY_CATCH) {
               if (!addJump(catchOffset, stackDepth, offsetStack, pc,
                            JumpKind::TryCatch)) {
                 return false;
               }
-            } else if (tn.kind() == TryNoteKind::Finally) {
+            } else if (tn.kind == JSTRY_FINALLY) {
               if (!addJump(catchOffset, stackDepth, offsetStack, pc,
                            JumpKind::TryFinally)) {
                 return false;
@@ -1066,22 +1066,18 @@ static MOZ_MUST_USE bool DisassembleAtPC(
       }
     }
     if (showAll) {
-      const SrcNote* sn = GetSrcNote(cx, script, next);
+      jssrcnote* sn = GetSrcNote(cx, script, next);
       if (sn) {
-        MOZ_ASSERT(!sn->isTerminator());
-        SrcNoteIterator iter(sn);
-        while (true) {
-          ++iter;
-          auto next = *iter;
-          if (!(!next->isTerminator() && next->delta() == 0)) {
-            break;
-          }
-          if (!sp->jsprintf("%s\n    ", sn->name())) {
+        MOZ_ASSERT(!SN_IS_TERMINATOR(sn));
+        jssrcnote* next = SN_NEXT(sn);
+        while (!SN_IS_TERMINATOR(next) && SN_DELTA(next) == 0) {
+          if (!sp->jsprintf("%02u\n    ", SN_TYPE(sn))) {
             return false;
           }
-          sn = *iter;
+          sn = next;
+          next = SN_NEXT(sn);
         }
-        if (!sp->jsprintf("%s ", sn->name())) {
+        if (!sp->jsprintf("%02u ", SN_TYPE(sn))) {
           return false;
         }
       } else {
@@ -1745,8 +1741,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
     // Handle simple cases of binary and unary operators.
     switch (CodeSpec(op).nuses) {
       case 2: {
-        const SrcNote* sn = GetSrcNote(cx, script, pc);
-        if (!sn || sn->type() != SrcNoteType::AssignOp) {
+        jssrcnote* sn = GetSrcNote(cx, script, pc);
+        if (!sn || SN_TYPE(sn) != SRC_ASSIGNOP) {
           return write("(") && decompilePCForStackOperand(pc, -2) &&
                  write(" ") && write(token) && write(" ") &&
                  decompilePCForStackOperand(pc, -1) && write(")");

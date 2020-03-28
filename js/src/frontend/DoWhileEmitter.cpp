@@ -9,7 +9,6 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
-#include "vm/TryNoteKind.h"  // TryNoteKind
 
 using namespace js;
 using namespace js::frontend;
@@ -63,7 +62,7 @@ bool DoWhileEmitter::emitCond() {
 bool DoWhileEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Cond);
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::IfNe, TryNoteKind::Loop)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOp::IfNe, JSTRY_LOOP)) {
     return false;
   }
 
