@@ -11,7 +11,6 @@
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/IfEmitter.h"        // IfEmitter
 #include "frontend/SharedContext.h"    // SharedContext
-#include "frontend/SourceNotes.h"      // SRC_*
 #include "gc/AllocKind.h"              // AllocKind
 #include "js/Id.h"                     // jsid
 #include "js/Value.h"                  // UndefinedHandleValue

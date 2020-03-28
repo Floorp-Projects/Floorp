@@ -394,7 +394,7 @@ class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
 // ----
 //   (REQUIRED) Flags structure
 //   (REQUIRED) Array of jsbytecode constituting code()
-//   (REQUIRED) Array of jssrcnote constituting notes()
+//   (REQUIRED) Array of SrcNote constituting notes()
 // ----
 //   (OPTIONAL) Array of uint32_t optional-offsets
 //  optArrayOffset:
@@ -552,8 +552,7 @@ class alignas(uint32_t) ImmutableScriptData final {
       JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
       uint32_t bodyScopeIndex, uint32_t numICEntries,
       uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
-      mozilla::Span<const jsbytecode> code,
-      mozilla::Span<const jssrcnote> notes,
+      mozilla::Span<const jsbytecode> code, mozilla::Span<const SrcNote> notes,
       mozilla::Span<const uint32_t> resumeOffsets,
       mozilla::Span<const ScopeNote> scopeNotes,
       mozilla::Span<const TryNote> tryNotes);
@@ -595,8 +594,8 @@ class alignas(uint32_t) ImmutableScriptData final {
   mozilla::Span<jsbytecode> codeSpan() { return {code(), codeLength()}; }
 
   uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
-  jssrcnote* notes() { return offsetToPointer<jssrcnote>(noteOffset()); }
-  mozilla::Span<jssrcnote> notesSpan() { return {notes(), noteLength()}; }
+  SrcNote* notes() { return offsetToPointer<SrcNote>(noteOffset()); }
+  mozilla::Span<SrcNote> notesSpan() { return {notes(), noteLength()}; }
 
   mozilla::Span<uint32_t> resumeOffsets() {
     return mozilla::MakeSpan(offsetToPointer<uint32_t>(resumeOffsetsOffset()),
