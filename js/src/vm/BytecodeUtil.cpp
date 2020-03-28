@@ -22,6 +22,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <type_traits>
 
 #include "jsapi.h"
 #include "jsnum.h"
@@ -291,7 +292,7 @@ struct OffsetAndDefIndex {
 namespace mozilla {
 
 template <>
-struct IsPod<OffsetAndDefIndex> : TrueType {};
+struct IsPod<OffsetAndDefIndex> : std::true_type {};
 
 }  // namespace mozilla
 

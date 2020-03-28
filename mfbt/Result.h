@@ -285,7 +285,7 @@ template <typename T>
 struct IsResult : std::false_type {};
 
 template <typename V, typename E>
-struct IsResult<Result<V, E>> : TrueType {};
+struct IsResult<Result<V, E>> : std::true_type {};
 
 }  // namespace detail
 

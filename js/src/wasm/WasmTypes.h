@@ -29,6 +29,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 
+#include <type_traits>
+
 #include "NamespaceImports.h"
 
 #include "ds/LifoAlloc.h"
@@ -124,15 +126,15 @@ typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
 // which is pretty verbose to do within js::wasm, so factor that process out
 // into a macro.
 
-#define WASM_DECLARE_POD_VECTOR(Type, VectorName) \
-  }                                               \
-  }                                               \
-  namespace mozilla {                             \
-  template <>                                     \
-  struct IsPod<js::wasm::Type> : TrueType {};     \
-  }                                               \
-  namespace js {                                  \
-  namespace wasm {                                \
+#define WASM_DECLARE_POD_VECTOR(Type, VectorName)   \
+  }                                                 \
+  }                                                 \
+  namespace mozilla {                               \
+  template <>                                       \
+  struct IsPod<js::wasm::Type> : std::true_type {}; \
+  }                                                 \
+  namespace js {                                    \
+  namespace wasm {                                  \
   typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
 
 // A wasm Module and everything it contains must support serialization and

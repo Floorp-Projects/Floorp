@@ -22,11 +22,6 @@
 
 namespace mozilla {
 
-/* 20.9.3 Helper classes [meta.help] */
-
-/** Convenient aliases. */
-typedef std::integral_constant<bool, true> TrueType;
-
 /* 20.9.4 Unary type traits [meta.unary] */
 
 /* 20.9.4.3 Type properties [meta.unary.prop] */
@@ -34,7 +29,7 @@ typedef std::integral_constant<bool, true> TrueType;
 /**
  * Traits class for identifying POD types.  Until C++11 there's no automatic
  * way to detect PODs, so for the moment this is done manually.  Users may
- * define specializations of this class that inherit from mozilla::TrueType and
+ * define specializations of this class that inherit from std::true_type and
  * std::false_type (or equivalently std::integral_constant<bool, true or
  * false>, or conveniently from mozilla::IsPod for composite types) as needed to
  * ensure correct IsPod behavior.
@@ -43,45 +38,45 @@ template <typename T>
 struct IsPod : public std::false_type {};
 
 template <>
-struct IsPod<char> : TrueType {};
+struct IsPod<char> : std::true_type {};
 template <>
-struct IsPod<signed char> : TrueType {};
+struct IsPod<signed char> : std::true_type {};
 template <>
-struct IsPod<unsigned char> : TrueType {};
+struct IsPod<unsigned char> : std::true_type {};
 template <>
-struct IsPod<short> : TrueType {};
+struct IsPod<short> : std::true_type {};
 template <>
-struct IsPod<unsigned short> : TrueType {};
+struct IsPod<unsigned short> : std::true_type {};
 template <>
-struct IsPod<int> : TrueType {};
+struct IsPod<int> : std::true_type {};
 template <>
-struct IsPod<unsigned int> : TrueType {};
+struct IsPod<unsigned int> : std::true_type {};
 template <>
-struct IsPod<long> : TrueType {};
+struct IsPod<long> : std::true_type {};
 template <>
-struct IsPod<unsigned long> : TrueType {};
+struct IsPod<unsigned long> : std::true_type {};
 template <>
-struct IsPod<long long> : TrueType {};
+struct IsPod<long long> : std::true_type {};
 template <>
-struct IsPod<unsigned long long> : TrueType {};
+struct IsPod<unsigned long long> : std::true_type {};
 template <>
-struct IsPod<bool> : TrueType {};
+struct IsPod<bool> : std::true_type {};
 template <>
-struct IsPod<float> : TrueType {};
+struct IsPod<float> : std::true_type {};
 template <>
-struct IsPod<double> : TrueType {};
+struct IsPod<double> : std::true_type {};
 template <>
-struct IsPod<wchar_t> : TrueType {};
+struct IsPod<wchar_t> : std::true_type {};
 template <>
-struct IsPod<char16_t> : TrueType {};
+struct IsPod<char16_t> : std::true_type {};
 template <typename T>
-struct IsPod<T*> : TrueType {};
+struct IsPod<T*> : std::true_type {};
 
 namespace detail {
 
 struct DoIsDestructibleImpl {
   template <typename T, typename = decltype(std::declval<T&>().~T())>
-  static TrueType test(int);
+  static std::true_type test(int);
   template <typename T>
   static std::false_type test(...);
 };
@@ -125,7 +120,7 @@ template <typename T, typename U>
 struct IsSame : std::false_type {};
 
 template <typename T>
-struct IsSame<T, T> : TrueType {};
+struct IsSame<T, T> : std::true_type {};
 
 } /* namespace mozilla */
 

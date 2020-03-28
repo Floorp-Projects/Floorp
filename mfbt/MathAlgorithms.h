@@ -51,17 +51,17 @@ template <typename T>
 struct AllowDeprecatedAbsFixed : std::false_type {};
 
 template <>
-struct AllowDeprecatedAbsFixed<int32_t> : TrueType {};
+struct AllowDeprecatedAbsFixed<int32_t> : std::true_type {};
 template <>
-struct AllowDeprecatedAbsFixed<int64_t> : TrueType {};
+struct AllowDeprecatedAbsFixed<int64_t> : std::true_type {};
 
 template <typename T>
 struct AllowDeprecatedAbs : AllowDeprecatedAbsFixed<T> {};
 
 template <>
-struct AllowDeprecatedAbs<int> : TrueType {};
+struct AllowDeprecatedAbs<int> : std::true_type {};
 template <>
-struct AllowDeprecatedAbs<long> : TrueType {};
+struct AllowDeprecatedAbs<long> : std::true_type {};
 
 }  // namespace detail
 

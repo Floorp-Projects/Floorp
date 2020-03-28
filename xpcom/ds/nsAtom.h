@@ -7,6 +7,8 @@
 #ifndef nsAtom_h
 #define nsAtom_h
 
+#include <type_traits>
+
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "mozilla/Atomics.h"
@@ -87,7 +89,7 @@ class nsAtom {
   inline MozExternalRefCountType AddRef();
   inline MozExternalRefCountType Release();
 
-  typedef mozilla::TrueType HasThreadSafeRefCnt;
+  using HasThreadSafeRefCnt = std::true_type;
 
  protected:
   // Used by nsStaticAtom.

@@ -113,7 +113,8 @@ def main(output, *filenames):
 
     print("\ntemplate<class T> struct IsCategoricalLabelEnum : std::false_type {};", file=output)
     for name, _, _ in enums:
-        print("template<> struct IsCategoricalLabelEnum<%s> : TrueType {};" % name, file=output)
+        print("template<> struct IsCategoricalLabelEnum<%s> : std::true_type {};" % name,
+              file=output)
 
     print("\ntemplate<class T> struct CategoricalLabelId {};", file=output)
     for name, _, id in enums:

@@ -59,10 +59,10 @@ template <typename T>
 struct IsAtomic : std::false_type {};
 
 template <typename T, MemoryOrdering Order>
-struct IsAtomic<Atomic<T, Order>> : TrueType {};
+struct IsAtomic<Atomic<T, Order>> : std::true_type {};
 
 template <typename T>
-struct IsAtomic<std::atomic<T>> : TrueType {};
+struct IsAtomic<std::atomic<T>> : std::true_type {};
 
 namespace StaticPrefs {
 

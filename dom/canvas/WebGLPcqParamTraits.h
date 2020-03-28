@@ -20,41 +20,42 @@ template <typename T>
 struct PcqParamTraits;
 
 template <>
-struct IsTriviallySerializable<FloatOrInt> : TrueType {};
+struct IsTriviallySerializable<FloatOrInt> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<webgl::ShaderPrecisionFormat> : TrueType {};
+struct IsTriviallySerializable<webgl::ShaderPrecisionFormat> : std::true_type {
+};
 
 template <>
-struct IsTriviallySerializable<WebGLContextOptions> : TrueType {};
+struct IsTriviallySerializable<WebGLContextOptions> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<WebGLPixelStore> : TrueType {};
+struct IsTriviallySerializable<WebGLPixelStore> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<WebGLTexImageData> : TrueType {};
+struct IsTriviallySerializable<WebGLTexImageData> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<WebGLTexPboOffset> : TrueType {};
+struct IsTriviallySerializable<WebGLTexPboOffset> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<webgl::ExtensionBits> : TrueType {};
+struct IsTriviallySerializable<webgl::ExtensionBits> : std::true_type {};
 template <>
-struct IsTriviallySerializable<webgl::GetUniformData> : TrueType {};
+struct IsTriviallySerializable<webgl::GetUniformData> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<ICRData> : TrueType {};
+struct IsTriviallySerializable<ICRData> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<gfx::IntSize> : TrueType {};
+struct IsTriviallySerializable<gfx::IntSize> : std::true_type {};
 
 template <typename T>
-struct IsTriviallySerializable<avec2<T>> : TrueType {};
+struct IsTriviallySerializable<avec2<T>> : std::true_type {};
 template <typename T>
-struct IsTriviallySerializable<avec3<T>> : TrueType {};
+struct IsTriviallySerializable<avec3<T>> : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<webgl::TexUnpackBlob> : TrueType {};
+struct IsTriviallySerializable<webgl::TexUnpackBlob> : std::true_type {};
 /*
 template <>
 struct PcqParamTraits<WebGLActiveInfo> {
