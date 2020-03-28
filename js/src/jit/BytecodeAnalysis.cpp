@@ -102,8 +102,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
       case JSOp::Try: {
         for (const TryNote& tn : script_->trynotes()) {
           if (tn.start == offset + JSOpLength_Try &&
-              (tn.kind() == TryNoteKind::Catch ||
-               tn.kind() == TryNoteKind::Finally)) {
+              (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY)) {
             uint32_t catchOrFinallyOffset = tn.start + tn.length;
             infos_[catchOrFinallyOffset].init(stackDepth);
             infos_[catchOrFinallyOffset].jumpTarget = true;

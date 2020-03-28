@@ -28,7 +28,6 @@
 
 #include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/NameAnalysisTypes.h"
-#include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
@@ -2579,7 +2578,7 @@ class JSScript : public js::BaseScript {
     MOZ_ASSERT(sharedData_);
     return immutableScriptData()->noteLength();
   }
-  js::SrcNote* notes() const {
+  jssrcnote* notes() const {
     MOZ_ASSERT(sharedData_);
     return immutableScriptData()->notes();
   }
@@ -2748,11 +2747,9 @@ extern JS::UniqueChars FormatIntroducedFilename(JSContext* cx,
 
 struct GSNCache;
 
-const js::SrcNote* GetSrcNote(GSNCache& cache, JSScript* script,
-                              jsbytecode* pc);
+jssrcnote* GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc);
 
-extern const js::SrcNote* GetSrcNote(JSContext* cx, JSScript* script,
-                                     jsbytecode* pc);
+extern jssrcnote* GetSrcNote(JSContext* cx, JSScript* script, jsbytecode* pc);
 
 extern jsbytecode* LineNumberToPC(JSScript* script, unsigned lineno);
 
@@ -2765,7 +2762,7 @@ namespace js {
 extern unsigned PCToLineNumber(JSScript* script, jsbytecode* pc,
                                unsigned* columnp = nullptr);
 
-extern unsigned PCToLineNumber(unsigned startLine, SrcNote* notes,
+extern unsigned PCToLineNumber(unsigned startLine, jssrcnote* notes,
                                jsbytecode* code, jsbytecode* pc,
                                unsigned* columnp = nullptr);
 

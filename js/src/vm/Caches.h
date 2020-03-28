@@ -11,7 +11,7 @@
 
 #include "jsmath.h"
 
-#include "frontend/SourceNotes.h"  // SrcNote
+#include "frontend/SourceNotes.h"
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
@@ -32,7 +32,7 @@ namespace js {
  * by offset from the bytecode with which they were generated.
  */
 struct GSNCache {
-  typedef HashMap<jsbytecode*, const SrcNote*, PointerHasher<jsbytecode*>,
+  typedef HashMap<jsbytecode*, jssrcnote*, PointerHasher<jsbytecode*>,
                   SystemAllocPolicy>
       Map;
 

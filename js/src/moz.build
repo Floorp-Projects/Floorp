@@ -360,7 +360,6 @@ UNIFIED_SOURCES += [
     'vm/StringType.cpp',
     'vm/SymbolType.cpp',
     'vm/TaggedProto.cpp',
-    'vm/ThrowMsgKind.cpp',
     'vm/Time.cpp',
     'vm/ToSource.cpp',
     'vm/TypedArrayObject.cpp',

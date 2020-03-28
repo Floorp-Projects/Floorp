@@ -240,12 +240,12 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         }
         break;
 
-      case JSOp::FunctionProto: {
+      case JSOp::BuiltinProto: {
         // If we already resolved this proto we can bake it in.
-        if (JSObject* proto =
-                cx_->global()->maybeGetPrototype(JSProto_Function)) {
-          if (!AddOpSnapshot<WarpFunctionProto>(alloc_, opSnapshots, offset,
-                                                proto)) {
+        JSProtoKey key = loc.getProtoKey();
+        if (JSObject* proto = cx_->global()->maybeGetPrototype(key)) {
+          if (!AddOpSnapshot<WarpBuiltinProto>(alloc_, opSnapshots, offset,
+                                               proto)) {
             return abort(AbortReason::Alloc);
           }
         }

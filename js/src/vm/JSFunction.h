@@ -13,7 +13,6 @@
 
 #include "jstypes.h"
 
-#include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 
@@ -30,6 +29,8 @@ static constexpr uint32_t BoundFunctionEnvArgsSlot = 4;
 
 static const char FunctionConstructorMedialSigils[] = ") {\n";
 static const char FunctionConstructorFinalBrace[] = "\n}";
+
+enum class FunctionPrefixKind { None, Get, Set };
 
 class FunctionFlags {
  public:

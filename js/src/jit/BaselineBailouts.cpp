@@ -496,10 +496,10 @@ static bool HasLiveStackValueAtDepth(HandleScript script, jsbytecode* pc,
   for (TryNoteIterAllNoGC tni(script, pc); !tni.done(); ++tni) {
     const TryNote& tn = **tni;
 
-    switch (tn.kind()) {
-      case TryNoteKind::ForIn:
-      case TryNoteKind::ForOf:
-      case TryNoteKind::Destructuring:
+    switch (tn.kind) {
+      case JSTRY_FOR_IN:
+      case JSTRY_FOR_OF:
+      case JSTRY_DESTRUCTURING:
         MOZ_ASSERT(tn.stackDepth <= stackDepth);
         if (stackSlotIndex < tn.stackDepth) {
           return true;

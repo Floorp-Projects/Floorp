@@ -20,7 +20,6 @@
 #include "frontend/TDZCheckCache.h"  // TDZCheckCache
 #include "gc/Rooting.h"              // RootedAtom, HandleAtom
 #include "vm/StringType.h"           // JSAtom
-#include "vm/TryNoteKind.h"          // TryNoteKind
 
 namespace js {
 namespace frontend {

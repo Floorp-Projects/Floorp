@@ -247,8 +247,8 @@ bool ObjectGroup::useSingletonForAllocationSite(JSScript* script,
   uint32_t offset = script->pcToOffset(pc);
 
   for (const TryNote& tn : script->trynotes()) {
-    if (tn.kind() != TryNoteKind::ForIn && tn.kind() != TryNoteKind::ForOf &&
-        tn.kind() != TryNoteKind::Loop) {
+    if (tn.kind != JSTRY_FOR_IN && tn.kind != JSTRY_FOR_OF &&
+        tn.kind != JSTRY_LOOP) {
       continue;
     }
 

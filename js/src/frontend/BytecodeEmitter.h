@@ -42,17 +42,19 @@
 #include "js/RootingAPI.h"                 // JS::Rooted, JS::Handle
 #include "js/TypeDecls.h"                  // jsbytecode
 #include "vm/BytecodeUtil.h"               // JSOp
-#include "vm/CheckIsCallableKind.h"        // CheckIsCallableKind
-#include "vm/CheckIsObjectKind.h"          // CheckIsObjectKind
-#include "vm/FunctionPrefixKind.h"         // FunctionPrefixKind
-#include "vm/GeneratorResumeKind.h"        // GeneratorResumeKind
 #include "vm/Instrumentation.h"            // InstrumentationKind
-#include "vm/Iteration.h"                  // IteratorKind
-#include "vm/JSFunction.h"                 // JSFunction
-#include "vm/JSScript.h"     // JSScript, BaseScript, FieldInitializers
-#include "vm/Runtime.h"      // ReportOutOfMemory
-#include "vm/StringType.h"   // JSAtom
-#include "vm/TryNoteKind.h"  // TryNoteKind
+#include "vm/Interpreter.h"  // CheckIsObjectKind, CheckIsCallableKind
+#include "vm/Iteration.h"    // IteratorKind
+#include "vm/JSFunction.h"   // JSFunction, FunctionPrefixKind
+#include "vm/JSScript.h"  // JSScript, BaseScript, FieldInitializers, TryNoteKind
+#include "vm/Runtime.h"   // ReportOutOfMemory
+#include "vm/StringType.h"  // JSAtom
+
+namespace js {
+
+enum class GeneratorResumeKind;
+
+}  // namespace js
 
 namespace js {
 namespace frontend {
@@ -350,10 +352,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // notes dynamic array, updating noteCount. Return the new note's index
   // within the array pointed at by current->notes as outparam.
   MOZ_MUST_USE bool newSrcNote(SrcNoteType type, unsigned* indexp = nullptr);
-  MOZ_MUST_USE bool newSrcNote2(SrcNoteType type, ptrdiff_t operand,
+  MOZ_MUST_USE bool newSrcNote2(SrcNoteType type, ptrdiff_t offset,
                                 unsigned* indexp = nullptr);
+  MOZ_MUST_USE bool newSrcNote3(SrcNoteType type, ptrdiff_t offset1,
+                                ptrdiff_t offset2, unsigned* indexp = nullptr);
 
-  MOZ_MUST_USE bool newSrcNoteOperand(ptrdiff_t operand);
+  MOZ_MUST_USE bool setSrcNoteOffset(unsigned index, unsigned which,
+                                     BytecodeOffsetDiff offset);
 
   // Control whether emitTree emits a line number note.
   enum EmitLineNumberNote { EMIT_LINENOTE, SUPPRESS_LINENOTE };
