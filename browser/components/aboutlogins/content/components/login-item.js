@@ -82,6 +82,7 @@ export default class LoginItem extends HTMLElement {
     this._timeUsed = this.shadowRoot.querySelector(".time-used");
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
+    this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
     this._dismissBreachAlert = this._breachAlert.querySelector(
       ".dismiss-alert"
     );
@@ -155,6 +156,19 @@ export default class LoginItem extends HTMLElement {
     if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       this._breachAlertLink.href = breachDetails.breachAlertURL;
+      if (breachDetails.BreachDate) {
+        let breachDate = new Date(breachDetails.BreachDate);
+        this._breachAlertDate.hidden = isNaN(breachDate);
+        if (!isNaN(breachDate)) {
+          document.l10n.setAttributes(
+            this._breachAlertDate,
+            "about-logins-breach-alert-date",
+            {
+              date: breachDate.getTime(),
+            }
+          );
+        }
+      }
     }
     this._vulnerableAlert.hidden =
       !this._vulnerableLoginsMap ||
