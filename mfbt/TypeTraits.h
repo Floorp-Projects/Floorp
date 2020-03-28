@@ -535,45 +535,6 @@ struct Conditional<false, A, B> {
   typedef B Type;
 };
 
-namespace detail {
-
-template <typename U, bool IsArray = IsArray<U>::value,
-          bool IsFunction = IsFunction<U>::value>
-struct DecaySelector;
-
-template <typename U>
-struct DecaySelector<U, false, false> {
-  typedef typename RemoveCV<U>::Type Type;
-};
-
-template <typename U>
-struct DecaySelector<U, true, false> {
-  typedef typename RemoveExtent<U>::Type* Type;
-};
-
-template <typename U>
-struct DecaySelector<U, false, true> {
-  typedef typename AddPointer<U>::Type Type;
-};
-
-};  // namespace detail
-
-/**
- * Strips const/volatile off a type and decays it from an lvalue to an
- * rvalue. So function types are converted to function pointers, arrays to
- * pointers, and references are removed.
- *
- * mozilla::Decay<int>::Type is int
- * mozilla::Decay<int&>::Type is int
- * mozilla::Decay<int&&>::Type is int
- * mozilla::Decay<const int&>::Type is int
- * mozilla::Decay<int[2]>::Type is int*
- * mozilla::Decay<int(int)>::Type is int(*)(int)
- */
-template <typename T>
-class Decay : public detail::DecaySelector<typename RemoveReference<T>::Type> {
-};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */

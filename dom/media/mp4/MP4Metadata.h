@@ -5,6 +5,8 @@
 #ifndef MP4METADATA_H_
 #define MP4METADATA_H_
 
+#include <type_traits>
+
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "DecoderData.h"
@@ -73,7 +75,7 @@ class MP4Metadata : public DecoderDoctorLifeLogger<MP4Metadata> {
 
    private:
     mozilla::MediaResult mResult;
-    typename mozilla::Decay<T>::Type mT;
+    std::decay_t<T> mT;
   };
 
   using ResultAndByteBuffer = ResultAndType<RefPtr<mozilla::MediaByteBuffer>>;

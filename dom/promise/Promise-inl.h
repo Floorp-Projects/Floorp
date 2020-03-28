@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_Promise_inl_h
 #define mozilla_dom_Promise_inl_h
 
+#include <type_traits>
+
 #include "mozilla/TupleCycleCollection.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/ResultExtensions.h"
@@ -67,7 +69,7 @@ struct StorageTypeHelper<SmartPtr<T>, true, false>
     : EnableIf<IsConvertible<SmartPtr<T>, T*>::value, RefPtr<T>> {};
 
 template <typename T>
-using StorageType = typename StorageTypeHelper<typename Decay<T>::Type>::Type;
+using StorageType = typename StorageTypeHelper<std::decay_t<T>>::Type;
 
 // Helpers to choose the correct argument type based on the storage type. Smart
 // pointers are converted to the corresponding raw pointer type. Everything else
