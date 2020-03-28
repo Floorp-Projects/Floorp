@@ -6,6 +6,8 @@
 #ifndef mozilla_extensions_MatchPattern_h
 #define mozilla_extensions_MatchPattern_h
 
+#include <utility>
+
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/MatchPatternBinding.h"
 #include "mozilla/extensions/MatchGlob.h"
@@ -95,11 +97,11 @@ class AtomSet final : public RefCounted<AtomSet> {
     }
   }
 
-  auto begin() const -> decltype(DeclVal<const ArrayType>().begin()) {
+  auto begin() const -> decltype(std::declval<const ArrayType>().begin()) {
     return mElems.begin();
   }
 
-  auto end() const -> decltype(DeclVal<const ArrayType>().end()) {
+  auto end() const -> decltype(std::declval<const ArrayType>().end()) {
     return mElems.end();
   }
 

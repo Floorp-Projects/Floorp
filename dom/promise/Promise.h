@@ -237,9 +237,9 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   template <typename Callback, typename... Args>
   using IsHandlerCallback =
       IsSame<already_AddRefed<Promise>,
-             decltype(DeclVal<Callback>()((JSContext*)(nullptr),
-                                          DeclVal<JS::Handle<JS::Value>>(),
-                                          DeclVal<Args>()...))>;
+             decltype(std::declval<Callback>()(
+                 (JSContext*)(nullptr), std::declval<JS::Handle<JS::Value>>(),
+                 std::declval<Args>()...))>;
 
   template <typename Callback, typename... Args>
   using ThenResult =

@@ -11,6 +11,8 @@
 
 #include "mozilla/Types.h"
 
+#include <utility>
+
 /*
  * These traits are approximate copies of the traits and semantics from C++11's
  * <type_traits> header.  Don't add traits not in that header!  When all
@@ -23,19 +25,6 @@ namespace mozilla {
 
 template <typename>
 struct RemoveCV;
-template <typename>
-struct AddRvalueReference;
-
-/* 20.2.4 Function template declval [declval] */
-
-/**
- * DeclVal simplifies the definition of expressions which occur as unevaluated
- * operands. It converts T to a reference type, making it possible to use in
- * decltype expressions even if T does not have a default constructor, e.g.:
- * decltype(DeclVal<TWithNoDefaultConstructor>().foo())
- */
-template <typename T>
-typename AddRvalueReference<T>::Type DeclVal();
 
 /* 20.9.3 Helper classes [meta.help] */
 
@@ -130,7 +119,7 @@ struct IsPod<T*> : TrueType {};
 namespace detail {
 
 struct DoIsDestructibleImpl {
-  template <typename T, typename = decltype(DeclVal<T&>().~T())>
+  template <typename T, typename = decltype(std::declval<T&>().~T())>
   static TrueType test(int);
   template <typename T>
   static FalseType test(...);

@@ -1036,8 +1036,8 @@ struct SFINAE1True : mozilla::TrueType {};
 
 template <class T>
 static auto HasRefCountMethodsTest(int)
-    -> SFINAE1True<decltype(mozilla::DeclVal<T>().AddRef(),
-                            mozilla::DeclVal<T>().Release())>;
+    -> SFINAE1True<decltype(std::declval<T>().AddRef(),
+                            std::declval<T>().Release())>;
 template <class>
 static auto HasRefCountMethodsTest(long) -> mozilla::FalseType;
 
@@ -1135,7 +1135,7 @@ struct ParameterStorage
 
 template <class T>
 static auto HasSetDeadlineTest(int) -> SFINAE1True<decltype(
-    mozilla::DeclVal<T>().SetDeadline(mozilla::DeclVal<mozilla::TimeStamp>()))>;
+    std::declval<T>().SetDeadline(std::declval<mozilla::TimeStamp>()))>;
 
 template <class T>
 static auto HasSetDeadlineTest(long) -> mozilla::FalseType;

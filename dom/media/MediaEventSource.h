@@ -8,6 +8,7 @@
 #define MediaEventSource_h_
 
 #include <type_traits>
+#include <utility>
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
@@ -89,11 +90,11 @@ class TakeArgsHelper {
   template <typename C>
   static std::false_type test(void (C::*)() const volatile, int);
   template <typename F>
-  static std::false_type test(F&&, decltype(DeclVal<F>()(), 0));
+  static std::false_type test(F&&, decltype(std::declval<F>()(), 0));
   static std::true_type test(...);
 
  public:
-  typedef decltype(test(DeclVal<T>(), 0)) type;
+  typedef decltype(test(std::declval<T>(), 0)) type;
 };
 
 template <typename T>
