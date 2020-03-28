@@ -138,28 +138,6 @@ struct IsSame : FalseType {};
 template <typename T>
 struct IsSame<T, T> : TrueType {};
 
-/* 20.9.7 Transformations between types [meta.trans] */
-
-/* 20.9.7.1 Const-volatile modifications [meta.trans.cv] */
-
-/**
- * RemoveConst removes top-level const qualifications on a type.
- *
- * mozilla::RemoveConst<int>::Type is int;
- * mozilla::RemoveConst<const int>::Type is int;
- * mozilla::RemoveConst<const int*>::Type is const int*;
- * mozilla::RemoveConst<int* const>::Type is int*.
- */
-template <typename T>
-struct RemoveConst {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveConst<const T> {
-  typedef T Type;
-};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */
