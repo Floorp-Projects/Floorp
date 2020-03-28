@@ -19,6 +19,7 @@
 
 #include <limits>
 #include <stdint.h>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -551,7 +552,7 @@ struct FuzzyEqualsEpsilon<double> {
 template <typename T>
 static MOZ_ALWAYS_INLINE bool FuzzyEqualsAdditive(
     T aValue1, T aValue2, T aEpsilon = detail::FuzzyEqualsEpsilon<T>::value()) {
-  static_assert(IsFloatingPoint<T>::value, "floating point type required");
+  static_assert(std::is_floating_point_v<T>, "floating point type required");
   return Abs(aValue1 - aValue2) <= aEpsilon;
 }
 
@@ -570,7 +571,7 @@ static MOZ_ALWAYS_INLINE bool FuzzyEqualsAdditive(
 template <typename T>
 static MOZ_ALWAYS_INLINE bool FuzzyEqualsMultiplicative(
     T aValue1, T aValue2, T aEpsilon = detail::FuzzyEqualsEpsilon<T>::value()) {
-  static_assert(IsFloatingPoint<T>::value, "floating point type required");
+  static_assert(std::is_floating_point_v<T>, "floating point type required");
   // can't use std::min because of bug 965340
   T smaller = Abs(aValue1) < Abs(aValue2) ? Abs(aValue1) : Abs(aValue2);
   return Abs(aValue1 - aValue2) <= aEpsilon * smaller;

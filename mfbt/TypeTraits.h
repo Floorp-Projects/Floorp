@@ -135,29 +135,6 @@ struct IsSame;
 namespace detail {
 
 template <typename T>
-struct IsFloatingPointHelper
-    : IntegralConstant<bool, IsSame<T, float>::value ||
-                                 IsSame<T, double>::value ||
-                                 IsSame<T, long double>::value> {};
-
-}  // namespace detail
-
-/**
- * IsFloatingPoint determines whether a type is a floating point type (float,
- * double, long double).
- *
- * mozilla::IsFloatingPoint<int>::value is false;
- * mozilla::IsFloatingPoint<const float>::value is true;
- * mozilla::IsFloatingPoint<long double>::value is true;
- * mozilla::IsFloatingPoint<double*>::value is false.
- */
-template <typename T>
-struct IsFloatingPoint
-    : detail::IsFloatingPointHelper<typename RemoveCV<T>::Type> {};
-
-namespace detail {
-
-template <typename T>
 struct IsArrayHelper : FalseType {};
 
 template <typename T, decltype(sizeof(1)) N>

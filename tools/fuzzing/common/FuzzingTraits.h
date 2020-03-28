@@ -92,7 +92,7 @@ inline char RandomIntegerRange(char min, char max) {
  */
 template <typename T>
 T RandomFloatingPointRange(T min, T max) {
-  static_assert(mozilla::IsFloatingPoint<T>::value == true,
+  static_assert(std::is_floating_point_v<T> == true,
                 "T must be a floating point type");
   MOZ_ASSERT(min < max);
   std::uniform_real_distribution<T> d(
@@ -106,7 +106,7 @@ T RandomFloatingPointRange(T min, T max) {
  */
 template <typename T>
 T RandomFloatingPoint() {
-  static_assert(mozilla::IsFloatingPoint<T>::value == true,
+  static_assert(std::is_floating_point_v<T> == true,
                 "T must be a floating point type");
   int radix = RandomIntegerRange<int>(std::numeric_limits<T>::min_exponent,
                                       std::numeric_limits<T>::max_exponent);
