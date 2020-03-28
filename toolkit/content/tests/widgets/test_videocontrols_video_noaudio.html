@@ -30,7 +30,7 @@
 
   add_task(async function mute_button_icon() {
     is(muteButton.getAttribute("noAudio"), "true");
-    is(muteButton.getAttribute("disabled"), "true");
+    ok(muteButton.hasAttribute("disabled"), "Mute button should be disabled");
 
     if (volumeStack) {
       ok(volumeStack.hidden);
