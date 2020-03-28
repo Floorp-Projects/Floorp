@@ -253,29 +253,6 @@ struct IsEnumHelper : IntegralConstant<bool, __is_enum(T)> {};
 template <typename T>
 struct IsEnum : detail::IsEnumHelper<typename RemoveCV<T>::Type> {};
 
-namespace detail {
-
-// __is_class is a supported extension across all of our supported compilers:
-// http://llvm.org/releases/3.0/docs/ClangReleaseNotes.html
-// http://gcc.gnu.org/onlinedocs/gcc-4.4.7/gcc/Type-Traits.html#Type-Traits
-// http://msdn.microsoft.com/en-us/library/ms177194%28v=vs.100%29.aspx
-template <typename T>
-struct IsClassHelper : IntegralConstant<bool, __is_class(T)> {};
-
-}  // namespace detail
-
-/**
- * IsClass determines whether a type is a class type (but not a union).
- *
- * struct S {};
- * union U {};
- * mozilla::IsClass<int>::value is false;
- * mozilla::IsClass<const S>::value is true;
- * mozilla::IsClass<U>::value is false;
- */
-template <typename T>
-struct IsClass : detail::IsClassHelper<typename RemoveCV<T>::Type> {};
-
 /* 20.9.4.2 Composite type traits [meta.unary.comp] */
 
 /**
