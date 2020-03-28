@@ -15,6 +15,7 @@ export default class LoginIntro extends HTMLElement {
 
     this._importText = shadowRoot.querySelector(".intro-import-text");
     this._importText.addEventListener("click", this);
+
     this.addEventListener("AboutLoginsUtilsReady", this);
   }
 
