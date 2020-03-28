@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_BindingUtils_h__
 #define mozilla_dom_BindingUtils_h__
 
+#include <type_traits>
+
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
@@ -2693,16 +2695,14 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
   };
 
   JS::Rooted<JSObject*> mReflector;
-  typename Conditional<IsRefcounted<T>::value, RefPtr<T>, OwnedNative>::Type
-      mNative;
+  std::conditional_t<IsRefcounted<T>::value, RefPtr<T>, OwnedNative> mNative;
 };
 
 template <class T>
 struct DeferredFinalizerImpl {
-  typedef typename Conditional<
+  using SmartPtr = std::conditional_t<
       IsSame<T, nsISupports>::value, nsCOMPtr<T>,
-      typename Conditional<IsRefcounted<T>::value, RefPtr<T>,
-                           UniquePtr<T>>::Type>::Type SmartPtr;
+      std::conditional_t<IsRefcounted<T>::value, RefPtr<T>, UniquePtr<T>>>;
   typedef SegmentedVector<SmartPtr> SmartPtrArray;
 
   static_assert(
@@ -2836,9 +2836,10 @@ using IsGlobalWithXPConnect =
                                std::is_base_of<MessageManagerGlobal, T>::value>;
 
 template <class T>
-struct CreateGlobalOptions : Conditional<IsGlobalWithXPConnect<T>::value,
-                                         CreateGlobalOptionsWithXPConnect,
-                                         CreateGlobalOptionsGeneric>::Type {
+struct CreateGlobalOptions
+    : std::conditional_t<IsGlobalWithXPConnect<T>::value,
+                         CreateGlobalOptionsWithXPConnect,
+                         CreateGlobalOptionsGeneric> {
   static constexpr ProtoAndIfaceCache::Kind ProtoAndIfaceCacheKind =
       ProtoAndIfaceCache::NonWindowLike;
 };
@@ -3062,8 +3063,8 @@ inline RefPtr<T> StrongOrRawPtr(RefPtr<S>&& aPtr) {
   return std::move(aPtr);
 }
 
-template <class T, class ReturnType = typename Conditional<
-                       IsRefcounted<T>::value, T*, UniquePtr<T>>::Type>
+template <class T, class ReturnType = std::conditional_t<IsRefcounted<T>::value,
+                                                         T*, UniquePtr<T>>>
 inline ReturnType StrongOrRawPtr(T* aPtr) {
   return ReturnType(aPtr);
 }
@@ -3073,7 +3074,7 @@ inline void StrongOrRawPtr(SmartPtr<S>&& aPtr) = delete;
 
 template <class T>
 using StrongPtrForMember =
-    typename Conditional<IsRefcounted<T>::value, RefPtr<T>, UniquePtr<T>>::Type;
+    std::conditional_t<IsRefcounted<T>::value, RefPtr<T>, UniquePtr<T>>;
 
 namespace binding_detail {
 inline JSObject* GetHackedNamespaceProtoObject(JSContext* aCx) {

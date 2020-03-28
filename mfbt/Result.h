@@ -185,8 +185,8 @@ struct IsPackableVariant {
     bool ok;
   };
 
-  using Impl = typename Conditional<sizeof(VEbool) <= sizeof(EVbool), VEbool,
-                                    EVbool>::Type;
+  using Impl =
+      std::conditional_t<sizeof(VEbool) <= sizeof(EVbool), VEbool, EVbool>;
 
   static const bool value = sizeof(Impl) <= sizeof(uintptr_t);
 };

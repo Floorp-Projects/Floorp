@@ -166,7 +166,7 @@ class MozPromise : public MozPromiseBase {
   // Return a |T&&| to enable move when IsExclusive is true or
   // a |const T&| to enforce copy otherwise.
   template <typename T,
-            typename R = typename Conditional<IsExclusive, T&&, const T&>::Type>
+            typename R = std::conditional_t<IsExclusive, T&&, const T&>>
   static R MaybeMove(T& aX) {
     return static_cast<R>(aX);
   }
@@ -569,7 +569,7 @@ class MozPromise : public MozPromiseBase {
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
     using PromiseType =
-        typename Conditional<SupportChaining::value, R1, MozPromise>::Type;
+        std::conditional_t<SupportChaining::value, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget, ThisType* aThisVal,
@@ -632,7 +632,7 @@ class MozPromise : public MozPromiseBase {
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
     using PromiseType =
-        typename Conditional<SupportChaining::value, R1, MozPromise>::Type;
+        std::conditional_t<SupportChaining::value, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget, ThisType* aThisVal,
@@ -692,7 +692,7 @@ class MozPromise : public MozPromiseBase {
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
     using PromiseType =
-        typename Conditional<SupportChaining::value, R1, MozPromise>::Type;
+        std::conditional_t<SupportChaining::value, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget,
@@ -762,7 +762,7 @@ class MozPromise : public MozPromiseBase {
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
     using PromiseType =
-        typename Conditional<SupportChaining::value, R1, MozPromise>::Type;
+        std::conditional_t<SupportChaining::value, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget,

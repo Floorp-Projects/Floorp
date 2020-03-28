@@ -220,7 +220,7 @@ class UniquePtr {
   }
 
   UniquePtr(Pointer aPtr,
-            typename Conditional<std::is_reference_v<D>, D, const D&>::Type aD1)
+            std::conditional_t<std::is_reference_v<D>, D, const D&> aD1)
       : mTuple(aPtr, aD1) {}
 
   UniquePtr(Pointer aPtr, std::remove_reference_t<D>&& aD2)
@@ -352,7 +352,7 @@ class UniquePtr<T[], D> {
                                       int>::Type aDummy = 0) = delete;
 
   UniquePtr(Pointer aPtr,
-            typename Conditional<std::is_reference_v<D>, D, const D&>::Type aD1)
+            std::conditional_t<std::is_reference_v<D>, D, const D&> aD1)
       : mTuple(aPtr, aD1) {}
 
   UniquePtr(Pointer aPtr, std::remove_reference_t<D>&& aD2)

@@ -19,8 +19,7 @@
 
 #include <limits.h>
 #include <stddef.h>
-
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
 
 namespace mozilla {
 
@@ -129,14 +128,8 @@ struct MulOverflowMask<1> {
  *   mozilla::t1::And<>::value is true.
  */
 
-template <bool...>
-struct And;
-
-template <>
-struct And<> : public TrueType {};
-
-template <bool C1, bool... Cn>
-struct And<C1, Cn...> : public Conditional<C1, And<Cn...>, FalseType>::Type {};
+template <bool... C>
+struct And : std::integral_constant<bool, (C && ...)> {};
 
 }  // namespace tl
 

@@ -11,6 +11,8 @@
 #ifndef MOZILLA_GENERICREFCOUNTED_H_
 #define MOZILLA_GENERICREFCOUNTED_H_
 
+#include <type_traits>
+
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 
@@ -101,8 +103,9 @@ class GenericRefCounted : public GenericRefCountedBase {
   }
 
  private:
-  typename Conditional<Atomicity == AtomicRefCount, Atomic<MozRefCountType>,
-                       MozRefCountType>::Type refCnt;
+  std::conditional_t<Atomicity == AtomicRefCount, Atomic<MozRefCountType>,
+                     MozRefCountType>
+      refCnt;
 };
 
 }  // namespace detail
