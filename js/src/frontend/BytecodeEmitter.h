@@ -352,13 +352,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // notes dynamic array, updating noteCount. Return the new note's index
   // within the array pointed at by current->notes as outparam.
   MOZ_MUST_USE bool newSrcNote(SrcNoteType type, unsigned* indexp = nullptr);
-  MOZ_MUST_USE bool newSrcNote2(SrcNoteType type, ptrdiff_t offset,
+  MOZ_MUST_USE bool newSrcNote2(SrcNoteType type, ptrdiff_t operand,
                                 unsigned* indexp = nullptr);
-  MOZ_MUST_USE bool newSrcNote3(SrcNoteType type, ptrdiff_t offset1,
-                                ptrdiff_t offset2, unsigned* indexp = nullptr);
 
-  MOZ_MUST_USE bool setSrcNoteOffset(unsigned index, unsigned which,
-                                     BytecodeOffsetDiff offset);
+  MOZ_MUST_USE bool newSrcNoteOperand(ptrdiff_t operand);
 
   // Control whether emitTree emits a line number note.
   enum EmitLineNumberNote { EMIT_LINENOTE, SUPPRESS_LINENOTE };
