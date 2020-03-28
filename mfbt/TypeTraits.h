@@ -219,45 +219,6 @@ struct RemoveCV {
   typedef typename RemoveConst<typename RemoveVolatile<T>::Type>::Type Type;
 };
 
-/* 20.9.7.2 Reference modifications [meta.trans.ref] */
-
-namespace detail {
-
-enum Voidness { TIsVoid, TIsNotVoid };
-
-template <typename T, Voidness V = IsVoid<T>::value ? TIsVoid : TIsNotVoid>
-struct AddRvalueReferenceHelper;
-
-template <typename T>
-struct AddRvalueReferenceHelper<T, TIsVoid> {
-  typedef void Type;
-};
-
-template <typename T>
-struct AddRvalueReferenceHelper<T, TIsNotVoid> {
-  typedef T&& Type;
-};
-
-}  // namespace detail
-
-/**
- * AddRvalueReference adds an rvalue && reference to T if one isn't already
- * present. (Note: adding an rvalue reference to an lvalue & reference in
- * essence keeps the &, per C+11 reference collapsing rules. For example,
- * int& would remain int&.)
- *
- * The final computed type will only *not* be a reference if T is void.
- *
- * mozilla::AddRvalueReference<int>::Type is int&&;
- * mozilla::AddRvalueRference<volatile int&>::Type is volatile int&;
- * mozilla::AddRvalueRference<const int&&>::Type is const int&&;
- * mozilla::AddRvalueReference<void*>::Type is void*&&;
- * mozilla::AddRvalueReference<void>::Type is void;
- * mozilla::AddRvalueReference<struct S&>::Type is struct S&.
- */
-template <typename T>
-struct AddRvalueReference : detail::AddRvalueReferenceHelper<T> {};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */
