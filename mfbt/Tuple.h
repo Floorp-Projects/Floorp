@@ -54,7 +54,7 @@ struct CheckConvertibilityImpl<Source, Target, false> : FalseType {};
 template <typename... SourceTypes, typename... TargetTypes>
 struct CheckConvertibilityImpl<Group<SourceTypes...>, Group<TargetTypes...>,
                                true>
-    : IntegralConstant<
+    : std::integral_constant<
           bool,
           tl::And<std::is_convertible_v<SourceTypes, TargetTypes>...>::value> {
 };
