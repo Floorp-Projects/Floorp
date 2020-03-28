@@ -150,13 +150,12 @@ EnterprisePoliciesManager.prototype = {
         continue;
       }
 
-      let [
-        parametersAreValid,
-        parsedParameters,
-      ] = JsonSchemaValidator.validateAndParseParameters(
-        policyParameters,
-        policySchema
-      );
+      let {
+        valid: parametersAreValid,
+        parsedValue: parsedParameters,
+      } = JsonSchemaValidator.validate(policyParameters, policySchema, {
+        allowExtraProperties: true,
+      });
 
       if (!parametersAreValid) {
         log.error(`Invalid parameters specified for ${policyName}.`);

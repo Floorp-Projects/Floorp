@@ -223,22 +223,10 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   {
     // First, find the real underlying callback.
-    JSObject* realCallback = js::UncheckedUnwrap(wrappedCallback);
+    JS::Rooted<JSObject*> realCallback(ccjs->RootingCx(),
+                                       js::UncheckedUnwrap(wrappedCallback));
 
-    // Check that it's ok to run this callback. JS-implemented WebIDL is always
-    // OK to run, since it runs with Chrome privileges anyway.
-    if (mIsMainThread && !aIsJSImplementedWebIDL) {
-      // Make sure to use realCallback to get the global of the callback
-      // object, not the wrapper.
-      if (!xpc::Scriptability::Get(realCallback).Allowed()) {
-        aRv.ThrowNotSupportedError(
-            "Refusing to execute function from global in which script is "
-            "disabled.");
-        return;
-      }
-    }
-
-    // Now get the global for this callback. Note that for the case of
+    // Get the global for this callback. Note that for the case of
     // JS-implemented WebIDL we never have a window here.
     nsGlobalWindowInner* win = mIsMainThread && !aIsJSImplementedWebIDL
                                    ? xpc::WindowGlobalOrNull(realCallback)
@@ -257,6 +245,15 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       // No DOM Window. Store the global.
       globalObject = xpc::NativeGlobal(realCallback);
       MOZ_ASSERT(globalObject);
+    }
+
+    // Make sure to use realCallback to get the global of the callback
+    // object, not the wrapper.
+    if (globalObject->IsScriptForbidden(realCallback, aIsJSImplementedWebIDL)) {
+      aRv.ThrowNotSupportedError(
+          "Refusing to execute function from global in which script is "
+          "disabled.");
+      return;
     }
   }
 

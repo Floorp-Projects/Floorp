@@ -418,7 +418,6 @@ export type ThreadFront = {
   getAvailableEventBreakpoints: () => Promise<EventListenerCategoryList>,
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
   detach: () => Promise<void>,
-  timeWarp: Function => Promise<*>,
   fetchAncestorFramePositions: Function => Promise<*>,
   get: string => FrameFront,
 };

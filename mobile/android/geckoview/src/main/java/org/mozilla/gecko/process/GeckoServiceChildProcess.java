@@ -83,7 +83,7 @@ public class GeckoServiceChildProcess extends Service {
             final int crashAnnotationFd = crashAnnotationPfd != null ?
                                           crashAnnotationPfd.detachFd() : -1;
 
-            ThreadUtils.postToUiThread(new Runnable() {
+            ThreadUtils.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     if (crashHandlerService != null) {

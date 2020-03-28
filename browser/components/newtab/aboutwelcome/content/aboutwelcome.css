@@ -30,14 +30,13 @@ html {
 
 body {
   --grey-subtitle: #4A4A4F;
-  --newtab-background-color: #F9F9FA;
+  --newtab-background-color: #EDEDF0;
   --newtab-text-primary-color: #0C0C0D;
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-button-primary-color: #0060DF;
   --newtab-card-background-color: #FFF;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
   --welcome-header-text-color: #2B2156;
-  --welcome-cards-background-color: #EDEDF0;
   --welcome-card-button-background-color: rgba(12, 12, 13, 0.1);
   --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
   --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.3);
@@ -46,10 +45,25 @@ body {
   --welcome-button-text-color: #FFF;
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
-  background-color: var(--welcome-cards-background-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
-  position: relative; }
+  position: relative;
+  /* these two rules fix test failures in 
+  "browser_ext_themes_ntp_colors" & "browser_ext_themes_ntp_colors_perwindow".*/
+  color: var(--newtab-text-primary-color);
+  background-color: var(--newtab-background-color); }
+  body[lwt-newtab-brighttext] {
+    --newtab-background-color: #2A2A2E;
+    --newtab-text-primary-color: #F9F9FA;
+    --newtab-text-conditional-color: #F9F9FA;
+    --newtab-button-primary-color: #0060DF;
+    --newtab-card-background-color: #38383D;
+    --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
+    --welcome-header-text-color: rgba(255, 255, 255, 0.6);
+    --welcome-card-button-background-color: rgba(12, 12, 13, 0.3);
+    --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.5);
+    --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.7);
+    --welcome-button-box-shadow-color: rgba(249, 249, 250, 0.2); }
 
 .welcomeCardGrid {
   margin: 0;

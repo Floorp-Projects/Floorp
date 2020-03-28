@@ -100,8 +100,8 @@ add_task(async function test_mpAutocompleteUIBusy() {
     actionOrigin: "",
     searchString: "",
     previousResult: null,
+    hasBeenTypePassword: true,
     isSecure: false,
-    isPasswordField: true,
     isProbablyANewPasswordField: true,
   };
 

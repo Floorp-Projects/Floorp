@@ -10,7 +10,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "PersonalityProvider",
-  "resource://activity-stream/lib/PersonalityProvider.jsm"
+  "resource://activity-stream/lib/PersonalityProvider/PersonalityProvider.jsm"
 );
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
@@ -139,9 +139,9 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
     }
   }
 
-  calculateItemRelevanceScore(item) {
+  async calculateItemRelevanceScore(item) {
     if (this.affinityProvider) {
-      const scoreResult = this.affinityProvider.calculateItemRelevanceScore(
+      const scoreResult = await this.affinityProvider.calculateItemRelevanceScore(
         item
       );
       if (scoreResult === 0 || scoreResult) {

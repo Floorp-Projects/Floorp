@@ -197,7 +197,7 @@ class WebRenderBridgeParent final
 
   mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(
       const uint64_t& aBlockId,
-      nsTArray<SLGuidAndRenderRoot>&& aTargets) override;
+      nsTArray<ScrollableLayerGuid>&& aTargets) override;
 
   mozilla::ipc::IPCResult RecvSetTestSampleTime(
       const TimeStamp& aTime) override;
@@ -327,7 +327,6 @@ class WebRenderBridgeParent final
 
   bool IsRootWebRenderBridgeParent() const;
   LayersId GetLayersId() const;
-  WRRootId GetWRRootId() const;
 
   void SetCompositionRecorder(
       UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);

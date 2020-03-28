@@ -71,8 +71,6 @@ class MessageContainer extends Component {
       indent: PropTypes.number,
       networkMessageUpdate: PropTypes.object,
       getMessage: PropTypes.func.isRequired,
-      isPaused: PropTypes.bool.isRequired,
-      pausedExecutionPoint: PropTypes.any,
       inWarningGroup: PropTypes.bool,
     };
   }
@@ -90,8 +88,6 @@ class MessageContainer extends Component {
       "payload",
       "timestampsVisible",
       "networkMessageUpdate",
-      "isPaused",
-      "pausedExecutionPoint",
       "badge",
       "inWarningGroup",
     ];

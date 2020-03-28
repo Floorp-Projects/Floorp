@@ -23,7 +23,6 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ipc/ByteBufUtils.h"
 #include "mozilla/layers/APZInputBridge.h"
-#include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -558,22 +557,6 @@ struct ParamTraits<mozilla::layers::APZEventResult> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::SLGuidAndRenderRoot> {
-  typedef mozilla::layers::SLGuidAndRenderRoot paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mScrollableLayerGuid);
-    WriteParam(aMsg, aParam.mRenderRoot);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mScrollableLayerGuid) &&
-            ReadParam(aMsg, aIter, &aResult->mRenderRoot));
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::layers::ZoomConstraints> {
   typedef mozilla::layers::ZoomConstraints paramType;
 
@@ -623,17 +606,13 @@ struct ParamTraits<mozilla::layers::FocusTarget::ScrollTargets> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mHorizontal);
-    WriteParam(aMsg, aParam.mHorizontalRenderRoot);
     WriteParam(aMsg, aParam.mVertical);
-    WriteParam(aMsg, aParam.mVerticalRenderRoot);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mHorizontal) &&
-           ReadParam(aMsg, aIter, &aResult->mHorizontalRenderRoot) &&
-           ReadParam(aMsg, aIter, &aResult->mVertical) &&
-           ReadParam(aMsg, aIter, &aResult->mVerticalRenderRoot);
+           ReadParam(aMsg, aIter, &aResult->mVertical);
   }
 };
 

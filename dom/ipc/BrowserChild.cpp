@@ -453,7 +453,7 @@ void BrowserChild::ContentReceivedInputBlock(uint64_t aInputBlockId,
 
 void BrowserChild::SetTargetAPZC(
     uint64_t aInputBlockId,
-    const nsTArray<SLGuidAndRenderRoot>& aTargets) const {
+    const nsTArray<ScrollableLayerGuid>& aTargets) const {
   if (mApzcTreeManager) {
     mApzcTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
   }
@@ -474,8 +474,8 @@ bool BrowserChild::DoUpdateZoomConstraints(
     return false;
   }
 
-  SLGuidAndRenderRoot guid = SLGuidAndRenderRoot(
-      mLayersId, aPresShellId, aViewId, gfxUtils::GetContentRenderRoot());
+  ScrollableLayerGuid guid =
+      ScrollableLayerGuid(mLayersId, aPresShellId, aViewId);
 
   mApzcTreeManager->UpdateZoomConstraints(guid, aConstraints);
   return true;
@@ -1379,8 +1379,7 @@ void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
           document->GetDocumentElement(), &presShellId, &viewId) &&
       mApzcTreeManager) {
-    SLGuidAndRenderRoot guid(mLayersId, presShellId, viewId,
-                             gfxUtils::GetContentRenderRoot());
+    ScrollableLayerGuid guid(mLayersId, presShellId, viewId);
 
     mApzcTreeManager->ZoomToRect(guid, zoomToRect, DEFAULT_BEHAVIOR);
   }
@@ -1466,9 +1465,8 @@ bool BrowserChild::NotifyAPZStateChange(
 
 void BrowserChild::StartScrollbarDrag(
     const layers::AsyncDragMetrics& aDragMetrics) {
-  SLGuidAndRenderRoot guid(mLayersId, aDragMetrics.mPresShellId,
-                           aDragMetrics.mViewId,
-                           gfxUtils::GetContentRenderRoot());
+  ScrollableLayerGuid guid(mLayersId, aDragMetrics.mPresShellId,
+                           aDragMetrics.mViewId);
 
   if (mApzcTreeManager) {
     mApzcTreeManager->StartScrollbarDrag(guid, aDragMetrics);
@@ -1478,8 +1476,7 @@ void BrowserChild::StartScrollbarDrag(
 void BrowserChild::ZoomToRect(const uint32_t& aPresShellId,
                               const ScrollableLayerGuid::ViewID& aViewId,
                               const CSSRect& aRect, const uint32_t& aFlags) {
-  SLGuidAndRenderRoot guid(mLayersId, aPresShellId, aViewId,
-                           gfxUtils::GetContentRenderRoot());
+  ScrollableLayerGuid guid(mLayersId, aPresShellId, aViewId);
 
   if (mApzcTreeManager) {
     mApzcTreeManager->ZoomToRect(guid, aRect, aFlags);

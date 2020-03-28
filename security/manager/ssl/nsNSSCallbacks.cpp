@@ -268,7 +268,9 @@ OCSPRequest::Run() {
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
   // Prevent HTTPS-Only Mode from upgrading the OCSP request.
-  loadInfo->SetHttpsOnlyNoUpgrade(true);
+  uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+  httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+  loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
 
   // For OCSP requests, only the first party domain and private browsing id
   // aspects of origin attributes are used. This means that:

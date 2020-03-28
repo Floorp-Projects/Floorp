@@ -212,12 +212,6 @@ function openSidebar(messageId, rootActorId) {
   };
 }
 
-function timeWarp(executionPoint) {
-  return ({ client }) => {
-    client.timeWarp(executionPoint);
-  };
-}
-
 module.exports = {
   contentMessagesToggle,
   eagerEvaluationToggle,
@@ -237,6 +231,5 @@ module.exports = {
   warningGroupsToggle,
   openLink,
   openSidebar,
-  timeWarp,
   autocompleteToggle,
 };

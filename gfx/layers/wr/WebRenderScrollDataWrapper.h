@@ -45,11 +45,9 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   // Basic constructor for external callers. Starts the walker at the root of
   // the tree.
   explicit WebRenderScrollDataWrapper(
-      const APZUpdater& aUpdater, WRRootId aWrRootId,
-      const WebRenderScrollData* aData = nullptr)
+      const APZUpdater& aUpdater, const WebRenderScrollData* aData = nullptr)
       : mUpdater(&aUpdater),
         mData(aData),
-        mWrRootId(aWrRootId),
         mLayerIndex(0),
         mContainingSubtreeLastIndex(0),
         mLayer(nullptr),
@@ -79,13 +77,12 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   // Internal constructor for walking from one WebRenderLayerScrollData to
   // another. In this case we need to recompute the mMetadataIndex to be the
   // "topmost" scroll metadata on the new layer.
-  WebRenderScrollDataWrapper(const APZUpdater* aUpdater, WRRootId aWrRootId,
+  WebRenderScrollDataWrapper(const APZUpdater* aUpdater,
                              const WebRenderScrollData* aData,
                              size_t aLayerIndex,
                              size_t aContainingSubtreeLastIndex)
       : mUpdater(aUpdater),
         mData(aData),
-        mWrRootId(aWrRootId),
         mLayerIndex(aLayerIndex),
         mContainingSubtreeLastIndex(aContainingSubtreeLastIndex),
         mLayer(nullptr),
@@ -104,7 +101,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
 
   // Internal constructor for walking from one metadata to another metadata on
   // the same WebRenderLayerScrollData.
-  WebRenderScrollDataWrapper(const APZUpdater* aUpdater, WRRootId aWrRootId,
+  WebRenderScrollDataWrapper(const APZUpdater* aUpdater,
                              const WebRenderScrollData* aData,
                              size_t aLayerIndex,
                              size_t aContainingSubtreeLastIndex,
@@ -112,7 +109,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
                              uint32_t aMetadataIndex)
       : mUpdater(aUpdater),
         mData(aData),
-        mWrRootId(aWrRootId),
         mLayerIndex(aLayerIndex),
         mContainingSubtreeLastIndex(aContainingSubtreeLastIndex),
         mLayer(aLayer),
@@ -136,7 +132,7 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
       // If we're still walking around in the virtual container layers created
       // by the ScrollMetadata array, we just need to update the metadata index
       // and that's it.
-      return WebRenderScrollDataWrapper(mUpdater, mWrRootId, mData, mLayerIndex,
+      return WebRenderScrollDataWrapper(mUpdater, mData, mLayerIndex,
                                         mContainingSubtreeLastIndex, mLayer,
                                         mMetadataIndex - 1);
     }
@@ -154,8 +150,8 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
       size_t prevSiblingIndex = mLayerIndex + 1 + mLayer->GetDescendantCount();
       size_t subtreeLastIndex =
           std::min(mContainingSubtreeLastIndex, prevSiblingIndex);
-      return WebRenderScrollDataWrapper(mUpdater, mWrRootId, mData,
-                                        mLayerIndex + 1, subtreeLastIndex);
+      return WebRenderScrollDataWrapper(mUpdater, mData, mLayerIndex + 1,
+                                        subtreeLastIndex);
     }
 
     // We've run out of descendants. But! If the original layer was a RefLayer,
@@ -163,13 +159,11 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     // So return a WebRenderScrollDataWrapper for the root of the child layer
     // tree.
     if (mLayer->GetReferentId()) {
-      WRRootId newWrRootId =
-          WRRootId(*mLayer->GetReferentId(), mWrRootId.mRenderRoot);
-      return WebRenderScrollDataWrapper(*mUpdater, newWrRootId,
-                                        mUpdater->GetScrollData(newWrRootId));
+      return WebRenderScrollDataWrapper(
+          *mUpdater, mUpdater->GetScrollData(*mLayer->GetReferentId()));
     }
 
-    return WebRenderScrollDataWrapper(*mUpdater, mWrRootId);
+    return WebRenderScrollDataWrapper(*mUpdater);
   }
 
   WebRenderScrollDataWrapper GetPrevSibling() const {
@@ -177,18 +171,17 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
 
     if (!AtTopLayer()) {
       // The virtual container layers don't have siblings
-      return WebRenderScrollDataWrapper(*mUpdater, mWrRootId);
+      return WebRenderScrollDataWrapper(*mUpdater);
     }
 
     // Skip past the descendants to get to the previous sibling. However, we
     // might be at the last sibling already.
     size_t prevSiblingIndex = mLayerIndex + 1 + mLayer->GetDescendantCount();
     if (prevSiblingIndex < mContainingSubtreeLastIndex) {
-      return WebRenderScrollDataWrapper(mUpdater, mWrRootId, mData,
-                                        prevSiblingIndex,
+      return WebRenderScrollDataWrapper(mUpdater, mData, prevSiblingIndex,
                                         mContainingSubtreeLastIndex);
     }
-    return WebRenderScrollDataWrapper(*mUpdater, mWrRootId);
+    return WebRenderScrollDataWrapper(*mUpdater);
   }
 
   const ScrollMetadata& Metadata() const {
@@ -374,8 +367,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return mLayer;
   }
 
-  wr::RenderRoot GetRenderRoot() const { return mWrRootId.mRenderRoot; }
-
  private:
   bool AtBottomLayer() const { return mMetadataIndex == 0; }
 
@@ -387,7 +378,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
  private:
   const APZUpdater* mUpdater;
   const WebRenderScrollData* mData;
-  WRRootId mWrRootId;
   // The index (in mData->mLayerScrollData) of the WebRenderLayerScrollData this
   // wrapper is pointing to.
   size_t mLayerIndex;

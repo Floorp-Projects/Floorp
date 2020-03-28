@@ -118,6 +118,7 @@
 #include "nsINetworkLinkService.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
+#include "mozilla/dom/nsHTTPSOnlyStreamListener.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
@@ -622,6 +623,20 @@ nsresult nsHttpChannel::OnBeforeConnect() {
                                   mPrivateBrowsing, mAllowSTS, originAttributes,
                                   shouldUpgrade, std::move(resultCallback),
                                   willCallback);
+      // If the request gets upgraded because of the HTTPS-Only mode, but no
+      // event listener has been registered so far, we want to do that here.
+      uint32_t httpOnlyStatus = mLoadInfo->GetHttpsOnlyStatus();
+      if (httpOnlyStatus &
+          nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED) {
+        RefPtr<nsHTTPSOnlyStreamListener> httpsOnlyListener =
+            new nsHTTPSOnlyStreamListener(mListener);
+        mListener = httpsOnlyListener;
+
+        httpOnlyStatus ^=
+            nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED;
+        httpOnlyStatus |= nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED;
+        mLoadInfo->SetHttpsOnlyStatus(httpOnlyStatus);
+      }
       LOG(
           ("nsHttpChannel::OnBeforeConnect "
            "[this=%p willCallback=%d rv=%" PRIx32 "]\n",

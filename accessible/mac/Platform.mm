@@ -126,7 +126,9 @@ void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
     return;
 
   mozAccessible* wrapper = GetNativeFromProxy(aProxy);
-  if (wrapper) FireNativeEvent(wrapper, aEventType);
+  if (wrapper) {
+    [wrapper firePlatformEvent:aEventType];
+  }
 }
 
 void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool) {
@@ -135,7 +137,9 @@ void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool) {
 
 void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset) {
   mozAccessible* wrapper = GetNativeFromProxy(aTarget);
-  if (wrapper) [wrapper selectedTextDidChange];
+  if (wrapper) {
+    [wrapper firePlatformEvent:nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED];
+  }
 }
 
 void ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t, bool, bool) {}
@@ -144,7 +148,9 @@ void ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool) {}
 
 void ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible* aWidget, uint32_t aEventType) {
   mozAccessible* wrapper = GetNativeFromProxy(aWidget);
-  if (wrapper) FireNativeEvent(wrapper, aEventType);
+  if (wrapper) {
+    [wrapper firePlatformEvent:aEventType];
+  }
 }
 }  // namespace a11y
 }  // namespace mozilla

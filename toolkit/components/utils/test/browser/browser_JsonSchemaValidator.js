@@ -13,50 +13,119 @@ add_task(async function test_boolean_values() {
     type: "boolean",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    true,
-    schema
-  );
-  ok(valid && parsed === true, "Parsed boolean value correctly");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    false,
-    schema
-  );
-  ok(valid && parsed === false, "Parsed boolean value correctly");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(0, schema);
-  ok(valid && parsed === false, "0 parsed as false correctly");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(valid && parsed === true, "1 parsed as true correctly");
+  // valid values
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: true,
+    },
+  });
+  validate({
+    value: false,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: false,
+    },
+  });
+  validate({
+    value: 0,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: false,
+    },
+  });
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: true,
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("0", schema)[0],
-    "No type coercion"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("true", schema)[0],
-    "No type coercion"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(2, schema)[0],
-    "Other number values are not valid"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(undefined, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(null, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: "0",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "0",
+      error: {
+        invalidValue: "0",
+        invalidPropertyNameComponents: [],
+        message: `The value '"0"' does not match the expected type 'boolean'`,
+      },
+    },
+  });
+  validate({
+    value: "true",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "true",
+      error: {
+        invalidValue: "true",
+        invalidPropertyNameComponents: [],
+        message: `The value '"true"' does not match the expected type 'boolean'`,
+      },
+    },
+  });
+  validate({
+    value: 2,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: 2,
+      error: {
+        invalidValue: 2,
+        invalidPropertyNameComponents: [],
+        message: `The value '2' does not match the expected type 'boolean'`,
+      },
+    },
+  });
+  validate({
+    value: undefined,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: undefined,
+        invalidPropertyNameComponents: [],
+        message: `The value 'undefined' does not match the expected type 'boolean'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'boolean'`,
+      },
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match the expected type 'boolean'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_number_values() {
@@ -64,27 +133,68 @@ add_task(async function test_number_values() {
     type: "number",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(valid && parsed === 1, "Parsed number value correctly");
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: 1,
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("1", schema)[0],
-    "No type coercion"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(null, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: "1",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "1",
+      error: {
+        invalidValue: "1",
+        invalidPropertyNameComponents: [],
+        message: `The value '"1"' does not match the expected type 'number'`,
+      },
+    },
+  });
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: true,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match the expected type 'number'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'number'`,
+      },
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match the expected type 'number'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_integer_values() {
@@ -93,27 +203,68 @@ add_task(async function test_integer_values() {
     type: "integer",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(valid && parsed == 1, "Parsed integer value correctly");
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: 1,
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("1", schema)[0],
-    "No type coercion"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(null, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: "1",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "1",
+      error: {
+        invalidValue: "1",
+        invalidPropertyNameComponents: [],
+        message: `The value '"1"' does not match the expected type 'integer'`,
+      },
+    },
+  });
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: true,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match the expected type 'integer'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'integer'`,
+      },
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match the expected type 'integer'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_null_values() {
@@ -121,35 +272,81 @@ add_task(async function test_null_values() {
     type: "null",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    null,
-    schema
-  );
-  ok(valid, "Null should be valid");
-  ok(parsed === null, "Parsed value should be null");
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: null,
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(1, schema)[0],
-    "Number should be invalid"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("1", schema)[0],
-    "String should be invalid"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "Boolean should be invalid"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Object should be invalid"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters([], schema)[0],
-    "Array should be invalid"
-  );
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: 1,
+      error: {
+        invalidValue: 1,
+        invalidPropertyNameComponents: [],
+        message: `The value '1' does not match the expected type 'null'`,
+      },
+    },
+  });
+  validate({
+    value: "1",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "1",
+      error: {
+        invalidValue: "1",
+        invalidPropertyNameComponents: [],
+        message: `The value '"1"' does not match the expected type 'null'`,
+      },
+    },
+  });
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: true,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match the expected type 'null'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'null'`,
+      },
+    },
+  });
+  validate({
+    value: [],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: [],
+      error: {
+        invalidValue: [],
+        invalidPropertyNameComponents: [],
+        message: `The value '[]' does not match the expected type 'null'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_string_values() {
@@ -157,34 +354,81 @@ add_task(async function test_string_values() {
     type: "string",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "foobar",
-    schema
-  );
-  ok(valid && parsed == "foobar", "Parsed string value correctly");
+  validate({
+    value: "foobar",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: "foobar",
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(1, schema)[0],
-    "No type coercion"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "No type coercion"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(undefined, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(null, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: 1,
+      error: {
+        invalidValue: 1,
+        invalidPropertyNameComponents: [],
+        message: `The value '1' does not match the expected type 'string'`,
+      },
+    },
+  });
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: true,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match the expected type 'string'`,
+      },
+    },
+  });
+  validate({
+    value: undefined,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: undefined,
+        invalidPropertyNameComponents: [],
+        message: `The value 'undefined' does not match the expected type 'string'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'string'`,
+      },
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match the expected type 'string'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_URL_values() {
@@ -192,36 +436,81 @@ add_task(async function test_URL_values() {
     type: "URL",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "https://www.example.com/foo#bar",
-    schema
+  let result = validate({
+    value: "https://www.example.com/foo#bar",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: new URL("https://www.example.com/foo#bar"),
+    },
+  });
+  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.equal(
+    result.parsedValue.origin,
+    "https://www.example.com",
+    "origin is correct"
   );
-  ok(valid, "URL is valid");
-  ok(parsed instanceof URL, "parsed is a URL");
-  is(parsed.origin, "https://www.example.com", "origin is correct");
-  is(parsed.pathname + parsed.hash, "/foo#bar", "pathname is correct");
+  Assert.equal(
+    result.parsedValue.pathname + result.parsedValue.hash,
+    "/foo#bar",
+    "pathname is correct"
+  );
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("", schema)[0],
-    "Empty string is not accepted for URL"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(
-      "www.example.com",
-      schema
-    )[0],
-    "Scheme is required for URL"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("https://:!$%", schema)[0],
-    "Invalid URL"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: "",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "",
+      error: {
+        invalidValue: "",
+        invalidPropertyNameComponents: [],
+        message: `The value '""' does not match the expected type 'URL'`,
+      },
+    },
+  });
+  validate({
+    value: "www.example.com",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "www.example.com",
+      error: {
+        invalidValue: "www.example.com",
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '"www.example.com"' does not match the expected ` +
+          `type 'URL'`,
+      },
+    },
+  });
+  validate({
+    value: "https://:!$%",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "https://:!$%",
+      error: {
+        invalidValue: "https://:!$%",
+        invalidPropertyNameComponents: [],
+        message: `The value '"https://:!$%"' does not match the expected type 'URL'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'URL'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_URLorEmpty_values() {
@@ -229,43 +518,94 @@ add_task(async function test_URLorEmpty_values() {
     type: "URLorEmpty",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "https://www.example.com/foo#bar",
-    schema
+  let result = validate({
+    value: "https://www.example.com/foo#bar",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: new URL("https://www.example.com/foo#bar"),
+    },
+  });
+  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.equal(
+    result.parsedValue.origin,
+    "https://www.example.com",
+    "origin is correct"
   );
-  ok(valid, "URL is valid");
-  ok(parsed instanceof URL, "parsed is a nsIURI");
-  is(parsed.origin, "https://www.example.com", "origin is correct");
-  is(parsed.pathname + parsed.hash, "/foo#bar", "pathname is correct");
+  Assert.equal(
+    result.parsedValue.pathname + result.parsedValue.hash,
+    "/foo#bar",
+    "pathname is correct"
+  );
 
   // Test that this type also accept empty strings
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters("", schema);
-  ok(valid, "URLorEmpty is valid");
-  ok(!parsed, "parsed value is falsy");
-  is(typeof parsed, "string", "parsed is a string");
-  is(parsed, "", "parsed is an empty string");
+  result = validate({
+    value: "",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: "",
+    },
+  });
+  Assert.equal(typeof result.parsedValue, "string", "parsedValue is a string");
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(" ", schema)[0],
-    "Non-empty string is not accepted"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(
-      "www.example.com",
-      schema
-    )[0],
-    "Scheme is required for URL"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("https://:!$%", schema)[0],
-    "Invalid URL"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: " ",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: " ",
+      error: {
+        invalidValue: " ",
+        invalidPropertyNameComponents: [],
+        message: `The value '" "' does not match the expected type 'URLorEmpty'`,
+      },
+    },
+  });
+  validate({
+    value: "www.example.com",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "www.example.com",
+      error: {
+        invalidValue: "www.example.com",
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '"www.example.com"' does not match the expected ` +
+          `type 'URLorEmpty'`,
+      },
+    },
+  });
+  validate({
+    value: "https://:!$%",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "https://:!$%",
+      error: {
+        invalidValue: "https://:!$%",
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '"https://:!$%"' does not match the expected ` +
+          `type 'URLorEmpty'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'URLorEmpty'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_origin_values() {
@@ -274,32 +614,70 @@ add_task(async function test_origin_values() {
     type: "origin",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+  let result = validate({
+    value: "https://www.example.com",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: new URL("https://www.example.com/"),
+    },
+  });
+  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.equal(
+    result.parsedValue.origin,
     "https://www.example.com",
-    schema
+    "origin is correct"
   );
-  ok(valid, "Origin is valid");
-  ok(parsed instanceof URL, "parsed is a nsIURI");
-  is(parsed.origin, "https://www.example.com", "origin is correct");
-  is(parsed.pathname + parsed.hash, "/", "pathname is corect");
+  Assert.equal(
+    result.parsedValue.pathname + result.parsedValue.hash,
+    "/",
+    "pathname is correct"
+  );
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(
-      "https://www.example.com/foobar",
-      schema
-    )[0],
-    "Origin cannot contain a path part"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("https://:!$%", schema)[0],
-    "Invalid origin"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: "https://www.example.com/foobar",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: new URL("https://www.example.com/foobar"),
+      error: {
+        invalidValue: "https://www.example.com/foobar",
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '"https://www.example.com/foobar"' does not match the ` +
+          `expected type 'origin'`,
+      },
+    },
+  });
+  validate({
+    value: "https://:!$%",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "https://:!$%",
+      error: {
+        invalidValue: "https://:!$%",
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '"https://:!$%"' does not match the expected ` +
+          `type 'origin'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: {},
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'origin'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_origin_file_values() {
@@ -308,14 +686,20 @@ add_task(async function test_origin_file_values() {
     type: "origin",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
+  let result = validate({
+    value: "file:///foo/bar",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: new URL("file:///foo/bar"),
+    },
+  });
+  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.equal(
+    result.parsedValue.href,
     "file:///foo/bar",
-    schema
+    "Should get what we passed in"
   );
-  ok(valid, "Origin is valid");
-  ok(parsed instanceof URL, "parsed is a nsIURI");
-  is(parsed.href, "file:///foo/bar", "Should get what we passed in");
 });
 
 add_task(async function test_origin_file_values() {
@@ -324,15 +708,17 @@ add_task(async function test_origin_file_values() {
     type: "origin",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "file:///foo/bar/foobar.html",
-    schema
-  );
-  ok(valid, "Origin is valid");
-  ok(parsed instanceof URL, "parsed is a nsIURI");
-  is(
-    parsed.href,
+  let result = validate({
+    value: "file:///foo/bar/foobar.html",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: new URL("file:///foo/bar/foobar.html"),
+    },
+  });
+  Assert.ok(result.parsedValue instanceof URL, "parsedValue is a URL");
+  Assert.equal(
+    result.parsedValue.href,
     "file:///foo/bar/foobar.html",
     "Should get what we passed in"
   );
@@ -347,34 +733,67 @@ add_task(async function test_array_values() {
     },
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    [1, 2, 3],
-    schema
-  );
-  ok(valid, "Array is valid");
-  ok(Array.isArray(parsed), "parsed is an array");
-  is(parsed.length, 3, "array is correct");
+  validate({
+    value: [1, 2, 3],
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: [1, 2, 3],
+    },
+  });
 
   // An empty array is also valid
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters([], schema);
-  ok(valid, "Array is valid");
-  ok(Array.isArray(parsed), "parsed is an array");
-  is(parsed.length, 0, "array is correct");
+  validate({
+    value: [],
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: [],
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters([1, true, 3], schema)[0],
-    "Mixed types"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(2, schema)[0],
-    "Type is correct but not in an array"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Object is not an array"
-  );
+  validate({
+    value: [1, true, 3],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: true,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [1],
+        message:
+          `The value 'true' does not match the expected type 'number'. The ` +
+          `invalid value is property '1' in [1,true,3]`,
+      },
+    },
+  });
+  validate({
+    value: 2,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: 2,
+        invalidPropertyNameComponents: [],
+        message: `The value '2' does not match the expected type 'array'`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match the expected type 'array'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_non_strict_arrays() {
@@ -389,89 +808,476 @@ add_task(async function test_non_strict_arrays() {
     },
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    ["valid1", "valid2", false, 3, "valid3"],
-    schema
-  );
-  ok(valid, "Array is valid");
-  ok(Array.isArray(parsed, "parsed is an array"));
-  is(parsed.length, 3, "Only valid values were included in the parsed array");
-  Assert.deepEqual(
-    parsed,
-    ["valid1", "valid2", "valid3"],
-    "Results were expected"
-  );
+  validate({
+    value: ["valid1", "valid2", false, 3, "valid3"],
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: ["valid1", "valid2", "valid3"],
+    },
+  });
 
   // Checks that strict defaults to true;
   delete schema.strict;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    ["valid1", "valid2", false, 3, "valid3"],
-    schema
-  );
-  ok(!valid, "Same verification was invalid without strict=false");
+  validate({
+    value: ["valid1", "valid2", false, 3, "valid3"],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: false,
+      error: {
+        invalidValue: false,
+        invalidPropertyNameComponents: [2],
+        message:
+          `The value 'false' does not match the expected type 'string'. The ` +
+          `invalid value is property '2' in ` +
+          `["valid1","valid2",false,3,"valid3"]`,
+      },
+    },
+  });
+
+  // Pass allowArrayNonMatchingItems, should be valid
+  validate({
+    value: ["valid1", "valid2", false, 3, "valid3"],
+    schema,
+    options: {
+      allowArrayNonMatchingItems: true,
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: ["valid1", "valid2", "valid3"],
+    },
+  });
 });
 
 add_task(async function test_object_values() {
-  let schema = {
-    type: "object",
-    properties: {
-      url: {
-        type: "URL",
-      },
-      title: {
-        type: "string",
+  // valid values below
+
+  validate({
+    value: {
+      foo: "hello",
+      bar: 123,
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+        bar: {
+          type: "number",
+        },
       },
     },
-  };
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        foo: "hello",
+        bar: 123,
+      },
+    },
+  });
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
+      foo: "hello",
+      bar: {
+        baz: 123,
+      },
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+        bar: {
+          type: "object",
+          properties: {
+            baz: {
+              type: "number",
+            },
+          },
+        },
+      },
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        foo: "hello",
+        bar: {
+          baz: 123,
+        },
+      },
+    },
+  });
+
+  // allowExtraProperties
+  let result = validate({
+    value: {
       url: "https://www.example.com/foo#bar",
       title: "Foo",
       alias: "Bar",
     },
-    schema
+    schema: {
+      type: "object",
+      properties: {
+        url: {
+          type: "URL",
+        },
+        title: {
+          type: "string",
+        },
+      },
+    },
+    options: {
+      allowExtraProperties: true,
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        url: new URL("https://www.example.com/foo#bar"),
+        title: "Foo",
+      },
+    },
+  });
+  Assert.ok(
+    result.parsedValue.url instanceof URL,
+    "types inside the object are also parsed"
   );
-
-  ok(valid, "Object is valid");
-  ok(typeof parsed == "object", "parsed in an object");
-  ok(parsed.url instanceof URL, "types inside the object are also parsed");
-  is(
-    parsed.url.href,
+  Assert.equal(
+    result.parsedValue.url.href,
     "https://www.example.com/foo#bar",
     "URL was correctly parsed"
   );
-  is(parsed.title, "Foo", "title was correctly parsed");
-  is(
-    parsed.alias,
-    undefined,
-    "property not described in the schema is not present in the parsed object"
-  );
 
-  // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(
-      {
-        url: "https://www.example.com/foo#bar",
-        title: 3,
+  // allowExplicitUndefinedProperties
+  validate({
+    value: {
+      foo: undefined,
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
       },
-      schema
-    )[0],
-    "Mismatched type for title"
-  );
+    },
+    options: {
+      allowExplicitUndefinedProperties: true,
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: {},
+    },
+  });
 
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(
-      {
-        url: "www.example.com",
-        title: 3,
+  // allowNullAsUndefinedProperties
+  validate({
+    value: {
+      foo: null,
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
       },
-      schema
-    )[0],
-    "Invalid URL inside the object"
-  );
+    },
+    options: {
+      allowNullAsUndefinedProperties: true,
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: {},
+    },
+  });
+
+  // invalid values below
+
+  validate({
+    value: null,
+    schema: {
+      type: "object",
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match the expected type 'object'`,
+      },
+    },
+  });
+
+  validate({
+    value: {
+      url: "not a URL",
+    },
+    schema: {
+      type: "object",
+      properties: {
+        url: {
+          type: "URL",
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: "not a URL",
+      error: {
+        invalidValue: "not a URL",
+        invalidPropertyNameComponents: ["url"],
+        message:
+          `The value '"not a URL"' does not match the expected type 'URL'. ` +
+          `The invalid value is property 'url' in {"url":"not a URL"}`,
+      },
+    },
+  });
+
+  validate({
+    value: "test",
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      error: {
+        invalidValue: "test",
+        invalidPropertyNameComponents: [],
+        message: `The value '"test"' does not match the expected type 'object'`,
+      },
+    },
+  });
+
+  validate({
+    value: {
+      foo: 123,
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: 123,
+      error: {
+        invalidValue: 123,
+        invalidPropertyNameComponents: ["foo"],
+        message:
+          `The value '123' does not match the expected type 'string'. ` +
+          `The invalid value is property 'foo' in {"foo":123}`,
+      },
+    },
+  });
+
+  validate({
+    value: {
+      foo: {
+        bar: 456,
+      },
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "object",
+          properties: {
+            bar: {
+              type: "string",
+            },
+          },
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: 456,
+      error: {
+        invalidValue: 456,
+        invalidPropertyNameComponents: ["foo", "bar"],
+        message:
+          `The value '456' does not match the expected type 'string'. ` +
+          `The invalid value is property 'foo.bar' in {"foo":{"bar":456}}`,
+      },
+    },
+  });
+
+  // null non-required property with strict=true: invalid
+  validate({
+    value: {
+      foo: null,
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: ["foo"],
+        message:
+          `The value 'null' does not match the expected type 'string'. ` +
+          `The invalid value is property 'foo' in {"foo":null}`,
+      },
+    },
+  });
+  validate({
+    value: {
+      foo: null,
+    },
+    schema: {
+      type: "object",
+      strict: true,
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    options: {
+      allowNullAsUndefinedProperties: true,
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: null,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: ["foo"],
+        message:
+          `The value 'null' does not match the expected type 'string'. ` +
+          `The invalid value is property 'foo' in {"foo":null}`,
+      },
+    },
+  });
+
+  // non-null falsey non-required property with strict=false: invalid
+  validate({
+    value: {
+      foo: false,
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    options: {
+      allowExplicitUndefinedProperties: true,
+      allowNullAsUndefinedProperties: true,
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: false,
+      error: {
+        invalidValue: false,
+        invalidPropertyNameComponents: ["foo"],
+        message:
+          `The value 'false' does not match the expected type 'string'. ` +
+          `The invalid value is property 'foo' in {"foo":false}`,
+      },
+    },
+  });
+  validate({
+    value: {
+      foo: false,
+    },
+    schema: {
+      type: "object",
+      strict: false,
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: false,
+      error: {
+        invalidValue: false,
+        invalidPropertyNameComponents: ["foo"],
+        message:
+          `The value 'false' does not match the expected type 'string'. ` +
+          `The invalid value is property 'foo' in {"foo":false}`,
+      },
+    },
+  });
+
+  validate({
+    value: {
+      bogus: "test",
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "string",
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: { bogus: "test" },
+        invalidPropertyNameComponents: [],
+        message: `Object has unexpected property 'bogus'`,
+      },
+    },
+  });
+
+  validate({
+    value: {
+      foo: {
+        bogus: "test",
+      },
+    },
+    schema: {
+      type: "object",
+      properties: {
+        foo: {
+          type: "object",
+          properties: {
+            bar: {
+              type: "string",
+            },
+          },
+        },
+      },
+    },
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: { bogus: "test" },
+        invalidPropertyNameComponents: ["foo"],
+        message:
+          `Object has unexpected property 'bogus'. The invalid value is ` +
+          `property 'foo' in {"foo":{"bogus":"test"}}`,
+      },
+    },
+  });
 });
 
 add_task(async function test_array_of_objects() {
@@ -491,9 +1297,8 @@ add_task(async function test_array_of_objects() {
     },
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    [
+  validate({
+    value: [
       {
         url: "https://www.example.com/bookmark1",
         title: "Foo",
@@ -503,30 +1308,21 @@ add_task(async function test_array_of_objects() {
         title: "Bar",
       },
     ],
-    schema
-  );
-
-  ok(valid, "Array is valid");
-  is(parsed.length, 2, "Correct number of items");
-
-  ok(
-    typeof parsed[0] == "object" && typeof parsed[1] == "object",
-    "Correct objects inside array"
-  );
-
-  is(
-    parsed[0].url.href,
-    "https://www.example.com/bookmark1",
-    "Correct URL for bookmark 1"
-  );
-  is(
-    parsed[1].url.href,
-    "https://www.example.com/bookmark2",
-    "Correct URL for bookmark 2"
-  );
-
-  is(parsed[0].title, "Foo", "Correct title for bookmark 1");
-  is(parsed[1].title, "Bar", "Correct title for bookmark 2");
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: [
+        {
+          url: new URL("https://www.example.com/bookmark1"),
+          title: "Foo",
+        },
+        {
+          url: new URL("https://www.example.com/bookmark2"),
+          title: "Bar",
+        },
+      ],
+    },
+  });
 });
 
 add_task(async function test_missing_arrays_inside_objects() {
@@ -548,17 +1344,18 @@ add_task(async function test_missing_arrays_inside_objects() {
     },
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       allow: [true, true, true],
     },
-    schema
-  );
-
-  ok(valid, "Object is valid");
-  is(parsed.allow.length, 3, "Allow array is correct.");
-  is(parsed.block, undefined, "Block array is undefined, as expected.");
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        allow: [true, true, true],
+      },
+    },
+  });
 });
 
 add_task(async function test_required_vs_nonrequired_properties() {
@@ -576,31 +1373,40 @@ add_task(async function test_required_vs_nonrequired_properties() {
     required: ["required-property"],
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       "required-property": 5,
+      "non-required-property": undefined,
     },
-    schema
-  );
+    schema,
+    options: {
+      allowExplicitUndefinedProperties: true,
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        "required-property": 5,
+      },
+    },
+  });
 
-  ok(valid, "Object is valid since required property is present");
-  is(parsed["required-property"], 5, "required property is correct");
-  is(
-    parsed["non-required-property"],
-    undefined,
-    "non-required property is undefined, as expected"
-  );
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       "non-required-property": 5,
     },
-    schema
-  );
-
-  ok(!valid, "Object is not valid since the required property is missing");
-  is(parsed, null, "Nothing was returned as parsed");
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: {
+          "non-required-property": 5,
+        },
+        invalidPropertyNameComponents: [],
+        message: `Object is missing required property 'required-property'`,
+      },
+    },
+  });
 });
 
 add_task(async function test_number_or_string_values() {
@@ -608,31 +1414,71 @@ add_task(async function test_number_or_string_values() {
     type: ["number", "string"],
   };
 
-  let valid, parsed;
-  // valid values
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(valid && parsed === 1, "Parsed number value correctly");
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "foobar",
-    schema
-  );
-  ok(valid && parsed === "foobar", "Parsed string value correctly");
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters("1", schema);
-  ok(valid && parsed === "1", "Did not coerce string to number");
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: 1,
+    },
+  });
+  validate({
+    value: "foobar",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: "foobar",
+    },
+  });
+  validate({
+    value: "1",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: "1",
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(null, schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match any type in ["number","string"]`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match any type in ["number","string"]`,
+      },
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match any type in ["number","string"]`,
+      },
+    },
+  });
 });
 
 add_task(async function test_number_or_array_values() {
@@ -643,45 +1489,104 @@ add_task(async function test_number_or_array_values() {
     },
   };
 
-  let valid, parsed;
-  // valid values
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(valid, "Number is valid");
-  is(parsed, 1, "Parsed correctly");
-  ok(valid && parsed === 1, "Parsed number value correctly");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    [1, 2, 3],
-    schema
-  );
-  ok(valid, "Array is valid");
-  Assert.deepEqual(parsed, [1, 2, 3], "Parsed correctly");
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: 1,
+    },
+  });
+  validate({
+    value: [1, 2, 3],
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: [1, 2, 3],
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(null, schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(["a", "b"], schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters([[]], schema)[0],
-    "Invalid value"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters([0, 1, [2, 3]], schema)[0],
-    "Invalid value"
-  );
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match any type in ["number","array"]`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match any type in ["number","array"]`,
+      },
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: null,
+        invalidPropertyNameComponents: [],
+        message: `The value 'null' does not match any type in ["number","array"]`,
+      },
+    },
+  });
+  validate({
+    value: ["a", "b"],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: ["a", "b"],
+        invalidPropertyNameComponents: [],
+        message: `The value '["a","b"]' does not match any type in ["number","array"]`,
+      },
+    },
+  });
+  validate({
+    value: [[]],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: [[]],
+        invalidPropertyNameComponents: [],
+        message: `The value '[[]]' does not match any type in ["number","array"]`,
+      },
+    },
+  });
+  validate({
+    value: [0, 1, [2, 3]],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: [0, 1, [2, 3]],
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '[0,1,[2,3]]' does not match any type in ` +
+          `["number","array"]`,
+      },
+    },
+  });
 });
 
 add_task(function test_number_or_null_Values() {
@@ -689,35 +1594,76 @@ add_task(function test_number_or_null_Values() {
     type: ["number", "null"],
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(valid, "Number should be valid");
-  is(parsed, 1, "Number should be parsed correctly");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    null,
-    schema
-  );
-  ok(valid, "Null should be valid");
-  is(parsed, null, "Null should be parsed correctly");
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: 1,
+    },
+  });
+  validate({
+    value: null,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: null,
+    },
+  });
 
   // Invalid values:
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(true, schema)[0],
-    "Boolean should be rejected"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters("string", schema)[0],
-    "String should be rejected"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters({}, schema)[0],
-    "Object should be rejected"
-  );
-  ok(
-    !JsonSchemaValidator.validateAndParseParameters(["a", "b"], schema)[0],
-    "Array should be rejected"
-  );
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: true,
+        invalidPropertyNameComponents: [],
+        message: `The value 'true' does not match any type in ["number","null"]`,
+      },
+    },
+  });
+  validate({
+    value: "string",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: "string",
+        invalidPropertyNameComponents: [],
+        message: `The value '"string"' does not match any type in ["number","null"]`,
+      },
+    },
+  });
+  validate({
+    value: {},
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: {},
+        invalidPropertyNameComponents: [],
+        message: `The value '{}' does not match any type in ["number","null"]`,
+      },
+    },
+  });
+  validate({
+    value: ["a", "b"],
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: ["a", "b"],
+        invalidPropertyNameComponents: [],
+        message: `The value '["a","b"]' does not match any type in ["number","null"]`,
+      },
+    },
+  });
 });
 
 add_task(async function test_patternProperties() {
@@ -733,40 +1679,60 @@ add_task(async function test_patternProperties() {
     },
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       "S-string": "test",
       "N-number": 5,
       "B-boolean": true,
       "S-bool-property": false,
     },
-    schema
-  );
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        "S-string": "test",
+        "N-number": 5,
+        "B-boolean": true,
+        "S-bool-property": false,
+      },
+    },
+  });
 
-  ok(valid, "Object is valid");
-  is(parsed["S-string"], "test", "parsedProperty is correct");
-  is(parsed["N-number"], 5, "parsedProperty is correct");
-  is(parsed["B-boolean"], true, "parsedProperty is correct");
-  is(parsed["S-bool-property"], false, "property is correct");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       "N-string": "test",
     },
-    schema
-  );
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: "test",
+      error: {
+        invalidValue: "test",
+        invalidPropertyNameComponents: ["N-string"],
+        message:
+          `The value '"test"' does not match the expected type 'number'. ` +
+          `The invalid value is property 'N-string' in {"N-string":"test"}`,
+      },
+    },
+  });
 
-  ok(!valid, "Object is not valid since there is a type mismatch");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       "S-number": 5,
     },
-    schema
-  );
-
-  ok(!valid, "Object is not valid since there is a type mismatch");
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: 5,
+      error: {
+        invalidValue: 5,
+        invalidPropertyNameComponents: ["S-number"],
+        message:
+          `The value '5' does not match the expected type 'string'. ` +
+          `The invalid value is property 'S-number' in {"S-number":5}`,
+      },
+    },
+  });
 
   schema = {
     type: "object",
@@ -776,12 +1742,7 @@ add_task(async function test_patternProperties() {
   };
 
   Assert.throws(
-    () => {
-      [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-        {},
-        schema
-      );
-    },
+    () => JsonSchemaValidator.validate({}, schema),
     /Invalid property pattern/,
     "Checking that invalid property patterns throw"
   );
@@ -792,44 +1753,68 @@ add_task(async function test_JSON_type() {
     type: "JSON",
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    {
+  validate({
+    value: {
       a: "b",
     },
-    schema
-  );
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        a: "b",
+      },
+    },
+  });
+  validate({
+    value: '{"a": "b"}',
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        a: "b",
+      },
+    },
+  });
 
-  ok(valid, "Object is valid");
-  ok(typeof parsed == "object", "parsed in an object");
-  is(parsed.a, "b", "parsedProperty is correct");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    '{"a": "b"}',
-    schema
-  );
-
-  ok(valid, "Object is valid");
-  ok(typeof parsed == "object", "parsed in an object");
-  is(parsed.a, "b", "parsedProperty is correct");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "{This{is{not{JSON}}}}",
-    schema
-  );
-
-  ok(!valid, "Object is not valid since JSON was incorrect");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters("0", schema);
-
-  ok(!valid, "Object is not valid since input wasn't an object");
-
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "true",
-    schema
-  );
-
-  ok(!valid, "Object is not valid since input wasn't an object");
+  validate({
+    value: "{This{is{not{JSON}}}}",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: "{This{is{not{JSON}}}}",
+        invalidPropertyNameComponents: [],
+        message: `JSON string could not be parsed: "{This{is{not{JSON}}}}"`,
+      },
+    },
+  });
+  validate({
+    value: "0",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: "0",
+        invalidPropertyNameComponents: [],
+        message: `JSON was not an object: "0"`,
+      },
+    },
+  });
+  validate({
+    value: "true",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: "true",
+        invalidPropertyNameComponents: [],
+        message: `JSON was not an object: "true"`,
+      },
+    },
+  });
 });
 
 add_task(async function test_enum() {
@@ -838,18 +1823,30 @@ add_task(async function test_enum() {
     enum: ["one", "two"],
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "one",
-    schema
-  );
-  ok(valid && parsed == "one", "Parsed string value correctly");
+  validate({
+    value: "one",
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: "one",
+    },
+  });
 
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    "three",
-    schema
-  );
-  ok(!valid, "String value wasn't in enum");
+  validate({
+    value: "three",
+    schema,
+    expectedResult: {
+      valid: false,
+      parsedValue: undefined,
+      error: {
+        invalidValue: "three",
+        invalidPropertyNameComponents: [],
+        message:
+          `The value '"three"' is not one of the enumerated values ` +
+          `["one","two"]`,
+      },
+    },
+  });
 });
 
 add_task(async function test_bool_enum() {
@@ -858,12 +1855,15 @@ add_task(async function test_bool_enum() {
     enum: ["one", "two"],
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(
-    true,
-    schema
-  );
-  ok(valid && parsed === true, "Enum is ignored because it is a boolean.");
+  // `enum` is ignored because `type` is boolean.
+  validate({
+    value: true,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: true,
+    },
+  });
 });
 
 add_task(async function test_boolint_enum() {
@@ -872,10 +1872,93 @@ add_task(async function test_boolint_enum() {
     enum: ["one", "two"],
   };
 
-  let valid, parsed;
-  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters(1, schema);
-  ok(
-    valid && parsed === true,
-    "Enum is ignored because it is a boolean converted from an integer."
-  );
+  // `enum` is ignored because `type` is boolean and the integer value was
+  // coerced to boolean.
+  validate({
+    value: 1,
+    schema,
+    expectedResult: {
+      valid: true,
+      parsedValue: true,
+    },
+  });
 });
+
+/**
+ * Validates a value against a schema and asserts that the result is as
+ * expected.
+ *
+ * @param {*} value
+ *   The value to validate.
+ * @param {object} schema
+ *   The schema to validate against.
+ * @param {object} expectedResult
+ *   The expected result.  See JsonSchemaValidator.validate for what this object
+ *   should look like.  If the expected result is invalid, then this object
+ *   should have an `error` property with all the properties of validation
+ *   errors, including `message`, except that `rootValue` and `rootSchema` are
+ *   unnecessary because this function will add them for you.
+ * @param {object} options
+ *   Options to pass to JsonSchemaValidator.validate.
+ * @return {object} The return value of JsonSchemaValidator.validate, which is
+ *   a result.
+ */
+function validate({ value, schema, expectedResult, options = undefined }) {
+  let result = JsonSchemaValidator.validate(value, schema, options);
+
+  checkObject(
+    result,
+    expectedResult,
+    {
+      valid: false,
+      parsedValue: true,
+    },
+    "Checking result property: "
+  );
+
+  Assert.equal("error" in result, "error" in expectedResult, "result.error");
+  if (result.error && expectedResult.error) {
+    expectedResult.error = Object.assign(expectedResult.error, {
+      rootValue: value,
+      rootSchema: schema,
+    });
+    checkObject(
+      result.error,
+      expectedResult.error,
+      {
+        rootValue: true,
+        rootSchema: false,
+        invalidPropertyNameComponents: false,
+        invalidValue: true,
+        message: false,
+      },
+      "Checking result.error property: "
+    );
+  }
+
+  return result;
+}
+
+/**
+ * Asserts that an object is the same as an expected object.
+ *
+ * @param {*} actual
+ *   The actual object.
+ * @param {*} expected
+ *   The expected object.
+ * @param {object} properties
+ *   The properties to compare in the two objects.  This value should be an
+ *   object.  The keys are the names of properties in the two objects.  The
+ *   values are booleans: true means that the property should be compared using
+ *   strict equality and false means deep equality.  Deep equality is used if
+ *   the property is an object.
+ */
+function checkObject(actual, expected, properties, message) {
+  for (let [name, strict] of Object.entries(properties)) {
+    let assertFunc =
+      !strict || typeof expected[name] == "object"
+        ? "deepEqual"
+        : "strictEqual";
+    Assert[assertFunc](actual[name], expected[name], message + name);
+  }
+}

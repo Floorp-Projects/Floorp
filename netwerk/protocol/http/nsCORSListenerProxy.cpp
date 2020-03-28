@@ -885,7 +885,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // from the netwerk, hence we shouldn't require CORS in that specific case.
   if (CheckInsecureUpgradePreventsCORS(mRequestingPrincipal, aChannel)) {
     // Check if HTTPS-Only Mode is enabled
-    if (!loadInfo->GetHttpsOnlyNoUpgrade() &&
+    if (!(loadInfo->GetHttpsOnlyStatus() & nsILoadInfo::HTTPS_ONLY_EXEMPT) &&
         StaticPrefs::dom_security_https_only_mode()) {
       return NS_OK;
     }

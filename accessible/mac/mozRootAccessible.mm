@@ -25,6 +25,18 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 
 @implementation mozRootAccessible
 
+- (id)initWithAccessible:(uintptr_t)aGeckoAccessible {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSAssert((aGeckoAccessible & IS_PROXY) == 0, @"mozRootAccessible is never a proxy");
+
+  mParallelView = getNativeViewFromRootAccessible((Accessible*)aGeckoAccessible);
+
+  return [super initWithAccessible:aGeckoAccessible];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
 - (NSArray*)accessibilityAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -106,11 +118,8 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 - (id)representedView {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (mParallelView) return (id)mParallelView;
+  NSAssert(mParallelView, @"root accessible does not have a native parallel view.");
 
-  mParallelView = getNativeViewFromRootAccessible([self getGeckoAccessible]);
-
-  NSAssert(mParallelView, @"can't return root accessible's native parallel view.");
   return mParallelView;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

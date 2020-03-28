@@ -100,10 +100,9 @@ fn host_features() {
         ..Default::default()
     };
 
-    let mut set = BTreeSet::new();
-    set.insert("cmd".to_owned());
-    set.insert("shell_v2".to_owned());
-    assert_eq!(set, host.features().expect("to query features"));
+    let set = host.features::<BTreeSet<_>>().expect("to query features");
+    assert!(set.contains("cmd"));
+    assert!(set.contains("shell_v2"));
 }
 
 #[test]

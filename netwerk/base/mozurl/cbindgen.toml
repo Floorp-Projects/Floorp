@@ -1,0 +1,61 @@
+header = """/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The MozURL type is implemented in Rust code, and uses extern "C" FFI calls to
+ * operate on the internal data structure. This file contains C declarations of
+ * these files.
+
+ * WARNING: DO NOT CALL ANY OF THESE FUNCTIONS. USE |MozURL| INSTEAD! */
+ """
+autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen. */
+
+namespace mozilla {
+namespace net {
+class MozURL;
+}  // namespace net
+}  // namespace mozilla
+
+extern "C" {
+
+// FFI-compatible string slice struct used internally by MozURL.
+// Coerces to nsDependentCSubstring.
+struct MozURLSpecSlice {
+  char* mData;
+  uint32_t mLen;
+
+  operator nsDependentCSubstring() {
+    return nsDependentCSubstring(mData, mLen);
+  }
+};
+
+nsresult mozurl_new(mozilla::net::MozURL** aResult, const nsACString* aSpec,
+                    /* optional */ const mozilla::net::MozURL* aBase);
+
+void mozurl_clone(const mozilla::net::MozURL* aThis,
+                  mozilla::net::MozURL** aResult);
+
+nsresult mozurl_common_base(const mozilla::net::MozURL* aUrl1,
+                            const mozilla::net::MozURL* aUrl2,
+                            mozilla::net::MozURL** aResult);
+}
+
+"""
+
+include_guard = "mozilla_net_MozURL_ffi_h"
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C++"
+namespaces = []
+includes = ["nsError.h", "nsString.h"]
+
+[export]
+exclude = ["Gecko_StrictFileOriginPolicy", "MozURL", "SpecSlice", "mozurl_new", "mozurl_clone", "mozurl_common_base"]
+item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]
+
+
+[export.rename]
+"SpecSlice" = "MozURLSpecSlice"
+"MozURL" = "mozilla::net::MozURL"

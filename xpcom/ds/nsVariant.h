@@ -43,39 +43,39 @@ class nsDiscriminatedUnion {
 
   uint16_t GetType() const { return mType; }
 
-  MOZ_MUST_USE nsresult ConvertToInt8(uint8_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToInt16(int16_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToInt32(int32_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToInt64(int64_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToUint8(uint8_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToUint16(uint16_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToUint32(uint32_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToUint64(uint64_t* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToFloat(float* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToDouble(double* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToBool(bool* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToChar(char* aResult) const;
-  MOZ_MUST_USE nsresult ConvertToWChar(char16_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToInt8(uint8_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToInt16(int16_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToInt32(int32_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToInt64(int64_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToUint8(uint8_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToUint16(uint16_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToUint32(uint32_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToUint64(uint64_t* aResult) const;
+  [[nodiscard]] nsresult ConvertToFloat(float* aResult) const;
+  [[nodiscard]] nsresult ConvertToDouble(double* aResult) const;
+  [[nodiscard]] nsresult ConvertToBool(bool* aResult) const;
+  [[nodiscard]] nsresult ConvertToChar(char* aResult) const;
+  [[nodiscard]] nsresult ConvertToWChar(char16_t* aResult) const;
 
-  MOZ_MUST_USE nsresult ConvertToID(nsID* aResult) const;
+  [[nodiscard]] nsresult ConvertToID(nsID* aResult) const;
 
-  MOZ_MUST_USE nsresult ConvertToAString(nsAString& aResult) const;
-  MOZ_MUST_USE nsresult ConvertToAUTF8String(nsAUTF8String& aResult) const;
-  MOZ_MUST_USE nsresult ConvertToACString(nsACString& aResult) const;
-  MOZ_MUST_USE nsresult ConvertToString(char** aResult) const;
-  MOZ_MUST_USE nsresult ConvertToWString(char16_t** aResult) const;
-  MOZ_MUST_USE nsresult ConvertToStringWithSize(uint32_t* aSize,
-                                                char** aStr) const;
-  MOZ_MUST_USE nsresult ConvertToWStringWithSize(uint32_t* aSize,
-                                                 char16_t** aStr) const;
+  [[nodiscard]] nsresult ConvertToAString(nsAString& aResult) const;
+  [[nodiscard]] nsresult ConvertToAUTF8String(nsAUTF8String& aResult) const;
+  [[nodiscard]] nsresult ConvertToACString(nsACString& aResult) const;
+  [[nodiscard]] nsresult ConvertToString(char** aResult) const;
+  [[nodiscard]] nsresult ConvertToWString(char16_t** aResult) const;
+  [[nodiscard]] nsresult ConvertToStringWithSize(uint32_t* aSize,
+                                                 char** aStr) const;
+  [[nodiscard]] nsresult ConvertToWStringWithSize(uint32_t* aSize,
+                                                  char16_t** aStr) const;
 
-  MOZ_MUST_USE nsresult ConvertToISupports(nsISupports** aResult) const;
-  MOZ_MUST_USE nsresult ConvertToInterface(nsIID** aIID,
-                                           void** aInterface) const;
-  MOZ_MUST_USE nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
-                                       uint32_t* aCount, void** aPtr) const;
+  [[nodiscard]] nsresult ConvertToISupports(nsISupports** aResult) const;
+  [[nodiscard]] nsresult ConvertToInterface(nsIID** aIID,
+                                            void** aInterface) const;
+  [[nodiscard]] nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
+                                        uint32_t* aCount, void** aPtr) const;
 
-  MOZ_MUST_USE nsresult SetFromVariant(nsIVariant* aValue);
+  [[nodiscard]] nsresult SetFromVariant(nsIVariant* aValue);
 
   void SetFromInt8(uint8_t aValue);
   void SetFromInt16(int16_t aValue);
@@ -94,16 +94,16 @@ class nsDiscriminatedUnion {
   void SetFromAString(const nsAString& aValue);
   void SetFromAUTF8String(const nsAUTF8String& aValue);
   void SetFromACString(const nsACString& aValue);
-  MOZ_MUST_USE nsresult SetFromString(const char* aValue);
-  MOZ_MUST_USE nsresult SetFromWString(const char16_t* aValue);
+  [[nodiscard]] nsresult SetFromString(const char* aValue);
+  [[nodiscard]] nsresult SetFromWString(const char16_t* aValue);
   void SetFromISupports(nsISupports* aValue);
   void SetFromInterface(const nsIID& aIID, nsISupports* aValue);
-  MOZ_MUST_USE nsresult SetFromArray(uint16_t aType, const nsIID* aIID,
-                                     uint32_t aCount, void* aValue);
-  MOZ_MUST_USE nsresult SetFromStringWithSize(uint32_t aSize,
-                                              const char* aValue);
-  MOZ_MUST_USE nsresult SetFromWStringWithSize(uint32_t aSize,
-                                               const char16_t* aValue);
+  [[nodiscard]] nsresult SetFromArray(uint16_t aType, const nsIID* aIID,
+                                      uint32_t aCount, void* aValue);
+  [[nodiscard]] nsresult SetFromStringWithSize(uint32_t aSize,
+                                               const char* aValue);
+  [[nodiscard]] nsresult SetFromWStringWithSize(uint32_t aSize,
+                                                const char16_t* aValue);
 
   // Like SetFromWStringWithSize, but leaves the string uninitialized. It does
   // does write the null-terminator.
@@ -116,11 +116,11 @@ class nsDiscriminatedUnion {
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
 
  private:
-  MOZ_MUST_USE nsresult
-  ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
+  [[nodiscard]] nsresult ToManageableNumber(
+      nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
-  MOZ_MUST_USE bool String2ID(nsID* aPid) const;
-  MOZ_MUST_USE nsresult ToString(nsACString& aOutString) const;
+  [[nodiscard]] bool String2ID(nsID* aPid) const;
+  [[nodiscard]] nsresult ToString(nsACString& aOutString) const;
 
  public:
   union {

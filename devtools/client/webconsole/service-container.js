@@ -41,9 +41,6 @@ function setupServiceContainer({
     resendNetworkRequest: requestId => hud.resendNetworkRequest(requestId),
     focusInput: () => hud.focusInput(),
     setInputValue: value => hud.setInputValue(value),
-    canRewind: () => hud.canRewind(),
-    onMessageHover: (type, message) =>
-      webConsoleUI.onMessageHover(type, message),
     getLongString: grip => webConsoleUI.getLongString(grip),
     getJsTermTooltipAnchor: () => webConsoleUI.getJsTermTooltipAnchor(),
     emitForTests: (event, value) => webConsoleUI.emitForTests(event, value),
@@ -59,8 +56,6 @@ function setupServiceContainer({
       sourceMapService: toolbox.sourceMapURLService,
       highlightDomElement: highlight,
       unHighlightDomElement: unhighlight,
-      jumpToExecutionPoint: executionPoint =>
-        toolbox.threadFront.timeWarp(executionPoint),
       onViewSourceInDebugger: frame => hud.onViewSourceInDebugger(frame),
       onViewSourceInStyleEditor: frame => hud.onViewSourceInStyleEditor(frame),
     });

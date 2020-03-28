@@ -28,7 +28,6 @@ async function loadTipExtension(options = {}) {
               payload: {
                 text: "Test",
                 buttonText: "OK",
-                data: "testData",
                 buttonUrl: options.buttonUrl,
                 helpUrl: options.helpUrl,
               },
@@ -38,7 +37,6 @@ async function loadTipExtension(options = {}) {
         browser.urlbar.onResultPicked.addListener((payload, details) => {
           browser.test.assertEq(payload.text, "Test", "payload.text");
           browser.test.assertEq(payload.buttonText, "OK", "payload.buttonText");
-          browser.test.assertEq(payload.data, "testData", "payload.data");
           browser.test.sendMessage("onResultPicked received", details);
         }, "test");
       });

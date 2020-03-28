@@ -147,11 +147,6 @@ class WebConsole {
     return this.ui ? this.ui.jsterm : null;
   }
 
-  canRewind() {
-    const traits = this.currentTarget && this.currentTarget.traits;
-    return traits && traits.canRewind;
-  }
-
   /**
    * Get the value from the input field.
    * @returns {String|null} returns null if there's no input.

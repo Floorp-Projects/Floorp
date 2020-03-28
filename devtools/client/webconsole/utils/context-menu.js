@@ -80,7 +80,7 @@ function createContextMenu(event, message, webConsoleWrapper) {
   const win = parentNode.ownerDocument.defaultView;
   const selection = win.getSelection();
 
-  const { source, request, executionPoint, messageId } = message || {};
+  const { source, request, messageId } = message || {};
 
   const menu = new Menu({ id: "webconsole-menu" });
 
@@ -267,18 +267,6 @@ function createContextMenu(event, message, webConsoleWrapper) {
         accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
         disabled: !rootActorId,
         click: () => dispatch(actions.openSidebar(messageId, rootActorId)),
-      })
-    );
-  }
-
-  // Add time warp option if available.
-  if (executionPoint) {
-    menu.append(
-      new MenuItem({
-        id: "console-menu-time-warp",
-        label: l10n.getStr("webconsole.menu.timeWarp.label"),
-        disabled: false,
-        click: () => dispatch(actions.jumpToExecutionPoint(executionPoint)),
       })
     );
   }

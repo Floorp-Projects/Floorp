@@ -15,7 +15,7 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
-using struct mozilla::layers::SLGuidAndRenderRoot from "mozilla/layers/APZTypes.h";
+using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
@@ -83,7 +83,7 @@ parent:
 
   // These correspond exactly to the equivalent APIs in PLayerTransaction -
   // see those for documentation.
-  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, SLGuidAndRenderRoot[] aTargets);
+  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
   // More copied from PLayerTransaction, but these are only used for testing.
   sync SetTestSampleTime(TimeStamp sampleTime);
   sync LeaveTestMode();

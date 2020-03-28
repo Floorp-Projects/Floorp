@@ -73,7 +73,7 @@ function init() {
       fragment.appendChild(
         MozXULElement.parseXULToFragment(
           `
-        <label class="blockedLabel" value="&blocklist.blocked.label;"/>
+        <label class="blockedLabel" data-l10n-id="blocklist-blocked"/>
       `,
           ["chrome://mozapps/locale/extensions/blocklist.dtd"]
         )
@@ -83,7 +83,7 @@ function init() {
       fragment.appendChild(
         MozXULElement.parseXULToFragment(
           `
-        <checkbox class="disableCheckbox" checked="true" label="&blocklist.checkbox.label;"/>
+        <checkbox class="disableCheckbox" checked="true" data-l10n-id="blocklist-checkbox"/>
       `,
           ["chrome://mozapps/locale/extensions/blocklist.dtd"]
         )
