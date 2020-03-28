@@ -238,19 +238,6 @@ struct IsPointer : detail::IsPointerHelper<typename RemoveCV<T>::Type> {};
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
- * IsConst determines whether a type is const or not.
- *
- * mozilla::IsConst<int>::value is false;
- * mozilla::IsConst<void* const>::value is true;
- * mozilla::IsConst<const char*>::value is false.
- */
-template <typename T>
-struct IsConst : FalseType {};
-
-template <typename T>
-struct IsConst<const T> : TrueType {};
-
-/**
  * IsVolatile determines whether a type is volatile or not.
  *
  * mozilla::IsVolatile<int>::value is false;
