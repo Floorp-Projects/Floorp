@@ -17,7 +17,7 @@ nsMacFinderProgress::nsMacFinderProgress() : mProgress(nil) {}
 
 nsMacFinderProgress::~nsMacFinderProgress() {
   if (mProgress) {
-    [mProgress.cancellationHandler release];
+    [mProgress unpublish];
     [mProgress release];
   }
 }
@@ -78,8 +78,6 @@ nsMacFinderProgress::End() {
 
   if (mProgress) {
     [mProgress unpublish];
-    [mProgress release];
-    mProgress = nil;
   }
 
   return NS_OK;
