@@ -170,8 +170,6 @@ confirm-discard-changes-dialog-confirm-button = Discard
 about-logins-breach-alert-title = Website Breach
 breach-alert-text = Passwords were leaked or stolen from this website since you last updated your login details. Change your password to protect your account.
 breach-alert-link = Learn more about this breach.
-breach-alert-dismiss =
-    .title = Close this alert
 about-logins-breach-alert-date = This breach occurred on { DATETIME($date, day: "numeric", month: "long", year: "numeric") }
 
 ## Vulnerable Password notification

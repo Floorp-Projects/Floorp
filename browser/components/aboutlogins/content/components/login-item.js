@@ -83,15 +83,9 @@ export default class LoginItem extends HTMLElement {
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
     this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
-    this._dismissBreachAlert = this._breachAlert.querySelector(
-      ".dismiss-alert"
-    );
     this._vulnerableAlert = this.shadowRoot.querySelector(".vulnerable-alert");
     this._vulnerableAlertLink = this._vulnerableAlert.querySelector(
       ".alert-link"
-    );
-    this._dismissVulnerableAlert = this._vulnerableAlert.querySelector(
-      ".dismiss-alert"
     );
 
     this.render();
@@ -101,7 +95,6 @@ export default class LoginItem extends HTMLElement {
     this._copyPasswordButton.addEventListener("click", this);
     this._copyUsernameButton.addEventListener("click", this);
     this._deleteButton.addEventListener("click", this);
-    this._dismissBreachAlert.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
     this._errorMessageLink.addEventListener("click", this);
     this._form.addEventListener("submit", this);
@@ -289,23 +282,6 @@ export default class LoginItem extends HTMLElement {
     this._internalSetMonitorData(internalMemberName, this[internalMemberName]);
   }
 
-  dismissBreachAlert() {
-    document.dispatchEvent(
-      new CustomEvent("AboutLoginsDismissBreachAlert", {
-        bubbles: true,
-        detail: this._login,
-      })
-    );
-    this._recordTelemetryEvent({
-      object: "existing_login",
-      method: "dismiss_breach_alert",
-    });
-  }
-
-  dismissVulnerableAlert() {
-    // TODO: Implement this
-  }
-
   showLoginItemError(error) {
     this._error = error;
     this.render();
@@ -455,14 +431,6 @@ export default class LoginItem extends HTMLElement {
               })
             );
           });
-          return;
-        }
-        if (classList.contains("dismiss-alert")) {
-          if (event.currentTarget.closest(".breach-alert")) {
-            this.dismissBreachAlert();
-          } else if (event.currentTarget.closest(".vulnerable-alert")) {
-            this.dismissVulnerableAlert();
-          }
           return;
         }
         if (classList.contains("edit-button")) {
