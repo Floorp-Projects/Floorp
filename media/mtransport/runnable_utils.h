@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include <functional>
 #include <tuple>
+#include <type_traits>
 
 // Abstract base class for all of our templates
 namespace mozilla {
@@ -73,10 +74,9 @@ class runnable_args_func : public detail::runnable_args_base<detail::NoResult> {
 };
 
 template <typename FunType, typename... Args>
-runnable_args_func<FunType, typename mozilla::Decay<Args>::Type...>*
-WrapRunnableNM(FunType f, Args&&... args) {
-  return new runnable_args_func<FunType,
-                                typename mozilla::Decay<Args>::Type...>(
+runnable_args_func<FunType, std::decay_t<Args>...>* WrapRunnableNM(
+    FunType f, Args&&... args) {
+  return new runnable_args_func<FunType, std::decay_t<Args>...>(
       f, std::forward<Args>(args)...);
 }
 
@@ -100,10 +100,9 @@ class runnable_args_func_ret
 };
 
 template <typename R, typename FunType, typename... Args>
-runnable_args_func_ret<R, FunType, typename mozilla::Decay<Args>::Type...>*
-WrapRunnableNMRet(R* ret, FunType f, Args&&... args) {
-  return new runnable_args_func_ret<R, FunType,
-                                    typename mozilla::Decay<Args>::Type...>(
+runnable_args_func_ret<R, FunType, std::decay_t<Args>...>* WrapRunnableNMRet(
+    R* ret, FunType f, Args&&... args) {
+  return new runnable_args_func_ret<R, FunType, std::decay_t<Args>...>(
       ret, f, std::forward<Args>(args)...);
 }
 
@@ -126,16 +125,15 @@ class runnable_args_memfn
  private:
   // For holders such as RefPtr and UniquePtr make sure concrete copy is held
   // rather than a potential dangling reference.
-  typename mozilla::Decay<Class>::Type mObj;
+  std::decay_t<Class> mObj;
   M mMethod;
   std::tuple<Args...> mArgs;
 };
 
 template <typename Class, typename M, typename... Args>
-runnable_args_memfn<Class, M, typename mozilla::Decay<Args>::Type...>*
-WrapRunnable(Class&& obj, M method, Args&&... args) {
-  return new runnable_args_memfn<Class, M,
-                                 typename mozilla::Decay<Args>::Type...>(
+runnable_args_memfn<Class, M, std::decay_t<Args>...>* WrapRunnable(
+    Class&& obj, M method, Args&&... args) {
+  return new runnable_args_memfn<Class, M, std::decay_t<Args>...>(
       std::forward<Class>(obj), method, std::forward<Args>(args)...);
 }
 
@@ -160,16 +158,15 @@ class runnable_args_memfn_ret
   Ret* mReturn;
   // For holders such as RefPtr and UniquePtr make sure concrete copy is held
   // rather than a potential dangling reference.
-  typename mozilla::Decay<Class>::Type mObj;
+  std::decay_t<Class> mObj;
   M mMethod;
   std::tuple<Args...> mArgs;
 };
 
 template <typename R, typename Class, typename M, typename... Args>
-runnable_args_memfn_ret<R, Class, M, typename mozilla::Decay<Args>::Type...>*
-WrapRunnableRet(R* ret, Class&& obj, M method, Args&&... args) {
-  return new runnable_args_memfn_ret<R, Class, M,
-                                     typename mozilla::Decay<Args>::Type...>(
+runnable_args_memfn_ret<R, Class, M, std::decay_t<Args>...>* WrapRunnableRet(
+    R* ret, Class&& obj, M method, Args&&... args) {
+  return new runnable_args_memfn_ret<R, Class, M, std::decay_t<Args>...>(
       ret, std::forward<Class>(obj), method, std::forward<Args>(args)...);
 }
 

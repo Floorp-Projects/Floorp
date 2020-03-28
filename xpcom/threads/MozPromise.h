@@ -1435,7 +1435,7 @@ static RefPtr<PromiseType> InvokeAsync(
   static_assert(sizeof...(ArgTypes) == sizeof...(ActualArgTypes),
                 "Method's ArgTypes and ActualArgTypes should have equal sizes");
   return detail::InvokeAsyncImpl<
-      StoreCopyPassByRRef<typename Decay<ActualArgTypes>::Type>...>(
+      StoreCopyPassByRRef<std::decay_t<ActualArgTypes>>...>(
       aTarget, aThisVal, aCallerName, aMethod,
       std::forward<ActualArgTypes>(aArgs)...);
 }
@@ -1444,7 +1444,7 @@ namespace detail {
 
 template <typename Function, typename PromiseType>
 class ProxyFunctionRunnable : public CancelableRunnable {
-  typedef typename Decay<Function>::Type FunctionStorage;
+  using FunctionStorage = std::decay_t<Function>;
 
  public:
   template <typename F>
