@@ -1358,7 +1358,7 @@
     /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error
-     * message. It must be in range for `js::CheckIsObjectKind`.
+     * message.
      *
      * Implements: [GetIterator][1] step 5, [IteratorNext][2] step 3. Both
      * operations call a JS method which scripts can define however they want,
@@ -1369,18 +1369,18 @@
      *
      *   Category: Objects
      *   Type: Iteration
-     *   Operands: uint8_t kind
+     *   Operands: CheckIsObjectKind kind
      *   Stack: result => result
      */ \
     MACRO(CheckIsObj, check_is_obj, NULL, 2, 1, 1, JOF_UINT8) \
     /*
      * Check that the top value on the stack is callable, and throw a TypeError
      * if not. The operand `kind` is used only to generate an appropriate error
-     * message. It must be in range for `js::CheckIsCallableKind`.
+     * message.
      *
      *   Category: Objects
      *   Type: Iteration
-     *   Operands: uint8_t kind
+     *   Operands: CheckIsCallableKind kind
      *   Stack: obj => obj
      */ \
     MACRO(CheckIsCallable, check_is_callable, NULL, 2, 1, 1, JOF_UINT8) \
@@ -1593,7 +1593,7 @@
      *
      *   Category: Functions
      *   Type: Creating functions
-     *   Operands: uint8_t prefixKind
+     *   Operands: FunctionPrefixKind prefixKind
      *   Stack: fun, name => fun
      */ \
     MACRO(SetFunName, set_fun_name, NULL, 2, 2, 1, JOF_UINT8) \
@@ -2046,7 +2046,7 @@
      *
      *   Category: Functions
      *   Type: Generators and async functions
-     *   Operands: uint8_t fulfillOrReject
+     *   Operands: AsyncFunctionResolveKind fulfillOrReject
      *   Stack: valueOrReason, gen => promise
      */ \
     MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \

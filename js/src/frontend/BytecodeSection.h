@@ -33,8 +33,9 @@
 #include "js/TypeDecls.h"               // jsbytecode, JSContext
 #include "js/Value.h"                   // JS::Vector
 #include "js/Vector.h"                  // Vector
-#include "vm/JSScript.h"                // JSTryNote, JSTryNoteKind, ScopeNote
 #include "vm/Opcodes.h"                 // JSOpLength_JumpTarget
+#include "vm/SharedStencil.h"           // TryNote, ScopeNote
+#include "vm/TryNoteKind.h"             // TryNoteKind
 
 namespace js {
 
