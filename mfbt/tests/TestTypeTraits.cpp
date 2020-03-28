@@ -14,7 +14,6 @@ using mozilla::IsConvertible;
 using mozilla::IsDestructible;
 using mozilla::IsFunction;
 using mozilla::IsSame;
-using mozilla::RemoveExtent;
 using mozilla::RemovePointer;
 
 static_assert(!IsFunction<int>::value, "int is not a function type");
@@ -118,18 +117,6 @@ static_assert(
     IsSame<decltype(DeclVal<TestWithNoDefaultConstructor>().foo()), int>::value,
     "decltype should work using a DeclVal'd struct without a default "
     "constructor");
-
-static_assert(IsSame<RemoveExtent<int>::Type, int>::value,
-              "removing extent from non-array must return the non-array");
-static_assert(
-    IsSame<RemoveExtent<const int[]>::Type, const int>::value,
-    "removing extent from unknown-bound array must return element type");
-static_assert(
-    IsSame<RemoveExtent<volatile int[5]>::Type, volatile int>::value,
-    "removing extent from known-bound array must return element type");
-static_assert(
-    IsSame<RemoveExtent<long[][17]>::Type, long[17]>::value,
-    "removing extent from multidimensional array must return element type");
 
 struct TestRemovePointer {
   bool m;

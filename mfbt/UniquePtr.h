@@ -9,6 +9,7 @@
 #ifndef mozilla_UniquePtr_h
 #define mozilla_UniquePtr_h
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Assertions.h"
@@ -635,7 +636,7 @@ typename detail::UniqueSelector<T>::SingleObject MakeUnique(Args&&... aArgs) {
 template <typename T>
 typename detail::UniqueSelector<T>::UnknownBound MakeUnique(
     decltype(sizeof(int)) aN) {
-  typedef typename RemoveExtent<T>::Type ArrayType;
+  using ArrayType = std::remove_extent_t<T>;
   return UniquePtr<T>(new ArrayType[aN]());
 }
 
