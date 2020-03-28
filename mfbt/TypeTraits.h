@@ -21,11 +21,6 @@
 
 namespace mozilla {
 
-/* Forward declarations. */
-
-template <typename>
-struct RemoveCV;
-
 /* 20.9.3 Helper classes [meta.help] */
 
 /**
@@ -44,29 +39,6 @@ typedef IntegralConstant<bool, true> TrueType;
 typedef IntegralConstant<bool, false> FalseType;
 
 /* 20.9.4 Unary type traits [meta.unary] */
-
-/* 20.9.4.1 Primary type categories [meta.unary.cat] */
-
-namespace detail {
-
-template <typename T>
-struct IsVoidHelper : FalseType {};
-
-template <>
-struct IsVoidHelper<void> : TrueType {};
-
-}  // namespace detail
-
-/**
- * IsVoid determines whether a type is void.
- *
- * mozilla::IsVoid<int>::value is false;
- * mozilla::IsVoid<void>::value is true;
- * mozilla::IsVoid<void*>::value is false;
- * mozilla::IsVoid<volatile void>::value is true.
- */
-template <typename T>
-struct IsVoid : detail::IsVoidHelper<typename RemoveCV<T>::Type> {};
 
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 

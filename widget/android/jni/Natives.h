@@ -560,7 +560,7 @@ class NativeStub<Traits, Impl, jni::Args<Args...>> {
   using ReturnType = typename Traits::ReturnType;
 
   static constexpr bool isStatic = Traits::isStatic;
-  static constexpr bool isVoid = mozilla::IsVoid<ReturnType>::value;
+  static constexpr bool isVoid = std::is_void_v<ReturnType>;
 
   struct VoidType {
     using JNIType = void;

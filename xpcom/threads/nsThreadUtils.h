@@ -553,7 +553,7 @@ class RunnableFunction : public Runnable {
       : Runnable(aName), mFunction(std::forward<F>(aFunction)) {}
 
   NS_IMETHOD Run() override {
-    static_assert(IsVoid<decltype(mFunction())>::value,
+    static_assert(std::is_void_v<decltype(mFunction())>,
                   "The lambda must return void!");
     mFunction();
     return NS_OK;
