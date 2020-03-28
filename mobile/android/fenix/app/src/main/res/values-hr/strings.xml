@@ -71,7 +71,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Biblioteka</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Web-stanica za desktop</string>
+    <string name="browser_menu_desktop_site">Klasični prikaz</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Dodaj na početni ekran</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -337,7 +337,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Uključi sinkronizaciju</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Skeniraj kod za uparivanje u desktop Firefoxu</string>
+    <string name="preferences_sync_pair">Skeniraj kôd za uparivanje u Firefoxu za računalo</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prijavi se</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -381,7 +381,7 @@
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Zabilješke</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">Desktop zabilješke</string>
+    <string name="library_desktop_bookmarks_root">Zabilješke računala</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Izbornik za zabilješke</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->

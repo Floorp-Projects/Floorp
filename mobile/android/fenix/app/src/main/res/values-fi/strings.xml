@@ -1052,6 +1052,9 @@
     <string name="etp_panel_off">Suojaukset ovat POIS PÄÄLTÄ tällä sivustolla</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Tehostettu seurannan suojaus ei ole käytössä näillä sivustoilla</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Siirry taaksepäin</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Oikeutesi</string>
     <!-- About page link text to open open source licenses screen -->

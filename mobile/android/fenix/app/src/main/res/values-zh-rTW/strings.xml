@@ -1068,6 +1068,9 @@
     <string name="etp_panel_off">已關閉此網站的追蹤保護</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">針對下列網站關閉加強型追蹤保護</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">瀏覽上一頁</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">您的權利</string>
     <!-- About page link text to open open source licenses screen -->

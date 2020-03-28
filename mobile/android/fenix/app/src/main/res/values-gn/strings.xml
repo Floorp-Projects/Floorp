@@ -1057,6 +1057,9 @@
     <string name="etp_panel_off">Umi ñemo’ã ojepe’áma ko tendápe g̃uarã</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Ñemo’ã tapykuehogua oñemboguéma ko’ã tendápe g̃uarã</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Eikundaha tapykuévo</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Nde derécho</string>
     <!-- About page link text to open open source licenses screen -->

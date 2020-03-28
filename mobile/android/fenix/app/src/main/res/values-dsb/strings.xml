@@ -1038,6 +1038,9 @@
     <string name="etp_panel_off">Šćit jo znjemóžnjony za toś to sedło</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Pólěpšony slědowański šćit jo znjemóžnjony za toś te sedła</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Slědk nawigěrowaś</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Waše pšawa</string>
     <!-- About page link text to open open source licenses screen -->
