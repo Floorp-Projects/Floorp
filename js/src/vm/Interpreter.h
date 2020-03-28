@@ -13,6 +13,8 @@
 
 #include "jspubtd.h"
 
+#include "vm/CheckIsCallableKind.h"  // CheckIsCallableKind
+#include "vm/CheckIsObjectKind.h"    // CheckIsObjectKind
 #include "vm/Iteration.h"
 #include "vm/Stack.h"
 
@@ -647,17 +649,7 @@ void ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
 void ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
                                 const char* redeclKind);
 
-enum class CheckIsObjectKind : uint8_t {
-  IteratorNext,
-  IteratorReturn,
-  IteratorThrow,
-  GetIterator,
-  GetAsyncIterator
-};
-
 bool ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind);
-
-enum class CheckIsCallableKind : uint8_t { IteratorReturn };
 
 bool ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind);
 
