@@ -9,7 +9,7 @@
 #ifndef mozilla_PerfectHash_h
 #define mozilla_PerfectHash_h
 
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
 
 namespace mozilla {
 namespace perfecthash {
@@ -25,8 +25,8 @@ constexpr uint32_t FNV_PRIME = 16777619;
 template <typename C>
 inline uint32_t Hash(uint32_t aBasis, const C* aKey, size_t aLen) {
   for (size_t i = 0; i < aLen; ++i) {
-    aBasis = (aBasis ^ static_cast<typename MakeUnsigned<C>::Type>(aKey[i])) *
-             FNV_PRIME;
+    aBasis =
+        (aBasis ^ static_cast<std::make_unsigned_t<C>>(aKey[i])) * FNV_PRIME;
   }
   return aBasis;
 }
