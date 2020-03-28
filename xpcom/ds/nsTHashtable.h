@@ -11,6 +11,7 @@
 #define nsTHashtable_h__
 
 #include <new>
+#include <type_traits>
 #include <utility>
 
 #include "PLDHashTable.h"
@@ -78,7 +79,7 @@
 template <class EntryType>
 class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   typedef mozilla::fallible_t fallible_t;
-  static_assert(mozilla::IsPointer<typename EntryType::KeyTypePointer>::value,
+  static_assert(std::is_pointer_v<typename EntryType::KeyTypePointer>,
                 "KeyTypePointer should be a pointer");
 
  public:

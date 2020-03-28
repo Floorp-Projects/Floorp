@@ -7,6 +7,8 @@
 #if !defined(MozPromise_h_)
 #  define MozPromise_h_
 
+#  include <type_traits>
+
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Monitor.h"
@@ -1427,7 +1429,7 @@ static RefPtr<PromiseType> InvokeAsync(
     ActualArgTypes&&... aArgs) {
   static_assert(
       !detail::Any(
-          IsPointer<typename RemoveReference<ActualArgTypes>::Type>::value...),
+          std::is_pointer_v<typename RemoveReference<ActualArgTypes>::Type>...),
       "Cannot pass pointer types through InvokeAsync, Storages must be "
       "provided");
   static_assert(sizeof...(ArgTypes) == sizeof...(ActualArgTypes),
