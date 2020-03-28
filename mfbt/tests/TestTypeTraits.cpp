@@ -12,14 +12,8 @@ using mozilla::DeclVal;
 using mozilla::IsArray;
 using mozilla::IsConvertible;
 using mozilla::IsDestructible;
-using mozilla::IsFunction;
 using mozilla::IsSame;
 using mozilla::RemovePointer;
-
-static_assert(!IsFunction<int>::value, "int is not a function type");
-static_assert(IsFunction<void(int)>::value, "void(int) is a function type");
-static_assert(!IsFunction<void (*)(int)>::value,
-              "void(*)(int) is not a function type");
 
 static_assert(!IsArray<bool>::value, "bool not an array");
 static_assert(IsArray<bool[]>::value, "bool[] is an array");
