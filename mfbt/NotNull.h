@@ -64,6 +64,7 @@
 
 #include <stddef.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Assertions.h"
@@ -192,7 +193,7 @@ struct PointedTo<const T*> {
 template <typename T, typename... Args>
 constexpr NotNull<T> MakeNotNull(Args&&... aArgs) {
   using Pointee = typename detail::PointedTo<T>::NonConstType;
-  static_assert(!IsArray<Pointee>::value,
+  static_assert(!std::is_array_v<Pointee>,
                 "MakeNotNull cannot construct an array");
   return NotNull<T>(new Pointee(std::forward<Args>(aArgs)...));
 }
