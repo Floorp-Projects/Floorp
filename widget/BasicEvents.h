@@ -7,6 +7,7 @@
 #define mozilla_BasicEvents_h__
 
 #include <stdint.h>
+#include <type_traits>
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
@@ -1049,7 +1050,7 @@ class NativeEventData final {
 
   template <typename T>
   void Copy(const T& other) {
-    static_assert(!mozilla::IsPointer<T>::value, "Don't want a pointer!");
+    static_assert(!std::is_pointer_v<T>, "Don't want a pointer!");
     mBuffer.SetLength(sizeof(T));
     memcpy(mBuffer.Elements(), &other, mBuffer.Length());
   }

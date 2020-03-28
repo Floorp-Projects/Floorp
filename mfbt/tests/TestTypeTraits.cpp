@@ -15,7 +15,6 @@ using mozilla::IsArray;
 using mozilla::IsConvertible;
 using mozilla::IsDestructible;
 using mozilla::IsFunction;
-using mozilla::IsPointer;
 using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
@@ -30,25 +29,6 @@ static_assert(!IsFunction<void (*)(int)>::value,
 static_assert(!IsArray<bool>::value, "bool not an array");
 static_assert(IsArray<bool[]>::value, "bool[] is an array");
 static_assert(IsArray<bool[5]>::value, "bool[5] is an array");
-
-static_assert(!IsPointer<bool>::value, "bool not a pointer");
-static_assert(IsPointer<bool*>::value, "bool* is a pointer");
-static_assert(IsPointer<bool* const>::value, "bool* const is a pointer");
-static_assert(IsPointer<bool* volatile>::value, "bool* volatile is a pointer");
-static_assert(IsPointer<bool* const volatile>::value,
-              "bool* const volatile is a pointer");
-static_assert(IsPointer<bool**>::value, "bool** is a pointer");
-static_assert(IsPointer<void (*)(void)>::value, "void (*)(void) is a pointer");
-struct IsPointerTest {
-  bool m;
-  void f();
-};
-static_assert(!IsPointer<IsPointerTest>::value, "IsPointerTest not a pointer");
-static_assert(IsPointer<IsPointerTest*>::value, "IsPointerTest* is a pointer");
-static_assert(!IsPointer<bool (IsPointerTest::*)()>::value,
-              "bool(IsPointerTest::*)() not a pointer");
-static_assert(!IsPointer<void (IsPointerTest::*)(void)>::value,
-              "void(IsPointerTest::*)(void) not a pointer");
 
 static_assert(!IsSigned<bool>::value, "bool shouldn't be signed");
 static_assert(IsUnsigned<bool>::value, "bool should be unsigned");
