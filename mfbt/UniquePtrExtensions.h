@@ -9,6 +9,8 @@
 #ifndef mozilla_UniquePtrExtensions_h
 #define mozilla_UniquePtrExtensions_h
 
+#include <type_traits>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/fallible.h"
 #include "mozilla/UniquePtr.h"
@@ -32,7 +34,7 @@ typename detail::UniqueSelector<T>::SingleObject MakeUniqueFallible(
 template <typename T>
 typename detail::UniqueSelector<T>::UnknownBound MakeUniqueFallible(
     decltype(sizeof(int)) aN) {
-  typedef typename RemoveExtent<T>::Type ArrayType;
+  using ArrayType = std::remove_extent_t<T>;
   return UniquePtr<T>(new (fallible) ArrayType[aN]());
 }
 
