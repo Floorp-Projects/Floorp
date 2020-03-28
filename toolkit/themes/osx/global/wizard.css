@@ -4,7 +4,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-wizard {
+:host {
   padding: 14px;
 }
 
@@ -28,14 +28,14 @@ wizard {
 }
 
 .wizard-header-box-icon {
-  margin-top: 3px;
-  margin-inline-end: 20px;
-  margin-bottom: 0;
-  margin-inline-start: 3px;
+  margin-block: 3px 0;
+  margin-inline: 3px 20px;
 }
 
-wizard[branded="true"] .wizard-header-icon {
-  list-style-image: url("chrome://branding/content/icon48.png");
+:host([data-branded="true"]) .wizard-header-icon {
+  list-style-image: url("chrome://branding/content/icon128.png");
+  width: 48px;
+  height: 48px;
 }
 
 .wizard-page-box {
