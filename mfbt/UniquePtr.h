@@ -245,7 +245,7 @@ class UniquePtr {
       std::enable_if_t<
           std::is_convertible_v<typename UniquePtr<U, E>::Pointer, Pointer> &&
               !std::is_array_v<U> &&
-              (std::is_reference_v<D> ? IsSame<D, E>::value
+              (std::is_reference_v<D> ? std::is_same_v<D, E>
                                       : std::is_convertible_v<E, D>),
           int>
           aDummy = 0)

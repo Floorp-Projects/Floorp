@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Assertions.h"
@@ -14,7 +15,6 @@
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 
-using mozilla::IsSame;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
@@ -196,7 +196,7 @@ static_assert(std::is_trivially_destructible_v<Maybe<TriviallyDestructible>>);
 static bool TestBasicFeatures() {
   // Check that a Maybe<T> is initialized to Nothing.
   Maybe<BasicValue> mayValue;
-  static_assert(IsSame<BasicValue, decltype(mayValue)::ValueType>::value,
+  static_assert(std::is_same_v<BasicValue, decltype(mayValue)::ValueType>,
                 "Should have BasicValue ValueType");
   MOZ_RELEASE_ASSERT(!mayValue);
   MOZ_RELEASE_ASSERT(!mayValue.isSome());
@@ -209,13 +209,13 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(!mayValue.isNothing());
   MOZ_RELEASE_ASSERT(*mayValue == BasicValue());
   MOZ_RELEASE_ASSERT(mayValue.value() == BasicValue());
-  static_assert(IsSame<BasicValue, decltype(mayValue.value())>::value,
+  static_assert(std::is_same_v<BasicValue, decltype(mayValue.value())>,
                 "value() should return a BasicValue");
   MOZ_RELEASE_ASSERT(mayValue.ref() == BasicValue());
-  static_assert(IsSame<BasicValue&, decltype(mayValue.ref())>::value,
+  static_assert(std::is_same_v<BasicValue&, decltype(mayValue.ref())>,
                 "ref() should return a BasicValue&");
   MOZ_RELEASE_ASSERT(mayValue.ptr() != nullptr);
-  static_assert(IsSame<BasicValue*, decltype(mayValue.ptr())>::value,
+  static_assert(std::is_same_v<BasicValue*, decltype(mayValue.ptr())>,
                 "ptr() should return a BasicValue*");
   MOZ_RELEASE_ASSERT(mayValue->GetStatus() == eWasDefaultConstructed);
 
@@ -249,13 +249,13 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(!mayValueCRef.isNothing());
   MOZ_RELEASE_ASSERT(*mayValueCRef == BasicValue());
   MOZ_RELEASE_ASSERT(mayValueCRef.value() == BasicValue());
-  static_assert(IsSame<BasicValue, decltype(mayValueCRef.value())>::value,
+  static_assert(std::is_same_v<BasicValue, decltype(mayValueCRef.value())>,
                 "value() should return a BasicValue");
   MOZ_RELEASE_ASSERT(mayValueCRef.ref() == BasicValue());
-  static_assert(IsSame<const BasicValue&, decltype(mayValueCRef.ref())>::value,
+  static_assert(std::is_same_v<const BasicValue&, decltype(mayValueCRef.ref())>,
                 "ref() should return a const BasicValue&");
   MOZ_RELEASE_ASSERT(mayValueCRef.ptr() != nullptr);
-  static_assert(IsSame<const BasicValue*, decltype(mayValueCRef.ptr())>::value,
+  static_assert(std::is_same_v<const BasicValue*, decltype(mayValueCRef.ptr())>,
                 "ptr() should return a const BasicValue*");
   MOZ_RELEASE_ASSERT(mayValueCRef->GetStatus() == eWasDefaultConstructed);
   mayValue.reset();
@@ -515,119 +515,121 @@ static bool TestFunctionalAccessors() {
   // Check that the 'some' case of functional accessors works.
   Maybe<BasicValue> someValue = Some(BasicValue(3));
   MOZ_RELEASE_ASSERT(someValue.valueOr(value) == BasicValue(3));
-  static_assert(IsSame<BasicValue, decltype(someValue.valueOr(value))>::value,
+  static_assert(std::is_same_v<BasicValue, decltype(someValue.valueOr(value))>,
                 "valueOr should return a BasicValue");
   MOZ_RELEASE_ASSERT(someValue.valueOrFrom(&MakeBasicValue) == BasicValue(3));
-  static_assert(IsSame<BasicValue,
-                       decltype(someValue.valueOrFrom(&MakeBasicValue))>::value,
-                "valueOrFrom should return a BasicValue");
+  static_assert(
+      std::is_same_v<BasicValue,
+                     decltype(someValue.valueOrFrom(&MakeBasicValue))>,
+      "valueOrFrom should return a BasicValue");
   MOZ_RELEASE_ASSERT(someValue.ptrOr(&value) != &value);
-  static_assert(IsSame<BasicValue*, decltype(someValue.ptrOr(&value))>::value,
+  static_assert(std::is_same_v<BasicValue*, decltype(someValue.ptrOr(&value))>,
                 "ptrOr should return a BasicValue*");
   MOZ_RELEASE_ASSERT(*someValue.ptrOrFrom(&MakeBasicValuePtr) == BasicValue(3));
   static_assert(
-      IsSame<BasicValue*,
-             decltype(someValue.ptrOrFrom(&MakeBasicValuePtr))>::value,
+      std::is_same_v<BasicValue*,
+                     decltype(someValue.ptrOrFrom(&MakeBasicValuePtr))>,
       "ptrOrFrom should return a BasicValue*");
   MOZ_RELEASE_ASSERT(someValue.refOr(value) == BasicValue(3));
-  static_assert(IsSame<BasicValue&, decltype(someValue.refOr(value))>::value,
+  static_assert(std::is_same_v<BasicValue&, decltype(someValue.refOr(value))>,
                 "refOr should return a BasicValue&");
   MOZ_RELEASE_ASSERT(someValue.refOrFrom(&MakeBasicValueRef) == BasicValue(3));
   static_assert(
-      IsSame<BasicValue&,
-             decltype(someValue.refOrFrom(&MakeBasicValueRef))>::value,
+      std::is_same_v<BasicValue&,
+                     decltype(someValue.refOrFrom(&MakeBasicValueRef))>,
       "refOrFrom should return a BasicValue&");
 
   // Check that the 'some' case works through a const reference.
   const Maybe<BasicValue>& someValueCRef = someValue;
   MOZ_RELEASE_ASSERT(someValueCRef.valueOr(value) == BasicValue(3));
   static_assert(
-      IsSame<BasicValue, decltype(someValueCRef.valueOr(value))>::value,
+      std::is_same_v<BasicValue, decltype(someValueCRef.valueOr(value))>,
       "valueOr should return a BasicValue");
   MOZ_RELEASE_ASSERT(someValueCRef.valueOrFrom(&MakeBasicValue) ==
                      BasicValue(3));
   static_assert(
-      IsSame<BasicValue,
-             decltype(someValueCRef.valueOrFrom(&MakeBasicValue))>::value,
+      std::is_same_v<BasicValue,
+                     decltype(someValueCRef.valueOrFrom(&MakeBasicValue))>,
       "valueOrFrom should return a BasicValue");
   MOZ_RELEASE_ASSERT(someValueCRef.ptrOr(&value) != &value);
   static_assert(
-      IsSame<const BasicValue*, decltype(someValueCRef.ptrOr(&value))>::value,
+      std::is_same_v<const BasicValue*, decltype(someValueCRef.ptrOr(&value))>,
       "ptrOr should return a const BasicValue*");
   MOZ_RELEASE_ASSERT(*someValueCRef.ptrOrFrom(&MakeBasicValuePtr) ==
                      BasicValue(3));
   static_assert(
-      IsSame<const BasicValue*,
-             decltype(someValueCRef.ptrOrFrom(&MakeBasicValuePtr))>::value,
+      std::is_same_v<const BasicValue*,
+                     decltype(someValueCRef.ptrOrFrom(&MakeBasicValuePtr))>,
       "ptrOrFrom should return a const BasicValue*");
   MOZ_RELEASE_ASSERT(someValueCRef.refOr(value) == BasicValue(3));
   static_assert(
-      IsSame<const BasicValue&, decltype(someValueCRef.refOr(value))>::value,
+      std::is_same_v<const BasicValue&, decltype(someValueCRef.refOr(value))>,
       "refOr should return a const BasicValue&");
   MOZ_RELEASE_ASSERT(someValueCRef.refOrFrom(&MakeBasicValueRef) ==
                      BasicValue(3));
   static_assert(
-      IsSame<const BasicValue&,
-             decltype(someValueCRef.refOrFrom(&MakeBasicValueRef))>::value,
+      std::is_same_v<const BasicValue&,
+                     decltype(someValueCRef.refOrFrom(&MakeBasicValueRef))>,
       "refOrFrom should return a const BasicValue&");
 
   // Check that the 'none' case of functional accessors works.
   Maybe<BasicValue> noneValue;
   MOZ_RELEASE_ASSERT(noneValue.valueOr(value) == BasicValue(9));
-  static_assert(IsSame<BasicValue, decltype(noneValue.valueOr(value))>::value,
+  static_assert(std::is_same_v<BasicValue, decltype(noneValue.valueOr(value))>,
                 "valueOr should return a BasicValue");
   MOZ_RELEASE_ASSERT(noneValue.valueOrFrom(&MakeBasicValue) == BasicValue(9));
-  static_assert(IsSame<BasicValue,
-                       decltype(noneValue.valueOrFrom(&MakeBasicValue))>::value,
-                "valueOrFrom should return a BasicValue");
+  static_assert(
+      std::is_same_v<BasicValue,
+                     decltype(noneValue.valueOrFrom(&MakeBasicValue))>,
+      "valueOrFrom should return a BasicValue");
   MOZ_RELEASE_ASSERT(noneValue.ptrOr(&value) == &value);
-  static_assert(IsSame<BasicValue*, decltype(noneValue.ptrOr(&value))>::value,
+  static_assert(std::is_same_v<BasicValue*, decltype(noneValue.ptrOr(&value))>,
                 "ptrOr should return a BasicValue*");
   MOZ_RELEASE_ASSERT(*noneValue.ptrOrFrom(&MakeBasicValuePtr) == BasicValue(9));
   static_assert(
-      IsSame<BasicValue*,
-             decltype(noneValue.ptrOrFrom(&MakeBasicValuePtr))>::value,
+      std::is_same_v<BasicValue*,
+                     decltype(noneValue.ptrOrFrom(&MakeBasicValuePtr))>,
       "ptrOrFrom should return a BasicValue*");
   MOZ_RELEASE_ASSERT(noneValue.refOr(value) == BasicValue(9));
-  static_assert(IsSame<BasicValue&, decltype(noneValue.refOr(value))>::value,
+  static_assert(std::is_same_v<BasicValue&, decltype(noneValue.refOr(value))>,
                 "refOr should return a BasicValue&");
   MOZ_RELEASE_ASSERT(noneValue.refOrFrom(&MakeBasicValueRef) == BasicValue(9));
   static_assert(
-      IsSame<BasicValue&,
-             decltype(noneValue.refOrFrom(&MakeBasicValueRef))>::value,
+      std::is_same_v<BasicValue&,
+                     decltype(noneValue.refOrFrom(&MakeBasicValueRef))>,
       "refOrFrom should return a BasicValue&");
 
   // Check that the 'none' case works through a const reference.
   const Maybe<BasicValue>& noneValueCRef = noneValue;
   MOZ_RELEASE_ASSERT(noneValueCRef.valueOr(value) == BasicValue(9));
   static_assert(
-      IsSame<BasicValue, decltype(noneValueCRef.valueOr(value))>::value,
+      std::is_same_v<BasicValue, decltype(noneValueCRef.valueOr(value))>,
       "valueOr should return a BasicValue");
   MOZ_RELEASE_ASSERT(noneValueCRef.valueOrFrom(&MakeBasicValue) ==
                      BasicValue(9));
   static_assert(
-      IsSame<BasicValue,
-             decltype(noneValueCRef.valueOrFrom(&MakeBasicValue))>::value,
+      std::is_same_v<BasicValue,
+                     decltype(noneValueCRef.valueOrFrom(&MakeBasicValue))>,
       "valueOrFrom should return a BasicValue");
   MOZ_RELEASE_ASSERT(noneValueCRef.ptrOr(&value) == &value);
   static_assert(
-      IsSame<const BasicValue*, decltype(noneValueCRef.ptrOr(&value))>::value,
+      std::is_same_v<const BasicValue*, decltype(noneValueCRef.ptrOr(&value))>,
       "ptrOr should return a const BasicValue*");
   MOZ_RELEASE_ASSERT(*noneValueCRef.ptrOrFrom(&MakeBasicValuePtr) ==
                      BasicValue(9));
   static_assert(
-      IsSame<const BasicValue*,
-             decltype(noneValueCRef.ptrOrFrom(&MakeBasicValuePtr))>::value,
+      std::is_same_v<const BasicValue*,
+                     decltype(noneValueCRef.ptrOrFrom(&MakeBasicValuePtr))>,
       "ptrOrFrom should return a const BasicValue*");
   MOZ_RELEASE_ASSERT(noneValueCRef.refOr(value) == BasicValue(9));
   static_assert(
-      IsSame<const BasicValue&, decltype(noneValueCRef.refOr(value))>::value,
+      std::is_same_v<const BasicValue&, decltype(noneValueCRef.refOr(value))>,
       "refOr should return a const BasicValue&");
   MOZ_RELEASE_ASSERT(noneValueCRef.refOrFrom(&MakeBasicValueRef) ==
                      BasicValue(9));
   static_assert(
-      IsSame<const BasicValue&,
-             decltype(noneValueCRef.refOrFrom(&MakeBasicValueRef))>::value,
+      std::is_same_v<const BasicValue&,
+                     decltype(noneValueCRef.refOrFrom(&MakeBasicValueRef))>,
       "refOrFrom should return a const BasicValue&");
 
   // Clean up so the undestroyed objects count stays accurate.
@@ -722,7 +724,7 @@ static bool TestMap() {
   // Check that map handles the 'Nothing' case.
   Maybe<BasicValue> mayValue;
   MOZ_RELEASE_ASSERT(mayValue.map(&TimesTwo) == Nothing());
-  static_assert(IsSame<Maybe<int>, decltype(mayValue.map(&TimesTwo))>::value,
+  static_assert(std::is_same_v<Maybe<int>, decltype(mayValue.map(&TimesTwo))>,
                 "map(TimesTwo) should return a Maybe<int>");
   MOZ_RELEASE_ASSERT(mayValue.map(&TimesTwoAndResetOriginal) == Nothing());
 
@@ -738,7 +740,7 @@ static bool TestMap() {
   const Maybe<BasicValue>& mayValueCRef = mayValue;
   MOZ_RELEASE_ASSERT(mayValueCRef.map(&TimesTwo) == Some(4));
   static_assert(
-      IsSame<Maybe<int>, decltype(mayValueCRef.map(&TimesTwo))>::value,
+      std::is_same_v<Maybe<int>, decltype(mayValueCRef.map(&TimesTwo))>,
       "map(TimesTwo) should return a Maybe<int>");
 
   // Check that map works with functors.
@@ -814,7 +816,7 @@ static bool TestToMaybe() {
 
   // Check that a non-null pointer translates into a Some value.
   Maybe<BasicValue> mayValue = ToMaybe(&value);
-  static_assert(IsSame<Maybe<BasicValue>, decltype(ToMaybe(&value))>::value,
+  static_assert(std::is_same_v<Maybe<BasicValue>, decltype(ToMaybe(&value))>,
                 "ToMaybe should return a Maybe<BasicValue>");
   MOZ_RELEASE_ASSERT(mayValue.isSome());
   MOZ_RELEASE_ASSERT(mayValue->GetTag() == 1);
@@ -824,7 +826,7 @@ static bool TestToMaybe() {
   // Check that a null pointer translates into a Nothing value.
   mayValue = ToMaybe(nullPointer);
   static_assert(
-      IsSame<Maybe<BasicValue>, decltype(ToMaybe(nullPointer))>::value,
+      std::is_same_v<Maybe<BasicValue>, decltype(ToMaybe(nullPointer))>,
       "ToMaybe should return a Maybe<BasicValue>");
   MOZ_RELEASE_ASSERT(mayValue.isNothing());
 

@@ -8,9 +8,9 @@
 #include "mozilla/IntegerRange.h"
 
 #include <stddef.h>
+#include <type_traits>
 
 using mozilla::IntegerRange;
-using mozilla::IsSame;
 using mozilla::Reversed;
 
 const size_t kMaxNumber = 50;
@@ -26,7 +26,7 @@ static void TestSingleParamRange(const IntType aN) {
   IntType array[kArraySize];
   IntType* ptr = array;
   for (auto i : IntegerRange(aN)) {
-    static_assert(IsSame<decltype(i), IntType>::value,
+    static_assert(std::is_same_v<decltype(i), IntType>,
                   "type of the loop var and the param should be the same");
     *ptr++ = i;
   }
@@ -44,7 +44,7 @@ static void TestSingleParamReverseRange(const IntType aN) {
   IntType array[kArraySize];
   IntType* ptr = array;
   for (auto i : Reversed(IntegerRange(aN))) {
-    static_assert(IsSame<decltype(i), IntType>::value,
+    static_assert(std::is_same_v<decltype(i), IntType>,
                   "type of the loop var and the param should be the same");
     *ptr++ = i;
   }
@@ -71,7 +71,7 @@ static void TestDoubleParamRange(const IntType1 aBegin, const IntType2 aEnd) {
   IntType2 array[kArraySize];
   IntType2* ptr = array;
   for (auto i : IntegerRange(aBegin, aEnd)) {
-    static_assert(IsSame<decltype(i), IntType2>::value,
+    static_assert(std::is_same_v<decltype(i), IntType2>,
                   "type of the loop var "
                   "should be same as that of the second param");
     *ptr++ = i;
@@ -91,7 +91,7 @@ static void TestDoubleParamReverseRange(const IntType1 aBegin,
   IntType2 array[kArraySize];
   IntType2* ptr = array;
   for (auto i : Reversed(IntegerRange(aBegin, aEnd))) {
-    static_assert(IsSame<decltype(i), IntType2>::value,
+    static_assert(std::is_same_v<decltype(i), IntType2>,
                   "type of the loop var "
                   "should be same as that of the second param");
     *ptr++ = i;

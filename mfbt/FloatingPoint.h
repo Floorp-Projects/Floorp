@@ -358,7 +358,7 @@ namespace detail {
 
 template <typename Float, typename SignedInteger>
 inline bool NumberEqualsSignedInteger(Float aValue, SignedInteger* aInteger) {
-  static_assert(IsSame<Float, float>::value || IsSame<Float, double>::value,
+  static_assert(std::is_same_v<Float, float> || std::is_same_v<Float, double>,
                 "Float must be an IEEE-754 floating point type");
   static_assert(std::is_signed_v<SignedInteger>,
                 "this algorithm only works for signed types: a different one "
@@ -429,7 +429,7 @@ inline bool NumberEqualsSignedInteger(Float aValue, SignedInteger* aInteger) {
 
 template <typename Float, typename SignedInteger>
 inline bool NumberIsSignedInteger(Float aValue, SignedInteger* aInteger) {
-  static_assert(IsSame<Float, float>::value || IsSame<Float, double>::value,
+  static_assert(std::is_same_v<Float, float> || std::is_same_v<Float, double>,
                 "Float must be an IEEE-754 floating point type");
   static_assert(std::is_signed_v<SignedInteger>,
                 "this algorithm only works for signed types: a different one "
