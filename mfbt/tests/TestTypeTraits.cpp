@@ -27,7 +27,6 @@ using mozilla::IsPointer;
 using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
-using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
 using mozilla::RemoveExtent;
 using mozilla::RemovePointer;
@@ -454,38 +453,6 @@ static_assert(
     IsSame<decltype(DeclVal<TestWithNoDefaultConstructor>().foo()), int>::value,
     "decltype should work using a DeclVal'd struct without a default "
     "constructor");
-
-static_assert(
-    IsSame<MakeSigned<const unsigned char>::Type, const signed char>::value,
-    "const unsigned char won't signify correctly");
-static_assert(IsSame<MakeSigned<volatile unsigned short>::Type,
-                     volatile signed short>::value,
-              "volatile unsigned short won't signify correctly");
-static_assert(IsSame<MakeSigned<const volatile unsigned int>::Type,
-                     const volatile signed int>::value,
-              "const volatile unsigned int won't signify correctly");
-static_assert(IsSame<MakeSigned<unsigned long>::Type, signed long>::value,
-              "unsigned long won't signify correctly");
-static_assert(
-    IsSame<MakeSigned<const signed char>::Type, const signed char>::value,
-    "const signed char won't signify correctly");
-
-static_assert(IsSame<MakeSigned<volatile signed short>::Type,
-                     volatile signed short>::value,
-              "volatile signed short won't signify correctly");
-static_assert(IsSame<MakeSigned<const volatile signed int>::Type,
-                     const volatile signed int>::value,
-              "const volatile signed int won't signify correctly");
-static_assert(IsSame<MakeSigned<signed long>::Type, signed long>::value,
-              "signed long won't signify correctly");
-
-static_assert(IsSame<MakeSigned<char>::Type, signed char>::value,
-              "char won't signify correctly");
-static_assert(
-    IsSame<MakeSigned<volatile char>::Type, volatile signed char>::value,
-    "volatile char won't signify correctly");
-static_assert(IsSame<MakeSigned<const char>::Type, const signed char>::value,
-              "const char won't signify correctly");
 
 static_assert(
     IsSame<MakeUnsigned<const signed char>::Type, const unsigned char>::value,
