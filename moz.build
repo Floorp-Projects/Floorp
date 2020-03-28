@@ -191,4 +191,6 @@ SPHINX_TREES['contributing'] = 'docs/contributing'
 
 SPHINX_TREES['code-quality'] = 'docs/code-quality'
 
+SPHINX_TREES['bug-mgmt'] = 'docs/bug-mgmt'
+
 include('build/templates.mozbuild')
