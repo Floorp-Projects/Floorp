@@ -774,8 +774,7 @@ constexpr Maybe<T&> SomeRef(T& aValue) {
 }
 
 template <typename T>
-Maybe<typename RemoveCV<typename RemoveReference<T>::Type>::Type> ToMaybe(
-    T* aPtr) {
+Maybe<typename RemoveCV<std::remove_reference_t<T>>::Type> ToMaybe(T* aPtr) {
   if (aPtr) {
     return Some(*aPtr);
   }

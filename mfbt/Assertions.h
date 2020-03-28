@@ -415,14 +415,13 @@ MOZ_END_EXTERN_C
  */
 
 #ifdef __cplusplus
-#  include "mozilla/TypeTraits.h"
 #  include <type_traits>
 namespace mozilla {
 namespace detail {
 
 template <typename T>
 struct AssertionConditionType {
-  typedef typename RemoveReference<T>::Type ValueT;
+  using ValueT = std::remove_reference_t<T>;
   static_assert(!std::is_array_v<ValueT>,
                 "Expected boolean assertion condition, got an array or a "
                 "string!");

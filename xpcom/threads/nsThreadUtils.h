@@ -567,7 +567,7 @@ class RunnableFunction : public Runnable {
 template <typename Function>
 using RunnableFunctionImpl =
     // Make sure we store a non-reference in nsRunnableFunction.
-    typename detail::RunnableFunction<typename RemoveReference<Function>::Type>;
+    typename detail::RunnableFunction<std::remove_reference_t<Function>>;
 }  // namespace detail
 
 namespace detail {
@@ -1077,18 +1077,16 @@ struct SmartPointerStorageClass
 
 template <typename T>
 struct NonLValueReferenceStorageClass
-    : mozilla::Conditional<
-          std::is_rvalue_reference_v<T>,
-          StoreCopyPassByRRef<typename mozilla::RemoveReference<T>::Type>,
-          typename SmartPointerStorageClass<T>::Type> {};
+    : mozilla::Conditional<std::is_rvalue_reference_v<T>,
+                           StoreCopyPassByRRef<std::remove_reference_t<T>>,
+                           typename SmartPointerStorageClass<T>::Type> {};
 
 template <typename T>
 struct NonPointerStorageClass
-    : mozilla::Conditional<
-          std::is_lvalue_reference_v<T>,
-          typename LValueReferenceStorageClass<
-              typename mozilla::RemoveReference<T>::Type>::Type,
-          typename NonLValueReferenceStorageClass<T>::Type> {};
+    : mozilla::Conditional<std::is_lvalue_reference_v<T>,
+                           typename LValueReferenceStorageClass<
+                               std::remove_reference_t<T>>::Type,
+                           typename NonLValueReferenceStorageClass<T>::Type> {};
 
 template <typename T>
 struct NonParameterStorageClass
@@ -1247,89 +1245,85 @@ class RunnableMethodImpl final
 // Type aliases for NewRunnableMethod.
 template <typename PtrType, typename Method>
 using OwningRunnableMethod =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, true,
-                                      RunnableKind::Standard>::base_type;
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      true, RunnableKind::Standard>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using OwningRunnableMethodImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, true,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, true,
                        RunnableKind::Standard, Storages...>;
 
 // Type aliases for NewCancelableRunnableMethod.
 template <typename PtrType, typename Method>
 using CancelableRunnableMethod =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, true,
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      true,
                                       RunnableKind::Cancelable>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using CancelableRunnableMethodImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, true,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, true,
                        RunnableKind::Cancelable, Storages...>;
 
 // Type aliases for NewIdleRunnableMethod.
 template <typename PtrType, typename Method>
 using IdleRunnableMethod =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, true,
-                                      RunnableKind::Idle>::base_type;
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      true, RunnableKind::Idle>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using IdleRunnableMethodImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, true,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, true,
                        RunnableKind::Idle, Storages...>;
 
 // Type aliases for NewIdleRunnableMethodWithTimer.
 template <typename PtrType, typename Method>
 using IdleRunnableMethodWithTimer =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, true,
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      true,
                                       RunnableKind::IdleWithTimer>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using IdleRunnableMethodWithTimerImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, true,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, true,
                        RunnableKind::IdleWithTimer, Storages...>;
 
 // Type aliases for NewNonOwningRunnableMethod.
 template <typename PtrType, typename Method>
 using NonOwningRunnableMethod =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, false,
-                                      RunnableKind::Standard>::base_type;
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      false, RunnableKind::Standard>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using NonOwningRunnableMethodImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, false,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, false,
                        RunnableKind::Standard, Storages...>;
 
 // Type aliases for NonOwningCancelableRunnableMethod
 template <typename PtrType, typename Method>
 using NonOwningCancelableRunnableMethod =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, false,
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      false,
                                       RunnableKind::Cancelable>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using NonOwningCancelableRunnableMethodImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, false,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, false,
                        RunnableKind::Cancelable, Storages...>;
 
 // Type aliases for NonOwningIdleRunnableMethod
 template <typename PtrType, typename Method>
 using NonOwningIdleRunnableMethod =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, false,
-                                      RunnableKind::Idle>::base_type;
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      false, RunnableKind::Idle>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using NonOwningIdleRunnableMethodImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, false,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, false,
                        RunnableKind::Idle, Storages...>;
 
 // Type aliases for NewIdleRunnableMethodWithTimer.
 template <typename PtrType, typename Method>
 using NonOwningIdleRunnableMethodWithTimer =
-    typename ::nsRunnableMethodTraits<typename RemoveReference<PtrType>::Type,
-                                      Method, false,
+    typename ::nsRunnableMethodTraits<std::remove_reference_t<PtrType>, Method,
+                                      false,
                                       RunnableKind::IdleWithTimer>::base_type;
 template <typename PtrType, typename Method, typename... Storages>
 using NonOwningIdleRunnableMethodWithTimerImpl =
-    RunnableMethodImpl<typename RemoveReference<PtrType>::Type, Method, false,
+    RunnableMethodImpl<std::remove_reference_t<PtrType>, Method, false,
                        RunnableKind::IdleWithTimer, Storages...>;
 
 }  // namespace detail
