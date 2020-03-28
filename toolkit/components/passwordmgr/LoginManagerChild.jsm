@@ -1848,6 +1848,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       AUTOCOMPLETE_OFF: 9,
       INSECURE: 10,
       PASSWORD_AUTOCOMPLETE_NEW_PASSWORD: 11,
+      TYPE_NO_LONGER_PASSWORD: 12,
     };
 
     // Heuristically determine what the user/pass fields are
@@ -1969,6 +1970,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       if (!logins.length) {
         log("form not filled, none of the logins fit in the field");
         autofillResult = AUTOFILL_RESULT.NO_LOGINS_FIT;
+        return;
+      }
+
+      if (!userTriggered && passwordField.type != "password") {
+        // We don't want to autofill (without user interaction) into a field
+        // that's unmasked.
+        log("not autofilling, password field isn't currently type=password");
+        autofillResult = AUTOFILL_RESULT.TYPE_NO_LONGER_PASSWORD;
         return;
       }
 
