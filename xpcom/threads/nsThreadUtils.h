@@ -1048,8 +1048,7 @@ template <typename TWithoutPointer>
 struct NonnsISupportsPointerStorageClass
     : std::conditional<
           std::is_const_v<TWithoutPointer>,
-          StoreConstPtrPassByConstPtr<
-              typename mozilla::RemoveConst<TWithoutPointer>::Type>,
+          StoreConstPtrPassByConstPtr<std::remove_const_t<TWithoutPointer>>,
           StorePtrPassByPtr<TWithoutPointer>> {
   using Type = typename NonnsISupportsPointerStorageClass::conditional::type;
 };
@@ -1065,10 +1064,10 @@ struct PointerStorageClass
 
 template <typename TWithoutRef>
 struct LValueReferenceStorageClass
-    : std::conditional<std::is_const_v<TWithoutRef>,
-                       StoreConstRefPassByConstLRef<
-                           typename mozilla::RemoveConst<TWithoutRef>::Type>,
-                       StoreRefPassByLRef<TWithoutRef>> {
+    : std::conditional<
+          std::is_const_v<TWithoutRef>,
+          StoreConstRefPassByConstLRef<std::remove_const_t<TWithoutRef>>,
+          StoreRefPassByLRef<TWithoutRef>> {
   using Type = typename LValueReferenceStorageClass::conditional::type;
 };
 

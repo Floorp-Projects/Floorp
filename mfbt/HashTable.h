@@ -75,6 +75,7 @@
 #define mozilla_HashTable_h
 
 #include <utility>
+#include <type_traits>
 
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
@@ -940,7 +941,7 @@ class EntrySlot;
 template <typename T>
 class HashTableEntry {
  private:
-  using NonConstT = typename RemoveConst<T>::Type;
+  using NonConstT = std::remove_const_t<T>;
 
   // Instead of having a hash table entry store that looks like this:
   //
@@ -1069,7 +1070,7 @@ class HashTableEntry {
 // in the hash table. These two things are not stored in contiguous memory.
 template <class T>
 class EntrySlot {
-  using NonConstT = typename RemoveConst<T>::Type;
+  using NonConstT = std::remove_const_t<T>;
 
   using Entry = HashTableEntry<T>;
 
@@ -1164,7 +1165,7 @@ template <class T, class HashPolicy, class AllocPolicy>
 class HashTable : private AllocPolicy {
   friend class mozilla::ReentrancyGuard;
 
-  using NonConstT = typename RemoveConst<T>::Type;
+  using NonConstT = std::remove_const_t<T>;
   using Key = typename HashPolicy::KeyType;
   using Lookup = typename HashPolicy::Lookup;
 

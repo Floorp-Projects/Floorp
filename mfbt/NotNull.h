@@ -167,7 +167,7 @@ template <typename Pointer>
 struct PointedTo {
   // Remove the reference that dereferencing operators may return.
   using Type = std::remove_reference_t<decltype(*std::declval<Pointer>())>;
-  using NonConstType = typename RemoveConst<Type>::Type;
+  using NonConstType = std::remove_const_t<Type>;
 };
 
 // Specializations for raw pointers.
