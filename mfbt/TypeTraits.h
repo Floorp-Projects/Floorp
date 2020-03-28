@@ -476,21 +476,6 @@ template <typename T>
 struct RemovePointer
     : detail::RemovePointerHelper<T, typename RemoveCV<T>::Type> {};
 
-/**
- * Converts T& to T*. Otherwise returns T* given T. Note that C++17 wants
- * std::add_pointer to work differently for function types. We don't implement
- * that behavior here.
- *
- * mozilla::AddPointer<int> is int*;
- * mozilla::AddPointer<int*> is int**;
- * mozilla::AddPointer<int&> is int*;
- * mozilla::AddPointer<int* const> is int** const.
- */
-template <typename T>
-struct AddPointer {
-  typedef typename RemoveReference<T>::Type* Type;
-};
-
 /* 20.9.7.6 Other transformations [meta.trans.other] */
 
 /**
