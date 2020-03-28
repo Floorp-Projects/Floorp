@@ -503,11 +503,6 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.showSecurityDevices
     );
-    setEventListener(
-      "telemetryDataDeletionLearnMore",
-      "command",
-      gPrivacyPane.showDataDeletion
-    );
 
     this._pane = document.getElementById("panePrivacy");
 
@@ -643,6 +638,11 @@ var gPrivacyPane = {
         "submitHealthReportBox",
         "command",
         gPrivacyPane.updateSubmitHealthReport
+      );
+      setEventListener(
+        "telemetryDataDeletionLearnMore",
+        "command",
+        gPrivacyPane.showDataDeletion
       );
       if (AppConstants.MOZ_NORMANDY) {
         this.initOptOutStudyCheckbox();
