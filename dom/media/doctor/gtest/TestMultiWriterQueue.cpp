@@ -12,6 +12,7 @@
 #include "nsThreadUtils.h"
 
 #include <gtest/gtest.h>
+#include <type_traits>
 
 using mozilla::MultiWriterQueue;
 using mozilla::MultiWriterQueueDefaultBufferSize;
@@ -226,9 +227,9 @@ TEST(MultiWriterQueue, MultiWriterSingleReader)
 TEST(MultiWriterQueue, MultiWriterMultiReader)
 {
   static_assert(
-      mozilla::IsSame<MultiWriterQueue<int, 10>,
-                      MultiWriterQueue<
-                          int, 10, MultiWriterQueueReaderLocking_Mutex>>::value,
+      std::is_same_v<
+          MultiWriterQueue<int, 10>,
+          MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>,
       "MultiWriterQueue reader locking should use Mutex by default");
 
   // Small BufferSize, to exercize the buffer management code.

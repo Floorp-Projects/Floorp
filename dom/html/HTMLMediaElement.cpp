@@ -122,6 +122,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <type_traits>
 
 mozilla::LazyLogModule gMediaElementLog("nsMediaElement");
 static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
@@ -4907,7 +4908,7 @@ nsresult HTMLMediaElement::SetupDecoder(DecoderType* aDecoder,
 
   rv = FinishDecoderSetup(aDecoder);
   // Only ChannelMediaDecoder supports resource cloning.
-  if (IsSame<DecoderType, ChannelMediaDecoder>::value && NS_SUCCEEDED(rv)) {
+  if (std::is_same_v<DecoderType, ChannelMediaDecoder> && NS_SUCCEEDED(rv)) {
     AddMediaElementToURITable();
     NS_ASSERTION(
         MediaElementTableCount(this, mLoadingSrc) == 1,
