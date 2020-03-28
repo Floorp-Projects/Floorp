@@ -943,7 +943,7 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr,
   }
 
   for (TryNote& elem : isd->tryNotes()) {
-    MOZ_TRY(xdr->codeUint32(&elem.kind));
+    MOZ_TRY(xdr->codeUint32(&elem.kind_));
     MOZ_TRY(xdr->codeUint32(&elem.stackDepth));
     MOZ_TRY(xdr->codeUint32(&elem.start));
     MOZ_TRY(xdr->codeUint32(&elem.length));
@@ -4533,7 +4533,7 @@ void JSScript::assertValidJumpTargets() const {
 
   // Check catch/finally blocks as jump targets.
   for (const TryNote& tn : trynotes()) {
-    if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
+    if (tn.kind() != TryNoteKind::Catch && tn.kind() != TryNoteKind::Finally) {
       continue;
     }
 

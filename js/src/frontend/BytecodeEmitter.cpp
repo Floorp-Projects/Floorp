@@ -833,7 +833,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
   // Close FOR_OF_ITERCLOSE trynotes.
   BytecodeOffset end = bce_->bytecodeSection().offset();
   for (BytecodeOffset start : forOfIterCloseScopeStarts) {
-    if (!bce_->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end)) {
+    if (!bce_->addTryNote(TryNoteKind::ForOfIterClose, 0, start, end)) {
       return false;
     }
   }
@@ -3046,7 +3046,7 @@ bool BytecodeEmitter::wrapWithDestructuringTryNote(int32_t iterDepth,
   }
   BytecodeOffset end = bytecodeSection().offset();
   if (start != end) {
-    return addTryNote(JSTRY_DESTRUCTURING, iterDepth, start, end);
+    return addTryNote(TryNoteKind::Destructuring, iterDepth, start, end);
   }
   return true;
 }
@@ -3271,7 +3271,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     return false;
   }
 
-  // JSTRY_DESTRUCTURING expects the iterator and the done value
+  // TryNoteKind::Destructuring expects the iterator and the done value
   // to be the second to top and the top of the stack, respectively.
   // IteratorClose is called upon exception only if done is false.
   int32_t tryNoteDepth = bytecodeSection().stackDepth();
@@ -5013,7 +5013,7 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    if (!loopInfo.emitLoopEnd(this, JSOp::Goto, JSTRY_FOR_OF)) {
+    if (!loopInfo.emitLoopEnd(this, JSOp::Goto, TryNoteKind::ForOf)) {
       //            [stack] NEXT ITER ARR (I+1)
       return false;
     }
@@ -6475,7 +6475,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RVAL RESUMEKIND
     return false;
   }
-  if (!loopInfo.emitLoopEnd(this, JSOp::Goto, JSTRY_LOOP)) {
+  if (!loopInfo.emitLoopEnd(this, JSOp::Goto, TryNoteKind::Loop)) {
     //              [stack] NEXT ITER RVAL RESUMEKIND
     return false;
   }

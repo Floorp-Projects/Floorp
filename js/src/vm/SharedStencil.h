@@ -24,27 +24,29 @@ namespace js {
  * Exception handling record.
  */
 struct TryNote {
-  uint32_t kind;       /* one of TryNoteKind */
+  uint32_t kind_;      /* one of TryNoteKind */
   uint32_t stackDepth; /* stack depth upon exception handler entry */
   uint32_t start;      /* start of the try statement or loop relative
                           to script->code() */
   uint32_t length;     /* length of the try statement or loop */
 
   TryNote(uint32_t kind, uint32_t stackDepth, uint32_t start, uint32_t length)
-      : kind(kind), stackDepth(stackDepth), start(start), length(length) {}
+      : kind_(kind), stackDepth(stackDepth), start(start), length(length) {}
 
   TryNote() = default;
 
+  TryNoteKind kind() const { return TryNoteKind(kind_); }
+
   bool isLoop() const {
-    switch (kind) {
-      case JSTRY_LOOP:
-      case JSTRY_FOR_IN:
-      case JSTRY_FOR_OF:
+    switch (kind()) {
+      case TryNoteKind::Loop:
+      case TryNoteKind::ForIn:
+      case TryNoteKind::ForOf:
         return true;
-      case JSTRY_CATCH:
-      case JSTRY_FINALLY:
-      case JSTRY_FOR_OF_ITERCLOSE:
-      case JSTRY_DESTRUCTURING:
+      case TryNoteKind::Catch:
+      case TryNoteKind::Finally:
+      case TryNoteKind::ForOfIterClose:
+      case TryNoteKind::Destructuring:
         return false;
     }
     MOZ_CRASH("Unexpected try note kind");
