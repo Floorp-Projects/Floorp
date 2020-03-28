@@ -578,7 +578,7 @@ JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
 
 JSObject* BuiltinProtoOperation(JSContext* cx, jsbytecode* pc);
 
-bool ThrowMsgOperation(JSContext* cx, const unsigned errorNum);
+bool ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind);
 
 bool GetAndClearException(JSContext* cx, MutableHandleValue res);
 
