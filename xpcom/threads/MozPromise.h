@@ -564,7 +564,7 @@ class MozPromise : public MozPromiseBase {
         typename detail::MethodTrait<RejectMethodType>::ReturnType>::Type;
     using SupportChaining =
         std::integral_constant<bool, IsMozPromise<R1>::value &&
-                                         IsSame<R1, R2>::value>;
+                                         std::is_same_v<R1, R2>>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
@@ -689,7 +689,7 @@ class MozPromise : public MozPromiseBase {
         typename detail::MethodTrait<RejectFunction>::ReturnType>::Type;
     using SupportChaining =
         std::integral_constant<bool, IsMozPromise<R1>::value &&
-                                         IsSame<R1, R2>::value>;
+                                         std::is_same_v<R1, R2>>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
