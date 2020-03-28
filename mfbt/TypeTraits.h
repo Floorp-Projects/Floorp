@@ -415,32 +415,6 @@ struct AddRvalueReferenceHelper<T, TIsNotVoid> {
 template <typename T>
 struct AddRvalueReference : detail::AddRvalueReferenceHelper<T> {};
 
-/* 20.9.7.4 Array modifications [meta.trans.arr] */
-
-/**
- * RemoveExtent produces either the type of the elements of the array T, or T
- * itself.
- *
- * mozilla::RemoveExtent<int>::Type is int;
- * mozilla::RemoveExtent<const int[]>::Type is const int;
- * mozilla::RemoveExtent<volatile int[5]>::Type is volatile int;
- * mozilla::RemoveExtent<long[][17]>::Type is long[17].
- */
-template <typename T>
-struct RemoveExtent {
-  typedef T Type;
-};
-
-template <typename T>
-struct RemoveExtent<T[]> {
-  typedef T Type;
-};
-
-template <typename T, decltype(sizeof(1)) N>
-struct RemoveExtent<T[N]> {
-  typedef T Type;
-};
-
 /* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
 
 namespace detail {
