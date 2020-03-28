@@ -370,9 +370,9 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
 
  private:
   template <class T>
-  std::enable_if_t<IsSame<T, IDBDatabase>::value ||
-                       IsSame<T, IDBCursor>::value ||
-                       IsSame<T, IDBMutableFile>::value,
+  std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
+                       std::is_same_v<T, IDBCursor> ||
+                       std::is_same_v<T, IDBMutableFile>,
                    nsresult>
   GetResult(JSContext* aCx, T* aDOMObject,
             JS::MutableHandle<JS::Value> aResult) {

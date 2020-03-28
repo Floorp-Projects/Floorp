@@ -6,6 +6,8 @@
 #if !defined(MediaQueue_h_)
 #  define MediaQueue_h_
 
+#  include <type_traits>
+
 #  include "mozilla/RecursiveMutex.h"
 #  include "mozilla/TaskQueue.h"
 
@@ -161,7 +163,7 @@ class MediaQueue : private nsDeque {
   }
 
   uint32_t AudioFramesCount() {
-    static_assert(mozilla::IsSame<T, AudioData>::value,
+    static_assert(std::is_same_v<T, AudioData>,
                   "Only usable with MediaQueue<AudioData>");
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     uint32_t frames = 0;
