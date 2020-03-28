@@ -14,9 +14,9 @@
   class MozArrowScrollbox extends MozElements.BaseControl {
     static get inheritedAttributes() {
       return {
-        ".scrollbutton-up": "orient,disabled=scrolledtostart",
-        "[part=scrollbox]": "orient,align,pack,dir,smoothscroll",
-        ".scrollbutton-down": "orient,disabled=scrolledtoend",
+        "#scrollbutton-up": "orient,disabled=scrolledtostart",
+        scrollbox: "orient,align,pack,dir,smoothscroll",
+        "#scrollbutton-down": "orient,disabled=scrolledtoend",
       };
     }
 
@@ -24,13 +24,13 @@
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/toolbarbutton.css"/>
       <html:link rel="stylesheet" href="chrome://global/skin/scrollbox.css"/>
-      <toolbarbutton class="scrollbutton-up" part="scrollbutton-up"/>
+      <toolbarbutton id="scrollbutton-up" part="scrollbutton-up"/>
       <spacer part="overflow-start-indicator"/>
       <scrollbox part="scrollbox" flex="1">
         <html:slot/>
       </scrollbox>
       <spacer part="overflow-end-indicator"/>
-      <toolbarbutton class="scrollbutton-down" part="scrollbutton-down"/>
+      <toolbarbutton id="scrollbutton-down" part="scrollbutton-down"/>
     `;
     }
 
@@ -39,10 +39,10 @@
       this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(this.fragment);
 
-      this.scrollbox = this.shadowRoot.querySelector("[part=scrollbox]");
-      this._scrollButtonUp = this.shadowRoot.querySelector(".scrollbutton-up");
-      this._scrollButtonDown = this.shadowRoot.querySelector(
-        ".scrollbutton-down"
+      this.scrollbox = this.shadowRoot.querySelector("scrollbox");
+      this._scrollButtonUp = this.shadowRoot.getElementById("scrollbutton-up");
+      this._scrollButtonDown = this.shadowRoot.getElementById(
+        "scrollbutton-down"
       );
 
       this._arrowScrollAnim = {
