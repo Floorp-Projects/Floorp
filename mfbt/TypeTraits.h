@@ -235,24 +235,6 @@ struct IsPointerHelper<T*> : TrueType {};
 template <typename T>
 struct IsPointer : detail::IsPointerHelper<typename RemoveCV<T>::Type> {};
 
-namespace detail {
-
-// __is_enum is a supported extension across all of our supported compilers.
-template <typename T>
-struct IsEnumHelper : IntegralConstant<bool, __is_enum(T)> {};
-
-}  // namespace detail
-
-/**
- * IsEnum determines whether a type is an enum type.
- *
- * mozilla::IsEnum<enum S>::value is true;
- * mozilla::IsEnum<enum S*>::value is false;
- * mozilla::IsEnum<int>::value is false;
- */
-template <typename T>
-struct IsEnum : detail::IsEnumHelper<typename RemoveCV<T>::Type> {};
-
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
