@@ -23,7 +23,7 @@ class MIRGenerator;
 #define WARP_OP_SNAPSHOT_LIST(_) \
   _(WarpArguments)               \
   _(WarpRegExp)                  \
-  _(WarpBuiltinProto)            \
+  _(WarpFunctionProto)           \
   _(WarpGetIntrinsic)            \
   _(WarpGetImport)               \
   _(WarpLambda)                  \
@@ -93,15 +93,15 @@ class WarpRegExp : public WarpOpSnapshot {
   bool hasShared() const { return hasShared_; }
 };
 
-// The proto for JSOp::BuiltinProto if it exists at compile-time.
-class WarpBuiltinProto : public WarpOpSnapshot {
+// The proto for JSOp::FunctionProto if it exists at compile-time.
+class WarpFunctionProto : public WarpOpSnapshot {
   // TODO: trace this.
   JSObject* proto_;
 
  public:
-  static constexpr Kind ThisKind = Kind::WarpBuiltinProto;
+  static constexpr Kind ThisKind = Kind::WarpFunctionProto;
 
-  WarpBuiltinProto(uint32_t offset, JSObject* proto)
+  WarpFunctionProto(uint32_t offset, JSObject* proto)
       : WarpOpSnapshot(ThisKind, offset), proto_(proto) {
     MOZ_ASSERT(proto);
   }

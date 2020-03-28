@@ -542,7 +542,7 @@ bool ClassEmitter::emitDerivedClass(JS::Handle<JSAtom*> name,
     //              [stack]
     return false;
   }
-  if (!bce_->emit2(JSOp::BuiltinProto, JSProto_Function)) {
+  if (!bce_->emit1(JSOp::FunctionProto)) {
     //              [stack] PROTO
     return false;
   }
