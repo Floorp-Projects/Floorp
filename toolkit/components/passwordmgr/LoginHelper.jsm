@@ -857,6 +857,10 @@ this.LoginHelper = {
       return false;
     }
 
+    if (element.hasBeenTypePassword) {
+      return false;
+    }
+
     let fieldType = element.hasAttribute("type")
       ? element.getAttribute("type").toLowerCase()
       : element.type;

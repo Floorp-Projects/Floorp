@@ -95,7 +95,8 @@ this.LoginFormFactory = {
   createFromField(aField) {
     if (
       ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
-      (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
+      (!aField.hasBeenTypePassword &&
+        !LoginHelper.isUsernameFieldType(aField)) ||
       !aField.ownerDocument
     ) {
       throw new Error(
