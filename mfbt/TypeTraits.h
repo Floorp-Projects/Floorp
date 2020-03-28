@@ -288,19 +288,6 @@ template <typename T>
 struct IsMemberPointer
     : detail::IsMemberPointerHelper<typename RemoveCV<T>::Type> {};
 
-/**
- * IsScalar determines whether a type is a scalar type.
- *
- * mozilla::IsScalar<int>::value is true
- * mozilla::IsScalar<int*>::value is true
- * mozilla::IsScalar<cls>::value is false
- */
-template <typename T>
-struct IsScalar
-    : IntegralConstant<bool, IsArithmetic<T>::value || IsEnum<T>::value ||
-                                 IsPointer<T>::value ||
-                                 IsMemberPointer<T>::value> {};
-
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
