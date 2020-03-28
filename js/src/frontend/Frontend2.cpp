@@ -18,7 +18,7 @@
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/CompilationInfo.h"   // CompilationInfo
 #include "frontend/smoosh_generated.h"  // CVec, SmooshResult, SmooshCompileOptions, free_smoosh, run_smoosh
-#include "frontend/SourceNotes.h"  // jssrcnote
+#include "frontend/SourceNotes.h"  // SrcNote
 #include "frontend/Stencil.h"      // ScopeCreationData
 #include "gc/Rooting.h"            // RootedScriptSourceObject
 #include "js/HeapAPI.h"            // JS::GCCellPtr
@@ -85,7 +85,7 @@ class SmooshScriptStencil : public ScriptStencil {
         result_.body_scope_index, result_.num_ic_entries, result_.num_type_sets,
         result_.is_function, /* funLength = */ 0,
         mozilla::MakeSpan(result_.bytecode.data, result_.bytecode.len),
-        mozilla::Span<const jssrcnote>(), mozilla::Span<const uint32_t>(),
+        mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
         scopeNotes, mozilla::Span<const TryNote>());
     if (!immutableScriptData) {
       return false;

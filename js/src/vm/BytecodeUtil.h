@@ -209,7 +209,7 @@ static MOZ_ALWAYS_INLINE void SET_UINT32_INDEX(jsbytecode* pc, uint32_t index) {
   SET_UINT32(pc, index);
 }
 
-// Index limit is determined by SN_4BYTE_OFFSET_FLAG, see
+// Index limit is determined by SrcNote::FourByteOffsetFlag, see
 // frontend/BytecodeEmitter.h.
 static const unsigned INDEX_LIMIT_LOG2 = 31;
 static const uint32_t INDEX_LIMIT = uint32_t(1) << INDEX_LIMIT_LOG2;
