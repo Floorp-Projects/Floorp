@@ -117,10 +117,10 @@ class ReadableStreamDefaultReader : public ReadableStreamReader {
 };
 
 extern MOZ_MUST_USE ReadableStreamDefaultReader*
-CreateReadableStreamDefaultReader(
-    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
-    ForAuthorCodeBool forAuthorCode = ForAuthorCodeBool::No,
-    JS::Handle<JSObject*> proto = nullptr);
+CreateReadableStreamDefaultReader(JSContext* cx,
+                                  JS::Handle<ReadableStream*> unwrappedStream,
+                                  ForAuthorCodeBool forAuthorCode,
+                                  JS::Handle<JSObject*> proto = nullptr);
 
 extern MOZ_MUST_USE JSObject* ReadableStreamReaderGenericCancel(
     JSContext* cx, JS::Handle<ReadableStreamReader*> unwrappedReader,
@@ -148,8 +148,7 @@ namespace js {
 
 extern MOZ_MUST_USE JSObject* CreateReadableStreamBYOBReader(
     JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
-    ForAuthorCodeBool forAuthorCode = ForAuthorCodeBool::No,
-    JS::Handle<JSObject*> proto = nullptr);
+    ForAuthorCodeBool forAuthorCode, JS::Handle<JSObject*> proto = nullptr);
 
 }  // namespace js
 
