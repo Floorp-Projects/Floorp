@@ -206,19 +206,6 @@ struct RemoveVolatile<volatile T> {
   typedef T Type;
 };
 
-/**
- * RemoveCV removes top-level const and volatile qualifications on a type.
- *
- * mozilla::RemoveCV<int>::Type is int;
- * mozilla::RemoveCV<const int>::Type is int;
- * mozilla::RemoveCV<volatile int>::Type is int;
- * mozilla::RemoveCV<int* const volatile>::Type is int*.
- */
-template <typename T>
-struct RemoveCV {
-  typedef typename RemoveConst<typename RemoveVolatile<T>::Type>::Type Type;
-};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */

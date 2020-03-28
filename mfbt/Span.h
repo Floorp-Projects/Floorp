@@ -72,8 +72,6 @@ inline size_t strlen16(const char16_t* aZeroTerminated) {
 
 // C++14 types that we don't have because we build as C++11.
 template <class T>
-using remove_cv_t = typename mozilla::RemoveCV<T>::Type;
-template <class T>
 using remove_const_t = typename mozilla::RemoveConst<T>::Type;
 
 template <class T>
@@ -84,7 +82,7 @@ struct is_span_oracle<mozilla::Span<ElementType, Extent>> : mozilla::TrueType {
 };
 
 template <class T>
-struct is_span : public is_span_oracle<remove_cv_t<T>> {};
+struct is_span : public is_span_oracle<std::remove_cv_t<T>> {};
 
 template <class T>
 struct is_std_array_oracle : mozilla::FalseType {};
@@ -94,7 +92,7 @@ struct is_std_array_oracle<std::array<ElementType, Extent>>
     : mozilla::TrueType {};
 
 template <class T>
-struct is_std_array : public is_std_array_oracle<remove_cv_t<T>> {};
+struct is_std_array : public is_std_array_oracle<std::remove_cv_t<T>> {};
 
 template <size_t From, size_t To>
 struct is_allowed_extent_conversion
