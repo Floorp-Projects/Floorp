@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Assertions.h"
@@ -16,7 +17,6 @@
 #include "mozilla/Vector.h"
 
 using mozilla::DefaultDelete;
-using mozilla::IsSame;
 using mozilla::MakeUnique;
 using mozilla::UniqueFreePtr;
 using mozilla::UniquePtr;
@@ -84,7 +84,7 @@ static void TestDeleterType() {
 }
 
 static bool TestDefaultFreeGuts() {
-  static_assert(IsSame<NewInt::DeleterType, DefaultDelete<int> >::value,
+  static_assert(std::is_same_v<NewInt::DeleterType, DefaultDelete<int> >,
                 "weird deleter?");
 
   NewInt n1(new int);
@@ -419,7 +419,7 @@ typedef UniquePtr<int[]> IntArray;
 static_assert(sizeof(IntArray) == sizeof(int*), "stored most efficiently");
 
 static bool TestArray() {
-  static_assert(IsSame<IntArray::DeleterType, DefaultDelete<int[]> >::value,
+  static_assert(std::is_same_v<IntArray::DeleterType, DefaultDelete<int[]> >,
                 "weird deleter?");
 
   IntArray n1(new int[5]);
@@ -526,7 +526,7 @@ static bool TestVoid() {
 
   auto x = p1.get();
   CHECK(x != nullptr);
-  CHECK((IsSame<decltype(x), void*>::value));
+  CHECK((std::is_same_v<decltype(x), void*>));
 
   p2.reset(p1.release());
   CHECK(p1.get() == nullptr);

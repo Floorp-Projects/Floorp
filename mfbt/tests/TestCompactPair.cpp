@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <type_traits>
+
 #include "mozilla/CompactPair.h"
 #include "mozilla/TypeTraits.h"
 
 using mozilla::CompactPair;
-using mozilla::IsSame;
 using mozilla::MakeCompactPair;
 
 // Sizes aren't part of the guaranteed CompactPair interface, but we want to
@@ -86,13 +87,13 @@ int main() {
   // Check that MakeCompactPair generates CompactPair objects of the correct
   // types.
   static_assert(
-      IsSame<decltype(MakeCompactPair(A(0), B(0))), CompactPair<A, B>>::value,
+      std::is_same_v<decltype(MakeCompactPair(A(0), B(0))), CompactPair<A, B>>,
       "MakeCompactPair should strip rvalue references");
   static_assert(
-      IsSame<decltype(MakeCompactPair(a, b)), CompactPair<A, B>>::value,
+      std::is_same_v<decltype(MakeCompactPair(a, b)), CompactPair<A, B>>,
       "MakeCompactPair should strip lvalue references");
-  static_assert(IsSame<decltype(MakeCompactPair(constA, constB)),
-                       CompactPair<A, B>>::value,
+  static_assert(std::is_same_v<decltype(MakeCompactPair(constA, constB)),
+                               CompactPair<A, B>>,
                 "MakeCompactPair should strip CV-qualifiers");
 
   // Check that copy assignment and move assignment work.
