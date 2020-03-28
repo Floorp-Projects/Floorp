@@ -11,6 +11,7 @@
 #include "mozilla/TypeTraits.h"
 #include <cmath>
 #include <random>
+#include <type_traits>
 
 namespace mozilla {
 namespace fuzzing {
@@ -35,7 +36,7 @@ class FuzzingTraits {
  */
 template <typename T>
 T RandomNumericLimit() {
-  static_assert(mozilla::IsArithmetic<T>::value == true,
+  static_assert(std::is_arithmetic_v<T> == true,
                 "T must be an arithmetic type");
   return FuzzingTraits::Sometimes(2) ? std::numeric_limits<T>::min()
                                      : std::numeric_limits<T>::max();

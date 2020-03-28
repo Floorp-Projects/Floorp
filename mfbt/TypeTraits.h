@@ -253,20 +253,6 @@ struct IsEnumHelper : IntegralConstant<bool, __is_enum(T)> {};
 template <typename T>
 struct IsEnum : detail::IsEnumHelper<typename RemoveCV<T>::Type> {};
 
-/* 20.9.4.2 Composite type traits [meta.unary.comp] */
-
-/**
- * IsArithmetic determines whether a type is arithmetic.  A type is arithmetic
- * iff it is an integral type or a floating point type.
- *
- * mozilla::IsArithmetic<int>::value is true;
- * mozilla::IsArithmetic<double>::value is true;
- * mozilla::IsArithmetic<long double*>::value is false.
- */
-template <typename T>
-struct IsArithmetic : IntegralConstant<bool, IsIntegral<T>::value ||
-                                                 IsFloatingPoint<T>::value> {};
-
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
