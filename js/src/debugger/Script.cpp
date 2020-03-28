@@ -1149,7 +1149,8 @@ class FlowGraphSummary {
         for (const TryNote& tn : script->trynotes()) {
           if (tn.start == r.frontOffset() + JSOpLength_Try) {
             uint32_t catchOffset = tn.start + tn.length;
-            if (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY) {
+            if (tn.kind() == TryNoteKind::Catch ||
+                tn.kind() == TryNoteKind::Finally) {
               addEdge(lineno, column, catchOffset);
             }
           }
@@ -2243,7 +2244,7 @@ class DebuggerScript::IsInCatchScopeMatcher {
 
     for (const TryNote& tn : script->trynotes()) {
       if (tn.start <= offset_ && offset_ < tn.start + tn.length &&
-          tn.kind == JSTRY_CATCH) {
+          tn.kind() == TryNoteKind::Catch) {
         isInCatch_ = true;
         return true;
       }
