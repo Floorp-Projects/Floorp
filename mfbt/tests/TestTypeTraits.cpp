@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <type_traits>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
 using mozilla::IsDestructible;
-using mozilla::IsSame;
 
 class PublicDestructible {
  public:
@@ -35,9 +36,9 @@ static_assert(IsDestructible<TrivialDestructible>::value,
  * actual type sizes seen at compile time.
  */
 #if defined(ANDROID) && !defined(__LP64__)
-static_assert(mozilla::IsSame<int, intptr_t>::value,
+static_assert(std::is_same_v<int, intptr_t>,
               "emulated PRI[di]PTR definitions will be wrong");
-static_assert(mozilla::IsSame<unsigned int, uintptr_t>::value,
+static_assert(std::is_same_v<unsigned int, uintptr_t>,
               "emulated PRI[ouxX]PTR definitions will be wrong");
 #endif
 

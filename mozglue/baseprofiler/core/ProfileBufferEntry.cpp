@@ -19,6 +19,7 @@
 #  include "mozilla/StackWalk.h"
 
 #  include <ostream>
+#  include <type_traits>
 
 namespace mozilla {
 namespace baseprofiler {
@@ -152,7 +153,7 @@ class MOZ_RAII AutoArraySchemaWriter {
 
   template <typename T>
   void IntElement(uint32_t aIndex, T aValue) {
-    static_assert(!IsSame<T, uint64_t>::value,
+    static_assert(!std::is_same_v<T, uint64_t>,
                   "Narrowing uint64 -> int64 conversion not allowed");
     FillUpTo(aIndex);
     mJSONWriter.IntElement(static_cast<int64_t>(aValue));
