@@ -7,10 +7,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
-#define TEST_CV_QUALIFIERS(test, type, ...)             \
-  test(type, __VA_ARGS__) test(const type, __VA_ARGS__) \
-      test(volatile type, __VA_ARGS__) test(const volatile type, __VA_ARGS__)
-
 using mozilla::AddPointer;
 using mozilla::AddRvalueReference;
 using mozilla::Decay;
@@ -53,38 +49,6 @@ static_assert(!IsPointer<bool (IsPointerTest::*)()>::value,
               "bool(IsPointerTest::*)() not a pointer");
 static_assert(!IsPointer<void (IsPointerTest::*)(void)>::value,
               "void(IsPointerTest::*)(void) not a pointer");
-
-namespace CPlusPlus11IsMemberPointer {
-
-using mozilla::IsMemberPointer;
-
-struct S {};
-union U {};
-
-#define ASSERT_IS_MEMBER_POINTER(type, msg) \
-  static_assert(IsMemberPointer<type>::value, #type msg);
-#define TEST_IS_MEMBER_POINTER(type)                 \
-  TEST_CV_QUALIFIERS(ASSERT_IS_MEMBER_POINTER, type, \
-                     " is a member pointer type")
-
-TEST_IS_MEMBER_POINTER(int S::*)
-TEST_IS_MEMBER_POINTER(int U::*)
-
-#undef TEST_IS_MEMBER_POINTER
-#undef ASSERT_IS_MEMBER_POINTER
-
-#define ASSERT_IS_NOT_MEMBER_POINTER(type, msg) \
-  static_assert(!IsMemberPointer<type>::value, #type msg);
-#define TEST_IS_NOT_MEMBER_POINTER(type)                 \
-  TEST_CV_QUALIFIERS(ASSERT_IS_NOT_MEMBER_POINTER, type, \
-                     " is not a member pointer type")
-
-TEST_IS_NOT_MEMBER_POINTER(int*)
-
-#undef TEST_IS_NOT_MEMBER_POINTER
-#undef ASSERT_IS_NOT_MEMBER_POINTER
-
-}  // namespace CPlusPlus11IsMemberPointer
 
 static_assert(!IsSigned<bool>::value, "bool shouldn't be signed");
 static_assert(IsUnsigned<bool>::value, "bool should be unsigned");
