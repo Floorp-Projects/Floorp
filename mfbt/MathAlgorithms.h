@@ -86,68 +86,18 @@ inline std::enable_if_t<detail::AllowDeprecatedAbs<T>::value, T> DeprecatedAbs(
 
 namespace detail {
 
-// For now mozilla::Abs only takes intN_T, the signed natural types, and
-// float/double/long double.  Feel free to add overloads for other standard,
-// signed types if you need them.
-
-template <typename T>
-struct AbsReturnTypeFixed;
-
-template <>
-struct AbsReturnTypeFixed<int8_t> {
-  typedef uint8_t Type;
-};
-template <>
-struct AbsReturnTypeFixed<int16_t> {
-  typedef uint16_t Type;
-};
-template <>
-struct AbsReturnTypeFixed<int32_t> {
-  typedef uint32_t Type;
-};
-template <>
-struct AbsReturnTypeFixed<int64_t> {
-  typedef uint64_t Type;
-};
-
 template <typename T, typename = void>
-struct AbsReturnType : AbsReturnTypeFixed<T> {};
+struct AbsReturnType;
 
 template <typename T>
-struct AbsReturnType<T, std::enable_if_t<std::is_same_v<T, char> && char(-1) < char(0)>> {
-  using Type = unsigned char;
+struct AbsReturnType<
+    T, std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>>> {
+  using Type = std::make_unsigned_t<T>;
 };
-template <>
-struct AbsReturnType<signed char> {
-  typedef unsigned char Type;
-};
-template <>
-struct AbsReturnType<short> {
-  typedef unsigned short Type;
-};
-template <>
-struct AbsReturnType<int> {
-  typedef unsigned int Type;
-};
-template <>
-struct AbsReturnType<long> {
-  typedef unsigned long Type;
-};
-template <>
-struct AbsReturnType<long long> {
-  typedef unsigned long long Type;
-};
-template <>
-struct AbsReturnType<float> {
-  typedef float Type;
-};
-template <>
-struct AbsReturnType<double> {
-  typedef double Type;
-};
-template <>
-struct AbsReturnType<long double> {
-  typedef long double Type;
+
+template <typename T>
+struct AbsReturnType<T, std::enable_if_t<std::is_floating_point_v<T>>> {
+  using Type = T;
 };
 
 }  // namespace detail
