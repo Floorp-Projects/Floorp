@@ -9,6 +9,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
 #include "vm/Opcodes.h"
+#include "vm/ThrowMsgKind.h"  // ThrowMsgKind
 
 using namespace js;
 using namespace js::frontend;
@@ -160,7 +161,7 @@ bool ElemOpEmitter::emitDelete() {
     }
 
     // Unconditionally throw when attempting to delete a super-reference.
-    if (!bce_->emitUint16Operand(JSOp::ThrowMsg, JSMSG_CANT_DELETE_SUPER)) {
+    if (!bce_->emit2(JSOp::ThrowMsg, uint8_t(ThrowMsgKind::CantDeleteSuper))) {
       //            [stack] THIS KEY SUPERBASE
       return false;
     }

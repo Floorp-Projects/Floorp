@@ -52,6 +52,7 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
+#include "vm/ThrowMsgKind.h"  // ThrowMsgKind
 #include "vm/TraceLogging.h"
 
 #include "builtin/Boolean-inl.h"
@@ -3129,7 +3130,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(OptimizeSpreadCall)
 
     CASE(ThrowMsg) {
-      MOZ_ALWAYS_FALSE(ThrowMsgOperation(cx, GET_UINT16(REGS.pc)));
+      MOZ_ALWAYS_FALSE(ThrowMsgOperation(cx, GET_UINT8(REGS.pc)));
       goto error;
     }
     END_CASE(ThrowMsg)
@@ -4651,7 +4652,8 @@ JSObject* js::BuiltinProtoOperation(JSContext* cx, jsbytecode* pc) {
   return GlobalObject::getOrCreatePrototype(cx, key);
 }
 
-bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
+bool js::ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind) {
+  auto errorNum = ThrowMsgKindToErrNum(ThrowMsgKind(throwMsgKind));
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNum);
   return false;
 }
