@@ -105,7 +105,7 @@ MFBT_API Result<LoadOrBranch, PCRelCheckError> CheckForPCRel(
  */
 template <typename ResultT>
 inline ResultT SignExtend(const uint32_t aValue, const uint8_t aNumValidBits) {
-  static_assert(IsIntegral<ResultT>::value && IsSigned<ResultT>::value,
+  static_assert(IsIntegral<ResultT>::value && std::is_signed_v<ResultT>,
                 "ResultT must be a signed integral type");
   MOZ_ASSERT(aNumValidBits < 32U && aNumValidBits > 1);
 
