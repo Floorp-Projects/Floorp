@@ -6,6 +6,8 @@
 #ifndef WEBGLPCQPARAMTRAITS_H_
 #define WEBGLPCQPARAMTRAITS_H_
 
+#include <type_traits>
+
 #include "mozilla/dom/ProducerConsumerQueue.h"
 #include "TexUnpackBlob.h"
 #include "WebGLContext.h"
@@ -101,8 +103,8 @@ struct PcqParamTraits<RawBuffer<T>> {
                : aProducerView.Status();
   }
 
-  template <typename ElementType =
-                typename RemoveCV<typename ParamType::ElementType>::Type>
+  template <
+      typename ElementType = std::remove_cv_t<typename ParamType::ElementType>>
   static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     size_t len;
     PcqStatus status = aConsumerView.ReadParam(&len);

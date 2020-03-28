@@ -585,7 +585,7 @@ struct IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> : TrueType {};
 
 template <typename T>
 struct IsRefcountedSmartPointer
-    : detail::IsRefcountedSmartPointerHelper<typename RemoveCV<T>::Type> {};
+    : detail::IsRefcountedSmartPointerHelper<std::remove_cv_t<T>> {};
 
 namespace detail {
 
@@ -608,7 +608,7 @@ struct RemoveSmartPointerHelper<T, nsCOMPtr<Pointee>> {
 
 template <typename T>
 struct RemoveSmartPointer
-    : detail::RemoveSmartPointerHelper<T, typename RemoveCV<T>::Type> {};
+    : detail::RemoveSmartPointerHelper<T, std::remove_cv_t<T>> {};
 
 namespace detail {
 
@@ -636,7 +636,7 @@ struct RemoveRawOrSmartPointerHelper<T, nsCOMPtr<Pointee>> {
 
 template <typename T>
 struct RemoveRawOrSmartPointer
-    : detail::RemoveRawOrSmartPointerHelper<T, typename RemoveCV<T>::Type> {};
+    : detail::RemoveRawOrSmartPointerHelper<T, std::remove_cv_t<T>> {};
 
 }  // namespace mozilla
 

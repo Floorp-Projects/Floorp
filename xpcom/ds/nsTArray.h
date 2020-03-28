@@ -13,6 +13,7 @@
 #include <initializer_list>
 #include <new>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Alignment.h"
@@ -626,8 +627,8 @@ class nsTArrayElementTraits {
   // Invoke the copy-constructor in place.
   template <class A>
   static inline void Construct(E* aE, A&& aArg) {
-    typedef typename mozilla::RemoveCV<E>::Type E_NoCV;
-    typedef typename mozilla::RemoveCV<A>::Type A_NoCV;
+    using E_NoCV = std::remove_cv_t<E>;
+    using A_NoCV = std::remove_cv_t<A>;
     static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
                   "For safety, we disallow constructing nsTArray<E> elements "
                   "from E* pointers. See bug 960591.");
@@ -636,9 +637,9 @@ class nsTArrayElementTraits {
   // Construct in place.
   template <class... Args>
   static inline void Emplace(E* aE, Args&&... aArgs) {
-    typedef typename mozilla::RemoveCV<E>::Type E_NoCV;
-    typedef typename mozilla::RemoveCV<
-        typename ::detail::ChooseFirst<Args...>::Type>::Type A_NoCV;
+    using E_NoCV = std::remove_cv_t<E>;
+    using A_NoCV =
+        std::remove_cv_t<typename ::detail::ChooseFirst<Args...>::Type>;
     static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
                   "For safety, we disallow constructing nsTArray<E> elements "
                   "from E* pointers. See bug 960591.");
