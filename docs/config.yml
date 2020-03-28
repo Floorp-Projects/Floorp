@@ -5,6 +5,7 @@
 categories:
     contributing_doc:
         - contributing
+        - bug-mgmt
     source_doc:
         - browser
         - dom
