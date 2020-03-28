@@ -39,7 +39,7 @@
         <vbox part="drop-indicator-bar" hidden="true">
           <image part="drop-indicator"/>
         </vbox>
-        <arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
+        <arrowscrollbox class="menupopup-arrowscrollbox" flex="1" orient="vertical"
                         exportparts="scrollbox: arrowscrollbox-scrollbox"
                         smoothscroll="false" part="arrowscrollbox">
           <html:slot></html:slot>
@@ -600,7 +600,7 @@
           <vbox part="drop-indicator-bar" hidden="true">
             <image part="drop-indicator"/>
           </vbox>
-          <arrowscrollbox class="popup-internal-box" flex="1"
+          <arrowscrollbox class="menupopup-arrowscrollbox" flex="1"
                           orient="vertical" smoothscroll="false"
                           part="arrowscrollbox">
             <html:slot/>

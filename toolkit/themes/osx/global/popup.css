@@ -17,7 +17,7 @@ menupopup > menu > menupopup {
   margin-top: -4px;
 }
 
-.popup-internal-box {
+.menupopup-arrowscrollbox {
   padding: 4px 0;
 }
 

@@ -81,7 +81,7 @@
       return `
         <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
         <html:style>${this.styles}</html:style>
-        <arrowscrollbox class="popup-internal-box"
+        <arrowscrollbox class="menupopup-arrowscrollbox"
                         flex="1"
                         orient="vertical"
                         smoothscroll="false">
@@ -92,13 +92,11 @@
 
     get styles() {
       let s = `
-        :host(.in-menulist) .popup-internal-box::part(scrollbutton-up),
-        :host(.in-menulist) .popup-internal-box::part(overflow-start-indicator),
-        :host(.in-menulist) .popup-internal-box::part(overflow-end-indicator),
-        :host(.in-menulist) .popup-internal-box::part(scrollbutton-down) {
+        :host(.in-menulist) arrowscrollbox::part(scrollbutton-up),
+        :host(.in-menulist) arrowscrollbox::part(scrollbutton-down) {
           display: none;
         }
-        :host(.in-menulist) .popup-internal-box::part(scrollbox) {
+        :host(.in-menulist) arrowscrollbox::part(scrollbox) {
           overflow: auto;
         }
       `;
@@ -106,7 +104,7 @@
       switch (AppConstants.platform) {
         case "macosx":
           s += `
-            :host(.in-menulist) .popup-internal-box {
+            :host(.in-menulist) arrowscrollbox {
               padding: 0;
             }
           `;
@@ -121,7 +119,7 @@
 
     get scrollBox() {
       if (!this._scrollBox) {
-        this._scrollBox = this.shadowRoot.querySelector(".popup-internal-box");
+        this._scrollBox = this.shadowRoot.querySelector("arrowscrollbox");
       }
       return this._scrollBox;
     }
