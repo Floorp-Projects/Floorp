@@ -156,7 +156,7 @@ inline bool IsTimeValid(double aTime) {
 template <typename IntType, typename FloatType>
 IntType TruncateFloatToInt(FloatType f) {
   using std::numeric_limits;
-  static_assert(mozilla::IsIntegral<IntType>::value == true,
+  static_assert(std::is_integral_v<IntType> == true,
                 "IntType must be an integral type");
   static_assert(std::is_floating_point_v<FloatType> == true,
                 "FloatType must be a floating point type");

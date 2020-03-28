@@ -82,59 +82,6 @@ struct IsVoid : detail::IsVoidHelper<typename RemoveCV<T>::Type> {};
 namespace detail {
 
 template <typename T>
-struct IsIntegralHelper : FalseType {};
-
-template <>
-struct IsIntegralHelper<char> : TrueType {};
-template <>
-struct IsIntegralHelper<signed char> : TrueType {};
-template <>
-struct IsIntegralHelper<unsigned char> : TrueType {};
-template <>
-struct IsIntegralHelper<short> : TrueType {};
-template <>
-struct IsIntegralHelper<unsigned short> : TrueType {};
-template <>
-struct IsIntegralHelper<int> : TrueType {};
-template <>
-struct IsIntegralHelper<unsigned int> : TrueType {};
-template <>
-struct IsIntegralHelper<long> : TrueType {};
-template <>
-struct IsIntegralHelper<unsigned long> : TrueType {};
-template <>
-struct IsIntegralHelper<long long> : TrueType {};
-template <>
-struct IsIntegralHelper<unsigned long long> : TrueType {};
-template <>
-struct IsIntegralHelper<bool> : TrueType {};
-template <>
-struct IsIntegralHelper<wchar_t> : TrueType {};
-template <>
-struct IsIntegralHelper<char16_t> : TrueType {};
-template <>
-struct IsIntegralHelper<char32_t> : TrueType {};
-
-} /* namespace detail */
-
-/**
- * IsIntegral determines whether a type is an integral type.
- *
- * mozilla::IsIntegral<int>::value is true;
- * mozilla::IsIntegral<unsigned short>::value is true;
- * mozilla::IsIntegral<const long>::value is true;
- * mozilla::IsIntegral<int*>::value is false;
- * mozilla::IsIntegral<double>::value is false;
- */
-template <typename T>
-struct IsIntegral : detail::IsIntegralHelper<typename RemoveCV<T>::Type> {};
-
-template <typename T, typename U>
-struct IsSame;
-
-namespace detail {
-
-template <typename T>
 struct IsArrayHelper : FalseType {};
 
 template <typename T, decltype(sizeof(1)) N>

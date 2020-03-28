@@ -186,7 +186,7 @@ class ThreadLocal : public Storage<T> {
 
 template <typename T, template <typename U> class Storage>
 inline bool ThreadLocal<T, Storage>::init() {
-  static_assert(std::is_pointer_v<T> || mozilla::IsIntegral<T>::value,
+  static_assert(std::is_pointer_v<T> || std::is_integral_v<T>,
                 "mozilla::ThreadLocal must be used with a pointer or "
                 "integral type");
   static_assert(sizeof(T) <= sizeof(void*),

@@ -378,7 +378,7 @@ class Atomic;
 template <typename T, MemoryOrdering Order>
 class Atomic<
     T, Order,
-    typename EnableIf<IsIntegral<T>::value && !IsSame<T, bool>::value>::Type>
+    typename EnableIf<std::is_integral_v<T> && !IsSame<T, bool>::value>::Type>
     : public detail::AtomicBaseIncDec<T, Order> {
   typedef typename detail::AtomicBaseIncDec<T, Order> Base;
 
