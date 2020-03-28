@@ -426,7 +426,7 @@ struct AssertionConditionType {
   static_assert(!IsArray<ValueT>::value,
                 "Expected boolean assertion condition, got an array or a "
                 "string!");
-  static_assert(!IsFunction<ValueT>::value,
+  static_assert(!std::is_function_v<ValueT>,
                 "Expected boolean assertion condition, got a function! Did "
                 "you intend to call that function?");
   static_assert(!std::is_floating_point_v<ValueT>,
