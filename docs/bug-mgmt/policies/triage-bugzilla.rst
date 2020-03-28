@@ -107,31 +107,8 @@ Weekly or More Frequently (depending on the component) find `un-triaged
 bugs in the components you
 triage <https://bugzilla.mozilla.org/buglist.cgi?f1=triage_owner&bug_type=defect&o1=equals&resolution=---&priority=--&v1=%25user%25>`__.
 
-For each bug decide priority (you can override what’s already been set,
+For each bug decide :ref:`priority <Priority definitions>` (you can override what’s already been set,
 as a triage lead, you are the decider.)
-
-+----------------------------------------+-----------------------------+
-| Priority                               | Description                 |
-+========================================+=============================+
-| –                                      | No decision                 |
-+----------------------------------------+-----------------------------+
-| P1                                     | Fix in the current release  |
-|                                        | cycle                       |
-+----------------------------------------+-----------------------------+
-| P2                                     | Fix in the next release     |
-|                                        | cycle or the following      |
-|                                        | (nightly + 1 or nightly +   |
-|                                        | 2)                          |
-+----------------------------------------+-----------------------------+
-| P3                                     | Backlog                     |
-+----------------------------------------+-----------------------------+
-| P4                                     | Do not use, this priority   |
-|                                        | is for web platform test    |
-|                                        | bots                        |
-+----------------------------------------+-----------------------------+
-| P5                                     | Will not fix, but will      |
-|                                        | accept a patch              |
-+----------------------------------------+-----------------------------+
 
 What About Release Status (status_firefoxNN) Flags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
