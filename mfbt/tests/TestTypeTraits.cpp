@@ -11,7 +11,6 @@
   test(type, __VA_ARGS__) test(const type, __VA_ARGS__) \
       test(volatile type, __VA_ARGS__) test(const volatile type, __VA_ARGS__)
 
-using mozilla::AddLvalueReference;
 using mozilla::AddPointer;
 using mozilla::AddRvalueReference;
 using mozilla::Decay;
@@ -409,18 +408,6 @@ static void TestIsConvertible() {
   // static_assert((!IsConvertible<C, A>::value),
   //           "C doesn't convert to A (private inheritance)");
 }
-
-static_assert(IsSame<AddLvalueReference<int>::Type, int&>::value,
-              "not adding & to int correctly");
-static_assert(
-    IsSame<AddLvalueReference<volatile int&>::Type, volatile int&>::value,
-    "not adding & to volatile int& correctly");
-static_assert(IsSame<AddLvalueReference<void*>::Type, void*&>::value,
-              "not adding & to void* correctly");
-static_assert(IsSame<AddLvalueReference<void>::Type, void>::value,
-              "void shouldn't be transformed by AddLvalueReference");
-static_assert(IsSame<AddLvalueReference<struct S1&&>::Type, struct S1&>::value,
-              "not reference-collapsing struct S1&& & to struct S1& correctly");
 
 static_assert(IsSame<AddRvalueReference<int>::Type, int&&>::value,
               "not adding && to int correctly");
