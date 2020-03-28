@@ -55,8 +55,7 @@ struct PointerTypeImpl<T, D, false> {
 
 template <class T, class D>
 struct PointerType {
-  typedef
-      typename PointerTypeImpl<T, typename RemoveReference<D>::Type>::Type Type;
+  typedef typename PointerTypeImpl<T, std::remove_reference_t<D>>::Type Type;
 };
 
 }  // namespace detail
@@ -224,29 +223,7 @@ class UniquePtr {
             typename Conditional<std::is_reference_v<D>, D, const D&>::Type aD1)
       : mTuple(aPtr, aD1) {}
 
-  // If you encounter an error with MSVC10 about RemoveReference below, along
-  // the lines that "more than one partial specialization matches the template
-  // argument list": don't use UniquePtr<T, reference to function>!  Ideally
-  // you should make deletion use the same function every time, using a
-  // deleter policy:
-  //
-  //   // BAD, won't compile with MSVC10, deleter doesn't need to be a
-  //   // variable at all
-  //   typedef void (&FreeSignature)(void*);
-  //   UniquePtr<int, FreeSignature> ptr((int*) malloc(sizeof(int)), free);
-  //
-  //   // GOOD, compiles with MSVC10, deletion behavior statically known and
-  //   // optimizable
-  //   struct DeleteByFreeing
-  //   {
-  //     void operator()(void* aPtr) { free(aPtr); }
-  //   };
-  //
-  // If deletion really, truly, must be a variable: you might be able to work
-  // around this with a deleter class that contains the function reference.
-  // But this workaround is untried and untested, because variable deletion
-  // behavior really isn't something you should use.
-  UniquePtr(Pointer aPtr, typename RemoveReference<D>::Type&& aD2)
+  UniquePtr(Pointer aPtr, std::remove_reference_t<D>&& aD2)
       : mTuple(aPtr, std::move(aD2)) {
     static_assert(!std::is_reference_v<D>,
                   "rvalue deleter can't be stored by reference");
@@ -378,11 +355,7 @@ class UniquePtr<T[], D> {
             typename Conditional<std::is_reference_v<D>, D, const D&>::Type aD1)
       : mTuple(aPtr, aD1) {}
 
-  // If you encounter an error with MSVC10 about RemoveReference below, along
-  // the lines that "more than one partial specialization matches the template
-  // argument list": don't use UniquePtr<T[], reference to function>!  See the
-  // comment by this constructor in the non-T[] specialization above.
-  UniquePtr(Pointer aPtr, typename RemoveReference<D>::Type&& aD2)
+  UniquePtr(Pointer aPtr, std::remove_reference_t<D>&& aD2)
       : mTuple(aPtr, std::move(aD2)) {
     static_assert(!std::is_reference_v<D>,
                   "rvalue deleter can't be stored by reference");

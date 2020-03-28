@@ -15,6 +15,7 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
+#include <type_traits>
 #include <utility>
 
 #ifndef mozilla_Variant_h
@@ -103,8 +104,8 @@ struct SelectVariantTypeHelper<T, Head, Variants...>
 template <typename T, typename... Variants>
 struct SelectVariantType
     : public SelectVariantTypeHelper<
-          typename RemoveConst<typename RemoveReference<T>::Type>::Type,
-          Variants...> {};
+          typename RemoveConst<std::remove_reference_t<T>>::Type, Variants...> {
+};
 
 // Compute a fast, compact type that can be used to hold integral values that
 // distinctly map to every type in Ts.
@@ -315,7 +316,7 @@ struct AsVariantTemporary {
   void operator=(const AsVariantTemporary&) = delete;
   void operator=(AsVariantTemporary&&) = delete;
 
-  typename RemoveConst<typename RemoveReference<T>::Type>::Type mValue;
+  typename RemoveConst<std::remove_reference_t<T>>::Type mValue;
 };
 
 }  // namespace detail

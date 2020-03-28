@@ -17,6 +17,8 @@
 #include "mozilla/ScopeExit.h"
 #include "CDMStorageIdProvider.h"
 
+#include <type_traits>
+
 namespace mozilla {
 namespace gmp {
 
@@ -183,10 +185,10 @@ void ChromiumCDMChild::CallOnMessageLoopThread(const char* const aName,
     CallMethod(aMethod, std::forward<ParamType>(aParams)...);
   } else {
     auto m = &ChromiumCDMChild::CallMethod<
-        decltype(aMethod), const typename RemoveReference<ParamType>::Type&...>;
+        decltype(aMethod), const std::remove_reference_t<ParamType>&...>;
     RefPtr<mozilla::Runnable> t =
         NewRunnableMethod<decltype(aMethod),
-                          const typename RemoveReference<ParamType>::Type...>(
+                          const std::remove_reference_t<ParamType>...>(
             aName, this, m, aMethod, std::forward<ParamType>(aParams)...);
     mPlugin->GMPMessageLoop()->PostTask(t.forget());
   }

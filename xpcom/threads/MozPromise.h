@@ -74,7 +74,7 @@ struct MethodTraitsHelper<Ret (ThisType::*)(ArgTypes...) const volatile> {
   static const size_t ArgSize = sizeof...(ArgTypes);
 };
 template <typename T>
-struct MethodTrait : MethodTraitsHelper<typename RemoveReference<T>::Type> {};
+struct MethodTrait : MethodTraitsHelper<std::remove_reference_t<T>> {};
 
 }  // namespace detail
 
@@ -1429,7 +1429,7 @@ static RefPtr<PromiseType> InvokeAsync(
     ActualArgTypes&&... aArgs) {
   static_assert(
       !detail::Any(
-          std::is_pointer_v<typename RemoveReference<ActualArgTypes>::Type>...),
+          std::is_pointer_v<std::remove_reference_t<ActualArgTypes>>...),
       "Cannot pass pointer types through InvokeAsync, Storages must be "
       "provided");
   static_assert(sizeof...(ArgTypes) == sizeof...(ActualArgTypes),

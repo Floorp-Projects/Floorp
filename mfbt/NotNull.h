@@ -68,6 +68,7 @@
 #include <utility>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
@@ -165,7 +166,7 @@ namespace detail {
 template <typename Pointer>
 struct PointedTo {
   // Remove the reference that dereferencing operators may return.
-  using Type = typename RemoveReference<decltype(*DeclVal<Pointer>())>::Type;
+  using Type = std::remove_reference_t<decltype(*DeclVal<Pointer>())>;
   using NonConstType = typename RemoveConst<Type>::Type;
 };
 

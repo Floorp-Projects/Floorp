@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 #include "mozilla/ipc/SharedMemoryBasic.h"
@@ -109,7 +110,7 @@ inline bool IsSuccess(PcqStatus status) { return status == PcqStatus::Success; }
 
 template <typename T>
 struct RemoveCVR {
-  typedef typename RemoveReference<typename RemoveCV<T>::Type>::Type Type;
+  using Type = std::remove_reference_t<typename RemoveCV<T>::Type>;
 };
 
 template <typename T>
