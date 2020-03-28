@@ -20,6 +20,7 @@
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/ZoneAllocator.h"
 #include "js/UniquePtr.h"
+#include "js/Value.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 
@@ -353,6 +354,9 @@ class JS::Compartment {
   void destroy(JSFreeOp* fop);
 
   MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
+
+  MOZ_MUST_USE inline bool wrap(JSContext* cx,
+                                MutableHandle<mozilla::Maybe<Value>> vp);
 
   MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandleString strp);
   MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandle<JS::BigInt*> bi);
