@@ -1047,7 +1047,7 @@ struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0)) {};
 template <typename TWithoutPointer>
 struct NonnsISupportsPointerStorageClass
     : mozilla::Conditional<
-          mozilla::IsConst<TWithoutPointer>::value,
+          std::is_const_v<TWithoutPointer>,
           StoreConstPtrPassByConstPtr<
               typename mozilla::RemoveConst<TWithoutPointer>::Type>,
           StorePtrPassByPtr<TWithoutPointer>> {};
@@ -1062,7 +1062,7 @@ struct PointerStorageClass
 template <typename TWithoutRef>
 struct LValueReferenceStorageClass
     : mozilla::Conditional<
-          mozilla::IsConst<TWithoutRef>::value,
+          std::is_const_v<TWithoutRef>,
           StoreConstRefPassByConstLRef<
               typename mozilla::RemoveConst<TWithoutRef>::Type>,
           StoreRefPassByLRef<TWithoutRef>> {};
