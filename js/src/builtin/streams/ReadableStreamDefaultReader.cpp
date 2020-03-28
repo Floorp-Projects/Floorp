@@ -14,7 +14,7 @@
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
-#include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader
+#include "builtin/streams/ReadableStreamReader.h"  // js::ForAuthorCodeBool, js::ReadableStream{,Default}Reader
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}
 #include "js/Class.h"                              // JSClass, JS_NULL_CLASS_OPS
 #include "js/RootingAPI.h"                         // JS::Handle, JS::Rooted
@@ -45,9 +45,8 @@ using JS::Value;
  * Steps 2-4.
  */
 MOZ_MUST_USE ReadableStreamDefaultReader* js::CreateReadableStreamDefaultReader(
-    JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
-    ForAuthorCodeBool forAuthorCode,
-    JS::Handle<JSObject*> proto /* = nullptr */) {
+    JSContext* cx, Handle<ReadableStream*> unwrappedStream,
+    ForAuthorCodeBool forAuthorCode, Handle<JSObject*> proto /* = nullptr */) {
   Rooted<ReadableStreamDefaultReader*> reader(
       cx, NewObjectWithClassProto<ReadableStreamDefaultReader>(cx, proto));
   if (!reader) {
