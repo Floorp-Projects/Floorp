@@ -43,7 +43,7 @@
         <label>웹 사이트는 인증서를 통해 신원을 증명합니다. 인증서 발급자를 알 수 없거나 인증서가 자체 서명되었거나 서버가 올바른 중간 인증서를 보내지 않고 있기 때문에 %1$s이(가) <b>%2$s</b>을(를) 신뢰하지 않습니다.</label>
     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_back">뒤로(권장)</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_back">뒤로 (권장)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">위험을 감수하고 계속</string>
 

@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">%1$s에 모두 추가</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox 부가 기능 기술은 현대화되고 있습니다. 이 부가 기능은 Firefox 버전 75 이상부터는 호환되지 않는 프레임워크를 사용하고있습니다.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">현재 초기에 선정된 추천 확장 기능들에 대한 지원을 구축하고 있습니다.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">부가 기능 다운로드 및 검증 중…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

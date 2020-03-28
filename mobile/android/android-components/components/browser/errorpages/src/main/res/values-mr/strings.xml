@@ -46,6 +46,14 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">जोडणी मध्ये अडथळा</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>ब्राउझरची जोडणी यशस्वी झाली, पण माहिती पाठवत असताना खंडीत झाली. कृपया पुन्हा प्रयत्न करा.</p>
+      <ul>
+        <li>हे संकेतस्थळ अतिव्यस्त किंवा तात्पुरते बंद असू शकते. काही क्षणात पुन्हा प्रयत्न करा.</li>
+
+        <li>आपण जर कोणतेही पृष्ठ लोड करू शकत नसाल तर आपल्या उपकरणाची डेटा किंवा वायफाय जोडणी तपासा</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">जोडणी कालबाह्य झाली</string>
 
@@ -70,6 +78,11 @@
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">असुरक्षीत फाइल प्रकार</string>
 
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>या समस्येबद्दल माहिती देण्यासाठी कृपया संकेतस्थळाच्या मालकाशी संपर्क करा.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">दुषीत मजकूर त्रुटी</string>
 
@@ -85,6 +98,8 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">इंटरनेट जोडणी नाही</string>
 
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">आपली नेटवर्क जोडणी तपासा किंवा काही क्षणात पृष्ठ परत लोड करण्याचा प्रयत्न करा.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">पुन्हा लोड करा</string>
 
@@ -105,8 +120,22 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">प्रॉक्सी सर्व्हरने जोडणी नकारली</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>ब्राउझरची संरचना प्रॉक्सी सर्व्हर वापरण्यासाठी केली आहे, पण प्रॉक्सीने जोडणी नकारली.</p>
+      <ul>
+        <li>ब्राउझरची प्रॉक्सी संरचना अचूक आहे का? सेटिंग तपासा व पुन्हा प्रयत्न करा.</li>
+        <li>प्रॉक्सी सेवा या नेटवर्ककडून जोडणीला अनुमती देते का?</li>
+        <li>अजूनही समस्या आहे?  मदतीसाठी आपल्या नेटवर्क प्रशासकाचा किंवा इंटरनेट प्रदात्याचा सल्ला घ्या.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">प्रॉक्सी सर्व्हर आढळला नाही</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>ब्राउझरची संरचना प्रॉक्सी सर्व्हर वापरण्यासाठी केली आहे, पण प्रॉक्सी सापडला नाही.</p>
+      <ul>
+        <li>ब्राउझरची प्रॉक्सी संरचना अचूक आहे का? सेटिंग तपासा व पुन्हा प्रयत्न करा.</li>
+        <li>उपकरण सक्रिय नेटवर्कशी जोडले आहे का?</li>
+        <li>अजूनही समस्या आहे? मदतीसाठी आपल्या नेटवर्क प्रशासकाचा किंवा इंटरनेट प्रदात्याचा सल्ला घ्या.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">मालवेअर साइट समस्या</string>

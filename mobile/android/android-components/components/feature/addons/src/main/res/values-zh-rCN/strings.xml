@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">将它们添加至 %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox 附加组件技术正趋于现代化。这些附加组件使用了与 Firefox 75 及更高版本不兼容的框架。</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">我们目前着重构建对部分“推荐扩展”的支持，请稍后再来。</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">正在下载并验证附加组件…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

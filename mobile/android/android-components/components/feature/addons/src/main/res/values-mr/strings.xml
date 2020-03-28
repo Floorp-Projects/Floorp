@@ -32,6 +32,22 @@
     <string name="mozac_feature_addons_permissions_history_description">ब्राऊझिंग इतिहास पहा</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">एक्स्टेंशनचा वापर मॉनिटर करा व थीम व्यवस्थापित करा</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ह्याव्यतिरिक्त इतर अॅप्स सोबत संदेशांची देवाणघेवाण करा</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">आपल्याला सूचना दर्शवा</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">क्रिप्टोग्राफिक प्रमाणीकरण सेवा प्रदान करा</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">ब्राउझर प्रॉक्सी सेटिंग संचालित करा</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">नुकतेच बंद केलेले टॅब पहा</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ब्राउझर टॅब लपवा आणि दाखवा</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">ब्राऊझिंग इतिहास पहा</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">खुल्या टॅबमध्ये आपला डेटा वापरण्यासाठी डेव्हलपर साधनांचा विस्तार करा</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">आवृत्ती</string>
     <!-- The authors of an add-on. -->
@@ -92,6 +108,22 @@
     <string name="mozac_feature_addons_updater_notification_title">%1$s मध्ये नवीन अद्यतन आहे</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d नवीन परवानग्या आवश्यक आहेत</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">नवीन परवानगी आवश्यक आहे</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">ॲड-ऑन सुधारणा</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">समर्थित ॲड-ऑन तपासक</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">नवीन ॲड-ऑन उपलब्ध</string>
+    <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">नवीन ॲड-ऑन उपलब्ध</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%1$s ला %2$s मध्ये जोडा</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s व %2$s ला %3$s मध्ये जोडा</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">त्यांना %1$s मध्ये जोडा</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">अ‍ॅड-ऑन डाउनलोड आणि सत्यापित करीत आहे…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -124,4 +156,16 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s अ‍ॅड-ऑन</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">अधिक जाणा</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">यशस्वीरित्या अद्यतनित</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">अद्यतन उपलब्ध नाही</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">त्रुटी</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">अद्यतन माहिती</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">मागील प्रयत्न:</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">स्थिती:</string>
 </resources>

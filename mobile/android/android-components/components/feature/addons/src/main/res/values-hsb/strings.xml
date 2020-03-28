@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Je %1$s přidać</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Přidatkowa technologija Firefox so modernizuje. Tute přidatki programowanske rošty wužiwaja, kotrež z Firefox 75 a nowšimi kompatibelne njejsu.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Wutworjamy tuchwilu podpěru za spočatny wuběr doporučenych rozšěrjenjow.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Přidatk so sćahuje a přepruwuje…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
