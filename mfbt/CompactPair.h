@@ -9,6 +9,7 @@
 #ifndef mozilla_CompactPair_h
 #define mozilla_CompactPair_h
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Attributes.h"
@@ -27,13 +28,14 @@ enum StorageType { AsBase, AsMember };
 // The extra conditions on storage for B are necessary so that CompactPairHelper
 // won't ambiguously inherit from either A or B, such that one or the other base
 // class would be inaccessible.
-template <
-    typename A, typename B,
-    detail::StorageType = IsEmpty<A>::value ? detail::AsBase : detail::AsMember,
-    detail::StorageType = IsEmpty<B>::value && !std::is_base_of<A, B>::value &&
-                                  !std::is_base_of<B, A>::value
-                              ? detail::AsBase
-                              : detail::AsMember>
+template <typename A, typename B,
+          detail::StorageType =
+              std::is_empty_v<A> ? detail::AsBase : detail::AsMember,
+          detail::StorageType = std::is_empty_v<B> &&
+                                        !std::is_base_of<A, B>::value &&
+                                        !std::is_base_of<B, A>::value
+                                    ? detail::AsBase
+                                    : detail::AsMember>
 struct CompactPairHelper;
 
 template <typename A, typename B>

@@ -400,61 +400,6 @@ struct IsPod<T*> : TrueType {};
 
 namespace detail {
 
-// __is_empty is a supported extension across all of our supported compilers:
-// http://llvm.org/releases/3.0/docs/ClangReleaseNotes.html
-// http://gcc.gnu.org/onlinedocs/gcc-4.4.7/gcc/Type-Traits.html#Type-Traits
-// http://msdn.microsoft.com/en-us/library/ms177194%28v=vs.100%29.aspx
-template <typename T>
-struct IsEmptyHelper
-    : IntegralConstant<bool, IsClass<T>::value&& __is_empty(T)> {};
-
-}  // namespace detail
-
-/**
- * IsEmpty determines whether a type is a class (but not a union) that is empty.
- *
- * A class is empty iff it and all its base classes have no non-static data
- * members (except bit-fields of length 0) and no virtual member functions, and
- * no base class is empty or a virtual base class.
- *
- * Intuitively, empty classes don't have any data that has to be stored in
- * instances of those classes.  (The size of the class must still be non-zero,
- * because distinct array elements of any type must have different addresses.
- * However, if the Empty Base Optimization is implemented by the compiler [most
- * compilers implement it, and in certain cases C++11 requires it], the size of
- * a class inheriting from an empty |Base| class need not be inflated by
- * |sizeof(Base)|.)  And intuitively, non-empty classes have data members and/or
- * vtable pointers that must be stored in each instance for proper behavior.
- *
- *   static_assert(!mozilla::IsEmpty<int>::value, "not a class => not empty");
- *   union U1 { int x; };
- *   static_assert(!mozilla::IsEmpty<U1>::value, "not a class => not empty");
- *   struct E1 {};
- *   struct E2 { int : 0 };
- *   struct E3 : E1 {};
- *   struct E4 : E2 {};
- *   static_assert(mozilla::IsEmpty<E1>::value &&
- *                 mozilla::IsEmpty<E2>::value &&
- *                 mozilla::IsEmpty<E3>::value &&
- *                 mozilla::IsEmpty<E4>::value,
- *                 "all empty");
- *   union U2 { E1 e1; };
- *   static_assert(!mozilla::IsEmpty<U2>::value, "not a class => not empty");
- *   struct NE1 { int x; };
- *   struct NE2 : virtual E1 {};
- *   struct NE3 : E2 { virtual ~NE3() {} };
- *   struct NE4 { virtual void f() {} };
- *   static_assert(!mozilla::IsEmpty<NE1>::value &&
- *                 !mozilla::IsEmpty<NE2>::value &&
- *                 !mozilla::IsEmpty<NE3>::value &&
- *                 !mozilla::IsEmpty<NE4>::value,
- *                 "all empty");
- */
-template <typename T>
-struct IsEmpty : detail::IsEmptyHelper<typename RemoveCV<T>::Type> {};
-
-namespace detail {
-
 template <typename T, bool = IsFloatingPoint<T>::value,
           bool = IsIntegral<T>::value,
           typename NoCV = typename RemoveCV<T>::Type>
