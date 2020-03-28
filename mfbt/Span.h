@@ -92,13 +92,13 @@ struct is_std_array : public is_std_array_oracle<std::remove_cv_t<T>> {};
 
 template <size_t From, size_t To>
 struct is_allowed_extent_conversion
-    : public mozilla::IntegralConstant<
-          bool, From == To || From == mozilla::dynamic_extent ||
-                    To == mozilla::dynamic_extent> {};
+    : public std::integral_constant<bool, From == To ||
+                                              From == mozilla::dynamic_extent ||
+                                              To == mozilla::dynamic_extent> {};
 
 template <class From, class To>
 struct is_allowed_element_type_conversion
-    : public mozilla::IntegralConstant<
+    : public std::integral_constant<
           bool, std::is_convertible_v<From (*)[], To (*)[]>> {};
 
 template <class Span, bool IsConst>
@@ -766,13 +766,14 @@ namespace span_details {
 // see it as constexpr and so will fail compilation of the template
 template <class ElementType, size_t Extent>
 struct calculate_byte_size
-    : mozilla::IntegralConstant<size_t, static_cast<size_t>(
-                                            sizeof(ElementType) *
-                                            static_cast<size_t>(Extent))> {};
+    : std::integral_constant<size_t,
+                             static_cast<size_t>(sizeof(ElementType) *
+                                                 static_cast<size_t>(Extent))> {
+};
 
 template <class ElementType>
 struct calculate_byte_size<ElementType, dynamic_extent>
-    : mozilla::IntegralConstant<size_t, dynamic_extent> {};
+    : std::integral_constant<size_t, dynamic_extent> {};
 }  // namespace span_details
 
 // [Span.objectrep], views of object representation

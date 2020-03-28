@@ -115,8 +115,8 @@ struct RemoveCVR {
 
 template <typename T>
 struct IsTriviallySerializable
-    : public IntegralConstant<bool, std::is_enum<T>::value ||
-                                        std::is_arithmetic<T>::value> {};
+    : public std::integral_constant<bool, std::is_enum<T>::value ||
+                                              std::is_arithmetic<T>::value> {};
 
 struct ProducerConsumerQueue;
 class Producer;

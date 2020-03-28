@@ -118,7 +118,7 @@ def main(output, *filenames):
     print("\ntemplate<class T> struct CategoricalLabelId {};", file=output)
     for name, _, id in enums:
         print("template<> struct CategoricalLabelId<%s> : "
-              "IntegralConstant<uint32_t, %s> {};" % (name, id), file=output)
+              "std::integral_constant<uint32_t, %s> {};" % (name, id), file=output)
 
     # Footer.
     print(footer, file=output)

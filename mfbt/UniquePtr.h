@@ -40,8 +40,8 @@ struct HasPointerTypeHelper {
 
 template <class T>
 class HasPointerType
-    : public IntegralConstant<bool,
-                              sizeof(HasPointerTypeHelper::Test<T>(0)) == 1> {};
+    : public std::integral_constant<bool, sizeof(HasPointerTypeHelper::Test<T>(
+                                              0)) == 1> {};
 
 template <class T, class D, bool = HasPointerType<D>::value>
 struct PointerTypeImpl {

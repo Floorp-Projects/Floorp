@@ -11,6 +11,7 @@
 
 #include "mozilla/Types.h"
 
+#include <type_traits>
 #include <utility>
 
 /*
@@ -23,20 +24,9 @@ namespace mozilla {
 
 /* 20.9.3 Helper classes [meta.help] */
 
-/**
- * Helper class used as a base for various type traits, exposed publicly
- * because <type_traits> exposes it as well.
- */
-template <typename T, T Value>
-struct IntegralConstant {
-  static constexpr T value = Value;
-  typedef T ValueType;
-  typedef IntegralConstant<T, Value> Type;
-};
-
 /** Convenient aliases. */
-typedef IntegralConstant<bool, true> TrueType;
-typedef IntegralConstant<bool, false> FalseType;
+typedef std::integral_constant<bool, true> TrueType;
+typedef std::integral_constant<bool, false> FalseType;
 
 /* 20.9.4 Unary type traits [meta.unary] */
 
@@ -46,7 +36,7 @@ typedef IntegralConstant<bool, false> FalseType;
  * Traits class for identifying POD types.  Until C++11 there's no automatic
  * way to detect PODs, so for the moment this is done manually.  Users may
  * define specializations of this class that inherit from mozilla::TrueType and
- * mozilla::FalseType (or equivalently mozilla::IntegralConstant<bool, true or
+ * mozilla::FalseType (or equivalently std::integral_constant<bool, true or
  * false>, or conveniently from mozilla::IsPod for composite types) as needed to
  * ensure correct IsPod behavior.
  */

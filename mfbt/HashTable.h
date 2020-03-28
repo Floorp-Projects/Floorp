@@ -928,7 +928,7 @@ class HashMapEntry {
 
 template <typename K, typename V>
 struct IsPod<HashMapEntry<K, V>>
-    : IntegralConstant<bool, IsPod<K>::value && IsPod<V>::value> {};
+    : std::integral_constant<bool, IsPod<K>::value && IsPod<V>::value> {};
 
 namespace detail {
 
