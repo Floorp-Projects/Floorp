@@ -86,45 +86,6 @@ TEST_IS_NOT_MEMBER_POINTER(int*)
 
 }  // namespace CPlusPlus11IsMemberPointer
 
-namespace CPlusPlus11IsScalar {
-
-using mozilla::IsScalar;
-
-enum E {};
-enum class EC {};
-class C {};
-struct S {};
-union U {};
-
-#define ASSERT_IS_SCALAR(type, msg) \
-  static_assert(IsScalar<type>::value, #type msg);
-#define TEST_IS_SCALAR(type) \
-  TEST_CV_QUALIFIERS(ASSERT_IS_SCALAR, type, " is a scalar type")
-
-TEST_IS_SCALAR(int)
-TEST_IS_SCALAR(float)
-TEST_IS_SCALAR(E)
-TEST_IS_SCALAR(EC)
-TEST_IS_SCALAR(S*)
-TEST_IS_SCALAR(int S::*)
-
-#undef TEST_IS_SCALAR
-#undef ASSERT_IS_SCALAR
-
-#define ASSERT_IS_NOT_SCALAR(type, msg) \
-  static_assert(!IsScalar<type>::value, #type msg);
-#define TEST_IS_NOT_SCALAR(type) \
-  TEST_CV_QUALIFIERS(ASSERT_IS_NOT_SCALAR, type, " is not a scalar type")
-
-TEST_IS_NOT_SCALAR(C)
-TEST_IS_NOT_SCALAR(S)
-TEST_IS_NOT_SCALAR(U)
-
-#undef TEST_IS_NOT_SCALAR
-#undef ASSERT_IS_NOT_SCALAR
-
-}  // namespace CPlusPlus11IsScalar
-
 static_assert(!IsSigned<bool>::value, "bool shouldn't be signed");
 static_assert(IsUnsigned<bool>::value, "bool should be unsigned");
 
