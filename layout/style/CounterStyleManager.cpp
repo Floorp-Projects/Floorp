@@ -6,6 +6,8 @@
 
 #include "CounterStyleManager.h"
 
+#include <type_traits>
+
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
@@ -287,7 +289,7 @@ static bool CJKIdeographicToText(CounterValue aOrdinal, nsAString& aResult,
     if (unitidx == 0) {
       unit10Kidx = pos / 4;
     }
-    auto cur = static_cast<MakeUnsigned<CounterValue>::Type>(aOrdinal) % 10;
+    auto cur = static_cast<std::make_unsigned_t<CounterValue>>(aOrdinal) % 10;
     if (cur == 0) {
       if (needZero) {
         needZero = false;

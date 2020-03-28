@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <climits>
+#include <type_traits>
 
 using namespace mozilla;
 
@@ -78,7 +79,7 @@ void test() {
 
   testTwiceBiggerType<T>::run();
 
-  typedef typename MakeUnsigned<T>::Type unsignedT;
+  using unsignedT = std::make_unsigned_t<T>;
 
   VERIFY(sizeof(unsignedT) == sizeof(T));
   VERIFY(IsSigned<unsignedT>::value == false);

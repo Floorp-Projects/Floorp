@@ -7,6 +7,8 @@
 #ifndef mozilla_interceptor_Arm64_h
 #define mozilla_interceptor_Arm64_h
 
+#include <type_traits>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
@@ -107,8 +109,7 @@ inline ResultT SignExtend(const uint32_t aValue, const uint8_t aNumValidBits) {
                 "ResultT must be a signed integral type");
   MOZ_ASSERT(aNumValidBits < 32U && aNumValidBits > 1);
 
-  using UnsignedResultT =
-      typename Decay<typename MakeUnsigned<ResultT>::Type>::Type;
+  using UnsignedResultT = typename Decay<std::make_unsigned_t<ResultT>>::Type;
 
   const uint8_t kResultWidthBits = sizeof(ResultT) * 8;
 
