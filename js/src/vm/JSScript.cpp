@@ -35,6 +35,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
+#include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -733,7 +734,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
 
   size += sizeof(Flags);
   size += codeLength * sizeof(jsbytecode);
-  size += noteLength * sizeof(jssrcnote);
+  size += noteLength * sizeof(SrcNote);
 
 #ifdef DEBUG
   // The compact arrays need to maintain uint32_t alignment. This should have
@@ -857,10 +858,10 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
     initElements<jsbytecode>(cursor, codeLength);
     cursor += codeLength * sizeof(jsbytecode);
 
-    static_assert(alignof(jsbytecode) >= alignof(jssrcnote),
+    static_assert(alignof(jsbytecode) >= alignof(SrcNote),
                   "Incompatible alignment");
-    initElements<jssrcnote>(cursor, noteLength);
-    cursor += noteLength * sizeof(jssrcnote);
+    initElements<SrcNote>(cursor, noteLength);
+    cursor += noteLength * sizeof(SrcNote);
 
     MOZ_ASSERT(cursor % CodeNoteAlign == 0);
   }
@@ -923,10 +924,10 @@ XDRResult ImmutableScriptData::XDR(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint16(&isd->numBytecodeTypeSets));
 
   static_assert(sizeof(jsbytecode) == 1);
-  static_assert(sizeof(jssrcnote) == 1);
+  static_assert(sizeof(SrcNote) == 1);
 
   jsbytecode* code = isd->code();
-  jssrcnote* notes = isd->notes();
+  SrcNote* notes = isd->notes();
   MOZ_TRY(xdr->codeBytes(code, codeLength));
   MOZ_TRY(xdr->codeBytes(notes, noteLength));
 
@@ -4567,7 +4568,8 @@ void GSNCache::purge() {
   map.clearAndCompact();
 }
 
-jssrcnote* js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc) {
+const js::SrcNote* js::GetSrcNote(GSNCache& cache, JSScript* script,
+                                  jsbytecode* pc) {
   size_t target = pc - script->code();
   if (target >= script->length()) {
     return nullptr;
@@ -4579,14 +4581,15 @@ jssrcnote* js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc) {
   }
 
   size_t offset = 0;
-  jssrcnote* result;
-  for (jssrcnote* sn = script->notes();; sn = SN_NEXT(sn)) {
-    if (SN_IS_TERMINATOR(sn)) {
+  const js::SrcNote* result;
+  for (SrcNoteIterator iter(script->notes());; ++iter) {
+    auto sn = *iter;
+    if (sn->isTerminator()) {
       result = nullptr;
       break;
     }
-    offset += SN_DELTA(sn);
-    if (offset == target && SN_IS_GETTABLE(sn)) {
+    offset += sn->delta();
+    if (offset == target && sn->isGettable()) {
       result = sn;
       break;
     }
@@ -4594,9 +4597,9 @@ jssrcnote* js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc) {
 
   if (cache.code != script->code() && script->length() >= GSN_CACHE_THRESHOLD) {
     unsigned nsrcnotes = 0;
-    for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-         sn = SN_NEXT(sn)) {
-      if (SN_IS_GETTABLE(sn)) {
+    for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+      auto sn = *iter;
+      if (sn->isGettable()) {
         ++nsrcnotes;
       }
     }
@@ -4606,10 +4609,10 @@ jssrcnote* js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc) {
     }
     if (cache.map.reserve(nsrcnotes)) {
       pc = script->code();
-      for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-           sn = SN_NEXT(sn)) {
-        pc += SN_DELTA(sn);
-        if (SN_IS_GETTABLE(sn)) {
+      for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+        auto sn = *iter;
+        pc += sn->delta();
+        if (sn->isGettable()) {
           cache.map.putNewInfallible(pc, sn);
         }
       }
@@ -4620,11 +4623,12 @@ jssrcnote* js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc) {
   return result;
 }
 
-jssrcnote* js::GetSrcNote(JSContext* cx, JSScript* script, jsbytecode* pc) {
+const js::SrcNote* js::GetSrcNote(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc) {
   return GetSrcNote(cx->caches().gsnCache, script, pc);
 }
 
-unsigned js::PCToLineNumber(unsigned startLine, jssrcnote* notes,
+unsigned js::PCToLineNumber(unsigned startLine, SrcNote* notes,
                             jsbytecode* code, jsbytecode* pc,
                             unsigned* columnp) {
   unsigned lineno = startLine;
@@ -4637,22 +4641,22 @@ unsigned js::PCToLineNumber(unsigned startLine, jssrcnote* notes,
    */
   ptrdiff_t offset = 0;
   ptrdiff_t target = pc - code;
-  for (jssrcnote* sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-    offset += SN_DELTA(sn);
+  for (SrcNoteIterator iter(notes); !iter.atEnd(); ++iter) {
+    auto sn = *iter;
+    offset += sn->delta();
     if (offset > target) {
       break;
     }
 
-    SrcNoteType type = SN_TYPE(sn);
-    if (type == SRC_SETLINE) {
-      lineno = unsigned(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
+    SrcNoteType type = sn->type();
+    if (type == SrcNoteType::SetLine) {
+      lineno = SrcNote::SetLine::getLine(sn);
       column = 0;
-    } else if (type == SRC_NEWLINE) {
+    } else if (type == SrcNoteType::NewLine) {
       lineno++;
       column = 0;
-    } else if (type == SRC_COLSPAN) {
-      ptrdiff_t colspan =
-          SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, SrcNote::ColSpan::Span));
+    } else if (type == SrcNoteType::ColSpan) {
+      ptrdiff_t colspan = SrcNote::ColSpan::getSpan(sn);
       MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
       column += colspan;
     }
@@ -4680,9 +4684,9 @@ jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
   ptrdiff_t offset = 0;
   ptrdiff_t best = -1;
   unsigned lineno = script->lineno();
-  unsigned bestdiff = SN_MAX_OFFSET;
-  for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-       sn = SN_NEXT(sn)) {
+  unsigned bestdiff = SrcNote::MaxOperand;
+  for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+    auto sn = *iter;
     /*
      * Exact-match only if offset is not in the prologue; otherwise use
      * nearest greater-or-equal line number match.
@@ -4697,11 +4701,11 @@ jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
         best = offset;
       }
     }
-    offset += SN_DELTA(sn);
-    SrcNoteType type = SN_TYPE(sn);
-    if (type == SRC_SETLINE) {
-      lineno = unsigned(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
-    } else if (type == SRC_NEWLINE) {
+    offset += sn->delta();
+    SrcNoteType type = sn->type();
+    if (type == SrcNoteType::SetLine) {
+      lineno = SrcNote::SetLine::getLine(sn);
+    } else if (type == SrcNoteType::NewLine) {
       lineno++;
     }
   }
@@ -4715,12 +4719,12 @@ out:
 JS_FRIEND_API unsigned js::GetScriptLineExtent(JSScript* script) {
   unsigned lineno = script->lineno();
   unsigned maxLineNo = lineno;
-  for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-       sn = SN_NEXT(sn)) {
-    SrcNoteType type = SN_TYPE(sn);
-    if (type == SRC_SETLINE) {
-      lineno = unsigned(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
-    } else if (type == SRC_NEWLINE) {
+  for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+    auto sn = *iter;
+    SrcNoteType type = sn->type();
+    if (type == SrcNoteType::SetLine) {
+      lineno = SrcNote::SetLine::getLine(sn);
+    } else if (type == SrcNoteType::NewLine) {
       lineno++;
     }
 
@@ -5108,13 +5112,13 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
     JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
     uint32_t bodyScopeIndex, uint32_t numICEntries,
     uint32_t numBytecodeTypeSets, bool isFunction, uint16_t funLength,
-    mozilla::Span<const jsbytecode> code, mozilla::Span<const jssrcnote> notes,
+    mozilla::Span<const jsbytecode> code, mozilla::Span<const SrcNote> notes,
     mozilla::Span<const uint32_t> resumeOffsets,
     mozilla::Span<const ScopeNote> scopeNotes,
     mozilla::Span<const TryNote> tryNotes) {
   MOZ_RELEASE_ASSERT(code.Length() <= frontend::MaxBytecodeLength);
 
-  // There are 1-4 copies of SN_MAKE_TERMINATOR appended after the source
+  // There are 1-4 copies of SrcNoteType::Null appended after the source
   // notes. These are a combination of sentinel and padding values.
   static_assert(frontend::MaxSrcNotesLength <= UINT32_MAX - CodeNoteAlign,
                 "Length + CodeNoteAlign shouldn't overflow UINT32_MAX");
@@ -5147,7 +5151,7 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
   // Initialize trailing arrays
   CopySpan(code, data->codeSpan());
   CopySpan(notes, data->notesSpan().To(noteLength));
-  std::fill_n(data->notes() + noteLength, nullLength, SRC_NULL);
+  std::fill_n(data->notes() + noteLength, nullLength, SrcNote::terminator());
   CopySpan(resumeOffsets, data->resumeOffsets());
   CopySpan(scopeNotes, data->scopeNotes());
   CopySpan(tryNotes, data->tryNotes());

@@ -18,6 +18,7 @@
 #  include <unistd.h>
 #endif
 
+#include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/Zone.h"
 #include "util/Text.h"
 #include "vm/BytecodeUtil.h"
@@ -144,9 +145,9 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
   }
 
   jsbytecode* snpc = script->code();
-  jssrcnote* sn = script->notes();
-  if (!SN_IS_TERMINATOR(sn)) {
-    snpc += SN_DELTA(sn);
+  const SrcNote* sn = script->notes();
+  if (!sn->isTerminator()) {
+    snpc += sn->delta();
   }
 
   size_t lineno = script->lineno();
@@ -172,17 +173,19 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
     // current pc.
     if (snpc <= pc || !firstLineHasBeenWritten) {
       size_t oldLine = lineno;
-      while (!SN_IS_TERMINATOR(sn) && snpc <= pc) {
-        SrcNoteType type = SN_TYPE(sn);
-        if (type == SRC_SETLINE) {
-          lineno = size_t(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
-        } else if (type == SRC_NEWLINE) {
+      SrcNoteIterator iter(sn);
+      while (!iter.atEnd() && snpc <= pc) {
+        sn = *iter;
+        SrcNoteType type = sn->type();
+        if (type == SrcNoteType::SetLine) {
+          lineno = SrcNote::SetLine::getLine(sn);
+        } else if (type == SrcNoteType::NewLine) {
           lineno++;
         }
-
-        sn = SN_NEXT(sn);
-        snpc += SN_DELTA(sn);
+        ++iter;
+        snpc += (*iter)->delta();
       }
+      sn = *iter;
 
       if ((oldLine != lineno || !firstLineHasBeenWritten) &&
           pc >= script->main() && fallsthrough) {

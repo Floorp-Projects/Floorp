@@ -9,7 +9,7 @@
 
 #include "vm/BytecodeUtil.h"
 
-#include "frontend/SourceNotes.h"
+#include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "vm/JSScript.h"
 
 namespace js {
@@ -122,8 +122,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         isBreakpoint(false),
         seenStepSeparator(false),
         wasArtifactEntryPoint(false) {
-    if (!SN_IS_TERMINATOR(sn)) {
-      snpc += SN_DELTA(sn);
+    if (!sn->isTerminator()) {
+      snpc += sn->delta();
     }
     updatePosition();
     while (frontPC() != script->main()) {
@@ -175,8 +175,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   // the debugger may want to allow users to pause.
   bool frontIsBreakablePoint() const { return isBreakpoint; }
 
-  // Breakable step points are the first breakable point after a SRC_STEP_SEP
-  // note has been encountered.
+  // Breakable step points are the first breakable point after a
+  // SrcNote::StepSep note has been encountered.
   bool frontIsBreakableStepPoint() const {
     return isBreakpoint && seenStepSeparator;
   }
@@ -191,39 +191,41 @@ class BytecodeRangeWithPosition : private BytecodeRange {
     // Determine the current line number by reading all source notes up to
     // and including the current offset.
     jsbytecode* lastLinePC = nullptr;
-    while (!SN_IS_TERMINATOR(sn) && snpc <= frontPC()) {
-      SrcNoteType type = SN_TYPE(sn);
-      if (type == SRC_COLSPAN) {
-        ptrdiff_t colspan =
-            SN_OFFSET_TO_COLSPAN(GetSrcNoteOffset(sn, SrcNote::ColSpan::Span));
+    SrcNoteIterator iter(sn);
+    for (; !iter.atEnd() && snpc <= frontPC();
+         ++iter, snpc += (*iter)->delta()) {
+      auto sn = *iter;
+
+      SrcNoteType type = sn->type();
+      if (type == SrcNoteType::ColSpan) {
+        ptrdiff_t colspan = SrcNote::ColSpan::getSpan(sn);
         MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
         column += colspan;
         lastLinePC = snpc;
-      } else if (type == SRC_SETLINE) {
-        lineno = size_t(GetSrcNoteOffset(sn, SrcNote::SetLine::Line));
+      } else if (type == SrcNoteType::SetLine) {
+        lineno = SrcNote::SetLine::getLine(sn);
         column = 0;
         lastLinePC = snpc;
-      } else if (type == SRC_NEWLINE) {
+      } else if (type == SrcNoteType::NewLine) {
         lineno++;
         column = 0;
         lastLinePC = snpc;
-      } else if (type == SRC_BREAKPOINT) {
+      } else if (type == SrcNoteType::Breakpoint) {
         isBreakpoint = true;
         lastLinePC = snpc;
-      } else if (type == SRC_STEP_SEP) {
+      } else if (type == SrcNoteType::StepSep) {
         seenStepSeparator = true;
         lastLinePC = snpc;
       }
-
-      sn = SN_NEXT(sn);
-      snpc += SN_DELTA(sn);
     }
+
+    sn = *iter;
     isEntryPoint = lastLinePC == frontPC();
   }
 
   size_t lineno;
   size_t column;
-  jssrcnote* sn;
+  const SrcNote* sn;
   jsbytecode* snpc;
   bool isEntryPoint;
   bool isBreakpoint;
