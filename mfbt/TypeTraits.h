@@ -350,41 +350,6 @@ struct AddRvalueReferenceHelper<T, TIsNotVoid> {
 template <typename T>
 struct AddRvalueReference : detail::AddRvalueReferenceHelper<T> {};
 
-/* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
-
-namespace detail {
-
-template <typename T, typename CVRemoved>
-struct RemovePointerHelper {
-  typedef T Type;
-};
-
-template <typename T, typename Pointee>
-struct RemovePointerHelper<T, Pointee*> {
-  typedef Pointee Type;
-};
-
-}  // namespace detail
-
-/**
- * Produces the pointed-to type if a pointer is provided, else returns the input
- * type.  Note that this does not dereference pointer-to-member pointers.
- *
- * struct S { bool m; void f(); };
- * mozilla::RemovePointer<int>::Type is int;
- * mozilla::RemovePointer<int*>::Type is int;
- * mozilla::RemovePointer<int* const>::Type is int;
- * mozilla::RemovePointer<int* volatile>::Type is int;
- * mozilla::RemovePointer<const long*>::Type is const long;
- * mozilla::RemovePointer<void* const>::Type is void;
- * mozilla::RemovePointer<void (S::*)()>::Type is void (S::*)();
- * mozilla::RemovePointer<void (*)()>::Type is void();
- * mozilla::RemovePointer<bool S::*>::Type is bool S::*.
- */
-template <typename T>
-struct RemovePointer
-    : detail::RemovePointerHelper<T, typename RemoveCV<T>::Type> {};
-
 /* 20.9.7.6 Other transformations [meta.trans.other] */
 
 /**

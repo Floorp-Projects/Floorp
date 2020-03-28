@@ -7,6 +7,7 @@
 #include "ModuleEvaluator.h"
 
 #include <algorithm>  // For std::find()
+#include <type_traits>
 
 #include <windows.h>
 #include <shlobj.h>
@@ -81,7 +82,7 @@ bool ModuleEvaluator::ResolveKnownFolder(REFKNOWNFOLDERID aFolderId,
   }
 
   using ShellStringUniquePtr =
-      UniquePtr<RemovePointer<PWSTR>::Type, CoTaskMemFreeDeleter>;
+      UniquePtr<std::remove_pointer_t<PWSTR>, CoTaskMemFreeDeleter>;
 
   ShellStringUniquePtr path(rawPath);
 

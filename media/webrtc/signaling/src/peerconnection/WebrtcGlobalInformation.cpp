@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <type_traits>
 
 #include "CSFLog.h"
 #include "WebRtcLog.h"
@@ -98,8 +99,7 @@ class RequestManager {
   MOZ_CAN_RUN_SCRIPT
   void Complete() {
     IgnoredErrorResult rv;
-    using RealCallbackType =
-        typename RemovePointer<decltype(mCallback.get())>::Type;
+    using RealCallbackType = std::remove_pointer_t<decltype(mCallback.get())>;
     RefPtr<RealCallbackType> callback(mCallback.get());
     callback->Call(mResult, rv);
 
