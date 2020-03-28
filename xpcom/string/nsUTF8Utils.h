@@ -232,9 +232,9 @@ class UTF16CharEnumerator {
 template <typename Char, typename UnsignedT>
 inline UnsignedT RewindToPriorUTF8Codepoint(const Char* utf8Chars,
                                             UnsignedT index) {
-  static_assert(mozilla::IsSame<Char, char>::value ||
-                    mozilla::IsSame<Char, unsigned char>::value ||
-                    mozilla::IsSame<Char, signed char>::value,
+  static_assert(std::is_same_v<Char, char> ||
+                    std::is_same_v<Char, unsigned char> ||
+                    std::is_same_v<Char, signed char>,
                 "UTF-8 data must be in 8-bit units");
   static_assert(std::is_unsigned_v<UnsignedT>, "index type must be unsigned");
   while (index > 0 && (utf8Chars[index] & 0xC0) == 0x80) --index;

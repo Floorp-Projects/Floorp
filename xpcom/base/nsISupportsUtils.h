@@ -7,6 +7,8 @@
 #ifndef nsISupportsUtils_h__
 #define nsISupportsUtils_h__
 
+#include <type_traits>
+
 #include "nscore.h"
 #include "nsISupportsBase.h"
 #include "nsError.h"
@@ -119,9 +121,9 @@ inline nsresult CallQueryInterface(T* aSource, DestinationType** aDestination) {
   // We permit nsISupports-to-nsISupports here so that one can still obtain
   // the canonical nsISupports pointer with CallQueryInterface.
   static_assert(
-      !(mozilla::IsSame<DestinationType, T>::value ||
+      !(std::is_same_v<DestinationType, T> ||
         std::is_base_of<DestinationType, T>::value) ||
-          mozilla::IsSame<DestinationType, nsISupports>::value,
+          std::is_same_v<DestinationType, nsISupports>,
       "don't use CallQueryInterface for compile-time-determinable casts");
 
   MOZ_ASSERT(aSource, "null parameter");

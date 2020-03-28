@@ -8,6 +8,8 @@
 #ifndef nsTSubstring_h
 #define nsTSubstring_h
 
+#include <type_traits>
+
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -1100,7 +1102,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   void NS_ABORT_OOM(T) {
     struct never {};  // a compiler-friendly way to do static_assert(false)
     static_assert(
-        mozilla::IsSame<N, never>::value,
+        std::is_same_v<N, never>,
         "In string classes, use AllocFailed to account for sizeof(char_type). "
         "Use the global ::NS_ABORT_OOM if you really have a count of bytes.");
   }

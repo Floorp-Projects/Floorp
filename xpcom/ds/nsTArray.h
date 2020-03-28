@@ -629,7 +629,7 @@ class nsTArrayElementTraits {
   static inline void Construct(E* aE, A&& aArg) {
     using E_NoCV = std::remove_cv_t<E>;
     using A_NoCV = std::remove_cv_t<A>;
-    static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
+    static_assert(!std::is_same_v<E_NoCV*, A_NoCV>,
                   "For safety, we disallow constructing nsTArray<E> elements "
                   "from E* pointers. See bug 960591.");
     new (static_cast<void*>(aE)) E(std::forward<A>(aArg));
@@ -640,7 +640,7 @@ class nsTArrayElementTraits {
     using E_NoCV = std::remove_cv_t<E>;
     using A_NoCV =
         std::remove_cv_t<typename ::detail::ChooseFirst<Args...>::Type>;
-    static_assert(!mozilla::IsSame<E_NoCV*, A_NoCV>::value,
+    static_assert(!std::is_same_v<E_NoCV*, A_NoCV>,
                   "For safety, we disallow constructing nsTArray<E> elements "
                   "from E* pointers. See bug 960591.");
     new (static_cast<void*>(aE)) E(std::forward<Args>(aArgs)...);
@@ -2127,10 +2127,9 @@ class nsTArray_Impl
   auto ApplyIf(const Item& aItem, index_type aStart, const Comparator& aComp,
                Function&& aFunction, FunctionElse&& aFunctionElse) const {
     static_assert(
-        mozilla::IsSame<
+        std::is_same_v<
             typename mozilla::FunctionTypeTraits<Function>::ReturnType,
-            typename mozilla::FunctionTypeTraits<FunctionElse>::ReturnType>::
-            value,
+            typename mozilla::FunctionTypeTraits<FunctionElse>::ReturnType>,
         "ApplyIf's `Function` and `FunctionElse` must return the same type.");
 
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
@@ -2149,10 +2148,9 @@ class nsTArray_Impl
   auto ApplyIf(const Item& aItem, index_type aStart, const Comparator& aComp,
                Function&& aFunction, FunctionElse&& aFunctionElse) {
     static_assert(
-        mozilla::IsSame<
+        std::is_same_v<
             typename mozilla::FunctionTypeTraits<Function>::ReturnType,
-            typename mozilla::FunctionTypeTraits<FunctionElse>::ReturnType>::
-            value,
+            typename mozilla::FunctionTypeTraits<FunctionElse>::ReturnType>,
         "ApplyIf's `Function` and `FunctionElse` must return the same type.");
 
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
@@ -2392,9 +2390,8 @@ class nsTArray_Impl
   void AssignRange(index_type aStart, size_type aCount, const Item* aValues) {
     AssignRangeAlgorithm<
         mozilla::IsPod<Item>::value,
-        mozilla::IsSame<Item, elem_type>::value>::implementation(Elements(),
-                                                                 aStart, aCount,
-                                                                 aValues);
+        std::is_same_v<Item, elem_type>>::implementation(Elements(), aStart,
+                                                         aCount, aValues);
   }
 };
 
