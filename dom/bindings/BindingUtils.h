@@ -209,9 +209,9 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObjectInternal(V& obj, U& value,
                                                 prototypes::ID protoID,
                                                 uint32_t protoDepth,
                                                 const CxType& cx) {
-  static_assert(IsSame<CxType, JSContext*>::value ||
-                    IsSame<CxType, BindingCallContext>::value ||
-                    IsSame<CxType, decltype(nullptr)>::value,
+  static_assert(std::is_same_v<CxType, JSContext*> ||
+                    std::is_same_v<CxType, BindingCallContext> ||
+                    std::is_same_v<CxType, decltype(nullptr)>,
                 "Unexpected CxType");
 
   /* First check to see whether we have a DOM object */
@@ -239,7 +239,7 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObjectInternal(V& obj, U& value,
   }
 
   JSObject* unwrappedObj;
-  if (IsSame<CxType, decltype(nullptr)>::value) {
+  if (std::is_same_v<CxType, decltype(nullptr)>) {
     unwrappedObj = js::CheckedUnwrapStatic(obj);
   } else {
     unwrappedObj =
@@ -249,7 +249,7 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObjectInternal(V& obj, U& value,
     return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
   }
 
-  if (IsSame<CxType, decltype(nullptr)>::value) {
+  if (std::is_same_v<CxType, decltype(nullptr)>) {
     // We might still have a windowproxy here.  But it shouldn't matter, because
     // that's not what the caller is looking for, so we're going to fail out
     // anyway below once we do the recursive call to ourselves with wrapper
@@ -988,7 +988,7 @@ struct TypeNeedsOuterization {
   // nsGlobalWindow (which inherits from EventTarget itself).
   static const bool value = std::is_base_of<nsGlobalWindowInner, T>::value ||
                             std::is_base_of<nsGlobalWindowOuter, T>::value ||
-                            IsSame<EventTarget, T>::value;
+                            std::is_same_v<EventTarget, T>;
 };
 
 #ifdef DEBUG
@@ -2699,12 +2699,12 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
 template <class T>
 struct DeferredFinalizerImpl {
   using SmartPtr = std::conditional_t<
-      IsSame<T, nsISupports>::value, nsCOMPtr<T>,
+      std::is_same_v<T, nsISupports>, nsCOMPtr<T>,
       std::conditional_t<IsRefcounted<T>::value, RefPtr<T>, UniquePtr<T>>>;
   typedef SegmentedVector<SmartPtr> SmartPtrArray;
 
   static_assert(
-      IsSame<T, nsISupports>::value || !std::is_base_of<nsISupports, T>::value,
+      std::is_same_v<T, nsISupports> || !std::is_base_of<nsISupports, T>::value,
       "nsISupports classes should all use the nsISupports instantiation");
 
   static inline void AppendAndTake(

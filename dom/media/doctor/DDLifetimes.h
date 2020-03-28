@@ -7,6 +7,8 @@
 #ifndef DDLifetimes_h_
 #define DDLifetimes_h_
 
+#include <type_traits>
+
 #include "DDLifetime.h"
 #include "DDLoggedTypeTraits.h"
 #include "nsClassHashtable.h"
@@ -59,7 +61,7 @@ class DDLifetimes {
             }
             continue;
           }
-          static_assert(IsSame<decltype(aF(lifetime)), void>::value, "");
+          static_assert(std::is_same_v<decltype(aF(lifetime)), void>, "");
           aF(lifetime);
         }
       }
@@ -77,7 +79,7 @@ class DDLifetimes {
     for (auto iter = mLifetimes.ConstIter(); !iter.Done(); iter.Next()) {
       for (const DDLifetime& lifetime : *iter.UserData()) {
         if (lifetime.mMediaElement == aMediaElement) {
-          static_assert(IsSame<decltype(aF(lifetime)), bool>::value, "");
+          static_assert(std::is_same_v<decltype(aF(lifetime)), bool>, "");
           if (aF(lifetime)) {
             return true;
           }
