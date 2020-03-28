@@ -20,6 +20,7 @@
 // NB: include this after shldisp.h so its macros do not conflict with COM
 // interfaces defined by shldisp.h
 #include <shellapi.h>
+#include <type_traits>
 
 #include <comdef.h>
 #include <comutil.h>
@@ -159,7 +160,7 @@ inline LauncherVoidResult ShellExecuteByExplorer(const _bstr_t& aPath,
 }
 
 using UniqueAbsolutePidl =
-    UniquePtr<RemovePointer<PIDLIST_ABSOLUTE>::Type, CoTaskMemFreeDeleter>;
+    UniquePtr<std::remove_pointer_t<PIDLIST_ABSOLUTE>, CoTaskMemFreeDeleter>;
 
 inline LauncherResult<UniqueAbsolutePidl> ShellParseDisplayName(
     const wchar_t* aPath) {

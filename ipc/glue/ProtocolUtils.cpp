@@ -10,6 +10,7 @@
 #ifdef OS_POSIX
 #  include <errno.h>
 #endif
+#include <type_traits>
 
 #include "mozilla/IntegerPrintfMacros.h"
 
@@ -44,10 +45,10 @@ namespace mozilla {
 #if defined(XP_WIN)
 // Generate RAII classes for LPTSTR and PSECURITY_DESCRIPTOR.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedLPTStr,
-                                          RemovePointer<LPTSTR>::Type,
+                                          std::remove_pointer_t<LPTSTR>,
                                           ::LocalFree)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(
-    ScopedPSecurityDescriptor, RemovePointer<PSECURITY_DESCRIPTOR>::Type,
+    ScopedPSecurityDescriptor, std::remove_pointer_t<PSECURITY_DESCRIPTOR>,
     ::LocalFree)
 #endif
 
