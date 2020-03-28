@@ -838,9 +838,10 @@ Span<ElementType> MakeSpan(ElementType* aStartPtr, ElementType* aEndPtr) {
  * the MakeSpan() overload that accepts a pointer and length and specify the
  * string literal's full length.
  */
-template <class ElementType, size_t N,
-          class = std::enable_if_t<!IsSame<ElementType, const char>::value &&
-                                   !IsSame<ElementType, const char16_t>::value>>
+template <
+    class ElementType, size_t N,
+    class = std::enable_if_t<!std::is_same_v<ElementType, const char> &&
+                             !std::is_same_v<ElementType, const char16_t>>>
 Span<ElementType> MakeSpan(ElementType (&aArr)[N]) {
   return Span<ElementType>(aArr, N);
 }

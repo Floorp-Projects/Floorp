@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Assertions.h"
@@ -17,7 +18,6 @@
 
 using mozilla::CompactPair;
 using mozilla::Get;
-using mozilla::IsSame;
 using mozilla::MakeTuple;
 using mozilla::MakeUnique;
 using mozilla::Tie;
@@ -34,8 +34,8 @@ using std::pair;
 
 // The second argument is the expected type. It's variadic to allow the
 // type to contain commas.
-#define CHECK_TYPE(expression, ...)                               \
-  static_assert(IsSame<decltype(expression), __VA_ARGS__>::value, \
+#define CHECK_TYPE(expression, ...)                                \
+  static_assert(std::is_same_v<decltype(expression), __VA_ARGS__>, \
                 "Type mismatch!")
 
 struct ConvertibleToInt {

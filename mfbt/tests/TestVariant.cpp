@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <type_traits>
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
 
-using mozilla::IsSame;
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 using mozilla::Variant;
@@ -25,13 +26,13 @@ static void testDetails() {
   using mozilla::detail::Nth;
 
   // Test Nth with a list of 1 item.
-  static_assert(IsSame<typename Nth<0, int>::Type, int>::value,
+  static_assert(std::is_same_v<typename Nth<0, int>::Type, int>,
                 "Nth<0, int>::Type should be int");
 
   // Test Nth with a list of more than 1 item.
-  static_assert(IsSame<typename Nth<0, int, char>::Type, int>::value,
+  static_assert(std::is_same_v<typename Nth<0, int, char>::Type, int>,
                 "Nth<0, int, char>::Type should be int");
-  static_assert(IsSame<typename Nth<1, int, char>::Type, char>::value,
+  static_assert(std::is_same_v<typename Nth<1, int, char>::Type, char>,
                 "Nth<1, int, char>::Type should be char");
 
   using mozilla::detail::SelectVariantType;
@@ -44,119 +45,120 @@ static void testDetails() {
   // SelectVariantType for 1 type, for all combinations from/to T, const T,
   // const T&, T&&
   // - type to type
-  static_assert(IsSame<typename SelectVariantType<int, int>::Type, int>::value,
+  static_assert(std::is_same_v<typename SelectVariantType<int, int>::Type, int>,
                 "SelectVariantType<int, int>::Type should be int");
   static_assert(SelectVariantType<int, int>::count == 1,
                 "SelectVariantType<int, int>::count should be 1");
 
   // - type to const type
-  static_assert(IsSame<typename SelectVariantType<int, const int>::Type,
-                       const int>::value,
+  static_assert(std::is_same_v<typename SelectVariantType<int, const int>::Type,
+                               const int>,
                 "SelectVariantType<int, const int>::Type should be const int");
   static_assert(SelectVariantType<int, const int>::count == 1,
                 "SelectVariantType<int, const int>::count should be 1");
 
   // - type to const type&
   static_assert(
-      IsSame<typename SelectVariantType<int, const int&>::Type,
-             const int&>::value,
+      std::is_same_v<typename SelectVariantType<int, const int&>::Type,
+                     const int&>,
       "SelectVariantType<int, const int&>::Type should be const int&");
   static_assert(SelectVariantType<int, const int&>::count == 1,
                 "SelectVariantType<int, const int&>::count should be 1");
 
   // - type to type&&
   static_assert(
-      IsSame<typename SelectVariantType<int, int&&>::Type, int&&>::value,
+      std::is_same_v<typename SelectVariantType<int, int&&>::Type, int&&>,
       "SelectVariantType<int, int&&>::Type should be int&&");
   static_assert(SelectVariantType<int, int&&>::count == 1,
                 "SelectVariantType<int, int&&>::count should be 1");
 
   // - const type to type
   static_assert(
-      IsSame<typename SelectVariantType<const int, int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<const int, int>::Type, int>,
       "SelectVariantType<const int, int>::Type should be int");
   static_assert(SelectVariantType<const int, int>::count == 1,
                 "SelectVariantType<const int, int>::count should be 1");
 
   // - const type to const type
   static_assert(
-      IsSame<typename SelectVariantType<const int, const int>::Type,
-             const int>::value,
+      std::is_same_v<typename SelectVariantType<const int, const int>::Type,
+                     const int>,
       "SelectVariantType<const int, const int>::Type should be const int");
   static_assert(SelectVariantType<const int, const int>::count == 1,
                 "SelectVariantType<const int, const int>::count should be 1");
 
   // - const type to const type&
   static_assert(
-      IsSame<typename SelectVariantType<const int, const int&>::Type,
-             const int&>::value,
+      std::is_same_v<typename SelectVariantType<const int, const int&>::Type,
+                     const int&>,
       "SelectVariantType<const int, const int&>::Type should be const int&");
   static_assert(SelectVariantType<const int, const int&>::count == 1,
                 "SelectVariantType<const int, const int&>::count should be 1");
 
   // - const type to type&&
   static_assert(
-      IsSame<typename SelectVariantType<const int, int&&>::Type, int&&>::value,
+      std::is_same_v<typename SelectVariantType<const int, int&&>::Type, int&&>,
       "SelectVariantType<const int, int&&>::Type should be int&&");
   static_assert(SelectVariantType<const int, int&&>::count == 1,
                 "SelectVariantType<const int, int&&>::count should be 1");
 
   // - const type& to type
   static_assert(
-      IsSame<typename SelectVariantType<const int&, int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<const int&, int>::Type, int>,
       "SelectVariantType<const int&, int>::Type should be int");
   static_assert(SelectVariantType<const int&, int>::count == 1,
                 "SelectVariantType<const int&, int>::count should be 1");
 
   // - const type& to const type
   static_assert(
-      IsSame<typename SelectVariantType<const int&, const int>::Type,
-             const int>::value,
+      std::is_same_v<typename SelectVariantType<const int&, const int>::Type,
+                     const int>,
       "SelectVariantType<const int&, const int>::Type should be const int");
   static_assert(SelectVariantType<const int&, const int>::count == 1,
                 "SelectVariantType<const int&, const int>::count should be 1");
 
   // - const type& to const type&
   static_assert(
-      IsSame<typename SelectVariantType<const int&, const int&>::Type,
-             const int&>::value,
+      std::is_same_v<typename SelectVariantType<const int&, const int&>::Type,
+                     const int&>,
       "SelectVariantType<const int&, const int&>::Type should be const int&");
   static_assert(SelectVariantType<const int&, const int&>::count == 1,
                 "SelectVariantType<const int&, const int&>::count should be 1");
 
   // - const type& to type&&
   static_assert(
-      IsSame<typename SelectVariantType<const int&, int&&>::Type, int&&>::value,
+      std::is_same_v<typename SelectVariantType<const int&, int&&>::Type,
+                     int&&>,
       "SelectVariantType<const int&, int&&>::Type should be int&&");
   static_assert(SelectVariantType<const int&, int&&>::count == 1,
                 "SelectVariantType<const int&, int&&>::count should be 1");
 
   // - type&& to type
   static_assert(
-      IsSame<typename SelectVariantType<int&&, int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int&&, int>::Type, int>,
       "SelectVariantType<int&&, int>::Type should be int");
   static_assert(SelectVariantType<int&&, int>::count == 1,
                 "SelectVariantType<int&&, int>::count should be 1");
 
   // - type&& to const type
   static_assert(
-      IsSame<typename SelectVariantType<int&&, const int>::Type,
-             const int>::value,
+      std::is_same_v<typename SelectVariantType<int&&, const int>::Type,
+                     const int>,
       "SelectVariantType<int&&, const int>::Type should be const int");
   static_assert(SelectVariantType<int&&, const int>::count == 1,
                 "SelectVariantType<int&&, const int>::count should be 1");
 
   // - type&& to const type&
   static_assert(
-      IsSame<typename SelectVariantType<int&&, const int&>::Type,
-             const int&>::value,
+      std::is_same_v<typename SelectVariantType<int&&, const int&>::Type,
+                     const int&>,
       "SelectVariantType<int&&, const int&>::Type should be const int&");
   static_assert(SelectVariantType<int&&, const int&>::count == 1,
                 "SelectVariantType<int&&, const int&>::count should be 1");
 
   // - type&& to type&&
   static_assert(
-      IsSame<typename SelectVariantType<int&&, int&&>::Type, int&&>::value,
+      std::is_same_v<typename SelectVariantType<int&&, int&&>::Type, int&&>,
       "SelectVariantType<int&&, int&&>::Type should be int&&");
   static_assert(SelectVariantType<int&&, int&&>::count == 1,
                 "SelectVariantType<int&&, int&&>::count should be 1");
@@ -164,45 +166,49 @@ static void testDetails() {
   // SelectVariantType for two different types.
   // (Don't test all combinations, trust that the above tests are sufficient.)
   static_assert(
-      IsSame<typename SelectVariantType<int, int, char>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int, int, char>::Type, int>,
       "SelectVariantType<int, int, char>::Type should be int");
   static_assert(SelectVariantType<int, int, char>::count == 1,
                 "SelectVariantType<int, int, char>::count should be 1");
   static_assert(
-      IsSame<typename SelectVariantType<char, int, char>::Type, char>::value,
+      std::is_same_v<typename SelectVariantType<char, int, char>::Type, char>,
       "SelectVariantType<char, int, char>::Type should be char");
   static_assert(SelectVariantType<char, int, char>::count == 1,
                 "SelectVariantType<char, int, char>::count should be 1");
 
   // SelectVariantType for two identical types.
   static_assert(
-      IsSame<typename SelectVariantType<int, int, int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int, int, int>::Type, int>,
       "SelectVariantType<int, int, int>::Type should be int");
   static_assert(SelectVariantType<int, int, int>::count == 2,
                 "SelectVariantType<int, int, int>::count should be 2");
 
   // SelectVariantType for two identical types, with others around.
   static_assert(
-      IsSame<typename SelectVariantType<int, char, int, int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int, char, int, int>::Type,
+                     int>,
       "SelectVariantType<int, char, int, int>::Type should be int");
   static_assert(SelectVariantType<int, char, int, int>::count == 2,
                 "SelectVariantType<int, char, int, int>::count should be 2");
 
   static_assert(
-      IsSame<typename SelectVariantType<int, int, char, int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int, int, char, int>::Type,
+                     int>,
       "SelectVariantType<int, int, char, int>::Type should be int");
   static_assert(SelectVariantType<int, int, char, int>::count == 2,
                 "SelectVariantType<int, int, char, int>::count should be 2");
 
   static_assert(
-      IsSame<typename SelectVariantType<int, int, int, char>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int, int, int, char>::Type,
+                     int>,
       "SelectVariantType<int, int, int, char>::Type should be int");
   static_assert(SelectVariantType<int, int, int, char>::count == 2,
                 "SelectVariantType<int, int, int, char>::count should be 2");
 
   static_assert(
-      IsSame<typename SelectVariantType<int, char, int, char, int, char>::Type,
-             int>::value,
+      std::is_same_v<
+          typename SelectVariantType<int, char, int, char, int, char>::Type,
+          int>,
       "SelectVariantType<int, char, int, char, int, char>::Type should be int");
   static_assert(
       SelectVariantType<int, char, int, char, int, char>::count == 2,
@@ -210,19 +216,20 @@ static void testDetails() {
 
   // SelectVariantType for two identically-selectable types (first one wins!).
   static_assert(
-      IsSame<typename SelectVariantType<int, int, const int>::Type, int>::value,
+      std::is_same_v<typename SelectVariantType<int, int, const int>::Type,
+                     int>,
       "SelectVariantType<int, int, const int>::Type should be int");
   static_assert(SelectVariantType<int, int, const int>::count == 2,
                 "SelectVariantType<int, int, const int>::count should be 2");
   static_assert(
-      IsSame<typename SelectVariantType<int, const int, int>::Type,
-             const int>::value,
+      std::is_same_v<typename SelectVariantType<int, const int, int>::Type,
+                     const int>,
       "SelectVariantType<int, const int, int>::Type should be const int");
   static_assert(SelectVariantType<int, const int, int>::count == 2,
                 "SelectVariantType<int, const int, int>::count should be 2");
   static_assert(
-      IsSame<typename SelectVariantType<int, const int, int&&>::Type,
-             const int>::value,
+      std::is_same_v<typename SelectVariantType<int, const int, int&&>::Type,
+                     const int>,
       "SelectVariantType<int, const int, int&&>::Type should be const int");
   static_assert(SelectVariantType<int, const int, int&&>::count == 2,
                 "SelectVariantType<int, const int, int&&>::count should be 2");
@@ -237,7 +244,7 @@ static void testSimple() {
 
   MOZ_RELEASE_ASSERT(v.is<1>());
   MOZ_RELEASE_ASSERT(!v.is<0>());
-  static_assert(IsSame<decltype(v.as<1>()), uint64_t&>::value,
+  static_assert(std::is_same_v<decltype(v.as<1>()), uint64_t&>,
                 "as<1>() should return a uint64_t");
   MOZ_RELEASE_ASSERT(v.as<1>() == 1);
 }
@@ -252,11 +259,11 @@ static void testDuplicate() {
   MOZ_RELEASE_ASSERT(v.is<1>());
   MOZ_RELEASE_ASSERT(!v.is<0>());
   MOZ_RELEASE_ASSERT(!v.is<2>());
-  static_assert(IsSame<decltype(v.as<0>()), uint32_t&>::value,
+  static_assert(std::is_same_v<decltype(v.as<0>()), uint32_t&>,
                 "as<0>() should return a uint64_t");
-  static_assert(IsSame<decltype(v.as<1>()), uint64_t&>::value,
+  static_assert(std::is_same_v<decltype(v.as<1>()), uint64_t&>,
                 "as<1>() should return a uint64_t");
-  static_assert(IsSame<decltype(v.as<2>()), uint32_t&>::value,
+  static_assert(std::is_same_v<decltype(v.as<2>()), uint32_t&>,
                 "as<2>() should return a uint64_t");
   MOZ_RELEASE_ASSERT(v.as<1>() == 1);
   MOZ_RELEASE_ASSERT(v.extract<1>() == 1);

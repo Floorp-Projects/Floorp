@@ -148,10 +148,9 @@ auto Op(const T1& aT1, const T2& aT2)
                             // depends solely on the operands type, not on the
                             // choice of operation.
 {
-  using mozilla::IsSame;
-  static_assert(IsSame<decltype(aT1 | aT2), decltype(aT1 & aT2)>::value,
+  static_assert(std::is_same_v<decltype(aT1 | aT2), decltype(aT1 & aT2)>,
                 "binary ops should have the same result type");
-  static_assert(IsSame<decltype(aT1 | aT2), decltype(aT1 ^ aT2)>::value,
+  static_assert(std::is_same_v<decltype(aT1 | aT2), decltype(aT1 ^ aT2)>,
                 "binary ops should have the same result type");
 
   static_assert(o == '|' || o == '&' || o == '^',
