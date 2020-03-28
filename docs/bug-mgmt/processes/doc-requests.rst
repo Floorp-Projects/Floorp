@@ -2,7 +2,7 @@ User documentation requests
 ===========================
 
 If you are working on a change (bugfix, enhancement, or feature) which
-would benefit from user-facing documenation, please use the
+would benefit from user-facing documentation, please use the
 ``user-doc-firefox`` flag to request it.
 
 This flag can be modified by anyone with ``EDITBUGS`` privileges.

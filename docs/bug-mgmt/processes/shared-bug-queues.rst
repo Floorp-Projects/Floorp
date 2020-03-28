@@ -19,8 +19,7 @@ Process
 
 1. Create a new bugzilla.mozilla.com account for an address which can
    receive mail.
-
--  Use the ``name+extension@domain.tld`` trick such as
+   Use the ``name+extension@domain.tld`` trick such as
    ``jmozillian+reviews@mozilla.com`` to create a unique address
 2. Respond to the email sent by Bugzilla and set a password on the
    account
