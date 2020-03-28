@@ -13787,9 +13787,11 @@ void CodeGenerator::visitObjectWithProto(LObjectWithProto* lir) {
   callVM<Fn, js::ObjectWithProtoOperation>(lir);
 }
 
-void CodeGenerator::visitFunctionProto(LFunctionProto* lir) {
-  using Fn = JSObject* (*)(JSContext*);
-  callVM<Fn, js::FunctionProtoOperation>(lir);
+void CodeGenerator::visitBuiltinProto(LBuiltinProto* lir) {
+  pushArg(ImmPtr(lir->mir()->pc()));
+
+  using Fn = JSObject* (*)(JSContext*, jsbytecode*);
+  callVM<Fn, js::BuiltinProtoOperation>(lir);
 }
 
 void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {

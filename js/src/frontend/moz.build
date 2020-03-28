@@ -61,7 +61,6 @@ UNIFIED_SOURCES += [
     'ParseNodeVerify.cpp',
     'PropOpEmitter.cpp',
     'SharedContext.cpp',
-    'SourceNotes.cpp',
     'Stencil.cpp',
     'SwitchEmitter.cpp',
     'TDZCheckCache.cpp',

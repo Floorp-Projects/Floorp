@@ -11090,14 +11090,19 @@ class MObjectWithProto : public MUnaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
-class MFunctionProto : public MNullaryInstruction {
-  explicit MFunctionProto() : MNullaryInstruction(classOpcode) {
+class MBuiltinProto : public MNullaryInstruction {
+  jsbytecode* pc_;
+
+  explicit MBuiltinProto(jsbytecode* pc)
+      : MNullaryInstruction(classOpcode), pc_(pc) {
     setResultType(MIRType::Object);
   }
 
  public:
-  INSTRUCTION_HEADER(FunctionProto)
+  INSTRUCTION_HEADER(BuiltinProto)
   TRIVIAL_NEW_WRAPPERS
+
+  jsbytecode* pc() const { return pc_; }
 
   bool possiblyCalls() const override { return true; }
 };

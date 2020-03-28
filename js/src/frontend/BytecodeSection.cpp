@@ -140,8 +140,7 @@ bool CGTryNoteList::append(TryNoteKind kind, uint32_t stackDepth,
   // Offsets are given relative to sections, but we only expect main-section
   // to have TryNotes. In finish() we will fixup base offset.
 
-  TryNote note(uint32_t(kind), stackDepth, start.toUint32(),
-               (end - start).toUint32());
+  TryNote note(kind, stackDepth, start.toUint32(), (end - start).toUint32());
 
   return list.append(note);
 }

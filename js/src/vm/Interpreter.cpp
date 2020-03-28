@@ -52,7 +52,6 @@
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
-#include "vm/ThrowMsgKind.h"  // ThrowMsgKind
 #include "vm/TraceLogging.h"
 
 #include "builtin/Boolean-inl.h"
@@ -1110,10 +1109,10 @@ void js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei) {
 // let block scope.
 jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script, const TryNote* tn) {
   jsbytecode* pc = script->offsetToPC(tn->start);
-  if (tn->kind() == TryNoteKind::Catch || tn->kind() == TryNoteKind::Finally) {
+  if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
     pc -= JSOpLength_Try;
     MOZ_ASSERT(JSOp(*pc) == JSOp::Try);
-  } else if (tn->kind() == TryNoteKind::Destructuring) {
+  } else if (tn->kind == JSTRY_DESTRUCTURING) {
     pc -= JSOpLength_TryDestructuring;
     MOZ_ASSERT(JSOp(*pc) == JSOp::TryDestructuring);
   }
@@ -1155,8 +1154,8 @@ static void UnwindIteratorsForUncatchableException(
   // ProcessTryNotes.
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
     const TryNote* tn = *tni;
-    switch (tn->kind()) {
-      case TryNoteKind::ForIn: {
+    switch (tn->kind) {
+      case JSTRY_FOR_IN: {
         Value* sp = regs.spForStackDepth(tn->stackDepth);
         UnwindIteratorForUncatchableException(&sp[-1].toObject());
         break;
@@ -1180,8 +1179,8 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
     const TryNote* tn = *tni;
 
-    switch (tn->kind()) {
-      case TryNoteKind::Catch:
+    switch (tn->kind) {
+      case JSTRY_CATCH:
         /* Catch cannot intercept the closing of a generator. */
         if (cx->isClosingGenerator()) {
           break;
@@ -1190,11 +1189,11 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         SettleOnTryNote(cx, tn, ei, regs);
         return CatchContinuation;
 
-      case TryNoteKind::Finally:
+      case JSTRY_FINALLY:
         SettleOnTryNote(cx, tn, ei, regs);
         return FinallyContinuation;
 
-      case TryNoteKind::ForIn: {
+      case JSTRY_FOR_IN: {
         /* This is similar to JSOp::EndIter in the interpreter loop. */
         MOZ_ASSERT(tn->stackDepth <= regs.stackDepth());
         Value* sp = regs.spForStackDepth(tn->stackDepth);
@@ -1203,7 +1202,7 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         break;
       }
 
-      case TryNoteKind::Destructuring: {
+      case JSTRY_DESTRUCTURING: {
         // Whether the destructuring iterator is done is at the top of the
         // stack. The iterator object is second from the top.
         MOZ_ASSERT(tn->stackDepth > 1);
@@ -1221,12 +1220,11 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         break;
       }
 
-      case TryNoteKind::ForOf:
-      case TryNoteKind::Loop:
+      case JSTRY_FOR_OF:
+      case JSTRY_LOOP:
         break;
 
-      // TryNoteKind::ForOfIterClose is handled internally by the try note
-      // iterator.
+      // JSTRY_FOR_OF_ITERCLOSE is handled internally by the try note iterator.
       default:
         MOZ_CRASH("Invalid try note");
     }
@@ -3131,7 +3129,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(OptimizeSpreadCall)
 
     CASE(ThrowMsg) {
-      MOZ_ALWAYS_FALSE(ThrowMsgOperation(cx, GET_UINT8(REGS.pc)));
+      MOZ_ALWAYS_FALSE(ThrowMsgOperation(cx, GET_UINT16(REGS.pc)));
       goto error;
     }
     END_CASE(ThrowMsg)
@@ -4060,14 +4058,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(CheckClassHeritage)
 
-    CASE(FunctionProto) {
-      JSObject* builtin = FunctionProtoOperation(cx);
+    CASE(BuiltinProto) {
+      JSObject* builtin = BuiltinProtoOperation(cx, REGS.pc);
       if (!builtin) {
         goto error;
       }
       PUSH_OBJECT(*builtin);
     }
-    END_CASE(FunctionProto)
+    END_CASE(BuiltinProto)
 
     CASE(FunWithProto) {
       ReservedRooted<JSObject*> proto(&rootObject1, &REGS.sp[-1].toObject());
@@ -4645,12 +4643,15 @@ JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
   return GetOrCreateModuleMetaObject(cx, module);
 }
 
-JSObject* js::FunctionProtoOperation(JSContext* cx) {
-  return GlobalObject::getOrCreatePrototype(cx, JSProto_Function);
+JSObject* js::BuiltinProtoOperation(JSContext* cx, jsbytecode* pc) {
+  MOZ_ASSERT(JSOp(*pc) == JSOp::BuiltinProto);
+  MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
+
+  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
+  return GlobalObject::getOrCreatePrototype(cx, key);
 }
 
-bool js::ThrowMsgOperation(JSContext* cx, const unsigned throwMsgKind) {
-  auto errorNum = ThrowMsgKindToErrNum(ThrowMsgKind(throwMsgKind));
+bool js::ThrowMsgOperation(JSContext* cx, const unsigned errorNum) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNum);
   return false;
 }

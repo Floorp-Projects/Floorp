@@ -1873,14 +1873,14 @@ bool WarpBuilder::build_SuperFun(BytecodeLocation) {
   return true;
 }
 
-bool WarpBuilder::build_FunctionProto(BytecodeLocation loc) {
-  if (auto* snapshot = getOpSnapshot<WarpFunctionProto>(loc)) {
+bool WarpBuilder::build_BuiltinProto(BytecodeLocation loc) {
+  if (auto* snapshot = getOpSnapshot<WarpBuiltinProto>(loc)) {
     JSObject* proto = snapshot->proto();
     pushConstant(ObjectValue(*proto));
     return true;
   }
 
-  auto* ins = MFunctionProto::New(alloc());
+  auto* ins = MBuiltinProto::New(alloc(), loc.toRawBytecode());
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);

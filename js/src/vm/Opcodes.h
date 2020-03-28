@@ -1358,7 +1358,7 @@
     /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error
-     * message.
+     * message. It must be in range for `js::CheckIsObjectKind`.
      *
      * Implements: [GetIterator][1] step 5, [IteratorNext][2] step 3. Both
      * operations call a JS method which scripts can define however they want,
@@ -1369,18 +1369,18 @@
      *
      *   Category: Objects
      *   Type: Iteration
-     *   Operands: CheckIsObjectKind kind
+     *   Operands: uint8_t kind
      *   Stack: result => result
      */ \
     MACRO(CheckIsObj, check_is_obj, NULL, 2, 1, 1, JOF_UINT8) \
     /*
      * Check that the top value on the stack is callable, and throw a TypeError
      * if not. The operand `kind` is used only to generate an appropriate error
-     * message.
+     * message. It must be in range for `js::CheckIsCallableKind`.
      *
      *   Category: Objects
      *   Type: Iteration
-     *   Operands: CheckIsCallableKind kind
+     *   Operands: uint8_t kind
      *   Stack: obj => obj
      */ \
     MACRO(CheckIsCallable, check_is_callable, NULL, 2, 1, 1, JOF_UINT8) \
@@ -1593,7 +1593,7 @@
      *
      *   Category: Functions
      *   Type: Creating functions
-     *   Operands: FunctionPrefixKind prefixKind
+     *   Operands: uint8_t prefixKind
      *   Stack: fun, name => fun
      */ \
     MACRO(SetFunName, set_fun_name, NULL, 2, 2, 1, JOF_UINT8) \
@@ -1679,14 +1679,14 @@
      */ \
     MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
-     * Pushes the current global's FunctionPrototype.
+     * Pushes the current global's builtin prototype for a given proto key.
      *
      *   Category: Functions
      *   Type: Creating constructors
-     *   Operands:
-     *   Stack: => %FunctionPrototype%
+     *   Operands: uint8_t kind
+     *   Stack: => %BuiltinPrototype%
      */ \
-    MACRO(FunctionProto, function_proto, NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(BuiltinProto, builtin_proto, NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * Invoke `callee` with `this` and `args`, and push the return value. Throw
      * a TypeError if `callee` isn't a function.
@@ -2046,7 +2046,7 @@
      *
      *   Category: Functions
      *   Type: Generators and async functions
-     *   Operands: AsyncFunctionResolveKind fulfillOrReject
+     *   Operands: uint8_t fulfillOrReject
      *   Stack: valueOrReason, gen => promise
      */ \
     MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \
@@ -2394,10 +2394,10 @@
      *
      *   Category: Control flow
      *   Type: Exceptions
-     *   Operands: ThrowMsgKind msgNumber
+     *   Operands: uint16_t msgNumber
      *   Stack: =>
      */ \
-    MACRO(ThrowMsg, throw_msg, NULL, 2, 0, 0, JOF_UINT8) \
+    MACRO(ThrowMsg, throw_msg, NULL, 3, 0, 0, JOF_UINT16) \
     /*
      * Throws a runtime TypeError for invalid assignment to a `const` binding.
      *
