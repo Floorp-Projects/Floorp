@@ -42,8 +42,8 @@ class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
 namespace {
 
 template <typename T, bool = IsRefcounted<std::remove_pointer_t<T>>::value,
-          bool = (IsConvertible<T, nsISupports*>::value ||
-                  IsConvertible<T*, nsISupports*>::value)>
+          bool = (std::is_convertible_v<T, nsISupports*> ||
+                  std::is_convertible_v<T*, nsISupports*>)>
 struct StorageTypeHelper {
   using Type = T;
 };
@@ -65,7 +65,7 @@ struct StorageTypeHelper<T*, true, false> {
 
 template <template <typename> class SmartPtr, typename T>
 struct StorageTypeHelper<SmartPtr<T>, true, false>
-    : EnableIf<IsConvertible<SmartPtr<T>, T*>::value, RefPtr<T>> {};
+    : EnableIf<std::is_convertible_v<SmartPtr<T>, T*>, RefPtr<T>> {};
 
 template <typename T>
 using StorageType = typename StorageTypeHelper<std::decay_t<T>>::Type;

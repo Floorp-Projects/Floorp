@@ -84,8 +84,8 @@ using TakesArgument =
 
 template <typename MethodType, typename TargetType>
 using ReturnTypeIs =
-    IsConvertible<typename detail::MethodTrait<MethodType>::ReturnType,
-                  TargetType>;
+    std::is_convertible<typename detail::MethodTrait<MethodType>::ReturnType,
+                        TargetType>;
 
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
@@ -255,7 +255,7 @@ class MozPromise : public MozPromiseBase {
   template <typename ResolveValueType_>
   [[nodiscard]] static RefPtr<MozPromise> CreateAndResolve(
       ResolveValueType_&& aResolveValue, const char* aResolveSite) {
-    static_assert(IsConvertible<ResolveValueType_, ResolveValueT>::value,
+    static_assert(std::is_convertible_v<ResolveValueType_, ResolveValueT>,
                   "Resolve() argument must be implicitly convertible to "
                   "MozPromise's ResolveValueT");
     RefPtr<typename MozPromise::Private> p =
@@ -267,7 +267,7 @@ class MozPromise : public MozPromiseBase {
   template <typename RejectValueType_>
   [[nodiscard]] static RefPtr<MozPromise> CreateAndReject(
       RejectValueType_&& aRejectValue, const char* aRejectSite) {
-    static_assert(IsConvertible<RejectValueType_, RejectValueT>::value,
+    static_assert(std::is_convertible_v<RejectValueType_, RejectValueT>,
                   "Reject() argument must be implicitly convertible to "
                   "MozPromise's RejectValueT");
     RefPtr<typename MozPromise::Private> p =
@@ -1161,8 +1161,8 @@ class MozPromiseHolderBase {
 
   template <typename ResolveValueType_>
   void Resolve(ResolveValueType_&& aResolveValue, const char* aMethodName) {
-    static_assert(IsConvertible<ResolveValueType_,
-                                typename PromiseType::ResolveValueType>::value,
+    static_assert(std::is_convertible_v<ResolveValueType_,
+                                        typename PromiseType::ResolveValueType>,
                   "Resolve() argument must be implicitly convertible to "
                   "MozPromise's ResolveValueT");
 
@@ -1183,8 +1183,8 @@ class MozPromiseHolderBase {
 
   template <typename RejectValueType_>
   void Reject(RejectValueType_&& aRejectValue, const char* aMethodName) {
-    static_assert(IsConvertible<RejectValueType_,
-                                typename PromiseType::RejectValueType>::value,
+    static_assert(std::is_convertible_v<RejectValueType_,
+                                        typename PromiseType::RejectValueType>,
                   "Reject() argument must be implicitly convertible to "
                   "MozPromise's RejectValueT");
 

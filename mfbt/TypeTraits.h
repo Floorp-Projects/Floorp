@@ -177,64 +177,6 @@ struct IsSame : FalseType {};
 template <typename T>
 struct IsSame<T, T> : TrueType {};
 
-namespace detail {
-
-template <typename From, typename To>
-struct ConvertibleTester {
- private:
-  template <typename To1>
-  static char test_helper(To1);
-
-  template <typename From1, typename To1>
-  static decltype(test_helper<To1>(DeclVal<From1>())) test(int);
-
-  template <typename From1, typename To1>
-  static int test(...);
-
- public:
-  static const bool value = sizeof(test<From, To>(0)) == sizeof(char);
-};
-
-}  // namespace detail
-
-/**
- * IsConvertible determines whether a value of type From will implicitly convert
- * to a value of type To.  For example:
- *
- *   struct A {};
- *   struct B : public A {};
- *   struct C {};
- *
- * mozilla::IsConvertible<A, A>::value is true;
- * mozilla::IsConvertible<A*, A*>::value is true;
- * mozilla::IsConvertible<B, A>::value is true;
- * mozilla::IsConvertible<B*, A*>::value is true;
- * mozilla::IsConvertible<C, A>::value is false;
- * mozilla::IsConvertible<A, C>::value is false;
- * mozilla::IsConvertible<A*, C*>::value is false;
- * mozilla::IsConvertible<C*, A*>::value is false.
- *
- * For obscure reasons, you can't use IsConvertible when the types being tested
- * are related through private inheritance, and you'll get a compile error if
- * you try.  Just don't do it!
- *
- * Note - we need special handling for void, which ConvertibleTester doesn't
- * handle. The void handling here doesn't handle const/volatile void correctly,
- * which could be easily fixed if the need arises.
- */
-template <typename From, typename To>
-struct IsConvertible
-    : IntegralConstant<bool, detail::ConvertibleTester<From, To>::value> {};
-
-template <typename B>
-struct IsConvertible<void, B> : IntegralConstant<bool, IsVoid<B>::value> {};
-
-template <typename A>
-struct IsConvertible<A, void> : IntegralConstant<bool, IsVoid<A>::value> {};
-
-template <>
-struct IsConvertible<void, void> : TrueType {};
-
 /* 20.9.7 Transformations between types [meta.trans] */
 
 /* 20.9.7.1 Const-volatile modifications [meta.trans.cv] */

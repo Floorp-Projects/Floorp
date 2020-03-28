@@ -109,7 +109,7 @@ struct is_allowed_extent_conversion
 template <class From, class To>
 struct is_allowed_element_type_conversion
     : public mozilla::IntegralConstant<
-          bool, mozilla::IsConvertible<From (*)[], To (*)[]>::value> {};
+          bool, std::is_convertible_v<From (*)[], To (*)[]>> {};
 
 template <class Span, bool IsConst>
 class span_iterator {
@@ -468,30 +468,28 @@ class Span {
   /**
    * Constructor for standard-library containers.
    */
-  template <
-      class Container,
-      class = span_details::enable_if_t<
-          !span_details::is_span<Container>::value &&
-          !span_details::is_std_array<Container>::value &&
-          mozilla::IsConvertible<typename Container::pointer, pointer>::value &&
-          mozilla::IsConvertible<
-              typename Container::pointer,
-              decltype(mozilla::DeclVal<Container>().data())>::value>>
+  template <class Container,
+            class = span_details::enable_if_t<
+                !span_details::is_span<Container>::value &&
+                !span_details::is_std_array<Container>::value &&
+                std::is_convertible_v<typename Container::pointer, pointer> &&
+                std::is_convertible_v<
+                    typename Container::pointer,
+                    decltype(mozilla::DeclVal<Container>().data())>>>
   constexpr MOZ_IMPLICIT Span(Container& cont)
       : Span(cont.data(), ReleaseAssertedCast<index_type>(cont.size())) {}
 
   /**
    * Constructor for standard-library containers (const version).
    */
-  template <
-      class Container,
-      class = span_details::enable_if_t<
-          std::is_const_v<element_type> &&
-          !span_details::is_span<Container>::value &&
-          mozilla::IsConvertible<typename Container::pointer, pointer>::value &&
-          mozilla::IsConvertible<
-              typename Container::pointer,
-              decltype(mozilla::DeclVal<Container>().data())>::value>>
+  template <class Container,
+            class = span_details::enable_if_t<
+                std::is_const_v<element_type> &&
+                !span_details::is_span<Container>::value &&
+                std::is_convertible_v<typename Container::pointer, pointer> &&
+                std::is_convertible_v<
+                    typename Container::pointer,
+                    decltype(mozilla::DeclVal<Container>().data())>>>
   constexpr MOZ_IMPLICIT Span(const Container& cont)
       : Span(cont.data(), ReleaseAssertedCast<index_type>(cont.size())) {}
 
