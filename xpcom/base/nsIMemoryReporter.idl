@@ -461,7 +461,7 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 
 // All the following registration/unregistration functions don't use
-// MOZ_MUST_USE because ignoring failures is common and reasonable.
+// [[nodiscard]] because ignoring failures is common and reasonable.
 
 // Register a memory reporter.  The manager service will hold a strong
 // reference to this reporter.
@@ -516,15 +516,15 @@ DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
 
 // Likewise for per-tab measurement.
 
-typedef MOZ_MUST_USE nsresult (*JSSizeOfTabFn)(JSObject* aObj,
-                                               size_t* aJsObjectsSize,
-                                               size_t* aJsStringSize,
-                                               size_t* aJsPrivateSize,
-                                               size_t* aJsOtherSize);
-typedef MOZ_MUST_USE nsresult (*NonJSSizeOfTabFn)(nsPIDOMWindowOuter* aWindow,
-                                                  size_t* aDomSize,
-                                                  size_t* aStyleSize,
-                                                  size_t* aOtherSize);
+typedef nsresult (*JSSizeOfTabFn)(JSObject* aObj,
+                                  size_t* aJsObjectsSize,
+                                  size_t* aJsStringSize,
+                                  size_t* aJsPrivateSize,
+                                  size_t* aJsOtherSize);
+typedef nsresult (*NonJSSizeOfTabFn)(nsPIDOMWindowOuter* aWindow,
+                                     size_t* aDomSize,
+                                     size_t* aStyleSize,
+                                     size_t* aOtherSize);
 
 nsresult RegisterJSSizeOfTab(JSSizeOfTabFn aSizeOfTabFn);
 nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);

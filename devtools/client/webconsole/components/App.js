@@ -396,7 +396,7 @@ class App extends Component {
   }
 
   renderRootElement(children) {
-    const { editorMode, serviceContainer, sidebarVisible } = this.props;
+    const { editorMode, sidebarVisible } = this.props;
 
     const classNames = ["webconsole-app"];
     if (sidebarVisible) {
@@ -404,9 +404,6 @@ class App extends Component {
     }
     if (editorMode) {
       classNames.push("jsterm-editor");
-    }
-    if (serviceContainer.canRewind()) {
-      classNames.push("can-rewind");
     }
 
     if (this.props.eagerEvaluationEnabled) {

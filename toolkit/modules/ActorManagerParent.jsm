@@ -523,7 +523,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource://gre/modules/ManifestMessagesChild.jsm",
       messages: [
-        "DOM:Manifest:FireAppInstalledEvent",
         "DOM:ManifestObtainer:Obtain",
         "DOM:WebManifest:fetchIcon",
         "DOM:WebManifest:hasManifestLink",

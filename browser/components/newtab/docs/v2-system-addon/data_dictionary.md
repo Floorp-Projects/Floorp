@@ -211,7 +211,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 | `card_type` | [Optional] ("bookmark", "pocket", "trending", "pinned", "search", "spoc", "organic") | :one:
 | `search_vendor` | [Optional] the vendor of the search shortcut, one of ("google", "amazon", "wikipedia", "duckduckgo", "bing", etc.). This field only exists when `card_type = "search"` | :one:
 | `date` | [Auto populated by Onyx] The date in YYYY-MM-DD format. | :three:
-| `experiment_id` | [Optional] The unique identifier for a specific experiment. | :one:
+| `shield_id` | [Optional] DEPRECATED: use `experiments` instead. The unique identifier for a specific experiment. | :one:
 | `event_id` | [Required] An identifier shared by multiple performance pings that describe an entire request flow. | :one:
 | `event` | [Required] The type of event. Any user defined string ("click", "share", "delete", "more_items") | :one:
 | `event_context` | [Optional] A string to record the context of an AS Router event ping. Compound context values will be stringified by JSON.stringify| :one:
@@ -265,6 +265,7 @@ and losing focus. | :one:
 | `reason` | [required] The reason if a SPOC is not displayed, "n/a" for the displayed, one of ("frequency_cap", "blocked_by_user", "flight_duplicate", "probability_selection", "below_min_score", "out_of_position", "n/a") | :one:
 | `full_recalc` | [required] Is it a full SPOCS recalculation: 0: false; 1: true. Recalculation case: 1). fetch SPOCS from Pocket endpoint. Non-recalculation cases: 1). An impression updates the SPOCS; 2). Any action that triggers the `selectLayoutRender ` | :one:
 | `browser_session_id` | [Optional] The unique identifier for a browser session, retrieved from TelemetrySession | :one:
+| `experiments` | [Optional] An object to record all active experiments (an empty object will be sent if there is no active experiment). The experiments IDs are stored as keys, and the value object stores the branch information. `Example: {"experiment_1": {"branch": "control"}, "experiment_2": {"branch": "treatment"}}`. This deprecates the `shield_id` used in Activity Stream and Messaging System. | :one:
 
 **Where:**
 

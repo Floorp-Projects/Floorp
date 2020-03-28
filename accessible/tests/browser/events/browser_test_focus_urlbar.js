@@ -320,7 +320,7 @@ async function runTipTests() {
         icon: "",
         text: "This is a test intervention.",
         buttonText: "Done",
-        data: "test",
+        type: "test",
         helpUrl: "about:blank",
         buttonUrl: "about:mozilla",
       }

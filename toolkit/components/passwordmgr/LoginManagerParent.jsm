@@ -417,8 +417,8 @@ class LoginManagerParent extends JSWindowActorParent {
     searchString,
     previousResult,
     forcePasswordGeneration,
+    hasBeenTypePassword,
     isSecure,
-    isPasswordField,
     isProbablyANewPasswordField,
   }) {
     // Note: previousResult is a regular object, not an
@@ -477,7 +477,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // Remove results that are too short, or have different prefix.
       // Also don't offer empty usernames as possible results except
       // for on password fields.
-      if (isPasswordField) {
+      if (hasBeenTypePassword) {
         return true;
       }
       return match && match.toLowerCase().startsWith(searchStringLower);

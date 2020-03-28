@@ -7,8 +7,6 @@ package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 
-import java.util.Map;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -20,7 +18,7 @@ public final class ThreadUtils {
      * Controls the action taken when a method like
      * {@link ThreadUtils#assertOnUiThread(AssertBehavior)} detects a problem.
      */
-    public static enum AssertBehavior {
+    public enum AssertBehavior {
         NONE,
         THROW,
     }
@@ -37,47 +35,6 @@ public final class ThreadUtils {
     public static Handler sGeckoHandler;
     public static volatile Thread sGeckoThread;
 
-    // Delayed Runnable that resets the Gecko thread priority.
-    private static final Runnable sPriorityResetRunnable = new Runnable() {
-        @Override
-        public void run() {
-            resetGeckoPriority();
-        }
-    };
-
-    private static boolean sIsGeckoPriorityReduced;
-
-    @SuppressWarnings("serial")
-    public static class UiThreadBlockedException extends RuntimeException {
-        public UiThreadBlockedException() {
-            super();
-        }
-
-        public UiThreadBlockedException(final String msg) {
-            super(msg);
-        }
-
-        public UiThreadBlockedException(final String msg, final Throwable e) {
-            super(msg, e);
-        }
-
-        public UiThreadBlockedException(final Throwable e) {
-            super(e);
-        }
-    }
-
-    public static void dumpAllStackTraces() {
-        Log.w(LOGTAG, "Dumping ALL the threads!");
-        Map<Thread, StackTraceElement[]> allStacks = Thread.getAllStackTraces();
-        for (Thread t : allStacks.keySet()) {
-            Log.w(LOGTAG, t.toString());
-            for (StackTraceElement ste : allStacks.get(t)) {
-                Log.w(LOGTAG, ste.toString());
-            }
-            Log.w(LOGTAG, "----");
-        }
-    }
-
     public static void setBackgroundThread(final Thread thread) {
         sBackgroundThread = thread;
     }
@@ -90,16 +47,24 @@ public final class ThreadUtils {
         return sUiHandler;
     }
 
+    /**
+     * Runs the provided runnable on the UI thread. If this method is called on the UI thread
+     * the runnable will be executed synchronously.
+     *
+     * @param runnable the runnable to be executed.
+     */
+    public static void runOnUiThread(final Runnable runnable) {
+        // We're on the UI thread already, let's just run this
+        if (isOnUiThread()) {
+            runnable.run();
+            return;
+        }
+
+        postToUiThread(runnable);
+    }
+
     public static void postToUiThread(final Runnable runnable) {
         sUiHandler.post(runnable);
-    }
-
-    public static void postDelayedToUiThread(final Runnable runnable, final long timeout) {
-        sUiHandler.postDelayed(runnable, timeout);
-    }
-
-    public static void removeCallbacksFromUiThread(final Runnable runnable) {
-        sUiHandler.removeCallbacks(runnable);
     }
 
     public static Thread getBackgroundThread() {
@@ -112,10 +77,6 @@ public final class ThreadUtils {
 
     public static void postToBackgroundThread(final Runnable runnable) {
         GeckoBackgroundThread.post(runnable);
-    }
-
-    public static void postDelayedToBackgroundThread(final Runnable runnable, final long timeout) {
-        GeckoBackgroundThread.postDelayed(runnable, timeout);
     }
 
     public static void assertOnUiThread(final AssertBehavior assertBehavior) {
@@ -133,22 +94,6 @@ public final class ThreadUtils {
     @RobocopTarget
     public static void assertOnGeckoThread() {
         assertOnThread(sGeckoThread, AssertBehavior.THROW);
-    }
-
-    public static void assertNotOnGeckoThread() {
-        if (sGeckoThread == null) {
-            // Cannot be on Gecko thread if Gecko thread is not live yet.
-            return;
-        }
-        assertNotOnThread(sGeckoThread, AssertBehavior.THROW);
-    }
-
-    public static void assertOnBackgroundThread() {
-        assertOnThread(getBackgroundThread(), AssertBehavior.THROW);
-    }
-
-    public static void assertOnThread(final Thread expectedThread) {
-        assertOnThread(expectedThread, AssertBehavior.THROW);
     }
 
     public static void assertOnThread(final Thread expectedThread, final AssertBehavior behavior) {
@@ -214,40 +159,5 @@ public final class ThreadUtils {
     @RobocopTarget
     public static boolean isOnThread(final Thread thread) {
         return (Thread.currentThread().getId() == thread.getId());
-    }
-
-    /**
-     * Reduces the priority of the Gecko thread, allowing other operations
-     * (such as those related to the UI and database) to take precedence.
-     *
-     * Note that there are no guards in place to prevent multiple calls
-     * to this method from conflicting with each other.
-     *
-     * @param timeout Timeout in ms after which the priority will be reset
-     */
-    public static void reduceGeckoPriority(final long timeout) {
-        if (Runtime.getRuntime().availableProcessors() > 1) {
-            // Don't reduce priority for multicore devices. We use availableProcessors()
-            // for its fast performance. It may give false negatives (i.e. multicore
-            // detected as single-core), but we can tolerate this behavior.
-            return;
-        }
-        if (!sIsGeckoPriorityReduced && sGeckoThread != null) {
-            sIsGeckoPriorityReduced = true;
-            sGeckoThread.setPriority(Thread.MIN_PRIORITY);
-            getUiHandler().postDelayed(sPriorityResetRunnable, timeout);
-        }
-    }
-
-    /**
-     * Resets the priority of a thread whose priority has been reduced
-     * by reduceGeckoPriority.
-     */
-    public static void resetGeckoPriority() {
-        if (sIsGeckoPriorityReduced) {
-            sIsGeckoPriorityReduced = false;
-            sGeckoThread.setPriority(Thread.NORM_PRIORITY);
-            getUiHandler().removeCallbacks(sPriorityResetRunnable);
-        }
     }
 }

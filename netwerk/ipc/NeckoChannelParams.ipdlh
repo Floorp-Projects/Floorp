@@ -145,7 +145,7 @@ struct LoadInfoArgs
   bool allowListFutureDocumentsCreatedFromThisRedirectChain;
   nsString                    cspNonce;
   bool                        skipContentSniffing;
-  bool                        httpsOnlyNoUpgrade;
+  uint32_t                    httpsOnlyStatus;
   bool                        isFromProcessingFrameAttributes;
   CookieJarSettingsArgs       cookieJarSettings;
   uint32_t                    requestBlockingReason;
@@ -184,9 +184,8 @@ struct ParentLoadInfoForwarderArgs
   // that flag is set to true so we skip content sniffing for that browsing
   bool skipContentSniffing;
 
-  // If httpsOnlyNoUpgrade is true, the request won't get upgraded by the
-  // HTTPS-Only Mode.
-  bool httpsOnlyNoUpgrade;
+  // Upgrade state of HTTPS-Only Mode
+  uint32_t httpsOnlyStatus;
 
   // We must also note that the tainting value was explicitly set
   // by the service worker.

@@ -220,13 +220,15 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)valueDidChange {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilityValueChangedNotification);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+- (void)firePlatformEvent:(uint32_t)eventType {
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      [self postNotification:NSAccessibilityValueChangedNotification];
+      break;
+    default:
+      [super firePlatformEvent:eventType];
+      break;
+  }
 }
 
 @end

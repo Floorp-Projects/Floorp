@@ -30,6 +30,24 @@ using mozilla::dom::ServiceWorkerRegistration;
 using mozilla::dom::ServiceWorkerRegistrationDescriptor;
 using mozilla::dom::VoidFunction;
 
+bool nsIGlobalObject::IsScriptForbidden(JSObject* aCallback,
+                                        bool aIsJSImplementedWebIDL) const {
+  if (mIsScriptForbidden) {
+    return true;
+  }
+
+  if (NS_IsMainThread()) {
+    if (aIsJSImplementedWebIDL) {
+      return false;
+    }
+    if (!xpc::Scriptability::Get(aCallback).Allowed()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsIGlobalObject::~nsIGlobalObject() {
   UnlinkHostObjectURIs();
   DisconnectEventTargetObjects();

@@ -402,13 +402,15 @@ class nsDisplayListBuilder {
    public:
     typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
-    Preserves3DContext() : mAccumulatedRectLevels(0) {}
+    Preserves3DContext()
+        : mAccumulatedRectLevels(0), mAllowAsyncAnimation(true) {}
 
     Preserves3DContext(const Preserves3DContext& aOther)
         : mAccumulatedTransform(),
           mAccumulatedRect(),
           mAccumulatedRectLevels(0),
-          mVisibleRect(aOther.mVisibleRect) {}
+          mVisibleRect(aOther.mVisibleRect),
+          mAllowAsyncAnimation(aOther.mAllowAsyncAnimation) {}
 
     // Accmulate transforms of ancestors on the preserves-3d chain.
     Matrix4x4 mAccumulatedTransform;
@@ -417,6 +419,8 @@ class nsDisplayListBuilder {
     // How far this frame is from the root of the current 3d context.
     int mAccumulatedRectLevels;
     nsRect mVisibleRect;
+    // Allow async animation for this 3D context.
+    bool mAllowAsyncAnimation;
   };
 
   /**
@@ -1715,6 +1719,14 @@ class nsDisplayListBuilder {
   }
 
   void SavePreserves3DRect() { mPreserves3DCtx.mVisibleRect = mVisibleRect; }
+
+  void SavePreserves3DAllowAsyncAnimation(bool aValue) {
+    mPreserves3DCtx.mAllowAsyncAnimation = aValue;
+  }
+
+  bool GetPreserves3DAllowAsyncAnimation() const {
+    return mPreserves3DCtx.mAllowAsyncAnimation;
+  }
 
   bool IsBuildingInvisibleItems() const { return mBuildingInvisibleItems; }
 
@@ -6824,7 +6836,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   using TransformReferenceBox = nsStyleTransformMatrix::TransformReferenceBox;
 
  public:
-  enum PrerenderDecision { NoPrerender, FullPrerender, PartialPrerender };
+  enum class PrerenderDecision { No, Full, Partial };
 
   /**
    * Returns a matrix (in pixels) for the current frame. The matrix should be
@@ -7105,16 +7117,25 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   static Matrix4x4 GetResultingTransformMatrix(
       const FrameTransformProperties& aProperties, TransformReferenceBox&,
       const nsPoint& aOrigin, float aAppUnitsPerPixel, uint32_t aFlags);
+
+  struct PrerenderInfo {
+    PrerenderDecision mDecision = PrerenderDecision::No;
+    bool mHasAnimations = true;
+  };
   /**
    * Decide whether we should prerender some or all of the contents of the
    * transformed frame even when it's not completely visible (yet).
-   * Return FullPrerender if the entire contents should be prerendered,
-   * PartialPrerender if some but not all of the contents should be prerendered,
-   * or NoPrerender if only the visible area should be rendered.
+   * Return PrerenderDecision::Full if the entire contents should be
+   * prerendered, PrerenderDecision::Partial if some but not all of the
+   * contents should be prerendered, or PrerenderDecision::No if only the
+   * visible area should be rendered.
+   * |mNoAffectDecisionInPreserve3D| is set if the prerender decision should not
+   * affect the decision on other frames in the preserve 3d tree.
    * |aDirtyRect| is updated to the area that should be prerendered.
    */
-  static PrerenderDecision ShouldPrerenderTransformedContent(
+  static PrerenderInfo ShouldPrerenderTransformedContent(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsRect* aDirtyRect);
+
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
   bool MayBeAnimated(nsDisplayListBuilder* aBuilder,

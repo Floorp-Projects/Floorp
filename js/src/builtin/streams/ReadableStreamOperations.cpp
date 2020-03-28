@@ -20,7 +20,7 @@
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamDefaultController{Close,Enqueue}, js::ReadableStreamControllerError, js::SourceAlgorithms
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStreamCancel
-#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ReadableStream{,Default}Reader, js::ReadableStreamDefaultReaderRead
+#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStream{,Default}Reader, js::ReadableStreamDefaultReaderRead
 #include "builtin/streams/TeeState.h"              // js::TeeState
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}
 #include "js/Promise.h"  // JS::CallOriginalPromiseThen, JS::AddPromiseReactions
@@ -524,7 +524,8 @@ MOZ_MUST_USE bool js::ReadableStreamTee(
 
   // Step 3: Let reader be ? AcquireReadableStreamDefaultReader(stream).
   Rooted<ReadableStreamDefaultReader*> reader(
-      cx, CreateReadableStreamDefaultReader(cx, unwrappedStream));
+      cx, CreateReadableStreamDefaultReader(cx, unwrappedStream,
+                                            ForAuthorCodeBool::No));
   if (!reader) {
     return false;
   }

@@ -524,18 +524,20 @@ inline NSString* ToNSString(id aValue) {
       valueWithRange:NSMakeRange(0, textAcc ? textAcc->CharacterCount() : proxy->CharacterCount())];
 }
 
-- (void)valueDidChange {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilityValueChangedNotification);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)selectedTextDidChange {
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilitySelectedTextChangedNotification);
+- (void)firePlatformEvent:(uint32_t)eventType {
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
+      [self postNotification:NSAccessibilityValueChangedNotification];
+      break;
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+      [self postNotification:NSAccessibilitySelectedTextChangedNotification];
+      break;
+    default:
+      [super firePlatformEvent:eventType];
+      break;
+  }
 }
 
 - (NSString*)stringFromRange:(NSRange*)range {

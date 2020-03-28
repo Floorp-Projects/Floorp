@@ -79,8 +79,8 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
   void Put(KeyType aKey, mozilla::UniquePtr<U>&& aData);
 
   template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
-  MOZ_MUST_USE bool Put(KeyType aKey, mozilla::UniquePtr<U>&& aData,
-                        const mozilla::fallible_t&);
+  [[nodiscard]] bool Put(KeyType aKey, mozilla::UniquePtr<U>&& aData,
+                         const mozilla::fallible_t&);
 };
 
 template <typename K, typename T>

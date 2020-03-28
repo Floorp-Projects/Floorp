@@ -62,8 +62,8 @@ class nsInterfaceHashtable
     }
   }
 
-  MOZ_MUST_USE bool Put(KeyType aKey, already_AddRefed<Interface>&& aData,
-                        const mozilla::fallible_t&);
+  [[nodiscard]] bool Put(KeyType aKey, already_AddRefed<Interface>&& aData,
+                         const mozilla::fallible_t&);
   using base_type::Put;
 
   /**

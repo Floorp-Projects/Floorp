@@ -41,14 +41,11 @@ function PageError(props) {
     repeat,
     serviceContainer,
     timestampsVisible,
-    isPaused,
     maybeScrollToBottom,
     inWarningGroup,
-    pausedExecutionPoint,
   } = props;
   const {
     id: messageId,
-    executionPoint,
     source,
     type,
     level,
@@ -72,8 +69,6 @@ function PageError(props) {
   return Message({
     dispatch,
     messageId,
-    executionPoint,
-    isPaused,
     open,
     collapsible: Array.isArray(stacktrace),
     source,
@@ -93,7 +88,6 @@ function PageError(props) {
     timestampsVisible,
     maybeScrollToBottom,
     message,
-    pausedExecutionPoint,
   });
 }
 

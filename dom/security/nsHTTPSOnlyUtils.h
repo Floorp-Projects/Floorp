@@ -46,19 +46,6 @@ class nsHTTPSOnlyUtils {
   static void LogMessage(const nsAString& aMessage, uint32_t aFlags,
                          uint64_t aInnerWindowID, bool aFromPrivateWindow,
                          nsIURI* aURI = nullptr);
-
-  /**
-   * Report simple error message to the browser console
-   *   @param aErrorText the error message
-   *   @param aCategory Name of the module reporting error
-   *   @param aFromPrivateWindow Whether from private window or not
-   *   @param aFromChromeContext Whether from chrome context or not
-   *   @param [aErrorFlags] See nsIScriptError.
-   */
-  static void LogSimpleConsoleError(
-      const nsAString& aErrorText, const char* aCategory,
-      bool aFromPrivateWindow, bool aFromChromeContext,
-      uint32_t aErrorFlags = nsIScriptError::errorFlag);
 };
 
 #endif /* nsHTTPSOnlyUtils_h___ */

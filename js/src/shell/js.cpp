@@ -208,7 +208,7 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
 static const double MAX_TIMEOUT_SECONDS = 1800.0;
 
 // Not necessarily in sync with the browser
-#ifdef ENABLE_WASM_THREADS
+#ifdef ENABLE_SHARED_MEMORY
 #  define SHARED_MEMORY_DEFAULT 1
 #else
 #  define SHARED_MEMORY_DEFAULT 0

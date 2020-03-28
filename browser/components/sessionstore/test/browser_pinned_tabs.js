@@ -221,3 +221,127 @@ add_task(async function test_mixed_pinned_unpinned() {
   // Clean up for the next task.
   await promiseBrowserState(BACKUP_STATE);
 });
+
+/**
+ * After session restore, if we crash an unpinned tab, we noticed pinned tabs
+ * created in the same process would lose all data (Bug 1624511). This test
+ * checks that case.
+ */
+add_task(async function test_pinned_tab_dataloss() {
+  // We do not run if there are no crash reporters to avoid
+  // problems with the intentional crash.
+  if (!AppConstants.MOZ_CRASHREPORTER) {
+    return;
+  }
+  // If we end up increasing the process count limit in future,
+  // we want to ensure that we don't stop testing this case
+  // of pinned tab data loss.
+  if (SpecialPowers.getIntPref("dom.ipc.processCount") > 8) {
+    ok(
+      false,
+      "Process count is greater than 8, update the number of pinned tabs in test."
+    );
+  }
+
+  // We expect 17 pinned tabs plus the selected tab get content restored.
+  // Given that the default process count is currently 8, we need this
+  // number of pinned tabs to reproduce the data loss. If this changes,
+  // please add more pinned tabs.
+  let allTabsRestored = promiseSessionStoreLoads(18);
+  await promiseBrowserState({
+    windows: [
+      {
+        selected: 18, // SessionStore uses 1-based indexing.
+        tabs: [
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          {
+            pinned: true,
+            entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }],
+          },
+          { entries: [{ url: REMOTE_URL, triggeringPrincipal_base64 }] },
+        ],
+      },
+    ],
+  });
+  await allTabsRestored;
+
+  let tabs = gBrowser.tabs;
+  BrowserTestUtils.crashFrame(tabs[17].linkedBrowser);
+
+  await TestUtils.topicObserved("sessionstore-state-write-complete");
+
+  for (let i = 0; i < tabs.length; i++) {
+    let tab = tabs[i];
+    is(
+      tab.linkedBrowser.currentURI.spec,
+      REMOTE_URL,
+      `Tab ${i + 1} should have matching URL`
+    );
+  }
+
+  // Clean up for the next task.
+  await promiseBrowserState(BACKUP_STATE);
+});

@@ -220,7 +220,8 @@ JS_PUBLIC_API JSObject* JS::ReadableStreamGetReader(
     return nullptr;
   }
 
-  JSObject* result = CreateReadableStreamDefaultReader(cx, unwrappedStream);
+  JSObject* result = CreateReadableStreamDefaultReader(cx, unwrappedStream,
+                                                       ForAuthorCodeBool::No);
   MOZ_ASSERT_IF(result, IsObjectInContextCompartment(result, cx));
   return result;
 }

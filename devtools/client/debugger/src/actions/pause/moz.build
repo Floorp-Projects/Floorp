@@ -23,7 +23,6 @@ CompiledModules(
     'previewPausedLocation.js',
     'resumed.js',
     'selectFrame.js',
-    'setFramePositions.js',
     'highlightCalls.js',
     'skipPausing.js',
 )
