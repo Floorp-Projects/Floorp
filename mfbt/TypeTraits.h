@@ -103,34 +103,6 @@ struct IsArrayHelper<T[]> : TrueType {};
 template <typename T>
 struct IsArray : detail::IsArrayHelper<typename RemoveCV<T>::Type> {};
 
-namespace detail {
-
-template <typename T>
-struct IsFunPtr;
-
-template <typename>
-struct IsFunPtr : public FalseType {};
-
-template <typename Result, typename... ArgTypes>
-struct IsFunPtr<Result (*)(ArgTypes...)> : public TrueType {};
-
-};  // namespace detail
-
-/**
- * IsFunction determines whether a type is a function type. Function pointers
- * don't qualify here--only the type of an actual function symbol. We do not
- * correctly handle varags function types because of a bug in MSVC.
- *
- * Given the function:
- *   void f(int) {}
- *
- * mozilla::IsFunction<void(int)> is true;
- * mozilla::IsFunction<void(*)(int)> is false;
- * mozilla::IsFunction<decltype(f)> is true.
- */
-template <typename T>
-struct IsFunction : public detail::IsFunPtr<typename RemoveCV<T>::Type*> {};
-
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
