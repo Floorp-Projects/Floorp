@@ -576,10 +576,10 @@ template <typename CVRemoved>
 struct IsRefcountedSmartPointerHelper : std::false_type {};
 
 template <typename Pointee>
-struct IsRefcountedSmartPointerHelper<RefPtr<Pointee>> : TrueType {};
+struct IsRefcountedSmartPointerHelper<RefPtr<Pointee>> : std::true_type {};
 
 template <typename Pointee>
-struct IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> : TrueType {};
+struct IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> : std::true_type {};
 
 }  // namespace detail
 
@@ -897,7 +897,7 @@ struct StoreCopyPassByValue {
 };
 template <typename S>
 struct IsParameterStorageClass<StoreCopyPassByValue<S>>
-    : public mozilla::TrueType {};
+    : public std::true_type {};
 
 template <typename T>
 struct StoreCopyPassByConstLRef {
@@ -910,7 +910,7 @@ struct StoreCopyPassByConstLRef {
 };
 template <typename S>
 struct IsParameterStorageClass<StoreCopyPassByConstLRef<S>>
-    : public mozilla::TrueType {};
+    : public std::true_type {};
 
 template <typename T>
 struct StoreCopyPassByLRef {
@@ -922,8 +922,8 @@ struct StoreCopyPassByLRef {
   passed_type PassAsParameter() { return m; }
 };
 template <typename S>
-struct IsParameterStorageClass<StoreCopyPassByLRef<S>>
-    : public mozilla::TrueType {};
+struct IsParameterStorageClass<StoreCopyPassByLRef<S>> : public std::true_type {
+};
 
 template <typename T>
 struct StoreCopyPassByRRef {
@@ -935,8 +935,8 @@ struct StoreCopyPassByRRef {
   passed_type PassAsParameter() { return std::move(m); }
 };
 template <typename S>
-struct IsParameterStorageClass<StoreCopyPassByRRef<S>>
-    : public mozilla::TrueType {};
+struct IsParameterStorageClass<StoreCopyPassByRRef<S>> : public std::true_type {
+};
 
 template <typename T>
 struct StoreRefPassByLRef {
@@ -948,8 +948,8 @@ struct StoreRefPassByLRef {
   passed_type PassAsParameter() { return m; }
 };
 template <typename S>
-struct IsParameterStorageClass<StoreRefPassByLRef<S>>
-    : public mozilla::TrueType {};
+struct IsParameterStorageClass<StoreRefPassByLRef<S>> : public std::true_type {
+};
 
 template <typename T>
 struct StoreConstRefPassByConstLRef {
@@ -962,7 +962,7 @@ struct StoreConstRefPassByConstLRef {
 };
 template <typename S>
 struct IsParameterStorageClass<StoreConstRefPassByConstLRef<S>>
-    : public mozilla::TrueType {};
+    : public std::true_type {};
 
 template <typename T>
 struct StoreRefPtrPassByPtr {
@@ -975,7 +975,7 @@ struct StoreRefPtrPassByPtr {
 };
 template <typename S>
 struct IsParameterStorageClass<StoreRefPtrPassByPtr<S>>
-    : public mozilla::TrueType {};
+    : public std::true_type {};
 
 template <typename T>
 struct StorePtrPassByPtr {
@@ -987,8 +987,7 @@ struct StorePtrPassByPtr {
   passed_type PassAsParameter() { return m; }
 };
 template <typename S>
-struct IsParameterStorageClass<StorePtrPassByPtr<S>>
-    : public mozilla::TrueType {};
+struct IsParameterStorageClass<StorePtrPassByPtr<S>> : public std::true_type {};
 
 template <typename T>
 struct StoreConstPtrPassByConstPtr {
@@ -1001,7 +1000,7 @@ struct StoreConstPtrPassByConstPtr {
 };
 template <typename S>
 struct IsParameterStorageClass<StoreConstPtrPassByConstPtr<S>>
-    : public mozilla::TrueType {};
+    : public std::true_type {};
 
 template <typename T>
 struct StoreCopyPassByConstPtr {
@@ -1014,7 +1013,7 @@ struct StoreCopyPassByConstPtr {
 };
 template <typename S>
 struct IsParameterStorageClass<StoreCopyPassByConstPtr<S>>
-    : public mozilla::TrueType {};
+    : public std::true_type {};
 
 template <typename T>
 struct StoreCopyPassByPtr {
@@ -1026,13 +1025,13 @@ struct StoreCopyPassByPtr {
   passed_type PassAsParameter() { return &m; }
 };
 template <typename S>
-struct IsParameterStorageClass<StoreCopyPassByPtr<S>>
-    : public mozilla::TrueType {};
+struct IsParameterStorageClass<StoreCopyPassByPtr<S>> : public std::true_type {
+};
 
 namespace detail {
 
 template <typename>
-struct SFINAE1True : mozilla::TrueType {};
+struct SFINAE1True : std::true_type {};
 
 template <class T>
 static auto HasRefCountMethodsTest(int)

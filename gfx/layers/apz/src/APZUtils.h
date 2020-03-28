@@ -8,6 +8,7 @@
 #define mozilla_layers_APZUtils_h
 
 #include <stdint.h>  // for uint32_t
+#include <type_traits>
 #include "gfxTypes.h"
 #include "FrameMetrics.h"
 #include "LayersTypes.h"
@@ -23,7 +24,7 @@ namespace mozilla {
 struct ExternalPixel;
 
 template <>
-struct IsPixel<ExternalPixel> : TrueType {};
+struct IsPixel<ExternalPixel> : std::true_type {};
 
 typedef gfx::CoordTyped<ExternalPixel> ExternalCoord;
 typedef gfx::IntCoordTyped<ExternalPixel> ExternalIntCoord;
