@@ -2955,7 +2955,8 @@ class nsLayoutUtils {
 
   // Return the default value to be used for -moz-control-character-visibility,
   // from preferences.
-  static uint8_t ControlCharVisibilityDefault();
+  static mozilla::StyleControlCharacterVisibility
+  ControlCharVisibilityDefault();
 
   // Callers are responsible to ensure the user-font-set is up-to-date if
   // aUseUserFontSet is true.

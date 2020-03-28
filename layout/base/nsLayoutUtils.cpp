@@ -7368,7 +7368,7 @@ nsIFrame* nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame) {
     result |= gfx::ShapedTextFlags::TEXT_DISABLE_OPTIONAL_LIGATURES;
   }
   if (aStyleText->mControlCharacterVisibility ==
-      NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN) {
+      StyleControlCharacterVisibility::Hidden) {
     result |= gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS;
   }
   switch (aComputedStyle->StyleText()->mTextRendering) {
@@ -10037,10 +10037,11 @@ nsPoint nsLayoutUtils::ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
 }
 
 /* static */
-uint8_t nsLayoutUtils::ControlCharVisibilityDefault() {
+mozilla::StyleControlCharacterVisibility
+nsLayoutUtils::ControlCharVisibilityDefault() {
   return StaticPrefs::layout_css_control_characters_visible()
-             ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
-             : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
+             ? StyleControlCharacterVisibility::Visible
+             : StyleControlCharacterVisibility::Hidden;
 }
 
 /* static */
