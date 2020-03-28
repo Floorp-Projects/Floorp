@@ -1110,10 +1110,10 @@ void js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei) {
 // let block scope.
 jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script, const TryNote* tn) {
   jsbytecode* pc = script->offsetToPC(tn->start);
-  if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
+  if (tn->kind() == TryNoteKind::Catch || tn->kind() == TryNoteKind::Finally) {
     pc -= JSOpLength_Try;
     MOZ_ASSERT(JSOp(*pc) == JSOp::Try);
-  } else if (tn->kind == JSTRY_DESTRUCTURING) {
+  } else if (tn->kind() == TryNoteKind::Destructuring) {
     pc -= JSOpLength_TryDestructuring;
     MOZ_ASSERT(JSOp(*pc) == JSOp::TryDestructuring);
   }
@@ -1155,8 +1155,8 @@ static void UnwindIteratorsForUncatchableException(
   // ProcessTryNotes.
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
     const TryNote* tn = *tni;
-    switch (tn->kind) {
-      case JSTRY_FOR_IN: {
+    switch (tn->kind()) {
+      case TryNoteKind::ForIn: {
         Value* sp = regs.spForStackDepth(tn->stackDepth);
         UnwindIteratorForUncatchableException(&sp[-1].toObject());
         break;
@@ -1180,8 +1180,8 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
   for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
     const TryNote* tn = *tni;
 
-    switch (tn->kind) {
-      case JSTRY_CATCH:
+    switch (tn->kind()) {
+      case TryNoteKind::Catch:
         /* Catch cannot intercept the closing of a generator. */
         if (cx->isClosingGenerator()) {
           break;
@@ -1190,11 +1190,11 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         SettleOnTryNote(cx, tn, ei, regs);
         return CatchContinuation;
 
-      case JSTRY_FINALLY:
+      case TryNoteKind::Finally:
         SettleOnTryNote(cx, tn, ei, regs);
         return FinallyContinuation;
 
-      case JSTRY_FOR_IN: {
+      case TryNoteKind::ForIn: {
         /* This is similar to JSOp::EndIter in the interpreter loop. */
         MOZ_ASSERT(tn->stackDepth <= regs.stackDepth());
         Value* sp = regs.spForStackDepth(tn->stackDepth);
@@ -1203,7 +1203,7 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         break;
       }
 
-      case JSTRY_DESTRUCTURING: {
+      case TryNoteKind::Destructuring: {
         // Whether the destructuring iterator is done is at the top of the
         // stack. The iterator object is second from the top.
         MOZ_ASSERT(tn->stackDepth > 1);
@@ -1221,11 +1221,12 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         break;
       }
 
-      case JSTRY_FOR_OF:
-      case JSTRY_LOOP:
+      case TryNoteKind::ForOf:
+      case TryNoteKind::Loop:
         break;
 
-      // JSTRY_FOR_OF_ITERCLOSE is handled internally by the try note iterator.
+      // TryNoteKind::ForOfIterClose is handled internally by the try note
+      // iterator.
       default:
         MOZ_CRASH("Invalid try note");
     }
