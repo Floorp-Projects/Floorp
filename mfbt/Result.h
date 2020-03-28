@@ -272,8 +272,8 @@ struct SelectResultImpl {
           ? PackingStrategy::NullIsOk
           : (detail::HasFreeLSB<V>::value && detail::HasFreeLSB<E>::value)
                 ? PackingStrategy::LowBitTagIsError
-                : (IsDefaultConstructible<V>::value &&
-                   IsDefaultConstructible<E>::value &&
+                : (std::is_default_constructible_v<V> &&
+                   std::is_default_constructible_v<E> &&
                    IsPackableVariant<V, E>::value)
                       ? PackingStrategy::PackedVariant
                       : PackingStrategy::Variant;

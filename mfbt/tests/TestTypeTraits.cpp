@@ -18,7 +18,6 @@ using mozilla::DeclVal;
 using mozilla::IsArray;
 using mozilla::IsClass;
 using mozilla::IsConvertible;
-using mozilla::IsDefaultConstructible;
 using mozilla::IsDestructible;
 using mozilla::IsFunction;
 using mozilla::IsPointer;
@@ -208,104 +207,6 @@ static_assert(!IsSigned<NotIntConstructible>::value,
               "non-arithmetic types are not signed");
 static_assert(!IsUnsigned<NotIntConstructible>::value,
               "non-arithmetic types are not unsigned");
-
-struct TrivialCtor0 {};
-struct TrivialCtor1 {
-  int mX;
-};
-
-struct DefaultCtor0 {
-  DefaultCtor0() = default;
-};
-struct DefaultCtor1 {
-  DefaultCtor1() = default;
-};
-struct DefaultCtor2 {
-  DefaultCtor2() = default;
-  explicit DefaultCtor2(int) {}
-};
-
-struct NoDefaultCtor0 {
-  explicit NoDefaultCtor0(int) {}
-};
-struct NoDefaultCtor1 {
-  NoDefaultCtor1() = delete;
-};
-
-class PrivateCtor0 {
-  PrivateCtor0() = default;
-};
-class PrivateCtor1 {
-  PrivateCtor1() = default;
-};
-
-enum EnumCtor0 {};
-enum EnumCtor1 : int {};
-
-enum class EnumClassCtor0 {};
-enum class EnumClassCtor1 : int {};
-
-union UnionCtor0 {};
-union UnionCtor1 {
-  int mX;
-};
-
-union UnionCustomCtor0 {
-  explicit UnionCustomCtor0(int) {}
-};
-union UnionCustomCtor1 {
-  int mX;
-  explicit UnionCustomCtor1(int aX) : mX(aX) {}
-};
-
-static_assert(IsDefaultConstructible<int>::value,
-              "integral type is default-constructible");
-
-static_assert(IsDefaultConstructible<TrivialCtor0>::value,
-              "trivial constructor class 0 is default-constructible");
-static_assert(IsDefaultConstructible<TrivialCtor1>::value,
-              "trivial constructor class 1 is default-constructible");
-
-static_assert(IsDefaultConstructible<DefaultCtor0>::value,
-              "default constructor class 0 is default-constructible");
-static_assert(IsDefaultConstructible<DefaultCtor1>::value,
-              "default constructor class 1 is default-constructible");
-static_assert(IsDefaultConstructible<DefaultCtor2>::value,
-              "default constructor class 2 is default-constructible");
-
-static_assert(!IsDefaultConstructible<NoDefaultCtor0>::value,
-              "no default constructor class is not default-constructible");
-static_assert(!IsDefaultConstructible<NoDefaultCtor1>::value,
-              "deleted default constructor class is not default-constructible");
-
-static_assert(
-    !IsDefaultConstructible<PrivateCtor0>::value,
-    "private default constructor class 0 is not default-constructible");
-static_assert(
-    !IsDefaultConstructible<PrivateCtor1>::value,
-    "private default constructor class 1 is not default-constructible");
-
-static_assert(IsDefaultConstructible<EnumCtor0>::value,
-              "enum constructor 0 is default-constructible");
-static_assert(IsDefaultConstructible<EnumCtor1>::value,
-              "enum constructor 1 is default-constructible");
-
-static_assert(IsDefaultConstructible<EnumClassCtor0>::value,
-              "enum class constructor 0 is default-constructible");
-static_assert(IsDefaultConstructible<EnumClassCtor1>::value,
-              "enum class constructor 1 is default-constructible");
-
-static_assert(IsDefaultConstructible<UnionCtor0>::value,
-              "union constructor 0 is default-constructible");
-static_assert(IsDefaultConstructible<UnionCtor1>::value,
-              "union constructor 1 is default-constructible");
-
-static_assert(
-    !IsDefaultConstructible<UnionCustomCtor0>::value,
-    "union with custom 1-arg constructor 0 is not default-constructible");
-static_assert(
-    !IsDefaultConstructible<UnionCustomCtor1>::value,
-    "union with custom 1-arg constructor 1 is not default-constructible");
 
 class PublicDestructible {
  public:
