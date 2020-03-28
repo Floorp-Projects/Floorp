@@ -266,10 +266,10 @@ class UniquePtr {
   MOZ_IMPLICIT UniquePtr(
       UniquePtr<U, E>&& aOther,
       typename EnableIf<
-          IsConvertible<typename UniquePtr<U, E>::Pointer, Pointer>::value &&
+          std::is_convertible_v<typename UniquePtr<U, E>::Pointer, Pointer> &&
               !std::is_array_v<U> &&
               (std::is_reference_v<D> ? IsSame<D, E>::value
-                                      : IsConvertible<E, D>::value),
+                                      : std::is_convertible_v<E, D>),
           int>::Type aDummy = 0)
       : mTuple(aOther.release(), std::forward<E>(aOther.get_deleter())) {}
 
@@ -284,7 +284,7 @@ class UniquePtr {
   template <typename U, typename E>
   UniquePtr& operator=(UniquePtr<U, E>&& aOther) {
     static_assert(
-        IsConvertible<typename UniquePtr<U, E>::Pointer, Pointer>::value,
+        std::is_convertible_v<typename UniquePtr<U, E>::Pointer, Pointer>,
         "incompatible UniquePtr pointees");
     static_assert(!std::is_array_v<U>,
                   "can't assign from UniquePtr holding an array");
@@ -371,7 +371,7 @@ class UniquePtr<T[], D> {
   // of the wrong type.
   template <typename U>
   UniquePtr(U&& aU, typename EnableIf<std::is_pointer_v<U> &&
-                                          IsConvertible<U, Pointer>::value,
+                                          std::is_convertible_v<U, Pointer>,
                                       int>::Type aDummy = 0) = delete;
 
   UniquePtr(Pointer aPtr,
@@ -392,7 +392,7 @@ class UniquePtr<T[], D> {
   template <typename U, typename V>
   UniquePtr(U&& aU, V&& aV,
             typename EnableIf<std::is_pointer_v<U> &&
-                                  IsConvertible<U, Pointer>::value,
+                                  std::is_convertible_v<U, Pointer>,
                               int>::Type aDummy = 0) = delete;
 
   UniquePtr(UniquePtr&& aOther)
@@ -479,8 +479,7 @@ class DefaultDelete {
   template <typename U>
   MOZ_IMPLICIT DefaultDelete(
       const DefaultDelete<U>& aOther,
-      typename EnableIf<mozilla::IsConvertible<U*, T*>::value, int>::Type
-          aDummy = 0) {}
+      typename EnableIf<std::is_convertible_v<U*, T*>, int>::Type aDummy = 0) {}
 
   void operator()(T* aPtr) const {
     static_assert(sizeof(T) > 0, "T must be complete");

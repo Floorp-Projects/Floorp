@@ -348,8 +348,7 @@ class MOZ_MUST_USE_TYPE Result final {
   template <typename E2>
   MOZ_IMPLICIT Result(GenericErrorResult<E2>&& aErrorResult)
       : mImpl(std::forward<E2>(aErrorResult.mErrorValue)) {
-    static_assert(mozilla::IsConvertible<E2, E>::value,
-                  "E2 must be convertible to E");
+    static_assert(std::is_convertible_v<E2, E>, "E2 must be convertible to E");
     MOZ_ASSERT(isErr());
   }
 
@@ -360,8 +359,7 @@ class MOZ_MUST_USE_TYPE Result final {
   template <typename E2>
   MOZ_IMPLICIT Result(const GenericErrorResult<E2>& aErrorResult)
       : mImpl(aErrorResult.mErrorValue) {
-    static_assert(mozilla::IsConvertible<E2, E>::value,
-                  "E2 must be convertible to E");
+    static_assert(std::is_convertible_v<E2, E>, "E2 must be convertible to E");
     MOZ_ASSERT(isErr());
   }
 
