@@ -8,6 +8,7 @@
 #  define MozPromise_h_
 
 #  include <type_traits>
+#  include <utility>
 
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
@@ -884,8 +885,8 @@ class MozPromise : public MozPromiseBase {
     }
 
     template <typename... Ts>
-    auto Then(Ts&&... aArgs)
-        -> decltype(DeclVal<PromiseType>().Then(std::forward<Ts>(aArgs)...)) {
+    auto Then(Ts&&... aArgs) -> decltype(
+        std::declval<PromiseType>().Then(std::forward<Ts>(aArgs)...)) {
       return static_cast<RefPtr<PromiseType>>(*this)->Then(
           std::forward<Ts>(aArgs)...);
     }

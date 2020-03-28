@@ -465,28 +465,28 @@ class Span {
   /**
    * Constructor for standard-library containers.
    */
-  template <class Container,
-            class = std::enable_if_t<
-                !span_details::is_span<Container>::value &&
-                !span_details::is_std_array<Container>::value &&
-                std::is_convertible_v<typename Container::pointer, pointer> &&
-                std::is_convertible_v<
-                    typename Container::pointer,
-                    decltype(mozilla::DeclVal<Container>().data())>>>
+  template <
+      class Container,
+      class = std::enable_if_t<
+          !span_details::is_span<Container>::value &&
+          !span_details::is_std_array<Container>::value &&
+          std::is_convertible_v<typename Container::pointer, pointer> &&
+          std::is_convertible_v<typename Container::pointer,
+                                decltype(std::declval<Container>().data())>>>
   constexpr MOZ_IMPLICIT Span(Container& cont)
       : Span(cont.data(), ReleaseAssertedCast<index_type>(cont.size())) {}
 
   /**
    * Constructor for standard-library containers (const version).
    */
-  template <class Container,
-            class = std::enable_if_t<
-                std::is_const_v<element_type> &&
-                !span_details::is_span<Container>::value &&
-                std::is_convertible_v<typename Container::pointer, pointer> &&
-                std::is_convertible_v<
-                    typename Container::pointer,
-                    decltype(mozilla::DeclVal<Container>().data())>>>
+  template <
+      class Container,
+      class = std::enable_if_t<
+          std::is_const_v<element_type> &&
+          !span_details::is_span<Container>::value &&
+          std::is_convertible_v<typename Container::pointer, pointer> &&
+          std::is_convertible_v<typename Container::pointer,
+                                decltype(std::declval<Container>().data())>>>
   constexpr MOZ_IMPLICIT Span(const Container& cont)
       : Span(cont.data(), ReleaseAssertedCast<index_type>(cont.size())) {}
 

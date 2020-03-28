@@ -8,6 +8,7 @@
 #define mozilla_dom_Promise_inl_h
 
 #include <type_traits>
+#include <utility>
 
 #include "mozilla/TupleCycleCollection.h"
 #include "mozilla/TypeTraits.h"
@@ -81,7 +82,7 @@ using StorageType = typename StorageTypeHelper<std::decay_t<T>>::Type;
 // spec-compliant behavior there should still give us the expected results, MSVC
 // considers it an illegal use of std::forward.
 template <template <typename> class SmartPtr, typename T>
-decltype(DeclVal<SmartPtr<T>>().get()) ArgType(SmartPtr<T>& aVal) {
+decltype(std::declval<SmartPtr<T>>().get()) ArgType(SmartPtr<T>& aVal) {
   return aVal.get();
 }
 

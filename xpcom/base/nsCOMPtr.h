@@ -204,7 +204,7 @@ namespace mozilla {
 // variety of smart pointer types in addition to raw pointers. These types
 // include RefPtr<>, nsCOMPtr<>, and OwningNonNull<>.
 template <class T>
-using PointedToType = std::remove_pointer_t<decltype(&*mozilla::DeclVal<T>())>;
+using PointedToType = std::remove_pointer_t<decltype(&*std::declval<T>())>;
 }  // namespace mozilla
 
 #ifdef NSCAP_FEATURE_USE_BASE
