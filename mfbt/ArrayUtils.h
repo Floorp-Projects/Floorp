@@ -112,7 +112,7 @@ struct AlignedChecker {
 
 template <typename AlignType, typename Pointee>
 struct AlignedChecker<AlignType, Pointee,
-                      std::enable_if_t<IsVoid<AlignType>::value>> {
+                      std::enable_if_t<std::is_void_v<AlignType>>> {
   static void test(const Pointee* aPtr) {}
 };
 
@@ -133,7 +133,7 @@ struct AlignedChecker<AlignType, Pointee,
  */
 template <typename T, typename U>
 inline std::enable_if_t<IsSame<T, U>::value || std::is_base_of<T, U>::value ||
-                            IsVoid<T>::value,
+                            std::is_void_v<T>,
                         bool>
 IsInRange(const T* aPtr, const U* aBegin, const U* aEnd) {
   MOZ_ASSERT(aBegin <= aEnd);
