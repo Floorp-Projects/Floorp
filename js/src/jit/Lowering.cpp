@@ -4789,10 +4789,10 @@ void LIRGenerator::visitObjectWithProto(MObjectWithProto* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitBuiltinProto(MBuiltinProto* ins) {
+void LIRGenerator::visitFunctionProto(MFunctionProto* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
 
-  auto* lir = new (alloc()) LBuiltinProto();
+  auto* lir = new (alloc()) LFunctionProto();
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

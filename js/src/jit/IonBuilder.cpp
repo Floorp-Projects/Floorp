@@ -2402,8 +2402,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::ObjWithProto:
       return jsop_objwithproto();
 
-    case JSOp::BuiltinProto:
-      return jsop_builtinproto();
+    case JSOp::FunctionProto:
+      return jsop_functionproto();
 
     case JSOp::CheckReturn:
       return jsop_checkreturn();
@@ -12765,9 +12765,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_objwithproto() {
   return resumeAfter(ins);
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_builtinproto() {
-  MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
-  JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
+AbortReasonOr<Ok> IonBuilder::jsop_functionproto() {
+  JSProtoKey key = JSProto_Function;
 
   // Bake in the prototype if it exists.
   if (JSObject* proto = script()->global().maybeGetPrototype(key)) {
@@ -12776,7 +12775,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_builtinproto() {
   }
 
   // Otherwise emit code to generate it.
-  auto* ins = MBuiltinProto::New(alloc(), pc);
+  auto* ins = MFunctionProto::New(alloc());
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins);
