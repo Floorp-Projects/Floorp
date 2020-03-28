@@ -5,10 +5,10 @@ add_task(async function file_menu_import_wizard() {
     document.getElementById("menu_importFromAnotherBrowser").doCommand()
   );
 
-  await TestUtils.waitForCondition(
-    () => Services.wm.getMostRecentWindow("Browser:MigrationWizard"),
-    "Migrator window opened"
-  );
+  await TestUtils.waitForCondition(() => {
+    let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
+    return win && win.document && win.document.readyState == "complete";
+  }, "Migrator window loaded");
 
   let migratorWindow = Services.wm.getMostRecentWindow(
     "Browser:MigrationWizard"

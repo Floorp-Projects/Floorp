@@ -89,10 +89,10 @@ add_task(async function test_no_logins_class() {
     // End the test now for Linux since the link is hidden.
     return;
   }
-  await TestUtils.waitForCondition(
-    () => Services.wm.getMostRecentWindow("Browser:MigrationWizard"),
-    "Migrator window opened"
-  );
+  await TestUtils.waitForCondition(() => {
+    let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
+    return win && win.document && win.document.readyState == "complete";
+  }, "Migrator window loaded");
   let migratorWindow = Services.wm.getMostRecentWindow(
     "Browser:MigrationWizard"
   );
