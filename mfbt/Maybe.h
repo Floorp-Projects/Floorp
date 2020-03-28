@@ -85,9 +85,9 @@ struct OutOfLinePoisoner {
 template <typename T>
 inline void PoisonObject(T* p) {
   const uintptr_t POISON = mozPoisonValue();
-  Conditional<(sizeof(T) <= 8 * sizeof(POISON)),
-              InlinePoisoner<0, sizeof(T) / sizeof(POISON)>,
-              OutOfLinePoisoner<sizeof(T)>>::Type::poison(p, POISON);
+  std::conditional_t<(sizeof(T) <= 8 * sizeof(POISON)),
+                     InlinePoisoner<0, sizeof(T) / sizeof(POISON)>,
+                     OutOfLinePoisoner<sizeof(T)>>::poison(p, POISON);
 }
 
 template <typename T>

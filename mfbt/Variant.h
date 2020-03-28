@@ -115,11 +115,11 @@ struct VariantTag {
   static const size_t TypeCount = sizeof...(Ts);
 
  public:
-  using Type = typename Conditional < TypeCount < 3, bool,
-        typename Conditional<TypeCount<(1 << 8), uint_fast8_t,
-                                       size_t  // stop caring past a certain
-                                               // point :-)
-                                       >::Type>::Type;
+  using Type = std::conditional_t < TypeCount < 3, bool,
+        std::conditional_t<TypeCount<(1 << 8), uint_fast8_t,
+                                     size_t  // stop caring past a certain
+                                             // point :-)
+                                     >>;
 };
 
 // TagHelper gets the given sentinel tag value for the given type T. This has to

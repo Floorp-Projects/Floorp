@@ -75,8 +75,6 @@ template <class T>
 using remove_cv_t = typename mozilla::RemoveCV<T>::Type;
 template <class T>
 using remove_const_t = typename mozilla::RemoveConst<T>::Type;
-template <bool B, class T, class F>
-using conditional_t = typename mozilla::Conditional<B, T, F>::Type;
 template <bool B, class T = void>
 using enable_if_t = typename mozilla::EnableIf<B, T>::Type;
 
@@ -120,7 +118,8 @@ class span_iterator {
   using value_type = remove_const_t<element_type_>;
   using difference_type = typename Span::index_type;
 
-  using reference = conditional_t<IsConst, const element_type_, element_type_>&;
+  using reference =
+      std::conditional_t<IsConst, const element_type_, element_type_>&;
   using pointer = std::add_pointer_t<reference>;
 
   constexpr span_iterator() : span_iterator(nullptr, 0) {}
