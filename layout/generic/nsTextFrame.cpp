@@ -73,6 +73,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <type_traits>
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
 #endif
@@ -2784,7 +2785,7 @@ static bool MayCharacterHaveEmphasisMark(uint32_t aCh) {
   // Comparing an unsigned variable against zero is a compile error,
   // so we use static assert here to ensure we really don't need to
   // compare it with the given constant.
-  static_assert(IsUnsigned<decltype(category)>::value &&
+  static_assert(std::is_unsigned_v<decltype(category)> &&
                     HB_UNICODE_GENERAL_CATEGORY_CONTROL == 0,
                 "if this constant is not zero, or category is signed, "
                 "we need to explicitly do the comparison below");
