@@ -90,11 +90,32 @@ static WritableStream* GetUnwrappedDest(JSContext* cx,
   return UnwrapStreamFromWriter(cx, writer);
 }
 
+// Shutdown with an action: if any of the above requirements ask to shutdown
+// with an action action, optionally with an error originalError, then:
 static MOZ_MUST_USE bool ShutdownWithAction(
     JSContext* cx, Handle<PipeToState*> state, Action action,
     Handle<Maybe<Value>> originalError) {
   cx->check(state);
   cx->check(originalError);
+
+  // Step a: If shuttingDown is true, abort these substeps.
+  if (state->shuttingDown()) {
+    return true;
+  }
+
+  // Step b: Set shuttingDown to true.
+  state->setShuttingDown();
+
+  // Step c: If dest.[[state]] is "writable" and
+  //         ! WritableStreamCloseQueuedOrInFlight(dest) is false,
+  // Step c.i:  If any chunks have been read but not yet written, write them to
+  //            dest.
+  // Step c.ii: Wait until every chunk that has been read has been written (i.e.
+  //            the corresponding promises have settled).
+  // Step d: Let p be the result of performing action.
+  // Step e: Upon fulfillment of p, finalize, passing along originalError if it
+  //         was given.
+  // Step f: Upon rejection of p with reason newError, finalize with newError.
 
   // XXX fill me in!
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -103,10 +124,28 @@ static MOZ_MUST_USE bool ShutdownWithAction(
   return false;
 }
 
+// Shutdown: if any of the above requirements or steps ask to shutdown,
+// optionally with an error error, then:
 static MOZ_MUST_USE bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
                                   Handle<Maybe<Value>> error) {
   cx->check(state);
   cx->check(error);
+
+  // Step a: If shuttingDown is true, abort these substeps.
+  if (state->shuttingDown()) {
+    return true;
+  }
+
+  // Step b: Set shuttingDown to true.
+  state->setShuttingDown();
+
+  // Step c: If dest.[[state]] is "writable" and
+  //         ! WritableStreamCloseQueuedOrInFlight(dest) is false,
+  // Step c.i:  If any chunks have been read but not yet written, write them to
+  //            dest.
+  // Step c.ii: Wait until every chunk that has been read has been written (i.e.
+  //            the corresponding promises have settled).
+  // Step d: Finalize, passing along error if it was given.
 
   // XXX fill me in!
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
