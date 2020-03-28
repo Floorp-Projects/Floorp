@@ -28,6 +28,7 @@
 #include "mozilla/TypeTraits.h"
 
 #include <limits.h>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -38,7 +39,7 @@ struct WrapToSignedHelper {
   static_assert(mozilla::IsUnsigned<UnsignedType>::value,
                 "WrapToSigned must be passed an unsigned type");
 
-  using SignedType = typename mozilla::MakeSigned<UnsignedType>::Type;
+  using SignedType = std::make_signed_t<UnsignedType>;
 
   static constexpr SignedType MaxValue =
       (UnsignedType(1) << (CHAR_BIT * sizeof(SignedType) - 1)) - 1;
