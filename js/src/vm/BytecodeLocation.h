@@ -10,6 +10,9 @@
 #include "frontend/NameAnalysisTypes.h"
 #include "js/TypeDecls.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/CheckIsCallableKind.h"  // CheckIsCallableKind
+#include "vm/CheckIsObjectKind.h"    // CheckIsObjectKind
+#include "vm/FunctionPrefixKind.h"   // FunctionPrefixKind
 #include "vm/StringType.h"
 
 namespace js {
@@ -18,11 +21,6 @@ using RawBytecodeLocationOffset = uint32_t;
 
 class PropertyName;
 class RegExpObject;
-
-enum class FunctionPrefixKind;
-
-enum class CheckIsObjectKind : uint8_t;
-enum class CheckIsCallableKind : uint8_t;
 
 class BytecodeLocationOffset {
   RawBytecodeLocationOffset rawOffset_;

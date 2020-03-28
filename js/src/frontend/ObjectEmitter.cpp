@@ -15,6 +15,7 @@
 #include "js/Id.h"                     // jsid
 #include "js/Value.h"                  // UndefinedHandleValue
 #include "vm/BytecodeUtil.h"           // IsHiddenInitOp
+#include "vm/FunctionPrefixKind.h"     // FunctionPrefixKind
 #include "vm/JSContext.h"              // JSContext
 #include "vm/NativeObject.h"           // NativeDefineDataProperty
 #include "vm/ObjectGroup.h"            // TenuredObject

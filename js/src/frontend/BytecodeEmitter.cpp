@@ -57,15 +57,17 @@
 #include "frontend/TryEmitter.h"     // TryEmitter
 #include "frontend/WhileEmitter.h"   // WhileEmitter
 #include "js/CompileOptions.h"       // TransitiveCompileOptions, CompileOptions
-#include "vm/AsyncFunction.h"        // AsyncFunctionResolveKind
-#include "vm/BytecodeUtil.h"  // IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
-#include "vm/GeneratorObject.h"  // AbstractGeneratorObject
-#include "vm/JSAtom.h"           // JSAtom, js_*_str
-#include "vm/JSContext.h"        // JSContext
-#include "vm/JSFunction.h"       // FunctionPrefixKind, JSFunction,
-#include "vm/JSScript.h"  // JSScript, ScopeNote, ScriptSourceObject, FieldInitializers, BaseScript
-#include "vm/Opcodes.h"  // JSOp, JSOpLength_*
-#include "wasm/AsmJS.h"  // IsAsmJSModule
+#include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
+#include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
+#include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
+#include "vm/GeneratorObject.h"     // AbstractGeneratorObject
+#include "vm/JSAtom.h"              // JSAtom, js_*_str
+#include "vm/JSContext.h"           // JSContext
+#include "vm/JSFunction.h"          // JSFunction,
+#include "vm/JSScript.h"  // JSScript, ScriptSourceObject, FieldInitializers, BaseScript
+#include "vm/Opcodes.h"        // JSOp, JSOpLength_*
+#include "vm/SharedStencil.h"  // ScopeNote
+#include "wasm/AsmJS.h"        // IsAsmJSModule
 
 #include "vm/JSObject-inl.h"  // JSObject
 
