@@ -36,7 +36,7 @@ namespace detail {
 
 template <typename UnsignedType>
 struct WrapToSignedHelper {
-  static_assert(mozilla::IsUnsigned<UnsignedType>::value,
+  static_assert(std::is_unsigned_v<UnsignedType>,
                 "WrapToSigned must be passed an unsigned type");
 
   using SignedType = std::make_signed_t<UnsignedType>;

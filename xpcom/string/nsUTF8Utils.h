@@ -10,6 +10,8 @@
 // file will provide signatures for the Mozilla abstract string types. It will
 // use XPCOM assertion/debugging macros, etc.
 
+#include <type_traits>
+
 #include "nscore.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
@@ -234,8 +236,7 @@ inline UnsignedT RewindToPriorUTF8Codepoint(const Char* utf8Chars,
                     mozilla::IsSame<Char, unsigned char>::value ||
                     mozilla::IsSame<Char, signed char>::value,
                 "UTF-8 data must be in 8-bit units");
-  static_assert(mozilla::IsUnsigned<UnsignedT>::value,
-                "index type must be unsigned");
+  static_assert(std::is_unsigned_v<UnsignedT>, "index type must be unsigned");
   while (index > 0 && (utf8Chars[index] & 0xC0) == 0x80) --index;
 
   return index;

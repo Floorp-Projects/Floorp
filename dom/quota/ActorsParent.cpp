@@ -23,6 +23,7 @@
 #include "nsPIDOMWindow.h"
 
 #include <algorithm>
+#include <type_traits>
 #include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/AutoRestore.h"
@@ -1770,7 +1771,7 @@ class PrincipalVerifier final : public Runnable {
  * Helper Functions
  ******************************************************************************/
 
-template <typename T, bool = mozilla::IsUnsigned<T>::value>
+template <typename T, bool = std::is_unsigned_v<T>>
 struct IntChecker {
   static void Assert(T aInt) {
     static_assert(mozilla::IsIntegral<T>::value, "Not an integer!");
