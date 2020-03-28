@@ -17,14 +17,20 @@
 
 #include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
-#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool
+#include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStreamDefaultReader
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
-#include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter
+#include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter, js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
+#include "js/CallArgs.h"       // JS::CallArgsFromVp, JS::CallArgs
 #include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
+#include "js/Promise.h"        // JS::AddPromiseReactions
 #include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
+#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
+#include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream, js::UnwrapStreamFromReader
+#include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
+#include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
 #include "vm/JSContext-inl.h"  // JSContext::check
 #include "vm/JSObject-inl.h"   // js::NewBuiltinClassInstance
 
@@ -32,6 +38,8 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
+using JS::CallArgs;
+using JS::CallArgsFromVp;
 using JS::Handle;
 using JS::Int32Value;
 using JS::ObjectValue;
@@ -39,9 +47,16 @@ using JS::Rooted;
 using JS::Value;
 
 using js::GetErrorMessage;
+using js::NewHandler;
 using js::PipeToState;
 using js::ReadableStream;
+using js::ReadableStreamDefaultReader;
+using js::TargetFromHandler;
+using js::UnwrapReaderFromStream;
+using js::UnwrapStreamFromWriter;
+using js::UnwrapWriterFromStream;
 using js::WritableStream;
+using js::WritableStreamDefaultWriter;
 
 // This typedef is undoubtedly not the right one for the long run, but it's
 // enough to be placeholder for now.
@@ -53,6 +68,26 @@ static MOZ_MUST_USE bool DummyAction(JSContext* cx,
                             JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,
                             "pipeTo dummy action");
   return false;
+}
+
+static ReadableStream* GetUnwrappedSource(JSContext* cx,
+                                          Handle<PipeToState*> state) {
+  cx->check(state);
+
+  Rooted<ReadableStreamDefaultReader*> reader(cx, state->reader());
+  cx->check(reader);
+
+  return UnwrapStreamFromReader(cx, reader);
+}
+
+static WritableStream* GetUnwrappedDest(JSContext* cx,
+                                        Handle<PipeToState*> state) {
+  cx->check(state);
+
+  Rooted<WritableStreamDefaultWriter*> writer(cx, state->writer());
+  cx->check(writer);
+
+  return UnwrapStreamFromWriter(cx, writer);
 }
 
 static MOZ_MUST_USE bool ShutdownWithAction(
@@ -275,11 +310,94 @@ static MOZ_MUST_USE bool CanPipeStreams(JSContext* cx,
   return true;
 }
 
+static MOZ_MUST_USE bool OnSourceClosed(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+  cx->check(state);
+
+  if (!OnSourceClosed(cx, state)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static MOZ_MUST_USE bool OnSourceErrored(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+  cx->check(state);
+
+  Rooted<ReadableStream*> unwrappedSource(cx, GetUnwrappedSource(cx, state));
+  if (!unwrappedSource) {
+    return false;
+  }
+
+  if (!OnSourceErrored(cx, state, unwrappedSource)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static MOZ_MUST_USE bool OnDestClosed(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+  cx->check(state);
+
+  if (!OnDestClosed(cx, state)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static MOZ_MUST_USE bool OnDestErrored(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
+  cx->check(state);
+
+  Rooted<WritableStream*> unwrappedDest(cx, GetUnwrappedDest(cx, state));
+  if (!unwrappedDest) {
+    return false;
+  }
+
+  if (!OnDestErrored(cx, state, unwrappedDest)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+template <class StreamAccessor, class Stream>
+static inline JSObject* GetClosedPromise(
+    JSContext* cx, Handle<Stream*> unwrappedStream,
+    StreamAccessor* (&unwrapAccessorFromStream)(JSContext*, Handle<Stream*>)) {
+  StreamAccessor* unwrappedAccessor =
+      unwrapAccessorFromStream(cx, unwrappedStream);
+  if (!unwrappedAccessor) {
+    return nullptr;
+  }
+
+  return unwrappedAccessor->closedPromise();
+}
+
 static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
                                      Handle<ReadableStream*> unwrappedSource,
                                      Handle<WritableStream*> unwrappedDest) {
   cx->check(state);
 
+  // Initially, check for source/dest closed or in error manually.
   bool shouldStart;
   if (!CanPipeStreams(cx, state, unwrappedSource, unwrappedDest,
                       &shouldStart)) {
@@ -287,6 +405,50 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
   }
   if (!shouldStart) {
     return true;
+  }
+
+  // After this point, react to source/dest closing or erroring as it happens.
+  {
+    Rooted<JSObject*> unwrappedClosedPromise(cx);
+    Rooted<JSObject*> onClosed(cx);
+    Rooted<JSObject*> onErrored(cx);
+
+    auto ReactWhenClosedOrErrored =
+        [&unwrappedClosedPromise, &onClosed, &onErrored, &state](
+            JSContext* cx, JSNative onClosedFunc, JSNative onErroredFunc) {
+          onClosed = NewHandler(cx, onClosedFunc, state);
+          if (!onClosed) {
+            return false;
+          }
+
+          onErrored = NewHandler(cx, onErroredFunc, state);
+          if (!onErrored) {
+            return false;
+          }
+
+          return JS::AddPromiseReactions(cx, unwrappedClosedPromise, onClosed,
+                                         onErrored);
+        };
+
+    unwrappedClosedPromise =
+        GetClosedPromise(cx, unwrappedSource, UnwrapReaderFromStream);
+    if (!unwrappedClosedPromise) {
+      return false;
+    }
+
+    if (!ReactWhenClosedOrErrored(cx, OnSourceClosed, OnSourceErrored)) {
+      return false;
+    }
+
+    unwrappedClosedPromise =
+        GetClosedPromise(cx, unwrappedDest, UnwrapWriterFromStream);
+    if (!unwrappedClosedPromise) {
+      return false;
+    }
+
+    if (!ReactWhenClosedOrErrored(cx, OnDestClosed, OnDestErrored)) {
+      return false;
+    }
   }
 
   // XXX Operations extending beyond preconditions are not yet implemented.
