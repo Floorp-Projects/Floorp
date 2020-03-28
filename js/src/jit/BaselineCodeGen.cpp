@@ -4744,7 +4744,7 @@ bool BaselineCodeGen<Handler>::emit_TypeofExpr() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_ThrowMsg() {
   prepareVMCall();
-  pushUint16BytecodeOperandArg(R2.scratchReg());
+  pushUint8BytecodeOperandArg(R2.scratchReg());
 
   using Fn = bool (*)(JSContext*, const unsigned);
   return callVM<Fn, js::ThrowMsgOperation>();

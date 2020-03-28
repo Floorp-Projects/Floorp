@@ -67,6 +67,7 @@
 #include "vm/JSScript.h"  // JSScript, ScriptSourceObject, FieldInitializers, BaseScript
 #include "vm/Opcodes.h"        // JSOp, JSOpLength_*
 #include "vm/SharedStencil.h"  // ScopeNote
+#include "vm/ThrowMsgKind.h"   // ThrowMsgKind
 #include "wasm/AsmJS.h"        // IsAsmJSModule
 
 #include "vm/JSObject-inl.h"  // JSObject
@@ -1945,7 +1946,7 @@ bool BytecodeEmitter::emitCallIncDec(UnaryNode* incDec) {
 
   // The increment/decrement has no side effects, so proceed to throw for
   // invalid assignment target.
-  return emitUint16Operand(JSOp::ThrowMsg, JSMSG_ASSIGN_TO_CALL);
+  return emit2(JSOp::ThrowMsg, uint8_t(ThrowMsgKind::AssignToCall));
 }
 
 bool BytecodeEmitter::emitDouble(double d) {
@@ -4204,7 +4205,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
 
       // Assignment to function calls is forbidden, but we have to make the
       // call first.  Now we can throw.
-      if (!emitUint16Operand(JSOp::ThrowMsg, JSMSG_ASSIGN_TO_CALL)) {
+      if (!emit2(JSOp::ThrowMsg, uint8_t(ThrowMsgKind::AssignToCall))) {
         return false;
       }
 
@@ -6230,7 +6231,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
       return false;
     }
     // Steps 7.b.iii.5-6.
-    if (!emitUint16Operand(JSOp::ThrowMsg, JSMSG_ITERATOR_NO_THROW)) {
+    if (!emit2(JSOp::ThrowMsg, uint8_t(ThrowMsgKind::IteratorNoThrow))) {
       //            [stack] NEXT ITER RECEIVED ITER
       //            [stack] # throw
       return false;

@@ -2394,10 +2394,10 @@
      *
      *   Category: Control flow
      *   Type: Exceptions
-     *   Operands: uint16_t msgNumber
+     *   Operands: ThrowMsgKind msgNumber
      *   Stack: =>
      */ \
-    MACRO(ThrowMsg, throw_msg, NULL, 3, 0, 0, JOF_UINT16) \
+    MACRO(ThrowMsg, throw_msg, NULL, 2, 0, 0, JOF_UINT8) \
     /*
      * Throws a runtime TypeError for invalid assignment to a `const` binding.
      *
