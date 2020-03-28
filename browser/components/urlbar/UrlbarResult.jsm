@@ -19,6 +19,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  JsonSchemaValidator:
+    "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -72,7 +74,7 @@ class UrlbarResult {
     if (!payload || typeof payload != "object") {
       throw new Error("Invalid result payload");
     }
-    this.payload = payload;
+    this.payload = this.validatePayload(payload);
 
     if (!payloadHighlights || typeof payloadHighlights != "object") {
       throw new Error("Invalid result payload highlights");
@@ -140,6 +142,28 @@ class UrlbarResult {
    */
   get icon() {
     return this.payload.icon;
+  }
+
+  /**
+   * Returns the given payload if it's valid or throws an error if it's not.
+   * The schemas in UrlbarUtils.RESULT_PAYLOAD_SCHEMA are used for validation.
+   *
+   * @param {object} payload The payload object.
+   * @returns {object} `payload` if it's valid.
+   */
+  validatePayload(payload) {
+    let schema = UrlbarUtils.getPayloadSchema(this.type);
+    if (!schema) {
+      throw new Error(`Unrecognized result type: ${this.type}`);
+    }
+    let result = JsonSchemaValidator.validate(payload, schema, {
+      allowExplicitUndefinedProperties: true,
+      allowNullAsUndefinedProperties: true,
+    });
+    if (!result.valid) {
+      throw result.error;
+    }
+    return payload;
   }
 
   /**

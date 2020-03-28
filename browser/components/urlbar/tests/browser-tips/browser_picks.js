@@ -115,7 +115,7 @@ add_task(async function mouse_insideTipButNotOnButtons() {
  *   Pass a URL if you want to pick the help button.  Pass nothing if you want
  *   to pick the main button instead.
  */
-async function doTest({ click, buttonUrl = null, helpUrl = null }) {
+async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   // Open a new tab for the test if we expect to load a URL.
   let tab;
   if (buttonUrl || helpUrl) {

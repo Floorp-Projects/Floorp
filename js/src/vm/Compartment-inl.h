@@ -107,6 +107,15 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
   return true;
 }
 
+inline bool JS::Compartment::wrap(JSContext* cx,
+                                  MutableHandle<mozilla::Maybe<Value>> vp) {
+  if (vp.get().isNothing()) {
+    return true;
+  }
+
+  return wrap(cx, MutableHandle<Value>::fromMarkedLocation(vp.get().ptr()));
+}
+
 namespace js {
 namespace detail {
 

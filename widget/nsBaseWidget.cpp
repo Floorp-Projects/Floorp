@@ -923,10 +923,10 @@ void nsBaseWidget::ConfigureAPZControllerThread() {
 
 void nsBaseWidget::SetConfirmedTargetAPZC(
     uint64_t aInputBlockId,
-    const nsTArray<SLGuidAndRenderRoot>& aTargets) const {
+    const nsTArray<ScrollableLayerGuid>& aTargets) const {
   APZThreadUtils::RunOnControllerThread(
       NewRunnableMethod<uint64_t,
-                        StoreCopyPassByRRef<nsTArray<SLGuidAndRenderRoot>>>(
+                        StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
           "layers::IAPZCTreeManager::SetTargetAPZC", mAPZC,
           &IAPZCTreeManager::SetTargetAPZC, aInputBlockId, aTargets));
 }
@@ -953,9 +953,7 @@ void nsBaseWidget::UpdateZoomConstraints(
   }
   LayersId layersId = mCompositorSession->RootLayerTreeId();
   mAPZC->UpdateZoomConstraints(
-      SLGuidAndRenderRoot(layersId, aPresShellId, aViewId,
-                          wr::RenderRoot::Default),
-      aConstraints);
+      ScrollableLayerGuid(layersId, aPresShellId, aViewId), aConstraints);
 }
 
 bool nsBaseWidget::AsyncPanZoomEnabled() const { return !!mAPZC; }
@@ -1786,12 +1784,10 @@ void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
   }
   LayersId layerId = mCompositorSession->RootLayerTreeId();
   APZThreadUtils::RunOnControllerThread(
-      NewRunnableMethod<SLGuidAndRenderRoot, CSSRect, uint32_t>(
+      NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
           "layers::IAPZCTreeManager::ZoomToRect", mAPZC,
           &IAPZCTreeManager::ZoomToRect,
-          SLGuidAndRenderRoot(layerId, aPresShellId, aViewId,
-                              wr::RenderRoot::Default),
-          aRect, aFlags));
+          ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags));
 }
 
 #ifdef ACCESSIBILITY
@@ -1829,23 +1825,23 @@ void nsBaseWidget::StartAsyncScrollbarDrag(
   MOZ_ASSERT(XRE_IsParentProcess() && mCompositorSession);
 
   LayersId layersId = mCompositorSession->RootLayerTreeId();
-  SLGuidAndRenderRoot guid(layersId, aDragMetrics.mPresShellId,
-                           aDragMetrics.mViewId, wr::RenderRoot::Default);
+  ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId,
+                           aDragMetrics.mViewId);
 
   APZThreadUtils::RunOnControllerThread(
-      NewRunnableMethod<SLGuidAndRenderRoot, AsyncDragMetrics>(
+      NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
           "layers::IAPZCTreeManager::StartScrollbarDrag", mAPZC,
           &IAPZCTreeManager::StartScrollbarDrag, guid, aDragMetrics));
 }
 
 bool nsBaseWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
-                                        const SLGuidAndRenderRoot& aGuid) {
+                                        const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
 
   return mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
 }
 
-void nsBaseWidget::StopAsyncAutoscroll(const SLGuidAndRenderRoot& aGuid) {
+void nsBaseWidget::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
 
   mAPZC->StopAutoscroll(aGuid);

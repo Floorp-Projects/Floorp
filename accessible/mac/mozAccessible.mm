@@ -10,6 +10,7 @@
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
+#include "xpcAccessibleMacInterface.h"
 #include "nsIPersistentProperties2.h"
 #include "DocAccessibleParent.h"
 #include "Relation.h"
@@ -20,6 +21,7 @@
 #include "mozilla/a11y/PDocAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "OuterDocAccessible.h"
+#include "nsChildView.h"
 
 #include "nsRect.h"
 #include "nsCocoaUtils.h"
@@ -144,6 +146,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   NSMutableArray* additional = [NSMutableArray array];
   [additional addObject:NSAccessibilityDOMIdentifierAttribute];
   switch (mRole) {
+    case roles::SUMMARY:
+      [additional addObject:NSAccessibilityExpandedAttribute];
+      break;
     case roles::MATHML_ROOT:
       [additional addObject:NSAccessibilityMathRootIndexAttribute];
       [additional addObject:NSAccessibilityMathRootRadicandAttribute];
@@ -265,6 +270,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 #endif
 
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) return [self children];
+  if ([attribute isEqualToString:NSAccessibilityExpandedAttribute]) {
+    return [NSNumber numberWithBool:([self state] & states::EXPANDED) != 0];
+  }
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) return [self parent];
 
 #ifdef DEBUG_hakan
@@ -518,8 +526,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // action, it will be first in the list. We append other
   // actions here to maintain that invariant.
   [actions addObject:NSAccessibilityScrollToVisibleAction];
-  // XXX(morgan): we should implement `show menu` as
-  // an "always performable" action. See bug 1623402.
+  [actions addObject:NSAccessibilityShowMenuAction];
 
   return actions;
 }
@@ -584,6 +591,28 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     } else if (proxy) {
       proxy->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
     }
+  } else if ([action isEqualToString:NSAccessibilityShowMenuAction]) {
+    DesktopIntRect geckoRect;
+    id objOrView = nil;
+    if (accWrap) {
+      geckoRect = DesktopIntRect::FromUnknownRect(accWrap->Bounds());
+      objOrView =
+          GetObjectOrRepresentedView(GetNativeFromGeckoAccessible(accWrap->RootAccessible()));
+    } else if (proxy) {
+      geckoRect = DesktopIntRect::FromUnknownRect(proxy->Bounds());
+      objOrView = GetObjectOrRepresentedView(
+          GetNativeFromGeckoAccessible(proxy->OuterDocOfRemoteBrowser()->RootAccessible()));
+    }
+
+    NSRect cocoaRect =
+        NSMakeRect(geckoRect.x, geckoRect.YMost(), geckoRect.width, geckoRect.height);
+    LayoutDeviceIntPoint p =
+        LayoutDeviceIntPoint(NSToIntRound(NSMidX(cocoaRect)), NSToIntRound(NSMidY(cocoaRect)));
+    nsIWidget* widget = [objOrView widget];
+    // XXX: NSRightMouseDown is depreciated in 10.12, should be
+    // changed to NSEventTypeRightMouseDown after refactoring.
+    widget->SynthesizeNativeMouseEvent(p, NSRightMouseDown, 0, nullptr);
+
   } else {
     if (accWrap) {
       accWrap->DoAction(0);
@@ -979,6 +1008,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
     {@"AXApplicationTimer", NS_LITERAL_STRING("timer")},
     {@"AXContentSeparator", NS_LITERAL_STRING("separator")},
     {@"AXDefinition", NS_LITERAL_STRING("definition")},
+    {@"AXDetails", NS_LITERAL_STRING("details")},
     {@"AXDocument", NS_LITERAL_STRING("document")},
     {@"AXDocumentArticle", NS_LITERAL_STRING("article")},
     {@"AXDocumentMath", NS_LITERAL_STRING("math")},
@@ -992,6 +1022,7 @@ static const RoleDescrMap sRoleDescrMap[] = {
     {@"AXLandmarkRegion", NS_LITERAL_STRING("region")},
     {@"AXLandmarkSearch", NS_LITERAL_STRING("search")},
     {@"AXSearchField", NS_LITERAL_STRING("searchTextField")},
+    {@"AXSummary", NS_LITERAL_STRING("summary")},
     {@"AXTabPanel", NS_LITERAL_STRING("tabPanel")},
     {@"AXTerm", NS_LITERAL_STRING("term")},
     {@"AXUserInterfaceTooltip", NS_LITERAL_STRING("tooltip")}};
@@ -1057,39 +1088,6 @@ struct RoleDescrComparator {
   return nsCocoaUtils::ToNSString(value);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (void)valueDidChange {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-#ifdef DEBUG_hakan
-  NSLog(@"%@'s value changed!", self);
-#endif
-  // sending out a notification is expensive, so we don't do it other than for really important
-  // objects, like mozTextAccessible.
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)selectedTextDidChange {
-  // Do nothing. mozTextAccessible will.
-}
-
-- (void)documentLoadComplete {
-  id realSelf = GetObjectOrRepresentedView(self);
-  NSAccessibilityPostNotification(realSelf, NSAccessibilityFocusedUIElementChangedNotification);
-  NSAccessibilityPostNotification(realSelf, @"AXLoadComplete");
-  NSAccessibilityPostNotification(realSelf, @"AXLayoutComplete");
-}
-
-- (void)menuOpened {
-  id realSelf = GetObjectOrRepresentedView(self);
-  NSAccessibilityPostNotification(realSelf, @"AXMenuOpened");
-}
-
-- (void)menuClosed {
-  id realSelf = GetObjectOrRepresentedView(self);
-  NSAccessibilityPostNotification(realSelf, @"AXMenuClosed");
 }
 
 - (NSString*)help {
@@ -1162,28 +1160,41 @@ struct RoleDescrComparator {
   return (([self state] & states::UNAVAILABLE) == 0);
 }
 
-// The root accessible calls this when the focused node was
-// changed to us.
-- (void)didReceiveFocus {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-#ifdef DEBUG_hakan
-  NSLog(@"%@ received focus!", self);
-#endif
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilityFocusedUIElementChangedNotification);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+- (void)firePlatformEvent:(uint32_t)eventType {
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      [self postNotification:NSAccessibilityFocusedUIElementChangedNotification];
+      break;
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
+      [self postNotification:NSAccessibilityFocusedUIElementChangedNotification];
+      [self postNotification:@"AXLoadComplete"];
+      [self postNotification:@"AXLayoutComplete"];
+      break;
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+      [self postNotification:@"AXMenuOpened"];
+      break;
+    case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
+      [self postNotification:@"AXMenuClosed"];
+      break;
+    case nsIAccessibleEvent::EVENT_SELECTION:
+    case nsIAccessibleEvent::EVENT_SELECTION_ADD:
+    case nsIAccessibleEvent::EVENT_SELECTION_REMOVE:
+      [self postNotification:NSAccessibilitySelectedChildrenChangedNotification];
+      break;
+  }
 }
 
-- (void)selectionDidChange {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+- (void)postNotification:(NSString*)notification {
+  // This sends events via nsIObserverService to be consumed by our mochitests.
+  xpcAccessibleMacInterface::FireEvent(self, notification);
 
-  // One of our selected children changed.
-  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self),
-                                  NSAccessibilitySelectedChildrenChangedNotification);
+  if (gfxPlatform::IsHeadless()) {
+    // Using a headless toolkit for tests and whatnot, posting accessibility
+    // notification won't work.
+    return;
+  }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NSAccessibilityPostNotification(GetObjectOrRepresentedView(self), notification);
 }
 
 - (NSWindow*)window {
@@ -1236,7 +1247,7 @@ struct RoleDescrComparator {
 
   mGeckoAccessible = 0;
 
-  NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
+  [self postNotification:NSAccessibilityUIElementDestroyedNotification];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

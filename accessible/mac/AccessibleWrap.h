@@ -53,6 +53,8 @@ class AccessibleWrap : public Accessible {
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 
  protected:
+  friend class xpcAccessibleMacInterface;
+
   /**
    * Return true if the parent doesn't have children to expose to AT.
    */
@@ -87,12 +89,6 @@ class AccessibleWrap : public Accessible {
    */
   bool mNativeInited;
 };
-
-#if defined(__OBJC__)
-void FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType);
-#else
-void FireNativeEvent(id aNativeAcc, uint32_t aEventType);
-#endif
 
 Class GetTypeFromRole(roles::Role aRole);
 

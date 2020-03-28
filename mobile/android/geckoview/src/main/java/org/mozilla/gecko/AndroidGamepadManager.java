@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.GamepadUtils;
@@ -16,7 +15,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.hardware.input.InputManager;
-import android.os.Build;
 import android.util.SparseArray;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -147,7 +145,7 @@ public class AndroidGamepadManager {
 
     @WrapForJNI
     private static void start(final Context context) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 doStart(context);
@@ -166,7 +164,7 @@ public class AndroidGamepadManager {
 
     @WrapForJNI
     private static void stop(final Context context) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 doStop(context);
@@ -186,7 +184,7 @@ public class AndroidGamepadManager {
 
     @WrapForJNI
     private static void onGamepadAdded(final int deviceId, final int serviceId) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 handleGamepadAdded(deviceId, serviceId);
@@ -363,67 +361,44 @@ public class AndroidGamepadManager {
     }
 
     private static void addDeviceListener(final Context context) {
-        if (Build.VERSION.SDK_INT < 16) {
-            // Poll known gamepads to see if they've disappeared.
-            sPollTimer = new Timer();
-            sPollTimer.scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        for (int i = 0; i < sGamepads.size(); ++i) {
-                            final int deviceId = sGamepads.keyAt(i);
-                            if (InputDevice.getDevice(deviceId) == null) {
-                                removeGamepad(deviceId);
-                            }
-                        }
-                    }
-                }, POLL_TIMER_PERIOD, POLL_TIMER_PERIOD);
-        } else {
-            sListener = new InputManager.InputDeviceListener() {
-                @Override
-                public void onInputDeviceAdded(final int deviceId) {
-                    InputDevice device = InputDevice.getDevice(deviceId);
-                    if (device == null) {
-                        return;
-                    }
-                    if ((device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
-                        addGamepad(device);
-                    }
+        sListener = new InputManager.InputDeviceListener() {
+            @Override
+            public void onInputDeviceAdded(final int deviceId) {
+                InputDevice device = InputDevice.getDevice(deviceId);
+                if (device == null) {
+                    return;
                 }
+                if ((device.getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+                    addGamepad(device);
+                }
+            }
 
-                @Override
-                public void onInputDeviceRemoved(final int deviceId) {
-                    if (sPendingGamepads.get(deviceId) != null) {
-                        // Got removed before Gecko's ack reached us.
-                        // gamepadAdded will deal with it.
-                        sPendingGamepads.remove(deviceId);
-                        return;
-                    }
-                    if (sGamepads.get(deviceId) != null) {
-                        removeGamepad(deviceId);
-                    }
+            @Override
+            public void onInputDeviceRemoved(final int deviceId) {
+                if (sPendingGamepads.get(deviceId) != null) {
+                    // Got removed before Gecko's ack reached us.
+                    // gamepadAdded will deal with it.
+                    sPendingGamepads.remove(deviceId);
+                    return;
                 }
+                if (sGamepads.get(deviceId) != null) {
+                    removeGamepad(deviceId);
+                }
+            }
 
-                @Override
-                public void onInputDeviceChanged(final int deviceId) {
-                }
-            };
-            final InputManager im = (InputManager)
-                    context.getSystemService(Context.INPUT_SERVICE);
-            im.registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
-        }
+            @Override
+            public void onInputDeviceChanged(final int deviceId) {
+            }
+        };
+        final InputManager im = (InputManager)
+                context.getSystemService(Context.INPUT_SERVICE);
+        im.registerInputDeviceListener(sListener, ThreadUtils.getUiHandler());
     }
 
     private static void removeDeviceListener(final Context context) {
-        if (Build.VERSION.SDK_INT < 16) {
-            if (sPollTimer != null) {
-                sPollTimer.cancel();
-                sPollTimer = null;
-            }
-        } else {
-            final InputManager im = (InputManager)
-                    context.getSystemService(Context.INPUT_SERVICE);
-            im.unregisterInputDeviceListener(sListener);
-            sListener = null;
-        }
+        final InputManager im = (InputManager)
+                context.getSystemService(Context.INPUT_SERVICE);
+        im.unregisterInputDeviceListener(sListener);
+        sListener = null;
     }
 }

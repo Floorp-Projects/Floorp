@@ -360,7 +360,7 @@ impl Device {
         // TODO: should we assert no bytes were read?
 
         debug!("execute_host_command: >> {:?}", &command);
-        stream.write_all(encode_message(command)?.as_bytes())?;
+        stream.write_all(encode_message(&command)?.as_bytes())?;
         let bytes = read_response(&mut stream, has_output, has_length)?;
 
         let response = std::str::from_utf8(&bytes)?;
@@ -410,8 +410,8 @@ impl Device {
     }
 
     pub fn forward_port(&self, local: u16, remote: u16) -> Result<u16> {
-        let command = format!("forward:tcp:{};tcp:{}", local, remote);
-        let response = self.host.execute_host_command(&command, true, false)?;
+        let command = format!("host-serial:{}:forward:tcp:{};tcp:{}", self.serial, local, remote);
+        let response = self.host.execute_command(&command, true, false)?;
 
         if local == 0 {
             Ok(response.parse::<u16>()?)
@@ -422,14 +422,12 @@ impl Device {
 
     pub fn kill_forward_port(&self, local: u16) -> Result<()> {
         let command = format!("killforward:tcp:{}", local);
-        self.host
-            .execute_host_command(&command, true, false)
+        self.execute_host_command(&command, true, false)
             .and(Ok(()))
     }
 
     pub fn kill_forward_all_ports(&self) -> Result<()> {
-        self.host
-            .execute_host_command(&"killforward-all".to_owned(), false, false)
+        self.execute_host_command(&"killforward-all".to_owned(), false, false)
             .and(Ok(()))
     }
 

@@ -8,9 +8,10 @@
 #define GFX_DISPLAY_ITEM_CACHE_H
 
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/Maybe.h"
 #include "nsTArray.h"
 
+class nsDisplayList;
+class nsDisplayListBuilder;
 class nsPaintedDisplayItem;
 
 namespace mozilla {
@@ -65,6 +66,28 @@ class DisplayItemCache final {
   DisplayItemCache();
 
   /**
+   * Sets the initial and max cache size to given |aInitialSize| and |aMaxSize|.
+   */
+  void SetCapacity(const size_t aInitialSize, const size_t aMaximumSize);
+
+  /**
+   * Sets the display list used by the cache.
+   */
+  void SetDisplayList(nsDisplayListBuilder* aBuilder, nsDisplayList* aList);
+
+  /**
+   * Sets the pipeline id used by the cache.
+   */
+  void SetPipelineId(const wr::PipelineId& aPipelineId);
+
+  /**
+   * Enables caching immediately if the cache is valid, and display list is set.
+   */
+  void SkipWaitingForPartialDisplayList() {
+    mCaching = mDisplayList && !mInvalid;
+  }
+
+  /**
    * Returns true if display item caching is enabled, otherwise false.
    */
   bool IsEnabled() const { return mMaximumSize > 0; }
@@ -80,16 +103,6 @@ class DisplayItemCache final {
   bool IsFull() const {
     return mFreeSlots.IsEmpty() && CurrentSize() == mMaximumSize;
   }
-
-  /**
-   * Updates the cache state based on the given display list build information
-   * and pipeline id.
-   *
-   * This is necessary because Gecko display items can only be reused for the
-   * partial display list builds following a full display list build.
-   */
-  void UpdateState(const bool aPartialDisplayListBuildFailed,
-                   const wr::PipelineId& aPipelineId);
 
   /**
    * Returns the current cache size.
@@ -131,29 +144,23 @@ class DisplayItemCache final {
 
   void ClearCache();
   void FreeUnusedSlots();
-  bool GrowIfPossible();
   Maybe<uint16_t> GetNextFreeSlot();
+  bool GrowIfPossible();
+  void UpdateState();
 
-  /**
-   * Sets the initial and max cache size to given |aInitialSize| and |aMaxSize|.
-   */
-  void SetCapacity(const size_t aInitialSize, const size_t aMaximumSize);
-
-  /**
-   * Returns true if the given |aPipelineId| is different from the previous one,
-   * otherwise returns false.
-   */
-  bool UpdatePipelineId(const wr::PipelineId& aPipelineId) {
-    const bool isSame = mPreviousPipelineId.refOr(aPipelineId) == aPipelineId;
-    mPreviousPipelineId = Some(aPipelineId);
-    return !isSame;
-  }
+  // The lifetime of display lists exceed the lifetime of DisplayItemCache.
+  // This pointer stores the address of the display list that is using this
+  // cache, and it is only used for pointer comparisons.
+  nsDisplayList* mDisplayList;
 
   size_t mMaximumSize;
   nsTArray<Slot> mSlots;
   nsTArray<uint16_t> mFreeSlots;
-  Maybe<wr::PipelineId> mPreviousPipelineId;
-  size_t mConsecutivePartialDisplayLists;
+
+  wr::PipelineId mPipelineId;
+  bool mCaching;
+  bool mInvalid;
+
   CacheStats mCacheStats;
 };
 

@@ -22,7 +22,6 @@ const {
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
   MESSAGE_UPDATE_PAYLOAD,
-  PAUSED_EXECUTION_POINT,
   PRIVATE_MESSAGES_CLEAR,
 } = require("devtools/client/webconsole/constants");
 
@@ -63,13 +62,6 @@ function messagesClearLogpoint(logpointId) {
   return {
     type: MESSAGES_CLEAR_LOGPOINT,
     logpointId,
-  };
-}
-
-function setPauseExecutionPoint(executionPoint) {
-  return {
-    type: PAUSED_EXECUTION_POINT,
-    executionPoint,
   };
 }
 
@@ -154,12 +146,6 @@ function networkUpdateRequest(id, data) {
   };
 }
 
-function jumpToExecutionPoint(executionPoint) {
-  return ({ client }) => {
-    client.timeWarp(executionPoint);
-  };
-}
-
 module.exports = {
   messagesAdd,
   messagesClear,
@@ -171,7 +157,4 @@ module.exports = {
   networkMessageUpdate,
   networkUpdateRequest,
   privateMessagesClear,
-  // for test purpose only.
-  setPauseExecutionPoint,
-  jumpToExecutionPoint,
 };

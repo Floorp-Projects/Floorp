@@ -5,7 +5,6 @@
 
 module.exports = {
   attachRefToWebConsoleUI: () => {},
-  canRewind: () => false,
   emitForTests: () => {},
   proxy: {
     client: {},

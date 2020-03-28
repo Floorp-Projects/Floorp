@@ -1486,7 +1486,7 @@ import android.view.inputmethod.EditorInfo;
             assertOnIcThread();
         }
 
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if (DEBUG) {
@@ -1624,7 +1624,7 @@ import android.view.inputmethod.EditorInfo;
         // mSoftInputReentrancyGuard is needed to ensure that between the different paths,
         // the soft input is only toggled exactly once.
 
-        ThreadUtils.postToUiThread(new Runnable() {
+        ThreadUtils.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 final int reentrancyGuard = mSoftInputReentrancyGuard.decrementAndGet();

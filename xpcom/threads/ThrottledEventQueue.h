@@ -100,7 +100,7 @@ class ThrottledEventQueue final : public nsISerialEventTarget {
   // has been queued on the base target, and even so, no events from the TEQ
   // will run. When the base target gets around to running the executor, the
   // executor will see that the TEQ is paused, and do nothing.
-  MOZ_MUST_USE nsresult SetIsPaused(bool aIsPaused);
+  [[nodiscard]] nsresult SetIsPaused(bool aIsPaused);
 
   // Return true if this ThrottledEventQueue is paused.
   bool IsPaused() const;

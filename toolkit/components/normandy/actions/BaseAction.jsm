@@ -115,9 +115,12 @@ class BaseAction {
   }
 
   validateArguments(args, schema = this.schema) {
-    let [valid, validated] = JsonSchemaValidator.validateAndParseParameters(
+    let { valid, parsedValue: validated } = JsonSchemaValidator.validate(
       args,
-      schema
+      schema,
+      {
+        allowExtraProperties: true,
+      }
     );
     if (!valid) {
       throw new Error(

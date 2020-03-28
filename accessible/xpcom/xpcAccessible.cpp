@@ -18,6 +18,10 @@
 #include "nsIMutableArray.h"
 #include "nsPersistentProperties.h"
 
+#ifdef MOZ_WIDGET_COCOA
+#  include "xpcAccessibleMacInterface.h"
+#endif
+
 using namespace mozilla::a11y;
 
 NS_IMETHODIMP
@@ -381,6 +385,23 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
 
   props.forget(aAttributes);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+xpcAccessible::GetNativeInterface(nsISupports** aNativeInterface) {
+#ifdef MOZ_WIDGET_COCOA
+  NS_ENSURE_ARG_POINTER(aNativeInterface);
+
+  // We don't cache or store this instance anywhere so each get returns a
+  // different instance. So `acc.nativeInterface != acc.nativeInterface`. This
+  // just seems simpler and more robust for now.
+  nsCOMPtr<nsISupports> macIface = new xpcAccessibleMacInterface(IntlGeneric());
+  macIface.swap(*aNativeInterface);
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP

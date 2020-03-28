@@ -3210,20 +3210,30 @@ void nsIFrame::BuildDisplayListForStackingContext(
   bool allowAsyncAnimation = false;
   bool inTransform = aBuilder->IsInTransform();
   if (isTransformed) {
-    nsDisplayTransform::PrerenderDecision decision =
+    nsDisplayTransform::PrerenderInfo decision =
         nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this,
                                                               &dirtyRect);
-    switch (decision) {
-      case nsDisplayTransform::FullPrerender:
+
+    switch (decision.mDecision) {
+      case nsDisplayTransform::PrerenderDecision::Full:
         allowAsyncAnimation = true;
         visibleRect = dirtyRect;
         break;
-      case nsDisplayTransform::PartialPrerender:
+      case nsDisplayTransform::PrerenderDecision::Partial:
         allowAsyncAnimation = true;
         visibleRect = dirtyRect;
         [[fallthrough]];
-        // fall through to the NoPrerender case
-      case nsDisplayTransform::NoPrerender: {
+        // fall through to the PrerenderDecision::No case
+      case nsDisplayTransform::PrerenderDecision::No: {
+        // If we didn't prerender an animated frame in a preserve-3d context,
+        // then we want disable async animations for the rest of the preserve-3d
+        // (especially ancestors).
+        if ((extend3DContext || combines3DTransformWithAncestors) &&
+            decision.mDecision == nsDisplayTransform::PrerenderDecision::No &&
+            decision.mHasAnimations) {
+          aBuilder->SavePreserves3DAllowAsyncAnimation(false);
+        }
+
         const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
         if (overflow.IsEmpty() && !extend3DContext) {
           return;
@@ -3231,8 +3241,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
         // If we're in preserve-3d then grab the dirty rect that was given to
         // the root and transform using the combined transform.
-        // FIXME: Could we remove this after making transform animations with
-        // preserve-3d run on the compositor?
         if (combines3DTransformWithAncestors) {
           visibleRect = dirtyRect = aBuilder->GetPreserves3DRect();
         }
@@ -3702,6 +3710,22 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
     buildingDisplayList.SetReferenceFrameAndCurrentOffset(
         outerReferenceFrame, GetOffsetToCrossDoc(outerReferenceFrame));
+
+    // We would like to block async animations for ancestors of ones not
+    // prerendered in the preserve-3d tree. Now that we've finished processing
+    // all descendants, update allowAsyncAnimation to take their prerender
+    // state into account
+    // FIXME: We don't block async animations for previous siblings because
+    // their prerender decisions have been made. We may have to figure out a
+    // better way to rollback their prerender decisions.
+    // Alternatively we could not block animations for later siblings, and only
+    // block them for ancestors of a blocked one.
+    if ((extend3DContext || combines3DTransformWithAncestors) &&
+        allowAsyncAnimation) {
+      // aBuilder->GetPreserves3DAllowAsyncAnimation() means the inner or
+      // previous silbing frames are allowed/disallowed for async animations.
+      allowAsyncAnimation = aBuilder->GetPreserves3DAllowAsyncAnimation();
+    }
 
     nsDisplayTransform* transformItem = MakeDisplayItem<nsDisplayTransform>(
         aBuilder, this, &resultList, visibleRect, 0, allowAsyncAnimation);

@@ -618,10 +618,6 @@ class WebConsoleUI {
     const inspectorSelection = this.hud.getInspectorSelection();
     return inspectorSelection?.nodeFront?.actorID;
   }
-
-  onMessageHover(type, message) {
-    this.emit("message-hover", type, message);
-  }
 }
 
 /* This is the same as DevelopmentHelpers.quickRestart, but it runs in all

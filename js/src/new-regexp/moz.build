@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
     'regexp-interpreter.cc',
     'regexp-macro-assembler-tracer.cc',
     'regexp-macro-assembler.cc',
+    'regexp-native-macro-assembler.cc',
     'regexp-parser.cc',
     'regexp-shim.cc',
     'regexp-stack.cc',

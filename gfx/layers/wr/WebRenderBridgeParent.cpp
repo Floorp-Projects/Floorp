@@ -1104,8 +1104,7 @@ void WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus) {
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateFocusState(rootLayersId, WRRootId(GetLayersId(), *mRenderRoot),
-                          aFocus);
+    apz->UpdateFocusState(rootLayersId, GetLayersId(), aFocus);
   }
 }
 
@@ -1118,10 +1117,8 @@ void WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateScrollDataAndTreeState(
-        WRRootId(rootLayersId, wr::RenderRoot::Default),
-        WRRootId(GetLayersId(), RenderRootForExternal(aRenderRoot)), aEpoch,
-        std::move(aData));
+    apz->UpdateScrollDataAndTreeState(rootLayersId, GetLayersId(), aEpoch,
+                                      std::move(aData));
   }
 }
 
@@ -1134,10 +1131,8 @@ void WebRenderBridgeParent::UpdateAPZScrollOffsets(
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateScrollOffsets(
-        WRRootId(rootLayersId, wr::RenderRoot::Default),
-        WRRootId(GetLayersId(), RenderRootForExternal(aRenderRoot)),
-        std::move(aUpdates), aPaintSequenceNumber);
+    apz->UpdateScrollOffsets(rootLayersId, GetLayersId(), std::move(aUpdates),
+                             aPaintSequenceNumber);
   }
 }
 
@@ -2146,17 +2141,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSyncWithCompositor() {
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(
-    const uint64_t& aBlockId, nsTArray<SLGuidAndRenderRoot>&& aTargets) {
+    const uint64_t& aBlockId, nsTArray<ScrollableLayerGuid>&& aTargets) {
   for (size_t i = 0; i < aTargets.Length(); i++) {
     // Guard against bad data from hijacked child processes
-    if (aTargets[i].mRenderRoot > wr::kHighestRenderRoot ||
-        aTargets[i].mRenderRoot != wr::RenderRoot::Default) {
-      NS_ERROR(
-          "Unexpected render root in RecvSetConfirmedTargetAPZC; dropping "
-          "message...");
-      return IPC_FAIL(this, "Bad render root");
-    }
-    if (aTargets[i].mScrollableLayerGuid.mLayersId != GetLayersId()) {
+    if (aTargets[i].mLayersId != GetLayersId()) {
       NS_ERROR(
           "Unexpected layers id in RecvSetConfirmedTargetAPZC; dropping "
           "message...");
@@ -2211,8 +2199,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetAsyncScrollOffset(
   if (mDestroyed) {
     return IPC_OK();
   }
-  mCompositorBridge->SetTestAsyncScrollOffset(
-      WRRootId(GetLayersId(), *mRenderRoot), aScrollId, CSSPoint(aX, aY));
+  mCompositorBridge->SetTestAsyncScrollOffset(GetLayersId(), aScrollId,
+                                              CSSPoint(aX, aY));
   return IPC_OK();
 }
 
@@ -2221,8 +2209,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetAsyncZoom(
   if (mDestroyed) {
     return IPC_OK();
   }
-  mCompositorBridge->SetTestAsyncZoom(WRRootId(GetLayersId(), *mRenderRoot),
-                                      aScrollId,
+  mCompositorBridge->SetTestAsyncZoom(GetLayersId(), aScrollId,
                                       LayerToParentLayerScale(aZoom));
   return IPC_OK();
 }
@@ -2231,14 +2218,13 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvFlushApzRepaints() {
   if (mDestroyed) {
     return IPC_OK();
   }
-  mCompositorBridge->FlushApzRepaints(WRRootId(GetLayersId(), *mRenderRoot));
+  mCompositorBridge->FlushApzRepaints(GetLayersId());
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetAPZTestData(
     APZTestData* aOutData) {
-  mCompositorBridge->GetAPZTestData(WRRootId(GetLayersId(), *mRenderRoot),
-                                    aOutData);
+  mCompositorBridge->GetAPZTestData(GetLayersId(), aOutData);
   return IPC_OK();
 }
 

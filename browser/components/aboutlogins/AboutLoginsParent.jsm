@@ -245,17 +245,6 @@ class AboutLoginsParent extends JSWindowActorParent {
         Services.logins.removeLogin(login);
         break;
       }
-      case "AboutLogins:DismissBreachAlert": {
-        const login = message.data.login;
-
-        await LoginBreaches.recordDismissal(login.guid);
-        const logins = await AboutLogins.getAllLogins();
-        const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-          logins
-        );
-        this.sendAsyncMessage("AboutLogins:SetBreaches", breachesByLoginGUID);
-        break;
-      }
       case "AboutLogins:HideFooter": {
         Services.prefs.setBoolPref(HIDE_MOBILE_FOOTER_PREF, true);
         break;
@@ -571,6 +560,30 @@ var AboutLogins = {
         if (!login) {
           return;
         }
+
+        if (BREACH_ALERTS_ENABLED) {
+          let breachesForThisLogin = await LoginBreaches.getPotentialBreachesByLoginGUID(
+            [login]
+          );
+          let breachData = breachesForThisLogin.size
+            ? breachesForThisLogin.get(login.guid)
+            : false;
+          this.messageSubscribers(
+            "AboutLogins:UpdateBreaches",
+            new Map([[login.guid, breachData]])
+          );
+          if (VULNERABLE_PASSWORDS_ENABLED) {
+            let vulnerablePasswordsForThisLogin = await LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
+              [login]
+            );
+            let isLoginVulnerable = !!vulnerablePasswordsForThisLogin.size;
+            this.messageSubscribers(
+              "AboutLogins:UpdateVulnerableLogins",
+              new Map([[login.guid, isLoginVulnerable]])
+            );
+          }
+        }
+
         this.messageSubscribers("AboutLogins:LoginModified", login);
         break;
       }

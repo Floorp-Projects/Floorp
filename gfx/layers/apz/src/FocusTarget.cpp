@@ -199,21 +199,6 @@ FocusTarget::FocusTarget(PresShell* aRootPresShell,
   ScrollTargets target;
   target.mHorizontal = nsLayoutUtils::FindIDForScrollableFrame(horizontal);
   target.mVertical = nsLayoutUtils::FindIDForScrollableFrame(vertical);
-  if (XRE_IsContentProcess()) {
-    target.mHorizontalRenderRoot = Some(gfxUtils::GetContentRenderRoot());
-    target.mVerticalRenderRoot = Some(gfxUtils::GetContentRenderRoot());
-  } else {
-    if (horizontal) {
-      auto renderRoot = gfxUtils::RecursivelyGetRenderRootForFrame(
-          horizontal->GetScrolledFrame());
-      target.mHorizontalRenderRoot = Some(renderRoot);
-    }
-    if (vertical) {
-      auto renderRoot = gfxUtils::RecursivelyGetRenderRootForFrame(
-          vertical->GetScrolledFrame());
-      target.mVerticalRenderRoot = Some(renderRoot);
-    }
-  }
   mData = AsVariant(target);
 
   FT_LOG("Creating scroll target with seq=%" PRIu64 ", kl=%d, h=%" PRIu64

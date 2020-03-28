@@ -1,0 +1,40 @@
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define NS_ACCESSIBLE_MAC_EVENT_TOPIC "accessible-mac-event"
+%}
+
+[scriptable, builtinclass, uuid(9d27cf21-66fc-47dc-8a07-98edb18707b1)]
+interface nsIAccessibleMacInterface : nsISupports
+{
+  /**
+   * List of available attribute names for tthe object.
+   * Emulates `AXUIElementCopyAttributeNames`.
+   */
+  readonly attribute Array<AString> attributeNames;
+
+  /**
+   * List of available action names for tthe object.
+   * Emulates `AXUIElementCopyActionNames`.
+   */
+  readonly attribute Array<AString> actionNames;
+
+  /**
+   * Returns the value of an attribute.
+   * Emulates `AXUIElementCopyAttributeValue`.
+   */
+  [implicit_jscontext]
+  jsval getAttributeValue(in AString attributeName);
+
+  /**
+   * Requests that the accessibility object perform the specified action.
+   * Emulatets `AXUIElementPerformAction`.
+   */
+  void performAction(in AString actionName);
+};
+

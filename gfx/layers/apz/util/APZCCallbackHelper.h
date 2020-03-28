@@ -9,7 +9,6 @@
 #include "InputData.h"
 #include "LayersTypes.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/layers/APZTypes.h"
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/RepaintRequest.h"
@@ -39,7 +38,7 @@ class DisplayportSetListener : public nsAPostRefreshObserver {
  public:
   DisplayportSetListener(nsIWidget* aWidget, PresShell* aPresShell,
                          const uint64_t& aInputBlockId,
-                         const nsTArray<SLGuidAndRenderRoot>& aTargets);
+                         const nsTArray<ScrollableLayerGuid>& aTargets);
   virtual ~DisplayportSetListener();
   bool Register();
   void DidRefresh() override;
@@ -48,7 +47,7 @@ class DisplayportSetListener : public nsAPostRefreshObserver {
   RefPtr<nsIWidget> mWidget;
   RefPtr<PresShell> mPresShell;
   uint64_t mInputBlockId;
-  nsTArray<SLGuidAndRenderRoot> mTargets;
+  nsTArray<ScrollableLayerGuid> mTargets;
 };
 
 /* This class contains some helper methods that facilitate implementing the

@@ -295,66 +295,76 @@ input[name="password"] {
   background-image: none;
 }
 
+.vulnerable-alert,
 .breach-alert {
-  border-radius: 8px;
+  border-radius: var(--panel-border-radius);
   border: 1px solid var(--in-content-border-color);
-  background-color: var(--yellow-10);
-  color: #0C0C0D;
-  box-shadow: 0 2px 8px 0 rgba(12,12,13,0.1);
+  box-shadow: 0 2px 8px 0 var(--grey-90-a10);
   font-size: .9em;
   font-weight: 300;
   line-height: 1.4;
   padding-block: 12px;
-  padding-inline-start: 36px;
-  padding-inline-end: 92px;
+  padding-inline-start: 64px;
+  padding-inline-end: 32px;
   margin-block-end: 40px;
   position: relative;
 }
 
-.breach-alert-link {
-  color: inherit;
-  text-decoration: underline;
+.breach-alert {
+  background-color: var(--red-70);
+  color: #fff;
+}
+
+.vulnerable-alert {
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
+}
+
+.alert-title {
+  font-size: 22px;
+  font-weight: normal;
+  line-height: 1em;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.alert-date {
+  display: block;
   font-weight: 600;
 }
 
-.breach-icon {
+.alert-link:visited,
+.alert-link {
+  font-weight: 600;
+}
+
+.breach-alert > .alert-link:visited,
+.breach-alert > .alert-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.alert-icon {
   position: absolute;
-  inset-block-start: 10px;
-  inset-inline-start: 10px;
+  inset-block-start: 16px;
+  inset-inline-start: 32px;
   -moz-context-properties: fill;
-  fill: var(--red-90);
-}
-
-.dismiss-breach-alert {
-  border: none;
-  padding: 0;
-  margin: 0;
-  position: absolute;
-  inset-inline-end: 12px;
-  inset-block-start: 12px;
-  min-width: auto;
-  min-height: auto;
-  line-height: 0;
-}
-
-.dismiss-breach-alert {
-  background-color: transparent;
-}
-
-.dismiss-breach-alert:enabled:hover {
-  background-color: var(--grey-90-a20);
-}
-
-.dismiss-breach-alert:enabled:hover:active {
-  background-color: var(--grey-90-a30);
-}
-
-.dismiss-breach-alert-icon {
-  -moz-context-properties: fill, fill-opacity;
-  fill-opacity: 0;
   fill: currentColor;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+}
+
+.alert-learn-more-link:hover,
+.alert-learn-more-link:visited,
+.alert-learn-more-link {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-end: 32px;
+  color: inherit;
+  font-size: 13px;
+}
+
+.vulnerable-alert > .alert-learn-more-link {
+  color: var(--in-content-deemphasized-text);
 }
 
 .error-message {
@@ -386,7 +396,7 @@ input[name="password"] {
 }
 
 @media (-moz-windows-default-theme: 0) {
-  .breach-icon {
+  .alert-icon {
     fill: currentColor;
   }
 }
@@ -401,6 +411,7 @@ input[name="password"] {
       --edit-delete-button-color: #cfcfd1;
     }
 
+    .vulnerable-alert,
     .breach-alert {
       box-shadow: 0 2px 8px 0 rgba(249,249,250,0.1);
     }

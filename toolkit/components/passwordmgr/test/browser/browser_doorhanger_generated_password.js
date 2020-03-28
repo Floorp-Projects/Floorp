@@ -153,6 +153,11 @@ async function openFormInNewTab(url, formValues, taskFn) {
           if (props) {
             // We'll reuse the form_basic.html, but ensure we'll get the generated password autocomplete option
             let field = doc.querySelector(props.selector);
+            if (props.type) {
+              // Change the type from 'password' to something else.
+              field.type = props.type;
+            }
+
             field.setAttribute("autocomplete", "new-password");
             if (props.hasOwnProperty("expectedValue")) {
               is(
@@ -667,7 +672,9 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
   );
 });
 
-add_task(async function autocomplete_generated_password_edited_no_auto_save() {
+async function autocomplete_generated_password_edited_no_auto_save(
+  passwordType = "password"
+) {
   // confirm behavior when filling a generated password via autocomplete
   // when there is an existing saved login with a "" username and then editing
   // the password and autocompleting again.
@@ -679,6 +686,7 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         selector: passwordInputSelector,
         expectedValue: "xyzpassword",
         setValue: "",
+        type: passwordType,
         expectedMessage: "PasswordEditedOrGenerated",
       },
       username: { selector: usernameInputSelector, expectedValue: "" },
@@ -769,7 +777,15 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
   );
 
   LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
-});
+}
+
+add_task(autocomplete_generated_password_edited_no_auto_save);
+
+add_task(
+  async function autocomplete_generated_password_edited_no_auto_save_type_text() {
+    await autocomplete_generated_password_edited_no_auto_save("text");
+  }
+);
 
 add_task(async function contextmenu_fill_generated_password_and_set_username() {
   // test when filling with a generated password and editing the username in the form

@@ -1999,12 +1999,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Whether window.onappinstalled from "W3C Web Manifest" is enabled
-- name: dom.manifest.onappinstalled
-  type: bool
-  value: false
-  mirror: always
-
 # Enable mapped array buffer by default.
 - name: dom.mapped_arraybuffer.enabled
   type: bool
@@ -2074,6 +2068,13 @@
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
   value: @IS_ANDROID@
+  mirror: always
+
+# Whether we shouldn't show an error page for unknown protocols (and should
+# show a console warning instead).
+- name: dom.no_unknown_protocol_error.enabled
+  type: bool
+  value: true
   mirror: always
 
 # Is support for Window.paintWorklet enabled?

@@ -41,11 +41,11 @@
     // HTML table role="button"
     var tree =
       { PUSHBUTTON: [ // table
-          { NOTHING: [ // tr
-            { NOTHING: [ // th
+          { TEXT_CONTAINER: [ // tr
+            { TEXT_CONTAINER: [ // th
               { TEXT_LEAF: [ ] },
             ] },
-            { NOTHING: [ // td
+            { TEXT_CONTAINER: [ // td
               { TEXT_LEAF: [ ] },
             ] },
           ] },
@@ -76,11 +76,11 @@
 
     tree =
       { PUSHBUTTON: [ // ul
-        { NOTHING: [ // li
+        { TEXT_CONTAINER: [ // li
           { STATICTEXT: [ ] },
           { TEXT_LEAF: [ ] },
         ] },
-        { NOTHING: [ // span styled as a list
+        { TEXT_CONTAINER: [ // span styled as a list
           { STATICTEXT: [ ] },
           { TEXT_LEAF: [ ] },
         ] },
@@ -89,7 +89,7 @@
 
     tree =
       { PUSHBUTTON: [ // ol
-        { NOTHING: [ // li
+        { TEXT_CONTAINER: [ // li
           { STATICTEXT: [ ] },
           { TEXT_LEAF: [ ] },
         ] },
@@ -98,10 +98,10 @@
 
     tree =
       { PUSHBUTTON: [ // dl
-        { NOTHING: [ // dt
+        { TEXT_CONTAINER: [ // dt
           { TEXT_LEAF: [ ] },
         ] },
-        { NOTHING: [ // dd
+        { TEXT_CONTAINER: [ // dd
           { TEXT_LEAF: [ ] },
         ] },
       ] };
