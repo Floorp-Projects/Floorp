@@ -8,7 +8,6 @@
 #define mozilla_fuzzing_FuzzingTraits_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 #include <cmath>
 #include <random>
 #include <type_traits>

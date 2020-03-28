@@ -22,7 +22,6 @@
 #ifdef XP_WIN
 #  include "mozilla/TimeStamp_windows.h"
 #endif
-#include "mozilla/TypeTraits.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Vector.h"
 

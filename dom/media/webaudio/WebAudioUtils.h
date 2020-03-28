@@ -10,7 +10,6 @@
 #include <cmath>
 #include <limits>
 #include <type_traits>
-#include "mozilla/TypeTraits.h"
 #include "mozilla/FloatingPoint.h"
 #include "MediaSegment.h"
 

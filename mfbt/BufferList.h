@@ -17,7 +17,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
 

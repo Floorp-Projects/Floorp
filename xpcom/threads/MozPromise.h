@@ -16,7 +16,6 @@
 #  include "mozilla/Mutex.h"
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/Tuple.h"
-#  include "mozilla/TypeTraits.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Variant.h"
 

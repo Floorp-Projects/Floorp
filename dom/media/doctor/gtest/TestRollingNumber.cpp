@@ -7,7 +7,6 @@
 #include "RollingNumber.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 
 #include <cstdint>
 #include <gtest/gtest.h>

@@ -17,7 +17,6 @@
 #include "mozilla/JsRust.h"
 #include "mozilla/Span.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/TypeTraits.h"
 
 #if MOZ_HAS_JSRUST()
 #  include "encoding_rs_mem.h"

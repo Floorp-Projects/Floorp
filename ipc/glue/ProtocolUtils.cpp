@@ -30,8 +30,6 @@
 #if defined(XP_WIN)
 #  include "aclapi.h"
 #  include "sddl.h"
-
-#  include "mozilla/TypeTraits.h"
 #endif
 
 using namespace IPC;

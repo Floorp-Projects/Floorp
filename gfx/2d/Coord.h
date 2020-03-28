@@ -8,7 +8,6 @@
 #define MOZILLA_GFX_COORD_H_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"  // For IsSame
 #include "Types.h"
 #include "BaseCoord.h"
 

@@ -7,7 +7,6 @@
 #ifndef mozilla_HoldDropJSObjects_h
 #define mozilla_HoldDropJSObjects_h
 
-#include "mozilla/TypeTraits.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsISupports;

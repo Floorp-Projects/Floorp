@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_ToJSValue_h
 #define mozilla_dom_ToJSValue_h
 
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingUtils.h"

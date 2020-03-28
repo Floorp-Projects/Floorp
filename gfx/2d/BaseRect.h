@@ -14,7 +14,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/TypeTraits.h"
 #include "Types.h"
 
 namespace mozilla {

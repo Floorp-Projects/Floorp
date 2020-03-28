@@ -26,7 +26,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/TypeTraits.h"
 #include "Layers.h"              // For Layer
 #include "nsComputedDOMStyle.h"  // nsComputedDOMStyle::GetComputedStyle
 #include "nsContentUtils.h"

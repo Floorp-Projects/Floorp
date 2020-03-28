@@ -19,7 +19,6 @@
 #include "mozilla/StaticPrefs_android.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy

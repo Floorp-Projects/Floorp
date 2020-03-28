@@ -11,7 +11,6 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 

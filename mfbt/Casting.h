@@ -10,7 +10,6 @@
 #define mozilla_Casting_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 
 #include <cstring>
 #include <limits.h>

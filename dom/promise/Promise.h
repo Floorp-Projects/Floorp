@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/PromiseBinding.h"

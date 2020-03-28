@@ -9,7 +9,7 @@
 #ifndef mozilla_IntegerTypeTraits_h
 #define mozilla_IntegerTypeTraits_h
 
-#include "mozilla/TypeTraits.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <type_traits>
 

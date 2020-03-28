@@ -24,7 +24,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Range.h"
-#include "mozilla/TypeTraits.h"
 
 #include <type_traits>
 

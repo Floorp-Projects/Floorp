@@ -14,7 +14,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/TypeTraits.h"
 #include <type_traits>
 #include <utility>
 

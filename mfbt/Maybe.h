@@ -20,7 +20,6 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Poison.h"
-#include "mozilla/TypeTraits.h"
 
 class nsCycleCollectionTraversalCallback;
 

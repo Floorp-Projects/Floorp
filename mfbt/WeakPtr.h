@@ -73,7 +73,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TypeTraits.h"
 
 #include <string.h>
 #include <type_traits>

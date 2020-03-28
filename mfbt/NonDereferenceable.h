@@ -10,7 +10,6 @@
 /* A pointer wrapper indicating that the pointer should not be dereferenced. */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"
 
 #include <cstdint>
 

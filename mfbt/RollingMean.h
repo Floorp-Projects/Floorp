@@ -10,7 +10,6 @@
 #define mozilla_RollingMean_h_
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Vector.h"
 
 #include <stddef.h>

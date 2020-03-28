@@ -16,7 +16,6 @@
 #include "BasePoint4D.h"
 #include "BaseSize.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/TypeTraits.h"
 
 #include <cmath>
 #include <type_traits>

@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CompactPair.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 

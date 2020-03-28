@@ -17,7 +17,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
-#include "mozilla/TypeTraits.h"
 #include "nsCOMPtr.h"
 #include "nsICancelableRunnable.h"
 #include "nsIIdlePeriod.h"

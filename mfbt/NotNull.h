@@ -68,7 +68,6 @@
 #include <utility>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

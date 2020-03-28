@@ -25,7 +25,6 @@
 #define mozilla_WrappingOperations_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"
 
 #include <limits.h>
 #include <type_traits>

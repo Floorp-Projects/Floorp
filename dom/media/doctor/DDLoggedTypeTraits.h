@@ -9,8 +9,6 @@
 
 #include <type_traits>
 
-#include "mozilla/TypeTraits.h"
-
 namespace mozilla {
 
 // Templated struct carrying compile-time information about C++ types that may

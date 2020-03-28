@@ -15,7 +15,6 @@
 #include "nscore.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/TypeTraits.h"
 
 #include "nsCharTraits.h"
 

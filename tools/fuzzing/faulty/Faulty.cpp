@@ -24,7 +24,6 @@
 #include "chrome/common/ipc_message.h"
 #include "chrome/common/file_descriptor_set_posix.h"
 #include "mozilla/ipc/Faulty.h"
-#include "mozilla/TypeTraits.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsIFile.h"

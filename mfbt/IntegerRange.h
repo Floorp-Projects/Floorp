@@ -11,7 +11,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ReverseIterator.h"
-#include "mozilla/TypeTraits.h"
 
 #include <type_traits>
 

@@ -34,7 +34,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/IntegerTypeTraits.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
