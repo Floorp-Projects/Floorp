@@ -7,7 +7,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
-using mozilla::AddRvalueReference;
 using mozilla::IsDestructible;
 using mozilla::IsSame;
 
@@ -27,20 +26,6 @@ static_assert(!IsDestructible<PrivateDestructible>::value,
               "private destructible class is not destructible");
 static_assert(IsDestructible<TrivialDestructible>::value,
               "trivial destructible class is destructible");
-
-static_assert(IsSame<AddRvalueReference<int>::Type, int&&>::value,
-              "not adding && to int correctly");
-static_assert(
-    IsSame<AddRvalueReference<volatile int&>::Type, volatile int&>::value,
-    "not adding && to volatile int& correctly");
-static_assert(IsSame<AddRvalueReference<const int&&>::Type, const int&&>::value,
-              "not adding && to volatile int& correctly");
-static_assert(IsSame<AddRvalueReference<void*>::Type, void*&&>::value,
-              "not adding && to void* correctly");
-static_assert(IsSame<AddRvalueReference<void>::Type, void>::value,
-              "void shouldn't be transformed by AddRvalueReference");
-static_assert(IsSame<AddRvalueReference<struct S1&>::Type, struct S1&>::value,
-              "not reference-collapsing struct S1& && to struct S1& correctly");
 
 /*
  * Android's broken [u]intptr_t inttype macros are broken because its PRI*PTR
