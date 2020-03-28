@@ -42,9 +42,3 @@ if [ -f "${PDBSTR}" ]; then
 else
     unset PDBSTR
 fi
-
-# Temporary signal to toolchain.configure that our compiler is patched to
-# support CFG, until such support can be assumed.
-if test -z "$USE_ARTIFACT"; then
-  ac_add_options --enable-hardening
-fi
