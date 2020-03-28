@@ -262,7 +262,7 @@ bool TryEmitter::emitEnd() {
   // Add the try note last, to let post-order give us the right ordering
   // (first to last for a given nesting level, inner to outer by level).
   if (hasCatch()) {
-    if (!bce_->addTryNote(JSTRY_CATCH, depth_, offsetAfterTryOp(),
+    if (!bce_->addTryNote(TryNoteKind::Catch, depth_, offsetAfterTryOp(),
                           tryEnd_.offset)) {
       return false;
     }
@@ -272,7 +272,7 @@ bool TryEmitter::emitEnd() {
   // trynote to catch exceptions (re)thrown from a catch block or
   // for the try{}finally{} case.
   if (hasFinally()) {
-    if (!bce_->addTryNote(JSTRY_FINALLY, depth_, offsetAfterTryOp(),
+    if (!bce_->addTryNote(TryNoteKind::Finally, depth_, offsetAfterTryOp(),
                           finallyStart_.offset)) {
       return false;
     }

@@ -9,6 +9,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
+#include "vm/TryNoteKind.h"  // TryNoteKind
 
 using namespace js;
 using namespace js::frontend;
@@ -76,7 +77,7 @@ bool WhileEmitter::emitEnd() {
     return false;
   }
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, JSTRY_LOOP)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, TryNoteKind::Loop)) {
     return false;
   }
 
