@@ -217,7 +217,7 @@ struct MaybeStorage;
 
 template <typename T>
 struct MaybeStorage<T, false> {
-  using NonConstT = typename RemoveConst<T>::Type;
+  using NonConstT = std::remove_const_t<T>;
 
   union Union {
     Union() {}
@@ -254,7 +254,7 @@ struct MaybeStorage<T, false> {
 
 template <typename T>
 struct MaybeStorage<T, true> {
-  using NonConstT = typename RemoveConst<T>::Type;
+  using NonConstT = std::remove_const_t<T>;
 
   union Union {
     constexpr Union() : dummy() {}

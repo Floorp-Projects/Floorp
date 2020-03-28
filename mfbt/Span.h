@@ -70,10 +70,6 @@ inline size_t strlen16(const char16_t* aZeroTerminated) {
   return len;
 }
 
-// C++14 types that we don't have because we build as C++11.
-template <class T>
-using remove_const_t = typename mozilla::RemoveConst<T>::Type;
-
 template <class T>
 struct is_span_oracle : mozilla::FalseType {};
 
@@ -111,7 +107,7 @@ class span_iterator {
 
  public:
   using iterator_category = std::random_access_iterator_tag;
-  using value_type = remove_const_t<element_type_>;
+  using value_type = std::remove_const_t<element_type_>;
   using difference_type = typename Span::index_type;
 
   using reference =
@@ -422,7 +418,7 @@ class Span {
    * Constructor for std::array.
    */
   template <size_t N,
-            class ArrayElementType = span_details::remove_const_t<element_type>>
+            class ArrayElementType = std::remove_const_t<element_type>>
   constexpr MOZ_IMPLICIT Span(std::array<ArrayElementType, N>& aArr)
       : storage_(&aArr[0], span_details::extent_type<N>()) {}
 
@@ -431,14 +427,14 @@ class Span {
    */
   template <size_t N>
   constexpr MOZ_IMPLICIT Span(
-      const std::array<span_details::remove_const_t<element_type>, N>& aArr)
+      const std::array<std::remove_const_t<element_type>, N>& aArr)
       : storage_(&aArr[0], span_details::extent_type<N>()) {}
 
   /**
    * Constructor for mozilla::Array.
    */
   template <size_t N,
-            class ArrayElementType = span_details::remove_const_t<element_type>>
+            class ArrayElementType = std::remove_const_t<element_type>>
   constexpr MOZ_IMPLICIT Span(mozilla::Array<ArrayElementType, N>& aArr)
       : storage_(&aArr[0], span_details::extent_type<N>()) {}
 
@@ -447,7 +443,7 @@ class Span {
    */
   template <size_t N>
   constexpr MOZ_IMPLICIT Span(
-      const mozilla::Array<span_details::remove_const_t<element_type>, N>& aArr)
+      const mozilla::Array<std::remove_const_t<element_type>, N>& aArr)
       : storage_(&aArr[0], span_details::extent_type<N>()) {}
 
   /**

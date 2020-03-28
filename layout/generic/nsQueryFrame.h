@@ -100,7 +100,7 @@ class do_QueryFrameHelper {
   template <class Dest>
   operator Dest*() {
     static_assert(
-        mozilla::IsSame<typename mozilla::RemoveConst<Dest>::Type,
+        mozilla::IsSame<std::remove_const_t<Dest>,
                         typename Dest::Has_NS_DECL_QUERYFRAME_TARGET>::value,
         "Dest must declare itself as a queryframe target");
     if (!mRawPtr) {
