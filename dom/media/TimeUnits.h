@@ -7,6 +7,8 @@
 #ifndef TIME_UNITS_H
 #define TIME_UNITS_H
 
+#include <type_traits>
+
 #include "Intervals.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
@@ -172,7 +174,7 @@ class TimeUnit final {
   TimeUnit operator*(T aVal) const {
     // See bug 853398 for the reason to block double multiplier.
     // If required, use MultDouble below and with caution.
-    static_assert(mozilla::IsIntegral<T>::value, "Must be an integral type");
+    static_assert(std::is_integral_v<T>, "Must be an integral type");
     return TimeUnit(mValue * aVal);
   }
   TimeUnit MultDouble(double aVal) const {

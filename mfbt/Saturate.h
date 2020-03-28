@@ -10,6 +10,7 @@
 #define mozilla_Saturate_h
 
 #include <limits>
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/Attributes.h"
@@ -41,7 +42,7 @@ class SaturateOp {
     // We should actually check for |std::is_scalar<T>::value| to be
     // true, but this type trait is not available everywhere. Relax
     // this assertion if you want to use floating point values as well.
-    static_assert(IsIntegral<T>::value,
+    static_assert(std::is_integral_v<T>,
                   "Integral type required in instantiation");
   }
 

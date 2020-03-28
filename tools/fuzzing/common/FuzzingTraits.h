@@ -47,8 +47,7 @@ T RandomNumericLimit() {
  */
 template <typename T>
 T RandomInteger() {
-  static_assert(mozilla::IsIntegral<T>::value == true,
-                "T must be an integral type");
+  static_assert(std::is_integral_v<T> == true, "T must be an integral type");
   double r =
       static_cast<double>(FuzzingTraits::Random((sizeof(T) * CHAR_BIT) + 1));
   T x = static_cast<T>(pow(2.0, r)) - 1;
@@ -63,8 +62,7 @@ T RandomInteger() {
  */
 template <typename T>
 T RandomIntegerRange(T min, T max) {
-  static_assert(mozilla::IsIntegral<T>::value == true,
-                "T must be an integral type");
+  static_assert(std::is_integral_v<T> == true, "T must be an integral type");
   MOZ_ASSERT(min < max);
   std::uniform_int_distribution<T> d(min, max);
   return d(FuzzingTraits::Rng());
