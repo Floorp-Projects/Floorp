@@ -304,40 +304,6 @@ struct IsSigned : detail::IsSignedHelper<T> {};
 
 namespace detail {
 
-template <typename T, bool = IsFloatingPoint<T>::value,
-          bool = IsIntegral<T>::value,
-          typename NoCV = typename RemoveCV<T>::Type>
-struct IsUnsignedHelper;
-
-// Floating point is not unsigned.
-template <typename T, typename NoCV>
-struct IsUnsignedHelper<T, true, false, NoCV> : FalseType {};
-
-// Integral is conditionally unsigned.
-template <typename T, typename NoCV>
-struct IsUnsignedHelper<T, false, true, NoCV>
-    : IntegralConstant<bool, (IsSame<NoCV, bool>::value ||
-                              bool(NoCV(1) < NoCV(-1)))> {};
-
-// Non-floating point, non-integral is not unsigned.
-template <typename T, typename NoCV>
-struct IsUnsignedHelper<T, false, false, NoCV> : FalseType {};
-
-}  // namespace detail
-
-/**
- * IsUnsigned determines whether a type is an unsigned arithmetic type.
- *
- * mozilla::IsUnsigned<int>::value is false;
- * mozilla::IsUnsigned<const unsigned int>::value is true;
- * mozilla::IsUnsigned<unsigned char>::value is true;
- * mozilla::IsUnsigned<float>::value is false.
- */
-template <typename T>
-struct IsUnsigned : detail::IsUnsignedHelper<T> {};
-
-namespace detail {
-
 struct DoIsDestructibleImpl {
   template <typename T, typename = decltype(DeclVal<T&>().~T())>
   static TrueType test(int);

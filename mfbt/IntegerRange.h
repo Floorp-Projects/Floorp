@@ -13,6 +13,8 @@
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/TypeTraits.h"
 
+#include <type_traits>
+
 namespace mozilla {
 
 namespace detail {
@@ -139,7 +141,7 @@ class IntegerRange {
   IntTypeT mEnd;
 };
 
-template <typename T, bool = IsUnsigned<T>::value>
+template <typename T, bool = std::is_unsigned_v<T>>
 struct GeqZero {
   static bool isNonNegative(T t) { return t >= 0; }
 };
