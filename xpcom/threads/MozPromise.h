@@ -92,7 +92,7 @@ template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
 
 template <typename Return>
-struct IsMozPromise : FalseType {};
+struct IsMozPromise : std::false_type {};
 
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 struct IsMozPromise<MozPromise<ResolveValueT, RejectValueT, IsExclusive>>

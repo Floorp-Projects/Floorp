@@ -71,7 +71,7 @@ inline size_t strlen16(const char16_t* aZeroTerminated) {
 }
 
 template <class T>
-struct is_span_oracle : mozilla::FalseType {};
+struct is_span_oracle : std::false_type {};
 
 template <class ElementType, size_t Extent>
 struct is_span_oracle<mozilla::Span<ElementType, Extent>> : mozilla::TrueType {
@@ -81,7 +81,7 @@ template <class T>
 struct is_span : public is_span_oracle<std::remove_cv_t<T>> {};
 
 template <class T>
-struct is_std_array_oracle : mozilla::FalseType {};
+struct is_std_array_oracle : std::false_type {};
 
 template <class ElementType, size_t Extent>
 struct is_std_array_oracle<std::array<ElementType, Extent>>

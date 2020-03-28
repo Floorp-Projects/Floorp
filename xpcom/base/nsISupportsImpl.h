@@ -388,7 +388,7 @@ class ThreadSafeAutoRefCnt {
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override; \
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;             \
   NS_IMETHOD_(MozExternalRefCountType) Release(void) override;            \
-  typedef mozilla::FalseType HasThreadSafeRefCnt;                         \
+  using HasThreadSafeRefCnt = std::false_type;                            \
                                                                           \
  protected:                                                               \
   nsAutoRefCnt mRefCnt;                                                   \
@@ -430,7 +430,7 @@ class ThreadSafeAutoRefCnt {
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) __VA_ARGS__; \
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) __VA_ARGS__;             \
   NS_IMETHOD_(MozExternalRefCountType) Release(void) __VA_ARGS__;            \
-  typedef mozilla::FalseType HasThreadSafeRefCnt;                            \
+  using HasThreadSafeRefCnt = std::false_type;                               \
                                                                              \
  protected:                                                                  \
   nsCycleCollectingAutoRefCnt mRefCnt;                                       \
@@ -535,7 +535,7 @@ class ThreadSafeAutoRefCnt {
       Release(void) __VA_ARGS__ {                                              \
     NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                     \
   }                                                                            \
-  typedef mozilla::FalseType HasThreadSafeRefCnt;                              \
+  using HasThreadSafeRefCnt = std::false_type;                                 \
                                                                                \
  protected:                                                                    \
   nsCycleCollectingAutoRefCnt mRefCnt;                                         \
@@ -550,7 +550,7 @@ class ThreadSafeAutoRefCnt {
       _class)} NS_METHOD_(MozExternalRefCountType) Release(void) {           \
     NS_IMPL_CC_MAIN_THREAD_ONLY_NATIVE_RELEASE_BODY(_class)                  \
   }                                                                          \
-  typedef mozilla::FalseType HasThreadSafeRefCnt;                            \
+  using HasThreadSafeRefCnt = std::false_type;                               \
                                                                              \
  protected:                                                                  \
   nsCycleCollectingAutoRefCnt mRefCnt;                                       \
@@ -592,7 +592,7 @@ class ThreadSafeAutoRefCnt {
     }                                                                 \
     return mRefCnt;                                                   \
   }                                                                   \
-  typedef mozilla::FalseType HasThreadSafeRefCnt;                     \
+  using HasThreadSafeRefCnt = std::false_type;                        \
                                                                       \
  protected:                                                           \
   nsAutoRefCnt mRefCnt;                                               \

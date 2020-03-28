@@ -909,7 +909,7 @@ namespace detail {
 // V is never passed, and is only used to allow us to specialize on the return
 // value of the comparator function.
 template <typename T, typename U, typename V = int>
-struct IsCompareMethod : mozilla::FalseType {};
+struct IsCompareMethod : std::false_type {};
 
 template <typename T, typename U>
 struct IsCompareMethod<
