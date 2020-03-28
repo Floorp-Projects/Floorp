@@ -1247,10 +1247,9 @@ inline bool WrapNewBindingNonWrapperCachedObject(
 }
 
 // Helper for smart pointers (nsRefPtr/nsCOMPtr).
-template <
-    template <typename> class SmartPtr, typename T,
-    typename U = typename EnableIf<IsRefcounted<T>::value, T>::Type,
-    typename V = typename EnableIf<IsSmartPtr<SmartPtr<T>>::value, T>::Type>
+template <template <typename> class SmartPtr, typename T,
+          typename U = std::enable_if_t<IsRefcounted<T>::value, T>,
+          typename V = std::enable_if_t<IsSmartPtr<SmartPtr<T>>::value, T>>
 inline bool WrapNewBindingNonWrapperCachedObject(
     JSContext* cx, JS::Handle<JSObject*> scope, const SmartPtr<T>& value,
     JS::MutableHandle<JS::Value> rval,
@@ -1260,8 +1259,7 @@ inline bool WrapNewBindingNonWrapperCachedObject(
 }
 
 // Helper for object references (as opposed to pointers).
-template <typename T,
-          typename U = typename EnableIf<!IsSmartPtr<T>::value, T>::Type>
+template <typename T, typename U = std::enable_if_t<!IsSmartPtr<T>::value, T>>
 inline bool WrapNewBindingNonWrapperCachedObject(
     JSContext* cx, JS::Handle<JSObject*> scope, T& value,
     JS::MutableHandle<JS::Value> rval,

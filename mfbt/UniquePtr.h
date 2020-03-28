@@ -242,12 +242,13 @@ class UniquePtr {
   template <typename U, class E>
   MOZ_IMPLICIT UniquePtr(
       UniquePtr<U, E>&& aOther,
-      typename EnableIf<
+      std::enable_if_t<
           std::is_convertible_v<typename UniquePtr<U, E>::Pointer, Pointer> &&
               !std::is_array_v<U> &&
               (std::is_reference_v<D> ? IsSame<D, E>::value
                                       : std::is_convertible_v<E, D>),
-          int>::Type aDummy = 0)
+          int>
+          aDummy = 0)
       : mTuple(aOther.release(), std::forward<E>(aOther.get_deleter())) {}
 
   ~UniquePtr() { reset(nullptr); }
@@ -347,9 +348,10 @@ class UniquePtr<T[], D> {
   // So forbid all overloads which would end up invoking delete[] on a pointer
   // of the wrong type.
   template <typename U>
-  UniquePtr(U&& aU, typename EnableIf<std::is_pointer_v<U> &&
-                                          std::is_convertible_v<U, Pointer>,
-                                      int>::Type aDummy = 0) = delete;
+  UniquePtr(U&& aU,
+            std::enable_if_t<
+                std::is_pointer_v<U> && std::is_convertible_v<U, Pointer>, int>
+                aDummy = 0) = delete;
 
   UniquePtr(Pointer aPtr,
             std::conditional_t<std::is_reference_v<D>, D, const D&> aD1)
@@ -364,9 +366,9 @@ class UniquePtr<T[], D> {
   // Forbidden for the same reasons as stated above.
   template <typename U, typename V>
   UniquePtr(U&& aU, V&& aV,
-            typename EnableIf<std::is_pointer_v<U> &&
-                                  std::is_convertible_v<U, Pointer>,
-                              int>::Type aDummy = 0) = delete;
+            std::enable_if_t<
+                std::is_pointer_v<U> && std::is_convertible_v<U, Pointer>, int>
+                aDummy = 0) = delete;
 
   UniquePtr(UniquePtr&& aOther)
       : mTuple(aOther.release(),
@@ -452,7 +454,7 @@ class DefaultDelete {
   template <typename U>
   MOZ_IMPLICIT DefaultDelete(
       const DefaultDelete<U>& aOther,
-      typename EnableIf<std::is_convertible_v<U*, T*>, int>::Type aDummy = 0) {}
+      std::enable_if_t<std::is_convertible_v<U*, T*>, int> aDummy = 0) {}
 
   void operator()(T* aPtr) const {
     static_assert(sizeof(T) > 0, "T must be complete");

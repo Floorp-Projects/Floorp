@@ -376,9 +376,8 @@ class Atomic;
  * swap method is provided.
  */
 template <typename T, MemoryOrdering Order>
-class Atomic<
-    T, Order,
-    typename EnableIf<std::is_integral_v<T> && !IsSame<T, bool>::value>::Type>
+class Atomic<T, Order,
+             std::enable_if_t<std::is_integral_v<T> && !IsSame<T, bool>::value>>
     : public detail::AtomicBaseIncDec<T, Order> {
   typedef typename detail::AtomicBaseIncDec<T, Order> Base;
 
@@ -448,7 +447,7 @@ class Atomic<T*, Order> : public detail::AtomicBaseIncDec<T*, Order> {
  * The atomic store and load operations and the atomic swap method is provided.
  */
 template <typename T, MemoryOrdering Order>
-class Atomic<T, Order, typename EnableIf<std::is_enum_v<T>>::Type>
+class Atomic<T, Order, std::enable_if_t<std::is_enum_v<T>>>
     : public detail::AtomicBase<T, Order> {
   typedef typename detail::AtomicBase<T, Order> Base;
 

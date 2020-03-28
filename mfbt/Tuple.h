@@ -137,10 +137,10 @@ struct TupleImpl<Index, HeadT, TailT...>
   // This constructor is enabled only when the argument types are actually
   // convertible to the element types, otherwise it could become a better
   // match for certain invocations than the copy constructor.
-  template <typename OtherHeadT, typename... OtherTailT,
-            typename = typename EnableIf<
-                CheckConvertibility<Group<OtherHeadT, OtherTailT...>,
-                                    Group<HeadT, TailT...>>::value>::Type>
+  template <
+      typename OtherHeadT, typename... OtherTailT,
+      typename = std::enable_if_t<CheckConvertibility<
+          Group<OtherHeadT, OtherTailT...>, Group<HeadT, TailT...>>::value>>
   explicit TupleImpl(OtherHeadT&& aHead, OtherTailT&&... aTail)
       : Base(std::forward<OtherTailT>(aTail)...),
         mHead(std::forward<OtherHeadT>(aHead)) {}
@@ -157,8 +157,8 @@ struct TupleImpl<Index, HeadT, TailT...>
   // Assign from a tuple whose elements are convertible to the elements
   // of this tuple.
   template <typename... OtherElements,
-            typename = typename EnableIf<sizeof...(OtherElements) ==
-                                         sizeof...(TailT) + 1>::Type>
+            typename = std::enable_if_t<sizeof...(OtherElements) ==
+                                        sizeof...(TailT) + 1>>
   TupleImpl& operator=(const TupleImpl<Index, OtherElements...>& aOther) {
     typedef TupleImpl<Index, OtherElements...> OtherT;
     Head(*this) = OtherT::Head(aOther);
@@ -166,8 +166,8 @@ struct TupleImpl<Index, HeadT, TailT...>
     return *this;
   }
   template <typename... OtherElements,
-            typename = typename EnableIf<sizeof...(OtherElements) ==
-                                         sizeof...(TailT) + 1>::Type>
+            typename = std::enable_if_t<sizeof...(OtherElements) ==
+                                        sizeof...(TailT) + 1>>
   TupleImpl& operator=(TupleImpl<Index, OtherElements...>&& aOther) {
     typedef TupleImpl<Index, OtherElements...> OtherT;
     Head(*this) = std::move(OtherT::Head(aOther));
@@ -237,9 +237,9 @@ class Tuple : public detail::TupleImpl<0, Elements...> {
   // actually instantiates the constructor with an empty parameter pack -
   // that's probably a bug) and we compile with warnings-as-errors.
   template <typename OtherHead, typename... OtherTail,
-            typename = typename EnableIf<detail::CheckConvertibility<
+            typename = std::enable_if_t<detail::CheckConvertibility<
                 detail::Group<OtherHead, OtherTail...>,
-                detail::Group<Elements...>>::value>::Type>
+                detail::Group<Elements...>>::value>>
   explicit Tuple(OtherHead&& aHead, OtherTail&&... aTail)
       : Impl(std::forward<OtherHead>(aHead),
              std::forward<OtherTail>(aTail)...) {}
@@ -247,15 +247,15 @@ class Tuple : public detail::TupleImpl<0, Elements...> {
   Tuple(Tuple&& aOther) : Impl(std::move(aOther)) {}
 
   template <typename... OtherElements,
-            typename = typename EnableIf<sizeof...(OtherElements) ==
-                                         sizeof...(Elements)>::Type>
+            typename = std::enable_if_t<sizeof...(OtherElements) ==
+                                        sizeof...(Elements)>>
   Tuple& operator=(const Tuple<OtherElements...>& aOther) {
     static_cast<Impl&>(*this) = aOther;
     return *this;
   }
   template <typename... OtherElements,
-            typename = typename EnableIf<sizeof...(OtherElements) ==
-                                         sizeof...(Elements)>::Type>
+            typename = std::enable_if_t<sizeof...(OtherElements) ==
+                                        sizeof...(Elements)>>
   Tuple& operator=(Tuple<OtherElements...>&& aOther) {
     static_cast<Impl&>(*this) = std::move(aOther);
     return *this;
@@ -289,8 +289,8 @@ class Tuple<A, B> : public detail::TupleImpl<0, A, B> {
   Tuple() : Impl() {}
   explicit Tuple(const A& aA, const B& aB) : Impl(aA, aB) {}
   template <typename AArg, typename BArg,
-            typename = typename EnableIf<detail::CheckConvertibility<
-                detail::Group<AArg, BArg>, detail::Group<A, B>>::value>::Type>
+            typename = std::enable_if_t<detail::CheckConvertibility<
+                detail::Group<AArg, BArg>, detail::Group<A, B>>::value>>
   explicit Tuple(AArg&& aA, BArg&& aB)
       : Impl(std::forward<AArg>(aA), std::forward<BArg>(aB)) {}
   Tuple(const Tuple& aOther) : Impl(aOther) {}
