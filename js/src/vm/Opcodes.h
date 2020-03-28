@@ -1679,14 +1679,14 @@
      */ \
     MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
-     * Pushes the current global's builtin prototype for a given proto key.
+     * Pushes the current global's FunctionPrototype.
      *
      *   Category: Functions
      *   Type: Creating constructors
-     *   Operands: uint8_t kind
-     *   Stack: => %BuiltinPrototype%
+     *   Operands:
+     *   Stack: => %FunctionPrototype%
      */ \
-    MACRO(BuiltinProto, builtin_proto, NULL, 2, 0, 1, JOF_UINT8) \
+    MACRO(FunctionProto, function_proto, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Invoke `callee` with `this` and `args`, and push the return value. Throw
      * a TypeError if `callee` isn't a function.
