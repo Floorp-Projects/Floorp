@@ -102,26 +102,6 @@ struct IsDestructibleImpl : public DoIsDestructibleImpl {
 template <typename T>
 struct IsDestructible : public detail::IsDestructibleImpl<T>::Type {};
 
-/* 20.9.5 Type property queries [meta.unary.prop.query] */
-
-/* 20.9.6 Relationships between types [meta.rel] */
-
-/**
- * IsSame tests whether two types are the same type.
- *
- * mozilla::IsSame<int, int>::value is true;
- * mozilla::IsSame<int*, int*>::value is true;
- * mozilla::IsSame<int, unsigned int>::value is false;
- * mozilla::IsSame<void, void>::value is true;
- * mozilla::IsSame<const int, int>::value is false;
- * mozilla::IsSame<struct S, struct S>::value is true.
- */
-template <typename T, typename U>
-struct IsSame : std::false_type {};
-
-template <typename T>
-struct IsSame<T, T> : std::true_type {};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */
