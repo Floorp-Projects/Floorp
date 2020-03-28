@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Zu %1$s hinzufügen</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Die Firefox-Add-on-Technologie wird modernisiert. Diese Add-ons verwenden Frameworks, die nicht mit Firefox 75 und höher kompatibel sind.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Wir entwickeln derzeit Unterstützung für eine erste Auswahl empfohlener Erweiterungen.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Add-on wird heruntergeladen und überprüft…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

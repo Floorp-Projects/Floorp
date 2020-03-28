@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Lägg till dem i %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox-tilläggsteknologi moderniseras. Dessa tillägg använder ramverk som inte är kompatibla med Firefox 75 och senare.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Vi bygger för närvarande stöd för ett första urval av rekommenderade tillägg.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Hämtar och verifierar tillägg…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
