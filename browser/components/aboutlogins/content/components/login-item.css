@@ -295,6 +295,7 @@ input[name="password"] {
   background-image: none;
 }
 
+.vulnerable-alert,
 .breach-alert {
   border-radius: 8px;
   border: 1px solid var(--in-content-border-color);
@@ -311,13 +312,13 @@ input[name="password"] {
   position: relative;
 }
 
-.breach-alert-link {
+.alert-link {
   color: inherit;
   text-decoration: underline;
   font-weight: 600;
 }
 
-.breach-icon {
+.alert-icon {
   position: absolute;
   inset-block-start: 10px;
   inset-inline-start: 10px;
@@ -325,7 +326,7 @@ input[name="password"] {
   fill: var(--red-90);
 }
 
-.dismiss-breach-alert {
+.dismiss-alert {
   border: none;
   padding: 0;
   margin: 0;
@@ -335,21 +336,18 @@ input[name="password"] {
   min-width: auto;
   min-height: auto;
   line-height: 0;
-}
-
-.dismiss-breach-alert {
   background-color: transparent;
 }
 
-.dismiss-breach-alert:enabled:hover {
+.dismiss-alert:enabled:hover {
   background-color: var(--grey-90-a20);
 }
 
-.dismiss-breach-alert:enabled:hover:active {
+.dismiss-alert:enabled:hover:active {
   background-color: var(--grey-90-a30);
 }
 
-.dismiss-breach-alert-icon {
+.dismiss-alert-icon {
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0;
   fill: currentColor;
@@ -386,7 +384,7 @@ input[name="password"] {
 }
 
 @media (-moz-windows-default-theme: 0) {
-  .breach-icon {
+  .alert-icon {
     fill: currentColor;
   }
 }
@@ -401,6 +399,7 @@ input[name="password"] {
       --edit-delete-button-color: #cfcfd1;
     }
 
+    .vulnerable-alert,
     .breach-alert {
       box-shadow: 0 2px 8px 0 rgba(249,249,250,0.1);
     }
