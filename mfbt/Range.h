@@ -8,7 +8,6 @@
 #define mozilla_Range_h
 
 #include "mozilla/RangedPtr.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Span.h"
 
 #include <stddef.h>

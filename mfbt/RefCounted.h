@@ -17,7 +17,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefCountType.h"
-#include "mozilla/TypeTraits.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 #  include "nsXPCOM.h"

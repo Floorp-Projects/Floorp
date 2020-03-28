@@ -460,7 +460,6 @@ def link_to_cpp(interfaces, fd):
     fd.write("""
 #include "xptinfo.h"
 #include "mozilla/PerfectHash.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/dom/BindingUtils.h"
 
 // These template methods are specialized to be used in the sDOMObjects table.

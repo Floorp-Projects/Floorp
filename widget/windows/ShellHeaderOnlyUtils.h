@@ -26,7 +26,6 @@
 #include <comutil.h>
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {

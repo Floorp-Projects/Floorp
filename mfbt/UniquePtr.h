@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CompactPair.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

@@ -16,7 +16,6 @@
 #include "mozilla/Result.h"
 #include "mozilla/Saturate.h"
 #include "mozilla/Types.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 namespace interceptor {

@@ -13,7 +13,6 @@
 
 #include "nsCycleCollectionTraversalCallback.h"
 #include "mozilla/Likely.h"
-#include "mozilla/TypeTraits.h"
 
 enum { CycleCollectionEdgeNameArrayFlag = 1 };
 

@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Variant.h"
 
 namespace mozilla {

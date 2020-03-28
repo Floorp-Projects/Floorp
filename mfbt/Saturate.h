@@ -10,11 +10,11 @@
 #define mozilla_Saturate_h
 
 #include <limits>
+#include <stdint.h>
 #include <type_traits>
 #include <utility>
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 namespace detail {

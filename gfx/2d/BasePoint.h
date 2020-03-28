@@ -12,7 +12,6 @@
 #include <type_traits>
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 namespace gfx {

@@ -15,7 +15,6 @@
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TypeTraits.h"
 
 /**
  * Macro for adding a reference to an interface.

@@ -9,7 +9,6 @@
 #include <limits>
 #include <type_traits>
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

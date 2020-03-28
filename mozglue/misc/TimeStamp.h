@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Types.h"
 
 namespace IPC {

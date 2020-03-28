@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 

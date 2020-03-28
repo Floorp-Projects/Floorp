@@ -20,7 +20,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/fallible.h"
 #include "nsPointerHashKeys.h"
 

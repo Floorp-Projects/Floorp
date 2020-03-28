@@ -70,7 +70,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/TypeTraits.h"
 
 #include <stdint.h>
 #include <string.h>

@@ -10,7 +10,6 @@
 #define mozilla_MathAlgorithms_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 
 #include <cmath>
 #include <limits.h>

@@ -16,7 +16,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"  // for mozilla::TimeDuration
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/jni/Natives.h"

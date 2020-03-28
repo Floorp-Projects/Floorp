@@ -11,7 +11,6 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/IdlePeriodState.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 
