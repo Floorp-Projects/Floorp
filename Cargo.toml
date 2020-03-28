@@ -11,6 +11,7 @@ members = [
   "js/src/frontend/binast", # Code generator.
   "js/src/rust",
   "js/src/wasm/cranelift",
+  "netwerk/test/http3server",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/components/updateagent",
