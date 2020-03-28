@@ -59,8 +59,8 @@ struct IPDLParamTraits {
 template <typename P>
 static MOZ_NEVER_INLINE void WriteIPDLParam(IPC::Message* aMsg,
                                             IProtocol* aActor, P&& aParam) {
-  IPDLParamTraits<typename Decay<P>::Type>::Write(aMsg, aActor,
-                                                  std::forward<P>(aParam));
+  IPDLParamTraits<std::decay_t<P>>::Write(aMsg, aActor,
+                                          std::forward<P>(aParam));
 }
 
 template <typename P>

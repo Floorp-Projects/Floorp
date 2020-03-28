@@ -109,7 +109,7 @@ inline ResultT SignExtend(const uint32_t aValue, const uint8_t aNumValidBits) {
                 "ResultT must be a signed integral type");
   MOZ_ASSERT(aNumValidBits < 32U && aNumValidBits > 1);
 
-  using UnsignedResultT = typename Decay<std::make_unsigned_t<ResultT>>::Type;
+  using UnsignedResultT = std::decay_t<std::make_unsigned_t<ResultT>>;
 
   const uint8_t kResultWidthBits = sizeof(ResultT) * 8;
 

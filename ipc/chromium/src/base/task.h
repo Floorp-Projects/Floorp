@@ -13,6 +13,7 @@
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
 
+#include <type_traits>
 #include <utility>
 
 // Helper functions so that we can call a function a pass it arguments that come
@@ -137,8 +138,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
   template <class Method, typename... Elements>
   inline already_AddRefed<mozilla::Runnable> NewRunnableMethod(
       Method method, Elements&&... elements) {
-    typedef mozilla::Tuple<typename mozilla::Decay<Elements>::Type...>
-        ArgsTuple;
+    typedef mozilla::Tuple<std::decay_t<Elements>...> ArgsTuple;
     typedef RunnableMethod<Method, ArgsTuple> Runnable;
     typedef typename ScopedTaskFactory<Runnable>::TaskWrapper TaskWrapper;
 
@@ -300,7 +300,7 @@ template <class T, class Method, typename... Args>
 inline already_AddRefed<mozilla::Runnable> NewRunnableMethod(T* object,
                                                              Method method,
                                                              Args&&... args) {
-  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
+  typedef mozilla::Tuple<std::decay_t<Args>...> ArgsTuple;
   RefPtr<mozilla::Runnable> t = new RunnableMethod<T, Method, ArgsTuple>(
       object, method, mozilla::MakeTuple(std::forward<Args>(args)...));
   return t.forget();
@@ -338,7 +338,7 @@ template <class Function, typename... Args>
 inline already_AddRefed<mozilla::CancelableRunnable>
 NewCancelableRunnableFunction(const char* name, Function function,
                               Args&&... args) {
-  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
+  typedef mozilla::Tuple<std::decay_t<Args>...> ArgsTuple;
   RefPtr<mozilla::CancelableRunnable> t =
       new RunnableFunction<Function, ArgsTuple>(
           name, function, mozilla::MakeTuple(std::forward<Args>(args)...));
@@ -348,7 +348,7 @@ NewCancelableRunnableFunction(const char* name, Function function,
 template <class Function, typename... Args>
 inline already_AddRefed<mozilla::Runnable> NewRunnableFunction(
     const char* name, Function function, Args&&... args) {
-  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
+  typedef mozilla::Tuple<std::decay_t<Args>...> ArgsTuple;
   RefPtr<mozilla::Runnable> t = new RunnableFunction<Function, ArgsTuple>(
       name, function, mozilla::MakeTuple(std::forward<Args>(args)...));
   return t.forget();

@@ -7,6 +7,7 @@
 #ifndef nsThreadUtils_h__
 #define nsThreadUtils_h__
 
+#include <type_traits>
 #include <utility>
 
 #include "MainThreadUtils.h"
@@ -888,7 +889,7 @@ struct IsParameterStorageClass : public mozilla::FalseType {};
 
 template <typename T>
 struct StoreCopyPassByValue {
-  typedef typename mozilla::Decay<T>::Type stored_type;
+  using stored_type = std::decay_t<T>;
   typedef stored_type passed_type;
   stored_type m;
   template <typename A>
@@ -901,7 +902,7 @@ struct IsParameterStorageClass<StoreCopyPassByValue<S>>
 
 template <typename T>
 struct StoreCopyPassByConstLRef {
-  typedef typename mozilla::Decay<T>::Type stored_type;
+  using stored_type = std::decay_t<T>;
   typedef const stored_type& passed_type;
   stored_type m;
   template <typename A>
@@ -914,7 +915,7 @@ struct IsParameterStorageClass<StoreCopyPassByConstLRef<S>>
 
 template <typename T>
 struct StoreCopyPassByLRef {
-  typedef typename mozilla::Decay<T>::Type stored_type;
+  using stored_type = std::decay_t<T>;
   typedef stored_type& passed_type;
   stored_type m;
   template <typename A>
@@ -927,7 +928,7 @@ struct IsParameterStorageClass<StoreCopyPassByLRef<S>>
 
 template <typename T>
 struct StoreCopyPassByRRef {
-  typedef typename mozilla::Decay<T>::Type stored_type;
+  using stored_type = std::decay_t<T>;
   typedef stored_type&& passed_type;
   stored_type m;
   template <typename A>

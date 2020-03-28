@@ -8,6 +8,7 @@
 #define CHROME_COMMON_IPC_MESSAGE_UTILS_H_
 
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <map>
 
@@ -113,7 +114,7 @@ struct ParamTraits;
 
 template <typename P>
 static inline void WriteParam(Message* m, P&& p) {
-  ParamTraits<typename mozilla::Decay<P>::Type>::Write(m, std::forward<P>(p));
+  ParamTraits<std::decay_t<P>>::Write(m, std::forward<P>(p));
 }
 
 template <typename P>
