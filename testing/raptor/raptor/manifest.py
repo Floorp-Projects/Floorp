@@ -492,7 +492,5 @@ def get_raptor_test_list(args, oskey):
                 # test doesn't have valid settings, remove it from available list
                 LOG.info("test %s is not valid due to missing settings" % test['name'])
                 tests_to_run.remove(test)
-    else:
-        LOG.critical("abort: specified test name doesn't exist")
 
     return tests_to_run
