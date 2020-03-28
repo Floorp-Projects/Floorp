@@ -26,38 +26,40 @@
 #include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
 
+#include <type_traits>
+
 #define SPAN_TEST(name) TEST(SpanTest, name)
 #define CHECK_THROW(a, b)
 
 using namespace mozilla;
 
-static_assert(IsConvertible<Range<int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<Range<int>, Span<const int>>,
               "Range should convert into const");
-static_assert(IsConvertible<Range<const int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<Range<const int>, Span<const int>>,
               "const Range should convert into const");
-static_assert(!IsConvertible<Range<const int>, Span<int>>::value,
+static_assert(!std::is_convertible_v<Range<const int>, Span<int>>,
               "Range should not drop const in conversion");
-static_assert(IsConvertible<Span<int>, Range<const int>>::value,
+static_assert(std::is_convertible_v<Span<int>, Range<const int>>,
               "Span should convert into const");
-static_assert(IsConvertible<Span<const int>, Range<const int>>::value,
+static_assert(std::is_convertible_v<Span<const int>, Range<const int>>,
               "const Span should convert into const");
-static_assert(!IsConvertible<Span<const int>, Range<int>>::value,
+static_assert(!std::is_convertible_v<Span<const int>, Range<int>>,
               "Span should not drop const in conversion");
-static_assert(IsConvertible<Span<const int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<Span<const int>, Span<const int>>,
               "const Span should convert into const");
-static_assert(IsConvertible<Span<int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<Span<int>, Span<const int>>,
               "Span should convert into const");
-static_assert(!IsConvertible<Span<const int>, Span<int>>::value,
+static_assert(!std::is_convertible_v<Span<const int>, Span<int>>,
               "Span should not drop const in conversion");
-static_assert(IsConvertible<const nsTArray<int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<const nsTArray<int>, Span<const int>>,
               "const nsTArray should convert into const");
-static_assert(IsConvertible<nsTArray<int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<nsTArray<int>, Span<const int>>,
               "nsTArray should convert into const");
-static_assert(!IsConvertible<const nsTArray<int>, Span<int>>::value,
+static_assert(!std::is_convertible_v<const nsTArray<int>, Span<int>>,
               "nsTArray should not drop const in conversion");
-static_assert(IsConvertible<nsTArray<const int>, Span<const int>>::value,
+static_assert(std::is_convertible_v<nsTArray<const int>, Span<const int>>,
               "nsTArray should convert into const");
-static_assert(!IsConvertible<nsTArray<const int>, Span<int>>::value,
+static_assert(!std::is_convertible_v<nsTArray<const int>, Span<int>>,
               "nsTArray should not drop const in conversion");
 
 /**

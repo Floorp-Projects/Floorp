@@ -56,7 +56,8 @@ struct CheckConvertibilityImpl<Group<SourceTypes...>, Group<TargetTypes...>,
                                true>
     : IntegralConstant<
           bool,
-          tl::And<IsConvertible<SourceTypes, TargetTypes>::value...>::value> {};
+          tl::And<std::is_convertible_v<SourceTypes, TargetTypes>...>::value> {
+};
 
 template <typename Source, typename Target>
 struct CheckConvertibility;
