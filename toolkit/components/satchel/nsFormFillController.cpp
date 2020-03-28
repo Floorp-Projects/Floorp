@@ -647,9 +647,8 @@ nsFormFillController::GetNoRollupOnCaretMove(bool* aNoRollupOnCaretMove) {
 
 NS_IMETHODIMP
 nsFormFillController::GetNoRollupOnEmptySearch(bool* aNoRollupOnEmptySearch) {
-  if (mFocusedInput &&
-      (mPwmgrInputs.Get(mFocusedInput) ||
-       mFocusedInput->ControlType() == NS_FORM_INPUT_PASSWORD)) {
+  if (mFocusedInput && (mPwmgrInputs.Get(mFocusedInput) ||
+                        mFocusedInput->HasBeenTypePassword())) {
     // Don't close the login popup when the field is cleared (bug 1534896).
     *aNoRollupOnEmptySearch = true;
   } else {
@@ -680,9 +679,8 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
   // handle the autocomplete. Otherwise, handle with form history.
   // This method is sometimes called in unit tests and from XUL without a
   // focused node.
-  if (mFocusedInput &&
-      (mPwmgrInputs.Get(mFocusedInput) ||
-       mFocusedInput->ControlType() == NS_FORM_INPUT_PASSWORD)) {
+  if (mFocusedInput && (mPwmgrInputs.Get(mFocusedInput) ||
+                        mFocusedInput->HasBeenTypePassword())) {
     MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: login field"));
 
     // Handle the case where a password field is focused but
@@ -941,8 +939,7 @@ void nsFormFillController::MaybeStartControllingInput(
   bool hasList = !!aInput->GetList();
 
   bool isPwmgrInput = false;
-  if (mPwmgrInputs.Get(aInput) ||
-      aInput->ControlType() == NS_FORM_INPUT_PASSWORD) {
+  if (mPwmgrInputs.Get(aInput) || aInput->HasBeenTypePassword()) {
     isPwmgrInput = true;
   }
 
@@ -958,7 +955,7 @@ void nsFormFillController::MaybeStartControllingInput(
 #ifdef NIGHTLY_BUILD
   // Trigger an asynchronous login reputation query when user focuses on the
   // password field.
-  if (aInput->ControlType() == NS_FORM_INPUT_PASSWORD) {
+  if (aInput->HasBeenTypePassword()) {
     StartQueryLoginReputation(aInput);
   }
 #endif
@@ -981,7 +978,7 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
   // multiple input forms and the fact that a mousedown into an already focused
   // field does not trigger another focus.
 
-  if (mFocusedInput->ControlType() != NS_FORM_INPUT_PASSWORD) {
+  if (!mFocusedInput->HasBeenTypePassword()) {
     return NS_OK;
   }
 

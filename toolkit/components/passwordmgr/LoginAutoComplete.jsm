@@ -159,7 +159,7 @@ class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
 class LoginAutocompleteItem extends AutocompleteItem {
   constructor(
     login,
-    isPasswordField,
+    hasBeenTypePassword,
     duplicateUsernames,
     actor,
     isOriginMatched
@@ -184,7 +184,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
     });
 
     XPCOMUtils.defineLazyGetter(this, "value", () => {
-      return isPasswordField ? login.password : login.username;
+      return hasBeenTypePassword ? login.password : login.username;
     });
 
     XPCOMUtils.defineLazyGetter(this, "comment", () => {
@@ -257,7 +257,7 @@ function LoginAutoCompleteResult(
     willAutoSaveGeneratedPassword,
     isSecure,
     actor,
-    isPasswordField,
+    hasBeenTypePassword,
     hostname,
     telemetryEventData,
   }
@@ -272,7 +272,7 @@ function LoginAutoCompleteResult(
 
     // Don't show the footer on non-empty password fields as it's not providing
     // value and only adding noise since a password was already filled.
-    if (isPasswordField && aSearchString && !generatedPassword) {
+    if (hasBeenTypePassword && aSearchString && !generatedPassword) {
       log.debug("Hiding footer: non-empty password field");
       return false;
     }
@@ -280,7 +280,7 @@ function LoginAutoCompleteResult(
     if (
       !matchingLogins.length &&
       !generatedPassword &&
-      isPasswordField &&
+      hasBeenTypePassword &&
       formFillController.passwordPopupAutomaticallyOpened
     ) {
       hidingFooterOnPWFieldAutoOpened = true;
@@ -311,7 +311,7 @@ function LoginAutoCompleteResult(
   for (let login of logins) {
     let item = new LoginAutocompleteItem(
       login,
-      isPasswordField,
+      hasBeenTypePassword,
       duplicateUsernames,
       actor,
       LoginHelper.isOriginMatching(login.origin, formOrigin, {
@@ -483,7 +483,7 @@ LoginAutoComplete.prototype = {
     if (isSecure) {
       isSecure = InsecurePasswordUtils.isFormSecure(form);
     }
-    let isPasswordField = aElement.type == "password";
+    let { hasBeenTypePassword } = aElement;
     let hostname = aElement.ownerDocument.documentURIObject.host;
     let formOrigin = LoginHelper.getLoginOrigin(
       aElement.ownerDocument.documentURI
@@ -529,7 +529,7 @@ LoginAutoComplete.prototype = {
           willAutoSaveGeneratedPassword,
           actor: loginManagerActor,
           isSecure,
-          isPasswordField,
+          hasBeenTypePassword,
           hostname,
           telemetryEventData,
         }
@@ -545,7 +545,7 @@ LoginAutoComplete.prototype = {
     }
 
     if (
-      isPasswordField &&
+      hasBeenTypePassword &&
       aSearchString &&
       !loginManagerActor.isPasswordGenerationForcedOn(aElement)
     ) {
@@ -578,7 +578,7 @@ LoginAutoComplete.prototype = {
       inputElement: aElement,
       form,
       formOrigin,
-      isPasswordField,
+      hasBeenTypePassword,
     });
     completeSearch(acLookupPromise).catch(log.error.bind(log));
   },
@@ -593,7 +593,7 @@ LoginAutoComplete.prototype = {
     inputElement,
     form,
     formOrigin,
-    isPasswordField,
+    hasBeenTypePassword,
   }) {
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
     let autocompleteInfo = inputElement.getAutocompleteInfo();
@@ -603,7 +603,7 @@ LoginAutoComplete.prototype = {
     );
     let forcePasswordGeneration = false;
     let isProbablyANewPasswordField = false;
-    if (isPasswordField) {
+    if (hasBeenTypePassword) {
       forcePasswordGeneration = loginManagerActor.isPasswordGenerationForcedOn(
         inputElement
       );
@@ -620,8 +620,8 @@ LoginAutoComplete.prototype = {
       searchString,
       previousResult,
       forcePasswordGeneration,
+      hasBeenTypePassword,
       isSecure: InsecurePasswordUtils.isFormSecure(form),
-      isPasswordField,
       isProbablyANewPasswordField,
     };
 
@@ -632,9 +632,9 @@ LoginAutoComplete.prototype = {
     log.debug("LoginAutoComplete search:", {
       forcePasswordGeneration,
       isSecure: messageData.isSecure,
-      isPasswordField,
+      hasBeenTypePassword,
       isProbablyANewPasswordField,
-      searchString: isPasswordField
+      searchString: hasBeenTypePassword
         ? "*".repeat(searchString.length)
         : searchString,
     });

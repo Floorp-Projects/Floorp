@@ -16,8 +16,8 @@ const NEW_PASSWORD_TEMPLATE_ARG = {
   searchString: "",
   previousResult: null,
   requestId: "foo",
+  hasBeenTypePassword: true,
   isSecure: true,
-  isPasswordField: true,
   isProbablyANewPasswordField: true,
 };
 
@@ -72,7 +72,7 @@ add_task(async function test_generated_noLogins() {
   let result3 = await LMP.doAutocompleteSearch({
     ...NEW_PASSWORD_TEMPLATE_ARG,
     ...{
-      isPasswordField: false,
+      hasBeenTypePassword: false,
       isProbablyANewPasswordField: false,
     },
   });
