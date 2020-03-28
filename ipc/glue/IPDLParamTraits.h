@@ -234,7 +234,7 @@ struct IPDLParamTraits<nsTArray<T>> {
   // a data structure T for which IsPod<T>::value is true, yet also have a
   // {IPDL,}ParamTraits<T> specialization.
   static const bool sUseWriteBytes =
-      (mozilla::IsIntegral<T>::value || std::is_floating_point_v<T>);
+      (std::is_integral_v<T> || std::is_floating_point_v<T>);
 };
 
 // Maybe support for IPDLParamTraits

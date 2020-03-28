@@ -54,8 +54,7 @@ using namespace mozilla::fuzzing;
  */
 template <typename T>
 void FuzzIntegralType(T* v, bool largeValues) {
-  static_assert(mozilla::IsIntegral<T>::value == true,
-                "T must be an integral type");
+  static_assert(std::is_integral_v<T> == true, "T must be an integral type");
   switch (FuzzingTraits::Random(6)) {
     case 0:
       if (largeValues) {

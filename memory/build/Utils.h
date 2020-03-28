@@ -7,6 +7,8 @@
 #ifndef Utils_h
 #define Utils_h
 
+#include <type_traits>
+
 #include "mozilla/CheckedInt.h"
 #include "mozilla/TemplateLib.h"
 
@@ -28,7 +30,7 @@ enum class Order {
 // Equal or Greater than the second integer.
 template <typename T>
 Order CompareInt(T aValue1, T aValue2) {
-  static_assert(mozilla::IsIntegral<T>::value, "Type must be integral");
+  static_assert(std::is_integral_v<T>, "Type must be integral");
   if (aValue1 < aValue2) {
     return Order::eLess;
   }

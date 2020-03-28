@@ -489,7 +489,7 @@ constexpr bool IsPowerOfTwo(T x) {
 
 template <typename T>
 inline T Clamp(const T aValue, const T aMin, const T aMax) {
-  static_assert(IsIntegral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "Clamp accepts only integral types, so that it doesn't have"
                 " to distinguish differently-signed zeroes (which users may"
                 " or may not care to distinguish, likely at a perf cost) or"

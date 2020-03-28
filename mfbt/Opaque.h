@@ -9,7 +9,7 @@
 #ifndef mozilla_Opaque_h
 #define mozilla_Opaque_h
 
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
 
 namespace mozilla {
 
@@ -20,7 +20,7 @@ namespace mozilla {
  */
 template <typename T>
 class Opaque final {
-  static_assert(mozilla::IsIntegral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "mozilla::Opaque only supports integral types");
 
   T mValue;

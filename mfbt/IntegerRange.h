@@ -155,7 +155,7 @@ struct GeqZero<T, true> {
 
 template <typename IntType>
 detail::IntegerRange<IntType> IntegerRange(IntType aEnd) {
-  static_assert(IsIntegral<IntType>::value, "value must be integral");
+  static_assert(std::is_integral_v<IntType>, "value must be integral");
   MOZ_ASSERT(detail::GeqZero<IntType>::isNonNegative(aEnd),
              "Should never have negative value here");
   return detail::IntegerRange<IntType>(aEnd);
@@ -163,7 +163,7 @@ detail::IntegerRange<IntType> IntegerRange(IntType aEnd) {
 
 template <typename IntType1, typename IntType2>
 detail::IntegerRange<IntType2> IntegerRange(IntType1 aBegin, IntType2 aEnd) {
-  static_assert(IsIntegral<IntType1>::value && IsIntegral<IntType2>::value,
+  static_assert(std::is_integral_v<IntType1> && std::is_integral_v<IntType2>,
                 "values must both be integral");
   static_assert(std::is_signed_v<IntType1> == std::is_signed_v<IntType2>,
                 "signed/unsigned mismatch");

@@ -174,7 +174,7 @@ struct BoundsCheckImpl<From, To, FromIsSigned, ToIsSigned> {
 
 template <typename From, typename To,
           bool TypesAreIntegral =
-              IsIntegral<From>::value&& IsIntegral<To>::value>
+              std::is_integral_v<From>&& std::is_integral_v<To>>
 class BoundsChecker;
 
 template <typename From>
