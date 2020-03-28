@@ -79,30 +79,6 @@ struct IsVoidHelper<void> : TrueType {};
 template <typename T>
 struct IsVoid : detail::IsVoidHelper<typename RemoveCV<T>::Type> {};
 
-namespace detail {
-
-template <typename T>
-struct IsArrayHelper : FalseType {};
-
-template <typename T, decltype(sizeof(1)) N>
-struct IsArrayHelper<T[N]> : TrueType {};
-
-template <typename T>
-struct IsArrayHelper<T[]> : TrueType {};
-
-}  // namespace detail
-
-/**
- * IsArray determines whether a type is an array type, of known or unknown
- * length.
- *
- * mozilla::IsArray<int>::value is false;
- * mozilla::IsArray<int[]>::value is true;
- * mozilla::IsArray<int[5]>::value is true.
- */
-template <typename T>
-struct IsArray : detail::IsArrayHelper<typename RemoveCV<T>::Type> {};
-
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**

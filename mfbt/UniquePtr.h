@@ -267,7 +267,7 @@ class UniquePtr {
       UniquePtr<U, E>&& aOther,
       typename EnableIf<
           IsConvertible<typename UniquePtr<U, E>::Pointer, Pointer>::value &&
-              !IsArray<U>::value &&
+              !std::is_array_v<U> &&
               (std::is_reference_v<D> ? IsSame<D, E>::value
                                       : IsConvertible<E, D>::value),
           int>::Type aDummy = 0)
@@ -286,7 +286,7 @@ class UniquePtr {
     static_assert(
         IsConvertible<typename UniquePtr<U, E>::Pointer, Pointer>::value,
         "incompatible UniquePtr pointees");
-    static_assert(!IsArray<U>::value,
+    static_assert(!std::is_array_v<U>,
                   "can't assign from UniquePtr holding an array");
 
     reset(aOther.release());

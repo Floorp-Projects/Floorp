@@ -423,7 +423,7 @@ namespace detail {
 template <typename T>
 struct AssertionConditionType {
   typedef typename RemoveReference<T>::Type ValueT;
-  static_assert(!IsArray<ValueT>::value,
+  static_assert(!std::is_array_v<ValueT>,
                 "Expected boolean assertion condition, got an array or a "
                 "string!");
   static_assert(!std::is_function_v<ValueT>,

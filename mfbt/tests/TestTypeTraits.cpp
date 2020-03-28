@@ -9,15 +9,10 @@
 
 using mozilla::AddRvalueReference;
 using mozilla::DeclVal;
-using mozilla::IsArray;
 using mozilla::IsConvertible;
 using mozilla::IsDestructible;
 using mozilla::IsSame;
 using mozilla::RemovePointer;
-
-static_assert(!IsArray<bool>::value, "bool not an array");
-static_assert(IsArray<bool[]>::value, "bool[] is an array");
-static_assert(IsArray<bool[5]>::value, "bool[5] is an array");
 
 class PublicDestructible {
  public:
