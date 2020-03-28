@@ -65,7 +65,9 @@ struct StorageTypeHelper<T*, true, false> {
 
 template <template <typename> class SmartPtr, typename T>
 struct StorageTypeHelper<SmartPtr<T>, true, false>
-    : EnableIf<std::is_convertible_v<SmartPtr<T>, T*>, RefPtr<T>> {};
+    : std::enable_if<std::is_convertible_v<SmartPtr<T>, T*>, RefPtr<T>> {
+  using Type = typename StorageTypeHelper::enable_if::type;
+};
 
 template <typename T>
 using StorageType = typename StorageTypeHelper<std::decay_t<T>>::Type;

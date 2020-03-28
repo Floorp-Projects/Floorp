@@ -179,7 +179,7 @@ inline HashNumber AddUintptrToHash<8>(HashNumber aHash, uintptr_t aValue) {
  * convert to uint32_t, data pointers, and function pointers.
  */
 template <typename T, bool TypeIsNotIntegral = !std::is_integral_v<T>,
-          typename U = typename mozilla::EnableIf<TypeIsNotIntegral>::Type>
+          typename U = std::enable_if_t<TypeIsNotIntegral>>
 MOZ_MUST_USE inline HashNumber AddToHash(HashNumber aHash, T aA) {
   /*
    * Try to convert |A| to uint32_t implicitly.  If this works, great.  If not,
@@ -204,8 +204,7 @@ MOZ_MUST_USE inline HashNumber AddToHash(HashNumber aHash, A* aA) {
 // types are treated the same as 64-bit pointers, and smaller integral types are
 // first implicitly converted to 32 bits and then passed to AddUintptrToHash()
 // to be hashed.
-template <typename T,
-          typename U = typename mozilla::EnableIf<std::is_integral_v<T>>::Type>
+template <typename T, typename U = std::enable_if_t<std::is_integral_v<T>>>
 MOZ_MUST_USE constexpr HashNumber AddToHash(HashNumber aHash, T aA) {
   return detail::AddUintptrToHash<sizeof(T)>(aHash, aA);
 }

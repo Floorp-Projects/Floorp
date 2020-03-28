@@ -8,6 +8,7 @@
 #define mozilla_layers_TreeTraversal_h
 
 #include <queue>
+#include <type_traits>
 
 namespace mozilla {
 namespace layers {
@@ -86,11 +87,11 @@ class ReverseIterator {
 template <typename Iterator, typename Node, typename PreAction,
           typename PostAction>
 static auto ForEachNode(Node aRoot, const PreAction& aPreAction,
-                        const PostAction& aPostAction) ->
-    typename EnableIf<
+                        const PostAction& aPostAction)
+    -> std::enable_if_t<
         IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value &&
             IsSame<decltype(aPostAction(aRoot)), TraversalFlag>::value,
-        bool>::Type {
+        bool> {
   if (!aRoot) {
     return false;
   }
@@ -127,10 +128,10 @@ static auto ForEachNode(Node aRoot, const PreAction& aPreAction,
 template <typename Iterator, typename Node, typename PreAction,
           typename PostAction>
 static auto ForEachNode(Node aRoot, const PreAction& aPreAction,
-                        const PostAction& aPostAction) ->
-    typename EnableIf<IsSame<decltype(aPreAction(aRoot)), void>::value &&
-                          IsSame<decltype(aPostAction(aRoot)), void>::value,
-                      void>::Type {
+                        const PostAction& aPostAction)
+    -> std::enable_if_t<IsSame<decltype(aPreAction(aRoot)), void>::value &&
+                            IsSame<decltype(aPostAction(aRoot)), void>::value,
+                        void> {
   if (!aRoot) {
     return;
   }
@@ -149,9 +150,8 @@ static auto ForEachNode(Node aRoot, const PreAction& aPreAction,
  * ForEachNode pre-order traversal, using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PreAction>
-auto ForEachNode(Node aRoot, const PreAction& aPreAction) ->
-    typename EnableIf<IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value,
-                      bool>::Type {
+auto ForEachNode(Node aRoot, const PreAction& aPreAction) -> std::enable_if_t<
+    IsSame<decltype(aPreAction(aRoot)), TraversalFlag>::value, bool> {
   return ForEachNode<Iterator>(
       aRoot, aPreAction, [](Node aNode) { return TraversalFlag::Continue; });
 }
@@ -160,9 +160,9 @@ auto ForEachNode(Node aRoot, const PreAction& aPreAction) ->
  * ForEachNode pre-order, not using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PreAction>
-auto ForEachNode(Node aRoot, const PreAction& aPreAction) ->
-    typename EnableIf<IsSame<decltype(aPreAction(aRoot)), void>::value,
-                      void>::Type {
+auto ForEachNode(Node aRoot, const PreAction& aPreAction)
+    -> std::enable_if_t<IsSame<decltype(aPreAction(aRoot)), void>::value,
+                        void> {
   ForEachNode<Iterator>(aRoot, aPreAction, [](Node aNode) {});
 }
 
@@ -170,10 +170,9 @@ auto ForEachNode(Node aRoot, const PreAction& aPreAction) ->
  * ForEachNode post-order traversal, using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PostAction>
-auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction) ->
-    typename EnableIf<
-        IsSame<decltype(aPostAction(aRoot)), TraversalFlag>::value,
-        bool>::Type {
+auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction)
+    -> std::enable_if_t<
+        IsSame<decltype(aPostAction(aRoot)), TraversalFlag>::value, bool> {
   return ForEachNode<Iterator>(
       aRoot, [](Node aNode) { return TraversalFlag::Continue; }, aPostAction);
 }
@@ -182,9 +181,9 @@ auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction) ->
  * ForEachNode post-order, not using TraversalFlag.
  */
 template <typename Iterator, typename Node, typename PostAction>
-auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction) ->
-    typename EnableIf<IsSame<decltype(aPostAction(aRoot)), void>::value,
-                      void>::Type {
+auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction)
+    -> std::enable_if_t<IsSame<decltype(aPostAction(aRoot)), void>::value,
+                        void> {
   ForEachNode<Iterator>(
       aRoot, [](Node aNode) {}, aPostAction);
 }

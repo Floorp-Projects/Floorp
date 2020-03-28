@@ -128,8 +128,8 @@ enum NativePtrType { OWNING, WEAK, REFPTR };
 template <class Impl>
 class NativePtrPicker {
   template <class I>
-  static typename EnableIf<std::is_base_of<SupportsWeakPtr<I>, I>::value,
-                           char (&)[NativePtrType::WEAK]>::Type
+  static std::enable_if_t<std::is_base_of<SupportsWeakPtr<I>, I>::value,
+                          char (&)[NativePtrType::WEAK]>
   Test(char);
 
   template <class I, typename = decltype(&I::AddRef, &I::Release)>
@@ -387,19 +387,19 @@ class ProxyNativeCall {
   // another pair of template parameters, Static and ThisArg.
 
   template <bool Static, bool ThisArg, size_t... Indices>
-  typename mozilla::EnableIf<Static && ThisArg, void>::Type Call(
+  std::enable_if_t<Static && ThisArg, void> Call(
       const Class::LocalRef& cls, std::index_sequence<Indices...>) const {
     (*mNativeCall)(cls, mozilla::Get<Indices>(mArgs)...);
   }
 
   template <bool Static, bool ThisArg, size_t... Indices>
-  typename mozilla::EnableIf<Static && !ThisArg, void>::Type Call(
+  std::enable_if_t<Static && !ThisArg, void> Call(
       const Class::LocalRef& cls, std::index_sequence<Indices...>) const {
     (*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
   }
 
   template <bool Static, bool ThisArg, size_t... Indices>
-  typename mozilla::EnableIf<!Static && ThisArg, void>::Type Call(
+  std::enable_if_t<!Static && ThisArg, void> Call(
       const typename Owner::LocalRef& inst,
       std::index_sequence<Indices...>) const {
     Impl* const impl = NativePtr<Impl>::Get(inst);
@@ -408,7 +408,7 @@ class ProxyNativeCall {
   }
 
   template <bool Static, bool ThisArg, size_t... Indices>
-  typename mozilla::EnableIf<!Static && !ThisArg, void>::Type Call(
+  std::enable_if_t<!Static && !ThisArg, void> Call(
       const typename Owner::LocalRef& inst,
       std::index_sequence<Indices...>) const {
     Impl* const impl = NativePtr<Impl>::Get(inst);
@@ -487,8 +487,7 @@ template <class Impl, bool HasThisArg, typename... Args>
 struct Dispatcher {
   template <class Traits, bool IsStatic = Traits::isStatic,
             typename... ProxyArgs>
-  static typename EnableIf<Traits::dispatchTarget == DispatchTarget::PROXY,
-                           void>::Type
+  static std::enable_if_t<Traits::dispatchTarget == DispatchTarget::PROXY, void>
   Run(ProxyArgs&&... args) {
     Impl::OnNativeCall(
         ProxyNativeCall<Impl, typename Traits::Owner, IsStatic, HasThisArg,
@@ -497,8 +496,8 @@ struct Dispatcher {
 
   template <class Traits, bool IsStatic = Traits::isStatic, typename ThisArg,
             typename... ProxyArgs>
-  static typename EnableIf<
-      Traits::dispatchTarget == DispatchTarget::GECKO_PRIORITY, void>::Type
+  static std::enable_if_t<
+      Traits::dispatchTarget == DispatchTarget::GECKO_PRIORITY, void>
   Run(ThisArg thisArg, ProxyArgs&&... args) {
     // For a static method, do not forward the "this arg" (i.e. the class
     // local ref) if the implementation does not request it. This saves us
@@ -513,8 +512,7 @@ struct Dispatcher {
 
   template <class Traits, bool IsStatic = Traits::isStatic, typename ThisArg,
             typename... ProxyArgs>
-  static typename EnableIf<Traits::dispatchTarget == DispatchTarget::GECKO,
-                           void>::Type
+  static std::enable_if_t<Traits::dispatchTarget == DispatchTarget::GECKO, void>
   Run(ThisArg thisArg, ProxyArgs&&... args) {
     // For a static method, do not forward the "this arg" (i.e. the class
     // local ref) if the implementation does not request it. This saves us
@@ -528,8 +526,8 @@ struct Dispatcher {
   }
 
   template <class Traits, bool IsStatic = false, typename... ProxyArgs>
-  static typename EnableIf<Traits::dispatchTarget == DispatchTarget::CURRENT,
-                           void>::Type
+  static std::enable_if_t<Traits::dispatchTarget == DispatchTarget::CURRENT,
+                          void>
   Run(ProxyArgs&&... args) {
     MOZ_CRASH("Unreachable code");
   }

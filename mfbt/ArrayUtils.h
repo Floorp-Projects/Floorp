@@ -18,6 +18,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
+#  include <type_traits>
 
 #  include "mozilla/Alignment.h"
 #  include "mozilla/Array.h"
@@ -101,8 +102,7 @@ bool ArrayEqual(const T* const a, const U* const b, const size_t n) {
 
 namespace detail {
 
-template <typename AlignType, typename Pointee,
-          typename = EnableIf<!IsVoid<AlignType>::value>>
+template <typename AlignType, typename Pointee, typename = void>
 struct AlignedChecker {
   static void test(const Pointee* aPtr) {
     MOZ_ASSERT((uintptr_t(aPtr) % MOZ_ALIGNOF(AlignType)) == 0,
@@ -111,7 +111,8 @@ struct AlignedChecker {
 };
 
 template <typename AlignType, typename Pointee>
-struct AlignedChecker<AlignType, Pointee> {
+struct AlignedChecker<AlignType, Pointee,
+                      std::enable_if_t<IsVoid<AlignType>::value>> {
   static void test(const Pointee* aPtr) {}
 };
 
@@ -131,9 +132,9 @@ struct AlignedChecker<AlignType, Pointee> {
  * particular alignment).
  */
 template <typename T, typename U>
-inline typename EnableIf<IsSame<T, U>::value || std::is_base_of<T, U>::value ||
-                             IsVoid<T>::value,
-                         bool>::Type
+inline std::enable_if_t<IsSame<T, U>::value || std::is_base_of<T, U>::value ||
+                            IsVoid<T>::value,
+                        bool>
 IsInRange(const T* aPtr, const U* aBegin, const U* aEnd) {
   MOZ_ASSERT(aBegin <= aEnd);
   detail::AlignedChecker<U, T>::test(aPtr);

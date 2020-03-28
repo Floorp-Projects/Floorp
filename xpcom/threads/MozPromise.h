@@ -508,17 +508,15 @@ class MozPromise : public MozPromiseBase {
    * make the resolve/reject value argument "optional".
    */
   template <typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<
-      TakesArgument<MethodType>::value,
-      typename detail::MethodTrait<MethodType>::ReturnType>::Type
+  static std::enable_if_t<TakesArgument<MethodType>::value,
+                          typename detail::MethodTrait<MethodType>::ReturnType>
   InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue) {
     return (aThisVal->*aMethod)(std::forward<ValueType>(aValue));
   }
 
   template <typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<
-      !TakesArgument<MethodType>::value,
-      typename detail::MethodTrait<MethodType>::ReturnType>::Type
+  static std::enable_if_t<!TakesArgument<MethodType>::value,
+                          typename detail::MethodTrait<MethodType>::ReturnType>
   InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue) {
     return (aThisVal->*aMethod)();
   }
@@ -526,7 +524,7 @@ class MozPromise : public MozPromiseBase {
   // Called when promise chaining is supported.
   template <bool SupportChaining, typename ThisType, typename MethodType,
             typename ValueType, typename CompletionPromiseType>
-  static typename EnableIf<SupportChaining, void>::Type InvokeCallbackMethod(
+  static std::enable_if_t<SupportChaining, void> InvokeCallbackMethod(
       ThisType* aThisVal, MethodType aMethod, ValueType&& aValue,
       CompletionPromiseType&& aCompletionPromise) {
     auto p = InvokeMethod(aThisVal, aMethod, std::forward<ValueType>(aValue));
@@ -538,7 +536,7 @@ class MozPromise : public MozPromiseBase {
   // Called when promise chaining is not supported.
   template <bool SupportChaining, typename ThisType, typename MethodType,
             typename ValueType, typename CompletionPromiseType>
-  static typename EnableIf<!SupportChaining, void>::Type InvokeCallbackMethod(
+  static std::enable_if_t<!SupportChaining, void> InvokeCallbackMethod(
       ThisType* aThisVal, MethodType aMethod, ValueType&& aValue,
       CompletionPromiseType&& aCompletionPromise) {
     MOZ_DIAGNOSTIC_ASSERT(
@@ -1403,7 +1401,7 @@ constexpr bool Any(T1 a, Ts... aOthers) {
 // See ParameterStorage in nsThreadUtils.h for help.
 template <typename... Storages, typename PromiseType, typename ThisType,
           typename... ArgTypes, typename... ActualArgTypes,
-          typename EnableIf<sizeof...(Storages) != 0, int>::Type = 0>
+          std::enable_if_t<sizeof...(Storages) != 0, int> = 0>
 static RefPtr<PromiseType> InvokeAsync(
     nsISerialEventTarget* aTarget, ThisType* aThisVal, const char* aCallerName,
     RefPtr<PromiseType> (ThisType::*aMethod)(ArgTypes...),
@@ -1422,7 +1420,7 @@ static RefPtr<PromiseType> InvokeAsync(
 // then move them out of the runnable into the target method parameters.
 template <typename... Storages, typename PromiseType, typename ThisType,
           typename... ArgTypes, typename... ActualArgTypes,
-          typename EnableIf<sizeof...(Storages) == 0, int>::Type = 0>
+          std::enable_if_t<sizeof...(Storages) == 0, int> = 0>
 static RefPtr<PromiseType> InvokeAsync(
     nsISerialEventTarget* aTarget, ThisType* aThisVal, const char* aCallerName,
     RefPtr<PromiseType> (ThisType::*aMethod)(ArgTypes...),

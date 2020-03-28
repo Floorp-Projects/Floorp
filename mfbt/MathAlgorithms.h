@@ -68,8 +68,8 @@ struct AllowDeprecatedAbs<long> : TrueType {};
 // DO NOT USE DeprecatedAbs.  It exists only until its callers can be converted
 // to Abs below, and it will be removed when all callers have been changed.
 template <typename T>
-inline typename mozilla::EnableIf<detail::AllowDeprecatedAbs<T>::value, T>::Type
-DeprecatedAbs(const T aValue) {
+inline std::enable_if_t<detail::AllowDeprecatedAbs<T>::value, T> DeprecatedAbs(
+    const T aValue) {
   // The absolute value of the smallest possible value of a signed-integer type
   // won't fit in that type (on twos-complement systems -- and we're blithely
   // assuming we're on such systems, for the non-<stdint.h> types listed above),
@@ -111,11 +111,13 @@ struct AbsReturnTypeFixed<int64_t> {
   typedef uint64_t Type;
 };
 
-template <typename T>
+template <typename T, typename = void>
 struct AbsReturnType : AbsReturnTypeFixed<T> {};
 
-template <>
-struct AbsReturnType<char> : EnableIf<char(-1) < char(0), unsigned char> {};
+template <typename T>
+struct AbsReturnType<T, std::enable_if_t<std::is_same_v<T, char> && char(-1) < char(0)>> {
+  using Type = unsigned char;
+};
 template <>
 struct AbsReturnType<signed char> {
   typedef unsigned char Type;
