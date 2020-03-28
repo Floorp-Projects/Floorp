@@ -134,19 +134,6 @@ struct IsFunction : public detail::IsFunPtr<typename RemoveCV<T>::Type*> {};
 /* 20.9.4.3 Type properties [meta.unary.prop] */
 
 /**
- * IsVolatile determines whether a type is volatile or not.
- *
- * mozilla::IsVolatile<int>::value is false;
- * mozilla::IsVolatile<void* volatile>::value is true;
- * mozilla::IsVolatile<volatile char*>::value is false.
- */
-template <typename T>
-struct IsVolatile : FalseType {};
-
-template <typename T>
-struct IsVolatile<volatile T> : TrueType {};
-
-/**
  * Traits class for identifying POD types.  Until C++11 there's no automatic
  * way to detect PODs, so for the moment this is done manually.  Users may
  * define specializations of this class that inherit from mozilla::TrueType and
