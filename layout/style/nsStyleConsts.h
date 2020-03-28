@@ -791,8 +791,7 @@ enum class StyleMaskComposite : uint8_t {
   Exclude
 };
 // See nsStyleText::mControlCharacterVisibility
-#define NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN 0
-#define NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE 1
+enum class StyleControlCharacterVisibility : uint8_t { Hidden = 0, Visible };
 
 // counter system
 #define NS_STYLE_COUNTER_SYSTEM_CYCLIC 0
