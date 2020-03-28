@@ -180,7 +180,7 @@ struct IsSupportedPass2<unsigned long long> {
 template <typename IntegerType, size_t Size = sizeof(IntegerType)>
 struct TwiceBiggerType {
   typedef typename detail::StdintTypeForSizeAndSignedness<
-      sizeof(IntegerType) * 2, IsSigned<IntegerType>::value>::Type Type;
+      sizeof(IntegerType) * 2, std::is_signed_v<IntegerType>>::Type Type;
 };
 
 template <typename IntegerType>
@@ -204,8 +204,8 @@ constexpr T BinaryComplement(T aX) {
   return ~aX;
 }
 
-template <typename T, typename U, bool IsTSigned = IsSigned<T>::value,
-          bool IsUSigned = IsSigned<U>::value>
+template <typename T, typename U, bool IsTSigned = std::is_signed_v<T>,
+          bool IsUSigned = std::is_signed_v<U>>
 struct DoesRangeContainRange {};
 
 template <typename T, typename U, bool Signedness>
@@ -223,8 +223,8 @@ struct DoesRangeContainRange<T, U, false, true> {
   static const bool value = false;
 };
 
-template <typename T, typename U, bool IsTSigned = IsSigned<T>::value,
-          bool IsUSigned = IsSigned<U>::value,
+template <typename T, typename U, bool IsTSigned = std::is_signed_v<T>,
+          bool IsUSigned = std::is_signed_v<U>,
           bool DoesTRangeContainURange = DoesRangeContainRange<T, U>::value>
 struct IsInRangeImpl {};
 
@@ -284,7 +284,7 @@ constexpr bool IsAddValid(T aX, T aY) {
   std::make_unsigned_t<T> ux = aX;
   std::make_unsigned_t<T> uy = aY;
   std::make_unsigned_t<T> result = ux + uy;
-  return IsSigned<T>::value
+  return std::is_signed_v<T>
              ? HasSignBit(BinaryComplement(T((result ^ aX) & (result ^ aY))))
              : BinaryComplement(aX) >= aY;
 #endif
@@ -303,13 +303,13 @@ constexpr bool IsSubValid(T aX, T aY) {
   std::make_unsigned_t<T> uy = aY;
   std::make_unsigned_t<T> result = ux - uy;
 
-  return IsSigned<T>::value
+  return std::is_signed_v<T>
              ? HasSignBit(BinaryComplement(T((result ^ aX) & (aX ^ aY))))
              : aX >= aY;
 #endif
 }
 
-template <typename T, bool IsTSigned = IsSigned<T>::value,
+template <typename T, bool IsTSigned = std::is_signed_v<T>,
           bool TwiceBiggerTypeIsSupported =
               IsSupported<typename TwiceBiggerType<T>::Type>::value>
 struct IsMulValidImpl {};
@@ -362,11 +362,11 @@ template <typename T>
 constexpr bool IsDivValid(T aX, T aY) {
   // Keep in mind that in the signed case, min/-1 is invalid because
   // abs(min)>max.
-  return aY != 0 && !(IsSigned<T>::value &&
+  return aY != 0 && !(std::is_signed_v<T> &&
                       aX == std::numeric_limits<T>::min() && aY == T(-1));
 }
 
-template <typename T, bool IsTSigned = IsSigned<T>::value>
+template <typename T, bool IsTSigned = std::is_signed_v<T>>
 struct IsModValidImpl;
 
 template <typename T>
@@ -400,7 +400,7 @@ struct IsModValidImpl<T, true> {
   }
 };
 
-template <typename T, bool IsSigned = IsSigned<T>::value>
+template <typename T, bool IsSigned = std::is_signed_v<T>>
 struct NegateImpl;
 
 template <typename T>

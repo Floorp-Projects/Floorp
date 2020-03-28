@@ -16,7 +16,6 @@ using mozilla::IsConvertible;
 using mozilla::IsDestructible;
 using mozilla::IsFunction;
 using mozilla::IsSame;
-using mozilla::IsSigned;
 using mozilla::RemoveExtent;
 using mozilla::RemovePointer;
 
@@ -28,50 +27,6 @@ static_assert(!IsFunction<void (*)(int)>::value,
 static_assert(!IsArray<bool>::value, "bool not an array");
 static_assert(IsArray<bool[]>::value, "bool[] is an array");
 static_assert(IsArray<bool[5]>::value, "bool[5] is an array");
-
-static_assert(!IsSigned<bool>::value, "bool shouldn't be signed");
-
-static_assert(!IsSigned<const bool>::value, "const bool shouldn't be signed");
-
-static_assert(!IsSigned<volatile bool>::value,
-              "volatile bool shouldn't be signed");
-
-static_assert(!IsSigned<unsigned char>::value,
-              "unsigned char shouldn't be signed");
-static_assert(IsSigned<signed char>::value, "signed char should be signed");
-
-static_assert(!IsSigned<unsigned short>::value,
-              "unsigned short shouldn't be signed");
-static_assert(IsSigned<short>::value, "short should be signed");
-
-static_assert(!IsSigned<unsigned int>::value,
-              "unsigned int shouldn't be signed");
-static_assert(IsSigned<int>::value, "int should be signed");
-
-static_assert(!IsSigned<unsigned long>::value,
-              "unsigned long shouldn't be signed");
-static_assert(IsSigned<long>::value, "long should be signed");
-
-static_assert(IsSigned<float>::value, "float should be signed");
-
-static_assert(IsSigned<const float>::value, "const float should be signed");
-
-static_assert(IsSigned<double>::value, "double should be signed");
-
-static_assert(IsSigned<volatile double>::value,
-              "volatile double should be signed");
-
-static_assert(IsSigned<long double>::value, "long double should be signed");
-
-static_assert(IsSigned<const volatile long double>::value,
-              "const volatile long double should be signed");
-
-class NotIntConstructible {
-  NotIntConstructible(int) = delete;
-};
-
-static_assert(!IsSigned<NotIntConstructible>::value,
-              "non-arithmetic types are not signed");
 
 class PublicDestructible {
  public:

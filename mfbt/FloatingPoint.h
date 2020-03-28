@@ -359,7 +359,7 @@ template <typename Float, typename SignedInteger>
 inline bool NumberEqualsSignedInteger(Float aValue, SignedInteger* aInteger) {
   static_assert(IsSame<Float, float>::value || IsSame<Float, double>::value,
                 "Float must be an IEEE-754 floating point type");
-  static_assert(IsSigned<SignedInteger>::value,
+  static_assert(std::is_signed_v<SignedInteger>,
                 "this algorithm only works for signed types: a different one "
                 "will be required for unsigned types");
   static_assert(sizeof(SignedInteger) >= sizeof(int),
@@ -430,7 +430,7 @@ template <typename Float, typename SignedInteger>
 inline bool NumberIsSignedInteger(Float aValue, SignedInteger* aInteger) {
   static_assert(IsSame<Float, float>::value || IsSame<Float, double>::value,
                 "Float must be an IEEE-754 floating point type");
-  static_assert(IsSigned<SignedInteger>::value,
+  static_assert(std::is_signed_v<SignedInteger>,
                 "this algorithm only works for signed types: a different one "
                 "will be required for unsigned types");
   static_assert(sizeof(SignedInteger) >= sizeof(int),

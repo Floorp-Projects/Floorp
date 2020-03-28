@@ -7,6 +7,8 @@
 #ifndef Tokenizer_h__
 #define Tokenizer_h__
 
+#include <type_traits>
+
 #include "nsString.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ScopeExit.h"
@@ -384,7 +386,7 @@ class TTokenizer : public TokenizerBase<TChar> {
    * Same as above, but accepts an integer with an optional minus sign.
    */
   template <typename T, typename V = typename EnableIf<
-                            IsSigned<typename RemovePointer<T>::Type>::value,
+                            std::is_signed_v<typename RemovePointer<T>::Type>,
                             typename RemovePointer<T>::Type>::Type>
   [[nodiscard]] bool ReadSignedInteger(T* aValue) {
     MOZ_RELEASE_ASSERT(aValue);
