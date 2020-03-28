@@ -10,8 +10,8 @@
 #include "mozilla/TypeTraits.h"
 #include <stdio.h>
 #include <functional>
+#include <utility>
 
-using mozilla::DeclVal;
 using mozilla::IsSame;
 
 /**************************************************************
@@ -346,10 +346,10 @@ TEST(NsDeque, TestConstRangeFor)
   }
 
   static_assert(IsSame<nsDeque::ConstDequeIterator,
-                       decltype(DeclVal<const nsDeque&>().begin())>::value,
+                       decltype(std::declval<const nsDeque&>().begin())>::value,
                 "(const nsDeque).begin() should return ConstDequeIterator");
   static_assert(IsSame<nsDeque::ConstDequeIterator,
-                       decltype(DeclVal<const nsDeque&>().end())>::value,
+                       decltype(std::declval<const nsDeque&>().end())>::value,
                 "(const nsDeque).end() should return ConstDequeIterator");
 
   int sum = 0;

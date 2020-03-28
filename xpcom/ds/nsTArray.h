@@ -911,9 +911,8 @@ template <typename T, typename U, typename V = int>
 struct IsCompareMethod : mozilla::FalseType {};
 
 template <typename T, typename U>
-struct IsCompareMethod<T, U,
-                       decltype(mozilla::DeclVal<T>()(mozilla::DeclVal<U>(),
-                                                      mozilla::DeclVal<U>()))>
+struct IsCompareMethod<
+    T, U, decltype(std::declval<T>()(std::declval<U>(), std::declval<U>()))>
     : mozilla::TrueType {};
 
 // These two wrappers allow us to use either a tri-state comparator, or an

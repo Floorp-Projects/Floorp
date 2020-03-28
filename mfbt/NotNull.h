@@ -166,13 +166,14 @@ namespace detail {
 template <typename Pointer>
 struct PointedTo {
   // Remove the reference that dereferencing operators may return.
-  using Type = std::remove_reference_t<decltype(*DeclVal<Pointer>())>;
+  using Type = std::remove_reference_t<decltype(*std::declval<Pointer>())>;
   using NonConstType = typename RemoveConst<Type>::Type;
 };
 
 // Specializations for raw pointers.
 // This is especially required because VS 2017 15.6 (March 2018) started
-// rejecting the above `decltype(*DeclVal<Pointer>())` trick for raw pointers.
+// rejecting the above `decltype(*std::declval<Pointer>())` trick for raw
+// pointers.
 // See bug 1443367.
 template <typename T>
 struct PointedTo<T*> {

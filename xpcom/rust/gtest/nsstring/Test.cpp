@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include <stdint.h>
+#include <utility>
 #include "nsString.h"
 
 extern "C" {
@@ -22,23 +23,23 @@ void GTest_ExpectFailure(const char* aMessage) { EXPECT_STREQ(aMessage, ""); }
 SIZE_ALIGN_CHECK(nsString)
 SIZE_ALIGN_CHECK(nsCString)
 
-#define MEMBER_CHECK(Clazz, Member)                                           \
-  extern "C" void Rust_Test_Member_##Clazz##_##Member(                        \
-      size_t* size, size_t* align, size_t* offset);                           \
-  TEST(RustNsString, ReprMember_##Clazz##_##Member)                           \
-  {                                                                           \
-    class Hack : public Clazz {                                               \
-     public:                                                                  \
-      static void RunTest() {                                                 \
-        size_t size, align, offset;                                           \
-        Rust_Test_Member_##Clazz##_##Member(&size, &align, &offset);          \
-        EXPECT_EQ(size, sizeof(mozilla::DeclVal<Hack>().Member));             \
-        EXPECT_EQ(align, alignof(decltype(mozilla::DeclVal<Hack>().Member))); \
-        EXPECT_EQ(offset, offsetof(Hack, Member));                            \
-      }                                                                       \
-    };                                                                        \
-    static_assert(sizeof(Clazz) == sizeof(Hack), "Hack matches class");       \
-    Hack::RunTest();                                                          \
+#define MEMBER_CHECK(Clazz, Member)                                       \
+  extern "C" void Rust_Test_Member_##Clazz##_##Member(                    \
+      size_t* size, size_t* align, size_t* offset);                       \
+  TEST(RustNsString, ReprMember_##Clazz##_##Member)                       \
+  {                                                                       \
+    class Hack : public Clazz {                                           \
+     public:                                                              \
+      static void RunTest() {                                             \
+        size_t size, align, offset;                                       \
+        Rust_Test_Member_##Clazz##_##Member(&size, &align, &offset);      \
+        EXPECT_EQ(size, sizeof(std::declval<Hack>().Member));             \
+        EXPECT_EQ(align, alignof(decltype(std::declval<Hack>().Member))); \
+        EXPECT_EQ(offset, offsetof(Hack, Member));                        \
+      }                                                                   \
+    };                                                                    \
+    static_assert(sizeof(Clazz) == sizeof(Hack), "Hack matches class");   \
+    Hack::RunTest();                                                      \
   }
 
 MEMBER_CHECK(nsString, mData)
