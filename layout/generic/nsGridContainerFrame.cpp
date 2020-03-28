@@ -11,6 +11,7 @@
 #include <functional>
 #include <limits>
 #include <stdlib.h>  // for div()
+#include <type_traits>
 #include "gfxContext.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
@@ -313,7 +314,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TrackSize::StateBits)
 
 namespace mozilla {
 template <>
-struct IsPod<nsGridContainerFrame::TrackSize> : TrueType {};
+struct IsPod<nsGridContainerFrame::TrackSize> : std::true_type {};
 }  // namespace mozilla
 
 TrackSize::StateBits nsGridContainerFrame::TrackSize::Initialize(

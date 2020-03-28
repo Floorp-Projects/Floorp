@@ -74,8 +74,7 @@ template <class T>
 struct is_span_oracle : std::false_type {};
 
 template <class ElementType, size_t Extent>
-struct is_span_oracle<mozilla::Span<ElementType, Extent>> : mozilla::TrueType {
-};
+struct is_span_oracle<mozilla::Span<ElementType, Extent>> : std::true_type {};
 
 template <class T>
 struct is_span : public is_span_oracle<std::remove_cv_t<T>> {};
@@ -84,8 +83,7 @@ template <class T>
 struct is_std_array_oracle : std::false_type {};
 
 template <class ElementType, size_t Extent>
-struct is_std_array_oracle<std::array<ElementType, Extent>>
-    : mozilla::TrueType {};
+struct is_std_array_oracle<std::array<ElementType, Extent>> : std::true_type {};
 
 template <class T>
 struct is_std_array : public is_std_array_oracle<std::remove_cv_t<T>> {};

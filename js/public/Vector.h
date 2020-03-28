@@ -23,7 +23,7 @@ template <typename T>
 struct TypeIsGCThing : std::false_type {};
 
 template <>
-struct TypeIsGCThing<JS::Value> : mozilla::TrueType {};
+struct TypeIsGCThing<JS::Value> : std::true_type {};
 
 }  // namespace detail
 

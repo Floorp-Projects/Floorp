@@ -19,6 +19,7 @@
 #include "mozilla/TypeTraits.h"
 
 #include <cmath>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -33,7 +34,7 @@ struct UnknownUnits {};
 }  // namespace gfx
 
 template <>
-struct IsPixel<gfx::UnknownUnits> : TrueType {};
+struct IsPixel<gfx::UnknownUnits> : std::true_type {};
 
 namespace gfx {
 

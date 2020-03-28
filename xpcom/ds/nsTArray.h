@@ -914,7 +914,7 @@ struct IsCompareMethod : std::false_type {};
 template <typename T, typename U>
 struct IsCompareMethod<
     T, U, decltype(std::declval<T>()(std::declval<U>(), std::declval<U>()))>
-    : mozilla::TrueType {};
+    : std::true_type {};
 
 // These two wrappers allow us to use either a tri-state comparator, or an
 // object with Equals() and LessThan() methods interchangeably. They provide a

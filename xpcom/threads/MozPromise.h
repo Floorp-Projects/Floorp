@@ -96,7 +96,7 @@ struct IsMozPromise : std::false_type {};
 
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 struct IsMozPromise<MozPromise<ResolveValueT, RejectValueT, IsExclusive>>
-    : TrueType {};
+    : std::true_type {};
 
 /*
  * A promise manages an asynchronous request that may or may not be able to be

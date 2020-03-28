@@ -22,6 +22,8 @@
 #include "mozilla/CompactPair.h"
 #include "mozilla/Poison.h"
 
+#include <type_traits>
+
 #include "jit/AtomicOp.h"
 #include "js/Printf.h"
 #include "wasm/WasmUtility.h"
@@ -2729,9 +2731,9 @@ namespace mozilla {
 
 // Specialize IsPod for the Nothing specializations.
 template <>
-struct IsPod<js::wasm::TypeAndValueT<Nothing>> : TrueType {};
+struct IsPod<js::wasm::TypeAndValueT<Nothing>> : std::true_type {};
 template <>
-struct IsPod<js::wasm::ControlStackEntry<Nothing>> : TrueType {};
+struct IsPod<js::wasm::ControlStackEntry<Nothing>> : std::true_type {};
 
 }  // namespace mozilla
 
