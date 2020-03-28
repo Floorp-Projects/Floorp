@@ -6,6 +6,8 @@
 
 #include "ActorsChild.h"
 
+#include <type_traits>
+
 #include "BackgroundChildImpl.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
@@ -368,10 +370,10 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
 
  private:
   template <class T>
-  typename EnableIf<IsSame<T, IDBDatabase>::value ||
-                        IsSame<T, IDBCursor>::value ||
-                        IsSame<T, IDBMutableFile>::value,
-                    nsresult>::Type
+  std::enable_if_t<IsSame<T, IDBDatabase>::value ||
+                       IsSame<T, IDBCursor>::value ||
+                       IsSame<T, IDBMutableFile>::value,
+                   nsresult>
   GetResult(JSContext* aCx, T* aDOMObject,
             JS::MutableHandle<JS::Value> aResult) {
     if (!aDOMObject) {

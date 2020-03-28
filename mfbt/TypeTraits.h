@@ -269,34 +269,6 @@ struct AddRvalueReferenceHelper<T, TIsNotVoid> {
 template <typename T>
 struct AddRvalueReference : detail::AddRvalueReferenceHelper<T> {};
 
-/* 20.9.7.6 Other transformations [meta.trans.other] */
-
-/**
- * EnableIf is a struct containing a typedef of T if and only if B is true.
- *
- * mozilla::EnableIf<true, int>::Type is int;
- * mozilla::EnableIf<false, int>::Type is a compile-time error.
- *
- * Use this template to implement SFINAE-style (Substitution Failure Is not An
- * Error) requirements.  For example, you might use it to impose a restriction
- * on a template parameter:
- *
- *   template<typename T>
- *   class PodVector // vector optimized to store POD (memcpy-able) types
- *   {
- *      EnableIf<IsPod<T>::value, T>::Type* vector;
- *      size_t length;
- *      ...
- *   };
- */
-template <bool B, typename T = void>
-struct EnableIf {};
-
-template <typename T>
-struct EnableIf<true, T> {
-  typedef T Type;
-};
-
 } /* namespace mozilla */
 
 #endif /* mozilla_TypeTraits_h */

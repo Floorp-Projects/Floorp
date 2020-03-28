@@ -1144,14 +1144,14 @@ template <class T>
 struct HasSetDeadline : decltype(HasSetDeadlineTest<T>(0)) {};
 
 template <class T>
-typename mozilla::EnableIf<::detail::HasSetDeadline<T>::value>::Type
-SetDeadlineImpl(T* aObj, mozilla::TimeStamp aTimeStamp) {
+std::enable_if_t<::detail::HasSetDeadline<T>::value> SetDeadlineImpl(
+    T* aObj, mozilla::TimeStamp aTimeStamp) {
   aObj->SetDeadline(aTimeStamp);
 }
 
 template <class T>
-typename mozilla::EnableIf<!::detail::HasSetDeadline<T>::value>::Type
-SetDeadlineImpl(T* aObj, mozilla::TimeStamp aTimeStamp) {}
+std::enable_if_t<!::detail::HasSetDeadline<T>::value> SetDeadlineImpl(
+    T* aObj, mozilla::TimeStamp aTimeStamp) {}
 } /* namespace detail */
 
 namespace mozilla {

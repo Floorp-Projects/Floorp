@@ -8,6 +8,7 @@
 
 #include <time.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "mozilla/BackgroundHangMonitor.h"
@@ -132,9 +133,8 @@ class nsAppShell : public nsBaseAppShell {
       const mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
 
   template <typename T>
-  static
-      typename mozilla::EnableIf<!std::is_base_of<Event, T>::value, void>::Type
-      SyncRunEvent(T&& lambda) {
+  static std::enable_if_t<!std::is_base_of<Event, T>::value, void> SyncRunEvent(
+      T&& lambda) {
     SyncRunEvent(LambdaEvent<T>(std::forward<T>(lambda)));
   }
 
