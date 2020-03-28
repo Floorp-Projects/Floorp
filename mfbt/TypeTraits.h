@@ -26,7 +26,6 @@ namespace mozilla {
 
 /** Convenient aliases. */
 typedef std::integral_constant<bool, true> TrueType;
-typedef std::integral_constant<bool, false> FalseType;
 
 /* 20.9.4 Unary type traits [meta.unary] */
 
@@ -36,12 +35,12 @@ typedef std::integral_constant<bool, false> FalseType;
  * Traits class for identifying POD types.  Until C++11 there's no automatic
  * way to detect PODs, so for the moment this is done manually.  Users may
  * define specializations of this class that inherit from mozilla::TrueType and
- * mozilla::FalseType (or equivalently std::integral_constant<bool, true or
+ * std::false_type (or equivalently std::integral_constant<bool, true or
  * false>, or conveniently from mozilla::IsPod for composite types) as needed to
  * ensure correct IsPod behavior.
  */
 template <typename T>
-struct IsPod : public FalseType {};
+struct IsPod : public std::false_type {};
 
 template <>
 struct IsPod<char> : TrueType {};
@@ -84,7 +83,7 @@ struct DoIsDestructibleImpl {
   template <typename T, typename = decltype(std::declval<T&>().~T())>
   static TrueType test(int);
   template <typename T>
-  static FalseType test(...);
+  static std::false_type test(...);
 };
 
 template <typename T>
@@ -123,7 +122,7 @@ struct IsDestructible : public detail::IsDestructibleImpl<T>::Type {};
  * mozilla::IsSame<struct S, struct S>::value is true.
  */
 template <typename T, typename U>
-struct IsSame : FalseType {};
+struct IsSame : std::false_type {};
 
 template <typename T>
 struct IsSame<T, T> : TrueType {};
