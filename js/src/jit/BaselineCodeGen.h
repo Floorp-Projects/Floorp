@@ -12,10 +12,9 @@
 #include "jit/BytecodeAnalysis.h"
 #include "jit/FixedList.h"
 #include "jit/MacroAssembler.h"
+#include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
 
 namespace js {
-
-enum class GeneratorResumeKind;
 
 namespace jit {
 
