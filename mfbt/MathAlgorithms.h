@@ -48,7 +48,7 @@ MOZ_ALWAYS_INLINE IntegerType EuclidLCM(IntegerType aA, IntegerType aB) {
 namespace detail {
 
 template <typename T>
-struct AllowDeprecatedAbsFixed : FalseType {};
+struct AllowDeprecatedAbsFixed : std::false_type {};
 
 template <>
 struct AllowDeprecatedAbsFixed<int32_t> : TrueType {};

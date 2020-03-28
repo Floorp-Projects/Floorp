@@ -282,7 +282,7 @@ struct SelectResultImpl {
 };
 
 template <typename T>
-struct IsResult : FalseType {};
+struct IsResult : std::false_type {};
 
 template <typename V, typename E>
 struct IsResult<Result<V, E>> : TrueType {};

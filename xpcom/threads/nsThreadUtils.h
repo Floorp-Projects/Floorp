@@ -573,7 +573,7 @@ using RunnableFunctionImpl =
 namespace detail {
 
 template <typename CVRemoved>
-struct IsRefcountedSmartPointerHelper : FalseType {};
+struct IsRefcountedSmartPointerHelper : std::false_type {};
 
 template <typename Pointee>
 struct IsRefcountedSmartPointerHelper<RefPtr<Pointee>> : TrueType {};
@@ -881,7 +881,7 @@ struct nsRunnableMethodTraits<PtrType, R (NS_STDCALL C::*)() const, Owning,
 // When creating a new storage class, add a specialization for it to be
 // recognized.
 template <typename T>
-struct IsParameterStorageClass : public mozilla::FalseType {};
+struct IsParameterStorageClass : public std::false_type {};
 
 // StoreXPassByY structs used to inform nsRunnableMethodArguments how to
 // store arguments, and how to pass them to the target method.
@@ -1039,7 +1039,7 @@ static auto HasRefCountMethodsTest(int)
     -> SFINAE1True<decltype(std::declval<T>().AddRef(),
                             std::declval<T>().Release())>;
 template <class>
-static auto HasRefCountMethodsTest(long) -> mozilla::FalseType;
+static auto HasRefCountMethodsTest(long) -> std::false_type;
 
 template <class T>
 struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0)) {};
@@ -1137,7 +1137,7 @@ static auto HasSetDeadlineTest(int) -> SFINAE1True<decltype(
     std::declval<T>().SetDeadline(std::declval<mozilla::TimeStamp>()))>;
 
 template <class T>
-static auto HasSetDeadlineTest(long) -> mozilla::FalseType;
+static auto HasSetDeadlineTest(long) -> std::false_type;
 
 template <class T>
 struct HasSetDeadline : decltype(HasSetDeadlineTest<T>(0)) {};

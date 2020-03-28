@@ -49,7 +49,7 @@ template <typename Source, typename Target, bool SameSize>
 struct CheckConvertibilityImpl;
 
 template <typename Source, typename Target>
-struct CheckConvertibilityImpl<Source, Target, false> : FalseType {};
+struct CheckConvertibilityImpl<Source, Target, false> : std::false_type {};
 
 template <typename... SourceTypes, typename... TargetTypes>
 struct CheckConvertibilityImpl<Group<SourceTypes...>, Group<TargetTypes...>,

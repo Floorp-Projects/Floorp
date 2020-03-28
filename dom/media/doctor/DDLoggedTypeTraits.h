@@ -7,6 +7,8 @@
 #ifndef DDLoggedTypeTraits_h_
 #define DDLoggedTypeTraits_h_
 
+#include <type_traits>
+
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla {
@@ -22,7 +24,7 @@ struct DDLoggedTypeTraits;
   struct DDLoggedTypeTraits<TYPE> {                            \
     using Type = TYPE;                                         \
     static constexpr const char* Name() { return #TYPE; }      \
-    using HasBase = FalseType;                                 \
+    using HasBase = std::false_type;                           \
     using BaseType = TYPE;                                     \
     static constexpr const char* BaseTypeName() { return ""; } \
   }
@@ -44,7 +46,7 @@ struct DDLoggedTypeTraits;
   struct DDLoggedTypeTraits<TYPE> {                            \
     using Type = TYPE;                                         \
     static constexpr const char* Name() { return #NAME; }      \
-    using HasBase = FalseType;                                 \
+    using HasBase = std::false_type;                           \
     using BaseType = TYPE;                                     \
     static constexpr const char* BaseTypeName() { return ""; } \
   }
