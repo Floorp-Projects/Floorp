@@ -97,7 +97,7 @@ struct MaybePoisoner {
   static void poison(void* aPtr) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     if (N >= sizeof(uintptr_t)) {
-      PoisonObject(static_cast<typename RemoveCV<T>::Type*>(aPtr));
+      PoisonObject(static_cast<std::remove_cv_t<T>*>(aPtr));
     }
 #endif
     MOZ_MAKE_MEM_UNDEFINED(aPtr, N);
@@ -774,7 +774,7 @@ constexpr Maybe<T&> SomeRef(T& aValue) {
 }
 
 template <typename T>
-Maybe<typename RemoveCV<std::remove_reference_t<T>>::Type> ToMaybe(T* aPtr) {
+Maybe<std::remove_cv_t<std::remove_reference_t<T>>> ToMaybe(T* aPtr) {
   if (aPtr) {
     return Some(*aPtr);
   }

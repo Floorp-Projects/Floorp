@@ -110,7 +110,7 @@ inline bool IsSuccess(PcqStatus status) { return status == PcqStatus::Success; }
 
 template <typename T>
 struct RemoveCVR {
-  using Type = std::remove_reference_t<typename RemoveCV<T>::Type>;
+  using Type = std::remove_reference_t<std::remove_cv_t<T>>;
 };
 
 template <typename T>
@@ -1169,7 +1169,7 @@ class Consumer : public detail::PcqBase {
   template <typename Arg>
   PcqStatus TryCopyOrSkipItem(ConsumerView& aView, Arg* aArg) {
     return PcqParamTraits<typename RemoveCVR<Arg>::Type>::Read(
-        aView, const_cast<typename RemoveCV<Arg>::Type*>(aArg));
+        aView, const_cast<std::remove_cv_t<Arg>*>(aArg));
   }
 
   template <typename Arg>

@@ -18,6 +18,7 @@
 #include "mozilla/Vector.h"
 
 #include <memory>
+#include <type_traits>
 
 namespace mozilla {
 namespace interceptor {
@@ -837,10 +838,10 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
   template <typename T>
   auto ChasePointer() {
     mTargetBytes->EnsureLimit(mOffset + sizeof(T));
-    const typename RemoveCV<T>::Type result =
-        *reinterpret_cast<const typename RemoveCV<T>::Type*>(
+    const std::remove_cv_t<T> result =
+        *reinterpret_cast<const std::remove_cv_t<T>*>(
             mTargetBytes->GetLocalBytes() + mOffset);
-    return ChasePointerHelper<typename RemoveCV<T>::Type>::Result(
+    return ChasePointerHelper<std::remove_cv_t<T>>::Result(
         mTargetBytes->GetMMPolicy(), result);
   }
 

@@ -179,7 +179,7 @@ class CommandSink : public BasicSink {
   // non-void return value, non-const method variant
   template <typename T, typename ReturnType, typename... Args>
   bool DispatchAsyncMethod(T& aObj, ReturnType (T::*aMethod)(Args...)) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!ReadArgs(args)) {
       return false;
     }
@@ -191,7 +191,7 @@ class CommandSink : public BasicSink {
   template <typename T, typename ReturnType, typename... Args>
   bool DispatchAsyncMethod(const T& aObj,
                            ReturnType (T::*aMethod)(Args...) const) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!ReadArgs(args)) {
       return false;
     }
@@ -202,7 +202,7 @@ class CommandSink : public BasicSink {
   // void return value, non-const method variant
   template <typename T, typename... Args>
   bool DispatchAsyncMethod(T* aObj, void (T::*aMethod)(Args...)) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!ReadArgs(args)) {
       return false;
     }
@@ -214,7 +214,7 @@ class CommandSink : public BasicSink {
   // void return value, const method variant
   template <typename T, typename... Args>
   bool DispatchAsyncMethod(const T* aObj, void (T::*aMethod)(Args...) const) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!ReadArgs(args)) {
       return false;
     }
@@ -366,7 +366,7 @@ class SyncCommandSink : public CommandSink<Command> {
   template <typename T, typename ReturnType, typename... Args>
   bool DispatchSyncMethod(T& aObj,
                           ReturnType SINK_FCN_CC (T::*aMethod)(Args...)) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -382,7 +382,7 @@ class SyncCommandSink : public CommandSink<Command> {
   template <typename T, typename ReturnType, typename... Args>
   bool DispatchSyncMethod(const T& aObj,
                           ReturnType SINK_FCN_CC (T::*aMethod)(Args...) const) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -399,7 +399,7 @@ class SyncCommandSink : public CommandSink<Command> {
   template <typename T, typename ReturnType, typename... Args>
   bool DispatchSyncMethod(T& aObj,
                           ReturnType __stdcall (T::*aMethod)(Args...)) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -415,7 +415,7 @@ class SyncCommandSink : public CommandSink<Command> {
   template <typename T, typename ReturnType, typename... Args>
   bool DispatchSyncMethod(const T& aObj,
                           ReturnType __stdcall (T::*aMethod)(Args...) const) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -431,7 +431,7 @@ class SyncCommandSink : public CommandSink<Command> {
   // __cdecl/__thiscall non-const void method variant
   template <typename T, typename... Args>
   bool DispatchSyncMethod(T& aObj, void SINK_FCN_CC (T::*aMethod)(Args...)) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -446,7 +446,7 @@ class SyncCommandSink : public CommandSink<Command> {
   template <typename T, typename... Args>
   bool DispatchSyncMethod(const T& aObj,
                           void SINK_FCN_CC (T::*aMethod)(Args...) const) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -461,7 +461,7 @@ class SyncCommandSink : public CommandSink<Command> {
   // __stdcall non-const void method variant
   template <typename T, typename... Args>
   bool DispatchSyncMethod(T& aObj, void __stdcall (T::*aMethod)(Args...)) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
@@ -476,7 +476,7 @@ class SyncCommandSink : public CommandSink<Command> {
   template <typename T, typename... Args>
   bool DispatchSyncMethod(const T& aObj,
                           void __stdcall (T::*aMethod)(Args...) const) {
-    std::tuple<typename RemoveCV<std::remove_reference_t<Args>>::Type...> args;
+    std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...> args;
     if (!BaseType::ReadArgs(args)) {
       WriteNAK();
       return false;
