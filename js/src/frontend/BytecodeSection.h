@@ -24,7 +24,7 @@
 #include "frontend/NameCollections.h"   // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"        // ObjLiteralCreationData
 #include "frontend/ParseNode.h"         // BigIntLiteral
-#include "frontend/SourceNotes.h"       // jssrcnote
+#include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"           // Stencils
 #include "gc/Barrier.h"                 // GCPtrObject, GCPtrScope, GCPtrValue
 #include "gc/Rooting.h"                 // JS::Rooted
@@ -160,7 +160,7 @@ static constexpr size_t MaxSrcNotesLength = INT32_MAX;
 // Have a few inline elements, so as to avoid heap allocation for tiny
 // sequences.  See bug 1390526.
 typedef Vector<jsbytecode, 64> BytecodeVector;
-typedef Vector<jssrcnote, 64> SrcNotesVector;
+typedef Vector<js::SrcNote, 64> SrcNotesVector;
 
 // Bytecode and all data directly associated with specific opcode/index inside
 // bytecode is stored in this class.
@@ -350,8 +350,8 @@ class BytecodeSection {
   // we can get undefined behavior.
   uint32_t currentLine_;
 
-  // Zero-based column index on currentLine_ of last SRC_COLSPAN-annotated
-  // opcode.
+  // Zero-based column index on currentLine_ of last
+  // SrcNoteType::ColSpan-annotated opcode.
   //
   // WARNING: If this becomes out of sync with already-emitted srcnotes,
   // we can get undefined behavior.
