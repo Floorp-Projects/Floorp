@@ -1039,11 +1039,11 @@ parent:
     async IsWindowSupportingWebVR(uint64_t aOuterWindowID) returns(bool isSupported);
 
     /** Records a history visit. */
-    async VisitURI(URIParams aURI, URIParams? aLastVisitedURI,
+    async VisitURI(nsIURI aURI, nsIURI aLastVisitedURI,
                    uint32_t aFlags);
 
     /** Fetches the visited status for an array of URIs (Android-only). */
-    async QueryVisitedState(URIParams[] aURIs);
+    async QueryVisitedState(nsIURI[] aURIs);
 
     /**
      * Construct a new WindowGlobal for an existing global in the content process

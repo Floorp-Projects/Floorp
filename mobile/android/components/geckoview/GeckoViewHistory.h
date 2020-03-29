@@ -44,7 +44,7 @@ class GeckoViewHistory final : public mozilla::BaseHistory {
   GeckoViewHistory();
 
   void QueryVisitedState(nsIWidget* aWidget,
-                         const nsTArray<nsCOMPtr<nsIURI>>& aURIs);
+                         const nsTArray<RefPtr<nsIURI>>&& aURIs);
   void HandleVisitedState(const nsTArray<VisitedURI>& aVisitedURIs);
 
  private:

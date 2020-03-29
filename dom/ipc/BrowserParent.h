@@ -786,11 +786,11 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvSetSystemFont(const nsCString& aFontName);
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);
 
-  mozilla::ipc::IPCResult RecvVisitURI(const URIParams& aURI,
-                                       const Maybe<URIParams>& aLastVisitedURI,
+  mozilla::ipc::IPCResult RecvVisitURI(nsIURI* aURI, nsIURI* aLastVisitedURI,
                                        const uint32_t& aFlags);
 
-  mozilla::ipc::IPCResult RecvQueryVisitedState(nsTArray<URIParams>&& aURIs);
+  mozilla::ipc::IPCResult RecvQueryVisitedState(
+      const nsTArray<RefPtr<nsIURI>>&& aURIs);
 
   mozilla::ipc::IPCResult RecvMaybeFireEmbedderLoadEvents(
       bool aFireLoadAtEmbeddingElement);
