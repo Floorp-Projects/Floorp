@@ -119,24 +119,6 @@ NS_INTERFACE_MAP_BEGIN(nsDSURIContentListener)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen) {
-  // If mDocShell is null here, that means someone's starting a load in our
-  // docshell after it's already been destroyed.  Don't let that happen.
-  if (!mDocShell) {
-    *aAbortOpen = true;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURIContentListener> parentListener;
-  GetParentContentListener(getter_AddRefs(parentListener));
-  if (parentListener) {
-    return parentListener->OnStartURIOpen(aURI, aAbortOpen);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDSURIContentListener::DoContent(const nsACString& aContentType,
                                   bool aIsContentPreferred,
                                   nsIRequest* aRequest,

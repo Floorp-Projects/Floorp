@@ -1445,9 +1445,6 @@ function openURL(aURL) {
     loadgroup.groupObserver = loadListener;
 
     var uriListener = {
-      onStartURIOpen(uri) {
-        return false;
-      },
       doContent(ctype, preferred, request, handler) {
         return false;
       },
