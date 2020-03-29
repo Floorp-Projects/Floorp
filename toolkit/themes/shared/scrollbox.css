@@ -6,7 +6,7 @@
 
 :host([scrolledtostart=true])::part(overflow-start-indicator),
 :host([scrolledtoend=true])::part(overflow-end-indicator),
-:host(:not([overflowing=true])) toolbarbutton {
+:host(:not([overflowing=true])) > toolbarbutton {
   visibility: collapse;
 }
 
@@ -25,7 +25,7 @@ toolbarbutton[disabled="true"] {
   fill-opacity: 0.4;
 }
 
-toolbarbutton[orient="horizontal"] {
+:host([orient="horizontal"]) > toolbarbutton {
   list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
 }
 
@@ -33,8 +33,8 @@ toolbarbutton[orient="horizontal"] {
   transform: scaleY(-1);
 }
 
-#scrollbutton-down:-moz-locale-dir(ltr)[orient="horizontal"] > .toolbarbutton-icon,
-#scrollbutton-up:-moz-locale-dir(rtl)[orient="horizontal"] > .toolbarbutton-icon {
+:host([orient="horizontal"]) > #scrollbutton-down:-moz-locale-dir(ltr) > .toolbarbutton-icon,
+:host([orient="horizontal"]) > #scrollbutton-up:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
 
@@ -43,7 +43,7 @@ toolbarbutton > .toolbarbutton-text {
 }
 
 %ifndef XP_MACOSX
-:host(:not([clicktoscroll="true"])) toolbarbutton {
+:host(:not([clicktoscroll="true"])) > toolbarbutton {
   -moz-appearance: none;
 }
 %endif
