@@ -14,9 +14,9 @@
   class MozArrowScrollbox extends MozElements.BaseControl {
     static get inheritedAttributes() {
       return {
-        "#scrollbutton-up": "orient,disabled=scrolledtostart",
+        "#scrollbutton-up": "disabled=scrolledtostart",
         scrollbox: "orient,align,pack,dir,smoothscroll",
-        "#scrollbutton-down": "orient,disabled=scrolledtoend",
+        "#scrollbutton-down": "disabled=scrolledtoend",
       };
     }
 
