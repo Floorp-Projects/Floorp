@@ -11,6 +11,7 @@
 #include "mozilla/ModuloBuffer.h"
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/ProfileBufferChunk.h"
+#include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/Vector.h"
 
 #ifdef MOZ_BASE_PROFILER
@@ -499,6 +500,175 @@ static void TestChunk() {
   MOZ_RELEASE_ASSERT(chunkA->ProcessId() == 123);
 
   printf("TestChunk done\n");
+}
+
+static void TestChunkManagerSingle() {
+  printf("TestChunkManagerSingle...\n");
+
+  // Construct a ProfileBufferChunkManagerSingle for one chunk of size >=1000.
+  constexpr ProfileBufferChunk::Length ChunkMinBufferBytes = 1000;
+  ProfileBufferChunkManagerSingle cms{ChunkMinBufferBytes};
+
+  // Reference to base class, to exercize virtual methods.
+  ProfileBufferChunkManager& cm = cms;
+
+#ifdef DEBUG
+  const char* chunkManagerRegisterer = "TestChunkManagerSingle";
+  cm.RegisteredWith(chunkManagerRegisterer);
+#endif  // DEBUG
+
+  const auto maxTotalSize = cm.MaxTotalSize();
+  MOZ_RELEASE_ASSERT(maxTotalSize >= ChunkMinBufferBytes);
+
+  cm.SetChunkDestroyedCallback([](const ProfileBufferChunk&) {
+    MOZ_RELEASE_ASSERT(
+        false,
+        "ProfileBufferChunkManagerSingle should never destroy its one chunk");
+  });
+
+  UniquePtr<ProfileBufferChunk> extantReleasedChunks =
+      cm.GetExtantReleasedChunks();
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks, "Unexpected released chunk(s)");
+
+  // First request.
+  UniquePtr<ProfileBufferChunk> chunk = cm.GetChunk();
+  MOZ_RELEASE_ASSERT(!!chunk, "First chunk request should always work");
+  MOZ_RELEASE_ASSERT(chunk->BufferBytes() >= ChunkMinBufferBytes,
+                     "Unexpected chunk size");
+  MOZ_RELEASE_ASSERT(!chunk->GetNext(), "There should only be one chunk");
+
+  // Keep address, for later checks.
+  const uintptr_t chunkAddress = reinterpret_cast<uintptr_t>(chunk.get());
+
+  extantReleasedChunks = cm.GetExtantReleasedChunks();
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks, "Unexpected released chunk(s)");
+
+  // Second request.
+  MOZ_RELEASE_ASSERT(!cm.GetChunk(), "Second chunk request should always fail");
+
+  extantReleasedChunks = cm.GetExtantReleasedChunks();
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks, "Unexpected released chunk(s)");
+
+  // Add some data to the chunk (to verify recycling later on).
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetFirstBlock == 0);
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetPastLastBlock == 0);
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 0);
+  chunk->SetRangeStart(100);
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 100);
+  Unused << chunk->ReserveInitialBlockAsTail(1);
+  Unused << chunk->ReserveBlock(2);
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetFirstBlock == 1);
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetPastLastBlock == 1 + 2);
+
+  // Release the first chunk.
+  chunk->MarkDone();
+  cm.ReleaseChunks(std::move(chunk));
+  MOZ_RELEASE_ASSERT(!chunk, "chunk UniquePtr should have been moved-from");
+
+  // Request after release.
+  MOZ_RELEASE_ASSERT(!cm.GetChunk(),
+                     "Chunk request after release should also fail");
+
+  // Check released chunk.
+  extantReleasedChunks = cm.GetExtantReleasedChunks();
+  MOZ_RELEASE_ASSERT(!!extantReleasedChunks,
+                     "Could not retrieve released chunk");
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks->GetNext(),
+                     "There should only be one released chunk");
+  MOZ_RELEASE_ASSERT(
+      reinterpret_cast<uintptr_t>(extantReleasedChunks.get()) == chunkAddress,
+      "Released chunk should be first requested one");
+
+  MOZ_RELEASE_ASSERT(!cm.GetExtantReleasedChunks(),
+                     "Unexpected extra released chunk(s)");
+
+  // Another request after release.
+  MOZ_RELEASE_ASSERT(!cm.GetChunk(),
+                     "Chunk request after release should also fail");
+
+  MOZ_RELEASE_ASSERT(
+      cm.MaxTotalSize() == maxTotalSize,
+      "MaxTotalSize() should not change after requests&releases");
+
+  // Reset the chunk manager. (Single-only non-virtual function.)
+  cms.Reset(std::move(extantReleasedChunks));
+  MOZ_RELEASE_ASSERT(!extantReleasedChunks,
+                     "Released chunk UniquePtr should have been moved-from");
+
+  MOZ_RELEASE_ASSERT(
+      cm.MaxTotalSize() == maxTotalSize,
+      "MaxTotalSize() should not change when resetting with the same chunk");
+
+  // 2nd round, first request. Theoretically async, but this implementation just
+  // immediately runs the callback.
+  bool ran = false;
+  cm.RequestChunk([&](UniquePtr<ProfileBufferChunk> aChunk) {
+    ran = true;
+    MOZ_RELEASE_ASSERT(!!aChunk);
+    chunk = std::move(aChunk);
+  });
+  MOZ_RELEASE_ASSERT(ran, "RequestChunk callback not called immediately");
+  ran = false;
+  cm.FulfillChunkRequests();
+  MOZ_RELEASE_ASSERT(!ran, "FulfillChunkRequests should not have any effects");
+  MOZ_RELEASE_ASSERT(!!chunk, "First chunk request should always work");
+  MOZ_RELEASE_ASSERT(chunk->BufferBytes() >= ChunkMinBufferBytes,
+                     "Unexpected chunk size");
+  MOZ_RELEASE_ASSERT(!chunk->GetNext(), "There should only be one chunk");
+  MOZ_RELEASE_ASSERT(reinterpret_cast<uintptr_t>(chunk.get()) == chunkAddress,
+                     "Requested chunk should be first requested one");
+  // Verify that chunk is empty and usable.
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetFirstBlock == 0);
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetPastLastBlock == 0);
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 0);
+  chunk->SetRangeStart(200);
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 200);
+  Unused << chunk->ReserveInitialBlockAsTail(3);
+  Unused << chunk->ReserveBlock(4);
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetFirstBlock == 3);
+  MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mOffsetPastLastBlock == 3 + 4);
+
+  // Second request.
+  ran = false;
+  cm.RequestChunk([&](UniquePtr<ProfileBufferChunk> aChunk) {
+    ran = true;
+    MOZ_RELEASE_ASSERT(!aChunk, "Second chunk request should always fail");
+  });
+  MOZ_RELEASE_ASSERT(ran, "RequestChunk callback not called");
+
+  // This one does nothing.
+  cm.ForgetUnreleasedChunks();
+
+  // Don't forget to mark chunk "Done" before letting it die.
+  chunk->MarkDone();
+  chunk = nullptr;
+
+  // Create a tiny chunk and reset the chunk manager with it.
+  chunk = ProfileBufferChunk::Create(1);
+  MOZ_RELEASE_ASSERT(!!chunk);
+  auto tinyChunkSize = chunk->BufferBytes();
+  MOZ_RELEASE_ASSERT(tinyChunkSize >= 1);
+  MOZ_RELEASE_ASSERT(tinyChunkSize < ChunkMinBufferBytes);
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 0);
+  chunk->SetRangeStart(300);
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 300);
+  cms.Reset(std::move(chunk));
+  MOZ_RELEASE_ASSERT(!chunk, "chunk UniquePtr should have been moved-from");
+  MOZ_RELEASE_ASSERT(cm.MaxTotalSize() == tinyChunkSize,
+                     "MaxTotalSize() should match the new chunk size");
+  chunk = cm.GetChunk();
+  MOZ_RELEASE_ASSERT(chunk->RangeStart() == 0, "Got non-recycled chunk");
+
+  // Enough testing! Clean-up.
+  Unused << chunk->ReserveInitialBlockAsTail(0);
+  chunk->MarkDone();
+  cm.ForgetUnreleasedChunks();
+
+#ifdef DEBUG
+  cm.DeregisteredFrom(chunkManagerRegisterer);
+#endif  // DEBUG
+
+  printf("TestChunkManagerSingle done\n");
 }
 
 static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
@@ -1694,6 +1864,7 @@ void TestProfilerDependencies() {
   TestPowerOfTwo();
   TestLEB128();
   TestChunk();
+  TestChunkManagerSingle();
   TestModuloBuffer();
   TestBlocksRingBufferAPI();
   TestBlocksRingBufferUnderlyingBufferChanges();
