@@ -274,9 +274,14 @@ void WebSocketChannelParent::ActorDestroy(ActorDestroyReason why) {
 NS_IMETHODIMP
 WebSocketChannelParent::GetInterface(const nsIID& iid, void** result) {
   LOG(("WebSocketChannelParent::GetInterface() %p\n", this));
-  if (mAuthProvider && iid.Equals(NS_GET_IID(nsIAuthPromptProvider)))
-    return mAuthProvider->GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL,
-                                        iid, result);
+  if (mAuthProvider && iid.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
+    nsresult rv = mAuthProvider->GetAuthPrompt(
+        nsIAuthPromptProvider::PROMPT_NORMAL, iid, result);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+    return NS_OK;
+  }
 
   // Only support nsILoadContext if child channel's callbacks did too
   if (iid.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
