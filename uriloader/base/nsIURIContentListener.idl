@@ -20,17 +20,6 @@ interface nsIURI;
 interface nsIURIContentListener : nsISupports
 {
  /**
-  * Gives the original content listener first crack at stopping a load before
-  * it happens.
-  *
-  * @param aURI   URI that is being opened.
-  *
-  * @return       <code>false</code> if the load can continue;
-  *               <code>true</code> if the open should be aborted.
-  */
-  boolean onStartURIOpen(in nsIURI aURI);
-
- /**
   * Notifies the content listener to hook up an nsIStreamListener capable of
   * consuming the data stream.
   *

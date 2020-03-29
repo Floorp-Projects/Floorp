@@ -491,7 +491,7 @@ class nsDocShell final : public nsDocLoader,
   // to transfer the resulting channel into the final process.
   static nsresult CreateRealChannelForDocument(
       nsIChannel** aChannel, nsIURI* aURI, nsILoadInfo* aLoadInfo,
-      nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
+      nsIInterfaceRequestor* aCallbacks,
       nsLoadFlags aLoadFlags, const nsAString& aSrcdoc, nsIURI* aBaseURI);
 
   // Creates a real (not DocumentChannel) channel, and configures it using the
