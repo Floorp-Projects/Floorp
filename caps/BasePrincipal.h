@@ -156,6 +156,7 @@ class BasePrincipal : public nsJSPrincipals {
                                 nsIReferrerInfo** _retval) override;
   NS_IMETHOD GetIsScriptAllowedByPolicy(
       bool* aIsScriptAllowedByPolicy) override;
+  NS_IMETHOD GetStorageOriginKey(nsACString& aOriginKey) override;
   nsresult ToJSON(nsACString& aJSON);
   static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
   // Method populates a passed Json::Value with serializable fields
