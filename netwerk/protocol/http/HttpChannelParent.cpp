@@ -1835,8 +1835,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvOpenAltDataCacheInputStream(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
-                              int64_t aProgress, int64_t aProgressMax) {
+HttpChannelParent::OnProgress(nsIRequest* aRequest, int64_t aProgress,
+                              int64_t aProgressMax) {
   LOG(("HttpChannelParent::OnProgress [this=%p progress=%" PRId64 "max=%" PRId64
        "]\n",
        this, aProgress, aProgressMax));
@@ -1865,8 +1865,8 @@ HttpChannelParent::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
-                            nsresult aStatus, const char16_t* aStatusArg) {
+HttpChannelParent::OnStatus(nsIRequest* aRequest, nsresult aStatus,
+                            const char16_t* aStatusArg) {
   LOG(("HttpChannelParent::OnStatus [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aStatus)));
   MOZ_ASSERT(NS_IsMainThread());

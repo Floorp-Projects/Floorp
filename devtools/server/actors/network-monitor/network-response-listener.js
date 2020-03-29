@@ -379,7 +379,7 @@ NetworkResponseListener.prototype = {
    * Handle progress event as data is transferred.  This is used to record the
    * size on the wire, which may be compressed / encoded.
    */
-  onProgress: function(request, context, progress, progressMax) {
+  onProgress: function(request, progress, progressMax) {
     this.transferredSize = progress;
     // Need to forward as well to keep things like Download Manager's progress
     // bar working properly.
