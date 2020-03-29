@@ -71,10 +71,10 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess(
       AddURI(aURI);
     }
 
-    void AddURI(nsIURI* aURI) { SerializeURI(aURI, *mURIs.AppendElement()); }
+    void AddURI(nsIURI* aURI) { mURIs.AppendElement(aURI); }
 
     BrowserChild* mBrowserChild;
-    nsTArray<URIParams> mURIs;
+    nsTArray<RefPtr<nsIURI>> mURIs;
   };
 
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -140,7 +140,7 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess(
     void AddURI(nsIURI* aURI) { mURIs.AppendElement(aURI); }
 
     nsCOMPtr<nsIWidget> mWidget;
-    nsTArray<nsCOMPtr<nsIURI>> mURIs;
+    nsTArray<RefPtr<nsIURI>> mURIs;
   };
 
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -178,7 +178,7 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess(
   }
 
   for (const NewURIEntry& entry : newEntries) {
-    QueryVisitedState(entry.mWidget, entry.mURIs);
+    QueryVisitedState(entry.mWidget, std::move(entry.mURIs));
   }
 }
 
@@ -209,7 +209,7 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
     JS_ClearPendingException(aCx);
     if (visitedState) {
       AutoTArray<VisitedURI, 1> visitedURIs;
-      visitedURIs.AppendElement(VisitedURI{mURI, *visitedState});
+      visitedURIs.AppendElement(VisitedURI{mURI.get(), *visitedState});
       mHistory->HandleVisitedState(visitedURIs);
     }
     return NS_OK;
@@ -243,12 +243,6 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
   }
 
   if (XRE_IsContentProcess()) {
-    URIParams uri;
-    SerializeURI(aURI, uri);
-
-    Maybe<URIParams> lastVisitedURI;
-    SerializeURI(aLastVisitedURI, lastVisitedURI);
-
     // If we're in the content process, send the visit to the parent. The parent
     // will find the matching chrome window for the content process and tab,
     // then forward the visit to Java.
@@ -260,7 +254,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
       return NS_OK;
     }
     Unused << NS_WARN_IF(
-        !browserChild->SendVisitURI(uri, lastVisitedURI, aFlags));
+        !browserChild->SendVisitURI(aURI, aLastVisitedURI, aFlags));
     return NS_OK;
   }
 
@@ -358,7 +352,7 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
  public:
   explicit GetVisitedCallback(GeckoViewHistory* aHistory,
                               nsIGlobalObject* aGlobalObject,
-                              const nsTArray<nsCOMPtr<nsIURI>>& aURIs)
+                              const nsTArray<RefPtr<nsIURI>>& aURIs)
       : mHistory(aHistory), mGlobalObject(aGlobalObject), mURIs(aURIs) {}
 
   NS_DECL_ISUPPORTS
@@ -417,21 +411,21 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
       JS::Rooted<JS::Value> value(aCx);
       if (NS_WARN_IF(!JS_GetElement(aCx, visited, i, &value))) {
         JS_ClearPendingException(aCx);
-        aVisitedURIs.AppendElement(VisitedURI{mURIs[i], false});
+        aVisitedURIs.AppendElement(VisitedURI{mURIs[i].get(), false});
         continue;
       }
       if (NS_WARN_IF(!value.isBoolean())) {
-        aVisitedURIs.AppendElement(VisitedURI{mURIs[i], false});
+        aVisitedURIs.AppendElement(VisitedURI{mURIs[i].get(), false});
         continue;
       }
-      aVisitedURIs.AppendElement(VisitedURI{mURIs[i], value.toBoolean()});
+      aVisitedURIs.AppendElement(VisitedURI{mURIs[i].get(), value.toBoolean()});
     }
     return true;
   }
 
   RefPtr<GeckoViewHistory> mHistory;
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
-  nsTArray<nsCOMPtr<nsIURI>> mURIs;
+  nsTArray<RefPtr<nsIURI>> mURIs;
 };
 
 NS_IMPL_ISUPPORTS(GetVisitedCallback, nsIAndroidEventCallback)
@@ -442,7 +436,7 @@ NS_IMPL_ISUPPORTS(GetVisitedCallback, nsIAndroidEventCallback)
  * from `ContentParent::RecvGetVisited` in e10s.
  */
 void GeckoViewHistory::QueryVisitedState(
-    nsIWidget* aWidget, const nsTArray<nsCOMPtr<nsIURI>>& aURIs) {
+    nsIWidget* aWidget, const nsTArray<RefPtr<nsIURI>>&& aURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<nsWindow> window = nsWindow::From(aWidget);
   if (NS_WARN_IF(!window)) {

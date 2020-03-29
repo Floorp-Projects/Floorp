@@ -3980,27 +3980,25 @@ mozilla::ipc::IPCResult BrowserParent::RecvShowCanvasPermissionPrompt(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(
-    const URIParams& aURI, const Maybe<URIParams>& aLastVisitedURI,
-    const uint32_t& aFlags) {
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
-  if (!ourURI) {
+mozilla::ipc::IPCResult BrowserParent::RecvVisitURI(nsIURI* aURI,
+                                                    nsIURI* aLastVisitedURI,
+                                                    const uint32_t& aFlags) {
+  if (!aURI) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<nsIURI> ourLastVisitedURI = DeserializeURI(aLastVisitedURI);
   RefPtr<nsIWidget> widget = GetWidget();
   if (NS_WARN_IF(!widget)) {
     return IPC_OK();
   }
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (history) {
-    Unused << history->VisitURI(widget, ourURI, ourLastVisitedURI, aFlags);
+    Unused << history->VisitURI(widget, aURI, aLastVisitedURI, aFlags);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvQueryVisitedState(
-    nsTArray<URIParams>&& aURIs) {
+    const nsTArray<RefPtr<nsIURI>>&& aURIs) {
 #ifdef MOZ_ANDROID_HISTORY
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (NS_WARN_IF(!history)) {
@@ -4011,17 +4009,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvQueryVisitedState(
     return IPC_OK();
   }
 
-  nsTArray<nsCOMPtr<nsIURI>> uris(aURIs.Length());
   for (size_t i = 0; i < aURIs.Length(); ++i) {
-    nsCOMPtr<nsIURI> uri = DeserializeURI(aURIs[i]);
-    if (NS_WARN_IF(!uri)) {
-      continue;
+    if (!aURIs[i]) {
+      return IPC_FAIL(this, "Received null URI");
     }
-    uris.AppendElement(uri);
   }
 
   GeckoViewHistory* gvHistory = static_cast<GeckoViewHistory*>(history.get());
-  gvHistory->QueryVisitedState(widget, uris);
+  gvHistory->QueryVisitedState(widget, std::move(aURIs));
 
   return IPC_OK();
 #else
