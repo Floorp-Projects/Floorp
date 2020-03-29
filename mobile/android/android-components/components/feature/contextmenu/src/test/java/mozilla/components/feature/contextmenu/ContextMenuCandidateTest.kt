@@ -87,6 +87,28 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate "Open Link in New Tab" action properly executes for session with a contextId`() {
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
+
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+        val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
+            testContext, tabsUseCases, parentView, snackbarDelegate)
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("1", store.state.tabs.first().contextId)
+
+        openInNewTab.action.invoke(store.state.tabs.first(), HitResult.UNKNOWN("https://firefox.com"))
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("https://firefox.com", store.state.tabs.last().content.url)
+        assertEquals("1", store.state.tabs.last().contextId)
+    }
+
+    @Test
     fun `Candidate "Open Link in New Tab" action properly executes and shows snackbar`() {
         val store = BrowserStore()
         val sessionManager = spy(SessionManager(mock(), store))
@@ -334,6 +356,31 @@ class ContextMenuCandidateTest {
         assertEquals(2, store.state.tabs.size)
         assertTrue(store.state.tabs.last().content.private)
         assertEquals("https://firefox.com", store.state.tabs.last().content.url)
+    }
+
+    @Test
+    fun `Candidate "Open Image in New Tab" opens with the session's contextId`() {
+        val store = BrowserStore()
+        val sessionManager = spy(SessionManager(mock(), store))
+        doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
+        sessionManager.add(Session("https://www.mozilla.org", contextId = "1"))
+
+        val tabsUseCases = TabsUseCases(sessionManager)
+        val parentView = CoordinatorLayout(testContext)
+
+        val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
+            testContext, tabsUseCases, parentView, snackbarDelegate)
+
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("1", store.state.tabs.first().contextId)
+
+        openImageInTab.action.invoke(
+            store.state.tabs.first(),
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"))
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals("https://firefox.com", store.state.tabs.last().content.url)
+        assertEquals("1", store.state.tabs.last().contextId)
     }
 
     @Test

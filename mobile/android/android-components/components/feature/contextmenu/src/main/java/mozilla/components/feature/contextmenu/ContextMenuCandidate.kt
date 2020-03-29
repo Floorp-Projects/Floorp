@@ -70,7 +70,7 @@ data class ContextMenuCandidate(
             showFor = { tab, hitResult -> hitResult.isLink() && !tab.content.private },
             action = { parent, hitResult ->
                 val tab = tabsUseCases.addTab(
-                    hitResult.getLink(), selectTab = false, startLoading = true, parentId = parent.id)
+                    hitResult.getLink(), selectTab = false, startLoading = true, parentId = parent.id, contextId = parent.contextId)
 
                 snackbarDelegate.show(
                     snackBarParentView = snackBarParentView,
@@ -151,7 +151,7 @@ data class ContextMenuCandidate(
                         hitResult.src, selectTab = false, startLoading = true, parentId = parent.id)
                 } else {
                     tabsUseCases.addTab(
-                        hitResult.src, selectTab = false, startLoading = true, parentId = parent.id)
+                        hitResult.src, selectTab = false, startLoading = true, parentId = parent.id, contextId = parent.contextId)
                 }
 
                 snackbarDelegate.show(
