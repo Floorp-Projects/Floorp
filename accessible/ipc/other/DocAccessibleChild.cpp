@@ -1603,23 +1603,16 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvURLDocTypeMimeType(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvAccessibleAtPoint(
+mozilla::ipc::IPCResult DocAccessibleChild::RecvChildAtPoint(
     const uint64_t& aID, const int32_t& aX, const int32_t& aY,
-    const bool& aNeedsScreenCoords, const uint32_t& aWhich,
-    PDocAccessibleChild** aResultDoc, uint64_t* aResultID) {
+    const uint32_t& aWhich, PDocAccessibleChild** aResultDoc,
+    uint64_t* aResultID) {
   *aResultDoc = nullptr;
   *aResultID = 0;
   Accessible* acc = IdToAccessible(aID);
   if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
     int32_t x = aX;
     int32_t y = aY;
-    if (aNeedsScreenCoords) {
-      nsIntPoint winCoords =
-          nsCoreUtils::GetScreenCoordsForWindow(acc->GetNode());
-      x += winCoords.x;
-      y += winCoords.y;
-    }
-
     Accessible* result = acc->ChildAtPoint(
         x, y, static_cast<Accessible::EWhichChildAtPoint>(aWhich));
     if (result) {

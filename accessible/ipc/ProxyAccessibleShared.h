@@ -260,9 +260,6 @@ void MimeType(nsString aMime);
 void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
                         nsString& aMimeType);
 
-ProxyAccessible* AccessibleAtPoint(int32_t aX, int32_t aY,
-                                   bool aNeedsScreenCoords);
-
 void Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY, int32_t* aWidth,
              int32_t* aHeight);
 
