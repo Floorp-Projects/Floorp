@@ -40,7 +40,14 @@ add_task(async function test_register_rollback() {
       return new MockWebSocket(uri, {
         onHello(request) {
           handshakes++;
-          equal(request.uaid, userAgentID, "Handshake: wrong device ID");
+          if (registers > 0) {
+            equal(request.uaid, userAgentID, "Handshake: wrong device ID");
+          } else {
+            ok(
+              !request.uaid,
+              "Should not send UAID in handshake without local subscriptions"
+            );
+          }
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
