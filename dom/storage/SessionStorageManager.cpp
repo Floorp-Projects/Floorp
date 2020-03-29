@@ -102,7 +102,8 @@ nsresult SessionStorageManager::GetSessionStorageCacheHelper(
     SessionStorageCache* aCloneFrom, RefPtr<SessionStorageCache>* aRetVal) {
   nsAutoCString originKey;
   nsAutoCString originAttributes;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
+  nsresult rv = aPrincipal->GetStorageOriginKey(originKey);
+  aPrincipal->OriginAttributesRef().CreateSuffix(originAttributes);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -301,7 +302,8 @@ void SessionStorageManager::SendSessionStorageDataToContentProcess(
     ContentParent* const aActor, nsIPrincipal* const aPrincipal) {
   nsAutoCString originAttrs;
   nsAutoCString originKey;
-  auto rv = GenerateOriginKey(aPrincipal, originAttrs, originKey);
+  nsresult rv = aPrincipal->GetStorageOriginKey(originKey);
+  aPrincipal->OriginAttributesRef().CreateSuffix(originAttrs);
   if (NS_FAILED(rv)) {
     return;
   }

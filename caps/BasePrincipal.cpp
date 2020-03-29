@@ -25,7 +25,8 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/StorageUtils.h"
-
+#include "mozilla/dom/StorageUtils.h"
+#include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "prnetdb.h"
 
@@ -1022,6 +1023,55 @@ BasePrincipal::GetLocalStorageQuotaKey(nsACString& aKey) {
   aKey.Append(':');
   aKey.Append(subdomainsDBKey);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetStorageOriginKey(nsACString& aOriginKey) {
+  aOriginKey.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!uri) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsAutoCString domainOrigin;
+  rv = uri->GetAsciiHost(domainOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (domainOrigin.IsEmpty()) {
+    // For the file:/// protocol use the exact directory as domain.
+    if (uri->SchemeIs("file")) {
+      nsCOMPtr<nsIURL> url = do_QueryInterface(uri, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = url->GetDirectory(domainOrigin);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // Append reversed domain
+  nsAutoCString reverseDomain;
+  rv = dom::StorageUtils::CreateReversedDomain(domainOrigin, reverseDomain);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  aOriginKey.Append(reverseDomain);
+
+  // Append scheme
+  nsAutoCString scheme;
+  rv = uri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOriginKey.Append(':');
+  aOriginKey.Append(scheme);
+
+  // Append port if any
+  int32_t port = NS_GetRealPort(uri);
+  if (port != -1) {
+    aOriginKey.Append(nsPrintfCString(":%d", port));
+  }
   return NS_OK;
 }
 
