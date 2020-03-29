@@ -304,7 +304,7 @@ child:
   nested(inside_sync) sync MimeType(uint64_t aID) returns(nsString aMime);
   nested(inside_sync) sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
 
-  nested(inside_sync) sync AccessibleAtPoint(uint64_t aID, int32_t aX, int32_t aY, bool aNeedsScreenCoords, uint32_t aWhich)
+  nested(inside_sync) sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
     returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
 
   nested(inside_sync) sync Extents(uint64_t aID, bool aNeedsScreenCoords)

@@ -793,9 +793,9 @@ ProxyAccessible* ProxyAccessible::ChildAtPoint(
     }
     PDocAccessibleParent* resultDoc = nullptr;
     uint64_t resultID = 0;
-    Unused << target->mDoc->SendAccessibleAtPoint(
-        target->mID, aX, aY, false, static_cast<uint32_t>(aWhichChild),
-        &resultDoc, &resultID);
+    Unused << target->mDoc->SendChildAtPoint(target->mID, aX, aY,
+                                             static_cast<uint32_t>(aWhichChild),
+                                             &resultDoc, &resultID);
     // If resultDoc is null, this means there is no child at this point.
     auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
     target = resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
@@ -841,18 +841,6 @@ void ProxyAccessible::MimeType(nsString aMime) {
 void ProxyAccessible::URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
                                          nsString& aMimeType) {
   Unused << mDoc->SendURLDocTypeMimeType(mID, &aURL, &aDocType, &aMimeType);
-}
-
-ProxyAccessible* ProxyAccessible::AccessibleAtPoint(int32_t aX, int32_t aY,
-                                                    bool aNeedsScreenCoords) {
-  PDocAccessibleParent* resultDoc = nullptr;
-  uint64_t resultID = 0;
-  Unused << mDoc->SendAccessibleAtPoint(
-      mID, aX, aY, aNeedsScreenCoords,
-      static_cast<uint32_t>(Accessible::eDirectChild), &resultDoc, &resultID);
-  auto useDoc = static_cast<DocAccessibleParent*>(resultDoc);
-  // If resultDoc is null, this means there is no child at this point.
-  return resultDoc ? useDoc->GetAccessible(resultID) : nullptr;
 }
 
 void ProxyAccessible::Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY,
