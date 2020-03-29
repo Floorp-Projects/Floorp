@@ -2,7 +2,7 @@
 
 # createSessionState
 
-`fun createSessionState(json: <ERROR CLASS>): `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngine.kt#L81)
+`fun createSessionState(json: <ERROR CLASS>): `[`EngineSessionState`](../../mozilla.components.concept.engine/-engine-session-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngine.kt#L86)
 
 Overrides [Engine.createSessionState](../../mozilla.components.concept.engine/-engine/create-session-state.md)
 

@@ -2,7 +2,7 @@
 
 # ACTION_SEARCH
 
-`ACTION_SEARCH` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L133)
+`ACTION_SEARCH` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L134)
 
 Created to handle an ACTION_SEARCH and ACTION_WEB_SEARCH intent
 
