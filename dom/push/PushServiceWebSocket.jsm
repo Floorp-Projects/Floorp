@@ -1056,46 +1056,13 @@ var PushServiceWebSocket = {
       return;
     }
 
-    this._mainPushService
-      .getAllUnexpired()
-      .then(
-        records => this._sendHello(records),
-        err => {
-          console.warn(
-            "Error fetching existing records before handshake; assuming none",
-            err
-          );
-          this._sendHello([]);
-        }
-      )
-      .catch(err => {
-        // If we failed to send the handshake, back off and reconnect.
-        console.warn("Failed to send handshake; reconnecting", err);
-        this._reconnect();
-      });
-  },
-
-  /**
-   * Sends a `hello` handshake to the server.
-   *
-   * @param {Array<PushRecordWebSocket>} An array of records for existing
-   *        subscriptions, used to determine whether to rotate our UAID.
-   */
-  _sendHello(records) {
     let data = {
       messageType: "hello",
       broadcasts: this._broadcastListeners,
       use_webpush: true,
     };
 
-    if (records.length && this._UAID) {
-      // Only send our UAID if we have existing push subscriptions, to
-      // avoid tying a persistent identifier to the connection (bug
-      // 1617136). The push server will issue our client a new UAID in
-      // the `hello` response, which we'll store until either the next
-      // time we reconnect, or the user subscribes to push. Once we have a
-      // push subscription, we'll stop rotating the UAID when we connect,
-      // so that we can receive push messages for them.
+    if (this._UAID) {
       data.uaid = this._UAID;
     }
 
