@@ -89,6 +89,7 @@ EXPORTS.mozilla += [
     'public/ModuloBuffer.h',
     'public/PowerOfTwo.h',
     'public/ProfileBufferChunk.h',
+    'public/ProfileBufferChunkManager.h',
     'public/ProfileBufferEntrySerialization.h',
     'public/ProfileBufferIndex.h',
 ]
