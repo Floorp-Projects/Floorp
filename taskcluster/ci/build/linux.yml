@@ -801,6 +801,9 @@ linux64-tsan-fuzzing/opt:
     index:
         product: firefox
         job-name: linux64-fuzzing-tsan-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: linux64/tsan
         symbol: Bof
@@ -808,6 +811,7 @@ linux64-tsan-fuzzing/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: tsan-fuzzing
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
         using: mozharness
@@ -842,6 +846,9 @@ linux64-asan-fuzzing/opt:
     index:
         product: firefox
         job-name: linux64-fuzzing-asan-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: linux64/asan
         symbol: Bof
@@ -850,6 +857,7 @@ linux64-asan-fuzzing/opt:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
             ASAN_OPTIONS: "detect_leaks=0"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
         using: mozharness
@@ -884,6 +892,9 @@ linux64-asan-fuzzing-ccov/opt:
     index:
         product: firefox
         job-name: linux64-ccov-fuzzing-asan-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: linux64/asan
         symbol: Bocf
@@ -893,6 +904,7 @@ linux64-asan-fuzzing-ccov/opt:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-ccov
             ASAN_OPTIONS: "detect_leaks=0"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
         max-run-time: 5400
     run:
         using: mozharness
