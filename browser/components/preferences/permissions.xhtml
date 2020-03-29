@@ -62,18 +62,16 @@
   <hbox class="actionButtons">
     <button id="removePermission" disabled="true"
             data-l10n-id="permissions-remove"
-            icon="remove"
             oncommand="gPermissionManager.onPermissionDelete();"/>
     <button id="removeAllPermissions"
             data-l10n-id="permissions-remove-all"
-            icon="clear"
             oncommand="gPermissionManager.onAllPermissionsDelete();"/>
   </hbox>
   <spacer flex="1"/>
   <hbox class="actionButtons" pack="end">
-    <button oncommand="window.close();" icon="close"
+    <button oncommand="window.close();"
             data-l10n-id="permissions-button-cancel" />
-    <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();" icon="save"
+    <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();"
             data-l10n-id="permissions-button-ok" />
   </hbox>
 </window>

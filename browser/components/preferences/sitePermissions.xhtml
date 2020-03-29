@@ -60,11 +60,9 @@
   <hbox class="actionButtons">
     <button id="removePermission" disabled="true"
             data-l10n-id="permissions-remove"
-            icon="remove"
             oncommand="gSitePermissionsManager.onPermissionDelete();"/>
     <button id="removeAllPermissions"
             data-l10n-id="permissions-remove-all"
-            icon="clear"
             oncommand="gSitePermissionsManager.onAllPermissionsDelete();"/>
   </hbox>
 
@@ -80,9 +78,9 @@
             data-l10n-id="disable-extension"/>
   </hbox>
   <hbox class="actionButtons" pack="end">
-    <button oncommand="window.close();" icon="close" id="cancel"
+    <button oncommand="window.close();" id="cancel"
             data-l10n-id="permissions-button-cancel" />
-    <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();" icon="save"
+    <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();"
             data-l10n-id="permissions-button-ok" />
   </hbox>
 </window>
