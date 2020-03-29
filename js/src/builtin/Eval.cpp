@@ -132,7 +132,7 @@ class EvalScriptGuard {
   }
 };
 
-enum EvalJSONResult { EvalJSON_Failure, EvalJSON_Success, EvalJSON_NotJSON };
+enum class EvalJSONResult { Failure, Success, NotJSON };
 
 template <typename CharT>
 static bool EvalStringMightBeJSON(const mozilla::Range<const CharT> chars) {
@@ -177,10 +177,10 @@ static EvalJSONResult ParseEvalStringAsJSON(
       cx, JSONParser<CharT>(cx, jsonChars,
                             JSONParserBase::ParseType::AttemptForEval));
   if (!parser.parse(rval)) {
-    return EvalJSON_Failure;
+    return EvalJSONResult::Failure;
   }
 
-  return rval.isUndefined() ? EvalJSON_NotJSON : EvalJSON_Success;
+  return rval.isUndefined() ? EvalJSONResult::NotJSON : EvalJSONResult::Success;
 }
 
 static EvalJSONResult TryEvalJSON(JSContext* cx, JSLinearString* str,
@@ -188,18 +188,18 @@ static EvalJSONResult TryEvalJSON(JSContext* cx, JSLinearString* str,
   if (str->hasLatin1Chars()) {
     AutoCheckCannotGC nogc;
     if (!EvalStringMightBeJSON(str->latin1Range(nogc))) {
-      return EvalJSON_NotJSON;
+      return EvalJSONResult::NotJSON;
     }
   } else {
     AutoCheckCannotGC nogc;
     if (!EvalStringMightBeJSON(str->twoByteRange(nogc))) {
-      return EvalJSON_NotJSON;
+      return EvalJSONResult::NotJSON;
     }
   }
 
   AutoStableStringChars linearChars(cx);
   if (!linearChars.init(cx, str)) {
-    return EvalJSON_Failure;
+    return EvalJSONResult::Failure;
   }
 
   return linearChars.isLatin1()
@@ -256,8 +256,8 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
 
   RootedScript callerScript(cx, caller ? caller.script() : nullptr);
   EvalJSONResult ejr = TryEvalJSON(cx, linearStr, vp);
-  if (ejr != EvalJSON_NotJSON) {
-    return ejr == EvalJSON_Success;
+  if (ejr != EvalJSONResult::NotJSON) {
+    return ejr == EvalJSONResult::Success;
   }
 
   EvalScriptGuard esg(cx);
@@ -370,8 +370,8 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
   }
 
   EvalJSONResult ejr = TryEvalJSON(cx, linearStr, vp);
-  if (ejr != EvalJSON_NotJSON) {
-    return ejr == EvalJSON_Success;
+  if (ejr != EvalJSONResult::NotJSON) {
+    return ejr == EvalJSONResult::Success;
   }
 
   EvalScriptGuard esg(cx);
