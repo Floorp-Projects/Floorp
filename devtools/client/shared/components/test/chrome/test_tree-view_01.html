@@ -114,6 +114,14 @@ window.onload = function() {
       event: { type: "keyDown", el: treeViewEl, options: { key: "ArrowUp" }},
       state: { selected: "/B" },
     }, {
+      name: "Selected row should move to the next matching row with first letter navigation.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "C" }},
+      state: { selected: "/C" },
+    }, {
+      name: "Selected row should not change when there are no more visible nodes matching first letter navigation.",
+      event: { type: "keyDown", el: treeViewEl, options: { key: "C" }},
+      state: { selected: "/C" },
+    }, {
       name: "Selected row should be updated to last on End.",
       event: { type: "keyDown", el: treeViewEl, options: { key: "End" }},
       state: { selected: "/D" },
