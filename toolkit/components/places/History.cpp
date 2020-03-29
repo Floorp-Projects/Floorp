@@ -1867,16 +1867,10 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   }
 
   if (XRE_IsContentProcess()) {
-    URIParams uri;
-    SerializeURI(aURI, uri);
-
-    Maybe<URIParams> lastVisitedURI;
-    SerializeURI(aLastVisitedURI, lastVisitedURI);
-
     NS_ENSURE_ARG(aWidget);
     BrowserChild* browserChild = aWidget->GetOwningBrowserChild();
     NS_ENSURE_TRUE(browserChild, NS_ERROR_FAILURE);
-    (void)browserChild->SendVisitURI(uri, lastVisitedURI, aFlags);
+    (void)browserChild->SendVisitURI(aURI, aLastVisitedURI, aFlags);
     return NS_OK;
   }
 
