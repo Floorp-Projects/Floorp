@@ -309,19 +309,23 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
     nsresult rv;
     nsCOMPtr<nsIWindowWatcher> wwatch =
         do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_NO_INTERFACE);
 
     bool hasWindowCreator = false;
     Unused << wwatch->HasWindowCreator(&hasWindowCreator);
     if (!hasWindowCreator) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_NO_INTERFACE;
     }
 
     nsCOMPtr<nsIPromptFactory> factory = do_QueryInterface(wwatch);
     if (!factory) {
       return NS_ERROR_NO_INTERFACE;
     }
-    return factory->GetPrompt(nullptr, aIID, reinterpret_cast<void**>(result));
+    rv = factory->GetPrompt(nullptr, aIID, reinterpret_cast<void**>(result));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+    return NS_OK;
   }
 
   // Only support nsILoadContext if child channel's callbacks did too

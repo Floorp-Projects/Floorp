@@ -166,20 +166,20 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
         mBrowsingContext->Top()->GetEmbedderElement();
     if (frameElement) {
       nsCOMPtr<nsPIDOMWindowOuter> win = frameElement->OwnerDoc()->GetWindow();
-      NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+      NS_ENSURE_TRUE(win, NS_ERROR_NO_INTERFACE);
 
       nsresult rv;
       nsCOMPtr<nsIWindowWatcher> wwatch =
           do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
 
       if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
-        return rv;
+        return NS_ERROR_NO_INTERFACE;
       }
 
       nsCOMPtr<nsIPrompt> prompt;
       rv = wwatch->GetNewPrompter(win, getter_AddRefs(prompt));
       if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
-        return rv;
+        return NS_ERROR_NO_INTERFACE;
       }
 
       prompt.forget(result);
@@ -189,7 +189,12 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
 
   if (mBrowsingContext && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
                            aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
-    return GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, aIID, result);
+    nsresult rv =
+        GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, aIID, result);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+    return NS_OK;
   }
 
   nsCOMPtr<nsIInterfaceRequestor> ir;
