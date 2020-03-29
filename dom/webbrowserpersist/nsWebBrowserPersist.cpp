@@ -976,7 +976,6 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
 //*****************************************************************************
 
 NS_IMETHODIMP nsWebBrowserPersist::OnProgress(nsIRequest* request,
-                                              nsISupports* ctxt,
                                               int64_t aProgress,
                                               int64_t aProgressMax) {
   if (!mProgressListener) {
@@ -1013,14 +1012,14 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(nsIRequest* request,
   // If our progress listener implements nsIProgressEventSink,
   // forward the notification
   if (mEventSink) {
-    mEventSink->OnProgress(request, ctxt, aProgress, aProgressMax);
+    mEventSink->OnProgress(request, aProgress, aProgressMax);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserPersist::OnStatus(nsIRequest* request,
-                                            nsISupports* ctxt, nsresult status,
+                                            nsresult status,
                                             const char16_t* statusArg) {
   if (mProgressListener) {
     // We need to filter out non-error error codes.
@@ -1051,7 +1050,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(nsIRequest* request,
   // If our progress listener implements nsIProgressEventSink,
   // forward the notification
   if (mEventSink) {
-    mEventSink->OnStatus(request, ctxt, status, statusArg);
+    mEventSink->OnStatus(request, status, statusArg);
   }
 
   return NS_OK;

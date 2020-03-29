@@ -51,10 +51,10 @@ function make_channel(url, body, cb) {
     getInterface(iid) {
       return this.QueryInterface(iid);
     },
-    onProgress(request, context, progress, progressMax) {
+    onProgress(request, progress, progressMax) {
       gotOnProgress = true;
     },
-    onStatus(request, context, status, statusArg) {
+    onStatus(request, status, statusArg) {
       gotOnStatus = true;
     },
     shouldPrepareForIntercept() {

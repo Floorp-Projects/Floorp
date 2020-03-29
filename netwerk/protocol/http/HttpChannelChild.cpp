@@ -89,8 +89,8 @@ InterceptStreamListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-InterceptStreamListener::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
-                                  nsresult status, const char16_t* aStatusArg) {
+InterceptStreamListener::OnStatus(nsIRequest* aRequest, nsresult status,
+                                  const char16_t* aStatusArg) {
   if (mOwner) {
     mOwner->DoOnStatus(mOwner, status);
   }
@@ -98,8 +98,8 @@ InterceptStreamListener::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
 }
 
 NS_IMETHODIMP
-InterceptStreamListener::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
-                                    int64_t aProgress, int64_t aProgressMax) {
+InterceptStreamListener::OnProgress(nsIRequest* aRequest, int64_t aProgress,
+                                    int64_t aProgressMax) {
   if (mOwner) {
     mOwner->DoOnProgress(mOwner, aProgress, aProgressMax);
   }
@@ -124,11 +124,10 @@ InterceptStreamListener::OnDataAvailable(nsIRequest* aRequest,
     nsAutoCString host;
     uri->GetHost(host);
 
-    OnStatus(mOwner, nullptr, NS_NET_STATUS_READING,
-             NS_ConvertUTF8toUTF16(host).get());
+    OnStatus(mOwner, NS_NET_STATUS_READING, NS_ConvertUTF8toUTF16(host).get());
 
     int64_t progress = aOffset + aCount;
-    OnProgress(mOwner, nullptr, progress, mOwner->mSynthesizedStreamLength);
+    OnProgress(mOwner, progress, mOwner->mSynthesizedStreamLength);
   }
 
   mOwner->DoOnDataAvailable(mOwner, nullptr, aInputStream, aOffset, aCount);
@@ -930,7 +929,7 @@ void HttpChannelChild::DoOnStatus(nsIRequest* aRequest, nsresult status) {
       !(mLoadFlags & LOAD_BACKGROUND)) {
     nsAutoCString host;
     mURI->GetHost(host);
-    mProgressSink->OnStatus(aRequest, nullptr, status,
+    mProgressSink->OnStatus(aRequest, status,
                             NS_ConvertUTF8toUTF16(host).get());
   }
 }
@@ -951,7 +950,7 @@ void HttpChannelChild::DoOnProgress(nsIRequest* aRequest, int64_t progress,
     // OnProgress
     //
     if (progress > 0) {
-      mProgressSink->OnProgress(aRequest, nullptr, progress, progressMax);
+      mProgressSink->OnProgress(aRequest, progress, progressMax);
     }
   }
 }
