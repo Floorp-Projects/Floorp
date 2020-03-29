@@ -3478,7 +3478,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
               nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) ||
              aArgs.srcdocData().IsVoid());
   rv = nsDocShell::CreateRealChannelForDocument(
-      getter_AddRefs(newChannel), aArgs.uri(), loadInfo, nullptr, nullptr,
+      getter_AddRefs(newChannel), aArgs.uri(), loadInfo, nullptr,
       aArgs.newLoadFlags(), aArgs.srcdocData(), aArgs.baseUri());
 
   // This is used to report any errors back to the parent by calling

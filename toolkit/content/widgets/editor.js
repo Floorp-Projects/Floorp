@@ -16,9 +16,6 @@
           "nsIURIContentListener",
           "nsISupportsWeakReference",
         ]),
-        onStartURIOpen(uri) {
-          return false;
-        },
         doContent(contentType, isContentPreferred, request, contentHandler) {
           return false;
         },
