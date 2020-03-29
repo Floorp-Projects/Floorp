@@ -1045,10 +1045,6 @@
     <string name="etp_panel_on">Protections are ON for this site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Protections are OFF for this site</string>
-    <!-- Text to announce when Enhanced Tracking Protection switch is ON -->
-    <string name="etp_switch_on">Enhanced Tracking Protection On</string>
-    <!-- Text to announce when Enhanced Tracking Protection switch is OFF -->
-    <string name="etp_switch_off">Enhanced Tracking Protection Off</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Enhanced Tracking Protection is off for these websites</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
