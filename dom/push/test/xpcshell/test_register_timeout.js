@@ -35,17 +35,19 @@ add_task(async function test_register_timeout() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          if (handshakes === 0) {
-            equal(request.uaid, null, "Should not include device ID");
-          } else if (handshakes === 1) {
-            // Should use the previously-issued device ID when reconnecting,
-            // but should not include the timed-out channel ID.
+          if (registers > 0) {
             equal(
               request.uaid,
               userAgentID,
-              "Should include device ID on reconnect"
+              "Should include device ID on reconnect with subscriptions"
             );
           } else {
+            ok(
+              !request.uaid,
+              "Should not send UAID in handshake without local subscriptions"
+            );
+          }
+          if (handshakes > 1) {
             ok(false, "Unexpected reconnect attempt " + handshakes);
           }
           handshakes++;
@@ -75,9 +77,9 @@ add_task(async function test_register_timeout() {
                 pushEndpoint: "https://example.com/update/timeout",
               })
             );
+            registers++;
             timeoutDone();
           }, 2000);
-          registers++;
         },
       });
     },
