@@ -3525,8 +3525,9 @@ void ContainerState::FinishPaintedLayerData(
 
 #ifdef MOZ_DUMP_PAINTING
   if (!data->mLog.IsEmpty()) {
-    if (PaintedLayerData* containingPld =
-            mLayerBuilder->GetContainingPaintedLayerData()) {
+    PaintedLayerData* containingPld =
+        mLayerBuilder->GetContainingPaintedLayerData();
+    if (containingPld && containingPld->mLayer) {
       containingPld->mLayer->AddExtraDumpInfo(nsCString(data->mLog));
     } else {
       layer->AddExtraDumpInfo(nsCString(data->mLog));
