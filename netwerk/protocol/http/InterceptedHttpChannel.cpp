@@ -414,10 +414,9 @@ void InterceptedHttpChannel::MaybeCallStatusAndProgress() {
     CopyUTF8toUTF16(host, mStatusHost);
   }
 
-  mProgressSink->OnStatus(this, nullptr, NS_NET_STATUS_READING,
-                          mStatusHost.get());
+  mProgressSink->OnStatus(this, NS_NET_STATUS_READING, mStatusHost.get());
 
-  mProgressSink->OnProgress(this, nullptr, progress, mSynthesizedStreamLength);
+  mProgressSink->OnProgress(this, progress, mSynthesizedStreamLength);
 
   mProgressReported = progress;
 }
