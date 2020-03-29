@@ -61,7 +61,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Muuda järjehoidjat</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Lisade haldur</string>
+    <string name="browser_menu_add_ons">Lisad</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Lisad puuduvad</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -72,8 +72,7 @@
     <string name="browser_menu_settings">Sätted</string>
 
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Kogumik</string>
-
+    <string name="browser_menu_library">Kogumik</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Töölaua versioon</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -89,7 +88,7 @@
     <string name="browser_menu_new_tab">Uus kaart</string>
 
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Salvesta kollektsiooni</string>
+    <string name="browser_menu_save_to_collection_2">Salvesta kollektsiooni</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Anna teada saidil olevast veast</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -325,7 +324,7 @@
     <string name="preference_usage_data">Kasutamise ja tehnilised andmed</string>
 
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Jagab sinu brauseri sooritusvõimsuse, kasutamise, kohandamiste ja riistvara andmeid Mozillaga, et aidata meil %1$s paremaks teha</string>
+    <string name="preferences_usage_data_description">Jagab sinu brauseri sooritusvõimsuse, kasutamise, kohandamiste ja riistvara andmeid Mozillaga, et aidata meil %1$s paremaks teha.</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Turundusandmed</string>
 
@@ -576,7 +575,7 @@
         Secure settings status and a button to modify site permissions -->
     <string name="quick_settings_sheet">Kiirsätete leht</string>
     <!-- Label that indicates that this option it the recommended one -->
-    <string name="phone_feature_recommended">soovitatud</string>
+    <string name="phone_feature_recommended">Soovitatav</string>
     <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">Halda saidi õigusi</string>
 
@@ -600,34 +599,32 @@
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Alati küsitakse</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">keelatud</string>
+    <string name="preference_option_phone_feature_blocked">Keelatud</string>
 
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">lubatud</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">keelatud Androidi poolt</string>
+    <string name="phone_feature_blocked_by_android">Keelatud Androidi poolt</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Erandid</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">sees</string>
+    <string name="tracking_protection_on">Sees</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
-    <string name="tracking_protection_off">väljas</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">video ja heli on keelatud</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">video ja heli on lubatud</string>
+    <string name="tracking_protection_off">Väljas</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Heli ja video on lubatud</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Heli ja video on lubatud ainult wifis</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Heli ja video blokitakse ainult mobiilset andmesidet kasutades</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Heli ja videot esitatakse ainult wifis olles</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Heli on keelatud</string>
+    <string name="preference_option_autoplay_block_audio2">Blokitakse ainult heli</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Heli ja video on keelatud</string>
+    <string name="preference_option_autoplay_blocked3">Blokitakse heli ja video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
-    <string name="delete_browsing_data_quit_on">sees</string>
+    <string name="delete_browsing_data_quit_on">Sees</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
-    <string name="delete_browsing_data_quit_off">väljas</string>
+    <string name="delete_browsing_data_quit_off">Väljas</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -1055,6 +1052,9 @@
     <string name="etp_panel_off">Sellel saidil on kaitse VÄLJAS</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Täiustatud jälitamisvastane kaitse on järgmistel saitidel välja lülitatud</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Liigu tagasi</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Sinu õigused</string>
     <!-- About page link text to open open source licenses screen -->

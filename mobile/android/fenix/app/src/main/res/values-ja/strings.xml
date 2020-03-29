@@ -64,7 +64,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ブックマークを編集</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">アドオンマネージャー</string>
+    <string name="browser_menu_add_ons">アドオン</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">アドオンがありません</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -74,7 +74,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">設定</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">ライブラリー</string>
+    <string name="browser_menu_library">ライブラリー</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">デスクトップサイト</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -88,7 +88,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">新しいタブ</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">コレクションに保存</string>
+    <string name="browser_menu_save_to_collection_2">コレクションに保存</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">サイトの問題を報告</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -616,19 +616,16 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">オフ</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">動画と音声の再生をブロックしました</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">動画と音声の再生を許可しました</string>
-
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">音声と動画の再生を許可</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Wi-Fi 接続時のみ音声と動画の再生を許可</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">データ通信時のみ音声と動画をブロック</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Wi-Fi 接続時は音声と動画を再生します</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">音声の再生をブロック</string>
+    <string name="preference_option_autoplay_block_audio2">音声のみブロック</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">音声と動画の再生をブロック</string>
+    <string name="preference_option_autoplay_blocked3">音声と動画をブロック</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">オン</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1056,6 +1053,9 @@
     <string name="etp_panel_off">このサイトでは保護が無効になっています</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">これらのウェブサイトでは強化されたトラッキング防止が無効になります</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">前のページへ戻る</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">あなたの権利</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1241,6 +1241,10 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s を削除しました</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">%s のすべてが新しくなりました</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">完全に再設計されたブラウザーがあなたを待っています。パフォーマンスと機能が改善され、オンラインでさらに多くのことができるようになりました。\n\nしばらくお待ちください。%s を更新して次のデータを移行しています:</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s を更新しています…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

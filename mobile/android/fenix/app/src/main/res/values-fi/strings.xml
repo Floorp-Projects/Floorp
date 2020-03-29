@@ -619,6 +619,8 @@
     <string name="preference_option_autoplay_allowed2">Salli ääni ja video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Estä ääni ja video vain käytettäessä matkapuhelinverkon datayhteyttä</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Ääni ja video toistetaan käytettäessä Wi-Fi-yhteyttä</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Estä vain ääni</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->

@@ -586,7 +586,7 @@
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Ծանուցում</string>
     <!-- Label that indicates that a permission must be asked always -->
-    <string name="preference_option_phone_feature_ask_to_allow">Խնդրեք թույլ տալ</string>
+    <string name="preference_option_phone_feature_ask_to_allow">Խնդրել թույլտվություն</string>
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Արգելափակված</string>
     <!-- Label that indicates that a permission must be allowed -->

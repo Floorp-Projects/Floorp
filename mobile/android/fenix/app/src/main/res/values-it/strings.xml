@@ -1071,6 +1071,9 @@
     <string name="etp_panel_off">Le protezioni sono disattivate per questo sito</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">La protezione antitracciamento avanzata è disattivata per questi siti</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Torna indietro</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">I tuoi diritti</string>
     <!-- About page link text to open open source licenses screen -->
