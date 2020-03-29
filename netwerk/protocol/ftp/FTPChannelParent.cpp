@@ -550,8 +550,12 @@ FTPChannelParent::GetInterface(const nsIID& uuid, void** result) {
              uuid.Equals(NS_GET_IID(nsIAuthPrompt2))) {
     nsCOMPtr<nsIAuthPromptProvider> provider(do_QueryObject(mBrowserParent));
     if (provider) {
-      return provider->GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, uuid,
-                                     result);
+      nsresult rv = provider->GetAuthPrompt(
+          nsIAuthPromptProvider::PROMPT_NORMAL, uuid, result);
+      if (NS_FAILED(rv)) {
+        return NS_ERROR_NO_INTERFACE;
+      }
+      return NS_OK;
     }
   }
 
