@@ -80,7 +80,10 @@ add_task(async function test_webapps_cleardata() {
       return new MockWebSocket(uri, {
         onHello(data) {
           equal(data.messageType, "hello", "Handshake: wrong message type");
-          equal(data.uaid, userAgentID, "Handshake: wrong device ID");
+          ok(
+            !data.uaid,
+            "Should not send UAID in handshake without local subscriptions"
+          );
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
