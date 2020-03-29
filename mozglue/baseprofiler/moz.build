@@ -90,6 +90,7 @@ EXPORTS.mozilla += [
     'public/PowerOfTwo.h',
     'public/ProfileBufferChunk.h',
     'public/ProfileBufferChunkManager.h',
+    'public/ProfileBufferChunkManagerSingle.h',
     'public/ProfileBufferEntrySerialization.h',
     'public/ProfileBufferIndex.h',
 ]
