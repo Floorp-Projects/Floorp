@@ -47,11 +47,9 @@
     <hbox class="actionButtons" pack="end">
       <button id="removeLanguage" disabled="true"
               data-l10n-id="translation-languages-button-remove"
-              icon="remove"
               oncommand="gTranslationExceptions.onLanguageDeleted();"/>
       <button id="removeAllLanguages"
               data-l10n-id="translation-languages-button-remove-all"
-              icon="clear"
               oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
       <spacer flex="1"/>
     </hbox>
@@ -76,14 +74,12 @@
   <hbox class="actionButtons" pack="end">
     <button id="removeSite" disabled="true"
             data-l10n-id="translation-sites-button-remove"
-            icon="remove"
             oncommand="gTranslationExceptions.onSiteDeleted();"/>
     <button id="removeAllSites"
             data-l10n-id="translation-sites-button-remove-all"
-            icon="clear"
             oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
     <spacer flex="1"/>
-    <button oncommand="window.close();" icon="close"
+    <button oncommand="window.close();"
             data-l10n-id="translation-button-close"/>
   </hbox>
 </window>
