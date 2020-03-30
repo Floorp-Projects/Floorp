@@ -67,7 +67,7 @@ pub use self::uuid::UuidMetric;
 /// Do not reorder the variants.
 ///
 /// **Any new metric must be added at the end.**
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum Metric {
     /// A boolean metric. See [`BooleanMetric`](struct.BooleanMetric.html) for more information.
     Boolean(bool),
@@ -150,7 +150,7 @@ impl Metric {
             }
             Metric::CustomDistributionLinear(hist) => json!(custom_distribution::snapshot(hist)),
             Metric::Datetime(d, time_unit) => json!(get_iso_time_string(*d, *time_unit)),
-            Metric::Experiment(e) => json!(e),
+            Metric::Experiment(e) => e.as_json(),
             Metric::Quantity(q) => json!(q),
             Metric::String(s) => json!(s),
             Metric::StringList(v) => json!(v),

@@ -193,7 +193,15 @@ macro_rules! implement_into_ffi_by_delegation {
 #[macro_export]
 macro_rules! define_string_destructor {
     ($mylib_destroy_string:ident) => {
-        #[doc = "Public destructor for strings managed by the other side of the FFI."]
+        /// Public destructor for strings managed by the other side of the FFI.
+        ///
+        /// # Safety
+        ///
+        /// This will free the string pointer it gets passed in as an argument,
+        /// and thus can be wildly unsafe if misused.
+        ///
+        /// See the documentation of `ffi_support::destroy_c_string` and
+        /// `ffi_support::define_string_destructor!` for further info.
         #[no_mangle]
         pub unsafe extern "C" fn $mylib_destroy_string(s: *mut std::os::raw::c_char) {
             // Note: This should never happen, but in the case of a bug aborting
@@ -208,17 +216,22 @@ macro_rules! define_string_destructor {
     };
 }
 
-/// Define a (public) destructor for a type that was allocated by `Box::into_raw(Box::new(value))`
-/// (e.g. a pointer which is probably opaque).
+/// Define a (public) destructor for a type that was allocated by
+/// `Box::into_raw(Box::new(value))` (e.g. a pointer which is probably opaque).
 ///
 /// ## Caveats
 ///
-/// This can go wrong in a ridiculous number of ways, and we can't really prevent any of them. But
-/// essentially, the caller (on the other side of the FFI) needs to be extremely careful to ensure
-/// that it stops using the pointer after it's freed.
+/// When called over the FFI, this can go wrong in a ridiculous number of ways,
+/// and we can't really prevent any of them. But essentially, the caller (on the
+/// other side of the FFI) needs to be extremely careful to ensure that it stops
+/// using the pointer after it's freed.
 ///
-/// Also, to avoid name collisions, it is strongly recommended that you provide an name for this
-/// function unique to your library. (This is true for all functions you expose).
+/// Also, to avoid name collisions, it is strongly recommended that you provide
+/// an name for this function unique to your library. (This is true for all
+/// functions you expose).
+///
+/// However, when called from rust, this is safe, as it becomes a function that
+/// just drops a `Option<Box<T>>` with some panic handling.
 ///
 /// ## Example
 ///
@@ -231,6 +244,10 @@ macro_rules! define_string_destructor {
 #[macro_export]
 macro_rules! define_box_destructor {
     ($T:ty, $destructor_name:ident) => {
+        /// # Safety
+        /// This is equivalent to calling Box::from_raw with panic handling, and
+        /// thus inherits [`Box::from_raw`]'s safety properties. That is to say,
+        /// this function is wildly unsafe.
         #[no_mangle]
         pub unsafe extern "C" fn $destructor_name(v: *mut $T) {
             // We should consider passing an error parameter in here rather than
