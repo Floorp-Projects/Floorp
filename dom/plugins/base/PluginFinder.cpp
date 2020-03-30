@@ -26,6 +26,7 @@
 #include "prio.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsPluginDirServiceProvider.h"
@@ -921,6 +922,33 @@ nsresult PluginFinder::DeterminePluginDirs() {
   MOZ_TRY(dirService->Get(NS_APP_PLUGINS_DIR_LIST,
                           NS_GET_IID(nsISimpleEnumerator),
                           getter_AddRefs(dirEnum)));
+
+  // Add any paths from MOZ_PLUGIN_PATH first.
+#if defined(XP_WIN) || defined(XP_LINUX)
+#  ifdef XP_WIN
+#    define PATH_SEPARATOR ';'
+#  else
+#    define PATH_SEPARATOR ':'
+#  endif
+  const char* pathsenv = PR_GetEnv("MOZ_PLUGIN_PATH");
+  if (pathsenv) {
+    const nsDependentCString pathsStr(pathsenv);
+    nsCCharSeparatedTokenizer paths(pathsStr, PATH_SEPARATOR);
+    while (paths.hasMoreTokens()) {
+      auto pathStr = paths.nextToken();
+      nsCOMPtr<nsIFile> pathFile;
+      rv = NS_NewNativeLocalFile(pathStr, true, getter_AddRefs(pathFile));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      bool exists;
+      if (pathFile && NS_SUCCEEDED(pathFile->Exists(&exists)) && exists) {
+        mPluginDirs.AppendElement(pathFile);
+      }
+    }
+  }
+#endif  // defined(XP_WIN) || defined(XP_LINUX)
 
   bool hasMore = false;
   while (NS_SUCCEEDED(dirEnum->HasMoreElements(&hasMore)) && hasMore) {
