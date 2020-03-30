@@ -565,10 +565,7 @@ var SelectParentHelper = {
       let searchbox = element.ownerDocument.createXULElement("search-textbox");
       searchbox.className = "contentSelectDropdown-searchbox";
       searchbox.addEventListener("input", this.onSearchInput);
-      searchbox.addEventListener(
-        "focus",
-        this.onSearchFocus.bind(this)
-      );
+      searchbox.addEventListener("focus", this.onSearchFocus.bind(this));
       searchbox.addEventListener("blur", this.onSearchBlur);
       searchbox.addEventListener("command", this.onSearchInput);
 
