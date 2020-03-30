@@ -364,6 +364,12 @@ nsFocusManager::GetActiveWindow(mozIDOMWindowProxy** aWindow) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFocusManager::GetActiveBrowsingContext(BrowsingContext** aBrowsingContext) {
+  NS_IF_ADDREF(*aBrowsingContext = GetActiveBrowsingContext());
+  return NS_OK;
+}
+
 void nsFocusManager::FocusWindow(nsPIDOMWindowOuter* aWindow,
                                  CallerType aCallerType) {
   if (RefPtr<nsFocusManager> fm = sInstance) {

@@ -7,6 +7,7 @@
 
 interface mozIDOMWindowProxy;
 
+webidl BrowsingContext;
 webidl Document;
 webidl Element;
 
@@ -48,6 +49,13 @@ interface nsIFocusManager : nsISupports
    * the application is active.
    */
   readonly attribute mozIDOMWindowProxy activeWindow;
+
+  /**
+   * In the parent process: The BrowsingContext corresponding to activeWindow.
+   * In content processes: The top-level Web content browsing context that
+   * focus is in if the application is active and focus is in Web content.
+   */
+  readonly attribute BrowsingContext activeBrowsingContext;
 
   /**
    * The child window within the activeWindow that is focused. This will
