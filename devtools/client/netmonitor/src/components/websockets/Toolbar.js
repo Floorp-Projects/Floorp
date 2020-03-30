@@ -48,11 +48,9 @@ class Toolbar extends Component {
     return {
       searchboxRef: PropTypes.object.isRequired,
       toggleFrameFilterType: PropTypes.func.isRequired,
-      toggleControlFrames: PropTypes.func.isRequired,
       clearFrames: PropTypes.func.isRequired,
       setFrameFilterText: PropTypes.func.isRequired,
       frameFilterType: PropTypes.string.isRequired,
-      showControlFrames: PropTypes.bool.isRequired,
     };
   }
 
@@ -86,18 +84,11 @@ class Toolbar extends Component {
    * Render the frame filter menu button.
    */
   renderFrameFilterMenu() {
-    const {
-      frameFilterType,
-      toggleFrameFilterType,
-      showControlFrames,
-      toggleControlFrames,
-    } = this.props;
+    const { frameFilterType, toggleFrameFilterType } = this.props;
 
     return FrameFilterMenu({
       frameFilterType,
       toggleFrameFilterType,
-      showControlFrames,
-      toggleControlFrames,
     });
   }
 
@@ -135,13 +126,11 @@ class Toolbar extends Component {
 module.exports = connect(
   state => ({
     frameFilterType: state.webSockets.frameFilterType,
-    showControlFrames: state.webSockets.showControlFrames,
   }),
   dispatch => ({
     clearFrames: () => dispatch(Actions.clearFrames()),
     toggleFrameFilterType: filter =>
       dispatch(Actions.toggleFrameFilterType(filter)),
-    toggleControlFrames: () => dispatch(Actions.toggleControlFrames()),
     setFrameFilterText: text => dispatch(Actions.setFrameFilterText(text)),
   })
 )(Toolbar);
