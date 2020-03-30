@@ -125,7 +125,7 @@ function Sandbox(options) {
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
 function load(loader, module) {
-  const { sandboxes, globals } = loader;
+  const { globals } = loader;
   const require = Require(loader, module);
 
   // We expose set of properties defined by `CommonJS` specification via
@@ -174,7 +174,6 @@ function load(loader, module) {
   // the scope object for this particular module
   const sandbox = new loader.sharedGlobalSandbox.Object();
   Object.defineProperties(sandbox, descriptors);
-  sandboxes[module.uri] = sandbox;
 
   const originalExports = module.exports;
   try {
@@ -368,8 +367,6 @@ function Require(loader, requirer) {
       } catch (e) {
         // Clear out modules cache so we can throw on a second invalid require
         delete modules[uri];
-        // Also clear out the Sandbox that was created
-        delete loader.sandboxes[uri];
         throw e;
       }
     }
@@ -574,8 +571,6 @@ function Loader(options) {
     // Map of module objects indexed by module URIs.
     modules: { enumerable: false, value: modules },
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
-    // Map of module sandboxes indexed by module URIs.
-    sandboxes: { enumerable: false, value: {} },
     // Whether the modules loaded should be ignored by the debugger
     invisibleToDebugger: {
       enumerable: false,
