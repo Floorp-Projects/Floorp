@@ -55,7 +55,6 @@ enum JSProtoKey {
 /* Struct forward declarations. */
 struct JS_PUBLIC_API JSClass;
 class JSErrorReport;
-struct JSExceptionState;
 struct JSFunctionSpec;
 struct JSPrincipals;
 struct JSPropertySpec;
