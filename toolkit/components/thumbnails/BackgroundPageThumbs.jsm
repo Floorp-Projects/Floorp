@@ -309,6 +309,7 @@ const BackgroundPageThumbs = {
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("messagemanagergroup", "thumbnails");
 
     if (Services.prefs.getBoolPref(ABOUT_NEWTAB_SEGREGATION_PREF)) {
       // Use the private container for thumbnails.
