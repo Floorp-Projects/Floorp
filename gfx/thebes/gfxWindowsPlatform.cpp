@@ -412,6 +412,8 @@ bool gfxWindowsPlatform::HandleDeviceReset() {
   gfxConfig::Reset(Feature::DIRECT2D);
 
   InitializeConfig();
+  // XXX Add InitWebRenderConfig() calling.
+  InitializeAdvancedLayersConfig();
   if (mInitializedDevices) {
     InitializeDevices();
   }
