@@ -31,7 +31,7 @@
 }
 
 .panel-info-button > image {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg);
+  list-style-image: url(chrome://global/skin/icons/identity-icon.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);

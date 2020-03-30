@@ -135,7 +135,7 @@
 /* MAIN IDENTITY ICON */
 #identity-icon {
   margin-inline-start: 0;
-  list-style-image: url(chrome://browser/skin/identity-icon.svg);
+  list-style-image: url(chrome://global/skin/icons/identity-icon.svg);
 }
 
 #identity-box[pageproxystate="valid"].chromeUI > #identity-icon {

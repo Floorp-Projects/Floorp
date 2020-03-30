@@ -253,7 +253,7 @@ button > hbox > label {
 .info-panel > description,
 .extension-controlled > description {
   line-height: 16px;
-  background: url(chrome://browser/skin/identity-icon.svg) 10px 14px no-repeat;
+  background: url(chrome://global/skin/icons/identity-icon.svg) 10px 14px no-repeat;
   padding: 10px;
   padding-inline-start: 32px;
 }
@@ -859,14 +859,14 @@ image.update-throbber {
 }
 
 .info-icon {
-  list-style-image: url("chrome://browser/skin/identity-icon.svg");
+  list-style-image: url("chrome://global/skin/icons/identity-icon.svg");
   width: 16px;
   height: 16px;
   margin-top: calc((32px - 16px) / 2);
 }
 
 .info-icon-telemetry {
-  list-style-image: url("chrome://browser/skin/identity-icon.svg");
+  list-style-image: url("chrome://global/skin/icons/identity-icon.svg");
   width: 16px;
   height: 16px;
   margin-inline: 2px 8px;
@@ -1048,7 +1048,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   padding-inline-start: 30px;
   margin-block-start: 20px;
   line-height: 20px;
-  background-image: url("chrome://browser/skin/identity-icon.svg");
+  background-image: url("chrome://global/skin/icons/identity-icon.svg");
   background-position-x: left 2px;
   background-position-y: top 2px;
   background-size: 16px 16px;
