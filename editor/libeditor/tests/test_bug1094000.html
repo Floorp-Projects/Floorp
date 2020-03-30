@@ -39,8 +39,8 @@ function runTests() {
   var editor5 = document.getElementById("editor5");
   var editor6 = document.getElementById("editor6");
 
-  ok(editor1.getBoundingClientRect().height - editor0.getBoundingClientRect().height > 1,
-        "an editor having a <br> element and an empty editor shouldn't be same height");
+  ok(Math.abs(editor1.getBoundingClientRect().height - editor0.getBoundingClientRect().height) <= 1,
+     "an editor having a <br> element and an empty editor should be same height");
   ok(Math.abs(editor1.getBoundingClientRect().height - editor2.getBoundingClientRect().height) <= 1,
      "an editor having only a <br> element and an editor having \"a\" should be same height");
 
