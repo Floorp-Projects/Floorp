@@ -122,44 +122,38 @@ function Sandbox(options) {
   return sandbox;
 }
 
+// This allows defining some modules in AMD format while retaining CommonJS
+// compatibility with this loader by allowing the factory function to have
+// access to general CommonJS functions, e.g.
+//
+//   define(function(require, exports, module) {
+//     ... code ...
+//   });
+function define(factory) {
+  factory(this.require, this.exports, this.module);
+}
+
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
 function load(loader, module) {
-  const { globals } = loader;
   const require = Require(loader, module);
 
   // We expose set of properties defined by `CommonJS` specification via
   // prototype of the sandbox. Also globals are deeper in the prototype
   // chain so that each module has access to them as well.
-  const descriptors = {
-    require: {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: require,
-    },
-    module: {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: module,
-    },
-    exports: {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: module.exports,
-    },
+  const properties = {
+    require,
+    module,
+    exports: module.exports,
   };
-  const define = Object.getOwnPropertyDescriptor(globals, "define");
-  if (define?.value) {
-    descriptors.define = define;
+  if (loader.supportAMDModules) {
+    properties.define = define;
   }
 
   // Create a new object in this sandbox, that will be used as
   // the scope object for this particular module
   const sandbox = new loader.sharedGlobalSandbox.Object();
-  Object.defineProperties(sandbox, descriptors);
+  Object.assign(sandbox, properties);
 
   const originalExports = module.exports;
   try {
@@ -557,6 +551,10 @@ function Loader(options) {
     // Map of module objects indexed by module URIs.
     modules: { enumerable: false, value: modules },
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
+    supportAMDModules: {
+      enumerable: false,
+      value: options.supportAMDModules || false,
+    },
     // Whether the modules loaded should be ignored by the debugger
     invisibleToDebugger: {
       enumerable: false,
