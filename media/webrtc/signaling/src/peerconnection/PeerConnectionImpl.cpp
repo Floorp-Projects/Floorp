@@ -613,6 +613,7 @@ class ConfigureCodec {
         mVP8MaxFr(0),
         mUseTmmbr(false),
         mUseRemb(false),
+        mUseTransportCC(false),
         mUseAudioFec(false),
         mRedUlpfecEnabled(false),
         mDtmfEnabled(false) {
@@ -652,6 +653,9 @@ class ConfigureCodec {
 
     // REMB is enabled by default, but can be disabled from about:config
     branch->GetBoolPref("media.navigator.video.use_remb", &mUseRemb);
+
+    branch->GetBoolPref("media.navigator.video.use_transport_cc",
+                        &mUseTransportCC);
 
     branch->GetBoolPref("media.navigator.audio.use_fec", &mUseAudioFec);
 
@@ -723,6 +727,9 @@ class ConfigureCodec {
         if (mUseRemb) {
           videoCodec.EnableRemb();
         }
+        if (mUseTransportCC) {
+          videoCodec.EnableTransportCC();
+        }
       } break;
       case SdpMediaSection::kText:
       case SdpMediaSection::kApplication:
@@ -744,6 +751,7 @@ class ConfigureCodec {
   int32_t mVP8MaxFr;
   bool mUseTmmbr;
   bool mUseRemb;
+  bool mUseTransportCC;
   bool mUseAudioFec;
   bool mRedUlpfecEnabled;
   bool mDtmfEnabled;

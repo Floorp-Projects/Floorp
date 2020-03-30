@@ -15,6 +15,8 @@ typedef enum {
     SDP_RTCP_FB_TRR_INT,
     // from https://www.ietf.org/archive/id/draft-alvestrand-rmcat-remb-03.txt
     SDP_RTCP_FB_REMB,
+    // from https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
+    SDP_RTCP_FB_TRANSPORT_CC,
     SDP_MAX_RTCP_FB,
     SDP_RTCP_FB_UNKNOWN
 } sdp_rtcp_fb_type_e;

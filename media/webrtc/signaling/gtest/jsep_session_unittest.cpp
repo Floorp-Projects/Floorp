@@ -61,6 +61,8 @@ class JsepSessionTest : public JsepSessionTestBase,
     Preferences::SetCString("media.peerconnection.sdp.parser", "legacy");
     Preferences::SetCString("media.peerconnection.sdp.alternate_parse_mode",
                             "never");
+    Preferences::SetBool("media.navigator.video.use_transport_cc", true);
+
     mSessionOff =
         MakeUnique<JsepSessionImpl>("Offerer", MakeUnique<FakeUuidGenerator>());
     mSessionAns = MakeUnique<JsepSessionImpl>("Answerer",
@@ -4201,10 +4203,10 @@ TEST_F(JsepSessionTest, TestExtmap) {
   // ssrc-audio-level will be extmap 1 for both
   // csrc-audio-level will be 2 for both
   // mid will be 3 for both
-  // video related extensions take 4 and 5
-  mSessionOff->AddAudioRtpExtension("foo");  // Default mapping of 7
-  mSessionOff->AddAudioRtpExtension("bar");  // Default mapping of 8
-  mSessionAns->AddAudioRtpExtension("bar");  // Default mapping of 7
+  // video related extensions take 4 - 7
+  mSessionOff->AddAudioRtpExtension("foo");  // Default mapping of 8
+  mSessionOff->AddAudioRtpExtension("bar");  // Default mapping of 9
+  mSessionAns->AddAudioRtpExtension("bar");  // Default mapping of 8
   std::string offer = CreateOffer();
   SetLocalOffer(offer, CHECK_SUCCESS);
   SetRemoteOffer(offer, CHECK_SUCCESS);
@@ -4229,9 +4231,9 @@ TEST_F(JsepSessionTest, TestExtmap) {
             offerExtmap[2].extensionname);
   ASSERT_EQ(3U, offerExtmap[2].entry);
   ASSERT_EQ("foo", offerExtmap[3].extensionname);
-  ASSERT_EQ(7U, offerExtmap[3].entry);
+  ASSERT_EQ(8U, offerExtmap[3].entry);
   ASSERT_EQ("bar", offerExtmap[4].extensionname);
-  ASSERT_EQ(8U, offerExtmap[4].entry);
+  ASSERT_EQ(9U, offerExtmap[4].entry);
 
   UniquePtr<Sdp> parsedAnswer(Parse(answer));
   ASSERT_EQ(1U, parsedAnswer->GetMediaSectionCount());
@@ -4248,7 +4250,7 @@ TEST_F(JsepSessionTest, TestExtmap) {
   ASSERT_EQ(3U, answerExtmap[1].entry);
   // We ensure that the entry for "bar" matches what was in the offer
   ASSERT_EQ("bar", answerExtmap[2].extensionname);
-  ASSERT_EQ(8U, answerExtmap[2].entry);
+  ASSERT_EQ(9U, answerExtmap[2].entry);
 }
 
 TEST_F(JsepSessionTest, TestExtmapDefaults) {
@@ -4288,7 +4290,7 @@ TEST_F(JsepSessionTest, TestExtmapDefaults) {
   ASSERT_TRUE(
       offerVideoMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
   auto& offerVideoExtmap = offerVideoMediaAttrs.GetExtmap().mExtmaps;
-  ASSERT_EQ(4U, offerVideoExtmap.size());
+  ASSERT_EQ(5U, offerVideoExtmap.size());
 
   ASSERT_EQ(3U, offerVideoExtmap[0].entry);
   ASSERT_EQ("urn:ietf:params:rtp-hdrext:sdes:mid",
@@ -4302,6 +4304,11 @@ TEST_F(JsepSessionTest, TestExtmapDefaults) {
   ASSERT_EQ("http://www.webrtc.org/experiments/rtp-hdrext/playout-delay",
             offerVideoExtmap[3].extensionname);
   ASSERT_EQ(6U, offerVideoExtmap[3].entry);
+  ASSERT_EQ(
+      "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-"
+      "extensions-01",
+      offerVideoExtmap[4].extensionname);
+  ASSERT_EQ(7U, offerVideoExtmap[4].entry);
 
   UniquePtr<Sdp> parsedAnswer(Parse(answer));
   ASSERT_EQ(2U, parsedAnswer->GetMediaSectionCount());
@@ -4325,7 +4332,7 @@ TEST_F(JsepSessionTest, TestExtmapDefaults) {
   ASSERT_TRUE(
       answerVideoMediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute));
   auto& answerVideoExtmap = answerVideoMediaAttrs.GetExtmap().mExtmaps;
-  ASSERT_EQ(3U, answerVideoExtmap.size());
+  ASSERT_EQ(4U, answerVideoExtmap.size());
 
   ASSERT_EQ(3U, answerVideoExtmap[0].entry);
   ASSERT_EQ("urn:ietf:params:rtp-hdrext:sdes:mid",
@@ -4336,6 +4343,11 @@ TEST_F(JsepSessionTest, TestExtmapDefaults) {
   ASSERT_EQ("urn:ietf:params:rtp-hdrext:toffset",
             answerVideoExtmap[2].extensionname);
   ASSERT_EQ(5U, answerVideoExtmap[2].entry);
+  ASSERT_EQ(
+      "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-"
+      "extensions-01",
+      answerVideoExtmap[3].extensionname);
+  ASSERT_EQ(7U, answerVideoExtmap[3].entry);
 }
 
 TEST_F(JsepSessionTest, TestExtmapWithDuplicates) {
@@ -4344,12 +4356,12 @@ TEST_F(JsepSessionTest, TestExtmapWithDuplicates) {
   // ssrc-audio-level will be extmap 1 for both
   // csrc-audio-level will be 2 for both
   // mid will be 3 for both
-  // video related extensions take 4 and 5
-  mSessionOff->AddAudioRtpExtension("foo");  // Default mapping of 7
-  mSessionOff->AddAudioRtpExtension("bar");  // Default mapping of 8
+  // video related extensions take 4 - 7
+  mSessionOff->AddAudioRtpExtension("foo");  // Default mapping of 8
+  mSessionOff->AddAudioRtpExtension("bar");  // Default mapping of 9
   mSessionOff->AddAudioRtpExtension("bar");  // Should be ignored
   mSessionOff->AddAudioRtpExtension("bar");  // Should be ignored
-  mSessionOff->AddAudioRtpExtension("baz");  // Default mapping of 9
+  mSessionOff->AddAudioRtpExtension("baz");  // Default mapping of 10
   mSessionOff->AddAudioRtpExtension("bar");  // Should be ignored
 
   std::string offer = CreateOffer();
@@ -4370,11 +4382,11 @@ TEST_F(JsepSessionTest, TestExtmapWithDuplicates) {
             offerExtmap[2].extensionname);
   ASSERT_EQ(3U, offerExtmap[2].entry);
   ASSERT_EQ("foo", offerExtmap[3].extensionname);
-  ASSERT_EQ(7U, offerExtmap[3].entry);
+  ASSERT_EQ(8U, offerExtmap[3].entry);
   ASSERT_EQ("bar", offerExtmap[4].extensionname);
-  ASSERT_EQ(8U, offerExtmap[4].entry);
+  ASSERT_EQ(9U, offerExtmap[4].entry);
   ASSERT_EQ("baz", offerExtmap[5].extensionname);
-  ASSERT_EQ(9U, offerExtmap[5].entry);
+  ASSERT_EQ(10U, offerExtmap[5].entry);
 }
 
 TEST_F(JsepSessionTest, TestExtmapZeroId) {
