@@ -47,7 +47,7 @@ static void CheckMetadata(const ImageTestCase& aTestCase,
 
   // Create a metadata decoder.
   DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder =
+  RefPtr<image::Decoder> decoder =
       DecoderFactory::CreateAnonymousMetadataDecoder(decoderType, sourceBuffer);
   ASSERT_TRUE(decoder != nullptr);
   RefPtr<IDecodingTask> task =

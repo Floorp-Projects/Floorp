@@ -29,8 +29,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 static already_AddRefed<SourceSurface> CheckDecoderState(
-    const ImageTestCase& aTestCase, Decoder* aDecoder) {
-  // Decoder should match what we asked for in the MIME type.
+    const ImageTestCase& aTestCase, image::Decoder* aDecoder) {
+  // image::Decoder should match what we asked for in the MIME type.
   EXPECT_NE(aDecoder->GetType(), DecoderType::UNKNOWN);
   EXPECT_EQ(aDecoder->GetType(),
             DecoderFactory::GetDecoderType(aTestCase.mMimeType));
@@ -75,7 +75,7 @@ static already_AddRefed<SourceSurface> CheckDecoderState(
 }
 
 static void CheckDecoderResults(const ImageTestCase& aTestCase,
-                                Decoder* aDecoder) {
+                                image::Decoder* aDecoder) {
   RefPtr<SourceSurface> surface = CheckDecoderState(aTestCase, aDecoder);
   if (!surface) {
     return;
@@ -111,7 +111,7 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
 
   // Create a decoder.
   DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+  RefPtr<image::Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
       decoderType, sourceBuffer, aOutputSize, DecoderFlags::FIRST_FRAME_ONLY,
       DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
@@ -126,7 +126,7 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
 }
 
 static void CheckDecoderSingleChunk(const ImageTestCase& aTestCase) {
-  WithSingleChunkDecode(aTestCase, Nothing(), [&](Decoder* aDecoder) {
+  WithSingleChunkDecode(aTestCase, Nothing(), [&](image::Decoder* aDecoder) {
     CheckDecoderResults(aTestCase, aDecoder);
   });
 }
@@ -148,7 +148,7 @@ void WithDelayedChunkDecode(const ImageTestCase& aTestCase,
 
   // Create a decoder.
   DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+  RefPtr<image::Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
       decoderType, sourceBuffer, aOutputSize, DecoderFlags::FIRST_FRAME_ONLY,
       DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
@@ -173,7 +173,7 @@ void WithDelayedChunkDecode(const ImageTestCase& aTestCase,
 }
 
 static void CheckDecoderDelayedChunk(const ImageTestCase& aTestCase) {
-  WithDelayedChunkDecode(aTestCase, Nothing(), [&](Decoder* aDecoder) {
+  WithDelayedChunkDecode(aTestCase, Nothing(), [&](image::Decoder* aDecoder) {
     CheckDecoderResults(aTestCase, aDecoder);
   });
 }
@@ -192,7 +192,7 @@ static void CheckDecoderMultiChunk(const ImageTestCase& aTestCase,
   auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
   sourceBuffer->ExpectLength(length);
   DecoderType decoderType = DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+  RefPtr<image::Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
       decoderType, sourceBuffer, Nothing(), DecoderFlags::FIRST_FRAME_ONLY,
       DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
@@ -232,35 +232,37 @@ static void CheckDownscaleDuringDecode(const ImageTestCase& aTestCase) {
   // more lines of red. We'll downscale it from 100x100 to 20x20.
   IntSize outputSize(20, 20);
 
-  WithSingleChunkDecode(aTestCase, Some(outputSize), [&](Decoder* aDecoder) {
-    RefPtr<SourceSurface> surface = CheckDecoderState(aTestCase, aDecoder);
+  WithSingleChunkDecode(
+      aTestCase, Some(outputSize), [&](image::Decoder* aDecoder) {
+        RefPtr<SourceSurface> surface = CheckDecoderState(aTestCase, aDecoder);
 
-    // There are no downscale-during-decode tests that have TEST_CASE_HAS_ERROR
-    // set, so we expect to always get a surface here.
-    EXPECT_TRUE(surface != nullptr);
+        // There are no downscale-during-decode tests that have
+        // TEST_CASE_HAS_ERROR set, so we expect to always get a surface here.
+        EXPECT_TRUE(surface != nullptr);
 
-    if (aTestCase.mFlags & TEST_CASE_IGNORE_OUTPUT) {
-      return;
-    }
+        if (aTestCase.mFlags & TEST_CASE_IGNORE_OUTPUT) {
+          return;
+        }
 
-    // Check that the downscaled image is correct. Note that we skip rows near
-    // the transitions between colors, since the downscaler does not produce a
-    // sharp boundary at these points. Even some of the rows we test need a
-    // small amount of fuzz; this is just the nature of Lanczos downscaling.
-    EXPECT_TRUE(
-        RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 47));
-    EXPECT_TRUE(
-        RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 27));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(),
-                                  /* aFuzz = */ 47));
-    EXPECT_TRUE(
-        RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 27));
-  });
+        // Check that the downscaled image is correct. Note that we skip rows
+        // near the transitions between colors, since the downscaler does not
+        // produce a sharp boundary at these points. Even some of the rows we
+        // test need a small amount of fuzz; this is just the nature of Lanczos
+        // downscaling.
+        EXPECT_TRUE(RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(),
+                                      /* aFuzz = */ 47));
+        EXPECT_TRUE(RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(),
+                                      /* aFuzz = */ 27));
+        EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(),
+                                      /* aFuzz = */ 47));
+        EXPECT_TRUE(RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(),
+                                      /* aFuzz = */ 27));
+      });
 }
 
 static void CheckAnimationDecoderResults(const ImageTestCase& aTestCase,
                                          AnimationSurfaceProvider* aProvider,
-                                         Decoder* aDecoder) {
+                                         image::Decoder* aDecoder) {
   EXPECT_TRUE(aDecoder->GetDecodeDone());
   EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR), aDecoder->HasError());
 
@@ -344,7 +346,7 @@ static void WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
   // Create a decoder.
   DecoderFlags decoderFlags = DefaultDecoderFlags();
   SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
-  RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
+  RefPtr<image::Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
       decoderType, sourceBuffer, Nothing(), decoderFlags, surfaceFlags);
   ASSERT_TRUE(decoder != nullptr);
 
@@ -365,7 +367,8 @@ static void WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
 
 static void CheckAnimationDecoderSingleChunk(const ImageTestCase& aTestCase) {
   WithSingleChunkAnimationDecode(
-      aTestCase, [&](AnimationSurfaceProvider* aProvider, Decoder* aDecoder) {
+      aTestCase,
+      [&](AnimationSurfaceProvider* aProvider, image::Decoder* aDecoder) {
         CheckAnimationDecoderResults(aTestCase, aProvider, aDecoder);
       });
 }
