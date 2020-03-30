@@ -21,9 +21,9 @@ chrome/toolkit/skin/classic/global/preferences.css
 chrome/toolkit/skin/classic/global/radio.css
 chrome/toolkit/skin/classic/global/richlistbox.css
 chrome/toolkit/skin/classic/global/scrollbars.css
+chrome/toolkit/skin/classic/global/search-textbox.css
 chrome/toolkit/skin/classic/global/splitter.css
 chrome/toolkit/skin/classic/global/tabbox.css
-chrome/toolkit/skin/classic/global/textbox.css
 chrome/toolkit/skin/classic/global/toolbar.css
 chrome/toolkit/skin/classic/global/toolbarbutton.css
 chrome/toolkit/skin/classic/global/tooltip.css
