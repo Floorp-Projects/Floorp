@@ -21,6 +21,20 @@
 namespace v8 {
 namespace internal {
 
+struct FrameData {
+  // Character position at the start of the input, stored as a
+  // negative offset from the end of the string (input_end_pointer_).
+  size_t inputStart;
+
+  // The backtrack_stack_pointer_ register points to the top of the stack.
+  // This points to the bottom of the backtrack stack.
+  void* backtrackStackBase;
+
+  // Copy of the input MatchPairs.
+  int32_t* matches;   // pointer to capture array
+  int32_t numMatches; // size of capture array
+};
+
 class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
  public:
   SMRegExpMacroAssembler(JSContext* cx, Isolate* isolate,
@@ -37,6 +51,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void AdvanceCurrentPosition(int by);
   virtual void PopCurrentPosition();
   virtual void PushCurrentPosition();
+  virtual void SetCurrentPositionFromEnd(int by);
 
   virtual void Backtrack();
   virtual void Bind(Label* label);
@@ -57,6 +72,13 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckCharacterInRange(uc16 from, uc16 to, Label* on_in_range);
   virtual void CheckCharacterNotInRange(uc16 from, uc16 to,
                                         Label* on_not_in_range);
+  virtual void CheckAtStart(int cp_offset, Label* on_at_start);
+  virtual void CheckNotAtStart(int cp_offset, Label* on_not_at_start);
+  virtual void CheckPosition(int cp_offset, Label* on_outside_input);
+
+  virtual void LoadCurrentCharacterImpl(int cp_offset, Label* on_end_of_input,
+                                        bool check_bounds, int characters,
+                                        int eats_at_least);
 
 
  private:
@@ -75,6 +97,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   void CheckCharacterInRangeImpl(uc16 from, uc16 to, Label* on_cond,
                                  js::jit::Assembler::Condition cond);
 
+  void LoadCurrentCharacterUnchecked(int cp_offset, int characters);
+
   void JumpOrBacktrack(Label* to);
 
   // MacroAssembler methods that take a Label can be called with a
@@ -90,6 +114,23 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   inline int char_size() { return static_cast<int>(mode_); }
   inline js::jit::Scale factor() {
     return mode_ == UC16 ? js::jit::TimesTwo : js::jit::TimesOne;
+  }
+
+  js::jit::Address inputStart() {
+    return js::jit::Address(masm_.getStackPointer(),
+                            offsetof(FrameData, inputStart));
+  }
+  js::jit::Address backtrackStackBase() {
+    return js::jit::Address(masm_.getStackPointer(),
+                            offsetof(FrameData, backtrackStackBase));
+  }
+  js::jit::Address matches() {
+    return js::jit::Address(masm_.getStackPointer(),
+                            offsetof(FrameData, matches));
+  }
+  js::jit::Address numMatches() {
+    return js::jit::Address(masm_.getStackPointer(),
+                            offsetof(FrameData, numMatches));
   }
 
   JSContext* cx_;
