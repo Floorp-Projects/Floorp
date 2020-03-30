@@ -37,6 +37,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
@@ -70,7 +71,8 @@ class DefaultBrowserToolbarController(
     private val bookmarkTapped: (Session) -> Unit,
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
-    private val topSiteStorage: TopSiteStorage
+    private val topSiteStorage: TopSiteStorage,
+    private val sharedViewModel: SharedViewModel
 ) : BrowserToolbarController {
 
     private val currentSession
@@ -119,6 +121,7 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleTabCounterClick() {
+        sharedViewModel.shouldScrollToSelectedTab = true
         animateTabAndNavigateHome()
     }
 
@@ -128,7 +131,8 @@ class DefaultBrowserToolbarController(
                 ToolbarMenu.Item.AddToHomeScreen -> activity.settings().installPwaOpened = true
                 is ToolbarMenu.Item.ReaderMode -> activity.settings().readerModeOpened = true
                 ToolbarMenu.Item.OpenInApp -> activity.settings().openInAppOpened = true
-                else -> {}
+                else -> {
+                }
             }
         }
     }
@@ -302,10 +306,14 @@ class DefaultBrowserToolbarController(
             // Delay for a short amount of time so the browser has time to start animating out
             // before we transition the fragment. This makes the animation feel smoother
             delay(ANIMATION_DELAY)
-            val directions = BrowserFragmentDirections.actionBrowserFragmentToHomeFragmentPopUp(
-                shouldScrollToSelectedTab = true
-            )
-            navController.navigate(directions)
+            if (!navController.popBackStack(R.id.homeFragment, false)) {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToHomeFragment()
+                navController.nav(
+                    R.id.browserFragment,
+                    directions,
+                    null
+                )
+            }
         }
     }
 

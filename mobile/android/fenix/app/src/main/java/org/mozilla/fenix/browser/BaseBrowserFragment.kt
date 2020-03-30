@@ -15,6 +15,7 @@ import androidx.annotation.CallSuper
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.appbar.AppBarLayout
@@ -84,6 +85,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
@@ -129,6 +131,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     // We need this so we don't accidentally remove all external sessions on back press
     private var sessionRemoved = false
+
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     @CallSuper
     override fun onCreateView(
@@ -206,7 +210,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 bookmarkTapped = { lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
-                topSiteStorage = requireComponents.core.topSiteStorage
+                topSiteStorage = requireComponents.core.topSiteStorage,
+                sharedViewModel = sharedViewModel
             )
 
             _browserInteractor = BrowserInteractor(

@@ -37,7 +37,6 @@ import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
@@ -115,6 +114,8 @@ class HomeFragment : Fragment() {
     private val homeViewModel: HomeScreenViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
     }
+
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private val snackbarAnchorView: View?
         get() {
@@ -510,10 +511,9 @@ class HomeFragment : Fragment() {
             activity?.window?.setBackgroundDrawableResource(R.drawable.private_home_background_gradient)
         }
         hideToolbar()
-        val safeArguments = arguments?.let { navArgs<HomeFragmentArgs>().value }
-        val shouldScrollToSelectedTab = safeArguments?.shouldScrollToSelectedTab ?: false
-        if (shouldScrollToSelectedTab) {
+        if (sharedViewModel.shouldScrollToSelectedTab) {
             scrollToSelectedTab()
+            sharedViewModel.shouldScrollToSelectedTab = false
         }
     }
 
