@@ -2,7 +2,7 @@
 
 # engineState
 
-`val engineState: `[`EngineState`](../-engine-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L24)
+`val engineState: `[`EngineState`](../-engine-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L25)
 
 Overrides [SessionState.engineState](../-session-state/engine-state.md)
 
