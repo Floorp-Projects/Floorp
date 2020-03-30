@@ -66,6 +66,13 @@ void SMRegExpMacroAssembler::AdvanceCurrentPosition(int by) {
   }
 }
 
+void SMRegExpMacroAssembler::AdvanceRegister(int reg, int by) {
+  MOZ_ASSERT(reg >= 0 && reg < num_registers_);
+  if (by != 0) {
+    masm_.addPtr(Imm32(by), register_location(reg));
+  }
+}
+
 void SMRegExpMacroAssembler::Backtrack() {
   // Check for an interrupt. We have to restart from the beginning if we
   // are interrupted, so we only check for urgent interrupts.
@@ -234,6 +241,23 @@ void SMRegExpMacroAssembler::GoTo(Label* to) {
   masm_.jump(LabelOrBacktrack(to));
 }
 
+void SMRegExpMacroAssembler::IfRegisterGE(int reg, int comparand,
+                                          Label* if_ge) {
+  masm_.branchPtr(Assembler::GreaterThanOrEqual, register_location(reg),
+                  ImmWord(comparand), LabelOrBacktrack(if_ge));
+}
+
+void SMRegExpMacroAssembler::IfRegisterLT(int reg, int comparand,
+                                          Label* if_lt) {
+  masm_.branchPtr(Assembler::LessThan, register_location(reg),
+                  ImmWord(comparand), LabelOrBacktrack(if_lt));
+}
+
+void SMRegExpMacroAssembler::IfRegisterEqPos(int reg, Label* if_eq) {
+  masm_.branchPtr(Assembler::Equal, register_location(reg), current_position_,
+                  LabelOrBacktrack(if_eq));
+}
+
 // This is a word-for-word identical copy of the V8 code, which is
 // duplicated in at least nine different places in V8 (one per
 // supported architecture) with no differences outside of comments and
@@ -287,6 +311,11 @@ void SMRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset,
 
 void SMRegExpMacroAssembler::PopCurrentPosition() { Pop(current_position_); }
 
+void SMRegExpMacroAssembler::PopRegister(int register_index) {
+  Pop(temp0_);
+  masm_.storePtr(temp0_, register_location(register_index));
+}
+
 void SMRegExpMacroAssembler::PushBacktrack(Label* label) {
   MOZ_ASSERT(!label->is_bound());
   MOZ_ASSERT(!label->patchOffset_.bound());
@@ -299,6 +328,43 @@ void SMRegExpMacroAssembler::PushBacktrack(Label* label) {
 }
 
 void SMRegExpMacroAssembler::PushCurrentPosition() { Push(current_position_); }
+
+void SMRegExpMacroAssembler::PushRegister(int register_index,
+                                          StackCheckFlag check_stack_limit) {
+  masm_.loadPtr(register_location(register_index), temp0_);
+  Push(temp0_);
+  if (check_stack_limit) {
+    CheckBacktrackStackLimit();
+  }
+}
+
+void SMRegExpMacroAssembler::ReadCurrentPositionFromRegister(int reg) {
+  masm_.loadPtr(register_location(reg), current_position_);
+}
+
+void SMRegExpMacroAssembler::WriteCurrentPositionToRegister(int reg,
+                                                            int cp_offset) {
+  if (cp_offset == 0) {
+    masm_.storePtr(current_position_, register_location(reg));
+  } else {
+    Address addr(current_position_, cp_offset * char_size());
+    masm_.computeEffectiveAddress(addr, temp0_);
+    masm_.storePtr(temp0_, register_location(reg));
+  }
+}
+
+// Note: The backtrack stack pointer is stored in a register as an
+// offset from the stack top, not as a bare pointer, so that it is not
+// corrupted if the backtrack stack grows (and therefore moves).
+void SMRegExpMacroAssembler::ReadStackPointerFromRegister(int reg) {
+  masm_.loadPtr(register_location(reg), backtrack_stack_pointer_);
+  masm_.addPtr(backtrackStackBase(), backtrack_stack_pointer_);
+}
+void SMRegExpMacroAssembler::WriteStackPointerToRegister(int reg) {
+  masm_.movePtr(backtrack_stack_pointer_, temp0_);
+  masm_.subPtr(backtrackStackBase(), temp0_);
+  masm_.storePtr(temp0_, register_location(reg));
+}
 
 // When matching a regexp that is anchored at the end, this operation
 // is used to try skipping the beginning of long strings. If the
@@ -317,11 +383,26 @@ void SMRegExpMacroAssembler::SetCurrentPositionFromEnd(int by) {
   masm_.bind(&after_position);
 }
 
+void SMRegExpMacroAssembler::SetRegister(int register_index, int to) {
+  MOZ_ASSERT(register_index >= num_capture_registers_);
+  masm_.storePtr(ImmWord(to), register_location(register_index));
+}
+
 // Returns true if a regexp match can be restarted (aka the regexp is global).
 // The return value is not used anywhere, but we implement it to be safe.
 bool SMRegExpMacroAssembler::Succeed() {
   masm_.jump(&success_label_);
   return global();
+}
+
+// Capture registers are initialized to input[-1]
+void SMRegExpMacroAssembler::ClearRegisters(int reg_from, int reg_to) {
+  MOZ_ASSERT(reg_from <= reg_to);
+  masm_.loadPtr(inputStart(), temp0_);
+  masm_.subPtr(Imm32(char_size()), temp0_);
+  for (int reg = reg_from; reg <= reg_to; reg++) {
+    masm_.storePtr(temp0_, register_location(reg));
+  }
 }
 
 void SMRegExpMacroAssembler::Push(Register source) {
