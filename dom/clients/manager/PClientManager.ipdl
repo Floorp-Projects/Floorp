@@ -32,9 +32,6 @@ parent:
   async PClientManagerOp(ClientOpConstructorArgs aArgs);
   async PClientSource(ClientSourceConstructorArgs aArgs);
 
-  async ExpectFutureClientSource(IPCClientInfo aClientInfo);
-  async ForgetFutureClientSource(IPCClientInfo aClientInfo);
-
 child:
   async PClientNavigateOp(ClientNavigateOpConstructorArgs aArgs);
 
