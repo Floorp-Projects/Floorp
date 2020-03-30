@@ -151,23 +151,9 @@ function load(loader, module) {
       value: module.exports,
     },
   };
-  if ("console" in globals) {
-    descriptors.console = {
-      configurable: true,
-      get() {
-        return globals.console;
-      },
-    };
-  }
   const define = Object.getOwnPropertyDescriptor(globals, "define");
   if (define?.value) {
     descriptors.define = define;
-  }
-  if ("DOMParser" in globals) {
-    descriptors.DOMParser = Object.getOwnPropertyDescriptor(
-      globals,
-      "DOMParser"
-    );
   }
 
   // Create a new object in this sandbox, that will be used as
