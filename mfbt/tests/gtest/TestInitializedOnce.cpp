@@ -27,10 +27,10 @@ void AssertIsNothing(const T& aVal) {
   ASSERT_TRUE(aVal.isNothing());
 }
 
-static_assert(std::is_literal_type_v<InitializedOnce<const int>>);
-static_assert(std::is_literal_type_v<LazyInitializedOnce<const int>>);
-static_assert(std::is_trivially_destructible_v<InitializedOnce<const int>>);
-static_assert(std::is_trivially_destructible_v<LazyInitializedOnce<const int>>);
+// XXX TODO Should be true once Bug ... ensures this for Maybe.
+// static_assert(std::is_trivially_destructible_v<InitializedOnce<const int>>);
+// static_assert(std::is_trivially_default_constructible_v<InitializedOnce<const
+// int, LazyInit::Allow>>);
 
 static_assert(!std::is_copy_constructible_v<InitializedOnce<const int>>);
 static_assert(!std::is_copy_assignable_v<InitializedOnce<const int>>);
@@ -75,7 +75,7 @@ static_assert(
     test_has_init_method(kPtrInitializedOnceIntLazyInitAllowResettable));
 
 struct MoveOnly {
-  explicit constexpr MoveOnly(int aValue) : mValue{aValue} {}
+  explicit MoveOnly(int aValue) : mValue{aValue} {}
 
   MoveOnly(MoveOnly&&) = default;
   MoveOnly& operator=(MoveOnly&&) = default;
@@ -89,16 +89,8 @@ constexpr int testValue = 32;
 
 TEST(InitializedOnce, ImmediateInit)
 {
-  constexpr InitializedOnce<const MoveOnly> val{testValue};
+  const InitializedOnce<const MoveOnly> val{testValue};
 
-  // compile-time assertions
-  static_assert(val);
-  static_assert(val.isSome());
-  static_assert(!val.isNothing());
-  static_assert(testValue == (*val).mValue);
-  static_assert(testValue == val->mValue);
-
-  // run-time assertions
   AssertIsSome(val);
   ASSERT_EQ(testValue, (*val).mValue);
   ASSERT_EQ(testValue, val->mValue);

@@ -210,9 +210,8 @@ class Maybe_CopyMove_Enabler<T, false, false, false> {
 #undef MOZ_MAYBE_DOWNCAST
 
 template <typename T, bool TriviallyDestructibleAndCopyable =
-                          std::is_trivially_destructible_v<T> &&
-                          (std::is_trivially_copy_constructible_v<T> ||
-                           !std::is_copy_constructible_v<T>)>
+                          std::is_trivially_destructible_v<T>&&
+                              std::is_trivially_copy_constructible_v<T>>
 struct MaybeStorage;
 
 template <typename T>
@@ -459,7 +458,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   /* Returns the contents of this Maybe<T> by pointer. Unsafe unless |isSome()|.
    */
   T* ptr();
-  constexpr const T* ptr() const;
+  const T* ptr() const;
 
   /*
    * Returns the contents of this Maybe<T> by pointer. If |isNothing()|,
@@ -472,7 +471,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return aDefault;
   }
 
-  constexpr const T* ptrOr(const T* aDefault) const {
+  const T* ptrOr(const T* aDefault) const {
     if (isSome()) {
       return ptr();
     }
@@ -702,7 +701,7 @@ T* Maybe<T>::ptr() {
 }
 
 template <typename T>
-constexpr const T* Maybe<T>::ptr() const {
+const T* Maybe<T>::ptr() const {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return &ref();
 }
