@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1585158976536">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1585238797372">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3738,6 +3738,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i506" id="/^ext@bettersurfplus$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="abcf90de-7322-4232-a59c-06e4b3a33c68" id="/^((\{927f6d6a-104f-4e69-b99a-e62e856899d9\})|(\{edf2d18c-ba07-4f30-bd59-85520b7259d8\})|(\{2128e9bc-aa97-4f9e-9327-bdce611538fb\})|(\{41a71134-b81e-49c5-be44-154c1b981153\})|(\{e00696fa-7731-40c6-81f1-5507d0435347\})|(\{f6dee727-c6cf-4d4a-b108-d59c3d9723ce\})|(\{48935666-26c5-484a-ade3-1660eca6a219\})|(\{06b9fcaa-45df-4fb3-a8fa-775d68690f5b\})|(jid1-4P0kohSJxU1qGa@jetpack)|(jid1-93WyvptyvzGATw@jetpack)|(addon@ytdownloader1\.info)|(\{f4817c52-46ac-4b98-b682-f900701c5778\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="034951cb-7614-4202-af35-18123476eb03" id="/^((\{e2e34cff-c7d2-4c87-8195-d206ac928969\})|(\{aea3f9d0-909d-4c39-9282-25b11aa29d61\})|(\{ec5c4eed-0275-4148-a7f0-b21c05121703\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
