@@ -61,9 +61,9 @@ using std::ceil;
 using std::min;
 
 #ifndef DEBUG
-NS_IMPL_ISUPPORTS(RasterImage, imgIContainer)
+NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, nsIProperties)
 #else
-NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, imgIContainerDebug)
+NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, nsIProperties, imgIContainerDebug)
 #endif
 
 //******************************************************************************
@@ -743,9 +743,17 @@ bool RasterImage::SetMetadata(const ImageMetadata& aMetadata,
   }
 
   if (aMetadata.HasHotspot()) {
-    auto hotspot = aMetadata.GetHotspot();
-    mHotspot.x = std::max(std::min(hotspot.x, mSize.width - 1), 0);
-    mHotspot.y = std::max(std::min(hotspot.y, mSize.height - 1), 0);
+    IntPoint hotspot = aMetadata.GetHotspot();
+
+    nsCOMPtr<nsISupportsPRUint32> intwrapx =
+        do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID);
+    nsCOMPtr<nsISupportsPRUint32> intwrapy =
+        do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID);
+    intwrapx->SetData(hotspot.x);
+    intwrapy->SetData(hotspot.y);
+
+    Set("hotspotX", intwrapx);
+    Set("hotspotY", intwrapy);
   }
 
   return true;
@@ -963,14 +971,48 @@ nsresult RasterImage::SetSourceSizeHint(uint32_t aSizeHint) {
   return rv;
 }
 
-nsresult RasterImage::GetHotspotX(int32_t* aX) {
-  *aX = mHotspot.x;
-  return NS_OK;
+/********* Methods to implement lazy allocation of nsIProperties object *******/
+NS_IMETHODIMP
+RasterImage::Get(const char* prop, const nsIID& iid, void** result) {
+  if (!mProperties) {
+    return NS_ERROR_FAILURE;
+  }
+  return mProperties->Get(prop, iid, result);
 }
 
-nsresult RasterImage::GetHotspotY(int32_t* aY) {
-  *aY = mHotspot.y;
-  return NS_OK;
+NS_IMETHODIMP
+RasterImage::Set(const char* prop, nsISupports* value) {
+  if (!mProperties) {
+    mProperties = new nsProperties();
+  }
+  return mProperties->Set(prop, value);
+}
+
+NS_IMETHODIMP
+RasterImage::Has(const char* prop, bool* _retval) {
+  NS_ENSURE_ARG_POINTER(_retval);
+  if (!mProperties) {
+    *_retval = false;
+    return NS_OK;
+  }
+  return mProperties->Has(prop, _retval);
+}
+
+NS_IMETHODIMP
+RasterImage::Undefine(const char* prop) {
+  if (!mProperties) {
+    return NS_ERROR_FAILURE;
+  }
+  return mProperties->Undefine(prop);
+}
+
+NS_IMETHODIMP
+RasterImage::GetKeys(nsTArray<nsCString>& keys) {
+  if (!mProperties) {
+    keys.Clear();
+    return NS_OK;
+  }
+  return mProperties->GetKeys(keys);
 }
 
 void RasterImage::Discard() {
