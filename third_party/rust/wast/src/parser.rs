@@ -329,75 +329,16 @@ impl ParseBuffer<'_> {
         for token in Lexer::new(input) {
             tokens.push((token?, Cell::new(NextTokenAt::Unknown)));
         }
-        let ret = ParseBuffer {
+        Ok(ParseBuffer {
             tokens: tokens.into_boxed_slice(),
             cur: Cell::new(0),
             input,
             known_annotations: Default::default(),
-        };
-        ret.validate_annotations()?;
-        Ok(ret)
+        })
     }
 
     fn parser(&self) -> Parser<'_> {
         Parser { buf: self }
-    }
-
-    // Validates that all annotations properly parse in that they have balanced
-    // delimiters. This is required since while parsing we generally skip
-    // annotations and there's no real opportunity to return a parse error.
-    fn validate_annotations(&self) -> Result<()> {
-        use crate::lexer::Source::*;
-        use crate::lexer::Token::*;
-        enum State {
-            None,
-            LParen,
-            Annotation { depth: usize, span: Span },
-        }
-        let mut state = State::None;
-        for token in self.tokens.iter() {
-            state = match (&token.0, state) {
-                // From nothing, a `(` starts the search for an annotation
-                (Token(LParen(_)), State::None) => State::LParen,
-                // ... otherwise in nothing we alwyas preserve that state.
-                (_, State::None) => State::None,
-
-                // If the previous state was an `LParen`, we may have an
-                // annotation if the next keyword is reserved
-                (Token(Reserved(s)), State::LParen) if s.starts_with("@") && s.len() > 0 => {
-                    let offset = self.input_pos(s);
-                    State::Annotation {
-                        span: Span { offset },
-                        depth: 1,
-                    }
-                }
-                // ... otherwise anything after an `LParen` kills the lparen
-                // state.
-                (_, State::LParen) => State::None,
-
-                // Once we're in an annotation we need to balance parentheses,
-                // so handle the depth changes.
-                (Token(LParen(_)), State::Annotation { span, depth }) => State::Annotation {
-                    span,
-                    depth: depth + 1,
-                },
-                (Token(RParen(_)), State::Annotation { depth: 1, .. }) => State::None,
-                (Token(RParen(_)), State::Annotation { span, depth }) => State::Annotation {
-                    span,
-                    depth: depth - 1,
-                },
-                // ... and otherwise all tokens are allowed in annotations.
-                (_, s @ State::Annotation { .. }) => s,
-            };
-        }
-        if let State::Annotation { span, .. } = state {
-            return Err(Error::new(span, format!("unclosed annotation")));
-        }
-        Ok(())
-    }
-
-    fn input_pos(&self, src: &str) -> usize {
-        src.as_ptr() as usize - self.input.as_ptr() as usize
     }
 }
 
@@ -416,11 +357,6 @@ impl<'a> Parser<'a> {
             Some(Token::RParen(_)) | None => true,
             Some(_) => false, // more tokens to parse!
         }
-    }
-
-    pub(crate) fn has_tokens(self) -> bool {
-        let cursor = self.cursor();
-        cursor.cur < self.buf.tokens.len()
     }
 
     /// Parses a `T` from this [`Parser`].
@@ -699,6 +635,10 @@ impl<'a> Parser<'a> {
         Error::parse(span, self.buf.input, msg.to_string())
     }
 
+    fn input_pos(self, src: &'a str) -> usize {
+        src.as_ptr() as usize - self.buf.input.as_ptr() as usize
+    }
+
     /// Returns the span of the current token
     pub fn cur_span(&self) -> Span {
         self.cursor().cur_span()
@@ -862,7 +802,7 @@ impl<'a> Cursor<'a> {
     /// Does not take into account whitespace or comments.
     pub fn cur_span(&self) -> Span {
         let offset = match self.clone().advance_token() {
-            Some(t) => self.parser.buf.input_pos(t.src()),
+            Some(t) => self.parser.input_pos(t.src()),
             None => self.parser.buf.input.len(),
         };
         Span { offset }

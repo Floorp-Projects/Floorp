@@ -53,10 +53,6 @@ impl Peek for WastDirectiveToken {
 #[allow(missing_docs)]
 pub enum WastDirective<'a> {
     Module(ast::Module<'a>),
-    QuoteModule {
-        span: ast::Span,
-        source: Vec<&'a [u8]>,
-    },
     AssertMalformed {
         span: ast::Span,
         module: QuoteModule<'a>,
@@ -102,7 +98,6 @@ impl WastDirective<'_> {
             WastDirective::Module(m) => m.span,
             WastDirective::AssertMalformed { span, .. }
             | WastDirective::Register { span, .. }
-            | WastDirective::QuoteModule{ span, .. }
             | WastDirective::AssertTrap { span, .. }
             | WastDirective::AssertReturn { span, .. }
             | WastDirective::AssertExhaustion { span, .. }
@@ -117,17 +112,7 @@ impl<'a> Parse<'a> for WastDirective<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let mut l = parser.lookahead1();
         if l.peek::<kw::module>() {
-            if parser.peek2::<kw::quote>() {
-                parser.parse::<kw::module>()?;
-                let span = parser.parse::<kw::quote>()?.0;
-                let mut source = Vec::new();
-                while !parser.is_empty() {
-                    source.push(parser.parse()?);
-                }
-                Ok(WastDirective::QuoteModule { span, source })
-            } else {
-                Ok(WastDirective::Module(parser.parse()?))
-            }
+            Ok(WastDirective::Module(parser.parse()?))
         } else if l.peek::<kw::assert_malformed>() {
             let span = parser.parse::<kw::assert_malformed>()?.0;
             Ok(WastDirective::AssertMalformed {
@@ -311,7 +296,7 @@ impl<'a> Parse<'a> for WastInvoke<'a> {
 #[allow(missing_docs)]
 pub enum QuoteModule<'a> {
     Module(ast::Module<'a>),
-    Quote(Vec<&'a [u8]>),
+    Quote(Vec<&'a str>),
 }
 
 impl<'a> Parse<'a> for QuoteModule<'a> {

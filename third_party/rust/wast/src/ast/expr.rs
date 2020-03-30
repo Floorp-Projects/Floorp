@@ -837,10 +837,6 @@ instructions! {
         I8x16AvgrU : [0xfd, 0xd9] : "i8x16.avgr_u",
         I16x8AvgrU : [0xfd, 0xda] : "i16x8.avgr_u",
 
-        I8x16Abs : [0xfd, 0xe1] : "i8x16.abs",
-        I16x8Abs : [0xfd, 0xe2] : "i16x8.abs",
-        I32x4Abs : [0xfd, 0xe3] : "i32x4.abs",
-
         Try(BlockType<'a>) : [0x06] : "try",
         Catch : [0x07] : "catch",
         Throw(ast::Index<'a>) : [0x08] : "throw",
