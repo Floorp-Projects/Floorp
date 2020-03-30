@@ -1284,7 +1284,7 @@ void nsFrameSelection::StopAutoScrollTimer() {
 /**
 hard to go from nodes to frames, easy the other way!
  */
-nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
+nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
                                      uint32_t aContentOffset,
                                      uint32_t aContentEndOffset,
                                      CaretAssociateHint aHint,
@@ -1316,66 +1316,70 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
   }
 
   // traverse through document and unselect crap here
-  if (aFocusMode !=
-      FocusMode::kExtendSelection) {  // single click? setting cursor down
-    const Batching saveBatching = mBatching;  // hack to use the collapse code.
-    mBatching.mCounter = 1;
+  switch (aFocusMode) {
+    case FocusMode::kCollapseToNewPoint:
+      [[fallthrough]];
+    case FocusMode::kMultiRangeSelection: {
+      // single click? setting cursor down
+      const Batching saveBatching =
+          mBatching;  // hack to use the collapse code.
+      mBatching.mCounter = 1;
 
-    if (aFocusMode == FocusMode::kMultiRangeSelection) {
-      // Remove existing collapsed ranges as there's no point in having
-      // non-anchor/focus collapsed ranges.
-      mDomSelections[index]->RemoveCollapsedRanges();
+      if (aFocusMode == FocusMode::kMultiRangeSelection) {
+        // Remove existing collapsed ranges as there's no point in having
+        // non-anchor/focus collapsed ranges.
+        mDomSelections[index]->RemoveCollapsedRanges();
 
-      ErrorResult error;
-      RefPtr<nsRange> newRange = nsRange::Create(
-          aNewFocus, aContentOffset, aNewFocus, aContentOffset, error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
+        ErrorResult error;
+        RefPtr<nsRange> newRange = nsRange::Create(
+            aNewFocus, aContentOffset, aNewFocus, aContentOffset, error);
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+        MOZ_ASSERT(newRange);
+        const RefPtr<Selection> selection{mDomSelections[index]};
+        selection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
+                                                             IgnoreErrors());
+        mBatching = saveBatching;
+      } else {
+        bool oldDesiredPosSet = mDesiredPos.mIsSet;  // need to keep old desired
+                                                     // position if it was set.
+        mDomSelections[index]->Collapse(aNewFocus, aContentOffset);
+        mDesiredPos.mIsSet = oldDesiredPosSet;  // now reset desired pos back.
+        mBatching = saveBatching;
       }
-      MOZ_ASSERT(newRange);
-      const RefPtr<Selection> selection{mDomSelections[index]};
-      selection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
-                                                           IgnoreErrors());
-      mBatching = saveBatching;
-    } else {
-      bool oldDesiredPosSet = mDesiredPos.mIsSet;  // need to keep old desired
-                                                   // position if it was set.
-      mDomSelections[index]->Collapse(aNewFocus, aContentOffset);
-      mDesiredPos.mIsSet = oldDesiredPosSet;  // now reset desired pos back.
-      mBatching = saveBatching;
-    }
-    if (aContentEndOffset != aContentOffset) {
-      mDomSelections[index]->Extend(aNewFocus, aContentEndOffset);
-    }
+      if (aContentEndOffset != aContentOffset) {
+        mDomSelections[index]->Extend(aNewFocus, aContentEndOffset);
+      }
 
-    // find out if we are inside a table. if so, find out which one and which
-    // cell once we do that, the next time we get a takefocus, check the parent
-    // tree. if we are no longer inside same table ,cell then switch to table
-    // selection mode.
-    // BUT only do this in an editor
+      // find out if we are inside a table. if so, find out which one and which
+      // cell once we do that, the next time we get a takefocus, check the
+      // parent tree. if we are no longer inside same table ,cell then switch to
+      // table selection mode. BUT only do this in an editor
 
-    NS_ENSURE_STATE(mPresShell);
-    bool editableCell = false;
-    mTableSelection.mCellParent = nullptr;
-    RefPtr<nsPresContext> context = mPresShell->GetPresContext();
-    if (context) {
-      RefPtr<HTMLEditor> htmlEditor = nsContentUtils::GetHTMLEditor(context);
-      if (htmlEditor) {
-        nsINode* cellparent = GetCellParent(aNewFocus);
-        nsCOMPtr<nsINode> editorHostNode = htmlEditor->GetActiveEditingHost();
-        editableCell = cellparent && editorHostNode &&
-                       cellparent->IsInclusiveDescendantOf(editorHostNode);
-        if (editableCell) {
-          mTableSelection.mCellParent = cellparent;
+      NS_ENSURE_STATE(mPresShell);
+      bool editableCell = false;
+      mTableSelection.mCellParent = nullptr;
+      RefPtr<nsPresContext> context = mPresShell->GetPresContext();
+      if (context) {
+        RefPtr<HTMLEditor> htmlEditor = nsContentUtils::GetHTMLEditor(context);
+        if (htmlEditor) {
+          nsINode* cellparent = GetCellParent(aNewFocus);
+          nsCOMPtr<nsINode> editorHostNode = htmlEditor->GetActiveEditingHost();
+          editableCell = cellparent && editorHostNode &&
+                         cellparent->IsInclusiveDescendantOf(editorHostNode);
+          if (editableCell) {
+            mTableSelection.mCellParent = cellparent;
 #ifdef DEBUG_TABLE_SELECTION
-          printf(" * TakeFocus - Collapsing into new cell\n");
+            printf(" * TakeFocus - Collapsing into new cell\n");
 #endif
+          }
         }
       }
+      break;
     }
-  } else {
-    // Now update the range list:
-    if ((aFocusMode == FocusMode::kExtendSelection) && aNewFocus) {
+    case FocusMode::kExtendSelection: {
+      // Now update the range list:
       int32_t offset;
       nsINode* cellparent = GetCellParent(aNewFocus);
       if (mTableSelection.mCellParent && cellparent &&
@@ -1390,9 +1394,10 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
 
         // Start selecting in the cell we were in before
         nsINode* parent = ParentOffset(mTableSelection.mCellParent, &offset);
-        if (parent)
+        if (parent) {
           HandleTableSelection(parent, offset, TableSelectionMode::Cell,
                                &event);
+        }
 
         // Find the parent of this new cell and extend selection to it
         parent = ParentOffset(cellparent, &offset);
@@ -1418,6 +1423,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* aNewFocus,
         } else
           mDomSelections[index]->Extend(aNewFocus, aContentOffset);
       }
+      break;
     }
   }
 
