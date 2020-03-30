@@ -50,7 +50,7 @@ class InitializedOnce final {
 
  public:
   template <typename Dummy = void>
-  explicit InitializedOnce(
+  explicit constexpr InitializedOnce(
       std::enable_if_t<InitWhenVal == InitWhen::LazyAllowed, Dummy>* =
           nullptr) {}
 
@@ -58,7 +58,7 @@ class InitializedOnce final {
   // arguments. The default constructor should only be available conditionally
   // and is declared above.
   template <typename Arg0, typename... Args>
-  explicit InitializedOnce(Arg0&& aArg0, Args&&... aArgs)
+  explicit constexpr InitializedOnce(Arg0&& aArg0, Args&&... aArgs)
       : mMaybe{Some(std::remove_const_t<T>{std::forward<Arg0>(aArg0),
                                            std::forward<Args>(aArgs)...})} {
     MOZ_ASSERT(ValueCheckPolicy<T>::Check(*mMaybe));
@@ -86,7 +86,7 @@ class InitializedOnce final {
   }
 
   template <typename... Args, typename Dummy = void>
-  std::enable_if_t<InitWhenVal == InitWhen::LazyAllowed, Dummy> init(
+  constexpr std::enable_if_t<InitWhenVal == InitWhen::LazyAllowed, Dummy> init(
       Args&&... aArgs) {
     MOZ_ASSERT(mMaybe.isNothing());
     MOZ_ASSERT(!mWasReset);
@@ -94,12 +94,12 @@ class InitializedOnce final {
     MOZ_ASSERT(ValueCheckPolicy<T>::Check(*mMaybe));
   }
 
-  explicit operator bool() const { return isSome(); }
-  bool isSome() const { return mMaybe.isSome(); }
-  bool isNothing() const { return mMaybe.isNothing(); }
+  constexpr explicit operator bool() const { return isSome(); }
+  constexpr bool isSome() const { return mMaybe.isSome(); }
+  constexpr bool isNothing() const { return mMaybe.isNothing(); }
 
-  T& operator*() const { return *mMaybe; }
-  T* operator->() const { return mMaybe.operator->(); }
+  constexpr T& operator*() const { return *mMaybe; }
+  constexpr T* operator->() const { return mMaybe.operator->(); }
 
   template <typename Dummy = void>
   std::enable_if_t<DestroyWhenVal == DestroyWhen::EarlyAllowed, Dummy>
