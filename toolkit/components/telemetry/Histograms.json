@@ -4465,15 +4465,6 @@
     "n_buckets": 1000,
     "description": "The duraion of a socketThread cycle, including polls and pending events. (ms)"
   },
-  "STS_NUMBER_OF_PENDING_EVENTS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "description": "Number of pending events per SocketThread cycle."
-  },
   "STS_POLL_CYCLE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -4491,24 +4482,6 @@
     "high": 60000,
     "n_buckets": 1000,
     "description": "The duraion of the socketThread cycle during shutdown, including polls and pending events. (ms)"
-  },
-  "STS_NUMBER_OF_PENDING_EVENTS_IN_THE_LAST_CYCLE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "description": "Number of pending events per SocketThread cycle during shutdown."
-  },
-  "STS_NUMBER_OF_ONSOCKETREADY_CALLS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "description": "Number of OnSocketReady calls during a single poll."
   },
   "STS_POLL_BLOCK_TIME": {
     "record_in_processes": ["main", "content"],

@@ -1053,7 +1053,6 @@ nsSocketTransportService::Run() {
   // For the calculation of the duration of the last cycle (i.e. the last
   // for-loop iteration before shutdown).
   TimeStamp startOfCycleForLastCycleCalc;
-  int numberOfPendingEventsLastCycle;
 
   // For measuring of the poll iteration duration without time spent blocked
   // in poll().
@@ -1064,7 +1063,6 @@ nsSocketTransportService::Run() {
   // For calculating the time needed for a new element to run.
   TimeStamp startOfIteration;
   TimeStamp startOfNextIteration;
-  int numberOfPendingEvents;
 
   // If there is too many pending events queued, we will run some poll()
   // between them and the following variable is cumulative time spent
@@ -1073,9 +1071,6 @@ nsSocketTransportService::Run() {
 
   for (;;) {
     bool pendingEvents = false;
-
-    numberOfPendingEvents = 0;
-    numberOfPendingEventsLastCycle = 0;
     if (Telemetry::CanRecordPrereleaseData()) {
       startOfCycleForLastCycleCalc = TimeStamp::NowLoRes();
       startOfNextIteration = TimeStamp::NowLoRes();
@@ -1133,7 +1128,6 @@ nsSocketTransportService::Run() {
         TimeStamp eventQueueStart = TimeStamp::NowLoRes();
         do {
           NS_ProcessNextEvent(mRawThread);
-          numberOfPendingEvents++;
           pendingEvents = false;
           mRawThread->HasPendingEvents(&pendingEvents);
         } while (pendingEvents && mServingPendingQueue &&
@@ -1145,12 +1139,6 @@ nsSocketTransportService::Run() {
           Telemetry::AccumulateTimeDelta(Telemetry::STS_POLL_AND_EVENTS_CYCLE,
                                          startOfIteration + pollDuration,
                                          TimeStamp::NowLoRes());
-
-          Telemetry::Accumulate(Telemetry::STS_NUMBER_OF_PENDING_EVENTS,
-                                numberOfPendingEvents);
-
-          numberOfPendingEventsLastCycle += numberOfPendingEvents;
-          numberOfPendingEvents = 0;
           pollDuration = nullptr;
         }
       }
@@ -1163,9 +1151,6 @@ nsSocketTransportService::Run() {
       if (mShuttingDown) {
         if (Telemetry::CanRecordPrereleaseData() &&
             !startOfCycleForLastCycleCalc.IsNull()) {
-          Telemetry::Accumulate(
-              Telemetry::STS_NUMBER_OF_PENDING_EVENTS_IN_THE_LAST_CYCLE,
-              numberOfPendingEventsLastCycle);
           Telemetry::AccumulateTimeDelta(
               Telemetry::STS_POLL_AND_EVENT_THE_LAST_CYCLE,
               startOfCycleForLastCycleCalc, TimeStamp::NowLoRes());
@@ -1320,7 +1305,6 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
     //
     // service "active" sockets...
     //
-    uint32_t numberOfOnSocketReadyCalls = 0;
     for (i = 0; i < int32_t(mActiveCount); ++i) {
       PRPollDesc& desc = mPollList[i + 1];
       SocketContext& s = mActiveList[i];
@@ -1331,7 +1315,6 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
 #endif
         s.DisengageTimeout();
         s.mHandler->OnSocketReady(desc.fd, desc.out_flags);
-        numberOfOnSocketReadyCalls++;
       } else if (s.IsTimedOut(now)) {
 #ifdef MOZ_TASK_TRACER
         tasktracer::AutoSourceEvent taskTracerEvent(
@@ -1340,16 +1323,10 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
         SOCKET_LOG(("socket %p timed out", s.mHandler));
         s.DisengageTimeout();
         s.mHandler->OnSocketReady(desc.fd, -1);
-        numberOfOnSocketReadyCalls++;
       } else {
         s.MaybeResetEpoch();
       }
     }
-    if (Telemetry::CanRecordPrereleaseData()) {
-      Telemetry::Accumulate(Telemetry::STS_NUMBER_OF_ONSOCKETREADY_CALLS,
-                            numberOfOnSocketReadyCalls);
-    }
-
     //
     // check for "dead" sockets and remove them (need to do this in
     // reverse order obviously).
