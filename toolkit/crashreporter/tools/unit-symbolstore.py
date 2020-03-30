@@ -3,9 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import concurrent.futures
 import mock
 import mozunit
 import os
+import platform
 import shutil
 import struct
 import subprocess
@@ -24,29 +26,22 @@ from symbolstore import realpath
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
 # dump_syms itself will not be run (we mock that call out), but we can't override
 # the ShouldProcessFile method since we actually want to test that.
-
-
 def write_elf(filename):
     open(filename, "wb").write(struct.pack("<7B45x", 0x7f, ord("E"), ord("L"), ord("F"), 1, 1, 1))
 
-
 def write_macho(filename):
     open(filename, "wb").write(struct.pack("<I28x", 0xfeedface))
-
 
 def write_dll(filename):
     open(filename, "w").write("aaa")
     # write out a fake PDB too
     open(os.path.splitext(filename)[0] + ".pdb", "w").write("aaa")
 
-
 def target_platform():
     return buildconfig.substs['OS_TARGET']
 
-
 def host_platform():
     return buildconfig.substs['HOST_OS_ARCH']
-
 
 writer = {'WINNT': write_dll,
           'Linux': write_elf,
@@ -60,16 +55,13 @@ file_output = [{'WINNT': "bogus data",
                 'Linux': "ELF executable",
                 'Darwin': "Mach-O executable"}[target_platform()]]
 
-
 def add_extension(files):
     return [f + extension for f in files]
-
 
 class HelperMixin(object):
     """
     Test that passing filenames to exclude from processing works.
     """
-
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
         if not self.test_dir.endswith(os.sep):
@@ -96,7 +88,7 @@ class HelperMixin(object):
 
     def make_file(self, path):
         self.make_dirs(path)
-        with open(path, 'wb'):
+        with open(path, 'wb') as f:
             pass
 
     def add_test_files(self, files):
@@ -121,7 +113,6 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         self.stdouts = []
         self.mock_popen = patch("subprocess.Popen").start()
         stdout_iter = self.next_mock_stdout()
-
         def next_popen(*args, **kwargs):
             m = mock.MagicMock()
             # Get the iterators over whatever output was provided.
@@ -154,17 +145,14 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         per file.
         """
         copied = []
-
         def mock_copy_debug(filename, debug_file, guid, code_file, code_id):
-            copied.append(filename[len(self.symbol_dir):]
-                          if filename.startswith(self.symbol_dir) else filename)
+            copied.append(filename[len(self.symbol_dir):] if filename.startswith(self.symbol_dir) else filename)
         self.add_test_files(add_extension(["foo"]))
         # Windows doesn't call file(1) to figure out if the file should be processed.
         if target_platform() != 'WINNT':
             self.stdouts.append(file_output)
         self.stdouts.append(mock_dump_syms("X" * 33, add_extension(["foo"])[0]))
         self.stdouts.append(mock_dump_syms("Y" * 33, add_extension(["foo"])[0]))
-
         def mock_dsymutil(args, **kwargs):
             filename = args[-1]
             os.makedirs(filename + ".dSYM")
@@ -189,7 +177,6 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         code_id = 'abc123'
         self.stdouts.append(mock_dump_syms('X' * 33, 'foo.pdb',
                                            ['INFO CODE_ID %s %s' % (code_id, code_file)]))
-
         def mock_compress(args, **kwargs):
             filename = args[-1]
             open(filename, 'w').write('stuff')
@@ -199,9 +186,7 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
                                      symbol_path=self.symbol_dir,
                                      copy_debug=True)
         d.Process(test_file)
-        self.assertTrue(os.path.isfile(os.path.join(self.symbol_dir,
-                                                    code_file, code_id, code_file[:-1] + '_')))
-
+        self.assertTrue(os.path.isfile(os.path.join(self.symbol_dir, code_file, code_id, code_file[:-1] + '_')))
 
 class TestGetVCSFilename(HelperMixin, unittest.TestCase):
     def setUp(self):
@@ -251,8 +236,7 @@ class TestGetVCSFilename(HelperMixin, unittest.TestCase):
 
 
 # SHA-512 of a zero-byte file
-EMPTY_SHA512 = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff'
-EMPTY_SHA512 += '8318d2877eec2f63b931bd47417a81a538327af927da3e'
+EMPTY_SHA512 = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e'
 
 
 class TestGeneratedFilePath(HelperMixin, unittest.TestCase):
@@ -266,7 +250,7 @@ class TestGeneratedFilePath(HelperMixin, unittest.TestCase):
         # Make an empty generated file
         g = os.path.join(self.test_dir, 'generated')
         rel_path = 'a/b/generated'
-        with open(g, 'wb'):
+        with open(g, 'wb') as f:
             pass
         expected = 's3:bucket:{}/{}:'.format(EMPTY_SHA512,
                                              rel_path)
@@ -328,7 +312,6 @@ if target_platform() == 'WINNT':
             # And mock the call to pdbstr to capture the srcsrv stream data.
             global srcsrv_stream
             srcsrv_stream = None
-
             def mock_pdbstr(args, cwd="", **kwargs):
                 for arg in args:
                     if arg.startswith("-i:"):
@@ -346,11 +329,9 @@ if target_platform() == 'WINNT':
             d.CopyDebug = lambda *args: True
             d.Process(os.path.join(self.test_dir, test_files[0]))
             self.assertNotEqual(srcsrv_stream, None)
-            hgserver = [x.rstrip() for x in srcsrv_stream.splitlines()
-                        if x.startswith("HGSERVER=")]
+            hgserver = [x.rstrip() for x in srcsrv_stream.splitlines() if x.startswith("HGSERVER=")]
             self.assertEqual(len(hgserver), 1)
             self.assertEqual(hgserver[0].split("=")[1], "http://example.com/repo")
-
 
 class TestInstallManifest(HelperMixin, unittest.TestCase):
     def setUp(self):
@@ -417,9 +398,8 @@ class TestInstallManifest(HelperMixin, unittest.TestCase):
         '''
         Test that a bad manifest argument gives an error.
         '''
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             symbolstore.validate_install_manifests(['foo'])
-
 
 class TestFileMapping(HelperMixin, unittest.TestCase):
     def setUp(self):
@@ -452,14 +432,13 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
                                              '..', '..', o))
         # mock the dump_syms output
         file_id = ("X" * 33, 'somefile')
-
         def mk_output(files):
             return iter(
                 [
                     'MODULE os x86 %s %s\n' % file_id
                 ] +
                 [
-                    'FILE %d %s\n' % (i, s) for i, s in enumerate(files)
+                    'FILE %d %s\n' % (i,s) for i, s in enumerate(files)
                 ] +
                 [
                     'PUBLIC xyz 123\n'
@@ -478,7 +457,6 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
                                    file_id[1], file_id[0], file_id[1] + '.sym')
         self.assertEqual(open(symbol_file, 'r').read(), expected_output)
 
-
 class TestFunctional(HelperMixin, unittest.TestCase):
     '''Functional tests of symbolstore.py, calling it with a real
     dump_syms binary and passing in a real binary to dump symbols from.
@@ -487,7 +465,6 @@ class TestFunctional(HelperMixin, unittest.TestCase):
     don't use the actual process pool like buildsymbols does, this tests
     that the way symbolstore.py gets called in buildsymbols works.
     '''
-
     def setUp(self):
         HelperMixin.setUp(self)
         self.skip_test = False
@@ -517,6 +494,7 @@ class TestFunctional(HelperMixin, unittest.TestCase):
             self.target_bin = os.path.join(buildconfig.topobjdir,
                                            'dist', 'bin', 'firefox-bin')
 
+
     def tearDown(self):
         HelperMixin.tearDown(self)
 
@@ -545,7 +523,6 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         self.assertTrue(os.path.isfile(symbol_file))
         symlines = open(symbol_file, 'r').readlines()
         file_lines = [l for l in symlines if l.startswith('FILE')]
-
         def check_hg_path(lines, match):
             match_lines = [l for l in file_lines if match in l]
             self.assertTrue(len(match_lines) >= 1,

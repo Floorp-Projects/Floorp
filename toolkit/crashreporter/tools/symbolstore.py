@@ -31,9 +31,13 @@ import os
 import re
 import shutil
 import textwrap
+import fnmatch
 import subprocess
 import time
 import ctypes
+import urlparse
+import concurrent.futures
+import multiprocessing
 
 from optparse import OptionParser
 
@@ -50,7 +54,6 @@ from mozpack.manifests import (
 )
 
 # Utility classes
-
 
 class VCSFileInfo:
     """ A base class for version-controlled file information. Ensures that the
@@ -133,11 +136,9 @@ class VCSFileInfo:
 #
 rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
 
-
 def read_output(*args):
     (stdout, _) = subprocess.Popen(args=args, stdout=subprocess.PIPE).communicate()
     return stdout.rstrip()
-
 
 class HGRepoInfo:
     def __init__(self, path):
@@ -168,8 +169,8 @@ class HGRepoInfo:
         if cleanroot is None:
             print(textwrap.dedent("""\
             Could not determine repo info for %s.  This is either not a clone of the web-based
-            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""")
-                  % path, sys.stderr)
+            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % path,
+                  sys.stderr)
             sys.exit(1)
         self.rev = rev
         self.root = root
@@ -177,7 +178,6 @@ class HGRepoInfo:
 
     def GetFileInfo(self, file):
         return HGFileInfo(file, self)
-
 
 class HGFileInfo(VCSFileInfo):
     def __init__(self, file, repo):
@@ -199,14 +199,12 @@ class HGFileInfo(VCSFileInfo):
             return "hg:%s:%s:%s" % (self.clean_root, self.file, self.revision)
         return self.file
 
-
 class GitRepoInfo:
     """
     Info about a local git repository. Does not currently
     support discovering info about a git clone, the info must be
     provided out-of-band.
     """
-
     def __init__(self, path, rev, root):
         self.path = path
         cleanroot = None
@@ -219,8 +217,7 @@ class GitRepoInfo:
         if cleanroot is None:
             print(textwrap.dedent("""\
             Could not determine repo info for %s (%s).  This is either not a clone of a web-based
-            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""")
-                  % (path, root),
+            repository, or you have not specified MOZ_SOURCE_REPO, or the clone is corrupt.""") % (path, root),
                   file=sys.stderr)
             sys.exit(1)
         self.rev = rev
@@ -228,7 +225,6 @@ class GitRepoInfo:
 
     def GetFileInfo(self, file):
         return GitFileInfo(file, self)
-
 
 class GitFileInfo(VCSFileInfo):
     def __init__(self, file, repo):
@@ -252,7 +248,6 @@ class GitFileInfo(VCSFileInfo):
 
 # Utility functions
 
-
 # A cache of files for which VCS info has already been determined. Used to
 # prevent extra filesystem activity or process launching.
 vcsFileInfoCache = {}
@@ -271,8 +266,8 @@ if platform.system() == 'Windows':
         result = path
 
         ctypes.windll.kernel32.SetErrorMode(ctypes.c_uint(1))
-        if not isinstance(path, str):
-            path = str(path, sys.getfilesystemencoding())
+        if not isinstance(path, unicode):
+            path = unicode(path, sys.getfilesystemencoding())
         handle = ctypes.windll.kernel32.CreateFileW(path,
                                                     # GENERIC_READ
                                                     0x80000000,
@@ -305,13 +300,11 @@ else:
     # Just use the os.path version otherwise.
     realpath = os.path.realpath
 
-
 def IsInDir(file, dir):
     # the lower() is to handle win32+vc8, where
     # the source filenames come out all lowercase,
     # but the srcdir can be mixed case
     return os.path.abspath(file).lower().startswith(os.path.abspath(dir).lower())
-
 
 def GetVCSFilenameFromSrcdir(file, srcdir):
     if srcdir not in Dumper.srcdirRepoInfo:
@@ -322,7 +315,6 @@ def GetVCSFilenameFromSrcdir(file, srcdir):
             # Unknown VCS or file is not in a repo.
             return None
     return Dumper.srcdirRepoInfo[srcdir].GetFileInfo(file)
-
 
 def GetVCSFilename(file, srcdirs):
     """Given a full path to a file, and the top source directory,
@@ -359,7 +351,6 @@ def GetVCSFilename(file, srcdirs):
     # we want forward slashes on win32 paths
     return (file.replace("\\", "/"), root)
 
-
 def validate_install_manifests(install_manifest_args):
     args = []
     for arg in install_manifest_args:
@@ -382,7 +373,6 @@ def validate_install_manifests(install_manifest_args):
         args.append((manifest, destination))
     return args
 
-
 def make_file_mapping(install_manifests):
     file_mapping = {}
     for manifest, destination in install_manifests:
@@ -395,7 +385,6 @@ def make_file_mapping(install_manifests):
                 abs_dest = realpath(os.path.join(destination, dst))
                 file_mapping[abs_dest] = realpath(src.path)
     return file_mapping
-
 
 @memoize
 def get_generated_file_s3_path(filename, rel_path, bucket):
@@ -413,27 +402,16 @@ def GetPlatformSpecificDumper(**kwargs):
             'Linux': Dumper_Linux,
             'Darwin': Dumper_Mac}[buildconfig.substs['OS_ARCH']](**kwargs)
 
-
 def SourceIndex(fileStream, outputPath, vcs_root):
     """Takes a list of files, writes info to a data block in a .stream file"""
     # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
     # Create the srcsrv data block that indexes the pdb file
     result = True
     pdbStreamFile = open(outputPath, "w")
-    pdbStreamFile.write(
-        '''SRCSRV: ini ------------------------------------------------\r\nVERSION=2\r
-INDEXVERSION=2\r
-VERCTRL=http\r\nSRCSRV: variables ------------------------------------------\r
-HGSERVER=''')
+    pdbStreamFile.write('''SRCSRV: ini ------------------------------------------------\r\nVERSION=2\r\nINDEXVERSION=2\r\nVERCTRL=http\r\nSRCSRV: variables ------------------------------------------\r\nHGSERVER=''')
     pdbStreamFile.write(vcs_root)
-    pdbStreamFile.write(
-        '''\r\nSRCSRVVERCTRL=http\r\nHTTP_EXTRACT_TARGET=%hgserver%/raw-file/%var3%/%var2%\r
-SRCSRVTRG=%http_extract_target%\r
-SRCSRV: source files ---------------------------------------\r\n''')
-    pdbStreamFile.write(
-        fileStream)
-    # can't do string interpolation because the source server also uses this
-    # so there are % in the above
+    pdbStreamFile.write('''\r\nSRCSRVVERCTRL=http\r\nHTTP_EXTRACT_TARGET=%hgserver%/raw-file/%var3%/%var2%\r\nSRCSRVTRG=%http_extract_target%\r\nSRCSRV: source files ---------------------------------------\r\n''')
+    pdbStreamFile.write(fileStream) # can't do string interpolation because the source server also uses this and so there are % in the above
     pdbStreamFile.write("SRCSRV: end ------------------------------------------------\r\n\n")
     pdbStreamFile.close()
     return result
@@ -562,7 +540,7 @@ class Dumper:
                                                           rel_path))
                 try:
                     os.makedirs(os.path.dirname(full_path))
-                except OSError:  # already exists
+                except OSError: # already exists
                     pass
                 f = open(full_path, "w")
                 f.write(module_line)
@@ -579,22 +557,18 @@ class Dumper:
                         if self.vcsinfo:
                             gen_path = self.generated_files.get(filename)
                             if gen_path and self.s3_bucket:
-                                filename = get_generated_file_s3_path(
-                                    filename, gen_path, self.s3_bucket)
+                                filename = get_generated_file_s3_path(filename, gen_path, self.s3_bucket)
                                 rootname = ''
                             else:
                                 (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
-                            # sets vcs_root in case the loop through files were to end
-                            # on an empty rootname
+                            # sets vcs_root in case the loop through files were to end on an empty rootname
                             if vcs_root is None:
-                                if rootname:
-                                    vcs_root = rootname
+                              if rootname:
+                                 vcs_root = rootname
                         # gather up files with hg for indexing
                         if filename.startswith("hg"):
-                            (ver, checkout,
-                             source_file, revision) = filename.split(":", 3)
-                            sourceFileStream += sourcepath + "*" + source_file
-                            sourceFileStream += '*' + revision + "\r\n"
+                            (ver, checkout, source_file, revision) = filename.split(":", 3)
+                            sourceFileStream += sourcepath + "*" + source_file + '*' + revision + "\r\n"
                         f.write("FILE %s %s\n" % (index, filename))
                     elif line.startswith("INFO CODE_ID "):
                         # INFO CODE_ID code_id code_file
@@ -664,7 +638,7 @@ class Dumper:
 
             if 'asan' not in perfherder_extra_options.lower():
                 print('PERFHERDER_DATA: %s' % json.dumps(perfherder_data),
-                      file=sys.stderr)
+                    file=sys.stderr)
 
         elapsed = time.time() - t_start
         print('Finished processing %s in %.2fs' % (file, elapsed),
@@ -672,7 +646,6 @@ class Dumper:
 
 # Platform-specific subclasses.  For the most part, these just have
 # logic to determine what files to extract symbols from.
-
 
 def locate_pdb(path):
     '''Given a path to a binary, attempt to locate the matching pdb file with simple heuristics:
@@ -694,7 +667,6 @@ def locate_pdb(path):
         return pdb
     return None
 
-
 class Dumper_Win32(Dumper):
     fixedFilenameCaseCache = {}
 
@@ -706,9 +678,9 @@ class Dumper_Win32(Dumper):
                 return True
         return False
 
+
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         file = locate_pdb(file)
-
         def compress(path):
             compressed_file = path[:-1] + '_'
             # ignore makecab's output
@@ -772,7 +744,7 @@ class Dumper_Win32(Dumper):
             else:
                 cmd = [pdbstr]
             subprocess.call(cmd + ["-w", "-p:" + os.path.basename(debug_file),
-                                   "-i:" + os.path.basename(streamFilename), "-s:srcsrv"],
+                             "-i:" + os.path.basename(streamFilename), "-s:srcsrv"],
                             cwd=os.path.dirname(stream_output_path))
             # clean up all the .stream files when done
             os.remove(stream_output_path)
@@ -781,7 +753,6 @@ class Dumper_Win32(Dumper):
 
 class Dumper_Linux(Dumper):
     objcopy = os.environ['OBJCOPY'] if 'OBJCOPY' in os.environ else 'objcopy'
-
     def ShouldProcess(self, file):
         """This function will allow processing of files that are
         executable, or end with the .so extension, and additionally
@@ -815,14 +786,13 @@ class Dumper_Linux(Dumper):
             if os.path.isfile(file_dbg):
                 os.unlink(file_dbg)
 
-
 class Dumper_Solaris(Dumper):
     def RunFileCommand(self, file):
         """Utility function, returns the output of file(1)"""
         try:
             output = os.popen("file " + file).read()
-            return output.split('\t')[1]
-        except Exception:
+            return output.split('\t')[1];
+        except:
             return ""
 
     def ShouldProcess(self, file):
@@ -833,7 +803,6 @@ class Dumper_Solaris(Dumper):
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
-
 
 class Dumper_Mac(Dumper):
     def ShouldProcess(self, file):
@@ -942,7 +911,7 @@ class Dumper_Mac(Dumper):
                                 guid,
                                 os.path.basename(dsymbundle) + ".tar.bz2")
         full_path = os.path.abspath(os.path.join(self.symbol_path,
-                                                 rel_path))
+                                                  rel_path))
         success = subprocess.call(["tar", "cjf", full_path, os.path.basename(dsymbundle)],
                                   cwd=os.path.dirname(dsymbundle),
                                   stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
@@ -950,19 +919,14 @@ class Dumper_Mac(Dumper):
             print(rel_path)
 
 # Entry point if called as a standalone program
-
-
 def main():
-    parser = OptionParser(
-        usage="usage: %prog [options] <dump_syms binary> <symbol store path> <debug info files>")
+    parser = OptionParser(usage="usage: %prog [options] <dump_syms binary> <symbol store path> <debug info files>")
     parser.add_option("-c", "--copy",
                       action="store_true", dest="copy_debug", default=False,
-                      help="""Copy debug info files into the same directory structure
-as symbol files""")
+                      help="Copy debug info files into the same directory structure as symbol files")
     parser.add_option("-a", "--archs",
                       action="store", dest="archs",
-                      help="""Run dump_syms -a <arch> for each space separated cpu architecture
-in ARCHS (only on OS X)""")
+                      help="Run dump_syms -a <arch> for each space separated cpu architecture in ARCHS (only on OS X)")
     parser.add_option("-s", "--srcdir",
                       action="append", dest="srcdir", default=[],
                       help="Use SRCDIR to determine relative paths to source files")
@@ -971,8 +935,7 @@ in ARCHS (only on OS X)""")
                       help="Try to retrieve VCS info for each FILE listed in the output")
     parser.add_option("-i", "--source-index",
                       action="store_true", dest="srcsrv", default=False,
-                      help="""Add source index information to debug files, making them suitable
-for use in a source server.""")
+                      help="Add source index information to debug files, making them suitable for use in a source server.")
     parser.add_option("--install-manifest",
                       action="append", dest="install_manifests",
                       default=[],
@@ -985,7 +948,7 @@ to canonical locations in the source repository. Specify
                       help="Count static initializers")
     (options, args) = parser.parse_args()
 
-    # check to see if the pdbstr.exe exists
+    #check to see if the pdbstr.exe exists
     if options.srcsrv:
         if 'PDBSTR' not in buildconfig.substs:
             print("pdbstr was not found by configure.\n", file=sys.stderr)
@@ -1017,7 +980,6 @@ to canonical locations in the source repository. Specify
                                        file_mapping=file_mapping)
 
     dumper.Process(args[2], options.count_ctors)
-
 
 # run main if run directly
 if __name__ == "__main__":
