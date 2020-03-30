@@ -1708,11 +1708,13 @@ class BaseScript : public gc::TenuredCell {
   ScriptWarmUpData warmUpData_ = {};
 
   BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
-             ScriptSourceObject* sourceObject, SourceExtent extent)
+             ScriptSourceObject* sourceObject, SourceExtent extent,
+             uint32_t immutableFlags)
       : jitCodeRaw_(stubEntry),
         functionOrGlobal_(functionOrGlobal),
         sourceObject_(sourceObject),
-        extent_(extent) {
+        extent_(extent),
+        immutableScriptFlags_(immutableFlags) {
     MOZ_ASSERT(functionOrGlobal->compartment() == sourceObject->compartment());
     MOZ_ASSERT(extent_.toStringStart <= extent_.sourceStart);
     MOZ_ASSERT(extent_.sourceStart <= extent_.sourceEnd);
@@ -1724,7 +1726,8 @@ class BaseScript : public gc::TenuredCell {
   static BaseScript* CreateRawLazy(JSContext* cx, uint32_t ngcthings,
                                    HandleFunction fun,
                                    HandleScriptSourceObject sourceObject,
-                                   const SourceExtent& extent);
+                                   const SourceExtent& extent,
+                                   uint32_t immutableFlags);
 
   // Create a lazy BaseScript and initialize gc-things with provided
   // closedOverBindings and innerFunctions.
@@ -1733,7 +1736,7 @@ class BaseScript : public gc::TenuredCell {
       HandleFunction fun, HandleScriptSourceObject sourceObject,
       const frontend::AtomVector& closedOverBindings,
       const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
-      const SourceExtent& extent);
+      const SourceExtent& extent, uint32_t immutableFlags);
 
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
   bool isUsingInterpreterTrampoline(JSRuntime* rt) const;
@@ -1813,14 +1816,8 @@ class BaseScript : public gc::TenuredCell {
  public:
   ImmutableScriptFlags immutableFlags() const { return immutableScriptFlags_; }
 
-  void setImmutableFlags(uint32_t flags) { immutableScriptFlags_ = flags; }
   void addToImmutableFlags(const ImmutableScriptFlags& flags) {
     immutableScriptFlags_ |= flags;
-  }
-
-  void inheritFlagsFromParser(const ImmutableScriptFlags& flags) {
-    MOZ_ASSERT(immutableScriptFlags_ == 0);
-    immutableScriptFlags_ = flags;
   }
 
   // ImmutableFlags accessors.
@@ -2151,7 +2148,7 @@ class JSScript : public js::BaseScript {
 
   static JSScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
                        js::HandleScriptSourceObject sourceObject,
-                       const js::SourceExtent& extent);
+                       const js::SourceExtent& extent, uint32_t immutableFlags);
 
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
