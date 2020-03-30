@@ -105,6 +105,46 @@ var SiteDataTestUtils = {
   },
 
   /**
+   * Adds a new localStorage entry for the specified origin, with the specified contents.
+   *
+   * @param {String} origin - the origin of the site to add test data for
+   * @param {String} key [optional] - the localStorage key
+   * @param {String} value [optional] - the localStorage value
+   */
+  addToLocalStorage(origin, key = "foo", value = "bar") {
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      origin
+    );
+    let storage = Services.domStorageManager.createStorage(
+      null,
+      principal,
+      principal,
+      ""
+    );
+    storage.setItem("key", "value");
+  },
+
+  /**
+   * Checks whether the given origin is storing data in localStorage
+   *
+   * @param {String} origin - the origin of the site to check
+   *
+   * @returns {Boolean} whether the origin has localStorage data
+   */
+  hasLocalStorage(origin) {
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      origin
+    );
+    let storage = Services.domStorageManager.createStorage(
+      null,
+      principal,
+      principal,
+      ""
+    );
+    return !!storage.length;
+  },
+
+  /**
    * Adds a new serviceworker with the specified path. Note that this
    * method will open a new tab at the domain of the SW path to that effect.
    *
