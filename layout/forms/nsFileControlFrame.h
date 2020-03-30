@@ -25,8 +25,6 @@ class DataTransfer;
 class nsFileControlFrame final : public nsBlockFrame,
                                  public nsIFormControlFrame,
                                  public nsIAnonymousContentCreator {
-  using Element = mozilla::dom::Element;
-
  public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsFileControlFrame)
@@ -61,6 +59,7 @@ class nsFileControlFrame final : public nsBlockFrame,
 
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;
+  virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(
@@ -89,6 +88,27 @@ class nsFileControlFrame final : public nsBlockFrame,
     virtual ~MouseListener() = default;
 
     nsFileControlFrame* mFrame;
+  };
+
+  class SyncDisabledStateEvent;
+  friend class SyncDisabledStateEvent;
+  class SyncDisabledStateEvent : public mozilla::Runnable {
+   public:
+    explicit SyncDisabledStateEvent(nsFileControlFrame* aFrame)
+        : mozilla::Runnable("nsFileControlFrame::SyncDisabledStateEvent"),
+          mFrame(aFrame) {}
+
+    NS_IMETHOD Run() override {
+      nsFileControlFrame* frame =
+          static_cast<nsFileControlFrame*>(mFrame.GetFrame());
+      NS_ENSURE_STATE(frame);
+
+      frame->SyncDisabledState();
+      return NS_OK;
+    }
+
+   private:
+    WeakFrame mFrame;
   };
 
   class DnDListener : public MouseListener {
@@ -137,6 +157,11 @@ class nsFileControlFrame final : public nsBlockFrame,
   static bool CropTextToWidth(gfxContext& aRenderingContext,
                               const nsIFrame* aFrame, nscoord aWidth,
                               nsString& aText);
+
+  /**
+   * Sync the disabled state of the content with anonymous children.
+   */
+  void SyncDisabledState();
 
   /**
    * Updates the displayed value by using aValue.
