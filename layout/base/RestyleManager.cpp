@@ -1122,40 +1122,6 @@ static void SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
   }
 }
 
-static bool IsPrimaryFrameOfRootOrBodyElement(nsIFrame* aFrame) {
-  nsIContent* content = aFrame->GetContent();
-  if (!content) {
-    return false;
-  }
-
-  Document* document = content->OwnerDoc();
-  Element* root = document->GetRootElement();
-  if (!root) {
-    return false;
-  }
-  nsIFrame* rootFrame = root->GetPrimaryFrame();
-  if (!rootFrame) {
-    return false;
-  }
-  if (aFrame == rootFrame) {
-    return true;
-  }
-
-  Element* body = document->GetBodyElement();
-  if (!body) {
-    return false;
-  }
-  nsIFrame* bodyFrame = body->GetPrimaryFrame();
-  if (!bodyFrame) {
-    return false;
-  }
-  if (aFrame == bodyFrame) {
-    return true;
-  }
-
-  return false;
-}
-
 static void ApplyRenderingChangeToTree(PresShell* aPresShell, nsIFrame* aFrame,
                                        nsChangeHint aChange) {
   // We check StyleDisplay()->HasTransformStyle() in addition to checking
@@ -1185,7 +1151,7 @@ static void ApplyRenderingChangeToTree(PresShell* aPresShell, nsIFrame* aFrame,
     // the html element, we propagate the repaint change hint to the
     // viewport. This is necessary for background and scrollbar colors
     // propagation.
-    if (IsPrimaryFrameOfRootOrBodyElement(aFrame)) {
+    if (aFrame->IsPrimaryFrameOfRootOrBodyElement()) {
       nsIFrame* rootFrame = aPresShell->GetRootFrame();
       MOZ_ASSERT(rootFrame, "No root frame?");
       DoApplyRenderingChangeToTree(rootFrame, nsChangeHint_RepaintFrame);

@@ -3941,19 +3941,16 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
       mLayer(aInitData.layer),
       mIsRasterImage(aInitData.isRasterImage),
       mShouldFixToViewport(aInitData.shouldFixToViewport),
-      mImageFlags(0),
-      mAssociatedImage(false) {
+      mImageFlags(0) {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
-
-  // If we have the same background style as our frame we know we're not going
-  // to need to associate our image to the frame. nsFrame::DidSetComputedStyle
-  // would've done that for us already.
-  //
-  // We need to check this here because the style frame pointer of the frame may
-  // change (and doesn't have to invalidate the display item unless background
-  // styles change).
-  mTriedToAssociateImage =
-      !(mBackgroundStyle && mBackgroundStyle != mFrame->Style());
+#ifdef DEBUG
+  if (mBackgroundStyle && mBackgroundStyle != mFrame->Style()) {
+    // If this changes, then you also need to adjust css::ImageLoader to
+    // invalidate mFrame as needed.
+    MOZ_ASSERT(mFrame->IsCanvasFrame() ||
+               mFrame->IsFrameOfType(nsIFrame::eTablePart));
+  }
+#endif
 
   mBounds = GetBoundsInternal(aInitData.builder, aFrameForBounds);
   if (mShouldFixToViewport) {
@@ -3970,25 +3967,8 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   }
 }
 
-void nsDisplayBackgroundImage::DisassociateImage() {
-  MOZ_ASSERT(mAssociatedImage);
-  MOZ_ASSERT(mFrame);
-
-  if (mFrame->HasImageRequest()) {
-    // We need to check HasImageRequest because the frame may already have
-    // cleared all its requests in some other way before us.
-    auto& layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
-    mFrame->DisassociateImage(layer.mImage);
-  }
-
-  mAssociatedImage = false;
-}
-
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage() {
   MOZ_COUNT_DTOR(nsDisplayBackgroundImage);
-  if (mAssociatedImage) {
-    DisassociateImage();
-  }
   if (mDependentFrame) {
     mDependentFrame->RemoveDisplayItem(this);
   }
@@ -4537,8 +4517,6 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  AssociateImageIfNeeded();
-
   if (!CanBuildWebRenderDisplayItems(aManager->LayerManager(),
                                      aDisplayListBuilder)) {
     return false;
@@ -4684,17 +4662,6 @@ bool nsDisplayBackgroundImage::RenderingMightDependOnPositioningAreaSizeChange()
   return false;
 }
 
-void nsDisplayBackgroundImage::AssociateImageIfNeeded() {
-  if (mTriedToAssociateImage) {
-    return;
-  }
-  mTriedToAssociateImage = true;
-  auto& layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
-  if (mFrame->AssociateImage(layer.mImage)) {
-    mAssociatedImage = true;
-  }
-}
-
 void nsDisplayBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                      gfxContext* aCtx) {
   PaintInternal(aBuilder, aCtx, GetPaintRect(), &mBounds);
@@ -4704,7 +4671,6 @@ void nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
                                              gfxContext* aCtx,
                                              const nsRect& aBounds,
                                              nsRect* aClipRect) {
-  AssociateImageIfNeeded();
   gfxContext* ctx = aCtx;
   StyleGeometryBox clip =
       mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer].mClip;
