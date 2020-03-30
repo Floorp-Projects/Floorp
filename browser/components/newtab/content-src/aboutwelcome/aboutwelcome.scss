@@ -7,6 +7,7 @@
 $break-point-medium: 610px;
 $break-point-large: 866px;
 $break-point-widest: 1122px;
+$onboarding-card-image-width: 140px;
 
 html {
   height: 100%;
@@ -194,8 +195,8 @@ body {
 
 .onboardingMessageImage {
   height: 112px;
-  width: 120px;
-  background-size: auto 140px;
+  width: $onboarding-card-image-width;
+  background-size: auto $onboarding-card-image-width;
   background-position: center center;
   background-repeat: no-repeat;
   display: inline-block;
@@ -203,12 +204,12 @@ body {
   @media (max-width: $break-point-large) {
     height: 75px;
     min-width: 80px;
-    background-size: 140px;
+    background-size: $onboarding-card-image-width;
   }
 
   @media (min-width: $break-point-widest) {
-    width: 230px;
-    background-size: auto 140px;
+    width: $onboarding-card-image-width;
+    background-size: auto $onboarding-card-image-width;
   }
 }
 

@@ -172,7 +172,7 @@ body {
 
 .onboardingMessageImage {
   height: 112px;
-  width: 120px;
+  width: 140px;
   background-size: auto 140px;
   background-position: center center;
   background-repeat: no-repeat;
@@ -184,7 +184,7 @@ body {
       background-size: 140px; } }
   @media (min-width: 1122px) {
     .onboardingMessageImage {
-      width: 230px;
+      width: 140px;
       background-size: auto 140px; } }
 
 .start-button {
