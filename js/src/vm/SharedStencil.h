@@ -98,6 +98,9 @@ class ScriptFlagBase {
   uint32_t flags_ = 0;
 
  public:
+  ScriptFlagBase() = default;
+  explicit ScriptFlagBase(uint32_t rawFlags) : flags_(rawFlags) {}
+
   MOZ_MUST_USE bool hasFlag(EnumType flag) const {
     return flags_ & static_cast<uint32_t>(flag);
   }
@@ -258,7 +261,7 @@ class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
   // Specific accessors for flag values are defined with
   // IMMUTABLE_FLAG_* macros below.
  public:
-  ImmutableScriptFlags() = default;
+  using ScriptFlagBase<ImmutableScriptFlagsEnum>::ScriptFlagBase;
 
   void static_asserts() {
     static_assert(sizeof(ImmutableScriptFlags) == sizeof(flags_),

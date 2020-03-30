@@ -382,9 +382,8 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
   BINJS_TRY_DECL(lazy, BaseScript::CreateLazy(
                            cx_, this->getCompilationInfo(), fun, sourceObject_,
                            pc_->closedOverBindingsForLazy(),
-                           pc_->innerFunctionIndexesForLazy, extent));
-
-  lazy->inheritFlagsFromParser(funbox->immutableFlags());
+                           pc_->innerFunctionIndexesForLazy, extent,
+                           funbox->immutableFlags()));
 
   if (funbox->strict()) {
     lazy->setStrict();
