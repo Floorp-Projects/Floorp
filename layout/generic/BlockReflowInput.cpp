@@ -119,12 +119,12 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
     // We are in a paginated situation. The block-end edge is just inside the
     // block-end border and padding. The content area block-size doesn't include
     // either border or padding edge.
-    mBEndEdge = aReflowInput.AvailableBSize() - mBorderPadding.BEnd(wm);
-    mContentArea.BSize(wm) = std::max(0, mBEndEdge - mBorderPadding.BStart(wm));
+    mContentArea.BSize(wm) = std::max(
+        0, aReflowInput.AvailableBSize() - mBorderPadding.BStartEnd(wm));
   } else {
     // When we are not in a paginated situation, then we always use a
     // unconstrained block-size.
-    mContentArea.BSize(wm) = mBEndEdge = NS_UNCONSTRAINEDSIZE;
+    mContentArea.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   }
   mContentArea.IStart(wm) = mBorderPadding.IStart(wm);
   mBCoord = mContentArea.BStart(wm) = mBorderPadding.BStart(wm);
@@ -191,9 +191,9 @@ void BlockReflowInput::ComputeBlockAvailSpace(
   aResult.BStart(wm) = mBCoord;
   aResult.BSize(wm) = availBSize == NS_UNCONSTRAINEDSIZE ? NS_UNCONSTRAINEDSIZE
                                                          : availBSize - mBCoord;
-  // mBCoord might be greater than mBEndEdge if the block's top margin pushes
-  // it off the page/column. Negative available block-size can confuse other
-  // code and is nonsense in principle.
+  // mBCoord might be greater than ContentBEnd() if the block's top margin
+  // pushes it off the page/column. Negative available block-size can confuse
+  // other code and is nonsense in principle.
 
   // XXX Do we really want this condition to be this restrictive (i.e.,
   // more restrictive than it used to be)?  The |else| here is allowed
