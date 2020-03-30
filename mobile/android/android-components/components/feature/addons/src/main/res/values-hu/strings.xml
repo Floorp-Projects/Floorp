@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Hozzáadás ehhez: %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">A Firefox kiegészítő technológiája modernizálódik. Ezek a kiegészítők olyan keretrendszereket használnak, amelyek nem kompatibilisek a Firefox 75 és újabb verziókkal.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Jelenleg is dolgozunk azon, hogy elérhetővé tegyük az első ajánlott kiegészítőket.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Kiegészítő letöltése és ellenőrzése…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

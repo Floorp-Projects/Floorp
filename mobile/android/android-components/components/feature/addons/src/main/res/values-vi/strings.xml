@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Thêm chúng vào %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Công nghệ tiện ích Firefox đang hiện đại hóa. Các tiện ích mở rộng này sử dụng các framework mà nó không tương thích với Firefox 75 và mới hơn.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Chúng tôi hiện đang xây dựng hỗ trợ cho lựa chọn ban đầu của Tiện ích mở rộng được đề xuất.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Đang tải xuống và xác minh tiện ích…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->

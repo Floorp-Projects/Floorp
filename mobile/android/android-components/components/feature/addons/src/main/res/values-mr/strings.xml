@@ -124,6 +124,10 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s व %2$s ला %3$s मध्ये जोडा</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">त्यांना %1$s मध्ये जोडा</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Firefox अ‍ॅड-ऑन तंत्रज्ञान आधुनिक होत आहे. हे अ‍ॅड-ऑन फ्रेमवर्क वापरतात जे Firefox 75 आणि त्यानंतरच्या आवृत्तींसोबत सुसंगत नाहीत.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">आम्ही सध्या शिफारस केलेल्या विस्तारांच्या प्रारंभिक निवडीसाठी समर्थन तयार करत आहोत.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">अ‍ॅड-ऑन डाउनलोड आणि सत्यापित करीत आहे…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
