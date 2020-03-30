@@ -9,6 +9,7 @@
 import argparse
 import json
 import os
+import statistics
 import subprocess
 import sys
 import tarfile
@@ -123,8 +124,7 @@ def compute_median(subtest):
     """
     if "replicates" not in subtest:
         return subtest
-    series = subtest["replicates"][1:]
-    subtest["value"] = float(sum(series)) / float(len(series))
+    subtest["value"] = statistics.median(subtest["replicates"])
     return subtest
 
 
