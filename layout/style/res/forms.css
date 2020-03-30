@@ -985,6 +985,9 @@ input[type=number]::-moz-number-wrapper {
   float: none !important;
   position: static !important;
   block-size: 100%;
+  /* The align-self: center bit below allows the editor to be potentially
+   * bigger than us. Clip it to match other text fields. */
+  overflow: -moz-hidden-unscrollable;
 }
 
 input[type=number]::-moz-text-control-editing-root {
@@ -993,9 +996,12 @@ input[type=number]::-moz-text-control-editing-root {
                      inside of form controls. So, we hardcode display here. */
   flex: 1;
   min-inline-size: 0;
+  /* This makes it overflow into the flex container padding if needed, instead
+   * of getting squashed or pushed down by it */
   align-self: center;
-  /* This prevents double-applying the padding */
-  padding-inline: 0;
+  /* This prevents double-applying the padding, which our flex container gets
+   * via the override in nsTextControlFrame::ReflowTextControlChild */
+  padding: 0;
 }
 
 input[type=number]::-moz-number-spin-box {
