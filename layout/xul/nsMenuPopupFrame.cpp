@@ -536,8 +536,25 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
   prefSize = BoundsCheck(minSize, prefSize, maxSize);
 
-  // if the size changed then set the bounds to be the preferred size
   bool sizeChanged = (mPrefSize != prefSize);
+
+  nsView* view = GetView();
+#ifdef MOZ_WAYLAND
+  NS_ASSERTION(view, "popup with no view");
+  nsIWidget* widget = view->GetWidget();
+  if (widget) {
+    nsRect prefRect = widget->GetPreferredPopupRect();
+    if (prefRect.width > 0 && prefRect.height > 0) {
+      mPrefSize = nsSize(prefRect.width, prefRect.height);
+      mRect.SizeTo(prefRect.width, prefRect.height);
+      sizeChanged = false;
+    }
+  } else {
+    NS_WARNING("No widget associated with popup frame.");
+  }
+#endif
+
+  // if the size changed then set the bounds to be the preferred size
   if (sizeChanged) {
     SetXULBounds(aState, nsRect(0, 0, prefSize.width, prefSize.height), false);
     mPrefSize = prefSize;
@@ -576,7 +593,6 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
 
   nsPresContext* pc = PresContext();
-  nsView* view = GetView();
 
   if (sizeChanged) {
     // If the size of the popup changed, apply any size constraints.
@@ -1407,7 +1423,21 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // tell us which axis the popup is flush against in case we have to move
       // it around later. The AdjustPositionForAnchorAlign method accounts for
       // the popup's margin.
-      screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
+
+#ifdef MOZ_WAYLAND
+      static bool inWayland = gdk_display_get_default() &&
+                              !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+#else
+      static bool inWayland = false;
+#endif
+      if (inWayland) {
+        screenPoint = nsPoint(anchorRect.x, anchorRect.y);
+#ifdef MOZ_WAYLAND
+        mAnchorRect = anchorRect;
+#endif
+      } else {
+        screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
+      }
     } else {
       // with no anchor, the popup is positioned relative to the root frame
       anchorRect = rootScreenRect;

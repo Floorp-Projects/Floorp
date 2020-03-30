@@ -427,6 +427,9 @@ class nsWindow final : public nsBaseWidget {
   static bool TitlebarCanUseShapeMask();
 #ifdef MOZ_WAYLAND
   virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) override;
+  virtual nsRect GetPreferredPopupRect() override {
+    return mPreferredPopupRect;
+  };
 #endif
   bool IsRemoteContent() { return HasRemoteContent(); }
   static void HideWaylandOpenedPopups();
@@ -694,6 +697,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWindow* GetCurrentWindow();
   GtkWindow* GetTopmostWindow();
   bool IsWidgetOverflowWindow();
+  nsRect mPreferredPopupRect;
 
   /**
    * |mIMContext| takes all IME related stuff.
