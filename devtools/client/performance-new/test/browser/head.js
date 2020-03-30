@@ -164,6 +164,11 @@ async function makeSureProfilerPopupIsEnabled() {
   );
 
   if (!ProfilerMenuButton.isInNavbar()) {
+    // Make sure the feature flag is enabled.
+    SpecialPowers.pushPrefEnv({
+      set: [["devtools.performance.popup.feature-flag", true]],
+    });
+
     info("> The menu button is not in the nav bar, add it.");
     ProfilerMenuButton.addToNavbar(document);
 
