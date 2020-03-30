@@ -513,7 +513,9 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       for (const script of childScripts) {
         if (scriptMatches(script)) {
           rv.push(script);
-          addMatchingScripts(script.getChildScripts());
+          if (script.format === "js") {
+            addMatchingScripts(script.getChildScripts());
+          }
         }
       }
     }
