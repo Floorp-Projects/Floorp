@@ -229,7 +229,9 @@ def main(argv):
 
     if options.run_binast:
         code = 'print(getBuildConfiguration().binast)'
-        is_binast_enabled = subprocess.check_output([js_shell, '-e', code])
+        is_binast_enabled = subprocess.check_output(
+            [js_shell, '-e', code]
+        ).decode(errors='replace')
         if not is_binast_enabled.startswith('true'):
             print("While --run-binast is specified, BinAST is not enabled.",
                   file=sys.stderr)
