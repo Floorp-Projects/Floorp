@@ -2503,6 +2503,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
         ContentBlocking::ShouldAllowAccessFor(newInnerWindow, uri, nullptr);
   }
 
+  newInnerWindow->GetWindowGlobalChild()
+      ->WindowContext()
+      ->SetHasStoragePermission(aDocument->HasStoragePermission());
+
   return NS_OK;
 }
 
