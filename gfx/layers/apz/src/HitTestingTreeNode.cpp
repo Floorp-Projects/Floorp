@@ -50,8 +50,11 @@ void HitTestingTreeNode::RecycleWith(
   mApzc = aApzc;
   mLayersId = aLayersId;
   MOZ_ASSERT(!mApzc || mApzc->GetLayersId() == mLayersId);
-  // The caller is expected to call SetHitTestData to repopulate the hit-test
-  // fields.
+  // The caller is expected to call appropriate setters (SetHitTestData,
+  // SetScrollbarData, SetFixedPosData, SetStickyPosData, etc.) to repopulate
+  // all the data fields before using this node for "real work". Otherwise
+  // those data fields may contain stale information from the previous use
+  // of this node object.
 }
 
 HitTestingTreeNode::~HitTestingTreeNode() = default;
