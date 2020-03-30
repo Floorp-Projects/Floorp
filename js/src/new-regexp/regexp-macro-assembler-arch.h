@@ -76,6 +76,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckNotAtStart(int cp_offset, Label* on_not_at_start);
   virtual void CheckPosition(int cp_offset, Label* on_outside_input);
   virtual void CheckBitInTable(Handle<ByteArray> table, Label* on_bit_set);
+  virtual bool CheckSpecialCharacterClass(uc16 type, Label* on_no_match);
 
   virtual void LoadCurrentCharacterImpl(int cp_offset, Label* on_end_of_input,
                                         bool check_bounds, int characters,

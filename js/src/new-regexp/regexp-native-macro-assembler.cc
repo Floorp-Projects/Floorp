@@ -252,6 +252,145 @@ void SMRegExpMacroAssembler::CheckPosition(int cp_offset,
   }
 }
 
+// This function attempts to generate special case code for character classes.
+// Returns true if a special case is generated.
+// Otherwise returns false and generates no code.
+bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
+                                                        Label* on_no_match) {
+  js::jit::Label* no_match = LabelOrBacktrack(on_no_match);
+
+  // Note: throughout this function, range checks (c in [min, max])
+  // are implemented by an unsigned (c - min) <= (max - min) check.
+  switch (type) {
+    case 's': {
+      // Match space-characters
+      if (mode_ != LATIN1) {
+        return false;
+      }
+      js::jit::Label success;
+      // One byte space characters are ' ', '\t'..'\r', and '\u00a0' (NBSP).
+
+      // Check ' '
+      masm_.branch32(Assembler::Equal, current_character_, Imm32(' '),
+                     &success);
+
+      // Check '\t'..'\r'
+      masm_.computeEffectiveAddress(Address(current_character_, -'\t'),
+                                    temp0_);
+      masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32('\r' - '\t'),
+                     &success);
+
+      // Check \u00a0.
+      masm_.branch32(Assembler::NotEqual, temp0_, Imm32(0x00a0 - '\t'),
+                     no_match);
+
+      masm_.bind(&success);
+      return true;
+    }
+    case 'S':
+      // The emitted code for generic character classes is good enough.
+      return false;
+    case 'd':
+      // Match latin1 digits ('0'-'9')
+      masm_.computeEffectiveAddress(Address(current_character_, -'0'), temp0_);
+      masm_.branch32(Assembler::Above, temp0_, Imm32('9' - '0'), no_match);
+      return true;
+    case 'D':
+      // Match anything except latin1 digits ('0'-'9')
+      masm_.computeEffectiveAddress(Address(current_character_, -'0'), temp0_);
+      masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32('9' - '0'),
+                     no_match);
+      return true;
+    case '.':
+      // Match non-newlines. This excludes '\n' (0x0a), '\r' (0x0d),
+      // U+2028 LINE SEPARATOR, and U+2029 PARAGRAPH SEPARATOR.
+      // See https://tc39.es/ecma262/#prod-LineTerminator
+
+      // To test for 0x0a and 0x0d efficiently, we XOR the input with 1.
+      // This converts 0x0a to 0x0b, and 0x0d to 0x0c, allowing us to
+      // test for the contiguous range 0x0b..0x0c.
+      masm_.move32(current_character_, temp0_);
+      masm_.xor32(Imm32(0x01), temp0_);
+      masm_.sub32(Imm32(0x0b), temp0_);
+      masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32(0x0c - 0x0b),
+                     no_match);
+
+      if (mode_ == UC16) {
+        // Compare original value to 0x2028 and 0x2029, using the already
+        // computed (current_char ^ 0x01 - 0x0b). I.e., check for
+        // 0x201d (0x2028 - 0x0b) or 0x201e.
+        masm_.sub32(Imm32(0x2028 - 0x0b), temp0_);
+        masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32(0x2029 - 0x2028),
+                       no_match);
+      }
+      return true;
+    case 'w':
+      // \w matches the set of 63 characters defined in Runtime Semantics:
+      // WordCharacters. We use a static lookup table, which is defined in
+      // regexp-macro-assembler.cc.
+      // Note: if both Unicode and IgnoreCase are true, \w matches a
+      // larger set of characters. That case is handled elsewhere.
+      if (mode_ != LATIN1) {
+        masm_.branch32(Assembler::Above, current_character_, Imm32('z'),
+                       no_match);
+      }
+      static_assert(arraysize(word_character_map) > unibrow::Latin1::kMaxChar);
+      masm_.movePtr(ImmPtr(word_character_map), temp0_);
+      masm_.load8ZeroExtend(
+          BaseIndex(temp0_, current_character_, js::jit::TimesOne), temp0_);
+      masm_.branchTest32(Assembler::Zero, temp0_, temp0_, no_match);
+      return true;
+    case 'W': {
+      // See 'w' above.
+      js::jit::Label done;
+      if (mode_ != LATIN1) {
+        masm_.branch32(Assembler::Above, current_character_, Imm32('z'), &done);
+      }
+      static_assert(arraysize(word_character_map) > unibrow::Latin1::kMaxChar);
+      masm_.movePtr(ImmPtr(word_character_map), temp0_);
+      masm_.load8ZeroExtend(
+          BaseIndex(temp0_, current_character_, js::jit::TimesOne), temp0_);
+      masm_.branchTest32(Assembler::NonZero, temp0_, temp0_, no_match);
+      if (mode_ != LATIN1) {
+        masm_.bind(&done);
+      }
+      return true;
+    }
+      ////////////////////////////////////////////////////////////////////////
+      // Non-standard classes (with no syntactic shorthand) used internally //
+      ////////////////////////////////////////////////////////////////////////
+    case '*':
+      // Match any character
+      return true;
+    case 'n':
+      // Match newlines. The opposite of '.'. See '.' above.
+      masm_.move32(current_character_, temp0_);
+      masm_.xor32(Imm32(0x01), temp0_);
+      masm_.sub32(Imm32(0x0b), temp0_);
+      if (mode_ == LATIN1) {
+        masm_.branch32(Assembler::Above, temp0_, Imm32(0x0c - 0x0b), no_match);
+      } else {
+        MOZ_ASSERT(mode_ == UC16);
+        js::jit::Label done;
+        masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32(0x0c - 0x0b),
+                       &done);
+
+        // Compare original value to 0x2028 and 0x2029, using the already
+        // computed (current_char ^ 0x01 - 0x0b). I.e., check for
+        // 0x201d (0x2028 - 0x0b) or 0x201e.
+        masm_.sub32(Imm32(0x2028 - 0x0b), temp0_);
+        masm_.branch32(Assembler::Above, temp0_, Imm32(0x2029 - 0x2028),
+                       no_match);
+        masm_.bind(&done);
+      }
+      return true;
+
+      // No custom implementation
+    default:
+      return false;
+  }
+}
+
 void SMRegExpMacroAssembler::Fail() {
   masm_.movePtr(ImmWord(js::RegExpRunStatus_Success_NotFound), temp0_);
   masm_.jump(&exit_label_);
