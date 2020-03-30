@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "24.0.0"
+version = "25.1.0"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["README.md", "LICENSE", "src/**/*", "examples/**/*", "tests/**/*", "Cargo.toml"]
 description = "A modern Telemetry library"
@@ -29,7 +29,7 @@ version = "0.4.10"
 features = ["serde"]
 
 [dependencies.ffi-support]
-version = "0.3.5"
+version = "0.4.0"
 
 [dependencies.lazy_static]
 version = "1.4.0"
@@ -71,6 +71,9 @@ version = "0.3"
 
 [dev-dependencies.tempfile]
 version = "3.1.0"
+
+[features]
+upload = []
 [badges.circle-ci]
 branch = "master"
 repository = "mozilla/glean"

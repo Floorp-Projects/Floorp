@@ -231,4 +231,28 @@ mod test {
             StorageManager.snapshot_experiments_as_json(glean.storage(), "glean_internal_info");
         assert!(empty_snapshot.is_none());
     }
+
+    #[test]
+    fn test_experiments_json_serialization_empty() {
+        let t = tempfile::tempdir().unwrap();
+        let name = t.path().display().to_string();
+        let glean = Glean::with_options(&name, "org.mozilla.glean", true).unwrap();
+
+        let metric = ExperimentMetric::new(&glean, "some-experiment".to_string());
+
+        metric.set_active(&glean, "test-branch".to_string(), None);
+        let snapshot = StorageManager
+            .snapshot_experiments_as_json(glean.storage(), "glean_internal_info")
+            .unwrap();
+        assert_eq!(
+            json!({"some-experiment": {"branch": "test-branch"}}),
+            snapshot
+        );
+
+        metric.set_inactive(&glean);
+
+        let empty_snapshot =
+            StorageManager.snapshot_experiments_as_json(glean.storage(), "glean_internal_info");
+        assert!(empty_snapshot.is_none());
+    }
 }
