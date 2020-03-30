@@ -96,6 +96,10 @@ class WebConsole {
     return this.toolbox.targetList;
   }
 
+  get resourceWatcher() {
+    return this.toolbox.resourceWatcher;
+  }
+
   /**
    * Getter for the window that can provide various utilities that the web
    * console makes use of, like opening links, managing popups, etc.  In

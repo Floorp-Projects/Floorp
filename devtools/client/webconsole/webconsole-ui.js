@@ -73,6 +73,7 @@ class WebConsoleUI {
     );
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
+    this._onResourceAvailable = this._onResourceAvailable.bind(this);
 
     EventEmitter.decorate(this);
   }
@@ -192,6 +193,11 @@ class WebConsoleUI {
       targetList.ALL_TYPES,
       this._onTargetAvailable,
       this._onTargetDestroy
+    );
+    const resourceWatcher = this.hud.resourceWatcher;
+    resourceWatcher.unwatch(
+      [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+      this._onResourceAvailable
     );
 
     for (const proxy of this.getAllProxies()) {
@@ -322,6 +328,21 @@ class WebConsoleUI {
       this._onTargetAvailable,
       this._onTargetDestroy
     );
+    const resourceWatcher = this.hud.resourceWatcher;
+    await resourceWatcher.watch(
+      [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+      this._onResourceAvailable
+    );
+  }
+
+  _onResourceAvailable({ resourceType, targetFront, resource }) {
+    const resourceWatcher = this.hud.resourceWatcher;
+    if (resourceType == resourceWatcher.TYPES.CONSOLE_MESSAGES) {
+      // resource is the packet sent from `ConsoleActor.getCachedMessages().messages`
+      // or via ConsoleActor's `consoleAPICall` event.
+      resource.type = "consoleAPICall";
+      this.wrapper.dispatchMessageAdd(resource);
+    }
   }
 
   /**
