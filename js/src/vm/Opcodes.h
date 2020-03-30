@@ -1978,21 +1978,44 @@
      */ \
     MACRO(CheckThisReinit, check_this_reinit, NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Initializes generator frame, creates a generator and pushes it on the
-     * stack.
+     * Create and push a generator object for the current frame.
+     *
+     * This instruction must appear only in scripts for generators, async
+     * functions, and async generators. There must not already be a generator
+     * object for the current frame (that is, this instruction must execute at
+     * most once per generator or async call).
      *
      *   Category: Functions
      *   Type: Generators and async functions
      *   Operands:
-     *   Stack: => generator
+     *   Stack: => gen
      */ \
     MACRO(Generator, generator, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pops the generator from the top of the stack, suspends it and stops
-     * execution.
+     * Suspend the current generator and return to the caller.
      *
-     * When resuming execution, JSOp::Resume pushes the rval, gen and resumeKind
-     * values. resumeKind is the GeneratorResumeKind stored as int32.
+     * When a generator is called, its script starts running, like any other JS
+     * function, because [FunctionDeclarationInstantation][1] and other
+     * [generator object setup][2] are implemented mostly in bytecode. However,
+     * the *FunctionBody* of the generator is not supposed to start running
+     * until the first `.next()` call, so after setup the script suspends
+     * itself: the "initial yield".
+     *
+     * Later, when resuming execution, `rval`, `gen` and `resumeKind` will
+     * receive the values passed in by `JSOp::Resume`. `resumeKind` is the
+     * `GeneratorResumeKind` stored as an Int32 value.
+     *
+     * This instruction must appear only in scripts for generators and async
+     * generators. `gen` must be the generator object for the current frame. It
+     * must not have been previously suspended. The resume point indicated by
+     * `resumeIndex` must be the next instruction in the script, which must be
+     * `AfterYield`.
+     *
+     * Implements: [GeneratorStart][3], steps 4-7.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
+     * [2]: https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody
+     * [3]: https://tc39.es/ecma262/#sec-generatorstart
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2001,11 +2024,14 @@
      */ \
     MACRO(InitialYield, initial_yield, NULL, 4, 1, 3, JOF_RESUMEINDEX) \
     /*
-     * Bytecode emitted after 'yield' expressions. This is useful for the
+     * Bytecode emitted after `yield` expressions. This is useful for the
      * Debugger and `AbstractGeneratorObject::isAfterYieldOrAwait`. It's
      * treated as jump target op so that the Baseline Interpreter can
      * efficiently restore the frame's interpreterICEntry when resuming a
      * generator.
+     *
+     * The preceding instruction in the script must be `Yield`, `InitialYield`,
+     * or `Await`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2014,8 +2040,18 @@
      */ \
     MACRO(AfterYield, after_yield, NULL, 5, 0, 0, JOF_ICINDEX) \
     /*
-     * Pops the generator and suspends and closes it. Yields the value in the
-     * frame's return value slot.
+     * Suspend and close the current generator, async function, or async
+     * generator.
+     *
+     * `gen` must be the generator object for the current frame.
+     *
+     * If the current function is a non-async generator, then the value in the
+     * frame's return value slot is returned to the caller. It should be an
+     * object of the form `{value: returnValue, done: true}`.
+     *
+     * If the current function is an async function or async generator, the
+     * frame's return value slot must contain the current frame's result
+     * promise, which must already be resolved or rejected.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2024,11 +2060,26 @@
      */ \
     MACRO(FinalYieldRval, final_yield_rval, NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Pops the generator and the return value 'rval1', stops execution and
-     * returns 'rval1'.
+     * Suspend execution of the current generator or async generator, returning
+     * `rval1`.
      *
-     * When resuming execution, JSOp::Resume pushes the rval2, gen and resumeKind
-     * values.
+     * For non-async generators, `rval1` should be an object of the form
+     * `{value: valueToYield, done: true}`. For async generators, `rval1`
+     * should be the value to yield, and the caller is responsible for creating
+     * the iterator result object (under `js::AsyncGeneratorYield`).
+     *
+     * This instruction must appear only in scripts for generators and async
+     * generators. `gen` must be the generator object for the current stack
+     * frame. The resume point indicated by `resumeIndex` must be the next
+     * instruction in the script, which must be `AfterYield`.
+     *
+     * When resuming execution, `rval2`, `gen` and `resumeKind` receive the
+     * values passed in by `JSOp::Resume`.
+     *
+     * Implements: [GeneratorYield][1] and [AsyncGeneratorYield][2].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-generatoryield
+     * [2]: https://tc39.es/ecma262/#sec-asyncgeneratoryield
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2047,10 +2098,25 @@
      */ \
     MACRO(IsGenClosing, is_gen_closing, NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Pops the top two values 'value' and 'gen' from the stack, then starts
-     * "awaiting" for 'value' to be resolved, which will then resume the
-     * execution of 'gen'. Pushes the async function promise on the stack, so
-     * that it'll be returned to the caller on the very first "await".
+     * Arrange for this async function to resume asynchronously when `value`
+     * becomes resolved.
+     *
+     * This is the last thing an async function does before suspending for an
+     * `await` expression. It coerces the awaited `value` to a promise and
+     * effectively calls `.then()` on it, passing handler functions that will
+     * resume this async function call later. See `js::AsyncFunctionAwait`.
+     *
+     * This instruction must appear only in non-generator async function
+     * scripts. `gen` must be the internal generator object for the current
+     * frame. After this instruction, the script should suspend itself with
+     * `Await` (rather than exiting any other way).
+     *
+     * The result `promise` is the async function's result promise,
+     * `gen->as<AsyncFunctionGeneratorObject>().promise()`.
+     *
+     * Implements: [Await][1], steps 2-9.
+     *
+     * [1]: https://tc39.github.io/ecma262/#await
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2059,10 +2125,21 @@
      */ \
     MACRO(AsyncAwait, async_await, NULL, 1, 2, 1, JOF_BYTE) \
     /*
-     * Pops the top two values 'valueOrReason' and 'gen' from the stack, then
-     * pushes the promise resolved with 'valueOrReason'. `gen` must be the
-     * internal generator object created in async functions. The pushed promise
-     * is the async function's result promise, which is stored in `gen`.
+     * Resolve or reject the current async function's result promise with
+     * 'valueOrReason'.
+     *
+     * This instruction must appear only in non-generator async function
+     * scripts. `gen` must be the internal generator object for the current
+     * frame. This instruction must run at most once per async function call,
+     * as resolving/rejecting an already resolved/rejected promise is not
+     * permitted.
+     *
+     * The result `promise` is the async function's result promise,
+     * `gen->as<AsyncFunctionGeneratorObject>().promise()`.
+     *
+     * Implements: [AsyncFunctionStart][1], step 4.d.i. and 4.e.i.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2071,11 +2148,51 @@
      */ \
     MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \
     /*
-     * Pops the generator and the return value 'promise', stops execution and
-     * returns 'promise'.
+     * Suspend the current frame for an `await` expression.
      *
-     * When resuming execution, JSOp::Resume pushes the resolved, gen and
-     * resumeKind values. resumeKind is the GeneratorResumeKind stored as int32.
+     * This instruction must appear only in scripts for async functions and
+     * async generators. `gen` must be the internal generator object for the
+     * current frame.
+     *
+     * This returns `promise` to the caller. Later, when this async call is
+     * resumed, `resolved`, `gen` and `resumeKind` receive the values passed in
+     * by `JSOp::Resume`, and execution continues at the next instruction,
+     * which must be `AfterYield`.
+     *
+     * This instruction is used in two subtly different ways.
+     *
+     * 1.  In async functions:
+     *
+     *         ...                          # valueToAwait
+     *         GetAliasedVar ".generator"   # valueToAwait gen
+     *         AsyncAwait                   # resultPromise
+     *         GetAliasedVar ".generator"   # resultPromise gen
+     *         Await                        # resolved gen resumeKind
+     *         AfterYield
+     *
+     *     `AsyncAwait` arranges for this frame to be resumed later and pushes
+     *     its result promise. `Await` then suspends the frame and removes it
+     *     from the stack, returning the result promise to the caller. (If this
+     *     async call hasn't awaited before, the caller may be user code.
+     *     Otherwise, the caller is self-hosted code using `resumeGenerator`.)
+     *
+     * 2.  In async generators:
+     *
+     *         ...                          # valueToAwait
+     *         GetAliasedVar ".generator"   # valueToAwait gen
+     *         Await                        # resolved gen resumeKind
+     *         AfterYield
+     *
+     *     `AsyncAwait` is not used, so (1) the value returned to the caller by
+     *     `Await` is `valueToAwait`, not `resultPromise`; and (2) the caller
+     *     is responsible for doing the async-generator equivalent of
+     *     `AsyncAwait` (namely, `js::AsyncGeneratorAwait`, called from
+     *     `js::AsyncGeneratorResume` after `js::CallSelfHostedFunction`
+     *     returns).
+     *
+     * Implements: [Await][1], steps 10-12.
+     *
+     * [1]: https://tc39.es/ecma262/#await
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2084,16 +2201,20 @@
      */ \
     MACRO(Await, await, NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
-     * Pops the top of stack value as 'value', checks if the await for 'value'
-     * can be skipped. If the await operation can be skipped and the resolution
-     * value for 'value' can be acquired, pushes the resolution value and
-     * 'true' onto the stack. Otherwise, pushes 'value' and 'false' on the
-     * stack.
+     * Decide whether awaiting 'value' can be skipped.
+     *
+     * This is part of an optimization for `await` expressions. Programs very
+     * often await values that aren't promises, or promises that are already
+     * resolved. We can then sometimes skip suspending the current frame and
+     * returning to the microtask loop. If the circumstances permit the
+     * optimization, `TrySkipAwait` replaces `value` with the result of the
+     * `await` expression (unwrapping the resolved promise, if any) and pushes
+     * `true`. Otherwise, it leaves `value` unchanged and pushes 'false'.
      *
      *   Category: Functions
      *   Type: Generators and async functions
      *   Operands:
-     *   Stack: value => value_or_resolved, canskip
+     *   Stack: value => value_or_resolved, can_skip
      */ \
     MACRO(TrySkipAwait, try_skip_await, NULL, 1, 1, 2, JOF_BYTE) \
     /*
@@ -2106,10 +2227,13 @@
      */ \
     MACRO(ResumeKind, resume_kind, NULL, 2, 0, 1, JOF_UINT8) \
     /*
-     * Pops the generator and resumeKind values. resumeKind is the
-     * GeneratorResumeKind stored as int32. If resumeKind is Next, continue
-     * execution. If resumeKind is Throw or Return, these completions are
-     * handled by throwing an exception. See GeneratorThrowOrReturn.
+     * Handle Throw and Return resumption.
+     *
+     * `gen` must be the generator object for the current frame. `resumeKind`
+     * must be a `GeneratorResumeKind` stored as an `Int32` value. If it is
+     * `Next`, continue to the next instruction. If `resumeKind` is `Throw` or
+     * `Return`, these completions are handled by throwing an exception. See
+     * `GeneratorThrowOrReturn`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2118,9 +2242,19 @@
      */ \
     MACRO(CheckResumeKind, check_resume_kind, NULL, 1, 3, 1, JOF_BYTE) \
     /*
-     * Pops the generator, argument and resumeKind from the stack, pushes a new
-     * generator frame and resumes execution of it. Pushes the return value
-     * after the generator yields.
+     * Resume execution of a generator, async function, or async generator.
+     *
+     * This behaves something like a call instruction. It pushes a stack frame
+     * (the one saved when `gen` was suspended, rather than a fresh one) and
+     * runs instructions in it. Once `gen` returns or yields, its return value
+     * is pushed to this frame's stack and execution continues in this script.
+     *
+     * This instruction is emitted only for the `resumeGenerator` self-hosting
+     * intrinsic. It is used in the implementation of
+     * `%GeneratorPrototype%.next`, `.throw`, and `.return`.
+     *
+     * `gen` must be a suspended generator object. `resumeKind` must be in
+     * range for `GeneratorResumeKind`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
