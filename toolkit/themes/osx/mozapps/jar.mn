@@ -4,7 +4,6 @@
 
 toolkit.jar:
 #include ../../shared/mozapps.inc.mn
-  skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/extensions/rating-won.png                  (extensions/rating-won.png)
   skin/classic/mozapps/extensions/rating-not-won.png              (extensions/rating-not-won.png)

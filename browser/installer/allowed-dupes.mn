@@ -99,8 +99,6 @@ chrome/toolkit/skin/classic/global/toolbar.css
 chrome/toolkit/skin/classic/global/toolbarbutton.css
 chrome/toolkit/skin/classic/global/tree.css
 chrome/toolkit/skin/classic/global/wizard.css
-chrome/toolkit/skin/classic/mozapps/downloads/buttons.png
-chrome/toolkit/skin/classic/mozapps/downloads/downloadButtons.png
 chrome/toolkit/skin/classic/mozapps/extensions/category-dictionaries.svg
 chrome/toolkit/skin/classic/mozapps/extensions/category-experiments.png
 chrome/toolkit/skin/classic/mozapps/extensions/dictionaryGeneric.svg
