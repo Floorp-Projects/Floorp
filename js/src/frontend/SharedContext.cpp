@@ -133,8 +133,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       functionNode(nullptr),
       extent{0, 0, toStringStart, 0, 1, 0},
       length(0),
-      isGenerator_(generatorKind == GeneratorKind::Generator),
-      isAsync_(asyncKind == FunctionAsyncKind::AsyncFunction),
       hasDestructuringArgs(false),
       hasParameterExprs(false),
       hasDuplicateParameters(false),
@@ -142,22 +140,22 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       isAnnexB(false),
       wasEmitted(false),
       emitBytecode(false),
-      declaredArguments(false),
       usesArguments(false),
       usesApply(false),
       usesThis(false),
       usesReturn(false),
-      hasRest_(false),
       hasExprBody_(false),
-      hasExtensibleScope_(false),
       argumentsHasLocalBinding_(false),
       definitelyNeedsArgsObj_(false),
-      needsHomeObject_(false),
-      isDerivedClassConstructor_(false),
-      hasThisBinding_(false),
       nargs_(0),
       explicitName_(explicitName),
-      flags_(flags) {}
+      flags_(flags) {
+  immutableFlags_.setFlag(ImmutableFlags::IsGenerator,
+                          generatorKind == GeneratorKind::Generator);
+  immutableFlags_.setFlag(ImmutableFlags::IsAsync,
+                          asyncKind == FunctionAsyncKind::AsyncFunction);
+  immutableFlags_.setFlag(ImmutableFlags::IsFunction);
+}
 
 bool FunctionBox::hasFunctionCreationData() const {
   return compilationInfo_.funcData[funcDataIndex_]
@@ -235,7 +233,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   }
 
   // We inherit the parse goal from our top-level.
-  hasModuleGoal_ = sc->hasModuleGoal();
+  setHasModuleGoal(sc->hasModuleGoal());
 
   if (sc->inWith()) {
     inWith_ = true;
@@ -337,7 +335,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
       bindings(cx),
       builder(builder) {
   thisBinding_ = ThisBinding::Module;
-  hasModuleGoal_ = true;
+  immutableFlags_.setFlag(ImmutableFlags::HasModuleGoal);
 }
 
 MutableHandle<FunctionCreationData> FunctionBox::functionCreationData() const {

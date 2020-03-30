@@ -4326,19 +4326,15 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 }
 
 void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
-  setFlag(ImmutableFlags::FunHasExtensibleScope, funbox->hasExtensibleScope());
-  setFlag(ImmutableFlags::NeedsHomeObject, funbox->needsHomeObject());
-  setFlag(ImmutableFlags::IsDerivedClassConstructor,
-          funbox->isDerivedClassConstructor());
+  // Add the flags from the funbox: Some flags were already set
+  // during allocation of the script, so we don't want to clobber
+  // those, simply add the new information from FunctionBox.
+  addToImmutableFlags(funbox->immutableFlags());
+
+  // Set flags that require a computation:
   setFlag(ImmutableFlags::HasMappedArgsObj, funbox->hasMappedArgsObj());
-  setFlag(ImmutableFlags::FunctionHasThisBinding, funbox->hasThisBinding());
   setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope,
           funbox->hasExtraBodyVarScope());
-  setFlag(ImmutableFlags::IsGenerator, funbox->isGenerator());
-  setFlag(ImmutableFlags::IsAsync, funbox->isAsync());
-  setFlag(ImmutableFlags::HasRest, funbox->hasRest());
-  setFlag(ImmutableFlags::HasDirectEval, funbox->hasDirectEval());
-  setFlag(ImmutableFlags::ShouldDeclareArguments, funbox->declaredArguments);
 
   if (funbox->argumentsHasLocalBinding()) {
     setArgumentsHasVarBinding();
@@ -4407,6 +4403,11 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   MOZ_ASSERT(script->extent_.lineno == stencil.lineno);
   MOZ_ASSERT(script->extent_.column == stencil.column);
 
+  // Initialize script flags from FunctionBox
+  if (stencil.isFunction) {
+    script->initFromFunctionBox(stencil.functionBox);
+  }
+
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, stencil.strict);
   script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
@@ -4421,11 +4422,6 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
                   stencil.needsFunctionEnvironmentObjects);
   script->setFlag(ImmutableFlags::HasModuleGoal, stencil.hasModuleGoal);
   script->setFlag(ImmutableFlags::HasInnerFunctions, stencil.hasInnerFunctions);
-
-  // Initialize script flags from FunctionBox
-  if (stencil.isFunction) {
-    script->initFromFunctionBox(stencil.functionBox);
-  }
 
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromStencil(cx, script, stencil)) {
@@ -5492,10 +5488,6 @@ BaseScript* BaseScript::CreateLazy(
   if (!lazy) {
     return nullptr;
   }
-
-  lazy->setFlag(ImmutableFlags::HasInnerFunctions,
-                !innerFunctionIndexes.empty());
-  lazy->setFlag(ImmutableFlags::IsFunction);
 
   // Fill in gcthing data with inner functions followed by binding data.
   mozilla::Span<JS::GCCellPtr> gcThings =

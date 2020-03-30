@@ -112,6 +112,11 @@ class ScriptFlagBase {
   }
 
   operator uint32_t() const { return flags_; }
+
+  ScriptFlagBase& operator|=(const uint32_t rhs) {
+    flags_ |= rhs;
+    return *this;
+  }
 };
 
 enum class ImmutableScriptFlagsEnum : uint32_t {
@@ -143,11 +148,36 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // Code is in strict mode.
   Strict = 1 << 4,
 
-  // See FunctionBox.
+  // The (static) bindings of this script need to support dynamic name
+  // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
+  // the scope chain for a dynamic set of keys. The primary examples are:
+  //  - direct eval
+  //  - function:
+  //  - with
+  // since both effectively allow any name to be accessed. Non-examples are:
+  //  - upvars of nested functions
+  //  - function statement
+  // since the set of assigned name is known dynamically.
+  //
+  // Note: access through the arguments object is not considered dynamic
+  // binding access since it does not go through the normal name lookup
+  // mechanism. This is debatable and could be changed (although care must be
+  // taken not to turn off the whole 'arguments' optimization). To answer the
+  // more general "is this argument aliased" question, script->needsArgsObj
+  // should be tested (see JSScript::argIsAliased).
   BindingsAccessedDynamically = 1 << 5,
+
+  // This function does something that can extend the set of bindings in its
+  // call objects --- it does a direct eval in non-strict code, or includes a
+  // function statement (as opposed to a function definition).
+  //
+  // This flag is *not* inherited by enclosed or enclosing functions; it
+  // applies only to the function in whose flags it appears.
+  //
   FunHasExtensibleScope = 1 << 6,
 
-  // Bytecode contains JSOp::CallSiteObj
+  // True if a tagged template exists in the body => Bytecode contains
+  // JSOp::CallSiteObj
   // (We don't relazify functions with template strings, due to observability)
   HasCallSiteObj = 1 << 7,
 
@@ -155,6 +185,8 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // or an inner-function script.
   HasModuleGoal = 1 << 8,
 
+  // Whether this function has a .this binding. If true, we need to emit
+  // JSOp::FunctionThis in the prologue to initialize it.
   FunctionHasThisBinding = 1 << 9,
 
   // Whether the arguments object for this script, if it needs one, should be
@@ -187,7 +219,8 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // Script came from eval().
   IsForEval = 1 << 19,
 
-  // Whether this is a top-level module script.
+  // Script is parsed with a top-level goal of Module. This may be a top-level
+  // or an inner-function script.
   IsModule = 1 << 20,
 
   // Whether the Parser declared 'arguments'.
@@ -334,11 +367,6 @@ class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
 
   MutableScriptFlags& operator&=(const uint32_t rhs) {
     flags_ &= rhs;
-    return *this;
-  }
-
-  MutableScriptFlags& operator|=(const uint32_t rhs) {
-    flags_ |= rhs;
     return *this;
   }
 };

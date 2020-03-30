@@ -1747,6 +1747,8 @@ bool LazyScriptCreationData::create(JSContext* cx,
     return false;
   }
 
+  lazy->inheritFlagsFromParser(funbox->immutableFlags());
+
   // Flags that need to be copied into the JSScript when we do the full
   // parse.
   if (forceStrict) {
@@ -1755,45 +1757,14 @@ bool LazyScriptCreationData::create(JSContext* cx,
   if (strict) {
     lazy->setStrict();
   }
-  lazy->setGeneratorKind(funbox->generatorKind());
-  lazy->setAsyncKind(funbox->asyncKind());
-  if (funbox->hasRest()) {
-    lazy->setHasRest();
-  }
-  if (funbox->isLikelyConstructorWrapper()) {
-    lazy->setIsLikelyConstructorWrapper();
-  }
-  if (funbox->isDerivedClassConstructor()) {
-    lazy->setIsDerivedClassConstructor();
-  }
-  if (funbox->needsHomeObject()) {
-    lazy->setNeedsHomeObject();
-  }
-  if (funbox->declaredArguments) {
-    lazy->setShouldDeclareArguments();
-  }
-  if (funbox->hasThisBinding()) {
-    lazy->setFunctionHasThisBinding();
-  }
-  if (funbox->hasExtensibleScope()) {
-    lazy->setFunHasExtensibleScope();
-  }
+
+  // Flags which are computed at this point.
   if (funbox->hasMappedArgsObj()) {
     lazy->setHasMappedArgsObj();
-  }
-  if (funbox->hasCallSiteObj()) {
-    lazy->setHasCallSiteObj();
   }
   if (funbox->argumentsHasLocalBinding()) {
     lazy->setArgumentsHasVarBinding();
   }
-  if (funbox->hasModuleGoal()) {
-    lazy->setHasModuleGoal();
-  }
-
-  // Flags that need to copied back into the parser when we do the full
-  // parse.
-  PropagateTransitiveParseFlags(funbox, lazy);
 
   function->initLazyScript(lazy);
 

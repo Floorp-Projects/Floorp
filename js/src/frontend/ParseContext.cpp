@@ -576,7 +576,7 @@ bool ParseContext::declareFunctionArgumentsObject(
                                     DeclaredNameInfo::npos)) {
         return false;
       }
-      funbox->declaredArguments = true;
+      funbox->setDeclaredArguments();
       funbox->usesArguments = true;
     } else if (hasExtraBodyVarScope) {
       // Formal parameters shadow the arguments object.
