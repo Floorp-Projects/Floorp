@@ -4,19 +4,14 @@
 // Test that URL-less sources have tabs and selecting that location does not
 // create a new tab for the same URL-less source
 add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html", "simple1", "simple2");
 
   // Create a URL-less source 
-  const { hud } = await dbg.toolbox.selectTool("webconsole");
-  await evaluateExpressionInConsole(hud, `
-    (() => {
-        setTimeout(() => { debugger; }, 100);
-    })();
-  `);
+  invokeInTab("doEval");
   await waitForPaused(dbg);
 
   // Click a frame which shouldn't open a new source tab
-  await clickElement(dbg, "frame", 3);
+  await clickElement(dbg, "frame", 2);
 
   // Click the frame to select the same location and ensure there's only 1 tab
   is(countTabs(dbg), 1);
