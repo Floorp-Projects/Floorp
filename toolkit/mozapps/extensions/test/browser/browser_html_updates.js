@@ -6,6 +6,11 @@ const { AddonTestUtils } = ChromeUtils.import(
 
 AddonTestUtils.initMochitest(this);
 
+const initialAutoUpdate = AddonManager.autoUpdateDefault;
+registerCleanupFunction(() => {
+  AddonManager.autoUpdateDefault = initialAutoUpdate;
+});
+
 add_task(async function setup() {
   Services.telemetry.clearEvents();
 });
@@ -250,6 +255,16 @@ function installUpdate(card, expected) {
   let updated = BrowserTestUtils.waitForEvent(card, "update");
   card.querySelector('panel-item[action="install-update"]').click();
   return Promise.all([updateInstalled, updated]);
+}
+
+async function findUpdatesForAddonId(id) {
+  let addon = await AddonManager.getAddonByID(id);
+  await new Promise(resolve => {
+    addon.findUpdates(
+      { onUpdateAvailable: resolve },
+      AddonManager.UPDATE_WHEN_USER_REQUESTED
+    );
+  });
 }
 
 function assertUpdateState({
@@ -576,9 +591,9 @@ add_task(async function testAvailableUpdates() {
 
   let win = await loadInitialView("extension");
   let doc = win.document;
+  let categoryUtils = new CategoryUtilities(win.managerWindow);
 
-  let { gCategories } = win.managerWindow;
-  let availableCat = gCategories.get("addons://updates/available");
+  let availableCat = categoryUtils.get("available-updates");
 
   ok(availableCat.hidden, "Available updates is hidden");
   is(availableCat.badgeCount, 0, "There are no updates");
@@ -612,7 +627,7 @@ add_task(async function testAvailableUpdates() {
   // Check the detail page for the first add-on.
   await loadDetailView(win, ids[0]);
   is(
-    gCategories.selected,
+    categoryUtils.getSelectedViewId(),
     "addons://list/extension",
     "The extensions category is selected"
   );
@@ -624,7 +639,7 @@ add_task(async function testAvailableUpdates() {
 
   // We're back on the updates view.
   is(
-    gCategories.selected,
+    categoryUtils.getSelectedViewId(),
     "addons://updates/available",
     "The available updates category is selected"
   );
@@ -664,4 +679,49 @@ add_task(async function testAvailableUpdates() {
 
   await closeView(win);
   await Promise.all(addons.map(addon => addon.unload()));
+});
+
+add_task(async function testUpdatesShownOnLoad() {
+  let id = "has-update@mochi.test";
+  let addon = await setupExtensionWithUpdate(id);
+
+  // Find the update for our addon.
+  AddonManager.autoUpdateDefault = false;
+  await findUpdatesForAddonId(id);
+
+  let win = await loadInitialView("extension");
+  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let updatesButton = categoryUtils.get("available-updates");
+
+  ok(!updatesButton.hidden, "The updates button is shown");
+  is(updatesButton.badgeCount, 1, "There is an update");
+
+  let loaded = waitForViewLoad(win);
+  updatesButton.click();
+  await loaded;
+
+  let cards = win.document.querySelectorAll("addon-card");
+
+  is(cards.length, 1, "There is one update card");
+
+  let card = cards[0];
+  is(card.addon.id, id, "The update is for the expected add-on");
+
+  await installUpdate(card, "update-installed");
+
+  ok(!updatesButton.hidden, "The updates button is still shown");
+  is(updatesButton.badgeCount, 0, "There are no more updates");
+
+  info("Check that the updates section is hidden when re-opened");
+  await closeView(win);
+  win = await loadInitialView("extension");
+  categoryUtils = new CategoryUtilities(win.managerWindow);
+  updatesButton = categoryUtils.get("available-updates");
+
+  ok(updatesButton.hidden, "Available updates is hidden");
+  is(updatesButton.badgeCount, 0, "There are no updates");
+
+  AddonManager.autoUpdateDefault = true;
+  await closeView(win);
+  await addon.unload();
 });

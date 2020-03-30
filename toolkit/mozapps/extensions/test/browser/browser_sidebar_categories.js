@@ -8,8 +8,7 @@ const THEME_ID = "default-theme@mozilla.org";
 add_task(async function testClickingSidebarEntriesChangesView() {
   let win = await loadInitialView("extension");
   let doc = win.document;
-  let { managerWindow } = win;
-  let themeCategory = managerWindow.document.getElementById("category-theme");
+  let themeCategory = doc.querySelector("#categories > [name=theme]");
 
   let assertViewHas = (selector, msg) => ok(doc.querySelector(selector), msg);
   let assertListView = type =>
@@ -34,17 +33,21 @@ add_task(async function testClickingSidebarEntriesChangesView() {
   );
 
   loaded = waitForViewLoad(win);
-  EventUtils.synthesizeMouseAtCenter(
-    themeCategory.firstElementChild,
-    {},
-    managerWindow
-  );
+  EventUtils.synthesizeMouseAtCenter(themeCategory, {}, win);
   await loaded;
 
   assertListView("theme");
 
   loaded = waitForViewLoad(win);
-  EventUtils.synthesizeKey("VK_UP", {}, managerWindow);
+  doc.getElementById("preferencesButton").focus();
+  EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, win);
+  is(doc.activeElement, themeCategory, "The theme category is focused");
+  EventUtils.synthesizeKey("VK_UP", {}, win);
+  ok(
+    !win.managerWindow.gViewController.isLoading,
+    "The new view isn't loading yet"
+  );
+  EventUtils.synthesizeKey(" ", {}, win);
   await loaded;
 
   assertListView("extension");
