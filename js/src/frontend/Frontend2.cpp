@@ -91,16 +91,23 @@ class SmooshScriptStencil : public ScriptStencil {
       return false;
     }
 
-    strict = result_.strict;
-    bindingsAccessedDynamically = result_.bindings_accessed_dynamically;
-    hasCallSiteObj = result_.has_call_site_obj;
-    isForEval = result_.is_for_eval;
-    isModule = result_.is_module;
-
-    hasNonSyntacticScope = result_.has_non_syntactic_scope;
-    needsFunctionEnvironmentObjects =
-        result_.needs_function_environment_objects;
-    hasModuleGoal = result_.has_module_goal;
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::Strict, result_.strict);
+    immutableFlags.setFlag(
+        ImmutableScriptFlagsEnum::BindingsAccessedDynamically,
+        result_.bindings_accessed_dynamically);
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasCallSiteObj,
+                           result_.has_call_site_obj);
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::IsForEval,
+                           result_.is_for_eval);
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::IsModule,
+                           result_.is_module);
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasNonSyntacticScope,
+                           result_.has_non_syntactic_scope);
+    immutableFlags.setFlag(
+        ImmutableScriptFlagsEnum::NeedsFunctionEnvironmentObjects,
+        result_.needs_function_environment_objects);
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasModuleGoal,
+                           result_.has_module_goal);
 
     if (!createAtoms(cx)) {
       return false;
