@@ -75,6 +75,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckAtStart(int cp_offset, Label* on_at_start);
   virtual void CheckNotAtStart(int cp_offset, Label* on_not_at_start);
   virtual void CheckPosition(int cp_offset, Label* on_outside_input);
+  virtual void CheckBitInTable(Handle<ByteArray> table, Label* on_bit_set);
 
   virtual void LoadCurrentCharacterImpl(int cp_offset, Label* on_end_of_input,
                                         bool check_bounds, int characters,
@@ -206,6 +207,20 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   int num_registers_;
   int num_capture_registers_;
   js::jit::LiveGeneralRegisterSet savedRegisters_;
+
+ public:
+  using TableVector =
+      js::Vector<PseudoHandle<ByteArrayData>, 4, js::SystemAllocPolicy>;
+  TableVector& tables() { return tables_; }
+
+ private:
+  TableVector tables_;
+  void AddTable(PseudoHandle<ByteArrayData> table) {
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!tables_.append(std::move(table))) {
+      oomUnsafe.crash("Irregexp table append");
+    }
+  }
 };
 
 }  // namespace internal
