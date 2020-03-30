@@ -1075,39 +1075,21 @@ Inspector.prototype = {
     this.addRuleView({ defaultTab });
 
     // Inspector sidebar panels in order of appearance.
-    const sidebarPanels = [
-      {
-        id: "layoutview",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
-      },
-      {
-        id: "computedview",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
-      },
-      {
-        id: "changesview",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle"),
-      },
-      {
-        id: "fontinspector",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
-      },
-      {
-        id: "animationinspector",
-        title: INSPECTOR_L10N.getStr(
-          "inspector.sidebar.animationInspectorTitle"
-        ),
-      },
-    ];
+    const sidebarPanels = [];
+    sidebarPanels.push({
+      id: "layoutview",
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2"),
+    });
 
-    if (
-      Services.prefs.getBoolPref("devtools.inspector.new-rulesview.enabled")
-    ) {
-      sidebarPanels.push({
-        id: "newruleview",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
-      });
-    }
+    sidebarPanels.push({
+      id: "computedview",
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
+    });
+
+    sidebarPanels.push({
+      id: "changesview",
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle"),
+    });
 
     if (
       Services.prefs.getBoolPref("devtools.inspector.compatibility.enabled")
@@ -1117,6 +1099,25 @@ Inspector.prototype = {
         title: INSPECTOR_L10N.getStr(
           "inspector.sidebar.compatibilityViewTitle"
         ),
+      });
+    }
+
+    sidebarPanels.push({
+      id: "fontinspector",
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
+    });
+
+    sidebarPanels.push({
+      id: "animationinspector",
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
+    });
+
+    if (
+      Services.prefs.getBoolPref("devtools.inspector.new-rulesview.enabled")
+    ) {
+      sidebarPanels.push({
+        id: "newruleview",
+        title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
       });
     }
 
