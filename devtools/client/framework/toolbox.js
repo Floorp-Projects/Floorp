@@ -34,6 +34,9 @@ var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
 ).wrappedJSObject;
 
 const { TargetList } = require("devtools/shared/resources/target-list");
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
@@ -237,6 +240,7 @@ function Toolbox(
   this.telemetry = new Telemetry();
 
   this.targetList = new TargetList(target.client.mainRoot, target);
+  this.resourceWatcher = new ResourceWatcher(this.targetList);
 
   // The session ID is used to determine which telemetry events belong to which
   // toolbox session. Because we use Amplitude to analyse the telemetry data we
