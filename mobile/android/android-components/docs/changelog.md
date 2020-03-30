@@ -76,6 +76,15 @@ permalink: /changelog/
  * Added an optional URL view to the `TabViewHolder` to display the URL.
  * Will expose a new `layout` parameter which allows consumers to change the tabs tray layout.
 
+* **service-glean**
+  * Glean was updated to v26.0.0
+    * **Breaking change:** The regular expression used to validate labels is stricter and more correct.
+    * Add more information about pings to markdown documentation:
+      * State whether the ping includes client id;
+      * Add list of data review links;
+      * Add list of related bugs links.
+    * `gradlew clean` will no longer remove the Miniconda installation in `~/.gradle/glean`. Therefore `clean` can be used without reinstalling Miniconda afterward every time.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
