@@ -123,79 +123,6 @@ function createModule(id) {
   });
 }
 
-function defineLazyGetter(object, prop, getter) {
-  const redefine = (obj, value) => {
-    Object.defineProperty(obj, prop, {
-      configurable: true,
-      writable: true,
-      value,
-    });
-    return value;
-  };
-
-  Object.defineProperty(object, prop, {
-    configurable: true,
-    get() {
-      return redefine(this, getter.call(this));
-    },
-    set(value) {
-      redefine(this, value);
-    },
-  });
-}
-
-/**
- * Defines lazy getters on the given object, which lazily require the
- * given module the first time they are accessed, and then resolve that
- * module's exported properties.
- *
- * @param {object} obj
- *        The target object on which to define the lazy getters.
- * @param {string} moduleId
- *        The ID of the module to require, as passed to require().
- * @param {Array<string | object>} args
- *        Any number of properties to import from the module. A string
- *        will cause the property to be defined which resolves to the
- *        same property in the module's exports. An object will define a
- *        lazy getter for every value in the object which corresponds to
- *        the given key in the module's exports, as in an ordinary
- *        destructuring assignment.
- */
-function lazyRequire(obj, moduleId, ...args) {
-  let module;
-  const getModule = () => {
-    if (!module) {
-      module = this.require(moduleId);
-    }
-    return module;
-  };
-
-  for (let props of args) {
-    if (typeof props !== "object") {
-      props = { [props]: props };
-    }
-
-    for (const [fromName, toName] of Object.entries(props)) {
-      defineLazyGetter(obj, toName, () => getModule()[fromName]);
-    }
-  }
-}
-
-/**
- * Defines a lazy getter on the given object which causes a module to be
- * lazily imported the first time it is accessed.
- *
- * @param {object} obj
- *        The target object on which to define the lazy getter.
- * @param {string} moduleId
- *        The ID of the module to require, as passed to require().
- * @param {string} [prop = moduleId]
- *        The name of the lazy getter property to define.
- */
-function lazyRequireModule(obj, moduleId, prop = moduleId) {
-  defineLazyGetter(obj, prop, () => this.require(moduleId));
-}
-
 /**
  * Create a CommonJS loader with the following options:
  * - createSandbox:
@@ -569,8 +496,6 @@ this.worker = new WorkerDebuggerLoader({
     rpc: rpc,
     URL: URL,
     setImmediate: setImmediate,
-    lazyRequire: lazyRequire,
-    lazyRequireModule: lazyRequireModule,
     retrieveConsoleEvents: this.retrieveConsoleEvents,
     setConsoleEventHandler: this.setConsoleEventHandler,
     console: console,
