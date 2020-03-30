@@ -271,7 +271,6 @@ static srtp_err_status_t srtp_aes_gcm_nss_do_crypto(void *cv,
 
     c->params.pIv = c->iv;
     c->params.ulIvLen = GCM_IV_LEN;
-    c->params.ulIvBits = GCM_IV_LEN * 8;
     c->params.pAAD = c->aad;
     c->params.ulAADLen = c->aad_size;
 
