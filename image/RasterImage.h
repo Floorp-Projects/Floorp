@@ -20,7 +20,6 @@
 #include "Image.h"
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
-#include "nsIProperties.h"
 #include "nsTArray.h"
 #include "LookupResult.h"
 #include "nsThreadUtils.h"
@@ -139,7 +138,6 @@ class ImageMetadata;
 class SourceBuffer;
 
 class RasterImage final : public ImageResource,
-                          public nsIProperties,
                           public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
     ,
@@ -152,7 +150,6 @@ class RasterImage final : public ImageResource,
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(RasterImage)
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIPROPERTIES
   NS_DECL_IMGICONTAINER
 #ifdef DEBUG
   NS_DECL_IMGICONTAINERDEBUG
@@ -367,7 +364,8 @@ class RasterImage final : public ImageResource,
   /// If this has a value, we're waiting for SetSize() to send the load event.
   Maybe<Progress> mLoadProgress;
 
-  nsCOMPtr<nsIProperties> mProperties;
+  // Hotspot of this image, or (0, 0) if there is no hotspot data.
+  gfx::IntPoint mHotspot;
 
   /// If this image is animated, a FrameAnimator which manages its animation.
   UniquePtr<FrameAnimator> mFrameAnimator;
