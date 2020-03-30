@@ -47,8 +47,7 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
     return childDoc->ChildAtPoint(aX, aY, aWhichChild);
   }
   AccessibleOrProxy target = AsAccessible()->ChildAtPoint(aX, aY, aWhichChild);
-  MOZ_ASSERT(target.IsAccessible());
-  if (aWhichChild == Accessible::eDirectChild) {
+  if (target.IsNull() || aWhichChild == Accessible::eDirectChild) {
     return target;
   }
   childDoc = target.RemoteChildDoc();
@@ -61,6 +60,7 @@ AccessibleOrProxy AccessibleOrProxy::ChildAtPoint(
 }
 
 ProxyAccessible* AccessibleOrProxy::RemoteChildDoc() const {
+  MOZ_ASSERT(!IsNull());
   if (IsProxy()) {
     return nullptr;
   }
