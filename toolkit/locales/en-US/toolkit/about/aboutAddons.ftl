@@ -209,6 +209,15 @@ extensions-view-available-updates =
     .name = Available Updates
     .tooltiptext = { extensions-view-available-updates.name }
 
+addon-category-discover = Recommendations
+addon-category-extension = Extensions
+addon-category-theme = Themes
+addon-category-plugin = Plugins
+addon-category-dictionary = Dictionaries
+addon-category-locale = Languages
+addon-category-available-updates = Available Updates
+addon-category-recent-updates = Recent Updates
+
 ## These are global warnings
 
 extensions-warning-safe-mode = All add-ons have been disabled by safe mode.

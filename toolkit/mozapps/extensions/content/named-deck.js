@@ -138,12 +138,16 @@ class ButtonGroup extends HTMLElement {
 
     this.addEventListener("button-group:selected", this);
     this.addEventListener("keydown", this);
+    this.addEventListener("mousedown", this);
+    document.addEventListener("keypress", this);
   }
 
   disconnectedCallback() {
     this.observer.disconnect();
     this.removeEventListener("button-group:selected", this);
     this.removeEventListener("keydown", this);
+    this.removeEventListener("mousedown", this);
+    document.removeEventListener("keypress", this);
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
@@ -230,6 +234,7 @@ class ButtonGroup extends HTMLElement {
   handleEvent(e) {
     let { previousKey, nextKey } = this._navigationKeys();
     if (e.type == "keydown" && (e.key == previousKey || e.key == nextKey)) {
+      this.setAttribute("last-input-type", "keyboard");
       e.preventDefault();
       let oldFocus = this.activeChild;
       this.walker.currentNode = oldFocus;
@@ -244,6 +249,10 @@ class ButtonGroup extends HTMLElement {
       }
     } else if (e.type == "button-group:selected") {
       this.activeChild = e.target;
+    } else if (e.type == "mousedown") {
+      this.setAttribute("last-input-type", "mouse");
+    } else if (e.type == "keypress" && e.key == "Tab") {
+      this.setAttribute("last-input-type", "keyboard");
     }
   }
 
