@@ -291,6 +291,9 @@ class SrcNoteWriter {
     }
 
     SrcNote* sn = allocator(1);
+    if (!sn) {
+      return false;
+    }
     sn->value_ = SrcNote::noteValue(type, delta);
     return true;
   }
