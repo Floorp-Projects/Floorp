@@ -47,13 +47,9 @@
     constructor() {
       super();
       let shadowRoot = this.attachShadow({ mode: "open" });
-      let stylesheet = document.createElement("link");
-      stylesheet.rel = "stylesheet";
-      stylesheet.href = "chrome://global/skin/dropmarker.css";
-
       let image = document.createXULElement("image");
       image.setAttribute("part", "icon");
-      shadowRoot.append(stylesheet, image);
+      shadowRoot.appendChild(image);
     }
   }
 
