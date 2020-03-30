@@ -167,7 +167,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioParam", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AudioParamMap", insecureContext: true, disabled: true },
+  { name: "AudioParamMap", insecureContext: false, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioProcessingEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
