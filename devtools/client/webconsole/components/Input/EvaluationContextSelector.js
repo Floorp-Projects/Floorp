@@ -127,7 +127,7 @@ class EvaluationContextSelector extends Component {
   render() {
     const { webConsoleUI, threads, selectedThread } = this.props;
     const doc = webConsoleUI.document;
-    const toolbox = webConsoleUI.wrapper.toolbox;
+    const { toolbox } = webConsoleUI.wrapper;
 
     if (threads.length <= 1) {
       return null;

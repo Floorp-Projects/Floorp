@@ -132,7 +132,7 @@ function transformConsoleAPICallPacket(packet) {
   let type = message.level;
   let level = getLevelFromType(type);
   let messageText = null;
-  const timer = message.timer;
+  const { timer } = message;
 
   // Special per-type conversion.
   switch (type) {

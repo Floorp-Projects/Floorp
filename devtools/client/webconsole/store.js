@@ -87,7 +87,7 @@ function configureStore(webConsoleUI, options = {}) {
     }),
   };
 
-  const toolbox = options.thunkArgs.toolbox;
+  const { toolbox } = options.thunkArgs;
   const sessionId = (toolbox && toolbox.sessionId) || -1;
   const middleware = applyMiddleware(
     ignore,
