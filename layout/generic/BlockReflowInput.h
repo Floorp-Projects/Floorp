@@ -239,8 +239,6 @@ class BlockReflowInput {
   // block, not floats inside of it.
   nsFloatManager::SavedState mFloatManagerStateBefore;
 
-  nscoord mBEndEdge;
-
   // The content area to reflow child frames within.  This is within
   // this frame's coordinate system and writing mode, which means
   // mContentArea.IStart == BorderPadding().IStart and
@@ -267,6 +265,9 @@ class BlockReflowInput {
     return mContentArea.BSize(mReflowInput.GetWritingMode());
   }
   nscoord ContentBEnd() const {
+    NS_ASSERTION(
+        ContentBSize() != NS_UNCONSTRAINEDSIZE,
+        "ContentBSize() is unconstrained, so ContentBEnd() may overflow.");
     return mContentArea.BEnd(mReflowInput.GetWritingMode());
   }
   mozilla::LogicalSize ContentSize(mozilla::WritingMode aWM) const {
