@@ -30,6 +30,7 @@ import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -116,7 +117,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             searchController
         )
 
-        awesomeBarView = AwesomeBarView(view.search_layout, searchInteractor)
+        awesomeBarView = AwesomeBarView(view.scrollable_area, searchInteractor)
 
         toolbarView = ToolbarView(
             view.toolbar_component_wrapper,
@@ -194,6 +195,10 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             qrFeature.get()?.scan(R.id.container)
         }
 
+        view.search_shortcuts_button.setOnClickListener {
+            searchInteractor.onSearchShortcutsButtonClicked()
+        }
+
         val stubListener = ViewStub.OnInflateListener { _, inflated ->
             inflated.learn_more.setOnClickListener {
                 (activity as HomeActivity)
@@ -243,6 +248,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
         consumeFrom(searchStore) {
             awesomeBarView.update(it)
+            updateSearchShortcutsIcon(it)
             toolbarView.update(it)
             updateSearchWithLabel(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
@@ -348,6 +354,18 @@ class SearchFragment : Fragment(), UserInteractionHandler {
 
             search_suggestions_onboarding_divider?.isVisible =
                 search_with_shortcuts.isVisible && state.showSearchSuggestionsHint
+        }
+    }
+
+    private fun updateSearchShortcutsIcon(searchState: SearchFragmentState) {
+        view?.apply {
+            val showShortcuts = searchState.showSearchShortcuts
+            search_shortcuts_button.isChecked = showShortcuts
+
+            val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
+            search_shortcuts_button.compoundDrawables[0]?.setTint(
+                requireContext().getColorFromAttr(color)
+            )
         }
     }
 
