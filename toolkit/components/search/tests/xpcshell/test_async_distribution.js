@@ -11,19 +11,24 @@ add_task(async function test_async_distribution() {
 
   Assert.ok(!Services.search.isInitialized);
 
-  return Services.search.init().then(function search_initialized(aStatus) {
-    Assert.ok(Components.isSuccessCode(aStatus));
-    Assert.ok(Services.search.isInitialized);
+  await Services.search.init();
+  Assert.ok(Services.search.isInitialized);
 
-    // test that the engine from the distribution overrides our jar engine
-    return Services.search.getEngines().then(engines => {
-      Assert.equal(engines.length, 2);
+  const engines = await Services.search.getEngines();
+  Assert.equal(engines.length, 2, "Should have got two engines");
 
-      let engine = Services.search.getEngineByName("basic");
-      Assert.notEqual(engine, null);
+  let engine = Services.search.getEngineByName("basic");
+  Assert.ok(engine, "Should have obtained an engine.");
 
-      // check the engine we have is actually the one from the distribution
-      Assert.equal(engine.description, "override");
-    });
-  });
+  Assert.equal(
+    engine.description,
+    "override",
+    "Should have got the distribution engine"
+  );
+
+  Assert.equal(
+    engine.wrappedJSObject._isBuiltin,
+    true,
+    "Distribution engines should still be marked as built-in"
+  );
 });
