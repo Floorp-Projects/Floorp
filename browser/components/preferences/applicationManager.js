@@ -24,8 +24,19 @@ var gAppManagerDialog = {
 
     const appDescElem = document.getElementById("appDescription");
     if (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) {
+      let { typeDescription } = this.handlerInfo;
+      let typeStr;
+      if (typeDescription.id) {
+        MozXULElement.insertFTLIfNeeded("browser/preferences/preferences.ftl");
+        typeStr = await document.l10n.formatValue(
+          typeDescription.id,
+          typeDescription.args
+        );
+      } else {
+        typeStr = typeDescription.raw;
+      }
       document.l10n.setAttributes(appDescElem, "app-manager-handle-file", {
-        type: this.handlerInfo.typeDescription.raw,
+        type: typeStr,
       });
     } else {
       document.l10n.setAttributes(appDescElem, "app-manager-handle-protocol", {
