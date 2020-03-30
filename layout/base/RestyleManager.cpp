@@ -517,6 +517,7 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
         }
       }
     }
+    primaryFrame->ContentStatesChanged(aStateMask);
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
