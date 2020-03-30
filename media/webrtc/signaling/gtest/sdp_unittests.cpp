@@ -3120,8 +3120,7 @@ const std::string kBasicAudioVideoDataOffer =
     "a=rtcp-fb:126 nack" CRLF "a=rtcp-fb:126 nack pli" CRLF
     "a=rtcp-fb:126 ccm fir" CRLF "a=rtcp-fb:97 nack" CRLF
     "a=rtcp-fb:97 nack pli" CRLF "a=rtcp-fb:97 ccm fir" CRLF
-    "a=rtcp-fb:* ccm tmmbr" CRLF  // Bug 1597603 "a=rtcp-fb:120 transport-cc"
-                                  // CRLF
+    "a=rtcp-fb:* ccm tmmbr" CRLF "a=rtcp-fb:120 transport-cc" CRLF
     "a=setup:actpass" CRLF "a=rtcp-mux" CRLF
     "m=application 9 DTLS/SCTP 5000" CRLF "c=IN IP4 0.0.0.0" CRLF
     "a=sctpmap:5000 webrtc-datachannel 16" CRLF "a=setup:actpass" CRLF;
@@ -3205,16 +3204,16 @@ TEST_P(NewSdpTest, CheckRtcpFb) {
   auto& rtcpfbs = video_attrs.GetRtcpFb().mFeedbacks;
 
   if (ResultsAreFromSipcc()) {
-    ASSERT_EQ(20U, rtcpfbs.size());
+    ASSERT_EQ(21U, rtcpfbs.size());
   } else {
     ASSERT_EQ("WEBRTCSDP", mResults->ParserName());
     std::stringstream os;
     Sdp()->Serialize(os);
-    // Reserialized resutst should be the same
+    // Reserialized results should be the same
     if (::testing::get<1>(GetParam())) {
       ASSERT_EQ(21U, rtcpfbs.size());
     } else {
-      ASSERT_EQ(20U, rtcpfbs.size());
+      ASSERT_EQ(21U, rtcpfbs.size());
     }
   }
 
@@ -3238,12 +3237,7 @@ TEST_P(NewSdpTest, CheckRtcpFb) {
   CheckRtcpFb(rtcpfbs[17], "97", SdpRtcpFbAttributeList::kNack, "pli");
   CheckRtcpFb(rtcpfbs[18], "97", SdpRtcpFbAttributeList::kCcm, "fir");
   CheckRtcpFb(rtcpfbs[19], "*", SdpRtcpFbAttributeList::kCcm, "tmmbr");
-
-  // Bug 1597603 - this should be re-enabled to play nicely with
-  // re-serialization
-  // if (!ResultsAreFromSipcc()) {
-  //   CheckRtcpFb(rtcpfbs[20], "120", SdpRtcpFbAttributeList::kTransCC, "");
-  // }
+  CheckRtcpFb(rtcpfbs[20], "120", SdpRtcpFbAttributeList::kTransportCC, "");
 }
 
 TEST_P(NewSdpTest, CheckRtcp) {

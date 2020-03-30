@@ -75,6 +75,7 @@ class VideoCodecConfig {
   // to drag SdpRtcpFbAttributeList::Feedback along too.
   bool mRembFbSet;
   bool mFECFbSet;
+  bool mTransportCCFbSet;
 
   int mULPFECPayloadType;
   int mREDPayloadType;
@@ -102,6 +103,7 @@ class VideoCodecConfig {
         mAckFbTypes != aRhs.mAckFbTypes || mNackFbTypes != aRhs.mNackFbTypes ||
         mCcmFbTypes != aRhs.mCcmFbTypes || mRembFbSet != aRhs.mRembFbSet ||
         mFECFbSet != aRhs.mFECFbSet ||
+        mTransportCCFbSet != aRhs.mTransportCCFbSet ||
         mULPFECPayloadType != aRhs.mULPFECPayloadType ||
         mREDPayloadType != aRhs.mREDPayloadType ||
         mREDRTXPayloadType != aRhs.mREDRTXPayloadType || mTias != aRhs.mTias ||
@@ -124,6 +126,7 @@ class VideoCodecConfig {
         mName(name),
         mRembFbSet(false),
         mFECFbSet(false),
+        mTransportCCFbSet(false),
         mULPFECPayloadType(123),
         mREDPayloadType(122),
         mREDRTXPayloadType(-1),
@@ -187,6 +190,8 @@ class VideoCodecConfig {
   bool RtcpFbRembIsSet() const { return mRembFbSet; }
 
   bool RtcpFbFECIsSet() const { return mFECFbSet; }
+
+  bool RtcpFbTransportCCIsSet() const { return mTransportCCFbSet; }
 };
 }  // namespace mozilla
 #endif

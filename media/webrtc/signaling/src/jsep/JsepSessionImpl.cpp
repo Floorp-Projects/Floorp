@@ -1999,6 +1999,10 @@ void JsepSessionImpl::SetupDefaultRtpExtensions() {
                        SdpDirectionAttribute::Direction::kSendrecv);
   AddVideoRtpExtension(webrtc::RtpExtension::kPlayoutDelayUri,
                        SdpDirectionAttribute::Direction::kRecvonly);
+  if (Preferences::GetBool("media.navigator.video.use_transport_cc", false)) {
+    AddVideoRtpExtension(webrtc::RtpExtension::kTransportSequenceNumberUri,
+                         SdpDirectionAttribute::Direction::kSendrecv);
+  }
 }
 
 void JsepSessionImpl::SetState(JsepSignalingState state) {

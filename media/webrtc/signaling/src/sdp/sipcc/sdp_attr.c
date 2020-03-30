@@ -4565,6 +4565,9 @@ sdp_result_e sdp_build_attr_rtcp_fb(sdp_t *sdp_p,
         case SDP_RTCP_FB_REMB:
             /* No additional params after REMB */
             break;
+        case SDP_RTCP_FB_TRANSPORT_CC:
+            /* No additional params after Transport-CC */
+            break;
 
         case SDP_RTCP_FB_UNKNOWN:
             /* Contents are in the "extra" field */
@@ -4710,6 +4713,10 @@ sdp_result_e sdp_parse_attr_rtcp_fb (sdp_t *sdp_p,
 
         case SDP_RTCP_FB_REMB:
             /* No additional tokens to parse after goog-remb */
+            break;
+
+        case SDP_RTCP_FB_TRANSPORT_CC:
+            /* No additional tokens to parse after transport-cc */
             break;
 
         case SDP_RTCP_FB_UNKNOWN:
