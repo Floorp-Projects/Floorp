@@ -6,8 +6,6 @@
 #ifndef _mozilla_dom_ClientHandleParent_h
 #define _mozilla_dom_ClientHandleParent_h
 
-#include "mozilla/MozPromise.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/dom/PClientHandleParent.h"
 #include "mozilla/ErrorResult.h"
 
@@ -23,17 +21,15 @@ typedef MozPromise<ClientSourceParent*, CopyableErrorResult,
 
 class ClientHandleParent final : public PClientHandleParent {
   RefPtr<ClientManagerService> mService;
-
-  // mSource and mSourcePromiseHolder are mutually exclusive.
   ClientSourceParent* mSource;
-
-  // Operations will wait on this promise while mSource is null.
-  MozPromiseHolder<SourcePromise> mSourcePromiseHolder;
-
-  MozPromiseRequestHolder<SourcePromise> mSourcePromiseRequestHolder;
 
   nsID mClientId;
   PrincipalInfo mPrincipalInfo;
+
+  // A promise for HandleOps that want to access our ClientSourceParent.
+  // Resolved once FoundSource is called and we have a ClientSourceParent
+  // available.
+  RefPtr<SourcePromise::Private> mSourcePromise;
 
   // PClientHandleParent interface
   mozilla::ipc::IPCResult RecvTeardown() override;

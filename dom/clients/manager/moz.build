@@ -7,7 +7,6 @@
 EXPORTS.mozilla.dom += [
   'ClientChannelHelper.h',
   'ClientHandle.h',
-  'ClientHandleParent.h',
   'ClientInfo.h',
   'ClientIPCUtils.h',
   'ClientManager.h',
