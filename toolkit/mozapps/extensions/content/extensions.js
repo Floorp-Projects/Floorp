@@ -19,16 +19,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AddonManager.jsm"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "XPINSTALL_ENABLED",
-  "xpinstall.enabled",
-  true
-);
-
-const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
 const PREF_UI_TYPE_HIDDEN = "extensions.ui.%TYPE%.hidden";
-const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
 
 var gViewDefault = "addons://discover/";
 
@@ -1172,7 +1163,7 @@ const addonTypes = new Set([
 ]);
 const htmlViewOpts = {
   loadViewFn(view) {
-    let viewId = `addons://${view}`;
+    let viewId = view.startsWith("addons://") ? view : `addons://${view}`;
     gViewController.loadView(viewId);
   },
   replaceWithDefaultViewFn() {
@@ -1182,6 +1173,9 @@ const htmlViewOpts = {
     if (addonTypes.has(name)) {
       gCategories.select(`addons://list/${name}`);
     }
+  },
+  getCurrentViewIdFn() {
+    return gViewController.currentViewId;
   },
 };
 

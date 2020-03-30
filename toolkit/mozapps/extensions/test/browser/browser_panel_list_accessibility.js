@@ -5,6 +5,8 @@
 
 function setupPanel(win) {
   let doc = win.document;
+  // Clear out the other elements so only our test content is on the page.
+  doc.body.textContent = "";
   let panelList = doc.createElement("panel-list");
   let items = ["one", "two", "three"];
   let panelItems = items.map(item => {

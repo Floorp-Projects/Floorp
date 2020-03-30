@@ -50,6 +50,7 @@
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
   --in-content-dialog-header-background: #f1f1f1;
+  --in-content-sidebar-width: 240px;
 
   --panel-border-radius: 2px; /* This is overridden on Windows */
 
@@ -674,8 +675,13 @@ xul|*.radio-label-box {
   background-color: initial; /* override the background-color set on all richlistboxes in common.inc.css */
   margin: 70px 0 0;
   border-width: 0;
-  width: 240px;
+  width: var(--in-content-sidebar-width);
   box-shadow: none;
+}
+
+html|*#categories {
+  box-sizing: border-box;
+  padding: 1px;
 }
 
 *|*#categories > *|*.category {
@@ -685,6 +691,25 @@ xul|*.radio-label-box {
   padding-inline-end: 10px;
   padding-inline-start: 10px;
   transition: background-color 150ms;
+}
+
+html|*#categories > html|*.category {
+  border: 0;
+  background-color: initial;
+  background-size: 24px;
+  background-repeat: no-repeat;
+  background-position-x: 10px;
+  background-position-y: 12px;
+  margin-inline-end: 0;
+  min-width: auto;
+  padding-inline-start: 34px;
+  text-align: start;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+}
+
+html|*#categories > html|*.category:dir(rtl) {
+  background-position-x: right 10px;
 }
 
 *|*#categories > *|*.category:hover {
@@ -698,7 +723,7 @@ xul|*.radio-label-box {
 
 *|*#categories > *|*.category[selected],
 *|*#categories > *|*.category.selected {
-  color: var(--in-content-category-text-selected);
+  color: var(--in-content-category-text-selected) !important;
   background-color: transparent;
 }
 
@@ -709,7 +734,7 @@ xul|*.radio-label-box {
 
 *|*#categories > *|*.category[selected]:hover:active,
 *|*#categories > *|*.category.selected:hover:active {
-  color: var(--in-content-category-text-selected-active);
+  color: var(--in-content-category-text-selected-active) !important;
   background-color: var(--in-content-category-background-selected-active);
 }
 
@@ -717,10 +742,14 @@ xul|*.radio-label-box {
   outline: var(--in-content-category-outline-focus);
 }
 
+html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring {
+  outline: none;
+  box-shadow: none;
+}
+
 *|*.category-name {
   font-size: 1.07em;
   line-height: 1.4em;
-  padding-bottom: 2px;
   padding-inline-start: 9px;
   margin: 0;
   -moz-user-select: none;
@@ -739,17 +768,30 @@ xul|*.radio-label-box {
 }
 
 @media (max-width: 830px) {
-  #categories {
-    width: 118px;
+  :root {
+    --in-content-sidebar-width: 118px;
   }
 
+  html|*.category:not(.category-no-icon) > html|*.category-name,
   .category-icon + .category-name {
     display: none;
   }
 
   #categories > .category {
-    padding-inline-start: 13px; /* make category icons align center */
+    padding-inline-start: 12px; /* make category icons align center */
     margin-inline-end: 33px;
+  }
+
+  html|*#categories > html|*.category {
+    width: 48px;
+    min-width: auto;
+    box-sizing: border-box;
+  }
+
+  html|*#categories > html|*.category,
+  /* We need to override the full-width RTL rule, so explicitly specify RTL. */
+  html|*#categories > html|*.category:dir(rtl) {
+    background-position: center;
   }
 
   .main-content {
@@ -997,10 +1039,14 @@ input[type="text"][warning]:enabled:not(:focus) {
   transform: scaleX(-1);
 }
 
-.sidebar-footer-button {
-  padding: 1px; /* Adding padding around help label in order to make entire keyboard focusing outline visible */
+.sidebar-footer-list {
+  list-style-type: none;
+  margin-block: 0 36px;
+  margin-inline: 34px 0;
+  padding: 0;
 }
 
+.sidebar-footer-link,
 .sidebar-footer-button > .text-link {
   -moz-box-flex: 1;
   margin-inline-start: 34px;
@@ -1012,15 +1058,49 @@ input[type="text"][warning]:enabled:not(:focus) {
   cursor: default;
 }
 
+.sidebar-footer-link {
+  display: flex;
+  align-items: center;
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position-x: 13px;
+  background-position-y: 10px;
+  cursor: default;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  padding-inline-start: 43px;
+
+  /* These override the common styles. */
+  margin: 0;
+  font-size: .9em;
+  width: auto;
+}
+
+.sidebar-footer-link:dir(rtl) {
+  background-position-x: right 13px;
+}
+
+.sidebar-footer-link,
+.sidebar-footer-link:hover,
+.sidebar-footer-link:hover:active,
+.sidebar-footer-link:visited {
+  text-decoration: none;
+  color: currentColor;
+}
+
+.sidebar-footer-link:hover,
 .sidebar-footer-button > .text-link:hover {
   background-color: var(--in-content-category-background-hover);
   border-radius: 2px;
 }
 
+.sidebar-footer-link:hover:active:not([disabled]),
 .sidebar-footer-button > .text-link:hover:active:not([disabled]) {
   background-color: var(--in-content-category-background-active);
+  color: currentColor;
 }
 
+.sidebar-footer-link:-moz-focusring,
 .sidebar-footer-button > .text-link:-moz-focusring {
   outline: var(--in-content-category-outline-focus);
 }
@@ -1043,12 +1123,16 @@ input[type="text"][warning]:enabled:not(:focus) {
   margin-bottom: 36px;
 }
 
-.help-icon {
+xul|*.help-icon {
   list-style-image: url("chrome://global/skin/icons/help.svg");
 }
 
+html|*.help-icon {
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
+
 .preferences-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/general.svg");
+  background-image: url("chrome://browser/skin/preferences/in-content/general.svg");
 }
 
 .addons-icon {
@@ -1078,6 +1162,27 @@ input[type="text"][warning]:enabled:not(:focus) {
   }
 
   .sidebar-footer-label {
+    display: none;
+  }
+
+  .sidebar-footer-list {
+    margin-inline-start: 40px;
+  }
+
+  .sidebar-footer-link {
+    width: 36px;
+    height: 36px;
+    padding-inline-start: 0;
+    margin-inline-start: 1px;
+  }
+
+  .sidebar-footer-link,
+  /* We need to override the full-width RTL rule, so explicitly specify RTL. */
+  .sidebar-footer-link:dir(rtl) {
+    background-position: center;
+  }
+
+  .sidebar-footer-link-text {
     display: none;
   }
 }

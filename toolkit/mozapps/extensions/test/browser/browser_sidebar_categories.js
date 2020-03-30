@@ -55,19 +55,35 @@ add_task(async function testClickingSidebarEntriesChangesView() {
 add_task(async function testClickingSidebarPaddingNoChange() {
   let win = await loadInitialView("theme");
   let { managerWindow } = win;
+  let categoryUtils = new CategoryUtilities(managerWindow);
+  let themeCategory = categoryUtils.get("theme");
 
+  let loadDetailView = async () => {
+    let loaded = waitForViewLoad(win);
+    getAddonCard(win, THEME_ID).click();
+    await loaded;
+
+    is(
+      managerWindow.gViewController.currentViewId,
+      `addons://detail/${THEME_ID}`,
+      "The detail view loaded"
+    );
+  };
+
+  // Confirm that clicking the button directly works.
+  await loadDetailView();
   let loaded = waitForViewLoad(win);
-  getAddonCard(win, THEME_ID).click();
+  EventUtils.synthesizeMouseAtCenter(themeCategory, {}, win);
   await loaded;
-
-  ok(
-    managerWindow.gViewController.currentViewId.startsWith("addons://detail/"),
+  is(
+    managerWindow.gViewController.currentViewId,
+    `addons://list/theme`,
     "The detail view loaded"
   );
 
-  let themeCategory = managerWindow.document.getElementById("category-theme");
-  EventUtils.synthesizeMouse(themeCategory, -5, -5, {}, managerWindow);
-
+  // Confirm that clicking on the padding beside it does nothing.
+  await loadDetailView();
+  EventUtils.synthesizeMouse(themeCategory, -5, -5, {}, win);
   ok(!managerWindow.gViewController.isLoading, "No view is loading");
 
   await closeView(win);
