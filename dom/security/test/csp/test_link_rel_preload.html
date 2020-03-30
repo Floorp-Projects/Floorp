@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+  <title>Bug 1599791 - Test link rel=preload</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id=testframe></iframe>
+<script class="testbody" type="text/javascript">
+
+// Please note that 'fakeServer' does not exist because the test relies
+// on "csp-on-violate-policy" , and "specialpowers-http-notify-request"
+// which fire if either the request is blocked or fires. The test does
+// not rely on the result of the load.
+
+let TOTAL_TESTS = 3; // script, style, image
+let seenTests = 0;
+
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+}
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    if (topic === "csp-on-violate-policy") {
+      let asciiSpec = SpecialPowers.getPrivilegedProps(
+                       SpecialPowers.do_QueryInterface(subject, "nsIURI"),
+                       "asciiSpec");
+
+      if (asciiSpec.includes("fakeServer?script") ||
+          asciiSpec.includes("fakeServer?style") ||
+          asciiSpec.includes("fakeServer?image")) {
+        let type = asciiSpec.substring(asciiSpec.indexOf("?") + 1);
+        ok (true, type + " should be blocked by CSP");
+        checkFinished();
+      }
+    }
+
+    if (topic === "specialpowers-http-notify-request") {
+      if (data.includes("fakeServer?script") ||
+          data.includes("fakeServer?style") ||
+          data.includes("fakeServer?image")) {
+        let type = data.substring(data.indexOf("?") + 1);
+        ok (false, type + " should not be loaded");
+        checkFinished();
+      }
+    }
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+function checkFinished() {
+  seenTests++;
+  if (seenTests == TOTAL_TESTS) {
+    window.examiner.remove();
+    SimpleTest.finish();
+    return;
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["network.preload-experimental", true]]},
+  function() {
+    document.getElementById("testframe").src = "file_link_rel_preload.html";
+  });
+
+</script>
+</body>
+</html>
