@@ -7,6 +7,8 @@
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
+import type { URL } from "../../types";
+
 let dispatcher;
 let workerPath;
 
@@ -23,7 +25,7 @@ export const stop = () => {
 
 type PrettyPrintOpts = {
   text: string,
-  url: string,
+  url: URL,
 };
 
 export async function prettyPrint({ text, url }: PrettyPrintOpts) {

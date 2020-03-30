@@ -16,17 +16,23 @@ import { getSourceActorsForSource } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 
-import type { Source, Context } from "../../types";
+import type { Source, Context, SourceId } from "../../types";
 import type { ThunkArgs } from "../types";
 
-async function blackboxActors(state, client, sourceId, isBlackBoxed, range?) {
+async function blackboxActors(
+  state,
+  client,
+  sourceId: SourceId,
+  isBlackBoxed: boolean,
+  range?
+) {
   for (const actor of getSourceActorsForSource(state, sourceId)) {
     await client.blackBox(actor, isBlackBoxed, range);
   }
   return { isBlackBoxed: !isBlackBoxed };
 }
 
-async function getSourceId(source, sourceMaps) {
+async function getSourceId(source: Source, sourceMaps) {
   let sourceId, range;
   if (features.originalBlackbox && isOriginalId(source.id)) {
     range = await sourceMaps.getFileGeneratedRange(source.id);

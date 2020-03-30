@@ -10,7 +10,7 @@ import { createDirectoryNode, createParentMap } from "./utils";
 import { getDomain } from "./treeOrder";
 
 import type { SourcesMapByThread } from "../../reducers/types";
-import type { Thread, Source } from "../../types";
+import type { Thread, Source, URL } from "../../types";
 import type { TreeDirectory } from "./types";
 
 function getSourcesToAdd(newSources, prevSources): Source[] {
@@ -31,13 +31,13 @@ type UpdateTreeParams = {
   newSources: SourcesMapByThread,
   prevSources: SourcesMapByThread,
   uncollapsedTree: TreeDirectory,
-  debuggeeUrl: string,
+  debuggeeUrl: URL,
   threads: Thread[],
 };
 
 type CreateTreeParams = {
   sources: SourcesMapByThread,
-  debuggeeUrl: string,
+  debuggeeUrl: URL,
   threads: Thread[],
 };
 

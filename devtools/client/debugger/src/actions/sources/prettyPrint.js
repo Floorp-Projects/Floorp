@@ -32,6 +32,7 @@ import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
 import type {
   Source,
+  SourceId,
   SourceContent,
   SourceActor,
   Context,
@@ -66,7 +67,7 @@ export async function prettyPrintSource(
   };
 }
 
-export function createPrettySource(cx: Context, sourceId: string) {
+export function createPrettySource(cx: Context, sourceId: SourceId) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
     const url = getPrettySourceURL(source.url || source.id);
@@ -128,7 +129,7 @@ function selectPrettyLocation(
  *          A promise that resolves to [aSource, prettyText] or rejects to
  *          [aSource, error].
  */
-export function togglePrettyPrint(cx: Context, sourceId: string) {
+export function togglePrettyPrint(cx: Context, sourceId: SourceId) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {

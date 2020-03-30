@@ -29,6 +29,7 @@ import type {
   SourceContent,
   SourceLocation,
   ThreadId,
+  URL,
 } from "../types";
 
 import { isFulfilled, type AsyncValue } from "./async-value";
@@ -106,7 +107,7 @@ export function isPretty(source: Source): boolean {
   return isPrettyURL(source.url);
 }
 
-export function isPrettyURL(url: string): boolean {
+export function isPrettyURL(url: URL): boolean {
   return url ? url.endsWith(":formatted") : false;
 }
 
@@ -123,7 +124,7 @@ export function isThirdParty(source: Source) {
  * @memberof utils/source
  * @static
  */
-export function getPrettySourceURL(url: ?string): string {
+export function getPrettySourceURL(url: ?URL): string {
   if (!url) {
     url = "";
   }
@@ -134,14 +135,14 @@ export function getPrettySourceURL(url: ?string): string {
  * @memberof utils/source
  * @static
  */
-export function getRawSourceURL(url: string): string {
+export function getRawSourceURL(url: URL): string {
   return url && url.endsWith(":formatted")
     ? url.slice(0, -":formatted".length)
     : url;
 }
 
 function resolveFileURL(
-  url: string,
+  url: URL,
   transformUrl: transformUrlCallback = initialUrl => initialUrl,
   truncate: boolean = true
 ) {
@@ -168,7 +169,7 @@ export function getFormattedSourceId(id: string) {
  */
 export function getFilename(
   source: Source,
-  rawSourceURL: string = getRawSourceURL(source.url)
+  rawSourceURL: URL = getRawSourceURL(source.url)
 ) {
   const { id } = source;
   if (!rawSourceURL) {
@@ -283,7 +284,7 @@ const contentTypeModeMap = {
   "text/html": { name: "htmlmixed" },
 };
 
-export function getSourcePath(url: string) {
+export function getSourcePath(url: URL) {
   if (!url) {
     return "";
   }
@@ -526,11 +527,11 @@ export function getSourceQueryString(source: ?Source) {
   return parseURL(getRawSourceURL(source.url)).search;
 }
 
-export function isUrlExtension(url: string) {
+export function isUrlExtension(url: URL) {
   return url.includes("moz-extension:") || url.includes("chrome-extension");
 }
 
-export function isExtensionDirectoryPath(url: string) {
+export function isExtensionDirectoryPath(url: URL) {
   if (isUrlExtension(url)) {
     const urlArr = url.replace(/\/+/g, "/").split("/");
     let extensionIndex = urlArr.indexOf("moz-extension:");
@@ -541,7 +542,7 @@ export function isExtensionDirectoryPath(url: string) {
   }
 }
 
-export function getPlainUrl(url: string): string {
+export function getPlainUrl(url: URL): string {
   const queryStart = url.indexOf("?");
   return queryStart !== -1 ? url.slice(0, queryStart) : url;
 }

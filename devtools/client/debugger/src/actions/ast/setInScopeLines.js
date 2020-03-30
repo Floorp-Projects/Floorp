@@ -17,7 +17,7 @@ import { isFulfilled } from "../../utils/async-value";
 
 import type { AstLocation } from "../../workers/parser";
 import type { ThunkArgs } from "../types";
-import type { Context } from "../../types";
+import type { Context, SourceLocation } from "../../types";
 
 function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
   if (!outOfScopeLocations) {
@@ -31,7 +31,11 @@ function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
   );
 }
 
-async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
+async function getInScopeLines(
+  cx: Context,
+  location: SourceLocation,
+  { dispatch, getState, parser }: ThunkArgs
+) {
   const source = getSourceWithContent(getState(), location.sourceId);
 
   let locations = null;

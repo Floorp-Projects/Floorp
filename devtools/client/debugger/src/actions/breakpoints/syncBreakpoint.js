@@ -27,13 +27,14 @@ import type {
   ASTLocation,
   PendingBreakpoint,
   SourceId,
+  Source,
   BreakpointPositions,
   Context,
 } from "../../types";
 
 async function findBreakpointPosition(
   cx: Context,
-  { getState, dispatch },
+  { getState, dispatch }: ThunkArgs,
   location: SourceLocation
 ) {
   const { sourceId, line } = location;
@@ -49,8 +50,8 @@ async function findNewLocation(
   cx: Context,
   { name, offset, index }: ASTLocation,
   location: SourceLocation,
-  source,
-  thunkArgs
+  source: Source,
+  thunkArgs: ThunkArgs
 ) {
   const symbols: LoadedSymbols = await thunkArgs.dispatch(
     setSymbols({ cx, source })

@@ -19,11 +19,10 @@ import type {
   PendingLocation,
   SourceId,
   Range,
+  URL,
 } from "../../types";
 
 import type { EventListenerCategoryList } from "../../actions/types";
-
-type URL = string;
 
 /**
  * The protocol is carried by a reliable, bi-directional byte stream; data sent
@@ -193,7 +192,7 @@ export type Target = {
   getFront: string => Promise<ConsoleFront>,
   form: { consoleActor: any },
   root: any,
-  navigateTo: ({ url: string }) => Promise<*>,
+  navigateTo: ({ url: URL }) => Promise<*>,
   attach: () => Promise<*>,
   attachThread: Object => Promise<ThreadFront>,
   listWorkers: () => Promise<*>,
@@ -206,7 +205,7 @@ export type Target = {
   isWorkerTarget: boolean,
   traits: Object,
   chrome: Boolean,
-  url: string,
+  url: URL,
   isParentProcess: Boolean,
   isServiceWorker: boolean,
   targetForm: Object,
@@ -307,7 +306,7 @@ export type Grip = {|
   name: string,
   extensible: boolean,
   location: {
-    url: string,
+    url: URL,
     line: number,
     column: number,
   },
@@ -325,7 +324,7 @@ export type FunctionGrip = {|
   parameterNames: string[],
   displayName: string,
   userDisplayName: string,
-  url: string,
+  url: URL,
   line: number,
   column: number,
 |};
@@ -413,7 +412,7 @@ export type ThreadFront = {
   actor: ActorId,
   actorID: ActorId,
   request: (payload: Object) => Promise<*>,
-  url: string,
+  url: URL,
   setActiveEventBreakpoints: (string[]) => Promise<void>,
   getAvailableEventBreakpoints: () => Promise<EventListenerCategoryList>,
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
@@ -424,7 +423,7 @@ export type ThreadFront = {
 
 export type Panel = {|
   emit: (eventName: string) => void,
-  openLink: (url: string) => void,
+  openLink: (url: URL) => void,
   openInspector: () => void,
   openElementInInspector: (grip: Object) => void,
   openConsoleAndEvaluate: (input: string) => void,

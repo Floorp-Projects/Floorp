@@ -21,7 +21,7 @@ import { searchContents } from "./file-search";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
 
-import type { SourceLocation, Context, Source } from "../types";
+import type { SourceLocation, Context, Source, SourceId } from "../types";
 import type {
   ActiveSearchType,
   OrientationType,
@@ -86,7 +86,7 @@ export function toggleInlinePreview(toggleValue: boolean) {
   };
 }
 
-export function showSource(cx: Context, sourceId: string) {
+export function showSource(cx: Context, sourceId: SourceId) {
   return ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
@@ -134,7 +134,7 @@ export function togglePaneCollapse(
 export function highlightLineRange(location: {
   start: number,
   end: number,
-  sourceId: string,
+  sourceId: SourceId,
 }) {
   return {
     type: "HIGHLIGHT_LINES",
@@ -145,7 +145,7 @@ export function highlightLineRange(location: {
 export function flashLineRange(location: {
   start: number,
   end: number,
-  sourceId: string,
+  sourceId: SourceId,
 }) {
   return ({ dispatch }: ThunkArgs) => {
     dispatch(highlightLineRange(location));

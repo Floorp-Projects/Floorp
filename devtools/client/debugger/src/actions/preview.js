@@ -28,7 +28,7 @@ import type { Action, ThunkArgs } from "./types";
 import type { Position, Context } from "../types";
 import type { AstLocation } from "../workers/parser";
 
-function findExpressionMatch(state, codeMirror, tokenPos) {
+function findExpressionMatch(state, codeMirror: any, tokenPos: Object) {
   const source = getSelectedSource(state);
   if (!source) {
     return;

@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { Source, Range, SourceLocation, Context } from "../../types";
+import type { Source, Range, SourceLocation, Context, URL } from "../../types";
 
 import type {
   ActiveSearchType,
@@ -69,7 +69,7 @@ export type UIAction =
   | {|
       +type: "SET_PROJECT_DIRECTORY_ROOT",
       +cx: Context,
-      +url: string,
+      +url: URL,
     |}
   | {|
       +type: "SET_PRIMARY_PANE_TAB",

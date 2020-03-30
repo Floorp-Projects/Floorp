@@ -26,7 +26,7 @@ import getFunctionName from "./utils/getFunctionName";
 import { getFramework } from "./frameworks";
 
 import type { SimplePath, Node, TraversalAncestors } from "./utils/simple-path";
-
+import type { SourceId } from "../../types";
 import type { AstPosition, AstLocation } from "./types";
 
 export type SymbolDeclaration = {
@@ -491,7 +491,7 @@ export function clearSymbols() {
   symbolDeclarations = new Map();
 }
 
-export function getSymbols(sourceId: string): SymbolDeclarations {
+export function getSymbols(sourceId: SourceId): SymbolDeclarations {
   if (symbolDeclarations.has(sourceId)) {
     const symbols = symbolDeclarations.get(sourceId);
     if (symbols) {

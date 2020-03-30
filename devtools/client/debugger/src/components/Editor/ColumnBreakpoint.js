@@ -49,9 +49,7 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
 
   bp.setAttribute("title", logValue || condition || "");
   bp.onclick = onClick;
-
-  // NOTE: flow does not know about oncontextmenu
-  (bp: any).oncontextmenu = onContextMenu;
+  bp.oncontextmenu = onContextMenu;
 
   return bp;
 }

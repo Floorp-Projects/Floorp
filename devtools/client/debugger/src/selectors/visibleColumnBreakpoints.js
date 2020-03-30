@@ -22,6 +22,7 @@ import { getLineText } from "../utils/source";
 import type { Selector, State } from "../reducers/types";
 
 import type {
+  Source,
   SourceLocation,
   PartialPosition,
   Breakpoint,
@@ -38,6 +39,12 @@ export type ColumnBreakpoint = {|
 
 export type ColumnBreakpoints = Array<ColumnBreakpoint>;
 
+type BreakpointMap =
+  | {|
+      +line: Breakpoint[],
+    |}
+  | {};
+
 function contains(location: PartialPosition, range: Range) {
   return (
     location.line >= range.start.line &&
@@ -48,7 +55,10 @@ function contains(location: PartialPosition, range: Range) {
   );
 }
 
-function groupBreakpoints(breakpoints, selectedSource) {
+function groupBreakpoints(
+  breakpoints: ?(Breakpoint[]),
+  selectedSource: Source
+): BreakpointMap {
   if (!breakpoints) {
     return {};
   }
@@ -68,7 +78,10 @@ function groupBreakpoints(breakpoints, selectedSource) {
   return map;
 }
 
-function findBreakpoint(location, breakpointMap) {
+function findBreakpoint(
+  location: SourceLocation,
+  breakpointMap: BreakpointMap
+): ?Breakpoint {
   const { line, column } = location;
   const breakpoints = breakpointMap[line]?.[column];
 
@@ -77,7 +90,10 @@ function findBreakpoint(location, breakpointMap) {
   }
 }
 
-function filterByLineCount(positions, selectedSource) {
+function filterByLineCount(
+  positions: BreakpointPosition[],
+  selectedSource: Source
+): BreakpointPosition[] {
   const lineCount = {};
 
   for (const breakpoint of positions) {
@@ -85,7 +101,6 @@ function filterByLineCount(positions, selectedSource) {
     if (!lineCount[line]) {
       lineCount[line] = 0;
     }
-
     lineCount[line] = lineCount[line] + 1;
   }
 
@@ -95,15 +110,22 @@ function filterByLineCount(positions, selectedSource) {
   );
 }
 
-function filterVisible(positions, selectedSource, viewport) {
+function filterVisible(
+  positions: BreakpointPosition[],
+  selectedSource: Source,
+  viewport
+) {
   return positions.filter(columnBreakpoint => {
     const location = getSelectedLocation(columnBreakpoint, selectedSource);
-
     return viewport && contains(location, viewport);
   });
 }
 
-function filterByBreakpoints(positions, selectedSource, breakpointMap) {
+function filterByBreakpoints(
+  positions: BreakpointPosition[],
+  selectedSource: Source,
+  breakpointMap: BreakpointMap
+) {
   return positions.filter(position => {
     const location = getSelectedLocation(position, selectedSource);
     return breakpointMap[location.line];
@@ -111,7 +133,11 @@ function filterByBreakpoints(positions, selectedSource, breakpointMap) {
 }
 
 // Filters out breakpoints to the right of the line. (bug 1552039)
-function filterInLine(positions, selectedSource, selectedContent) {
+function filterInLine(
+  positions: BreakpointPosition[],
+  selectedSource: Source,
+  selectedContent
+) {
   return positions.filter(position => {
     const location = getSelectedLocation(position, selectedSource);
     const lineText = getLineText(
@@ -126,8 +152,8 @@ function filterInLine(positions, selectedSource, selectedContent) {
 
 function formatPositions(
   positions: BreakpointPosition[],
-  selectedSource,
-  breakpointMap
+  selectedSource: Source,
+  breakpointMap: BreakpointMap
 ) {
   return (positions: any).map((position: BreakpointPosition) => {
     const location = getSelectedLocation(position, selectedSource);

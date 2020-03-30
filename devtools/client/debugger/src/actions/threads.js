@@ -16,6 +16,8 @@ import {
   getSourceActorsForThread,
 } from "../selectors";
 
+import type { ActorId } from "../types";
+
 export function updateThreads() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const cx = getContext(getState());
@@ -77,7 +79,7 @@ export function updateThreads() {
   };
 }
 
-export function ensureHasThread(thread: string) {
+export function ensureHasThread(thread: ActorId) {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const currentThreads = getAllThreads(getState());
     if (!currentThreads.some(t => t.actor == thread)) {

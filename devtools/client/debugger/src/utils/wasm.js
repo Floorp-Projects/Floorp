@@ -32,7 +32,7 @@ function maybeWasmSectionNameResolver(data: Uint8Array) {
  * @memberof utils/wasm
  * @static
  */
-export function getWasmText(sourceId: string, data: Uint8Array) {
+export function getWasmText(sourceId: SourceId, data: Uint8Array) {
   const nameResolver = maybeWasmSectionNameResolver(data);
   const parser = new BinaryReader();
   parser.setData(data.buffer, 0, data.length);
@@ -62,7 +62,7 @@ export function getWasmText(sourceId: string, data: Uint8Array) {
  * @memberof utils/wasm
  * @static
  */
-export function getWasmLineNumberFormatter(sourceId: string) {
+export function getWasmLineNumberFormatter(sourceId: SourceId) {
   const codeOf0 = 48,
     codeOfA = 65;
   const buffer = [
@@ -98,7 +98,7 @@ export function getWasmLineNumberFormatter(sourceId: string) {
  * @memberof utils/wasm
  * @static
  */
-export function isWasm(sourceId: string) {
+export function isWasm(sourceId: SourceId) {
   return sourceId in wasmStates;
 }
 
@@ -106,7 +106,7 @@ export function isWasm(sourceId: string) {
  * @memberof utils/wasm
  * @static
  */
-export function lineToWasmOffset(sourceId: string, number: number): ?number {
+export function lineToWasmOffset(sourceId: SourceId, number: number): ?number {
   const wasmState = wasmStates[sourceId];
   if (!wasmState) {
     return undefined;
@@ -122,7 +122,7 @@ export function lineToWasmOffset(sourceId: string, number: number): ?number {
  * @memberof utils/wasm
  * @static
  */
-export function wasmOffsetToLine(sourceId: string, offset: number): ?number {
+export function wasmOffsetToLine(sourceId: SourceId, offset: number): ?number {
   const wasmState = wasmStates[sourceId];
   if (!wasmState) {
     return undefined;

@@ -18,6 +18,8 @@ export type SearchModifiers = {
   regexMatch: boolean,
 };
 
+export type URL = string;
+
 export type Mode =
   | String
   | {
@@ -61,7 +63,7 @@ export type QueuedSourceData =
 
 export type OriginalSourceData = {|
   id: string,
-  url: string,
+  url: URL,
 |};
 
 export type GeneratedSourceData = {
@@ -411,11 +413,11 @@ export type SourceWithContentAndType<+Content: SourceContent> = $ReadOnly<{
 
 export type Source = {
   +id: SourceId,
-  +url: string,
+  +url: URL,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
-  +relativeUrl: string,
-  +introductionUrl: ?string,
+  +relativeUrl: URL,
+  +introductionUrl: ?URL,
   +introductionType: ?string,
   +extensionName: ?string,
   +isExtension: boolean,
@@ -475,7 +477,7 @@ export type Scope = {|
 export type ThreadType = "mainThread" | "worker" | "contentProcess";
 export type Thread = {
   +actor: ThreadId,
-  +url: string,
+  +url: URL,
   +type: ThreadType,
   +name: string,
   serviceWorkerStatus?: string,
