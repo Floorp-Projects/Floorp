@@ -434,7 +434,7 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
 
     if (NS_WARN_IF(
             !Write(aCx, aValue, JS::UndefinedHandleValue, cloneDataPolicy))) {
-      MOZ_CRASH("We should support any kind of data!");
+      // Ignore the message.
       return false;
     }
 
