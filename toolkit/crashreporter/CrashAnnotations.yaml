@@ -290,6 +290,7 @@ DOMFissionEnabled:
     Set to 1 when DOM fission is enabled, and subframes are potentially loaded
     in a separate process.
   type: boolean
+  ping: true
 
 DOMIPCEnabled:
   description: >
