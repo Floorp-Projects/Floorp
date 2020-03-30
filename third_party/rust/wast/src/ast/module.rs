@@ -15,12 +15,12 @@ pub struct Wat<'a> {
 
 impl<'a> Parse<'a> for Wat<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if !parser.has_tokens() {
-            return Err(parser.error("expected at least one module field"));
-        }
         let _r = parser.register_annotation("custom");
         let module = if !parser.peek2::<kw::module>() {
             let fields = ModuleField::parse_remaining(parser)?;
+            if fields.is_empty() {
+                return Err(parser.error("expected at least one module field"));
+            }
             Module {
                 span: ast::Span { offset: 0 },
                 id: None,

@@ -341,7 +341,7 @@ impl<'a> Namespace<'a> {
                 if desc != "elem" && desc != "data" {
                     return Err(Error::new(
                         name.span(),
-                        format!("duplicate {} identifier", desc),
+                        format!("duplicate identifier for {}", desc),
                     ));
                 }
             }
