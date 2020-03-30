@@ -2248,6 +2248,7 @@ void nsCookieService::SetCookieStringInternal(
       NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_WRITE);
       return;  // Stop here
     case STATUS_REJECTED_WITH_ERROR:
+      NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_WRITE);
       return;
     case STATUS_ACCEPTED:  // Fallthrough
     case STATUS_ACCEPT_SESSION:
