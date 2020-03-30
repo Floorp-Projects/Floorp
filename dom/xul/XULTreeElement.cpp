@@ -83,7 +83,7 @@ nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(FlushType aFlushType) {
   MOZ_ASSERT(aFlushType == FlushType::Frames ||
              aFlushType == FlushType::Layout || aFlushType == FlushType::None);
   nsCOMPtr<nsIContent> kungFuDeathGrip = this;  // keep a reference
-  RefPtr<Document> doc = GetUncomposedDoc();
+  RefPtr<Document> doc = GetComposedDoc();
 
   // Make sure our frames are up to date, and layout as needed.  We
   // have to do this before checking for our cached mTreeBody, since
