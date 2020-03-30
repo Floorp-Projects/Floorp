@@ -21,7 +21,7 @@ template <typename Func>
 void WithSwizzleFilter(const IntSize& aSize, SurfaceFormat aInputFormat,
                        SurfaceFormat aOutputFormat, bool aPremultiplyAlpha,
                        Func aFunc) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   WithFilterPipeline(
@@ -34,7 +34,7 @@ TEST(ImageSwizzleFilter, WritePixels_RGBA_to_BGRA)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8,
-      false, [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      false, [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(aDecoder, aFilter, BGRAColor::Blue(),
                                     BGRAColor::Red());
       });
@@ -44,7 +44,7 @@ TEST(ImageSwizzleFilter, WritePixels_RGBA_to_Premultiplied_BGRA)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8, true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(
             aDecoder, aFilter, BGRAColor(0x26, 0x00, 0x00, 0x7F, true),
             BGRAColor(0x00, 0x00, 0x26, 0x7F), Nothing(), Nothing(), Nothing(),
@@ -56,7 +56,7 @@ TEST(ImageSwizzleFilter, WritePixels_RGBA_to_BGRX)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8,
-      false, [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      false, [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(aDecoder, aFilter,
                                     BGRAColor(0x26, 0x00, 0x00, 0x7F, true),
                                     BGRAColor(0x00, 0x00, 0x26, 0xFF));
@@ -67,7 +67,7 @@ TEST(ImageSwizzleFilter, WritePixels_RGBA_to_Premultiplied_BGRX)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8, true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(aDecoder, aFilter,
                                     BGRAColor(0x26, 0x00, 0x00, 0x7F, true),
                                     BGRAColor(0x00, 0x00, 0x13, 0xFF));
@@ -78,7 +78,7 @@ TEST(ImageSwizzleFilter, WritePixels_RGBA_to_RGBX)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8,
-      false, [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      false, [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(aDecoder, aFilter,
                                     BGRAColor(0x00, 0x00, 0x26, 0x7F, true),
                                     BGRAColor(0x00, 0x00, 0x26, 0xFF));
@@ -89,7 +89,7 @@ TEST(ImageSwizzleFilter, WritePixels_RGBA_to_Premultiplied_RGRX)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8, true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(aDecoder, aFilter,
                                     BGRAColor(0x00, 0x00, 0x26, 0x7F, true),
                                     BGRAColor(0x00, 0x00, 0x13, 0xFF));
@@ -100,7 +100,7 @@ TEST(ImageSwizzleFilter, WritePixels_BGRA_to_BGRX)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8,
-      false, [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      false, [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(aDecoder, aFilter,
                                     BGRAColor(0x10, 0x26, 0x00, 0x7F, true),
                                     BGRAColor(0x10, 0x26, 0x00, 0xFF));
@@ -111,7 +111,7 @@ TEST(ImageSwizzleFilter, WritePixels_BGRA_to_Premultiplied_BGRA)
 {
   WithSwizzleFilter(
       IntSize(100, 100), SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8, true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckTransformedWritePixels(
             aDecoder, aFilter, BGRAColor(0x10, 0x26, 0x00, 0x7F, true),
             BGRAColor(0x10, 0x26, 0x00, 0x7F), Nothing(), Nothing(), Nothing(),

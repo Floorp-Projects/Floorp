@@ -45,7 +45,7 @@ using namespace mozilla::image;
 
 TEST(ImageDownscalingFilter, NoSkia)
 {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(bool(decoder));
 
   // Configuring a DownscalingFilter should fail without Skia.
