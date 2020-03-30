@@ -1238,6 +1238,14 @@ SearchService.prototype = {
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
       if (gModernConfig) {
+        // This isn't ideal, as it means re-processing the xml files on each
+        // startup, however the switch to in-tree distributions (bug 1622978)
+        // should be done before we release modern config, so we can get away
+        // with it for now.
+        for (let loadDir of distDirs) {
+          let enginesFromDir = await this._loadEnginesFromDir(loadDir);
+          enginesFromDir.forEach(this._addEngineToStore, this);
+        }
         const newEngines = await this._loadEnginesFromConfig(engines, isReload);
         for (let engine of newEngines) {
           this._addEngineToStore(engine);
@@ -1846,7 +1854,7 @@ SearchService.prototype = {
         file.initWithPath(osfile.path);
         addedEngine = new SearchEngine({
           fileURI: file,
-          isBuiltin: false,
+          isBuiltin: true,
         });
         await addedEngine._initFromFile(file);
         engines.push(addedEngine);
