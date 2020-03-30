@@ -1642,6 +1642,10 @@ class CategoryButton extends HTMLButtonElement {
     this.append(text);
   }
 
+  load() {
+    loadViewFn(this.viewId);
+  }
+
   get isVisible() {
     return true;
   }
@@ -1738,9 +1742,13 @@ class CategoriesBox extends customElements.get("button-group") {
     this.addEventListener("click", e => {
       let button = e.target.closest("[viewid]");
       if (button) {
-        loadViewFn(button.getAttribute("viewid"));
+        button.load();
       }
     });
+    this.addEventListener("button-group:key-selected", e => {
+      this.activeChild.load();
+    });
+
     AddonManagerListenerHandler.addListener(this);
 
     this._resolveRendered();

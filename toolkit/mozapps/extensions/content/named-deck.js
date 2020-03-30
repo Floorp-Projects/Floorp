@@ -246,6 +246,7 @@ class ButtonGroup extends HTMLElement {
       }
       if (newFocus) {
         this.activeChild = newFocus;
+        this.dispatchEvent(new CustomEvent("button-group:key-selected"));
       }
     } else if (e.type == "button-group:selected") {
       this.activeChild = e.target;
