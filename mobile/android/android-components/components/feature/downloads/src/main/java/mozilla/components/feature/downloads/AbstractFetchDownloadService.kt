@@ -86,8 +86,28 @@ abstract class AbstractFetchDownloadService : Service() {
         @GuardedBy("context") var status: DownloadJobStatus,
         var foregroundServiceId: Int = 0,
         var downloadDeleted: Boolean = false,
-        var notifiedStopped: Boolean = false
-    )
+        var notifiedStopped: Boolean = false,
+        var lastNotificationUpdate: Long = 0L
+    ) {
+        internal fun canUpdateNotification(): Boolean {
+            return isUnderNotificationUpdateLimit() && !notifiedStopped
+        }
+
+        /**
+         * Android imposes a limit on of how often we can send updates for a notification.
+         * The limit is one second per update.
+         * See https://developer.android.com/training/notify-user/build-notification.html#Updating
+         * This function indicates if we are under that limit.
+         */
+        internal fun isUnderNotificationUpdateLimit(): Boolean {
+            return getSecondsSinceTheLastNotificationUpdate() >= 1
+        }
+
+        @Suppress("MagicNumber")
+        internal fun getSecondsSinceTheLastNotificationUpdate(): Long {
+            return (System.currentTimeMillis() - lastNotificationUpdate) / 1000
+        }
+    }
 
     internal fun setDownloadJobStatus(downloadJobState: DownloadJobState, status: DownloadJobStatus) {
         synchronized(context) {
@@ -142,7 +162,7 @@ abstract class AbstractFetchDownloadService : Service() {
                         NotificationManagerCompat.from(context).cancel(
                             currentDownloadJobState.foregroundServiceId
                         )
-
+                        currentDownloadJobState.lastNotificationUpdate = System.currentTimeMillis()
                         setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.CANCELLED)
                         currentDownloadJobState.job?.cancel()
 
@@ -158,7 +178,7 @@ abstract class AbstractFetchDownloadService : Service() {
                         NotificationManagerCompat.from(context).cancel(
                             currentDownloadJobState.foregroundServiceId
                         )
-
+                        currentDownloadJobState.lastNotificationUpdate = System.currentTimeMillis()
                         setDownloadJobStatus(currentDownloadJobState, DownloadJobStatus.ACTIVE)
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
@@ -211,6 +231,7 @@ abstract class AbstractFetchDownloadService : Service() {
             while (isActive) {
                 delay(PROGRESS_UPDATE_INTERVAL)
                 updateDownloadNotification()
+                if (downloadJobs.isEmpty()) cancel()
             }
         }
 
@@ -224,7 +245,7 @@ abstract class AbstractFetchDownloadService : Service() {
     @Suppress("ComplexMethod")
     private fun updateDownloadNotification() {
         for (download in downloadJobs.values) {
-            if (download.notifiedStopped) { continue }
+            if (!download.canUpdateNotification()) { continue }
 
             // Dispatch the corresponding notification based on the current status
             val notification = when (getDownloadJobStatus(download)) {
@@ -248,7 +269,11 @@ abstract class AbstractFetchDownloadService : Service() {
                     DownloadNotification.createDownloadFailedNotification(context, download.state)
                 }
 
-                DownloadJobStatus.CANCELLED -> { null }
+                DownloadJobStatus.CANCELLED -> {
+                    NotificationManagerCompat.from(context).cancel(download.foregroundServiceId)
+                    download.lastNotificationUpdate = System.currentTimeMillis()
+                    null
+                }
             }
 
             notification?.let {
@@ -256,10 +281,11 @@ abstract class AbstractFetchDownloadService : Service() {
                     download.foregroundServiceId,
                     it
                 )
+                download.lastNotificationUpdate = System.currentTimeMillis()
             }
 
             if (getDownloadJobStatus(download) != DownloadJobStatus.ACTIVE) {
-                sendDownloadStopped(download.state.id)
+                sendDownloadStopped(download)
             }
         }
     }
@@ -381,14 +407,13 @@ abstract class AbstractFetchDownloadService : Service() {
      * Informs [mozilla.components.feature.downloads.manager.FetchDownloadManager] that a download
      * is no longer in progress due to being paused, completed, or failed
      */
-    private fun sendDownloadStopped(downloadID: Long) {
-        val downloadJob = downloadJobs[downloadID] ?: return
-        downloadJob.notifiedStopped = true
+    private fun sendDownloadStopped(downloadState: DownloadJobState) {
+        downloadState.notifiedStopped = true
 
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
-        intent.putExtra(EXTRA_DOWNLOAD_STATUS, getDownloadJobStatus(downloadJob))
-        intent.putExtra(EXTRA_DOWNLOAD, downloadJob.state)
-        intent.putExtra(EXTRA_DOWNLOAD_ID, downloadID)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, getDownloadJobStatus(downloadState))
+        intent.putExtra(EXTRA_DOWNLOAD, downloadState.state)
+        intent.putExtra(EXTRA_DOWNLOAD_ID, downloadState.state.id)
 
         broadcastManager.sendBroadcast(intent)
     }
@@ -539,7 +564,7 @@ abstract class AbstractFetchDownloadService : Service() {
          * users to press buttons on the notification. If a new notification is presented while a
          * user is tapping a button, their press will be cancelled.
          */
-        private const val PROGRESS_UPDATE_INTERVAL = 750L
+        internal const val PROGRESS_UPDATE_INTERVAL = 750L
 
         const val EXTRA_DOWNLOAD = "mozilla.components.feature.downloads.extras.DOWNLOAD"
         const val EXTRA_DOWNLOAD_STATUS = "mozilla.components.feature.downloads.extras.DOWNLOAD_STATUS"

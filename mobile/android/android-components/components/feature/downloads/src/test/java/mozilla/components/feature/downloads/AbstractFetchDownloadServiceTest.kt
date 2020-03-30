@@ -11,6 +11,7 @@ import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -24,6 +25,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_PAUSE
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.PROGRESS_UPDATE_INTERVAL
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.ACTIVE
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.CANCELLED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.COMPLETED
@@ -514,7 +516,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, ACTIVE)
         assertEquals(ACTIVE, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         assertEquals(1, shadowNotificationService.size())
     }
@@ -545,7 +547,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, PAUSED)
         assertEquals(PAUSED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         assertEquals(1, shadowNotificationService.size())
     }
@@ -576,7 +578,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, COMPLETED)
         assertEquals(COMPLETED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         assertEquals(1, shadowNotificationService.size())
     }
@@ -607,7 +609,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, FAILED)
         assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         assertEquals(1, shadowNotificationService.size())
     }
@@ -638,7 +640,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, CANCELLED)
         assertEquals(CANCELLED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         assertEquals(0, shadowNotificationService.size())
     }
@@ -722,8 +724,10 @@ class AbstractFetchDownloadServiceTest {
         val providedDownload = argumentCaptor<DownloadState>()
         verify(service).performDownload(providedDownload.capture())
 
+        service.downloadJobs[download.id]?.status = PAUSED
+
         // Advance the clock so that the poller posts a notification.
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         assertEquals(1, shadowNotificationService.size())
 
         // Now simulate onTaskRemoved.
@@ -760,7 +764,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.setDownloadJobStatus(cancelledDownloadJobState, CANCELLED)
         assertEquals(CANCELLED, service.getDownloadJobStatus(cancelledDownloadJobState))
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         assertEquals(0, shadowNotificationService.size())
 
         val download = DownloadState("https://example.com/file.txt", "file.txt")
@@ -778,7 +782,65 @@ class AbstractFetchDownloadServiceTest {
 
         service.setDownloadJobStatus(downloadJobState, COMPLETED)
         assertEquals(COMPLETED, service.getDownloadJobStatus(downloadJobState))
-        testDispatcher.advanceTimeBy(750)
+        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         assertEquals(1, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `keeps track of how many seconds have passed since the last update to a notification`() = runBlocking {
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(state = mock(), status = ACTIVE)
+        val oneSecond = 1000L
+
+        downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
+
+        delay(oneSecond)
+
+        var seconds = downloadJobState.getSecondsSinceTheLastNotificationUpdate()
+
+        assertEquals(1, seconds)
+
+        delay(oneSecond)
+
+        seconds = downloadJobState.getSecondsSinceTheLastNotificationUpdate()
+
+        assertEquals(2, seconds)
+    }
+
+    @Test
+    fun `is a notification under the time limit for updates`() = runBlocking {
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(state = mock(), status = ACTIVE)
+        val oneSecond = 1000L
+
+        downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
+
+        assertFalse(downloadJobState.isUnderNotificationUpdateLimit())
+
+        delay(oneSecond)
+
+        assertTrue(downloadJobState.isUnderNotificationUpdateLimit())
+    }
+
+    @Test
+    fun `try to update a notification`() = runBlocking {
+        val downloadJobState = AbstractFetchDownloadService.DownloadJobState(state = mock(), status = ACTIVE)
+        val oneSecond = 1000L
+
+        downloadJobState.lastNotificationUpdate = System.currentTimeMillis()
+
+        // It's over the notification limit
+        assertFalse(downloadJobState.canUpdateNotification())
+
+        delay(oneSecond)
+
+        // It's under the notification limit
+        assertTrue(downloadJobState.canUpdateNotification())
+
+        downloadJobState.notifiedStopped = true
+
+        assertFalse(downloadJobState.canUpdateNotification())
+
+        downloadJobState.notifiedStopped = false
+
+        assertTrue(downloadJobState.canUpdateNotification())
     }
 }
