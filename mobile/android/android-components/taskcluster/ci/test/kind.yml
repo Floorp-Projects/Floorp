@@ -40,8 +40,8 @@ job-defaults:
         max-run-time: 7200
 
 jobs:
-    ui:
-        description: 'Run ui tests for browser component'
+    unit-test-browser-engine-gecko-nightly:
+        description: 'Run unit tests on device for browser component'
         run:
             post-gradlew:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'browser', 'arm', '1']
