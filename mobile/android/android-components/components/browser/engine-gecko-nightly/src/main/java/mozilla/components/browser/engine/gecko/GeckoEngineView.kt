@@ -170,6 +170,12 @@ class GeckoEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
+    override fun getInputResult(): EngineView.InputResult {
+        // Direct mapping of GeckoView's returned values.
+        // There should be a 1-1 relation. If not fail fast to allow for a quick fix.
+        return EngineView.InputResult.values().first { it.value == currentGeckoView.inputResult }
+    }
+
     override fun setVerticalClipping(clippingHeight: Int) {
         currentGeckoView.setVerticalClipping(clippingHeight)
     }

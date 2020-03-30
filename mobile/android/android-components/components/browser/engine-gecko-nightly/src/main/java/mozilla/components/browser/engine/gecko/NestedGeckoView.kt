@@ -10,8 +10,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
+import mozilla.components.concept.engine.EngineView
 import org.mozilla.geckoview.GeckoView
-import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_HANDLED_CONTENT
 import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_UNHANDLED
 
 /**
@@ -42,8 +42,12 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
     @VisibleForTesting
     internal var childHelper: NestedScrollingChildHelper = NestedScrollingChildHelper(this)
 
-    @VisibleForTesting
-    internal var shouldScroll = true
+    /**
+     * Integer indicating how user's MotionEvent was handled.
+     *
+     * There must be a 1-1 relation between this values and [EngineView.InputResult]'s.
+     */
+    internal var inputResult: Int = INPUT_RESULT_UNHANDLED
 
     init {
         isNestedScrollingEnabled = true
@@ -60,41 +64,31 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         }
 
         // Execute event handler from parent class in all cases
-        val eventHandled = handleEvent(event)
+        inputResult = handleEvent(event)
 
         when (action) {
             MotionEvent.ACTION_MOVE -> {
-                if (shouldScroll) {
-                    val allowScroll = !shouldPinOnScreen()
-                    var deltaY = lastY - eventY
+                val allowScroll = !shouldPinOnScreen()
+                var deltaY = lastY - eventY
 
-                    if (allowScroll && dispatchNestedPreScroll(0, deltaY, scrollConsumed, scrollOffset)) {
-                        deltaY -= scrollConsumed[1]
-                        event.offsetLocation(0f, (-scrollOffset[1]).toFloat())
-                        nestedOffsetY += scrollOffset[1]
-                    }
+                if (allowScroll && dispatchNestedPreScroll(0, deltaY, scrollConsumed, scrollOffset)) {
+                    deltaY -= scrollConsumed[1]
+                    event.offsetLocation(0f, (-scrollOffset[1]).toFloat())
+                    nestedOffsetY += scrollOffset[1]
+                }
 
-                    lastY = eventY - scrollOffset[1]
+                lastY = eventY - scrollOffset[1]
 
-                    if (allowScroll && dispatchNestedScroll(0, scrollOffset[1], 0, deltaY, scrollOffset)) {
-                        lastY -= scrollOffset[1]
-                        event.offsetLocation(0f, scrollOffset[1].toFloat())
-                        nestedOffsetY += scrollOffset[1]
-                    }
+                if (allowScroll && dispatchNestedScroll(0, scrollOffset[1], 0, deltaY, scrollOffset)) {
+                    lastY -= scrollOffset[1]
+                    event.offsetLocation(0f, scrollOffset[1].toFloat())
+                    nestedOffsetY += scrollOffset[1]
                 }
             }
 
             MotionEvent.ACTION_DOWN -> {
-                // Only scroll for certain eventHandled responses
-                // See https://github.com/mozilla-mobile/fenix/issues/8768#issuecomment-592718468
-                shouldScroll = (eventHandled != INPUT_RESULT_HANDLED_CONTENT && eventHandled != INPUT_RESULT_UNHANDLED)
-
-                if (shouldScroll) {
-                    lastY = eventY
-                    startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
-                } else {
-                    stopNestedScroll()
-                }
+                lastY = eventY
+                startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
 
             // We don't care about other touch events
@@ -104,7 +98,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         // Recycle previously obtained event
         event.recycle()
 
-        return eventHandled
+        return inputResult
     }
 
     // Helper function to make testing of this method easier
