@@ -962,7 +962,7 @@ void WSRunScanner::GetRuns() {
     mStartRun->mType = WSType::leadingWS;
     mStartRun->mEndNode = mFirstNBSPNode;
     mStartRun->mEndOffset = mFirstNBSPOffset;
-    mStartRun->mLeftType = mStartReason;
+    mStartRun->SetStartFrom(mStartReason);
     mStartRun->SetEndByNormalWiteSpaces();
 
     // set up next run
@@ -971,7 +971,7 @@ void WSRunScanner::GetRuns() {
     normalRun->mType = WSType::normalWS;
     normalRun->mStartNode = mFirstNBSPNode;
     normalRun->mStartOffset = mFirstNBSPOffset;
-    normalRun->mLeftType = WSType::leadingWS;
+    normalRun->SetStartFromLeadingWhiteSpaces();
     normalRun->mLeft = mStartRun;
     if (!EndsByBlockBoundary()) {
       // then no trailing ws.  this normal run ends the overall ws run.
@@ -1002,7 +1002,7 @@ void WSRunScanner::GetRuns() {
         lastRun->mStartOffset = mLastNBSPOffset + 1;
         lastRun->mEndNode = mEndNode;
         lastRun->mEndOffset = mEndOffset;
-        lastRun->mLeftType = WSType::normalWS;
+        lastRun->SetStartFromNormalWhiteSpaces();
         lastRun->mLeft = normalRun;
         lastRun->SetEndBy(mEndReason);
         mEndRun = lastRun;
@@ -1014,7 +1014,7 @@ void WSRunScanner::GetRuns() {
     mStartRun->mType = WSType::normalWS;
     mStartRun->mEndNode = mLastNBSPNode;
     mStartRun->mEndOffset = mLastNBSPOffset + 1;
-    mStartRun->mLeftType = mStartReason;
+    mStartRun->SetStartFrom(mStartReason);
 
     // we might have trailing ws.
     // it so happens that *if* there is an nbsp at end, {mEndNode,mEndOffset-1}
@@ -1031,7 +1031,7 @@ void WSRunScanner::GetRuns() {
       lastRun->mType = WSType::trailingWS;
       lastRun->mStartNode = mLastNBSPNode;
       lastRun->mStartOffset = mLastNBSPOffset + 1;
-      lastRun->mLeftType = WSType::normalWS;
+      lastRun->SetStartFromNormalWhiteSpaces();
       lastRun->mLeft = mStartRun;
       lastRun->SetEndBy(mEndReason);
       mEndRun = lastRun;
@@ -1061,7 +1061,7 @@ void WSRunScanner::MakeSingleWSRun(WSType aType) {
   mStartRun->mType = aType;
   mStartRun->mEndNode = mEndNode;
   mStartRun->mEndOffset = mEndOffset;
-  mStartRun->mLeftType = mStartReason;
+  mStartRun->SetStartFrom(mStartReason);
   mStartRun->SetEndBy(mEndReason);
 
   mEndRun = mStartRun;
@@ -1890,8 +1890,8 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
       } else {
         spaceNBSP = true;
       }
-    } else if (aRun->mLeftType == WSType::text ||
-               aRun->mLeftType == WSType::special) {
+    } else if (aRun->StartsFromNormalText() ||
+               aRun->StartsFromSpecialContent()) {
       leftCheck = true;
     }
     if (leftCheck || spaceNBSP) {
@@ -2050,8 +2050,8 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnnecessary(
         // ASCII space, we can replace the NBSP with ASCII space.
         canConvert = true;
       }
-    } else if (aRun->mLeftType == WSType::text ||
-               aRun->mLeftType == WSType::special) {
+    } else if (aRun->StartsFromNormalText() ||
+               aRun->StartsFromSpecialContent()) {
       // If previous character is a NBSP and it's the first character of the
       // text node, additionally, if its previous node is a text node including
       // non-whitespace characters or <img> node or something inline
