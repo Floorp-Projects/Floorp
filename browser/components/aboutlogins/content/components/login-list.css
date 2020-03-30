@@ -181,27 +181,12 @@ ol {
 .alert-icon {
   width: 16px;
   margin-inline-start: 12px;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.75;
 }
 
 .breached > .alert-icon {
-  fill: var(--red-70);
-}
-
-.vulnerable > .alert-icon {
-  fill: var(--grey-60);
-}
-
-@media (-moz-windows-default-theme: 0) {
-  .list-item-warning-icon {
-    fill: currentColor;
-  }
-}
-
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
-  @media (prefers-color-scheme: dark) {
-    .breached > .list-item-warning-icon {
-      fill: var(--red-60);
-    }
-  }
+  fill: var(--red-60);
+  fill-opacity: 1;
 }
