@@ -163,8 +163,8 @@ class LoadInfo final : public nsILoadInfo {
            bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
            bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
            const nsAString& aCspNonce, bool aSkipContentSniffing,
-           uint32_t aHttpsOnlyStatus, uint32_t aRequestBlockingReason,
-           nsINode* aLoadingContext);
+           uint32_t aHttpsOnlyStatus, bool aHasStoragePermission,
+           uint32_t aRequestBlockingReason, nsINode* aLoadingContext);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -260,6 +260,7 @@ class LoadInfo final : public nsILoadInfo {
   nsString mCspNonce;
   bool mSkipContentSniffing;
   uint32_t mHttpsOnlyStatus;
+  bool mHasStoragePermission;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.
