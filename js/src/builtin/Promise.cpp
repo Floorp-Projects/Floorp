@@ -39,9 +39,8 @@
 
 using namespace js;
 
-static double MillisecondsSinceStartup(
-    const mozilla::Maybe<mozilla::TimeStamp>& maybeNow) {
-  auto now = maybeNow.isSome() ? maybeNow.ref() : mozilla::TimeStamp::Now();
+static double MillisecondsSinceStartup() {
+  auto now = mozilla::TimeStamp::Now();
   return (now - mozilla::TimeStamp::ProcessCreation()).ToMilliseconds();
 }
 
@@ -390,10 +389,6 @@ static MOZ_ALWAYS_INLINE bool ShouldCaptureDebugInfo(JSContext* cx) {
   return cx->options().asyncStack() || cx->realm()->isDebuggee();
 }
 
-static mozilla::Maybe<mozilla::TimeStamp> MaybeNow() {
-  return mozilla::Nothing();
-}
-
 class PromiseDebugInfo : public NativeObject {
  private:
   enum Slots {
@@ -407,9 +402,8 @@ class PromiseDebugInfo : public NativeObject {
 
  public:
   static const JSClass class_;
-  static PromiseDebugInfo* create(
-      JSContext* cx, Handle<PromiseObject*> promise,
-      const mozilla::Maybe<mozilla::TimeStamp>& maybeNow) {
+  static PromiseDebugInfo* create(JSContext* cx,
+                                  Handle<PromiseObject*> promise) {
     Rooted<PromiseDebugInfo*> debugInfo(
         cx, NewBuiltinClassInstance<PromiseDebugInfo>(cx));
     if (!debugInfo) {
@@ -424,7 +418,7 @@ class PromiseDebugInfo : public NativeObject {
     debugInfo->setFixedSlot(Slot_AllocationSite, ObjectOrNullValue(stack));
     debugInfo->setFixedSlot(Slot_ResolutionSite, NullValue());
     debugInfo->setFixedSlot(Slot_AllocationTime,
-                            DoubleValue(MillisecondsSinceStartup(maybeNow)));
+                            DoubleValue(MillisecondsSinceStartup()));
     debugInfo->setFixedSlot(Slot_ResolutionTime, NumberValue(0));
     promise->setFixedSlot(PromiseSlot_DebugInfo, ObjectValue(*debugInfo));
 
@@ -475,8 +469,6 @@ class PromiseDebugInfo : public NativeObject {
   }
 
   static void setResolutionInfo(JSContext* cx, Handle<PromiseObject*> promise) {
-    mozilla::Maybe<mozilla::TimeStamp> maybeNow = MaybeNow();
-
     if (!ShouldCaptureDebugInfo(cx)) {
       return;
     }
@@ -488,7 +480,7 @@ class PromiseDebugInfo : public NativeObject {
     Rooted<PromiseDebugInfo*> debugInfo(cx, FromPromise(promise));
     if (!debugInfo) {
       RootedValue idVal(cx, promise->getFixedSlot(PromiseSlot_DebugInfo));
-      debugInfo = create(cx, promise, maybeNow);
+      debugInfo = create(cx, promise);
       if (!debugInfo) {
         cx->clearPendingException();
         return;
@@ -524,7 +516,7 @@ class PromiseDebugInfo : public NativeObject {
 
     debugInfo->setFixedSlot(Slot_ResolutionSite, ObjectOrNullValue(stack));
     debugInfo->setFixedSlot(Slot_ResolutionTime,
-                            DoubleValue(MillisecondsSinceStartup(maybeNow)));
+                            DoubleValue(MillisecondsSinceStartup()));
   }
 };
 
@@ -2223,8 +2215,6 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
   // Step 7.
   // Implicit, the handled flag is unset by default.
 
-  mozilla::Maybe<mozilla::TimeStamp> maybeNow = MaybeNow();
-
   if (MOZ_LIKELY(!ShouldCaptureDebugInfo(cx))) {
     return promise;
   }
@@ -2235,8 +2225,7 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
 
   Rooted<PromiseObject*> promiseRoot(cx, promise);
 
-  PromiseDebugInfo* debugInfo =
-      PromiseDebugInfo::create(cx, promiseRoot, maybeNow);
+  PromiseDebugInfo* debugInfo = PromiseDebugInfo::create(cx, promiseRoot);
   if (!debugInfo) {
     return nullptr;
   }
@@ -5415,8 +5404,7 @@ static MOZ_MUST_USE bool AddDummyPromiseReactionForDebugger(
 uint64_t PromiseObject::getID() { return PromiseDebugInfo::id(this); }
 
 double PromiseObject::lifetime() {
-  return MillisecondsSinceStartup(mozilla::Some(mozilla::TimeStamp::Now())) -
-         allocationTime();
+  return MillisecondsSinceStartup() - allocationTime();
 }
 
 /**
