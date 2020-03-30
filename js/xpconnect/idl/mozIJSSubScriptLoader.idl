@@ -40,9 +40,13 @@ interface mozIJSSubScriptLoader : nsISupports
      * @param optionsObject an object with parameters. Valid parameters are:
      *                      - target:  an object to evaluate onto (default: global object of the caller)
      *                      - ignoreCache: if set to true, will bypass the cache for reading the file.
-     *                      - async: if set to true, the script will be loaded
-     *                        asynchronously, and a Promise is returned which
-     *                        resolves to its result when execution is complete.
+     *                      - useCompilationScope: If true, the script will be
+     *                        parsed in the compilation cache realm first, and
+     *                        then cloned into the target realm for execution.
+     *                        The script cache strongly holds scripts, so if you
+     *                        load a script into an arbitrary realm without this
+     *                        option enabled, you risk leaking that realm.
+     *                        Defaults to false.
      *                      - wantReturnValue: If true, the script will return
      *                        the value of the last statement that it evaluated.
      *                        This option disables most optimizations in the
