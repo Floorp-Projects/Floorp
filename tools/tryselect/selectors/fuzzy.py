@@ -228,7 +228,7 @@ def fzf_bootstrap(update=False):
 
     # Bug 1623197: We only want to run fzf's `install` if it's not in the $PATH
     # Swap to os.path.commonpath when we're not on Py2
-    if update and not fzf_bin.startswith(fzf_path):
+    if fzf_bin and update and not fzf_bin.startswith(fzf_path):
         print("fzf installed somewhere other than {}, please update manually".format(fzf_path))
         sys.exit(1)
 
