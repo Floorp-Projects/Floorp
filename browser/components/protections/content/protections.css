@@ -115,7 +115,7 @@ h2 {
 .etp-card .icon.dark,
 .mobile-app-icon.dark,
 a.hidden,
-.loading .card-body.hidden,
+.loading .card-body,
 .lockwise-card.hidden,
 #lockwise-body-content .has-logins.hidden,
 #lockwise-body-content .no-logins.hidden,
