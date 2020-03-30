@@ -11,7 +11,6 @@ const {
   WS_OPEN_FRAME_DETAILS,
   WS_CLEAR_FRAMES,
   WS_TOGGLE_FRAME_FILTER_TYPE,
-  WS_TOGGLE_CONTROL_FRAMES,
   WS_SET_REQUEST_FILTER_TEXT,
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
@@ -48,7 +47,6 @@ function WebSockets(initialState = {}) {
     frameFilterText: "",
     // Default filter type is "all",
     frameFilterType: "all",
-    showControlFrames: false,
     selectedFrame: null,
     frameDetailsOpen: false,
     currentChannelId: null,
@@ -126,7 +124,6 @@ function clearFrames(state) {
     columns: nextState.columns,
     frameFilterType: nextState.frameFilterType,
     frameFilterText: nextState.frameFilterText,
-    showControlFrames: nextState.showControlFrames,
   };
 }
 
@@ -137,16 +134,6 @@ function toggleFrameFilterType(state, action) {
   return {
     ...state,
     frameFilterType: action.filter,
-  };
-}
-
-/**
- * Toggle control frame for the WebSocket connection.
- */
-function toggleControlFrames(state, action) {
-  return {
-    ...state,
-    showControlFrames: !state.showControlFrames,
   };
 }
 
@@ -229,8 +216,6 @@ function webSockets(state = WebSockets(), action) {
       return clearFrames(state);
     case WS_TOGGLE_FRAME_FILTER_TYPE:
       return toggleFrameFilterType(state, action);
-    case WS_TOGGLE_CONTROL_FRAMES:
-      return toggleControlFrames(state, action);
     case WS_SET_REQUEST_FILTER_TEXT:
       return setFrameFilterText(state, action);
     case WS_TOGGLE_COLUMN:
