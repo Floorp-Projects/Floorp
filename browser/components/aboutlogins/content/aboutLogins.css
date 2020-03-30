@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   --sidebar-width: 320px;
   display: grid;
@@ -9,7 +14,6 @@ body {
   grid-template-rows: 75px 1fr;
   grid-template-areas: "header header"
                        "logins login";
-  height: 100vh;
 }
 
 header {
