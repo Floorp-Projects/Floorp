@@ -185,7 +185,7 @@ ol {
 }
 
 .breached > .alert-icon {
-  fill: var(--red-90);
+  fill: var(--red-70);
 }
 
 .vulnerable > .alert-icon {

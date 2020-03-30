@@ -258,7 +258,7 @@ add_task(async function test_breach_indicator() {
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "The first login should be TEST_LOGIN_1");
   ok(!loginListItems[0].classList.contains("vulnerable"), "The first login should not have the .vulnerable class");
   ok(loginListItems[0].classList.contains("breached"), "The first login should have the .breached class.");
-  is(alertIcon.src, "chrome://global/skin/icons/warning.svg", "The alert icon should be the breach warning icon");
+  is(alertIcon.src, "chrome://browser/content/aboutlogins/icons/breached-website.svg", "The alert icon should be the breach warning icon");
   is(loginListItems[1].dataset.guid, TEST_LOGIN_3.guid, "The second login should be TEST_LOGIN_3");
   ok(loginListItems[1].classList.contains("vulnerable"), "The second login should have the .vulnerable class");
   ok(!loginListItems[1].classList.contains("breached"), "The second login should not have the .breached class");
