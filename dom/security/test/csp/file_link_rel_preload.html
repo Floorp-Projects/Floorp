@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+  <title>Bug 1599791 - Test link rel=preload</title>
+  <!-- Please note that fakeServer does not exist in our testsuite -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'">
+  <link rel="preload" as="script" href="fakeServer?script"></link>
+  <link rel="preload" as="style" href="fakeServer?style"></link>
+  <link rel="preload" as="image" href="fakeServer?image"></link>
+
+  <link rel="stylesheet" href="fakeServer?style">
+</head>
+<body>
+<script src="fakeServer?script"></script>
+<img src="fakeServer?image"></img>
+</body>
+</html>
