@@ -130,71 +130,90 @@ function shouldSkipAnimations() {
   );
 }
 
-const AddonCardListenerHandler = {
-  ADDON_EVENTS: new Set([
-    "onDisabled",
-    "onEnabled",
-    "onInstalled",
-    "onPropertyChanged",
-    "onUninstalling",
-  ]),
-  MANAGER_EVENTS: new Set(["onUpdateModeChanged"]),
-  INSTALL_EVENTS: new Set(["onNewInstall", "onInstallEnded"]),
-
-  delegateAddonEvent(name, args) {
-    this.delegateEvent(name, args[0], args);
-  },
-
-  delegateInstallEvent(name, args) {
-    let addon = args[0].addon || args[0].existingAddon;
-    if (!addon) {
-      return;
-    }
-    this.delegateEvent(name, addon, args);
-  },
-
-  delegateEvent(name, addon, args) {
-    let elements;
-    if (this.MANAGER_EVENTS.has(name)) {
-      elements = document.querySelectorAll("addon-card, addon-page-options");
-    } else {
-      let cardSelector = `addon-card[addon-id="${addon.id}"]`;
-      elements = document.querySelectorAll(
-        `${cardSelector}, ${cardSelector} addon-details`
-      );
-    }
-    for (let el of elements) {
-      try {
-        if (name in el) {
-          el[name](...args);
-        }
-      } catch (e) {
-        Cu.reportError(e);
+function callListeners(name, args, listeners) {
+  for (let listener of listeners) {
+    try {
+      if (name in listener) {
+        listener[name](...args);
       }
+    } catch (e) {
+      Cu.reportError(e);
     }
+  }
+}
+
+const AddonManagerListenerHandler = {
+  listeners: new Set(),
+
+  addListener(listener) {
+    this.listeners.add(listener);
+  },
+
+  removeListener(listener) {
+    this.listeners.delete(listener);
+  },
+
+  delegateEvent(name, args) {
+    callListeners(name, args, this.listeners);
   },
 
   startup() {
-    for (let name of this.ADDON_EVENTS) {
-      this[name] = (...args) => this.delegateAddonEvent(name, args);
-    }
-    for (let name of this.INSTALL_EVENTS) {
-      this[name] = (...args) => this.delegateInstallEvent(name, args);
-    }
-    for (let name of this.MANAGER_EVENTS) {
-      this[name] = (...args) => this.delegateEvent(name, null, args);
-    }
-    AddonManager.addAddonListener(this);
-    AddonManager.addInstallListener(this);
-    AddonManager.addManagerListener(this);
+    this._listener = new Proxy(
+      {},
+      {
+        has: () => true,
+        get: (_, name) => (...args) => this.delegateEvent(name, args),
+      }
+    );
+    AddonManager.addAddonListener(this._listener);
+    AddonManager.addInstallListener(this._listener);
+    AddonManager.addManagerListener(this._listener);
   },
 
   shutdown() {
-    AddonManager.removeAddonListener(this);
-    AddonManager.removeInstallListener(this);
-    AddonManager.removeManagerListener(this);
+    AddonManager.removeAddonListener(this._listener);
+    AddonManager.removeInstallListener(this._listener);
+    AddonManager.removeManagerListener(this._listener);
   },
 };
+
+/**
+ * This object wires the AddonManager event listeners into addon-card and
+ * addon-details elements rather than needing to add/remove listeners all the
+ * time as the view changes.
+ */
+const AddonCardListenerHandler = new Proxy(
+  {},
+  {
+    has: () => true,
+    get(_, name) {
+      return (...args) => {
+        let elements = [];
+        let addon;
+
+        // We expect args[0] to be of type:
+        // - AddonInstall, on AddonManager install events
+        // - AddonWrapper, on AddonManager addon events
+        // - undefined, on AddonManager manage events
+        if (args[0]) {
+          addon = args[0].addon || args[0].existingAddon || args[0];
+        }
+
+        if (addon && addon.id) {
+          let cardSelector = `addon-card[addon-id="${addon.id}"]`;
+          elements = document.querySelectorAll(
+            `${cardSelector}, ${cardSelector} addon-details`
+          );
+        } else {
+          elements = document.querySelectorAll("addon-card");
+        }
+
+        callListeners(name, args, elements);
+      };
+    },
+  }
+);
+AddonManagerListenerHandler.addListener(AddonCardListenerHandler);
 
 function isAbuseReportSupported(addon) {
   return (
@@ -1184,12 +1203,12 @@ class GlobalWarnings extends MessageBarStackElement {
   connectedCallback() {
     this.refresh();
     this.addEventListener("click", this);
-    AddonManager.addManagerListener(this);
+    AddonManagerListenerHandler.addListener(this);
   }
 
   disconnectedCallback() {
     this.removeEventListener("click", this);
-    AddonManager.removeManagerListener(this);
+    AddonManagerListenerHandler.removeListener(this);
   }
 
   refresh() {
@@ -1252,6 +1271,10 @@ class GlobalWarnings extends MessageBarStackElement {
       }
     }
   }
+
+  /**
+   * AddonManager listener events.
+   */
 
   onCompatibilityModeChanged() {
     this.refresh();
@@ -1407,11 +1430,13 @@ class AddonPageOptions extends HTMLElement {
     }
     this.addEventListener("click", this);
     this.panel.addEventListener("showing", this);
+    AddonManagerListenerHandler.addListener(this);
   }
 
   disconnectedCallback() {
     this.removeEventListener("click", this);
     this.panel.removeEventListener("showing", this);
+    AddonManagerListenerHandler.removeListener(this);
   }
 
   toggle(...args) {
@@ -1479,14 +1504,6 @@ class AddonPageOptions extends HTMLElement {
         loadViewFn("shortcuts/shortcuts");
         break;
     }
-  }
-
-  onUpdateModeChanged() {
-    let updatesEnabled = this.automaticUpdatesEnabled();
-    this.toggleUpdatesEl.checked = updatesEnabled;
-    let resetType = updatesEnabled ? "automatic" : "manual";
-    let resetStringId = `addon-updates-reset-updates-to-${resetType}`;
-    document.l10n.setAttributes(this.resetUpdatesEl, resetStringId);
   }
 
   async checkForUpdates(e) {
@@ -1582,6 +1599,18 @@ class AddonPageOptions extends HTMLElement {
         view: this.getTelemetryViewName(),
       },
     });
+  }
+
+  /**
+   * AddonManager listener events.
+   */
+
+  onUpdateModeChanged() {
+    let updatesEnabled = this.automaticUpdatesEnabled();
+    this.toggleUpdatesEl.checked = updatesEnabled;
+    let resetType = updatesEnabled ? "automatic" : "manual";
+    let resetStringId = `addon-updates-reset-updates-to-${resetType}`;
+    document.l10n.setAttributes(this.resetUpdatesEl, resetStringId);
   }
 }
 customElements.define("addon-page-options", AddonPageOptions);
@@ -2630,51 +2659,6 @@ class AddonCard extends HTMLElement {
     this.panel.removeEventListener("hidden", this);
   }
 
-  onNewInstall(install) {
-    this.updateInstall = install;
-    this.sendEvent("update-found");
-  }
-
-  onInstallEnded(install) {
-    this.setAddon(install.addon);
-  }
-
-  onDisabled(addon) {
-    if (!this.reloading) {
-      this.update();
-    }
-  }
-
-  onEnabled(addon) {
-    this.reloading = false;
-    this.update();
-  }
-
-  onInstalled(addon) {
-    // When a temporary addon is reloaded, onInstalled is triggered instead of
-    // onEnabled.
-    this.reloading = false;
-    this.update();
-  }
-
-  onUninstalling() {
-    // Dispatch a remove event, the DetailView is listening for this to get us
-    // back to the list view when the current add-on is removed.
-    this.sendEvent("remove");
-  }
-
-  onUpdateModeChanged() {
-    this.update();
-  }
-
-  onPropertyChanged(addon, changed) {
-    if (this.details && changed.includes("applyBackgroundUpdates")) {
-      this.details.update();
-    } else if (addon.type == "plugin" && changed.includes("userDisabled")) {
-      this.update();
-    }
-  }
-
   /**
    * Update the card's contents based on the previously set add-on. This should
    * be called if there has been a change to the add-on.
@@ -2892,6 +2876,55 @@ class AddonCard extends HTMLElement {
       addon: this.addon,
       value,
     });
+  }
+
+  /**
+   * AddonManager listener events.
+   */
+
+  onNewInstall(install) {
+    this.updateInstall = install;
+    this.sendEvent("update-found");
+  }
+
+  onInstallEnded(install) {
+    this.setAddon(install.addon);
+  }
+
+  onDisabled(addon) {
+    if (!this.reloading) {
+      this.update();
+    }
+  }
+
+  onEnabled(addon) {
+    this.reloading = false;
+    this.update();
+  }
+
+  onInstalled(addon) {
+    // When a temporary addon is reloaded, onInstalled is triggered instead of
+    // onEnabled.
+    this.reloading = false;
+    this.update();
+  }
+
+  onUninstalling() {
+    // Dispatch a remove event, the DetailView is listening for this to get us
+    // back to the list view when the current add-on is removed.
+    this.sendEvent("remove");
+  }
+
+  onUpdateModeChanged() {
+    this.update();
+  }
+
+  onPropertyChanged(addon, changed) {
+    if (this.details && changed.includes("applyBackgroundUpdates")) {
+      this.details.update();
+    } else if (addon.type == "plugin" && changed.includes("userDisabled")) {
+      this.update();
+    }
   }
 }
 customElements.define("addon-card", AddonCard);
@@ -3527,12 +3560,23 @@ class AddonList extends HTMLElement {
   }
 
   registerListener() {
-    AddonManager.addAddonListener(this);
+    AddonManagerListenerHandler.addListener(this);
   }
 
   removeListener() {
-    AddonManager.removeAddonListener(this);
+    AddonManagerListenerHandler.removeListener(this);
   }
+
+  handleEvent(e) {
+    if (!this.isUserFocused || (e.type == "mouseleave" && !this.hasMenuOpen)) {
+      this._removeUserFocusListeners();
+      this.update();
+    }
+  }
+
+  /**
+   * AddonManager listener events.
+   */
 
   onOperationCancelled(addon) {
     if (
@@ -3576,13 +3620,6 @@ class AddonList extends HTMLElement {
     this.removePendingUninstallBar(addon);
     this.removeAddon(addon);
   }
-
-  handleEvent(e) {
-    if (!this.isUserFocused || (e.type == "mouseleave" && !this.hasMenuOpen)) {
-      this._removeUserFocusListeners();
-      this.update();
-    }
-  }
 }
 customElements.define("addon-list", AddonList);
 
@@ -3592,11 +3629,11 @@ class RecommendedAddonList extends HTMLElement {
       this.loadCardsIfNeeded();
       this.updateCardsWithAddonManager();
     }
-    AddonManager.addAddonListener(this);
+    AddonManagerListenerHandler.addListener(this);
   }
 
   disconnectedCallback() {
-    AddonManager.removeAddonListener(this);
+    AddonManagerListenerHandler.removeListener(this);
   }
 
   get type() {
@@ -3630,20 +3667,6 @@ class RecommendedAddonList extends HTMLElement {
    */
   set hideInstalled(val) {
     this.toggleAttribute("hide-installed", val);
-  }
-
-  onInstalled(addon) {
-    let card = this.getCardById(addon.id);
-    if (card) {
-      this.setAddonForCard(card, addon);
-    }
-  }
-
-  onUninstalled(addon) {
-    let card = this.getCardById(addon.id);
-    if (card) {
-      this.setAddonForCard(card, null);
-    }
   }
 
   getCardById(addonId) {
@@ -3716,6 +3739,24 @@ class RecommendedAddonList extends HTMLElement {
     }
     this.append(frag);
     await this.updateCardsWithAddonManager();
+  }
+
+  /**
+   * AddonManager listener events.
+   */
+
+  onInstalled(addon) {
+    let card = this.getCardById(addon.id);
+    if (card) {
+      this.setAddonForCard(card, addon);
+    }
+  }
+
+  onUninstalled(addon) {
+    let card = this.getCardById(addon.id);
+    if (card) {
+      this.setAddonForCard(card, null);
+    }
   }
 }
 customElements.define("recommended-addon-list", RecommendedAddonList);
@@ -4092,14 +4133,14 @@ function initialize(opts) {
   loadViewFn = opts.loadViewFn;
   replaceWithDefaultViewFn = opts.replaceWithDefaultViewFn;
   setCategoryFn = opts.setCategoryFn;
-  AddonCardListenerHandler.startup();
+  AddonManagerListenerHandler.startup();
   window.addEventListener(
     "unload",
     () => {
       // Clear out the document so the disconnectedCallback will trigger
       // properly and all of the custom elements can cleanup.
       document.body.textContent = "";
-      AddonCardListenerHandler.shutdown();
+      AddonManagerListenerHandler.shutdown();
     },
     { once: true }
   );
