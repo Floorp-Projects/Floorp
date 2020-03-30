@@ -300,38 +300,6 @@ already_AddRefed<nsIURI> GetNextSubDomainURI(nsIURI* aURI) {
   return uri.forget();
 }
 
-// This function produces a nsIPrincipal which is identical to the current
-// nsIPrincipal, except that it has one less subdomain segment. It returns
-// `nullptr` if there are no more segments to remove.
-already_AddRefed<nsIPrincipal> GetNextSubDomainPrincipal(
-    nsIPrincipal* aPrincipal) {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return nullptr;
-  }
-
-  // Create a new principal which is identical to the current one, but with the
-  // new host
-  nsCOMPtr<nsIURI> newURI = GetNextSubDomainURI(uri);
-  if (!newURI) {
-    return nullptr;
-  }
-
-  // Copy the attributes over
-  mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-
-  if (!StaticPrefs::permissions_isolateBy_userContext()) {
-    // Disable userContext for permissions.
-    attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::CreateContentPrincipal(newURI, attrs);
-
-  return principal.forget();
-}
-
 class MOZ_STACK_CLASS UpgradeHostToOriginHelper {
  public:
   virtual nsresult Insert(const nsACString& aOrigin, const nsCString& aType,
@@ -2433,7 +2401,8 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
   // If aExactHostMatch wasn't true, we can check if the base domain has a
   // permission entry.
   if (!aExactHostMatch) {
-    nsCOMPtr<nsIPrincipal> principal = GetNextSubDomainPrincipal(aPrincipal);
+    nsCOMPtr<nsIPrincipal> principal;
+    aPrincipal->GetNextSubDomainPrincipal(getter_AddRefs(principal));
     if (principal) {
       return GetPermissionHashKey(principal, aType, aExactHostMatch);
     }
@@ -3283,6 +3252,7 @@ nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
 
   nsTArray<std::pair<nsCString, nsCString>> pairs;
   nsCOMPtr<nsIPrincipal> prin = aPrincipal;
+  nsresult rv = NS_OK;
   while (prin) {
     // Add the pair to the list
     std::pair<nsCString, nsCString>* pair =
@@ -3292,9 +3262,12 @@ nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
     GetKeyForPrincipal(prin, false, pair->first);
 
     Unused << GetOriginFromPrincipal(prin, false, pair->second);
-
+    nsCOMPtr<nsIPrincipal> subDomainPrin;
     // Get the next subdomain principal and loop back around.
-    prin = GetNextSubDomainPrincipal(prin);
+    rv = prin->GetNextSubDomainPrincipal(getter_AddRefs(subDomainPrin));
+    if (NS_SUCCEEDED(rv)) {
+      prin = subDomainPrin;
+    }
   }
 
   MOZ_ASSERT(pairs.Length() >= 1,
