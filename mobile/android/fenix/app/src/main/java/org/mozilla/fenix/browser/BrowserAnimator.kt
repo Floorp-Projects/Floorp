@@ -5,6 +5,7 @@
 package org.mozilla.fenix.browser
 
 import android.animation.ValueAnimator
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -15,10 +16,13 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import java.lang.ref.WeakReference
 
 /**
@@ -43,8 +47,10 @@ class BrowserAnimator(
 
     private val browserZoomInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
         addUpdateListener {
-            unwrappedSwipeRefresh?.scaleX = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
-            unwrappedSwipeRefresh?.scaleY = STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
+            unwrappedSwipeRefresh?.scaleX =
+                STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
+            unwrappedSwipeRefresh?.scaleY =
+                STARTING_XY_SCALE + XY_SCALE_MULTIPLIER * it.animatedFraction
             unwrappedSwipeRefresh?.alpha = it.animatedFraction
         }
 
@@ -154,5 +160,19 @@ class BrowserAnimator(
         private const val END_ANIMATOR_VALUE = 500f
         private const val XY_SCALE_MULTIPLIER = .05f
         private const val STARTING_XY_SCALE = .95f
+
+        fun getToolbarNavOptions(context: Context): NavOptions {
+            val navOptions = NavOptions.Builder()
+
+            if (!context.settings().shouldUseBottomToolbar) {
+                navOptions.setEnterAnim(R.anim.fade_in)
+                navOptions.setExitAnim(R.anim.fade_out)
+            } else {
+                navOptions.setEnterAnim(R.anim.fade_in_up)
+                navOptions.setExitAnim(R.anim.fade_out_down)
+            }
+
+            return navOptions.build()
+        }
     }
 }

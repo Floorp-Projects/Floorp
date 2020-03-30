@@ -79,6 +79,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
@@ -246,9 +247,9 @@ class HomeFragment : Fragment() {
 
         if (!shouldUseBottomToolbar) {
             view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-            )
+                    ConstraintLayout.LayoutParams.MATCH_PARENT,
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+                )
                 .apply {
                     gravity = Gravity.TOP
                 }
@@ -591,7 +592,7 @@ class HomeFragment : Fragment() {
             sessionId = null
         )
 
-        nav(R.id.homeFragment, directions)
+        nav(R.id.homeFragment, directions, getToolbarNavOptions(requireContext()))
     }
 
     private fun openSettingsScreen() {

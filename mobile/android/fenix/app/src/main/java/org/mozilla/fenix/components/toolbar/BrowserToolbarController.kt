@@ -24,6 +24,7 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
+import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -91,7 +92,7 @@ class DefaultBrowserToolbarController(
                 pastedText = text
             )
 
-            navController.nav(R.id.browserFragment, directions)
+            navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
         }
     }
 
@@ -116,7 +117,7 @@ class DefaultBrowserToolbarController(
                 currentSession?.id
             )
 
-            navController.nav(R.id.browserFragment, directions)
+            navController.nav(R.id.browserFragment, directions, getToolbarNavOptions(activity))
         }
     }
 
@@ -131,8 +132,7 @@ class DefaultBrowserToolbarController(
                 ToolbarMenu.Item.AddToHomeScreen -> activity.settings().installPwaOpened = true
                 is ToolbarMenu.Item.ReaderMode -> activity.settings().readerModeOpened = true
                 ToolbarMenu.Item.OpenInApp -> activity.settings().openInAppOpened = true
-                else -> {
-                }
+                else -> { }
             }
         }
     }
