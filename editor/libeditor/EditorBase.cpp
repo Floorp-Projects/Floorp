@@ -24,6 +24,7 @@
 #include "JoinNodeTransaction.h"              // for JoinNodeTransaction
 #include "PlaceholderTransaction.h"           // for PlaceholderTransaction
 #include "SplitNodeTransaction.h"             // for SplitNodeTransaction
+#include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
 #include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
 #include "mozilla/ComputedStyle.h"            // for ComputedStyle
@@ -6164,12 +6165,14 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
   // If mPrincipal has set, it means that we're handling an edit action
   // which is requested by JS.  If it's not chrome script, we shouldn't
   // dispatch "beforeinput" event.
-  // XXX If it's a request from addons, I think that we should dispatch
-  //     "beforeinput" event since from point of view of web apps, it looks
-  //     like a browser-built-in feature.  Spec issue:
-  //     https://github.com/w3c/input-events/issues/91
   if (mPrincipal && !mPrincipal->IsSystemPrincipal()) {
-    return NS_OK;
+    // But if it's content script of an addon, `execCommand` calls are a
+    // part of browser's default action from point of view of web apps.
+    // Therefore, we should dispatch `beforeinput` event.
+    // https://github.com/w3c/input-events/issues/91
+    if (!mPrincipal->GetIsAddonOrExpandedAddonPrincipal()) {
+      return NS_OK;
+    }
   }
 
   // If we're called from OnCompositionEnd(), we shouldn't dispatch
