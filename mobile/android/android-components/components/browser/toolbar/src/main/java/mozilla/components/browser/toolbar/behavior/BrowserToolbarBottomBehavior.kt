@@ -99,6 +99,13 @@ class BrowserToolbarBottomBehavior(
         return super.layoutDependsOn(parent, child, dependency)
     }
 
+    /**
+     * Used to expand the [BrowserToolbar] upwards
+     */
+    fun forceExpand(view: View) {
+        animateSnap(view, SnapDirection.UP)
+    }
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun animateSnap(child: View, direction: SnapDirection) = with(snapAnimator) {
         addUpdateListener { child.translationY = it.animatedValue as Float }

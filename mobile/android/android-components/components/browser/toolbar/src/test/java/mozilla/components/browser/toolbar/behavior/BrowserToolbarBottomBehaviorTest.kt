@@ -171,4 +171,14 @@ class BrowserToolbarBottomBehaviorTest {
         assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, layoutParams.anchorGravity)
         assertEquals(Gravity.TOP or Gravity.CENTER_HORIZONTAL, layoutParams.gravity)
     }
+
+    @Test
+    fun `Behavior will animateSnap UP when forceExpand is called`() {
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
+        val toolbar: BrowserToolbar = mock()
+
+        behavior.forceExpand(toolbar)
+
+        verify(behavior).animateSnap(toolbar, SnapDirection.UP)
+    }
 }
