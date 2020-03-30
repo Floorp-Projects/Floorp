@@ -916,6 +916,8 @@
     /*
      * Define a data property on `obj` with property key `id` and value `val`.
      *
+     * `obj` must be an object.
+     *
      * Implements: [CreateDataPropertyOrThrow][1]. This instruction is used for
      * object literals like `{0: val}` and `{[id]: val}`, and methods like
      * `*[Symbol.iterator]() {}`.
@@ -936,6 +938,8 @@
      * Define an accessor property on `obj` with the given `getter`.
      * `nameIndex` gives the property name.
      *
+     * `obj` must be an object and `getter` must be a function.
+     *
      * `JSOp::InitHiddenPropGetter` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
@@ -951,6 +955,8 @@
      *
      * This is used to implement getters like `get [id]() {}` or `get 0() {}`.
      *
+     * `obj` must be an object and `getter` must be a function.
+     *
      * `JSOp::InitHiddenElemGetter` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
@@ -965,6 +971,8 @@
      * Define an accessor property on `obj` with the given `setter`.
      *
      * This is used to implement ordinary setters like `set foo(v) {}`.
+     *
+     * `obj` must be an object and `setter` must be a function.
      *
      * `JSOp::InitHiddenPropSetter` is the same but defines a non-enumerable
      * property, for setters in classes.
@@ -1600,6 +1608,10 @@
     /*
      * Initialize the home object for functions with super bindings.
      *
+     * `fun` must be a method, getter, or setter, so that it has a
+     * [[HomeObject]] slot. `homeObject` must be a plain object or (for static
+     * methods) a constructor.
+     *
      *   Category: Functions
      *   Type: Creating functions
      *   Operands:
@@ -1648,7 +1660,9 @@
      * 10.b. and 12-17.
      *
      * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
-     * class definition in the source buffer and are used for `toString()`.
+     * class definition in the source buffer, used for `toString()`. They must
+     * be valid offsets into the source buffer, measured in code units, such
+     * that `scriptSource->substring(cx, start, end)` is valid.
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
@@ -1667,8 +1681,8 @@
      * Implements: [ClassDefinitionEvaluation for *ClassTail*][1], steps
      * 10.a. and 12-17.
      *
-     * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
-     * class definition in the source buffer and are used for `toString()`.
+     * `sourceStart` and `sourceEnd` follow the same rules as for
+     * `JSOp::ClassConstructor`.
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
@@ -1680,6 +1694,9 @@
     MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
      * Pushes the current global's FunctionPrototype.
+     *
+     * `kind` must be in range for `JSProtoKey` (and must not be
+     * `JSProto_LIMIT`).
      *
      *   Category: Functions
      *   Type: Creating constructors
@@ -1767,6 +1784,9 @@
      * to prove that the bindings won't need to be captured by closures or
      * accessed using `JSOp::{Get,Bind,Set,Del}Name` instructions. Direct eval
      * makes that analysis impossible.
+     *
+     * The instruction immediately following any `JSOp::*Eval` instruction must
+     * be `JSOp::Lineno`.
      *
      * Implements: [Function Call Evaluation][1], steps 5-7 and 9, when the
      * syntactic critera for direct eval in step 6 are all met.
@@ -2311,6 +2331,9 @@
     /*
      * Store `rval` in the current stack frame's `returnValue` slot.
      *
+     * This instruction must not be used in a toplevel script compiled with the
+     * `noScriptRval` option.
+     *
      *   Category: Control flow
      *   Type: Return
      *   Operands:
@@ -2411,9 +2434,9 @@
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
      *
-     * The `jumpAtEndOffset` operand is the offset (relative to the current op)
-     * of the `JSOp::Goto` at the end of the try-block body. This is used by
-     * bytecode analysis and JIT compilation.
+     * The `jumpAtEndOffset` operand must be the offset (relative to the
+     * current op) of the `JSOp::Goto` at the end of the try-block body. This
+     * is used by bytecode analysis and JIT compilation.
      *
      * Location information for catch/finally blocks is stored in a side table,
      * `script->trynotes()`.
@@ -2428,6 +2451,9 @@
      * No-op instruction used by the exception unwinder to determine the
      * correct environment to unwind to when performing IteratorClose due to
      * destructuring.
+     *
+     * This instruction must appear immediately before each
+     * `JSTRY_DESTRUCTURING` span in a script's try notes.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2547,7 +2573,7 @@
      * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
      * a binding as uninitialized.
      *
-     * This magic value must be used only by `JSOp::Init*Lexical`.
+     * This magic value must be used only by `JSOp::InitLexical`.
      *
      *   Category: Variables and scopes
      *   Type: Initialization
@@ -2578,9 +2604,13 @@
      */ \
     MACRO(InitLexical, init_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME) \
     /*
-     * Initialize a global lexical binding; or mark it as uninitialized.
+     * Initialize a global lexical binding.
      *
-     * Like `JSOp::InitLexical` but for global lexicals.
+     * The binding must already have been created by `DefLet` or `DefConst` and
+     * must be uninitialized.
+     *
+     * Like `JSOp::InitLexical` but for global lexicals. Unlike `InitLexical`
+     * this can't be used to mark a binding as uninitialized.
      *
      *   Category: Variables and scopes
      *   Type: Initialization
@@ -2759,8 +2789,6 @@
      * `slot` that encode an [`EnvironmentCoordinate`][1], directions to the
      * binding from the current environment object.
      *
-     * `hops` and `slot` must be valid for the current scope.
-     *
      * `Aliased` instructions can't be used when there's a dynamic scope (due
      * to non-strict `eval` or `with`) that might shadow the aliased binding.
      *
@@ -2786,7 +2814,7 @@
      * not bound in `env`, throw a ReferenceError.
      *
      * `env` must be an environment currently on the environment chain, pushed
-     * by `JSOp::BindName`.
+     * by `JSOp::BindName` or `JSOp::BindVar`.
      *
      * Note: `JSOp::BindName` and `JSOp::GetBoundName` are the two halves of the
      * `JSOp::GetName` operation: finding and reading a variable. This
@@ -2841,8 +2869,9 @@
     MACRO(Callee, callee, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Load the callee stored in a CallObject on the environment chain. The
-     * numHops operand is the number of environment objects to skip on the
-     * environment chain.
+     * `numHops` operand is the number of environment objects to skip on the
+     * environment chain. The environment chain element indicated by `numHops`
+     * must be a CallObject.
      *
      *   Category: Variables and scopes
      *   Type: Getting binding values
@@ -2856,7 +2885,7 @@
      * This can call setters and/or proxy traps.
      *
      * `env` must be an environment currently on the environment chain,
-     * pushed by `JSOp::BindName`.
+     * pushed by `JSOp::BindName` or `JSOp::BindVar`.
      *
      * This is the fallback `Set` instruction that handles all unoptimized
      * cases. Optimized instructions follow.
@@ -3040,6 +3069,8 @@
      * fresh lexical environment for every iteration of a for-in/of loop whose
      * loop-head has a (captured) lexical declaration.
      *
+     * The current environment must be a LexicalEnvironmentObject.
+     *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
      *   Operands:
@@ -3052,6 +3083,8 @@
      * of inducing a fresh lexical environment for every iteration of a
      * `for(let ...; ...; ...)` loop, if any declarations induced by such a
      * loop are captured within the loop.
+     *
+     * The current environment must be a LexicalEnvironmentObject.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3197,10 +3230,10 @@
      */ \
     MACRO(DefFun, def_fun, NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Create a new mutable binding in the global lexical environment. Throw a
-     * SyntaxError if a binding with the same name already exists on that
-     * environment, or if a var binding with the same name exists on the
-     * global.
+     * Create a new uninitialized mutable binding in the global lexical
+     * environment. Throw a SyntaxError if a binding with the same name already
+     * exists on that environment, or if a var binding with the same name
+     * exists on the global.
      *
      *   Category: Variables and scopes
      *   Type: Creating and deleting bindings
@@ -3209,11 +3242,7 @@
      */ \
     MACRO(DefLet, def_let, NULL, 5, 0, 0, JOF_ATOM) \
     /*
-     * Create a new constant binding in the global lexical environment.
-     *
-     * Throw a SyntaxError if a binding with the same name already exists in
-     * that environment, or if a var binding with the same name exists on the
-     * global.
+     * Like `DefLet`, but create an uninitialized constant binding.
      *
      *   Category: Variables and scopes
      *   Type: Creating and deleting bindings
@@ -3303,7 +3332,8 @@
     /*
      * Create and push the rest parameter array for current function call.
      *
-     * This must appear only in function scripts.
+     * This must appear only in a script for a function that has a rest
+     * parameter.
      *
      *   Category: Variables and scopes
      *   Type: Function environment setup
@@ -3413,7 +3443,11 @@
      */ \
     MACRO(Nop, nop, NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * No-op instruction used to speed up pc-to-line mapping.
+     * No-op instruction emitted immediately after `JSOp::*Eval` so that direct
+     * eval does not have to do slow pc-to-line mapping.
+     *
+     * The `lineno` operand should agree with this script's source notes about
+     * the line number of the preceding `*Eval` instruction.
      *
      *   Category: Other
      *   Operands: uint32_t lineno
@@ -3421,8 +3455,15 @@
      */ \
     MACRO(Lineno, lineno, NULL, 5, 0, 0, JOF_UINT32) \
     /*
-     * No-op instruction used by the decompiler to produce nicer error messages
-     * about destructuring code.
+     * No-op instruction to hint that the top stack value is uninteresting.
+     *
+     * This affects only debug output and some error messages.
+     * In array destructuring, we emit bytecode that is roughly equivalent to
+     * `result.done ? undefined : result.value`.
+     * `NopDestructuring` is emitted after the `undefined`, so that the
+     * expression decompiler and disassembler know to casually ignore the
+     * possibility of `undefined`, and render the result of the conditional
+     * expression simply as "`result.value`".
      *
      *   Category: Other
      *   Operands:
