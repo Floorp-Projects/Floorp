@@ -663,7 +663,6 @@ nsresult AbstractOSKeyStore::DoCipher(const UniquePK11SymKey& aSymKey,
   CK_GCM_PARAMS gcm_params;
   gcm_params.pIv = const_cast<unsigned char*>(ivp);
   gcm_params.ulIvLen = mIVLength;
-  gcm_params.ulIvBits = gcm_params.ulIvLen * 8;
   gcm_params.ulTagBits = 128;
   gcm_params.pAAD = nullptr;
   gcm_params.ulAADLen = 0;
