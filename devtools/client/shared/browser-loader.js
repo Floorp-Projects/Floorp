@@ -136,6 +136,20 @@ function BrowserLoaderBuilder({
     sandboxName: "DevTools (UI loader)",
     paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
+    // Make sure `define` function exists.  This allows defining some modules
+    // in AMD format while retaining CommonJS compatibility through this hook.
+    // JSON Viewer needs modules in AMD format, as it currently uses RequireJS
+    // from a content document and can't access our usual loaders.  So, any
+    // modules shared with the JSON Viewer should include a define wrapper:
+    //
+    //   // Make this available to both AMD and CJS environments
+    //   define(function(require, exports, module) {
+    //     ... code ...
+    //   });
+    //
+    // Bug 1248830 will work out a better plan here for our content module
+    // loading needs, especially as we head towards devtools.html.
+    supportAMDModules: true,
     requireHook: (id, require) => {
       // If |id| requires special handling, simply defer to devtools
       // immediately.
@@ -174,22 +188,6 @@ function BrowserLoaderBuilder({
       // Allow modules to use the window's console to ensure logs appear in a
       // tab toolbox, if one exists, instead of just the browser console.
       console: window.console,
-      // Make sure `define` function exists.  This allows defining some modules
-      // in AMD format while retaining CommonJS compatibility through this hook.
-      // JSON Viewer needs modules in AMD format, as it currently uses RequireJS
-      // from a content document and can't access our usual loaders.  So, any
-      // modules shared with the JSON Viewer should include a define wrapper:
-      //
-      //   // Make this available to both AMD and CJS environments
-      //   define(function(require, exports, module) {
-      //     ... code ...
-      //   });
-      //
-      // Bug 1248830 will work out a better plan here for our content module
-      // loading needs, especially as we head towards devtools.html.
-      define(factory) {
-        factory(this.require, this.exports, this.module);
-      },
       // Allow modules to use the DevToolsLoader lazy loading helpers.
       loader: {
         lazyGetter: loader.lazyGetter,

@@ -83,6 +83,19 @@ function DevToolsLoader({
     invisibleToDebugger,
     freshCompartment,
     sandboxName: "DevTools (Module loader)",
+    // Make sure `define` function exists. JSON Viewer needs modules in AMD
+    // format, as it currently uses RequireJS from a content document and
+    // can't access our usual loaders. So, any modules shared with the JSON
+    // Viewer should include a define wrapper:
+    //
+    //   // Make this available to both AMD and CJS environments
+    //   define(function(require, exports, module) {
+    //     ... code ...
+    //   });
+    //
+    // Bug 1248830 will work out a better plan here for our content module
+    // loading needs, especially as we head towards devtools.html.
+    supportAMDModules: true,
     requireHook: (id, require) => {
       if (id.startsWith("raw!") || id.startsWith("theme-loader!")) {
         return requireRawId(id, require);
