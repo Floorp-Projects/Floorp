@@ -2117,12 +2117,8 @@ nsresult nsHttpHandler::SetupChannelInternal(
   nsresult rv = NewChannelId(channelId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentPolicyType contentPolicyType =
-      aLoadInfo ? aLoadInfo->GetExternalContentPolicyType()
-                : nsIContentPolicy::TYPE_OTHER;
-
   rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI,
-                         channelId, contentPolicyType);
+                         channelId, aLoadInfo->GetExternalContentPolicyType());
   if (NS_FAILED(rv)) return rv;
 
   // TRRServiceChannel doesn't need loadInfo.
