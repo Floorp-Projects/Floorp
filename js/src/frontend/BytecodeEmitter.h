@@ -847,6 +847,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
            emitInstrumentationForOpcodeSlow(op, atomIndex);
   }
 
+  MOZ_MUST_USE js::UniquePtr<ImmutableScriptData> createImmutableScriptData(
+      JSContext* cx);
+
  private:
   MOZ_MUST_USE bool emitInstrumentationSlow(
       InstrumentationKind kind,

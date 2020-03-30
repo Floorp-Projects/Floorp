@@ -2435,21 +2435,33 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
+  js::UniquePtr<ImmutableScriptData> immutableScriptData =
+      createImmutableScriptData(cx);
+  if (!immutableScriptData) {
+    return false;
+  }
+
+  BCEScriptStencil stencil(*this, std::move(immutableScriptData));
+  return JSScript::fullyInitFromStencil(cx, script, stencil);
+}
+
+js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
+    JSContext* cx) {
   uint32_t nslots;
   if (!getNslots(&nslots)) {
-    return false;
+    return nullptr;
   }
 
-  BCEScriptStencil stencil(*this);
-  if (!stencil.init(cx, nslots)) {
-    return false;
-  }
+  bool isFunction = sc->isFunctionBox();
+  uint16_t funLength = isFunction ? sc->asFunctionBox()->length : 0;
 
-  if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
-    return false;
-  }
-
-  return true;
+  return ImmutableScriptData::new_(
+      cx, mainOffset(), maxFixedSlots, nslots, bodyScopeIndex,
+      bytecodeSection().numICEntries(), bytecodeSection().numTypeSets(),
+      isFunction, funLength, bytecodeSection().code(),
+      bytecodeSection().notes(), bytecodeSection().resumeOffsetList().span(),
+      bytecodeSection().scopeNoteList().span(),
+      bytecodeSection().tryNoteList().span());
 }
 
 bool BytecodeEmitter::getNslots(uint32_t* nslots) {
