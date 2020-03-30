@@ -1739,10 +1739,6 @@ class nsIWidget : public nsISupports {
   virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsRect GetPreferredPopupRect() {
-    NS_WARNING("GetPreferredPopupRect implemented only for wayland");
-    return nsRect(0, 0, 0, 0);
-  }
 #endif
 
   /*

@@ -135,7 +135,6 @@ using namespace mozilla::widget;
 #include "NativeKeyBindings.h"
 
 #include <dlfcn.h>
-#include "nsPresContext.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -1222,23 +1221,19 @@ void nsWindow::CleanupWaylandPopups() {
   }
 }
 
-static nsMenuPopupFrame* GetMenuPopupFrame(nsIFrame* aFrame) {
-  if (aFrame) {
-    nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(aFrame);
-    return menuPopupFrame;
-  }
-  return nullptr;
-}
-
 // The MenuList popups are used as dropdown menus for example in WebRTC
 // microphone/camera chooser or autocomplete widgets.
 bool nsWindow::IsMainMenuWindow() {
-  nsMenuPopupFrame* menuPopupFrame = GetMenuPopupFrame(GetFrame());
-  if (menuPopupFrame) {
-    LOG(("  nsMenuPopupFrame [%p] type: %d IsMenu: %d, IsMenuList: %d\n",
-         menuPopupFrame, menuPopupFrame->PopupType(), menuPopupFrame->IsMenu(),
-         menuPopupFrame->IsMenuList()));
-    return mPopupType == ePopupTypeMenu && !menuPopupFrame->IsMenuList();
+  nsIFrame* frame = GetFrame();
+  if (frame) {
+    nsMenuPopupFrame* menuPopupFrame = nullptr;
+    menuPopupFrame = do_QueryFrame(frame);
+    if (menuPopupFrame) {
+      LOG(("  nsMenuPopupFrame [%p] type: %d IsMenu: %d, IsMenuList: %d\n",
+           menuPopupFrame, menuPopupFrame->PopupType(),
+           menuPopupFrame->IsMenu(), menuPopupFrame->IsMenuList()));
+      return mPopupType == ePopupTypeMenu && !menuPopupFrame->IsMenuList();
+    }
   }
   return false;
 }
@@ -1372,27 +1367,6 @@ static void NativeMoveResizeWaylandPopupCallback(
   wnd->NativeMoveResizeWaylandPopupCB(final_rect, flipped_x, flipped_y);
 }
 
-static void GetOffsetToParent(GtkWindow* aWnd, int* aXParent, int* aYParent) {
-  *aXParent = *aYParent = 0;
-  GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(aWnd));
-  if (parentGtkWindow) {
-    gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
-                          aXParent, aYParent);
-
-    parentGtkWindow = gtk_window_get_transient_for(parentGtkWindow);
-    while (parentGtkWindow) {
-      int x_parent, y_parent;
-      gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
-                            &x_parent, &y_parent);
-      *aXParent -= x_parent;
-      *aYParent -= y_parent;
-      LOG(("  - parent offsets %d %d\n", x_parent, y_parent));
-      parentGtkWindow = gtk_window_get_transient_for(parentGtkWindow);
-    }
-    LOG(("- final offsets %d %d\n", *aXParent, *aYParent));
-  }
-}
-
 void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
                                               bool aFlippedX, bool aFlippedY) {
   LOG(("  orig mBounds x=%d y=%d width=%d height=%d\n", mBounds.x, mBounds.y,
@@ -1411,11 +1385,11 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
                         &x_parent, &y_parent);
 
-  LayoutDeviceIntRect newBounds(aFinalSize->x, aFinalSize->y, aFinalSize->width,
+  LayoutDeviceIntRect newBounds(aFinalSize->x + x_parent,
+                                aFinalSize->y + y_parent, aFinalSize->width,
                                 aFinalSize->height);
 
-  newBounds.x = GdkCoordToDevicePixels(newBounds.x);
-  newBounds.y = GdkCoordToDevicePixels(newBounds.y);
+  newBounds.Scale(nsWindow::GdkScaleFactor());
   LOG(("  new mBounds  x=%d y=%d width=%d height=%d\n", newBounds.x,
        newBounds.y, newBounds.width, newBounds.height));
 
@@ -1423,60 +1397,20 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
       (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
   bool needsSizeUpdate =
       (newBounds.width != mBounds.width || newBounds.height != mBounds.height);
-  // Update view
-  int32_t p2a = AppUnitsPerCSSPixel();
-  mPreferredPopupRect = nsRect(NSIntPixelsToAppUnits(newBounds.x, p2a),
-                               NSIntPixelsToAppUnits(newBounds.y, p2a),
-                               NSIntPixelsToAppUnits(newBounds.width, p2a),
-                               NSIntPixelsToAppUnits(newBounds.height, p2a));
 
   if (!needsPositionUpdate && !needsSizeUpdate) {
     return;
   }
 
-  NotifyWindowMoved(newBounds.x, newBounds.y);
-  Resize(newBounds.width, newBounds.height, true);
-  DispatchResized();
-
-  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
-  if (popupFrame) {
-    RefPtr<PresShell> presShell = popupFrame->PresShell();
-    presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::Resize,
-                                NS_FRAME_IS_DIRTY);
+  if (needsPositionUpdate && needsSizeUpdate) {
+    mBounds = newBounds;
+    NotifyWindowMoved(newBounds.x, newBounds.y);
+  } else if (needsPositionUpdate) {
+    mBounds = newBounds;
+    NotifyWindowMoved(newBounds.x, newBounds.y);
+  } else {
+    Resize(newBounds.width, newBounds.height, true);
   }
-}
-
-static GdkGravity PopupAlignmentToGdkGravity(int8_t aAlignment) {
-  switch (aAlignment) {
-    case POPUPALIGNMENT_NONE:
-      return GDK_GRAVITY_NORTH_WEST;
-      break;
-    case POPUPALIGNMENT_TOPLEFT:
-      return GDK_GRAVITY_NORTH_WEST;
-      break;
-    case POPUPALIGNMENT_TOPRIGHT:
-      return GDK_GRAVITY_NORTH_EAST;
-      break;
-    case POPUPALIGNMENT_BOTTOMLEFT:
-      return GDK_GRAVITY_SOUTH_WEST;
-      break;
-    case POPUPALIGNMENT_BOTTOMRIGHT:
-      return GDK_GRAVITY_SOUTH_EAST;
-      break;
-    case POPUPALIGNMENT_LEFTCENTER:
-      return GDK_GRAVITY_WEST;
-      break;
-    case POPUPALIGNMENT_RIGHTCENTER:
-      return GDK_GRAVITY_EAST;
-      break;
-    case POPUPALIGNMENT_TOPCENTER:
-      return GDK_GRAVITY_NORTH;
-      break;
-    case POPUPALIGNMENT_BOTTOMCENTER:
-      return GDK_GRAVITY_SOUTH;
-      break;
-  }
-  return GDK_GRAVITY_STATIC;
 }
 
 void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
@@ -1514,73 +1448,41 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   LOG(("nsWindow::NativeMoveResizeWaylandPopup: Set popup parent %p\n",
        parentWindow));
 
-  // Get anchor rectangle
-  LayoutDeviceIntRect anchorRect(0, 0, 0, 0);
-  nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
-  if (popupFrame) {
-#ifdef MOZ_WAYLAND
-    anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
-        popupFrame->GetAnchorRect(), AppUnitsPerCSSPixel());
-#endif
-  }
-
   int x_parent, y_parent;
-  GetOffsetToParent(GTK_WINDOW(mShell), &x_parent, &y_parent);
-  LOG(("  x_parent    %d   y_parent    %d\n", x_parent, y_parent));
-
-  if (anchorRect.width == 0) {
-    LOG(("  No anchor recr given, use aPosition for anchor"));
-    anchorRect.SetRect(aPosition->x, aPosition->y, 1, 1);
+  if (parentWindow) {
+    gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentWindow)),
+                          &x_parent, &y_parent);
+  } else {
+    NS_WARNING(("no parent window, this should not happen for popup!"));
+    x_parent = y_parent = 0;
   }
-  LOG(("  anchor x %d y %d width %d height %d\n", anchorRect.x, anchorRect.y,
-       anchorRect.width, anchorRect.height));
-  anchorRect.MoveBy(-x_parent, -y_parent);
-  GdkRectangle rect = {anchorRect.x, anchorRect.y, anchorRect.width,
-                       anchorRect.height};
 
-  // Get gravity and flip type
+  GdkRectangle rect = {aPosition->x - x_parent, aPosition->y - y_parent, 1, 1};
+  if (aSize) {
+    rect.width = aSize->width;
+    rect.height = aSize->height;
+  }
+  LOG(("  x_parent    %d   y_parent    %d\n", x_parent, y_parent));
+  LOG(("  aPosition x %d   aPosition y %d\n", aPosition->x, aPosition->y));
+  LOG(("  rect.x      %d   rect.y      %d\n", rect.x, rect.y));
+
+  if (!g_signal_handler_find(
+          gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
+          FuncToGpointer(NativeMoveResizeWaylandPopupCallback), this)) {
+    g_signal_connect(gdkWindow, "moved-to-rect",
+                     G_CALLBACK(NativeMoveResizeWaylandPopupCallback), this);
+  }
+
   GdkGravity rectAnchor = GDK_GRAVITY_NORTH_WEST;
   GdkGravity menuAnchor = GDK_GRAVITY_NORTH_WEST;
-  FlipType flipType = FlipType_Default;
-  if (popupFrame) {
-#ifdef MOZ_WAYLAND
-    rectAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAnchor());
-    menuAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAlignment());
-    flipType = popupFrame->GetFlipType();
-#endif
-  } else {
-    LOG(("  NO ANCHOR INFO"));
-    if (GetTextDirection() == GTK_TEXT_DIR_RTL) {
-      rectAnchor = GDK_GRAVITY_NORTH_EAST;
-      menuAnchor = GDK_GRAVITY_NORTH_EAST;
-    }
+  if (GetTextDirection() == GTK_TEXT_DIR_RTL) {
+    rectAnchor = GDK_GRAVITY_NORTH_EAST;
+    menuAnchor = GDK_GRAVITY_NORTH_EAST;
   }
-  LOG((" parentRect gravity: %d anchor gravity: %d\n", rectAnchor, menuAnchor));
 
-  GdkAnchorHints hints = GdkAnchorHints(GDK_ANCHOR_RESIZE);
-
-  if (popupFrame && rectAnchor == GDK_GRAVITY_CENTER &&
-      menuAnchor == GDK_GRAVITY_CENTER) {
-    // only slide
-    hints = GdkAnchorHints(hints | GDK_ANCHOR_SLIDE);
-  } else {
-    switch (flipType) {
-      case FlipType_Both:
-        hints = GdkAnchorHints(hints | GDK_ANCHOR_FLIP);
-        break;
-      case FlipType_Slide:
-        hints = GdkAnchorHints(hints | GDK_ANCHOR_SLIDE);
-        break;
-      case FlipType_Default:
-        hints = GdkAnchorHints(hints | GDK_ANCHOR_FLIP);
-        break;
-      default:
-        break;
-    }
-  }
-  if (!IsMainMenuWindow()) {
-    // we don't want to slide menus to fit the screen rather resize them
-    hints = GdkAnchorHints(hints | GDK_ANCHOR_SLIDE);
+  GdkAnchorHints hints = GdkAnchorHints(GDK_ANCHOR_SLIDE | GDK_ANCHOR_FLIP);
+  if (aSize) {
+    hints = GdkAnchorHints(hints | GDK_ANCHOR_RESIZE);
   }
 
   // A workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1986
@@ -1603,42 +1505,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   } else {
     LOG(("  No aSize given"));
   }
-
-  // Inspired by nsMenuPopupFrame::AdjustPositionForAnchorAlign
-  nsPoint cursorOffset(0, 0);
-  // Offset is already computed to the tooltips
-  if (popupFrame && mPopupType != ePopupTypeTooltip) {
-    nsMargin margin(0, 0, 0, 0);
-    popupFrame->StyleMargin()->GetMargin(margin);
-    switch (popupFrame->GetPopupAlignment()) {
-      case POPUPALIGNMENT_TOPRIGHT:
-        cursorOffset.MoveBy(-margin.right, margin.top);
-        break;
-      case POPUPALIGNMENT_BOTTOMLEFT:
-        cursorOffset.MoveBy(margin.left, -margin.bottom);
-        break;
-      case POPUPALIGNMENT_BOTTOMRIGHT:
-        cursorOffset.MoveBy(-margin.right, -margin.bottom);
-        break;
-      case POPUPALIGNMENT_TOPLEFT:
-      default:
-        cursorOffset.MoveBy(margin.left, margin.top);
-        break;
-    }
-  }
-
-  if (!g_signal_handler_find(
-          gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
-          FuncToGpointer(NativeMoveResizeWaylandPopupCallback), this)) {
-    g_signal_connect(gdkWindow, "moved-to-rect",
-                     G_CALLBACK(NativeMoveResizeWaylandPopupCallback), this);
-  }
-
-  int32_t p2a = AppUnitsPerCSSPixel();
-  LOG(("  popup window cursor offset x: %d y: %d\n", cursorOffset.x / p2a,
-       cursorOffset.y / p2a));
-  sGdkWindowMoveToRect(gdkWindow, &rect, rectAnchor, menuAnchor, hints,
-                       cursorOffset.x / p2a, cursorOffset.y / p2a);
+  sGdkWindowMoveToRect(gdkWindow, &rect, rectAnchor, menuAnchor, hints, 0, 0);
 
   if (isWidgetVisible) {
     // We show the popup with the same configuration so no need to call
@@ -2881,7 +2748,6 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
 
   LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
   if (mBounds.Size() == size) {
-    LOG(("Already the same size"));
     // We were already resized at nsWindow::OnConfigureEvent() so skip it.
     return;
   }
@@ -4865,9 +4731,6 @@ void nsWindow::NativeShow(bool aAction) {
       gdk_window_show_unraised(mGdkWindow);
     }
   } else {
-    // There's a chance that when the popup will be shown again it might be
-    // resized because parent could be moved meanwhile.
-    mPreferredPopupRect = nsRect(0, 0, 0, 0);
     if (!mIsX11Display) {
       WaylandStopVsync();
       if (IsWaylandPopup() && IsMainMenuWindow()) {
