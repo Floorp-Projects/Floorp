@@ -14,9 +14,10 @@
 namespace mozilla {
 namespace dom {
 
-#define MOZ_EACH_WC_FIELD(FIELD) \
-  FIELD(OuterWindowId, uint64_t) \
-  FIELD(CookieJarSettings, Maybe<mozilla::net::CookieJarSettingsArgs>)
+#define MOZ_EACH_WC_FIELD(FIELD)                                       \
+  FIELD(OuterWindowId, uint64_t)                                       \
+  FIELD(CookieJarSettings, Maybe<mozilla::net::CookieJarSettingsArgs>) \
+  FIELD(HasStoragePermission, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -79,6 +80,11 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_CookieJarSettings>,
               const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
+              ContentParent* aSource) {
+    return true;
+  }
+
+  bool CanSet(FieldIndex<IDX_HasStoragePermission>, const bool& aValue,
               ContentParent* aSource) {
     return true;
   }
