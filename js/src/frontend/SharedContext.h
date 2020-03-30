@@ -19,6 +19,7 @@
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Scope.h"
+#include "vm/SharedStencil.h"
 
 namespace js {
 namespace frontend {
@@ -127,36 +128,10 @@ class SharedContext {
   // True if "use strict"; appears in the body instead of being inherited.
   bool hasExplicitUseStrict_ : 1;
 
-  // The (static) bindings of this script need to support dynamic name
-  // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
-  // the scope chain for a dynamic set of keys. The primary examples are:
-  //  - direct eval
-  //  - function::
-  //  - with
-  // since both effectively allow any name to be accessed. Non-examples are:
-  //  - upvars of nested functions
-  //  - function statement
-  // since the set of assigned name is known dynamically.
-  //
-  // Note: access through the arguments object is not considered dynamic
-  // binding access since it does not go through the normal name lookup
-  // mechanism. This is debatable and could be changed (although care must be
-  // taken not to turn off the whole 'arguments' optimization). To answer the
-  // more general "is this argument aliased" question, script->needsArgsObj
-  // should be tested (see JSScript::argIsAliased).
-  bool bindingsAccessedDynamically_ : 1;
+  // Alias enum into SharedContext
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
 
-  // A direct eval occurs in the body of the script.
-  bool hasDirectEval_ : 1;
-
-  // True if a tagged template exists in the body.
-  bool hasCallSiteObj_ : 1;
-
-  // Script is being parsed with a goal of Module.
-  bool hasModuleGoal_ : 1;
-
-  // Whether this script has nested functions.
-  bool hasInnerFunctions_ : 1;
+  ImmutableScriptFlags immutableFlags_ = {};
 
   void computeAllowSyntax(Scope* scope);
   void computeInWith(Scope* scope);
@@ -177,12 +152,7 @@ class SharedContext {
         allowArguments_(true),
         inWith_(false),
         needsThisTDZChecks_(false),
-        hasExplicitUseStrict_(false),
-        bindingsAccessedDynamically_(false),
-        hasDirectEval_(false),
-        hasCallSiteObj_(false),
-        hasModuleGoal_(false),
-        hasInnerFunctions_(false) {}
+        hasExplicitUseStrict_(false) {}
 
   // If this is the outermost SharedContext, the Scope that encloses
   // it. Otherwise nullptr.
@@ -214,8 +184,12 @@ class SharedContext {
 
   ThisBinding thisBinding() const { return thisBinding_; }
 
-  bool hasModuleGoal() const { return hasModuleGoal_; }
-  bool hasInnerFunctions() const { return hasInnerFunctions_; }
+  bool hasModuleGoal() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::HasModuleGoal);
+  }
+  bool hasInnerFunctions() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::HasInnerFunctions);
+  }
   bool allowNewTarget() const { return allowNewTarget_; }
   bool allowSuperProperty() const { return allowSuperProperty_; }
   bool allowSuperCall() const { return allowSuperCall_; }
@@ -225,17 +199,33 @@ class SharedContext {
 
   bool hasExplicitUseStrict() const { return hasExplicitUseStrict_; }
   bool bindingsAccessedDynamically() const {
-    return bindingsAccessedDynamically_;
+    return immutableFlags_.hasFlag(ImmutableFlags::BindingsAccessedDynamically);
   }
-  bool hasDirectEval() const { return hasDirectEval_; }
-  bool hasCallSiteObj() const { return hasCallSiteObj_; }
+  bool hasDirectEval() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::HasDirectEval);
+  }
+  bool hasCallSiteObj() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::HasCallSiteObj);
+  }
 
   void setExplicitUseStrict() { hasExplicitUseStrict_ = true; }
-  void setBindingsAccessedDynamically() { bindingsAccessedDynamically_ = true; }
-  void setHasDirectEval() { hasDirectEval_ = true; }
-  void setHasCallSiteObj() { hasCallSiteObj_ = true; }
-  void setHasModuleGoal() { hasModuleGoal_ = true; }
-  void setHasInnerFunctions() { hasInnerFunctions_ = true; }
+  void setBindingsAccessedDynamically() {
+    immutableFlags_.setFlag(ImmutableFlags::BindingsAccessedDynamically);
+  }
+  void setHasDirectEval() {
+    immutableFlags_.setFlag(ImmutableFlags::HasDirectEval);
+  }
+  void setHasCallSiteObj() {
+    immutableFlags_.setFlag(ImmutableFlags::HasCallSiteObj);
+  }
+  void setHasModuleGoal(bool hasModuleGoal = true) {
+    immutableFlags_.setFlag(ImmutableFlags::HasModuleGoal, hasModuleGoal);
+  }
+  void setHasInnerFunctions() {
+    immutableFlags_.setFlag(ImmutableFlags::HasInnerFunctions);
+  }
+
+  ImmutableScriptFlags immutableFlags() { return immutableFlags_; }
 
   inline bool allBindingsClosedOver();
 
@@ -345,8 +335,6 @@ class FunctionBox : public SharedContext {
 
   uint16_t length;
 
-  bool isGenerator_ : 1;           /* generator function or async generator */
-  bool isAsync_ : 1;               /* async function or async generator */
   bool hasDestructuringArgs : 1;   /* parameter list contains destructuring
                                       expression */
   bool hasParameterExprs : 1;      /* parameter list contains expressions */
@@ -357,24 +345,13 @@ class FunctionBox : public SharedContext {
   bool emitBytecode : 1; /* need to generate bytecode for this function. */
 
   // Fields for use in heuristics.
-  bool declaredArguments : 1; /* the Parser declared 'arguments' */
-  bool usesArguments : 1;     /* contains a free use of 'arguments' */
-  bool usesApply : 1;         /* contains an f.apply() call */
-  bool usesThis : 1;          /* contains 'this' */
-  bool usesReturn : 1;        /* contains a 'return' statement */
-  bool hasRest_ : 1;          /* has rest parameter */
-  bool hasExprBody_ : 1;      /* arrow function with expression
-                               * body like: () => 1
-                               * Only used by Reflect.parse */
-
-  // This function does something that can extend the set of bindings in its
-  // call objects --- it does a direct eval in non-strict code, or includes a
-  // function statement (as opposed to a function definition).
-  //
-  // This flag is *not* inherited by enclosed or enclosing functions; it
-  // applies only to the function in whose flags it appears.
-  //
-  bool hasExtensibleScope_ : 1;
+  bool usesArguments : 1; /* contains a free use of 'arguments' */
+  bool usesApply : 1;     /* contains an f.apply() call */
+  bool usesThis : 1;      /* contains 'this' */
+  bool usesReturn : 1;    /* contains a 'return' statement */
+  bool hasExprBody_ : 1;  /* arrow function with expression
+                           * body like: () => 1
+                           * Only used by Reflect.parse */
 
   // Technically, every function has a binding named 'arguments'. Internally,
   // this binding is only added when 'arguments' is mentioned by the function
@@ -409,13 +386,6 @@ class FunctionBox : public SharedContext {
   // setting this flag which eagerly sets script->needsArgsObj to true.
   //
   bool definitelyNeedsArgsObj_ : 1;
-
-  bool needsHomeObject_ : 1;
-  bool isDerivedClassConstructor_ : 1;
-
-  // Whether this function has a .this binding. If true, we need to emit
-  // JSOp::FunctionThis in the prologue to initialize it.
-  bool hasThisBinding_ : 1;
 
   uint16_t nargs_;
 
@@ -517,13 +487,17 @@ class FunctionBox : public SharedContext {
     return usesArguments && usesApply && usesThis && !usesReturn;
   }
 
-  bool isGenerator() const { return isGenerator_; }
+  bool isGenerator() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::IsGenerator);
+  }
   GeneratorKind generatorKind() const {
     return isGenerator() ? GeneratorKind::Generator
                          : GeneratorKind::NotGenerator;
   }
 
-  bool isAsync() const { return isAsync_; }
+  bool isAsync() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::IsAsync);
+  }
   FunctionAsyncKind asyncKind() const {
     return isAsync() ? FunctionAsyncKind::AsyncFunction
                      : FunctionAsyncKind::SyncFunction;
@@ -542,8 +516,17 @@ class FunctionBox : public SharedContext {
     return functionCreationData().get().flags.isLambda();
   }
 
-  bool hasRest() const { return hasRest_; }
-  void setHasRest() { hasRest_ = true; }
+  void setDeclaredArguments() {
+    immutableFlags_.setFlag(ImmutableFlags::ShouldDeclareArguments);
+  }
+  bool declaredArguments() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::ShouldDeclareArguments);
+  }
+
+  bool hasRest() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::HasRest);
+  }
+  void setHasRest() { immutableFlags_.setFlag(ImmutableFlags::HasRest); }
 
   bool hasExprBody() const { return hasExprBody_; }
   void setHasExprBody() {
@@ -551,12 +534,20 @@ class FunctionBox : public SharedContext {
     hasExprBody_ = true;
   }
 
-  bool hasExtensibleScope() const { return hasExtensibleScope_; }
-  bool hasThisBinding() const { return hasThisBinding_; }
+  bool hasExtensibleScope() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::FunHasExtensibleScope);
+  }
+  bool hasThisBinding() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::FunctionHasThisBinding);
+  }
   bool argumentsHasLocalBinding() const { return argumentsHasLocalBinding_; }
   bool definitelyNeedsArgsObj() const { return definitelyNeedsArgsObj_; }
-  bool needsHomeObject() const { return needsHomeObject_; }
-  bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
+  bool needsHomeObject() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::NeedsHomeObject);
+  }
+  bool isDerivedClassConstructor() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::IsDerivedClassConstructor);
+  }
   bool isNamedLambda() const { return flags_.isNamedLambda(explicitName()); }
   bool isGetter() const { return flags_.isGetter(); }
   bool isSetter() const { return flags_.isSetter(); }
@@ -576,8 +567,12 @@ class FunctionBox : public SharedContext {
 
   JSAtom* explicitName() const { return explicitName_; }
 
-  void setHasExtensibleScope() { hasExtensibleScope_ = true; }
-  void setHasThisBinding() { hasThisBinding_ = true; }
+  void setHasExtensibleScope() {
+    immutableFlags_.setFlag(ImmutableFlags::FunHasExtensibleScope);
+  }
+  void setHasThisBinding() {
+    immutableFlags_.setFlag(ImmutableFlags::FunctionHasThisBinding);
+  }
   void setArgumentsHasLocalBinding() { argumentsHasLocalBinding_ = true; }
   void setDefinitelyNeedsArgsObj() {
     MOZ_ASSERT(argumentsHasLocalBinding_);
@@ -587,13 +582,13 @@ class FunctionBox : public SharedContext {
     MOZ_ASSERT_IF(hasFunction(), function()->allowSuperProperty());
     MOZ_ASSERT_IF(!hasFunction(),
                   functionCreationData().get().flags.allowSuperProperty());
-    needsHomeObject_ = true;
+    immutableFlags_.setFlag(ImmutableFlags::NeedsHomeObject);
   }
   void setDerivedClassConstructor() {
     MOZ_ASSERT_IF(hasFunction(), function()->isClassConstructor());
     MOZ_ASSERT_IF(!hasFunction(),
                   functionCreationData().get().flags.isClassConstructor());
-    isDerivedClassConstructor_ = true;
+    immutableFlags_.setFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
 
   bool hasSimpleParameterList() const {

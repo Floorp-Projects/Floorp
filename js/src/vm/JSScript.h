@@ -1814,6 +1814,14 @@ class BaseScript : public gc::TenuredCell {
   ImmutableScriptFlags immutableFlags() const { return immutableScriptFlags_; }
 
   void setImmutableFlags(uint32_t flags) { immutableScriptFlags_ = flags; }
+  void addToImmutableFlags(const ImmutableScriptFlags& flags) {
+    immutableScriptFlags_ |= flags;
+  }
+
+  void inheritFlagsFromParser(const ImmutableScriptFlags& flags) {
+    MOZ_ASSERT(immutableScriptFlags_ == 0);
+    immutableScriptFlags_ = flags;
+  }
 
   // ImmutableFlags accessors.
   MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
