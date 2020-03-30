@@ -26,7 +26,7 @@ import {
 } from "../reducers/project-text-search";
 
 import type { Action, ThunkArgs } from "./types";
-import type { Context } from "../types";
+import type { Context, SourceId } from "../types";
 import type {
   SearchOperation,
   StatusType,
@@ -45,7 +45,7 @@ export function addOngoingSearch(
 
 export function addSearchResult(
   cx: Context,
-  sourceId: string,
+  sourceId: SourceId,
   filepath: string,
   matches: Object[]
 ): Action {
@@ -116,7 +116,7 @@ export function searchSources(cx: Context, query: string) {
   return search;
 }
 
-export function searchSource(cx: Context, sourceId: string, query: string) {
+export function searchSource(cx: Context, sourceId: SourceId, query: string) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {

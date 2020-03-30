@@ -38,7 +38,7 @@ import { downloadFile } from "../../utils/utils";
 import { isFulfilled } from "../../utils/async-value";
 
 import type { TreeNode, SourcesGroups } from "../../utils/sources-tree/types";
-import type { Source, Context, Thread, SourceContent } from "../../types";
+import type { Source, Context, Thread, SourceContent, URL } from "../../types";
 
 type OwnProps = {|
   item: TreeNode,
@@ -50,7 +50,7 @@ type OwnProps = {|
   focusItem: TreeNode => void,
   selectItem: TreeNode => void,
   source: ?Source,
-  debuggeeUrl: string,
+  debuggeeUrl: URL,
   projectRoot: string,
   setExpanded: (TreeNode, boolean, boolean) => void,
   getSourcesGroups: TreeNode => SourcesGroups,
@@ -60,7 +60,7 @@ type Props = {
   item: TreeNode,
   autoExpand: ?boolean,
   cx: Context,
-  debuggeeUrl: string,
+  debuggeeUrl: URL,
   projectRoot: string,
   extensionName: string | null,
   sourceContent: ?SourceContent,

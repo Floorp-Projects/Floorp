@@ -96,7 +96,10 @@ export function mapDisplayNames(
   });
 }
 
-function isWasmOriginalSourceFrame(frame, getState: () => State): boolean {
+function isWasmOriginalSourceFrame(
+  frame: Frame,
+  getState: () => State
+): boolean {
   if (isGeneratedId(frame.location.sourceId)) {
     return false;
   }
@@ -166,7 +169,11 @@ async function expandFrames(
   return result;
 }
 
-async function updateFrameSymbols(cx, frames, { dispatch, getState }) {
+async function updateFrameSymbols(
+  cx: ThreadContext,
+  frames: Frame[],
+  { dispatch, getState }
+) {
   await Promise.all(
     frames.map(frame => {
       const source = getSourceFromId(getState(), frame.location.sourceId);

@@ -23,18 +23,19 @@ import {
   resourceAsSourceBase,
 } from "./sources";
 
+import type { SourceId, URL } from "../types";
 import type { Action } from "../actions/types";
 import type { Selector, State } from "./types";
 import type { SourceBase } from "./sources";
 
 export type PersistedTab = {|
-  url: string,
+  url: URL,
   framework?: string | null,
   isOriginal: boolean,
-  sourceId: null,
+  sourceId: SourceId,
 |};
 
-export type VisibleTab = {| ...Tab, sourceId: string |};
+export type VisibleTab = {| ...Tab, sourceId: SourceId |};
 
 export type Tab = PersistedTab | VisibleTab;
 
@@ -291,7 +292,7 @@ const querySourcesForTabs = makeShallowQuery({
   reduce: items => items,
 });
 
-export function tabExists(state: State, sourceId: string) {
+export function tabExists(state: State, sourceId: SourceId) {
   return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
 }
 

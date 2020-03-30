@@ -52,7 +52,7 @@ import type {
   ParentMap,
   SourcesGroups,
 } from "../../utils/sources-tree/types";
-import type { Source, Context, Thread } from "../../types";
+import type { Source, Context, Thread, URL } from "../../types";
 import type {
   SourcesMapByThread,
   State as AppState,
@@ -69,7 +69,7 @@ type Props = {
   sourceCount: number,
   shownSource: ?Source,
   selectedSource: ?Source,
-  debuggeeUrl: string,
+  debuggeeUrl: URL,
   projectRoot: string,
   expanded: Set<string>,
   selectSource: typeof actions.selectSource,

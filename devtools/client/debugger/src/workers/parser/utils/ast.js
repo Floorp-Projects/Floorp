@@ -10,6 +10,8 @@ import * as t from "@babel/types";
 import isEmpty from "lodash/isEmpty";
 import { getSource } from "../sources";
 
+import type { SourceId } from "../../../types";
+
 let ASTs = new Map();
 
 function _parse(code, opts) {
@@ -125,7 +127,7 @@ export function parseScript(text: string, opts?: Object) {
   return _parse(text, opts);
 }
 
-export function getAst(sourceId: string) {
+export function getAst(sourceId: SourceId) {
   if (ASTs.has(sourceId)) {
     return ASTs.get(sourceId);
   }
@@ -177,7 +179,11 @@ export function clearASTs() {
 }
 
 type Visitor = { enter: Function };
-export function traverseAst<T>(sourceId: string, visitor: Visitor, state?: T) {
+export function traverseAst<T>(
+  sourceId: SourceId,
+  visitor: Visitor,
+  state?: T
+) {
   const ast = getAst(sourceId);
   if (isEmpty(ast)) {
     return null;

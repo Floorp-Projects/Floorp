@@ -4,7 +4,8 @@
 
 // @flow
 import { memoize } from "lodash";
-import { URL } from "whatwg-url";
+import { URL as URLParser } from "whatwg-url";
+import type { URL } from "../types";
 
 const defaultUrl = {
   hash: "",
@@ -23,9 +24,9 @@ const defaultUrl = {
   username: "",
 };
 
-export const parse = memoize(function parse(url: string): any {
+export const parse = memoize(function parse(url: URL): any {
   try {
-    const urlObj = new URL(url);
+    const urlObj = new URLParser(url);
     (urlObj: any).path = urlObj.pathname + urlObj.search;
     return urlObj;
   } catch (err) {
@@ -38,6 +39,6 @@ export const parse = memoize(function parse(url: string): any {
   }
 });
 
-export function sameOrigin(firstUrl: string, secondUrl: string) {
+export function sameOrigin(firstUrl: URL, secondUrl: URL) {
   return parse(firstUrl).origin == parse(secondUrl).origin;
 }

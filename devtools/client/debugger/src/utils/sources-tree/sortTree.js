@@ -7,6 +7,7 @@
 import { nodeHasChildren, isExactUrlMatch } from "./utils";
 
 import type { TreeDirectory } from "./types";
+import type { URL } from "../../types";
 
 /**
  * Look at the nodes in the source tree, and determine the index of where to
@@ -14,7 +15,7 @@ import type { TreeDirectory } from "./types";
  * @memberof utils/sources-tree
  * @static
  */
-export function sortTree(tree: TreeDirectory, debuggeeUrl: string = "") {
+export function sortTree(tree: TreeDirectory, debuggeeUrl: URL = "") {
   return (tree.contents: any).sort((previousNode, currentNode) => {
     const currentNodeIsDir = nodeHasChildren(currentNode);
     const previousNodeIsDir = nodeHasChildren(previousNode);

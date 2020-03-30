@@ -14,7 +14,7 @@ import type { SymbolDeclarations } from "./getSymbols";
 
 export class ParserDispatcher extends WorkerDispatcher {
   async findOutOfScopeLocations(
-    sourceId: string,
+    sourceId: SourceId,
     position: AstPosition
   ): Promise<AstLocation[]> {
     return this.invoke("findOutOfScopeLocations", sourceId, position);
@@ -35,7 +35,7 @@ export class ParserDispatcher extends WorkerDispatcher {
     return this.invoke("getScopes", location);
   }
 
-  async getSymbols(sourceId: string): Promise<SymbolDeclarations> {
+  async getSymbols(sourceId: SourceId): Promise<SymbolDeclarations> {
     return this.invoke("getSymbols", sourceId);
   }
 

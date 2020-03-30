@@ -49,6 +49,8 @@ import { validateNavigateContext, ContextError } from "../../utils/context";
 import type {
   Source,
   SourceActorId,
+  SourceId,
+  ThreadId,
   Context,
   OriginalSourceData,
   GeneratedSourceData,
@@ -152,7 +154,7 @@ function loadSourceMap(cx: Context, sourceActor: SourceActor) {
 
 // If a request has been made to show this source, go ahead and
 // select it.
-function checkSelectedSource(cx: Context, sourceId: string) {
+function checkSelectedSource(cx: Context, sourceId: SourceId) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const state = getState();
     const pendingLocation = getPendingSelectedLocation(state);
@@ -188,7 +190,7 @@ function checkSelectedSource(cx: Context, sourceId: string) {
   };
 }
 
-function checkPendingBreakpoints(cx: Context, sourceId: string) {
+function checkPendingBreakpoints(cx: Context, sourceId: SourceId) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     // source may have been modified by selectLocation
     const source = getSource(getState(), sourceId);
@@ -394,13 +396,13 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
   };
 }
 
-function addSources(cx, sources: Array<Source>) {
+function addSources(cx: Context, sources: Array<Source>) {
   return ({ dispatch, getState }: ThunkArgs) => {
     dispatch({ type: "ADD_SOURCES", cx, sources });
   };
 }
 
-function checkNewSources(cx, sources: Source[]) {
+function checkNewSources(cx: Context, sources: Source[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     for (const source of sources) {
       dispatch(checkSelectedSource(cx, source.id));
@@ -412,7 +414,10 @@ function checkNewSources(cx, sources: Source[]) {
   };
 }
 
-export function ensureSourceActor(thread: string, sourceActor: SourceActorId) {
+export function ensureSourceActor(
+  thread: ThreadId,
+  sourceActor: SourceActorId
+) {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     await sourceQueue.flush();
     if (hasSourceActor(getState(), sourceActor)) {

@@ -6,14 +6,14 @@
 
 import type { SymbolDeclarations } from "../../workers/parser";
 import type { PromiseAction } from "../utils/middleware/promise";
-import type { Context, SourceLocation } from "../../types";
+import type { Context, SourceLocation, SourceId } from "../../types";
 
 export type ASTAction =
   | PromiseAction<
       {|
         +type: "SET_SYMBOLS",
         +cx: Context,
-        +sourceId: string,
+        +sourceId: SourceId,
       |},
       SymbolDeclarations
     >

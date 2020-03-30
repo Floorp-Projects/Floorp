@@ -54,7 +54,7 @@ function getSteppableExpression(
 
 function _getNextStep(
   statement: SimplePath,
-  sourceId: string,
+  sourceId: SourceId,
   position: AstPosition
 ): ?SourceLocation {
   const nextStatement = statement.getSibling(1);

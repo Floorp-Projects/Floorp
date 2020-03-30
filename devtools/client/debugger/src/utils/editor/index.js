@@ -17,7 +17,12 @@ import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
 
 import type { AstLocation } from "../../workers/parser";
 import type { EditorPosition, EditorRange } from "../editor/types";
-import type { SearchModifiers, Source, SourceLocation } from "../../types";
+import type {
+  SearchModifiers,
+  Source,
+  SourceLocation,
+  SourceId,
+} from "../../types";
 type Editor = Object;
 
 let editor: ?Editor;
@@ -74,7 +79,7 @@ export function traverseResults(
   }
 }
 
-export function toEditorLine(sourceId: string, lineOrOffset: number): number {
+export function toEditorLine(sourceId: SourceId, lineOrOffset: number): number {
   if (isWasm(sourceId)) {
     // TODO ensure offset is always "mappable" to edit line.
     return wasmOffsetToLine(sourceId, lineOrOffset) || 0;
@@ -83,7 +88,7 @@ export function toEditorLine(sourceId: string, lineOrOffset: number): number {
   return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
-export function fromEditorLine(sourceId: string, line: number): number {
+export function fromEditorLine(sourceId: SourceId, line: number): number {
   if (isWasm(sourceId)) {
     return lineToWasmOffset(sourceId, line) || 0;
   }
@@ -99,7 +104,7 @@ export function toEditorPosition(location: SourceLocation): EditorPosition {
 }
 
 export function toEditorRange(
-  sourceId: string,
+  sourceId: SourceId,
   location: AstLocation
 ): EditorRange {
   const { start, end } = location;
@@ -109,7 +114,7 @@ export function toEditorRange(
   };
 }
 
-export function toSourceLine(sourceId: string, line: number): ?number {
+export function toSourceLine(sourceId: SourceId, line: number): ?number {
   return isWasm(sourceId) ? lineToWasmOffset(sourceId, line) : line + 1;
 }
 
@@ -206,7 +211,7 @@ export function markText(
 
 export function lineAtHeight(
   { codeMirror }: Object,
-  sourceId: string,
+  sourceId: SourceId,
   event: MouseEvent
 ) {
   const _editorLine = codeMirror.lineAtHeight(event.clientY);

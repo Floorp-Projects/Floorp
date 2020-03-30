@@ -49,7 +49,10 @@ function resetLineNumberFormat(editor: SourceEditor) {
   resizeToggleButton(cm);
 }
 
-export function updateLineNumberFormat(editor: SourceEditor, sourceId: string) {
+export function updateLineNumberFormat(
+  editor: SourceEditor,
+  sourceId: SourceId
+) {
   if (!isWasm(sourceId)) {
     return resetLineNumberFormat(editor);
   }

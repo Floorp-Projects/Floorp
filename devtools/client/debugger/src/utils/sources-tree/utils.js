@@ -6,7 +6,7 @@
 import { parse } from "../../utils/url";
 
 import type { TreeNode, TreeSource, TreeDirectory, ParentMap } from "./types";
-import type { Source, Thread } from "../../types";
+import type { Source, Thread, URL } from "../../types";
 import type { SourcesMapByThread } from "../../reducers/types";
 import { isPretty } from "../source";
 import { getURL } from "./getURL";
@@ -16,7 +16,7 @@ export function nodeHasChildren(item: TreeNode): boolean {
   return item.type == "directory" && Array.isArray(item.contents);
 }
 
-export function isExactUrlMatch(pathPart: string, debuggeeUrl: string) {
+export function isExactUrlMatch(pathPart: string, debuggeeUrl: URL) {
   // compare to hostname with an optional 'www.' prefix
   const { host } = parse(debuggeeUrl);
   if (!host) {
@@ -154,7 +154,7 @@ export function createParentMap(tree: TreeNode): ParentMap {
   return map;
 }
 
-export function getRelativePath(url: string) {
+export function getRelativePath(url: URL) {
   const { pathname } = parse(url);
   if (!pathname) {
     return url;

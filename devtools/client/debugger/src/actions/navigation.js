@@ -13,6 +13,7 @@ import { evaluateExpressions } from "./expressions";
 import { clearWasmStates } from "../utils/wasm";
 import { getMainThread, getThreadContext } from "../selectors";
 import type { Action, ThunkArgs } from "./types";
+import type { ActorId, URL } from "../types";
 
 /**
  * Redux actions for the navigation state
@@ -46,8 +47,8 @@ export function willNavigate(event: Object) {
 }
 
 export function connect(
-  url: string,
-  actor: string,
+  url: URL,
+  actor: ActorId,
   traits: Object,
   isWebExtension: boolean
 ) {

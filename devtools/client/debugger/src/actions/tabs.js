@@ -19,7 +19,7 @@ import {
 } from "../selectors";
 
 import type { Action, ThunkArgs } from "./types";
-import type { Source, Context } from "../types";
+import type { Source, Context, SourceId, URL } from "../types";
 
 export function updateTab(source: Source, framework: string): Action {
   const { url, id: sourceId, isOriginal } = source;
@@ -44,7 +44,7 @@ export function addTab(source: Source): Action {
   };
 }
 
-export function moveTab(url: string, tabIndex: number): Action {
+export function moveTab(url: URL, tabIndex: number): Action {
   return {
     type: "MOVE_TAB",
     url,
@@ -52,7 +52,10 @@ export function moveTab(url: string, tabIndex: number): Action {
   };
 }
 
-export function moveTabBySourceId(sourceId: string, tabIndex: number): Action {
+export function moveTabBySourceId(
+  sourceId: SourceId,
+  tabIndex: number
+): Action {
   return {
     type: "MOVE_TAB_BY_SOURCE_ID",
     sourceId,
