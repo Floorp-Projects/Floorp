@@ -20,6 +20,7 @@ using js::jit::AbsoluteAddress;
 using js::jit::Address;
 using js::jit::AllocatableGeneralRegisterSet;
 using js::jit::Assembler;
+using js::jit::BaseIndex;
 using js::jit::GeneralRegisterSet;
 using js::jit::Imm32;
 using js::jit::ImmPtr;
@@ -83,6 +84,25 @@ void SMRegExpMacroAssembler::Backtrack() {
 
 void SMRegExpMacroAssembler::Bind(Label* label) {
   masm_.bind(label->inner());
+}
+
+// Check if current_position + cp_offset is the input start
+void SMRegExpMacroAssembler::CheckAtStartImpl(int cp_offset, Label* on_cond,
+                                              Assembler::Condition cond) {
+  Address addr(current_position_, cp_offset * char_size());
+  masm_.computeEffectiveAddress(addr, temp0_);
+
+  masm_.branchPtr(cond, inputStart(), temp0_,
+                  LabelOrBacktrack(on_cond));
+}
+
+void SMRegExpMacroAssembler::CheckAtStart(int cp_offset, Label* on_at_start) {
+  CheckAtStartImpl(cp_offset, on_at_start, Assembler::Equal);
+}
+
+void SMRegExpMacroAssembler::CheckNotAtStart(int cp_offset,
+                                             Label* on_not_at_start) {
+  CheckAtStartImpl(cp_offset, on_not_at_start, Assembler::NotEqual);
 }
 
 void SMRegExpMacroAssembler::CheckCharacterImpl(Imm32 c, Label* on_cond,
@@ -181,6 +201,30 @@ void SMRegExpMacroAssembler::CheckCharacterNotInRange(uc16 from, uc16 to,
   CheckCharacterInRangeImpl(from, to, on_not_in_range, Assembler::Above);
 }
 
+// Checks whether the given offset from the current position is
+// inside the input string.
+void SMRegExpMacroAssembler::CheckPosition(int cp_offset,
+                                           Label* on_outside_input) {
+  // Note: current_position_ is a (negative) byte offset relative to
+  // the end of the input string.
+  if (cp_offset >= 0) {
+    //      end + current + offset >= end
+    // <=>        current + offset >= 0
+    // <=>        current          >= -offset
+    masm_.branchPtr(Assembler::GreaterThanOrEqual, current_position_,
+                    ImmWord(-cp_offset * char_size()),
+                    LabelOrBacktrack(on_outside_input));
+  } else {
+    // Compute offset position
+    masm_.computeEffectiveAddress(
+        Address(current_position_, cp_offset * char_size()), temp0_);
+
+    // Compare to start of input.
+    masm_.branchPtr(Assembler::GreaterThanOrEqual, inputStart(), temp0_,
+                    LabelOrBacktrack(on_outside_input));
+  }
+}
+
 void SMRegExpMacroAssembler::Fail() {
   masm_.movePtr(ImmWord(js::RegExpRunStatus_Success_NotFound), temp0_);
   masm_.jump(&exit_label_);
@@ -188,6 +232,57 @@ void SMRegExpMacroAssembler::Fail() {
 
 void SMRegExpMacroAssembler::GoTo(Label* to) {
   masm_.jump(LabelOrBacktrack(to));
+}
+
+// This is a word-for-word identical copy of the V8 code, which is
+// duplicated in at least nine different places in V8 (one per
+// supported architecture) with no differences outside of comments and
+// formatting. It should be hoisted into the superclass. Once that is
+// done upstream, this version can be deleted.
+void SMRegExpMacroAssembler::LoadCurrentCharacterImpl(int cp_offset,
+                                                      Label* on_end_of_input,
+                                                      bool check_bounds,
+                                                      int characters,
+                                                      int eats_at_least) {
+  // It's possible to preload a small number of characters when each success
+  // path requires a large number of characters, but not the reverse.
+  MOZ_ASSERT(eats_at_least >= characters);
+  MOZ_ASSERT(cp_offset < (1 << 30));  // Be sane! (And ensure negation works)
+
+  if (check_bounds) {
+    if (cp_offset >= 0) {
+      CheckPosition(cp_offset + eats_at_least - 1, on_end_of_input);
+    } else {
+      CheckPosition(cp_offset, on_end_of_input);
+    }
+  }
+  LoadCurrentCharacterUnchecked(cp_offset, characters);
+}
+
+// Load the character (or characters) at the specified offset from the
+// current position. Zero-extend to 32 bits.
+void SMRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset,
+                                                           int characters) {
+  BaseIndex address(input_end_pointer_, current_position_, js::jit::TimesOne,
+                    cp_offset * char_size());
+  if (mode_ == LATIN1) {
+    if (characters == 4) {
+      masm_.load32(address, current_character_);
+    } else if (characters == 2) {
+      masm_.load16ZeroExtend(address, current_character_);
+    } else {
+      MOZ_ASSERT(characters == 1);
+      masm_.load8ZeroExtend(address, current_character_);
+    }
+  } else {
+    MOZ_ASSERT(mode_ == UC16);
+    if (characters == 2) {
+      masm_.load32(address, current_character_);
+    } else {
+      MOZ_ASSERT(characters == 1);
+      masm_.load16ZeroExtend(address, current_character_);
+    }
+  }
 }
 
 void SMRegExpMacroAssembler::PopCurrentPosition() { Pop(current_position_); }
@@ -204,6 +299,23 @@ void SMRegExpMacroAssembler::PushBacktrack(Label* label) {
 }
 
 void SMRegExpMacroAssembler::PushCurrentPosition() { Push(current_position_); }
+
+// When matching a regexp that is anchored at the end, this operation
+// is used to try skipping the beginning of long strings. If the
+// maximum length of a match is less than the length of the string, we
+// can skip the initial len - max_len bytes.
+void SMRegExpMacroAssembler::SetCurrentPositionFromEnd(int by) {
+  js::jit::Label after_position;
+  masm_.branchPtr(Assembler::GreaterThanOrEqual, current_position_,
+                  ImmWord(-by * char_size()), &after_position);
+  masm_.movePtr(ImmWord(-by * char_size()), current_position_);
+
+  // On RegExp code entry (where this operation is used), the character before
+  // the current position is expected to be already loaded.
+  // We have advanced the position, so it's safe to read backwards.
+  LoadCurrentCharacterUnchecked(-1, 1);
+  masm_.bind(&after_position);
+}
 
 // Returns true if a regexp match can be restarted (aka the regexp is global).
 // The return value is not used anywhere, but we implement it to be safe.
