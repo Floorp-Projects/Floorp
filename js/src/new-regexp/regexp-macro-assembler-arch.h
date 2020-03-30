@@ -80,6 +80,19 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
                                         bool check_bounds, int characters,
                                         int eats_at_least);
 
+  virtual void AdvanceRegister(int reg, int by);
+  virtual void IfRegisterGE(int reg, int comparand, Label* if_ge);
+  virtual void IfRegisterLT(int reg, int comparand, Label* if_lt);
+  virtual void IfRegisterEqPos(int reg, Label* if_eq);
+  virtual void PopRegister(int register_index);
+  virtual void PushRegister(int register_index,
+                            StackCheckFlag check_stack_limit);
+  virtual void ReadCurrentPositionFromRegister(int reg);
+  virtual void WriteCurrentPositionToRegister(int reg, int cp_offset);
+  virtual void ReadStackPointerFromRegister(int reg);
+  virtual void WriteStackPointerToRegister(int reg);
+  virtual void SetRegister(int register_index, int to);
+  virtual void ClearRegisters(int reg_from, int reg_to);
 
  private:
   // Push a register on the backtrack stack.
@@ -131,6 +144,21 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   js::jit::Address numMatches() {
     return js::jit::Address(masm_.getStackPointer(),
                             offsetof(FrameData, numMatches));
+  }
+
+  // The stack-pointer-relative location of a regexp register.
+  js::jit::Address register_location(int register_index) {
+    return js::jit::Address(masm_.getStackPointer(),
+                            register_offset(register_index));
+  }
+
+  int32_t register_offset(int register_index) {
+    MOZ_ASSERT(register_index >= 0 && register_index <= kMaxRegister);
+    if (num_registers_ <= register_index) {
+      num_registers_ = register_index + 1;
+    }
+    static_assert(alignof(uintptr_t) <= alignof(FrameData));
+    return sizeof(FrameData) + register_index * sizeof(uintptr_t*);
   }
 
   JSContext* cx_;
