@@ -233,6 +233,10 @@ function hasPermission(addon, permission) {
   return !!(addon.permissions & PERMISSION_MASKS[permission]);
 }
 
+function isInState(install, state) {
+  return install.state == AddonManager["STATE_" + state.toUpperCase()];
+}
+
 async function getAddonMessageInfo(addon) {
   const { name } = addon;
   const appName = brandBundle.GetStringFromName("brandShortName");
@@ -421,7 +425,14 @@ async function isAddonOptionsUIAllowed(addon) {
  * @param {string} param The (optional) param for the view.
  */
 let loadViewFn;
+
+/**
+ * This function is set in initialize() by the parent about:addons window. It
+ * is a helper for gViewController.replaceView(gViewDefault). This should be
+ * used to reset the view if we try to load an invalid view.
+ */
 let replaceWithDefaultViewFn;
+let getCurrentViewIdFn;
 let setCategoryFn;
 
 let _templates = {};
@@ -1614,6 +1625,289 @@ class AddonPageOptions extends HTMLElement {
   }
 }
 customElements.define("addon-page-options", AddonPageOptions);
+
+class CategoryButton extends HTMLButtonElement {
+  connectedCallback() {
+    if (this.childElementCount != 0) {
+      return;
+    }
+
+    this.classList.add("category");
+
+    // Make sure the aria-selected attribute is set correctly.
+    this.selected = this.hasAttribute("selected");
+
+    let text = document.createElement("span");
+    text.classList.add("category-name");
+    document.l10n.setAttributes(text, `addon-category-${this.name}`);
+
+    this.append(text);
+  }
+
+  get isVisible() {
+    return true;
+  }
+
+  get badgeCount() {
+    return this.getAttribute("badge-count");
+  }
+
+  set badgeCount(val) {
+    if (val !== null) {
+      this.setAttribute("badge-count", val);
+    } else {
+      this.removeAttribute("badge-count");
+    }
+  }
+
+  get selected() {
+    this.hasAttribute("selected");
+  }
+
+  set selected(val) {
+    this.toggleAttribute("selected", !!val);
+    this.setAttribute("aria-selected", !!val);
+  }
+
+  get name() {
+    return this.getAttribute("name");
+  }
+
+  // Just setting the hidden attribute isn't enough in case the category gets
+  // hidden while about:addons is closed since it could be the last active view
+  // which will unhide the button when it gets selected.
+  get defaultHidden() {
+    return this.hasAttribute("default-hidden");
+  }
+}
+customElements.define("category-button", CategoryButton, { extends: "button" });
+
+class DiscoverButton extends CategoryButton {
+  get isVisible() {
+    return isDiscoverEnabled();
+  }
+}
+customElements.define("discover-button", DiscoverButton, { extends: "button" });
+
+class CategoriesBox extends customElements.get("button-group") {
+  constructor() {
+    super();
+    // This will resolve when the initial category states have been set from
+    // our cached prefs. This is intended for use in testing to verify that we
+    // are caching the previous state.
+    this.promiseRendered = new Promise(resolve => {
+      this._resolveRendered = resolve;
+    });
+    // This will resolve when the final category states have been set by
+    // checking the AddonManager state and showing/hiding categories. The page
+    // won't be "initialized" until this resolves.
+    this.promiseInitialized = new Promise(resolve => {
+      this._resolveInitialized = resolve;
+    });
+  }
+
+  async initialize() {
+    let addonTypesObjects = AddonManager.addonTypes;
+    let addonTypes = new Set();
+    for (let type in addonTypesObjects) {
+      addonTypes.add(type);
+    }
+
+    let hiddenTypes = new Set([]);
+
+    for (let button of this.children) {
+      let { defaultHidden, name } = button;
+      button.hidden =
+        !button.isVisible || (defaultHidden && this.shouldHideCategory(name));
+
+      if (defaultHidden && addonTypes.has(name)) {
+        hiddenTypes.add(name);
+      }
+    }
+
+    let hiddenUpdated;
+    if (hiddenTypes.size) {
+      hiddenUpdated = this.updateHiddenCategories(Array.from(hiddenTypes));
+    }
+
+    this.addEventListener("click", e => {
+      let button = e.target.closest("[viewid]");
+      if (button) {
+        loadViewFn(button.getAttribute("viewid"));
+      }
+    });
+    AddonManagerListenerHandler.addListener(this);
+
+    this._resolveRendered();
+    await hiddenUpdated;
+    this._resolveInitialized();
+  }
+
+  shouldHideCategory(name) {
+    return Services.prefs.getBoolPref(`extensions.ui.${name}.hidden`, true);
+  }
+
+  setShouldHideCategory(name, hide) {
+    Services.prefs.setBoolPref(`extensions.ui.${name}.hidden`, hide);
+  }
+
+  getButtonByName(name) {
+    return this.querySelector(`[name="${name}"]`);
+  }
+
+  select(viewId) {
+    let button = this.querySelector(`[viewid="${viewId}"]`);
+    if (button) {
+      this.activeChild = button;
+      this.selectedChild = button;
+      button.hidden = false;
+      Services.prefs.setStringPref(PREF_UI_LASTCATEGORY, viewId);
+    }
+  }
+
+  onInstalled(addon) {
+    let button = this.getButtonByName(addon.type);
+    if (button) {
+      button.hidden = false;
+      this.setShouldHideCategory(addon.type, false);
+    }
+    this.updateAvailableCount();
+  }
+
+  onInstallStarted(install) {
+    this.onInstalled(install);
+  }
+
+  onNewInstall() {
+    this.updateAvailableCount();
+  }
+
+  onInstallCancelled() {
+    this.updateAvailableCount();
+  }
+
+  isManualUpdate(install) {
+    let isManual =
+      install.existingAddon &&
+      !AddonManager.shouldAutoUpdate(install.existingAddon);
+    return isManual && isInState(install, "available");
+  }
+
+  async updateAvailableCount() {
+    let installs = await AddonManager.getAllInstalls();
+    var count = installs.filter(install => {
+      return this.isManualUpdate(install, true) && !install.installed;
+    }).length;
+    let availableButton = this.getButtonByName("available-updates");
+    availableButton.hidden = !availableButton.selected && count == 0;
+    availableButton.badgeCount = count;
+  }
+
+  async updateHiddenCategories(types) {
+    let hiddenTypes = new Set(types);
+    let getAddons = AddonManager.getAddonsByTypes(types);
+    let getInstalls = AddonManager.getInstallsByTypes(types);
+
+    for (let addon of await getAddons) {
+      if (addon.hidden) {
+        continue;
+      }
+
+      this.onInstalled(addon);
+      hiddenTypes.delete(addon.type);
+
+      if (!hiddenTypes.size) {
+        return;
+      }
+    }
+
+    for (let install of await getInstalls) {
+      if (
+        install.existingAddon ||
+        install.state == AddonManager.STATE_AVAILABLE
+      ) {
+        continue;
+      }
+
+      this.onInstalled(install);
+      hiddenTypes.delete(install.type);
+
+      if (!hiddenTypes.size) {
+        return;
+      }
+    }
+
+    for (let type of hiddenTypes) {
+      let button = this.getButtonByName(type);
+      if (button.selected) {
+        // Cancel the load if this view should be hidden.
+        replaceWithDefaultViewFn();
+      }
+      this.setShouldHideCategory(type, true);
+      button.hidden = true;
+    }
+  }
+}
+customElements.define("categories-box", CategoriesBox);
+
+class SidebarFooter extends HTMLElement {
+  connectedCallback() {
+    let list = document.createElement("ul");
+    list.classList.add("sidebar-footer-list");
+
+    let prefsItem = document.createElement("li");
+    prefsItem.classList.add("sidebar-footer-item");
+    let prefsLink = document.createElement("a");
+    prefsLink.classList.add("sidebar-footer-link", "preferences-icon");
+    prefsLink.id = "preferencesButton";
+    prefsLink.href = "about:preferences";
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    prefsLink.addEventListener("click", e => {
+      e.preventDefault();
+      AMTelemetry.recordLinkEvent({
+        object: "aboutAddons",
+        value: "about:preferences",
+        extra: {
+          view: getTelemetryViewName(this),
+        },
+      });
+      windowRoot.ownerGlobal.switchToTabHavingURI("about:preferences", true, {
+        ignoreFragment: "whenComparing",
+        triggeringPrincipal: systemPrincipal,
+      });
+    });
+    let prefsText = document.createElement("span");
+    prefsText.classList.add("sidebar-footer-link-text");
+    document.l10n.setAttributes(prefsText, "preferences");
+    prefsLink.append(prefsText);
+    prefsItem.append(prefsLink);
+
+    let supportItem = document.createElement("li");
+    supportItem.classList.add("sidebar-footer-item");
+    let supportLink = document.createElement("a", { is: "support-link" });
+    supportLink.classList.add("sidebar-footer-link", "help-icon");
+    supportLink.id = "help-button";
+    supportLink.setAttribute("support-page", "addons-help");
+    supportLink.addEventListener("click", e => {
+      AMTelemetry.recordLinkEvent({
+        object: "aboutAddons",
+        value: "support",
+        extra: {
+          view: getTelemetryViewName(this),
+        },
+      });
+    });
+    let supportText = document.createElement("span");
+    supportText.classList.add("sidebar-footer-link-text");
+    document.l10n.setAttributes(supportText, "help-button");
+    supportLink.append(supportText);
+    supportItem.append(supportLink);
+
+    list.append(prefsItem, supportItem);
+    this.append(list);
+  }
+}
+customElements.define("sidebar-footer", SidebarFooter, { extends: "footer" });
 
 class AddonOptions extends HTMLElement {
   connectedCallback() {
@@ -4087,7 +4381,9 @@ let addonPageHeader = null;
  * @returns {string} The current view name.
  */
 function getTelemetryViewName(el) {
-  return el.closest("[current-view]").getAttribute("current-view");
+  let root =
+    el.closest("[current-view]") || document.querySelector("[current-view]");
+  return root.getAttribute("current-view");
 }
 
 /**
@@ -4133,6 +4429,10 @@ function initialize(opts) {
   loadViewFn = opts.loadViewFn;
   replaceWithDefaultViewFn = opts.replaceWithDefaultViewFn;
   setCategoryFn = opts.setCategoryFn;
+  getCurrentViewIdFn = opts.getCurrentViewIdFn;
+  let categoriesBox = document.querySelector("categories-box");
+  categoriesBox.initialize();
+  categoriesBox.select(getCurrentViewIdFn());
   AddonManagerListenerHandler.startup();
   window.addEventListener(
     "unload",

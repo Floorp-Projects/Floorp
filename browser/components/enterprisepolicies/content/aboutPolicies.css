@@ -36,6 +36,18 @@ body {
   border-top-color: rgba(255,255,255,0.15);
 }
 
+#category-active {
+  background-image: url("chrome://browser/content/policies/policies-active.svg");
+}
+
+#category-documentation {
+  background-image: url("chrome://browser/content/policies/policies-documentation.svg");
+}
+
+#category-errors {
+  background-image: url("chrome://browser/content/policies/policies-error.svg");
+}
+
 /** Content area **/
 
 .main-content {

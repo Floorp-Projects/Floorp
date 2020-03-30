@@ -3,10 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --section-width: 664px;
   --addon-icon-size: 32px;
+  --main-margin-start: 28px;
+  --section-width: 664px;
+  --sidebar-width: var(--in-content-sidebar-width);
   --z-index-sticky-container: 1;
   --z-index-popup: 10;
+}
+
+@media (max-width: 830px) {
+  :root {
+    --main-margin-start: 16px;
+    /* Maintain a main margin so card shadows don't overlap the sidebar. */
+    --sidebar-width: calc(var(--in-content-sidebar-width) - var(--main-margin-start));
+  }
 }
 
 *|*[hidden] {
@@ -17,6 +27,74 @@ body {
   cursor: default;
   /* The page starts to look really bad lower than this. */
   min-width: 500px;
+}
+
+#full {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+}
+
+#sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden auto;
+}
+
+#categories {
+  display: flex;
+  flex-direction: column;
+  padding-inline-end: 4px; /* Leave space for the button focus styles. */
+}
+
+.category {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  margin-block: 0;
+  align-items: center;
+}
+
+.category[badge-count]::after {
+  display: inline-block;
+  min-width: 20px;
+  background-color: var(--blue-50);
+  color: #fff;
+  font-weight: bold;
+  /* Use a large border-radius to get semi-circles on the sides. */
+  border-radius: 1000px;
+  padding: 2px 6px;
+  content: attr(badge-count);
+  text-align: center;
+  margin-inline-start: 8px;
+  grid-column: 2;
+}
+
+.category[name="discover"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+.category[name="locale"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-languages.svg");
+}
+.category[name="extension"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-extensions.svg");
+}
+.category[name="theme"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
+}
+.category[name="plugin"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-plugins.svg");
+}
+.category[name="dictionary"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-dictionaries.svg");
+}
+.category[name="available-updates"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-available.svg");
+}
+.category[name="recent-updates"] {
+  background-image: url("chrome://mozapps/skin/extensions/category-recent.svg");
 }
 
 .header-name {
@@ -43,8 +121,9 @@ body {
 }
 
 search-addons > search-textbox {
-  margin-inline-end: 0;
+  margin: 0;
   width: 20em;
+  min-height: 32px;
 }
 
 .search-label {
@@ -54,7 +133,7 @@ search-addons > search-textbox {
 .main-heading {
   background: var(--in-content-page-background);
   display: flex;
-  margin-inline-start: 28px;
+  margin-inline-start: var(--main-margin-start);
   padding-bottom: 16px;
   max-width: var(--section-width);
 }
@@ -80,14 +159,14 @@ search-addons > search-textbox {
 }
 
 #main {
-  margin-inline-start: 28px;
+  margin-inline-start: var(--main-margin-start);
   margin-bottom: 28px;
   max-width: var(--section-width);
 }
 
 global-warnings,
 #abuse-reports-messages {
-  margin-inline-start: 28px;
+  margin-inline-start: var(--main-margin-start);
   max-width: var(--section-width);
 }
 
@@ -550,15 +629,28 @@ button.tab-button[selected] {
   color: var(--in-content-category-text-selected) !important;
 }
 
-button.tab-button:focus {
-  border-top-color: transparent;
-}
-
 button.tab-button:-moz-focusring {
   outline-offset: -2px;
   -moz-outline-radius: 0;
 }
 
+.tab-group[last-input-type="mouse"] > button.tab-button:-moz-focusring {
+  outline: none;
+  box-shadow: none;
+}
+
 panel-list {
   font-size: 13px;
+}
+
+@media (max-width: 830px) {
+  .category[badge-count]::after {
+    content: "";
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    min-width: auto;
+    padding: 0;
+  }
 }
