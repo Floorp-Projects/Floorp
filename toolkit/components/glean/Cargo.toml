@@ -12,3 +12,4 @@ nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 static_prefs = { path = "../../../modules/libpref/init/static_prefs" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
+once_cell = "1.2.0"
