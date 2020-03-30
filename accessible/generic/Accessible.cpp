@@ -147,8 +147,8 @@ ENameValueFlag Accessible::Name(nsString& aName) const {
       return eNameFromTooltip;
     }
   } else if (mContent->IsSVGElement()) {
-    // If user agents need to choose among multiple ‘desc’ or ‘title’ elements
-    // for processing, the user agent shall choose the first one.
+    // If user agents need to choose among multiple 'desc' or 'title'
+    // elements for processing, the user agent shall choose the first one.
     for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
          childElm = childElm->GetNextSibling()) {
       if (childElm->IsSVGElement(nsGkAtoms::desc)) {
@@ -2007,8 +2007,8 @@ ENameValueFlag Accessible::NativeName(nsString& aName) const {
   }
 
   if (mContent->IsSVGElement()) {
-    // If user agents need to choose among multiple ‘desc’ or ‘title’ elements
-    // for processing, the user agent shall choose the first one.
+    // If user agents need to choose among multiple 'desc' or 'title'
+    // elements for processing, the user agent shall choose the first one.
     for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
          childElm = childElm->GetNextSibling()) {
       if (childElm->IsSVGElement(nsGkAtoms::title)) {
