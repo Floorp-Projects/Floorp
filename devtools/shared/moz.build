@@ -8,7 +8,6 @@ include('../templates.mozbuild')
 
 DIRS += [
     'acorn',
-    'adb',
     'client',
     'css',
     'discovery',

@@ -4,8 +4,12 @@
 
 "use strict";
 
-const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
-const { shell } = require("devtools/shared/adb/commands/index");
+const {
+  prepareTCPConnection,
+} = require("devtools/client/shared/remote-debugging/adb/commands/index");
+const {
+  shell,
+} = require("devtools/client/shared/remote-debugging/adb/commands/index");
 
 class AdbRuntime {
   constructor(adbDevice, socketPath) {

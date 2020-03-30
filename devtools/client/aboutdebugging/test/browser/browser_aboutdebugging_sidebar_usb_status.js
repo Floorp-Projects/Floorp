@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { adbAddon } = require("devtools/shared/adb/adb-addon");
+const {
+  adbAddon,
+} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
 
 /**
  * This test asserts that the sidebar shows a message describing the status of the USB

@@ -4,7 +4,12 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "adb", "devtools/shared/adb/adb", true);
+loader.lazyRequireGetter(
+  this,
+  "adb",
+  "devtools/client/shared/remote-debugging/adb/adb",
+  true
+);
 
 /**
  * Used to represent a regular runtime returned by ADB.

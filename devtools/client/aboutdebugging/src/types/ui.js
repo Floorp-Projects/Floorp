@@ -5,7 +5,9 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { ADB_ADDON_STATES } = require("devtools/shared/adb/adb-addon");
+const {
+  ADB_ADDON_STATES,
+} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
 const {
   DEBUG_TARGET_PANE,
   PAGE_TYPES,

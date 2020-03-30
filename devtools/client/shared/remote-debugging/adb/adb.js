@@ -10,17 +10,23 @@ const {
 } = require("resource://gre/modules/Timer.jsm");
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { adbProcess } = require("devtools/shared/adb/adb-process");
-const { adbAddon } = require("devtools/shared/adb/adb-addon");
-const AdbDevice = require("devtools/shared/adb/adb-device");
-const { AdbRuntime } = require("devtools/shared/adb/adb-runtime");
+const {
+  adbProcess,
+} = require("devtools/client/shared/remote-debugging/adb/adb-process");
+const {
+  adbAddon,
+} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
+const AdbDevice = require("devtools/client/shared/remote-debugging/adb/adb-device");
+const {
+  AdbRuntime,
+} = require("devtools/client/shared/remote-debugging/adb/adb-runtime");
 const {
   TrackDevicesCommand,
-} = require("devtools/shared/adb/commands/track-devices");
+} = require("devtools/client/shared/remote-debugging/adb/commands/track-devices");
 loader.lazyRequireGetter(
   this,
   "check",
-  "devtools/shared/adb/adb-running-checker",
+  "devtools/client/shared/remote-debugging/adb/adb-running-checker",
   true
 );
 
