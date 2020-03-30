@@ -8,17 +8,18 @@ import * as timings from "./timings";
 import { prefs, asyncStore, features } from "./prefs";
 import { isDevelopment, isTesting } from "devtools-environment";
 import { getDocument } from "./editor/source-documents";
+import type { URL } from "../types";
 
 function getThreadFront(dbg: Object) {
   return dbg.connection.targetList.targetFront.threadFront;
 }
 
-function findSource(dbg: any, url: string) {
+function findSource(dbg: any, url: URL) {
   const sources = dbg.selectors.getSourceList();
   return sources.find(s => (s.url || "").includes(url));
 }
 
-function findSources(dbg: any, url: string) {
+function findSources(dbg: any, url: URL) {
   const sources = dbg.selectors.getSourceList();
   return sources.filter(s => (s.url || "").includes(url));
 }

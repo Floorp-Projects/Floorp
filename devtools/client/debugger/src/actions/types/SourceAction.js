@@ -4,7 +4,13 @@
 
 // @flow
 
-import type { Source, SourceLocation, Context } from "../../types";
+import type {
+  Source,
+  SourceId,
+  SourceLocation,
+  Context,
+  URL,
+} from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
 import type { SourceBase } from "../../reducers/sources";
 
@@ -12,7 +18,7 @@ export type LoadSourceAction = PromiseAction<
   {|
     +type: "LOAD_SOURCE_TEXT",
     +cx: Context,
-    +sourceId: string,
+    +sourceId: SourceId,
     +epoch: number,
   |},
   {
@@ -41,7 +47,7 @@ export type SourceAction =
   | {|
       +type: "SET_PENDING_SELECTED_LOCATION",
       +cx: Context,
-      +url: string,
+      +url: URL,
       +line?: number,
       +column?: number,
     |}
@@ -68,12 +74,12 @@ export type SourceAction =
     >
   | {|
       +type: "MOVE_TAB",
-      +url: string,
+      +url: URL,
       +tabIndex: number,
     |}
   | {|
       +type: "MOVE_TAB_BY_SOURCE_ID",
-      +sourceId: string,
+      +sourceId: SourceId,
       +tabIndex: number,
     |}
   | {|
@@ -88,5 +94,5 @@ export type SourceAction =
       type: "SET_ORIGINAL_BREAKABLE_LINES",
       +cx: Context,
       breakableLines: number[],
-      sourceId: string,
+      sourceId: SourceId,
     |};

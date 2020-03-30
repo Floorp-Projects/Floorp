@@ -39,8 +39,10 @@ import {
 import type {
   SourceLocation,
   PartialPosition,
+  SourceId,
   Source,
   Context,
+  URL,
 } from "../../types";
 import type { ThunkArgs } from "../types";
 
@@ -57,7 +59,7 @@ export const setSelectedLocation = (
 
 export const setPendingSelectedLocation = (
   cx: Context,
-  url: string,
+  url: URL,
   options?: PartialPosition
 ) => ({
   type: "SET_PENDING_SELECTED_LOCATION",
@@ -85,7 +87,7 @@ export const clearSelectedLocation = (cx: Context) => ({
  */
 export function selectSourceURL(
   cx: Context,
-  url: string,
+  url: URL,
   options?: PartialPosition
 ) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
@@ -106,7 +108,7 @@ export function selectSourceURL(
  */
 export function selectSource(
   cx: Context,
-  sourceId: string,
+  sourceId: SourceId,
   options: PartialPosition = {}
 ) {
   return async ({ dispatch }: ThunkArgs) => {

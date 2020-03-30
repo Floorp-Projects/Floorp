@@ -16,10 +16,15 @@ import {
 } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 
+import type { ThunkArgs } from "../../actions/types";
 import type { Source, Context } from "../../types";
 import type { Symbols } from "../../reducers/types";
 
-async function doSetSymbols(cx, source, { dispatch, getState, parser }) {
+async function doSetSymbols(
+  cx,
+  source: Source,
+  { dispatch, getState, parser }: ThunkArgs
+) {
   const sourceId = source.id;
 
   await dispatch(loadSourceText({ cx, source }));

@@ -6,6 +6,7 @@
 
 import type { PersistedTab, VisibleTab } from "../reducers/tabs";
 import type { TabList, Tab, TabsSources } from "../reducers/types";
+import type { URL } from "../types";
 
 /*
  * Finds the hidden tabs by comparing the tabs' top offset.
@@ -40,7 +41,7 @@ export function getHiddenTabs(
   });
 }
 
-export function getFramework(tabs: TabList, url: string) {
+export function getFramework(tabs: TabList, url: URL) {
   const tab = tabs.find(t => t.url === url);
 
   if (tab) {
@@ -109,7 +110,7 @@ export function getTabMenuItems() {
   };
 }
 
-export function isSimilarTab(tab: Tab, url: string, isOriginal: boolean) {
+export function isSimilarTab(tab: Tab, url: URL, isOriginal: boolean) {
   return tab.url === url && tab.isOriginal === isOriginal;
 }
 

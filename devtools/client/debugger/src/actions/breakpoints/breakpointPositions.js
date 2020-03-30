@@ -21,7 +21,9 @@ import {
 import type {
   MappedLocation,
   Range,
+  Source,
   SourceLocation,
+  SourceId,
   BreakpointPositions,
   Context,
 } from "../../types";
@@ -54,7 +56,7 @@ async function mapLocations(
 }
 
 // Filter out positions, that are not in the original source Id
-function filterBySource(positions, sourceId) {
+function filterBySource(positions: MappedLocation[], sourceId: SourceId) {
   if (!isOriginalId(sourceId)) {
     return positions;
   }
@@ -65,7 +67,7 @@ function filterByUniqLocation(positions: MappedLocation[]) {
   return uniqBy(positions, ({ location }) => makeBreakpointId(location));
 }
 
-function convertToList(results, source) {
+function convertToList(results, source: Source) {
   const { id, url } = source;
   const positions = [];
 
@@ -83,7 +85,7 @@ function convertToList(results, source) {
   return positions;
 }
 
-function groupByLine(results, sourceId, line) {
+function groupByLine(results: MappedLocation[], sourceId: SourceId, line) {
   const isOriginal = isOriginalId(sourceId);
   const positions = {};
 
@@ -105,7 +107,12 @@ function groupByLine(results, sourceId, line) {
   return positions;
 }
 
-async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
+async function _setBreakpointPositions(
+  cx: Context,
+  sourceId: SourceId,
+  line,
+  thunkArgs: ThunkArgs
+) {
   const { client, dispatch, getState, sourceMaps } = thunkArgs;
   let generatedSource = getSource(getState(), sourceId);
   if (!generatedSource) {
@@ -192,7 +199,7 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
   });
 }
 
-function generatedSourceActorKey(state, sourceId) {
+function generatedSourceActorKey(state, sourceId: SourceId) {
   const generatedSource = getSource(
     state,
     isOriginalId(sourceId) ? originalToGeneratedId(sourceId) : sourceId
@@ -206,7 +213,7 @@ function generatedSourceActorKey(state, sourceId) {
 }
 
 export const setBreakpointPositions: MemoizedAction<
-  {| cx: Context, sourceId: string, line?: number |},
+  {| cx: Context, sourceId: SourceId, line?: number |},
   ?BreakpointPositions
 > = memoizeableAction("setBreakpointPositions", {
   getValue: ({ sourceId, line }, { getState }) => {

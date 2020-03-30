@@ -127,7 +127,10 @@ export function getInScopeLines(state: OuterState, location: SourceLocation) {
   return inScopeLines[makeBreakpointId(location)];
 }
 
-export function hasInScopeLines(state: OuterState, location: SourceLocation) {
+export function hasInScopeLines(
+  state: OuterState,
+  location: SourceLocation
+): boolean {
   return !!getInScopeLines(state, location);
 }
 

@@ -11,6 +11,8 @@ import { times, zip, flatten } from "lodash";
 
 import { formatDisplayName } from "../../utils/pause/frames";
 
+import type { URL } from "../../types";
+
 import "./PreviewFunction.css";
 
 type FunctionType = {
@@ -19,7 +21,7 @@ type FunctionType = {
   userDisplayName?: string,
   parameterNames?: string[],
   location?: {
-    url: string,
+    url: URL,
     line: number,
     column: number,
   },

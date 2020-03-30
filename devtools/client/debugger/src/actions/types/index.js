@@ -10,7 +10,9 @@ import type {
   Thread,
   Context,
   ThreadId,
+  SourceId,
   SourceLocation,
+  URL,
 } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
@@ -59,25 +61,25 @@ export type Thunk = ThunkArgs => any;
 export type ActionType = Object | Function;
 
 type ProjectTextSearchResult = {
-  sourceId: string,
+  sourceId: SourceId,
   filepath: string,
   matches: MatchedLocations[],
 };
 
 type AddTabAction = {|
   +type: "ADD_TAB",
-  +url: string,
+  +url: URL,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId: string,
+  +sourceId: SourceId,
 |};
 
 type UpdateTabAction = {|
   +type: "UPDATE_TAB",
-  +url: string,
+  +url: URL,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId: string,
+  +sourceId: SourceId,
 |};
 
 type NavigateAction =

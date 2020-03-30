@@ -56,10 +56,8 @@ class Breakpoint extends PureComponent<Props> {
       "breakpoint-disabled": breakpoint.disabled,
       "folding-enabled": features.codeFolding,
     });
-
     bp.onmousedown = this.onClick;
-    // NOTE: flow does not know about oncontextmenu
-    (bp: any).oncontextmenu = this.onContextMenu;
+    bp.oncontextmenu = this.onContextMenu;
 
     return bp;
   }

@@ -5,6 +5,7 @@
 // @flow
 
 import type { AstLocation, AstPosition } from "./types";
+import type { SourceId } from "../../types";
 
 import findIndex from "lodash/findIndex";
 import findLastIndex from "lodash/findLastIndex";
@@ -114,7 +115,7 @@ function sortByStart(a: AstLocation, b: AstLocation) {
  * location.
  */
 function findOutOfScopeLocations(
-  sourceId: string,
+  sourceId: SourceId,
   position: AstPosition
 ): AstLocation[] {
   const { functions, comments } = findSymbols(sourceId);

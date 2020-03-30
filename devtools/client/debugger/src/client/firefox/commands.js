@@ -23,6 +23,7 @@ import type {
   SourceId,
   SourceActor,
   Range,
+  URL,
 } from "../../types";
 
 import type {
@@ -289,7 +290,7 @@ async function autocomplete(
   });
 }
 
-function navigate(url: string): Promise<*> {
+function navigate(url: URL): Promise<*> {
   return currentTarget().navigateTo({ url });
 }
 

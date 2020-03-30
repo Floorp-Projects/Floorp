@@ -53,7 +53,7 @@ export function doSearchForHighlight(
 ) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     const selectedSource = getSelectedSourceWithContent(getState());
-    if (!selectedSource || !selectedSource.content) {
+    if (!selectedSource?.content) {
       return;
     }
     dispatch(searchContentsForHighlight(query, editor, line, ch));

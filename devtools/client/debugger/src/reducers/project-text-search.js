@@ -11,10 +11,10 @@
  */
 
 import type { Action } from "../actions/types";
-import type { Cancellable } from "../types";
+import type { Cancellable, SourceId } from "../types";
 
 export type Search = {
-  +sourceId: string,
+  +sourceId: SourceId,
   +filepath: string,
   +matches: any[],
 };

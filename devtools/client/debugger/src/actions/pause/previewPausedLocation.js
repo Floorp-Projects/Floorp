@@ -7,9 +7,10 @@
 import { selectLocation } from "../sources";
 import { getContext, getSourceByURL } from "../../selectors";
 import type { ThunkArgs } from "../types";
+import type { URL } from "../../types";
 
 type Location = {
-  sourceUrl: string,
+  sourceUrl: URL,
   column: number,
   line: number,
 };

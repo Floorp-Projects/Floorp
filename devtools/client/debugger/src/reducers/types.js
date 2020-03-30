@@ -24,6 +24,7 @@ import type { TabsState } from "./tabs";
 import type { UIState } from "./ui";
 import type { QuickOpenState } from "./quick-open";
 import type { EventListenersState } from "./event-listeners";
+import type { URL } from "../types";
 
 export type State = {
   ast: ASTState,
@@ -46,7 +47,7 @@ export type State = {
 export type Selector<T> = State => T;
 
 export type PendingSelectedLocation = {
-  url: string,
+  url: URL,
   line?: number,
   column?: number,
 };

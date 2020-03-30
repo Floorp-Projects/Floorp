@@ -21,6 +21,7 @@ import type {
   XHRBreakpoint,
   Breakpoint,
   BreakpointId,
+  SourceId,
   SourceLocation,
 } from "../types";
 import type { Action } from "../actions/types";
@@ -199,7 +200,7 @@ export function getBreakpointsDisabled(state: OuterState): boolean {
 
 export function getBreakpointsForSource(
   state: OuterState,
-  sourceId: string,
+  sourceId: SourceId,
   line: ?number
 ): Breakpoint[] {
   if (!sourceId) {

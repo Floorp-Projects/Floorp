@@ -8,10 +8,10 @@ import createSimplePath, { type SimplePath } from "./simple-path";
 import { traverseAst } from "./ast";
 import { nodeContainsPosition } from "./contains";
 
-import type { AstPosition } from "../types";
+import type { AstPosition, SourceId } from "../types";
 
 export function getClosestPath(
-  sourceId: string,
+  sourceId: SourceId,
   location: AstPosition
 ): SimplePath {
   let closestPath = null;
