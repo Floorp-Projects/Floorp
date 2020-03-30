@@ -60,8 +60,8 @@ pub fn encode(module: &Module<'_>) -> Vec<u8> {
     e.section_list(3, Func, &functys);
     e.section_list(4, Table, &tables);
     e.section_list(5, Memory, &memories);
-    e.section_list(6, Global, &globals);
     e.section_list(13, Event, &events);
+    e.section_list(6, Global, &globals);
     e.section_list(7, Export, &exports);
     e.custom_sections(Before(Start));
     if let Some(start) = start.get(0) {
