@@ -208,6 +208,26 @@ void SMRegExpMacroAssembler::CheckCharacterNotInRange(uc16 from, uc16 to,
   CheckCharacterInRangeImpl(from, to, on_not_in_range, Assembler::Above);
 }
 
+void SMRegExpMacroAssembler::CheckBitInTable(Handle<ByteArray> table,
+                                             Label* on_bit_set) {
+  // Claim ownership of the ByteArray from the current HandleScope.
+  // ByteArrays are allocated on the C++ heap and are (eventually)
+  // owned by the RegExpShared.
+  PseudoHandle<ByteArrayData> rawTable = table->takeOwnership(isolate());
+
+  masm_.movePtr(ImmPtr(rawTable->data()), temp0_);
+
+  masm_.move32(Imm32(kTableMask), temp1_);
+  masm_.and32(current_character_, temp1_);
+
+  masm_.load8ZeroExtend(BaseIndex(temp0_, temp1_, js::jit::TimesOne), temp0_);
+  masm_.branchTest32(Assembler::NonZero, temp0_, temp0_,
+                     LabelOrBacktrack(on_bit_set));
+
+  // Transfer ownership of |rawTable| to the |tables_| vector.
+  AddTable(std::move(rawTable));
+}
+
 // Checks whether the given offset from the current position is
 // inside the input string.
 void SMRegExpMacroAssembler::CheckPosition(int cp_offset,
