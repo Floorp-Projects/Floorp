@@ -15,12 +15,6 @@ const { ForgetAboutSite } = ChromeUtils.import(
   "resource://gre/modules/ForgetAboutSite.jsm"
 );
 
-const { PlacesUtils } = ChromeUtils.import(
-  "resource://gre/modules/PlacesUtils.jsm"
-);
-
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 ChromeUtils.defineModuleGetter(
   this,
   "PlacesTestUtils",
@@ -379,6 +373,21 @@ async function test_content_preferences_not_cleared_with_uri_contains_domain() {
   Assert.equal(false, await preference_exists(TEST_URI));
 }
 
+function push_registration_exists(aURL, ps) {
+  return new Promise(resolve => {
+    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      aURL
+    );
+    return ps.getSubscription(aURL, principal, (status, record) => {
+      if (!Components.isSuccessCode(status)) {
+        resolve(false);
+      } else {
+        resolve(!!record);
+      }
+    });
+  });
+}
+
 // Push
 async function test_push_cleared() {
   let ps;
@@ -389,36 +398,63 @@ async function test_push_cleared() {
     return;
   }
 
-  // Enable the push service, but disable the connection, so that accessing
-  // `pushImpl.service` doesn't try to connect.
-  Services.prefs.setBoolPref("dom.push.connection.enabled", false);
-  Services.prefs.setBoolPref("dom.push.enabled", true);
-  let pushImpl = ps.wrappedJSObject;
-  if (typeof pushImpl != "object" || !pushImpl || !("service" in pushImpl)) {
-    // GeckoView, for example, uses a different implementation; bail if it's
-    // not something we can replace.
-    info("Can't test with this push service implementation");
-    return;
-  }
-  // Otherwise, tear down the old one and replace it with our mock backend,
-  // so that we don't have to initialize an entire mock WebSocket only to
-  // test clearing data.
-  await pushImpl.service.uninit();
-  let wasCleared = false;
-  pushImpl.service = {
-    async clear({ domain } = {}) {
-      Assert.equal(
-        domain,
-        "mozilla.org",
-        "Should pass domain to clear to push service"
-      );
-      wasCleared = true;
-    },
-  };
-  Services.prefs.setBoolPref("dom.push.enabled", true);
+  do_get_profile();
+  setPrefs();
+  const { PushServiceWebSocket } = ChromeUtils.import(
+    "resource://gre/modules/PushServiceWebSocket.jsm"
+  );
+  const { PushService } = serviceExports;
+  const userAgentID = "bd744428-f125-436a-b6d0-dd0c9845837f";
+  const channelID = "0ef2ad4a-6c49-41ad-af6e-95d2425276bf";
 
-  await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  Assert.ok(wasCleared, "Should have cleared push data");
+  let db = PushServiceWebSocket.newPushDB();
+
+  try {
+    PushService.init({
+      serverURI: "wss://push.example.org/",
+      db,
+      makeWebSocket(uriObj) {
+        return new MockWebSocket(uriObj, {
+          onHello(request) {
+            this.serverSendMsg(
+              JSON.stringify({
+                messageType: "hello",
+                status: 200,
+                uaid: userAgentID,
+              })
+            );
+          },
+          onUnregister(request) {
+            this.serverSendMsg(
+              JSON.stringify({
+                messageType: "unregister",
+                status: 200,
+                channelID: request.channelID,
+              })
+            );
+          },
+        });
+      },
+    });
+
+    const TEST_URL = "https://www.mozilla.org/scope/";
+    Assert.equal(false, await push_registration_exists(TEST_URL, ps));
+    await db.put({
+      channelID,
+      pushEndpoint: "https://example.org/update/clear-success",
+      scope: TEST_URL,
+      version: 1,
+      originAttributes: "",
+      quota: Infinity,
+    });
+    Assert.ok(await push_registration_exists(TEST_URL, ps));
+
+    await ForgetAboutSite.removeDataFromDomain("mozilla.org");
+
+    Assert.equal(false, await push_registration_exists(TEST_URL, ps));
+  } finally {
+    await PushService._shutdownService();
+  }
 }
 
 // Cache

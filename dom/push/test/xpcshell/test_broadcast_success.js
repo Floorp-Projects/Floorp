@@ -61,8 +61,6 @@ add_task(async function test_register_success() {
 
   var broadcastSubscriptions = [];
 
-  let handshakeDone;
-  let handshakePromise = new Promise(resolve => (handshakeDone = resolve));
   await PushService.init({
     serverURI: "wss://push.example.org/",
     db,
@@ -76,10 +74,7 @@ add_task(async function test_register_success() {
             "Handshake: doesn't consult listeners"
           );
           equal(data.messageType, "hello", "Handshake: wrong message type");
-          ok(
-            !data.uaid,
-            "Should not send UAID in handshake without local subscriptions"
-          );
+          equal(data.uaid, userAgentID, "Handshake: wrong device ID");
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
@@ -87,7 +82,6 @@ add_task(async function test_register_success() {
               uaid: userAgentID,
             })
           );
-          handshakeDone();
         },
 
         onBroadcastSubscribe(data) {
@@ -96,7 +90,6 @@ add_task(async function test_register_success() {
       });
     },
   });
-  await handshakePromise;
 
   socket.serverSendMsg(
     JSON.stringify({
@@ -171,10 +164,7 @@ add_task(async function test_handle_hello_broadcasts() {
             "Handshake: doesn't consult listeners"
           );
           equal(data.messageType, "hello", "Handshake: wrong message type");
-          ok(
-            !data.uaid,
-            "Should not send UAID in handshake without local subscriptions"
-          );
+          equal(data.uaid, userAgentID, "Handshake: wrong device ID");
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
