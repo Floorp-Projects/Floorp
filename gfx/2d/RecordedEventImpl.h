@@ -133,11 +133,11 @@ class RecordedCreateSimilarDrawTarget
 };
 
 class RecordedCreateClippedDrawTarget
-    : public RecordedDrawingEvent<RecordedCreateClippedDrawTarget> {
+    : public RecordedEventDerived<RecordedCreateClippedDrawTarget> {
  public:
-  RecordedCreateClippedDrawTarget(DrawTarget* aDT, ReferencePtr aRefPtr,
-                                  const Rect& aBounds, SurfaceFormat aFormat)
-      : RecordedDrawingEvent(CREATECLIPPEDDRAWTARGET, aDT),
+  RecordedCreateClippedDrawTarget(ReferencePtr aRefPtr, const Rect& aBounds,
+                                  SurfaceFormat aFormat)
+      : RecordedEventDerived(CREATECLIPPEDDRAWTARGET),
         mRefPtr(aRefPtr),
         mBounds(aBounds),
         mFormat(aFormat) {}
@@ -2067,12 +2067,9 @@ inline bool RecordedCreateDrawTargetForFilter::PlayEvent(
 
 inline bool RecordedCreateClippedDrawTarget::PlayEvent(
     Translator* aTranslator) const {
-  DrawTarget* dt = aTranslator->LookupDrawTarget(mDT);
-  if (!dt) {
-    return false;
-  }
-
-  RefPtr<DrawTarget> newDT = dt->CreateClippedDrawTarget(mBounds, mFormat);
+  RefPtr<DrawTarget> newDT =
+      aTranslator->GetReferenceDrawTarget()->CreateClippedDrawTarget(mBounds,
+                                                                     mFormat);
 
   // If we couldn't create a DrawTarget this will probably cause us to crash
   // with nullptr later in the playback, so return false to abort.
@@ -2086,7 +2083,6 @@ inline bool RecordedCreateClippedDrawTarget::PlayEvent(
 
 template <class S>
 void RecordedCreateClippedDrawTarget::Record(S& aStream) const {
-  RecordedDrawingEvent::Record(aStream);
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mBounds);
   WriteElement(aStream, mFormat);
@@ -2094,7 +2090,7 @@ void RecordedCreateClippedDrawTarget::Record(S& aStream) const {
 
 template <class S>
 RecordedCreateClippedDrawTarget::RecordedCreateClippedDrawTarget(S& aStream)
-    : RecordedDrawingEvent(CREATECLIPPEDDRAWTARGET, aStream) {
+    : RecordedEventDerived(CREATECLIPPEDDRAWTARGET) {
   ReadElement(aStream, mRefPtr);
   ReadElement(aStream, mBounds);
   ReadElementConstrained(aStream, mFormat, SurfaceFormat::A8R8G8B8_UINT32,
