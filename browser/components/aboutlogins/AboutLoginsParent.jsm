@@ -418,12 +418,18 @@ class AboutLoginsParent extends JSWindowActorParent {
             playStoreBadgeLanguage,
           };
 
+          let selectedSort = Services.prefs.getCharPref(
+            "signon.management.page.sort",
+            "name"
+          );
+          if (selectedSort == "breached") {
+            // The "breached" value was used since Firefox 70 and
+            // replaced with "alerts" in Firefox 76.
+            selectedSort = "alerts";
+          }
           this.sendAsyncMessage("AboutLogins:Setup", {
             logins,
-            selectedSort: Services.prefs.getCharPref(
-              "signon.management.page.sort",
-              "name"
-            ),
+            selectedSort,
             syncState,
             selectedBadgeLanguages,
             masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
