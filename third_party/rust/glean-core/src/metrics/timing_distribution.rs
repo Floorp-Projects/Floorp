@@ -63,15 +63,20 @@ impl Timings {
     ///
     /// This API exists to satisfy the FFI requirements, where the clock is handled on the
     /// application side and passed in as a timestamp.
-    fn set_stop(&mut self, id: TimerId, stop_time: u64) -> Result<u64, &str> {
+    fn set_stop(&mut self, id: TimerId, stop_time: u64) -> Result<u64, (ErrorType, &str)> {
         let start_time = match self.start_times.remove(&id) {
             Some(start_time) => start_time,
-            None => return Err("Timing not running"),
+            None => return Err((ErrorType::InvalidState, "Timing not running")),
         };
 
         let duration = match stop_time.checked_sub(start_time) {
             Some(duration) => duration,
-            None => return Err("Timer stopped with negative duration"),
+            None => {
+                return Err((
+                    ErrorType::InvalidValue,
+                    "Timer stopped with negative duration",
+                ))
+            }
         };
 
         Ok(duration)
@@ -162,8 +167,8 @@ impl TimingDistributionMetric {
     pub fn set_stop_and_accumulate(&mut self, glean: &Glean, id: TimerId, stop_time: u64) {
         // Duration is in nanoseconds.
         let mut duration = match self.timings.set_stop(id, stop_time) {
-            Err(error) => {
-                record_error(glean, &self.meta, ErrorType::InvalidValue, error, None);
+            Err((err_type, err_msg)) => {
+                record_error(glean, &self.meta, err_type, err_msg, None);
                 return;
             }
             Ok(duration) => duration,

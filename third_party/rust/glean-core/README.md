@@ -32,7 +32,7 @@ let cfg = Configuration {
     max_events: None,
 };
 let mut glean = Glean::new(cfg).unwrap();
-let ping = PingType::new("sample", true);
+let ping = PingType::new("sample", true, true, vec![]);
 glean.register_ping_type(&ping);
 
 let call_counter: CounterMetric = CounterMetric::new(CommonMetricData {
@@ -44,7 +44,7 @@ let call_counter: CounterMetric = CounterMetric::new(CommonMetricData {
 
 call_counter.add(&glean, 1);
 
-glean.submit_ping(&ping).unwrap();
+glean.submit_ping(&ping, None).unwrap();
 ```
 
 ## License
