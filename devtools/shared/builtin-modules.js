@@ -238,6 +238,7 @@ exports.modules = {
   ChromeUtils,
   DebuggerNotificationObserver,
   HeapSnapshot,
+  InspectorUtils,
   promise,
   // Expose "chrome" Promise, which aren't related to any document
   // and so are never frozen, even if the browser loader module which
@@ -268,10 +269,6 @@ defineLazyGetter(exports.modules, "ChromeDebugger", () => {
   return debuggerSandbox.Debugger;
 });
 
-defineLazyGetter(exports.modules, "InspectorUtils", () => {
-  return InspectorUtils;
-});
-
 defineLazyGetter(exports.modules, "xpcInspector", () => {
   return Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
 });
@@ -285,9 +282,11 @@ exports.globals = {
   BrowsingContext,
   console,
   CSS,
+  CSSRule,
   DOMParser,
   DOMPoint,
   DOMQuad,
+  Event,
   NamedNodeMap,
   NodeFilter,
   DOMRect,
@@ -350,14 +349,3 @@ lazyGlobal("indexedDB", () => {
     indexedDB
   );
 });
-
-const inspectorGlobals = {
-  CSSRule,
-  Event,
-};
-
-for (const [name, value] of Object.entries(inspectorGlobals)) {
-  lazyGlobal(name, () => {
-    return value;
-  });
-}
