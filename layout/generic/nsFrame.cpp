@@ -4989,8 +4989,11 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
 
   AutoWeakFrame weakThis = this;
   if (NS_SUCCEEDED(result) && parentContent) {
-    frameselection->HandleTableSelection(parentContent, contentOffset, target,
-                                         mouseEvent);
+    result = frameselection->HandleTableSelection(parentContent, contentOffset,
+                                                  target, mouseEvent);
+    if (NS_WARN_IF(NS_FAILED(result))) {
+      return result;
+    }
   } else {
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
     frameselection->HandleDrag(this, pt);
