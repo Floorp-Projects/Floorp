@@ -1197,6 +1197,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
       node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
                              aLayer.GetStickyScrollRangeOuter(),
                              aLayer.GetStickyScrollRangeInner());
+    } else {
+      node->SetStickyPosData(ScrollableLayerGuid::NULL_SCROLL_ID,
+                             LayerRectAbsolute(), LayerRectAbsolute());
     }
     return node;
   }
@@ -1428,6 +1431,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
                            aLayer.GetStickyScrollRangeOuter(),
                            aLayer.GetStickyScrollRangeInner());
+  } else {
+    node->SetStickyPosData(ScrollableLayerGuid::NULL_SCROLL_ID,
+                           LayerRectAbsolute(), LayerRectAbsolute());
   }
   return node;
 }
