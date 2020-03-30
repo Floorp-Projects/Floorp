@@ -512,10 +512,51 @@ addon-permissions-list > .addon-detail-row:first-of-type {
   border-top: none;
 }
 
-.deck-tab-group {
+.tab-group {
+  display: block;
   margin-top: 8px;
   /* Pull the buttons flush with the side of the card */
   margin-inline: calc(var(--card-padding) * -1);
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-top: 1px solid var(--in-content-box-border-color);
+  font-size: 0;
+  line-height: 0;
+}
+
+button.tab-button {
+  -moz-appearance: none;
+  border-inline: none;
+  border-block: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0;
+  padding: 4px 16px;
+  color: var(--in-content-text-color);
+}
+
+button.tab-button:hover {
+  background-color: var(--in-content-button-background);
+  border-top-color: var(--in-content-box-border-color);
+}
+
+button.tab-button:hover:active {
+  background-color: var(--in-content-button-background-hover);
+}
+
+button.tab-button[selected] {
+  border-top-color: var(--in-content-border-highlight);
+  color: var(--in-content-category-text-selected) !important;
+}
+
+button.tab-button:focus {
+  border-top-color: transparent;
+}
+
+button.tab-button:-moz-focusring {
+  outline-offset: -2px;
+  -moz-outline-radius: 0;
 }
 
 panel-list {

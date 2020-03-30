@@ -399,7 +399,7 @@ add_task(async function testReleaseNotesLoad() {
 
   info("Switch away and back to release notes");
   // Load details view.
-  let detailsBtn = tabGroup.querySelector('named-deck-button[name="details"]');
+  let detailsBtn = tabGroup.querySelector('.tab-button[name="details"]');
   let viewChanged = BrowserTestUtils.waitForEvent(deck, "view-changed");
   detailsBtn.click();
   await viewChanged;
@@ -506,7 +506,7 @@ add_task(async function testReleaseNotesError() {
 
   info("Switch away and back to release notes");
   // Load details view.
-  let detailsBtn = tabGroup.querySelector('named-deck-button[name="details"]');
+  let detailsBtn = tabGroup.querySelector('.tab-button[name="details"]');
   let viewChanged = BrowserTestUtils.waitForEvent(deck, "view-changed");
   detailsBtn.click();
   await viewChanged;

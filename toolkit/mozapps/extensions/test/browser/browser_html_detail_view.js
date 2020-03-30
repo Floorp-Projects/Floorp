@@ -87,7 +87,7 @@ function checkOptions(doc, options, expectedOptions) {
 
 function assertDeckHeadingHidden(group) {
   ok(group.hidden, "The tab group is hidden");
-  let buttons = group.querySelectorAll("named-deck-button");
+  let buttons = group.querySelectorAll(".tab-button");
   for (let button of buttons) {
     ok(button.offsetHeight == 0, `The ${button.name} is hidden`);
   }
@@ -95,7 +95,7 @@ function assertDeckHeadingHidden(group) {
 
 function assertDeckHeadingButtons(group, visibleButtons) {
   ok(!group.hidden, "The tab group is shown");
-  let buttons = group.querySelectorAll("named-deck-button");
+  let buttons = group.querySelectorAll(".tab-button");
   ok(
     buttons.length >= visibleButtons.length,
     `There should be at least ${visibleButtons.length} buttons`
@@ -951,6 +951,7 @@ add_task(async function testExternalUninstall() {
 
   // Verify the list view was loaded and the card is gone.
   let list = doc.querySelector("addon-list");
+  ok(list, "Moved to a list page");
   is(list.type, "extension", "We're on the extension list page");
   card = list.querySelector(`addon-card[addon-id="${id}"]`);
   ok(!card, "The card has been removed");

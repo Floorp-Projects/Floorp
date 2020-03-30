@@ -2192,7 +2192,7 @@ class AddonDetails extends HTMLElement {
     }
 
     // Hide the tab group if "details" is the only visible button.
-    let tabGroupButtons = this.tabGroup.querySelectorAll("named-deck-button");
+    let tabGroupButtons = this.tabGroup.querySelectorAll(".tab-button");
     this.tabGroup.hidden = Array.from(tabGroupButtons).every(button => {
       return button.name == "details" || button.hidden;
     });
@@ -2222,7 +2222,7 @@ class AddonDetails extends HTMLElement {
     this.appendChild(importTemplate("addon-details"));
 
     this.deck = this.querySelector("named-deck");
-    this.tabGroup = this.querySelector(".deck-tab-group");
+    this.tabGroup = this.querySelector(".tab-group");
 
     // Set the add-on for the permissions section.
     this.permissionsList = this.querySelector("addon-permissions-list");
