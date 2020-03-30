@@ -40,6 +40,14 @@ class AntiTrackingUtils final {
   // for the passed in principal argument.
   static bool IsStorageAccessPermission(nsIPermission* aPermission,
                                         nsIPrincipal* aPrincipal);
+
+  // Returns true if the storage permission is granted for the given principal
+  // and the storage permission key.
+  static bool CheckStoragePermission(nsIPrincipal* aPrincipal,
+                                     const nsAutoCString& aType,
+                                     bool aIsInPrivateBrowsing,
+                                     uint32_t* aRejectedReason,
+                                     uint32_t aBlockedReason);
 };
 
 }  // namespace mozilla

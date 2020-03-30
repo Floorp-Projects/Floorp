@@ -145,109 +145,6 @@ int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
 
   return aCookieJarSettings->GetCookieBehavior();
 }
-
-bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
-                                 const nsAutoCString& aType,
-                                 bool aIsInPrivateBrowsing,
-                                 uint32_t* aRejectedReason,
-                                 uint32_t aBlockedReason) {
-  nsPermissionManager* permManager = nsPermissionManager::GetInstance();
-  if (NS_WARN_IF(!permManager)) {
-    LOG(("Failed to obtain the permission manager"));
-    return false;
-  }
-
-  uint32_t result = 0;
-  if (aIsInPrivateBrowsing) {
-    LOG_PRIN(("Querying the permissions for private modei looking for a "
-              "permission of type %s for %s",
-              aType.get(), _spec),
-             aPrincipal);
-    if (!permManager->PermissionAvailable(aPrincipal, aType)) {
-      LOG(
-          ("Permission isn't available for this principal in the current "
-           "process"));
-      return false;
-    }
-    nsTArray<RefPtr<nsIPermission>> permissions;
-    nsresult rv = permManager->GetAllForPrincipal(aPrincipal, permissions);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Failed to get the list of permissions"));
-      return false;
-    }
-
-    bool found = false;
-    for (const auto& permission : permissions) {
-      if (!permission) {
-        LOG(("Couldn't get the permission for unknown reasons"));
-        continue;
-      }
-
-      nsAutoCString permissionType;
-      if (NS_SUCCEEDED(permission->GetType(permissionType)) &&
-          permissionType != aType) {
-        LOG(("Non-matching permission type: %s", aType.get()));
-        continue;
-      }
-
-      uint32_t capability = 0;
-      if (NS_SUCCEEDED(permission->GetCapability(&capability)) &&
-          capability != nsIPermissionManager::ALLOW_ACTION) {
-        LOG(("Non-matching permission capability: %d", capability));
-        continue;
-      }
-
-      uint32_t expirationType = 0;
-      if (NS_SUCCEEDED(permission->GetExpireType(&expirationType)) &&
-          expirationType != nsIPermissionManager ::EXPIRE_SESSION) {
-        LOG(("Non-matching permission expiration type: %d", expirationType));
-        continue;
-      }
-
-      int64_t expirationTime = 0;
-      if (NS_SUCCEEDED(permission->GetExpireTime(&expirationTime)) &&
-          expirationTime != 0) {
-        LOG(("Non-matching permission expiration time: %" PRId64,
-             expirationTime));
-        continue;
-      }
-
-      LOG(("Found a matching permission"));
-      found = true;
-      break;
-    }
-
-    if (!found) {
-      if (aRejectedReason) {
-        *aRejectedReason = aBlockedReason;
-      }
-      return false;
-    }
-  } else {
-    nsresult rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(
-        aPrincipal, aType, &result);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(("Failed to test the permission"));
-      return false;
-    }
-
-    LOG_PRIN(
-        ("Testing permission type %s for %s resulted in %d (%s)", aType.get(),
-         _spec, int(result),
-         result == nsIPermissionManager::ALLOW_ACTION ? "success" : "failure"),
-        aPrincipal);
-
-    if (result != nsIPermissionManager::ALLOW_ACTION) {
-      if (aRejectedReason) {
-        *aRejectedReason = aBlockedReason;
-      }
-      return false;
-    }
-  }
-
-  return true;
-}
-
 }  // namespace
 
 /* static */ RefPtr<ContentBlocking::StorageAccessGrantPromise>
@@ -813,7 +710,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     return true;
   }
 
-  return CheckAntiTrackingPermission(
+  return AntiTrackingUtils::CheckStoragePermission(
       parentPrincipal, type, nsContentUtils::IsInPrivateBrowsing(document),
       aRejectedReason, blockedReason);
 }
@@ -1078,8 +975,9 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
-  return CheckAntiTrackingPermission(parentPrincipal, type, !!privateBrowsingId,
-                                     aRejectedReason, blockedReason);
+  return AntiTrackingUtils::CheckStoragePermission(
+      parentPrincipal, type, !!privateBrowsingId, aRejectedReason,
+      blockedReason);
 }
 
 bool ContentBlocking::ShouldAllowAccessFor(
@@ -1162,7 +1060,7 @@ bool ContentBlocking::ApproximateAllowAccessForWithoutChannel(
   nsAutoCString type;
   AntiTrackingUtils::CreateStoragePermissionKey(origin, type);
 
-  return CheckAntiTrackingPermission(
+  return AntiTrackingUtils::CheckStoragePermission(
       parentPrincipal, type,
       nsContentUtils::IsInPrivateBrowsing(parentDocument), nullptr, 0);
 }
