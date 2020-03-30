@@ -2,6 +2,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+//! Firefox on Glean (FOG) is the name of the layer that integrates the [Glean SDK][glean-sdk] into Firefox Desktop.
+//! It is currently being designed and implemented.
+//!
+//! The [Glean SDK][glean-sdk] is a data collection library built by Mozilla for use in its products.
+//! Like [Telemetry][telemetry], it can be used to
+//! (in accordance with our [Privacy Policy][privacy-policy])
+//! send anonymous usage statistics to Mozilla in order to make better decisions.
+//!
+//! Documentation can be found online in the [Firefox Source Docs][docs].
+//!
+//! [glean-sdk]: https://github.com/mozilla/glean/
+//! [book-of-glean]: https://mozilla.github.io/glean/book/index.html
+//! [privacy-policy]: https://www.mozilla.org/privacy/
+//! [docs]: https://firefox-source-docs.mozilla.org/toolkit/components/glean/
+
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -10,8 +25,14 @@ use nserror::{nsresult, NS_OK};
 use client_info::ClientInfo;
 use glean_core::Configuration;
 
+mod api;
 mod client_info;
+mod core_metrics;
 
+/// Project FOG's entry point.
+///
+/// This assembles client information and the Glean configuration and then initializes the global
+/// Glean instance.
 #[no_mangle]
 pub unsafe extern "C" fn fog_init(
     app_build: *const c_char,
