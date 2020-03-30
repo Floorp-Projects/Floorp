@@ -7,7 +7,9 @@
 
 async function checkAdbNotRunning() {
   info("Check if ADB is already running before the test starts");
-  const { check } = require("devtools/shared/adb/adb-running-checker");
+  const {
+    check,
+  } = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
   const isAdbAlreadyRunning = await check();
   if (isAdbAlreadyRunning) {
     throw new Error(
@@ -21,8 +23,12 @@ async function checkAdbNotRunning() {
 // Returns a promise that resolves when the adb process exists and is running.
 async function waitForAdbStart() {
   info("Wait for ADB to start");
-  const { adbProcess } = require("devtools/shared/adb/adb-process");
-  const { check } = require("devtools/shared/adb/adb-running-checker");
+  const {
+    adbProcess,
+  } = require("devtools/client/shared/remote-debugging/adb/adb-process");
+  const {
+    check,
+  } = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
   return asyncWaitUntil(async () => {
     const isProcessReady = adbProcess.ready;
     const isRunning = await check();
@@ -35,11 +41,15 @@ async function waitForAdbStart() {
 // Returns a promise that resolves when the adb process is no longer running.
 async function stopAdbProcess() {
   info("Attempt to stop ADB");
-  const { adbProcess } = require("devtools/shared/adb/adb-process");
+  const {
+    adbProcess,
+  } = require("devtools/client/shared/remote-debugging/adb/adb-process");
   await adbProcess.stop();
 
   info("Wait for ADB to stop");
-  const { check } = require("devtools/shared/adb/adb-running-checker");
+  const {
+    check,
+  } = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
   return asyncWaitUntil(async () => {
     const isProcessReady = adbProcess.ready;
     const isRunning = await check();

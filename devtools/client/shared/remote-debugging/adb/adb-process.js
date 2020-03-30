@@ -7,19 +7,21 @@
 const { Cc, Ci } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
+const {
+  getFileForBinary,
+} = require("devtools/client/shared/remote-debugging/adb/adb-binary");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 
 loader.lazyRequireGetter(
   this,
   "runCommand",
-  "devtools/shared/adb/commands/index",
+  "devtools/client/shared/remote-debugging/adb/commands/index",
   true
 );
 loader.lazyRequireGetter(
   this,
   "check",
-  "devtools/shared/adb/adb-running-checker",
+  "devtools/client/shared/remote-debugging/adb/adb-running-checker",
   true
 );
 

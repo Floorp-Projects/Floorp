@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
+const {
+  prepareTCPConnection,
+} = require("devtools/client/shared/remote-debugging/adb/commands/index");
 const { DevToolsClient } = require("devtools/shared/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const {

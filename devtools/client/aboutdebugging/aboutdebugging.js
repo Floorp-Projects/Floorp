@@ -40,17 +40,22 @@ const {
   removeUSBRuntimesObserver,
 } = require("devtools/client/aboutdebugging/src/modules/usb-runtimes");
 
-loader.lazyRequireGetter(this, "adb", "devtools/shared/adb/adb", true);
+loader.lazyRequireGetter(
+  this,
+  "adb",
+  "devtools/client/shared/remote-debugging/adb/adb",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "adbAddon",
-  "devtools/shared/adb/adb-addon",
+  "devtools/client/shared/remote-debugging/adb/adb-addon",
   true
 );
 loader.lazyRequireGetter(
   this,
   "adbProcess",
-  "devtools/shared/adb/adb-process",
+  "devtools/client/shared/remote-debugging/adb/adb-process",
   true
 );
 
