@@ -4071,6 +4071,7 @@ void JSScript::relazify(JSRuntime* rt) {
   clearFlag(ImmutableFlags::HasNonSyntacticScope);
   clearFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
   clearFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
+  clearFlag(ImmutableFlags::AlwaysNeedsArgsObj);
 
   // We should not still be in any side-tables for the debugger or
   // code-coverage. The finalizer will not be able to clean them up once
@@ -4317,27 +4318,6 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
   return true;
 }
 
-void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
-  // Add the flags from the funbox: Some flags were already set
-  // during allocation of the script, so we don't want to clobber
-  // those, simply add the new information from FunctionBox.
-  addToImmutableFlags(funbox->immutableFlags());
-
-  // Set flags that require a computation:
-  setFlag(ImmutableFlags::HasMappedArgsObj, funbox->hasMappedArgsObj());
-  setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope,
-          funbox->hasExtraBodyVarScope());
-
-  if (funbox->argumentsHasLocalBinding()) {
-    setArgumentsHasVarBinding();
-    if (funbox->definitelyNeedsArgsObj()) {
-      setNeedsArgsObj(true);
-    }
-  } else {
-    MOZ_ASSERT(!funbox->definitelyNeedsArgsObj());
-  }
-}
-
 /* static */
 bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
                                     frontend::ScriptStencil& stencil) {
@@ -4395,13 +4375,10 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   MOZ_ASSERT(script->extent_.lineno == stencil.lineno);
   MOZ_ASSERT(script->extent_.column == stencil.column);
 
-  // Initialize script flags from FunctionBox
-  if (stencil.isFunction()) {
-    script->initFromFunctionBox(stencil.functionBox);
-  }
-
-  // Initialize script flags from BytecodeEmitter
   script->addToImmutableFlags(stencil.immutableFlags);
+
+  // Derive initial mutable flags
+  script->resetArgsUsageAnalysis();
 
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromStencil(cx, script, stencil)) {
@@ -4455,6 +4432,16 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   }
 
   return true;
+}
+
+void JSScript::resetArgsUsageAnalysis() {
+  bool alwaysNeedsArgsObj =
+      immutableFlags_.hasFlag(ImmutableFlags::AlwaysNeedsArgsObj);
+  MOZ_ASSERT_IF(alwaysNeedsArgsObj, argumentsHasVarBinding());
+  if (argumentsHasVarBinding()) {
+    mutableFlags_.setFlag(MutableFlags::NeedsArgsObj, alwaysNeedsArgsObj);
+    mutableFlags_.setFlag(MutableFlags::NeedsArgsAnalysis, !alwaysNeedsArgsObj);
+  }
 }
 
 #ifdef DEBUG
