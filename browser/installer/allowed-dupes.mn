@@ -76,6 +76,7 @@ browser/features/firefox@getpocket.com/chrome/skin/linux/menuPanel@2x.png
 browser/features/firefox@getpocket.com/chrome/skin/windows/menuPanel.png
 browser/features/firefox@getpocket.com/chrome/skin/windows/menuPanel@2x.png
 chrome.manifest
+chrome/toolkit/skin/classic/global/arrowscrollbox.css
 chrome/toolkit/skin/classic/global/autocomplete.css
 chrome/toolkit/skin/classic/global/button.css
 chrome/toolkit/skin/classic/global/checkbox.css
@@ -91,7 +92,6 @@ chrome/toolkit/skin/classic/global/preferences.css
 chrome/toolkit/skin/classic/global/radio.css
 chrome/toolkit/skin/classic/global/richlistbox.css
 chrome/toolkit/skin/classic/global/scrollbars.css
-chrome/toolkit/skin/classic/global/scrollbox.css
 chrome/toolkit/skin/classic/global/splitter.css
 chrome/toolkit/skin/classic/global/tabbox.css
 chrome/toolkit/skin/classic/global/textbox.css
