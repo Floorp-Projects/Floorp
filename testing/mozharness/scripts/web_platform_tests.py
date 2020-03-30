@@ -226,6 +226,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                          "wpt_instruments.txt")]
 
+        if self.is_android or "wdspec" in test_types:
+            processes = 1
+        else:
+            processes = 2
+        cmd.append("--processes=%s" % processes)
+
         if self.is_android:
             cmd += ["--device-serial=%s" % self.device_serial,
                     "--package-name=%s" % self.query_package_name()]
