@@ -39,9 +39,7 @@ impl GlyphCacheEntry {
             GlyphCacheEntry::Cached(ref glyph) => {
                 texture_cache.get_allocated_size(&glyph.texture_cache_handle)
             }
-            GlyphCacheEntry::Pending => Some(0),
-            // If the cache only has blank glyphs left, just get rid of it.
-            GlyphCacheEntry::Blank => None,
+            GlyphCacheEntry::Pending | GlyphCacheEntry::Blank => Some(0),
         }
     }
 
