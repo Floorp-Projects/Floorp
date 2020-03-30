@@ -92,7 +92,7 @@ class ConsoleOutput extends Component {
   }
 
   componentWillUpdate(nextProps, nextState) {
-    const outputNode = this.outputNode;
+    const { outputNode } = this;
     if (!outputNode || !outputNode.lastChild) {
       // Force a scroll to bottom when messages are added to an empty console.
       // This makes the console stay pinned to the bottom if a batch of messages
@@ -108,7 +108,7 @@ class ConsoleOutput extends Component {
     // - the number of messages in the store changed and the new message is an evaluation
     //   result.
 
-    const lastChild = outputNode.lastChild;
+    const { lastChild } = outputNode;
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
     const messagesDelta = nextProps.messages.size - this.props.messages.size;

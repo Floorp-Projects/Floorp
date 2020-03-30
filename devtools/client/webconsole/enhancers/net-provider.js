@@ -38,7 +38,7 @@ function enableNetProvider(webConsoleUI) {
         return reducer(state, action);
       }
 
-      const type = action.type;
+      const { type } = action;
       const newState = reducer(state, action);
 
       // If network message has been opened, fetch all HTTP details
@@ -67,7 +67,7 @@ function enableNetProvider(webConsoleUI) {
       // Make sure to call `dataProvider.onNetworkEventUpdate`
       // to fetch data from the backend.
       if (type == NETWORK_MESSAGE_UPDATE) {
-        const actor = action.response.networkInfo.actor;
+        const { actor } = action.response.networkInfo;
         const open = getAllMessagesUiById(state).includes(actor);
         if (open) {
           const message = getMessage(state, actor);

@@ -1327,8 +1327,7 @@ function isTextInNetEvent(matchStr, request) {
     return false;
   }
 
-  const method = request.method;
-  const url = request.url;
+  const { method, url } = request;
   return matchStr(method) || matchStr(url);
 }
 

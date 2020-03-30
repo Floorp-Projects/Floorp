@@ -67,7 +67,7 @@ class ConfirmDialog extends Component {
 
   componentDidMount() {
     const doc = this.props.webConsoleUI.document;
-    const toolbox = this.props.webConsoleUI.wrapper.toolbox;
+    const { toolbox } = this.props.webConsoleUI.wrapper;
     const tooltipDoc = toolbox ? toolbox.doc : doc;
     // The popup will be attached to the toolbox document or HUD document in the case
     // such as the browser console which doesn't have a toolbox.

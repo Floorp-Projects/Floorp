@@ -169,7 +169,7 @@ class ConsoleSettings extends Component {
   render() {
     const { webConsoleUI } = this.props;
     const doc = webConsoleUI.document;
-    const toolbox = webConsoleUI.wrapper.toolbox;
+    const { toolbox } = webConsoleUI.wrapper;
 
     return MenuButton(
       {

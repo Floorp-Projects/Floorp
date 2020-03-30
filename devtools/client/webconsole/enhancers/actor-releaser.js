@@ -22,7 +22,7 @@ function enableActorReleaser(webConsoleUI) {
     function releaseActorsEnhancer(state, action) {
       state = reducer(state, action);
 
-      const type = action.type;
+      const { type } = action;
       if (
         webConsoleUI &&
         [
