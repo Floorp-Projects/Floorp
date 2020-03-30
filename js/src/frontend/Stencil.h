@@ -35,7 +35,8 @@
 #include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, ScopeNote, JSTryNote, FieldInitializers
 #include "vm/Runtime.h"  // ReportOutOfMemory
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
-#include "vm/ScopeKind.h"  // ScopeKind
+#include "vm/ScopeKind.h"      // ScopeKind
+#include "vm/SharedStencil.h"  // ImmutableScriptFlags
 
 struct JSContext;
 class JSAtom;
@@ -468,22 +469,17 @@ class ScriptStencil {
   uint32_t ngcthings = 0;
 
   // `See BaseScript::ImmutableFlags`.
-  bool strict = false;
-  bool bindingsAccessedDynamically = false;
-  bool hasCallSiteObj = false;
-  bool isForEval = false;
-  bool isModule = false;
-  bool isFunction = false;
-  bool hasNonSyntacticScope = false;
-  bool needsFunctionEnvironmentObjects = false;
-  bool hasModuleGoal = false;
-  bool hasInnerFunctions = false;
+  ImmutableScriptFlags immutableFlags;
 
   ScriptThingsVector gcThings;
 
   js::frontend::FunctionBox* functionBox = nullptr;
 
   explicit ScriptStencil(JSContext* cx) : gcThings(cx) {}
+
+  bool isFunction() const {
+    return immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsFunction);
+  }
 
   // Store all GC things into `gcthings`.
   // `gcthings.Length()` is `this.ngcthings`.

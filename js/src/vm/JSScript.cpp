@@ -4396,24 +4396,12 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   MOZ_ASSERT(script->extent_.column == stencil.column);
 
   // Initialize script flags from FunctionBox
-  if (stencil.isFunction) {
+  if (stencil.isFunction()) {
     script->initFromFunctionBox(stencil.functionBox);
   }
 
   // Initialize script flags from BytecodeEmitter
-  script->setFlag(ImmutableFlags::Strict, stencil.strict);
-  script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
-                  stencil.bindingsAccessedDynamically);
-  script->setFlag(ImmutableFlags::HasCallSiteObj, stencil.hasCallSiteObj);
-  script->setFlag(ImmutableFlags::IsForEval, stencil.isForEval);
-  script->setFlag(ImmutableFlags::IsModule, stencil.isModule);
-  script->setFlag(ImmutableFlags::IsFunction, stencil.isFunction);
-  script->setFlag(ImmutableFlags::HasNonSyntacticScope,
-                  stencil.hasNonSyntacticScope);
-  script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
-                  stencil.needsFunctionEnvironmentObjects);
-  script->setFlag(ImmutableFlags::HasModuleGoal, stencil.hasModuleGoal);
-  script->setFlag(ImmutableFlags::HasInnerFunctions, stencil.hasInnerFunctions);
+  script->addToImmutableFlags(stencil.immutableFlags);
 
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromStencil(cx, script, stencil)) {
@@ -4432,7 +4420,7 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
   rollbackGuard.release();
 
   // Link JSFunction to this JSScript.
-  if (stencil.isFunction) {
+  if (stencil.isFunction()) {
     JSFunction* fun = stencil.functionBox->function();
     if (fun->isIncomplete()) {
       fun->initScript(script);

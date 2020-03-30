@@ -152,7 +152,17 @@ class SharedContext {
         allowArguments_(true),
         inWith_(false),
         needsThisTDZChecks_(false),
-        hasExplicitUseStrict_(false) {}
+        hasExplicitUseStrict_(false) {
+    if (kind_ == Kind::FunctionBox) {
+      immutableFlags_.setFlag(ImmutableScriptFlagsEnum::IsFunction);
+    } else if (kind_ == Kind::Module) {
+      immutableFlags_.setFlag(ImmutableScriptFlagsEnum::IsModule);
+    } else if (kind_ == Kind::Eval) {
+      immutableFlags_.setFlag(ImmutableScriptFlagsEnum::IsForEval);
+    } else {
+      MOZ_ASSERT(kind_ == Kind::Global);
+    }
+  }
 
   // If this is the outermost SharedContext, the Scope that encloses
   // it. Otherwise nullptr.
