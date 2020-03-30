@@ -161,7 +161,7 @@ internal class SupportedAddonsWorker(
             }
         } catch (exception: Exception) {
             logger.error("An exception happened trying to check for new supported add-ons, re-schedule ${exception.message}", exception)
-            if (!exception.shouldReport()) {
+            if (exception.shouldReport()) {
                 GlobalAddonDependencyProvider.onCrash?.invoke(exception)
             }
         }

@@ -9,4 +9,4 @@ import kotlinx.coroutines.CancellationException
 /**
  * Indicates if an exception should be reported to the crash reporter.
  */
-internal fun Exception.shouldReport(): Boolean = cause is IOException || this is CancellationException
+internal fun Exception.shouldReport(): Boolean = cause !is IOException && cause !is CancellationException

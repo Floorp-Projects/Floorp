@@ -596,7 +596,7 @@ internal class AddonUpdaterWorker(
                         exception
                 )
                 saveUpdateAttempt(extensionId, AddonUpdater.Status.Error(exception.message ?: "", exception))
-                if (!exception.shouldReport()) {
+                if (exception.shouldReport()) {
                     GlobalAddonDependencyProvider.onCrash?.invoke(exception)
                 }
                 continuation.resume(Result.retry())
