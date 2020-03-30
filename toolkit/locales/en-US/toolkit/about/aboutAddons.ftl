@@ -197,18 +197,6 @@ private-browsing-description2 =
     there. We’ve made this change to keep your private browsing private.
     <label data-l10n-name="private-browsing-learn-more">Learn how to manage extension settings</label>
 
-extensions-view-discopane =
-    .name = Recommendations
-    .tooltiptext = { extensions-view-discopane.name }
-
-extensions-view-recent-updates =
-    .name = Recent Updates
-    .tooltiptext = { extensions-view-recent-updates.name }
-
-extensions-view-available-updates =
-    .name = Available Updates
-    .tooltiptext = { extensions-view-available-updates.name }
-
 addon-category-discover = Recommendations
 addon-category-extension = Extensions
 addon-category-theme = Themes

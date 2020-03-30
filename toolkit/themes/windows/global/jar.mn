@@ -28,7 +28,6 @@ toolkit.jar:
   skin/classic/global/tooltip.css
 * skin/classic/global/tree.css
 * skin/classic/global/alerts/alert.css                     (alerts/alert.css)
-  skin/classic/global/arrow/arrow-up.gif                   (arrow/arrow-up.gif)
   skin/classic/global/arrow/arrow-dn.gif                   (arrow/arrow-dn.gif)
   skin/classic/global/dirListing/folder.png                (dirListing/folder.png)
   skin/classic/global/dirListing/up.png                    (dirListing/up.png)

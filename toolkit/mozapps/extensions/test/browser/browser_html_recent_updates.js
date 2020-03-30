@@ -74,8 +74,9 @@ add_task(async function testRecentUpdatesList() {
   // Load extension view first so we can mock the startOfDay property.
   let win = await loadInitialView("extension");
   let doc = win.document;
+  let categoryUtils = new CategoryUtilities(win.managerWindow);
   const RECENT_URL = "addons://updates/recent";
-  let recentCat = win.managerWindow.gCategories.get(RECENT_URL);
+  let recentCat = categoryUtils.get("recent-updates");
 
   ok(recentCat.hidden, "Recent updates category is initially hidden");
 
@@ -85,7 +86,7 @@ add_task(async function testRecentUpdatesList() {
   await loaded;
 
   is(
-    win.managerWindow.gCategories.selected,
+    categoryUtils.getSelectedViewId(),
     RECENT_URL,
     "Recent updates is selected"
   );
@@ -169,7 +170,7 @@ add_task(async function testRecentUpdatesList() {
   await loaded;
 
   is(
-    win.managerWindow.gCategories.selected,
+    categoryUtils.getSelectedViewId(),
     "addons://list/extension",
     "The extensions category is selected"
   );
