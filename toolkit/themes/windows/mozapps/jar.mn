@@ -4,5 +4,4 @@
 
 toolkit.jar:
 #include ../../shared/mozapps.inc.mn
-* skin/classic/mozapps/extensions/extensions.css             (extensions/extensions.css)
   skin/classic/mozapps/update/updates.css                    (update/updates.css)

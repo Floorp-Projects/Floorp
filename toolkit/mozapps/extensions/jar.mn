@@ -6,7 +6,6 @@ toolkit.jar:
 % content mozapps %content/mozapps/
 #ifndef MOZ_FENNEC
   content/mozapps/extensions/extensions.xhtml                   (content/extensions.xhtml)
-  content/mozapps/extensions/extensions.css                     (content/extensions.css)
   content/mozapps/extensions/extensions.js                      (content/extensions.js)
   content/mozapps/extensions/blocklist.xhtml                    (content/blocklist.xhtml)
   content/mozapps/extensions/blocklist.js                       (content/blocklist.js)

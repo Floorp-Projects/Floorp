@@ -54,9 +54,6 @@
 
   --panel-border-radius: 2px; /* This is overridden on Windows */
 
-  /* The photon animation curve */
-  --animation-curve: cubic-bezier(.07,.95,0,1);
-
   --blue-40: #45a1ff;
   --blue-40-a10: rgb(69, 161, 255, 0.1);
   --blue-50: #0a84ff;
@@ -80,7 +77,6 @@
   --green-80: #006504;
   --green-90: #003706;
   --orange-50: #ff9400;
-  --purple-70: #6200a4;
   --red-50: #ff0039;
   --red-50-a30: rgba(255, 0, 57, 0.3);
   --red-60: #d70022;
@@ -101,7 +97,6 @@
   --card-shadow: var(--shadow-10);
   --card-outline-color: var(--grey-30);
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
-  --card-shadow-focus: 0 0 0 2px var(--blue-50), 0 0 0 6px var(--blue-50-a30);
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
