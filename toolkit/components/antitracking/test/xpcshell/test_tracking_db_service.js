@@ -6,15 +6,8 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "TrackingDBService",
