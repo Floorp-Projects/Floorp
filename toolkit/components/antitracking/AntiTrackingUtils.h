@@ -48,6 +48,10 @@ class AntiTrackingUtils final {
                                      bool aIsInPrivateBrowsing,
                                      uint32_t* aRejectedReason,
                                      uint32_t aBlockedReason);
+
+  // Returns true if the storage permission is granted for the given channel.
+  // And this is meant to be called in the parent process.
+  static bool HasStoragePermissionInParent(nsIChannel* aChannel);
 };
 
 }  // namespace mozilla
