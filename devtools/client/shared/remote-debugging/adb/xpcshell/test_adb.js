@@ -7,10 +7,18 @@ const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
-const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
-const { check } = require("devtools/shared/adb/adb-running-checker");
-const { adbProcess } = require("devtools/shared/adb/adb-process");
-const { TrackDevicesCommand } = require("devtools/shared/adb/commands/index");
+const {
+  getFileForBinary,
+} = require("devtools/client/shared/remote-debugging/adb/adb-binary");
+const {
+  check,
+} = require("devtools/client/shared/remote-debugging/adb/adb-running-checker");
+const {
+  adbProcess,
+} = require("devtools/client/shared/remote-debugging/adb/adb-process");
+const {
+  TrackDevicesCommand,
+} = require("devtools/client/shared/remote-debugging/adb/commands/index");
 
 const ADB_JSON = {
   Linux: {

@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { adbAddon } = require("devtools/shared/adb/adb-addon");
+const {
+  adbAddon,
+} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
 
 const ABD_ADDON_NAME = "ADB binary provider";
 

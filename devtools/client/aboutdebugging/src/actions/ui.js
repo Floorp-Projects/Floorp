@@ -30,7 +30,9 @@ const {
 } = require("devtools/client/aboutdebugging/src/constants");
 
 const NetworkLocationsModule = require("devtools/client/aboutdebugging/src/modules/network-locations");
-const { adbAddon } = require("devtools/shared/adb/adb-addon");
+const {
+  adbAddon,
+} = require("devtools/client/shared/remote-debugging/adb/adb-addon");
 const {
   refreshUSBRuntimes,
 } = require("devtools/client/aboutdebugging/src/modules/usb-runtimes");

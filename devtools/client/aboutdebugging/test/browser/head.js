@@ -29,12 +29,16 @@ registerCleanupFunction(async function() {
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
 
   try {
-    const { adbAddon } = require("devtools/shared/adb/adb-addon");
+    const {
+      adbAddon,
+    } = require("devtools/client/shared/remote-debugging/adb/adb-addon");
     await adbAddon.uninstall();
   } catch (e) {
     // Will throw if the addon is already uninstalled, ignore exceptions here.
   }
-  const { adbProcess } = require("devtools/shared/adb/adb-process");
+  const {
+    adbProcess,
+  } = require("devtools/client/shared/remote-debugging/adb/adb-process");
   await adbProcess.kill();
 
   const {

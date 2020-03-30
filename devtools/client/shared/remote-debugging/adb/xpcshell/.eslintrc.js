@@ -5,5 +5,5 @@
 "use strict";
 
 module.exports = {
-  extends: "../../../.eslintrc.xpcshell.js",
+  extends: "../../../../../.eslintrc.xpcshell.js",
 };

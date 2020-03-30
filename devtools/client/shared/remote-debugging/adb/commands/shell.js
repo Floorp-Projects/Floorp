@@ -7,7 +7,7 @@
 "use strict";
 
 const { dumpn } = require("devtools/shared/DevToolsUtils");
-const client = require("devtools/shared/adb/adb-client");
+const client = require("devtools/client/shared/remote-debugging/adb/adb-client");
 
 const OKAY = 0x59414b4f;
 

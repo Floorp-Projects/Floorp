@@ -16,6 +16,7 @@ import sys
 HOST = '127.0.0.1'
 PORT = 5037
 
+
 class ADBRequestHandler(SocketServer.BaseRequestHandler):
     def sendData(self, data):
         header = 'OKAY%04x' % len(data)
@@ -48,14 +49,16 @@ class ADBRequestHandler(SocketServer.BaseRequestHandler):
                 self.sendData('1234567890\tdevice')
                 break
 
+
 class ADBServer(SocketServer.TCPServer):
     def __init__(self, server_address):
         # Create a SocketServer with bind_and_activate 'False' to set
         # allow_reuse_address before binding.
-        SocketServer.TCPServer.__init__(self, \
-                                        server_address, \
-                                        ADBRequestHandler, \
-                                        bind_and_activate = False)
+        SocketServer.TCPServer.__init__(self,
+                                        server_address,
+                                        ADBRequestHandler,
+                                        bind_and_activate=False)
+
 
 if len(sys.argv) == 2 and sys.argv[1] == 'start-server':
     # daemonize

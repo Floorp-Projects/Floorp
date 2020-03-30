@@ -21,7 +21,7 @@ const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 loader.lazyRequireGetter(
   this,
   "ADB_ADDON_STATES",
-  "devtools/shared/adb/adb-addon",
+  "devtools/client/shared/remote-debugging/adb/adb-addon",
   true
 );
 

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { shell } = require("devtools/shared/adb/commands/index");
+const {
+  shell,
+} = require("devtools/client/shared/remote-debugging/adb/commands/index");
 
 /**
  * A Device instance is created and registered with the Devices module whenever
