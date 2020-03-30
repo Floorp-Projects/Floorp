@@ -2570,12 +2570,6 @@ impl Renderer {
         self.pipeline_info.epochs.get(&(pipeline_id, document_id)).cloned()
     }
 
-    // update the program cache with new binaries, e.g. when some of the lazy loaded
-    // shader programs got activated in the mean time
-    pub fn update_program_cache(&mut self, cached_programs: Rc<ProgramCache>) {
-        self.device.update_program_cache(cached_programs);
-    }
-
     /// Processes the result queue.
     ///
     /// Should be called before `render()`, as texture cache updates are done here.
