@@ -15,6 +15,8 @@ import org.mozilla.samples.browser.ext.components
 
 class SampleRequestInterceptor(val context: Context) : RequestInterceptor {
 
+    override fun interceptsAppInitiatedRequests() = true
+
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
