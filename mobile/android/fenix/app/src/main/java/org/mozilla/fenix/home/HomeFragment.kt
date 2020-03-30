@@ -391,19 +391,25 @@ class HomeFragment : Fragment() {
             )
         )
 
-        requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
-        requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
-            override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-                if (authType != AuthType.Existing) {
-                    view?.let {
-                        FenixSnackbar.make(it, Snackbar.LENGTH_SHORT)
-                            .setText(it.context.getString(R.string.onboarding_firefox_account_sync_is_on))
-                            .setAnchorView(toolbarLayout)
-                            .show()
+        requireComponents.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
+            // By the time this code runs, we may not be attached to a context.
+            if ((this@HomeFragment).context == null) {
+                return@runIfReadyOrQueue
+            }
+            requireComponents.backgroundServices.accountManager.register(currentMode, owner = this@HomeFragment)
+            requireComponents.backgroundServices.accountManager.register(object : AccountObserver {
+                override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+                    if (authType != AuthType.Existing) {
+                        view?.let {
+                            FenixSnackbar.make(it, Snackbar.LENGTH_SHORT)
+                                .setText(it.context.getString(R.string.onboarding_firefox_account_sync_is_on))
+                                .setAnchorView(toolbarLayout)
+                                .show()
+                        }
                     }
                 }
-            }
-        }, owner = this)
+            }, owner = this@HomeFragment)
+        }
 
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
             browsingModeManager.mode.isPrivate
