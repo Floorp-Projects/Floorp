@@ -16,7 +16,7 @@
 #  include "brotli/decode.h"  // brotli
 #endif
 #include "nsISupportsUtils.h"
-#include "mozilla/MmapFaultHandler.h"
+#include "MmapFaultHandler.h"
 #include "prio.h"
 #include "plstr.h"
 #include "mozilla/Attributes.h"

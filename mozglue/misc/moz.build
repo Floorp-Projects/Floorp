@@ -10,7 +10,6 @@ EXPORTS.mozilla += [
     'AutoProfilerLabel.h',
     'decimal/Decimal.h',
     'decimal/DoubleConversion.h',
-    'MmapFaultHandler.h',
     'PlatformConditionVariable.h',
     'PlatformMutex.h',
     'Printf.h',
@@ -31,7 +30,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 SOURCES += [
     'AutoProfilerLabel.cpp',
-    'MmapFaultHandler.cpp',
     'Printf.cpp',
     'StackWalk.cpp',
     'TimeStamp.cpp',
