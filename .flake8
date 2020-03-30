@@ -51,8 +51,6 @@ exclude =
     testing/web-platform,
     toolkit/components/featuregates,
     toolkit/content/tests/chrome/file_about_networking_wsh.py,
-    toolkit/crashreporter/tools/symbolstore.py,
-    toolkit/crashreporter/tools/unit-symbolstore.py,
     toolkit/library/build/dependentlibs.py,
     toolkit/locales/generate_update_locale.py,
     toolkit/mozapps,
