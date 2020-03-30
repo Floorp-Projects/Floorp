@@ -585,7 +585,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // we don't want to notify the listeners during JS GC (they could be
   // in JS!).
   tmp->mNotifyAutoCopy = false;
-  tmp->StopNotifyingAccessibleCaretEventHub();
+  if (tmp->mAccessibleCaretEventHub) {
+    tmp->StopNotifyingAccessibleCaretEventHub();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionChangeEventDispatcher)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
   tmp->RemoveAllRanges(IgnoreErrors());
@@ -2753,12 +2755,16 @@ bool Selection::ContainsPoint(const nsPoint& aPoint) {
 }
 
 void Selection::MaybeNotifyAccessibleCaretEventHub(PresShell* aPresShell) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (!mAccessibleCaretEventHub && aPresShell) {
     mAccessibleCaretEventHub = aPresShell->GetAccessibleCaretEventHub();
   }
 }
 
 void Selection::StopNotifyingAccessibleCaretEventHub() {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   mAccessibleCaretEventHub = nullptr;
 }
 
