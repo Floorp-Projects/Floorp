@@ -6786,9 +6786,12 @@ DocGroup* Document::GetDocGroupOrCreate() {
     nsresult rv = mozilla::dom::DocGroup::GetKey(NodePrincipal(), docGroupKey);
     if (NS_SUCCEEDED(rv)) {
       if (mDocumentContainer) {
-        TabGroup* tabgroup = mDocumentContainer->GetWindow()->MaybeTabGroup();
-        if (tabgroup) {
-          mDocGroup = tabgroup->AddDocument(docGroupKey, this);
+        nsPIDOMWindowOuter* window = mDocumentContainer->GetWindow();
+        if (window) {
+          TabGroup* tabgroup = window->MaybeTabGroup();
+          if (tabgroup) {
+            mDocGroup = tabgroup->AddDocument(docGroupKey, this);
+          }
         }
       }
     }
