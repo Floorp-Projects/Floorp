@@ -84,7 +84,7 @@ class nsMozIconURI final : public nsIMozIconURI,
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
+    [[nodiscard]] NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
       return InitFromInputStream(aStream);
     }
 
