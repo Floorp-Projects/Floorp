@@ -8740,6 +8740,12 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+
+# Use smooth rendering for basic compositor.
+- name: widget.wayland-smooth-rendering
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 #endif
 
 #---------------------------------------------------------------------------
