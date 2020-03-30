@@ -79,7 +79,6 @@ exchange.aero
 express.aero
 federation.aero
 flight.aero
-freight.aero
 fuel.aero
 gliding.aero
 government.aero
@@ -7092,7 +7091,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-03-15T18:10:34Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-03-29T18:18:21Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9094,9 +9093,6 @@ mutual
 
 // nab : 2015-08-20 National Australia Bank Limited
 nab
-
-// nadex : 2014-12-11 Nadex Domains, Inc.
-nadex
 
 // nagoya : 2013-10-24 GMO Registry, Inc.
 nagoya
@@ -13017,8 +13013,10 @@ wedeploy.sh
 remotewd.com
 
 // Wikimedia Labs : https://wikitech.wikimedia.org
-// Submitted by Yuvi Panda <yuvipanda@wikimedia.org>
+// Submitted by Arturo Borrero Gonzalez <aborrero@wikimedia.org>
 wmflabs.org
+toolforge.org
+wmcloud.org
 
 // WoltLab GmbH : https://www.woltlab.com
 // Submitted by Tim Düsterhus <security@woltlab.cloud>
