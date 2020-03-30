@@ -3,19 +3,14 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [
-]>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <script src="chrome://browser/content/syncedtabs/sidebar.js"></script>
     <script src="chrome://browser/content/utilityOverlay.js"/>
     <script src="chrome://browser/content/contentTheme.js"></script>
 
-    <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/skin/syncedtabs/sidebar.css"/>
-    <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/"/>
-    <link rel="stylesheet" type="text/css" media="all" href="chrome://global/skin/textbox.css"/>
+    <link rel="stylesheet" media="all" href="chrome://browser/skin/syncedtabs/sidebar.css"/>
     <link rel="localization" href="browser/branding/sync-brand.ftl"/>
     <link rel="localization" href="browser/syncedTabs.ftl"/>
     <title data-l10n-id="synced-tabs-sidebar-title"></title>
@@ -109,12 +104,10 @@
           <div class="search-box">
             <div class="textbox-input-box">
               <input type="text"
-                     class="tabsFilter textbox-input"
+                     class="tabsFilter"
                      data-l10n-id="synced-tabs-sidebar-search"
                      tabindex="1"/>
-              <div class="textbox-search-icons">
-                <a class="textbox-search-clear"></a>
-              </div>
+              <button class="textbox-search-clear"/>
             </div>
           </div>
         </div>

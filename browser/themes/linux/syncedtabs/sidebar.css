@@ -17,19 +17,10 @@
   margin: 4px;
 }
 
-.textbox-search-clear {
-  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
-  background-repeat: no-repeat;
-  background-size: 12px 12px;
-  width: 12px;
-  height: 12px;
-  margin-top: 3px;
-}
-
 .search-box > .textbox-input-box {
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
-  background-size: 12px 12px;
+  background-size: 12px;
   background-position: left center;
   padding-inline-start: 14px;
 }
