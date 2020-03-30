@@ -1326,20 +1326,21 @@ WebCore::PeriodicWave* BasicWaveFormCache::GetBasicWaveForm(
       mSawtooth = WebCore::PeriodicWave::createSawtooth(mSampleRate);
     }
     return mSawtooth;
-  } else if (aType == OscillatorType::Square) {
+  }
+  if (aType == OscillatorType::Square) {
     if (!mSquare) {
       mSquare = WebCore::PeriodicWave::createSquare(mSampleRate);
     }
     return mSquare;
-  } else if (aType == OscillatorType::Triangle) {
+  }
+  if (aType == OscillatorType::Triangle) {
     if (!mTriangle) {
       mTriangle = WebCore::PeriodicWave::createTriangle(mSampleRate);
     }
     return mTriangle;
-  } else {
-    MOZ_ASSERT(false, "Not reached");
-    return nullptr;
   }
+  MOZ_ASSERT(false, "Not reached");
+  return nullptr;
 }
 
 }  // namespace dom
