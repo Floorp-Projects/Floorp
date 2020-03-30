@@ -602,8 +602,13 @@ static nsresult AddThreatSourceFromRedirectEntry(
   nsCOMPtr<nsIPrincipal> principal;
   rv = aRedirectEntry->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCString spec;
-  rv = principal->GetExposableSpec(spec);
+  rv = GetSpecWithoutSensitiveData(uri, spec);
   NS_ENSURE_SUCCESS(rv, rv);
   auto source = aHit.add_resources();
   source->set_url(spec.get());
