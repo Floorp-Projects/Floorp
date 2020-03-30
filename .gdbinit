@@ -22,7 +22,7 @@ handle SIGSYS noprint nostop pass
 set print object on
 
 # run when using the auto-solib-add trick
-def prun
+define prun
         tbreak main
         run
 	set auto-solib-add 0
@@ -30,7 +30,7 @@ def prun
 end
 
 # run -mail, when using the auto-solib-add trick
-def pmail
+define pmail
         tbreak main
         run -mail
 	set auto-solib-add 0
@@ -40,7 +40,7 @@ end
 # Define a "pu" command to display PRUnichar * strings (100 chars max)
 # Also allows an optional argument for how many chars to print as long as
 # it's less than 100.
-def pu
+define pu
   set $uni = $arg0
   if $argc == 2
     set $limit = $arg1
@@ -77,7 +77,7 @@ end
 # this assumes strings as of Gecko 1.9 (well, and probably a few
 # releases before that as well); going back far enough will get you
 # to string classes that this function doesn't work for.
-def ps
+define ps
   set $str = $arg0
   if (sizeof(*$str.mData) == 1 && ($str.mFlags & 1) != 0)
     print $str.mData
@@ -87,7 +87,7 @@ def ps
 end
 
 # Define a "pa" command to display the string value for an nsAtom
-def pa
+define pa
   set $atom = $arg0
   if (sizeof(*((&*$atom)->mString)) == 2)
     pu (&*$atom)->mString
@@ -96,19 +96,19 @@ end
 
 # define a "pxul" command to display the type of a XUL element from
 # an nsXULElement* pointer.
-def pxul
+define pxul
   set $p = $arg0
   print $p->mNodeInfo.mRawPtr->mInner.mName->mStaticAtom->mString
 end
 
 # define a "prefcnt" command to display the refcount of an XPCOM obj
-def prefcnt
+define prefcnt
   set $p = $arg0
   print ((nsPurpleBufferEntry*)$p->mRefCnt.mTagged)->mRefCnt
 end
 
 # define a "ptag" command to display the tag name of a content node
-def ptag
+define ptag
   set $p = $arg0
   pa $p->mNodeInfo.mRawPtr->mInner.mName
 end
@@ -179,15 +179,15 @@ document ptarray
         ptarray a 1 2 - Prints elements in range [idx1..idx2] from tarray
 end
 
-def js
+define js
   call DumpJSStack()
 end
 
-def ft
+define ft
   call $arg0->DumpFrameTree()
 end
 
-def ftl
+define ftl
   call $arg0->DumpFrameTreeLimited()
 end
 
