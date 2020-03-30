@@ -266,6 +266,15 @@ class Image : public imgIContainer {
   virtual void SetHasError() = 0;
 
   virtual nsIURI* GetURI() const = 0;
+
+  nsresult GetHotspotX(int32_t* aX) override {
+    *aX = 0;
+    return NS_OK;
+  }
+  nsresult GetHotspotY(int32_t* aY) override {
+    *aY = 0;
+    return NS_OK;
+  }
 };
 
 class ImageResource : public Image {
