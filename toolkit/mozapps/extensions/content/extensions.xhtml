@@ -3,21 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
-<?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
-
-<!-- Used for the modals related to the inline options_page XUL browser -->
-<?xml-stylesheet href="chrome://global/content/tabprompts.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/tabprompts.css" type="text/css"?>
-
-<!-- @CSP: Soon, about:addons will not be implemented using XUL anymore (see Bug 1558982).
-   - Until then we have to whitelist the following things:
-   - *) the extensions.webservice.discoverURL using data:, http:, and https:
-   -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        csp="default-src chrome:; frame-src chrome: data: http: https:; script-src chrome:; object-src 'none'"
+        csp="default-src chrome:; frame-src chrome:; script-src chrome:; object-src 'none'"
         id="addons-page" data-l10n-id="addons-window"
         role="application" windowtype="Addons:Manager">
 
