@@ -48,8 +48,6 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
                "The consumed block-size should be constrained!");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  mFlags.mIsFirstInflow = !aFrame->GetPrevInFlow();
-  mFlags.mIsOverflowContainer = IS_TRUE_OVERFLOW_CONTAINER(aFrame);
 
   nsIFrame::LogicalSides logicalSkipSides =
       aFrame->GetLogicalSkipSides(&aReflowInput);
