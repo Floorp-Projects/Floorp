@@ -2590,7 +2590,7 @@ PK11_FindBestKEAMatch(CERTCertificate *server, void *wincx)
         rv = PK11_Authenticate(le->slot, PR_TRUE, wincx);
         if (rv != SECSuccess)
             continue;
-        if (le->slot->session == CK_INVALID_HANDLE) {
+        if (le->slot->session == CK_INVALID_SESSION) {
             continue;
         }
         returnedCert = pk11_GetKEAMate(le->slot, server);

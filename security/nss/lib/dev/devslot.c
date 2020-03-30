@@ -189,11 +189,11 @@ nssSlot_IsTokenPresent(
         if (session) {
             nssSession_EnterMonitor(session);
             /* token is not present */
-            if (session->handle != CK_INVALID_HANDLE) {
+            if (session->handle != CK_INVALID_SESSION) {
                 /* session is valid, close and invalidate it */
                 CKAPI(epv)
                     ->C_CloseSession(session->handle);
-                session->handle = CK_INVALID_HANDLE;
+                session->handle = CK_INVALID_SESSION;
             }
             nssSession_ExitMonitor(session);
         }
@@ -215,17 +215,17 @@ nssSlot_IsTokenPresent(
     if (session) {
         PRBool tokenRemoved;
         nssSession_EnterMonitor(session);
-        if (session->handle != CK_INVALID_HANDLE) {
+        if (session->handle != CK_INVALID_SESSION) {
             CK_SESSION_INFO sessionInfo;
             ckrv = CKAPI(epv)->C_GetSessionInfo(session->handle, &sessionInfo);
             if (ckrv != CKR_OK) {
                 /* session is screwy, close and invalidate it */
                 CKAPI(epv)
                     ->C_CloseSession(session->handle);
-                session->handle = CK_INVALID_HANDLE;
+                session->handle = CK_INVALID_SESSION;
             }
         }
-        tokenRemoved = (session->handle == CK_INVALID_HANDLE);
+        tokenRemoved = (session->handle == CK_INVALID_SESSION);
         nssSession_ExitMonitor(session);
         /* token not removed, finished */
         if (!tokenRemoved) {

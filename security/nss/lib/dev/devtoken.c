@@ -260,7 +260,7 @@ find_objects(
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         ckrv = CKR_SESSION_HANDLE_INVALID;
         goto loser;
     }
@@ -1124,7 +1124,7 @@ nssToken_FindTrustForCertificate(
     nssCryptokiObject *object = NULL, **objects;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return object;
     }
@@ -1206,7 +1206,7 @@ nssToken_FindCRLsBySubject(
     nssSession *session = sessionOpt ? sessionOpt : token->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return objects;
     }
@@ -1262,7 +1262,7 @@ nssToken_Digest(
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return rvItem;
     }
@@ -1328,7 +1328,7 @@ nssToken_BeginDigest(
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return PR_FAILURE;
     }
@@ -1350,7 +1350,7 @@ nssToken_ContinueDigest(
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return PR_FAILURE;
     }
@@ -1378,7 +1378,7 @@ nssToken_FinishDigest(
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return NULL;
     }
@@ -1457,7 +1457,7 @@ nssToken_TraverseCertificates(
     nssSession *session = (sessionOpt) ? sessionOpt : token->defaultSession;
 
     /* Don't ask the module to use an invalid session handle. */
-    if (!session || session->handle == CK_INVALID_HANDLE) {
+    if (!session || session->handle == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         return PR_FAILURE;
     }

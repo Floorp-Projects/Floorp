@@ -145,9 +145,7 @@ extern PRBool sftk_fatalError;
 /*
 ** macros to check for forked child process after C_Initialize
 */
-/* for PKCS #11 3.0, default is NO_FORK_CHECK, if you want it, now you
- * need to define DO_FORK_CHECK */
-#if defined(XP_UNIX) && defined(DO_FORK_CHECK)
+#if defined(XP_UNIX) && !defined(NO_FORK_CHECK)
 
 #ifdef DEBUG
 
@@ -260,19 +258,6 @@ extern PRBool sftkForkCheckDisabled;
 #define NO_FORK_CHECK
 #endif
 
-#endif
-
-/*
- * If we were trying to be complete, we would have both FORK_SAFE
- * and non-Fork safe interfaces here. That would require doubling
- * the functions in our function list for both this and the FIPS
- * interface. Since NSS now always asks for a FORK_SAFE interface,
- * and can fall back to a non-FORK_SAFE interface, we set only
- * export one set of interfaces here */
-#ifdef NO_FORK_CHECK
-#define NSS_INTERFACE_FLAGS CKF_INTERFACE_FORK_SAFE
-#else
-#define NSS_INTERFACE_FLAGS 0
 #endif
 
 SEC_END_PROTOS

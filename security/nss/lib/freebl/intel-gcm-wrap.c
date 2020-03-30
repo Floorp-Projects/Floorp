@@ -45,7 +45,7 @@ intel_AES_GCM_CreateContext(void *context,
 {
     intel_AES_GCMContext *gcm = NULL;
     AESContext *aes = (AESContext *)context;
-    const CK_NSS_GCM_PARAMS *gcmParams = (const CK_NSS_GCM_PARAMS *)params;
+    const CK_GCM_PARAMS *gcmParams = (const CK_GCM_PARAMS *)params;
     unsigned char buff[AES_BLOCK_SIZE]; /* aux buffer */
 
     unsigned long IV_whole_len = gcmParams->ulIvLen & (~0xful);

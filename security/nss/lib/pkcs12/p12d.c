@@ -1355,13 +1355,13 @@ sec_pkcs12_decoder_verify_mac(SEC_PKCS12DecoderContext *p12dcx)
     algtag = SECOID_GetAlgorithmTag(&p12dcx->macData.safeMac.digestAlgorithm);
     switch (algtag) {
         case SEC_OID_SHA1:
-            integrityMech = CKM_NSS_PBE_SHA1_HMAC_KEY_GEN;
+            integrityMech = CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN;
             break;
         case SEC_OID_MD5:
-            integrityMech = CKM_NSS_PBE_MD5_HMAC_KEY_GEN;
+            integrityMech = CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN;
             break;
         case SEC_OID_MD2:
-            integrityMech = CKM_NSS_PBE_MD2_HMAC_KEY_GEN;
+            integrityMech = CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN;
             break;
         case SEC_OID_SHA224:
             integrityMech = CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN;

@@ -165,8 +165,8 @@ get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
         CASE(CKA_TRUST_TIME_STAMPING);
         CASE(CKA_CERT_SHA1_HASH);
         CASE(CKA_CERT_MD5_HASH);
-        CASE(CKA_NSS_DB);
-        CASE(CKA_NSS_TRUST);
+        CASE(CKA_NETSCAPE_DB);
+        CASE(CKA_NETSCAPE_TRUST);
         default:
             break;
     }
@@ -337,6 +337,7 @@ log_rv(CK_RV rv)
         CASE(CKR_MUTEX_BAD);
         CASE(CKR_MUTEX_NOT_LOCKED);
         CASE(CKR_FUNCTION_REJECTED);
+        CASE(CKR_KEY_PARAMS_INVALID);
         default:
             break;
     }

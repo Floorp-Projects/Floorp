@@ -45,7 +45,7 @@ aes_encrypt_buf(
     SECItem key_item;
     PK11SlotInfo *slot = NULL;
     PK11SymKey *symKey = NULL;
-    CK_NSS_GCM_PARAMS gcm_params;
+    CK_GCM_PARAMS gcm_params;
     SECItem param;
 
     /* Import key into NSS. */
@@ -102,7 +102,7 @@ aes_decrypt_buf(
     SECItem key_item;
     PK11SlotInfo *slot = NULL;
     PK11SymKey *symKey = NULL;
-    CK_NSS_GCM_PARAMS gcm_params;
+    CK_GCM_PARAMS gcm_params;
     SECItem param;
 
     if (inputlen + tagsize > sizeof(concatenated)) {
