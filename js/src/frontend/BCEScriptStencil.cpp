@@ -14,31 +14,19 @@
 using namespace js;
 using namespace js::frontend;
 
-BCEScriptStencil::BCEScriptStencil(BytecodeEmitter& bce)
-    : ScriptStencil(bce.cx), bce_(bce) {}
+BCEScriptStencil::BCEScriptStencil(
+    BytecodeEmitter& bce, UniquePtr<ImmutableScriptData> immutableScriptData)
+    : ScriptStencil(bce.cx, std::move(immutableScriptData)), bce_(bce) {
+  init();
+}
 
-bool BCEScriptStencil::init(JSContext* cx, uint32_t nslots) {
+void BCEScriptStencil::init() {
   lineno = bce_.firstLine;
   column = bce_.firstColumn;
 
   natoms = bce_.perScriptData().atomIndices()->count();
 
   ngcthings = bce_.perScriptData().gcThingList().length();
-
-  bool isFunction = bce_.sc->isFunctionBox();
-  uint16_t funLength = isFunction ? bce_.sc->asFunctionBox()->length : 0;
-
-  immutableScriptData = ImmutableScriptData::new_(
-      cx, bce_.mainOffset(), bce_.maxFixedSlots, nslots, bce_.bodyScopeIndex,
-      bce_.bytecodeSection().numICEntries(),
-      bce_.bytecodeSection().numTypeSets(), isFunction, funLength,
-      bce_.bytecodeSection().code(), bce_.bytecodeSection().notes(),
-      bce_.bytecodeSection().resumeOffsetList().span(),
-      bce_.bytecodeSection().scopeNoteList().span(),
-      bce_.bytecodeSection().tryNoteList().span());
-  if (!immutableScriptData) {
-    return false;
-  }
 
   immutableFlags = bce_.sc->immutableFlags();
 
@@ -53,10 +41,9 @@ bool BCEScriptStencil::init(JSContext* cx, uint32_t nslots) {
 
   gcThings = bce_.perScriptData().gcThingList().stealGCThings();
 
-  if (isFunction) {
+  if (isFunction()) {
     functionBox = bce_.sc->asFunctionBox();
   }
-  return true;
 }
 
 bool BCEScriptStencil::getNeedsFunctionEnvironmentObjects() const {

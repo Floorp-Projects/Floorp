@@ -29,9 +29,11 @@ class BCEScriptStencil : public ScriptStencil {
 
   bool getNeedsFunctionEnvironmentObjects() const;
 
+  void init();
+
  public:
-  explicit BCEScriptStencil(BytecodeEmitter& bce);
-  bool init(JSContext* cx, uint32_t nslots);
+  BCEScriptStencil(BytecodeEmitter& bce,
+                   UniquePtr<ImmutableScriptData> immutableScriptData);
 
   virtual bool finishGCThings(JSContext* cx,
                               mozilla::Span<JS::GCCellPtr> output) const;

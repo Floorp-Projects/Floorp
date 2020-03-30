@@ -48,9 +48,12 @@ class SmooshScriptStencil : public ScriptStencil {
   JSAtom** allAtoms_ = nullptr;
 
  public:
-  SmooshScriptStencil(JSContext* cx, const SmooshResult& result,
-                      CompilationInfo& compilationInfo)
-      : ScriptStencil(cx), result_(result), compilationInfo_(compilationInfo) {}
+  SmooshScriptStencil(const SmooshResult& result,
+                      CompilationInfo& compilationInfo,
+                      UniquePtr<ImmutableScriptData> immutableScriptData)
+      : ScriptStencil(compilationInfo.cx, std::move(immutableScriptData)),
+        result_(result),
+        compilationInfo_(compilationInfo) {}
 
   MOZ_MUST_USE bool init(JSContext* cx) {
     lineno = result_.lineno;
@@ -59,37 +62,6 @@ class SmooshScriptStencil : public ScriptStencil {
     natoms = result_.atoms.len;
 
     ngcthings = result_.gcthings.len;
-
-    Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
-    if (!scopeNotes.resize(result_.scope_notes.len)) {
-      return false;
-    }
-    for (size_t i = 0; i < result_.scope_notes.len; i++) {
-      SmooshScopeNote& scopeNote = result_.scope_notes.data[i];
-      scopeNotes[i].index = scopeNote.index;
-      scopeNotes[i].start = scopeNote.start;
-      scopeNotes[i].length = scopeNote.length;
-      scopeNotes[i].parent = scopeNote.parent;
-    }
-
-    uint32_t nfixed = result_.max_fixed_slots;
-    uint64_t nslots64 =
-        nfixed + static_cast<uint64_t>(result_.maximum_stack_depth);
-    if (nslots64 > UINT32_MAX) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEED_DIET,
-                                js_script_str);
-      return false;
-    }
-    immutableScriptData = ImmutableScriptData::new_(
-        cx, result_.main_offset, nfixed, uint32_t(nslots64),
-        result_.body_scope_index, result_.num_ic_entries, result_.num_type_sets,
-        result_.is_function, /* funLength = */ 0,
-        mozilla::MakeSpan(result_.bytecode.data, result_.bytecode.len),
-        mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
-        scopeNotes, mozilla::Span<const TryNote>());
-    if (!immutableScriptData) {
-      return false;
-    }
 
     immutableFlags.setFlag(ImmutableScriptFlagsEnum::Strict, result_.strict);
     immutableFlags.setFlag(
@@ -362,7 +334,41 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   RootedScript script(cx,
                       JSScript::Create(cx, cx->global(), options, sso, extent));
 
-  SmooshScriptStencil stencil(cx, smoosh, compilationInfo);
+  Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
+  if (!scopeNotes.resize(smoosh.scope_notes.len)) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < smoosh.scope_notes.len; i++) {
+    SmooshScopeNote& scopeNote = smoosh.scope_notes.data[i];
+    scopeNotes[i].index = scopeNote.index;
+    scopeNotes[i].start = scopeNote.start;
+    scopeNotes[i].length = scopeNote.length;
+    scopeNotes[i].parent = scopeNote.parent;
+  }
+
+  uint32_t nfixed = smoosh.max_fixed_slots;
+  uint64_t nslots64 =
+      nfixed + static_cast<uint64_t>(smoosh.maximum_stack_depth);
+  if (nslots64 > UINT32_MAX) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEED_DIET,
+                              js_script_str);
+    return nullptr;
+  }
+
+  int funLength = 0;  // Smoosh support for functions isn't complete yet.
+  auto immutableScriptData = ImmutableScriptData::new_(
+      cx, smoosh.main_offset, nfixed, uint32_t(nslots64),
+      smoosh.body_scope_index, smoosh.num_ic_entries, smoosh.num_type_sets,
+      smoosh.is_function, funLength,
+      mozilla::MakeSpan(smoosh.bytecode.data, smoosh.bytecode.len),
+      mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
+      scopeNotes, mozilla::Span<const TryNote>());
+  if (!immutableScriptData) {
+    return nullptr;
+  }
+
+  SmooshScriptStencil stencil(smoosh, compilationInfo,
+                              std::move(immutableScriptData));
   if (!stencil.init(cx)) {
     return nullptr;
   }

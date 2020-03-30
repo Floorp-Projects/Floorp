@@ -475,7 +475,9 @@ class ScriptStencil {
 
   js::frontend::FunctionBox* functionBox = nullptr;
 
-  explicit ScriptStencil(JSContext* cx) : gcThings(cx) {}
+  ScriptStencil(JSContext* cx,
+                UniquePtr<js::ImmutableScriptData> immutableScriptData)
+      : immutableScriptData(std::move(immutableScriptData)), gcThings(cx) {}
 
   bool isFunction() const {
     return immutableFlags.hasFlag(ImmutableScriptFlagsEnum::IsFunction);

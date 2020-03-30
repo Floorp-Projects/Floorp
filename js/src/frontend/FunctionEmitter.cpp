@@ -735,15 +735,13 @@ bool FunctionScriptEmitter::initScript(
     const FieldInitializers& fieldInitializers) {
   MOZ_ASSERT(state_ == State::EndBody);
 
-  uint32_t nslots;
-  if (!bce_->getNslots(&nslots)) {
+  js::UniquePtr<ImmutableScriptData> immutableScriptData =
+      bce_->createImmutableScriptData(bce_->cx);
+  if (!immutableScriptData) {
     return false;
   }
 
-  BCEScriptStencil stencil(*bce_);
-  if (!stencil.init(bce_->cx, nslots)) {
-    return false;
-  }
+  BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
   if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->script, stencil)) {
     return false;
   }
