@@ -366,7 +366,8 @@ var GeckoViewUtils = {
   },
 
   getActiveDispatcherAndWindow() {
-    const win = Services.focus.activeWindow;
+    const bc = Services.focus.activeBrowsingContext;
+    const win = bc ? bc.window : null; // WON'T WORK FOR OOP IFRAMES!
     let dispatcher = this.getDispatcherForWindow(win);
     if (dispatcher) {
       return [dispatcher, win];
