@@ -884,10 +884,6 @@ image.update-throbber {
   font-size: 85%;
 }
 
-#searchInput .textbox-search-icons:not([selectedIndex="1"]) {
-  display: none;
-}
-
 .search-tooltip {
   max-width: 150px;
   font-size: 1.25rem;

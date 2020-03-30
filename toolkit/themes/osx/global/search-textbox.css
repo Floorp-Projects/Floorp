@@ -5,7 +5,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-search-textbox {
+:host {
   -moz-appearance: searchfield;
   font-size: 12px;
   cursor: text;
@@ -15,9 +15,7 @@ search-textbox {
   color: -moz-FieldText;
 }
 
-html|*.textbox-input {
-  -moz-appearance: none;
-  margin: 0;
+html|input {
   border: none;
   padding: 0 1px;
   background-color: transparent;
@@ -29,12 +27,12 @@ html|*.textbox-input {
   text-align: inherit;
 }
 
-search-textbox[readonly="true"] {
+:host([readonly="true"]) {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
-search-textbox[disabled="true"] {
+:host([disabled="true"]) {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
@@ -51,6 +49,7 @@ search-textbox[disabled="true"] {
   cursor: default;
 }
 
+/* Don't leave extra blank space with long placeholders (see bug 1385902) */
 .textbox-search-icons:not([selectedIndex="1"]) {
-  visibility: hidden;
+  display: none;
 }

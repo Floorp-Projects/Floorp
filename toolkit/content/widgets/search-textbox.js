@@ -7,13 +7,11 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const HTML_NS = "http://www.w3.org/1999/xhtml";
-
   class MozSearchTextbox extends MozXULElement {
     constructor() {
       super();
 
-      this.inputField = document.createElementNS(HTML_NS, "input");
+      this.inputField = document.createElement("input");
 
       const METHODS = [
         "focus",
@@ -46,6 +44,7 @@
         });
       }
 
+      this.attachShadow({ mode: "open" });
       this.addEventListener("input", this);
       this.addEventListener("keypress", this);
       this.addEventListener("mousedown", this);
@@ -53,10 +52,9 @@
 
     static get inheritedAttributes() {
       return {
-        ".textbox-input":
+        input:
           "value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,spellcheck",
-        ".textbox-search-icon":
-          "src=image,label=searchbuttonlabel,searchbutton,disabled",
+        ".textbox-search-icon": "label=searchbuttonlabel,disabled",
         ".textbox-search-clear": "disabled",
       };
     }
@@ -67,11 +65,15 @@
       }
       this.textContent = "";
 
+      const stylesheet = document.createElement("link");
+      stylesheet.rel = "stylesheet";
+      stylesheet.href = "chrome://global/skin/search-textbox.css";
+
       const textboxSign = document.createXULElement("image");
       textboxSign.className = "textbox-search-sign";
+      textboxSign.part = "search-sign";
 
       const input = this.inputField;
-      input.className = "textbox-input";
       input.setAttribute("mozactionhint", "search");
       input.addEventListener("focus", this);
       input.addEventListener("blur", this);
@@ -97,7 +99,7 @@
       const deck = (this._searchIcons = document.createXULElement("deck"));
       deck.className = "textbox-search-icons";
       deck.append(searchBtn, clearBtn);
-      this.append(textboxSign, input, deck);
+      this.shadowRoot.append(stylesheet, textboxSign, input, deck);
 
       this._timer = null;
 

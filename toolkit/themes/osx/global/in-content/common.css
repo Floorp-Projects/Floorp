@@ -74,7 +74,7 @@ xul|search-textbox {
   padding-inline-end: 8px;
 }
 
-xul|search-textbox > .textbox-search-sign {
+xul|search-textbox::part(search-sign) {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;
