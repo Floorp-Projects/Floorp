@@ -62,12 +62,12 @@ const val HTTP_NOT_FOUND = 404
 class AndroidAssetDispatcher : Dispatcher() {
     private val mainThreadHandler = Handler(Looper.getMainLooper())
 
-    override fun dispatch(request: RecordedRequest): MockResponse {
+    override fun dispatch(request: RecordedRequest?): MockResponse {
         val assetManager = InstrumentationRegistry.getInstrumentation().context.assets
         try {
-            val pathNoLeadingSlash = request.path.drop(1)
-            assetManager.open(pathNoLeadingSlash).use { inputStream ->
-                return fileToResponse(pathNoLeadingSlash, inputStream)
+            val pathWithoutQueryParams = Uri.parse(request?.path?.drop(1)).path
+            assetManager.open(pathWithoutQueryParams!!).use { inputStream ->
+                return fileToResponse(pathWithoutQueryParams, inputStream)
             }
         } catch (e: IOException) { // e.g. file not found.
             // We're on a background thread so we need to forward the exception to the main thread.
