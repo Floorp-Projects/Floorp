@@ -582,7 +582,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       cspNonce, aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetHttpsOnlyStatus(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
-      aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo));
+      aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
+      aLoadInfo->GetHasStoragePermission()));
 
   return NS_OK;
 }
@@ -778,8 +779,8 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.documentHasLoaded(),
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.httpsOnlyStatus(), loadInfoArgs.requestBlockingReason(),
-      loadingContext);
+      loadInfoArgs.httpsOnlyStatus(), loadInfoArgs.hasStoragePermission(),
+      loadInfoArgs.requestBlockingReason(), loadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -801,7 +802,8 @@ void LoadInfoToParentLoadInfoForwarder(
         false,  // documentHasLoaded
         false,  // allowListFutureDocumentsCreatedFromThisRedirectChain
         Maybe<CookieJarSettingsArgs>(),
-        nsILoadInfo::BLOCKING_REASON_NONE);  // requestBlockingReason
+        nsILoadInfo::BLOCKING_REASON_NONE,  // requestBlockingReason
+        false);                             // hasStoragePermission
     return;
   }
 
@@ -835,7 +837,8 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
-      cookieJarSettingsArgs, aLoadInfo->GetRequestBlockingReason());
+      cookieJarSettingsArgs, aLoadInfo->GetRequestBlockingReason(),
+      aLoadInfo->GetHasStoragePermission());
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -894,6 +897,10 @@ nsresult MergeParentLoadInfoForwarder(
           ->Merge(cookieJarSettingsArgs.ref());
     }
   }
+
+  rv =
+      aLoadInfo->SetHasStoragePermission(aForwarderArgs.hasStoragePermission());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

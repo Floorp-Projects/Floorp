@@ -150,6 +150,7 @@ struct LoadInfoArgs
   CookieJarSettingsArgs       cookieJarSettings;
   uint32_t                    requestBlockingReason;
   CSPInfo?                    cspToInheritInfo;
+  bool                        hasStoragePermission;
 };
 
 /**
@@ -198,6 +199,8 @@ struct ParentLoadInfoForwarderArgs
   CookieJarSettingsArgs? cookieJarSettings;
 
   uint32_t requestBlockingReason;
+
+  bool hasStoragePermission;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder

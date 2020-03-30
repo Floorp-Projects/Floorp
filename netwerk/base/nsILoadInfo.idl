@@ -471,6 +471,12 @@ interface nsILoadInfo : nsISupports
   attribute nsICookieJarSettings cookieJarSettings;
 
   /**
+   * True if the loading document has the storage permission. This value would
+   * be set during opening the channel.
+   */
+  [infallible] attribute boolean hasStoragePermission;
+
+  /**
    * If forceInheritPrincipal is true, the data coming from the channel should
    * inherit its principal, even when the data is loaded over http:// or another
    * protocol that would normally use a URI-based principal.
