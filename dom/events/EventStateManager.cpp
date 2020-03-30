@@ -3827,23 +3827,37 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
 static gfx::IntPoint ComputeHotspot(imgIContainer* aContainer,
                                     const Maybe<gfx::Point>& aHotspot) {
   MOZ_ASSERT(aContainer);
-
   // css3-ui says to use the CSS-specified hotspot if present,
   // otherwise use the intrinsic hotspot, otherwise use the top left
   // corner.
+  uint32_t hotspotX, hotspotY;
   if (aHotspot) {
     int32_t imgWidth, imgHeight;
     aContainer->GetWidth(&imgWidth);
     aContainer->GetHeight(&imgHeight);
-    auto hotspot = gfx::IntPoint::Round(*aHotspot);
-    return {std::max(std::min(hotspot.x, imgWidth - 1), 0),
-            std::max(std::min(hotspot.y, imgHeight - 1), 0)};
-  }
 
-  gfx::IntPoint hotspot;
-  aContainer->GetHotspotX(&hotspot.x);
-  aContainer->GetHotspotY(&hotspot.y);
-  return hotspot;
+    // XXX std::max(NS_lround(x), 0)?
+    hotspotX = aHotspot->x > 0.0f ? uint32_t(aHotspot->x + 0.5f) : uint32_t(0);
+    if (hotspotX >= uint32_t(imgWidth)) hotspotX = imgWidth - 1;
+    hotspotY = aHotspot->y > 0.0f ? uint32_t(aHotspot->y + 0.5f) : uint32_t(0);
+    if (hotspotY >= uint32_t(imgHeight)) hotspotY = imgHeight - 1;
+  } else {
+    hotspotX = 0;
+    hotspotY = 0;
+    nsCOMPtr<nsIProperties> props(do_QueryInterface(aContainer));
+    if (props) {
+      nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
+
+      props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32),
+                 getter_AddRefs(hotspotXWrap));
+      props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32),
+                 getter_AddRefs(hotspotYWrap));
+
+      if (hotspotXWrap) hotspotXWrap->GetData(&hotspotX);
+      if (hotspotYWrap) hotspotYWrap->GetData(&hotspotY);
+    }
+  }
+  return {hotspotX, hotspotY};
 }
 
 static CursorImage ComputeCustomCursor(nsPresContext* aPresContext,
