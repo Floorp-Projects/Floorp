@@ -58,7 +58,6 @@
   skin/classic/browser/connection-secure.svg                   (../shared/identity-block/connection-secure.svg)
   skin/classic/browser/connection-mixed-passive-loaded.svg     (../shared/identity-block/connection-mixed-passive-loaded.svg)
   skin/classic/browser/connection-mixed-active-loaded.svg      (../shared/identity-block/connection-mixed-active-loaded.svg)
-  skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
   skin/classic/browser/info.svg                                (../shared/info.svg)
   skin/classic/browser/newInstall.css                          (../shared/newInstall.css)
   skin/classic/browser/newInstallPage.css                      (../shared/newInstallPage.css)
