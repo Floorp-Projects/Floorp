@@ -2,7 +2,7 @@
 
 # SnapshotSerializer
 
-`class SnapshotSerializer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SnapshotSerializer.kt#L29)
+`class SnapshotSerializer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SnapshotSerializer.kt#L30)
 
 Helper to transform [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) instances to JSON and back.
 

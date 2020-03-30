@@ -2,7 +2,7 @@
 
 # createDownloadLinkCandidate
 
-`fun createDownloadLinkCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L207)
+`fun createDownloadLinkCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L237)
 
 Context Menu item: "Save link".
 
