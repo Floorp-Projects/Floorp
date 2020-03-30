@@ -11,16 +11,20 @@
  * will reflect the deck's state. When the button is clicked, it will set the
  * view in the <named-deck> to the button's "name" attribute.
  *
+ * The "tab" role will be added unless a different role is provided. Wrapping
+ * a set of these buttons in a <button-group> element will add the key handling
+ * for a tablist.
+ *
  * NOTE: This does not observe changes to the "deck" or "name" attributes, so
  * changing them likely won't work properly.
  *
- * <named-deck-button deck="pet-deck" name="dogs">Dogs</named-deck-button>
+ * <button is="named-deck-button" deck="pet-deck" name="dogs">Dogs</button>
  * <named-deck id="pet-deck">
  *   <p name="cats">I like cats.</p>
  *   <p name="dogs">I like dogs.</p>
  * </named-deck>
  *
- * let btn = document.querySelector("named-deck-button");
+ * let btn = document.querySelector('button[name="dogs"]');
  * let deck = document.querySelector("named-deck");
  * deck.selectedViewName == "cats";
  * btn.selected == false; // Selected was pulled from the related deck.
@@ -28,61 +32,26 @@
  * deck.selectedViewName == "dogs";
  * btn.selected == true; // Selected updated when view changed.
  */
-class NamedDeckButton extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    // Include styles inline to avoid a FOUC.
-    let style = document.createElement("style");
-    style.textContent = `
-      button {
-        -moz-appearance: none;
-        border: none;
-        border-top: 2px solid transparent;
-        border-bottom: 2px solid transparent;
-        background: var(--in-content-box-background);
-        font-size: 14px;
-        line-height: 20px;
-        padding: 4px 16px;
-        color: var(--in-content-text-color);
-      }
-
-      button:hover {
-        background-color: var(--in-content-box-background-hover);
-        border-top-color: var(--in-content-box-border-color);
-      }
-
-      button:hover:active {
-        background-color: var(--in-content-box-background-active);
-      }
-
-      :host([selected]) button {
-        border-top-color: var(--in-content-border-highlight);
-        color: var(--in-content-category-text-selected);
-      }
-    `;
-    this.shadowRoot.appendChild(style);
-
-    this.button = document.createElement("button");
-    this.button.setAttribute("role", "tab");
-    this.button.appendChild(document.createElement("slot"));
-    this.shadowRoot.appendChild(this.button);
-
-    this.addEventListener("click", this);
-  }
-
+class NamedDeckButton extends HTMLButtonElement {
   connectedCallback() {
     this.id = `${this.deckId}-button-${this.name}`;
+    if (!this.hasAttribute("role")) {
+      this.setAttribute("role", "tab");
+    }
     this.setSelectedFromDeck();
+    this.addEventListener("click", this);
     document.addEventListener("view-changed", this, { capture: true });
   }
 
   disconnectedCallback() {
+    this.removeEventListener("click", this);
     document.removeEventListener("view-changed", this, { capture: true });
   }
 
-  focus() {
-    this.button.focus();
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name == "selected") {
+      this.selected = newVal;
+    }
   }
 
   get deckId() {
@@ -117,58 +86,164 @@ class NamedDeckButton extends HTMLElement {
   }
 
   set selected(val) {
-    this.toggleAttribute("selected", !!val);
-    this.button.setAttribute("aria-selected", !!val);
-    this.button.setAttribute("tabindex", val ? "0" : "-1");
+    if (this.selected != val) {
+      this.toggleAttribute("selected", val);
+    }
+    this.setAttribute("aria-selected", !!val);
   }
 
   setSelectedFromDeck() {
     let { deck } = this;
     this.selected = deck && deck.selectedViewName == this.name;
+    if (this.selected) {
+      this.dispatchEvent(
+        new CustomEvent("button-group:selected", { bubbles: true })
+      );
+    }
   }
 }
-customElements.define("named-deck-button", NamedDeckButton);
+customElements.define("named-deck-button", NamedDeckButton, {
+  extends: "button",
+});
 
-class NamedDeckButtonGroup extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
+class ButtonGroup extends HTMLElement {
+  static get observedAttributes() {
+    return ["orientation"];
+  }
 
-    let style = document.createElement("style");
-    style.textContent = `
-      div {
-        border-bottom: 1px solid var(--in-content-box-border-color);
-        border-top: 1px solid var(--in-content-box-border-color);
-        font-size: 0;
-        line-height: 0;
-      }
-    `;
-    this.shadowRoot.appendChild(style);
+  connectedCallback() {
+    this.setAttribute("role", "tablist");
 
-    let container = document.createElement("div");
-    container.setAttribute("role", "tablist");
-    container.appendChild(document.createElement("slot"));
-    this.shadowRoot.appendChild(container);
+    if (!this.observer) {
+      this.observer = new MutationObserver(changes => {
+        for (let change of changes) {
+          this.setChildAttributes(change.addedNodes);
+          for (let node of change.removedNodes) {
+            if (this.activeChild == node) {
+              // Ensure there's still an active child.
+              this.activeChild = this.firstElementChild;
+            }
+          }
+        }
+      });
+    }
+    this.observer.observe(this, { childList: true });
 
+    // Set the role and tabindex for the current children.
+    this.setChildAttributes(this.children);
+
+    // Try assigning the active child again, this will run through the checks
+    // to ensure it's still valid.
+    this.activeChild = this._activeChild;
+
+    this.addEventListener("button-group:selected", this);
     this.addEventListener("keydown", this);
   }
 
-  handleEvent(e) {
-    if (
-      e.type === "keydown" &&
-      e.target.localName === "named-deck-button" &&
-      ["ArrowLeft", "ArrowRight"].includes(e.key)
-    ) {
-      let previousDirectionKey =
-        document.dir === "rtl" ? "ArrowRight" : "ArrowLeft";
-      this.walker.currentNode = e.target;
-      let nextItem =
-        e.key === previousDirectionKey
-          ? this.walker.previousNode()
-          : this.walker.nextNode();
-      if (nextItem) {
-        nextItem.focus();
+  disconnectedCallback() {
+    this.observer.disconnect();
+    this.removeEventListener("button-group:selected", this);
+    this.removeEventListener("keydown", this);
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name == "orientation") {
+      if (this.isVertical) {
+        this.setAttribute("aria-orientation", this.orientation);
+      } else {
+        this.removeAttribute("aria-orientation");
       }
+    }
+  }
+
+  setChildAttributes(nodes) {
+    for (let node of nodes) {
+      if (node.nodeType == Node.ELEMENT_NODE && node != this.activeChild) {
+        node.setAttribute("tabindex", "-1");
+      }
+    }
+  }
+
+  // The activeChild is the child that can be focused with tab.
+  get activeChild() {
+    return this._activeChild;
+  }
+
+  set activeChild(node) {
+    let prevActiveChild = this._activeChild;
+    let newActiveChild;
+
+    if (node && this.contains(node)) {
+      newActiveChild = node;
+    } else {
+      newActiveChild = this.firstElementChild;
+    }
+
+    this._activeChild = newActiveChild;
+
+    if (newActiveChild) {
+      newActiveChild.setAttribute("tabindex", "0");
+    }
+
+    if (prevActiveChild && prevActiveChild != newActiveChild) {
+      prevActiveChild.setAttribute("tabindex", "-1");
+    }
+  }
+
+  get isVertical() {
+    return this.orientation == "vertical";
+  }
+
+  get orientation() {
+    return this.getAttribute("orientation") == "vertical"
+      ? "vertical"
+      : "horizontal";
+  }
+
+  set orientation(val) {
+    if (val == "vertical") {
+      this.setAttribute("orientation", val);
+    } else {
+      this.removeAttribute("orientation");
+    }
+  }
+
+  _navigationKeys() {
+    if (this.isVertical) {
+      return {
+        previousKey: "ArrowUp",
+        nextKey: "ArrowDown",
+      };
+    }
+    if (document.dir == "rtl") {
+      return {
+        previousKey: "ArrowRight",
+        nextKey: "ArrowLeft",
+      };
+    }
+    return {
+      previousKey: "ArrowLeft",
+      nextKey: "ArrowRight",
+    };
+  }
+
+  handleEvent(e) {
+    let { previousKey, nextKey } = this._navigationKeys();
+    if (e.type == "keydown" && (e.key == previousKey || e.key == nextKey)) {
+      e.preventDefault();
+      let oldFocus = this.activeChild;
+      this.walker.currentNode = oldFocus;
+      let newFocus;
+      if (e.key == previousKey) {
+        newFocus = this.walker.previousNode();
+      } else {
+        newFocus = this.walker.nextNode();
+      }
+      if (newFocus) {
+        this.activeChild = newFocus;
+      }
+    } else if (e.type == "button-group:selected") {
+      this.activeChild = e.target;
     }
   }
 
@@ -176,21 +251,20 @@ class NamedDeckButtonGroup extends HTMLElement {
     if (!this._walker) {
       this._walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, {
         acceptNode: node => {
-          if (
-            node.hidden ||
-            node.disabled ||
-            node.localName !== "named-deck-button"
-          ) {
+          if (node.hidden || node.disabled) {
             return NodeFilter.FILTER_REJECT;
           }
-          return NodeFilter.FILTER_ACCEPT;
+          node.focus();
+          return document.activeElement == node
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
         },
       });
     }
     return this._walker;
   }
 }
-customElements.define("named-deck-button-group", NamedDeckButtonGroup);
+customElements.define("button-group", ButtonGroup);
 
 /**
  * A deck that is indexed by the "name" attribute of its children. The

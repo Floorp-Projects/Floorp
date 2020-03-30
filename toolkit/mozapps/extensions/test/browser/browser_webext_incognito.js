@@ -45,7 +45,7 @@ function getPreferencesButtonAtDetailsView() {
 
 function isInlineOptionsVisible() {
   // The following button is used to open the inline options browser.
-  return !getHtmlElem("named-deck-button[name='preferences']").hidden;
+  return !getHtmlElem(".tab-button[name='preferences']").hidden;
 }
 
 function getPrivateBrowsingValue() {

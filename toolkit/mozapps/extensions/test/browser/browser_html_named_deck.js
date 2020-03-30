@@ -7,7 +7,7 @@
 const DEFAULT_SECTION_NAMES = ["one", "two", "three"];
 
 function makeButton({ doc, name, deckId }) {
-  let button = doc.createElement("named-deck-button");
+  let button = doc.createElement("button", { is: "named-deck-button" });
   button.setAttribute("name", name);
   button.deckId = deckId;
   button.textContent = name.toUpperCase();
@@ -145,7 +145,7 @@ async function setup({ doc, beAsync, first }) {
   for (let name of DEFAULT_SECTION_NAMES) {
     deck.appendChild(makeSection({ doc, name }));
   }
-  const buttons = doc.createElement("div");
+  const buttons = doc.createElement("button-group");
   for (let name of DEFAULT_SECTION_NAMES) {
     buttons.appendChild(makeButton({ doc, name, deckId }));
   }
@@ -184,6 +184,67 @@ add_task(async function testNamedDeckAndButtons() {
   await runTests(await setup({ doc, beAsync: false, first: "buttons" }));
   dump("Running buttons first tests asynchronously");
   await runTests(await setup({ doc, beAsync: true, first: "buttons" }));
+
+  await closeView(win);
+});
+
+add_task(async function testFocusAndClickMixing() {
+  const win = await loadInitialView("extension");
+  const doc = win.document;
+  const waitForAnimationFrame = () =>
+    new Promise(r => requestAnimationFrame(r));
+  const tab = (e = {}) => {
+    EventUtils.synthesizeKey("VK_TAB", e, win);
+    return waitForAnimationFrame();
+  };
+
+  const firstButton = doc.createElement("button");
+  doc.body.append(firstButton);
+
+  const { deck, buttons: buttonGroup } = await setup({
+    doc,
+    beAsync: false,
+    first: "buttons",
+  });
+  const buttons = buttonGroup.children;
+  firstButton.focus();
+  const secondButton = doc.createElement("button");
+  doc.body.append(secondButton);
+
+  await tab();
+  is(doc.activeElement, buttons[0], "first deck button is focused");
+  is(deck.selectedViewName, "one", "first view is shown");
+
+  await tab();
+  is(doc.activeElement, secondButton, "focus moves out of group");
+
+  await tab({ shiftKey: true });
+  is(doc.activeElement, buttons[0], "focus moves back to first button");
+
+  // Click on another tab button, this should make it the focusable button.
+  EventUtils.synthesizeMouseAtCenter(buttons[1], {}, win);
+  await waitForAnimationFrame();
+
+  is(deck.selectedViewName, "two", "second view is shown");
+
+  if (doc.activeElement != buttons[1]) {
+    // On Mac the button isn't focused on click, but it is on Windows/Linux.
+    await tab();
+  }
+  is(doc.activeElement, buttons[1], "second deck button is focusable");
+
+  await tab();
+  is(doc.activeElement, secondButton, "focus moved to second plain button");
+
+  await tab({ shiftKey: true });
+  is(doc.activeElement, buttons[1], "second deck button is focusable");
+
+  await tab({ shiftKey: true });
+  is(
+    doc.activeElement,
+    firstButton,
+    "next shift-tab moves out of button group"
+  );
 
   await closeView(win);
 });

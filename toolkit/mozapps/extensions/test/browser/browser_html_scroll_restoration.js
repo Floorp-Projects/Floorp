@@ -193,7 +193,7 @@ add_task(async function test_scroll_restoration() {
 
   // Switch from the default details tab to the permissions tab.
   // (this does not change the history).
-  win.document.querySelector("named-deck-button[name='permissions']").click();
+  win.document.querySelector(".tab-button[name='permissions']").click();
 
   // Switch back from the details view to the extension list.
 
