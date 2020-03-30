@@ -7,7 +7,7 @@
  * https://drafts.css-houdini.org/worklets/#idl-index
  */
 
-[Pref="dom.worklet.enabled",
+[SecureContext, Pref="dom.worklet.enabled",
  Exposed=Window]
 interface Worklet {
   [NewObject, Throws, NeedsCallerType]
