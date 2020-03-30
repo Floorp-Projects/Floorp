@@ -810,13 +810,13 @@ class EditorBase : public nsIEditor,
      * itself.
      *
      */
-    MOZ_MUST_USE bool CanHandle() const {
+    [[nodiscard]] bool CanHandle() const {
 #ifdef DEBUG
       mHasCanHandleChecked = true;
 #endif  // #ifdefn DEBUG
       return mSelection && mEditorBase.IsInitialized();
     }
-    MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
     CanHandleAndMaybeDispatchBeforeInputEvent() {
       if (NS_WARN_IF(!CanHandle())) {
         return NS_ERROR_NOT_INITIALIZED;
@@ -833,7 +833,7 @@ class EditorBase : public nsIEditor,
      *                  and it's canceled, returns
      *                  NS_ERROR_EDITOR_ACTION_CANCELED.
      */
-    MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeDispatchBeforeInputEvent();
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MaybeDispatchBeforeInputEvent();
 
     /**
      * MarkAsBeforeInputHasBeenDispatched() should be called only when updating
@@ -1182,7 +1182,7 @@ class EditorBase : public nsIEditor,
     return mEditActionData->NeedsToDispatchBeforeInputEvent();
   }
 
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeDispatchBeforeInputEvent() {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MaybeDispatchBeforeInputEvent() {
     MOZ_ASSERT(mEditActionData);
     return mEditActionData->MaybeDispatchBeforeInputEvent();
   }
@@ -1359,7 +1359,7 @@ class EditorBase : public nsIEditor,
    *
    * @param aStringToInsert     The string to insert.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertTextAsSubAction(const nsAString& aStringToInsert);
 
   /**
@@ -1406,7 +1406,7 @@ class EditorBase : public nsIEditor,
    * the text node directly and without transaction.  This is used when
    * setting `<input>.value` and `<textarea>.value`.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SetTextNodeWithoutTransaction(const nsAString& aString, Text& aTextNode);
 
   /**
@@ -1438,7 +1438,7 @@ class EditorBase : public nsIEditor,
    * @param aPointToInsert      The DOM point where should be <br> node inserted
    *                            before.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE CreateElementResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   InsertPaddingBRElementForEmptyLastLineWithTransaction(
       const EditorDOMPoint& aPointToInsert);
 
@@ -1916,14 +1916,14 @@ class EditorBase : public nsIEditor,
    * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
    * for empty editor if there is.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   EnsureNoPaddingBRElementForEmptyEditor();
 
   /**
    * MaybeCreatePaddingBRElementForEmptyEditor() creates padding <br> element
    * for empty editor if there is no children.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   MaybeCreatePaddingBRElementForEmptyEditor();
 
   /**
@@ -1932,7 +1932,7 @@ class EditorBase : public nsIEditor,
    *
    * @param aElement    The element for which to insert formatting.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MarkElementDirty(Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MarkElementDirty(Element& aElement);
 
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
@@ -2464,7 +2464,7 @@ class EditorBase : public nsIEditor,
    * the editor's sync/async settings for reflowing, painting, and scrolling
    * match.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult ScrollSelectionFocusIntoView();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ScrollSelectionFocusIntoView();
 
   /**
    * Helper for GetPreviousNodeInternal() and GetNextNodeInternal().
@@ -2609,7 +2609,7 @@ class EditorBase : public nsIEditor,
    * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
    * TextEditor or <br> if it's HTMLEditor.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertLineBreakAsSubAction();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertLineBreakAsSubAction();
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
