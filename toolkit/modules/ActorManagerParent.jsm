@@ -180,6 +180,7 @@ let ACTORS = {
     },
 
     allFrames: true,
+    messageManagerGroups: ["browsers", "test"],
   },
 
   // This is the actor that responds to requests from the find toolbar and
