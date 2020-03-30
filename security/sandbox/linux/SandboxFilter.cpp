@@ -1292,6 +1292,23 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_get_mempolicy:
         return Allow();
 
+        // Mesa's amdgpu driver uses kcmp with KCMP_FILE; see also bug
+        // 1624743.  The pid restriction should be sufficient on its
+        // own if we need to remove the type restriction in the future.
+      case __NR_kcmp: {
+        // The real KCMP_FILE is part of an anonymous enum in
+        // <linux/kcmp.h>, but we can't depend on having that header,
+        // and it's not a #define so the usual #ifndef approach
+        // doesn't work.
+        static const int kKcmpFile = 0;
+        const pid_t myPid = getpid();
+        Arg<pid_t> pid1(0), pid2(1);
+        Arg<int> type(2);
+        return If(AllOf(pid1 == myPid, pid2 == myPid, type == kKcmpFile),
+                  Allow())
+            .Else(InvalidSyscall());
+      }
+
 #endif  // DESKTOP
 
         // nsSystemInfo uses uname (and we cache an instance, so
