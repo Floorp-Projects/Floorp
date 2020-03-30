@@ -91,6 +91,9 @@ def check_for_crashes(dump_directory,
         except Exception:
             test_name = "unknown"
 
+    if not quiet:
+        print("mozcrash checking %s for minidumps..." % dump_directory)
+
     crash_info = CrashInfo(dump_directory, symbols_path, dump_save_path=dump_save_path,
                            stackwalk_binary=stackwalk_binary)
 
