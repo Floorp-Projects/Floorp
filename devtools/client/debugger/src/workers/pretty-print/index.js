@@ -4,6 +4,7 @@
 
 // @flow
 
+import { prefs } from "../../utils/prefs";
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
@@ -36,7 +37,7 @@ export async function prettyPrint({ text, url }: PrettyPrintOpts) {
 
   return dispatcher.invoke("prettyPrint", {
     url,
-    indent: 2,
+    indent: prefs.indentSize,
     sourceText: text,
   });
 }
