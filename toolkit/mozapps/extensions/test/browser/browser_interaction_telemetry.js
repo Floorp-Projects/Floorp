@@ -426,7 +426,7 @@ add_task(async function testGeneralActions() {
   BrowserTestUtils.removeTab(tab);
 
   waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
-  let searchBox = doc.getElementById("search-addons");
+  let searchBox = doc.querySelector("search-addons").input.inputField;
   searchBox.value = "something";
   searchBox.focus();
   EventUtils.synthesizeKey("KEY_Enter", {}, win);
