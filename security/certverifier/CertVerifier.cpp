@@ -250,6 +250,9 @@ static Result BuildCertChainForOneKeyUsage(
 }
 
 void CertVerifier::LoadKnownCTLogs() {
+  if (mCTMode == CertificateTransparencyMode::Disabled) {
+    return;
+  }
   mCTVerifier = MakeUnique<MultiLogCTVerifier>();
   for (const CTLogInfo& log : kCTLogList) {
     Input publicKey;
