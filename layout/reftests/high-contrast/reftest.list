@@ -40,3 +40,5 @@ pref(browser.display.document_color_use,2) == non-themed-button-001.html non-the
 pref(browser.display.document_color_use,2) == non-themed-button-002.html non-themed-button-002-ref.html
 
 != cascade-001.html about:blank
+
+pref(browser.display.document_color_use,2) == background-transparent-form-control.html background-transparent-form-control-ref.html
