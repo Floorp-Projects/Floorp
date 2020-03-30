@@ -5,7 +5,7 @@
 package mozilla.components.feature.addons.worker
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import junit.framework.TestCase.assertTrue
+import junit.framework.TestCase.assertFalse
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import org.junit.Test
@@ -15,12 +15,12 @@ import org.junit.runner.RunWith
 class ExtensionsTest {
 
     @Test
-    fun `shouldReport - when cause is an IOException must be reported`() {
-        assertTrue(Exception(IOException()).shouldReport())
+    fun `shouldReport - when cause is an IOException must NOT be reported`() {
+        assertFalse(Exception(IOException()).shouldReport())
     }
 
     @Test
-    fun `shouldReport - a CancellationException must be reported`() {
-        assertTrue(CancellationException().shouldReport())
+    fun `shouldReport - when cause is a CancellationException must NOT be reported`() {
+        assertFalse(Exception(CancellationException()).shouldReport())
     }
 }
