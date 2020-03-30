@@ -335,9 +335,14 @@ static const size_t MinVirtualMemoryLimitForHugeMemory =
 
 ExclusiveData<ReadLockFlag> sHugeMemoryEnabled(mutexid::WasmHugeMemoryEnabled);
 
-bool wasm::IsHugeMemoryEnabled() {
+static bool IsHugeMemoryEnabledHelper() {
   auto state = sHugeMemoryEnabled.lock();
   return state->get();
+}
+
+bool wasm::IsHugeMemoryEnabled() {
+  static bool enabled = IsHugeMemoryEnabledHelper();
+  return enabled;
 }
 
 bool wasm::DisableHugeMemory() {
