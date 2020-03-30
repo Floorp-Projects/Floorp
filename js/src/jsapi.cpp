@@ -5019,45 +5019,6 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState() {
   }
 }
 
-struct JSExceptionState {
-  explicit JSExceptionState(JSContext* cx) : throwing(false), exception(cx) {}
-  bool throwing;
-  PersistentRootedValue exception;
-};
-
-JS_PUBLIC_API JSExceptionState* JS_SaveExceptionState(JSContext* cx) {
-  JSExceptionState* state;
-
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  state = cx->new_<JSExceptionState>(cx);
-  if (state) {
-    state->throwing = JS_GetPendingException(cx, &state->exception);
-  }
-  return state;
-}
-
-JS_PUBLIC_API void JS_RestoreExceptionState(JSContext* cx,
-                                            JSExceptionState* state) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  if (state) {
-    if (state->throwing) {
-      JS_SetPendingException(cx, state->exception);
-    } else {
-      JS_ClearPendingException(cx);
-    }
-    JS_DropExceptionState(cx, state);
-  }
-}
-
-JS_PUBLIC_API void JS_DropExceptionState(JSContext* cx,
-                                         JSExceptionState* state) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  js_delete(state);
-}
-
 JS_PUBLIC_API JSErrorReport* JS_ErrorFromException(JSContext* cx,
                                                    HandleObject obj) {
   AssertHeapIsIdle();
