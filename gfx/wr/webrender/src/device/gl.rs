@@ -1601,10 +1601,6 @@ impl Device {
         &self.gl
     }
 
-    pub fn update_program_cache(&mut self, cached_programs: Rc<ProgramCache>) {
-        self.cached_programs = Some(cached_programs);
-    }
-
     /// Ensures that the maximum texture size is less than or equal to the
     /// provided value. If the provided value is less than the value supported
     /// by the driver, the latter is used.

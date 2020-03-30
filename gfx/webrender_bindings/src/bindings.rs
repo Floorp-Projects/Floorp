@@ -1108,12 +1108,6 @@ pub unsafe extern "C" fn remove_program_binary_disk_cache(prof_path: &nsAString)
     }
 }
 
-#[no_mangle]
-pub extern "C" fn wr_renderer_update_program_cache(renderer: &mut Renderer, program_cache: &mut WrProgramCache) {
-    let program_cache = Rc::clone(&program_cache.rc_get());
-    renderer.update_program_cache(program_cache);
-}
-
 // This matches IsEnvSet in gfxEnv.h
 fn env_var_to_bool(key: &'static str) -> bool {
     env::var(key).ok().map_or(false, |v| !v.is_empty())
