@@ -70,6 +70,20 @@ using namespace sandbox::bpf_dsl;
 // actual value because it shows up in file flags.
 #define O_LARGEFILE_REAL 00100000
 
+#ifndef F_LINUX_SPECIFIC_BASE
+#  define F_LINUX_SPECIFIC_BASE 1024
+#else
+static_assert(F_LINUX_SPECIFIC_BASE == 1024);
+#endif
+
+#ifndef F_ADD_SEALS
+#  define F_ADD_SEALS (F_LINUX_SPECIFIC_BASE + 9)
+#  define F_GET_SEALS (F_LINUX_SPECIFIC_BASE + 10)
+#else
+static_assert(F_ADD_SEALS == (F_LINUX_SPECIFIC_BASE + 9));
+static_assert(F_GET_SEALS == (F_LINUX_SPECIFIC_BASE + 10));
+#endif
+
 // To avoid visual confusion between "ifdef ANDROID" and "ifndef ANDROID":
 #ifndef ANDROID
 #  define DESKTOP
@@ -1118,6 +1132,9 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 #ifdef F_SETLKW64
             .Case(F_SETLKW64, Allow())
 #endif
+            // Wayland client libraries use file seals
+            .Case(F_ADD_SEALS, Allow())
+            .Case(F_GET_SEALS, Allow())
             .Default(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
 
