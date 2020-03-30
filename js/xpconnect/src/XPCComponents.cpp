@@ -1443,7 +1443,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
 
   nsresult rv = scripterr->InitWithWindowID(
       msg, fileName, EmptyString(), lineNo, 0, 0, "XPConnect JavaScript",
-      innerWindowID, innerWindowID ? true : false);
+      innerWindowID, innerWindowID == 0 ? true : false);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   console->LogMessage(scripterr);
