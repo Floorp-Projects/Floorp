@@ -537,17 +537,25 @@ menuitem.bookmark-item {
 
 %include ../shared/urlbar-autocomplete.inc.css
 
-@media (-moz-windows-default-theme) {
-  :root {
-    --urlbar-popup-url-color: hsl(210, 77%, 47%);
-    --urlbar-popup-action-color: hsl(178, 100%, 28%);
-  }
+:root {
+  --urlbar-popup-url-color: hsl(210, 77%, 47%);
+  --urlbar-popup-action-color: hsl(178, 100%, 28%);
 }
 
 @media (-moz-windows-default-theme: 0) {
-  :root {
+  :root:not(:-moz-lwtheme) {
     --urlbar-popup-url-color: -moz-nativehyperlinktext;
     --urlbar-popup-action-color: -moz-nativehyperlinktext;
+
+    --urlbarView-button-text: buttontext;
+    --urlbarView-button-background: buttonface;
+    --urlbarView-button-background-hover: buttonface;
+    --urlbarView-button-background-active: buttonface;
+    --urlbarView-button-border: threedshadow;
+    --urlbarView-primary-button-text: highlighttext;
+    --urlbarView-primary-button-background: highlight;
+    --urlbarView-primary-button-background-hover: highlight;
+    --urlbarView-primary-button-background-active: highlight;
   }
 }
 
