@@ -1430,6 +1430,9 @@ class Document : public nsINode,
   // Returns the cookie jar settings for this and sub contexts.
   nsICookieJarSettings* CookieJarSettings();
 
+  // Returns whether this document has the storage permission.
+  bool HasStoragePermission() { return mHasStoragePermission; }
+
   // Increments the document generation.
   inline void Changed() { ++mGeneration; }
 
@@ -5036,6 +5039,8 @@ class Document : public nsINode,
   bool mPendingInitialTranslation;
 
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
+
+  bool mHasStoragePermission;
 
   // Document generation. Gets incremented everytime it changes.
   int32_t mGeneration;

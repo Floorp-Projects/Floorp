@@ -1363,6 +1363,7 @@ Document::Document(const char* aContentType)
       mSavedResolution(1.0f),
       mSavedResolutionBeforeMVM(1.0f),
       mPendingInitialTranslation(false),
+      mHasStoragePermission(false),
       mGeneration(0),
       mCachedTabSizeGeneration(0),
       mNextFormNumber(0),
@@ -3227,6 +3228,8 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   rv = loadInfo->GetCookieJarSettings(getter_AddRefs(mCookieJarSettings));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mHasStoragePermission = loadInfo->GetHasStoragePermission();
 
   return NS_OK;
 }
