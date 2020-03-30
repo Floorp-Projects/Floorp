@@ -64,7 +64,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.menu.ext.getHighlight
+import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
@@ -107,6 +107,7 @@ import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
+import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -321,20 +322,13 @@ class HomeFragment : Fragment() {
             }
         }
 
-        with(view.menuButton) {
-            menuBuilder = createHomeMenu(context!!).menuBuilder
+        createHomeMenu(context!!, WeakReference(view.menuButton))
 
-            val primaryTextColor = ContextCompat.getColor(
-                context,
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
-            )
+        view.menuButton.setColorFilter(ContextCompat.getColor(
+            context!!,
+            ThemeManager.resolveAttribute(R.attr.primaryText, context!!)
+        ))
 
-            setColorFilter(primaryTextColor)
-
-            // Immediately check for `What's new` highlight. If home items that change over time
-            // are added, this will need to be called repeatedly.
-            setHighlight(menuBuilder?.items?.getHighlight())
-        }
         view.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
         view.toolbar_wrapper.setOnClickListener {
@@ -607,8 +601,10 @@ class HomeFragment : Fragment() {
     }
 
     @SuppressWarnings("ComplexMethod")
-    private fun createHomeMenu(context: Context): HomeMenu {
-        return HomeMenu(context) {
+    private fun createHomeMenu(context: Context, menuButtonView: WeakReference<MenuButton>) = HomeMenu(
+        this,
+        context,
+        onItemTapped = {
             when (it) {
                 HomeMenu.Item.Settings -> {
                     invokePendingDeleteJobs()
@@ -676,8 +672,10 @@ class HomeFragment : Fragment() {
                     )
                 }
             }
-        }
-    }
+        },
+        onHighlightPresent = { menuButtonView.get()?.setHighlight(it) },
+        onMenuBuilderChanged = { menuButtonView.get()?.menuBuilder = it }
+    )
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
         return Observer<List<TabCollection>> {
