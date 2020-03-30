@@ -757,8 +757,7 @@ class WellKnownChecker {
     nsLoadFlags flags;
 
     nsContentPolicyType contentPolicyType =
-        loadInfo ? loadInfo->GetExternalContentPolicyType()
-                 : nsIContentPolicy::TYPE_OTHER;
+        loadInfo->GetExternalContentPolicyType();
 
     if (NS_FAILED(gHttpHandler->NewChannelId(channelId)) ||
         NS_FAILED(chan->Init(uri, caps, nullptr, 0, nullptr, channelId,
