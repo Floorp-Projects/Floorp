@@ -373,7 +373,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
-  if (!JSScript::fullyInitFromStencil(cx, script, stencil)) {
+  if (!JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil)) {
     return nullptr;
   }
 

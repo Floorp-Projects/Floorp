@@ -43,19 +43,20 @@ void BCEScriptStencil::init() {
 
   // Update flags specific to functions.
   if (isFunction()) {
-    functionBox = bce_.sc->asFunctionBox();
+    FunctionBox* funbox = bce_.sc->asFunctionBox();
+    functionIndex.emplace(funbox->index());
 
     // Set flags that don't have direct flag representation within the
     // FunctionBox.
     immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasMappedArgsObj,
-                           functionBox->hasMappedArgsObj());
+                           funbox->hasMappedArgsObj());
     immutableFlags.setFlag(
         ImmutableScriptFlagsEnum::FunctionHasExtraBodyVarScope,
-        functionBox->hasExtraBodyVarScope());
+        funbox->hasExtraBodyVarScope());
     immutableFlags.setFlag(ImmutableScriptFlagsEnum::AlwaysNeedsArgsObj,
-                           functionBox->definitelyNeedsArgsObj());
+                           funbox->definitelyNeedsArgsObj());
     immutableFlags.setFlag(ImmutableScriptFlagsEnum::ArgumentsHasVarBinding,
-                           functionBox->argumentsHasLocalBinding());
+                           funbox->argumentsHasLocalBinding());
 
   } /* isFunctionBox */
 }

@@ -742,7 +742,8 @@ bool FunctionScriptEmitter::initScript(
   }
 
   BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
-  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->script, stencil)) {
+  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo,
+                                      bce_->script, stencil)) {
     return false;
   }
 
