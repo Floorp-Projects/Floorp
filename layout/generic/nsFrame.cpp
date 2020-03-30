@@ -114,6 +114,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/SVGPathData.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/gfx/Tools.h"
@@ -612,6 +613,16 @@ static void MaybeScheduleReflowSVGNonDisplayText(nsFrame* aFrame) {
   }
 
   svgTextFrame->ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
+}
+
+bool nsIFrame::IsPrimaryFrameOfRootOrBodyElement() const {
+  if (!IsPrimaryFrame()) {
+    return false;
+  }
+  nsIContent* content = GetContent();
+  Document* document = content->OwnerDoc();
+  return content == document->GetRootElement() ||
+         content == document->GetBodyElement();
 }
 
 void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

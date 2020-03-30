@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsError.h"
+#include "nsCanvasFrame.h"
 #include "nsDisplayList.h"
 #include "nsIFrameInlines.h"
 #include "FrameLayerBuilder.h"
@@ -495,8 +496,27 @@ static bool IsRenderNoImages(uint32_t aDisplayItemKey) {
   return flags & TYPE_RENDERS_NO_IMAGES;
 }
 
-static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest) {
-  bool invalidateFrame = false;
+static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
+                             bool aForcePaint) {
+  if (!aFrame->StyleVisibility()->IsVisible()) {
+    return;
+  }
+
+  if (aFrame->IsFrameOfType(nsIFrame::eTablePart)) {
+    // Tables don't necessarily build border/background display items
+    // for the individual table part frames, so IterateRetainedDataFor
+    // might not find the right display item.
+    return aFrame->InvalidateFrame();
+  }
+
+  if (aFrame->IsPrimaryFrameOfRootOrBodyElement()) {
+    // Try to invalidate the canvas too, in the probable case the background
+    // was propagated to it.
+    InvalidateImages(aFrame->PresShell()->GetCanvasFrame(), aRequest,
+                     aForcePaint);
+  }
+
+  bool invalidateFrame = aForcePaint;
   const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
   for (uint32_t i = 0; i < array.Length(); i++) {
     DisplayItemData* data =
@@ -541,6 +561,17 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest) {
     }
   }
 
+  // Update ancestor rendering observers (-moz-element etc)
+  //
+  // NOTE: We need to do this even if invalidateFrame is false, see bug 1114526.
+  {
+    nsIFrame* f = aFrame;
+    while (f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+      SVGObserverUtils::InvalidateDirectRenderingObservers(f);
+      f = nsLayoutUtils::GetCrossDocParentFrame(f);
+    }
+  }
+
   if (invalidateFrame) {
     aFrame->SchedulePaint();
   }
@@ -553,28 +584,7 @@ void ImageLoader::RequestPaintIfNeeded(FrameSet* aFrameSet,
   NS_ASSERTION(mDocument, "Should have returned earlier!");
 
   for (FrameWithFlags& fwf : *aFrameSet) {
-    nsIFrame* frame = fwf.mFrame;
-    if (frame->StyleVisibility()->IsVisible()) {
-      if (frame->IsFrameOfType(nsIFrame::eTablePart)) {
-        // Tables don't necessarily build border/background display items
-        // for the individual table part frames, so IterateRetainedDataFor
-        // might not find the right display item.
-        frame->InvalidateFrame();
-      } else {
-        InvalidateImages(frame, aRequest);
-
-        // Update ancestor rendering observers (-moz-element etc)
-        nsIFrame* f = frame;
-        while (f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-          SVGObserverUtils::InvalidateDirectRenderingObservers(f);
-          f = nsLayoutUtils::GetCrossDocParentFrame(f);
-        }
-
-        if (aForcePaint) {
-          frame->SchedulePaint();
-        }
-      }
-    }
+    InvalidateImages(fwf.mFrame, aRequest, aForcePaint);
   }
 }
 

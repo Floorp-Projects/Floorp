@@ -2129,6 +2129,8 @@ class nsIFrame : public nsQueryFrame {
 
   void SetIsPrimaryFrame(bool aIsPrimary) { mIsPrimaryFrame = aIsPrimary; }
 
+  bool IsPrimaryFrameOfRootOrBodyElement() const;
+
   /**
    * This call is invoked on the primary frame for a character data content
    * node, when it is changed in the content tree.
