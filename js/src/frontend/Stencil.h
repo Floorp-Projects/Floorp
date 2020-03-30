@@ -468,7 +468,7 @@ class ScriptStencil {
   // See `finishGCThings` method.
   uint32_t ngcthings = 0;
 
-  // `See BaseScript::ImmutableFlags`.
+  // The flags that will be added to the script when initializing it.
   ImmutableScriptFlags immutableFlags;
 
   ScriptThingsVector gcThings;
