@@ -34,51 +34,6 @@
 
   <stack id="main-page-stack" flex="1">
   <hbox id="main-page-content" flex="1">
-    <vbox id="category-box">
-      <!-- category list -->
-      <richlistbox id="categories" flex="1">
-        <richlistitem id="category-discover" value="addons://discover/"
-                      class="category"
-                      is="addon-category"
-                      data-l10n-id="extensions-view-discopane"
-                      data-l10n-attrs="name"
-                      priority="1000"/>
-        <richlistitem id="category-availableUpdates" value="addons://updates/available"
-                      class="category"
-                      is="addon-category"
-                      data-l10n-id="extensions-view-available-updates"
-                      data-l10n-attrs="name"
-                      hidden="true"/>
-        <richlistitem id="category-recentUpdates" value="addons://updates/recent"
-                      class="category"
-                      is="addon-category"
-                      data-l10n-id="extensions-view-recent-updates"
-                      data-l10n-attrs="name"
-                      priority="101000"
-                      hidden="true"/>
-      </richlistbox>
-
-      <spacer flex="1"/>
-
-      <hbox class="sidebar-footer-button" pack="center">
-        <label id="preferencesButton" is="text-link">
-          <hbox align="center">
-            <image class="sidebar-footer-icon preferences-icon"/>
-            <label class="sidebar-footer-label" data-l10n-id="preferences" flex="1"/>
-          </hbox>
-        </label>
-      </hbox>
-
-      <hbox class="sidebar-footer-button help-button" pack="center">
-        <label id="helpButton" is="text-link">
-          <hbox align="center">
-            <image class="sidebar-footer-icon help-icon"/>
-            <label class="sidebar-footer-label" data-l10n-id="help-button" flex="1"/>
-          </hbox>
-        </label>
-      </hbox>
-    </vbox>
-
     <vbox class="main-content" flex="1">
       <!-- view port -->
       <deck id="view-port" flex="1" selectedIndex="0">

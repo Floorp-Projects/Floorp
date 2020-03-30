@@ -394,7 +394,7 @@ const AbuseReportTestUtils = {
   // Assert that the report action is hidden on the addon card
   // for the given about:addons windows and extension id.
   async assertReportActionHidden(gManagerWindow, extId) {
-    await gManagerWindow.htmlBrowserLoaded;
+    await gManagerWindow.promiseHtmlBrowserLoaded();
     const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
 
     let addonCard = doc.querySelector(
@@ -1168,7 +1168,7 @@ async function test_abusereport_from_aboutaddons_menu() {
   const extension = await installTestExtension(EXT_ID);
 
   await openAboutAddons();
-  await gManagerWindow.htmlBrowserLoaded;
+  await gManagerWindow.promiseHtmlBrowserLoaded();
 
   AbuseReportTestUtils.assertReportPanelHidden();
 
@@ -1205,7 +1205,7 @@ async function test_abusereport_from_aboutaddons_remove() {
   const extension = await installTestExtension(EXT_ID, "theme");
 
   await openAboutAddons("theme");
-  await gManagerWindow.htmlBrowserLoaded;
+  await gManagerWindow.promiseHtmlBrowserLoaded();
 
   AbuseReportTestUtils.assertReportPanelHidden();
 
@@ -1502,7 +1502,7 @@ async function test_report_hidden_on_report_unsupported_addontype() {
 async function test_no_report_checkbox_for_unsupported_addon_types() {
   async function test_report_checkbox_hidden(addon) {
     await openAboutAddons(addon.type);
-    await gManagerWindow.htmlBrowserLoaded;
+    await gManagerWindow.promiseHtmlBrowserLoaded();
 
     const abuseReportFrameEl = AbuseReportTestUtils.getReportFrame();
     ok(abuseReportFrameEl.hidden, "Abuse Report frame should be hidden");
