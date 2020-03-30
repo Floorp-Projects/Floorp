@@ -949,7 +949,7 @@ xul|treechildren::-moz-tree-image(selected) {
 }
 
 .message-bar-icon {
-  list-style-image: url("chrome://browser/skin/identity-icon.svg");
+  list-style-image: url("chrome://global/skin/icons/identity-icon.svg");
   width: 24px;
   height: 24px;
   padding: 4px;

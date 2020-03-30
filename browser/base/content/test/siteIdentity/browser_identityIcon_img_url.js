@@ -30,7 +30,7 @@ const TEST_CASES = [
   {
     type: "non-chrome about page",
     testURL: "about:about",
-    img_url: `url("chrome://browser/skin/identity-icon.svg")`,
+    img_url: `url("chrome://global/skin/icons/identity-icon.svg")`,
   },
   {
     type: "chrome about page",
@@ -40,7 +40,7 @@ const TEST_CASES = [
   {
     type: "file",
     testURL: "dummy_page.html",
-    img_url: `url("chrome://browser/skin/identity-icon.svg")`,
+    img_url: `url("chrome://global/skin/icons/identity-icon.svg")`,
   },
   {
     type: "mixedPassiveContent",
@@ -60,12 +60,12 @@ const TEST_CASES = [
   {
     type: "localhost",
     testURL: "http://127.0.0.1",
-    img_url: `url("chrome://browser/skin/identity-icon.svg")`,
+    img_url: `url("chrome://global/skin/icons/identity-icon.svg")`,
   },
   {
     type: "localhost + http frame",
     testURL: kBaseURILocalhost + "file_csp_block_all_mixedcontent.html",
-    img_url: `url("chrome://browser/skin/identity-icon.svg")`,
+    img_url: `url("chrome://global/skin/icons/identity-icon.svg")`,
   },
   {
     type: "data URI",
@@ -81,7 +81,7 @@ const TEST_CASES = [
     type: "view-source HTTPS",
     testURL: "view-source:https://example.com/",
     // TODO this will get a secure treatment with bug 1496844.
-    img_url: `url("chrome://browser/skin/identity-icon.svg")`,
+    img_url: `url("chrome://global/skin/icons/identity-icon.svg")`,
   },
 ];
 
