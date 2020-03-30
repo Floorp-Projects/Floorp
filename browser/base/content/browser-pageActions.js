@@ -701,7 +701,14 @@ var BrowserPageActions = {
   },
 
   doCommandForAction(action, event, buttonNode) {
-    if (event && event.type == "click" && event.button != 0) {
+    // On mac, ctrl-click will send a context menu event from the widget, so we
+    // don't want to handle the click event when ctrl key is pressed.
+    if (
+      event &&
+      event.type == "click" &&
+      (event.button != 0 ||
+        (AppConstants.platform == "macosx" && event.ctrlKey))
+    ) {
       return;
     }
     if (event && event.type == "keypress") {
