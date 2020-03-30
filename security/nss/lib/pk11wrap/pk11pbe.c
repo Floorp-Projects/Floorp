@@ -988,10 +988,10 @@ PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
                     mechanism = CKM_PBA_SHA1_WITH_SHA1_HMAC;
                     break;
                 case SEC_OID_MD2:
-                    mechanism = CKM_NSS_PBE_MD2_HMAC_KEY_GEN;
+                    mechanism = CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN;
                     break;
                 case SEC_OID_MD5:
-                    mechanism = CKM_NSS_PBE_MD5_HMAC_KEY_GEN;
+                    mechanism = CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN;
                     break;
                 default:
                     break;
@@ -1363,8 +1363,8 @@ PK11SymKey *
 PK11_RawPBEKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *mech,
                   SECItem *pwitem, PRBool faulty3DES, void *wincx)
 {
-    if (faulty3DES && (type == CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC)) {
-        type = CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC;
+    if (faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
+        type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
     }
     return pk11_RawPBEKeyGenWithKeyType(slot, type, mech, -1, 0, pwitem, wincx);
 }
@@ -1421,8 +1421,8 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
         goto loser;
     }
-    if (faulty3DES && (type == CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC)) {
-        type = CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC;
+    if (faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
+        type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
     }
     symKey = pk11_RawPBEKeyGenWithKeyType(slot, type, param, keyType, keyLen,
                                           pwitem, wincx);

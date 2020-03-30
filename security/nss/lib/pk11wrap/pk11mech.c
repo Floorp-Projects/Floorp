@@ -240,8 +240,8 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type, unsigned long len)
         case CKM_AES_CMAC_GENERAL:
         case CKM_AES_CBC_PAD:
         case CKM_AES_KEY_GEN:
-        case CKM_NSS_AES_KEY_WRAP:
-        case CKM_NSS_AES_KEY_WRAP_PAD:
+        case CKM_NETSCAPE_AES_KEY_WRAP:
+        case CKM_NETSCAPE_AES_KEY_WRAP_PAD:
         case CKM_AES_XCBC_MAC:
         case CKM_AES_XCBC_MAC_96:
             return CKK_AES;
@@ -617,20 +617,20 @@ PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size)
         case CKM_PBE_MD2_DES_CBC:
         case CKM_PBE_MD5_DES_CBC:
         case CKM_PBA_SHA1_WITH_SHA1_HMAC:
-        case CKM_NSS_PBE_SHA1_HMAC_KEY_GEN:
-        case CKM_NSS_PBE_MD5_HMAC_KEY_GEN:
-        case CKM_NSS_PBE_MD2_HMAC_KEY_GEN:
+        case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
+        case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
+        case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
         case CKM_NSS_PKCS12_PBE_SHA224_HMAC_KEY_GEN:
         case CKM_NSS_PKCS12_PBE_SHA256_HMAC_KEY_GEN:
         case CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN:
         case CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
-        case CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
         case CKM_PBE_SHA1_RC2_40_CBC:
         case CKM_PBE_SHA1_RC2_128_CBC:
         case CKM_PBE_SHA1_RC4_40:
@@ -693,11 +693,11 @@ PK11_GetBlockSize(CK_MECHANISM_TYPE type, SECItem *params)
         case CKM_CAST5_CBC_PAD:
         case CKM_PBE_MD2_DES_CBC:
         case CKM_PBE_MD5_DES_CBC:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
-        case CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
         case CKM_PBE_SHA1_RC2_40_CBC:
         case CKM_PBE_SHA1_RC2_128_CBC:
         case CKM_PBE_SHA1_DES3_EDE_CBC:
@@ -728,8 +728,8 @@ PK11_GetBlockSize(CK_MECHANISM_TYPE type, SECItem *params)
         case CKM_BATON_ECB96:
             return 12;
         case CKM_RC4:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
         case CKM_PBE_SHA1_RC4_40:
         case CKM_PBE_SHA1_RC4_128:
             return 0;
@@ -773,11 +773,11 @@ PK11_GetIVLength(CK_MECHANISM_TYPE type)
         case CKM_IDEA_CBC:
         case CKM_PBE_MD2_DES_CBC:
         case CKM_PBE_MD5_DES_CBC:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
-        case CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
         case CKM_PBE_SHA1_RC2_40_CBC:
         case CKM_PBE_SHA1_RC2_128_CBC:
         case CKM_PBE_SHA1_DES3_EDE_CBC:
@@ -827,8 +827,8 @@ PK11_GetIVLength(CK_MECHANISM_TYPE type)
         case CKM_RSA_PKCS:
         case CKM_RSA_9796:
         case CKM_RSA_X_509:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
         case CKM_PBE_SHA1_RC4_40:
         case CKM_PBE_SHA1_RC4_128:
             return 0;
@@ -1277,13 +1277,13 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
             break;
         case CKM_PBE_MD2_DES_CBC:
         case CKM_PBE_MD5_DES_CBC:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
-        case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
-        case CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
         case CKM_PBE_SHA1_DES2_EDE_CBC:
         case CKM_PBE_SHA1_DES3_EDE_CBC:
         case CKM_PBE_SHA1_RC2_40_CBC:
@@ -1633,13 +1633,13 @@ PK11_ParamToAlgid(SECOidTag algTag, SECItem *param,
             break;
         case CKM_PBE_MD2_DES_CBC:
         case CKM_PBE_MD5_DES_CBC:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
-        case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
-        case CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
-        case CKM_NSS_PBE_SHA1_40_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
         case CKM_PBE_SHA1_DES3_EDE_CBC:
         case CKM_PBE_SHA1_DES2_EDE_CBC:
         case CKM_PBE_SHA1_RC2_40_CBC:
@@ -1830,11 +1830,11 @@ PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
     switch (pPBEMechanism->mechanism) {
         case CKM_PBE_MD2_DES_CBC:
         case CKM_PBE_MD5_DES_CBC:
-        case CKM_NSS_PBE_SHA1_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
             pCryptoMechanism->mechanism = CKM_DES_CBC;
             goto have_crypto_mechanism;
-        case CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC:
-        case CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
         case CKM_PBE_SHA1_DES3_EDE_CBC:
         case CKM_PBE_SHA1_DES2_EDE_CBC:
             pCryptoMechanism->mechanism = CKM_DES3_CBC;
@@ -1848,19 +1848,19 @@ PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
                         (unsigned char *)(pPBEparams->pInitVector),
                         iv_len);
             break;
-        case CKM_NSS_PBE_SHA1_40_BIT_RC4:
-        case CKM_NSS_PBE_SHA1_128_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
         case CKM_PBE_SHA1_RC4_40:
         case CKM_PBE_SHA1_RC4_128:
             pCryptoMechanism->mechanism = CKM_RC4;
             pCryptoMechanism->ulParameterLen = 0;
             pCryptoMechanism->pParameter = CK_NULL_PTR;
             break;
-        case CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
         case CKM_PBE_SHA1_RC2_40_CBC:
             rc2_key_len = 40;
             goto have_key_len;
-        case CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC:
+        case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
             rc2_key_len = 128;
         have_key_len:
             pCryptoMechanism->mechanism = CKM_RC2_CBC;

@@ -879,7 +879,7 @@ lg_FindDSAPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type,
             return lg_CopyAttributeSigned(attribute, type,
                                           key->u.dsa.params.base.data,
                                           key->u.dsa.params.base.len);
-        case CKA_NSS_DB:
+        case CKA_NETSCAPE_DB:
             return lg_CopyAttributeSigned(attribute, type,
                                           key->u.dsa.publicValue.data,
                                           key->u.dsa.publicValue.len);
@@ -919,7 +919,7 @@ lg_FindDHPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type,
         case CKA_BASE:
             return lg_CopyAttributeSigned(attribute, type, key->u.dh.base.data,
                                           key->u.dh.base.len);
-        case CKA_NSS_DB:
+        case CKA_NETSCAPE_DB:
             return lg_CopyAttributeSigned(attribute, type,
                                           key->u.dh.publicValue.data,
                                           key->u.dh.publicValue.len);
@@ -957,7 +957,7 @@ lg_FindECPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type,
             return lg_CopyAttributeSigned(attribute, type,
                                           key->u.ec.ecParams.DEREncoding.data,
                                           key->u.ec.ecParams.DEREncoding.len);
-        case CKA_NSS_DB:
+        case CKA_NETSCAPE_DB:
             return lg_CopyAttributeSigned(attribute, type,
                                           key->u.ec.publicValue.data,
                                           key->u.ec.publicValue.len);
@@ -1689,7 +1689,7 @@ lg_SetSingleAttribute(LGObjectCache *obj, const CK_ATTRIBUTE *attr,
     CK_ATTRIBUTE attribLocal;
     CK_RV crv;
 
-    if ((attr->type == CKA_NSS_DB) && (obj->objclass == CKO_PRIVATE_KEY)) {
+    if ((attr->type == CKA_NETSCAPE_DB) && (obj->objclass == CKO_PRIVATE_KEY)) {
         *writePrivate = PR_TRUE;
         return CKR_OK;
     }

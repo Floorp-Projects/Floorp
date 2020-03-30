@@ -70,7 +70,7 @@ PK11_DestroyTokenObject(PK11SlotInfo *slot, CK_OBJECT_HANDLE object)
     CK_SESSION_HANDLE rwsession;
 
     rwsession = PK11_GetRWSession(slot);
-    if (rwsession == CK_INVALID_HANDLE) {
+    if (rwsession == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
@@ -203,7 +203,7 @@ PK11_GetAttributes(PLArenaPool *arena, PK11SlotInfo *slot,
     /* make pedantic happy... note that it's only used arena != NULL */
     void *mark = NULL;
     CK_RV crv;
-    if (slot->session == CK_INVALID_HANDLE)
+    if (slot->session == CK_INVALID_SESSION)
         return CKR_SESSION_HANDLE_INVALID;
 
     /*
@@ -317,7 +317,7 @@ PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
 
     PK11_SETATTRS(&setTemplate, CKA_LABEL, (CK_CHAR *)nickname, len);
     rwsession = PK11_GetRWSession(slot);
-    if (rwsession == CK_INVALID_HANDLE) {
+    if (rwsession == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
@@ -394,12 +394,12 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
     rwsession = session;
     if (token) {
         rwsession = PK11_GetRWSession(slot);
-    } else if (rwsession == CK_INVALID_HANDLE) {
+    } else if (rwsession == CK_INVALID_SESSION) {
         rwsession = slot->session;
-        if (rwsession != CK_INVALID_HANDLE)
+        if (rwsession != CK_INVALID_SESSION)
             PK11_EnterSlotMonitor(slot);
     }
-    if (rwsession == CK_INVALID_HANDLE) {
+    if (rwsession == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
@@ -412,7 +412,7 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
     }
     if (token) {
         PK11_RestoreROSession(slot, rwsession);
-    } else if (session == CK_INVALID_HANDLE) {
+    } else if (session == CK_INVALID_SESSION) {
         PK11_ExitSlotMonitor(slot);
     }
 
@@ -1243,7 +1243,7 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
     }
 
     if (PK11_IsInternal(slot)) {
-        PK11_SETATTRS(attrs, CKA_NSS_DB, idValue->data,
+        PK11_SETATTRS(attrs, CKA_NETSCAPE_DB, idValue->data,
                       idValue->len);
         attrs++;
     }
@@ -1275,13 +1275,13 @@ PK11_UnwrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
             rwsession = PK11_GetRWSession(slot);
         } else {
             rwsession = slot->session;
-            if (rwsession != CK_INVALID_HANDLE)
+            if (rwsession != CK_INVALID_SESSION)
                 PK11_EnterSlotMonitor(slot);
         }
         /* This is a lot a work to deal with fussy PKCS #11 modules
          * that can't bother to return BAD_DATA when presented with an
          * invalid session! */
-        if (rwsession == CK_INVALID_HANDLE) {
+        if (rwsession == CK_INVALID_SESSION) {
             PORT_SetError(SEC_ERROR_BAD_DATA);
             goto loser;
         }
@@ -1733,7 +1733,7 @@ PK11_WriteRawAttribute(PK11ObjectType objType, void *objSpec,
 
     PK11_SETATTRS(&setTemplate, attrType, (CK_CHAR *)item->data, item->len);
     rwsession = PK11_GetRWSession(slot);
-    if (rwsession == CK_INVALID_HANDLE) {
+    if (rwsession == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
@@ -1797,7 +1797,7 @@ pk11_FindObjectByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *theTemplate, int tsi
      * issue the find
      */
     PK11_EnterSlotMonitor(slot);
-    if (slot->session != CK_INVALID_HANDLE) {
+    if (slot->session != CK_INVALID_SESSION) {
         crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session,
                                                    theTemplate, tsize);
     }
@@ -1840,7 +1840,7 @@ pk11_FindObjectsByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
     if (haslock) {
         PK11_EnterSlotMonitor(slot);
     }
-    if (session != CK_INVALID_HANDLE) {
+    if (session != CK_INVALID_SESSION) {
         crv = PK11_GETTAB(slot)->C_FindObjectsInit(session,
                                                    findTemplate, templCount);
     }
@@ -2050,7 +2050,7 @@ PK11_NumberObjectsFor(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
     CK_RV crv = CKR_SESSION_HANDLE_INVALID;
 
     PK11_EnterSlotMonitor(slot);
-    if (slot->session != CK_INVALID_HANDLE) {
+    if (slot->session != CK_INVALID_SESSION) {
         crv = PK11_GETTAB(slot)->C_FindObjectsInit(slot->session,
                                                    findTemplate, templCount);
     }

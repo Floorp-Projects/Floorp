@@ -179,12 +179,8 @@ extern "C" {
 
 #define __PASTE(x, y) x##y
 
-#ifndef CK_PKCS11_3_0
-/* remember that we set it so we can unset it at the end */
-#define __NSS_CK_PKCS11_3_IMPLICIT 1
-#define CK_PKCS11_3_0 1
-#endif
-
+/* packing defines */
+#include "pkcs11p.h"
 /* ==============================================================
  * Define the "extern" form of all the entry points.
  * ==============================================================
@@ -220,7 +216,7 @@ extern "C" {
 #undef CK_PKCS11_FUNCTION_INFO
 
 /* ==============================================================
- * Define structed vector of entry points.  A CK_FUNCTION_3_0_LIST
+ * Define structed vector of entry points.  A CK_FUNCTION_LIST
  * contains a CK_VERSION indicating a library's PKCS #11 version
  * and then a whole slew of function pointers to the routines in
  * the library.  This type was declared, but not defined, in
@@ -232,20 +228,6 @@ extern "C" {
     __PASTE(CK_, name)                \
     name;
 
-#include "pkcs11p.h"
-struct CK_FUNCTION_LIST_3_0 {
-
-    CK_VERSION version; /* PKCS #11 version */
-
-/* Pile all the function pointers into the CK_FUNCTION_LIST_3_0. */
-/* pkcs11f.h has all the information about the PKCS #11
- * function prototypes. */
-#include "pkcs11f.h"
-};
-
-#define CK_PKCS11_2_0_ONLY 1
-
-/* now define the 2.0 function list */
 struct CK_FUNCTION_LIST {
 
     CK_VERSION version; /* PKCS #11 version */
@@ -255,17 +237,13 @@ struct CK_FUNCTION_LIST {
  * function prototypes. */
 #include "pkcs11f.h"
 };
-#include "pkcs11u.h"
 
 #undef CK_PKCS11_FUNCTION_INFO
-#undef CK_PKCS11_2_0_ONLY
-
-#ifdef __NSS_CK_PKCS11_3_IMPLICIT
-#undef CK_PKCS11_3_0
-#undef __NSS_CK_PKCS11_3_IMPLICIT
-#endif
 
 #undef __PASTE
+
+/* unpack */
+#include "pkcs11u.h"
 
 #ifdef __cplusplus
 }

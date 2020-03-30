@@ -132,8 +132,8 @@
 /* NSS trust stuff */
 
 /* HISTORICAL: define used to pass in the database key for DSA private keys */
-#define CKA_NSS_DB 0xD5A0DB00L
-#define CKA_NSS_TRUST 0x80000001L
+#define CKA_NETSCAPE_DB 0xD5A0DB00L
+#define CKA_NETSCAPE_TRUST 0x80000001L
 
 /* FAKE PKCS #11 defines */
 #define CKM_FAKE_RANDOM 0x80000efeUL
@@ -250,20 +250,20 @@
 
 /*
  * HISTORICAL:
- * Do not attempt to use these. They are only used by NSS's internal
+ * Do not attempt to use these. They are only used by NETSCAPE's internal
  * PKCS #11 interface. Most of these are place holders for other mechanism
  * and will change in the future.
  */
-#define CKM_NSS_PBE_SHA1_DES_CBC 0x80000002UL
-#define CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC 0x80000003UL
-#define CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC 0x80000004UL
-#define CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC 0x80000005UL
-#define CKM_NSS_PBE_SHA1_40_BIT_RC4 0x80000006UL
-#define CKM_NSS_PBE_SHA1_128_BIT_RC4 0x80000007UL
-#define CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC 0x80000008UL
-#define CKM_NSS_PBE_SHA1_HMAC_KEY_GEN 0x80000009UL
-#define CKM_NSS_PBE_MD5_HMAC_KEY_GEN 0x8000000aUL
-#define CKM_NSS_PBE_MD2_HMAC_KEY_GEN 0x8000000bUL
+#define CKM_NETSCAPE_PBE_SHA1_DES_CBC 0x80000002UL
+#define CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC 0x80000003UL
+#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC 0x80000004UL
+#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC 0x80000005UL
+#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4 0x80000006UL
+#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4 0x80000007UL
+#define CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC 0x80000008UL
+#define CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN 0x80000009UL
+#define CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN 0x8000000aUL
+#define CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN 0x8000000bUL
 
 #define CKM_TLS_PRF_GENERAL 0x80000373UL
 
@@ -531,70 +531,8 @@ typedef CK_TRUST __CKT_NSS_MUST_VERIFY __attribute__((deprecated("CKT_NSS_MUST_V
 #define CKT_NSS_MUST_VERIFY (CKT_NSS + 4) /*really means trust unknown*/
 #endif
 
-/*
- * These are not really PKCS #11 values specifically. They are the 'loadable'
- * module spec NSS uses. They are available for others to use as well, but not
- * part of the formal PKCS #11 spec.
- *
- * The function 'FIND' returns an array of PKCS #11 initialization strings
- * The function 'ADD' takes a PKCS #11 initialization string and stores it.
- * The function 'DEL' takes a 'name= library=' value and deletes the associated
- *  string.
- * The function 'RELEASE' frees the array returned by 'FIND'
- */
-#define SECMOD_MODULE_DB_FUNCTION_FIND 0
-#define SECMOD_MODULE_DB_FUNCTION_ADD 1
-#define SECMOD_MODULE_DB_FUNCTION_DEL 2
-#define SECMOD_MODULE_DB_FUNCTION_RELEASE 3
-typedef char **(PR_CALLBACK *SECMODModuleDBFunc)(unsigned long function,
-                                                 char *parameters, void *moduleSpec);
-
-/* softoken slot ID's */
-#define SFTK_MIN_USER_SLOT_ID 4
-#define SFTK_MAX_USER_SLOT_ID 100
-#define SFTK_MIN_FIPS_USER_SLOT_ID 101
-#define SFTK_MAX_FIPS_USER_SLOT_ID 127
-
-/* Module Interface. This is the old NSS private module interface, now exported
- * as a PKCS #11 v3 interface. It's interface name is
- * "Vendor NSS Module Interface" */
-typedef char **(*CK_NSS_ModuleDBFunc)(unsigned long function,
-                                      char *parameters, void *args);
-typedef struct CK_NSS_MODULE_FUNCTIONS {
-    CK_VERSION version;
-    CK_NSS_ModuleDBFunc NSC_ModuleDBFunc;
-} CK_NSS_MODULE_FUNCTIONS;
-
-/* There was an inconsistency between the spec and the header file in defining
- * the CK_GCM_PARAMS structure. The authoritative reference is the header file,
- * but NSS used the spec when adding it to its own header. In V3 we've
- * corrected it, but we need to handle the old case for devices that followed
- * us in using the incorrect specification. */
-typedef struct CK_NSS_GCM_PARAMS {
-    CK_BYTE_PTR pIv;
-    CK_ULONG ulIvLen;
-    CK_BYTE_PTR pAAD;
-    CK_ULONG ulAADLen;
-    CK_ULONG ulTagBits;
-} CK_NSS_GCM_PARAMS;
-
-typedef CK_NSS_GCM_PARAMS CK_PTR CK_NSS_GCM_PARAMS_PTR;
-
-/* deprecated #defines. Drop in future NSS releases */
-#ifdef NSS_PKCS11_2_0_COMPAT
-
-/* defines that were changed between NSS's PKCS #11 and the Oasis headers */
-#define CKF_EC_FP CKF_EC_F_P
-#define CKO_KG_PARAMETERS CKO_DOMAIN_PARAMETERS
-#define CK_INVALID_SESSION CK_INVALID_HANDLE
-#define CKR_KEY_PARAMS_INVALID 0x0000006B
-
-/* use the old wrong CK_GCM_PARAMS is NSS_PCKS11_2_0_COMPAT is defined */
-typedef struct CK_NSS_GCM_PARAMS CK_GCM_PARAMS;
-typedef CK_NSS_GCM_PARAMS CK_PTR CK_GCM_PARAMS_PTR;
-
 /* don't leave old programs in a lurch just yet, give them the old NETSCAPE
- * synonym if NSS_PKCS11_2_0_COMPAT is defined*/
+ * synonym */
 #define CKO_NETSCAPE_CRL CKO_NSS_CRL
 #define CKO_NETSCAPE_SMIME CKO_NSS_SMIME
 #define CKO_NETSCAPE_TRUST CKO_NSS_TRUST
@@ -615,20 +553,8 @@ typedef CK_NSS_GCM_PARAMS CK_PTR CK_GCM_PARAMS_PTR;
 #define CKA_NETSCAPE_PQG_H CKA_NSS_PQG_H
 #define CKA_NETSCAPE_PQG_SEED_BITS CKA_NSS_PQG_SEED_BITS
 #define CKA_NETSCAPE_MODULE_SPEC CKA_NSS_MODULE_SPEC
-#define CKA_NETSCAPE_DB CKA_NSS_DB
-#define CKA_NETSCAPE_TRUST CKA_NSS_TRUST
 #define CKM_NETSCAPE_AES_KEY_WRAP CKM_NSS_AES_KEY_WRAP
 #define CKM_NETSCAPE_AES_KEY_WRAP_PAD CKM_NSS_AES_KEY_WRAP_PAD
-#define CKM_NETSCAPE_PBE_SHA1_DES_CBC CKM_NSS_PBE_SHA1_DES_CBC
-#define CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC CKM_NSS_PBE_SHA1_TRIPLE_DES_CBC
-#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC CKM_NSS_PBE_SHA1_40_BIT_RC2_CBC
-#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC CKM_NSS_PBE_SHA1_128_BIT_RC2_CBC
-#define CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4 CKM_NSS_PBE_SHA1_40_BIT_RC4
-#define CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4 CKM_NSS_PBE_SHA1_128_BIT_RC4
-#define CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC CKM_NSS_PBE_SHA1_FAULTY_3DES_CBC
-#define CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN CKM_NSS_PBE_SHA1_HMAC_KEY_GEN
-#define CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN CKM_NSS_PBE_MD5_HMAC_KEY_GEN
-#define CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN CKM_NSS_PBE_MD2_HMAC_KEY_GEN
 #define CKR_NETSCAPE_CERTDB_FAILED CKR_NSS_CERTDB_FAILED
 #define CKR_NETSCAPE_KEYDB_FAILED CKR_NSS_KEYDB_FAILED
 
@@ -639,10 +565,29 @@ typedef CK_NSS_GCM_PARAMS CK_PTR CK_GCM_PARAMS_PTR;
 #define CKT_NETSCAPE_TRUST_UNKNOWN CKT_NSS_TRUST_UNKNOWN
 #define CKT_NETSCAPE_VALID CKT_NSS_VALID
 #define CKT_NETSCAPE_VALID_DELEGATOR CKT_NSS_VALID_DELEGATOR
-#else
-/* use the new CK_GCM_PARAMS if NSS_PKCS11_2_0_COMPAT is not defined */
-typedef struct CK_GCM_PARAMS_V3 CK_GCM_PARAMS;
-typedef CK_GCM_PARAMS_V3 CK_PTR CK_GCM_PARAMS_PTR;
-#endif
+
+/*
+ * These are not really PKCS #11 values specifically. They are the 'loadable'
+ * module spec NSS uses. The are available for others to use as well, but not
+ * part of the formal PKCS #11 spec.
+ *
+ * The function 'FIND' returns an array of PKCS #11 initialization strings
+ * The function 'ADD' takes a PKCS #11 initialization string and stores it.
+ * The function 'DEL' takes a 'name= library=' value and deletes the associated
+ *  string.
+ * The function 'RELEASE' frees the array returned by 'FIND'
+ */
+#define SECMOD_MODULE_DB_FUNCTION_FIND 0
+#define SECMOD_MODULE_DB_FUNCTION_ADD 1
+#define SECMOD_MODULE_DB_FUNCTION_DEL 2
+#define SECMOD_MODULE_DB_FUNCTION_RELEASE 3
+typedef char **(PR_CALLBACK *SECMODModuleDBFunc)(unsigned long function,
+                                                 char *parameters, void *moduleSpec);
+
+/* softoken slot ID's */
+#define SFTK_MIN_USER_SLOT_ID 4
+#define SFTK_MAX_USER_SLOT_ID 100
+#define SFTK_MIN_FIPS_USER_SLOT_ID 101
+#define SFTK_MAX_FIPS_USER_SLOT_ID 127
 
 #endif /* _PKCS11N_H_ */

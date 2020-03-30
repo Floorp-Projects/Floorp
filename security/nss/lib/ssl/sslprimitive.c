@@ -133,7 +133,7 @@ ssl_AeadInner(const SSLAeadContext *ctx, PRBool decrypt, PRUint64 counter,
     }
 
     // Build AEAD parameters.
-    CK_NSS_GCM_PARAMS gcmParams = { 0 }; /* future, use CK_GCM_PARAMS_V3 with fallback */
+    CK_GCM_PARAMS gcmParams = { 0 };
     CK_NSS_AEAD_PARAMS aeadParams = { 0 };
     unsigned char *params;
     unsigned int paramsLen;

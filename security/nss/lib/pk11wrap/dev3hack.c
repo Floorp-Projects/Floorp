@@ -28,7 +28,7 @@ nssSession_ImportNSS3Session(NSSArena *arenaOpt,
                              PZLock *lock, PRBool rw)
 {
     nssSession *rvSession = NULL;
-    if (session != CK_INVALID_HANDLE) {
+    if (session != CK_INVALID_SESSION) {
         rvSession = nss_ZNEW(arenaOpt, nssSession);
         if (rvSession) {
             rvSession->handle = session;

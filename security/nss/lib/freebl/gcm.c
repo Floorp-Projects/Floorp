@@ -537,7 +537,7 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     unsigned char H[MAX_BLOCK_SIZE];
     unsigned int tmp;
     PRBool freeCtr = PR_FALSE;
-    const CK_NSS_GCM_PARAMS *gcmParams = (const CK_NSS_GCM_PARAMS *)params;
+    const CK_GCM_PARAMS *gcmParams = (const CK_GCM_PARAMS *)params;
     CK_AES_CTR_PARAMS ctrParams;
     SECStatus rv;
 #ifdef DISABLE_HW_GCM
