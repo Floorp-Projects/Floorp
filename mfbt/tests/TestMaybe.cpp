@@ -192,18 +192,6 @@ struct TriviallyDestructible {
 
 static_assert(std::is_trivially_destructible_v<Maybe<TriviallyDestructible>>);
 
-struct UncopyableValueLiteralType {
-  UncopyableValueLiteralType(UncopyableValueLiteralType&&) = default;
-  UncopyableValueLiteralType& operator=(UncopyableValueLiteralType&&) = default;
-};
-
-static_assert(std::is_literal_type_v<UncopyableValueLiteralType>);
-static_assert(std::is_literal_type_v<Maybe<UncopyableValueLiteralType>>);
-static_assert(!std::is_copy_constructible_v<Maybe<UncopyableValueLiteralType>>);
-static_assert(!std::is_copy_assignable_v<Maybe<UncopyableValueLiteralType>>);
-static_assert(std::is_move_constructible_v<Maybe<UncopyableValueLiteralType>>);
-static_assert(std::is_move_assignable_v<Maybe<UncopyableValueLiteralType>>);
-
 static bool TestBasicFeatures() {
   // Check that a Maybe<T> is initialized to Nothing.
   Maybe<BasicValue> mayValue;
