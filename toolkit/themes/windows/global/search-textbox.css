@@ -7,7 +7,7 @@
 
 /* ::::: search textbox ::::: */
 
-search-textbox {
+:host {
   -moz-appearance: textfield;
   cursor: text;
   margin: 2px 4px; /* matches <input> global.css margin */
@@ -17,9 +17,7 @@ search-textbox {
   color: -moz-FieldText;
 }
 
-html|*.textbox-input {
-  -moz-appearance: none;
-  margin: 0;
+html|input {
   border: none;
   padding: 0 1px;
   background-color: transparent;
@@ -33,14 +31,14 @@ html|*.textbox-input {
 
 /* ..... readonly state ..... */
 
-search-textbox[readonly="true"] {
+:host([readonly="true"]) {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
 /* ..... disabled state ..... */
 
-search-textbox[disabled="true"] {
+:host([disabled="true"]) {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
@@ -48,12 +46,12 @@ search-textbox[disabled="true"] {
 
 /* ::::: icons ::::: */
 
-search-textbox:not([searchbutton]) > .textbox-search-sign {
+:host(:not([searchbutton])) > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
   margin-inline-end: 5px;
 }
 
-.textbox-search-icon[searchbutton] {
+:host([searchbutton]) .textbox-search-icon {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
 }
 
@@ -62,7 +60,7 @@ search-textbox:not([searchbutton]) > .textbox-search-sign {
   transform: scaleX(-1);
 }
 
-.textbox-search-icon[searchbutton]:not([disabled]) {
+:host([searchbutton]) .textbox-search-icon:not([disabled]) {
   cursor: pointer;
 }
 
@@ -72,4 +70,9 @@ search-textbox:not([searchbutton]) > .textbox-search-sign {
 
 .textbox-search-clear:not([disabled]) {
   cursor: default;
+}
+
+/* Don't leave extra blank space with long placeholders (see bug 1385902) */
+:host(:not([searchbutton])) > .textbox-search-icons:not([selectedIndex="1"]) {
+  display: none;
 }
