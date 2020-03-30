@@ -23,22 +23,13 @@
 .search-box > .textbox-input-box {
   background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
-  background-size: 12px 12px;
+  background-size: 12px;
   background-position: left center;
   padding-inline-start: 14px;
 }
 
 .search-box > .textbox-input-box:dir(rtl) {
   background-position: right center;
-}
-
-.textbox-search-clear {
-  width: 12px;
-  height: 12px;
-  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
-  background-repeat: no-repeat;
-  background-size: 12px 12px;
-  margin-top: 2px;
 }
 
 .textbox-search-clear:not([disabled]) {

@@ -49,15 +49,3 @@ body:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
   -moz-user-select: text;
   text-shadow: none;
 }
-
-.search-box > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
-  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
-  background-repeat: no-repeat;
-  background-size: 11px 11px;
-  width: 11px;
-  height: 11px;
-}
-
-.textbox-search-clear {
-  margin-top: 1px;
-}

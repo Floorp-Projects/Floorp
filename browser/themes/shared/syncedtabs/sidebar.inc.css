@@ -182,17 +182,16 @@ body {
   padding-inline-start: 35px;
 }
 
-.text-input-box {
-  display: flex;
-  flex-flow: row nowrap;
-}
-
 .textbox-input-box {
   display: flex;
   flex-direction: row;
 }
 
 .tabsFilter {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
   flex: 1;
   /* min-width of anything to override the implicit "min-content" value.
      0px is safe as the sidebar itself has a constrained size meaning we will
@@ -296,17 +295,23 @@ body[lwt-sidebar] .deck .instructions {
   display: none;
 }
 
+.textbox-search-clear {
+  background-color: transparent;
+  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
+  background-repeat: no-repeat;
+  background-size: 12px;
+  background-position: center;
+  width: 12px;
+  padding: 0;
+  border: none;
+}
+
 .textbox-search-clear:not([disabled]) {
   cursor: default;
 }
 
-.textbox-search-icons .textbox-search-clear,
-.filtered .textbox-search-icons .textbox-search-icon {
+.search-box:not(.filtered) .textbox-search-clear {
   display: none;
-}
-
-.filtered .textbox-search-icons .textbox-search-clear {
-  display: block;
 }
 
 /* Themed sidebars */
