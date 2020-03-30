@@ -1928,7 +1928,8 @@ void nsFrameLoader::DestroyDocShell() {
     GetDocShell()->Destroy();
   }
 
-  if (!mWillChangeProcess && mPendingBrowsingContext->EverAttached()) {
+  if (!mWillChangeProcess && mPendingBrowsingContext &&
+      mPendingBrowsingContext->EverAttached()) {
     mPendingBrowsingContext->Detach();
   }
 
