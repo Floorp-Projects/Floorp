@@ -29,7 +29,7 @@ var gLastTest;
 
 function doTests() {
   var textbox = $("searchbox");
-  var icons = textbox.querySelector(".textbox-search-icons");
+  var icons = textbox._searchIcons;
   var searchIcon = icons.querySelector(".textbox-search-icon");
   var clearIcon = icons.querySelector(".textbox-search-clear");
 
@@ -91,7 +91,6 @@ function doTests() {
   textbox.value = "";
   textbox.searchButton = true;
   is(textbox.getAttribute("searchbutton"), "true", "searchbutton attribute set on the textbox");
-  is(searchIcon.getAttribute("searchbutton"), "true", "searchbutton attribute inherited to the search icon");
 
   textbox.value = "foo";
   is(icons.selectedPanel, searchIcon, "search icon displayed in search button mode if there's a value");
@@ -146,7 +145,6 @@ function doTests() {
 
   textbox.searchButton = false;
   ok(!textbox.hasAttribute("searchbutton"), "searchbutton attribute removed from the textbox");
-  ok(!searchIcon.hasAttribute("searchbutton"), "searchbutton attribute removed from the search icon");
 
   gLastTest = true;
   gExpectedValue = "123";
