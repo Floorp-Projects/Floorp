@@ -12,8 +12,10 @@
 #include "nsIChannel.h"
 #include "nsIPermission.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsPermissionManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsScriptSecurityManager.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
 
@@ -226,4 +228,97 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   }
 
   return true;
+}
+
+/* static */ bool AntiTrackingUtils::HasStoragePermissionInParent(
+    nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+
+  nsresult rv =
+      loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  int32_t cookieBehavior = cookieJarSettings->GetCookieBehavior();
+  // We only need to check the storage permission if the cookie behavior is
+  // either BEHAVIOR_REJECT_TRACKER or
+  // BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN. Because ContentBlocking
+  // wouldn't update or check the storage permission if the cookie behavior is
+  // not belongs to these two.
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      cookieBehavior !=
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> targetPrincipal =
+      (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER)
+          ? loadInfo->GetTopLevelStorageAreaPrincipal()
+          : loadInfo->GetTopLevelPrincipal();
+
+  if (!targetPrincipal) {
+    if (loadInfo->GetTopLevelPrincipal()) {
+      // We can only get here if the cookieBehavior is BEHAVIOR_REJECT_TRACKER,
+      // the TopLevelStorageAreaPrincipal is null and there is a
+      // TopLevelPrincipal. In this case, the channel is for the top-level
+      // window. So, we can return from here.
+      return false;
+    }
+
+    // We try to use the loading principal if there is no TopLevelPrincipal.
+    targetPrincipal = loadInfo->LoadingPrincipal();
+  }
+
+  if (!targetPrincipal) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+
+    if (httpChannel) {
+      // We don't have a loading principal, let's see if this is a document
+      // channel which belongs to a top-level window.
+      bool isDocument = false;
+      rv = httpChannel->GetIsMainDocumentChannel(&isDocument);
+      if (NS_SUCCEEDED(rv) && isDocument) {
+        nsIScriptSecurityManager* ssm =
+            nsScriptSecurityManager::GetScriptSecurityManager();
+        Unused << ssm->GetChannelResultPrincipal(
+            aChannel, getter_AddRefs(targetPrincipal));
+      }
+    }
+  }
+
+  // Let's use the triggering principal if we still have nothing on the hand.
+  if (!targetPrincipal) {
+    targetPrincipal = loadInfo->TriggeringPrincipal();
+  }
+
+  // Cannot get the target principal, bail out.
+  if (NS_WARN_IF(!targetPrincipal)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> trackingURI;
+  rv = aChannel->GetURI(getter_AddRefs(trackingURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  nsAutoCString trackingOrigin;
+  rv = nsContentUtils::GetASCIIOrigin(trackingURI, trackingOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  nsAutoCString type;
+  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
+
+  uint32_t unusedReason = 0;
+
+  return AntiTrackingUtils::CheckStoragePermission(
+      targetPrincipal, type, NS_UsePrivateBrowsing(aChannel), &unusedReason,
+      unusedReason);
 }
