@@ -366,6 +366,9 @@ uint32_t GetNaked(uint32_t aCh) {
     }
     if (!IsCombiningDiacritic(nextChar)) {
       // Hangul syllables decompose but do not actually have diacritics.
+      // This also excludes decompositions with the Japanese marks U+3099 and
+      // U+309A (COMBINING KATAKANA-HIRAGANA [SEMI-]VOICED SOUND MARK), which
+      // we should not ignore for searching (bug 1624244).
       baseChar = aCh;
     }
   }
