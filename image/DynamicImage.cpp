@@ -294,5 +294,13 @@ void DynamicImage::PropagateUseCounters(dom::Document*) {
   // No use counters.
 }
 
+nsresult DynamicImage::GetHotspotX(int32_t* aX) {
+  return Image::GetHotspotX(aX);
+}
+
+nsresult DynamicImage::GetHotspotY(int32_t* aY) {
+  return Image::GetHotspotY(aY);
+}
+
 }  // namespace image
 }  // namespace mozilla

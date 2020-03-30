@@ -784,10 +784,8 @@ function run_test() {
       inMimeType
     );
 
-    var props = container.QueryInterface(Ci.nsIProperties);
-
-    Assert.equal(props.get("hotspotX", Ci.nsISupportsPRUint32).data, 10);
-    Assert.equal(props.get("hotspotY", Ci.nsISupportsPRUint32).data, 9);
+    Assert.equal(container.hotspotX, 10);
+    Assert.equal(container.hotspotY, 9);
 
     /* ========== end ========== */
   } catch (e) {
