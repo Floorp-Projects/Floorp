@@ -18,12 +18,7 @@ class ViewSourceChild extends JSWindowActorChild {
     let data = message.data;
     switch (message.name) {
       case "ViewSource:LoadSource":
-        this.viewSource(
-          data.URL,
-          data.outerWindowID,
-          data.lineNumber,
-          data.shouldWrap
-        );
+        this.viewSource(data.URL, data.outerWindowID, data.lineNumber);
         break;
       case "ViewSource:LoadSourceWithSelection":
         this.viewSourceWithSelection(
