@@ -3561,8 +3561,11 @@ class MCreateThis : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, getCallee), (1, getNewTarget))
 
-  // Although creation of |this| modifies global state, it is safely repeatable.
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  // Performs a property read from |newTarget| iff |newTarget| is a JSFunction
+  // with an own |.prototype| property.
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Any);
+  }
   bool possiblyCalls() const override { return true; }
 };
 
