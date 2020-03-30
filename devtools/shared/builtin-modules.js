@@ -140,9 +140,7 @@ function defineLazyServiceGetter(object, name, contract, interfaceName) {
 
 /**
  * Defines a getter on a specified object for a module.  The module will not
- * be imported until first use. The getter allows to execute setup and
- * teardown code (e.g.  to register/unregister to services) and accepts
- * a proxy object which acts on behalf of the module until it is imported.
+ * be imported until first use.
  *
  * @param object
  *        The object to define the lazy getter on.
@@ -150,48 +148,15 @@ function defineLazyServiceGetter(object, name, contract, interfaceName) {
  *        The name of the getter to define on object for the module.
  * @param resource
  *        The URL used to obtain the module.
- * @param symbol
- *        The name of the symbol exported by the module.
- *        This parameter is optional and defaults to name.
- * @param preLambda
- *        A function that is executed when the proxy is set up.
- *        This will only ever be called once.
- * @param postLambda
- *        A function that is executed when the module has been imported to
- *        run optional teardown procedures on the proxy object.
- *        This will only ever be called once.
- * @param proxy
- *        An object which acts on behalf of the module to be imported until
- *        the module has been imported.
  */
-function defineLazyModuleGetter(
-  object,
-  name,
-  resource,
-  symbol,
-  preLambda,
-  postLambda,
-  proxy
-) {
-  proxy = proxy || {};
-
-  if (typeof preLambda === "function") {
-    preLambda.apply(proxy);
-  }
-
+function defineLazyModuleGetter(object, name, resource) {
   defineLazyGetter(object, name, function() {
-    let temp = {};
     try {
-      temp = ChromeUtils.import(resource);
-
-      if (typeof postLambda === "function") {
-        postLambda.apply(proxy);
-      }
+      return ChromeUtils.import(resource)[name];
     } catch (ex) {
       Cu.reportError("Failed to load module " + resource + ".");
       throw ex;
     }
-    return temp[symbol || name];
   });
 }
 
@@ -210,26 +175,10 @@ function defineLazyModuleGetter(
  *    Pass true if the property name is a member of the module's exports.
  */
 function lazyRequireGetter(obj, property, module, destructure) {
-  Object.defineProperty(obj, property, {
-    get: () => {
-      // Redefine this accessor property as a data property.
-      // Delete it first, to rule out "too much recursion" in case obj is
-      // a proxy whose defineProperty handler might unwittingly trigger this
-      // getter again.
-      delete obj[property];
-      const value = destructure
-        ? require(module)[property]
-        : require(module || property);
-      Object.defineProperty(obj, property, {
-        value,
-        writable: true,
-        configurable: true,
-        enumerable: true,
-      });
-      return value;
-    },
-    configurable: true,
-    enumerable: true,
+  defineLazyGetter(obj, property, () => {
+    return destructure
+      ? require(module)[property]
+      : require(module || property);
   });
 }
 
