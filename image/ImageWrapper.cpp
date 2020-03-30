@@ -124,14 +124,6 @@ Maybe<AspectRatio> ImageWrapper::GetIntrinsicRatio() {
   return mInnerImage->GetIntrinsicRatio();
 }
 
-nsresult ImageWrapper::GetHotspotX(int32_t* aX) {
-  return Image::GetHotspotX(aX);
-}
-
-nsresult ImageWrapper::GetHotspotY(int32_t* aY) {
-  return Image::GetHotspotY(aY);
-}
-
 NS_IMETHODIMP_(Orientation)
 ImageWrapper::GetOrientation() { return mInnerImage->GetOrientation(); }
 
