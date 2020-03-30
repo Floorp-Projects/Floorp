@@ -21,7 +21,7 @@ using namespace mozilla::image;
 template <typename Func>
 void WithDeinterlacingFilter(const IntSize& aSize, bool aProgressiveDisplay,
                              Func aFunc) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(bool(decoder));
 
   WithFilterPipeline(
@@ -31,7 +31,7 @@ void WithDeinterlacingFilter(const IntSize& aSize, bool aProgressiveDisplay,
 }
 
 void AssertConfiguringDeinterlacingFilterFails(const IntSize& aSize) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   AssertConfiguringPipelineFails(
@@ -47,7 +47,7 @@ class ImageDeinterlacingFilter : public ::testing::Test {
 TEST_F(ImageDeinterlacingFilter, WritePixels100_100) {
   WithDeinterlacingFilter(
       IntSize(100, 100), /* aProgressiveDisplay = */ true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         CheckWritePixels(aDecoder, aFilter,
                          /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
                          /* aInputRect = */ Some(IntRect(0, 0, 100, 100)));
@@ -56,7 +56,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixels100_100) {
 
 TEST_F(ImageDeinterlacingFilter, WritePixels99_99) {
   WithDeinterlacingFilter(IntSize(99, 99), /* aProgressiveDisplay = */ true,
-                          [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+                          [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
                             CheckWritePixels(
                                 aDecoder, aFilter,
                                 /* aOutputRect = */ Some(IntRect(0, 0, 99, 99)),
@@ -66,7 +66,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixels99_99) {
 
 TEST_F(ImageDeinterlacingFilter, WritePixels8_8) {
   WithDeinterlacingFilter(IntSize(8, 8), /* aProgressiveDisplay = */ true,
-                          [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+                          [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
                             CheckWritePixels(
                                 aDecoder, aFilter,
                                 /* aOutputRect = */ Some(IntRect(0, 0, 8, 8)),
@@ -76,7 +76,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixels8_8) {
 
 TEST_F(ImageDeinterlacingFilter, WritePixels7_7) {
   WithDeinterlacingFilter(IntSize(7, 7), /* aProgressiveDisplay = */ true,
-                          [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+                          [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
                             CheckWritePixels(
                                 aDecoder, aFilter,
                                 /* aOutputRect = */ Some(IntRect(0, 0, 7, 7)),
@@ -86,7 +86,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixels7_7) {
 
 TEST_F(ImageDeinterlacingFilter, WritePixels3_3) {
   WithDeinterlacingFilter(IntSize(3, 3), /* aProgressiveDisplay = */ true,
-                          [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+                          [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
                             CheckWritePixels(
                                 aDecoder, aFilter,
                                 /* aOutputRect = */ Some(IntRect(0, 0, 3, 3)),
@@ -96,7 +96,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixels3_3) {
 
 TEST_F(ImageDeinterlacingFilter, WritePixels1_1) {
   WithDeinterlacingFilter(IntSize(1, 1), /* aProgressiveDisplay = */ true,
-                          [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+                          [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
                             CheckWritePixels(
                                 aDecoder, aFilter,
                                 /* aOutputRect = */ Some(IntRect(0, 0, 1, 1)),
@@ -107,7 +107,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixels1_1) {
 TEST_F(ImageDeinterlacingFilter, WritePixelsNonProgressiveOutput51_52) {
   WithDeinterlacingFilter(
       IntSize(51, 52), /* aProgressiveDisplay = */ false,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be green for even rows and red for
         // odd rows but we need to write the rows in the order that the
         // deinterlacer expects them.
@@ -212,7 +212,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsNonProgressiveOutput51_52) {
 TEST_F(ImageDeinterlacingFilter, WritePixelsOutput20_20) {
   WithDeinterlacingFilter(
       IntSize(20, 20), /* aProgressiveDisplay = */ true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be green for even rows and red for
         // odd rows but we need to write the rows in the order that the
         // deinterlacer expects them.
@@ -285,7 +285,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput20_20) {
 TEST_F(ImageDeinterlacingFilter, WritePixelsOutput7_7) {
   WithDeinterlacingFilter(
       IntSize(7, 7), /* aProgressiveDisplay = */ true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be a repeating pattern of two green
         // rows followed by two red rows but we need to write the rows in the
         // order that the deinterlacer expects them.
@@ -347,7 +347,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput7_7) {
 TEST_F(ImageDeinterlacingFilter, WritePixelsOutput3_3) {
   WithDeinterlacingFilter(
       IntSize(3, 3), /* aProgressiveDisplay = */ true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be green, red, green in that order,
         // but we need to write the rows in the order that the deinterlacer
         // expects them.
@@ -399,7 +399,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput3_3) {
 TEST_F(ImageDeinterlacingFilter, WritePixelsOutput1_1) {
   WithDeinterlacingFilter(
       IntSize(1, 1), /* aProgressiveDisplay = */ true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be a single red row.
         uint32_t count = 0;
         auto result = aFilter->WritePixels<uint32_t>([&]() {
@@ -421,8 +421,9 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput1_1) {
       });
 }
 
-void WriteRowAndCheckInterlacerOutput(Decoder* aDecoder, SurfaceFilter* aFilter,
-                                      BGRAColor aColor, WriteState aNextState,
+void WriteRowAndCheckInterlacerOutput(image::Decoder* aDecoder,
+                                      SurfaceFilter* aFilter, BGRAColor aColor,
+                                      WriteState aNextState,
                                       IntRect aInvalidRect,
                                       uint32_t aFirstHaeberliRow,
                                       uint32_t aLastHaeberliRow) {
@@ -462,7 +463,7 @@ void WriteRowAndCheckInterlacerOutput(Decoder* aDecoder, SurfaceFilter* aFilter,
 TEST_F(ImageDeinterlacingFilter, WritePixelsIntermediateOutput7_7) {
   WithDeinterlacingFilter(
       IntSize(7, 7), /* aProgressiveDisplay = */ true,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be a repeating pattern of two green
         // rows followed by two red rows but we need to write the rows in the
         // order that the deinterlacer expects them.
@@ -545,7 +546,7 @@ TEST_F(ImageDeinterlacingFilter,
        WritePixelsNonProgressiveIntermediateOutput7_7) {
   WithDeinterlacingFilter(
       IntSize(7, 7), /* aProgressiveDisplay = */ false,
-      [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // Fill the image. The output should be a repeating pattern of two green
         // rows followed by two red rows but we need to write the rows in the
         // order that the deinterlacer expects them.

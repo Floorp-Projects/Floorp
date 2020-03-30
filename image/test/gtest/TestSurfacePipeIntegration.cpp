@@ -39,7 +39,7 @@ class TestSurfacePipeFactory {
 }  // namespace image
 }  // namespace mozilla
 
-void CheckSurfacePipeMethodResults(SurfacePipe* aPipe, Decoder* aDecoder,
+void CheckSurfacePipeMethodResults(SurfacePipe* aPipe, image::Decoder* aDecoder,
                                    const IntRect& aRect = IntRect(0, 0, 100,
                                                                   100)) {
   // Check that the pipeline ended up in the state we expect.  Note that we're
@@ -93,7 +93,7 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe) {
   pipe = TestSurfacePipeFactory::SimpleSurfacePipe();
 
   // Test that SurfacePipe objects can be initialized with a pipeline.
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   auto sink = MakeUnique<SurfaceSink>();
@@ -185,10 +185,10 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe) {
 }
 
 TEST_F(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+  auto test = [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 25, 25)));
   };
@@ -214,7 +214,7 @@ TEST_F(ImageSurfacePipeIntegration,
   //        +############+
   //        +------------+
 
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   // Note that aInputWriteRect is 100x50 because RemoveFrameRectFilter ignores
@@ -240,7 +240,7 @@ TEST_F(ImageSurfacePipeIntegration,
   //     Some fuzz, as usual, is necessary when dealing with Lanczos
   //     downscaling.
 
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+  auto test = [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
@@ -269,10 +269,10 @@ TEST_F(ImageSurfacePipeIntegration,
   //        +            +
   //        +------------+
 
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+  auto test = [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
@@ -288,14 +288,14 @@ TEST_F(ImageSurfacePipeIntegration,
 }
 
 TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   // Note that aInputRect is the full 100x100 size even though
   // RemoveFrameRectFilter is part of this pipeline, because deinterlacing
   // requires reading every row.
 
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+  auto test = [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
@@ -312,10 +312,10 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels) {
 
 TEST_F(ImageSurfacePipeIntegration,
        DeinterlaceRemoveFrameRectDownscaleWritePixels) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+  auto test = [](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
@@ -333,7 +333,7 @@ TEST_F(ImageSurfacePipeIntegration,
 }
 
 TEST_F(ImageSurfacePipeIntegration, ConfiguringHugeDeinterlacingBufferFails) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
   // When DownscalingFilter is used, we may succeed in allocating an output

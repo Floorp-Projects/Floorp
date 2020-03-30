@@ -27,7 +27,7 @@ using std::vector;
 
 template <typename Func>
 void WithADAM7InterpolatingFilter(const IntSize& aSize, Func aFunc) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(bool(decoder));
 
   WithFilterPipeline(
@@ -36,7 +36,7 @@ void WithADAM7InterpolatingFilter(const IntSize& aSize, Func aFunc) {
 }
 
 void AssertConfiguringADAM7InterpolatingFilterFails(const IntSize& aSize) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  RefPtr<image::Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(bool(decoder));
 
   AssertConfiguringPipelineFails(
@@ -229,8 +229,8 @@ WriteState WriteUninterpolatedPixels(SurfaceFilter* aFilter,
   return result;
 }
 
-bool CheckHorizontallyInterpolatedImage(Decoder* aDecoder, const IntSize& aSize,
-                                        uint8_t aPass,
+bool CheckHorizontallyInterpolatedImage(image::Decoder* aDecoder,
+                                        const IntSize& aSize, uint8_t aPass,
                                         const vector<BGRAColor>& aColors) {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
   RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
@@ -258,7 +258,7 @@ void CheckHorizontalInterpolation(const IntSize& aSize,
   const IntRect surfaceRect(IntPoint(0, 0), aSize);
 
   WithADAM7InterpolatingFilter(
-      aSize, [&](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      aSize, [&](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         // We check horizontal interpolation behavior for each pass
         // individually. In addition to the normal 7 passes that ADAM7 includes,
         // we also check an eighth pass to verify that nothing breaks if extra
@@ -317,8 +317,8 @@ WriteState WriteRowColorPixels(SurfaceFilter* aFilter, const IntSize& aSize,
   return result;
 }
 
-bool CheckVerticallyInterpolatedImage(Decoder* aDecoder, const IntSize& aSize,
-                                      uint8_t aPass,
+bool CheckVerticallyInterpolatedImage(image::Decoder* aDecoder,
+                                      const IntSize& aSize, uint8_t aPass,
                                       const vector<BGRAColor>& aColors) {
   vector<float>& weights = InterpolationWeights(ImportantRowStride(aPass));
 
@@ -372,7 +372,7 @@ void CheckVerticalInterpolation(const IntSize& aSize,
                                 const vector<BGRAColor>& aColors) {
   const IntRect surfaceRect(IntPoint(0, 0), aSize);
 
-  WithADAM7InterpolatingFilter(aSize, [&](Decoder* aDecoder,
+  WithADAM7InterpolatingFilter(aSize, [&](image::Decoder* aDecoder,
                                           SurfaceFilter* aFilter) {
     for (uint8_t pass = 1; pass <= 8; ++pass) {
       // Write a pattern of rows to the surface. Important rows will receive a
@@ -406,7 +406,7 @@ void CheckADAM7InterpolatingWritePixels(const IntSize& aSize) {
   // the pixels are the same color, interpolation doesn't matter; we test the
   // correctness of the interpolation algorithm itself separately.
   WithADAM7InterpolatingFilter(
-      aSize, [&](Decoder* aDecoder, SurfaceFilter* aFilter) {
+      aSize, [&](image::Decoder* aDecoder, SurfaceFilter* aFilter) {
         IntRect rect(IntPoint(0, 0), aSize);
 
         for (int32_t pass = 1; pass <= 8; ++pass) {
