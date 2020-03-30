@@ -29,7 +29,7 @@ job-defaults:
         channel:
             by-release-type:
                 beta: beta
-                release: mock  # TODO: once we are ready to ship to stable, update this
+                release: stable
                 default: mock
 
 jobs:
