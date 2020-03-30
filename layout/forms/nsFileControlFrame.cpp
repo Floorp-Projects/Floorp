@@ -232,15 +232,18 @@ static already_AddRefed<Element> MakeAnonButton(Document* aDoc,
 
   // Make sure access key and tab order for the element actually redirect to the
   // file picking button.
-  RefPtr<HTMLButtonElement> buttonElement =
-      HTMLButtonElement::FromNodeOrNull(button);
-
+  auto* buttonElement = HTMLButtonElement::FromNode(button);
   if (!aAccessKey.IsEmpty()) {
     buttonElement->SetAccessKey(aAccessKey, IgnoreErrors());
   }
 
   // We allow tabbing over the input itself, not the button.
   buttonElement->SetTabIndex(-1, IgnoreErrors());
+  nsAutoString disabled;
+  if (aInputElement->GetAttr(nsGkAtoms::disabled, disabled)) {
+    buttonElement->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, disabled,
+                           true);
+  }
   return button.forget();
 }
 
@@ -283,8 +286,6 @@ nsresult nsFileControlFrame::CreateAnonymousContent(
                                    false);
   mContent->AddSystemEventListener(NS_LITERAL_STRING("dragover"),
                                    mMouseListener, false);
-
-  SyncDisabledState();
 
   return NS_OK;
 }
@@ -535,20 +536,10 @@ nscoord nsFileControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
-void nsFileControlFrame::SyncDisabledState() {
-  EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    mBrowseFilesOrDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
-                                EmptyString(), true);
-  } else {
-    mBrowseFilesOrDirs->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
-  }
-}
-
 nsresult nsFileControlFrame::AttributeChanged(int32_t aNameSpaceID,
                                               nsAtom* aAttribute,
                                               int32_t aModType) {
-  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::tabindex) {
+  if (aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::disabled) {
     if (aModType == MutationEvent_Binding::REMOVAL) {
       mBrowseFilesOrDirs->UnsetAttr(aNameSpaceID, aAttribute, true);
     } else {
@@ -559,12 +550,6 @@ nsresult nsFileControlFrame::AttributeChanged(int32_t aNameSpaceID,
   }
 
   return nsBlockFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
-}
-
-void nsFileControlFrame::ContentStatesChanged(EventStates aStates) {
-  if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
-  }
 }
 
 #ifdef DEBUG_FRAME_DUMP
