@@ -240,8 +240,15 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 // European accents and Hebrew niqqud, but not Hangul components or Thaana
 // vowels, even though Thaana vowels are combining nonspacing marks that could
 // be considered diacritics.
+// As an exception to strictly following Unicode properties, we exclude the
+// Japanese kana voicing marks
+//   3099;COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK;Mn;8;NSM
+//   309A;COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK;Mn;8;NSM
+// which users report should not be ignored (bug 1624244).
 inline bool IsCombiningDiacritic(uint32_t aCh) {
-  return u_getCombiningClass(aCh) != 0;
+  uint8_t cc = u_getCombiningClass(aCh);
+  return cc != HB_UNICODE_COMBINING_CLASS_NOT_REORDERED &&
+         cc != HB_UNICODE_COMBINING_CLASS_KANA_VOICING;
 }
 
 // Remove diacritics from a character
