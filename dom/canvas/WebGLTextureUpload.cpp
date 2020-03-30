@@ -1667,50 +1667,37 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
   nsCString errorText;
   do {
     const auto& idealUnpack = dstUsage->idealUnpack;
-    const auto& pi = idealUnpack->ToPacking();
+    if (!isSubImage) {
+      UniqueBuffer buffer;
 
-    UniqueBuffer zeros;
-    if (uint32_t(rwWidth) != dstWidth || uint32_t(rwHeight) != dstHeight) {
-      CheckedInt<size_t> byteCount = BytesPerPixel(pi);
-      byteCount *= dstWidth;
-      byteCount *= dstHeight;
+      if (uint32_t(rwWidth) != dstWidth || uint32_t(rwHeight) != dstHeight) {
+        const auto& pi = idealUnpack->ToPacking();
+        CheckedInt<size_t> byteCount = BytesPerPixel(pi);
+        byteCount *= dstWidth;
+        byteCount *= dstHeight;
 
-      if (byteCount.isValid()) {
-        zeros = calloc(1u, byteCount.value());
+        if (byteCount.isValid()) {
+          buffer = calloc(1u, byteCount.value());
+        }
+
+        if (!buffer.get()) {
+          webgl->ErrorOutOfMemory("Ran out of memory allocating zeros.");
+          return false;
+        }
       }
 
-      if (!zeros.get()) {
-        webgl->ErrorOutOfMemory("Ran out of memory allocating zeros.");
-        return false;
-      }
-    }
-
-    if (!isSubImage || zeros) {
       const ScopedUnpackReset unpackReset(webgl);
       gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
-      if (!isSubImage) {
-        error = DoTexImage(gl, target, level, idealUnpack, dstWidth, dstHeight, 1, nullptr);
-        if (error) {
-          errorText = nsPrintfCString(
-              "DoTexImage(0x%04x, %i, {0x%04x, 0x%04x, 0x%04x}, %u,%u,1) -> "
-              "0x%04x",
-              target.get(), level, idealUnpack->internalFormat,
-              idealUnpack->unpackFormat, idealUnpack->unpackType, dstWidth,
-              dstHeight, error);
-          break;
-        }
-      }
-      if (zeros) {
-        error = DoTexSubImage(gl, target, level, xOffset, yOffset, zOffset,
-                              dstWidth, dstHeight, 1, pi, zeros.get());
-        if (error) {
-          errorText = nsPrintfCString(
-              "DoTexSubImage(0x%04x, %i, %i,%i,%i, %u,%u,1, {0x%04x, 0x%04x}) -> "
-              "0x%04x",
-              target.get(), level, xOffset, yOffset, zOffset, dstWidth,
-              dstHeight, idealUnpack->unpackFormat, idealUnpack->unpackType, error);
-          break;
-        }
+      error = DoTexImage(gl, target, level, idealUnpack, dstWidth, dstHeight, 1,
+                         buffer.get());
+      if (error) {
+        errorText = nsPrintfCString(
+            "DoTexImage(0x%04x, %i, {0x%04x, 0x%04x, 0x%04x}, %u,%u,1) -> "
+            "0x%04x",
+            target.get(), level, idealUnpack->internalFormat,
+            idealUnpack->unpackFormat, idealUnpack->unpackType, dstWidth,
+            dstHeight, error);
+        break;
       }
     }
 
