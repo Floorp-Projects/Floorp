@@ -117,6 +117,7 @@ export const prefs = new PrefsHelper("devtools", {
   mapScopes: ["Bool", "debugger.map-scopes-enabled"],
   logActions: ["Bool", "debugger.log-actions"],
   logEventBreakpoints: ["Bool", "debugger.log-event-breakpoints"],
+  indentSize: ["Int", "editor.tabsize"],
 });
 
 // The pref may not be defined. Defaulting to null isn't viable (cursor never blinks).
