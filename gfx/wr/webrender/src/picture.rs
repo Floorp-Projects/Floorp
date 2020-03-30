@@ -2395,11 +2395,11 @@ impl TileCacheInstance {
 
         self.map_local_to_surface = SpaceMapper::new(
             self.spatial_node_index,
-            PictureRect::from_untyped(&pic_rect.to_untyped()),
+            pic_rect,
         );
         self.map_child_pic_to_surface = SpaceMapper::new(
             self.spatial_node_index,
-            PictureRect::from_untyped(&pic_rect.to_untyped()),
+            pic_rect,
         );
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
@@ -2430,7 +2430,7 @@ impl TileCacheInstance {
             );
 
             let clip_chain_instance = frame_state.clip_store.build_clip_chain_instance(
-                LayoutRect::from_untyped(&pic_rect.to_untyped()),
+                pic_rect.cast_unit(),
                 &self.map_local_to_surface,
                 &pic_to_world_mapper,
                 frame_context.spatial_tree,
@@ -4562,7 +4562,7 @@ impl PicturePrimitive {
 
         match self.raster_config {
             Some(ref mut raster_config) => {
-                let pic_rect = PictureRect::from_untyped(&self.precise_local_rect.to_untyped());
+                let pic_rect = self.precise_local_rect.cast_unit();
 
                 let mut device_pixel_scale = frame_state
                     .surfaces[raster_config.surface_index.0]
@@ -4579,7 +4579,7 @@ impl PicturePrimitive {
                         let mut max_offset = vec2(0.0, 0.0);
                         let mut min_offset = vec2(0.0, 0.0);
                         for shadow in shadows {
-                            let offset = shadow.offset.cast_unit();
+                            let offset = layout_vector_as_picture_vector(shadow.offset);
                             max_offset = max_offset.max(offset);
                             min_offset = min_offset.min(offset);
                         }
