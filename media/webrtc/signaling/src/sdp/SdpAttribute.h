@@ -987,7 +987,7 @@ class SdpRtcpFbAttributeList : public SdpAttribute {
  public:
   SdpRtcpFbAttributeList() : SdpAttribute(kRtcpFbAttribute) {}
 
-  enum Type { kAck, kApp, kCcm, kNack, kTrrInt, kRemb, kTransCC };
+  enum Type { kAck, kApp, kCcm, kNack, kTrrInt, kRemb, kTransportCC };
 
   static const char* pli;
   static const char* sli;
@@ -1039,7 +1039,7 @@ inline std::ostream& operator<<(std::ostream& os,
     case SdpRtcpFbAttributeList::kRemb:
       os << "goog-remb";
       break;
-    case SdpRtcpFbAttributeList::kTransCC:
+    case SdpRtcpFbAttributeList::kTransportCC:
       os << "transport-cc";
       break;
     default:

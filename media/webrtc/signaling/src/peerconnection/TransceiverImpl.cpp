@@ -658,6 +658,7 @@ static nsresult JsepCodecDescToVideoCodecConfig(
   (*aConfig)->mCcmFbTypes = desc.mCcmFbTypes;
   (*aConfig)->mRembFbSet = desc.RtcpFbRembIsSet();
   (*aConfig)->mFECFbSet = desc.mFECEnabled;
+  (*aConfig)->mTransportCCFbSet = desc.RtcpFbTransportCCIsSet();
   if (desc.mFECEnabled) {
     (*aConfig)->mREDPayloadType = desc.mREDPayloadType;
     (*aConfig)->mULPFECPayloadType = desc.mULPFECPayloadType;
