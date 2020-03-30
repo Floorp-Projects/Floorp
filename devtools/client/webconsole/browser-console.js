@@ -7,6 +7,9 @@
 const Services = require("Services");
 const WebConsole = require("devtools/client/webconsole/webconsole");
 const { TargetList } = require("devtools/shared/resources/target-list");
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 const { Utils } = require("devtools/client/webconsole/utils");
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -43,6 +46,7 @@ class BrowserConsole extends WebConsole {
 
     this._browserConsoleTarget = target;
     this._targetList = new TargetList(target.client.mainRoot, target);
+    this._resourceWatcher = new ResourceWatcher(this._targetList);
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
     this._bcDestroyer = null;
@@ -54,6 +58,10 @@ class BrowserConsole extends WebConsole {
 
   get targetList() {
     return this._targetList;
+  }
+
+  get resourceWatcher() {
+    return this._resourceWatcher;
   }
 
   /**
