@@ -421,7 +421,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
   NS_ENSURE_TRUE(mEncodingScope.mSelection, NS_ERROR_FAILURE);
 
   nsresult rv = NS_OK;
-  Selection* selection = mEncodingScope.mSelection;
+  const Selection* selection = mEncodingScope.mSelection;
   uint32_t count = selection->RangeCount();
 
   nsCOMPtr<nsINode> node;
