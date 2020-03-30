@@ -52,6 +52,7 @@ class SavedFrame : public NativeObject {
   JSAtom* getAsyncCause();
   SavedFrame* getParent() const;
   JSPrincipals* getPrincipals();
+  bool getMutedErrors();
   bool isSelfHosted(JSContext* cx);
   bool isWasm();
 
@@ -122,8 +123,9 @@ class SavedFrame : public NativeObject {
   void initFunctionDisplayName(JSAtom* maybeName);
   void initAsyncCause(JSAtom* maybeCause);
   void initParent(SavedFrame* maybeParent);
-  void initPrincipalsAlreadyHeld(JSPrincipals* principals);
-  void initPrincipals(JSPrincipals* principals);
+  void initPrincipalsAlreadyHeldAndMutedErrors(JSPrincipals* principals,
+                                               bool mutedErrors);
+  void initPrincipalsAndMutedErrors(JSPrincipals* principals, bool mutedErrors);
 
   enum {
     // The reserved slots in the SavedFrame class.
