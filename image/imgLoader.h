@@ -239,7 +239,7 @@ class imgLoader final : public imgILoader,
   imgLoader();
   nsresult Init();
 
-  MOZ_MUST_USE nsresult LoadImage(
+  [[nodiscard]] nsresult LoadImage(
       nsIURI* aURI, nsIURI* aInitialDocumentURI, nsIReferrerInfo* aReferrerInfo,
       nsIPrincipal* aLoadingPrincipal, uint64_t aRequestContextID,
       nsILoadGroup* aLoadGroup, imgINotificationObserver* aObserver,
@@ -248,10 +248,10 @@ class imgLoader final : public imgILoader,
       nsContentPolicyType aContentPolicyType, const nsAString& initiatorType,
       bool aUseUrgentStartForChannel, imgRequestProxy** _retval);
 
-  MOZ_MUST_USE nsresult
-  LoadImageWithChannel(nsIChannel* channel, imgINotificationObserver* aObserver,
-                       nsISupports* aCX, nsIStreamListener** listener,
-                       imgRequestProxy** _retval);
+  [[nodiscard]] nsresult LoadImageWithChannel(
+      nsIChannel* channel, imgINotificationObserver* aObserver,
+      nsISupports* aCX, nsIStreamListener** listener,
+      imgRequestProxy** _retval);
 
   static nsresult GetMimeTypeFromContent(const char* aContents,
                                          uint32_t aLength,

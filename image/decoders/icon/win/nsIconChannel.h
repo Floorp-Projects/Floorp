@@ -69,8 +69,8 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
   nsresult GetHIconFromFile(bool aNonBlocking, HICON* hIcon);
   nsresult GetHIconFromFile(nsIFile* aLocalFile, const nsAutoString& aPath,
                             UINT aInfoFlags, HICON* hIcon);
-  MOZ_MUST_USE nsresult MakeInputStream(nsIInputStream** _retval,
-                                        bool aNonBlocking, HICON aIcon);
+  [[nodiscard]] nsresult MakeInputStream(nsIInputStream** _retval,
+                                         bool aNonBlocking, HICON aIcon);
 
   // Functions specific to Vista and above
  protected:

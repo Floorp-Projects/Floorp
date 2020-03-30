@@ -62,12 +62,12 @@ class imgRequest final : public nsIStreamListener,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
-  MOZ_MUST_USE nsresult Init(nsIURI* aURI, nsIURI* aFinalURI,
-                             bool aHadInsecureRedirect, nsIRequest* aRequest,
-                             nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
-                             nsISupports* aCX,
-                             nsIPrincipal* aTriggeringPrincipal,
-                             int32_t aCORSMode, nsIReferrerInfo* aReferrerInfo);
+      [[nodiscard]] nsresult
+      Init(nsIURI* aURI, nsIURI* aFinalURI, bool aHadInsecureRedirect,
+           nsIRequest* aRequest, nsIChannel* aChannel,
+           imgCacheEntry* aCacheEntry, nsISupports* aCX,
+           nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
+           nsIReferrerInfo* aReferrerInfo);
 
   void ClearLoader();
 
