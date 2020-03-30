@@ -167,13 +167,15 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioParam", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AudioParamMap", insecureContext: false, disabled: true },
+  { name: "AudioParamMap", insecureContext: false, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioProcessingEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioScheduledSourceNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AudioWorkletNode", insecureContext: false, disabled: true },
+  { name: "AudioWorklet", insecureContext: false, nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "AudioWorkletNode", insecureContext: false, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AuthenticatorAssertionResponse", android: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1391,6 +1393,8 @@ var interfaceNamesInGlobalScope = [
   { name: "Window", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Worker", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "Worklet", insecureContext: false, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "XMLDocument", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
