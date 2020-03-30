@@ -455,3 +455,5 @@ mochitest-remote:
     max-run-time: 5400
     mozharness:
         mochitest-flavor: browser
+        extra-options:
+            - --setpref=remote.log.level=Trace
