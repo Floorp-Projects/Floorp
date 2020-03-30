@@ -470,7 +470,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     int32_t mStartOffset;          // offset where ws run starts
     int32_t mEndOffset;            // offset where ws run ends
     // type of ws, and what is to left and right of it
-    WSType mType, mLeftType;
+    WSType mType;
     // other ws runs to left or right.  may be null.
     WSFragment *mLeft, *mRight;
 
@@ -482,6 +482,18 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
     EditorRawDOMPoint EndPoint() const {
       return EditorRawDOMPoint(mEndNode, mEndOffset);
+    }
+
+    /**
+     * Information why this fragments starts from (i.e., this indicates the
+     * previous content type of the fragment).
+     */
+    void SetStartFrom(WSType aLeftWSType) { mLeftWSType = aLeftWSType; }
+    void SetStartFromLeadingWhiteSpaces() { mLeftWSType = WSType::leadingWS; }
+    void SetStartFromNormalWhiteSpaces() { mLeftWSType = WSType::normalWS; }
+    bool StartsFromNormalText() const { return mLeftWSType == WSType::text; }
+    bool StartsFromSpecialContent() const {
+      return mLeftWSType == WSType::special;
     }
 
     /**
@@ -501,7 +513,7 @@ class MOZ_STACK_CLASS WSRunScanner {
     }
 
    private:
-    WSType mRightWSType;
+    WSType mLeftWSType, mRightWSType;
   };
 
   /**
