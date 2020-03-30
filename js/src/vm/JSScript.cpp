@@ -1204,14 +1204,12 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     SourceExtent extent{sourceStart, sourceEnd, toStringStart,
                         toStringEnd, lineno,    column};
-    script =
-        JSScript::Create(cx, functionOrGlobal, *options, sourceObject, extent);
+    script = JSScript::New(cx, functionOrGlobal, sourceObject, extent,
+                           immutableFlags);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
     scriptp.set(script);
-
-    script->setImmutableFlags(immutableFlags);
 
     if (script->argumentsHasVarBinding()) {
       // Call setArgumentsHasVarBinding to initialize the
@@ -1311,13 +1309,11 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     MOZ_TRY(xdr->codeUint32(&ngcthings));
 
     if (mode == XDR_DECODE) {
-      lazy.set(
-          BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject, extent));
+      lazy.set(BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject,
+                                         extent, immutableFlags));
       if (!lazy) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
-
-      lazy->setImmutableFlags(immutableFlags);
 
       // Set the enclosing scope of the lazy function. This value should only be
       // set if we have a non-lazy enclosing script at this point.
@@ -4238,7 +4234,7 @@ void PrivateScriptData::trace(JSTracer* trc) {
 /* static */
 JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                         HandleScriptSourceObject sourceObject,
-                        const SourceExtent& extent) {
+                        const SourceExtent& extent, uint32_t immutableFlags) {
   void* script = Allocate<BaseScript>(cx);
   if (!script) {
     return nullptr;
@@ -4250,8 +4246,8 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  return new (script)
-      JSScript(stubEntry, functionOrGlobal, sourceObject, extent);
+  return new (script) JSScript(stubEntry, functionOrGlobal, sourceObject,
+                               extent, immutableFlags);
 }
 
 /* static */
@@ -4270,14 +4266,10 @@ JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
                            js::ImmutableScriptFlags flags,
                            SourceExtent extent) {
   RootedScript script(
-      cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent));
+      cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent, flags));
   if (!script) {
     return nullptr;
   }
-
-  // Record compile options that get checked at runtime.
-  MOZ_ASSERT(script->immutableScriptFlags_ == 0);
-  script->setImmutableFlags(flags);
 
   return script;
 }
@@ -4960,23 +4952,15 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
   JS::AssertObjectIsNotGray(sourceObject);
 
-  CompileOptions options(cx);
-  options.setMutedErrors(src->mutedErrors())
-      .setSelfHostingMode(src->selfHosted())
-      .setNoScriptRval(src->noScriptRval());
-
   // Create a new JSScript to fill in
   SourceExtent extent{src->sourceStart(),   src->sourceEnd(),
                       src->toStringStart(), src->toStringEnd(),
                       src->lineno(),        src->column()};
-  RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, options,
-                                        sourceObject, extent));
+  RootedScript dst(cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent,
+                                     src->immutableFlags()));
   if (!dst) {
     return nullptr;
   }
-
-  // Copy POD fields
-  dst->setImmutableFlags(src->immutableFlags());
 
   dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
@@ -5438,7 +5422,8 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
 BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
                                       HandleFunction fun,
                                       HandleScriptSourceObject sourceObject,
-                                      const SourceExtent& extent) {
+                                      const SourceExtent& extent,
+                                      uint32_t immutableFlags) {
   cx->check(fun);
 
   void* res = Allocate<BaseScript>(cx);
@@ -5452,7 +5437,8 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  BaseScript* lazy = new (res) BaseScript(stubEntry, fun, sourceObject, extent);
+  BaseScript* lazy = new (res)
+      BaseScript(stubEntry, fun, sourceObject, extent, immutableFlags);
   if (!lazy) {
     return nullptr;
   }
@@ -5479,12 +5465,12 @@ BaseScript* BaseScript::CreateLazy(
     HandleFunction fun, HandleScriptSourceObject sourceObject,
     const frontend::AtomVector& closedOverBindings,
     const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
-    const SourceExtent& extent) {
+    const SourceExtent& extent, uint32_t immutableFlags) {
   uint32_t ngcthings =
       innerFunctionIndexes.length() + closedOverBindings.length();
 
-  BaseScript* lazy =
-      BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject, extent);
+  BaseScript* lazy = BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject,
+                                               extent, immutableFlags);
   if (!lazy) {
     return nullptr;
   }
