@@ -128,8 +128,6 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     let matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
-    // RelativeTimeFormat equivalent to https://github.com/tc39/ecma402/pull/175
-#ifdef NIGHTLY_BUILD
     // Steps 7-9.
     let numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
     if (numberingSystem !== undefined) {
@@ -138,7 +136,6 @@ function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
                                                                            "nu");
     }
     opt.nu = numberingSystem;
-#endif
 
     lazyRelativeTimeFormatData.opt = opt;
 

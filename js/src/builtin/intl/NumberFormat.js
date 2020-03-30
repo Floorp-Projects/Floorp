@@ -458,8 +458,6 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
-// https://github.com/tc39/ecma402/pull/175
-#ifdef NIGHTLY_BUILD
     var numberingSystem = GetOption(options, "numberingSystem", "string", undefined, undefined);
 
     if (numberingSystem !== undefined) {
@@ -469,7 +467,6 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     }
 
     opt.nu = numberingSystem;
-#endif
 
     // Compute formatting options.
     // Step 12.
