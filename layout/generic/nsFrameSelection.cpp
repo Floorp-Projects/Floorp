@@ -1395,8 +1395,11 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
         // Start selecting in the cell we were in before
         nsINode* parent = ParentOffset(mTableSelection.mCellParent, &offset);
         if (parent) {
-          HandleTableSelection(parent, offset, TableSelectionMode::Cell,
-                               &event);
+          const nsresult result = HandleTableSelection(
+              parent, offset, TableSelectionMode::Cell, &event);
+          if (NS_WARN_IF(NS_FAILED(result))) {
+            return result;
+          }
         }
 
         // Find the parent of this new cell and extend selection to it
@@ -1408,8 +1411,11 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
         if (parent) {
           mTableSelection.mCellParent = cellparent;
           // Continue selection into next cell
-          HandleTableSelection(parent, offset, TableSelectionMode::Cell,
-                               &event);
+          const nsresult result = HandleTableSelection(
+              parent, offset, TableSelectionMode::Cell, &event);
+          if (NS_WARN_IF(NS_FAILED(result))) {
+            return result;
+          }
         }
       } else {
         // XXXX Problem: Shift+click in browser is appending text selection to
