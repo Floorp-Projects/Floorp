@@ -20,20 +20,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
         android:importantForAccessibility="no"
-        android:tint="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_tab_collection" />
+        app:srcCompat="@drawable/ic_tab_collection"
+        app:tint="@null" />
 
     <TextView
         android:id="@+id/collection_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
         android:layout_marginEnd="8dp"
         android:ellipsize="end"
         android:gravity="start"
@@ -41,24 +39,24 @@
         android:minLines="1"
         android:textAppearance="@style/Header14TextStyle"
         app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="@id/collection_icon"
         app:layout_constraintEnd_toStartOf="@id/chevron"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@+id/collection_icon"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/collection_icon"
         tools:text="@tools:sample/lorem/random" />
-
     <ImageView
         android:id="@+id/chevron"
         android:layout_width="10dp"
         android:layout_height="6dp"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/ic_chevron"
         android:contentDescription="@string/tab_menu"
+        app:layout_constraintBottom_toBottomOf="@id/collection_icon"
         app:layout_constraintEnd_toStartOf="@+id/collection_share_button"
         app:layout_constraintStart_toEndOf="@+id/collection_title"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/collection_icon" />
 
     <ImageButton
         android:id="@+id/collection_share_button"

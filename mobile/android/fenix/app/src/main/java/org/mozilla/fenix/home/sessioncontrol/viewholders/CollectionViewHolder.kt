@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.content.Context
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.recyclerview.widget.RecyclerView
@@ -76,16 +75,12 @@ class CollectionViewHolder(
 
     private fun updateCollectionUI() {
         view.collection_title.text = collection.title
-        val layoutParams = view.layoutParams as ViewGroup.MarginLayoutParams
 
         view.isActivated = expanded
         if (expanded) {
-            layoutParams.bottomMargin = 0
-            collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
             view.collection_share_button.visibility = View.VISIBLE
             view.collection_overflow_button.visibility = View.VISIBLE
         } else {
-            layoutParams.bottomMargin = COLLAPSED_MARGIN
             view.collection_share_button.visibility = View.GONE
             view.collection_overflow_button.visibility = View.GONE
         }
@@ -98,8 +93,6 @@ class CollectionViewHolder(
 
     companion object {
         const val buttonIncreaseDps = 16
-        const val EXPANDED_PADDING = 60
-        const val COLLAPSED_MARGIN = 12
         const val LAYOUT_ID = R.layout.collection_home_list_row
         const val maxTitleLength = 20
     }
