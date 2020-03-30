@@ -442,6 +442,8 @@ void nsIFrame::FindCloserFrameForSelection(
   }
 }
 
+void nsIFrame::ContentStatesChanged(mozilla::EventStates aStates) {}
+
 AutoWeakFrame::AutoWeakFrame(const WeakFrame& aOther)
     : mPrev(nullptr), mFrame(nullptr) {
   Init(aOther.GetFrame());
