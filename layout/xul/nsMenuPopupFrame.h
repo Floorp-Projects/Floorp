@@ -547,6 +547,14 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // frame hierarchy, it's needed for Linux/Wayland which demands
   // strict popup windows hierarchy.
   nsIWidget* GetParentMenuWidget();
+#ifdef MOZ_WAYLAND
+  // We need following getters for Wayland for calling gdk_window_move_to_rect
+  nsRect GetAnchorRect() { return mAnchorRect; }
+  int GetPopupAlignment() { return mPopupAlignment; }
+  int GetPopupAnchor() { return mPopupAnchor; }
+  int GetPopupPosition() { return mPosition; }
+  FlipType GetFlipType() { return mFlip; }
+#endif
 
  protected:
   nsString mIncrementalString;  // for incremental typing navigation
@@ -579,7 +587,11 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   int32_t mXPos;
   int32_t mYPos;
   nsIntRect mScreenRect;
-
+  // Used for store rectangle which the popup is going to be anchored to,
+  // we need that for Wayland
+#ifdef MOZ_WAYLAND
+  nsRect mAnchorRect;
+#endif
   // If the panel prefers to "slide" rather than resize, then the arrow gets
   // positioned at this offset (along either the x or y axis, depending on
   // mPosition)
