@@ -1778,6 +1778,8 @@ nsresult Selection::StartAutoScrollTimer(nsIFrame* aFrame,
 }
 
 nsresult Selection::StopAutoScrollTimer() {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
   if (mAutoScrollTimer) {
     return mAutoScrollTimer->Stop();
   }
