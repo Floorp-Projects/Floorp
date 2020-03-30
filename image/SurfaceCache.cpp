@@ -270,7 +270,7 @@ class ImageSurfaceCache {
     return bytes;
   }
 
-  MOZ_MUST_USE bool Insert(NotNull<CachedSurface*> aSurface) {
+  [[nodiscard]] bool Insert(NotNull<CachedSurface*> aSurface) {
     MOZ_ASSERT(!mLocked || aSurface->IsPlaceholder() || aSurface->IsLocked(),
                "Inserting an unlocked surface for a locked image");
     return mSurfaces.Put(aSurface->GetSurfaceKey(),
