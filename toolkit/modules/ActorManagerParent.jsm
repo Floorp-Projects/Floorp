@@ -244,6 +244,7 @@ let ACTORS = {
     },
 
     allFrames: true,
+    messageManagerGroups: ["browsers", ""],
   },
   PictureInPicture: {
     parent: {
