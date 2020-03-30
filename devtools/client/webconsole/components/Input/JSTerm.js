@@ -180,7 +180,7 @@ class JSTerm extends Component {
     };
 
     const doc = this.webConsoleUI.document;
-    const toolbox = this.webConsoleUI.wrapper.toolbox;
+    const { toolbox } = this.webConsoleUI.wrapper;
     const tooltipDoc = toolbox ? toolbox.doc : doc;
     // The popup will be attached to the toolbox document or HUD document in the case
     // such as the browser console which doesn't have a toolbox.

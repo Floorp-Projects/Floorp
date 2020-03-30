@@ -131,9 +131,8 @@ function onExpressionEvaluated(response) {
 
 function handleHelperResult(response) {
   return async ({ dispatch, hud, webConsoleUI }) => {
-    const result = response.result;
-    const helperResult = response.helperResult;
-    const helperHasRawOutput = !!(helperResult || {}).rawOutput;
+    const { result, helperResult } = response;
+    const helperHasRawOutput = !!helperResult?.rawOutput;
 
     if (helperResult?.type) {
       switch (helperResult.type) {

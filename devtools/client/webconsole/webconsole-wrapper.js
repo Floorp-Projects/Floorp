@@ -322,7 +322,7 @@ class WebConsoleWrapper {
 
         store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
 
-        const length = this.queuedMessageAdds.length;
+        const { length } = this.queuedMessageAdds;
 
         // This telemetry event is only useful when we have a toolbox so only
         // send it when we have one.

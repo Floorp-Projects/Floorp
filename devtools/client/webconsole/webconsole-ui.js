@@ -180,7 +180,7 @@ class WebConsoleUI {
       this.jsterm = null;
     }
 
-    const toolbox = this.hud.toolbox;
+    const { toolbox } = this.hud;
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
@@ -188,7 +188,7 @@ class WebConsoleUI {
     }
 
     // Stop listening for targets
-    const targetList = this.hud.targetList;
+    const { targetList } = this.hud;
     targetList.unwatchTargets(
       targetList.ALL_TYPES,
       this._onTargetAvailable,
@@ -260,7 +260,7 @@ class WebConsoleUI {
   }
 
   inspectObjectActor(objectActor) {
-    const webConsoleFront = this.webConsoleFront;
+    const { webConsoleFront } = this;
     this.wrapper.dispatchMessageAdd(
       {
         helperResult: {
@@ -436,7 +436,7 @@ class WebConsoleUI {
 
     this.outputNode = this.document.getElementById("app-wrapper");
 
-    const toolbox = this.hud.toolbox;
+    const { toolbox } = this.hud;
 
     // Initialize module loader and load all the WebConsoleWrapper. The entire code-base
     // doesn't need any extra privileges and runs entirely in content scope.

@@ -256,7 +256,7 @@ class App extends Component {
 
     // Remove notification automatically when the user types "allow pasting".
     const pasteKeyUpHandler = e => {
-      const value = e.target.value;
+      const { value } = e.target;
       if (value.includes(SELF_XSS_OK)) {
         dispatch(actions.removeNotification("selfxss-notification"));
         input.removeEventListener("keyup", pasteKeyUpHandler);
