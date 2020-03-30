@@ -2174,8 +2174,9 @@ class JSScript : public js::BaseScript {
                                       uint32_t ngcthings);
 
  public:
-  static bool fullyInitFromStencil(JSContext* cx, js::HandleScript script,
-                                   js::frontend::ScriptStencil& stencil);
+  static bool fullyInitFromStencil(
+      JSContext* cx, js::frontend::CompilationInfo& compilationInfo,
+      js::HandleScript script, js::frontend::ScriptStencil& stencil);
 
 #ifdef DEBUG
  private:

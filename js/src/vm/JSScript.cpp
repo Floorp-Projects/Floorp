@@ -4319,7 +4319,9 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 }
 
 /* static */
-bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
+bool JSScript::fullyInitFromStencil(JSContext* cx,
+                                    frontend::CompilationInfo& compilationInfo,
+                                    HandleScript script,
                                     frontend::ScriptStencil& stencil) {
   ImmutableScriptFlags lazyFlags;
   MutableScriptFlags lazyMutableFlags;
@@ -4398,7 +4400,8 @@ bool JSScript::fullyInitFromStencil(JSContext* cx, HandleScript script,
 
   // Link JSFunction to this JSScript.
   if (stencil.isFunction()) {
-    JSFunction* fun = stencil.functionBox->function();
+    JSFunction* fun =
+        compilationInfo.funcData[*stencil.functionIndex].as<JSFunction*>();
     if (fun->isIncomplete()) {
       fun->initScript(script);
     } else if (fun->hasSelfHostedLazyScript()) {

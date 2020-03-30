@@ -2442,7 +2442,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   BCEScriptStencil stencil(*this, std::move(immutableScriptData));
-  return JSScript::fullyInitFromStencil(cx, script, stencil);
+  return JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil);
 }
 
 js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
