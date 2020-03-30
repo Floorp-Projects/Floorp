@@ -30,7 +30,7 @@ class ContentProcessTargetFront extends TargetMixin(
   }
 
   get name() {
-    return `Content Process ${this.processID}`;
+    return `Content Process (pid ${this.processID})`;
   }
 
   attach() {
