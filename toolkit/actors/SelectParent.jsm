@@ -565,11 +565,11 @@ var SelectParentHelper = {
       let searchbox = element.ownerDocument.createXULElement("search-textbox");
       searchbox.className = "contentSelectDropdown-searchbox";
       searchbox.addEventListener("input", this.onSearchInput);
-      searchbox.inputField.addEventListener(
+      searchbox.addEventListener(
         "focus",
         this.onSearchFocus.bind(this)
       );
-      searchbox.inputField.addEventListener("blur", this.onSearchBlur);
+      searchbox.addEventListener("blur", this.onSearchBlur);
       searchbox.addEventListener("command", this.onSearchInput);
 
       // Handle special keys for exiting search
@@ -688,16 +688,14 @@ var SelectParentHelper = {
   },
 
   onSearchFocus(event) {
-    let searchObj = event.currentTarget;
-    let menupopup = searchObj.closest("menupopup");
+    let menupopup = event.target.closest("menupopup");
     menupopup.parentElement.activeChild = null;
     menupopup.setAttribute("ignorekeys", "true");
     this._actor.sendAsyncMessage("Forms:SearchFocused", {});
   },
 
   onSearchBlur(event) {
-    let searchObj = event.currentTarget;
-    let menupopup = searchObj.closest("menupopup");
+    let menupopup = event.target.closest("menupopup");
     menupopup.setAttribute("ignorekeys", "false");
   },
 };
