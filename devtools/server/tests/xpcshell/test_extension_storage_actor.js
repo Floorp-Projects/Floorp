@@ -5,6 +5,10 @@
 
 "use strict";
 
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+
 const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
@@ -200,8 +204,30 @@ async function shutdown(extension, target) {
   await extension.unload();
 }
 
+/**
+ * Mocks the missing 'storage/permanent' directory needed by the "indexedDB"
+ * storage actor's 'preListStores' method (called when 'listStores' is called). This
+ * directory exists in a full browser i.e. mochitest.
+ */
+function createMissingIndexedDBDirs() {
+  const dir = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
+  dir.append("storage");
+  if (!dir.exists()) {
+    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  }
+  dir.append("permanent");
+  if (!dir.exists()) {
+    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  }
+  Assert.ok(
+    dir.exists(),
+    "Should have a 'storage/permanent' dir in the profile dir"
+  );
+}
+
 add_task(async function setup() {
   await promiseStartupManager();
+  createMissingIndexedDBDirs();
 });
 
 add_task(async function test_extension_store_exists() {
