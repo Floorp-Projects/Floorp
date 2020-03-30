@@ -675,7 +675,9 @@ bool UIInit() {
   if (gAutoSubmit) {
     gUI = [[CrashReporterUI alloc] init];
   } else {
-    [NSBundle loadNibNamed:(gRTLlayout ? @"MainMenuRTL" : @"MainMenu") owner:NSApp];
+    [[NSBundle mainBundle] loadNibNamed:(gRTLlayout ? @"MainMenuRTL" : @"MainMenu")
+                                  owner:NSApp
+                        topLevelObjects:nil];
   }
 
   return true;
