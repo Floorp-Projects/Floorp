@@ -1099,7 +1099,6 @@ class SearchAddons extends HTMLElement {
       this.input.setAttribute("searchbutton", true);
       this.input.setAttribute("maxlength", 100);
       this.input.setAttribute("data-l10n-attrs", "placeholder");
-      this.input.inputField.id = "search-addons";
       document.l10n.setAttributes(this.input, "addons-heading-search-input");
       this.append(this.input);
     }

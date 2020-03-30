@@ -33,7 +33,7 @@ add_task(async function testSearchBarKeyboardAccess() {
   let win = await loadInitialView("extension");
 
   let doc = win.document;
-  let searchBox = doc.getElementById("search-addons");
+  let searchBox = doc.querySelector("search-addons").input;
 
   testHtmlKeys(win, searchBox);
   testXulKeys(win.managerWindow, searchBox);
