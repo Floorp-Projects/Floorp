@@ -23,7 +23,7 @@
     get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/toolbarbutton.css"/>
-      <html:link rel="stylesheet" href="chrome://global/skin/scrollbox.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/arrowscrollbox.css"/>
       <toolbarbutton id="scrollbutton-up" part="scrollbutton-up"/>
       <spacer part="overflow-start-indicator"/>
       <scrollbox part="scrollbox" flex="1">
