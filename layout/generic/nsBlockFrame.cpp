@@ -2583,7 +2583,8 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
       // If the previous margin is dirty, reflow the current line
       line->MarkDirty();
       line->ClearPreviousMarginDirty();
-    } else if (line->BEnd() + deltaBCoord > aState.mBEndEdge) {
+    } else if (aState.ContentBSize() != NS_UNCONSTRAINEDSIZE &&
+               line->BEnd() + deltaBCoord > aState.ContentBEnd()) {
       // Lines that aren't dirty but get slid past our height constraint must
       // be reflowed.
       line->MarkDirty();
@@ -4965,8 +4966,9 @@ bool nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   }
 
   // See if the line fit (our first line always does).
-  if (mLines.front() != aLine && newBCoord > aState.mBEndEdge &&
-      aState.mBEndEdge != NS_UNCONSTRAINEDSIZE) {
+  if (mLines.front() != aLine &&
+      aState.ContentBSize() != NS_UNCONSTRAINEDSIZE &&
+      newBCoord > aState.ContentBEnd()) {
     NS_ASSERTION(aState.mCurrentLine == aLine, "oops");
     if (ShouldAvoidBreakInside(aState.mReflowInput)) {
       // All our content doesn't fit, start on the next page.
