@@ -8,16 +8,23 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+kind-dependencies:
+    - toolchain
+
+
 job-defaults:
     attributes:
         build-type: debug
         code-review: true
+    fetches:
+        toolchain:
+            - android-sdk-linux
     run:
         # TODO Generate APKs in a build task instead
         gradlew: ['clean', 'assembleGeckoNightly', 'assembleAndroidTest', 'assembleDebug']
         secrets:
             - name: project/mobile/android-components/firebase
-              key: firebaseToken                  
+              key: firebaseToken
               path: .firebase_token.json
               json: true
         using: gradlew
@@ -38,6 +45,7 @@ job-defaults:
             GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
             GOOGLE_PROJECT: moz-android-components-230120
         max-run-time: 7200
+
 
 jobs:
     unit-browser-engine-gecko-nightly:

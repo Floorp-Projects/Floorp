@@ -2,7 +2,10 @@
 trust-domain: mobile
 treeherder:
     group-names:
+        Fetch: Fetch and store content
         I: Docker Image Builds
+        TL: Toolchain builds for Linux 64-bits
+
         # Groups are generated off buildconfig.yml, except these ones:
         samples-browser-beta: samples-browser-beta
         samples-browser-release: samples-browser-release

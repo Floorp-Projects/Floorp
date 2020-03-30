@@ -9,13 +9,16 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+kind-dependencies:
+    - toolchain
+
+
 job-defaults:
     attributes:
         code-review: true
-    worker-type: b-android
-    worker:
-        docker-image: {in-tree: base}
-        max-run-time: 7200
+    fetches:
+        toolchain:
+            - android-sdk-linux
     run:
         use-caches: false
     run-on-tasks-for: [github-pull-request, github-push]
@@ -23,6 +26,10 @@ job-defaults:
         kind: test
         platform: 'lint/opt'
         tier: 1
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 7200
 
 jobs:
     compare-locales:
