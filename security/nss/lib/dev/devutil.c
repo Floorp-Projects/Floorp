@@ -284,10 +284,10 @@ nssTokenObjectCache_HaveObjectClass(
         case CKO_CERTIFICATE:
             haveIt = cache->doObjectType[cachedCerts];
             break;
-        case CKO_NSS_TRUST:
+        case CKO_NETSCAPE_TRUST:
             haveIt = cache->doObjectType[cachedTrust];
             break;
-        case CKO_NSS_CRL:
+        case CKO_NETSCAPE_CRL:
             haveIt = cache->doObjectType[cachedCRLs];
             break;
         default:
@@ -472,7 +472,7 @@ create_cert(
         CKA_ISSUER,
         CKA_SERIAL_NUMBER,
         CKA_SUBJECT,
-        CKA_NSS_EMAIL
+        CKA_NETSCAPE_EMAIL
     };
     static const PRUint32 numCertAttr = sizeof(certAttr) / sizeof(certAttr[0]);
     return create_object(object, certAttr, numCertAttr, status);
@@ -511,8 +511,8 @@ create_crl(
         CKA_LABEL,
         CKA_VALUE,
         CKA_SUBJECT,
-        CKA_NSS_KRL,
-        CKA_NSS_URL
+        CKA_NETSCAPE_KRL,
+        CKA_NETSCAPE_URL
     };
     static const PRUint32 numCRLAttr = sizeof(crlAttr) / sizeof(crlAttr[0]);
     return create_object(object, crlAttr, numCRLAttr, status);
@@ -716,10 +716,10 @@ nssTokenObjectCache_FindObjectsByTemplate(
         case CKO_CERTIFICATE:
             objectType = cachedCerts;
             break;
-        case CKO_NSS_TRUST:
+        case CKO_NETSCAPE_TRUST:
             objectType = cachedTrust;
             break;
-        case CKO_NSS_CRL:
+        case CKO_NETSCAPE_CRL:
             objectType = cachedCRLs;
             break;
         default:
@@ -784,10 +784,10 @@ nssTokenObjectCache_GetObjectAttributes(
         case CKO_CERTIFICATE:
             objectType = cachedCerts;
             break;
-        case CKO_NSS_TRUST:
+        case CKO_NETSCAPE_TRUST:
             objectType = cachedTrust;
             break;
-        case CKO_NSS_CRL:
+        case CKO_NETSCAPE_CRL:
             objectType = cachedCRLs;
             break;
         default:
@@ -877,10 +877,10 @@ nssTokenObjectCache_ImportObject(
         case CKO_CERTIFICATE:
             objectType = cachedCerts;
             break;
-        case CKO_NSS_TRUST:
+        case CKO_NETSCAPE_TRUST:
             objectType = cachedTrust;
             break;
-        case CKO_NSS_CRL:
+        case CKO_NETSCAPE_CRL:
             objectType = cachedCRLs;
             break;
         default:

@@ -1755,7 +1755,7 @@ ssl3_AESGCM(const ssl3KeyMaterial *keys,
     SECStatus rv = SECFailure;
     unsigned char nonce[12];
     unsigned int uOutLen;
-    CK_NSS_GCM_PARAMS gcmParams; /* future use CK_GCM_PARAMS_V3 with fallback */
+    CK_GCM_PARAMS gcmParams;
 
     const int tagSize = 16;
     const int explicitNonceLen = 8;
@@ -11398,9 +11398,9 @@ ssl3_ComputeTLSFinished(sslSocket *ss, ssl3CipherSpec *spec,
     }
 
     if (spec->version < SSL_LIBRARY_VERSION_TLS_1_2) {
-        tls_mac_params.prfHashMechanism = CKM_TLS_PRF;
+        tls_mac_params.prfMechanism = CKM_TLS_PRF;
     } else {
-        tls_mac_params.prfHashMechanism = ssl3_GetPrfHashMechanism(ss);
+        tls_mac_params.prfMechanism = ssl3_GetPrfHashMechanism(ss);
     }
     tls_mac_params.ulMacLength = 12;
     tls_mac_params.ulServerOrClient = isServer ? 1 : 2;

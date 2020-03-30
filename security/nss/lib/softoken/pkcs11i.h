@@ -676,8 +676,6 @@ struct sftk_MACCtxStr {
 };
 typedef struct sftk_MACCtxStr sftk_MACCtx;
 
-extern CK_NSS_MODULE_FUNCTIONS sftk_module_funcList;
-
 SEC_BEGIN_PROTOS
 
 /* shared functions between pkcs11.c and fipstokn.c */
@@ -890,7 +888,6 @@ CK_RV sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
 
 /* NIST 800-108 (kbkdf.c) implementations */
 extern CK_RV kbkdf_Dispatch(CK_MECHANISM_TYPE mech, CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, SFTKObject *base_key, SFTKObject *ret_key, CK_ULONG keySize);
-char **NSC_ModuleDBFunc(unsigned long function, char *parameters, void *args);
 
 SEC_END_PROTOS
 

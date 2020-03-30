@@ -392,19 +392,19 @@ nss_dbm_db_swap_type(
             return type_byte;
         case CKA_MODIFIABLE:
             return type_byte;
-        case CKA_NSS_URL:
+        case CKA_NETSCAPE_URL:
             return type_opaque;
-        case CKA_NSS_EMAIL:
+        case CKA_NETSCAPE_EMAIL:
             return type_opaque;
-        case CKA_NSS_SMIME_INFO:
+        case CKA_NETSCAPE_SMIME_INFO:
             return type_opaque;
-        case CKA_NSS_SMIME_TIMESTAMP:
+        case CKA_NETSCAPE_SMIME_TIMESTAMP:
             return type_opaque;
-        case CKA_NSS_PKCS8_SALT:
+        case CKA_NETSCAPE_PKCS8_SALT:
             return type_opaque;
-        case CKA_NSS_PASSWORD_CHECK:
+        case CKA_NETSCAPE_PASSWORD_CHECK:
             return type_opaque;
-        case CKA_NSS_EXPIRES:
+        case CKA_NETSCAPE_EXPIRES:
             return type_opaque;
         case CKA_TRUST_DIGITAL_SIGNATURE:
             return type_long;
@@ -436,9 +436,9 @@ nss_dbm_db_swap_type(
             return type_long;
         case CKA_TRUST_TIME_STAMPING:
             return type_long;
-        case CKA_NSS_DB:
+        case CKA_NETSCAPE_DB:
             return type_opaque;
-        case CKA_NSS_TRUST:
+        case CKA_NETSCAPE_TRUST:
             return type_opaque;
         default:
             return type_opaque;

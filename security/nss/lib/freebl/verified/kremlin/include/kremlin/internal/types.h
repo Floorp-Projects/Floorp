@@ -52,16 +52,12 @@ typedef const char *Prims_string;
 /* The uint128 type is a special case since we offer several implementations of
  * it, depending on the compiler and whether the user wants the verified
  * implementation or not. */
-#if !defined(KRML_VERIFIED_UINT128) && defined(_MSC_VER) && defined(_M_X64) && \
-    !defined(__clang__)
+#if !defined(KRML_VERIFIED_UINT128) && defined(_MSC_VER) && defined(_M_X64)
 #include <emmintrin.h>
 typedef __m128i FStar_UInt128_uint128;
-#elif !defined(KRML_VERIFIED_UINT128) && !defined(_MSC_VER) &&           \
-    (defined(__x86_64__) || defined(__x86_64) || defined(__aarch64__) || \
-     (defined(__powerpc64__) && defined(__LITTLE_ENDIAN__)))
+#elif !defined(KRML_VERIFIED_UINT128) && !defined(_MSC_VER) && \
+    (defined(__x86_64__) || defined(__x86_64) || defined(__aarch64__))
 typedef unsigned __int128 FStar_UInt128_uint128;
-#elif !defined(KRML_VERIFIED_UINT128) && defined(_MSC_VER) && defined(__clang__)
-typedef __uint128_t FStar_UInt128_uint128;
 #else
 typedef struct FStar_UInt128_uint128_s {
     uint64_t low;
@@ -76,11 +72,11 @@ typedef FStar_UInt128_uint128 FStar_UInt128_t, uint128_t;
 #include "kremlin/lowstar_endianness.h"
 
 /* This one is always included, because it defines C.Endianness functions too. */
-#if !defined(_MSC_VER) || defined(__clang__)
+#if !defined(_MSC_VER)
 #include "fstar_uint128_gcc64.h"
 #endif
 
-#if !defined(KRML_VERIFIED_UINT128) && defined(_MSC_VER) && !defined(__clang__)
+#if !defined(KRML_VERIFIED_UINT128) && defined(_MSC_VER)
 #include "fstar_uint128_msvc.h"
 #elif defined(KRML_VERIFIED_UINT128)
 #include "FStar_UInt128_Verified.h"

@@ -61,7 +61,7 @@ pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert, CERTCertTrust 
         { CKA_CERT_SHA1_HASH, NULL, 0 },
     };
 
-    CK_OBJECT_CLASS tobjc = CKO_NSS_TRUST;
+    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
     CK_OBJECT_HANDLE tobjID;
     unsigned char sha1_hash[SHA1_LENGTH];
 
@@ -148,8 +148,8 @@ pk11_CollectCrls(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID, void *arg)
     CERTCrlNode *new_node = NULL;
     CK_ATTRIBUTE fetchCrl[3] = {
         { CKA_VALUE, NULL, 0 },
-        { CKA_NSS_KRL, NULL, 0 },
-        { CKA_NSS_URL, NULL, 0 },
+        { CKA_NETSCAPE_KRL, NULL, 0 },
+        { CKA_NETSCAPE_URL, NULL, 0 },
     };
     const int fetchCrlSize = sizeof(fetchCrl) / sizeof(fetchCrl[2]);
     CK_RV crv;
@@ -219,7 +219,7 @@ PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx)
     pk11TraverseSlot creater;
     CK_ATTRIBUTE theTemplate[2];
     CK_ATTRIBUTE *attrs;
-    CK_OBJECT_CLASS certClass = CKO_NSS_CRL;
+    CK_OBJECT_CLASS certClass = CKO_NETSCAPE_CRL;
     CK_BBOOL isKrl = CK_FALSE;
 
     attrs = theTemplate;
@@ -227,7 +227,7 @@ PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx)
     attrs++;
     if (type != -1) {
         isKrl = (CK_BBOOL)(type == SEC_KRL_TYPE);
-        PK11_SETATTRS(attrs, CKA_NSS_KRL, &isKrl, sizeof(isKrl));
+        PK11_SETATTRS(attrs, CKA_NETSCAPE_KRL, &isKrl, sizeof(isKrl));
         attrs++;
     }
 
@@ -256,8 +256,8 @@ pk11_RetrieveCrlsCallback(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID,
     CERTCrlNode *new_node = NULL;
     CK_ATTRIBUTE fetchCrl[3] = {
         { CKA_VALUE, NULL, 0 },
-        { CKA_NSS_KRL, NULL, 0 },
-        { CKA_NSS_URL, NULL, 0 },
+        { CKA_NETSCAPE_KRL, NULL, 0 },
+        { CKA_NETSCAPE_URL, NULL, 0 },
     };
     const int fetchCrlSize = sizeof(fetchCrl) / sizeof(fetchCrl[2]);
     CK_RV crv;
@@ -360,7 +360,7 @@ pk11_RetrieveCrls(CERTCrlHeadNode *nodes, SECItem *issuer,
     pk11TraverseSlot creater;
     CK_ATTRIBUTE theTemplate[2];
     CK_ATTRIBUTE *attrs;
-    CK_OBJECT_CLASS crlClass = CKO_NSS_CRL;
+    CK_OBJECT_CLASS crlClass = CKO_NETSCAPE_CRL;
     crlOptions options;
 
     attrs = theTemplate;
@@ -541,11 +541,11 @@ SECItem *
 PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
                       SECItem *name, SECItem **profileTime)
 {
-    CK_OBJECT_CLASS smimeClass = CKO_NSS_SMIME;
+    CK_OBJECT_CLASS smimeClass = CKO_NETSCAPE_SMIME;
     CK_ATTRIBUTE theTemplate[] = {
         { CKA_SUBJECT, NULL, 0 },
         { CKA_CLASS, NULL, 0 },
-        { CKA_NSS_EMAIL, NULL, 0 },
+        { CKA_NETSCAPE_EMAIL, NULL, 0 },
     };
     CK_ATTRIBUTE smimeData[] = {
         { CKA_SUBJECT, NULL, 0 },
@@ -567,7 +567,7 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
     attrs++;
     PK11_SETATTRS(attrs, CKA_CLASS, &smimeClass, sizeof(smimeClass));
     attrs++;
-    PK11_SETATTRS(attrs, CKA_NSS_EMAIL, emailAddr, strlen(emailAddr));
+    PK11_SETATTRS(attrs, CKA_NETSCAPE_EMAIL, emailAddr, strlen(emailAddr));
     attrs++;
 
     if (*slot) {
@@ -597,7 +597,7 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
     }
 
     if (profileTime) {
-        PK11_SETATTRS(smimeData, CKA_NSS_SMIME_TIMESTAMP, NULL, 0);
+        PK11_SETATTRS(smimeData, CKA_NETSCAPE_SMIME_TIMESTAMP, NULL, 0);
     }
 
     crv = PK11_GetAttributes(NULL, *slot, smimeh, smimeData, 2);
@@ -650,14 +650,14 @@ SECStatus
 PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
                       SECItem *emailProfile, SECItem *profileTime)
 {
-    CK_OBJECT_CLASS smimeClass = CKO_NSS_SMIME;
+    CK_OBJECT_CLASS smimeClass = CKO_NETSCAPE_SMIME;
     CK_BBOOL ck_true = CK_TRUE;
     CK_ATTRIBUTE theTemplate[] = {
         { CKA_CLASS, NULL, 0 },
         { CKA_TOKEN, NULL, 0 },
         { CKA_SUBJECT, NULL, 0 },
-        { CKA_NSS_EMAIL, NULL, 0 },
-        { CKA_NSS_SMIME_TIMESTAMP, NULL, 0 },
+        { CKA_NETSCAPE_EMAIL, NULL, 0 },
+        { CKA_NETSCAPE_SMIME_TIMESTAMP, NULL, 0 },
         { CKA_VALUE, NULL, 0 }
     };
     /* if you change the array, change the variable below as well */
@@ -677,11 +677,11 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     attrs++;
     PK11_SETATTRS(attrs, CKA_SUBJECT, derSubj->data, derSubj->len);
     attrs++;
-    PK11_SETATTRS(attrs, CKA_NSS_EMAIL,
+    PK11_SETATTRS(attrs, CKA_NETSCAPE_EMAIL,
                   emailAddr, PORT_Strlen(emailAddr) + 1);
     attrs++;
     if (profileTime) {
-        PK11_SETATTRS(attrs, CKA_NSS_SMIME_TIMESTAMP, profileTime->data,
+        PK11_SETATTRS(attrs, CKA_NETSCAPE_SMIME_TIMESTAMP, profileTime->data,
                       profileTime->len);
         attrs++;
         PK11_SETATTRS(attrs, CKA_VALUE, emailProfile->data,
@@ -697,7 +697,7 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     }
 
     rwsession = PK11_GetRWSession(slot);
-    if (rwsession == CK_INVALID_HANDLE) {
+    if (rwsession == CK_INVALID_SESSION) {
         PORT_SetError(SEC_ERROR_READ_ONLY);
         if (free_slot) {
             PK11_FreeSlot(free_slot);

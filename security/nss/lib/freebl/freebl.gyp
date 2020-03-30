@@ -54,10 +54,11 @@
       ],
     },
     {
-      'target_name': 'hw-acc-crypto-avx',
+      # TODO: make this so that all hardware accelerated code is in here.
+      'target_name': 'hw-acc-crypto',
       'type': 'static_library',
       # 'sources': [
-      #   All AVX hardware accelerated crypto currently requires x64
+      #   All hardware accelerated crypto currently requires x64
       # ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
@@ -112,72 +113,6 @@
             'verified/Hacl_Poly1305_128.c',
             'verified/Hacl_Chacha20_Vec128.c',
             'verified/Hacl_Chacha20Poly1305_128.c',
-          ],
-        }],
-      ],
-    },
-    {
-      'target_name': 'hw-acc-crypto-avx2',
-      'type': 'static_library',
-      # 'sources': [
-      #   All AVX2 hardware accelerated crypto currently requires x64
-      # ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports'
-      ],
-      'conditions': [
-        [ 'target_arch=="x64"', {
-          'cflags': [
-            '-mssse3',
-            '-msse4'
-          ],
-          'cflags_mozilla': [
-            '-mssse3',
-            '-msse4',
-            '-mpclmul',
-            '-maes',
-            '-mavx',
-            '-mavx2',
-          ],
-          # GCC doesn't define this.
-          'defines': [
-            '__SSSE3__',
-          ],
-        }],
-        [ 'OS=="linux" or OS=="android" or OS=="dragonfly" or OS=="freebsd" or \
-           OS=="netbsd" or OS=="openbsd"', {
-          'cflags': [
-            '-mpclmul',
-            '-maes',
-            '-mavx',
-            '-mavx2',
-          ],
-        }],
-        # macOS build doesn't use cflags.
-        [ 'OS=="mac" or OS=="ios"', {
-          'xcode_settings': {
-            'OTHER_CFLAGS': [
-              '-mssse3',
-              '-msse4',
-              '-mpclmul',
-              '-maes',
-              '-mavx',
-              '-mavx2',
-            ],
-          },
-        }],
-        [ 'target_arch=="arm"', {
-          # Gecko doesn't support non-NEON platform on Android, but tier-3
-          # platform such as Linux/arm will need it
-          'cflags_mozilla': [
-            '-mfpu=neon'
-          ],
-        }],
-        [ 'target_arch=="x64"', {
-          'sources': [
-            'verified/Hacl_Poly1305_256.c',
-            'verified/Hacl_Chacha20_Vec256.c',
-            'verified/Hacl_Chacha20Poly1305_256.c',
           ],
         }],
       ],
@@ -318,8 +253,7 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        'hw-acc-crypto-avx',
-        'hw-acc-crypto-avx2',
+        'hw-acc-crypto',
       ],
       'conditions': [
         [ 'target_arch=="ia32" or target_arch=="x64"', {
@@ -380,8 +314,7 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        'hw-acc-crypto-avx',
-        'hw-acc-crypto-avx2',
+        'hw-acc-crypto',
       ],
       'conditions': [
         [ 'target_arch=="ia32" or target_arch=="x64"', {
@@ -461,8 +394,7 @@
       'type': 'shared_library',
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        'hw-acc-crypto-avx',
-        'hw-acc-crypto-avx2',
+        'hw-acc-crypto',
       ],
     },
     {
@@ -478,8 +410,7 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        'hw-acc-crypto-avx',
-        'hw-acc-crypto-avx2',
+        'hw-acc-crypto',
       ],
       'asflags_mozilla': [
         '-mcpu=v9', '-Wa,-xarch=v9a'
