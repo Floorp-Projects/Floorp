@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
-#include "mozilla/StaticPrefs_widget.h"
 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -523,8 +522,7 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mBufferPendingCommit(false),
       mBufferCommitAllowed(false),
       mBufferNeedsClear(false),
-      mIsMainThread(NS_IsMainThread()),
-      mSmoothRendering(StaticPrefs::widget_wayland_smooth_rendering()) {
+      mIsMainThread(NS_IsMainThread()) {
   for (int i = 0; i < BACK_BUFFER_NUM; i++) {
     mShmBackupBuffer[i] = nullptr;
     mDMABackupBuffer[i] = nullptr;
@@ -881,19 +879,18 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mLockedScreenRect = lockedScreenRect;
   }
 
-  // We can draw directly only when widget has the same size as wl_buffer
   LayoutDeviceIntRect size = mWindow->GetMozContainerSize();
+
+  // We can draw directly only when widget has the same size as wl_buffer
   mDrawToWaylandBufferDirectly = (size.width == mLockedScreenRect.width &&
                                   size.height == mLockedScreenRect.height);
 
   // We can draw directly only when we redraw significant part of the window
-  // to avoid flickering or do only fullscreen updates in smooth mode.
+  // to avoid flickering.
   if (mDrawToWaylandBufferDirectly) {
     mDrawToWaylandBufferDirectly =
-        mSmoothRendering
-            ? windowRedraw
-            : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
-                                lockSize.height * 2 > lockedScreenRect.height));
+        windowRedraw || (lockSize.width * 3 > lockedScreenRect.width &&
+                         lockSize.height * 3 > lockedScreenRect.height);
   }
 
   if (mDrawToWaylandBufferDirectly) {

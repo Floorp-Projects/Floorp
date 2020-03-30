@@ -331,10 +331,6 @@ class WindowSurfaceWayland : public WindowSurface {
   // This typically apply to popup windows.
   bool mBufferNeedsClear;
 
-  // Cache all drawings except fullscreen updates.
-  // Avoid any rendering artifacts for significant performance penality.
-  bool mSmoothRendering;
-
   bool mIsMainThread;
 
   static bool UseDMABufBackend();
