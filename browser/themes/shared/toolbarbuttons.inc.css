@@ -55,8 +55,8 @@ toolbar[brighttext] {
 
 /* ::::: primary toolbar buttons ::::: */
 
-.tabbrowser-arrowscrollbox[scrolledtostart=true]::part(scrollbutton-up),
-.tabbrowser-arrowscrollbox[scrolledtoend=true]::part(scrollbutton-down),
+#tabbrowser-arrowscrollbox[scrolledtostart=true]::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox[scrolledtoend=true]::part(scrollbutton-down),
 :root:not([customizing]) .toolbarbutton-1[disabled=true],
 /* specialcase the overflow and the hamburger button so they show up disabled in customize mode. */
 #nav-bar-overflow-button[disabled=true],
@@ -74,22 +74,22 @@ toolbar[brighttext] {
 }
 
 #TabsToolbar .toolbarbutton-1,
-.tabbrowser-arrowscrollbox::part(scrollbutton-up),
-.tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+#tabbrowser-arrowscrollbox::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   margin: 0 0 var(--tabs-navbar-shadow-size) !important;
 }
 
-.tabbrowser-arrowscrollbox::part(scrollbutton-up),
-.tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+#tabbrowser-arrowscrollbox::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   -moz-appearance: none;
   padding: 0 var(--toolbarbutton-inner-padding) !important;
 }
 
-#navigator-toolbox:not(:hover) .tabbrowser-arrowscrollbox:not([highlight])::part(scrollbutton-down) {
+#navigator-toolbox:not(:hover) #tabbrowser-arrowscrollbox:not([highlight])::part(scrollbutton-down) {
   transition: 1s background-color ease-out;
 }
 
-.tabbrowser-arrowscrollbox[highlight]::part(scrollbutton-down) {
+#tabbrowser-arrowscrollbox[highlight]::part(scrollbutton-down) {
   background-color: Highlight;
 }
 
@@ -175,8 +175,8 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
 }
 
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover,
-.tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
-.tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
+#tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
+#tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
 .findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover,
 toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not([open]),
 toolbar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
