@@ -250,6 +250,10 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
 
   // Whether this function needs a call object or named lambda environment.
   NeedsFunctionEnvironmentObjects = 1 << 26,
+
+  // True if the ArgumentsAnalysis is expected to always indicate an arguments
+  // object is needed.
+  AlwaysNeedsArgsObj = 1 << 27,
 };
 
 class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {

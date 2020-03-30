@@ -41,9 +41,23 @@ void BCEScriptStencil::init() {
 
   gcThings = bce_.perScriptData().gcThingList().stealGCThings();
 
+  // Update flags specific to functions.
   if (isFunction()) {
     functionBox = bce_.sc->asFunctionBox();
-  }
+
+    // Set flags that don't have direct flag representation within the
+    // FunctionBox.
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::HasMappedArgsObj,
+                           functionBox->hasMappedArgsObj());
+    immutableFlags.setFlag(
+        ImmutableScriptFlagsEnum::FunctionHasExtraBodyVarScope,
+        functionBox->hasExtraBodyVarScope());
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::AlwaysNeedsArgsObj,
+                           functionBox->definitelyNeedsArgsObj());
+    immutableFlags.setFlag(ImmutableScriptFlagsEnum::ArgumentsHasVarBinding,
+                           functionBox->argumentsHasLocalBinding());
+
+  } /* isFunctionBox */
 }
 
 bool BCEScriptStencil::getNeedsFunctionEnvironmentObjects() const {
