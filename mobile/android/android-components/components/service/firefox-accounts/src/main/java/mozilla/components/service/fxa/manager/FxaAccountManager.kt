@@ -30,7 +30,6 @@ import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
@@ -52,6 +51,7 @@ import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.WorkManagerSyncManager
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -153,7 +153,7 @@ open class FxaAccountManager(
     private val deviceConfig: DeviceConfig,
     @Volatile private var syncConfig: SyncConfig?,
     private val applicationScopes: Set<String> = emptySet(),
-    private val crashReporter: CrashReporter? = null,
+    private val crashReporter: CrashReporting? = null,
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
     // That is, we want to ensure a sequential execution flow, but on a background thread.
     private val coroutineContext: CoroutineContext = Executors

@@ -21,6 +21,7 @@ import mozilla.components.lib.crash.prompt.CrashPrompt
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.lib.crash.service.SendCrashTelemetryService
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -59,7 +60,7 @@ class CrashReporter(
     internal val promptConfiguration: PromptConfiguration = PromptConfiguration(),
     private val nonFatalCrashIntent: PendingIntent? = null,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
-) {
+) : CrashReporting {
     internal val logger = Logger("mozac/CrashReporter")
     internal val crashBreadcrumbs = BreadcrumbPriorityQueue(BREADCRUMB_MAX_NUM)
 
@@ -123,7 +124,7 @@ class CrashReporter(
     /**
      * Submit a caught exception report to all registered services.
      */
-    fun submitCaughtException(throwable: Throwable): Job {
+    override fun submitCaughtException(throwable: Throwable): Job {
         logger.info("Caught Exception report submitted to ${services.size} services")
 
         return scope.launch {

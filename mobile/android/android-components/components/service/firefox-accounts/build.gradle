@@ -57,8 +57,6 @@ dependencies {
     implementation project(':support-sync-telemetry')
     implementation project(':support-ktx')
     implementation project(':lib-dataprotect')
-    // CrashReporter is part of the public API.
-    api project(':lib-crash')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

@@ -24,10 +24,10 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.top.sites.TopSiteStorage
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
 import mozilla.components.support.migration.GleanMetrics.MigrationAddons
@@ -208,7 +208,7 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
 @Suppress("LargeClass", "TooManyFunctions")
 class FennecMigrator private constructor(
     private val context: Context,
-    private val crashReporter: CrashReporter,
+    private val crashReporter: CrashReporting,
     private val migrations: List<VersionedMigration>,
     private val historyStorage: Lazy<PlacesHistoryStorage>?,
     private val bookmarksStorage: Lazy<PlacesBookmarksStorage>?,
@@ -231,7 +231,7 @@ class FennecMigrator private constructor(
      * Data migration builder. Allows configuring which migrations to run, their versions and relative order.
      */
     @Suppress("TooManyFunctions")
-    class Builder(private val context: Context, private val crashReporter: CrashReporter) {
+    class Builder(private val context: Context, private val crashReporter: CrashReporting) {
         private var historyStorage: Lazy<PlacesHistoryStorage>? = null
         private var bookmarksStorage: Lazy<PlacesBookmarksStorage>? = null
         private var loginsStorage: Lazy<SyncableLoginsStorage>? = null

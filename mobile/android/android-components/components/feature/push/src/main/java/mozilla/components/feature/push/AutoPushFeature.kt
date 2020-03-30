@@ -28,7 +28,7 @@ import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -82,7 +82,7 @@ class AutoPushFeature(
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
     ),
-    private val crashReporter: CrashReporter? = null,
+    private val crashReporter: CrashReporting? = null,
     delegate: Observable<Observer> = ObserverRegistry()
 ) : PushProcessor, Observable<AutoPushFeature.Observer> by delegate {
 

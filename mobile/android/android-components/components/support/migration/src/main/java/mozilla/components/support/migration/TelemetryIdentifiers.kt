@@ -4,7 +4,7 @@
 
 package mozilla.components.support.migration
 
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
 import org.json.JSONObject
@@ -38,7 +38,7 @@ internal object TelemetryIdentifiersMigration {
     private const val PROFILE_CREATION_DATE_JSON_ATTR = "created"
 
     @SuppressWarnings("TooGenericExceptionCaught")
-    internal fun migrate(profilePath: String, crashReporter: CrashReporter): Result<TelemetryIdentifiersResult> {
+    internal fun migrate(profilePath: String, crashReporter: CrashReporting): Result<TelemetryIdentifiersResult> {
         val clientStateFile = File(profilePath, CLIENT_ID_FILE_PATH)
 
         val clientId = try {

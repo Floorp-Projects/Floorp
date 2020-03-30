@@ -5,8 +5,8 @@
 package mozilla.components.support.migration
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.sync.logins.ServerPassword
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -52,7 +52,7 @@ class FennecLoginsMigrationTest {
 
     @Test
     fun `decrypted records without a set master password`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         with(FennecLoginsMigration.getLogins(
             crashReporter,
             masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD,
@@ -96,7 +96,7 @@ class FennecLoginsMigrationTest {
 
     @Test
     fun `decrypted record with long encoded strings without a set master password`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         with(FennecLoginsMigration.getLogins(
             crashReporter,
             masterPassword = FennecLoginsMigration.DEFAULT_MASTER_PASSWORD,
@@ -143,7 +143,7 @@ class FennecLoginsMigrationTest {
 
     @Test
     fun `decrypted records with a master password`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         with(FennecLoginsMigration.getLogins(
             crashReporter,
             masterPassword = "my secret pass",

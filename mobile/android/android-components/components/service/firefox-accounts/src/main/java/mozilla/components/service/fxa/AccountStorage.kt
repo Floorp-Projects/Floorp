@@ -7,8 +7,8 @@ package mozilla.components.service.fxa
 import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
 const val FXA_STATE_PREFS_KEY = "fxaAppState"
@@ -30,7 +30,7 @@ internal interface AccountStorage {
 @SuppressWarnings("TooGenericExceptionCaught")
 internal class SharedPrefAccountStorage(
     val context: Context,
-    crashReporter: CrashReporter? = null,
+    crashReporter: CrashReporting? = null,
     migrateFromSecureStorage: Boolean = true
 ) : AccountStorage {
     internal val logger = Logger("mozac/SharedPrefAccountStorage")
@@ -108,7 +108,7 @@ internal abstract class AbnormalAccountStorageEvent : Exception() {
  */
 internal class SecureAbove22AccountStorage(
     context: Context,
-    private val crashReporter: CrashReporter? = null,
+    private val crashReporter: CrashReporting? = null,
     migrateFromPlaintextStorage: Boolean = true
 ) : AccountStorage {
     companion object {
