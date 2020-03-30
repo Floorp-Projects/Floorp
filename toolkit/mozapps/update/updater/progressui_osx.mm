@@ -119,7 +119,7 @@ int ShowProgressUI(bool indeterminate) {
 
   sIndeterminate = indeterminate;
   [NSApplication sharedApplication];
-  [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
+  [[NSBundle mainBundle] loadNibNamed:@"MainMenu" owner:NSApp topLevelObjects:nil];
   [NSApp run];
 
   return 0;
