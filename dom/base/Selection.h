@@ -745,8 +745,6 @@ class Selection final : public nsSupportsWeakReference,
                                                      int32_t* aOutIndex);
 
   Document* GetDocument() const;
-  nsPIDOMWindowOuter* GetWindow() const;
-  HTMLEditor* GetHTMLEditor() const;
 
   void Disconnect();
 
@@ -801,7 +799,7 @@ class Selection final : public nsSupportsWeakReference,
         nsRange* aRange, int32_t* aOutIndex, Selection& aSelection);
 
     /**
-     * GetCommonEditingHostForAllRanges() returns common editing host of all
+     * GetCommonEditingHost() returns common editing host of all
      * ranges if there is. If at least one of the ranges is in non-editable
      * element, returns nullptr.  See following examples for the detail:
      *
@@ -831,7 +829,9 @@ class Selection final : public nsSupportsWeakReference,
      *  in this case, this returns nullptr because the second range is in
      *  non-editable area.
      */
-    Element* GetCommonEditingHostForAllRanges();
+    Element* GetCommonEditingHost() const;
+
+    void MaybeFocusCommonEditingHost(PresShell* aPresShell) const;
 
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
