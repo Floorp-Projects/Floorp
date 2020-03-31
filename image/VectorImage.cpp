@@ -1560,5 +1560,13 @@ void VectorImage::MediaFeatureValuesChangedAllDocuments(
   }
 }
 
+nsresult VectorImage::GetHotspotX(int32_t* aX) {
+  return Image::GetHotspotX(aX);
+}
+
+nsresult VectorImage::GetHotspotY(int32_t* aY) {
+  return Image::GetHotspotY(aY);
+}
+
 }  // namespace image
 }  // namespace mozilla

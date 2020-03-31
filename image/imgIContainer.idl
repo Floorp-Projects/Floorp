@@ -107,6 +107,16 @@ interface imgIContainer : nsISupports
   [notxpcom, nostdcall] readonly attribute MaybeAspectRatio intrinsicRatio;
 
   /**
+   * The x coordinate of the image's hotspot, or 0 if there is no hotspot.
+   */
+  readonly attribute int32_t hotspotX;
+
+  /**
+   * The y coordinate of the image's hotspot, or 0 if there is no hotspot.
+   */
+  readonly attribute int32_t hotspotY;
+
+  /**
    * Given a size at which this image will be displayed, and the drawing
    * parameters affecting how it will be drawn, returns the image size which
    * should be used to draw to produce the highest quality result. This is the
