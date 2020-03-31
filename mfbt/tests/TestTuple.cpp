@@ -281,6 +281,19 @@ static bool TestTie() {
   return true;
 }
 
+static bool TestTieIgnore() {
+  int i;
+  char c;
+  Tuple<int, float, char> rhs1(42, 0.5f, 'c');
+
+  Tie(i, mozilla::Ignore, c) = rhs1;
+
+  CHECK(i == Get<0>(rhs1));
+  CHECK(c == Get<2>(rhs1));
+
+  return true;
+}
+
 int main() {
   TestConstruction();
   TestConstructionFromMozPair();
@@ -291,6 +304,7 @@ int main() {
   TestGet();
   TestMakeTuple();
   TestTie();
+  TestTieIgnore();
   TestTieMozPair();
   return 0;
 }
