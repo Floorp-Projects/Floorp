@@ -98,3 +98,55 @@ add_task(async function() {
 
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
+
+/**
+ * Test that trackers are treated based on their base domain, not origin.
+ */
+add_task(async function() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  let associatedOrigins = [
+    "https://itisatracker.org",
+    "https://sub.itisatracker.org",
+    "https://www.itisatracker.org",
+    "https://sub.sub.sub.itisatracker.org",
+    "http://itisatracker.org",
+    "http://sub.itisatracker.org",
+  ];
+
+  for (let permissionOrigin of associatedOrigins) {
+    // Only one of the associated origins gets permission, but
+    // all should be exempt from purging.
+    PermissionTestUtils.add(
+      permissionOrigin,
+      "storageAccessAPI",
+      Services.perms.ALLOW_ACTION
+    );
+
+    for (let origin of associatedOrigins) {
+      SiteDataTestUtils.addToCookies(origin);
+    }
+
+    // Add another tracker to verify we're actually purging.
+    SiteDataTestUtils.addToCookies(TRACKING_PAGE);
+
+    await PurgeTrackerService.purgeTrackingCookieJars();
+
+    for (let origin of associatedOrigins) {
+      ok(
+        SiteDataTestUtils.hasCookies(origin),
+        `${origin} should have retained its cookies when permission is set for ${permissionOrigin}.`
+      );
+    }
+
+    ok(
+      !SiteDataTestUtils.hasCookies(TRACKING_PAGE),
+      "cookie is removed after purge with no storage access permission."
+    );
+
+    PermissionTestUtils.remove(permissionOrigin, "storageAccessAPI");
+    await SiteDataTestUtils.clear();
+  }
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
