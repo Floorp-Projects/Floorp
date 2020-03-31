@@ -112,6 +112,7 @@ document.addEventListener("DOMContentLoaded", e => {
     // But we need to caclulate the actual number of the most cells in a row to give accurate information.
     let maxColumnCount = 0;
     let date = new Date();
+    var hasData = false;
     for (let i = 0; i <= 6; i++) {
       let dateString = date.toISOString().split("T")[0];
       let ariaOwnsString = ""; // Get the row's colummns in order
@@ -122,6 +123,7 @@ document.addEventListener("DOMContentLoaded", e => {
       let innerBar = document.createElement("div");
       innerBar.className = "graph-wrapper-bar";
       if (data[dateString]) {
+        hasData = true;
         let content = data[dateString];
         let count = document.createElement("div");
         count.className = "bar-count";
@@ -248,7 +250,7 @@ document.addEventListener("DOMContentLoaded", e => {
       !socialEnabled;
 
     // User has turned off all blocking, show a different card.
-    if (notBlocking) {
+    if (notBlocking && !hasData) {
       document
         .getElementById("etp-card-content")
         .setAttribute(

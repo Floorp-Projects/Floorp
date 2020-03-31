@@ -728,6 +728,20 @@ add_task(async function test_etp_custom_protections_off() {
       "Button to manage protections is displayed"
     );
   });
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+  let date = new Date().toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKERS_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await reloadTab(tab);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let etpCard = content.document.querySelector(".etp-card");
+      return !etpCard.classList.contains("custom-not-blocking");
+    }, "The regular ETP card is showing");
+  });
   Services.prefs.setStringPref("browser.contentblocking.category", "standard");
   BrowserTestUtils.removeTab(tab);
 });
