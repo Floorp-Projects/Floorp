@@ -236,9 +236,10 @@ sealed class Event {
             )
     }
 
-    data class LibrarySelectedItem(val item: String) : Event() {
+    data class LibrarySelectedItem(val item: LibraryItem) : Event() {
+        enum class LibraryItem { BOOKMARKS, HISTORY }
         override val extras: Map<Library.selectedItemKeys, String>?
-            get() = mapOf(Library.selectedItemKeys.item to item)
+            get() = mapOf(Library.selectedItemKeys.item to item.name)
     }
 
     data class ErrorPageVisited(val errorType: ErrorType) : Event() {
