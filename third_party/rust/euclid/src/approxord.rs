@@ -7,8 +7,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-/// Utilities for testing approximate ordering - especially true for 
-/// floating point types, where NaN's cannot be ordered. 
+//! Utilities for testing approximate ordering - especially true for
+//! floating point types, where NaN's cannot be ordered.
+
 pub fn min<T: PartialOrd>(x: T, y: T) -> T {
     if x <= y {
         x

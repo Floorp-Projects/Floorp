@@ -9,26 +9,33 @@
 
 /// Trait for testing approximate equality
 pub trait ApproxEq<Eps> {
+    /// Default epsilon value
     fn approx_epsilon() -> Eps;
-    fn approx_eq(&self, other: &Self) -> bool;
+
+    /// Returns `true` is this object is approximately equal to the other one, using
+    /// a provided epsilon value.
     fn approx_eq_eps(&self, other: &Self, approx_epsilon: &Eps) -> bool;
+
+    /// Returns `true` is this object is approximately equal to the other one, using
+    /// the `approx_epsilon()` epsilon value.
+    fn approx_eq(&self, other: &Self) -> bool {
+        self.approx_eq_eps(other, &Self::approx_epsilon())
+    }
 }
 
 macro_rules! approx_eq {
-    ($ty:ty, $eps:expr) => (
+    ($ty:ty, $eps:expr) => {
         impl ApproxEq<$ty> for $ty {
             #[inline]
-            fn approx_epsilon() -> $ty { $eps }
-            #[inline]
-            fn approx_eq(&self, other: &$ty) -> bool {
-                self.approx_eq_eps(other, &$eps)
+            fn approx_epsilon() -> $ty {
+                $eps
             }
             #[inline]
             fn approx_eq_eps(&self, other: &$ty, approx_epsilon: &$ty) -> bool {
-                (*self - *other).abs() < *approx_epsilon
+                num_traits::Float::abs(*self - *other) < *approx_epsilon
             }
         }
-    )
+    };
 }
 
 approx_eq!(f32, 1.0e-6);
