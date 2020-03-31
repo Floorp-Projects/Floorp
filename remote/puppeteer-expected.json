@@ -289,7 +289,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.emulate should support clicking": [
-    "PASS"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Page.emulateMedia should be an alias for Page.emulateMediaType": [
     "PASS"
@@ -397,10 +397,10 @@
     "PASS"
   ],
   "Firefox Browser Page Page.evaluate should return undefined for non-serializable objects": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page Page.evaluate should fail for circular object": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page Page.evaluate should be able to throw a tricky error": [
     "PASS"
@@ -427,7 +427,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Page.evaluate should throw a nice error after a navigation": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page Page.evaluate should not throw an error when evaluation does a navigation": [
     "PASS"
@@ -613,7 +613,7 @@
     "PASS"
   ],
   "Firefox Browser Page Keyboard should press the metaKey": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Keyboard should move with the arrow keys": [
     "PASS"
@@ -628,7 +628,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Keyboard should report shiftKey": [
-    "PASS"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Keyboard should report multiple modifiers": [
     "PASS"
@@ -661,7 +661,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Keyboard should press the meta key": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Mouse should click the document": [
     "PASS"
@@ -829,7 +829,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Frame.goto should return matching responses": [
-    "FAIL"
+    "SKIP"
   ],
   "Firefox Browser Page Frame.waitForNavigation should work": [
     "FAIL"
@@ -844,7 +844,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.Events.Request should fire for iframes": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.Events.Request should fire for fetches": [
     "PASS"
@@ -1243,7 +1243,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.setUserAgent should work for subframes": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.setUserAgent should emulate device user-agent": [
     "PASS"
@@ -1258,13 +1258,13 @@
     "PASS"
   ],
   "Firefox Browser Page Page.setContent should respect timeout": [
-    "PASS"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Page.setContent should respect default navigation timeout": [
-    "PASS"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Page.setContent should await resources to load": [
-    "PASS"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Page.setContent should work fast enough": [
     "PASS"
@@ -1600,10 +1600,10 @@
     "FAIL"
   ],
   "Firefox Browser Page Page.waitFor should wait for selector": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Page.waitFor should wait for an xpath": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Page.waitFor should not allow you to select an element with single slash xpath": [
     "PASS"
@@ -1672,64 +1672,64 @@
     "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should immediately resolve promise if node exists": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should work with removed MutationObserver": [
     "FAIL"
   ],
   "Firefox Browser Page Frame.waitForSelector should resolve promise when node is added": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should work when node is added through innerHTML": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector Page.waitForSelector is shortcut for main frame": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should run in specified frame": [
-    "FAIL"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Frame.waitForSelector should throw when frame is detached": [
-    "FAIL"
+    "PASS", "FAIL"
   ],
   "Firefox Browser Page Frame.waitForSelector should survive cross-process navigation": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should wait for visible": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should wait for visible recursively": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector hidden should wait for visibility: hidden": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector hidden should wait for display: none": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector hidden should wait for removal": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should return null if waiting to hide non-existing element": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should respect timeout": [
     "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should have an error message specifically for awaiting an element to be hidden": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should respond to node attribute mutation": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should return the element handle": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector should have correct stack trace for timeout": [
     "PASS"
   ],
   "Firefox Browser Page Frame.waitForXPath should support some fancy xpath": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForXPath should respect timeout": [
     "PASS"
@@ -1741,16 +1741,16 @@
     "FAIL"
   ],
   "Firefox Browser Page Frame.waitForXPath hidden should wait for display: none": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForXPath should return the element handle": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForXPath should allow you to select a text node": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Frame.waitForXPath should allow you to select an element with single slash": [
-    "FAIL"
+    "PASS"
   ],
   "Firefox Browser Page Workers Page.workers": [
     "SKIP"
@@ -1786,7 +1786,7 @@
     "FAIL"
   ],
   "Firefox Browser BrowserContext should wait for a target": [
-    "TIMEOUT"
+    "SKIP"
   ],
   "Firefox Browser BrowserContext should timeout waiting for a non-existent target": [
     "PASS"

@@ -161,10 +161,10 @@ module.exports.addTests = function({testRunner, expect}) {
     it('should properly serialize null fields', async({page}) => {
       expect(await page.evaluate(() => ({a: undefined}))).toEqual({});
     });
-    it_fails_ffox('should return undefined for non-serializable objects', async({page, server}) => {
+    it('should return undefined for non-serializable objects', async({page, server}) => {
       expect(await page.evaluate(() => window)).toBe(undefined);
     });
-    it_fails_ffox('should fail for circular object', async({page, server}) => {
+    it('should fail for circular object', async({page, server}) => {
       const result = await page.evaluate(() => {
         const a = {};
         const b = {a};
@@ -224,7 +224,7 @@ module.exports.addTests = function({testRunner, expect}) {
       });
       expect(result).toBe(true);
     });
-    it_fails_ffox('should throw a nice error after a navigation', async({page, server}) => {
+    it('should throw a nice error after a navigation', async({page, server}) => {
       const executionContext = await page.mainFrame().executionContext();
 
       await Promise.all([

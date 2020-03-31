@@ -31,7 +31,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await waitFor;
       expect(found).toBe(true);
     });
-    it_fails_ffox('should wait for an xpath', async({page, server}) => {
+    it('should wait for an xpath', async({page, server}) => {
       let found = false;
       const waitFor = page.waitFor('//div').then(() => found = true);
       await page.goto(server.EMPTY_PAGE);
@@ -243,7 +243,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await watchdog;
     });
 
-    it('Page.waitForSelector is shortcut for main frame', async({page, server}) => {
+    it_fails_ffox('Page.waitForSelector is shortcut for main frame', async({page, server}) => {
       await page.goto(server.EMPTY_PAGE);
       await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
       const otherFrame = page.frames()[1];
@@ -287,7 +287,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await waitForSelector;
       expect(boxFound).toBe(true);
     });
-    it_fails_ffox('should wait for visible', async({page, server}) => {
+    it('should wait for visible', async({page, server}) => {
       let divFound = false;
       const waitForSelector = page.waitForSelector('div', {visible: true}).then(() => divFound = true);
       await page.setContent(`<div style='display: none; visibility: hidden;'>1</div>`);
@@ -298,7 +298,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForSelector).toBe(true);
       expect(divFound).toBe(true);
     });
-    it_fails_ffox('should wait for visible recursively', async({page, server}) => {
+    it('should wait for visible recursively', async({page, server}) => {
       let divVisible = false;
       const waitForSelector = page.waitForSelector('div#inner', {visible: true}).then(() => divVisible = true);
       await page.setContent(`<div style='display: none; visibility: hidden;'><div id="inner">hi</div></div>`);
@@ -309,7 +309,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForSelector).toBe(true);
       expect(divVisible).toBe(true);
     });
-    it_fails_ffox('hidden should wait for visibility: hidden', async({page, server}) => {
+    it('hidden should wait for visibility: hidden', async({page, server}) => {
       let divHidden = false;
       await page.setContent(`<div style='display: block;'></div>`);
       const waitForSelector = page.waitForSelector('div', {hidden: true}).then(() => divHidden = true);
@@ -319,7 +319,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForSelector).toBe(true);
       expect(divHidden).toBe(true);
     });
-    it_fails_ffox('hidden should wait for display: none', async({page, server}) => {
+    it('hidden should wait for display: none', async({page, server}) => {
       let divHidden = false;
       await page.setContent(`<div style='display: block;'></div>`);
       const waitForSelector = page.waitForSelector('div', {hidden: true}).then(() => divHidden = true);
@@ -329,7 +329,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForSelector).toBe(true);
       expect(divHidden).toBe(true);
     });
-    it_fails_ffox('hidden should wait for removal', async({page, server}) => {
+    it('hidden should wait for removal', async({page, server}) => {
       await page.setContent(`<div></div>`);
       let divRemoved = false;
       const waitForSelector = page.waitForSelector('div', {hidden: true}).then(() => divRemoved = true);
@@ -339,7 +339,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForSelector).toBe(true);
       expect(divRemoved).toBe(true);
     });
-    it_fails_ffox('should return null if waiting to hide non-existing element', async({page, server}) => {
+    it('should return null if waiting to hide non-existing element', async({page, server}) => {
       const handle = await page.waitForSelector('non-existing', { hidden: true });
       expect(handle).toBe(null);
     });
@@ -350,7 +350,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(error.message).toContain('waiting for selector "div" failed: timeout');
       expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
     });
-    it_fails_ffox('should have an error message specifically for awaiting an element to be hidden', async({page, server}) => {
+    it('should have an error message specifically for awaiting an element to be hidden', async({page, server}) => {
       await page.setContent(`<div></div>`);
       let error = null;
       await page.waitForSelector('div', {hidden: true, timeout: 10}).catch(e => error = e);
@@ -358,7 +358,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(error.message).toContain('waiting for selector "div" to be hidden failed: timeout');
     });
 
-    it_fails_ffox('should respond to node attribute mutation', async({page, server}) => {
+    it('should respond to node attribute mutation', async({page, server}) => {
       let divFound = false;
       const waitForSelector = page.waitForSelector('.zombo').then(() => divFound = true);
       await page.setContent(`<div class='notZombo'></div>`);
@@ -366,7 +366,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await page.evaluate(() => document.querySelector('div').className = 'zombo');
       expect(await waitForSelector).toBe(true);
     });
-    it_fails_ffox('should return the element handle', async({page, server}) => {
+    it('should return the element handle', async({page, server}) => {
       const waitForSelector = page.waitForSelector('.zombo');
       await page.setContent(`<div class='zombo'>anything</div>`);
       expect(await page.evaluate(x => x.textContent, await waitForSelector)).toBe('anything');
@@ -414,7 +414,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(waitError).toBeTruthy();
       expect(waitError.message).toContain('waitForFunction failed: frame got detached.');
     });
-    it_fails_ffox('hidden should wait for display: none', async({page, server}) => {
+    it('hidden should wait for display: none', async({page, server}) => {
       let divHidden = false;
       await page.setContent(`<div style='display: block;'></div>`);
       const waitForXPath = page.waitForXPath('//div', {hidden: true}).then(() => divHidden = true);
@@ -424,7 +424,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForXPath).toBe(true);
       expect(divHidden).toBe(true);
     });
-    it_fails_ffox('should return the element handle', async({page, server}) => {
+    it('should return the element handle', async({page, server}) => {
       const waitForXPath = page.waitForXPath('//*[@class="zombo"]');
       await page.setContent(`<div class='zombo'>anything</div>`);
       expect(await page.evaluate(x => x.textContent, await waitForXPath)).toBe('anything');
