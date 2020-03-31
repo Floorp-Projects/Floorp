@@ -114,6 +114,7 @@ dialog:not([subdialog]) .editAddressForm {
 #country-warning-message {
   box-sizing: border-box;
   font-size: 1rem;
+  display: flex;
   align-items: center;
   text-align: start;
   opacity: .5;

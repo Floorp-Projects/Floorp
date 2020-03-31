@@ -98,6 +98,7 @@ dialog[subdialog] form {
 
 #controls-container {
   flex: 0 1 100%;
+  display: flex;
   justify-content: end;
   margin: 1em 0 0;
 }
