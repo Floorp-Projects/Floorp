@@ -859,8 +859,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(cx, buf.get(), map.size(),
                       JS::SourceOwnership::Borrowed)) {
-        script = reuseGlobal ? CompileForNonSyntacticScopeDontInflate(
-                                   cx, options, srcBuf)
+        script = reuseGlobal ? CompileForNonSyntacticScope(cx, options, srcBuf)
                              : Compile(cx, options, srcBuf);
       } else {
         MOZ_ASSERT(!script);
@@ -872,8 +871,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(cx, str.get(), str.Length(),
                       JS::SourceOwnership::Borrowed)) {
-        script = reuseGlobal ? CompileForNonSyntacticScopeDontInflate(
-                                   cx, options, srcBuf)
+        script = reuseGlobal ? CompileForNonSyntacticScope(cx, options, srcBuf)
                              : Compile(cx, options, srcBuf);
       } else {
         MOZ_ASSERT(!script);
