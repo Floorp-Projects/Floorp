@@ -145,26 +145,31 @@ class AlternateServerPlayback:
         ctx.master.addons.trigger("update", [])
 
     def load_files(self, paths):
-        if "," in paths[0]:
-            paths = paths[0].split(",")
-        for path in paths:
-            ctx.log.info("Loading flows from %s" % path)
-            try:
-                flows = io.read_flows_from_paths([path])
-            except exceptions.FlowReadException as e:
-                raise exceptions.CommandError(str(e))
-            self.load_flows(flows)
-            proto = os.path.splitext(path)[0] + ".json"
-            if os.path.exists(proto):
-                ctx.log.info("Loading proto info from %s" % proto)
-                with open(proto) as f:
-                    recording_info = json.loads(f.read())
-                ctx.log.info(
-                    "Replaying file {} recorded on {}".format(
-                        os.path.basename(path), recording_info["recording_date"]
+        try:
+            if "," in paths[0]:
+                paths = paths[0].split(",")
+            for path in paths:
+                ctx.log.info("Loading flows from %s" % path)
+                try:
+                    flows = io.read_flows_from_paths([path])
+                except exceptions.FlowReadException as e:
+                    raise exceptions.CommandError(str(e))
+                self.load_flows(flows)
+                proto = os.path.splitext(path)[0] + ".json"
+                if os.path.exists(proto):
+                    ctx.log.info("Loading proto info from %s" % proto)
+                    with open(proto) as f:
+                        recording_info = json.loads(f.read())
+                    ctx.log.info(
+                        "Replaying file {} recorded on {}".format(
+                            os.path.basename(path), recording_info["recording_date"]
+                        )
                     )
-                )
-                _PROTO.update(recording_info["http_protocol"])
+                    _PROTO.update(recording_info["http_protocol"])
+        except Exception as e:
+            ctx.log.error("Could not load recording file! Stopping playback process!")
+            ctx.log.info(e)
+            ctx.master.shutdown()
 
     def _hash(self, flow):
         """
@@ -227,35 +232,41 @@ class AlternateServerPlayback:
 
     def request(self, f):
         if self.flowmap:
-            rflow = self.next_flow(f)
-            if rflow:
-                response = rflow.response.copy()
-                response.is_replay = True
-                # Refresh server replay responses by adjusting date, expires and
-                # last-modified headers, as well as adjusting cookie expiration.
-                response.refresh()
+            try:
+                rflow = self.next_flow(f)
+                if rflow:
+                    response = rflow.response.copy()
+                    response.is_replay = True
+                    # Refresh server replay responses by adjusting date, expires and
+                    # last-modified headers, as well as adjusting cookie expiration.
+                    response.refresh()
 
-                f.response = response
-                self._replayed += 1
-            else:
-                # returns 404 rather than dropping the whole HTTP/2 connection
-                ctx.log.warn(
-                    "server_playback: killed non-replay request {}".format(
-                        f.request.url
+                    f.response = response
+                    self._replayed += 1
+                else:
+                    # returns 404 rather than dropping the whole HTTP/2 connection
+                    ctx.log.warn(
+                        "server_playback: killed non-replay request {}".format(
+                            f.request.url
+                        )
                     )
-                )
-                f.response = http.HTTPResponse.make(
-                    404, b"", {"content-type": "text/plain"}
-                )
-                self._not_replayed += 1
+                    f.response = http.HTTPResponse.make(
+                        404, b"", {"content-type": "text/plain"}
+                    )
+                    self._not_replayed += 1
 
-            # collecting stats only if we can dump them (see .done())
-            if ctx.options.upload_dir:
-                parsed_url = urllib.parse.urlparse(parse.unquote(f.request.url))
-                self.netlocs[parsed_url.netloc][f.response.status_code] += 1
-                self.calls.append({'time': str(time.time()),
-                                   'url': f.request.url,
-                                   'response_status': f.response.status_code})
+                # collecting stats only if we can dump them (see .done())
+                if ctx.options.upload_dir:
+                    parsed_url = urllib.parse.urlparse(parse.unquote(f.request.url))
+                    self.netlocs[parsed_url.netloc][f.response.status_code] += 1
+                    self.calls.append({'time': str(time.time()),
+                                       'url': f.request.url,
+                                       'response_status': f.response.status_code})
+            except Exception as e:
+                ctx.log.error("Could not generate response! Stopping playback process!")
+                ctx.log.info(e)
+                ctx.master.shutdown()
+
         else:
             ctx.log.error("Playback library is empty! Stopping playback process!")
             ctx.master.shutdown()

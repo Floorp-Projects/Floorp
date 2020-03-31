@@ -9,5 +9,7 @@ import tempfile
 @contextlib.contextmanager
 def tempdir():
     dest_dir = tempfile.mkdtemp()
-    yield dest_dir
-    shutil.rmtree(dest_dir, ignore_errors=True)
+    try:
+        yield dest_dir
+    finally:
+        shutil.rmtree(dest_dir, ignore_errors=True)
