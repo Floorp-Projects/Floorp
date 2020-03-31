@@ -197,13 +197,6 @@ class nsColumnSetFrame final : public nsContainerFrame {
                             ReflowOutput& aDesiredSize,
                             bool aUnboundedLastColumn, nsReflowStatus& aStatus);
 
-  /**
-   * Retrieve the available block-size for content of this frame. The available
-   * content block-size is the available block-size for the frame, minus borders
-   * and padding.
-   */
-  nscoord GetAvailableContentBSize(const ReflowInput& aReflowInput) const;
-
   void ForEachColumnRule(
       const std::function<void(const nsRect& lineRect)>& aSetLineRect,
       const nsPoint& aPt) const;
