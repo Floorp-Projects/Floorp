@@ -11824,7 +11824,8 @@ class MWasmDerivedPointer : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmDerivedPointer()->offset() == offset();
   }
 
   ALLOW_CLONE(MWasmDerivedPointer)
