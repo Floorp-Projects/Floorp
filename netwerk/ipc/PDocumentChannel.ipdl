@@ -55,7 +55,10 @@ child:
   async RedirectToRealChannel(RedirectToRealChannelArgs args)
       returns (nsresult rv);
 
-  async ConfirmRedirect(LoadInfoArgs aLoadInfo, nsIURI aNewURI) returns(nsresult rv, nsresult? cancelCode);
+  async CSPViolation(CSPInfo aCSP, bool aIsCspToInherit,
+    nsIURI aBlockedURI, uint32_t aBlockedContentSource,
+    nsIURI aOriginalURI, nsString aViolatedDirective, uint32_t aViolatedPolicyIndex,
+    nsString aObserverSubject);
 
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).
