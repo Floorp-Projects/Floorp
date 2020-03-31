@@ -83,20 +83,25 @@ nsTreeBodyFrame* XULTreeElement::GetTreeBodyFrame(FlushType aFlushType) {
   MOZ_ASSERT(aFlushType == FlushType::Frames ||
              aFlushType == FlushType::Layout || aFlushType == FlushType::None);
   nsCOMPtr<nsIContent> kungFuDeathGrip = this;  // keep a reference
+  RefPtr<Document> doc = GetComposedDoc();
 
   // Make sure our frames are up to date, and layout as needed.  We
   // have to do this before checking for our cached mTreeBody, since
   // it might go away on style flush, and in any case if aFlushLayout
   // is true we need to make sure to flush no matter what.
-  if (aFlushType != FlushType::None) {
-    if (RefPtr<Document> doc = GetComposedDoc()) {
-      doc->FlushPendingNotifications(aFlushType);
-    }
+  // XXXbz except that flushing style when we were not asked to flush
+  // layout here breaks things.  See bug 585123.
+  if (aFlushType == FlushType::Layout && doc) {
+    doc->FlushPendingNotifications(FlushType::Layout);
   }
 
   if (mTreeBody) {
     // Have one cached already.
     return mTreeBody;
+  }
+
+  if (aFlushType == FlushType::Frames && doc) {
+    doc->FlushPendingNotifications(FlushType::Frames);
   }
 
   if (nsCOMPtr<nsIContent> tree = FindBodyElement(this)) {
