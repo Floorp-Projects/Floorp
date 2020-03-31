@@ -409,12 +409,6 @@ nsresult RHEntryToRHEntryInfo(nsIRedirectHistoryEntry* aRHEntry,
 
 nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
                                 Maybe<LoadInfoArgs>* aOptionalLoadInfoArgs) {
-  if (!aLoadInfo) {
-    // if there is no loadInfo, then there is nothing to serialize
-    *aOptionalLoadInfoArgs = Nothing();
-    return NS_OK;
-  }
-
   nsresult rv = NS_OK;
   Maybe<PrincipalInfo> loadingPrincipalInfo;
   if (aLoadInfo->LoadingPrincipal()) {
@@ -792,21 +786,6 @@ nsresult LoadInfoArgsToLoadInfo(
 
 void LoadInfoToParentLoadInfoForwarder(
     nsILoadInfo* aLoadInfo, ParentLoadInfoForwarderArgs* aForwarderArgsOut) {
-  if (!aLoadInfo) {
-    *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
-        false, false, Nothing(), nsILoadInfo::TAINTING_BASIC,
-        false,                                  // SkipContentSniffing
-        nsILoadInfo::HTTPS_ONLY_UNINITIALIZED,  // httpsOnlyStatus
-        false,  // serviceWorkerTaintingSynthesized
-        false,  // documentHasUserInteracted
-        false,  // documentHasLoaded
-        false,  // allowListFutureDocumentsCreatedFromThisRedirectChain
-        Maybe<CookieJarSettingsArgs>(),
-        nsILoadInfo::BLOCKING_REASON_NONE,  // requestBlockingReason
-        false);                             // hasStoragePermission
-    return;
-  }
-
   Maybe<IPCServiceWorkerDescriptor> ipcController;
   Maybe<ServiceWorkerDescriptor> controller(aLoadInfo->GetController());
   if (controller.isSome()) {
@@ -843,10 +822,6 @@ void LoadInfoToParentLoadInfoForwarder(
 
 nsresult MergeParentLoadInfoForwarder(
     ParentLoadInfoForwarderArgs const& aForwarderArgs, nsILoadInfo* aLoadInfo) {
-  if (!aLoadInfo) {
-    return NS_OK;
-  }
-
   nsresult rv;
 
   rv = aLoadInfo->SetAllowInsecureRedirectToDataURI(
@@ -907,12 +882,6 @@ nsresult MergeParentLoadInfoForwarder(
 
 void LoadInfoToChildLoadInfoForwarder(
     nsILoadInfo* aLoadInfo, ChildLoadInfoForwarderArgs* aForwarderArgsOut) {
-  if (!aLoadInfo) {
-    *aForwarderArgsOut =
-        ChildLoadInfoForwarderArgs(Nothing(), Nothing(), Nothing(), 0);
-    return;
-  }
-
   Maybe<IPCClientInfo> ipcReserved;
   Maybe<ClientInfo> reserved(aLoadInfo->GetReservedClientInfo());
   if (reserved.isSome()) {
@@ -938,10 +907,6 @@ void LoadInfoToChildLoadInfoForwarder(
 
 nsresult MergeChildLoadInfoForwarder(
     const ChildLoadInfoForwarderArgs& aForwarderArgs, nsILoadInfo* aLoadInfo) {
-  if (!aLoadInfo) {
-    return NS_OK;
-  }
-
   Maybe<ClientInfo> reservedClientInfo;
   auto& ipcReserved = aForwarderArgs.reservedClientInfo();
   if (ipcReserved.isSome()) {
