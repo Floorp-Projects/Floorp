@@ -78,7 +78,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer}) {
       ]);
       await context.close();
     });
-    it('should wait for a target', async function({browser, server}) {
+    it_fails_ffox('should wait for a target', async function({browser, server}) {
       const context = await browser.createIncognitoBrowserContext();
       let resolved = false;
       const targetPromise = context.waitForTarget(target => target.url() === server.EMPTY_PAGE);
