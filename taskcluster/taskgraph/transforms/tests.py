@@ -1290,8 +1290,8 @@ CHUNK_SUITES_BLACKLIST = (
     'test-verify-gpu',
     'test-verify-wpt',
     'web-platform-tests',
-    'web-platform-tests-crashtests',
-    'web-platform-tests-reftests',
+    'web-platform-tests-crashtest',
+    'web-platform-tests-reftest',
     'web-platform-tests-wdspec',
 )
 """These suites will be chunked at test runtime rather than here in the taskgraph."""
