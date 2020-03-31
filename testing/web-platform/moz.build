@@ -17,7 +17,7 @@ PYTHON_UNITTEST_MANIFESTS += ['python.ini']
 with Files("**"):
     SCHEDULES.exclusive = [
         'web-platform-tests',
-        'web-platform-tests-reftests',
+        'web-platform-tests-reftest',
         'web-platform-tests-wdspec',
     ]
 

@@ -58,8 +58,8 @@ EXCLUSIVE_COMPONENTS = [
     'xpcshell',
     'xpcshell-coverage',
     'web-platform-tests',
-    'web-platform-tests-crashtests',
-    'web-platform-tests-reftests',
+    'web-platform-tests-crashtest',
+    'web-platform-tests-reftest',
     'web-platform-tests-wdspec',
     # specific test suites via schedules-component
     'mochitest-a11y',
