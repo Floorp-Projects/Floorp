@@ -10,7 +10,7 @@
 
 #include "jsapi.h"
 
-#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/HeapAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
@@ -51,7 +51,7 @@ BEGIN_TEST(testPrivateGCThingValue) {
   CHECK(srcBuf.init(cx, code, mozilla::ArrayLength(code) - 1,
                     JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   CHECK(script);
   JS_SetReservedSlot(obj, 0, PrivateGCThingValue(script));
 

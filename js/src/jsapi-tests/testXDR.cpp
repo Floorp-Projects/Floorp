@@ -10,7 +10,7 @@
 #include "jsfriendapi.h"
 
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
-#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
@@ -68,7 +68,7 @@ BEGIN_TEST(testXDR_bug506491) {
   CHECK(srcBuf.init(cx, s, mozilla::ArrayLength(s) - 1,
                     JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   CHECK(script);
 
   script = FreezeThaw(cx, script);
@@ -97,7 +97,7 @@ BEGIN_TEST(testXDR_bug516827) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, "", 0, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   CHECK(script);
 
   script = FreezeThaw(cx, script);
@@ -129,7 +129,7 @@ BEGIN_TEST(testXDR_source) {
     JS::SourceText<mozilla::Utf8Unit> srcBuf;
     CHECK(srcBuf.init(cx, *s, strlen(*s), JS::SourceOwnership::Borrowed));
 
-    JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
+    JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -157,7 +157,7 @@ BEGIN_TEST(testXDR_sourceMap) {
     JS::SourceText<mozilla::Utf8Unit> srcBuf;
     CHECK(srcBuf.init(cx, "", 0, JS::SourceOwnership::Borrowed));
 
-    script = JS::CompileDontInflate(cx, options, srcBuf);
+    script = JS::Compile(cx, options, srcBuf);
     CHECK(script);
 
     size_t len = strlen(*sm);

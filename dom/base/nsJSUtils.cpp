@@ -216,10 +216,9 @@ static JSScript* CompileScript(
   // Once the UTF-8 overloads don't inflate, we can get rid of these two
   // |CompileScript| overloads and just call the JSAPI directly in the one
   // caller.
-  return aScopeChain.length() == 0
-             ? JS::CompileDontInflate(aCx, aCompileOptions, aSrcBuf)
-             : JS::CompileForNonSyntacticScopeDontInflate(aCx, aCompileOptions,
-                                                          aSrcBuf);
+  return aScopeChain.length() == 0 ? JS::Compile(aCx, aCompileOptions, aSrcBuf)
+                                   : JS::CompileForNonSyntacticScopeDontInflate(
+                                         aCx, aCompileOptions, aSrcBuf);
 }
 
 template <typename Unit>
