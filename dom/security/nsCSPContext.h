@@ -119,8 +119,16 @@ class nsCSPContext : public nsIContentSecurityPolicy {
     eSelf,
   };
 
-  nsresult AsyncReportViolation(
-      mozilla::dom::Element* aTriggeringElement,
+  using AsyncReportViolationCallback = std::function<nsresult(
+      nsCSPContext* aContext, mozilla::dom::Element* aTriggeringElement,
+      nsICSPEventListener* aCSPEventListener, nsIURI* aBlockedURI,
+      BlockedContentSource aBlockedContentSource, nsIURI* aOriginalURI,
+      const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
+      const nsAString& aObserverSubject, const nsAString& aSourceFile,
+      const nsAString& aScriptSample, uint32_t aLineNum, uint32_t aColumnNum)>;
+
+  static nsresult AsyncReportViolation(
+      nsCSPContext* aContext, mozilla::dom::Element* aTriggeringElement,
       nsICSPEventListener* aCSPEventListener, nsIURI* aBlockedURI,
       BlockedContentSource aBlockedContentSource, nsIURI* aOriginalURI,
       const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
@@ -140,10 +148,25 @@ class nsCSPContext : public nsIContentSecurityPolicy {
         0);
   }
 
+  nsresult GetAllowsNavigateTo(const AsyncReportViolationCallback& aCallback,
+                               nsIURI* aURI, bool aIsFormSubmission,
+                               bool aWasRedirected, bool aEnforceWhitelist,
+                               bool* outAllowsNavigateTo);
+
+  nsresult ShouldLoad(const AsyncReportViolationCallback& aCallback,
+                      nsContentPolicyType aContentType,
+                      nsICSPEventListener* aCSPEventListener,
+                      nsIURI* aContentLocation, nsISupports* aRequestContext,
+                      const nsACString& aMimeTypeGuess,
+                      nsIURI* aOriginalURIIfRedirect,
+                      bool aSendViolationReports, const nsAString& aNonce,
+                      int16_t* outDecision);
+
  private:
   void EnsureIPCPoliciesRead();
 
-  bool permitsInternal(CSPDirective aDir,
+  bool permitsInternal(const AsyncReportViolationCallback& aCallback,
+                       CSPDirective aDir,
                        mozilla::dom::Element* aTriggeringElement,
                        nsICSPEventListener* aCSPEventListener,
                        nsIURI* aContentLocation, nsIURI* aOriginalURIIfRedirect,
