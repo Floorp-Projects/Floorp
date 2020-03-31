@@ -22,35 +22,11 @@ class BugbugTimeoutException(Exception):
     pass
 
 
-class platform(object):
-    """Strategies for dealing with platforms."""
-
-    @staticmethod
-    def all(task, params):
-        """Don't filter any platforms."""
-        return False
-
-    @staticmethod
-    def debug(task, params):
-        """Only run debug platforms."""
-        return not (task.attributes.get('build_type') == "debug")
-
-
-@register_strategy("bugbug-all", args=(platform.all,))
-@register_strategy("bugbug-debug", args=(platform.debug,))
+@register_strategy("bugbug-push-schedules")
 class BugBugPushSchedules(OptimizationStrategy):
-    """Query the 'bugbug' service to retrieve relevant tasks and manifests.
-
-    Args:
-        filterfn (func): A function to further reduce tasks after the bugbug
-                         algorithm.
-    """
     BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
     RETRY_TIMEOUT = 4 * 60  # seconds
     RETRY_INTERVAL = 5      # seconds
-
-    def __init__(self, filterfn):
-        self.filterfn = filterfn
 
     @memoized_property
     def session(self):
@@ -90,10 +66,8 @@ class BugBugPushSchedules(OptimizationStrategy):
 
         test_manifests = task.attributes.get('test_manifests')
         if test_manifests is None:
-            if task.label not in data.get('tasks', {}):
-                return True
-
-        elif not bool(set(task.attributes['test_manifests']) & set(data.get('groups', {}))):
+            if task.label in data.get('tasks', {}):
+                return False
             return True
 
-        return self.filterfn(task, params)
+        return not bool(set(task.attributes['test_manifests']) & set(data.get('groups', {})))
