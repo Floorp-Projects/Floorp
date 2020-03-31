@@ -100,9 +100,9 @@ JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,
   return CompileModuleHelper(cx, options, srcBuf);
 }
 
-JS_PUBLIC_API JSObject* JS::CompileModuleDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Utf8Unit>& srcBuf) {
+JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,
+                                          const ReadOnlyCompileOptions& options,
+                                          SourceText<Utf8Unit>& srcBuf) {
   return CompileModuleHelper(cx, options, srcBuf);
 }
 
