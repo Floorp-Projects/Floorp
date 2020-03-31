@@ -2,8 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! The different metric types supported by the Glean SDK to handle data.
+use nserror::{nsresult, NS_OK};
+use nsstring::nsAString;
 
-mod ping;
-
-pub use ping::PingType;
+#[no_mangle]
+pub unsafe extern "C" fn fog_init(_data_dir: &nsAString, _pingsender_path: &nsAString) -> nsresult {
+    NS_OK
+}

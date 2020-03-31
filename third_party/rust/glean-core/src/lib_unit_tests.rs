@@ -10,8 +10,11 @@ use crate::metrics::RecordedExperimentData;
 use crate::metrics::StringMetric;
 
 const GLOBAL_APPLICATION_ID: &str = "org.mozilla.glean.test.app";
-pub fn new_glean() -> (Glean, tempfile::TempDir) {
-    let dir = tempfile::tempdir().unwrap();
+pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDir) {
+    let dir = match tempdir {
+        Some(tempdir) => tempdir,
+        None => tempfile::tempdir().unwrap(),
+    };
     let tmpname = dir.path().display().to_string();
     let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
     (glean, dir)
@@ -19,7 +22,7 @@ pub fn new_glean() -> (Glean, tempfile::TempDir) {
 
 #[test]
 fn path_is_constructed_from_data() {
-    let (glean, _) = new_glean();
+    let (glean, _) = new_glean(None);
 
     assert_eq!(
         "/submit/org-mozilla-glean-test-app/baseline/1/this-is-a-docid",
@@ -169,7 +172,7 @@ fn client_id_and_first_run_date_must_be_regenerated() {
     {
         let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
 
-        glean.data_store.clear_all();
+        glean.data_store.as_ref().unwrap().clear_all();
 
         assert!(glean
             .core_metrics
@@ -200,7 +203,7 @@ fn client_id_and_first_run_date_must_be_regenerated() {
 
 #[test]
 fn basic_metrics_should_be_cleared_when_uploading_is_disabled() {
-    let (mut glean, _t) = new_glean();
+    let (mut glean, _t) = new_glean(None);
     let metric = StringMetric::new(CommonMetricData::new(
         "category",
         "string_metric",
@@ -225,7 +228,7 @@ fn basic_metrics_should_be_cleared_when_uploading_is_disabled() {
 
 #[test]
 fn first_run_date_is_managed_correctly_when_toggling_uploading() {
-    let (mut glean, _) = new_glean();
+    let (mut glean, _) = new_glean(None);
 
     let original_first_run_date = glean
         .core_metrics
@@ -253,7 +256,7 @@ fn first_run_date_is_managed_correctly_when_toggling_uploading() {
 
 #[test]
 fn client_id_is_managed_correctly_when_toggling_uploading() {
-    let (mut glean, _) = new_glean();
+    let (mut glean, _) = new_glean(None);
 
     let original_client_id = glean
         .core_metrics
@@ -395,6 +398,145 @@ fn correct_order() {
 }
 
 #[test]
+#[rustfmt::skip] // Let's not merge lines
+fn backwards_compatible_deserialization() {
+    use std::env;
+    use std::time::Duration;
+    use chrono::prelude::*;
+    use histogram::Histogram;
+    use metrics::{Metric::*, TimeUnit};
+
+    // Prepare some data to fill in
+    let dt = FixedOffset::east(9*3600).ymd(2014, 11, 28).and_hms_nano(21, 45, 59, 12);
+
+    let mut custom_dist_exp = Histogram::exponential(1, 500, 10);
+    custom_dist_exp.accumulate(10);
+
+    let mut custom_dist_linear = Histogram::linear(1, 500, 10);
+    custom_dist_linear.accumulate(10);
+
+    let mut time_dist = Histogram::functional(2.0, 8.0);
+    time_dist.accumulate(10);
+
+    let mut mem_dist = Histogram::functional(2.0, 16.0);
+    mem_dist.accumulate(10);
+
+    // One of every metric type. The values are arbitrary, but stable.
+    let all_metrics = vec![
+        (
+            "boolean",
+            vec![0, 0, 0, 0, 1],
+            Boolean(true)
+        ),
+        (
+            "counter",
+            vec![1, 0, 0, 0, 20, 0, 0, 0],
+            Counter(20)
+        ),
+        (
+            "custom exponential distribution",
+                vec![2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 1,
+                     0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0,
+                     0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 244, 1, 0, 0, 0, 0, 0, 0, 10, 0,
+                     0, 0, 0, 0, 0, 0],
+            CustomDistributionExponential(custom_dist_exp)
+        ),
+        (
+            "custom linear distribution",
+            vec![3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                 0, 0, 0, 0, 0, 0, 244, 1, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0],
+            CustomDistributionLinear(custom_dist_linear)
+        ),
+        (
+            "datetime",
+            vec![4, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 50, 48, 49, 52, 45, 49, 49, 45,
+                 50, 56, 84, 50, 49, 58, 52, 53, 58, 53, 57, 46, 48, 48, 48, 48, 48,
+                 48, 48, 49, 50, 43, 48, 57, 58, 48, 48, 3, 0, 0, 0],
+            Datetime(dt, TimeUnit::Second),
+        ),
+        (
+            "experiment",
+            vec![5, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 98, 114, 97, 110, 99, 104, 0],
+            Experiment(RecordedExperimentData { branch: "branch".into(), extra: None, }),
+        ),
+        (
+            "quantity",
+            vec![6, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0],
+            Quantity(17)
+        ),
+        (
+            "string",
+            vec![7, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 103, 108, 101, 97, 110],
+            String("glean".into())
+        ),
+        (
+            "string list",
+            vec![8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0,
+                 103, 108, 101, 97, 110],
+            StringList(vec!["glean".into()])
+        ),
+        (
+            "uuid",
+            vec![9, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 48, 56, 50, 99, 51, 101, 53, 50,
+                 45, 48, 97, 49, 56, 45, 49, 49, 101, 97, 45, 57, 52, 54, 102, 45, 48,
+                 102, 101, 48, 99, 57, 56, 99, 51, 54, 49, 99],
+            Uuid("082c3e52-0a18-11ea-946f-0fe0c98c361c".into()),
+        ),
+        (
+            "timespan",
+            vec![10, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+            Timespan(Duration::new(5, 0), TimeUnit::Second),
+        ),
+        (
+            "timing distribution",
+            vec![11, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 123, 81, 125,
+                 60, 184, 114, 241, 63],
+            TimingDistribution(time_dist),
+        ),
+        (
+            "memory distribution",
+            vec![12, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 15, 137, 249,
+                 108, 88, 181, 240, 63],
+             MemoryDistribution(mem_dist),
+        ),
+    ];
+
+    for (name, data, metric) in all_metrics {
+        // Helper to print serialization data if instructed by environment variable
+        // Run with:
+        //
+        // ```text
+        // PRINT_DATA=1 cargo test -p glean-core --lib -- --nocapture backwards
+        // ```
+        //
+        // This should not be necessary to re-run and change here, unless a bincode upgrade
+        // requires us to also migrate existing data.
+        if env::var("PRINT_DATA").is_ok() {
+            let bindata = bincode::serialize(&metric).unwrap();
+            println!("(\n    {:?},\n    vec!{:?},", name, bindata);
+        } else {
+            // Otherwise run the test
+            let deserialized = bincode::deserialize(&data).unwrap();
+            if let CustomDistributionExponential(hist) = &deserialized {
+                hist.snapshot_values(); // Force initialization of the ranges
+            }
+            if let CustomDistributionLinear(hist) = &deserialized {
+                hist.snapshot_values(); // Force initialization of the ranges
+            }
+
+            assert_eq!(
+                metric, deserialized,
+                "Expected properly deserialized {}",
+                name
+            );
+        }
+    }
+}
+
+#[test]
 fn test_first_run() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
@@ -408,5 +550,38 @@ fn test_first_run() {
         // Other runs must be not marked as "first run".
         let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
         assert!(!glean.is_first_run());
+    }
+}
+
+#[test]
+fn test_dirty_bit() {
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+    {
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
+        // The dirty flag must not be set the first time Glean runs.
+        assert!(!glean.is_dirty_flag_set());
+
+        // Set the dirty flag and check that it gets correctly set.
+        glean.set_dirty_flag(true);
+        assert!(glean.is_dirty_flag_set());
+    }
+
+    {
+        // Check that next time Glean runs, it correctly picks up the "dirty flag".
+        // It is expected to be 'true'.
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
+        assert!(glean.is_dirty_flag_set());
+
+        // Set the dirty flag to false.
+        glean.set_dirty_flag(false);
+        assert!(!glean.is_dirty_flag_set());
+    }
+
+    {
+        // Check that next time Glean runs, it correctly picks up the "dirty flag".
+        // It is expected to be 'false'.
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true).unwrap();
+        assert!(!glean.is_dirty_flag_set());
     }
 }

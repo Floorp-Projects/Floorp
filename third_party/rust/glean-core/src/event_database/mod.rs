@@ -140,7 +140,7 @@ impl EventDatabase {
 
         let mut ping_sent = false;
         for store_name in store_names {
-            if let Err(err) = glean.submit_ping_by_name(&store_name) {
+            if let Err(err) = glean.submit_ping_by_name(&store_name, None) {
                 log::error!(
                     "Error flushing existing events to the '{}' ping: {}",
                     store_name,
@@ -199,7 +199,7 @@ impl EventDatabase {
         // If any of the event stores reached maximum size, submit the pings
         // containing those events immediately.
         for store_name in stores_to_submit {
-            if let Err(err) = glean.submit_ping_by_name(store_name) {
+            if let Err(err) = glean.submit_ping_by_name(store_name, None) {
                 log::error!(
                     "Got more than {} events, but could not send {} ping: {}",
                     glean.get_max_events(),
