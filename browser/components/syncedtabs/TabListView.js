@@ -56,8 +56,6 @@ function TabListView(window, props) {
   this._emptyClientTemplate = this._doc.getElementById("empty-client-template");
   this._tabTemplate = this._doc.getElementById("tab-template");
   this.tabsFilter = this._doc.querySelector(".tabsFilter");
-  this.clearFilter = this._doc.querySelector(".textbox-search-clear");
-  this.searchBox = this._doc.querySelector(".search-box");
 
   this.container = this._doc.createElement("div");
 
@@ -208,10 +206,9 @@ TabListView.prototype = {
 
   // These listeners are attached only once, when we initialize the view
   _attachFixedListeners() {
-    this.tabsFilter.addEventListener("input", this.onFilter.bind(this));
+    this.tabsFilter.addEventListener("command", this.onFilter.bind(this));
     this.tabsFilter.addEventListener("focus", this.onFilterFocus.bind(this));
     this.tabsFilter.addEventListener("blur", this.onFilterBlur.bind(this));
-    this.clearFilter.addEventListener("click", this.onClearFilter.bind(this));
   },
 
   // These listeners have to be re-created every time since we re-create the list
@@ -222,17 +219,9 @@ TabListView.prototype = {
   },
 
   _updateSearchBox(state) {
-    if (state.filter) {
-      this.searchBox.classList.add("filtered");
-    } else {
-      this.searchBox.classList.remove("filtered");
-    }
     this.tabsFilter.value = state.filter;
     if (state.inputFocused) {
-      this.searchBox.setAttribute("focused", true);
       this.tabsFilter.focus();
-    } else {
-      this.searchBox.removeAttribute("focused");
     }
   },
 
@@ -398,10 +387,6 @@ TabListView.prototype = {
     }
   },
 
-  onClearFilter() {
-    this.props.onClearFilter();
-  },
-
   onFilterFocus() {
     this.props.onFilterFocus();
   },
@@ -490,7 +475,7 @@ TabListView.prototype = {
   handleTabsFilterContextMenuShown(event) {
     let document = event.target.ownerDocument;
     let focusedElement = document.commandDispatcher.focusedElement;
-    if (focusedElement != this.tabsFilter) {
+    if (focusedElement != this.tabsFilter.inputField) {
       this.tabsFilter.focus();
     }
     for (let item of event.target.children) {
