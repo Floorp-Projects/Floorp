@@ -30,6 +30,22 @@ function waitForBlackboxCount(dbg, count) {
   );
 }
 
+async function waitForSourceToUnBlackBox(dbg, source) {
+  const sourceUrl = findSource(dbg, source).url;
+  const thread = dbg.selectors.getCurrentThread();
+
+  return await waitFor(
+    async () => {
+      const threadSources = await dbg.client.fetchThreadSources(thread);
+
+      const sourceIndex = threadSources.findIndex(
+        threadSource => threadSource.source.url === sourceUrl
+      );
+
+      return threadSources[sourceIndex].source.isBlackBoxed === false;
+  });
+}
+
 add_task(async function() {
   const dbg = await initDebugger("doc-blackbox-all.html");
  
@@ -65,13 +81,13 @@ add_task(async function() {
   await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllInside, "Unblackbox files in this directory");
   selectContextMenuItem(dbg, nodeSelectors.nodeUnBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 0);
+  await waitForSourceToUnBlackBox(dbg, sourceFiles.previewGetter);
 
   info("All sources inside the selected directory are unblackboxed.");
   sources = dbg.selectors.getSourceList();
   is(sources.every(source => !source.isBlackBoxed), true, "All sources are unblackboxed as expected.");
 
   info("All sources are unblackboxed and the debugger pauses on line 14.");
-  await selectSource(dbg, sourceFiles.nestedSource);
   invokeInTab("funcA");
   await waitForPaused(dbg);
   await resume(dbg);
@@ -108,6 +124,7 @@ add_task(async function() {
   await assertContextMenuLabel(dbg, nodeSelectors.nodeUnBlackBoxAllOutside, "Unblackbox files outside this directory");
   selectContextMenuItem(dbg, nodeSelectors.nodeUnBlackBoxAllOutside);
   await waitForBlackboxCount(dbg, 1);
+  await waitForSourceToUnBlackBox(dbg, sourceFiles.previewGetter);
 
   info("Only source inside the selected directory is still blackboxed.");
   is(findSource(dbg, sourceFiles.nestedSource).isBlackBoxed, false, "nested-source.js source file is not blackboxed");
@@ -115,7 +132,6 @@ add_task(async function() {
   is(findSource(dbg, sourceFiles.previewGetter).isBlackBoxed, false, "preview-getter.js source file is not blackboxed");
 
   info("The invoked function is not blackboxed and the debugger pauses on line 14.");
-  await selectSource(dbg, sourceFiles.codeReload1);
   invokeInTab("funcA");
   await waitForPaused(dbg);
   await resume(dbg);
