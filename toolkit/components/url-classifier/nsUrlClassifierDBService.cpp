@@ -2446,6 +2446,9 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
         mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
     content->SetEventTargetForActor(actor, systemGroupEventTarget);
 
+    URIParams uri;
+    SerializeURI(aURI, uri);
+
     nsTArray<IPCURLClassifierFeature> ipcFeatures;
     for (nsIUrlClassifierFeature* feature : aFeatures) {
       nsAutoCString name;
@@ -2470,8 +2473,7 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
           IPCURLClassifierFeature(name, tables, skipHostList));
     }
 
-    if (!content->SendPURLClassifierLocalConstructor(actor, aURI,
-                                                     ipcFeatures)) {
+    if (!content->SendPURLClassifierLocalConstructor(actor, uri, ipcFeatures)) {
       return NS_ERROR_FAILURE;
     }
 

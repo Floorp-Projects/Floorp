@@ -3682,9 +3682,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       } else {
         mozilla::dom::ContentChild* cc =
             mozilla::dom::ContentChild::GetSingleton();
-        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
+        mozilla::ipc::URIParams uri;
+        SerializeURI(aURI, uri);
+        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, flags,
                             mOriginAttributes, &isStsHost);
-        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, aURI, flags,
+        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, uri, flags,
                             mOriginAttributes, &isPinnedHost);
       }
 
@@ -8129,7 +8131,10 @@ void nsDocShell::CopyFavicon(nsIURI* aOldURI, nsIURI* aNewURI,
   if (XRE_IsContentProcess()) {
     dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
     if (contentChild) {
-      contentChild->SendCopyFavicon(aOldURI, aNewURI,
+      mozilla::ipc::URIParams oldURI, newURI;
+      SerializeURI(aOldURI, oldURI);
+      SerializeURI(aNewURI, newURI);
+      contentChild->SendCopyFavicon(oldURI, newURI,
                                     IPC::Principal(aLoadingPrincipal),
                                     aInPrivateBrowsing);
     }

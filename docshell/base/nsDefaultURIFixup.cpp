@@ -389,7 +389,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     }
 
     RefPtr<nsIInputStream> postData;
-    RefPtr<nsIURI> uri;
+    Maybe<mozilla::ipc::URIParams> uri;
     nsAutoString providerName;
     if (!contentChild->SendKeywordToURI(keyword, aIsPrivateContext,
                                         &providerName, &postData, &uri)) {
@@ -403,7 +403,8 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
       postData.forget(aPostData);
     }
 
-    info->mPreferredURI = uri.forget();
+    nsCOMPtr<nsIURI> temp = DeserializeURI(uri);
+    info->mPreferredURI = std::move(temp);
     return NS_OK;
   }
 
