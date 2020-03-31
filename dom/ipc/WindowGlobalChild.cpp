@@ -101,9 +101,6 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     return wgc.forget();
   }
 
-  RefPtr<BrowserChild> browserChild =
-      BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
-
   // Send the link constructor over PBrowser, or link over PInProcess.
   if (XRE_IsParentProcess()) {
     InProcessChild* ipChild = InProcessChild::Singleton();
@@ -120,30 +117,31 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
 
     // Note: ref is released in DeallocPWindowGlobalParent
     ipParent->BindPWindowGlobalEndpoint(std::move(endpoint), wgp);
-    wgp->Init(init, /* aBrowserParent */ nullptr);
+    wgp->Init(init);
   } else {
-    ContentChild* contentChild = ContentChild::GetSingleton();
+    RefPtr<BrowserChild> browserChild =
+        BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
+    MOZ_ASSERT(browserChild);
+
     ManagedEndpoint<PWindowGlobalParent> endpoint =
-        contentChild->OpenPWindowGlobalEndpoint(wgc);
+        browserChild->OpenPWindowGlobalEndpoint(wgc);
+
     browserChild->SendNewWindowGlobal(std::move(endpoint), init);
   }
 
-  wgc->Init(browserChild);
+  wgc->Init();
   return wgc.forget();
 }
 
-void WindowGlobalChild::Init(BrowserChild* aBrowserChild) {
+void WindowGlobalChild::Init() {
   if (!mDocumentURI) {
     NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
   }
 
   // Ensure we have a corresponding WindowContext object.
   if (XRE_IsParentProcess()) {
-    MOZ_ASSERT(!aBrowserChild);
     mWindowContext = GetParentActor();
   } else {
-    MOZ_ASSERT(aBrowserChild);
-    mBrowserChild = aBrowserChild;
     mWindowContext = WindowContext::Create(this);
   }
 
@@ -183,8 +181,10 @@ already_AddRefed<WindowGlobalParent> WindowGlobalChild::GetParentActor() {
 }
 
 already_AddRefed<BrowserChild> WindowGlobalChild::GetBrowserChild() {
-  return do_AddRef(
-      BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(mWindowGlobal)));
+  if (IsInProcess() || !CanSend()) {
+    return nullptr;
+  }
+  return do_AddRef(static_cast<BrowserChild*>(Manager()));
 }
 
 uint64_t WindowGlobalChild::ContentParentId() {
@@ -242,7 +242,13 @@ void WindowGlobalChild::Destroy() {
           windowActor->StartDestroy();
         }
 
-        self->SendDestroy();
+        // Perform async IPC shutdown unless we're not in-process, and our
+        // BrowserChild is in the process of being destroyed, which will destroy
+        // us as well.
+        RefPtr<BrowserChild> browserChild = self->GetBrowserChild();
+        if (!browserChild || !browserChild->IsDestroyed()) {
+          self->SendDestroy();
+        }
       }));
 }
 

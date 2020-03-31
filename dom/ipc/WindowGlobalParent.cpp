@@ -69,11 +69,8 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
   mFields.SetWithoutSyncing<IDX_OuterWindowId>(aInit.outerWindowId());
 }
 
-void WindowGlobalParent::Init(const WindowGlobalInit& aInit,
-                              BrowserParent* aBrowserParent) {
+void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   MOZ_ASSERT(Manager(), "Should have a manager!");
-
-  mBrowserParent = aBrowserParent;
 
   // Invoke our base class' `Init` method. This will register us in
   // `gWindowContexts`.
@@ -81,17 +78,13 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit,
 
   // Determine which content process the window global is coming from.
   dom::ContentParentId processId(0);
-  if (mInProcess) {
-    MOZ_DIAGNOSTIC_ASSERT(!GetContentParent());
-    MOZ_DIAGNOSTIC_ASSERT(!mBrowserParent);
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(mBrowserParent);
-    MOZ_DIAGNOSTIC_ASSERT(mBrowserParent->Manager() == Manager());
-
-    processId = GetContentParent()->ChildID();
+  ContentParent* cp = nullptr;
+  if (!mInProcess) {
+    cp = static_cast<ContentParent*>(Manager()->Manager());
+    processId = cp->ChildID();
 
     // Ensure the content process has permissions for this principal.
-    GetContentParent()->TransmitPermissionsForPrincipal(mDocumentPrincipal);
+    cp->TransmitPermissionsForPrincipal(mDocumentPrincipal);
   }
 
   MOZ_DIAGNOSTIC_ASSERT(
@@ -105,13 +98,12 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit,
     NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
   }
 
-  // NOTE: `GetContentParent()` may be nullptr, but that's OK, we need to tell
-  // every other process in our group in that case.
+  // NOTE: `cp` may be nullptr, but that's OK, we need to tell every other
+  // process in our group in that case.
   IPCInitializer ipcinit = GetIPCInitializer();
-  Group()->EachOtherParent(
-      GetContentParent(), [&](ContentParent* otherContent) {
-        Unused << otherContent->SendCreateWindowContext(ipcinit);
-      });
+  Group()->EachOtherParent(cp, [&](ContentParent* otherContent) {
+    Unused << otherContent->SendCreateWindowContext(ipcinit);
+  });
 
   // If there is no current window global, assume we're about to become it
   // optimistically.
@@ -146,11 +138,11 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
   return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
 }
 
-ContentParent* WindowGlobalParent::GetContentParent() {
-  if (IsInProcess() || !CanRecv()) {
+already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
+  if (IsInProcess() || !CanSend()) {
     return nullptr;
   }
-  return static_cast<ContentParent*>(Manager());
+  return do_AddRef(static_cast<BrowserParent*>(Manager()));
 }
 
 already_AddRefed<nsFrameLoader> WindowGlobalParent::GetRootFrameLoader() {
@@ -165,11 +157,13 @@ already_AddRefed<nsFrameLoader> WindowGlobalParent::GetRootFrameLoader() {
 }
 
 uint64_t WindowGlobalParent::ContentParentId() {
-  return GetContentParent() ? GetContentParent()->ChildID() : 0;
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  return browserParent ? browserParent->Manager()->ChildID() : 0;
 }
 
 int32_t WindowGlobalParent::OsPid() {
-  return GetContentParent() ? GetContentParent()->Pid() : -1;
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  return browserParent ? browserParent->Manager()->Pid() : -1;
 }
 
 // A WindowGlobalPaernt is the root in its process if it has no parent, or its
@@ -284,7 +278,10 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   }
 
   if (CanSend()) {
-    Unused << Send__delete__(this);
+    RefPtr<BrowserParent> browserParent = GetBrowserParent();
+    if (!browserParent || !browserParent->IsDestroyed()) {
+      Unused << Send__delete__(this);
+    }
   }
   return IPC_OK();
 }
@@ -311,8 +308,8 @@ void WindowGlobalParent::ReceiveRawMessage(
 }
 
 const nsAString& WindowGlobalParent::GetRemoteType() {
-  if (ContentParent* contentParent = GetContentParent()) {
-    return contentParent->GetRemoteType();
+  if (RefPtr<BrowserParent> browserParent = GetBrowserParent()) {
+    return browserParent->Manager()->GetRemoteType();
   }
 
   return VoidString();
@@ -344,16 +341,13 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
   // Notify the OnContentBlockingEvent if necessary.
   if (event) {
-    // Get the root browser parent directly from our root element, since the
-    // content blocking event could happen in the early stage of loading, i.e.
-    // accessing cookies for the http header. At this stage, the actor is not
-    // ready, so we would get a nullptr from GetBrowserParent().
-    RefPtr<nsFrameLoader> frameLoader = GetRootFrameLoader();
-    if (NS_WARN_IF(!frameLoader)) {
-      return;
-    }
-
-    BrowserParent* browserParent = frameLoader->GetBrowserParent();
+    // Get the browser parent from the manager directly since the content
+    // blocking event could happen in the early stage of loading, i.e.
+    // accessing cookies for the http header. At this stage, the actor is
+    // not ready, so we would get a nullptr from GetBrowserParent(). But,
+    // we can actually get it from the manager.
+    RefPtr<BrowserParent> browserParent =
+        static_cast<BrowserParent*>(Manager());
     if (NS_WARN_IF(!browserParent)) {
       return;
     }
@@ -361,6 +355,7 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
     nsCOMPtr<nsIBrowser> browser;
     nsCOMPtr<nsIWebProgress> manager;
     nsCOMPtr<nsIWebProgressListener> managerAsListener;
+
     if (!browserParent->GetWebProgressListener(
             getter_AddRefs(browser), getter_AddRefs(manager),
             getter_AddRefs(managerAsListener))) {
@@ -591,28 +586,37 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   // Note that our WindowContext has become discarded.
   WindowContext::Discard();
 
+  ContentParent* cp = nullptr;
+  if (!mInProcess) {
+    cp = static_cast<ContentParent*>(Manager()->Manager());
+  }
+
   RefPtr<WindowGlobalParent> self(this);
-  Group()->EachOtherParent(GetContentParent(), [&](ContentParent* cp) {
-    // Keep the WindowContext alive until other
-    // processes have acknowledged it has been
-    // discarded.
-    auto callback = [self](auto) {};
-    cp->SendDiscardWindowContext(InnerWindowId(), callback, callback);
+  Group()->EachOtherParent(cp, [&](ContentParent* otherContent) {
+    // Keep the WindowContext alive until other processes have acknowledged it
+    // has been discarded.
+    auto resolve = [self](bool) {};
+    auto reject = [self](mozilla::ipc::ResponseRejectReason) {};
+    otherContent->SendDiscardWindowContext(InnerWindowId(), resolve, reject);
   });
 
   // Report content blocking log when destroyed.
-  // There shouldn't have any content blocking log when a document is loaded in
+  // There shouldn't have any content blocking log when a documnet is loaded in
   // the parent process(See NotifyContentBlockingeEvent), so we could skip
   // reporting log when it is in-process.
-  if (mBrowserParent) {
-    nsCOMPtr<nsILoadContext> loadContext = mBrowserParent->GetLoadContext();
-    if (loadContext && !loadContext->UsePrivateBrowsing() &&
-        BrowsingContext()->IsTopContent()) {
-      GetContentBlockingLog()->ReportLog(DocumentPrincipal());
+  if (!mInProcess) {
+    RefPtr<BrowserParent> browserParent =
+        static_cast<BrowserParent*>(Manager());
+    if (browserParent) {
+      nsCOMPtr<nsILoadContext> loadContext = browserParent->GetLoadContext();
+      if (loadContext && !loadContext->UsePrivateBrowsing() &&
+          BrowsingContext()->IsTopContent()) {
+        GetContentBlockingLog()->ReportLog(DocumentPrincipal());
 
-      if (mDocumentURI && (net::SchemeIsHTTP(mDocumentURI) ||
-                           net::SchemeIsHTTPS(mDocumentURI))) {
-        GetContentBlockingLog()->ReportOrigins();
+        if (mDocumentURI && (net::SchemeIsHTTP(mDocumentURI) ||
+                             net::SchemeIsHTTPS(mDocumentURI))) {
+          GetContentBlockingLog()->ReportOrigins();
+        }
       }
     }
   }
@@ -643,6 +647,15 @@ JSObject* WindowGlobalParent::WrapObject(JSContext* aCx,
 
 nsIGlobalObject* WindowGlobalParent::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
+nsIContentParent* WindowGlobalParent::GetContentParent() {
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  if (!browserParent) {
+    return nullptr;
+  }
+
+  return browserParent->Manager();
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
