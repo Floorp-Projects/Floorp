@@ -531,8 +531,6 @@ class ProviderInterventions extends UrlbarProvider {
     if (topDocIDs.has("update")) {
       // There are several update tips. Figure out which one to show.
       switch (appUpdater.status) {
-        case AppUpdater.STATUS.DOWNLOADING:
-        case AppUpdater.STATUS.STAGING:
         case AppUpdater.STATUS.READY_FOR_RESTART:
           // Prompt the user to restart.
           this.currentTip = TIPS.UPDATE_RESTART;
@@ -553,7 +551,9 @@ class ProviderInterventions extends UrlbarProvider {
           return false;
         default:
           // Give up and ask the user to download the latest version from the
-          // web.
+          // web. We default to this case when the update is still downloading
+          // because an update doesn't actually occur if the user were to
+          // restart the browser. See bug 1625241.
           this.currentTip = TIPS.UPDATE_WEB;
           break;
       }
