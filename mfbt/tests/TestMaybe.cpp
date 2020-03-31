@@ -169,7 +169,7 @@ struct UncopyableUnmovableValue {
   Status mStatus;
 };
 
-static_assert(std::is_literal_type_v<Maybe<int>>);
+static_assert(std::is_trivially_destructible_v<Maybe<int>>);
 static_assert(std::is_trivially_copy_constructible_v<Maybe<int>>);
 static_assert(std::is_trivially_copy_assignable_v<Maybe<int>>);
 
@@ -191,6 +191,35 @@ struct TriviallyDestructible {
 };
 
 static_assert(std::is_trivially_destructible_v<Maybe<TriviallyDestructible>>);
+
+struct UncopyableValueLiteralType {
+  explicit constexpr UncopyableValueLiteralType(int aValue) : mValue{aValue} {}
+
+  UncopyableValueLiteralType(UncopyableValueLiteralType&&) = default;
+  UncopyableValueLiteralType& operator=(UncopyableValueLiteralType&&) = default;
+
+  int mValue;
+};
+
+static_assert(
+    std::is_trivially_destructible_v<Maybe<UncopyableValueLiteralType>>);
+static_assert(!std::is_copy_constructible_v<Maybe<UncopyableValueLiteralType>>);
+static_assert(!std::is_copy_assignable_v<Maybe<UncopyableValueLiteralType>>);
+static_assert(std::is_move_constructible_v<Maybe<UncopyableValueLiteralType>>);
+static_assert(std::is_move_assignable_v<Maybe<UncopyableValueLiteralType>>);
+
+constexpr Maybe<UncopyableValueLiteralType> someUncopyable =
+    Some(UncopyableValueLiteralType{42});
+static_assert(someUncopyable.isSome());
+static_assert(42 == someUncopyable->mValue);
+
+constexpr Maybe<UncopyableValueLiteralType> someUncopyableAssigned = [] {
+  auto res = Maybe<UncopyableValueLiteralType>{};
+  res = Some(UncopyableValueLiteralType{42});
+  return res;
+}();
+static_assert(someUncopyableAssigned.isSome());
+static_assert(42 == someUncopyableAssigned->mValue);
 
 static bool TestBasicFeatures() {
   // Check that a Maybe<T> is initialized to Nothing.
@@ -1158,9 +1187,12 @@ static bool TestTypeConversion() {
 }
 
 static bool TestReference() {
-  static_assert(std::is_literal_type_v<Maybe<int&>>);
+  static_assert(std::is_trivially_destructible_v<Maybe<int&>>);
   static_assert(std::is_trivially_copy_constructible_v<Maybe<int&>>);
   static_assert(std::is_trivially_copy_assignable_v<Maybe<int&>>);
+
+  static_assert(Maybe<int&>{}.isNothing());
+  static_assert(Maybe<int&>{Nothing{}}.isNothing());
 
   {
     Maybe<int&> defaultConstructed;
