@@ -4,6 +4,11 @@
 // Tests that getBoxQuadsFromWindowOrigin works across process
 // boundaries.
 //
+// The test forces a fission window, because there is some
+// imprecision in the APZ transforms for non-fission windows,
+// and the getBoxQuadsFromWindowOrigin is designed specifically
+// to be used by a fission browser.
+//
 // This test embeds a number of documents within iframes,
 // with a variety of borders and padding. Each iframe hosts
 // a document in different domain than its container.
@@ -44,27 +49,45 @@
 // 3) An iframe embedded in an SVG.
 
 "use strict";
+/* import-globals-from ../../../../gfx/layers/apz/test/mochitest/apz_test_utils.js */
 
 const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers_getBoxQuads2-a.html";
 
 add_task(async function() {
-  const tab = await addTab(TEST_URI);
+  info("Opening a fission window.");
+  const fissionWin = await BrowserTestUtils.openNewBrowserWindow({
+    remote: true,
+    fission: true,
+  });
+
+  loadHelperScript(
+    "../../../../gfx/layers/apz/test/mochitest/apz_test_utils.js"
+  );
+  loadHelperScript("../../../../../tests/SimpleTest/paint_listener.js");
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    fissionWin.gBrowser,
+    TEST_URI
+  );
 
   info("Running tests");
+
+  ok(waitUntilApzStable, "waitUntilApzStable is defined.");
+  await waitUntilApzStable();
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     const win = content.window;
     const doc = content.document;
-    const docNode = doc.documentElement;
+    const refNode = doc.documentElement;
     const iframeB = doc.getElementById("b");
     const iframeD = doc.getElementById("d");
 
-    // Get the offset of the root document to the window origin. We'll
-    // use this later to adjust the quads we get from the iframes.
-    const docQuad = docNode.getBoxQuadsFromWindowOrigin()[0];
-    const offsetX = docQuad.p1.x;
-    const offsetY = docQuad.p1.y;
-    info(`Document is offset ${offsetX}, ${offsetY} from window.`);
+    // Get the offset of the reference node to the window origin. We'll use
+    // this offset later to adjust the quads we get from the iframes.
+    const refQuad = refNode.getBoxQuadsFromWindowOrigin()[0];
+    const offsetX = refQuad.p1.x;
+    const offsetY = refQuad.p1.y;
+    info(`Reference node is offset (${offsetX}, ${offsetY}) from window.`);
 
     function postAndReceiveMessage(iframe) {
       return new Promise(resolve => {
@@ -79,26 +102,81 @@ add_task(async function() {
       });
     }
 
+    // Bug 1624659: Our checks are not always precise, though for these test
+    // cases they should align precisely to css pixels. For now we use an
+    // epsilon and a locally-defined isfuzzy to compensate. We can't use
+    // SimpleTest.isfuzzy, because it's not bridged to the ContentTask.
+    // If that is ever bridged, we can remove the isfuzzy definition here and
+    // everything should "just work".
+    function isfuzzy(actual, expected, epsilon, msg) {
+      if (actual >= expected - epsilon && actual <= expected + epsilon) {
+        ok(true, msg);
+      } else {
+        // This will trigger the usual failure message for is.
+        is(actual, expected, msg);
+      }
+    }
+
+    const ADDITIVE_EPSILON = 1;
     const checksToMake = [
-      { msg: "C-div", iframe: iframeB, x: 130, y: 230 },
-      { msg: "E-div", iframe: iframeD, x: 430, y: 260 },
+      {
+        msg: "C-div",
+        iframe: iframeB,
+        left: 130,
+        top: 230,
+        right: 180,
+        bottom: 280,
+      },
+      {
+        msg: "E-div",
+        iframe: iframeD,
+        left: 430,
+        top: 260,
+        right: 480,
+        bottom: 310,
+      },
     ];
 
-    for (const { msg, iframe, x, y } of checksToMake) {
+    for (const { msg, iframe, left, top, right, bottom } of checksToMake) {
       info("Checking " + msg + ".");
       const quad = await postAndReceiveMessage(iframe);
-      is(
-        Math.round(quad.p1.x - offsetX),
-        x,
-        msg + " quad x position is as expected."
+      const bounds = quad.getBounds();
+      info(
+        `Quad bounds is (${bounds.left}, ${bounds.top}) to (${bounds.right}, ${bounds.bottom}).`
       );
-      is(
-        Math.round(quad.p1.y - offsetY),
-        y,
-        msg + " quad y position is as expected."
+      isfuzzy(
+        bounds.left - offsetX,
+        left,
+        ADDITIVE_EPSILON,
+        msg + " quad left position is as expected."
+      );
+      isfuzzy(
+        bounds.top - offsetY,
+        top,
+        ADDITIVE_EPSILON,
+        msg + " quad top position is as expected."
+      );
+      isfuzzy(
+        bounds.right - offsetX,
+        right,
+        ADDITIVE_EPSILON,
+        msg + " quad right position is as expected."
+      );
+      isfuzzy(
+        bounds.bottom - offsetY,
+        bottom,
+        ADDITIVE_EPSILON,
+        msg + " quad bottom position is as expected."
       );
     }
   });
 
-  gBrowser.removeCurrentTab();
+  fissionWin.gBrowser.removeCurrentTab();
+
+  await BrowserTestUtils.closeWindow(fissionWin);
+
+  // Clean up the properties added to window by paint_listener.js.
+  delete window.waitForAllPaintsFlushed;
+  delete window.waitForAllPaints;
+  delete window.promiseAllPaintsDone;
 });
