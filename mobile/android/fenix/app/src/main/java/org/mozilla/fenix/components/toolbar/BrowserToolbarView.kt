@@ -11,18 +11,18 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.annotation.LayoutRes
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.copy
-import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.paste
-import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.paste_and_go
-import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.app_bar
+import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
+import kotlinx.android.synthetic.main.component_browser_top_toolbar.view.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
 import mozilla.components.support.utils.URLStringUtils
@@ -240,7 +240,11 @@ class BrowserToolbarView(
     }
 
     fun expand() {
-        if (!settings.shouldUseBottomToolbar) {
+        if (settings.shouldUseBottomToolbar) {
+            (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                (behavior as BrowserToolbarBottomBehavior).forceExpand(view)
+            }
+        } else {
             layout.app_bar?.setExpanded(true)
         }
     }

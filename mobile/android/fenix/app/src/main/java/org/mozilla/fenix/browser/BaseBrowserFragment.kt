@@ -453,6 +453,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             )
 
             session.register(observer = object : Session.Observer {
+                override fun onNavigationStateChanged(
+                    session: Session,
+                    canGoBack: Boolean,
+                    canGoForward: Boolean
+                ) {
+                    // Once https://bugzilla.mozilla.org/show_bug.cgi?id=1626338 is fixed, we can
+                    // rely solely on `onLoadRequest` entirely, but as it stands that is not called
+                    // for history navigation (back or forward).
+                    browserToolbarView.expand()
+                }
+
                 override fun onLoadRequest(
                     session: Session,
                     url: String,
