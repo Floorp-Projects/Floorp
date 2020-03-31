@@ -17,7 +17,7 @@
 #include "jsapi.h"  // JS_EnsureLinearString, JS_GC, JS_Get{Latin1,TwoByte}LinearStringChars, JS_GetStringLength, JS_ValueToFunction
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompilationAndEvaluation.h"  // JS::Evaluate{,DontInflate}
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/Conversions.h"               // JS::ToString
 #include "js/MemoryFunctions.h"           // JS_malloc
@@ -60,18 +60,6 @@ static Source<Unit> MakeSourceAllWhitespace(JSContext* cx, size_t len) {
   return source;
 }
 
-static bool Evaluate(JSContext* cx, const JS::CompileOptions& options,
-                     JS::SourceText<char16_t>& sourceText) {
-  JS::Rooted<JS::Value> dummy(cx);
-  return JS::Evaluate(cx, options, sourceText, &dummy);
-}
-
-static bool Evaluate(JSContext* cx, const JS::CompileOptions& options,
-                     JS::SourceText<Utf8Unit>& sourceText) {
-  JS::Rooted<JS::Value> dummy(cx);
-  return JS::EvaluateDontInflate(cx, options, sourceText, &dummy);
-}
-
 template <typename Unit>
 static JSFunction* EvaluateChars(JSContext* cx, Source<Unit> chars, size_t len,
                                  char functionName, const char* func) {
@@ -85,8 +73,11 @@ static JSFunction* EvaluateChars(JSContext* cx, Source<Unit> chars, size_t len,
     return nullptr;
   }
 
-  if (!Evaluate(cx, options, sourceText)) {
-    return nullptr;
+  {
+    JS::Rooted<JS::Value> dummy(cx);
+    if (!JS::Evaluate(cx, options, sourceText, &dummy)) {
+      return nullptr;
+    }
   }
 
   // Evaluate the name of that function.

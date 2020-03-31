@@ -8,7 +8,7 @@
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::EvaluateDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
@@ -56,8 +56,7 @@ BEGIN_TEST(testRedefineGlobalEval) {
   CHECK(srcBuf.init(cx, data, mozilla::ArrayLength(data) - 1,
                     JS::SourceOwnership::Borrowed));
 
-  CHECK(JS::EvaluateDontInflate(cx, opts.setFileAndLine(__FILE__, __LINE__),
-                                srcBuf, &v));
+  CHECK(JS::Evaluate(cx, opts.setFileAndLine(__FILE__, __LINE__), srcBuf, &v));
 
   return true;
 }

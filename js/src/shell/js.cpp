@@ -1007,7 +1007,7 @@ static bool InitModuleLoader(JSContext* cx) {
   }
 
   RootedValue rv(cx);
-  return JS::EvaluateDontInflate(cx, options, srcBuf, &rv);
+  return JS::Evaluate(cx, options, srcBuf, &rv);
 }
 
 static bool GetModuleImportHook(JSContext* cx,
@@ -10287,7 +10287,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       }
 
       RootedValue rval(cx);
-      if (!JS::EvaluateDontInflate(cx, opts, srcBuf, &rval)) {
+      if (!JS::Evaluate(cx, opts, srcBuf, &rval)) {
         return false;
       }
 

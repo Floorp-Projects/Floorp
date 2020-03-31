@@ -955,7 +955,7 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
         JS::SourceText<mozilla::Utf8Unit> srcBuf;
         if (srcBuf.init(cx, argv[i], strlen(argv[i]),
                         JS::SourceOwnership::Borrowed)) {
-          JS::EvaluateDontInflate(cx, opts, srcBuf, &rval);
+          JS::Evaluate(cx, opts, srcBuf, &rval);
         }
 
         isInteractive = false;

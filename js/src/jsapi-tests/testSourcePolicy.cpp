@@ -4,7 +4,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::CompileFunction, JS::EvaluateDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::CompileFunction, JS::Evaluate
 #include "js/MemoryFunctions.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
@@ -26,11 +26,11 @@ BEGIN_TEST(testBug795104) {
 
   JS::CompileOptions opts(cx);
 
-  // We don't want an rval for our JS::EvaluateDontInflate call
+  // We don't want an rval for our JS::Evaluate call
   opts.setNoScriptRval(true);
 
   JS::RootedValue unused(cx);
-  CHECK(JS::EvaluateDontInflate(cx, opts, srcBuf, &unused));
+  CHECK(JS::Evaluate(cx, opts, srcBuf, &unused));
 
   JS::RootedFunction fun(cx);
   JS::RootedObjectVector emptyScopeChain(cx);
