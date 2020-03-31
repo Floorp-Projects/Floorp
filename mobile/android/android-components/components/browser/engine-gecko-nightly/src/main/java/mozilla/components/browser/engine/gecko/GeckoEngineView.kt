@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import org.mozilla.geckoview.BasicSelectionActionDelegate
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession
 
 /**
  * Gecko-based EngineView implementation.
@@ -101,16 +102,13 @@ class GeckoEngineView @JvmOverloads constructor(
             currentGeckoView.session?.let {
                 // Release a previously assigned session. Otherwise GeckoView will close it
                 // automatically.
+                detachSelectionActionDelegate(it)
                 currentGeckoView.releaseSession()
-                currentSelection = null
             }
 
             try {
                 currentGeckoView.setSession(internalSession.geckoSession)
-
-                currentSelection = GeckoSelectionActionDelegate.maybeCreate(context, selectionActionDelegate)
-                    ?: internalSession.geckoSession.selectionActionDelegate as? BasicSelectionActionDelegate
-                internalSession.geckoSession.selectionActionDelegate = currentSelection
+                attachSelectionActionDelegate(internalSession.geckoSession)
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =
@@ -120,6 +118,21 @@ class GeckoEngineView @JvmOverloads constructor(
                     "SET SESSION: Current activity: $activityClassName Other activity: $otherActivityClassName"
                 throw IllegalStateException(msg, e)
             }
+        }
+    }
+
+    private fun attachSelectionActionDelegate(session: GeckoSession) {
+        val delegate = GeckoSelectionActionDelegate.maybeCreate(context, selectionActionDelegate)
+        if (delegate != null) {
+            session.selectionActionDelegate = delegate
+            currentSelection = delegate
+        }
+    }
+
+    private fun detachSelectionActionDelegate(session: GeckoSession?) {
+        if (currentSelection != null) {
+            session?.selectionActionDelegate = null
+            currentSelection = null
         }
     }
 
@@ -134,9 +147,12 @@ class GeckoEngineView @JvmOverloads constructor(
 
     @Synchronized
     override fun release() {
-        currentSession?.apply { unregister(observer) }
+        detachSelectionActionDelegate(currentSession?.geckoSession)
 
-        currentSelection = null
+        currentSession?.apply {
+            unregister(observer)
+        }
+
         currentSession = null
 
         currentGeckoView.releaseSession()
