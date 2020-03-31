@@ -28,7 +28,7 @@ def run(message='{msg}', push=True, closed_tree=False, try_config=None):
     # XXX Remove once an intelligent scheduling algorithm is running on
     # autoland by default. This ensures `mach try auto` doesn't run SETA.
     try_config.setdefault('optimize-strategies',
-                          'taskgraph.optimize:experimental.bugbug_push_schedules')
+                          'taskgraph.optimize:experimental.bugbug.all')
 
     task_config = {
         'version': 2,
