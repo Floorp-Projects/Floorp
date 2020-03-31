@@ -55,6 +55,11 @@ class Compiler(base.Compiler):
             value = self.visit(child)(value)
         return value
 
+    def visit_IndexNode(self, node):
+        assert len(node.children) == 1
+        index = self.visit(node.children[0])
+        return lambda x: x[index]
+
     def visit_UnaryExpressionNode(self, node):
         assert len(node.children) == 2
         operator = self.visit(node.children[0])
