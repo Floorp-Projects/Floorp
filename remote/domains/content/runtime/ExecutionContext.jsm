@@ -21,6 +21,7 @@ const TYPED_ARRAY_CLASSES = [
   "Float32Array",
   "Float64Array",
 ];
+
 function uuid() {
   return uuidGen
     .generateUUID()
@@ -52,6 +53,7 @@ class ExecutionContext {
     this.frameId = debuggee.docShell.browsingContext.id.toString();
     this.isDefault = isDefault;
 
+    // objectId => Debugger.Object
     this._remoteObjects = new Map();
   }
 
@@ -59,16 +61,47 @@ class ExecutionContext {
     this._debugger.removeDebuggee(this._debuggee);
   }
 
-  hasRemoteObject(id) {
-    return this._remoteObjects.has(id);
+  hasRemoteObject(objectId) {
+    return this._remoteObjects.has(objectId);
   }
 
-  getRemoteObject(id) {
-    return this._remoteObjects.get(id);
+  getRemoteObject(objectId) {
+    return this._remoteObjects.get(objectId);
   }
 
-  releaseObject(id) {
-    return this._remoteObjects.delete(id);
+  releaseObject(objectId) {
+    return this._remoteObjects.delete(objectId);
+  }
+
+  /**
+   * Add a new debuggerObj to the object cache.
+   *
+   * Whenever an object is returned as reference, a new entry is added
+   * to the internal object cache. It means the same underlying object or node
+   * can be represented via multiple references.
+   */
+  setRemoteObject(debuggerObj) {
+    const objectId = uuid();
+
+    // TODO: Wrap Symbol into an object,
+    // which would allow us to set the objectId.
+    if (typeof debuggerObj == "object") {
+      debuggerObj.objectId = objectId;
+    }
+
+    // For node objects add an unique identifier.
+    if (
+      debuggerObj instanceof Debugger.Object &&
+      Node.isInstance(debuggerObj.unsafeDereference())
+    ) {
+      debuggerObj.nodeId = uuid();
+      // We do not differentiate between backendNodeId and nodeId (yet)
+      debuggerObj.backendNodeId = debuggerObj.nodeId;
+    }
+
+    this._remoteObjects.set(objectId, debuggerObj);
+
+    return objectId;
   }
 
   /**
@@ -170,7 +203,7 @@ class ExecutionContext {
     // Map the given objectId to a JS reference.
     let thisArg = null;
     if (objectId) {
-      thisArg = this._remoteObjects.get(objectId);
+      thisArg = this.getRemoteObject(objectId);
       if (!thisArg) {
         throw new Error(`Unable to get target object with id: ${objectId}`);
       }
@@ -227,14 +260,15 @@ class ExecutionContext {
   }
 
   getProperties({ objectId, ownProperties }) {
-    let obj = this.getRemoteObject(objectId);
-    if (!obj) {
-      throw new Error("Cannot find object with id = " + objectId);
+    let debuggerObj = this.getRemoteObject(objectId);
+    if (!debuggerObj) {
+      throw new Error("Could not find object with given id");
     }
+
     const result = [];
-    const serializeObject = (obj, isOwn) => {
-      for (const propertyName of obj.getOwnPropertyNames()) {
-        const descriptor = obj.getOwnPropertyDescriptor(propertyName);
+    const serializeObject = (debuggerObj, isOwn) => {
+      for (const propertyName of debuggerObj.getOwnPropertyNames()) {
+        const descriptor = debuggerObj.getOwnPropertyDescriptor(propertyName);
         result.push({
           name: propertyName,
 
@@ -256,15 +290,15 @@ class ExecutionContext {
 
     // When `ownProperties` is set to true, we only iterate over own properties.
     // Otherwise, we also iterate over propreties inherited from the prototype chain.
-    serializeObject(obj, true);
+    serializeObject(debuggerObj, true);
 
     if (!ownProperties) {
       while (true) {
-        obj = obj.proto;
-        if (!obj) {
+        debuggerObj = debuggerObj.proto;
+        if (!debuggerObj) {
           break;
         }
-        serializeObject(obj, false);
+        serializeObject(debuggerObj, false);
       }
     }
 
@@ -279,10 +313,10 @@ class ExecutionContext {
    */
   _fromCallArgument(arg) {
     if (arg.objectId) {
-      if (!this._remoteObjects.has(arg.objectId)) {
-        throw new Error(`Cannot find object with ID: ${arg.objectId}`);
+      if (!this.hasRemoteObject(arg.objectId)) {
+        throw new Error("Could not find object with given id");
       }
-      return this._remoteObjects.get(arg.objectId);
+      return this.getRemoteObject(arg.objectId);
     }
 
     if (arg.unserializableValue) {
@@ -341,10 +375,8 @@ class ExecutionContext {
     if (debuggerObj instanceof Debugger.Object) {
       const rawObj = debuggerObj.unsafeDereference();
 
-      result.objectId = uuid();
+      result.objectId = this.setRemoteObject(debuggerObj);
       result.type = typeof rawObj;
-
-      this._remoteObjects.set(result.objectId, debuggerObj);
 
       // Map the Debugger API `class` attribute to CDP `subtype`
       const cls = debuggerObj.class;
@@ -385,9 +417,7 @@ class ExecutionContext {
     // them.
     if (result.type == "symbol") {
       result.description = debuggerObj.toString();
-
-      result.objectId = uuid();
-      this._remoteObjects.set(result.objectId, debuggerObj);
+      result.objectId = this.setRemoteObject(debuggerObj);
 
       return result;
     }

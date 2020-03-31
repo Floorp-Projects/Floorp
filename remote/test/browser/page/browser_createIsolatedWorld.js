@@ -135,7 +135,7 @@ add_task(async function evaluateInIsolatedAndDefault({ client }) {
     arguments: [{ objectId: objIsolated.objectId }],
   });
   is(result1.value, 11, "Isolated context incremented the expected value");
-  let errorThrown;
+  let errorThrown = "";
   try {
     await Runtime.callFunctionOn({
       executionContextId: isolatedContext.id,
@@ -146,7 +146,7 @@ add_task(async function evaluateInIsolatedAndDefault({ client }) {
     errorThrown = e.message;
   }
   ok(
-    errorThrown.match(/Cannot find object with ID/),
+    errorThrown.match(/Could not find object with given id/),
     "Contexts do not share objects"
   );
 });
