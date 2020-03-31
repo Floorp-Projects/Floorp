@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.5.23';
-var pdfjsBuild = '85838fc50';
+var pdfjsVersion = '2.5.42';
+var pdfjsBuild = 'c12ea21c1';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1218,7 +1218,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.5.23',
+    apiVersion: '2.5.42',
     source: {
       data: source.data,
       url: source.url,
@@ -3160,9 +3160,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.5.23';
+const version = '2.5.42';
 exports.version = version;
-const build = '85838fc50';
+const build = 'c12ea21c1';
 exports.build = build;
 
 /***/ }),
@@ -6585,22 +6585,22 @@ class MessageHandler {
       }
 
       if (data.callbackId) {
-        const sourceName = this.sourceName;
-        const targetName = data.sourceName;
+        const cbSourceName = this.sourceName;
+        const cbTargetName = data.sourceName;
         new Promise(function (resolve) {
           resolve(action(data.data));
         }).then(function (result) {
           comObj.postMessage({
-            sourceName,
-            targetName,
+            sourceName: cbSourceName,
+            targetName: cbTargetName,
             callback: CallbackKind.DATA,
             callbackId: data.callbackId,
             data: result
           });
         }, function (reason) {
           comObj.postMessage({
-            sourceName,
-            targetName,
+            sourceName: cbSourceName,
+            targetName: cbTargetName,
             callback: CallbackKind.ERROR,
             callbackId: data.callbackId,
             reason: wrapReason(reason)
