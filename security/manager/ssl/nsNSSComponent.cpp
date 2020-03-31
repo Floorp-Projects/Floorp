@@ -60,6 +60,7 @@
 #include "sslproto.h"
 #include "SSLTokensCache.h"
 #include "prmem.h"
+#include "GeckoProfiler.h"
 
 #if defined(XP_LINUX) && !defined(ANDROID)
 #  include <linux/magic.h>
@@ -1914,6 +1915,8 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
 
 nsresult nsNSSComponent::InitializeNSS() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::InitializeNSS\n"));
+  AUTO_PROFILER_LABEL("nsNSSComponent::InitializeNSS", OTHER);
+  AUTO_PROFILER_TRACING_MARKER("NSS", "nsNSSComponent::InitializeNSS", OTHER);
 
   static_assert(
       nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE &&
