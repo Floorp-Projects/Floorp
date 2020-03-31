@@ -77,11 +77,9 @@ web-platform-tests:
         extra-options:
             - --test-type=testharness
 
-web-platform-tests-reftests:
+web-platform-tests-reftest:
     description: "Web platform reftest run"
-    suite:
-        name: web-platform-tests-reftests
-    schedules-component: web-platform-tests-reftests
+    schedules-component: web-platform-tests-reftest
     treeherder-symbol: W(Wr)
     virtualization:
         by-test-platform:
@@ -152,11 +150,9 @@ web-platform-tests-wdspec-headless:
                     - --setpref=toolkit.asyncshutdown.log=true
                     - --headless
 
-web-platform-tests-crashtests:
+web-platform-tests-crashtest:
     description: "Web platform crashtests run"
-    suite:
-        name: web-platform-tests-crashtests
-    schedules-component: web-platform-tests-crashtests
+    schedules-component: web-platform-tests-crashtest
     treeherder-symbol: W(Wc)
     chunks: 1
     mozharness:

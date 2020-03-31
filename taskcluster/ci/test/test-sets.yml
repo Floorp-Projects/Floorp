@@ -17,8 +17,8 @@
 
 web-platform-tests:
     - web-platform-tests
-    - web-platform-tests-crashtests
-    - web-platform-tests-reftests
+    - web-platform-tests-crashtest
+    - web-platform-tests-reftest
     - web-platform-tests-wdspec
 
 web-platform-tests-wdspec-headless:
@@ -509,8 +509,8 @@ macosx1014-64-tests:
     - test-verify-gpu
     - test-verify-wpt
     - web-platform-tests
-    - web-platform-tests-crashtests
-    - web-platform-tests-reftests
+    - web-platform-tests-crashtest
+    - web-platform-tests-reftest
     - web-platform-tests-wdspec
     - xpcshell
 
@@ -555,8 +555,8 @@ android-x86_64-tests:
     - reftest
     - test-verify
     - web-platform-tests
-    - web-platform-tests-crashtests
-    - web-platform-tests-reftests
+    - web-platform-tests-crashtest
+    - web-platform-tests-reftest
     - xpcshell
 
 android-x86_64-qr-tests:
