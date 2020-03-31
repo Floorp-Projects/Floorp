@@ -6,7 +6,7 @@
 "use strict";
 
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
 ChromeUtils.defineModuleGetter(
   this,

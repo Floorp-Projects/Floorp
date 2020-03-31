@@ -9,7 +9,7 @@ const { PermissionTestUtils } = ChromeUtils.import(
 );
 
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 
@@ -30,7 +30,7 @@ async function assertSitesListed(blocked) {
   // Wait for 2 content blocking events - one for the load and one for the tracker.
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(2)]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-tracking-protection"

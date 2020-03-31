@@ -4,11 +4,11 @@
 "use strict";
 
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const BENIGN_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/benignPage.html";
 const COOKIE_PAGE =
-  "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
+  "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
@@ -67,7 +67,7 @@ add_task(async function testReportBreakageCancel() {
     await TestUtils.waitForCondition(() =>
       gProtectionsHandler._protectionsPopup.hasAttribute("blocking")
     );
-    await openProtectionsPopup();
+    await openProtectionsPanel();
 
     let siteNotWorkingButton = document.getElementById(
       "protections-popup-tp-switch-breakage-link"
@@ -121,7 +121,7 @@ add_task(async function testReportBreakageSiteException() {
     gProtectionsHandler.disableForCurrentPage();
     await loaded;
 
-    await openProtectionsPopup();
+    await openProtectionsPanel();
 
     let siteFixedButton = document.getElementById(
       "protections-popup-tp-switch-breakage-fixed-link"
@@ -155,7 +155,7 @@ add_task(async function testReportBreakageSiteException() {
 
 add_task(async function testNoTracking() {
   await BrowserTestUtils.withNewTab(BENIGN_PAGE, async function() {
-    await openProtectionsPopup();
+    await openProtectionsPanel();
 
     let siteNotWorkingButton = document.getElementById(
       "protections-popup-tp-switch-breakage-link"
@@ -242,7 +242,7 @@ add_task(async function testCM() {
 });
 
 async function openAndTestReportBreakage(url, tags, error = false) {
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let siteNotWorkingButton = document.getElementById(
     "protections-popup-tp-switch-breakage-link"

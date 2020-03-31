@@ -6,7 +6,7 @@
 
 const TP_PB_PREF = "privacy.trackingprotection.enabled";
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 var TrackingProtection = null;
 var gProtectionsHandler = null;

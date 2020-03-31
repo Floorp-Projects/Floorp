@@ -6,9 +6,9 @@
 "use strict";
 
 const COOKIE_PAGE =
-  "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
+  "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 const CONTAINER_PAGE =
-  "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/containerPage.html";
+  "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/containerPage.html";
 
 const TPC_PREF = "network.cookie.cookieBehavior";
 
@@ -60,7 +60,7 @@ async function assertSitesListed(testCase) {
   ]);
   let browser = tab.linkedBrowser;
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
@@ -296,7 +296,7 @@ add_task(async function testCookiesSubViewAllowed() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(3)]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
@@ -399,7 +399,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   await new Promise(resolve => waitForFocus(resolve, popup));
   await new Promise(resolve => waitForFocus(resolve, window));
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
@@ -469,7 +469,7 @@ add_task(async function testCookiesSubViewBlockedDoublyNested() {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(3)]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"

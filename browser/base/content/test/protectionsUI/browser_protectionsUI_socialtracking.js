@@ -4,7 +4,7 @@
 "use strict";
 
 const TRACKING_PAGE =
-  "http://example.com/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://example.com/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
 const ST_PROTECTION_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const ST_BLOCK_COOKIES_PREF = "privacy.socialtracking.block_cookies.enabled";
@@ -123,7 +123,7 @@ async function testSubview(hasException) {
   });
   await promise;
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-socialblock"
@@ -199,7 +199,7 @@ async function testCategoryItem(blockLoads) {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-socialblock"
@@ -249,7 +249,7 @@ async function testCategoryItem(blockLoads) {
   });
   [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   ok(!categoryItem.hasAttribute("uidisabled"), "Item shouldn't be uidisabled");
 

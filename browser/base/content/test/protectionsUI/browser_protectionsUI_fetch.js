@@ -1,5 +1,5 @@
 const URL =
-  "http://mochi.test:8888/browser/browser/base/content/test/trackingUI/file_trackingUI_fetch.html";
+  "http://mochi.test:8888/browser/browser/base/content/test/protectionsUI/file_protectionsUI_fetch.html";
 
 add_task(async function test_fetch() {
   await SpecialPowers.pushPrefEnv({

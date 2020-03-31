@@ -9,11 +9,11 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
 const BENIGN_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/benignPage.html";
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const COOKIE_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/cookiePage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
 requestLongerTimeout(2);
