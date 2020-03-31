@@ -1728,7 +1728,7 @@ pref("extensions.pocket.site", "getpocket.com");
 pref("signon.generation.confidenceThreshold", "0.75");
 
 pref("signon.management.page.breach-alerts.enabled", true);
-pref("signon.management.page.vulnerable-passwords.enabled", false);
+pref("signon.management.page.vulnerable-passwords.enabled", true);
 pref("signon.management.page.sort", "name");
 pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
 // The utm_creative value is appended within the code (specific to the location on
