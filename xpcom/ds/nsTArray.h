@@ -2873,7 +2873,8 @@ class nsTArrayBackInserter
 
   nsTArrayBackInserter& operator*() { return *this; }
 
-  void operator++() {}
+  nsTArrayBackInserter& operator++() { return *this; }
+  nsTArrayBackInserter& operator++(int) { return *this; }
 };
 
 template <typename T>
