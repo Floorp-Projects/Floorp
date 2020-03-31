@@ -3,9 +3,9 @@
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const BENIGN_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/benignPage.html";
 const ABOUT_PAGE = "about:preferences";
 
 /* This asserts that the content blocking event state is correctly reset

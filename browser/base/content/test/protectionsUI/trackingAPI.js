@@ -20,7 +20,7 @@ onmessage = event => {
       break;
     case "socialtracking":
       createIframe(
-        "https://social-tracking.example.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+        "https://social-tracking.example.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs"
       );
       break;
     case "cryptomining":
@@ -34,7 +34,7 @@ onmessage = event => {
       break;
     case "cookie":
       createIframe(
-        "https://trackertest.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+        "https://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs"
       );
       break;
     case "first-party-cookie":
@@ -42,22 +42,22 @@ onmessage = event => {
       // top-level cookies right now, we just create an iframe with the
       // first party domain...
       createIframe(
-        "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+        "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/cookieServer.sjs"
       );
       break;
     case "third-party-cookie":
       createIframe(
-        "https://test1.example.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+        "https://test1.example.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs"
       );
       break;
     case "image":
       createImage(
-        "http://trackertest.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs?type=image-no-cookie"
+        "http://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs?type=image-no-cookie"
       );
       break;
     case "window-open":
       window.win = window.open(
-        "http://trackertest.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs",
+        "http://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs",
         "_blank",
         "width=100,height=100"
       );

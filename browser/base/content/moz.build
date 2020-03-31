@@ -100,7 +100,7 @@ with Files("test/tabs/**"):
 with Files("test/touch/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("test/trackingUI/**"):
+with Files("test/protectionsUI/**"):
     BUG_COMPONENT = ("Firefox", "Protections UI")
 
 with Files("test/webextensions/**"):

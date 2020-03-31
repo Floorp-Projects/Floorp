@@ -13,7 +13,7 @@ AntiTracking._createTask({
     await callRequestStorageAccess();
 
     const TRACKING_PAGE =
-      "http://another-tracking.example.net/browser/browser/base/content/test/trackingUI/trackingPage.html";
+      "http://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
     async function runChecks(name) {
       let iframe = document.createElement("iframe");
       iframe.src = TRACKING_PAGE;

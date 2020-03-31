@@ -19,11 +19,11 @@ const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 const BENIGN_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/benignPage.html";
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const COOKIE_PAGE =
-  "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
+  "http://not-tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 var gProtectionsHandler = null;
 var TrackingProtection = null;
 var ThirdPartyCookies = null;

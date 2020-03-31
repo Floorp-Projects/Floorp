@@ -5,9 +5,9 @@
 const PREF = "privacy.trackingprotection.enabled";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 const BENIGN_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/benignPage.html";
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
 /**
  * Enable local telemetry recording for the duration of the tests.
