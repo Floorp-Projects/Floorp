@@ -657,7 +657,7 @@ class nsDefaultComparator {
   bool LessThan(const A& aA, const B& aB) const { return aA < aB; }
 };
 
-template <bool IsPod, bool IsSameType>
+template <bool IsTriviallyCopyConstructible, bool IsSameType>
 struct AssignRangeAlgorithm {
   template <class Item, class ElemType, class IndexType, class SizeType>
   static void implementation(ElemType* aElements, IndexType aStart,
@@ -2389,7 +2389,7 @@ class nsTArray_Impl
   template <class Item>
   void AssignRange(index_type aStart, size_type aCount, const Item* aValues) {
     AssignRangeAlgorithm<
-        mozilla::IsPod<Item>::value,
+        std::is_trivially_copy_constructible_v<Item>,
         std::is_same_v<Item, elem_type>>::implementation(Elements(), aStart,
                                                          aCount, aValues);
   }
