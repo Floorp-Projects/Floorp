@@ -523,25 +523,6 @@ static bool intrinsic_MakeConstructible(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_MakeDefaultConstructor(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].toObject().as<JSFunction>().isSelfHostedBuiltin());
-
-  RootedFunction ctor(cx, &args[0].toObject().as<JSFunction>());
-
-  // Because self-hosting code does not allow top-level lexicals,
-  // class constructors are class expressions in top-level vars.
-  // Because of this, we give them an inferred atom. Since they
-  // will always be cloned, and given an explicit atom, instead
-  // overrule that.
-  ctor->clearInferredName();
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2165,7 +2146,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CreateModuleSyntaxError", intrinsic_CreateModuleSyntaxError, 4, 0),
     JS_FN("AssertionFailed", intrinsic_AssertionFailed, 1, 0),
     JS_FN("DumpMessage", intrinsic_DumpMessage, 1, 0),
-    JS_FN("MakeDefaultConstructor", intrinsic_MakeDefaultConstructor, 2, 0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,
           0),
     JS_FN("DecompileArg", intrinsic_DecompileArg, 2, 0),
