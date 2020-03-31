@@ -81,6 +81,7 @@ class L10nMutations final : public nsStubMutationObserver,
     MOZ_ASSERT(!mDOMLocalization,
                "DOMLocalization<-->L10nMutations cycle should be broken.");
   }
+  bool IsInRoots(nsINode* aNode);
 };
 
 }  // namespace dom

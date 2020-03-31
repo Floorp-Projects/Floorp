@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.connectRoot with Web Components</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  async function* mockGenerateMessages(resourceIds) {
+    const bundle = new FluentBundle("en-US");
+    bundle.addResource(new FluentResource(`
+key1 = Key 1
+key2 = Key 2
+key3 = Key 3
+key4 = Key 4
+    `));
+    yield bundle;
+  }
+
+  document.domLoc = new DOMLocalization(
+    [],
+    mockGenerateMessages
+  );
+  document.domLoc.connectRoot(document.documentElement);
+  </script>
+  <script type="application/javascript">
+    // In this test we're going to use two elements - `shadowLabel` and `lightLabel`.
+    // We create a new `DOMLocalization` and connect it to the document's root first.
+    //
+    // Then, we connect and disconnect it on root and element within the shadow DOM and
+    // apply new `data-l10n-id` onto both labels.
+    // Once the `lightLabel` get a new translation, we check what happened to the `shadowLabel`
+    // to ensure that depending on the status of connection between the shadow DOM and the `DOMLocalization`
+    // the `shadowLabel` either gets translated or not.
+
+    SimpleTest.waitForExplicitFinish();
+
+    class FluentWidget extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+      }
+      connectedCallback() {
+        this.runTests();
+      }
+      runTests() {
+        // First, let's verify that the mutation will not be applied since
+        // the shadow DOM is not connected to the `DOMLocalization`.
+        let shadowLabel = this.shadowRoot.getElementById("shadowLabel");
+        let lightLabel = document.getElementById("lightLabel");
+
+        let verifyL10n = () => {
+          if (lightLabel.textContent == "Key 1") {
+            is(shadowLabel.textContent, "", "document.l10n content not applied to an element in the shadow DOM");
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            this.testPart2();
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+
+        document.domLoc.setAttributes(shadowLabel, "key1");
+        document.domLoc.setAttributes(lightLabel, "key1");
+      }
+      testPart2() {
+        // Next, we connect the shadow root to DOMLocalization and the next attribute
+        // change should result in a translation being applied.
+        document.domLoc.connectRoot(this.shadowRoot);
+
+        let shadowLabel = this.shadowRoot.getElementById("shadowLabel");
+        let lightLabel = document.getElementById("lightLabel");
+
+        // Test that mutation was applied.
+        let verifyL10n = () => {
+          if (lightLabel.textContent == "Key 2") {
+            is(shadowLabel.textContent, "Key 2", "document.l10n content applied to an element in the shadow DOM");
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            this.testPart3();
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+
+        document.domLoc.setAttributes(shadowLabel, "key2");
+        document.domLoc.setAttributes(lightLabel, "key2");
+      }
+      testPart3() {
+        // After we disconnect the shadow root, the mutations should
+        // not be applied onto the `shadowLabel`.
+        document.domLoc.disconnectRoot(this.shadowRoot);
+
+        let shadowLabel = this.shadowRoot.getElementById("shadowLabel");
+        let lightLabel = document.getElementById("lightLabel");
+
+        let verifyL10n = () => {
+          if (lightLabel.textContent == "Key 3") {
+            is(shadowLabel.textContent, "Key 2", "document.l10n content not applied to an element in the shadow DOM");
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            this.testPart4();
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+
+        document.domLoc.setAttributes(shadowLabel, "key3");
+        document.domLoc.setAttributes(lightLabel, "key3");
+      }
+      testPart4() {
+        // Finally, we'll connect it back, but this time, we'll connect
+        // not the shadow root, but an element within it.
+        // This should still result in the `shadowLabel` receiving a new translation.
+        document.domLoc.connectRoot(this.shadowRoot.getElementById("shadowDiv"));
+
+        let shadowLabel = this.shadowRoot.getElementById("shadowLabel");
+        let lightLabel = document.getElementById("lightLabel");
+
+        // Test that mutation was applied.
+        let verifyL10n = () => {
+          if (lightLabel.textContent == "Key 4") {
+            is(shadowLabel.textContent, "Key 4", "document.l10n content applied to an element in the shadow DOM");
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            SimpleTest.finish();
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+
+        document.domLoc.setAttributes(shadowLabel, "key4");
+        document.domLoc.setAttributes(lightLabel, "key4");
+      }
+    }
+    customElements.define("fluent-widget", FluentWidget);
+  </script>
+</head>
+<body>
+  <template id="fluent-widget-template">
+    <div id="shadowDiv">
+      <p id="shadowLabel"></p>
+    </div>
+  </template>
+  <fluent-widget id="widget1"></fluent-widget>
+
+  <p id="lightLabel"></p>
+</body>
+</html>
