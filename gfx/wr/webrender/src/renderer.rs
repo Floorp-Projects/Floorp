@@ -6054,7 +6054,7 @@ impl Renderer {
 
         let texture_rect = FramebufferIntRect::new(
             FramebufferIntPoint::zero(),
-            FramebufferIntSize::from_untyped(source_rect.size.to_untyped()),
+            source_rect.size.cast_unit(),
         );
 
         debug_renderer.add_rect(
@@ -6193,7 +6193,7 @@ impl Renderer {
                 device.clear_target(
                     Some(tag_color),
                     None,
-                    Some(FramebufferIntRect::from_untyped(&tag_rect.to_untyped())),
+                    Some(tag_rect.cast_unit()),
                 );
 
                 // Draw the dimensions onto the tag.
@@ -6321,7 +6321,7 @@ impl Renderer {
 
     pub fn read_gpu_cache(&mut self) -> (DeviceIntSize, Vec<u8>) {
         let texture = self.gpu_cache_texture.texture.as_ref().unwrap();
-        let size = FramebufferIntSize::from_untyped(texture.get_dimensions().to_untyped());
+        let size = device_size_as_framebuffer_size(texture.get_dimensions());
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
         self.device.bind_read_target(ReadTarget::from_texture(texture, 0));
@@ -6858,7 +6858,7 @@ impl Renderer {
         // read from textures directly with `get_tex_image*`.
 
         for layer_id in 0 .. texture.get_layer_count() {
-            let rect = FramebufferIntSize::from_untyped(rect_size.to_untyped()).into();
+            let rect = device_size_as_framebuffer_size(rect_size).into();
 
             device.attach_read_texture(texture, layer_id);
             #[cfg(feature = "png")]
