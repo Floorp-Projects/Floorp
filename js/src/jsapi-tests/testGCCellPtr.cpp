@@ -8,7 +8,7 @@
 #include "jsapi.h"
 #include "jspubtd.h"
 
-#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
@@ -28,7 +28,7 @@ BEGIN_TEST(testGCCellPtr) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::CompileDontInflate(cx, opts, srcBuf));
+  JS::RootedScript script(cx, JS::Compile(cx, opts, srcBuf));
   CHECK(script);
 
   CHECK(!JS::GCCellPtr(nullptr));

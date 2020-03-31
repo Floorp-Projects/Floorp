@@ -23,7 +23,7 @@ FRAGMENT(jsbytecode, simple) {
   bool ok = srcBuf.init(cx, chars, mozilla::ArrayLength(chars) - 1,
                         JS::SourceOwnership::Borrowed);
 
-  JSScript* script = JS::CompileDontInflate(cx, opts, srcBuf);
+  JSScript* script = JS::Compile(cx, opts, srcBuf);
   jsbytecode* code = script->code();
 
   breakpoint();

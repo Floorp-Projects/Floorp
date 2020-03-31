@@ -287,7 +287,7 @@ void XPCShellEnvironment::ProcessFile(JSContext* cx, const char* filename,
 
     if (srcBuf.init(cx, buffer, strlen(buffer),
                     JS::SourceOwnership::Borrowed) &&
-        (script = JS::CompileDontInflate(cx, options, srcBuf))) {
+        (script = JS::Compile(cx, options, srcBuf))) {
       ok = JS_ExecuteScript(cx, script, &result);
       if (ok && !result.isUndefined()) {
         /* Suppress warnings from JS::ToString(). */
