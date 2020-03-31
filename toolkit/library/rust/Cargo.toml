@@ -32,7 +32,7 @@ webrtc = ["gkrust-shared/webrtc"]
 wasm_library_sandboxing = ["gkrust-shared/wasm_library_sandboxing"]
 webgpu = ["gkrust-shared/webgpu"]
 remote_agent = ["gkrust-shared/remote"]
-glean = ["gkrust-shared/glean"]
+fogotype = ["gkrust-shared/fogotype"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

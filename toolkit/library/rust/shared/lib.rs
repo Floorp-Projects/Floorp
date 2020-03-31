@@ -25,7 +25,7 @@ extern crate cubeb_coreaudio;
 extern crate cubeb_pulse;
 extern crate encoding_glue;
 extern crate env_logger;
-#[cfg(feature = "glean")]
+#[cfg(feature = "fogotype")]
 extern crate fog;
 extern crate gkrust_utils;
 extern crate jsrust_shared;

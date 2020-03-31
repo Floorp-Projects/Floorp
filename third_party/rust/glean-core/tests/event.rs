@@ -152,7 +152,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
     let store_names: Vec<String> = vec!["events".into()];
 
     for store_name in &store_names {
-        glean.register_ping_type(&PingType::new(store_name.clone(), true, false, vec![]));
+        glean.register_ping_type(&PingType::new(store_name.clone(), true, false));
     }
 
     let click = EventMetric::new(

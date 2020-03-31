@@ -1,0 +1,17 @@
+[package]
+name = "fog"
+version = "0.1.0"
+authors = ["The Mozilla Project Developers"]
+edition = "2018"
+license = "MPL-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cstr = "0.1"
+glean-preview = "0.0.5"
+log = "0.4"
+nserror = { path = "../../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../../xpcom/rust/nsstring" }
+static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
+xpcom = { path = "../../../../xpcom/rust/xpcom" }

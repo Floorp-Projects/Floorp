@@ -58,7 +58,7 @@ impl TryFrom<i32> for HistogramType {
 /// assert_eq!(10, hist.count());
 /// assert_eq!(55, hist.sum());
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Histogram<B> {
     /// Mapping bucket's minimum to sample count.
     values: HashMap<u64, u64>,

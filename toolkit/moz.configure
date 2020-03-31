@@ -1978,16 +1978,16 @@ set_config('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
 set_define('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
 
 
-# Glean SDK Integration Crate
+# FOGotype prototype Glean SDK Integration Crate
 # ==============================================================
 
 @depends(milestone)
-def glean(milestone):
+def fogotype(milestone):
     if milestone.is_nightly:
         return True
 
-set_config('MOZ_GLEAN', True, when=glean)
-set_define('MOZ_GLEAN', True, when=glean)
+set_config('MOZ_FOGOTYPE', True, when=fogotype)
+set_define('MOZ_FOGOTYPE', True, when=fogotype)
 
 # dump_syms
 # ==============================================================

@@ -314,33 +314,3 @@ fn large_nanoseconds_values() {
     // Check that we got the right sum and number of samples.
     assert_eq!(val.sum() as u64, time);
 }
-
-#[test]
-fn stopping_non_existing_id_records_an_error() {
-    let (glean, _t) = new_glean(None);
-
-    let mut metric = TimingDistributionMetric::new(
-        CommonMetricData {
-            name: "non_existing_id".into(),
-            category: "test".into(),
-            send_in_pings: vec!["store1".into()],
-            disabled: false,
-            lifetime: Lifetime::Ping,
-            ..Default::default()
-        },
-        TimeUnit::Nanosecond,
-    );
-
-    metric.set_stop_and_accumulate(&glean, 3785, 60);
-
-    // 1 error should be reported.
-    assert_eq!(
-        Ok(1),
-        test_get_num_recorded_errors(
-            &glean,
-            metric.meta(),
-            ErrorType::InvalidState,
-            Some("store1")
-        )
-    );
-}
