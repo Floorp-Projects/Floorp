@@ -38,7 +38,7 @@ module.exports.addTests = function({testRunner, expect, FFOX}) {
         window.keyPromise = new Promise(resolve => document.addEventListener('keydown', event => resolve(event.key)));
       });
       await page.keyboard.press('Meta');
-      expect(await page.evaluate('keyPromise')).toBe(FFOX && os.platform() !== 'darwin' ? 'OS' : 'Meta');
+      expect(await page.evaluate('keyPromise')).toBe('Meta');
     });
     it('should move with the arrow keys', async({page, server}) => {
       await page.goto(server.PREFIX + '/input/textarea.html');
@@ -234,21 +234,18 @@ module.exports.addTests = function({testRunner, expect, FFOX}) {
       });
       await page.keyboard.press('Meta');
       const [key, code, metaKey] = await page.evaluate('result');
-      if (FFOX && os.platform() !== 'darwin')
-        expect(key).toBe('OS');
-      else
-        expect(key).toBe('Meta');
+      expect(key).toBe('Meta');
 
-      if (FFOX)
-        expect(code).toBe('OSLeft');
+      if (FFOX) {
+        if (os.platform() !== 'darwin')
+          expect(code).toBe('AltLeft');
+        else
+          expect(code).toBe('OSLeft');
+      }
       else
         expect(code).toBe('MetaLeft');
 
-      if (FFOX && os.platform() !== 'darwin')
-        expect(metaKey).toBe(false);
-      else
-        expect(metaKey).toBe(true);
-
+      expect(metaKey).toBe(true);
     });
   });
 };
