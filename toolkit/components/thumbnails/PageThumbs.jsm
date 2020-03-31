@@ -100,7 +100,7 @@ var PageThumbs = {
    * The static host to use for thumbnail urls.
    */
   get staticHost() {
-    return "thumbnail";
+    return "thumbnails";
   },
 
   /**

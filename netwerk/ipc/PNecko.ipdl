@@ -156,6 +156,11 @@ parent:
   async EnsureHSTSData()
     returns (bool result);
 
+  /**
+   * Page thumbnails remote resource loading
+   */
+  async GetPageThumbStream(nsIURI uri) returns (nsIInputStream stream);
+
 child:
   /*
    * Bring up the http auth prompt for a nested remote mozbrowser.
