@@ -358,16 +358,16 @@ LexerTransition<ICOState> nsICODecoder::SniffResource(const char* aData) {
     size_t toRead = mDirEntry->mBytesInRes - BITMAPINFOSIZE;
     return Transition::ToUnbuffered(ICOState::FINISHED_RESOURCE,
                                     ICOState::READ_RESOURCE, toRead);
-  } else {
-    // Make sure we have a sane size for the bitmap information header.
-    int32_t bihSize = LittleEndian::readUint32(aData);
-    if (bihSize != static_cast<int32_t>(BITMAPINFOSIZE)) {
-      return Transition::TerminateFailure();
-    }
-
-    // Read in the rest of the bitmap information header.
-    return ReadBIH(aData);
   }
+
+  // Make sure we have a sane size for the bitmap information header.
+  int32_t bihSize = LittleEndian::readUint32(aData);
+  if (bihSize != static_cast<int32_t>(BITMAPINFOSIZE)) {
+    return Transition::TerminateFailure();
+  }
+
+  // Read in the rest of the bitmap information header.
+  return ReadBIH(aData);
 }
 
 LexerTransition<ICOState> nsICODecoder::ReadResource() {
