@@ -862,6 +862,8 @@ class nsIFrame : public nsQueryFrame {
    */
   nsContainerFrame* GetParent() const { return mParent; }
 
+  bool CanBeDynamicReflowRoot() const;
+
   /**
    * Gets the parent of a frame, using the parent of the placeholder for
    * out-of-flow frames.
