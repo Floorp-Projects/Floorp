@@ -243,7 +243,7 @@ const silenceWorkerUpdates = function() {
 async function createLocalClientWrapper() {
   info("Create a local DevToolsClient");
   const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+  const { DevToolsClient } = require("devtools/client/devtools-client");
   const {
     ClientWrapper,
   } = require("devtools/client/aboutdebugging/src/modules/client-wrapper");

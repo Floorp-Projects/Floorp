@@ -89,9 +89,6 @@ module.exports = {
       // For all server and shared files, prevent requiring devtools/client
       // modules.
       files: ["server/**", "shared/**"],
-      // devtools-client.js is effectively a client file, but it is still loaded
-      // by test suites in devtools/shared and devtools/server.
-      excludedFiles: ["shared/client/devtools-client.js"],
       rules: {
         "mozilla/reject-some-requires": [
           "error",

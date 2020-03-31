@@ -10,7 +10,8 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+// eslint-disable-next-line mozilla/reject-some-requires
+const { DevToolsClient } = require("devtools/client/devtools-client");
 
 const Services = require("Services");
 

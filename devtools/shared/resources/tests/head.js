@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 
 async function createLocalClient() {

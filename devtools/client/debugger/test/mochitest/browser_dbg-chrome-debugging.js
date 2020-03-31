@@ -13,7 +13,7 @@ var customLoader = new DevToolsLoader({
   invisibleToDebugger: true,
 });
 var { DevToolsServer } = customLoader.require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/shared/client/devtools-client");
+var { DevToolsClient } = require("devtools/client/devtools-client");
 
 function initDevToolsClient() {
   DevToolsServer.init();

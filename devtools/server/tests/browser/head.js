@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");

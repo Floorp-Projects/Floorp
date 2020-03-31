@@ -7,7 +7,7 @@
 const { BrowserToolboxLauncher } = ChromeUtils.import(
   "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
 );
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 
 /**
  * Open up a browser toolbox and return a ToolboxTask object for interacting
