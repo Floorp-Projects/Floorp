@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Ychwanegwch nhw i %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Mae technoleg ychwanegiad Firefox yn moderneiddio. Mae’r  ychwanegion hyn yn defnyddio fframweithiau nad ydynt yn gydnaws â Firefox 75 a thu hwnt.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Ar hyn o bryd rydym yn adeiladu cefnogaeth ar gyfer detholiad cychwynnol o Estyniadau Cymeradwy.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Llwytho a gwirio ychwanegyn…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
