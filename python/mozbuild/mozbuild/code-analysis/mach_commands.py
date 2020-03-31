@@ -3,9 +3,11 @@
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, print_function, unicode_literals
 
+import concurrent.futures
 import io
 import logging
 import json
+import multiprocessing
 import ntpath
 import os
 import re
@@ -172,6 +174,9 @@ class StaticAnalysis(MachCommandBase):
     # File contaning all paths to exclude from formatting
     _format_ignore_file = '.clang-format-ignore'
 
+    # List of file extension to consider (should start with dot)
+    _check_syntax_include_extensions = ('.cpp', '.c', '.cc', '.cxx')
+
     _clang_tidy_config = None
     _cov_config = None
 
@@ -284,7 +289,6 @@ class StaticAnalysis(MachCommandBase):
 
         with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
             import math
-            import multiprocessing
             batch_size = int(math.ceil(float(len(source)) / multiprocessing.cpu_count()))
             for i in range(0, len(source), batch_size):
                 args = self._get_clang_tidy_command(
@@ -1116,9 +1120,6 @@ class StaticAnalysis(MachCommandBase):
                 )
             return self.TOOLS_UNSUPORTED_PLATFORM
 
-        import concurrent.futures
-        import multiprocessing
-
         max_workers = multiprocessing.cpu_count()
 
         self.log(logging.INFO, 'static-analysis', {},
@@ -1322,8 +1323,6 @@ class StaticAnalysis(MachCommandBase):
             self.__infer_tool = mozpath.join(self.topsrcdir, 'tools', 'infer')
             self.__infer_test_folder = mozpath.join(self.__infer_tool, 'test')
 
-            import concurrent.futures
-            import multiprocessing
             max_workers = multiprocessing.cpu_count()
             self.log(logging.INFO, 'static-analysis', {},
                      "RUNNING: infer autotest for platform {0} with {1} workers.".format(
@@ -1520,6 +1519,80 @@ class StaticAnalysis(MachCommandBase):
             process.stdin.close()
             process.wait()
             return process.returncode
+
+    @StaticAnalysisSubCommand('static-analysis', 'check-syntax',
+                              'Run the check-syntax for C/C++ files based on '
+                              '`compile_commands.json`')
+    @CommandArgument('source', nargs='*',
+                     help='Source files to be compiled checked (regex on path).')
+    def check_syntax(self, source, verbose=False):
+        # Verify that we have a valid `source`
+        if len(source) == 0:
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'ERROR: Specify files that need to be syntax checked.')
+            return
+
+        self._set_log_level(verbose)
+        self.log_manager.enable_all_structured_loggers()
+
+        rc = self._build_compile_db(verbose=verbose)
+        if rc != 0:
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'ERROR: Unable to build the `compile_commands.json`.')
+            return rc
+        rc = self._build_export(jobs=2, verbose=verbose)
+
+        if rc != 0:
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'ERROR: Unable to build export.')
+            return rc
+
+        # Build the list with all files from source
+        path_list = self._generate_path_list(source)
+
+        compile_db = json.load(open(self._compile_db, 'r'))
+
+        if compile_db is None:
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'ERROR: Loading {}'.format(self._compile_db))
+            return 1
+
+        commands = []
+
+        compile_dict = {entry['file']: entry['command']
+                        for entry in compile_db}
+        # Begin the compile check for each file
+        for file in path_list:
+            # It must be a C/C++ file
+            ext = mozpath.splitext(file)[-1]
+
+            if ext.lower() not in self._check_syntax_include_extensions:
+                self.log(logging.INFO, 'static-analysis',
+                         {}, 'Skipping {}'.format(file))
+                continue
+            file_with_abspath = mozpath.join(self.topsrcdir, file)
+            # Found for a file that we are looking
+
+            entry = compile_dict.get(file_with_abspath, None)
+            if entry:
+                command = entry.split(' ')
+                # Verify to see if we are dealing with an unified build
+                if 'Unified_' in command[-1]:
+                    # Translate the unified `TU` to per file basis TU
+                    command[-1] = file_with_abspath
+
+                # We want syntax-only
+                command.append('-fsyntax-only')
+                commands.append(command)
+
+        max_workers = multiprocessing.cpu_count()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = []
+            for command in commands:
+                futures.append(executor.submit(self.run_process, args=command,
+                                               cwd=self.topsrcdir, pass_thru=True,
+                                               ensure_exit_code=False))
 
     @Command('clang-format',  category='misc', description='Run clang-format on current changes')
     @CommandArgument('--show', '-s', action='store_const', const='stdout', dest='output_path',
@@ -2185,8 +2258,6 @@ class StaticAnalysis(MachCommandBase):
             return 0
 
         # Run clang-format in parallel trying to saturate all of the available cores.
-        import concurrent.futures
-        import multiprocessing
         import math
 
         max_workers = multiprocessing.cpu_count()
