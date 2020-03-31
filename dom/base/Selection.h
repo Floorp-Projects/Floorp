@@ -156,6 +156,8 @@ class Selection final : public nsSupportsWeakReference,
                                 nsTArray<StyledRange>* aOutput);
 
  private:
+  static bool AreUserSelectedRangesNonEmpty(
+      const nsRange& aRange, nsTArray<RefPtr<nsRange>>& aTempRangesToAdd);
   /**
    * https://w3c.github.io/selection-api/#selectstart-event.
    */

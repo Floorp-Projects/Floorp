@@ -842,6 +842,22 @@ static bool MaybeDispatchSelectstartEvent(
   return executeDefaultAction;
 }
 
+// static
+bool Selection::AreUserSelectedRangesNonEmpty(
+    const nsRange& aRange, nsTArray<RefPtr<nsRange>>& aTempRangesToAdd) {
+  MOZ_ASSERT(aTempRangesToAdd.IsEmpty());
+
+  RefPtr<nsRange> scratchRange = aRange.CloneRange();
+  UserSelectRangesToAdd(scratchRange, aTempRangesToAdd);
+  const bool newRangesNonEmpty =
+      aTempRangesToAdd.Length() > 1 ||
+      (aTempRangesToAdd.Length() == 1 && !aTempRangesToAdd[0]->Collapsed());
+
+  aTempRangesToAdd.ClearAndRetainStorage();
+
+  return newRangesNonEmpty;
+}
+
 nsresult Selection::AddRangesForUserSelectableNodes(
     nsRange* aRange, int32_t* aOutIndex,
     const DispatchSelectstartEvent aDispatchSelectstartEvent) {
@@ -874,12 +890,9 @@ nsresult Selection::AddRangesForUserSelectableNodes(
     // clone of the original range passed in. We do this seperately, because
     // the selectstart event could have caused the world to change, and
     // required ranges to be re-generated
-    RefPtr<nsRange> scratchRange = aRange->CloneRange();
-    UserSelectRangesToAdd(scratchRange, rangesToAdd);
-    bool newRangesNonEmpty =
-        rangesToAdd.Length() > 1 ||
-        (rangesToAdd.Length() == 1 && !rangesToAdd[0]->Collapsed());
 
+    const bool newRangesNonEmpty =
+        AreUserSelectedRangesNonEmpty(*aRange, rangesToAdd);
     MOZ_ASSERT(!newRangesNonEmpty || nsContentUtils::IsSafeToRunScript());
     if (newRangesNonEmpty && nsContentUtils::IsSafeToRunScript()) {
       // The spec currently doesn't say that we should dispatch this event
@@ -901,9 +914,6 @@ nsresult Selection::AddRangesForUserSelectableNodes(
         return NS_ERROR_UNEXPECTED;
       }
     }
-
-    // The scratch ranges we generated may be invalid now, throw them out
-    rangesToAdd.ClearAndRetainStorage();
   }
 
   // Generate the ranges to add
