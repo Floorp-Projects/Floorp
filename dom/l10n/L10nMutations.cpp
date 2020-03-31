@@ -40,10 +40,11 @@ void L10nMutations::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   if (!mObserving) {
     return;
   }
-  if (aElement->IsInComposedDoc()) {
-    if (aNameSpaceID == kNameSpaceID_None &&
-        (aAttribute == nsGkAtoms::datal10nid ||
-         aAttribute == nsGkAtoms::datal10nargs)) {
+
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::datal10nid ||
+       aAttribute == nsGkAtoms::datal10nargs)) {
+    if (IsInRoots(aElement)) {
       L10nElementChanged(aElement);
     }
   }
@@ -53,17 +54,17 @@ void L10nMutations::ContentAppended(nsIContent* aChild) {
   if (!mObserving) {
     return;
   }
-  ErrorResult rv;
-  Sequence<OwningNonNull<Element>> elements;
 
   nsINode* node = aChild;
+  if (!IsInRoots(node)) {
+    return;
+  }
+
+  ErrorResult rv;
+  Sequence<OwningNonNull<Element>> elements;
   while (node) {
     if (node->IsElement()) {
-      Element* elem = node->AsElement();
-
-      if (elem->IsInComposedDoc()) {
-        DOMLocalization::GetTranslatables(*node, elements, rv);
-      }
+      DOMLocalization::GetTranslatables(*node, elements, rv);
     }
 
     node = node->GetNextSibling();
@@ -86,7 +87,7 @@ void L10nMutations::ContentInserted(nsIContent* aChild) {
   }
   Element* elem = aChild->AsElement();
 
-  if (!elem->IsInComposedDoc()) {
+  if (!IsInRoots(elem)) {
     return;
   }
   DOMLocalization::GetTranslatables(*aChild, elements, rv);
@@ -188,4 +189,20 @@ void L10nMutations::OnCreatePresShell() {
   if (!mPendingElements.IsEmpty()) {
     StartRefreshObserver();
   }
+}
+
+bool L10nMutations::IsInRoots(nsINode* aNode) {
+  // If the root of the mutated element is in the light DOM,
+  // we know it must be covered by our observer directly.
+  //
+  // Otherwise, we need to check if its subtree root is the same
+  // as any of the `DOMLocalization::mRoots` subtree roots.
+  nsINode* root = aNode->SubtreeRoot();
+
+  // If element is in light DOM, it must be covered by one of
+  // the DOMLocalization roots to end up here.
+  MOZ_ASSERT_IF(!root->IsShadowRoot(),
+                mDOMLocalization->SubtreeRootInRoots(root));
+
+  return !root->IsShadowRoot() || mDOMLocalization->SubtreeRootInRoots(root);
 }

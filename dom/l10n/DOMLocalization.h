@@ -90,6 +90,16 @@ class DOMLocalization : public intl::Localization {
                          nsTArray<L10nMessage>& aTranslations,
                          nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 
+  bool SubtreeRootInRoots(nsINode* aSubtreeRoot) {
+    for (auto iter = mRoots.Iter(); !iter.Done(); iter.Next()) {
+      nsINode* subtreeRoot = iter.Get()->GetKey()->SubtreeRoot();
+      if (subtreeRoot == aSubtreeRoot) {
+        return true;
+      }
+    }
+    return false;
+  }
+
  protected:
   virtual ~DOMLocalization();
   void OnChange() override;
