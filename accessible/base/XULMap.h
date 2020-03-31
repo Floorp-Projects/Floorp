@@ -45,10 +45,6 @@ XULMAP(label, [](Element* aElement, Accessible* aContext) -> Accessible* {
 })
 
 XULMAP(image, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
-    return new XULToolbarButtonAccessible(aElement, aContext->Document());
-  }
-
   // Don't include nameless images in accessible tree.
   if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
     return nullptr;
