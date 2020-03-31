@@ -123,15 +123,11 @@
       if (val) {
         this.setAttribute("searchbutton", "true");
         this.removeAttribute("aria-autocomplete");
-        // Hack for the button to get the right accessible:
-        // If you update the 'onclick' event handler code within the
-        // _searchButtonIcon you also have to update the sha512 hash in the
-        // CSP of about:addons within extensions.xhtml.
-        this._searchButtonIcon.setAttribute("onclick", "true");
+        this._searchButtonIcon.setAttribute("role", "button");
       } else {
         this.removeAttribute("searchbutton");
-        this._searchButtonIcon.removeAttribute("onclick");
         this.setAttribute("aria-autocomplete", "list");
+        this._searchButtonIcon.setAttribute("role", "none");
       }
       return val;
     }
