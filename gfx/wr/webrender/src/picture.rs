@@ -4590,15 +4590,10 @@ impl PicturePrimitive {
                         let world_min = map_raster_to_world.map_vector(raster_min);
                         let world_max = map_raster_to_world.map_vector(raster_max);
 
-                        let top_left = -world_max.max(vec2(0.0, 0.0));
-                        let bottom_right = -world_min.min(vec2(0.0, 0.0));
-
                         // Grow the clip in the opposite direction of the shadow's offset.
-                        SideOffsets2D::new(
-                            -top_left.y,
-                            bottom_right.x,
-                            bottom_right.y,
-                            -top_left.x,
+                        SideOffsets2D::from_vectors_outer(
+                            -world_max.max(vec2(0.0, 0.0)),
+                            -world_min.min(vec2(0.0, 0.0)),
                         )
                     }
                     _ => SideOffsets2D::zero(),
