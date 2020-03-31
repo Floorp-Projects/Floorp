@@ -389,6 +389,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PSHEntry;
     manages PSHistory;
     manages PBenchmarkStorage;
+    manages PWindowGlobal;
 
     // Depending on exactly how the new browser is being created, it might be
     // created from either the child or parent process!

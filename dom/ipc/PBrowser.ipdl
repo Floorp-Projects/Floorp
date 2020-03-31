@@ -179,7 +179,6 @@ nested(upto inside_cpow) sync refcounted protocol PBrowser
     manages PFilePicker;
     manages PPluginWidget;
     manages PPaymentRequest;
-    manages PWindowGlobal;
     manages PBrowserBridge;
 
 both:

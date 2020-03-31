@@ -1311,7 +1311,7 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
 
   // Open a remote endpoint for the initial PWindowGlobal actor.
   ManagedEndpoint<PWindowGlobalChild> windowEp =
-      browserParent->OpenPWindowGlobalEndpoint(windowParent);
+      constructorSender->OpenPWindowGlobalEndpoint(windowParent);
   if (NS_WARN_IF(!windowEp.IsValid())) {
     return nullptr;
   }
@@ -1327,7 +1327,7 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     return nullptr;
   }
 
-  windowParent->Init(windowInit);
+  windowParent->Init(windowInit, browserParent);
 
   if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
     // Tell the BrowserChild object that it was created due to a
@@ -3320,12 +3320,12 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     }
   }
 
-  if (NS_WARN_IF(!parent->BindPWindowGlobalEndpoint(std::move(aWindowEp),
+  if (NS_WARN_IF(!BindPWindowGlobalEndpoint(std::move(aWindowEp),
                                                     initialWindow))) {
     return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
   }
 
-  initialWindow->Init(aInitialWindowInit);
+  initialWindow->Init(aInitialWindowInit, parent);
 
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt
