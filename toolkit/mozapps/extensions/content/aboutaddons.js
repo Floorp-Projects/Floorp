@@ -1630,8 +1630,6 @@ class CategoryButton extends HTMLButtonElement {
       return;
     }
 
-    this.classList.add("category");
-
     // Make sure the aria-selected attribute is set correctly.
     this.selected = this.hasAttribute("selected");
 
