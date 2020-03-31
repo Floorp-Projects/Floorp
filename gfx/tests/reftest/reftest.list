@@ -20,7 +20,7 @@ fuzzy(0-11,0-4) == 1474722.html 1474722-ref.html
 == 1519754.html 1519754-ref.html
 skip-if(!asyncPan) == 1524261.html 1524261-ref.html
 fuzzy-if(webrender,14-14,44-81) == 1524353.html 1524353-ref.html
-fuzzy-if(webrender,4-7,25000-36908) == 1523776.html 1523776-ref.html
+fuzzy-if(webrender,2-7,19000-36908) == 1523776.html 1523776-ref.html
 == bug1523410-translate-scale-snap.html bug1523410-translate-scale-snap-ref.html
 == 1523080.html 1523080-ref.html
 == 1616444-same-color-different-paths.html 1616444-same-color-different-paths-ref.html
