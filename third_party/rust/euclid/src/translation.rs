@@ -9,6 +9,7 @@
 
 use {Vector2D, Point2D, Vector3D, Point3D, Transform2D, Transform3D};
 use {Size2D, Rect, vec2, point2, vec3, point3};
+use UnknownUnit;
 use num::*;
 use trig::Trig;
 use core::ops::{Add, Sub, Neg, Mul, Div};
@@ -82,12 +83,18 @@ impl<T, Src, Dst> Hash for Translation2D<T, Src, Dst>
 
 impl<T, Src, Dst> Translation2D<T, Src, Dst> {
     #[inline]
-    pub fn new(x: T, y: T) -> Self {
+    pub const fn new(x: T, y: T) -> Self {
         Translation2D {
             x,
             y,
             _unit: PhantomData,
         }
+    }
+
+    /// No-op, just cast the unit.
+    #[inline]
+    pub fn transform_size(&self, s: Size2D<T, Src>) -> Size2D<T, Dst> {
+        Size2D::new(s.width, s.height)
     }
 }
 
@@ -95,25 +102,52 @@ impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T : Copy
 {
+    /// Cast into a 2D vector.
+    #[inline]
+    pub fn to_vector(&self) -> Vector2D<T, Src> {
+        vec2(self.x, self.y)
+    }
+
+    /// Cast into an array with x and y.
     #[inline]
     pub fn to_array(&self) -> [T; 2] {
         [self.x, self.y]
     }
 
+    /// Cast into a tuple with x and y.
     #[inline]
     pub fn to_tuple(&self) -> (T, T) {
         (self.x, self.y)
+    }
+
+    /// Drop the units, preserving only the numeric value.
+    #[inline]
+    pub fn to_untyped(&self) -> Translation2D<T, UnknownUnit, UnknownUnit> {
+        Translation2D {
+            x: self.x,
+            y: self.y,
+            _unit: PhantomData,
+        }
+    }
+
+    /// Tag a unitless value with units.
+    #[inline]
+    pub fn from_untyped(t: &Translation2D<T, UnknownUnit, UnknownUnit>) -> Self {
+        Translation2D {
+            x: t.x,
+            y: t.y,
+            _unit: PhantomData,
+        }
     }
 }
 
 impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
-    T : Copy + Zero
+    T: Zero
 {
     #[inline]
     pub fn identity() -> Self {
-        let _0 = T::zero();
-        Translation2D::new(_0, _0)
+        Translation2D::new(T::zero(), T::zero())
     }
 }
 
@@ -123,7 +157,8 @@ where
 {
     #[inline]
     pub fn is_identity(&self) -> bool {
-        self.x == T::zero() && self.y == T::zero()
+        let _0 = T::zero();
+        self.x == _0 && self.y == _0
     }
 }
 
@@ -145,17 +180,6 @@ where
             size: self.transform_size(r.size),
         }
     }
-
-    /// No-op, just cast the unit.
-    #[inline]
-    pub fn transform_size(&self, s: Size2D<T, Src>) -> Size2D<T, Dst> {
-        Size2D::new(s.width, s.height)
-    }
-
-    /// Cast into a 2D vector.
-    pub fn to_vector(&self) -> Vector2D<T, Src> {
-        vec2(self.x, self.y)
-    }
 }
 
 impl<T, Src, Dst> Translation2D<T, Src, Dst>
@@ -172,7 +196,7 @@ where
 impl<T, Src, Dst1, Dst2> Add<Translation2D<T, Dst1, Dst2>>
 for Translation2D<T, Src, Dst1>
 where
-    T: Copy + Add<T, Output = T>
+    T: Add<T, Output = T>
 {
     type Output = Translation2D<T, Src, Dst2>;
     fn add(self, other: Translation2D<T, Dst1, Dst2>) -> Translation2D<T, Src, Dst2> {
@@ -187,7 +211,7 @@ impl<T, Src, Dst1, Dst2>
     Sub<Translation2D<T, Dst1, Dst2>>
     for Translation2D<T, Src, Dst2>
 where
-    T: Copy + Sub<T, Output = T>
+    T: Sub<T, Output = T>
 {
     type Output = Translation2D<T, Src, Dst1>;
     fn sub(self, other: Translation2D<T, Dst1, Dst2>) -> Translation2D<T, Src, Dst1> {
@@ -201,7 +225,6 @@ where
 impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T: Copy
-        + Clone
         + Add<T, Output = T>
         + Mul<T, Output = T>
         + Div<T, Output = T>
@@ -219,8 +242,6 @@ where
 }
 
 impl<T, Src, Dst> From<Vector2D<T, Src>> for Translation2D<T, Src, Dst>
-where
-    T: Copy
 {
     fn from(v: Vector2D<T, Src>) -> Self {
         Translation2D::new(v.x, v.y)
@@ -228,8 +249,6 @@ where
 }
 
 impl<T, Src, Dst> Into<Vector2D<T, Src>> for Translation2D<T, Src, Dst>
-where
-    T: Copy
 {
     fn into(self) -> Vector2D<T, Src> {
         vec2(self.x, self.y)
@@ -239,7 +258,6 @@ where
 impl<T, Src, Dst> Into<Transform2D<T, Src, Dst>> for Translation2D<T, Src, Dst>
 where
     T: Copy
-        + Clone
         + Add<T, Output = T>
         + Mul<T, Output = T>
         + Div<T, Output = T>
@@ -255,20 +273,24 @@ where
 }
 
 impl <T, Src, Dst> Default for Translation2D<T, Src, Dst>
-    where T: Copy + Zero
+    where T: Zero
 {
     fn default() -> Self {
         Self::identity()
     }
 }
 
-impl<T, Src, Dst> fmt::Debug for Translation2D<T, Src, Dst>
-where T: Copy + fmt::Debug {
+impl<T: fmt::Debug, Src, Dst> fmt::Debug for Translation2D<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.to_array().fmt(f)
+        write!(f, "Translation({:?},{:?})", self.x, self.y)
     }
 }
 
+impl<T: fmt::Display, Src, Dst> fmt::Display for Translation2D<T, Src, Dst> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({},{})", self.x, self.y)
+    }
+}
 
 
 /// A 3d transformation from a space to another that can only express translations.
@@ -304,7 +326,7 @@ impl<'de, T, Src, Dst> serde::Deserialize<'de> for Translation3D<T, Src, Dst>
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de>
     {
-        let (x, y, z) = try!(serde::Deserialize::deserialize(deserializer));
+        let (x, y, z) = serde::Deserialize::deserialize(deserializer)?;
         Ok(Translation3D { x, y, z, _unit: PhantomData })
     }
 }
@@ -342,7 +364,7 @@ impl<T, Src, Dst> Hash for Translation3D<T, Src, Dst>
 
 impl<T, Src, Dst> Translation3D<T, Src, Dst> {
     #[inline]
-    pub fn new(x: T, y: T, z: T) -> Self {
+    pub const fn new(x: T, y: T, z: T) -> Self {
         Translation3D {
             x,
             y,
@@ -350,31 +372,66 @@ impl<T, Src, Dst> Translation3D<T, Src, Dst> {
             _unit: PhantomData,
         }
     }
+
+    /// No-op, just cast the unit.
+    #[inline]
+    pub fn transform_size(self, s: Size2D<T, Src>) -> Size2D<T, Dst> {
+        Size2D::new(s.width, s.height)
+    }
 }
 
 impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Copy
 {
+    /// Cast into a 3D vector.
+    #[inline]
+    pub fn to_vector(&self) -> Vector3D<T, Src> {
+        vec3(self.x, self.y, self.z)
+    }
+
+    /// Cast into an array with x, y and z.
     #[inline]
     pub fn to_array(&self) -> [T; 3] {
         [self.x, self.y, self.z]
     }
 
+    /// Cast into a tuple with x, y and z.
     #[inline]
     pub fn to_tuple(&self) -> (T, T, T) {
         (self.x, self.y, self.z)
+    }
+
+    /// Drop the units, preserving only the numeric value.
+    #[inline]
+    pub fn to_untyped(&self) -> Translation3D<T, UnknownUnit, UnknownUnit> {
+        Translation3D {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+            _unit: PhantomData,
+        }
+    }
+
+    /// Tag a unitless value with units.
+    #[inline]
+    pub fn from_untyped(t: &Translation3D<T, UnknownUnit, UnknownUnit>) -> Self {
+        Translation3D {
+            x: t.x,
+            y: t.y,
+            z: t.z,
+            _unit: PhantomData,
+        }
     }
 }
 
 impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
-    T: Copy + Zero
+    T: Zero
 {
     #[inline]
     pub fn identity() -> Self {
-        let _0 = T::zero();
-        Translation3D::new(_0, _0, _0)
+        Translation3D::new(T::zero(), T::zero(), T::zero())
     }
 }
 
@@ -384,7 +441,8 @@ where
 {
     #[inline]
     pub fn is_identity(&self) -> bool {
-        self.x == T::zero() && self.y == T::zero() && self.z == T::zero()
+        let _0 = T::zero();
+        self.x == _0 && self.y == _0 && self.z == _0
     }
 }
 
@@ -412,17 +470,6 @@ where
             size: self.transform_size(r.size),
         }
     }
-
-    /// No-op, just cast the unit.
-    #[inline]
-    pub fn transform_size(self, s: Size2D<T, Src>) -> Size2D<T, Dst> {
-        Size2D::new(s.width, s.height)
-    }
-
-    /// Cast into a 3D vector.
-    pub fn to_vector(&self) -> Vector3D<T, Src> {
-        vec3(self.x, self.y, self.z)
-    }
 }
 
 impl<T, Src, Dst> Translation3D<T, Src, Dst>
@@ -439,7 +486,7 @@ where
 impl<T, Src, Dst1, Dst2> Add<Translation3D<T, Dst1, Dst2>>
 for Translation3D<T, Src, Dst1>
 where
-    T: Copy + Add<T, Output = T>
+    T: Add<T, Output = T>
 {
     type Output = Translation3D<T, Src, Dst2>;
     fn add(self, other: Translation3D<T, Dst1, Dst2>) -> Translation3D<T, Src, Dst2> {
@@ -455,7 +502,7 @@ impl<T, Src, Dst1, Dst2>
     Sub<Translation3D<T, Dst1, Dst2>>
     for Translation3D<T, Src, Dst2>
 where
-    T: Copy + Sub<T, Output = T>
+    T: Sub<T, Output = T>
 {
     type Output = Translation3D<T, Src, Dst1>;
     fn sub(self, other: Translation3D<T, Dst1, Dst2>) -> Translation3D<T, Src, Dst1> {
@@ -469,7 +516,7 @@ where
 
 impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
-    T: Copy + Clone +
+    T: Copy +
         Add<T, Output=T> +
         Sub<T, Output=T> +
         Mul<T, Output=T> +
@@ -487,8 +534,6 @@ where
 }
 
 impl<T, Src, Dst> From<Vector3D<T, Src>> for Translation3D<T, Src, Dst>
-where
-    T: Copy
 {
     fn from(v: Vector3D<T, Src>) -> Self {
         Translation3D::new(v.x, v.y, v.z)
@@ -496,8 +541,6 @@ where
 }
 
 impl<T, Src, Dst> Into<Vector3D<T, Src>> for Translation3D<T, Src, Dst>
-where
-    T: Copy
 {
     fn into(self) -> Vector3D<T, Src> {
         vec3(self.x, self.y, self.z)
@@ -506,7 +549,7 @@ where
 
 impl<T, Src, Dst> Into<Transform3D<T, Src, Dst>> for Translation3D<T, Src, Dst>
 where
-    T: Copy + Clone +
+    T: Copy +
         Add<T, Output=T> +
         Sub<T, Output=T> +
         Mul<T, Output=T> +
@@ -522,17 +565,22 @@ where
 }
 
 impl <T, Src, Dst> Default for Translation3D<T, Src, Dst>
-    where T: Copy + Zero
+    where T: Zero
 {
     fn default() -> Self {
         Self::identity()
     }
 }
 
-impl<T, Src, Dst> fmt::Debug for Translation3D<T, Src, Dst>
-where T: Copy + fmt::Debug {
+impl<T: fmt::Debug, Src, Dst> fmt::Debug for Translation3D<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.to_array().fmt(f)
+        write!(f, "Translation({:?},{:?},{:?})", self.x, self.y, self.z)
+    }
+}
+
+impl<T: fmt::Display, Src, Dst> fmt::Display for Translation3D<T, Src, Dst> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({},{},{})", self.x, self.y, self.z)
     }
 }
 

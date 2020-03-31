@@ -18,14 +18,20 @@ pub trait Trig {
 }
 
 macro_rules! trig {
-    ($ty:ident) => (
+    ($ty:ident) => {
         impl Trig for $ty {
             #[inline]
-            fn sin(self) -> $ty { self.sin() }
+            fn sin(self) -> $ty {
+                num_traits::Float::sin(self)
+            }
             #[inline]
-            fn cos(self) -> $ty { self.cos() }
+            fn cos(self) -> $ty {
+                num_traits::Float::cos(self)
+            }
             #[inline]
-            fn tan(self) -> $ty { self.tan() }
+            fn tan(self) -> $ty {
+                num_traits::Float::tan(self)
+            }
 
             /// A slightly faster approximation of `atan2`.
             ///
@@ -38,11 +44,12 @@ macro_rules! trig {
 
                 // See https://math.stackexchange.com/questions/1098487/atan2-faster-approximation#1105038
                 use core::$ty::consts;
-                let x_abs = x.abs();
-                let y_abs = y.abs();
+                let x_abs = num_traits::Float::abs(x);
+                let y_abs = num_traits::Float::abs(y);
                 let a = x_abs.min(y_abs) / x_abs.max(y_abs);
                 let s = a * a;
-                let mut result = ((-0.046_496_474_9 * s + 0.159_314_22) * s - 0.327_622_764) * s * a + a;
+                let mut result =
+                    ((-0.046_496_474_9 * s + 0.159_314_22) * s - 0.327_622_764) * s * a + a;
                 if y_abs > x_abs {
                     result = consts::FRAC_PI_2 - result;
                 }
@@ -66,7 +73,7 @@ macro_rules! trig {
                 rad.to_degrees()
             }
         }
-    )
+    };
 }
 
 trig!(f32);

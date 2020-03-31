@@ -53,7 +53,7 @@ impl<'de, T, U> serde::Deserialize<'de> for HomogeneousVector<T, U>
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de>
     {
-        let (x, y, z, w) = try!(serde::Deserialize::deserialize(deserializer));
+        let (x, y, z, w) = serde::Deserialize::deserialize(deserializer)?;
         Ok(HomogeneousVector { x, y, z, w, _unit: PhantomData })
     }
 }
@@ -93,7 +93,7 @@ impl<T, U> Hash for HomogeneousVector<T, U>
 impl<T, U> HomogeneousVector<T, U> {
     /// Constructor taking scalar values directly.
     #[inline]
-    pub fn new(x: T, y: T, z: T, w: T) -> Self {
+    pub const fn new(x: T, y: T, z: T, w: T) -> Self {
         HomogeneousVector { x, y, z, w, _unit: PhantomData }
     }
 }

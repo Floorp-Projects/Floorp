@@ -1,6 +1,5 @@
 use {Rect, Box2D, Box3D, Vector2D, Vector3D, size2, point2, point3};
 use approxord::{min, max};
-use num::Zero;
 use core::ops::Deref;
 use core::ops::{Add, Sub};
 use core::cmp::{PartialEq};
@@ -27,7 +26,7 @@ impl<T> NonEmpty<T> {
 
 impl<T, U> NonEmpty<Rect<T, U>>
 where
-    T: Copy + Clone + Zero + PartialOrd + PartialEq + Add<T, Output = T> + Sub<T, Output = T>,
+    T: Copy + PartialOrd + Add<T, Output = T> + Sub<T, Output = T>,
 {
     #[inline]
     pub fn union(&self, other: &NonEmpty<Rect<T, U>>) -> NonEmpty<Rect<T, U>> {
