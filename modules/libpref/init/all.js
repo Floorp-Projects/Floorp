@@ -1100,6 +1100,7 @@ pref("privacy.purge_trackers.enabled", false);
 #endif
 // Allowable amount of cookies to purge in a batch.
 pref("privacy.purge_trackers.max_purge_count", 100);
+pref("privacy.purge_trackers.logging.level", "Warn");
 
 
 pref("dom.event.contextmenu.enabled",       true);
