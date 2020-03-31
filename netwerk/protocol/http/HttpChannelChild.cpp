@@ -2245,15 +2245,14 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
     mLoadInfo->GetRequestBlockingReason(&sourceRequestBlockingReason);
   }
 
-  nsCOMPtr<nsILoadInfo> newChannelLoadInfo = nullptr;
+  Maybe<ChildLoadInfoForwarderArgs> targetLoadInfoForwarder;
   nsCOMPtr<nsIChannel> newChannel = do_QueryInterface(mRedirectChannelChild);
   if (newChannel) {
-    newChannelLoadInfo = newChannel->LoadInfo();
+    ChildLoadInfoForwarderArgs args;
+    nsCOMPtr<nsILoadInfo> loadInfo = newChannel->LoadInfo();
+    LoadInfoToChildLoadInfoForwarder(loadInfo, &args);
+    targetLoadInfoForwarder.emplace(args);
   }
-
-  ChildLoadInfoForwarderArgs targetLoadInfoForwarder;
-  LoadInfoToChildLoadInfoForwarder(newChannelLoadInfo,
-                                   &targetLoadInfoForwarder);
 
   if (CanSend())
     SendRedirect2Verify(aResult, *headerTuples, sourceRequestBlockingReason,

@@ -843,7 +843,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetCacheTokenCachedCharset(
 mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const nsresult& aResult, const RequestHeaderTuples& changedHeaders,
     const uint32_t& aSourceRequestBlockingReason,
-    const ChildLoadInfoForwarderArgs& aTargetLoadInfoForwarder,
+    const Maybe<ChildLoadInfoForwarderArgs>& aTargetLoadInfoForwarder,
     const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
     const Maybe<URIParams>& aAPIRedirectURI,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
@@ -927,10 +927,13 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         appCacheChannel->SetChooseApplicationCache(setChooseAppCache);
       }
 
-      nsCOMPtr<nsILoadInfo> newLoadInfo = newHttpChannel->LoadInfo();
-      rv = MergeChildLoadInfoForwarder(aTargetLoadInfoForwarder, newLoadInfo);
-      if (NS_FAILED(rv) && NS_SUCCEEDED(result)) {
-        result = rv;
+      if (aTargetLoadInfoForwarder.isSome()) {
+        nsCOMPtr<nsILoadInfo> newLoadInfo = newHttpChannel->LoadInfo();
+        rv = MergeChildLoadInfoForwarder(aTargetLoadInfoForwarder.ref(),
+                                         newLoadInfo);
+        if (NS_FAILED(rv) && NS_SUCCEEDED(result)) {
+          result = rv;
+        }
       }
     }
   }
