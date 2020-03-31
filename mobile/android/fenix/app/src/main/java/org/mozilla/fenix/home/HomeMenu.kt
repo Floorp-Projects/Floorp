@@ -51,6 +51,32 @@ class HomeMenu(
     private val menuCategoryTextColor =
         ThemeManager.resolveAttribute(R.attr.menuCategoryText, context)
 
+    // 'Reconnect' and 'Quit' items aren't needed most of the time, so we'll only create the if necessary.
+    private val reconnectToSyncItem by lazy {
+        BrowserMenuHighlightableItem(
+            context.getString(R.string.sync_reconnect),
+            R.drawable.ic_sync_disconnected,
+            iconTintColorResource = syncDisconnectedColor,
+            textColorResource = primaryTextColor,
+            highlight = BrowserMenuHighlight.HighPriority(
+                backgroundTint = syncDisconnectedBackgroundColor
+            ),
+            isHighlighted = { true }
+        ) {
+            onItemTapped.invoke(Item.Sync)
+        }
+    }
+
+    private val quitItem by lazy {
+        BrowserMenuImageText(
+            context.getString(R.string.delete_browsing_data_on_quit_action),
+            R.drawable.ic_exit,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.Quit)
+        }
+    }
+
     private val coreMenuItems by lazy {
         val whatsNewItem = BrowserMenuHighlightableItem(
             context.getString(R.string.browser_menu_whats_new),
@@ -142,32 +168,6 @@ class HomeMenu(
                     ))
                 }
             }, lifecycleOwner)
-        }
-    }
-
-    // 'Reconnect' and 'Quit' items aren't needed most of the time, so we'll only create the if necessary.
-    private val reconnectToSyncItem by lazy {
-        BrowserMenuHighlightableItem(
-            context.getString(R.string.sync_reconnect),
-            R.drawable.ic_sync_disconnected,
-            iconTintColorResource = syncDisconnectedColor,
-            textColorResource = primaryTextColor,
-            highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = syncDisconnectedBackgroundColor
-            ),
-            isHighlighted = { true }
-        ) {
-            onItemTapped.invoke(Item.Sync)
-        }
-    }
-
-    private val quitItem by lazy {
-        BrowserMenuImageText(
-            context.getString(R.string.delete_browsing_data_on_quit_action),
-            R.drawable.ic_exit,
-            primaryTextColor
-        ) {
-            onItemTapped.invoke(Item.Quit)
         }
     }
 }
