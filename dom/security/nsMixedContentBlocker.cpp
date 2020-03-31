@@ -986,8 +986,9 @@ nsresult nsMixedContentBlocker::ShouldLoad(
       mozilla::dom::ContentChild* cc =
           mozilla::dom::ContentChild::GetSingleton();
       if (cc) {
-        cc->SendAccumulateMixedContentHSTS(innerContentLocation, active,
-                                           originAttributes);
+        mozilla::ipc::URIParams uri;
+        SerializeURI(innerContentLocation, uri);
+        cc->SendAccumulateMixedContentHSTS(uri, active, originAttributes);
       }
     }
   }

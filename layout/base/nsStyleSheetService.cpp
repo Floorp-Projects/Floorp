@@ -169,8 +169,11 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI* aSheetURI,
         return rv;
       }
 
+      mozilla::ipc::URIParams uri;
+      SerializeURI(aSheetURI, uri);
+
       for (uint32_t i = 0; i < children.Length(); i++) {
-        Unused << children[i]->SendLoadAndRegisterSheet(aSheetURI, aSheetType);
+        Unused << children[i]->SendLoadAndRegisterSheet(uri, aSheetType);
       }
     }
   }
@@ -324,8 +327,11 @@ nsStyleSheetService::UnregisterSheet(nsIURI* aSheetURI, uint32_t aSheetType) {
       return NS_OK;
     }
 
+    mozilla::ipc::URIParams uri;
+    SerializeURI(aSheetURI, uri);
+
     for (uint32_t i = 0; i < children.Length(); i++) {
-      Unused << children[i]->SendUnregisterSheet(aSheetURI, aSheetType);
+      Unused << children[i]->SendUnregisterSheet(uri, aSheetType);
     }
   }
 

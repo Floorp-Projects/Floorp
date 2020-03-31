@@ -934,6 +934,9 @@ nsresult ContentChild::ProvideWindowCommon(
       return rv;
     }
 
+    Maybe<URIParams> uriToLoad;
+    SerializeURI(aURI, uriToLoad);
+
     if (name.LowerCaseEqualsLiteral("_blank")) {
       name = EmptyString();
     }
@@ -941,7 +944,7 @@ nsresult ContentChild::ProvideWindowCommon(
     MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
 
     Unused << SendCreateWindowInDifferentProcess(
-        aTabOpener, aChromeFlags, aCalledFromJS, aWidthSpecified, aURI,
+        aTabOpener, aChromeFlags, aCalledFromJS, aWidthSpecified, uriToLoad,
         features, fullZoom, name, triggeringPrincipal, csp, referrerInfo);
 
     // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
@@ -1189,7 +1192,13 @@ nsresult ContentChild::ProvideWindowCommon(
       return rv;
     }
 
-    SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS, aWidthSpecified, aURI, features, fullZoom,
+    Maybe<URIParams> uriToLoad;
+    if (aURI) {
+      SerializeURI(aURI, uriToLoad);
+    }
+
+    SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS,
+                     aWidthSpecified, uriToLoad, features, fullZoom,
                      Principal(triggeringPrincipal), csp, referrerInfo,
                      std::move(resolve), std::move(reject));
   }
@@ -1392,7 +1401,7 @@ void ContentChild::InitXPCOM(
   }
 
   // The stylesheet cache is not ready yet. Store this URL for future use.
-  nsCOMPtr<nsIURI> ucsURL = aXPCOMInit.userContentSheetURL();
+  nsCOMPtr<nsIURI> ucsURL = DeserializeURI(aXPCOMInit.userContentSheetURL());
   GlobalStyleSheetCache::SetUserContentCSSURL(ucsURL);
 
   GfxInfoBase::SetFeatureStatus(aXPCOMInit.gfxFeatureStatus());
@@ -2356,7 +2365,7 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
     return IPC_OK();
   }
   for (const VisitedQueryResult& result : aURIs) {
-    nsCOMPtr<nsIURI> newURI = result.uri();
+    nsCOMPtr<nsIURI> newURI = DeserializeURI(result.uri());
     if (!newURI) {
       return IPC_FAIL_NO_REASON(this);
     }
@@ -2738,35 +2747,38 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyIdleObserver(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvLoadAndRegisterSheet(
-    nsIURI* aURI, const uint32_t& aType) {
-  if (!aURI) {
+    const URIParams& aURI, const uint32_t& aType) {
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
     return IPC_OK();
   }
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
-    sheetService->LoadAndRegisterSheet(aURI, aType);
+    sheetService->LoadAndRegisterSheet(uri, aType);
   }
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUnregisterSheet(
-    nsIURI* aURI, const uint32_t& aType) {
-  if (!aURI) {
+    const URIParams& aURI, const uint32_t& aType) {
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
     return IPC_OK();
   }
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
-    sheetService->UnregisterSheet(aURI, aType);
+    sheetService->UnregisterSheet(uri, aType);
   }
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDomainSetChanged(
-    const uint32_t& aSetType, const uint32_t& aChangeType, nsIURI* aDomain) {
+    const uint32_t& aSetType, const uint32_t& aChangeType,
+    const Maybe<URIParams>& aDomain) {
   if (aChangeType == ACTIVATE_POLICY) {
     if (mPolicy) {
       return IPC_OK();
@@ -2815,14 +2827,16 @@ mozilla::ipc::IPCResult ContentChild::RecvDomainSetChanged(
 
   MOZ_ASSERT(set);
 
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aDomain);
+
   switch (aChangeType) {
     case ADD_DOMAIN:
-      NS_ENSURE_TRUE(aDomain, IPC_FAIL_NO_REASON(this));
-      set->Add(aDomain);
+      NS_ENSURE_TRUE(uri, IPC_FAIL_NO_REASON(this));
+      set->Add(uri);
       break;
     case REMOVE_DOMAIN:
-      NS_ENSURE_TRUE(aDomain, IPC_FAIL_NO_REASON(this));
-      set->Remove(aDomain);
+      NS_ENSURE_TRUE(uri, IPC_FAIL_NO_REASON(this));
+      set->Remove(uri);
       break;
     case CLEAR_DOMAINS:
       set->Clear();
@@ -3249,7 +3263,7 @@ bool ContentChild::DeallocPURLClassifierChild(PURLClassifierChild* aActor) {
 }
 
 PURLClassifierLocalChild* ContentChild::AllocPURLClassifierLocalChild(
-    nsIURI* aUri, const nsTArray<IPCURLClassifierFeature>& aFeatures) {
+    const URIParams& aUri, const nsTArray<IPCURLClassifierFeature>& aFeatures) {
   return new URLClassifierLocalChild();
 }
 
@@ -3260,7 +3274,8 @@ bool ContentChild::DeallocPURLClassifierLocalChild(
   return true;
 }
 
-PLoginReputationChild* ContentChild::AllocPLoginReputationChild(nsIURI* aUri) {
+PLoginReputationChild* ContentChild::AllocPLoginReputationChild(
+    const URIParams& aUri) {
   return new PLoginReputationChild();
 }
 

@@ -60,6 +60,10 @@ using mozilla::loader::PScriptCacheChild;
 bool IsDevelopmentBuild();
 #endif /* !XP_WIN */
 
+namespace ipc {
+class URIParams;
+}  // namespace ipc
+
 namespace dom {
 
 namespace ipc {
@@ -84,6 +88,7 @@ class ContentChild final
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
+  typedef mozilla::ipc::URIParams URIParams;
 
   friend class PContentChild;
 
@@ -416,10 +421,10 @@ class ContentChild final
 
   mozilla::ipc::IPCResult RecvMinimizeMemoryUsage();
 
-  mozilla::ipc::IPCResult RecvLoadAndRegisterSheet(nsIURI* aURI,
+  mozilla::ipc::IPCResult RecvLoadAndRegisterSheet(const URIParams& aURI,
                                                    const uint32_t& aType);
 
-  mozilla::ipc::IPCResult RecvUnregisterSheet(nsIURI* aURI,
+  mozilla::ipc::IPCResult RecvUnregisterSheet(const URIParams& aURI,
                                               const uint32_t& aType);
 
   void AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
@@ -434,7 +439,7 @@ class ContentChild final
 
   mozilla::ipc::IPCResult RecvDomainSetChanged(const uint32_t& aSetType,
                                                const uint32_t& aChangeType,
-                                               nsIURI* aDomain);
+                                               const Maybe<URIParams>& aDomain);
 
   mozilla::ipc::IPCResult RecvShutdown();
 
@@ -596,10 +601,11 @@ class ContentChild final
 
   // PURLClassifierLocalChild
   PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
-      nsIURI* aUri, const nsTArray<IPCURLClassifierFeature>& aFeatures);
+      const URIParams& aUri,
+      const nsTArray<IPCURLClassifierFeature>& aFeatures);
   bool DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor);
 
-  PLoginReputationChild* AllocPLoginReputationChild(nsIURI* aUri);
+  PLoginReputationChild* AllocPLoginReputationChild(const URIParams& aUri);
 
   bool DeallocPLoginReputationChild(PLoginReputationChild* aActor);
 

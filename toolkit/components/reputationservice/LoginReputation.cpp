@@ -298,7 +298,10 @@ LoginReputationService::QueryReputationAsync(
       return NS_ERROR_FAILURE;
     }
 
-    if (!content->SendPLoginReputationConstructor(documentURI)) {
+    URIParams uri;
+    SerializeURI(documentURI, uri);
+
+    if (!content->SendPLoginReputationConstructor(uri)) {
       return NS_ERROR_FAILURE;
     }
   } else {

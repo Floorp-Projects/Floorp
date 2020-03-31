@@ -436,7 +436,7 @@ class VisitedQuery final : public AsyncStatementCallback {
         AutoTArray<VisitedQueryResult, 1> results;
         VisitedQueryResult& result = *results.AppendElement();
         result.visited() = mIsVisited;
-        result.uri() = mURI;
+        SerializeURI(mURI, result.uri());
         history->NotifyVisitedParent(results);
       }
     }
@@ -584,7 +584,7 @@ class NotifyManyVisitsObservers : public Runnable {
 
         if (BrowserTabsRemoteAutostart()) {
           VisitedQueryResult& result = *results.AppendElement();
-          result.uri() = uris[i];
+          SerializeURI(uris[i], result.uri());
           result.visited() = true;
         }
       }
@@ -596,7 +596,7 @@ class NotifyManyVisitsObservers : public Runnable {
 
       if (BrowserTabsRemoteAutostart()) {
         VisitedQueryResult& result = *results.AppendElement();
-        result.uri() = uris[0];
+        SerializeURI(uris[0], result.uri());
         result.visited() = true;
         mHistory->NotifyVisitedParent(results);
       }
@@ -1993,9 +1993,12 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
   }
 
   if (XRE_IsContentProcess()) {
+    URIParams uri;
+    SerializeURI(aURI, uri);
+
     auto* cpc = dom::ContentChild::GetSingleton();
     MOZ_ASSERT(cpc, "Content Protocol is NULL!");
-    Unused << cpc->SendSetURITitle(aURI, PromiseFlatString(aTitle));
+    Unused << cpc->SendSetURITitle(uri, PromiseFlatString(aTitle));
     return NS_OK;
   }
 
@@ -2203,9 +2206,9 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
 void History::StartPendingVisitedQueries(
     const PendingVisitedQueries& aQueries) {
   if (XRE_IsContentProcess()) {
-    nsTArray<RefPtr<nsIURI>> uris(aQueries.Count());
+    nsTArray<URIParams> uris(aQueries.Count());
     for (auto iter = aQueries.ConstIter(); !iter.Done(); iter.Next()) {
-      uris.AppendElement(iter.Get()->GetKey());
+      SerializeURI(iter.Get()->GetKey(), *uris.AppendElement());
     }
     auto* cpc = mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(cpc, "Content Protocol is NULL!");
