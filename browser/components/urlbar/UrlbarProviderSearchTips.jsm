@@ -275,8 +275,20 @@ class ProviderSearchTips extends UrlbarProvider {
    * Called from `onLocationChange` in browser.js.
    * @param {URL} uri
    *  The URI being navigated to.
+   * @param {nsIWebProgress} webProgress
+   * @param {number} flags
+   *   Load flags. See nsIWebProgressListener.idl for possible values.
    */
-  onLocationChange(uri) {
+  onLocationChange(uri, webProgress, flags) {
+    // Ignore events that don't change the document. Google is known to do this.
+    // Also ignore changes in sub-frames. See bug 1623978.
+    if (
+      flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT ||
+      !webProgress.isTopLevel
+    ) {
+      return;
+    }
+
     let window = BrowserWindowTracker.getTopWindow();
     // The UrlbarView is usually closed on location change when the input is
     // blurred. Since we open the view to show the redirect tip without focusing

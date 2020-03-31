@@ -5268,7 +5268,11 @@ var XULBrowserWindow = {
 
       SafeBrowsingNotificationBox.onLocationChange(aLocationURI);
 
-      UrlbarProviderSearchTips.onLocationChange(aLocationURI);
+      UrlbarProviderSearchTips.onLocationChange(
+        aLocationURI,
+        aWebProgress,
+        aFlags
+      );
 
       gTabletModePageCounter.inc();
 
