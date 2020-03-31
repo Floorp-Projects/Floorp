@@ -2,7 +2,7 @@
 
 # ErrorResponse
 
-`sealed class ErrorResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L33)
+`sealed class ErrorResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L34)
 
 An alternative response for an error request.
 

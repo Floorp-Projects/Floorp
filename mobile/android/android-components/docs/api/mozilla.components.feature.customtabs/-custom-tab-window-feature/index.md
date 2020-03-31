@@ -2,7 +2,7 @@
 
 # CustomTabWindowFeature
 
-`class CustomTabWindowFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabWindowFeature.kt#L32)
+`class CustomTabWindowFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabWindowFeature.kt#L31)
 
 Feature implementation for handling window requests by opening custom tabs.
 
@@ -10,7 +10,7 @@ Feature implementation for handling window requests by opening custom tabs.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CustomTabWindowFeature(activity: <ERROR CLASS>, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null)`<br>Feature implementation for handling window requests by opening custom tabs. |
+| [&lt;init&gt;](-init-.md) | `CustomTabWindowFeature(activity: <ERROR CLASS>, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, handleError: (`[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Feature implementation for handling window requests by opening custom tabs. |
 
 ### Functions
 

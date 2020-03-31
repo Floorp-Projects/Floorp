@@ -2,7 +2,7 @@
 
 # InterceptionResponse
 
-`sealed class InterceptionResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L18)
+`sealed class InterceptionResponse` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L19)
 
 An alternative response for an intercepted request.
 

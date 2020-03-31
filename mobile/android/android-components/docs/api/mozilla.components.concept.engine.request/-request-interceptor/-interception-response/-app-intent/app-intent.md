@@ -2,4 +2,4 @@
 
 # appIntent
 
-`val appIntent: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L27)
+`val appIntent: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L28)

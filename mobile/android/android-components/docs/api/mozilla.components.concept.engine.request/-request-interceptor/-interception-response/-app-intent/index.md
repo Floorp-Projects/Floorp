@@ -2,7 +2,7 @@
 
 # AppIntent
 
-`data class AppIntent : `[`InterceptionResponse`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L27)
+`data class AppIntent : `[`InterceptionResponse`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L28)
 
 ### Constructors
 
