@@ -18,10 +18,6 @@ EXTRA_JS_MODULES += [
     'PageThumbUtils.jsm',
 ]
 
-UNIFIED_SOURCES += [
-    'PageThumbsProtocol.cpp'
-]
-
 XPIDL_SOURCES += [
     'nsIPageThumbsStorageService.idl',
 ]
