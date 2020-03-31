@@ -375,6 +375,9 @@ class MOZ_STACK_CLASS IonBuilder {
                                     PropertyName* name, MDefinition* value,
                                     bool barrier);
 
+  AbortReasonOr<Ok> arithUnaryBinaryCache(JSOp op, MDefinition* left,
+                                          MDefinition* right);
+
   // jsop_binary_arith helpers.
   MBinaryArithInstruction* binaryArithInstruction(JSOp op, MDefinition* left,
                                                   MDefinition* right);
@@ -390,8 +393,6 @@ class MOZ_STACK_CLASS IonBuilder {
                                               MDefinition* right);
   AbortReasonOr<Ok> binaryArithTrySpecializedOnBaselineInspector(
       bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
-  AbortReasonOr<Ok> arithTryBinaryStub(bool* emitted, JSOp op,
-                                       MDefinition* left, MDefinition* right);
   MDefinition* maybeConvertToNumber(MDefinition* def);
 
   // jsop_bitop helpers.

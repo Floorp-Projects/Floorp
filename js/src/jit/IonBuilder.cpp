@@ -3430,21 +3430,12 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitnot() {
 
   if (!forceInlineCaches()) {
     MOZ_TRY(bitnotTrySpecialized(&emitted, input));
-    if (emitted) return Ok();
+    if (emitted) {
+      return Ok();
+    }
   }
 
-  MOZ_TRY(arithTryBinaryStub(&emitted, JSOp::BitNot, nullptr, input));
-  if (emitted) {
-    return Ok();
-  }
-
-  // Not possible to optimize. Do a slow vm call.
-  MBitNot* ins = MBitNot::New(alloc(), input);
-
-  current->add(ins);
-  current->push(ins);
-  MOZ_ASSERT(ins->isEffectful());
-  return resumeAfter(ins);
+  return arithUnaryBinaryCache(JSOp::BitNot, nullptr, input);
 }
 
 AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
@@ -3540,14 +3531,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitop(JSOp op) {
     }
   }
 
-  MOZ_TRY(arithTryBinaryStub(&emitted, op, left, right));
-  if (emitted) {
-    return Ok();
-  }
-
-  // Not possible to optimize. Do a slow vm call.
-  MOZ_TRY(binaryBitOpEmit(op, MIRType::None, left, right));
-  return Ok();
+  return arithUnaryBinaryCache(op, left, right);
 }
 
 MDefinition::Opcode BinaryJSOpToMDefinition(JSOp op) {
@@ -3741,20 +3725,10 @@ AbortReasonOr<Ok> IonBuilder::binaryArithTrySpecializedOnBaselineInspector(
   return Ok();
 }
 
-AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
-                                                 MDefinition* left,
-                                                 MDefinition* right) {
-  MOZ_ASSERT(*emitted == false);
-  JSOp actualOp = JSOp(*pc);
-
-  // The actual jsop 'jsop_pos' is not supported yet.
-  // There's no IC support for JSOp::Pow either.
-  if (actualOp == JSOp::Pos || actualOp == JSOp::Pow) {
-    return Ok();
-  }
-
+AbortReasonOr<Ok> IonBuilder::arithUnaryBinaryCache(JSOp op, MDefinition* left,
+                                                    MDefinition* right) {
   MInstruction* stub = nullptr;
-  switch (actualOp) {
+  switch (JSOp(*pc)) {
     case JSOp::Neg:
     case JSOp::BitNot:
       MOZ_ASSERT_IF(op == JSOp::Mul,
@@ -3787,10 +3761,7 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
   // is 'empty typed'.
   maybeMarkEmpty(stub);
 
-  MOZ_TRY(resumeAfter(stub));
-
-  *emitted = true;
-  return Ok();
+  return resumeAfter(stub);
 }
 
 MDefinition* IonBuilder::maybeConvertToNumber(MDefinition* def) {
@@ -3834,23 +3805,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left,
     }
   }
 
-  MOZ_TRY(arithTryBinaryStub(&emitted, op, left, right));
-  if (emitted) {
-    return Ok();
-  }
-
-  MDefinition::Opcode defOp = BinaryJSOpToMDefinition(op);
-  MBinaryArithInstruction* ins =
-      MBinaryArithInstruction::New(alloc(), defOp, left, right);
-
-  // Decrease type from 'any type' to 'empty type' when one of the operands
-  // is 'empty typed'.
-  maybeMarkEmpty(ins);
-
-  current->add(ins);
-  current->push(ins);
-  MOZ_ASSERT(ins->isEffectful());
-  return resumeAfter(ins);
+  return arithUnaryBinaryCache(op, left, right);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_binary_arith(JSOp op) {
@@ -3871,11 +3826,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_pow() {
     if (emitted) {
       return Ok();
     }
-  }
-
-  MOZ_TRY(arithTryBinaryStub(&emitted, JSOp::Pow, base, exponent));
-  if (emitted) {
-    return Ok();
   }
 
   // For now, use MIRType::None as a safe cover-all. See bug 1188079.
