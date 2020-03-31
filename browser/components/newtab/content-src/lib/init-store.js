@@ -55,41 +55,47 @@ const messageMiddleware = store => next => action => {
   }
 };
 
-export const rehydrationMiddleware = store => next => action => {
-  if (store._didRehydrate) {
+export const rehydrationMiddleware = ({ getState }) => {
+  // NB: The parameter here is MiddlewareAPI which looks like a Store and shares
+  // the same getState, so attached properties are accessible from the store.
+  getState.didRehydrate = false;
+  getState.didRequestInitialState = false;
+  return next => action => {
+    if (getState.didRehydrate) {
+      return next(action);
+    }
+
+    const isMergeStoreAction = action.type === MERGE_STORE_ACTION;
+    const isRehydrationRequest = action.type === at.NEW_TAB_STATE_REQUEST;
+
+    if (isRehydrationRequest) {
+      getState.didRequestInitialState = true;
+      return next(action);
+    }
+
+    if (isMergeStoreAction) {
+      getState.didRehydrate = true;
+      return next(action);
+    }
+
+    // If init happened after our request was made, we need to re-request
+    if (getState.didRequestInitialState && action.type === at.INIT) {
+      return next(ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST }));
+    }
+
+    if (
+      au.isBroadcastToContent(action) ||
+      au.isSendToOneContent(action) ||
+      au.isSendToPreloaded(action)
+    ) {
+      // Note that actions received before didRehydrate will not be dispatched
+      // because this could negatively affect preloading and the the state
+      // will be replaced by rehydration anyway.
+      return null;
+    }
+
     return next(action);
-  }
-
-  const isMergeStoreAction = action.type === MERGE_STORE_ACTION;
-  const isRehydrationRequest = action.type === at.NEW_TAB_STATE_REQUEST;
-
-  if (isRehydrationRequest) {
-    store._didRequestInitialState = true;
-    return next(action);
-  }
-
-  if (isMergeStoreAction) {
-    store._didRehydrate = true;
-    return next(action);
-  }
-
-  // If init happened after our request was made, we need to re-request
-  if (store._didRequestInitialState && action.type === at.INIT) {
-    return next(ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST }));
-  }
-
-  if (
-    au.isBroadcastToContent(action) ||
-    au.isSendToOneContent(action) ||
-    au.isSendToPreloaded(action)
-  ) {
-    // Note that actions received before didRehydrate will not be dispatched
-    // because this could negatively affect preloading and the the state
-    // will be replaced by rehydration anyway.
-    return null;
-  }
-
-  return next(action);
+  };
 };
 
 /**
@@ -99,24 +105,27 @@ export const rehydrationMiddleware = store => next => action => {
  * that it gets sent before the main is ready to receive it. Conversely, any
  * actions allowed early are accepted to be ignorable or re-sendable.
  */
-export const queueEarlyMessageMiddleware = store => next => action => {
-  if (store._receivedFromMain) {
-    next(action);
-  } else if (au.isFromMain(action)) {
-    next(action);
-    store._receivedFromMain = true;
-    // Sending out all the early actions as main is ready now
-    if (store._earlyActionQueue) {
-      store._earlyActionQueue.forEach(next);
-      store._earlyActionQueue = [];
+export const queueEarlyMessageMiddleware = ({ getState }) => {
+  // NB: The parameter here is MiddlewareAPI which looks like a Store and shares
+  // the same getState, so attached properties are accessible from the store.
+  getState.earlyActionQueue = [];
+  getState.receivedFromMain = false;
+  return next => action => {
+    if (getState.receivedFromMain) {
+      next(action);
+    } else if (au.isFromMain(action)) {
+      next(action);
+      getState.receivedFromMain = true;
+      // Sending out all the early actions as main is ready now
+      getState.earlyActionQueue.forEach(next);
+      getState.earlyActionQueue.length = 0;
+    } else if (EARLY_QUEUED_ACTIONS.includes(action.type)) {
+      getState.earlyActionQueue.push(action);
+    } else {
+      // Let any other type of action go through
+      next(action);
     }
-  } else if (EARLY_QUEUED_ACTIONS.includes(action.type)) {
-    store._earlyActionQueue = store._earlyActionQueue || [];
-    store._earlyActionQueue.push(action);
-  } else {
-    // Let any other type of action go through
-    next(action);
-  }
+  };
 };
 
 /**
@@ -136,9 +145,6 @@ export function initStore(reducers) {
         messageMiddleware
       )
   );
-
-  store._didRehydrate = false;
-  store._didRequestInitialState = false;
 
   if (global.RPMAddMessageListener) {
     global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {

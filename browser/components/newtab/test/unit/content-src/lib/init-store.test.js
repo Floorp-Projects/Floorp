@@ -99,11 +99,12 @@ describe("initStore", () => {
     it("should dispatch an additional NEW_TAB_STATE_REQUEST if INIT was received after a request", () => {
       const requestAction = ac.AlsoToMain({ type: at.NEW_TAB_STATE_REQUEST });
       const next = sinon.spy();
+      const dispatch = rehydrationMiddleware(store)(next);
 
-      rehydrationMiddleware(store)(next)(requestAction);
-
+      dispatch(requestAction);
       next.resetHistory();
-      rehydrationMiddleware(store)(next)({ type: at.INIT });
+      dispatch({ type: at.INIT });
+
       assert.calledWith(next, requestAction);
     });
     it("should allow MERGE_STORE_ACTION to go through", () => {
@@ -114,13 +115,10 @@ describe("initStore", () => {
     });
     it("should not allow actions from main to go through before MERGE_STORE_ACTION was received", () => {
       const next = sinon.spy();
+      const dispatch = rehydrationMiddleware(store)(next);
 
-      rehydrationMiddleware(store)(next)(
-        ac.BroadcastToContent({ type: "FOO" })
-      );
-      rehydrationMiddleware(store)(next)(
-        ac.AlsoToOneContent({ type: "FOO" }, 123)
-      );
+      dispatch(ac.BroadcastToContent({ type: "FOO" }));
+      dispatch(ac.AlsoToOneContent({ type: "FOO" }, 123));
 
       assert.notCalled(next);
     });
@@ -132,11 +130,13 @@ describe("initStore", () => {
     });
     it("should allow actions from main to go through after MERGE_STORE_ACTION has been received", () => {
       const next = sinon.spy();
-      rehydrationMiddleware(store)(next)({ type: MERGE_STORE_ACTION });
+      const dispatch = rehydrationMiddleware(store)(next);
+
+      dispatch({ type: MERGE_STORE_ACTION });
       next.resetHistory();
 
       const action = ac.AlsoToOneContent({ type: "FOO" }, 123);
-      rehydrationMiddleware(store)(next)(action);
+      dispatch(action);
       assert.calledWith(next, action);
     });
   });
@@ -161,29 +161,30 @@ describe("initStore", () => {
       EARLY_QUEUED_ACTIONS.forEach(actionType => {
         const testStore = initStore({ number: addNumberReducer });
         const next = sinon.spy();
+        const dispatch = queueEarlyMessageMiddleware(testStore)(next);
         const action = ac.AlsoToMain({ type: actionType });
         const fromMainAction = ac.AlsoToOneContent({ type: "FOO" }, 123);
 
         // Early actions should be added to the queue
-        queueEarlyMessageMiddleware(testStore)(next)(action);
-        queueEarlyMessageMiddleware(testStore)(next)(action);
+        dispatch(action);
+        dispatch(action);
 
         assert.notCalled(next);
-        assert.equal(testStore._earlyActionQueue.length, 2);
+        assert.equal(testStore.getState.earlyActionQueue.length, 2);
         next.resetHistory();
 
         // Receiving action from main would empty the queue
-        queueEarlyMessageMiddleware(testStore)(next)(fromMainAction);
+        dispatch(fromMainAction);
 
         assert.calledThrice(next);
         assert.equal(next.firstCall.args[0], fromMainAction);
         assert.equal(next.secondCall.args[0], action);
         assert.equal(next.thirdCall.args[0], action);
-        assert.equal(testStore._earlyActionQueue.length, 0);
+        assert.equal(testStore.getState.earlyActionQueue.length, 0);
         next.resetHistory();
 
         // New action should go through immediately
-        queueEarlyMessageMiddleware(testStore)(next)(action);
+        dispatch(action);
         assert.calledOnce(next);
         assert.calledWith(next, action);
       });
