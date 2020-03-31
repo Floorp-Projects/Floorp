@@ -101,7 +101,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   WindowGlobalChild(const WindowGlobalInit& aInit,
                     nsGlobalWindowInner* aWindow);
 
-  void Init();
+  void Init(BrowserChild* aBrowserChild);
 
   void InitWindowGlobal(nsGlobalWindowInner* aWindow);
 
@@ -144,6 +144,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
   RefPtr<dom::BrowsingContext> mBrowsingContext;
   RefPtr<dom::WindowContext> mWindowContext;
+  RefPtr<BrowserChild> mBrowserChild;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> mWindowActors;
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
