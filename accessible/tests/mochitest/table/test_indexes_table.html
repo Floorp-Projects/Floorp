@@ -150,6 +150,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
       testTableIndexes("tablealldisplayblock", idxes);
 
+      // ////////////////////////////////////////////////////////////////////////
+      // Table that has display: block; style
+      idxes = [
+        [0, 1],
+      ];
+      testTableIndexes("tablewithdisplayblock", idxes);
+
       SimpleTest.finish();
     }
 
@@ -393,6 +400,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       </tr>
 
     </tbody>
+  </table>
 
   <table border="1" id="tableinsane6" >
     <caption>overlapping cells</caption>
@@ -449,6 +457,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       </tr>
     </tbody>
   </table>
-  
+
+  <table id="tablewithdisplayblock" style="display: block;">
+    <tr><th>a</th><td>b</td></tr>
+  </table>  
 </body>
 </html>
