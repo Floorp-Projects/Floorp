@@ -1809,11 +1809,9 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   if (XRE_IsContentProcess()) {
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
-    mozilla::ipc::URIParams uri;
-    SerializeURI(aURI, uri);
-    cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, flags, attrs,
+    cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags, attrs,
                         &aInfo.mHasHSTS);
-    cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, uri, flags, attrs,
+    cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, aURI, flags, attrs,
                         &aInfo.mHasHPKP);
   } else {
     nsCOMPtr<nsISiteSecurityService> sss =
