@@ -160,6 +160,9 @@ inline bool nsINode::IsEditable() const {
   }
 
   // Check if the node is in a document and the document is in designMode.
+  //
+  // NOTE(emilio): If you change this to be the composed doc you also need to
+  // change NotifyEditableStateChange() in Document.cpp.
   Document* doc = GetUncomposedDoc();
   return doc && doc->HasFlag(NODE_IS_EDITABLE);
 }
