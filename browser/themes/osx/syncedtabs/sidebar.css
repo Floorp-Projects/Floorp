@@ -34,18 +34,3 @@ body:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
     font-weight: bold;
   }
 }
-
-.sidebar-search-container {
-  padding: 4px;
-}
-
-.search-box {
-  -moz-appearance: searchfield;
-  padding: 1px;
-  font-size: 12px;
-  cursor: text;
-  margin: 4px;
-  color: -moz-fieldText;
-  -moz-user-select: text;
-  text-shadow: none;
-}

@@ -11,31 +11,6 @@
   margin-inline-end: 6px;
 }
 
-.search-box {
-  -moz-appearance: textfield;
-  cursor: text;
-  margin: 4px;
-  padding: 2px 2px 3px;
-  padding-inline-start: 4px;
-  color: -moz-FieldText;
-}
-
-.search-box > .textbox-input-box {
-  background-image: url(chrome://global/skin/icons/search-textbox.svg);
-  background-repeat: no-repeat;
-  background-size: 12px;
-  background-position: left center;
-  padding-inline-start: 14px;
-}
-
-.search-box > .textbox-input-box:dir(rtl) {
-  background-position: right center;
-}
-
-.textbox-search-clear:not([disabled]) {
-  cursor: default;
-}
-
 .client .item.tab > .item-title-container {
   padding-inline-start: 26px;
 }
