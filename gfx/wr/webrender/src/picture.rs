@@ -2395,11 +2395,11 @@ impl TileCacheInstance {
 
         self.map_local_to_surface = SpaceMapper::new(
             self.spatial_node_index,
-            pic_rect,
+            PictureRect::from_untyped(&pic_rect.to_untyped()),
         );
         self.map_child_pic_to_surface = SpaceMapper::new(
             self.spatial_node_index,
-            pic_rect,
+            PictureRect::from_untyped(&pic_rect.to_untyped()),
         );
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
@@ -2430,7 +2430,7 @@ impl TileCacheInstance {
             );
 
             let clip_chain_instance = frame_state.clip_store.build_clip_chain_instance(
-                pic_rect.cast_unit(),
+                LayoutRect::from_untyped(&pic_rect.to_untyped()),
                 &self.map_local_to_surface,
                 &pic_to_world_mapper,
                 frame_context.spatial_tree,
@@ -4562,7 +4562,7 @@ impl PicturePrimitive {
 
         match self.raster_config {
             Some(ref mut raster_config) => {
-                let pic_rect = self.precise_local_rect.cast_unit();
+                let pic_rect = PictureRect::from_untyped(&self.precise_local_rect.to_untyped());
 
                 let mut device_pixel_scale = frame_state
                     .surfaces[raster_config.surface_index.0]
@@ -4579,7 +4579,7 @@ impl PicturePrimitive {
                         let mut max_offset = vec2(0.0, 0.0);
                         let mut min_offset = vec2(0.0, 0.0);
                         for shadow in shadows {
-                            let offset = layout_vector_as_picture_vector(shadow.offset);
+                            let offset = shadow.offset.cast_unit();
                             max_offset = max_offset.max(offset);
                             min_offset = min_offset.min(offset);
                         }
@@ -4590,10 +4590,15 @@ impl PicturePrimitive {
                         let world_min = map_raster_to_world.map_vector(raster_min);
                         let world_max = map_raster_to_world.map_vector(raster_max);
 
+                        let top_left = -world_max.max(vec2(0.0, 0.0));
+                        let bottom_right = -world_min.min(vec2(0.0, 0.0));
+
                         // Grow the clip in the opposite direction of the shadow's offset.
-                        SideOffsets2D::from_vectors_outer(
-                            -world_max.max(vec2(0.0, 0.0)),
-                            -world_min.min(vec2(0.0, 0.0)),
+                        SideOffsets2D::new(
+                            -top_left.y,
+                            bottom_right.x,
+                            bottom_right.y,
+                            -top_left.x,
                         )
                     }
                     _ => SideOffsets2D::zero(),

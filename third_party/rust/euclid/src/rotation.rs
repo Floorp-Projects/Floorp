@@ -8,17 +8,186 @@
 // except according to those terms.
 
 use approxeq::ApproxEq;
-use num_traits::{Float, One, Zero, NumCast};
+use num_traits::{Float, FloatConst, One, Zero, NumCast};
 use core::fmt;
-use core::ops::{Add, Div, Mul, Neg, Sub};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign};
 use core::marker::PhantomData;
 use core::cmp::{Eq, PartialEq};
 use core::hash::{Hash};
 use trig::Trig;
-use {Angle, Point2D, Point3D, Vector2D, Vector3D, point2, point3, vec3};
+use {Point2D, Point3D, Vector2D, Vector3D, point2, point3, vec3};
 use {Transform2D, Transform3D, UnknownUnit};
 #[cfg(feature = "serde")]
 use serde;
+
+/// An angle in radians
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Angle<T> {
+    pub radians: T,
+}
+
+impl<T> Angle<T> {
+    #[inline]
+    pub fn radians(radians: T) -> Self {
+        Angle { radians }
+    }
+
+    #[inline]
+    pub fn get(self) -> T {
+        self.radians
+    }
+}
+
+impl<T> Angle<T>
+where
+    T: Trig,
+{
+    #[inline]
+    pub fn degrees(deg: T) -> Self {
+        Angle {
+            radians: T::degrees_to_radians(deg),
+        }
+    }
+
+    #[inline]
+    pub fn to_degrees(self) -> T {
+        T::radians_to_degrees(self.radians)
+    }
+}
+
+impl<T> Angle<T>
+where
+    T: Rem<Output = T> + Sub<Output = T> + Add<Output = T> + Zero + FloatConst + PartialOrd + Copy,
+{
+    /// Returns this angle in the [0..2*PI[ range.
+    pub fn positive(&self) -> Self {
+        let two_pi = T::PI() + T::PI();
+        let mut a = self.radians % two_pi;
+        if a < T::zero() {
+            a = a + two_pi;
+        }
+        Angle::radians(a)
+    }
+
+    /// Returns this angle in the ]-PI..PI] range.
+    pub fn signed(&self) -> Self {
+        Angle::pi() - (Angle::pi() - *self).positive()
+    }
+}
+
+impl<T> Angle<T>
+where
+    T: Float,
+{
+    /// Returns (sin(self), cos(self)).
+    pub fn sin_cos(self) -> (T, T) {
+        self.radians.sin_cos()
+    }
+}
+
+impl<T> Angle<T>
+where
+    T: Zero,
+{
+    pub fn zero() -> Self {
+        Angle::radians(T::zero())
+    }
+}
+
+impl<T> Angle<T>
+where
+    T: FloatConst + Add<Output = T>,
+{
+    pub fn pi() -> Self {
+        Angle::radians(T::PI())
+    }
+
+    pub fn two_pi() -> Self {
+        Angle::radians(T::PI() + T::PI())
+    }
+
+    pub fn frac_pi_2() -> Self {
+        Angle::radians(T::FRAC_PI_2())
+    }
+
+    pub fn frac_pi_3() -> Self {
+        Angle::radians(T::FRAC_PI_3())
+    }
+
+    pub fn frac_pi_4() -> Self {
+        Angle::radians(T::FRAC_PI_4())
+    }
+}
+
+impl<T: Clone + Add<T, Output = T>> Add for Angle<T> {
+    type Output = Angle<T>;
+    fn add(self, other: Angle<T>) -> Angle<T> {
+        Angle::radians(self.radians + other.radians)
+    }
+}
+
+impl<T: Clone + AddAssign<T>> AddAssign for Angle<T> {
+    fn add_assign(&mut self, other: Angle<T>) {
+        self.radians += other.radians;
+    }
+}
+
+impl<T: Clone + Sub<T, Output = T>> Sub<Angle<T>> for Angle<T> {
+    type Output = Angle<T>;
+    fn sub(self, other: Angle<T>) -> <Self as Sub>::Output {
+        Angle::radians(self.radians - other.radians)
+    }
+}
+
+impl<T: Clone + SubAssign<T>> SubAssign for Angle<T> {
+    fn sub_assign(&mut self, other: Angle<T>) {
+        self.radians -= other.radians;
+    }
+}
+
+impl<T: Clone + Div<T, Output = T>> Div<Angle<T>> for Angle<T> {
+    type Output = T;
+    #[inline]
+    fn div(self, other: Angle<T>) -> T {
+        self.radians / other.radians
+    }
+}
+
+impl<T: Clone + Div<T, Output = T>> Div<T> for Angle<T> {
+    type Output = Angle<T>;
+    #[inline]
+    fn div(self, factor: T) -> Angle<T> {
+        Angle::radians(self.radians / factor)
+    }
+}
+
+impl<T: Clone + DivAssign<T>> DivAssign<T> for Angle<T> {
+    fn div_assign(&mut self, factor: T) {
+        self.radians /= factor;
+    }
+}
+
+impl<T: Clone + Mul<T, Output = T>> Mul<T> for Angle<T> {
+    type Output = Angle<T>;
+    #[inline]
+    fn mul(self, factor: T) -> Angle<T> {
+        Angle::radians(self.radians * factor)
+    }
+}
+
+impl<T: Clone + MulAssign<T>> MulAssign<T> for Angle<T> {
+    fn mul_assign(&mut self, factor: T) {
+        self.radians *= factor;
+    }
+}
+
+impl<T: Neg<Output = T>> Neg for Angle<T> {
+    type Output = Self;
+    fn neg(self) -> Self {
+        Angle::radians(-self.radians)
+    }
+}
 
 /// A transform that can represent rotations in 2d, represented as an angle in radians.
 #[repr(C)]
@@ -95,7 +264,9 @@ where
 
 impl<T, Src, Dst> Rotation2D<T, Src, Dst>
 where
-    T:    Add<T, Output = T>
+    T: Copy
+        + Clone
+        + Add<T, Output = T>
         + Sub<T, Output = T>
         + Mul<T, Output = T>
         + Div<T, Output = T>
@@ -151,29 +322,12 @@ where
     pub fn transform_vector(&self, vector: Vector2D<T, Src>) -> Vector2D<T, Dst> {
         self.transform_point(vector.to_point()).to_vector()
     }
-
-    /// Drop the units, preserving only the numeric value.
-    #[inline]
-    pub fn to_untyped(&self) -> Rotation2D<T, UnknownUnit, UnknownUnit> {
-        Rotation2D {
-            angle: self.angle,
-            _unit: PhantomData,
-        }
-    }
-
-    /// Tag a unitless value with units.
-    #[inline]
-    pub fn from_untyped(r: &Rotation2D<T, UnknownUnit, UnknownUnit>) -> Self {
-        Rotation2D {
-            angle: r.angle,
-            _unit: PhantomData,
-        }
-    }
 }
 
 impl<T, Src, Dst> Rotation2D<T, Src, Dst>
 where
     T: Copy
+        + Clone
         + Add<T, Output = T>
         + Mul<T, Output = T>
         + Div<T, Output = T>
@@ -436,8 +590,7 @@ where
 
     /// Basic Linear interpolation between this rotation and another rotation.
     ///
-    /// When `t` is `One::one()`, returned value equals to `other`,
-    /// otherwise equals to `self`.
+    /// `t` is expected to be between zero and one.
     #[inline]
     pub fn lerp(&self, other: &Self, t: T) -> Self {
         let one_t = T::one() - t;
@@ -613,30 +766,6 @@ where
             self.r * factor,
         )
     }
-
-    /// Drop the units, preserving only the numeric value.
-    #[inline]
-    pub fn to_untyped(&self) -> Rotation3D<T, UnknownUnit, UnknownUnit> {
-        Rotation3D {
-            i: self.i,
-            j: self.j,
-            k: self.k,
-            r: self.r,
-            _unit: PhantomData,
-        }
-    }
-
-    /// Tag a unitless value with units.
-    #[inline]
-    pub fn from_untyped(r: &Rotation3D<T, UnknownUnit, UnknownUnit>) -> Self {
-        Rotation3D {
-            i: r.i,
-            j: r.j,
-            k: r.k,
-            r: r.r,
-            _unit: PhantomData,
-        }
-    }
 }
 
 impl<T: fmt::Debug, Src, Dst> fmt::Debug for Rotation3D<T, Src, Dst> {
@@ -665,6 +794,10 @@ where
 {
     fn approx_epsilon() -> T {
         T::approx_epsilon()
+    }
+
+    fn approx_eq(&self, other: &Self) -> bool {
+        self.approx_eq_eps(other, &Self::approx_epsilon())
     }
 
     fn approx_eq_eps(&self, other: &Self, eps: &T) -> bool {
@@ -947,4 +1080,62 @@ fn from_euler() {
     let ypr_pq = ypr_q.transform_point3d(p);
 
     assert!(ypr_pe.approx_eq(&ypr_pq));
+}
+
+#[test]
+fn wrap_angles() {
+    use core::f32::consts::{FRAC_PI_2, PI};
+
+    assert!(Angle::radians(0.0).positive().radians.approx_eq(&0.0));
+    assert!(
+        Angle::radians(FRAC_PI_2)
+            .positive()
+            .radians
+            .approx_eq(&FRAC_PI_2)
+    );
+    assert!(
+        Angle::radians(-FRAC_PI_2)
+            .positive()
+            .radians
+            .approx_eq(&(3.0 * FRAC_PI_2))
+    );
+    assert!(
+        Angle::radians(3.0 * FRAC_PI_2)
+            .positive()
+            .radians
+            .approx_eq(&(3.0 * FRAC_PI_2))
+    );
+    assert!(
+        Angle::radians(5.0 * FRAC_PI_2)
+            .positive()
+            .radians
+            .approx_eq(&FRAC_PI_2)
+    );
+    assert!(Angle::radians(2.0 * PI).positive().radians.approx_eq(&0.0));
+    assert!(Angle::radians(-2.0 * PI).positive().radians.approx_eq(&0.0));
+    assert!(Angle::radians(PI).positive().radians.approx_eq(&PI));
+    assert!(Angle::radians(-PI).positive().radians.approx_eq(&PI));
+
+    assert!(
+        Angle::radians(FRAC_PI_2)
+            .signed()
+            .radians
+            .approx_eq(&FRAC_PI_2)
+    );
+    assert!(
+        Angle::radians(3.0 * FRAC_PI_2)
+            .signed()
+            .radians
+            .approx_eq(&-FRAC_PI_2)
+    );
+    assert!(
+        Angle::radians(5.0 * FRAC_PI_2)
+            .signed()
+            .radians
+            .approx_eq(&FRAC_PI_2)
+    );
+    assert!(Angle::radians(2.0 * PI).signed().radians.approx_eq(&0.0));
+    assert!(Angle::radians(-2.0 * PI).signed().radians.approx_eq(&0.0));
+    assert!(Angle::radians(-PI).signed().radians.approx_eq(&PI));
+    assert!(Angle::radians(PI).signed().radians.approx_eq(&PI));
 }
