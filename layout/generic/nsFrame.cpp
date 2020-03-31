@@ -2455,6 +2455,99 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle(
       *element, PseudoStyleType::selection, Style());
 }
 
+template <typename SizeOrMaxSize>
+static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
+  if (!aSize.IsExtremumLength()) {
+    return false;
+  }
+
+  // All of the keywords except for '-moz-available' depend on intrinsic sizes.
+  return aSize.AsExtremumLength() != StyleExtremumLength::MozAvailable;
+}
+
+bool nsIFrame::CanBeDynamicReflowRoot() const {
+  if (!StaticPrefs::layout_dynamic_reflow_roots_enabled()) {
+    return false;
+  }
+
+  auto& display = *StyleDisplay();
+  if (IsFrameOfType(nsIFrame::eLineParticipant) ||
+      nsStyleDisplay::IsRubyDisplayType(display.mDisplay) ||
+      display.DisplayOutside() == StyleDisplayOutside::InternalTable ||
+      display.DisplayInside() == StyleDisplayInside::Table ||
+      (GetParent() && GetParent()->IsXULBoxFrame())) {
+    // We have a display type where 'width' and 'height' don't actually set the
+    // width or height (i.e., the size depends on content).
+    MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT),
+               "should not have dynamic reflow root bit");
+    return false;
+  }
+
+  // We can't serve as a dynamic reflow root if our used 'width' and 'height'
+  // might be influenced by content.
+  //
+  // FIXME: For display:block, we should probably optimize inline-size: auto.
+  // FIXME: Other flex and grid cases?
+  auto& pos = *StylePosition();
+  const auto& width = pos.mWidth;
+  const auto& height = pos.mHeight;
+  if (!width.IsLengthPercentage() || width.HasPercent() ||
+      !height.IsLengthPercentage() || height.HasPercent() ||
+      IsIntrinsicKeyword(pos.mMinWidth) || IsIntrinsicKeyword(pos.mMaxWidth) ||
+      IsIntrinsicKeyword(pos.mMinHeight) ||
+      IsIntrinsicKeyword(pos.mMaxHeight) ||
+      ((pos.mMinWidth.IsAuto() || pos.mMinHeight.IsAuto()) &&
+       IsFlexOrGridItem())) {
+    return false;
+  }
+
+  // If our flex-basis is 'auto', it'll defer to 'width' (or 'height') which
+  // we've already checked. Otherwise, it preempts them, so we need to
+  // perform the same "could-this-value-be-influenced-by-content" checks that
+  // we performed for 'width' and 'height' above.
+  if (IsFlexItem()) {
+    const auto& flexBasis = pos.mFlexBasis;
+    if (!flexBasis.IsAuto()) {
+      if (!flexBasis.IsSize() || !flexBasis.AsSize().IsLengthPercentage() ||
+          flexBasis.AsSize().HasPercent()) {
+        return false;
+      }
+    }
+  }
+
+  if (!IsFixedPosContainingBlock()) {
+    // We can't treat this frame as a reflow root, since dynamic changes
+    // to absolutely-positioned frames inside of it require that we
+    // reflow the placeholder before we reflow the absolutely positioned
+    // frame.
+    // FIXME:  Alternatively, we could sort the reflow roots in
+    // PresShell::ProcessReflowCommands by depth in the tree, from
+    // deepest to least deep.  However, for performance (FIXME) we
+    // should really be sorting them in the opposite order!
+    return false;
+  }
+
+  // If we participate in a container's block reflow context, or margins
+  // can collapse through us, we can't be a dynamic reflow root.
+  if (IsBlockFrameOrSubclass() &&
+      !HasAllStateBits(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT)) {
+    return false;
+  }
+
+  // Subgrids are never reflow roots, but 'contain:layout/paint' prevents
+  // creating a subgrid in the first place.
+  if (pos.mGridTemplateColumns.IsSubgrid() ||
+      pos.mGridTemplateRows.IsSubgrid()) {
+    // NOTE: we could check that 'display' of our parent's primary frame is
+    // '[inline-]grid' here but that's probably not worth it in practice.
+    if (!display.IsContainLayout() && !display.IsContainPaint()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /********************************************************
  * Refreshes each content's frame
  *********************************************************/
