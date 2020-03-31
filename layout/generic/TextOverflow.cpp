@@ -875,6 +875,10 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
                                  const LogicalRect& aInsideMarkersArea,
                                  const LogicalRect& aContentArea,
                                  uint32_t aLineNumber) {
+  if (!mBlock->IsVisibleForPainting()) {
+    return;
+  }
+
   if (aCreateIStart) {
     DisplayListClipState::AutoSaveRestore clipState(mBuilder);
 
