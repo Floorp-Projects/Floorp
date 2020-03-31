@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Aksés tab panyungsi</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Aksés kagiatan panyungsi salila navigasi</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Baca jeung robah markah</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Baca jeung ropéa setélan panyungsi</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Beresihan jujutan langlangan, réréméh, jeung data nu tumali</string>
     <!-- The developer website (Homepage) of the add-on. -->

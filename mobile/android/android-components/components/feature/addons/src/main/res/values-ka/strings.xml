@@ -126,6 +126,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">დაამატეთ %1$s-ს</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox დამატებების ტექნოლოგიები ახლდება. ეს დამატებები იყენებს სამუშაო გარსებს, რომლებიც არა თავსებადი Firefox 75 და მომდევნო ვერსიებთან.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">ჩვენ ჯერჯერობით ვმუშაობთ, პირველი სასურველი გაფართოებების შესარჩევად.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">დამატება ჩამოიტვირთება და დამოწმდება…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
