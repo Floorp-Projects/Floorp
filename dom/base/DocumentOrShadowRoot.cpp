@@ -591,7 +591,7 @@ void DocumentOrShadowRoot::GetAnimations(
        child = child->GetNextSibling()) {
     if (RefPtr<Element> element = Element::FromNode(child)) {
       nsTArray<RefPtr<Animation>> result;
-      element->GetAnimations(options, result, Element::Flush::No);
+      element->GetAnimationsWithoutFlush(options, result);
       aAnimations.AppendElements(std::move(result));
     }
   }

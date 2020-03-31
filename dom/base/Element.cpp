@@ -3287,23 +3287,26 @@ already_AddRefed<Animation> Element::Animate(
 }
 
 void Element::GetAnimations(const GetAnimationsOptions& aOptions,
-                            nsTArray<RefPtr<Animation>>& aAnimations,
-                            Flush aFlush) {
-  if (aFlush == Flush::Yes) {
-    if (Document* doc = GetComposedDoc()) {
-      // We don't need to explicitly flush throttled animations here, since
-      // updating the animation style of elements will never affect the set of
-      // running animations and it's only the set of running animations that is
-      // important here.
-      //
-      // NOTE: Any changes to the flags passed to the following call should
-      // be reflected in the flags passed in DocumentOrShadowRoot::GetAnimations
-      // too.
-      doc->FlushPendingNotifications(
-          ChangesToFlush(FlushType::Style, false /* flush animations */));
-    }
+                            nsTArray<RefPtr<Animation>>& aAnimations) {
+  if (Document* doc = GetComposedDoc()) {
+    // We don't need to explicitly flush throttled animations here, since
+    // updating the animation style of elements will never affect the set of
+    // running animations and it's only the set of running animations that is
+    // important here.
+    //
+    // NOTE: Any changes to the flags passed to the following call should
+    // be reflected in the flags passed in DocumentOrShadowRoot::GetAnimations
+    // too.
+    doc->FlushPendingNotifications(
+        ChangesToFlush(FlushType::Style, false /* flush animations */));
   }
 
+  GetAnimationsWithoutFlush(aOptions, aAnimations);
+}
+
+void Element::GetAnimationsWithoutFlush(
+    const GetAnimationsOptions& aOptions,
+    nsTArray<RefPtr<Animation>>& aAnimations) {
   Element* elem = this;
   PseudoStyleType pseudoType = PseudoStyleType::NotPseudo;
   // For animations on generated-content elements, the animations are stored
