@@ -178,33 +178,26 @@ PurgeTrackerService.prototype = {
       return;
     }
 
+    let baseDomainsWithInteraction = new Set();
+    for (let perm of Services.perms.getAllWithTypePrefix("storageAccessAPI")) {
+      baseDomainsWithInteraction.add(perm.principal.baseDomain);
+    }
+
     for (let cookie of cookies) {
       let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         "https://" +
           cookie.rawHost +
           ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
       );
-      let httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        "http://" +
-          cookie.rawHost +
-          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
-      );
-
-      // We consider it a valid permission for both if http or https has been given permission
-      let interactionPermission =
-        Services.perms.getPermissionObject(
-          httpsPrincipal,
-          "storageAccessAPI",
-          false
-        ) ||
-        Services.perms.getPermissionObject(
-          httpPrincipal,
-          "storageAccessAPI",
-          false
-        );
 
       // Either the interaction permission was never granted or it expired.
-      if (!interactionPermission) {
+      if (!baseDomainsWithInteraction.has(httpsPrincipal.baseDomain)) {
+        let httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          "http://" +
+            cookie.rawHost +
+            ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
+        );
+
         // We purge if we also find it is a tracker.
         let isTracker =
           (await this.isTracker(httpsPrincipal, feature)) ||
