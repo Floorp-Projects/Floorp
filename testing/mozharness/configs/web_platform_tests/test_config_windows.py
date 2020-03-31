@@ -9,6 +9,7 @@ import sys
 config = {
     "options": [
         "--prefs-root=%(test_path)s/prefs",
+        "--processes=1",
         "--config=%(test_path)s/wptrunner.ini",
         "--ca-cert-path=%(test_path)s/tests/tools/certs/cacert.pem",
         "--host-key-path=%(test_path)s/tests/tools/certs/web-platform.test.key",
