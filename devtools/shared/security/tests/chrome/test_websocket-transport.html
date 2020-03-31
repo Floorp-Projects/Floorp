@@ -13,7 +13,8 @@
 window.onload = function() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   const Services = require("Services");
-  const {DevToolsClient} = require("devtools/shared/client/devtools-client");
+  // eslint-disable-next-line mozilla/reject-some-requires
+  const {DevToolsClient} = require("devtools/client/devtools-client");
   const {DevToolsServer} = require("devtools/server/devtools-server");
   const { SocketListener } = require("devtools/shared/security/socket");
 

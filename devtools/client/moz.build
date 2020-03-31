@@ -34,7 +34,9 @@ DIRS += [
 JAR_MANIFESTS += ['jar.mn']
 
 DevToolsModules(
+    'constants.js',
     'definitions.js',
+    'devtools-client.js',
     'menus.js',
 )
 

@@ -8,7 +8,7 @@ In order to communicate, a client and a server instance must be created and a pr
 
 ```javascript
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 
 function start() {
   // Start the server.
@@ -32,7 +32,7 @@ If a TCP socket is required, the function should be split in two parts, a server
 
 ```javascript
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 
 function startServer() {
   // Start the server.
@@ -139,7 +139,7 @@ Here is the source code for a complete debugger application:
  * Debugger API demo.
  */
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 
 let client;
 let threadFront;

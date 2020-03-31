@@ -5,7 +5,7 @@
 
 // Test a given Target's parentFront attribute returns the correct parent front.
 
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 
 const TEST_URL = `data:text/html;charset=utf-8,<div id="test"></div>`;

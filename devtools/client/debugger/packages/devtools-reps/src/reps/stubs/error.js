@@ -200,7 +200,7 @@ stubs.set("base-loader Error", {
     name: "Error",
     message: "Error message",
     stack:
-      "onPacket@resource://devtools/shared/base-loader.js -> resource://devtools/shared/client/debugger-client.js:856:9\n" +
+      "onPacket@resource://devtools/shared/base-loader.js -> resource://devtools/client/debugger-client.js:856:9\n" +
       "send/<@resource://devtools/shared/base-loader.js -> resource://devtools/shared/transport/transport.js:569:13\n" +
       "exports.makeInfallible/<@resource://devtools/shared/base-loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:109:14\n" +
       "exports.makeInfallible/<@resource://devtools/shared/base-loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:109:14\n",

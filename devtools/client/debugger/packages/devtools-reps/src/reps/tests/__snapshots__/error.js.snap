@@ -476,7 +476,7 @@ exports[`Error - base-loader.js renders as expected without mode 1`] = `
       className="objectBox-stackTrace-location"
       key="location0"
     >
-      resource://devtools/shared/client/debugger-client.js:856:9
+      resource://devtools/client/debugger-client.js:856:9
     </span>
     
 

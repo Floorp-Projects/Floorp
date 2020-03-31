@@ -6,7 +6,7 @@
 // DevToolsClient tests
 
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+const { DevToolsClient } = require("devtools/client/devtools-client");
 
 add_task(async function() {
   await testCloseLoops();

@@ -39,7 +39,7 @@ should not notify the application that the thread has been paused or resumed.
 
 [protocol]: https://searchfox.org/mozilla-central/source/devtools/docs/backend/protocol.md
 [dt-connect]: https://github.com/firefox-devtools/devtools-core/tree/master/packages/devtools-connection
-[devtools-client.js]: https://searchfox.org/mozilla-central/source/devtools/shared/client/devtools-client.js
+[devtools-client.js]: https://searchfox.org/mozilla-central/source/devtools/client/devtools-client.js
 
 ## Chrome
 
