@@ -16,16 +16,12 @@ NS_IMPL_ISUPPORTS(nsSoundProxy, nsISound)
 NS_IMETHODIMP
 nsSoundProxy::Play(nsIURL* aURL) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
-
-  nsCOMPtr<nsIURI> soundURI(aURL);
   // Only allow playing a chrome:// URL from the content process.
-  if (!soundURI || !soundURI->SchemeIs("chrome")) {
+  if (!aURL || !aURL->SchemeIs("chrome")) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::ipc::URIParams soundParams;
-  mozilla::ipc::SerializeURI(soundURI, soundParams);
-  ContentChild::GetSingleton()->SendPlaySound(soundParams);
+  ContentChild::GetSingleton()->SendPlaySound(aURL);
   return NS_OK;
 }
 
