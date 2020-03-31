@@ -1,8 +1,5 @@
-import six
 import sys
 import unittest
-
-from cStringIO import StringIO
 
 import pytest
 
@@ -20,7 +17,7 @@ class TokenizerTest(unittest.TestCase):
     def compare(self, input_str, expected=None):
         if expected is None:
             expected = input_str.decode("utf-8")
-        actual = six.ensure_text(self.serialize(input_str))
+        actual = self.serialize(input_str)
         self.assertEqual(actual, expected)
 
     def test_0(self):
@@ -233,4 +230,8 @@ class TokenizerTest(unittest.TestCase):
 
     def test_if_string_0(self):
         self.compare(b"""foo: "if bar"
+""")
+
+    def test_non_ascii_1(self):
+        self.compare(b"""[\xf0\x9f\x99\x84]
 """)
