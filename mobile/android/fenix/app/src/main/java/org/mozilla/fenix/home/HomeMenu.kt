@@ -121,7 +121,16 @@ class HomeMenu(
             onItemTapped.invoke(Item.Help)
         }
 
+        // Only query account manager if it has been initialized.
+        // We don't want to cause its initialization just for this check.
+        val accountAuthItem = if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
+            if (context.components.backgroundServices.accountManager.accountNeedsReauth()) reconnectToSyncItem else null
+        } else {
+            null
+        }
+
         listOfNotNull(
+            accountAuthItem,
             whatsNewItem,
             BrowserMenuDivider(),
             BrowserMenuCategory(

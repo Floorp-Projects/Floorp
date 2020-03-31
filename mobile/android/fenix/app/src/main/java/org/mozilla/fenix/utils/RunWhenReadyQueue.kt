@@ -20,6 +20,13 @@ class RunWhenReadyQueue {
     private val isReady = AtomicBoolean(false)
 
     /**
+     * Was this queue ever marked as 'ready' via a call to [ready]?
+     *
+     * @return Boolean value indicating if this queue is 'ready'.
+     */
+    fun isReady(): Boolean = isReady.get()
+
+    /**
      * Runs the [task] if this queue is marked as ready, or queues it for later execution.
      * Task will be executed on the main thread.
      *
