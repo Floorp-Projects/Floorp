@@ -570,30 +570,5 @@ JS_PUBLIC_API bool JS::EvaluateUtf8Path(
     return false;
   }
 
-  return Evaluate(cx, options, srcBuf, rval);
-}
-
-JS_PUBLIC_API bool JS::EvaluateUtf8PathDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-    const char* filename, MutableHandleValue rval) {
-  FileContents buffer(cx);
-  {
-    AutoFile file;
-    if (!file.open(cx, filename) || !file.readAll(cx, buffer)) {
-      return false;
-    }
-  }
-
-  CompileOptions options(cx, optionsArg);
-  options.setFileAndLine(filename, 1);
-
-  auto contents = reinterpret_cast<const char*>(buffer.begin());
-  size_t length = buffer.length();
-
-  JS::SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, contents, length, JS::SourceOwnership::Borrowed)) {
-    return false;
-  }
-
   return EvaluateDontInflate(cx, options, srcBuf, rval);
 }
