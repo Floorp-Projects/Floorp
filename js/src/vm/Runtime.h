@@ -587,12 +587,12 @@ struct JSRuntime {
 
   static js::GlobalObject* createSelfHostingGlobal(JSContext* cx);
 
+ public:
   bool getUnclonedSelfHostedValue(JSContext* cx, js::HandlePropertyName name,
                                   js::MutableHandleValue vp);
   JSFunction* getUnclonedSelfHostedFunction(JSContext* cx,
                                             js::HandlePropertyName name);
 
- public:
   MOZ_MUST_USE bool createJitRuntime(JSContext* cx);
   js::jit::JitRuntime* jitRuntime() const { return jitRuntime_.ref(); }
   bool hasJitRuntime() const { return !!jitRuntime_; }
