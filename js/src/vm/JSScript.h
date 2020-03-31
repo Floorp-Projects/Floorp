@@ -1665,10 +1665,10 @@ class BaseScript : public gc::TenuredCell {
   // Object that determines what Realm this script is compiled for. In general
   // this refers to the realm's GlobalObject, but for a lazy-script we instead
   // refer to the associated function.
-  const GCPtrObject functionOrGlobal_;
+  const GCPtrObject functionOrGlobal_ = {};
 
   // The ScriptSourceObject for this script.
-  GCPtr<ScriptSourceObject*> sourceObject_ = {};
+  const GCPtr<ScriptSourceObject*> sourceObject_ = {};
 
   // Unshared variable-length data. This may be nullptr for lazy scripts of leaf
   // functions. Note that meaning of this data is different if the script is
@@ -2389,8 +2389,7 @@ class JSScript : public js::BaseScript {
 
   static JSLinearString* sourceData(JSContext* cx, JS::HandleScript script);
 
-  void setDefaultClassConstructorSpan(js::ScriptSourceObject* sourceObject,
-                                      uint32_t start, uint32_t end,
+  void setDefaultClassConstructorSpan(uint32_t start, uint32_t end,
                                       unsigned line, unsigned column);
 
 #ifdef MOZ_VTUNE
