@@ -123,23 +123,6 @@ JSScript* JS::CompileUtf8File(JSContext* cx,
     return nullptr;
   }
 
-  return CompileUtf8Inflating(cx, options, srcBuf);
-}
-
-JSScript* JS::CompileUtf8FileDontInflate(JSContext* cx,
-                                         const ReadOnlyCompileOptions& options,
-                                         FILE* file) {
-  FileContents buffer(cx);
-  if (!ReadCompleteFile(cx, file, buffer)) {
-    return nullptr;
-  }
-
-  SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, reinterpret_cast<const char*>(buffer.begin()),
-                   buffer.length(), SourceOwnership::Borrowed)) {
-    return nullptr;
-  }
-
   return CompileSourceBuffer(cx, options, srcBuf);
 }
 
@@ -153,7 +136,7 @@ JSScript* JS::CompileUtf8Path(JSContext* cx,
 
   CompileOptions options(cx, optionsArg);
   options.setFileAndLine(filename, 1);
-  return CompileUtf8FileDontInflate(cx, options, file.fp());
+  return CompileUtf8File(cx, options, file.fp());
 }
 
 JSScript* JS::CompileForNonSyntacticScope(
