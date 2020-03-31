@@ -109,7 +109,7 @@ class WebExtensionController(
             installedExtensions[extensionId]?.let { ext ->
                 val port = ext.getConnectedPort(name, session)
                 port?.postMessage(msg)
-                        ?: logger.error("No port connected for provided session. Message $msg not sent.")
+                    ?: logger.error("No port with name $name connected for provided session. Message $msg not sent.")
             }
         }
     }

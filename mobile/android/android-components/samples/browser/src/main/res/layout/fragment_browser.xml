@@ -30,6 +30,15 @@
             android:visibility="gone"
             app:findInPageNoMatchesTextColor="@color/photonRed50" />
 
+        <mozilla.components.feature.p2p.view.P2PBar
+            android:id="@+id/p2p"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="#FFFFFFFF"
+            android:elevation="10dp"
+            android:padding="4dp"
+            android:visibility="gone"/>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout

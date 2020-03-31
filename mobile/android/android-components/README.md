@@ -134,6 +134,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Progressive Web Apps (PWA)**](components/feature/pwa/README.md) - A component that provides functionality for supporting Progressive Web Apps (PWA).
 
+* 🔴 [**P2P**](components/feature/p2p/README.md) - A component that provides peer-to-peer communication.
+
 * 🔴 [**Reader View**](components/feature/readerview/README.md) - A component that provides Reader View functionality.
 
 * ⚪ [**QR**](components/feature/qr/README.md) - A component that provides functionality for scanning QR codes.

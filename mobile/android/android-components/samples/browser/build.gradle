@@ -78,6 +78,7 @@ dependencies {
     implementation project(':browser-storage-memory')
 
     implementation project(':lib-fetch-httpurlconnection')
+    implementation project(':lib-nearby')
 
     implementation project(':feature-awesomebar')
     implementation project(':feature-app-links')
@@ -90,6 +91,7 @@ dependencies {
     implementation project(':feature-session')
     implementation project(':feature-toolbar')
     implementation project(':feature-tabs')
+    implementation project(':feature-p2p')
     implementation project(':feature-prompts')
     implementation project(':feature-privatemode')
     implementation project(':feature-pwa')

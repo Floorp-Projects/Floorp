@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:clickable="true"
+    android:focusable="true"
+    tools:background="#ffffffff"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <Button
+        android:id="@+id/p2pAdvertiseBtn"
+        style="@style/Mozac.Feature.P2P.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="true"
+        android:text="@string/mozac_feature_p2p_advertise"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/p2pDiscoverBtn"
+        style="@style/Mozac.Feature.P2P.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="true"
+        android:text="@string/mozac_feature_p2p_discover"
+        app:layout_constraintStart_toEndOf="@id/p2pAdvertiseBtn"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/p2pSendUrlBtn"
+        style="@style/Mozac.Feature.P2P.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="@string/mozac_feature_p2p_send_url"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/p2pSendPageBtn"
+        style="@style/Mozac.Feature.P2P.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="@string/mozac_feature_p2p_send_page"
+        app:layout_constraintStart_toEndOf="@id/p2pSendUrlBtn"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/p2pStatusText"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical|start"
+        app:layout_constraintEnd_toStartOf="@+id/p2pResetBtn"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/p2pResetBtn"
+        style="@style/Mozac.Feature.P2P.TextButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minWidth="1dp"
+        android:text="@string/mozac_feature_p2p_reset"
+        android:visibility="visible"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/p2pCloseBtn"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/p2pCloseBtn"
+        style="@style/Mozac.Feature.P2P.CloseButton"
+        android:contentDescription="@string/mozac_feature_p2p_dismiss"
+        app:srcCompat="@drawable/mozac_ic_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+</merge>
