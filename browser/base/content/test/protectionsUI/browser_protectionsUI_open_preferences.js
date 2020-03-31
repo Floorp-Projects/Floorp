@@ -6,9 +6,9 @@
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const COOKIE_PAGE =
-  "http://tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
+  "http://tracking.example.com/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 
 async function waitAndAssertPreferencesShown(_spotlight, identityPopup) {
   await BrowserTestUtils.waitForEvent(
@@ -66,7 +66,7 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
   // Wait for 2 content blocking events - one for the load and one for the tracker.
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(2)]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-tracking-protection"
@@ -118,7 +118,7 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
   // Wait for 2 content blocking events - one for the load and one for the tracker.
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent(2)]);
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"

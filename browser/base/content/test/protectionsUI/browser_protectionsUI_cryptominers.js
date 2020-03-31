@@ -4,7 +4,7 @@
 "use strict";
 
 const TRACKING_PAGE =
-  "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
+  "http://example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 const CM_PROTECTION_PREF = "privacy.trackingprotection.cryptomining.enabled";
 let cmHistogram;
 
@@ -123,7 +123,7 @@ async function testSubview(hasException) {
   });
   await promise;
 
-  await openProtectionsPopup();
+  await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
     "protections-popup-category-cryptominers"
