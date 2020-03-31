@@ -179,6 +179,7 @@ ol {
 }
 
 .alert-icon {
+  min-width: 16px;
   width: 16px;
   margin-inline-start: 12px;
   -moz-context-properties: fill, fill-opacity;
