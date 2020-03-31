@@ -1344,17 +1344,15 @@ template XDRResult js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope,
                                      HandleScriptSourceObject, HandleFunction,
                                      MutableHandle<BaseScript*>);
 
-void JSScript::setDefaultClassConstructorSpan(
-    js::ScriptSourceObject* sourceObject, uint32_t start, uint32_t end,
-    unsigned line, unsigned column) {
-  MOZ_ASSERT(compartment() == sourceObject->compartment());
-  sourceObject_ = sourceObject;
+void JSScript::setDefaultClassConstructorSpan(uint32_t start, uint32_t end,
+                                              unsigned line, unsigned column) {
   extent_.toStringStart = start;
   extent_.toStringEnd = end;
   extent_.sourceStart = start;
   extent_.sourceEnd = end;
   extent_.lineno = line;
   extent_.column = column;
+
   // Since this script has been changed to point into the user's source, we
   // can clear its self-hosted flag, allowing Debugger to see it.
   clearFlag(ImmutableFlags::SelfHosted);

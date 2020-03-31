@@ -282,8 +282,6 @@ class FunctionFlags {
     setKind(ClassConstructor);
   }
 
-  void clearIsSelfHosted() { clearFlags(SELF_HOSTED); }
-
   void setIsBoundFunction() {
     MOZ_ASSERT(!isBoundFunction());
     setFlags(BOUND_FUN);
@@ -557,8 +555,6 @@ class JSFunction : public js::NativeObject {
   // Make the function constructible.
   void setIsConstructor() { flags_.setIsConstructor(); }
   void setIsClassConstructor() { flags_.setIsClassConstructor(); }
-
-  void clearIsSelfHosted() { flags_.clearIsSelfHosted(); }
 
   // Can be called multiple times by the parser.
   void setArgCount(uint16_t nargs) { this->nargs_ = nargs; }
