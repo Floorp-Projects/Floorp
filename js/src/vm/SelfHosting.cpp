@@ -2740,7 +2740,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
   }
 
   RootedValue rv(cx);
-  if (!EvaluateDontInflate(cx, options, srcBuf, &rv)) {
+  if (!JS::Evaluate(cx, options, srcBuf, &rv)) {
     return false;
   }
 

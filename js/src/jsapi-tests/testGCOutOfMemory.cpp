@@ -8,7 +8,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::EvaluateDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
@@ -28,7 +28,7 @@ BEGIN_TEST(testGCOutOfMemory) {
   CHECK(srcBuf.init(cx, source, strlen(source), JS::SourceOwnership::Borrowed));
 
   JS::RootedValue root(cx);
-  bool ok = JS::EvaluateDontInflate(cx, opts, srcBuf, &root);
+  bool ok = JS::Evaluate(cx, opts, srcBuf, &root);
 
   /* Check that we get OOM. */
   CHECK(!ok);
