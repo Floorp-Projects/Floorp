@@ -40,102 +40,7 @@ namespace mozilla {
 // both spaces count as NormalWS.  Together, they render as the one visible
 // space.
 
-/**
- * A type-safe bitfield indicating various types of whitespace or other things.
- * Used as a member variable in WSRunObject and WSFragment.
- *
- * XXX: If this idea is useful in other places, we should generalize it using a
- * template.
- */
-class WSType {
- public:
-  enum Enum {
-    none = 0,
-    leadingWS = 1,        // leading insignificant ws, ie, after block or br
-    trailingWS = 1 << 1,  // trailing insignificant ws, ie, before block
-    normalWS = 1 << 2,    // normal significant ws, ie, after text, image, ...
-    text = 1 << 3,        // indicates regular (non-ws) text
-    special = 1 << 4,     // indicates an inline non-container, like image
-    br = 1 << 5,          // indicates a br node
-    otherBlock = 1 << 6,  // indicates a block other than one ws run is in
-    thisBlock = 1 << 7,   // indicates the block ws run is in
-    block = otherBlock | thisBlock  // block found
-  };
-
-  /**
-   * Implicit constructor, because the enums are logically just WSTypes
-   * themselves, and are only a separate type because there's no other obvious
-   * way to name specific WSType values.
-   */
-  MOZ_IMPLICIT WSType(const Enum& aEnum = none) : mEnum(aEnum) {}
-
-  // operator==, &, and | need to access mEnum
-  friend bool operator==(const WSType& aLeft, const WSType& aRight);
-  friend const WSType operator&(const WSType& aLeft, const WSType& aRight);
-  friend const WSType operator|(const WSType& aLeft, const WSType& aRight);
-  WSType& operator=(const WSType& aOther) {
-    // This handles self-assignment fine
-    mEnum = aOther.mEnum;
-    return *this;
-  }
-  WSType& operator&=(const WSType& aOther) {
-    mEnum &= aOther.mEnum;
-    return *this;
-  }
-  WSType& operator|=(const WSType& aOther) {
-    mEnum |= aOther.mEnum;
-    return *this;
-  }
-
- private:
-  uint16_t mEnum;
-  void bool_conversion_helper() {}
-
- public:
-  // Allow boolean conversion with no numeric conversion
-  typedef void (WSType::*bool_type)();
-  operator bool_type() const {
-    return mEnum ? &WSType::bool_conversion_helper : nullptr;
-  }
-};
-
-/**
- * These are declared as global functions so "WSType::Enum == WSType" et al.
- * will work using the implicit constructor.
- */
-inline bool operator==(const WSType& aLeft, const WSType& aRight) {
-  return aLeft.mEnum == aRight.mEnum;
-}
-
-inline bool operator!=(const WSType& aLeft, const WSType& aRight) {
-  return !(aLeft == aRight);
-}
-
-inline const WSType operator&(const WSType& aLeft, const WSType& aRight) {
-  WSType ret;
-  ret.mEnum = aLeft.mEnum & aRight.mEnum;
-  return ret;
-}
-
-inline const WSType operator|(const WSType& aLeft, const WSType& aRight) {
-  WSType ret;
-  ret.mEnum = aLeft.mEnum | aRight.mEnum;
-  return ret;
-}
-
-/**
- * Make sure that & and | of WSType::Enum creates a WSType instead of an int,
- * because operators between WSType and int shouldn't work
- */
-inline const WSType operator&(const WSType::Enum& aLeft,
-                              const WSType::Enum& aRight) {
-  return WSType(aLeft) & WSType(aRight);
-}
-
-inline const WSType operator|(const WSType::Enum& aLeft,
-                              const WSType::Enum& aRight) {
-  return WSType(aLeft) | WSType(aRight);
-}
+class WSRunScanner;
 
 /**
  * WSScanResult is result of ScanNextVisibleNodeOrBlockBoundaryFrom(),
@@ -145,6 +50,29 @@ inline const WSType operator|(const WSType::Enum& aLeft,
  * start of scanner.
  */
 class MOZ_STACK_CLASS WSScanResult final {
+ private:
+  enum class WSType : uint8_t {
+    NotInitialized,
+    // The run is maybe collapsible white spaces at start of a hard line.
+    LeadingWhiteSpaces,
+    // The run is maybe collapsible white spaces at end of a hard line.
+    TrailingWhiteSpaces,
+    // Normal (perhaps, meaning visible) white spaces.
+    NormalWhiteSpaces,
+    // Normal text, not white spaces.
+    NormalText,
+    // Special content such as `<img>`, etc.
+    SpecialContent,
+    // <br> element.
+    BRElement,
+    // Other block's boundary (child block of current block, maybe).
+    OtherBlockBoundary,
+    // Current block's boundary.
+    CurrentBlockBoundary,
+  };
+
+  friend class WSRunScanner;  // Because of WSType.
+
  public:
   WSScanResult() = delete;
   MOZ_NEVER_INLINE_DEBUG WSScanResult(nsIContent* aContent, WSType aReason)
@@ -161,27 +89,30 @@ class MOZ_STACK_CLASS WSScanResult final {
 
   MOZ_NEVER_INLINE_DEBUG void AssertIfInvalidData() const {
 #ifdef DEBUG
-    MOZ_ASSERT(mReason == WSType::text || mReason == WSType::normalWS ||
-               mReason == WSType::br || mReason == WSType::special ||
-               mReason == WSType::thisBlock || mReason == WSType::otherBlock);
-    MOZ_ASSERT_IF(mReason == WSType::text || mReason == WSType::normalWS,
-                  mContent && mContent->IsText());
-    MOZ_ASSERT_IF(mReason == WSType::br,
+    MOZ_ASSERT(
+        mReason == WSType::NormalText || mReason == WSType::NormalWhiteSpaces ||
+        mReason == WSType::BRElement || mReason == WSType::SpecialContent ||
+        mReason == WSType::CurrentBlockBoundary ||
+        mReason == WSType::OtherBlockBoundary);
+    MOZ_ASSERT_IF(
+        mReason == WSType::NormalText || mReason == WSType::NormalWhiteSpaces,
+        mContent && mContent->IsText());
+    MOZ_ASSERT_IF(mReason == WSType::BRElement,
                   mContent && mContent->IsHTMLElement(nsGkAtoms::br));
     MOZ_ASSERT_IF(
-        mReason == WSType::special,
+        mReason == WSType::SpecialContent,
         mContent && ((mContent->IsText() && !mContent->IsEditable()) ||
                      (!mContent->IsHTMLElement(nsGkAtoms::br) &&
                       !HTMLEditor::NodeIsBlockStatic(*mContent))));
-    MOZ_ASSERT_IF(mReason == WSType::otherBlock,
+    MOZ_ASSERT_IF(mReason == WSType::OtherBlockBoundary,
                   mContent && HTMLEditor::NodeIsBlockStatic(*mContent));
-    // If mReason is WSType::thisBlock, mContent can be any content.  In most
-    // cases, it's current block element which is editable.  However, if there
-    // is no editable block parent, this is topmost editable inline content.
-    // Additionally, if there is no editable content, this is the container
-    // start of scanner and is not editable.
+    // If mReason is WSType::CurrentBlockBoundary, mContent can be any content.
+    // In most cases, it's current block element which is editable.  However, if
+    // there is no editable block parent, this is topmost editable inline
+    // content. Additionally, if there is no editable content, this is the
+    // container start of scanner and is not editable.
     MOZ_ASSERT_IF(
-        mReason == WSType::thisBlock,
+        mReason == WSType::CurrentBlockBoundary,
         !mContent || !mContent->GetParentElement() ||
             HTMLEditor::NodeIsBlockStatic(*mContent) ||
             HTMLEditor::NodeIsBlockStatic(*mContent->GetParentElement()) ||
@@ -273,29 +204,34 @@ class MOZ_STACK_CLASS WSScanResult final {
    * The scanner reached <img> or something which is inline and is not a
    * container.
    */
-  bool ReachedSpecialContent() const { return mReason == WSType::special; }
+  bool ReachedSpecialContent() const {
+    return mReason == WSType::SpecialContent;
+  }
 
   /**
    * The point is in normal whitespaces or text.
    */
   bool InNormalWhiteSpacesOrText() const {
-    return mReason == WSType::normalWS || mReason == WSType::text;
+    return mReason == WSType::NormalWhiteSpaces ||
+           mReason == WSType::NormalText;
   }
 
   /**
    * The point is in normal whitespaces.
    */
-  bool InNormalWhiteSpaces() const { return mReason == WSType::normalWS; }
+  bool InNormalWhiteSpaces() const {
+    return mReason == WSType::NormalWhiteSpaces;
+  }
 
   /**
    * The point is in normal text.
    */
-  bool InNormalText() const { return mReason == WSType::text; }
+  bool InNormalText() const { return mReason == WSType::NormalText; }
 
   /**
    * The scanner reached a <br> element.
    */
-  bool ReachedBRElement() const { return mReason == WSType::br; }
+  bool ReachedBRElement() const { return mReason == WSType::BRElement; }
 
   /**
    * The scanner reached a <hr> element.
@@ -307,20 +243,23 @@ class MOZ_STACK_CLASS WSScanResult final {
   /**
    * The scanner reached current block boundary or other block element.
    */
-  bool ReachedBlockBoundary() const { return !!(mReason & WSType::block); }
+  bool ReachedBlockBoundary() const {
+    return mReason == WSType::CurrentBlockBoundary ||
+           mReason == WSType::OtherBlockBoundary;
+  }
 
   /**
    * The scanner reached current block element boundary.
    */
   bool ReachedCurrentBlockBoundary() const {
-    return mReason == WSType::thisBlock;
+    return mReason == WSType::CurrentBlockBoundary;
   }
 
   /**
    * The scanner reached other block element.
    */
   bool ReachedOtherBlockElement() const {
-    return mReason == WSType::otherBlock;
+    return mReason == WSType::OtherBlockBoundary;
   }
 
   /**
@@ -336,6 +275,7 @@ class MOZ_STACK_CLASS WSScanResult final {
 
 class MOZ_STACK_CLASS WSRunScanner {
  public:
+  using WSType = WSScanResult::WSType;
   /**
    * The constructors take 2 DOM points.  They represent a range in an editing
    * host.  aScanEndPoint (aScanEndNode and aScanEndOffset) must be later
@@ -403,40 +343,50 @@ class MOZ_STACK_CLASS WSRunScanner {
    * forward.  If there was whitespaces or text from the point, returns the
    * text node.  Otherwise, returns an element which is explained by the
    * following methods.  Note that when the reason is
-   * WSType::thisBlock, In most cases, it's current block element which is
-   * editable, but also may be non-element and/or non-editable.  See
+   * WSType::CurrentBlockBoundary, In most cases, it's current block element
+   * which is editable, but also may be non-element and/or non-editable.  See
    * MOZ_ASSERT_IF()s in WSScanResult::AssertIfInvalidData() for the detail.
    */
   nsIContent* GetStartReasonContent() const { return mStartReasonContent; }
   nsIContent* GetEndReasonContent() const { return mEndReasonContent; }
 
-  bool StartsFromNormalText() const { return mStartReason == WSType::text; }
-  bool StartsFromSpecialContent() const {
-    return mStartReason == WSType::special;
+  bool StartsFromNormalText() const {
+    return mStartReason == WSType::NormalText;
   }
-  bool StartsFromBRElement() const { return mStartReason == WSType::br; }
+  bool StartsFromSpecialContent() const {
+    return mStartReason == WSType::SpecialContent;
+  }
+  bool StartsFromBRElement() const { return mStartReason == WSType::BRElement; }
   bool StartsFromCurrentBlockBoundary() const {
-    return mStartReason == WSType::thisBlock;
+    return mStartReason == WSType::CurrentBlockBoundary;
   }
   bool StartsFromOtherBlockElement() const {
-    return mStartReason == WSType::otherBlock;
+    return mStartReason == WSType::OtherBlockBoundary;
   }
   bool StartsFromBlockBoundary() const {
-    return !!(mStartReason & WSType::block);
+    return mStartReason == WSType::CurrentBlockBoundary ||
+           mStartReason == WSType::OtherBlockBoundary;
   }
   bool StartsFromHardLineBreak() const {
-    return !!(mStartReason & (WSType::block | WSType::br));
+    return mStartReason == WSType::CurrentBlockBoundary ||
+           mStartReason == WSType::OtherBlockBoundary ||
+           mStartReason == WSType::BRElement;
   }
-  bool EndsByNormalText() const { return mEndReason == WSType::text; }
-  bool EndsBySpecialContent() const { return mEndReason == WSType::special; }
-  bool EndsByBRElement() const { return mEndReason == WSType::br; }
+  bool EndsByNormalText() const { return mEndReason == WSType::NormalText; }
+  bool EndsBySpecialContent() const {
+    return mEndReason == WSType::SpecialContent;
+  }
+  bool EndsByBRElement() const { return mEndReason == WSType::BRElement; }
   bool EndsByCurrentBlockBoundary() const {
-    return mEndReason == WSType::thisBlock;
+    return mEndReason == WSType::CurrentBlockBoundary;
   }
   bool EndsByOtherBlockElement() const {
-    return mEndReason == WSType::otherBlock;
+    return mEndReason == WSType::OtherBlockBoundary;
   }
-  bool EndsByBlockBoundary() const { return !!(mEndReason & WSType::block); }
+  bool EndsByBlockBoundary() const {
+    return mEndReason == WSType::CurrentBlockBoundary ||
+           mEndReason == WSType::OtherBlockBoundary;
+  }
 
   MOZ_NEVER_INLINE_DEBUG dom::Element* StartReasonOtherBlockElementPtr() const {
     MOZ_DIAGNOSTIC_ASSERT(mStartReasonContent->IsElement());
@@ -477,6 +427,8 @@ class MOZ_STACK_CLASS WSRunScanner {
           mEndOffset(0),
           mLeft(nullptr),
           mRight(nullptr),
+          mLeftWSType(WSType::NotInitialized),
+          mRightWSType(WSType::NotInitialized),
           mIsVisible(Visible::No),
           mIsStartOfHardLine(StartOfHardLine::No),
           mIsEndOfHardLine(EndOfHardLine::No) {}
@@ -518,11 +470,17 @@ class MOZ_STACK_CLASS WSRunScanner {
      * previous content type of the fragment).
      */
     void SetStartFrom(WSType aLeftWSType) { mLeftWSType = aLeftWSType; }
-    void SetStartFromLeadingWhiteSpaces() { mLeftWSType = WSType::leadingWS; }
-    void SetStartFromNormalWhiteSpaces() { mLeftWSType = WSType::normalWS; }
-    bool StartsFromNormalText() const { return mLeftWSType == WSType::text; }
+    void SetStartFromLeadingWhiteSpaces() {
+      mLeftWSType = WSType::LeadingWhiteSpaces;
+    }
+    void SetStartFromNormalWhiteSpaces() {
+      mLeftWSType = WSType::NormalWhiteSpaces;
+    }
+    bool StartsFromNormalText() const {
+      return mLeftWSType == WSType::NormalText;
+    }
     bool StartsFromSpecialContent() const {
-      return mLeftWSType == WSType::special;
+      return mLeftWSType == WSType::SpecialContent;
     }
 
     /**
@@ -530,15 +488,20 @@ class MOZ_STACK_CLASS WSRunScanner {
      * next content type of the fragment).
      */
     void SetEndBy(WSType aRightWSType) { mRightWSType = aRightWSType; }
-    void SetEndByNormalWiteSpaces() { mRightWSType = WSType::normalWS; }
-    void SetEndByTrailingWhiteSpaces() { mRightWSType = WSType::trailingWS; }
-    bool EndsByNormalText() const { return mRightWSType == WSType::text; }
-    bool EndsBySpecialContent() const {
-      return mRightWSType == WSType::special;
+    void SetEndByNormalWiteSpaces() {
+      mRightWSType = WSType::NormalWhiteSpaces;
     }
-    bool EndsByBRElement() const { return mRightWSType == WSType::br; }
+    void SetEndByTrailingWhiteSpaces() {
+      mRightWSType = WSType::TrailingWhiteSpaces;
+    }
+    bool EndsByNormalText() const { return mRightWSType == WSType::NormalText; }
+    bool EndsBySpecialContent() const {
+      return mRightWSType == WSType::SpecialContent;
+    }
+    bool EndsByBRElement() const { return mRightWSType == WSType::BRElement; }
     bool EndsByBlockBoundary() const {
-      return !!(mRightWSType & WSType::block);
+      return mRightWSType == WSType::CurrentBlockBoundary ||
+             mRightWSType == WSType::OtherBlockBoundary;
     }
 
    private:
@@ -687,9 +650,10 @@ class MOZ_STACK_CLASS WSRunScanner {
   const HTMLEditor* mHTMLEditor;
 
  private:
-  // Must be one of WSType::text, WSType::special, WSType::br,
-  // WSType::thisBlock or WSType::otherBlock.  Access these values with
-  // StartsFrom*() and EndsBy*() accessors.
+  // Must be one of WSType::NotInitialized, WSType::NormalText,
+  // WSType::SpecialContent, WSType::BRElement, WSType::CurrentBlockBoundary or
+  // WSType::OtherBlockBoundary.  Access these values with StartsFrom*() and
+  // EndsBy*() accessors.
   WSType mStartReason;
   WSType mEndReason;
 };

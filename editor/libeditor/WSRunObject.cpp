@@ -68,8 +68,8 @@ WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
       mStartRun(nullptr),
       mEndRun(nullptr),
       mHTMLEditor(aHTMLEditor),
-      mStartReason(WSType::none),
-      mEndReason(WSType::none) {
+      mStartReason(WSType::NotInitialized),
+      mEndReason(WSType::NotInitialized) {
   MOZ_ASSERT(
       *nsContentUtils::ComparePoints(aScanStartPoint.ToRawRangeBoundary(),
                                      aScanEndPoint.ToRawRangeBoundary()) <= 0);
@@ -586,8 +586,8 @@ WSScanResult WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom(
         return WSScanResult(
             atPreviousChar.NextPoint(),
             atPreviousChar.IsCharASCIISpace() || atPreviousChar.IsCharNBSP()
-                ? WSType::normalWS
-                : WSType::text);
+                ? WSType::NormalWhiteSpaces
+                : WSType::NormalText);
       }
       // If no text node, keep looking.  We should eventually fall out of loop
     }
@@ -621,8 +621,8 @@ WSScanResult WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom(
             atNextChar,
             !atNextChar.IsEndOfContainer() &&
                     (atNextChar.IsCharASCIISpace() || atNextChar.IsCharNBSP())
-                ? WSType::normalWS
-                : WSType::text);
+                ? WSType::NormalWhiteSpaces
+                : WSType::NormalText);
       }
       // If no text node, keep looking.  We should eventually fall out of loop
     }
@@ -719,7 +719,7 @@ nsresult WSRunScanner::GetWSNodes() {
           if (theChar != kNBSP) {
             mStartNode = textNode;
             mStartOffset = i;
-            mStartReason = WSType::text;
+            mStartReason = WSType::NormalText;
             mStartReasonContent = textNode;
             break;
           }
@@ -745,7 +745,7 @@ nsresult WSRunScanner::GetWSNodes() {
       if (IsBlockNode(priorNode)) {
         mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
-        mStartReason = WSType::otherBlock;
+        mStartReason = WSType::OtherBlockBoundary;
         mStartReasonContent = priorNode;
       } else if (priorNode->IsText() && priorNode->IsEditable()) {
         RefPtr<Text> textNode = priorNode->AsText();
@@ -769,7 +769,7 @@ nsresult WSRunScanner::GetWSNodes() {
               if (theChar != kNBSP) {
                 mStartNode = textNode;
                 mStartOffset = pos + 1;
-                mStartReason = WSType::text;
+                mStartReason = WSType::NormalText;
                 mStartReasonContent = textNode;
                 break;
               }
@@ -791,9 +791,9 @@ nsresult WSRunScanner::GetWSNodes() {
         mStartNode = start.GetContainer();
         mStartOffset = start.Offset();
         if (priorNode->IsHTMLElement(nsGkAtoms::br)) {
-          mStartReason = WSType::br;
+          mStartReason = WSType::BRElement;
         } else {
-          mStartReason = WSType::special;
+          mStartReason = WSType::SpecialContent;
         }
         mStartReasonContent = priorNode;
       }
@@ -802,7 +802,7 @@ nsresult WSRunScanner::GetWSNodes() {
       // editableBlockParentOrTopmotEditableInlineContent
       mStartNode = start.GetContainer();
       mStartOffset = start.Offset();
-      mStartReason = WSType::thisBlock;
+      mStartReason = WSType::CurrentBlockBoundary;
       // mStartReasonContent can be either a block element or any non-editable
       // content in this case.
       mStartReasonContent = editableBlockParentOrTopmotEditableInlineContent;
@@ -825,7 +825,7 @@ nsresult WSRunScanner::GetWSNodes() {
           if (theChar != kNBSP) {
             mEndNode = textNode;
             mEndOffset = i;
-            mEndReason = WSType::text;
+            mEndReason = WSType::NormalText;
             mEndReasonContent = textNode;
             break;
           }
@@ -852,7 +852,7 @@ nsresult WSRunScanner::GetWSNodes() {
         // we encountered a new block.  therefore no more ws.
         mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
-        mEndReason = WSType::otherBlock;
+        mEndReason = WSType::OtherBlockBoundary;
         mEndReasonContent = nextNode;
       } else if (nextNode->IsText() && nextNode->IsEditable()) {
         RefPtr<Text> textNode = nextNode->AsText();
@@ -876,7 +876,7 @@ nsresult WSRunScanner::GetWSNodes() {
               if (theChar != kNBSP) {
                 mEndNode = textNode;
                 mEndOffset = pos;
-                mEndReason = WSType::text;
+                mEndReason = WSType::NormalText;
                 mEndReasonContent = textNode;
                 break;
               }
@@ -899,9 +899,9 @@ nsresult WSRunScanner::GetWSNodes() {
         mEndNode = end.GetContainer();
         mEndOffset = end.Offset();
         if (nextNode->IsHTMLElement(nsGkAtoms::br)) {
-          mEndReason = WSType::br;
+          mEndReason = WSType::BRElement;
         } else {
-          mEndReason = WSType::special;
+          mEndReason = WSType::SpecialContent;
         }
         mEndReasonContent = nextNode;
       }
@@ -910,7 +910,7 @@ nsresult WSRunScanner::GetWSNodes() {
       // editableBlockParentOrTopmotEditableInlineContent
       mEndNode = end.GetContainer();
       mEndOffset = end.Offset();
-      mEndReason = WSType::thisBlock;
+      mEndReason = WSType::CurrentBlockBoundary;
       // mEndReasonContent can be either a block element or any non-editable
       // content in this case.
       mEndReasonContent = editableBlockParentOrTopmotEditableInlineContent;
