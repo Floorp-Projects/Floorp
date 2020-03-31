@@ -2776,19 +2776,6 @@ Document* Selection::GetDocument() const {
   return presShell ? presShell->GetDocument() : nullptr;
 }
 
-nsPIDOMWindowOuter* Selection::GetWindow() const {
-  Document* document = GetDocument();
-  return document ? document->GetWindow() : nullptr;
-}
-
-HTMLEditor* Selection::GetHTMLEditor() const {
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) {
-    return nullptr;
-  }
-  return nsContentUtils::GetHTMLEditor(presContext);
-}
-
 nsIFrame* Selection::GetSelectionAnchorGeometry(SelectionRegion aRegion,
                                                 nsRect* aRect) {
   if (!mFrameSelection) return nullptr;  // nothing to do
@@ -3015,10 +3002,10 @@ void Selection::RemoveSelectionListener(
   mSelectionListeners.RemoveElement(aListenerToRemove);  // Releases
 }
 
-Element* Selection::StyledRanges::GetCommonEditingHostForAllRanges() {
+Element* Selection::StyledRanges::GetCommonEditingHost() const {
   Element* editingHost = nullptr;
-  for (StyledRange& rangeData : mRanges) {
-    nsRange* range = rangeData.mRange;
+  for (const StyledRange& rangeData : mRanges) {
+    const nsRange* range = rangeData.mRange;
     MOZ_ASSERT(range);
     nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
     if (!commonAncestorNode || !commonAncestorNode->IsContent()) {
@@ -3053,6 +3040,49 @@ Element* Selection::StyledRanges::GetCommonEditingHostForAllRanges() {
   return editingHost;
 }
 
+void Selection::StyledRanges::MaybeFocusCommonEditingHost(
+    PresShell* aPresShell) const {
+  if (!aPresShell) {
+    return;
+  }
+
+  nsPresContext* presContext = aPresShell->GetPresContext();
+  if (!presContext) {
+    return;
+  }
+
+  Document* document = aPresShell->GetDocument();
+  if (!document) {
+    return;
+  }
+
+  nsPIDOMWindowOuter* window = document->GetWindow();
+  // If the document is in design mode or doesn't have contenteditable
+  // element, we don't need to move focus.
+  if (window && !document->HasFlag(NODE_IS_EDITABLE) &&
+      nsContentUtils::GetHTMLEditor(presContext)) {
+    RefPtr<Element> newEditingHost = GetCommonEditingHost();
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+    nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
+        window, nsFocusManager::eOnlyCurrentWindow,
+        getter_AddRefs(focusedWindow));
+    nsCOMPtr<Element> focusedElement = do_QueryInterface(focusedContent);
+    // When all selected ranges are in an editing host, it should take focus.
+    // But otherwise, we shouldn't move focus since Chromium doesn't move
+    // focus but only selection range is updated.
+    if (newEditingHost && newEditingHost != focusedElement) {
+      MOZ_ASSERT(!newEditingHost->IsInNativeAnonymousSubtree());
+      // Note that don't steal focus from focused window if the window doesn't
+      // have focus.  Additionally, although when an element gets focus, we
+      // usually scroll to the element, but in this case, we shouldn't do it
+      // because Chrome does not do so.
+      fm->SetFocus(newEditingHost, nsIFocusManager::FLAG_NOSWITCHFRAME |
+                                       nsIFocusManager::FLAG_NOSCROLL);
+    }
+  }
+}
+
 nsresult Selection::NotifySelectionListeners(bool aCalledByJS) {
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = aCalledByJS;
@@ -3060,7 +3090,9 @@ nsresult Selection::NotifySelectionListeners(bool aCalledByJS) {
 }
 
 nsresult Selection::NotifySelectionListeners() {
-  if (!mFrameSelection) return NS_OK;  // nothing to do
+  if (!mFrameSelection) {
+    return NS_OK;  // nothing to do
+  }
 
   // Our internal code should not move focus with using this class while
   // this moves focus nor from selection listeners.
@@ -3073,33 +3105,7 @@ nsresult Selection::NotifySelectionListeners() {
   // browsers don't do it either.
   if (mSelectionType == SelectionType::eNormal &&
       calledByJSRestorer.SavedValue()) {
-    nsPIDOMWindowOuter* window = GetWindow();
-    Document* document = GetDocument();
-    // If the document is in design mode or doesn't have contenteditable
-    // element, we don't need to move focus.
-    if (window && document && !document->HasFlag(NODE_IS_EDITABLE) &&
-        GetHTMLEditor()) {
-      RefPtr<Element> newEditingHost =
-          mStyledRanges.GetCommonEditingHostForAllRanges();
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
-      nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-      nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
-          window, nsFocusManager::eOnlyCurrentWindow,
-          getter_AddRefs(focusedWindow));
-      nsCOMPtr<Element> focusedElement = do_QueryInterface(focusedContent);
-      // When all selected ranges are in an editing host, it should take focus.
-      // But otherwise, we shouldn't move focus since Chromium doesn't move
-      // focus but only selection range is updated.
-      if (newEditingHost && newEditingHost != focusedElement) {
-        MOZ_ASSERT(!newEditingHost->IsInNativeAnonymousSubtree());
-        // Note that don't steal focus from focused window if the window doesn't
-        // have focus.  Additionally, although when an element gets focus, we
-        // usually scroll to the element, but in this case, we shouldn't do it
-        // because Chrome does not do so.
-        fm->SetFocus(newEditingHost, nsIFocusManager::FLAG_NOSWITCHFRAME |
-                                         nsIFocusManager::FLAG_NOSCROLL);
-      }
-    }
+    mStyledRanges.MaybeFocusCommonEditingHost(GetPresShell());
   }
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
