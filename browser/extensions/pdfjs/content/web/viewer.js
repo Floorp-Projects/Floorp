@@ -1684,7 +1684,9 @@ const PDFViewerApplication = {
       _boundEvents
     } = this;
     window.removeEventListener("visibilitychange", webViewerVisibilityChange);
-    window.removeEventListener("wheel", webViewerWheel);
+    window.removeEventListener("wheel", webViewerWheel, {
+      passive: false
+    });
     window.removeEventListener("click", webViewerClick);
     window.removeEventListener("keydown", webViewerKeyDown);
     window.removeEventListener("resize", _boundEvents.windowResize);
@@ -2746,7 +2748,7 @@ function binarySearchFirstItem(items, condition) {
   let minIndex = 0;
   let maxIndex = items.length - 1;
 
-  if (items.length === 0 || !condition(items[maxIndex])) {
+  if (maxIndex < 0 || !condition(items[maxIndex])) {
     return items.length;
   }
 
@@ -7597,7 +7599,9 @@ class PDFPresentationMode {
   _removeWindowListeners() {
     window.removeEventListener("mousemove", this.showControlsBind);
     window.removeEventListener("mousedown", this.mouseDownBind);
-    window.removeEventListener("wheel", this.mouseWheelBind);
+    window.removeEventListener("wheel", this.mouseWheelBind, {
+      passive: false
+    });
     window.removeEventListener("keydown", this.resetMouseScrollStateBind);
     window.removeEventListener("contextmenu", this.contextMenuBind);
     window.removeEventListener("touchstart", this.touchSwipeBind);
@@ -8462,8 +8466,8 @@ var _base_viewer = __webpack_require__(25);
 var _pdfjsLib = __webpack_require__(4);
 
 class PDFViewer extends _base_viewer.BaseViewer {
-  get _setDocumentViewerElement() {
-    return (0, _pdfjsLib.shadow)(this, "_setDocumentViewerElement", this.viewer);
+  get _viewerElement() {
+    return (0, _pdfjsLib.shadow)(this, "_viewerElement", this.viewer);
   }
 
   _scrollIntoView({
@@ -8826,8 +8830,16 @@ class BaseViewer {
     return this.pdfDocument ? this._pagesCapability.promise : null;
   }
 
-  get _setDocumentViewerElement() {
-    throw new Error("Not implemented: _setDocumentViewerElement");
+  get _viewerElement() {
+    throw new Error("Not implemented: _viewerElement");
+  }
+
+  _onePageRenderedOrForceFetch() {
+    if (!this.container.offsetParent || this._getVisiblePages().views.length === 0) {
+      return Promise.resolve();
+    }
+
+    return this._onePageRenderedCapability.promise;
   }
 
   setDocument(pdfDocument) {
@@ -8894,7 +8906,7 @@ class BaseViewer {
 
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         const pageView = new _pdf_page_view.PDFPageView({
-          container: this._setDocumentViewerElement,
+          container: this._viewerElement,
           eventBus: this.eventBus,
           id: pageNum,
           scale,
@@ -8926,7 +8938,7 @@ class BaseViewer {
         this._updateSpreadMode();
       }
 
-      this._onePageRenderedCapability.promise.then(() => {
+      this._onePageRenderedOrForceFetch().then(() => {
         if (this.findController) {
           this.findController.setDocument(pdfDocument);
         }
@@ -11031,8 +11043,8 @@ class PDFSinglePageViewer extends _base_viewer.BaseViewer {
     });
   }
 
-  get _setDocumentViewerElement() {
-    return (0, _pdfjsLib.shadow)(this, "_setDocumentViewerElement", this._shadowViewer);
+  get _viewerElement() {
+    return (0, _pdfjsLib.shadow)(this, "_viewerElement", this._shadowViewer);
   }
 
   _resetView() {
