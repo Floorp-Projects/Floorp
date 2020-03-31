@@ -175,7 +175,7 @@ void LiveSavedFrameCache::findWithoutInvalidation(
 struct MOZ_STACK_CLASS SavedFrame::Lookup {
   Lookup(JSAtom* source, uint32_t sourceId, uint32_t line, uint32_t column,
          JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
-         JSPrincipals* principals, bool mutedErrors,
+         JSPrincipals* principals,
          const Maybe<LiveSavedFrameCache::FramePtr>& framePtr = Nothing(),
          jsbytecode* pc = nullptr, Activation* activation = nullptr)
       : source(source),
@@ -186,7 +186,6 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
         asyncCause(asyncCause),
         parent(parent),
         principals(principals),
-        mutedErrors(mutedErrors),
         framePtr(framePtr),
         pc(pc),
         activation(activation) {
@@ -206,7 +205,6 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
         asyncCause(savedFrame.getAsyncCause()),
         parent(savedFrame.getParent()),
         principals(savedFrame.getPrincipals()),
-        mutedErrors(savedFrame.getMutedErrors()),
         framePtr(Nothing()),
         pc(nullptr),
         activation(nullptr) {
@@ -221,7 +219,6 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
   JSAtom* asyncCause;
   SavedFrame* parent;
   JSPrincipals* principals;
-  bool mutedErrors;
 
   // These are used only by the LiveSavedFrameCache and not used for identity or
   // hashing.
@@ -256,7 +253,6 @@ class WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
   JSAtom* asyncCause() { return value().asyncCause; }
   SavedFrame* parent() { return value().parent; }
   JSPrincipals* principals() { return value().principals; }
-  bool mutedErrors() { return value().mutedErrors; }
   Maybe<LiveSavedFrameCache::FramePtr> framePtr() { return value().framePtr; }
   jsbytecode* pc() { return value().pc; }
   Activation* activation() { return value().activation; }
@@ -291,7 +287,7 @@ HashNumber SavedFrame::HashPolicy::hash(const Lookup& lookup) {
   // and add another overload of AddToHash with more arguments.
   return AddToHash(lookup.line, lookup.column, lookup.source,
                    lookup.functionDisplayName, lookup.asyncCause,
-                   lookup.mutedErrors, SavedFramePtrHasher::hash(lookup.parent),
+                   SavedFramePtrHasher::hash(lookup.parent),
                    JSPrincipalsPtrHasher::hash(lookup.principals));
 }
 
@@ -455,15 +451,7 @@ JSPrincipals* SavedFrame::getPrincipals() {
   if (v.isUndefined()) {
     return nullptr;
   }
-  return reinterpret_cast<JSPrincipals*>(uintptr_t(v.toPrivate()) & ~0b1);
-}
-
-bool SavedFrame::getMutedErrors() {
-  const Value& v = getReservedSlot(JSSLOT_PRINCIPALS);
-  if (v.isUndefined()) {
-    return true;
-  }
-  return bool(uintptr_t(v.toPrivate()) & 0b1);
+  return static_cast<JSPrincipals*>(v.toPrivate());
 }
 
 void SavedFrame::initSource(JSAtom* source) {
@@ -486,20 +474,16 @@ void SavedFrame::initColumn(uint32_t column) {
   initReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(column));
 }
 
-void SavedFrame::initPrincipalsAndMutedErrors(JSPrincipals* principals,
-                                              bool mutedErrors) {
+void SavedFrame::initPrincipals(JSPrincipals* principals) {
   if (principals) {
     JS_HoldPrincipals(principals);
   }
-  initPrincipalsAlreadyHeldAndMutedErrors(principals, mutedErrors);
+  initPrincipalsAlreadyHeld(principals);
 }
 
-void SavedFrame::initPrincipalsAlreadyHeldAndMutedErrors(
-    JSPrincipals* principals, bool mutedErrors) {
+void SavedFrame::initPrincipalsAlreadyHeld(JSPrincipals* principals) {
   MOZ_ASSERT_IF(principals, principals->refcount > 0);
-  uintptr_t ptr = uintptr_t(principals) | mutedErrors;
-  initReservedSlot(JSSLOT_PRINCIPALS,
-                   PrivateValue(reinterpret_cast<void*>(ptr)));
+  initReservedSlot(JSSLOT_PRINCIPALS, PrivateValue(principals));
 }
 
 void SavedFrame::initFunctionDisplayName(JSAtom* maybeName) {
@@ -539,7 +523,7 @@ void SavedFrame::initFromLookup(JSContext* cx, Handle<Lookup> lookup) {
   initFunctionDisplayName(lookup.functionDisplayName());
   initAsyncCause(lookup.asyncCause());
   initParent(lookup.parent());
-  initPrincipalsAndMutedErrors(lookup.principals(), lookup.mutedErrors());
+  initPrincipals(lookup.principals());
 }
 
 /* static */
@@ -726,23 +710,24 @@ static MOZ_MUST_USE bool SavedFrame_checkThis(JSContext* cx, CallArgs& args,
 
 } /* namespace js */
 
-js::SavedFrame* js::UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals,
-                                     HandleObject obj,
-                                     JS::SavedFrameSelfHosted selfHosted,
-                                     bool& skippedAsync) {
+namespace JS {
+
+static inline js::SavedFrame* UnwrapSavedFrame(JSContext* cx,
+                                               JSPrincipals* principals,
+                                               HandleObject obj,
+                                               SavedFrameSelfHosted selfHosted,
+                                               bool& skippedAsync) {
   if (!obj) {
     return nullptr;
   }
 
-  RootedSavedFrame frame(cx, obj->maybeUnwrapAs<SavedFrame>());
+  js::RootedSavedFrame frame(cx, obj->maybeUnwrapAs<js::SavedFrame>());
   if (!frame) {
     return nullptr;
   }
 
   return GetFirstSubsumedFrame(cx, principals, frame, selfHosted, skippedAsync);
 }
-
-namespace JS {
 
 JS_PUBLIC_API SavedFrameResult GetSavedFrameSource(
     JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
@@ -1481,8 +1466,7 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
                                 location.line(), location.column(), displayAtom,
                                 nullptr,  // asyncCause
                                 nullptr,  // parent (not known yet)
-                                principals, iter.mutedErrors(), framePtr,
-                                iter.pc(), &activation)) {
+                                principals, framePtr, iter.pc(), &activation)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -1994,8 +1978,7 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
                                 ubiFrame.get().line(), ubiFrame.get().column(),
                                 functionDisplayName,
                                 /* asyncCause */ nullptr,
-                                /* parent */ nullptr, principals,
-                                /* mutedErrors */ true)) {
+                                /* parent */ nullptr, principals)) {
       ReportOutOfMemory(cx);
       return false;
     }

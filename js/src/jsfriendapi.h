@@ -1312,10 +1312,6 @@ struct MOZ_STACK_CLASS JS_FRIEND_API ErrorReport {
    * *definitely* inconsistent with any standard, and particulars of the
    * behavior implemented here generally shouldn't be relied upon.
    *
-   * To fill in information such as file-name or line number the (optional)
-   * stack for the pending exception can be used. For this first SavedFrame
-   * is used.
-   *
    * If the value of |sniffingBehavior| is |WithSideEffects|, some of these
    * attempts *may* invoke user-configurable behavior when |exn| is an object:
    * converting |exn| to a string, detecting and getting properties on |exn|,
@@ -1332,8 +1328,7 @@ struct MOZ_STACK_CLASS JS_FRIEND_API ErrorReport {
    * to the usual JSAPI return value error behavior.
    */
   bool init(JSContext* cx, JS::HandleValue exn,
-            SniffingBehavior sniffingBehavior,
-            JS::HandleObject fallbackStack = nullptr);
+            SniffingBehavior sniffingBehavior);
 
   JSErrorReport* report() { return reportp; }
 
@@ -1346,11 +1341,8 @@ struct MOZ_STACK_CLASS JS_FRIEND_API ErrorReport {
   //
   // Returns false if we fail to actually populate the ErrorReport
   // for some reason (probably out of memory).
-  bool populateUncaughtExceptionReportUTF8(JSContext* cx,
-                                           JS::HandleObject fallbackStack, ...);
-  bool populateUncaughtExceptionReportUTF8VA(JSContext* cx,
-                                             JS::HandleObject fallbackStack,
-                                             va_list ap);
+  bool populateUncaughtExceptionReportUTF8(JSContext* cx, ...);
+  bool populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap);
 
   // Reports exceptions from add-on scopes to telemetry.
   void ReportAddonExceptionToTelemetry(JSContext* cx);
