@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=440572
   <script src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runtests()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=440572">Mozilla Bug 440572</a>
 
 <script class="testbody" type="text/javascript">
@@ -21,13 +21,16 @@ function receiveMessage(e)
 {
   is(e.origin, "http://example.org", "wrong sender!");
   messages.set(e.data.from, e.data.result);
+  // Runtests after receiving the right number of messages.
+  if (messages.size == 4) {
+    runtests();
+  }
 }
 
 window.addEventListener("message", receiveMessage);
 
 function runtests()
 {
-  is(messages.size, 4, "received the right number of messages.");
   is(messages.get("test"), "success", "test in frame failed.");
   is(messages.get("dump"), "success", '"dump" in frame failed.');
   is(messages.get("open"), "success", '"open" in frame failed.');
