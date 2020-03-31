@@ -21,21 +21,10 @@ pub struct InternalPings {
 impl InternalPings {
     pub fn new() -> InternalPings {
         InternalPings {
-            baseline: PingType::new("baseline", true, false, vec![]),
-            metrics: PingType::new(
-                "metrics",
-                true,
-                false,
-                vec![
-                    "overdue".to_string(),
-                    "reschedule".to_string(),
-                    "today".to_string(),
-                    "tomorrow".to_string(),
-                    "upgrade".to_string(),
-                ],
-            ),
-            events: PingType::new("events", true, false, vec![]),
-            deletion_request: PingType::new("deletion-request", true, true, vec![]),
+            baseline: PingType::new("baseline", true, false),
+            metrics: PingType::new("metrics", true, false),
+            events: PingType::new("events", true, false),
+            deletion_request: PingType::new("deletion-request", true, true),
         }
     }
 }

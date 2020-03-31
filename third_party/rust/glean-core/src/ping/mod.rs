@@ -15,9 +15,10 @@ use crate::common_metric_data::{CommonMetricData, Lifetime};
 use crate::metrics::{CounterMetric, DatetimeMetric, Metric, MetricType, PingType, TimeUnit};
 use crate::storage::StorageManager;
 use crate::util::{get_iso_time_string, local_now_with_offset};
-use crate::{
-    Glean, Result, DELETION_REQUEST_PINGS_DIRECTORY, INTERNAL_STORAGE, PENDING_PINGS_DIRECTORY,
-};
+use crate::{Glean, Result};
+
+// An internal ping name, not to be touched by anything else
+const INTERNAL_STORAGE: &str = "glean_internal_info";
 
 /// Collect a ping's data, assemble it into its full payload and store it on disk.
 pub struct PingMaker;
@@ -107,19 +108,14 @@ impl PingMaker {
         (start_time_data, end_time_data)
     }
 
-    fn get_ping_info(&self, glean: &Glean, storage_name: &str, reason: Option<&str>) -> JsonValue {
+    fn get_ping_info(&self, glean: &Glean, storage_name: &str) -> JsonValue {
         let (start_time, end_time) = self.get_start_end_times(glean, storage_name);
         let mut map = json!({
+            "ping_type": storage_name,
             "seq": self.get_ping_seq(glean, storage_name),
             "start_time": start_time,
             "end_time": end_time,
         });
-
-        if let Some(reason) = reason {
-            map.as_object_mut()
-                .unwrap() // safe unwrap, we created the object above
-                .insert("reason".to_string(), JsonValue::String(reason.to_string()));
-        };
 
         // Get the experiment data, if available.
         if let Some(experiment_data) =
@@ -166,18 +162,12 @@ impl PingMaker {
     ///
     /// * `glean` - the Glean instance to collect data from.
     /// * `ping` - the ping to collect for.
-    /// * `reason` - an optional reason code to include in the ping.
     ///
     /// ## Return value
     ///
     /// Returns a fully assembled JSON representation of the ping payload.
     /// If there is no data stored for the ping, `None` is returned.
-    pub fn collect(
-        &self,
-        glean: &Glean,
-        ping: &PingType,
-        reason: Option<&str>,
-    ) -> Option<JsonValue> {
+    pub fn collect(&self, glean: &Glean, ping: &PingType) -> Option<JsonValue> {
         info!("Collecting {}", ping.name);
 
         let metrics_data = StorageManager.snapshot_as_json(glean.storage(), &ping.name, true);
@@ -191,7 +181,7 @@ impl PingMaker {
             info!("Storage for {} empty. Ping will still be sent.", ping.name);
         }
 
-        let ping_info = self.get_ping_info(glean, &ping.name, reason);
+        let ping_info = self.get_ping_info(glean, &ping.name);
         let client_info = self.get_client_info(glean, ping.include_client_id);
 
         let mut json = json!({
@@ -216,19 +206,13 @@ impl PingMaker {
     ///
     /// * `glean` - the Glean instance to collect data from.
     /// * `ping` - the ping to collect for.
-    /// * `reason` - an optional reason code to include in the ping.
     ///
     /// ## Return value
     ///
     /// Returns a fully assembled ping payload in a string encoded as JSON.
     /// If there is no data stored for the ping, `None` is returned.
-    pub fn collect_string(
-        &self,
-        glean: &Glean,
-        ping: &PingType,
-        reason: Option<&str>,
-    ) -> Option<String> {
-        self.collect(glean, ping, reason)
+    pub fn collect_string(&self, glean: &Glean, ping: &PingType) -> Option<String> {
+        self.collect(glean, ping)
             .map(|ping| ::serde_json::to_string_pretty(&ping).unwrap())
     }
 
@@ -240,9 +224,9 @@ impl PingMaker {
         // Use a special directory for deletion-request pings
         let pings_dir = match ping_type {
             Some(ping_type) if ping_type == "deletion-request" => {
-                data_path.join(DELETION_REQUEST_PINGS_DIRECTORY)
+                data_path.join("deletion_request")
             }
-            _ => data_path.join(PENDING_PINGS_DIRECTORY),
+            _ => data_path.join("pending_pings"),
         };
 
         create_dir_all(&pings_dir)?;
@@ -317,7 +301,7 @@ mod test {
 
     #[test]
     fn sequence_numbers_should_be_reset_when_toggling_uploading() {
-        let (mut glean, _) = new_glean(None);
+        let (mut glean, _) = new_glean();
         let ping_maker = PingMaker::new();
 
         assert_eq!(0, ping_maker.get_ping_seq(&glean, "custom"));

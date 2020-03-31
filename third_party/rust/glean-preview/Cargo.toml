@@ -12,62 +12,30 @@
 
 [package]
 edition = "2018"
-name = "glean-core"
-version = "24.0.0"
+name = "glean-preview"
+version = "0.0.5"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
-include = ["README.md", "LICENSE", "src/**/*", "examples/**/*", "tests/**/*", "Cargo.toml"]
-description = "A modern Telemetry library"
+include = ["README.md", "LICENSE", "CHANGELOG.md", "src/**/*", "tests/**/*", "Cargo.toml"]
+description = "Nice Glean SDK Rust API"
 readme = "README.md"
-keywords = ["telemetry"]
+keywords = ["telemetry", "glean"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
-[dependencies.bincode]
-version = "1.2.1"
-
-[dependencies.chrono]
-version = "0.4.10"
-features = ["serde"]
-
-[dependencies.ffi-support]
-version = "0.3.5"
+[dependencies.glean-core]
+version = "24.0.0"
 
 [dependencies.lazy_static]
 version = "1.4.0"
 
-[dependencies.log]
-version = "0.4.8"
-
 [dependencies.once_cell]
 version = "1.2.0"
-
-[dependencies.regex]
-version = "1.3.3"
-features = ["std"]
-default-features = false
-
-[dependencies.rkv]
-version = "0.10.2"
-
-[dependencies.serde]
-version = "1.0.104"
-features = ["derive"]
-
-[dependencies.serde_json]
-version = "1.0.44"
-
-[dependencies.uuid]
-version = "0.8.1"
-features = ["v4"]
-[dev-dependencies.ctor]
-version = "0.1.12"
-
 [dev-dependencies.env_logger]
 version = "0.7.1"
 features = ["termcolor", "atty", "humantime"]
 default-features = false
 
-[dev-dependencies.iso8601]
-version = "0.3"
+[dev-dependencies.log]
+version = "0.4.8"
 
 [dev-dependencies.tempfile]
 version = "3.1.0"

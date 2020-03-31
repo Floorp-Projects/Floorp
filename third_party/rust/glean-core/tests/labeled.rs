@@ -226,7 +226,7 @@ fn dynamic_labels_too_long() {
 }
 
 #[test]
-fn dynamic_labels_regex_mismatch() {
+fn dynamic_labels_regex_mimsatch() {
     let (glean, _t) = new_glean(None);
     let mut labeled = LabeledMetric::new(
         CounterMetric::new(CommonMetricData {
@@ -247,7 +247,6 @@ fn dynamic_labels_regex_mismatch() {
         "1.not_fine",
         "this.$isnotfine",
         "-.not_fine",
-        "this.is_not_fine.2",
     ];
     let num_non_validating = labels_not_validating.len();
 
@@ -292,6 +291,7 @@ fn dynamic_labels_regex_allowed() {
         "this_is_fine_too",
         "this.is_still_fine",
         "thisisfine",
+        "this.is_fine.2",
         "_.is_fine",
         "this.is-fine",
         "this-is-fine",
@@ -313,6 +313,7 @@ fn dynamic_labels_regex_allowed() {
                     "this_is_fine_too": 1,
                     "this.is_still_fine": 1,
                     "thisisfine": 1,
+                    "this.is_fine.2": 1,
                     "_.is_fine": 1,
                     "this.is-fine": 1,
                     "this-is-fine": 1

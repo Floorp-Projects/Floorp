@@ -24,6 +24,7 @@ lazy_static! {
     /// * `this_is_fine_too`
     /// * `this.is_still_fine`
     /// * `thisisfine`
+    /// * `this.is_fine.2`
     /// * `_.is_fine`
     /// * `this.is-fine`
     /// * `this-is-fine`
@@ -32,9 +33,7 @@ lazy_static! {
     /// * `1.not_fine`
     /// * `this.$isnotfine`
     /// * `-.not_fine`
-    static ref LABEL_REGEX: Regex = Regex::new(
-        "^[a-z_][a-z0-9_-]{0,29}(\\.[a-z_][a-z0-9_-]{0,29})*$"
-    ).unwrap();
+    static ref LABEL_REGEX: Regex = Regex::new("^[a-z_][a-z0-9_-]{0,29}(\\.[a-z0-9_-]{0,29})*$").unwrap();
 }
 
 /// A labeled metric.

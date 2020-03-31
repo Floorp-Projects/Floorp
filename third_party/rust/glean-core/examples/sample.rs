@@ -25,8 +25,8 @@ fn main() {
         delay_ping_lifetime_io: false,
     };
     let mut glean = Glean::new(cfg).unwrap();
-    glean.register_ping_type(&PingType::new("baseline", true, false, vec![]));
-    glean.register_ping_type(&PingType::new("metrics", true, false, vec![]));
+    glean.register_ping_type(&PingType::new("baseline", true, false));
+    glean.register_ping_type(&PingType::new("metrics", true, false));
 
     let local_metric: StringMetric = StringMetric::new(CommonMetricData {
         name: "local_metric".into(),
@@ -67,10 +67,10 @@ fn main() {
 
     let ping_maker = PingMaker::new();
     let ping = ping_maker
-        .collect_string(&glean, glean.get_ping_by_name("baseline").unwrap(), None)
+        .collect_string(&glean, glean.get_ping_by_name("baseline").unwrap())
         .unwrap();
     println!("Baseline Ping:\n{}", ping);
 
-    let ping = ping_maker.collect_string(&glean, glean.get_ping_by_name("metrics").unwrap(), None);
+    let ping = ping_maker.collect_string(&glean, glean.get_ping_by_name("metrics").unwrap());
     println!("Metrics Ping: {:?}", ping);
 }

@@ -143,17 +143,16 @@ use std::ptr;
 /// // Note: this type manages memory, so you still will want to expose a destructor for this,
 /// // and possibly implement Drop as well.
 /// ```
-pub unsafe trait IntoFfi: Sized {
+pub unsafe trait IntoFfi {
     /// This type must be:
     ///
-    /// 1. Compatible with C, which is to say `#[repr(C)]`, a numeric primitive,
-    ///    another type that has guarantees made about it's layout, or a
-    ///    `#[repr(transparent)]` wrapper around one of those.
+    /// 1. Compatible with C, which is to say `#[repr(C)]`, a numeric primitive, another type that
+    ///    has guarantees made about it's layout, or a `#[repr(transparent)]` wrapper around one of
+    ///    those.
     ///
-    ///    One could even use `&T`, so long as `T: Sized`, although it's
-    ///    extremely dubious to return a reference to borrowed memory over the
-    ///    FFI, since it's very difficult for the caller to know how long it
-    ///    remains valid.
+    ///    One could even use `&T`, so long as `T: Sized`, although it's extremely dubious to return
+    ///    a reference to borrowed memory over the FFI, since it's very difficult for the caller
+    ///    to know how long it remains valid.
     ///
     /// 2. Capable of storing an empty/ignorable/default value.
     ///
@@ -165,23 +164,19 @@ pub unsafe trait IntoFfi: Sized {
     ///
     /// - #[repr(C)] structs containing only things on this list.
     ///
-    /// - `Option<Box<T>>`, but only if `T` is `Sized`. (Internally this is
-    ///   guaranteed to be represented equivalently to a pointer)
+    /// - Raw pointers: `*const T`, and `*mut T`
     ///
-    /// - Raw pointers such as `*const T`, and `*mut T`, but again, only if `T`
-    ///   is `Sized` (`*const [T]`, `*mut dyn SomeTrait` etc are not valid).
-    ///
-    /// - Enums with a fixed `repr`, although it's a good idea avoid
-    ///   `#[repr(C)]` enums in favor of, say, `#[repr(i32)]` (for example, any
-    ///   fixed type there should be fine), as it's potentially error prone to
-    ///   access `#[repr(C)]` enums from Android over JNA (it's only safe if C's
+    /// - Enums with a fixed `repr`, although it's a good idea avoid `#[repr(C)]` enums in favor of
+    ///   `#[repr(i32)]` (for example, any fixed type there should be fine), as it's potentially
+    ///   error prone to access `#[repr(C)]` enums from Android over JNA (it's only safe if C's
     ///   `sizeof(int) == 4`, which is very common, but not universally true).
     ///
-    /// - `&T`/`&mut T` where `T: Sized` but only if you really know what you're
-    ///   doing, because this is probably a mistake.
+    /// - `&T`/`&mut T` where `T: Sized` but only if you really know what you're doing, because this is
+    ///   probably a mistake.
     ///
-    /// Invalid examples include things like `&str`, `&[T]`, `String`, `Vec<T>`,
-    /// `std::ffi::CString`, `&std::ffi::CStr`, etc.
+    /// Invalid examples include things like `&str`, `&[T]`, `String`, `Vec<T>`, `Box<T>`,
+    /// `std::ffi::CString`, `&std::ffi::CStr`, etc. (Note that eventually, `Box<T>` may be valid
+    /// `where T: Sized`, but currently it is not).
     type Value;
 
     /// Return an 'empty' value. This is what's passed back to C in the case of an error,
