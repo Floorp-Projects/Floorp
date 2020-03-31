@@ -231,24 +231,6 @@ extern JS_PUBLIC_API JSScript* CompileForNonSyntacticScope(
     SourceText<mozilla::Utf8Unit>& srcBuf);
 
 /**
- * Compile the provided UTF-8 data into a script in a non-syntactic scope.  It
- * is an error if the data contains invalid UTF-8.  Return the script on
- * success, or return null on failure (usually with an error reported).
- *
- * The "DontInflate" suffix and (semantically unobservable) don't-inflate
- * characteristic are temporary while bugs in UTF-8 compilation are ironed out.
- * In the long term |JS::CompileForNonSyntacticScope| for UTF-8 will just never
- * inflate, and this separate function will die.
- *
- * NOTE: UTF-8 compilation is currently experimental, and it's possible it has
- *       as-yet-undiscovered bugs that the UTF-16 compilation functions do not
- *       have.  Use only if you're willing to take a risk!
- */
-extern JS_PUBLIC_API JSScript* CompileForNonSyntacticScopeDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf);
-
-/**
  * Compile a function with envChain plus the global as its scope chain.
  * envChain must contain objects in the current compartment of cx.  The actual
  * scope chain used for the function will consist of With wrappers for those

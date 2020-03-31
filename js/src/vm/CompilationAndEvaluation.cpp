@@ -77,28 +77,6 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   return frontend::CompileGlobalScript(compilationInfo, globalsc, srcBuf);
 }
 
-static JSScript* CompileUtf8Inflating(JSContext* cx,
-                                      const ReadOnlyCompileOptions& options,
-                                      SourceText<Utf8Unit>& srcBuf) {
-  auto bytes = srcBuf.get();
-  size_t length = srcBuf.length();
-
-  auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length,
-                                  js::MallocArena)
-          .get());
-  if (!chars) {
-    return nullptr;
-  }
-
-  SourceText<char16_t> source;
-  if (!source.init(cx, std::move(chars), length)) {
-    return nullptr;
-  }
-
-  return CompileSourceBuffer(cx, options, source);
-}
-
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
                       SourceText<char16_t>& srcBuf) {
   return CompileSourceBuffer(cx, options, srcBuf);
@@ -148,14 +126,6 @@ JSScript* JS::CompileForNonSyntacticScope(
 }
 
 JSScript* JS::CompileForNonSyntacticScope(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-    SourceText<Utf8Unit>& srcBuf) {
-  CompileOptions options(cx, optionsArg);
-  options.setNonSyntacticScope(true);
-  return CompileUtf8Inflating(cx, options, srcBuf);
-}
-
-JSScript* JS::CompileForNonSyntacticScopeDontInflate(
     JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     SourceText<Utf8Unit>& srcBuf) {
   CompileOptions options(cx, optionsArg);
