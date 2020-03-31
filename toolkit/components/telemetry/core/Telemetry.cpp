@@ -1159,6 +1159,25 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
   return NS_OK;
 }
 
+#if defined(MOZ_GLEAN)
+// The FOG API is implemented in Rust and exposed to C++ via a set of
+// C functions with the "fog_" prefix.
+// See toolkit/components/glean/*.
+extern "C" {
+nsresult fog_init(const char* buildId, const char* appDisplayVersion, const char* channel);
+}
+
+static void internal_initGlean() {
+  Unused << NS_WARN_IF(NS_FAILED(
+        fog_init(
+          /* build id    */ "build-id",
+          /* app version */ "0.0a1",
+          /* channel     */ "nightly"
+        )
+  ));
+}
+#endif  // defined(MOZ_GLEAN)
+
 already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   {
     auto lock = sTelemetry.Lock();
@@ -1208,6 +1227,12 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   // is Android but not Fennec.
   if (GetCurrentProduct() == SupportedProduct::Geckoview) {
     TelemetryGeckoViewPersistence::InitPersistence();
+  }
+#endif
+
+#if defined(MOZ_GLEAN)
+  if (XRE_IsParentProcess()) {
+    internal_initGlean();
   }
 #endif
 
