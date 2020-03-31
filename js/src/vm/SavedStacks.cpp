@@ -175,7 +175,7 @@ void LiveSavedFrameCache::findWithoutInvalidation(
 struct MOZ_STACK_CLASS SavedFrame::Lookup {
   Lookup(JSAtom* source, uint32_t sourceId, uint32_t line, uint32_t column,
          JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
-         JSPrincipals* principals,
+         JSPrincipals* principals, bool mutedErrors,
          const Maybe<LiveSavedFrameCache::FramePtr>& framePtr = Nothing(),
          jsbytecode* pc = nullptr, Activation* activation = nullptr)
       : source(source),
@@ -186,6 +186,7 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
         asyncCause(asyncCause),
         parent(parent),
         principals(principals),
+        mutedErrors(mutedErrors),
         framePtr(framePtr),
         pc(pc),
         activation(activation) {
@@ -205,6 +206,7 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
         asyncCause(savedFrame.getAsyncCause()),
         parent(savedFrame.getParent()),
         principals(savedFrame.getPrincipals()),
+        mutedErrors(savedFrame.getMutedErrors()),
         framePtr(Nothing()),
         pc(nullptr),
         activation(nullptr) {
@@ -219,6 +221,7 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
   JSAtom* asyncCause;
   SavedFrame* parent;
   JSPrincipals* principals;
+  bool mutedErrors;
 
   // These are used only by the LiveSavedFrameCache and not used for identity or
   // hashing.
@@ -253,6 +256,7 @@ class WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
   JSAtom* asyncCause() { return value().asyncCause; }
   SavedFrame* parent() { return value().parent; }
   JSPrincipals* principals() { return value().principals; }
+  bool mutedErrors() { return value().mutedErrors; }
   Maybe<LiveSavedFrameCache::FramePtr> framePtr() { return value().framePtr; }
   jsbytecode* pc() { return value().pc; }
   Activation* activation() { return value().activation; }
@@ -287,7 +291,7 @@ HashNumber SavedFrame::HashPolicy::hash(const Lookup& lookup) {
   // and add another overload of AddToHash with more arguments.
   return AddToHash(lookup.line, lookup.column, lookup.source,
                    lookup.functionDisplayName, lookup.asyncCause,
-                   SavedFramePtrHasher::hash(lookup.parent),
+                   lookup.mutedErrors, SavedFramePtrHasher::hash(lookup.parent),
                    JSPrincipalsPtrHasher::hash(lookup.principals));
 }
 
@@ -451,7 +455,15 @@ JSPrincipals* SavedFrame::getPrincipals() {
   if (v.isUndefined()) {
     return nullptr;
   }
-  return static_cast<JSPrincipals*>(v.toPrivate());
+  return reinterpret_cast<JSPrincipals*>(uintptr_t(v.toPrivate()) & ~0b1);
+}
+
+bool SavedFrame::getMutedErrors() {
+  const Value& v = getReservedSlot(JSSLOT_PRINCIPALS);
+  if (v.isUndefined()) {
+    return true;
+  }
+  return bool(uintptr_t(v.toPrivate()) & 0b1);
 }
 
 void SavedFrame::initSource(JSAtom* source) {
@@ -474,16 +486,20 @@ void SavedFrame::initColumn(uint32_t column) {
   initReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(column));
 }
 
-void SavedFrame::initPrincipals(JSPrincipals* principals) {
+void SavedFrame::initPrincipalsAndMutedErrors(JSPrincipals* principals,
+                                              bool mutedErrors) {
   if (principals) {
     JS_HoldPrincipals(principals);
   }
-  initPrincipalsAlreadyHeld(principals);
+  initPrincipalsAlreadyHeldAndMutedErrors(principals, mutedErrors);
 }
 
-void SavedFrame::initPrincipalsAlreadyHeld(JSPrincipals* principals) {
+void SavedFrame::initPrincipalsAlreadyHeldAndMutedErrors(
+    JSPrincipals* principals, bool mutedErrors) {
   MOZ_ASSERT_IF(principals, principals->refcount > 0);
-  initReservedSlot(JSSLOT_PRINCIPALS, PrivateValue(principals));
+  uintptr_t ptr = uintptr_t(principals) | mutedErrors;
+  initReservedSlot(JSSLOT_PRINCIPALS,
+                   PrivateValue(reinterpret_cast<void*>(ptr)));
 }
 
 void SavedFrame::initFunctionDisplayName(JSAtom* maybeName) {
@@ -523,7 +539,7 @@ void SavedFrame::initFromLookup(JSContext* cx, Handle<Lookup> lookup) {
   initFunctionDisplayName(lookup.functionDisplayName());
   initAsyncCause(lookup.asyncCause());
   initParent(lookup.parent());
-  initPrincipals(lookup.principals());
+  initPrincipalsAndMutedErrors(lookup.principals(), lookup.mutedErrors());
 }
 
 /* static */
@@ -1466,7 +1482,8 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
                                 location.line(), location.column(), displayAtom,
                                 nullptr,  // asyncCause
                                 nullptr,  // parent (not known yet)
-                                principals, framePtr, iter.pc(), &activation)) {
+                                principals, iter.mutedErrors(), framePtr,
+                                iter.pc(), &activation)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -1978,7 +1995,8 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
                                 ubiFrame.get().line(), ubiFrame.get().column(),
                                 functionDisplayName,
                                 /* asyncCause */ nullptr,
-                                /* parent */ nullptr, principals)) {
+                                /* parent */ nullptr, principals,
+                                /* mutedErrors */ true)) {
       ReportOutOfMemory(cx);
       return false;
     }
