@@ -187,15 +187,16 @@ public class VideoCaptureAndroid implements CameraVideoCapturer.CameraEventsHand
 
   // Delivers a captured frame.
   public void onFrameCaptured(VideoFrame frame) {
-    I420Buffer i420Buffer = frame.getBuffer().toI420();
+    if (native_capturer != 0) {
+      I420Buffer i420Buffer = frame.getBuffer().toI420();
+      ProvideCameraFrame(i420Buffer.getWidth(), i420Buffer.getHeight(),
+          i420Buffer.getDataY(), i420Buffer.getStrideY(),
+          i420Buffer.getDataU(), i420Buffer.getStrideU(),
+          i420Buffer.getDataV(), i420Buffer.getStrideV(),
+          frame.getRotation(),
+          frame.getTimestampNs() / 1000000, native_capturer);
 
-    ProvideCameraFrame(i420Buffer.getWidth(), i420Buffer.getHeight(),
-        i420Buffer.getDataY(), i420Buffer.getStrideY(),
-        i420Buffer.getDataU(), i420Buffer.getStrideU(),
-        i420Buffer.getDataV(), i420Buffer.getStrideV(),
-        frame.getRotation(),
-        frame.getTimestampNs() / 1000000, native_capturer);
-
-    i420Buffer.release();
+      i420Buffer.release();
+    }
   }
 }
