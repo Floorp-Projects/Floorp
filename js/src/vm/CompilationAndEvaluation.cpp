@@ -465,7 +465,6 @@ static bool ExecuteScript(JSContext* cx, HandleObjectVector envChain,
     if (!script) {
       return false;
     }
-    js::DebugAPI::onNewScript(cx, script);
   }
 
   return ExecuteScript(cx, env, script, rval);
@@ -506,8 +505,6 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
     if (!script) {
       return false;
     }
-
-    js::DebugAPI::onNewScript(cx, script);
   }
   return ExecuteScript(cx, globalLexical, script, rval.address());
 }
@@ -523,8 +520,6 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
     if (!script) {
       return false;
     }
-
-    js::DebugAPI::onNewScript(cx, script);
   }
   return ExecuteScript(cx, envChain, script, rval.address());
 }
