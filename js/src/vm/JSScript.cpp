@@ -5038,6 +5038,8 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
     }
   }
 
+  DebugAPI::onNewScript(cx, dst);
+
   return dst;
 }
 
