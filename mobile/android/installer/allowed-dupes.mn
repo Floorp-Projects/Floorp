@@ -5,27 +5,19 @@
 # PLEASE DO NOT ADD MORE EXCEPTIONS TO THIS LIST
 #
 
-modules/commonjs/sdk/ui/button/view/events.js
-modules/commonjs/sdk/ui/state/events.js
-modules/devtools/Console.jsm
 modules/devtools/Loader.jsm
-modules/devtools/Simulator.jsm
-modules/devtools/shared/Console.jsm
 modules/devtools/shared/Loader.jsm
-modules/devtools/shared/apps/Simulator.jsm
+
+# Row and column icons are duplicated
 res/table-remove-column-active.gif
-res/table-remove-column-hover.gif
-res/table-remove-column.gif
 res/table-remove-row-active.gif
+res/table-remove-column-hover.gif
 res/table-remove-row-hover.gif
+res/table-remove-column.gif
 res/table-remove-row.gif
+
 res/multilocale.txt
-modules/commonjs/index.js
 update.locale
-chrome/chrome/searchplugins/bolcom-fy-NL.xml
-chrome/chrome/searchplugins/bolcom-nl.xml
-chrome/chrome/searchplugins/ddg.xml
-chrome/chrome/searchplugins/duckduckgo.xml
 
 #ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
 defaults/pref/arm64-v8a/geckoview-prefs.js
