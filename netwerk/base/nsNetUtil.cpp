@@ -101,6 +101,7 @@
 #include "nsAboutProtocolHandler.h"
 #include "nsResProtocolHandler.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
+#include "mozilla/net/PageThumbProtocolHandler.h"
 #include <limits>
 
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -1753,7 +1754,6 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   if (scheme.EqualsLiteral("moz-safe-about") ||
       scheme.EqualsLiteral("page-icon") || scheme.EqualsLiteral("moz") ||
       scheme.EqualsLiteral("moz-anno") ||
-      scheme.EqualsLiteral("moz-page-thumb") ||
       scheme.EqualsLiteral("moz-fonttable")) {
     return NS_MutateURI(new nsSimpleURI::Mutator())
         .SetSpec(aSpec)
@@ -1798,6 +1798,22 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   if (scheme.EqualsLiteral("moz-extension")) {
     RefPtr<mozilla::net::ExtensionProtocolHandler> handler =
         mozilla::net::ExtensionProtocolHandler::GetSingleton();
+    if (!handler) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("moz-page-thumb")) {
+    // The moz-page-thumb service runs JS to resolve a URI to a
+    // storage location, so this should only ever run on the main
+    // thread.
+    if (!NS_IsMainThread()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    RefPtr<mozilla::net::PageThumbProtocolHandler> handler =
+        mozilla::net::PageThumbProtocolHandler::GetSingleton();
     if (!handler) {
       return NS_ERROR_NOT_AVAILABLE;
     }

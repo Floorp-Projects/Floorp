@@ -55,6 +55,8 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include <stdint.h>
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -924,6 +926,15 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
           if (accessAllowed) {
             return NS_OK;
           }
+        }
+      } else if (targetScheme.EqualsLiteral("moz-page-thumb")) {
+        if (XRE_IsParentProcess()) {
+          return NS_OK;
+        }
+
+        auto& remoteType = dom::ContentChild::GetSingleton()->GetRemoteType();
+        if (remoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+          return NS_OK;
         }
       }
     }

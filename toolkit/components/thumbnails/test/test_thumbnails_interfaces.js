@@ -28,7 +28,7 @@ function run_test() {
   );
   Assert.throws(
     () => handler.newChannel(badhost, dummyLoadInfo),
-    /NS_ERROR_NOT_AVAILABLE/i,
+    /NS_ERROR_MALFORMED_URI/i,
     "moz-page-thumb object with wrong host must not resolve to a file path"
   );
 
@@ -44,7 +44,7 @@ function run_test() {
   let noURL = Services.io.newURI("moz-page-thumb://thumbnail/?badStuff");
   Assert.throws(
     () => handler.newChannel(noURL, dummyLoadInfo),
-    /NS_ERROR_NOT_AVAILABLE/i,
+    /NS_ERROR_MALFORMED_URI/i,
     "moz-page-thumb object without a URL parameter must not resolve to a file path"
   );
 }
