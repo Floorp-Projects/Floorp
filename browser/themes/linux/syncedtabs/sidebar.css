@@ -10,25 +10,3 @@
   margin: 1px 0 0;
   margin-inline-end: 6px;
 }
-
-.search-box {
-  -moz-appearance: textfield;
-  cursor: text;
-  margin: 4px;
-}
-
-.search-box > .textbox-input-box {
-  background-image: url(chrome://global/skin/icons/search-textbox.svg);
-  background-repeat: no-repeat;
-  background-size: 12px;
-  background-position: left center;
-  padding-inline-start: 14px;
-}
-
-.search-box > .textbox-input-box:dir(rtl) {
-  background-position: right center;
-}
-
-.textbox-search-clear:not([disabled]) {
-  cursor: pointer;
-}

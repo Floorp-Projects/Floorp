@@ -4,16 +4,17 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
-    <script src="chrome://browser/content/syncedtabs/sidebar.js"></script>
+    <script src="chrome://browser/content/syncedtabs/sidebar.js"/>
     <script src="chrome://browser/content/utilityOverlay.js"/>
-    <script src="chrome://browser/content/contentTheme.js"></script>
+    <script src="chrome://browser/content/contentTheme.js"/>
 
     <link rel="stylesheet" media="all" href="chrome://browser/skin/syncedtabs/sidebar.css"/>
     <link rel="localization" href="browser/branding/sync-brand.ftl"/>
     <link rel="localization" href="browser/syncedTabs.ftl"/>
-    <title data-l10n-id="synced-tabs-sidebar-title"></title>
+    <title data-l10n-id="synced-tabs-sidebar-title"/>
   </head>
 
   <body role="application">
@@ -101,15 +102,10 @@
       <!-- the non-scrollable header -->
       <div class="content-header">
         <div class="sidebar-search-container tabs-container sync-state">
-          <div class="search-box">
-            <div class="textbox-input-box">
-              <input type="text"
-                     class="tabsFilter"
-                     data-l10n-id="synced-tabs-sidebar-search"
-                     tabindex="1"/>
-              <button class="textbox-search-clear"/>
-            </div>
-          </div>
+          <xul:search-textbox class="tabsFilter"
+                              tabindex="1"
+                              data-l10n-id="synced-tabs-sidebar-search"
+                              data-l10n-attrs="placeholder"/>
         </div>
       </div>
       <!-- the scrollable content area where our templates are inserted -->
