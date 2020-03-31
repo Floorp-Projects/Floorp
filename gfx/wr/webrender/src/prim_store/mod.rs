@@ -344,6 +344,20 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             }
         }
     }
+
+    pub fn map_vector(&self, v: Vector2D<f32, F>) -> Vector2D<f32, T> {
+        match self.kind {
+            CoordinateSpaceMapping::Local => {
+                v.cast_unit()
+            }
+            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
+                scale_offset.map_vector(&v)
+            }
+            CoordinateSpaceMapping::Transform(ref transform) => {
+                transform.transform_vector2d(v)
+            }
+        }
+    }
 }
 
 /// For external images, it's not possible to know the

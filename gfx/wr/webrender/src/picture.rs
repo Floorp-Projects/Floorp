@@ -106,7 +106,7 @@ use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId};
 use crate::composite::{ExternalSurfaceDescriptor};
 use crate::debug_colors;
-use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D};
+use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameBuilderConfig, FrameVisibilityContext, FrameVisibilityState};
@@ -4572,11 +4572,43 @@ impl PicturePrimitive {
                     .surfaces[raster_config.surface_index.0]
                     .scale_factors;
 
+                // If the primitive has a filter that can sample with an offset, the clip rect has
+                // to take it into account.
+                let clip_inflation = match raster_config.composite_mode {
+                    PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
+                        let mut max_offset = vec2(0.0, 0.0);
+                        let mut min_offset = vec2(0.0, 0.0);
+                        for shadow in shadows {
+                            let offset = shadow.offset.cast_unit();
+                            max_offset = max_offset.max(offset);
+                            min_offset = min_offset.min(offset);
+                        }
+
+                        // Get the shadow offsets in world space.
+                        let raster_min = map_pic_to_raster.map_vector(min_offset);
+                        let raster_max = map_pic_to_raster.map_vector(max_offset);
+                        let world_min = map_raster_to_world.map_vector(raster_min);
+                        let world_max = map_raster_to_world.map_vector(raster_max);
+
+                        let top_left = -world_max.max(vec2(0.0, 0.0));
+                        let bottom_right = -world_min.min(vec2(0.0, 0.0));
+
+                        // Grow the clip in the opposite direction of the shadow's offset.
+                        SideOffsets2D::new(
+                            -top_left.y,
+                            bottom_right.x,
+                            bottom_right.y,
+                            -top_left.x,
+                        )
+                    }
+                    _ => SideOffsets2D::zero(),
+                };
+
                 let (mut clipped, mut unclipped) = match get_raster_rects(
                     pic_rect,
                     &map_pic_to_raster,
                     &map_raster_to_world,
-                    clipped_prim_bounding_rect,
+                    clipped_prim_bounding_rect.outer_rect(clip_inflation),
                     device_pixel_scale,
                 ) {
                     Some(info) => info,
@@ -4736,8 +4768,6 @@ impl PicturePrimitive {
                     PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
                         let mut max_std_deviation = 0.0;
                         for shadow in shadows {
-                            // TODO(nical) presumably we should compute the clipped rect for each shadow
-                            // and compute the union of them to determine what we need to rasterize and blur?
                             max_std_deviation = f32::max(max_std_deviation, shadow.blur_radius);
                         }
                         max_std_deviation = clamp_blur_radius(max_std_deviation, scale_factors) * device_pixel_scale.0;
