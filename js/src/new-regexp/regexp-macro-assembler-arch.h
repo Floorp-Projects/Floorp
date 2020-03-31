@@ -77,6 +77,11 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckPosition(int cp_offset, Label* on_outside_input);
   virtual void CheckBitInTable(Handle<ByteArray> table, Label* on_bit_set);
   virtual bool CheckSpecialCharacterClass(uc16 type, Label* on_no_match);
+  virtual void CheckNotBackReference(int start_reg, bool read_backward,
+                                     Label* on_no_match);
+  virtual void CheckNotBackReferenceIgnoreCase(int start_reg,
+                                               bool read_backward,
+                                               Label* on_no_match);
 
   virtual void LoadCurrentCharacterImpl(int cp_offset, Label* on_end_of_input,
                                         bool check_bounds, int characters,
@@ -111,6 +116,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
                                   bool negate);
   void CheckCharacterInRangeImpl(uc16 from, uc16 to, Label* on_cond,
                                  js::jit::Assembler::Condition cond);
+  void CheckNotBackReferenceImpl(int start_reg, bool read_backward,
+                                 Label* on_no_match, bool ignore_case);
 
   void LoadCurrentCharacterUnchecked(int cp_offset, int characters);
 
@@ -125,6 +132,13 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   }
 
   void CheckBacktrackStackLimit();
+
+  static uint32_t CaseInsensitiveCompareStrings(const char16_t* substring1,
+                                                const char16_t* substring2,
+                                                size_t byteLength);
+  static uint32_t CaseInsensitiveCompareUCStrings(const char16_t* substring1,
+                                                  const char16_t* substring2,
+                                                  size_t byteLength);
 
   inline int char_size() { return static_cast<int>(mode_); }
   inline js::jit::Scale factor() {
