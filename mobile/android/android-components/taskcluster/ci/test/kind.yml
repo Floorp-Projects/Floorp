@@ -40,7 +40,7 @@ job-defaults:
         max-run-time: 7200
 
 jobs:
-    unit-test-browser-engine-gecko-nightly:
+    unit-browser-engine-gecko-nightly:
         description: 'Run unit tests on device for browser component'
         run:
             post-gradlew:
