@@ -64,8 +64,7 @@
 
 use crate::error::{ErrorCode, ExternError};
 use crate::into_ffi::IntoFfi;
-use std::error::Error as StdError;
-use std::fmt;
+use failure_derive::Fail;
 use std::ops;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Mutex, RwLock};
@@ -171,43 +170,31 @@ pub const MAX_CAPACITY: usize = (1 << 15) - 1;
 const MIN_CAPACITY: usize = 4;
 
 /// An error representing the ways a `Handle` may be invalid.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Fail)]
 pub enum HandleError {
     /// Identical to invalid handle, but has a slightly more helpful
     /// message for the most common case 0.
+    #[fail(display = "Tried to use a null handle (this object has probably been closed)")]
     NullHandle,
 
     /// Returned from [`Handle::from_u64`] if [`Handle::is_valid`] fails.
+    #[fail(display = "u64 could not encode a valid Handle")]
     InvalidHandle,
 
     /// Returned from get/get_mut/delete if the handle is stale (this indicates
     /// something equivalent to a use-after-free / double-free, etc).
+    #[fail(display = "Handle has stale version number")]
     StaleVersion,
 
     /// Returned if the handle index references an index past the end of the
     /// HandleMap.
+    #[fail(display = "Handle references a index past the end of this HandleMap")]
     IndexPastEnd,
 
     /// The handle has a map_id for a different map than the one it was
     /// attempted to be used with.
+    #[fail(display = "Handle is from a different map")]
     WrongMap,
-}
-
-impl StdError for HandleError {}
-
-impl fmt::Display for HandleError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use HandleError::*;
-        match self {
-            NullHandle => {
-                f.write_str("Tried to use a null handle (this object has probably been closed)")
-            }
-            InvalidHandle => f.write_str("u64 could not encode a valid Handle"),
-            StaleVersion => f.write_str("Handle has stale version number"),
-            IndexPastEnd => f.write_str("Handle references a index past the end of this HandleMap"),
-            WrongMap => f.write_str("Handle is from a different map"),
-        }
-    }
 }
 
 impl From<HandleError> for ExternError {
@@ -1316,4 +1303,5 @@ mod test {
         inner.assert_valid();
         assert_eq!(inner.len(), 0);
     }
+
 }

@@ -1240,10 +1240,12 @@ dependencies = [
 
 [[package]]
 name = "ffi-support"
-version = "0.4.0"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "087be066eb6e85d7150f0c5400018a32802f99d688b2d3868c526f7bbfe17960"
+checksum = "efee06d8ac3e85a6e9759a0ed2682235a70832ebe10953849b92cdced8688660"
 dependencies = [
+ "failure",
+ "failure_derive",
  "lazy_static",
  "log",
 ]
@@ -1364,11 +1366,11 @@ checksum = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
 name = "fog"
 version = "0.1.0"
 dependencies = [
- "glean-core",
+ "cstr",
+ "glean-preview",
  "log",
  "nserror",
  "nsstring",
- "once_cell",
  "static_prefs",
  "xpcom",
 ]
@@ -1738,9 +1740,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "25.1.0"
+version = "24.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a893aa65acba615064c53e2ab091a54227a0253852b8e4a2c813c8338f6095a7"
+checksum = "40afd759281422c5a9d17c5a2cfd6b703fbc6fea0ce1d82d09c4c53a4d98f4cf"
 dependencies = [
  "bincode",
  "chrono",
@@ -1753,6 +1755,17 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid",
+]
+
+[[package]]
+name = "glean-preview"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "182218f42395f369a1a5372d334699458a606aa557dd2e23998ba25704964e2c"
+dependencies = [
+ "glean-core",
+ "lazy_static",
+ "once_cell",
 ]
 
 [[package]]

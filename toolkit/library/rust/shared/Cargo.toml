@@ -47,7 +47,7 @@ rlbox_lucet_sandbox = { version = "0.1.0", optional = true }
 wgpu-remote = { path = "../../../../gfx/wgpu/wgpu-remote", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
 remote = { path = "../../../../remote", optional = true }
-fog = { path = "../../../components/glean", optional = true }
+fog = { path = "../../../components/telemetry/fog", optional = true }
 
 unic-langid = { version = "0.8", features = ["likelysubtags"] }
 unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
@@ -87,7 +87,7 @@ webrtc = ["mdns_service"]
 wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
 webgpu = ["wgpu-remote"]
 remote_agent = ["remote"]
-glean = ["fog"]
+fogotype = ["fog"]
 
 [lib]
 path = "lib.rs"
