@@ -1368,6 +1368,7 @@ dependencies = [
  "log",
  "nserror",
  "nsstring",
+ "once_cell",
  "static_prefs",
  "xpcom",
 ]
