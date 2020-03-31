@@ -792,7 +792,7 @@
     <string name="delete_browsing_data_on_quit_action">Închide</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Va șterge toate datele de navigare.</string>
+    <string name="delete_browsing_data_prompt_message">Acest lucru va șterge toate datele de navigare.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s va șterge datele de navigare selectate.</string>
     <!-- Text for the cancel button for the data deletion dialog -->

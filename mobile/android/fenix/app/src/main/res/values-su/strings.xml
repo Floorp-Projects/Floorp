@@ -9,6 +9,15 @@
     <string name="private_browsing_placeholder_description">%1$s meresihan jujutan sungsian jeung langlangan nalika anjeun kaluar ti aplikasi atawa nutup sakabéh tab nyamuni. Najan henteu matak anonim ka raramatloka atawa panyadia layanan internét anjeun, bakal
         leuwih gampang pikeun ngajaga anu dipigawé jering tetep nyamuni ti batur nu maké ieu piranti.</string>
 
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Buka Tab</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Mundur</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Maju</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Segerkeun</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Eureun</string>
 
@@ -16,6 +25,29 @@
     <string name="browser_menu_bookmark">Markah</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Édit markah</string>
+
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Émboh</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Pitulung</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Anu Anyar</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Setélan</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Pabukon</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Loka déstop</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Tambahkeun ka layar Tepas</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Pasang</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Panggihan dina kaca</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Tab nyamuni</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Tab anyar</string>
 
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Paluruh</string>
@@ -213,8 +245,14 @@
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Anjeun bakal kaluar log ti kalolobaan loka</string>
 
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Kaluar</string>
+
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Bolay</string>
+
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Pupus</string>
 
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Pinday sandi</string>

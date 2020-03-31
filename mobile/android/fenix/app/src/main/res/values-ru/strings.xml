@@ -69,7 +69,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Изменить закладку</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Управление дополнениями</string>
+    <string name="browser_menu_add_ons">Дополнения</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Дополнения отсутствуют</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -79,7 +79,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Настройки</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Моя библиотека</string>
+    <string name="browser_menu_library">Библиотека</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Версия для ПК</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -93,7 +93,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Новая вкладка</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Сохранить в коллекцию</string>
+    <string name="browser_menu_save_to_collection_2">Сохранить в коллекцию</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Сообщить о проблеме с сайтом</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -617,19 +617,16 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Отключена</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Видео и аудио заблокированы</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Видео и аудио разрешены</string>
-
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Разрешить аудио и видео</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Разрешить аудио и видео только по Wi-Fi</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Блокировать аудио и видео только при использовании мобильных данных</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Аудио и видео будут проигрываться при использовании Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Блокировать аудио</string>
+    <string name="preference_option_autoplay_block_audio2">Блокировать только аудио</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Блокировать видео и аудио</string>
+    <string name="preference_option_autoplay_blocked3">Блокировать аудио и видео</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Включено</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1073,6 +1070,9 @@
     <string name="etp_panel_off">Защита для этого сайта отключена</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Расширенная защита от отслеживания отключена для следующих веб-сайтов</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Перейти назад</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Ваши права</string>
     <!-- About page link text to open open source licenses screen -->

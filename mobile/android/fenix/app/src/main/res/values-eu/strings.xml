@@ -1049,6 +1049,9 @@
     <string name="etp_panel_off">Babesak inaktibo daude gune honetarako</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Jarraipenaren babes hobetua desgaituta dago gune hauetarako</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Nabigatu atzera</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Zure eskubideak</string>
     <!-- About page link text to open open source licenses screen -->

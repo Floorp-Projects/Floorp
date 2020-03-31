@@ -156,6 +156,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Szukaj w Internecie</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Wyszukiwanie głosowe</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Ustawienia</string>
@@ -204,6 +207,12 @@
     <string name="preferences_add_private_browsing_shortcut">Dodaj skrót do trybu prywatnego</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Ułatwienia dostępu</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Własny serwer konta Firefoksa</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Własny serwer synchronizacji</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Zmieniono serwer konta Firefoksa/synchronizacji. Wyłączanie aplikacji, aby zastosować zmiany…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference shown on banner to sign into account -->
@@ -463,6 +472,14 @@
     <string name="history_delete_all_dialog">Czy na pewno usunąć historię przeglądania?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Usuń</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopiuj</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Udostępnij</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Otwórz w nowej karcie</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Otwórz w prywatnej karcie</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Usuń</string>
     <!-- History multi select title in app bar
@@ -908,6 +925,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Poznaj nasze zasady ochrony prywatności</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Zamknij</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Zacznij przeglądać Internet</string>
 
@@ -1069,6 +1089,11 @@
     <string name="about_licensing_information">Informacje licencyjne</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Używane przez nas biblioteki</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Pozostałe kliknięcia do włączenia menu debugowania: %1$d</string>
+    <string name="about_debug_menu_toast_done">Włączono menu debugowania</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">Karty: 1</string>

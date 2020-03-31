@@ -150,6 +150,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Որոնել համացանցում</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Ձայնային որոնում</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Կարգավորումներ</string>
@@ -198,6 +201,12 @@
     <string name="preferences_add_private_browsing_shortcut">Ավելացնել գաղտնի դիտարկման դյուրանցում</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Մատչելիություն</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Ընտրովի Firefox հաշվի սերվեր</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Ընտրովի համաժամեցման սերվեր</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox հաշիվը / համաժամեցման սերվերը փոփոխված է: Հայտը դադարեցվում է՝ փոփոխությունները գործադրելու համար…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Հաշիվ</string>
     <!-- Preference shown on banner to sign into account -->
@@ -453,6 +462,14 @@
     <string name="history_delete_all_dialog">Մաքրե՞լ պատմությունը:</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Մաքրել</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Պատճենել</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Համօգտագործել</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Բացել նոր ներդիրում</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Բացել Գաղտնի ներդիրում</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Ջնջել</string>
     <!-- History multi select title in app bar
@@ -898,6 +915,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Կարդացեք մեր գաղտնիության ծանուցումը</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Փակել</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Սկսել դիտարկումը</string>
 
@@ -1037,6 +1057,9 @@
     <string name="etp_panel_off">Պաշտպանությունները անջատված են այս կայքի համար</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Ընդլայնված Հետագծման պաշտպանությունը անջատված է այս կայքերի համար</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Նավարկեք հետ</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Ձեր իրավունքները</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1057,6 +1080,11 @@
     <string name="about_licensing_information">Արտոնագրի տեղեկություն</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Գրադարաններ, որոնք մենք օգտագործում ենք</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Վրիպազերծման ցանկ. %1$d կտտացում(ներ) է մնացել միացնելու համար</string>
+    <string name="about_debug_menu_toast_done">Վրիպազերծման ցանկը միացված է</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ներդիր</string>
