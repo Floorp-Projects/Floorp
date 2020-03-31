@@ -68,6 +68,19 @@ struct CheckConvertibility<Group<SourceTypes...>, Group<TargetTypes...>>
                                   sizeof...(TargetTypes)> {};
 
 /*
+ * Helper type for Tie(args...) to allow ignoring specific elements
+ * during Tie unpacking.  Supports assignment from any type.
+ *
+ * Not for direct usage; instead, use mozilla::Ignore in calls to Tie.
+ */
+struct IgnoreImpl {
+  template <typename T>
+  constexpr const IgnoreImpl& operator=(const T&) const {
+    return *this;
+  }
+};
+
+/*
  * TupleImpl is a helper class used to implement mozilla::Tuple.
  * It represents one node in a recursive inheritance hierarchy.
  * 'Index' is the 0-based index of the tuple element stored in this node;
@@ -462,6 +475,22 @@ template <typename... Elements>
 inline Tuple<std::decay_t<Elements>...> MakeTuple(Elements&&... aElements) {
   return Tuple<std::decay_t<Elements>...>(std::forward<Elements>(aElements)...);
 }
+
+/**
+ * A helper placholder to allow ignoring specific elements during Tie unpacking.
+ * Can be used with any type and any number of elements in a call to Tie.
+ *
+ * Usage of Ignore with Tie is equivalent to using std::ignore with
+ * std::tie.
+ *
+ * Example:
+ *
+ * int i;
+ * float f;
+ * char c;
+ * Tie(i, Ignore, f, c, Ignore) = FunctionThatReturnsATuple();
+ */
+constexpr detail::IgnoreImpl Ignore;
 
 /**
  * A convenience function for constructing a tuple of references to a
