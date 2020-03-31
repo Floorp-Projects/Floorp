@@ -6,7 +6,7 @@
 
 include "mozilla/dom/DocShellMessageUtils.h";
 
-include protocol PContent;
+include protocol PBrowser;
 include protocol PInProcess;
 include protocol PBrowserBridge;
 
@@ -45,7 +45,7 @@ struct IPCWebShareData
  */
 async refcounted protocol PWindowGlobal
 {
-  manager PContent or PInProcess;
+  manager PBrowser or PInProcess;
 
 child:
   async __delete__();

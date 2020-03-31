@@ -1030,7 +1030,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
   // Open a remote endpoint for our PWindowGlobal actor.
   ManagedEndpoint<PWindowGlobalParent> windowParentEp =
-      OpenPWindowGlobalEndpoint(windowChild);
+      newChild->OpenPWindowGlobalEndpoint(windowChild);
   if (NS_WARN_IF(!windowParentEp.IsValid())) {
     return NS_ERROR_ABORT;
   }
@@ -1042,7 +1042,7 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
-  windowChild->Init(newChild);
+  windowChild->Init();
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
@@ -1806,11 +1806,11 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
 
-  if (NS_WARN_IF(
-          !BindPWindowGlobalEndpoint(std::move(aWindowEp), windowChild))) {
+  if (NS_WARN_IF(!browserChild->BindPWindowGlobalEndpoint(std::move(aWindowEp),
+                                                          windowChild))) {
     return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
   }
-  windowChild->Init(browserChild);
+  windowChild->Init();
 
   // Ensure that a TabGroup is set for our BrowserChild before running `Init`.
   if (!browserChild->mTabGroup) {
