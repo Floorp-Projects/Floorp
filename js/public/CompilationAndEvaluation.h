@@ -209,18 +209,6 @@ extern JS_PUBLIC_API JSScript* CompileUtf8File(
     JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file);
 
 /**
- * Compile the UTF-8 contents of the given file into a script.  It is an error
- * if the file contains invalid UTF-8.  Return the script on success, or return
- * null on failure (usually with an error reported).
- *
- * NOTE: UTF-8 compilation is currently experimental, and it's possible it has
- *       as-yet-undiscovered bugs not present in |JS::CompileUtf8File| that
- *       first inflates to UTF-16.  Use only if you're willing to take a risk!
- */
-extern JS_PUBLIC_API JSScript* CompileUtf8FileDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file);
-
-/**
  * Compile the UTF-8 contents of the file at the given path into a script.
  * (The path itself is in the system encoding, not [necessarily] UTF-8.)  It
  * is an error if the file's contents are invalid UTF-8.  Return the script on
