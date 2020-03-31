@@ -346,6 +346,15 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool addTryNote(TryNoteKind kind, uint32_t stackDepth,
                                BytecodeOffset start, BytecodeOffset end);
 
+  // Indicates the emitter should not generate location or debugger source
+  // notes. This lets us avoid generating notes for non-user code.
+  bool skipLocationSrcNotes() const {
+    return inPrologue() || (emitterMode == EmitterMode::SelfHosting);
+  }
+  bool skipBreakpointSrcNotes() const {
+    return inPrologue() || (emitterMode == EmitterMode::SelfHosting);
+  }
+
   // Append a new source note of the given type (and therefore size) to the
   // notes dynamic array, updating noteCount. Return the new note's index
   // within the array pointed at by current->notes as outparam.
