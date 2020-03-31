@@ -822,6 +822,26 @@ static nsINode* DetermineSelectstartEventTarget(
   return target;
 }
 
+/**
+ * @return true, iff the default action should be executed.
+ */
+static bool MaybeDispatchSelectstartEvent(
+    const nsRange& aRange, const bool aSelectionEventsOnTextControlsEnabled,
+    Document* aDocument) {
+  nsCOMPtr<nsINode> selectstartEventTarget = DetermineSelectstartEventTarget(
+      aSelectionEventsOnTextControlsEnabled, aRange);
+
+  bool executeDefaultAction = true;
+
+  if (selectstartEventTarget) {
+    nsContentUtils::DispatchTrustedEvent(
+        aDocument, selectstartEventTarget, NS_LITERAL_STRING("selectstart"),
+        CanBubble::eYes, Cancelable::eYes, &executeDefaultAction);
+  }
+
+  return executeDefaultAction;
+}
+
 nsresult Selection::AddRangesForUserSelectableNodes(
     nsRange* aRange, int32_t* aOutIndex,
     const DispatchSelectstartEvent aDispatchSelectstartEvent) {
@@ -846,6 +866,10 @@ nsresult Selection::AddRangesForUserSelectableNodes(
   if (aDispatchSelectstartEvent == DispatchSelectstartEvent::Maybe &&
       mSelectionType == SelectionType::eNormal && selectEventsEnabled &&
       IsCollapsed() && !IsBlockingSelectionChangeEvents()) {
+    // We consider a selection to be starting if we are currently collapsed,
+    // and the selection is becoming uncollapsed, and this is caused by a
+    // user initiated event.
+
     // First, we generate the ranges to add with a scratch range, which is a
     // clone of the original range passed in. We do this seperately, because
     // the selectstart event could have caused the world to change, and
@@ -858,36 +882,23 @@ nsresult Selection::AddRangesForUserSelectableNodes(
 
     MOZ_ASSERT(!newRangesNonEmpty || nsContentUtils::IsSafeToRunScript());
     if (newRangesNonEmpty && nsContentUtils::IsSafeToRunScript()) {
-      // We consider a selection to be starting if we are currently collapsed,
-      // and the selection is becoming uncollapsed, and this is caused by a
-      // user initiated event.
-
       // The spec currently doesn't say that we should dispatch this event
       // on text controls, so for now we only support doing that under a
       // pref, disabled by default.
       // See https://github.com/w3c/selection-api/issues/53.
-      nsCOMPtr<nsINode> selectstartEventTarget =
-          DetermineSelectstartEventTarget(
-              nsFrameSelection::sSelectionEventsOnTextControlsEnabled, *aRange);
+      const bool executeDefaultAction = MaybeDispatchSelectstartEvent(
+          *aRange, nsFrameSelection::sSelectionEventsOnTextControlsEnabled,
+          GetDocument());
 
-      if (selectstartEventTarget) {
-        bool defaultAction = true;
+      if (!executeDefaultAction) {
+        return NS_OK;
+      }
 
-        nsContentUtils::DispatchTrustedEvent(
-            GetDocument(), selectstartEventTarget,
-            NS_LITERAL_STRING("selectstart"), CanBubble::eYes, Cancelable::eYes,
-            &defaultAction);
-
-        if (!defaultAction) {
-          return NS_OK;
-        }
-
-        // As we just dispatched an event to the DOM, something could have
-        // changed under our feet. Re-generate the rangesToAdd array, and
-        // ensure that the range we are about to add is still valid.
-        if (!aRange->IsPositioned()) {
-          return NS_ERROR_UNEXPECTED;
-        }
+      // As we potentially dispatched an event to the DOM, something could have
+      // changed under our feet. Re-generate the rangesToAdd array, and
+      // ensure that the range we are about to add is still valid.
+      if (!aRange->IsPositioned()) {
+        return NS_ERROR_UNEXPECTED;
       }
     }
 
