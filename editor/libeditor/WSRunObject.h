@@ -469,19 +469,48 @@ class MOZ_STACK_CLASS WSRunScanner {
     nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
     int32_t mStartOffset;          // offset where ws run starts
     int32_t mEndOffset;            // offset where ws run ends
-    // type of ws, and what is to left and right of it
-    WSType mType;
     // other ws runs to left or right.  may be null.
     WSFragment *mLeft, *mRight;
 
     WSFragment()
-        : mStartOffset(0), mEndOffset(0), mLeft(nullptr), mRight(nullptr) {}
+        : mStartOffset(0),
+          mEndOffset(0),
+          mLeft(nullptr),
+          mRight(nullptr),
+          mIsVisible(Visible::No),
+          mIsStartOfHardLine(StartOfHardLine::No),
+          mIsEndOfHardLine(EndOfHardLine::No) {}
 
     EditorRawDOMPoint StartPoint() const {
       return EditorRawDOMPoint(mStartNode, mStartOffset);
     }
     EditorRawDOMPoint EndPoint() const {
       return EditorRawDOMPoint(mEndNode, mEndOffset);
+    }
+
+    enum class Visible : bool { No, Yes };
+    enum class StartOfHardLine : bool { No, Yes };
+    enum class EndOfHardLine : bool { No, Yes };
+
+    /**
+     * Information about this fragment.
+     * XXX "Visible" might be wrong in some situation, but not sure.
+     */
+    void MarkAsVisible() { mIsVisible = Visible::Yes; }
+    void MarkAsStartOfHardLine() { mIsStartOfHardLine = StartOfHardLine::Yes; }
+    void MarkAsEndOfHardLine() { mIsEndOfHardLine = EndOfHardLine::Yes; }
+    bool IsVisible() const { return mIsVisible == Visible::Yes; }
+    bool IsStartOfHardLine() const {
+      return mIsStartOfHardLine == StartOfHardLine::Yes;
+    }
+    bool IsMiddleOfHardLine() const {
+      return !IsStartOfHardLine() && !IsEndOfHardLine();
+    }
+    bool IsEndOfHardLine() const {
+      return mIsEndOfHardLine == EndOfHardLine::Yes;
+    }
+    bool IsVisibleAndMiddleOfHardLine() const {
+      return IsVisible() && IsMiddleOfHardLine();
     }
 
     /**
@@ -514,6 +543,9 @@ class MOZ_STACK_CLASS WSRunScanner {
 
    private:
     WSType mLeftWSType, mRightWSType;
+    Visible mIsVisible;
+    StartOfHardLine mIsStartOfHardLine;
+    EndOfHardLine mIsEndOfHardLine;
   };
 
   /**
@@ -605,7 +637,10 @@ class MOZ_STACK_CLASS WSRunScanner {
 
   void GetRuns();
   void ClearRuns();
-  void MakeSingleWSRun(WSType aType);
+  void InitializeWithSingleFragment(
+      WSFragment::Visible aIsVisible,
+      WSFragment::StartOfHardLine aIsStartOfHardLine,
+      WSFragment::EndOfHardLine aIsEndOfHardLine);
 
   // The list of nodes containing ws in this run.
   nsTArray<RefPtr<dom::Text>> mNodeArray;
