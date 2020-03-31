@@ -79,7 +79,7 @@ export class DebugLine extends PureComponent<Props> {
 
     let { line, column } = toEditorPosition(location);
     let { markTextClass, lineClass } = this.getTextClasses(why);
-    doc.addLineClass(line, "line", lineClass);
+    doc.addLineClass(line, "wrapClass", lineClass);
 
     const lineText = doc.getLine(line);
     column = Math.max(column, getIndentation(lineText));
@@ -115,7 +115,7 @@ export class DebugLine extends PureComponent<Props> {
     const { line } = toEditorPosition(location);
     const doc = getDocument(location.sourceId);
     const { lineClass } = this.getTextClasses(why);
-    doc.removeLineClass(line, "line", lineClass);
+    doc.removeLineClass(line, "wrapClass", lineClass);
   }
 
   getTextClasses(why: ?Why): TextClasses {

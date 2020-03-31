@@ -47,7 +47,7 @@ class HighlightLines extends Component<Props> {
     const { start, end } = highlightedLineRange;
     codeMirror.operation(() => {
       range(start - 1, end).forEach(line => {
-        codeMirror.removeLineClass(line, "line", "highlight-lines");
+        codeMirror.removeLineClass(line, "wrapClass", "highlight-lines");
       });
     });
   }
@@ -67,7 +67,7 @@ class HighlightLines extends Component<Props> {
       editor.alignLine(start);
 
       range(start - 1, end).forEach(line => {
-        codeMirror.addLineClass(line, "line", "highlight-lines");
+        codeMirror.addLineClass(line, "wrapClass", "highlight-lines");
       });
     });
   };
