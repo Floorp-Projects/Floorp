@@ -623,10 +623,6 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   nsCOMPtr<nsIURI> referrer;
   NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
 
-  Maybe<URIParams> uriParams, referrerParams;
-  SerializeURI(uri, uriParams);
-  SerializeURI(referrer, referrerParams);
-
   Maybe<mozilla::net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
@@ -644,9 +640,9 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   // DoContent.
   RefPtr<ExternalHelperAppChild> childListener = new ExternalHelperAppChild();
   MOZ_ALWAYS_TRUE(child->SendPExternalHelperAppConstructor(
-      childListener, uriParams, loadInfoArgs, nsCString(aMimeContentType), disp,
+      childListener, uri, loadInfoArgs, nsCString(aMimeContentType), disp,
       contentDisposition, fileName, aForceSave, contentLength, wasFileChannel,
-      referrerParams, aContentContext, shouldCloseWindow));
+      referrer, aContentContext, shouldCloseWindow));
 
   NS_ADDREF(*aStreamListener = childListener);
 
@@ -929,12 +925,9 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
-    URIParams uri;
-    SerializeURI(aURI, uri);
-
     nsCOMPtr<nsIBrowserChild> browserChild(do_GetInterface(aWindowContext));
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        uri, static_cast<dom::BrowserChild*>(browserChild.get()));
+        aURI, static_cast<dom::BrowserChild*>(browserChild.get()));
     return NS_OK;
   }
 
