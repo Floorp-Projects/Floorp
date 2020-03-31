@@ -1,0 +1,99 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2400
+            .*-ref-hw-2017/.*: 3600
+            default: 1800
+    suite: raptor
+    workdir: /home/cltbld
+    run-on-projects:
+        by-test-platform:
+            .*shippable[^-qr].*: ['mozilla-central', 'try']
+            default: []
+    tier: 3
+    fission-tier: 3
+    virtualization:
+        by-test-platform:
+            windows10-64-ccov/.*: virtual
+            default: hardware
+    mozharness:
+        script: raptor_script.py
+        config:
+            by-test-platform:
+                macosx.*:
+                    - raptor/mac_config.py
+                windows.*:
+                    - raptor/windows_config.py
+                windows10-64-ccov/.*:
+                    - raptor/windows_vm_config.py
+                linux64-ccov/.*:
+                    - raptor/linux64_config_taskcluster.py
+                default:
+                    - raptor/linux_config.py
+        extra-options:
+            - --browsertime
+    fission-run-on-projects: []
+
+browsertime-tp6:
+    description: "Raptor (browsertime) tp6 page-load tests"
+    raptor-test: tp6
+    raptor-subtests: ['amazon']
+    apps: ['firefox', 'chrome']
+    variants:
+        by-app:
+            firefox: []
+            default: []
+    pageload:
+        by-app:
+            firefox: 'both'
+            chrome: 'cold'
+            default: 'warm'
+    limit-platforms:
+        by-app:
+            chrome:
+                - .*shippable[^-qr].*
+            default: []
+    treeherder-symbol: Btime(tp6)
+    max-run-time: 4000
+    run-visual-metrics:
+        by-app:
+            chrome: false
+            default: true
+
+browsertime-speedometer:
+    description: "Raptor (browsertime) Speedometer on Firefox"
+    raptor-test: raptor-speedometer
+    run-on-projects:
+        by-test-platform:
+            .*-ref-hw-2017/.*: []
+            default: ['integration', 'try']
+    variants: ["fission"]
+    apps: ["firefox"]
+    treeherder-symbol: Btime(sp)
+
+browsertime-ares6:
+    description: "Raptor (browsertime) ares6 on Firefox"
+    raptor-test: raptor-ares6
+    run-on-projects:
+        by-test-platform:
+            .*-ref-hw-2017/.*: []
+            default: ['integration', 'try']
+    variants: ["fission"]
+    apps: ["firefox"]
+    treeherder-symbol: Btime(ares6)
+
+browsertime-tp6-profiling:
+    description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"
+    raptor-test: tp6
+    raptor-subtests: ['amazon']
+    apps: ['firefox']
+    pageload: 'both'
+    treeherder-symbol: Btime-Prof(tp6)
+    max-run-time: 4000
+    mozharness:
+        extra-options:
+            - --gecko-profile
