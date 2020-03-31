@@ -1310,12 +1310,12 @@ class Element : public FragmentOrElement {
       const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
       ErrorResult& aError);
 
-  enum class Flush { Yes, No };
-
   MOZ_CAN_RUN_SCRIPT
   void GetAnimations(const GetAnimationsOptions& aOptions,
-                     nsTArray<RefPtr<Animation>>& aAnimations,
-                     Flush aFlush = Flush::Yes);
+                     nsTArray<RefPtr<Animation>>& aAnimations);
+
+  void GetAnimationsWithoutFlush(const GetAnimationsOptions& aOptions,
+                                 nsTArray<RefPtr<Animation>>& aAnimations);
 
   static void GetAnimationsUnsorted(Element* aElement,
                                     PseudoStyleType aPseudoType,
