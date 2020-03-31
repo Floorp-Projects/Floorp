@@ -46,7 +46,7 @@ fails-if(Android&&!asyncPan) != 492155-4.html about:blank
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
 skip-if(!cocoaWidget) == chrome://reftest/content/native-theme/menulist-mirrored-when-rtl.xhtml chrome://reftest/content/native-theme/menulist-mirrored-when-rtl-ref.xhtml
-skip-if(!cocoaWidget) == chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl.xhtml chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl-ref.xhtml
+skip-if(!cocoaWidget||debug) == chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl.xhtml chrome://reftest/content/native-theme/searchfield-mirrored-when-rtl-ref.xhtml
 skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 
 != chrome://reftest/content/native-theme/resizer-bottomend.xhtml chrome://reftest/content/native-theme/blank-window.xhtml
