@@ -7392,12 +7392,7 @@
   type: uint32_t
   value: 500
   mirror: always
-
-- name: network.predictor.cleaned-up
-  type: bool
-  value: false
-  mirror: never
-
+  
 # A testing flag.
 - name: network.predictor.doing-tests
   type: bool
