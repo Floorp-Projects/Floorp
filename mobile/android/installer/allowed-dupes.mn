@@ -5,30 +5,6 @@
 # PLEASE DO NOT ADD MORE EXCEPTIONS TO THIS LIST
 #
 
-chrome/toolkit/skin/classic/global/arrowscrollbox.css
-chrome/toolkit/skin/classic/global/autocomplete.css
-chrome/toolkit/skin/classic/global/button.css
-chrome/toolkit/skin/classic/global/checkbox.css
-chrome/toolkit/skin/classic/global/dialog.css
-chrome/toolkit/skin/classic/global/dropmarker.css
-chrome/toolkit/skin/classic/global/global.css
-chrome/toolkit/skin/classic/global/listbox.css
-chrome/toolkit/skin/classic/global/menu.css
-chrome/toolkit/skin/classic/global/menulist.css
-chrome/toolkit/skin/classic/global/numberinput.css
-chrome/toolkit/skin/classic/global/popup.css
-chrome/toolkit/skin/classic/global/preferences.css
-chrome/toolkit/skin/classic/global/radio.css
-chrome/toolkit/skin/classic/global/richlistbox.css
-chrome/toolkit/skin/classic/global/scrollbars.css
-chrome/toolkit/skin/classic/global/search-textbox.css
-chrome/toolkit/skin/classic/global/splitter.css
-chrome/toolkit/skin/classic/global/tabbox.css
-chrome/toolkit/skin/classic/global/toolbar.css
-chrome/toolkit/skin/classic/global/toolbarbutton.css
-chrome/toolkit/skin/classic/global/tooltip.css
-chrome/toolkit/skin/classic/global/tree.css
-chrome/toolkit/skin/classic/global/wizard.css
 modules/commonjs/sdk/ui/button/view/events.js
 modules/commonjs/sdk/ui/state/events.js
 modules/devtools/Console.jsm
