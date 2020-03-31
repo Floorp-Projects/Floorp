@@ -12,6 +12,7 @@
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsDataHashtable.h"
+#include "nsCSPContext.h"
 
 #define CSPSERVICE_CONTRACTID "@mozilla.org/cspservice;1"
 #define CSPSERVICE_CID                               \
@@ -41,6 +42,11 @@ class CSPService : public nsIContentPolicy, public nsIChannelEventSink {
   static nsresult ConsultCSPForRedirect(nsIURI* aOriginalURI, nsIURI* aNewURI,
                                         nsILoadInfo* aLoadInfo,
                                         Maybe<nsresult>& aCancelCode);
+
+  static nsresult ConsultCSPForRedirect(
+      const nsCSPContext::AsyncReportViolationCallback& aCallback,
+      nsIURI* aOriginalURI, nsIURI* aNewURI, nsILoadInfo* aLoadInfo,
+      Maybe<nsresult>& aCancelCode);
 
  protected:
   virtual ~CSPService();
