@@ -74,8 +74,8 @@ if CONFIG['MOZ_WEBRTC']:
 if CONFIG['ENABLE_REMOTE_AGENT']:
     gkrust_features += ['remote_agent']
 
-if CONFIG['MOZ_FOGOTYPE']:
-    gkrust_features += ['fogotype']
+if CONFIG['MOZ_GLEAN']:
+    gkrust_features += ['glean']
 
 if CONFIG['MOZ_USING_WASM_SANDBOXING']:
     gkrust_features += ['wasm_library_sandboxing']

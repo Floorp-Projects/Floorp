@@ -11,7 +11,7 @@ use crate::error::{Error, ErrorKind};
 
 /// Different resolutions supported by the time related
 /// metric types (e.g. DatetimeMetric).
-#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum TimeUnit {
     /// Truncate to nanosecond precision.
