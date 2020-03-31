@@ -227,7 +227,12 @@ class ExperimentsDebugActivityTest {
 
         // Set our experiments as the experiment result
         configuration = Configuration()
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         Experiments.initialize(context, configuration)
+        runBlocking {
+            Experiments.testInitJob?.join()
+        }
         Experiments.onExperimentsUpdated(ExperimentsSnapshot(experimentsList, null))
 
         // Set the extra values and start the intent.

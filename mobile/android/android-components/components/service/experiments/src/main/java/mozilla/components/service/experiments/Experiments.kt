@@ -9,6 +9,11 @@ import android.content.Context
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.service.glean.Glean
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 import java.io.File
 
 /**
@@ -45,6 +50,18 @@ open class ExperimentsInternalAPI internal constructor() {
     private var experimentsUpdatedCallback: (() -> Unit)? = null
 
     /**
+     * A [CoroutineScope] used to dispatch initialization as to not block the calling thread.
+     */
+    @ObsoleteCoroutinesApi
+    private val coroutineScope by lazy {
+        CoroutineScope(newSingleThreadContext("MakoInitializerThread"))
+    }
+
+    // This is only for tests to be able to properly await initialize to minimize async issues.
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal var testInitJob: Job? = null
+
+    /**
      * Initialize the experiments library.
      *
      * This should only be initialized once by the application.
@@ -53,8 +70,10 @@ open class ExperimentsInternalAPI internal constructor() {
      * as shared preferences.  As we cannot enforce through the compiler that the context pass to
      * the initialize function is a applicationContext, there could potentially be a memory leak
      * if the initializing application doesn't comply.
-     *
      * @param configuration [Configuration] containing information about the experiments endpoint.
+     *
+     * @return Returns a [Job] so that off-thread initialization can be monitored and interacted
+     * with.
      */
     fun initialize(
         applicationContext: Context,
@@ -65,37 +84,39 @@ open class ExperimentsInternalAPI internal constructor() {
             logger.error("Experiments library should not be initialized multiple times")
             return
         }
-
         this.configuration = configuration
 
-        experimentsUpdatedCallback = onExperimentsUpdated
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        testInitJob = coroutineScope.launch {
+            experimentsUpdatedCallback = onExperimentsUpdated
 
-        experimentsResult = ExperimentsSnapshot(listOf(), null)
-        experimentsLoaded = false
-        context = applicationContext
-        storage = getExperimentsStorage(applicationContext)
+            experimentsResult = ExperimentsSnapshot(listOf(), null)
+            experimentsLoaded = false
+            context = applicationContext
+            storage = getExperimentsStorage(applicationContext)
 
-        isInitialized = true
+            isInitialized = true
 
-        // Load cached experiments from storage. After this, experiments status is available.
-        loadExperiments()
+            // Load cached experiments from storage. After this, experiments status is available.
+            loadExperiments()
 
-        // Load the active experiment from cache, if any.
-        activeExperiment = loadActiveExperiment(applicationContext, experiments)
+            // Load the active experiment from cache, if any.
+            activeExperiment = loadActiveExperiment(applicationContext, experiments)
 
-        // If no active experiment was loaded from cache, check the cached experiments list for any
-        // that should be launched now.
-        if (activeExperiment == null) {
-            findAndStartActiveExperiment()
+            // If no active experiment was loaded from cache, check the cached experiments list for any
+            // that should be launched now.
+            if (activeExperiment == null) {
+                findAndStartActiveExperiment()
+            }
+
+            // We now have the last known experiment state loaded for product code
+            // that needs to check it early in startup.
+            // Next we need to update the experiments list from the server async,
+            // without blocking the app launch and schedule future periodic
+            // updates.
+            updater = getExperimentsUpdater(applicationContext)
+            updater.initialize(configuration)
         }
-
-        // We now have the last known experiment state loaded for product code
-        // that needs to check it early in startup.
-        // Next we need to update the experiments list from the server async,
-        // without blocking the app launch and schedule future periodic
-        // updates.
-        updater = getExperimentsUpdater(applicationContext)
-        updater.initialize(configuration)
     }
 
     /**
