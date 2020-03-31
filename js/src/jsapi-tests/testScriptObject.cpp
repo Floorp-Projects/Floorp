@@ -7,7 +7,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::Compile{,{,Utf8{File,Path}}DontInflate}
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,Utf8{FileDontInflate,Path}}
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
@@ -135,8 +135,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(script_filename, 1);
 
-  JS::RootedScript script(
-      cx, JS::CompileUtf8PathDontInflate(cx, options, script_filename));
+  JS::RootedScript script(cx,
+                          JS::CompileUtf8Path(cx, options, script_filename));
   CHECK(script);
 
   tempScript.remove();
@@ -153,8 +153,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(script_filename, 1);
 
-  JS::RootedScript script(
-      cx, JS::CompileUtf8PathDontInflate(cx, options, script_filename));
+  JS::RootedScript script(cx,
+                          JS::CompileUtf8Path(cx, options, script_filename));
   CHECK(script);
 
   tempScript.remove();
