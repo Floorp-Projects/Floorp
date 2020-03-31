@@ -31,10 +31,10 @@ relevant_tests:
         job-name: shadow-scheduler-relevant_tests
     worker:
         env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.relevant_tests
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:relevant_tests
 
 bugbug_push_schedules:
-    description: Runs the bugbug.all optimization strategy instead of the default.
+    description: Runs the bugbug_push_schedules optimization strategy instead of the default.
     treeherder:
         symbol: SS(bugbug_push_schedules)
     index:
@@ -42,18 +42,7 @@ bugbug_push_schedules:
         job-name: shadow-scheduler-bugbug_push_schedules
     worker:
         env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.all
-
-bugbug_debug:
-    description: Runs the bugbug.debug optimization strategy instead of the default.
-    treeherder:
-        symbol: SS(bugbug_debug)
-    index:
-        product: source
-        job-name: shadow-scheduler-bugbug_debug
-    worker:
-        env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.debug
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:bugbug_push_schedules
 
 seta:
     description: Runs the SETA optimization strategy instead of the default.
@@ -64,4 +53,4 @@ seta:
         job-name: shadow-scheduler-seta
     worker:
         env:
-            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.seta
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta
