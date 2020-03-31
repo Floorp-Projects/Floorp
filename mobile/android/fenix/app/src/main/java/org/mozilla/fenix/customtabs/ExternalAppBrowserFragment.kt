@@ -33,6 +33,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
 import org.mozilla.fenix.browser.FenixSnackbarDelegate
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -50,7 +51,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
     private val windowFeature = ViewBoundFeatureWrapper<CustomTabWindowFeature>()
     private val hideToolbarFeature = ViewBoundFeatureWrapper<WebAppHideToolbarFeature>()
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     override fun initializeUI(view: View): Session? {
         return super.initializeUI(view)?.also {
             val activity = requireActivity()
@@ -82,7 +83,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         activity,
                         components.core.store,
                         customTabSessionId
-                    ),
+                    ) { exception ->
+                        components.analytics.crashReporter.submitCaughtException(exception)
+                        FenixSnackbar.make(view.swipeRefresh, FenixSnackbar.LENGTH_LONG).apply {
+                            setText(resources.getString(R.string.unknown_scheme_error_message))
+                            setAppropriateBackground(true)
+                        }.show()
+                    },
                     owner = this,
                     view = view
                 )
