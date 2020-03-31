@@ -33,7 +33,11 @@ class EmptyLines extends Component<Props> {
 
     editor.codeMirror.operation(() => {
       editor.codeMirror.eachLine(lineHandle => {
-        editor.codeMirror.removeLineClass(lineHandle, "line", "empty-line");
+        editor.codeMirror.removeLineClass(
+          lineHandle,
+          "wrapClass",
+          "empty-line"
+        );
       });
     });
   }
@@ -49,9 +53,13 @@ class EmptyLines extends Component<Props> {
         );
 
         if (breakableLines.has(line)) {
-          editor.codeMirror.removeLineClass(lineHandle, "line", "empty-line");
+          editor.codeMirror.removeLineClass(
+            lineHandle,
+            "wrapClass",
+            "empty-line"
+          );
         } else {
-          editor.codeMirror.addLineClass(lineHandle, "line", "empty-line");
+          editor.codeMirror.addLineClass(lineHandle, "wrapClass", "empty-line");
         }
       });
     });
