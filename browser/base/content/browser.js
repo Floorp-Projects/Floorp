@@ -3368,6 +3368,28 @@ function UpdateUrlbarSearchSplitterState() {
   } else if (splitter) {
     splitter.remove();
   }
+
+  if (!ibefore && urlbar.hasAttribute("width")) {
+    urlbar.parentNode
+      .querySelectorAll("toolbarspring")
+      .forEach(n => n.removeAttribute("width"));
+    urlbar.removeAttribute("width");
+    Services.xulStore.removeValue(
+      document.documentURI,
+      "urlbar-container",
+      "width"
+    );
+    let searchbarNode =
+      searchbar || gNavToolbox.palette.querySelector("#search-container");
+    if (searchbarNode) {
+      searchbarNode.removeAttribute("width");
+    }
+    Services.xulStore.removeValue(
+      document.documentURI,
+      "search-container",
+      "width"
+    );
+  }
 }
 
 function UpdatePopupNotificationsVisibility() {
