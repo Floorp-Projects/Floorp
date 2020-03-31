@@ -281,6 +281,7 @@ function setUpdateURL(aURL) {
     invalidateCachesOnRestart() {},
     shouldBlockIncompatJaws: origAppInfo.shouldBlockIncompatJaws,
     processType: origAppInfo.processType,
+    processID: origAppInfo.processID,
     uniqueProcessID: origAppInfo.uniqueProcessID,
 
     // nsIWinAppHelper
