@@ -22,11 +22,9 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -39,7 +37,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.decodeUrlToRoundedDrawable
+import org.mozilla.fenix.ext.toRoundedDrawable
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
@@ -375,16 +373,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         if (account != null && !accountManager.accountNeedsReauth()) {
             preferenceSignIn?.isVisible = false
 
-            profile?.avatar?.url?.let {
-                lifecycleScope.launch(IO) {
-                    val roundedDrawable = it.decodeUrlToRoundedDrawable(context)
-                    withContext(Main) {
-                        preferenceFirefoxAccount?.icon =
-                            roundedDrawable ?: AppCompatResources.getDrawable(
-                                context,
-                                R.drawable.ic_account
-                            )
-                    }
+            profile?.avatar?.url?.let { avatarUrl ->
+                lifecycleScope.launch(Main) {
+                    val roundedDrawable = avatarUrl.toRoundedDrawable(context, requireComponents.core.client)
+                    preferenceFirefoxAccount?.icon =
+                        roundedDrawable ?: AppCompatResources.getDrawable(context, R.drawable.ic_account)
                 }
             }
             preferenceSignIn?.onPreferenceClickListener = null

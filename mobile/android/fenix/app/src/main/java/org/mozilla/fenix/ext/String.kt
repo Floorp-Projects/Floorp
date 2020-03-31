@@ -5,20 +5,23 @@
 package org.mozilla.fenix.ext
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Patterns
 import android.webkit.URLUtil
-import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.net.toUri
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.publicsuffixlist.ext.urlToTrimmedHost
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
+import java.io.IOException
 import java.net.IDN
-import java.net.MalformedURLException
-import java.net.URL
 import java.util.Locale
 
 const val FILE_PREFIX = "file://"
@@ -113,17 +116,23 @@ fun String.simplifiedUrl(): String {
 }
 
 /**
- * Gets a rounded drawable from a URL if possible, else null. Must be called off main thread.
+ * Gets a rounded drawable from a URL if possible, else null.
  */
-fun String.decodeUrlToRoundedDrawable(context: Context): RoundedBitmapDrawable? {
-    val avatarUrl = try {
-        URL(this)
-    } catch (e: MalformedURLException) {
-        return null
+suspend fun String.toRoundedDrawable(context: Context, client: Client) = bitmapForUrl(this, client)?.let { bitmap ->
+    RoundedBitmapDrawableFactory.create(context.resources, bitmap).also {
+        it.isCircular = true
+        it.setAntiAlias(true)
     }
-    val bitmap = BitmapFactory.decodeStream(avatarUrl.openConnection().getInputStream())
-    val roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.resources, bitmap)
-    roundedBitmapDrawable.isCircular = true
-    roundedBitmapDrawable.setAntiAlias(true)
-    return roundedBitmapDrawable
+}
+
+suspend fun bitmapForUrl(url: String, client: Client): Bitmap? = withContext(Dispatchers.IO) {
+    // TODO cache this image, see https://github.com/mozilla-mobile/fenix/issues/9531
+    // Code below will cache it in Gecko's cache, which ensures that as long as we've fetched it once,
+    // we will be able to display this avatar as long as the cache isn't purged (e.g. via 'clear user data').
+    val body = try {
+        client.fetch(Request(url, useCaches = true)).body
+    } catch (e: IOException) {
+        return@withContext null
+    }
+    body.useStream { BitmapFactory.decodeStream(it) }
 }
