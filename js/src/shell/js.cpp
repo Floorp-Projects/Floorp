@@ -1376,7 +1376,7 @@ static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
     return false;
   }
 
-  RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
+  RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   if (!script) {
     return false;
   }

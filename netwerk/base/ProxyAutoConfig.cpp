@@ -15,7 +15,7 @@
 #include "nsIURLParser.h"
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
-#include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate}
+#include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/ContextOptions.h"
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
@@ -749,7 +749,7 @@ nsresult ProxyAutoConfig::SetupJS() {
         return nullptr;
       }
 
-      return JS::CompileDontInflate(cx, options, srcBuf);
+      return JS::Compile(cx, options, srcBuf);
     }
 
     // nsReadableUtils.h says that "ASCII" is a misnomer "for legacy reasons",

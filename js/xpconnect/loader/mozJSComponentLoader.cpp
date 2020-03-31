@@ -861,7 +861,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
                       JS::SourceOwnership::Borrowed)) {
         script = reuseGlobal ? CompileForNonSyntacticScopeDontInflate(
                                    cx, options, srcBuf)
-                             : CompileDontInflate(cx, options, srcBuf);
+                             : Compile(cx, options, srcBuf);
       } else {
         MOZ_ASSERT(!script);
       }
@@ -874,7 +874,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
                       JS::SourceOwnership::Borrowed)) {
         script = reuseGlobal ? CompileForNonSyntacticScopeDontInflate(
                                    cx, options, srcBuf)
-                             : CompileDontInflate(cx, options, srcBuf);
+                             : Compile(cx, options, srcBuf);
       } else {
         MOZ_ASSERT(!script);
       }

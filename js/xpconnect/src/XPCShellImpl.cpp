@@ -692,7 +692,7 @@ static bool ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer,
     return false;
   }
 
-  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   if (!script) {
     return false;
   }

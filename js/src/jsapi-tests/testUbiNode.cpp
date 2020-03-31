@@ -5,7 +5,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/TestingFunctions.h"
-#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
+#include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "js/UbiNode.h"
 #include "js/UbiNodeDominatorTree.h"
@@ -98,7 +98,7 @@ BEGIN_TEST(test_ubiNodeZone) {
   JS::SourceText<mozilla::Utf8Unit> emptySrcBuf;
   CHECK(emptySrcBuf.init(cx, "", 0, JS::SourceOwnership::Borrowed));
 
-  RootedScript script1(cx, JS::CompileDontInflate(cx, options, emptySrcBuf));
+  RootedScript script1(cx, JS::Compile(cx, options, emptySrcBuf));
   CHECK(script1);
 
   {
@@ -109,7 +109,7 @@ BEGIN_TEST(test_ubiNodeZone) {
     RootedString string2(cx,
                          JS_NewStringCopyZ(cx, "A million household uses!"));
     CHECK(string2);
-    RootedScript script2(cx, JS::CompileDontInflate(cx, options, emptySrcBuf));
+    RootedScript script2(cx, JS::Compile(cx, options, emptySrcBuf));
     CHECK(script2);
 
     CHECK(JS::ubi::Node(string1).zone() == global1->zone());
@@ -147,7 +147,7 @@ BEGIN_TEST(test_ubiNodeCompartment) {
   CHECK(emptySrcBuf.init(cx, "", 0, JS::SourceOwnership::Borrowed));
 
   // Create a script in the original realm...
-  RootedScript script1(cx, JS::CompileDontInflate(cx, options, emptySrcBuf));
+  RootedScript script1(cx, JS::Compile(cx, options, emptySrcBuf));
   CHECK(script1);
 
   {
@@ -155,7 +155,7 @@ BEGIN_TEST(test_ubiNodeCompartment) {
     // there, too.
     JSAutoRealm ar(cx, global2);
 
-    RootedScript script2(cx, JS::CompileDontInflate(cx, options, emptySrcBuf));
+    RootedScript script2(cx, JS::Compile(cx, options, emptySrcBuf));
     CHECK(script2);
 
     CHECK(JS::ubi::Node(script1).compartment() == global1->compartment());

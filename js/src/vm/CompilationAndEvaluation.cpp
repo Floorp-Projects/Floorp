@@ -106,12 +106,6 @@ JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
                       SourceText<Utf8Unit>& srcBuf) {
-  return CompileUtf8Inflating(cx, options, srcBuf);
-}
-
-JSScript* JS::CompileDontInflate(JSContext* cx,
-                                 const ReadOnlyCompileOptions& options,
-                                 SourceText<Utf8Unit>& srcBuf) {
   return CompileSourceBuffer(cx, options, srcBuf);
 }
 
