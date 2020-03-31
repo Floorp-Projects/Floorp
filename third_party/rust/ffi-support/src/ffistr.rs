@@ -72,6 +72,10 @@ impl<'a> FfiStr<'a> {
     ///
     /// This should not be needed most of the time, and users should instead
     /// accept `FfiStr` in function parameter lists.
+    ///
+    /// # Safety
+    ///
+    /// Dereferences a pointer and is thus unsafe.
     #[inline]
     pub unsafe fn from_raw(ptr: *const c_char) -> Self {
         Self {

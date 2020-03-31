@@ -16,7 +16,7 @@ use super::{Bucketing, Histogram};
 /// i = ⌊n log<sub>base</sub>(𝑥)⌋
 ///
 /// In other words, there are n buckets for each power of `base` magnitude.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Functional {
     exponent: f64,
 }
