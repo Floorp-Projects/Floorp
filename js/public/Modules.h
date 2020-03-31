@@ -95,18 +95,10 @@ extern JS_PUBLIC_API JSObject* CompileModule(
 
 /**
  * Parse the given source buffer as a module in the scope of the current global
- * of cx and return a source text module record.
- *
- * The "DontInflate" suffix and (semantically unobservable) don't-inflate
- * characteristic are temporary while bugs in UTF-8 compilation are ironed out.
- * In the long term this function will be renamed |JS::CompileModule| and will
- * just never inflate.
- *
- * NOTE: UTF-8 compilation is currently experimental, and it's possible it has
- *       as-yet-undiscovered bugs that the UTF-16 compilation functions do not
- *       have.  Use only if you're willing to take a risk!
+ * of cx and return a source text module record.  An error is reported if a
+ * UTF-8 encoding error is encountered.
  */
-extern JS_PUBLIC_API JSObject* CompileModuleDontInflate(
+extern JS_PUBLIC_API JSObject* CompileModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<mozilla::Utf8Unit>& srcBuf);
 
