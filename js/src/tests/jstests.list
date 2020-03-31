@@ -56,11 +56,6 @@ skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/ListForma
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1611782
-skip-if(release_or_beta) script test262/intl402/RelativeTimeFormat/constructor/constructor/options-throwing-getters.js
-skip-if(release_or_beta) script test262/intl402/RelativeTimeFormat/constructor/constructor/options-order.js
-skip-if(release_or_beta) script test262/intl402/RelativeTimeFormat/constructor/constructor/options-numberingSystem-invalid.js
-
 
 #####################################
 # Test262 tests disabled on browser #
@@ -404,13 +399,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1560355
-skip-if(release_or_beta) skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
-skip-if(release_or_beta) skip script test262/intl402/DateTimeFormat/constructor-calendar-numberingSystem-order.js
-skip-if(release_or_beta) skip script test262/intl402/NumberFormat/numbering-system-options.js
-skip-if(release_or_beta) skip script test262/intl402/NumberFormat/constructor-numberingSystem-order.js
-skip-if(release_or_beta) skip script test262/intl402/NumberFormat/constructor-options-throwing-getters.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js

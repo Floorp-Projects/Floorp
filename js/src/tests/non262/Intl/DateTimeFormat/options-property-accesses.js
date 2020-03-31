@@ -23,7 +23,6 @@ var proxy = new Proxy({
 }));
 
 var fractionalSecondDigits = isNightly ? ["fractionalSecondDigits"] : [];
-var calendarAndNumberingSystem = isNightly ? ["calendar", "numberingSystem"] : [];
 
 var constructorAccesses = [
     // ToDateTimeOptions(options, "any", "date").
@@ -31,7 +30,7 @@ var constructorAccesses = [
     "hour", "minute", "second", ...fractionalSecondDigits,
 
     // InitializeDateTimeFormat
-    "localeMatcher", ...calendarAndNumberingSystem, "hour12", "hourCycle", "timeZone",
+    "localeMatcher", "calendar", "numberingSystem", "hour12", "hourCycle", "timeZone",
 
     // Table 5: Components of date and time formats
     "weekday", "era", "year", "month", "day", "hour", "minute", "second", "timeZoneName",
