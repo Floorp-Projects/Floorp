@@ -202,25 +202,6 @@ nsresult nsJSUtils::ExecutionContext::JoinCompile(
   return NS_OK;
 }
 
-static JSScript* CompileScript(
-    JSContext* aCx, JS::Handle<JS::StackGCVector<JSObject*>> aScopeChain,
-    JS::CompileOptions& aCompileOptions, JS::SourceText<char16_t>& aSrcBuf) {
-  return aScopeChain.length() == 0
-             ? JS::Compile(aCx, aCompileOptions, aSrcBuf)
-             : JS::CompileForNonSyntacticScope(aCx, aCompileOptions, aSrcBuf);
-}
-
-static JSScript* CompileScript(
-    JSContext* aCx, JS::Handle<JS::StackGCVector<JSObject*>> aScopeChain,
-    JS::CompileOptions& aCompileOptions, JS::SourceText<Utf8Unit>& aSrcBuf) {
-  // Once the UTF-8 overloads don't inflate, we can get rid of these two
-  // |CompileScript| overloads and just call the JSAPI directly in the one
-  // caller.
-  return aScopeChain.length() == 0 ? JS::Compile(aCx, aCompileOptions, aSrcBuf)
-                                   : JS::CompileForNonSyntacticScopeDontInflate(
-                                         aCx, aCompileOptions, aSrcBuf);
-}
-
 template <typename Unit>
 nsresult nsJSUtils::ExecutionContext::InternalCompile(
     JS::CompileOptions& aCompileOptions, JS::SourceText<Unit>& aSrcBuf) {
@@ -235,7 +216,10 @@ nsresult nsJSUtils::ExecutionContext::InternalCompile(
 #endif
 
   MOZ_ASSERT(!mScript);
-  mScript = CompileScript(mCx, mScopeChain, aCompileOptions, aSrcBuf);
+  mScript =
+      mScopeChain.length() == 0
+          ? JS::Compile(mCx, aCompileOptions, aSrcBuf)
+          : JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf);
   if (!mScript) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
