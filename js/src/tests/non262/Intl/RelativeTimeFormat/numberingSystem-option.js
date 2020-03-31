@@ -1,5 +1,3 @@
-// |reftest| skip-if(release_or_beta)
-
 const defaultLocale = "en";
 const defaultNumberingSystem = new Intl.RelativeTimeFormat(defaultLocale).resolvedOptions().numberingSystem;
 
