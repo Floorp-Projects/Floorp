@@ -64,8 +64,9 @@ already_AddRefed<ipc::SharedMemoryBasic> GetHyphDictFromParent(
   MOZ_ASSERT(!XRE_IsParentProcess());
   ipc::SharedMemoryBasic::Handle handle = ipc::SharedMemoryBasic::NULLHandle();
   uint32_t size;
-  MOZ_ASSERT(aURI);
-  if (!dom::ContentChild::GetSingleton()->SendGetHyphDict(aURI, &handle,
+  ipc::URIParams params;
+  SerializeURI(aURI, params);
+  if (!dom::ContentChild::GetSingleton()->SendGetHyphDict(params, &handle,
                                                           &size)) {
     return nullptr;
   }

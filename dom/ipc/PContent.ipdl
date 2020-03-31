@@ -54,6 +54,7 @@ include JavaScriptTypes;
 include IPCBlob;
 include IPCStream;
 include PTabContext;
+include URIParams;
 include PluginTypes;
 include ProtocolTypes;
 include PBackgroundSharedTypes;
@@ -190,10 +191,10 @@ union FileDescOrError {
 struct DomainPolicyClone
 {
     bool        active;
-    nsIURI[] blocklist;
-    nsIURI[] allowlist;
-    nsIURI[] superBlocklist;
-    nsIURI[] superAllowlist;
+    URIParams[] blocklist;
+    URIParams[] allowlist;
+    URIParams[] superBlocklist;
+    URIParams[] superAllowlist;
 };
 
 struct AndroidSystemInfo
@@ -281,7 +282,7 @@ struct XPCOMInitData
     nsString[] dictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    nsIURI userContentSheetURL;
+    URIParams? userContentSheetURL;
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
@@ -293,7 +294,7 @@ struct XPCOMInitData
 
 struct VisitedQueryResult
 {
-    nsIURI uri;
+    URIParams uri;
     bool visited;
 };
 
@@ -633,8 +634,8 @@ child:
     /**
      * Used to manage nsIStyleSheetService across processes.
      */
-    async LoadAndRegisterSheet(nsIURI uri, uint32_t type);
-    async UnregisterSheet(nsIURI uri, uint32_t type);
+    async LoadAndRegisterSheet(URIParams uri, uint32_t type);
+    async UnregisterSheet(URIParams uri, uint32_t type);
 
     /**
      * Notify idle observers in the child
@@ -647,7 +648,7 @@ child:
                          LayoutDeviceIntPoint aDragEndPoint,
                          uint32_t aKeyModifiers);
 
-    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
+    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, URIParams? aDomain);
 
     /**
      * Notify the child to shutdown. The child will in turn call FinishShutdown
@@ -890,11 +891,11 @@ parent:
 
     async InitCrashReporter(Shmem shmem, NativeThreadId tid);
 
-    sync IsSecureURI(uint32_t aType, nsIURI aURI, uint32_t aFlags,
+    sync IsSecureURI(uint32_t aType, URIParams aURI, uint32_t aFlags,
                      OriginAttributes aOriginAttributes)
         returns (bool isSecureURI);
 
-    async AccumulateMixedContentHSTS(nsIURI aURI, bool aActive,
+    async AccumulateMixedContentHSTS(URIParams aURI, bool aActive,
                                      OriginAttributes aOriginAttributes);
 
     nested(inside_cpow) async PHal();
@@ -922,9 +923,9 @@ parent:
     sync PURLClassifier(Principal principal)
         returns (bool success);
 
-    async PURLClassifierLocal(nsIURI uri, IPCURLClassifierFeature[] features);
+    async PURLClassifierLocal(URIParams uri, IPCURLClassifierFeature[] features);
 
-    async PLoginReputation(nsIURI formURI);
+    async PLoginReputation(URIParams formURI);
 
     async PSessionStorageObserver();
 
@@ -937,10 +938,10 @@ parent:
 
     // Services remoting
 
-    async StartVisitedQueries(nsIURI[] uri);
-    async SetURITitle(nsIURI uri, nsString title);
+    async StartVisitedQueries(URIParams[] uri);
+    async SetURITitle(URIParams uri, nsString title);
 
-    async LoadURIExternal(nsIURI uri, PBrowser windowContext);
+    async LoadURIExternal(URIParams uri, PBrowser windowContext);
     async ExtProtocolChannelConnectParent(uint32_t registrarId);
 
     // PrefService message
@@ -996,7 +997,7 @@ parent:
     // nsIMIMEInfo and other such influences.
     // Pass true for aShouldCloseWindow to specify that aContext was opened specifically
     // for this load, and should be closed once we've handled it.
-    async PExternalHelperApp(nsIURI uri,
+    async PExternalHelperApp(URIParams? uri,
                              LoadInfoArgs? loadInfoArgs,
                              nsCString aMimeContentType,
                              nsCString aContentDisposition,
@@ -1005,7 +1006,7 @@ parent:
                              bool aForceSave,
                              int64_t aContentLength,
                              bool aWasFileChannel,
-                             nsIURI aReferrer,
+                             URIParams? aReferrer,
                              MaybeDiscardedBrowsingContext aContext,
                              bool aShouldCloseWindow);
 
@@ -1045,7 +1046,7 @@ parent:
 
     // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
     // the content process.
-    async PlaySound(nsIURI aURL) compress;
+    async PlaySound(URIParams aURL) compress;
     async Beep() compress;
     async PlayEventSound(uint32_t aEventId) compress;
 
@@ -1064,11 +1065,11 @@ parent:
     async DeviceReset();
 
     sync KeywordToURI(nsCString keyword, bool isPrivateContext)
-        returns (nsString providerName, nsIInputStream postData, nsIURI uri);
+        returns (nsString providerName, nsIInputStream postData, URIParams? uri);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 
-    async CopyFavicon(nsIURI oldURI, nsIURI newURI, Principal aLoadingPrincipal, bool isPrivate);
+    async CopyFavicon(URIParams oldURI, URIParams newURI, Principal aLoadingPrincipal, bool isPrivate);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.
@@ -1133,7 +1134,7 @@ parent:
      * @param tabId
      *   To identify which tab owns the app.
      */
-    async POfflineCacheUpdate(nsIURI manifestURI, nsIURI documentURI,
+    async POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
                               PrincipalInfo loadingPrincipal, bool stickDocument,
                               CookieJarSettingsArgs cookieJarSettings);
 
@@ -1347,14 +1348,14 @@ parent:
      * @param aLoaded
      *   Returns the size in bytes of the resource.
      */
-    sync GetHyphDict(nsIURI aURI) returns (Handle aHandle, uint32_t aSize);
+    sync GetHyphDict(URIParams aURI) returns (Handle aHandle, uint32_t aSize);
 
     async CreateWindow(nullable PBrowser aThisTab,
                        PBrowser aNewTab,
                        uint32_t aChromeFlags,
                        bool aCalledFromJS,
                        bool aWidthSpecified,
-                       nsIURI aURIToLoad,
+                       URIParams? aURIToLoad,
                        nsCString aFeatures,
                        float aFullZoom,
                        Principal aTriggeringPrincipal,
@@ -1367,7 +1368,7 @@ parent:
       uint32_t aChromeFlags,
       bool aCalledFromJS,
       bool aWidthSpecified,
-      nsIURI aURIToLoad,
+      URIParams? aURIToLoad,
       nsCString aFeatures,
       float aFullZoom,
       nsString aName,

@@ -13,6 +13,10 @@
 
 namespace mozilla {
 
+namespace ipc {
+class URIParams;
+}  // namespace ipc
+
 enum DomainSetChangeType {
   ACTIVATE_POLICY,
   DEACTIVATE_POLICY,
@@ -36,7 +40,7 @@ class DomainSet final : public nsIDomainSet {
 
   explicit DomainSet(DomainSetType aType) : mType(aType) {}
 
-  void CloneSet(nsTArray<RefPtr<nsIURI>>* aDomains);
+  void CloneSet(nsTArray<mozilla::ipc::URIParams>* aDomains);
 
  protected:
   virtual ~DomainSet() {}
