@@ -300,6 +300,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   virtual void SetCorsPreflightParameters(
       const nsTArray<nsCString>& unsafeHeaders) override;
   virtual void SetAltDataForChild(bool aIsForChild) override;
+  virtual void DisableAltDataCache() override { mDisableAltDataCache = true; };
+
   NS_IMETHOD GetConnectionInfoHashKey(
       nsACString& aConnectionInfoHashKey) override;
   NS_IMETHOD GetIntegrityMetadata(nsAString& aIntegrityMetadata) override;
@@ -863,6 +865,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // This flag will be true if the consumer is requesting alt-data AND the
   // consumer is in the child process.
   bool mAltDataForChild;
+
+  // This flag will be true if the consumer cannot process alt-data.  This
+  // is used in the webextension StreamFilter handler.  If true, we bypass
+  // using alt-data for the request.
+  bool mDisableAltDataCache;
 
   bool mForceMainDocumentChannel;
   // This is set true if the channel is waiting for the
