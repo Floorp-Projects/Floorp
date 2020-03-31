@@ -130,4 +130,10 @@ class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTest
     override fun getThrowsIOExceptionWhenHostNotReachable() {
         super.getThrowsIOExceptionWhenHostNotReachable()
     }
+
+    @Test
+    @UiThreadTest
+    override fun getDataUri() {
+        super.getDataUri()
+    }
 }

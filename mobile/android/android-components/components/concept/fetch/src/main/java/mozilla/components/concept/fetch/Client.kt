@@ -4,6 +4,10 @@
 
 package mozilla.components.concept.fetch
 
+import android.util.Base64
+import mozilla.components.concept.fetch.Response.Companion.CONTENT_LENGTH_HEADER
+import mozilla.components.concept.fetch.Response.Companion.CONTENT_TYPE_HEADER
+import java.io.ByteArrayInputStream
 import java.io.IOException
 
 /**
@@ -41,6 +45,44 @@ abstract class Client {
     abstract fun fetch(request: Request): Response
 
     /**
+     * Generates a [Response] by decoding a base64 encoded data URI.
+     *
+     * @param request The [Request] for the data URI.
+     * @return The generated [Response] including the decoded bytes as body.
+     */
+    @Suppress("ThrowsCount", "TooGenericExceptionCaught")
+    protected fun fetchDataUri(request: Request): Response {
+        if (!request.isDataUri()) {
+            throw IOException("Not a data URI")
+        }
+
+        val dataUri = request.url
+        if (!dataUri.contains(DATA_URI_BASE64_EXT)) {
+            throw IOException("Data URI must be base64 encoded")
+        }
+
+        return try {
+            val contentType = dataUri.substringAfter(DATA_URI_SCHEME).substringBefore(DATA_URI_BASE64_EXT)
+            val bytes = Base64.decode(dataUri.substring(dataUri.lastIndexOf(',') + 1), Base64.DEFAULT)
+            val headers = MutableHeaders().apply {
+                set(CONTENT_LENGTH_HEADER, bytes.size.toString())
+                if (contentType.isNotEmpty()) {
+                    set(CONTENT_TYPE_HEADER, contentType)
+                }
+            }
+
+            Response(
+                dataUri,
+                Response.SUCCESS,
+                headers,
+                Response.Body(ByteArrayInputStream(bytes), contentType)
+            )
+        } catch (e: Exception) {
+            throw IOException("Failed to decode data URI")
+        }
+    }
+
+    /**
      * List of default headers that should be added to every request unless overridden by the headers in the request.
      */
     protected val defaultHeaders: Headers = MutableHeaders(
@@ -61,4 +103,9 @@ abstract class Client {
         // We expect all clients to support and use keep-alive by default.
         "Connection" to "keep-alive"
     )
+
+    companion object {
+        const val DATA_URI_BASE64_EXT = ";base64"
+        const val DATA_URI_SCHEME = "data:"
+    }
 }

@@ -149,3 +149,8 @@ data class Request(
         OMIT
     }
 }
+
+/**
+ * Checks whether or not the request is for a data URI.
+ */
+fun Request.isDataUri() = url.startsWith("data:")
