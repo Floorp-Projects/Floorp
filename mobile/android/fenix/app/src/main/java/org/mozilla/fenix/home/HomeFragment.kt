@@ -42,19 +42,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_home.homeAppBar
-import kotlinx.android.synthetic.main.fragment_home.privateBrowsingButton
-import kotlinx.android.synthetic.main.fragment_home.search_engine_icon
-import kotlinx.android.synthetic.main.fragment_home.toolbarLayout
-import kotlinx.android.synthetic.main.fragment_home.view.add_tab_button
-import kotlinx.android.synthetic.main.fragment_home.view.bottomBarShadow
-import kotlinx.android.synthetic.main.fragment_home.view.bottom_bar
-import kotlinx.android.synthetic.main.fragment_home.view.homeAppBar
-import kotlinx.android.synthetic.main.fragment_home.view.menuButton
-import kotlinx.android.synthetic.main.fragment_home.view.sessionControlRecyclerView
-import kotlinx.android.synthetic.main.fragment_home.view.toolbar
-import kotlinx.android.synthetic.main.fragment_home.view.toolbarLayout
-import kotlinx.android.synthetic.main.fragment_home.view.toolbar_wrapper
+import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -689,6 +678,8 @@ class HomeFragment : Fragment() {
     private fun subscribeToTopSites(): Observer<List<TopSite>> {
         return Observer<List<TopSite>> { topSites ->
             requireComponents.core.topSiteStorage.cachedTopSites = topSites
+            context?.settings()?.preferences?.edit()
+                ?.putInt(getString(R.string.pref_key_top_sites_size), topSites.size)?.apply()
             homeFragmentStore.dispatch(HomeFragmentAction.TopSitesChange(topSites))
         }.also { observer ->
             requireComponents.core.topSiteStorage.getTopSites().observe(this, observer)

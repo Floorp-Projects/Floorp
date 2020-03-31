@@ -609,4 +609,9 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_override_sync_tokenserver),
         default = ""
     )
+
+    val topSitesSize by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_top_sites_size),
+        default = 0
+    )
 }

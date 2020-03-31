@@ -295,6 +295,34 @@ metrics:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-09-01"
+  top_sites_count:
+    type: counter
+    lifetime: application
+    description: >
+      A counter that indicates how many top sites a user has
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8125
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9556
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  has_top_sites:
+    type: boolean
+    lifetime: application
+    description: >
+      A boolean that indicates if the user has top sites
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8125
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/9556
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
   search_count:
     type: labeled_counter
     description: >
