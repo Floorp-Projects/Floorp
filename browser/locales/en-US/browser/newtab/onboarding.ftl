@@ -142,6 +142,10 @@ onboarding-import-browser-settings-title = Import Your Bookmarks, Passwords, and
 onboarding-import-browser-settings-text = Dive right in—easily bring your Chrome sites and settings with you.
 onboarding-import-browser-settings-button = Import Chrome Data
 
+onboarding-personal-data-promise-title = Private by Design
+onboarding-personal-data-promise-text = { -brand-product-name } treats your data with respect by taking less of it, protecting it, and being clear about how we use it.
+onboarding-personal-data-promise-button = Read our Promise
+
 ## Message strings belonging to the Return to AMO flow
 
 return-to-amo-sub-header = Great, you’ve got { -brand-short-name }

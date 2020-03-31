@@ -183,7 +183,7 @@ const ONBOARDING_MESSAGES = () => [
     id: "TRAILHEAD_CARD_1",
     template: "onboarding",
     bundled: 3,
-    order: 2,
+    order: 3,
     content: {
       title: { string_id: "onboarding-tracking-protection-title2" },
       text: { string_id: "onboarding-tracking-protection-text2" },
@@ -253,7 +253,7 @@ const ONBOARDING_MESSAGES = () => [
     },
     // Use service oauth client_id to identify 'Firefox Monitor' service attached to Firefox Account
     // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
-    targeting: `(trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_OAUTH_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))) && isChinaRepack == false`,
+    targeting: `(trailheadTriplet in ['supercharge', 'static', 'privacy'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_OAUTH_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))) && isChinaRepack == false`,
     trigger: { id: "showOnboarding" },
   },
   {
@@ -423,6 +423,29 @@ const ONBOARDING_MESSAGES = () => [
       },
     },
     targeting: "trailheadTriplet == 'dynamic_chrome'",
+    trigger: { id: "showOnboarding" },
+  },
+  {
+    id: "TRAILHEAD_CARD_12",
+    template: "onboarding",
+    bundled: 3,
+    order: 1,
+    content: {
+      title: { string_id: "onboarding-personal-data-promise-title" },
+      text: { string_id: "onboarding-personal-data-promise-text" },
+      icon: "pledge",
+      primary_button: {
+        label: { string_id: "onboarding-personal-data-promise-button" },
+        action: {
+          type: "OPEN_URL",
+          data: {
+            args: "https://www.mozilla.org/firefox/privacy/",
+            where: "tabshifted",
+          },
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'privacy'",
     trigger: { id: "showOnboarding" },
   },
   {
