@@ -40,6 +40,9 @@ permalink: /changelog/
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Fixed a memory leak when using a `SelectionActionDelegate` on `GeckoEngineView`.
 
+* **feature-share**
+  * Added `RecentAppsStorage.deleteRecentApp` and `RecentAppsDao.deleteRecentApp` to allow deleting a `RecentAppEntity`
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)
