@@ -141,7 +141,7 @@ with only_when(host_is_osx | target_is_osx):
     @imports(_from='biplist', _import='readPlist')
     def macos_sdk(sdk, host):
         sdk_min_version = Version('10.11')
-        sdk_max_version = Version('10.15')
+        sdk_max_version = Version('10.15.4')
 
         if sdk:
             sdk = sdk[0]
