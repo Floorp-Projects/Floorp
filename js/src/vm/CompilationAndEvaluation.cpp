@@ -153,19 +153,6 @@ JSScript* JS::CompileUtf8Path(JSContext* cx,
 
   CompileOptions options(cx, optionsArg);
   options.setFileAndLine(filename, 1);
-  return CompileUtf8File(cx, options, file.fp());
-}
-
-JSScript* JS::CompileUtf8PathDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-    const char* filename) {
-  AutoFile file;
-  if (!file.open(cx, filename)) {
-    return nullptr;
-  }
-
-  CompileOptions options(cx, optionsArg);
-  options.setFileAndLine(filename, 1);
   return CompileUtf8FileDontInflate(cx, options, file.fp());
 }
 
