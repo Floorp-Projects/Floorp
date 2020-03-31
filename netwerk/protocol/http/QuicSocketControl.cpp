@@ -48,8 +48,8 @@ QuicSocketControl::GetSSLVersionOffered(int16_t* aSSLVersionOffered) {
 }
 
 void QuicSocketControl::CallAuthenticated() {
-  if (mHttp3Session) {
-    RefPtr<Http3Session> http3Session = do_QueryReferent(mHttp3Session);
+  RefPtr<Http3Session> http3Session = do_QueryReferent(mHttp3Session);
+  if (http3Session) {
     http3Session->Authenticated(GetErrorCode());
   }
   mHttp3Session = nullptr;
