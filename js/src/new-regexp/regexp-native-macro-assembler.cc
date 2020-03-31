@@ -25,6 +25,7 @@ using js::jit::GeneralRegisterSet;
 using js::jit::Imm32;
 using js::jit::ImmPtr;
 using js::jit::ImmWord;
+using js::jit::LiveGeneralRegisterSet;
 using js::jit::Register;
 using js::jit::StackMacroAssembler;
 
@@ -226,6 +227,205 @@ void SMRegExpMacroAssembler::CheckBitInTable(Handle<ByteArray> table,
 
   // Transfer ownership of |rawTable| to the |tables_| vector.
   AddTable(std::move(rawTable));
+}
+
+void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
+                                                       bool read_backward,
+                                                       Label* on_no_match,
+                                                       bool ignore_case) {
+  js::jit::Label fallthrough;
+
+  // Captures are stored as a sequential pair of registers.
+  // Find the length of the back-referenced capture and load the
+  // capture's start index into current_character_.
+  masm_.loadPtr(register_location(start_reg),               // index of start
+                current_character_);
+  masm_.loadPtr(register_location(start_reg + 1), temp0_);  // index of end
+  masm_.subPtr(current_character_, temp0_);                 // length of capture
+
+  // Capture registers are either both set or both cleared.
+  // If the capture length is zero, then the capture is either empty or cleared.
+  // Fall through in both cases.
+  masm_.branchPtr(Assembler::Equal, temp0_, ImmWord(0), &fallthrough);
+
+  // Check that there are sufficient characters left in the input.
+  if (read_backward) {
+    // If start + len > current, there isn't enough room for a
+    // lookbehind backreference.
+    masm_.loadPtr(inputStart(), temp1_);
+    masm_.addPtr(temp0_, temp1_);
+    masm_.branchPtr(Assembler::GreaterThan, temp1_, current_position_,
+                    LabelOrBacktrack(on_no_match));
+  } else {
+    // current_position_ is the negative offset from the end.
+    // If current + len > 0, there isn't enough room for a backreference.
+    masm_.movePtr(current_position_, temp1_);
+    masm_.addPtr(temp0_, temp1_);
+    masm_.branchPtr(Assembler::GreaterThan, temp1_, ImmWord(0),
+                    LabelOrBacktrack(on_no_match));
+  }
+
+  if (mode_ == UC16 && ignore_case) {
+    // We call a helper function for case-insensitive non-latin1 strings.
+
+    // Save volatile regs. temp1_ and temp2_ don't need to be saved.
+    LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
+    volatileRegs.takeUnchecked(temp1_);
+    volatileRegs.takeUnchecked(temp2_);
+    masm_.PushRegsInMask(volatileRegs);
+
+    // Parameters are
+    //   Address captured - Address of captured substring's start.
+    //   Address current - Address of current character position.
+    //   size_t byte_length - length of capture (in bytes)
+
+    // Compute |captured|
+    masm_.addPtr(input_end_pointer_, current_character_);
+
+    // Compute |current|
+    masm_.addPtr(input_end_pointer_, current_position_);
+    if (read_backward) {
+      // Offset by length when matching backwards.
+      masm_.subPtr(temp0_, current_position_);
+    }
+
+    masm_.setupUnalignedABICall(temp1_);
+    masm_.passABIArg(current_character_);
+    masm_.passABIArg(current_position_);
+    masm_.passABIArg(temp0_);
+
+    bool unicode = true; // TODO: Fix V8 bug
+    if (unicode) {
+      uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
+          CaseInsensitiveCompareUCStrings;
+      masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+    } else {
+      uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
+          CaseInsensitiveCompareStrings;
+      masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+    }
+    masm_.storeCallInt32Result(temp1_);
+    masm_.PopRegsInMask(volatileRegs);
+    masm_.branchTest32(Assembler::Zero, temp1_, temp1_,
+                       LabelOrBacktrack(on_no_match));
+
+    // On success, advance position by length of capture
+    if (read_backward) {
+      masm_.subPtr(temp0_, current_position_);
+    } else {
+      masm_.addPtr(temp0_, current_position_);
+    }
+
+    masm_.bind(&fallthrough);
+    return;
+  }
+
+  // We will be modifying current_position_. Save it in case the match fails.
+  masm_.push(current_position_);
+
+  // Compute start of capture string
+  masm_.addPtr(input_end_pointer_, current_character_);
+
+  // Compute start of match string
+  masm_.addPtr(input_end_pointer_, current_position_);
+  if (read_backward) {
+    // Offset by length when matching backwards.
+    masm_.subPtr(temp0_, current_position_);
+  }
+
+  // Compute end of match string
+  masm_.addPtr(current_position_, temp0_);
+
+  js::jit::Label success;
+  js::jit::Label fail;
+  js::jit::Label loop;
+  masm_.bind(&loop);
+
+  // Load next character from each string.
+  if (mode_ == LATIN1) {
+    masm_.load8ZeroExtend(Address(current_character_, 0), temp1_);
+    masm_.load8ZeroExtend(Address(current_position_, 0), temp2_);
+  } else {
+    masm_.load16ZeroExtend(Address(current_character_, 0), temp1_);
+    masm_.load16ZeroExtend(Address(current_position_, 0), temp2_);
+  }
+
+  if (ignore_case) {
+    MOZ_ASSERT(mode_ == LATIN1);
+    // Try exact match.
+    js::jit::Label loop_increment;
+    masm_.branch32(Assembler::Equal, temp1_, temp2_, &loop_increment);
+
+    // Mismatch. Try case-insensitive match.
+    // Force the match character to lower case (by setting bit 0x20)
+    // then check to see if it is a letter.
+    js::jit::Label convert_capture;
+    masm_.or32(Imm32(0x20), temp1_);
+
+    // Check if it is in [a,z].
+    masm_.computeEffectiveAddress(Address(temp1_, -'a'), temp2_);
+    masm_.branch32(Assembler::BelowOrEqual, temp2_, Imm32('z' - 'a'),
+                   &convert_capture);
+    // Check for values in range [224,254].
+    // Exclude 247 (U+00F7 DIVISION SIGN).
+    masm_.sub32(Imm32(224 - 'a'), temp2_);
+    masm_.branch32(Assembler::Above, temp2_, Imm32(254 - 224), &fail);
+    masm_.branch32(Assembler::Equal, temp2_, Imm32(247 - 224), &fail);
+
+    // Match character is lower case. Convert capture character
+    // to lower case and compare.
+    masm_.bind(&convert_capture);
+    masm_.load8ZeroExtend(Address(current_character_, 0), temp2_);
+    masm_.or32(Imm32(0x20), temp2_);
+    masm_.branch32(Assembler::NotEqual, temp1_, temp2_, &fail);
+
+    masm_.bind(&loop_increment);
+  } else {
+    // Fail if characters do not match.
+    masm_.branch32(Assembler::NotEqual, temp1_, temp2_, &fail);
+  }
+
+  // Increment pointers into match and capture strings.
+  masm_.addPtr(Imm32(char_size()), current_character_);
+  masm_.addPtr(Imm32(char_size()), current_position_);
+
+  // Loop if we have not reached the end of the match string.
+  masm_.branchPtr(Assembler::Below, current_position_, temp0_, &loop);
+  masm_.jump(&success);
+
+  // If we fail, restore current_position_ and branch.
+  masm_.bind(&fail);
+  masm_.pop(current_position_);
+  JumpOrBacktrack(on_no_match);
+
+  masm_.bind(&success);
+
+  // current_position_ is a pointer. Convert it back to an offset.
+  masm_.subPtr(input_end_pointer_, current_position_);
+  if (read_backward) {
+    // Subtract match length if we matched backward
+    masm_.addPtr(register_location(start_reg), current_position_);
+    masm_.subPtr(register_location(start_reg + 1), current_position_);
+  }
+
+  // Drop saved value of current_position_
+  masm_.addToStackPtr(Imm32(sizeof(uintptr_t)));
+
+  masm_.bind(&fallthrough);
+}
+
+// Branch if a back-reference does not match a previous capture.
+void SMRegExpMacroAssembler::CheckNotBackReference(int start_reg,
+                                                   bool read_backward,
+                                                   Label* on_no_match) {
+  CheckNotBackReferenceImpl(start_reg, read_backward, on_no_match,
+                            /*ignore_case = */ false);
+}
+
+void SMRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(
+    int start_reg, bool read_backward, Label* on_no_match) {
+  CheckNotBackReferenceImpl(start_reg, read_backward, on_no_match,
+                            /*ignore_case = */ true);
 }
 
 // Checks whether the given offset from the current position is
@@ -610,5 +810,52 @@ RegExpMacroAssembler::IrregexpImplementation
 SMRegExpMacroAssembler::Implementation() {
   return kBytecodeImplementation;
 }
+
+/*static */
+uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareStrings(
+    const char16_t* substring1, const char16_t* substring2, size_t byteLength) {
+  js::AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(byteLength % sizeof(char16_t) == 0);
+  size_t length = byteLength / sizeof(char16_t);
+
+  for (size_t i = 0; i < length; i++) {
+    char16_t c1 = substring1[i];
+    char16_t c2 = substring2[i];
+    if (c1 != c2) {
+      c1 = js::unicode::ToUpperCase(c1);
+      c2 = js::unicode::ToUpperCase(c2);
+      if (c1 != c2) {
+        return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+
+/*static */
+uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareUCStrings(
+    const char16_t* substring1, const char16_t* substring2, size_t byteLength) {
+  js::AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(byteLength % sizeof(char16_t) == 0);
+  size_t length = byteLength / sizeof(char16_t);
+
+  for (size_t i = 0; i < length; i++) {
+    char16_t c1 = substring1[i];
+    char16_t c2 = substring2[i];
+    if (c1 != c2) {
+      c1 = js::unicode::FoldCase(c1);
+      c2 = js::unicode::FoldCase(c2);
+      if (c1 != c2) {
+        return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+
 }  // namespace internal
 }  // namespace v8
