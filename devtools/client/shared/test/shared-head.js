@@ -166,7 +166,7 @@ async function getTestActor(toolbox) {
 // create a front for the given `tab`
 async function getTestActorWithoutToolbox(tab) {
   const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+  const { DevToolsClient } = require("devtools/client/devtools-client");
 
   // We need to spawn a client instance,
   // but for that we have to first ensure a server is running

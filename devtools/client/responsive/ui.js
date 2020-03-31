@@ -16,7 +16,7 @@ const { TargetList } = require("devtools/shared/resources/target-list");
 loader.lazyRequireGetter(
   this,
   "DevToolsClient",
-  "devtools/shared/client/devtools-client",
+  "devtools/client/devtools-client",
   true
 );
 loader.lazyRequireGetter(

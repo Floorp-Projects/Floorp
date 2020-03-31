@@ -14,7 +14,7 @@ loader.require("devtools/client/framework/devtools-browser");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
-var { DevToolsClient } = require("devtools/shared/client/devtools-client");
+var { DevToolsClient } = require("devtools/client/devtools-client");
 var { PrefsHelper } = require("devtools/client/shared/prefs");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { LocalizationHelper } = require("devtools/shared/l10n");

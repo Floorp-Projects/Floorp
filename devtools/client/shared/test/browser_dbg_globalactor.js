@@ -9,7 +9,7 @@
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
-var { DevToolsClient } = require("devtools/shared/client/devtools-client");
+var { DevToolsClient } = require("devtools/client/devtools-client");
 
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
 

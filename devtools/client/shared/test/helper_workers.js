@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 );
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/shared/client/devtools-client");
+var { DevToolsClient } = require("devtools/client/devtools-client");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 

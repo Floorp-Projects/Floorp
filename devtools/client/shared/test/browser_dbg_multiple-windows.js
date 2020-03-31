@@ -9,7 +9,7 @@
  */
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/shared/client/devtools-client");
+var { DevToolsClient } = require("devtools/client/devtools-client");
 
 const TAB1_URL = "data:text/html;charset=utf-8,first-tab";
 const TAB2_URL = "data:text/html;charset=utf-8,second-tab";

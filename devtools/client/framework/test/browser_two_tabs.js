@@ -6,7 +6,7 @@
  */
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
-var { DevToolsClient } = require("devtools/shared/client/devtools-client");
+var { DevToolsClient } = require("devtools/client/devtools-client");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";

@@ -38,7 +38,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "DevToolsClient",
-  "devtools/shared/client/devtools-client",
+  "devtools/client/devtools-client",
   true
 );
 loader.lazyRequireGetter(

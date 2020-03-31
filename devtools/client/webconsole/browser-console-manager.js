@@ -14,7 +14,7 @@ loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(
   this,
   "DevToolsClient",
-  "devtools/shared/client/devtools-client",
+  "devtools/client/devtools-client",
   true
 );
 loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/l10n");

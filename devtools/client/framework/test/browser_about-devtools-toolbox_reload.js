@@ -55,7 +55,7 @@ add_task(async function() {
 });
 
 async function createLocalClient() {
-  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+  const { DevToolsClient } = require("devtools/client/devtools-client");
   const { DevToolsServer } = require("devtools/server/devtools-server");
   DevToolsServer.init();
   DevToolsServer.registerAllActors();

@@ -10,9 +10,7 @@ const {
   callFunctionWithAsyncStack,
 } = require("devtools/shared/platform/stack");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {
-  UnsolicitedNotifications,
-} = require("devtools/shared/client/constants");
+const { UnsolicitedNotifications } = require("devtools/client/constants");
 
 loader.lazyRequireGetter(
   this,

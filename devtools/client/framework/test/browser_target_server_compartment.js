@@ -84,7 +84,7 @@ async function testMainProcess() {
   const { DevToolsServer } = customLoader.require(
     "devtools/server/devtools-server"
   );
-  const { DevToolsClient } = require("devtools/shared/client/devtools-client");
+  const { DevToolsClient } = require("devtools/client/devtools-client");
 
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
