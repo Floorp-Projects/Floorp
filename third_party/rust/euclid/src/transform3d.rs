@@ -93,7 +93,7 @@ impl<'de, T, Src, Dst> serde::Deserialize<'de> for Transform3D<T, Src, Dst>
             m21, m22, m23, m24,
             m31, m32, m33, m34,
             m41, m42, m43, m44,
-        ) = serde::Deserialize::deserialize(deserializer)?;
+        ) = try!(serde::Deserialize::deserialize(deserializer));
         Ok(Transform3D {
             m11, m12, m13, m14,
             m21, m22, m23, m24,
@@ -179,7 +179,7 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// is `T * v`), then please use `column_major`
     #[inline]
     #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
-    pub const fn row_major(
+    pub fn row_major(
             m11: T, m12: T, m13: T, m14: T,
             m21: T, m22: T, m23: T, m24: T,
             m31: T, m32: T, m33: T, m34: T,
@@ -204,7 +204,7 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// is `T * v`), then please use `row_major`
     #[inline]
     #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
-    pub const fn column_major(
+    pub fn column_major(
             m11: T, m21: T, m31: T, m41: T,
             m12: T, m22: T, m32: T, m42: T,
             m13: T, m23: T, m33: T, m43: T,
@@ -221,7 +221,7 @@ impl<T, Src, Dst> Transform3D<T, Src, Dst> {
 }
 
 impl <T, Src, Dst> Transform3D<T, Src, Dst>
-where T: Copy +
+where T: Copy + Clone +
          PartialEq +
          One + Zero {
     #[inline]
@@ -245,7 +245,7 @@ where T: Copy +
 }
 
 impl <T, Src, Dst> Transform3D<T, Src, Dst>
-where T: Copy +
+where T: Copy + Clone +
          Add<T, Output=T> +
          Sub<T, Output=T> +
          Mul<T, Output=T> +
@@ -323,28 +323,16 @@ where T: Copy +
         (m33 * det) < _0
     }
 
-    /// Returns true is this transform is approximately equal to the other one, using
-    /// T's default epsilon value.
-    ///
-    /// The same as [`ApproxEq::approx_eq()`] but available without importing trait.
-    ///
-    /// [`ApproxEq::approx_eq()`]: ./approxeq/trait.ApproxEq.html#method.approx_eq
-    #[inline]
     pub fn approx_eq(&self, other: &Self) -> bool
     where T : ApproxEq<T> {
-        <Self as ApproxEq<T>>::approx_eq(&self, &other)
-    }
-
-    /// Returns true is this transform is approximately equal to the other one, using
-    /// a provided epsilon value.
-    ///
-    /// The same as [`ApproxEq::approx_eq_eps()`] but available without importing trait.
-    ///
-    /// [`ApproxEq::approx_eq_eps()`]: ./approxeq/trait.ApproxEq.html#method.approx_eq_eps
-    #[inline]
-    pub fn approx_eq_eps(&self, other: &Self, eps: &T) -> bool
-    where T : ApproxEq<T> {
-        <Self as ApproxEq<T>>::approx_eq_eps(&self, &other, &eps)
+        self.m11.approx_eq(&other.m11) && self.m12.approx_eq(&other.m12) &&
+        self.m13.approx_eq(&other.m13) && self.m14.approx_eq(&other.m14) &&
+        self.m21.approx_eq(&other.m21) && self.m22.approx_eq(&other.m22) &&
+        self.m23.approx_eq(&other.m23) && self.m24.approx_eq(&other.m24) &&
+        self.m31.approx_eq(&other.m31) && self.m32.approx_eq(&other.m32) &&
+        self.m33.approx_eq(&other.m33) && self.m34.approx_eq(&other.m34) &&
+        self.m41.approx_eq(&other.m41) && self.m42.approx_eq(&other.m42) &&
+        self.m43.approx_eq(&other.m43) && self.m44.approx_eq(&other.m44)
     }
 
     /// Returns the same transform with a different destination unit.
@@ -425,12 +413,6 @@ where T: Copy +
     #[must_use]
     pub fn pre_transform<NewSrc>(&self, mat: &Transform3D<T, NewSrc, Src>) -> Transform3D<T, NewSrc, Dst> {
         mat.post_transform(self)
-    }
-
-    /// Returns whether it is possible to compute the inverse transform.
-    #[inline]
-    pub fn is_invertible(&self) -> bool {
-        self.determinant() != Zero::zero()
     }
 
     /// Returns the inverse transform if possible.
@@ -736,9 +718,9 @@ where T: Copy +
     #[must_use]
     pub fn pre_scale(&self, x: T, y: T, z: T) -> Self {
         Transform3D::row_major(
-            self.m11 * x, self.m12 * x, self.m13 * x, self.m14 * x,
-            self.m21 * y, self.m22 * y, self.m23 * y, self.m24 * y,
-            self.m31 * z, self.m32 * z, self.m33 * z, self.m34 * z,
+            self.m11 * x, self.m12,     self.m13,     self.m14,
+            self.m21    , self.m22 * y, self.m23,     self.m24,
+            self.m31    , self.m32,     self.m33 * z, self.m34,
             self.m41    , self.m42,     self.m43,     self.m44
         )
     }
@@ -831,7 +813,6 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Beware: This library is written with the assumption that row vectors
     /// are being used. If your matrices use column vectors (i.e. transforming a vector
     /// is `T * v`), then please use `to_column_major_array`
-    #[inline]
     pub fn to_row_major_array(&self) -> [T; 16] {
         [
             self.m11, self.m12, self.m13, self.m14,
@@ -846,7 +827,6 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Beware: This library is written with the assumption that row vectors
     /// are being used. If your matrices use column vectors (i.e. transforming a vector
     /// is `T * v`), then please use `to_row_major_array`
-    #[inline]
     pub fn to_column_major_array(&self) -> [T; 16] {
         [
             self.m11, self.m21, self.m31, self.m41,
@@ -864,7 +844,6 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Beware: This library is written with the assumption that row vectors
     /// are being used. If your matrices use column vectors (i.e. transforming a vector
     /// is `T * v`), then please use `to_column_arrays`
-    #[inline]
     pub fn to_row_arrays(&self) -> [[T; 4]; 4] {
         [
             [self.m11, self.m12, self.m13, self.m14],
@@ -882,7 +861,6 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Beware: This library is written with the assumption that row vectors
     /// are being used. If your matrices use column vectors (i.e. transforming a vector
     /// is `T * v`), then please use `to_row_arrays`
-    #[inline]
     pub fn to_column_arrays(&self) -> [[T; 4]; 4] {
         [
             [self.m11, self.m21, self.m31, self.m41],
@@ -897,7 +875,6 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Beware: This library is written with the assumption that row vectors
     /// are being used. If your matrices use column vectors (i.e. transforming a vector
     /// is `T * v`), please provide column-major data to this function.
-    #[inline]
     pub fn from_array(array: [T; 16]) -> Self {
         Self::row_major(
             array[0],  array[1],  array[2],  array[3],
@@ -912,7 +889,6 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Beware: This library is written with the assumption that row vectors
     /// are being used. If your matrices use column vectors (i.e. transforming a vector
     /// is `T * v`), please provide column-major data to tis function.
-    #[inline]
     pub fn from_row_arrays(array: [[T; 4]; 4]) -> Self {
         Self::row_major(
             array[0][0], array[0][1], array[0][2], array[0][3],
@@ -923,15 +899,14 @@ impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     }
 }
 
-impl<T: NumCast + Copy, Src, Dst> Transform3D<T, Src, Dst> {
+impl<T0: NumCast + Copy, Src, Dst> Transform3D<T0, Src, Dst> {
     /// Cast from one numeric representation to another, preserving the units.
-    #[inline]
-    pub fn cast<NewT: NumCast>(&self) -> Transform3D<NewT, Src, Dst> {
+    pub fn cast<T1: NumCast + Copy>(&self) -> Transform3D<T1, Src, Dst> {
         self.try_cast().unwrap()
     }
 
     /// Fallible cast from one numeric representation to another, preserving the units.
-    pub fn try_cast<NewT: NumCast>(&self) -> Option<Transform3D<NewT, Src, Dst>> {
+    pub fn try_cast<T1: NumCast + Copy>(&self) -> Option<Transform3D<T1, Src, Dst>> {
         match (NumCast::from(self.m11), NumCast::from(self.m12),
                NumCast::from(self.m13), NumCast::from(self.m14),
                NumCast::from(self.m21), NumCast::from(self.m22),
@@ -951,22 +926,6 @@ impl<T: NumCast + Copy, Src, Dst> Transform3D<T, Src, Dst> {
             },
             _ => None
         }
-    }
-}
-
-impl<T: ApproxEq<T>, Src, Dst> ApproxEq<T> for Transform3D<T, Src, Dst> {
-    #[inline]
-    fn approx_epsilon() -> T { T::approx_epsilon() }
-
-    fn approx_eq_eps(&self, other: &Self, eps: &T) -> bool {
-        self.m11.approx_eq_eps(&other.m11, eps) && self.m12.approx_eq_eps(&other.m12, eps) &&
-        self.m13.approx_eq_eps(&other.m13, eps) && self.m14.approx_eq_eps(&other.m14, eps) &&
-        self.m21.approx_eq_eps(&other.m21, eps) && self.m22.approx_eq_eps(&other.m22, eps) &&
-        self.m23.approx_eq_eps(&other.m23, eps) && self.m24.approx_eq_eps(&other.m24, eps) &&
-        self.m31.approx_eq_eps(&other.m31, eps) && self.m32.approx_eq_eps(&other.m32, eps) &&
-        self.m33.approx_eq_eps(&other.m33, eps) && self.m34.approx_eq_eps(&other.m34, eps) &&
-        self.m41.approx_eq_eps(&other.m41, eps) && self.m42.approx_eq_eps(&other.m42, eps) &&
-        self.m43.approx_eq_eps(&other.m43, eps) && self.m44.approx_eq_eps(&other.m44, eps)
     }
 }
 
@@ -1080,16 +1039,6 @@ mod tests {
         assert!(!s1.is_2d());
         assert_eq!(Mf32::create_scale(2.0, 3.0, 0.0).to_2d(), Transform2D::create_scale(2.0, 3.0));
     }
-
-
-    #[test]
-    pub fn test_pre_post_scale() {
-        let m = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2)).post_translate(vec3(6.0, 7.0, 8.0));
-        let s = Mf32::create_scale(2.0, 3.0, 4.0);
-        assert_eq!(m.post_transform(&s), m.post_scale(2.0, 3.0, 4.0));
-        assert_eq!(m.pre_transform(&s), m.pre_scale(2.0, 3.0, 4.0));
-    }
-
 
     #[test]
     pub fn test_ortho() {
