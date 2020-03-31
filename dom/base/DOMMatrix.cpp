@@ -759,6 +759,10 @@ void DOMMatrixReadOnly::Ensure3DMatrix() {
 DOMMatrix* DOMMatrix::MultiplySelf(const DOMMatrixInit& aOtherInit,
                                    ErrorResult& aRv) {
   RefPtr<DOMMatrix> other = FromMatrix(mParent, aOtherInit, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(other);
   if (other->IsIdentity()) {
     return this;
   }
@@ -780,6 +784,10 @@ DOMMatrix* DOMMatrix::MultiplySelf(const DOMMatrixInit& aOtherInit,
 DOMMatrix* DOMMatrix::PreMultiplySelf(const DOMMatrixInit& aOtherInit,
                                       ErrorResult& aRv) {
   RefPtr<DOMMatrix> other = FromMatrix(mParent, aOtherInit, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(other);
   if (other->IsIdentity()) {
     return this;
   }
