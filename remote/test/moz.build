@@ -5,6 +5,7 @@
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += [
     "browser/browser.ini",
+    "browser/dom/browser.ini",
     "browser/emulation/browser.ini",
     "browser/input/browser.ini",
     "browser/io/browser.ini",

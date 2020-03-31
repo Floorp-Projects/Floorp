@@ -226,6 +226,27 @@ add_task(async function returnAsObjectTypes({ client }) {
   }
 });
 
+add_task(async function returnAsObjectDifferentObjectIds({ client }) {
+  const { Runtime } = client;
+
+  await enableRuntime(client);
+
+  const expressions = [{}, "document"];
+  for (const expression of expressions) {
+    const { result: result1 } = await Runtime.evaluate({
+      expression: JSON.stringify(expression),
+    });
+    const { result: result2 } = await Runtime.evaluate({
+      expression: JSON.stringify(expression),
+    });
+    is(
+      result1.objectId,
+      result2.objectId,
+      `Different object ids returned for ${expression}`
+    );
+  }
+});
+
 add_task(async function returnAsObjectPrimitiveTypes({ client }) {
   const { Runtime } = client;
 

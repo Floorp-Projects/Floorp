@@ -105,7 +105,9 @@ class Runtime extends ContentProcessDomain {
       }
     }
     if (!context) {
-      throw new Error(`Unable to get execution context by ID: ${objectId}`);
+      throw new Error(
+        `Unable to get execution context by object ID: ${objectId}`
+      );
     }
     context.releaseObject(objectId);
   }
@@ -255,8 +257,8 @@ class Runtime extends ContentProcessDomain {
 
   getProperties({ objectId, ownProperties }) {
     for (const ctx of this.contexts.values()) {
-      const obj = ctx.getRemoteObject(objectId);
-      if (typeof obj != "undefined") {
+      const debuggerObj = ctx.getRemoteObject(objectId);
+      if (debuggerObj) {
         return ctx.getProperties({ objectId, ownProperties });
       }
     }
@@ -278,9 +280,9 @@ class Runtime extends ContentProcessDomain {
 
   _getRemoteObject(objectId) {
     for (const ctx of this.contexts.values()) {
-      const obj = ctx.getRemoteObject(objectId);
-      if (typeof obj != "undefined") {
-        return obj;
+      const debuggerObj = ctx.getRemoteObject(objectId);
+      if (debuggerObj) {
+        return debuggerObj;
       }
     }
     return null;

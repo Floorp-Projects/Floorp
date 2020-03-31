@@ -64,7 +64,7 @@ async function testObjectRelease({ Runtime }, contextId) {
     ok(false, "callFunctionOn with a released object as argument should throw");
   } catch (e) {
     ok(
-      e.message.includes("Cannot find object with ID:"),
+      e.message.includes("Could not find object with given id"),
       "callFunctionOn throws on released argument"
     );
   }
