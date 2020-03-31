@@ -204,6 +204,9 @@ def run(paths, linters, formats, outgoing, workdir, rev, edit,
     from mozlint import LintRoller, formatters
     from mozlint.editor import edit_issues
 
+    lintargs['config_paths'] = [os.path.join(lintargs['root'], p) for p in
+                                lintargs['config_paths']]
+
     if list_linters:
         lint_paths = find_linters(lintargs['config_paths'], linters)
         linters = [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
