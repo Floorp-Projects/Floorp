@@ -103,8 +103,15 @@ struct MaybePoisoner {
   }
 };
 
+template <typename T>
+constexpr bool IsTriviallyDestructibleAndCopyable =
+    std::is_trivially_destructible_v<T> &&
+    (std::is_trivially_copy_constructible_v<T> ||
+     !std::is_copy_constructible_v<T>);
+
 template <typename T,
-          bool TriviallyCopyable = std::is_trivially_copy_constructible_v<T>,
+          bool TriviallyDestructibleAndCopyable =
+              IsTriviallyDestructibleAndCopyable<T>,
           bool Copyable = std::is_copy_constructible_v<T>,
           bool Movable = std::is_move_constructible_v<T>>
 class Maybe_CopyMove_Enabler;
@@ -120,16 +127,19 @@ class Maybe_CopyMove_Enabler;
     return downcast(*this).template operator=<T>(downcast(aOther));         \
   }
 
-#define MOZ_MAYBE_MOVE_OPS()                                                   \
-  Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&& aOther) {                    \
-    if (downcast(aOther).isSome()) {                                           \
-      downcast(*this).emplace(std::move(*downcast(aOther)));                   \
-      downcast(aOther).reset();                                                \
-    }                                                                          \
-  }                                                                            \
-                                                                               \
-  Maybe_CopyMove_Enabler& operator=(Maybe_CopyMove_Enabler&& aOther) {         \
-    return downcast(*this).template operator=<T>(std::move(downcast(aOther))); \
+#define MOZ_MAYBE_MOVE_OPS()                                            \
+  constexpr Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&& aOther) {   \
+    if (downcast(aOther).isSome()) {                                    \
+      downcast(*this).emplace(std::move(*downcast(aOther)));            \
+      downcast(aOther).reset();                                         \
+    }                                                                   \
+  }                                                                     \
+                                                                        \
+  constexpr Maybe_CopyMove_Enabler& operator=(                          \
+      Maybe_CopyMove_Enabler&& aOther) {                                \
+    downcast(*this).template operator=<T>(std::move(downcast(aOther))); \
+                                                                        \
+    return *this;                                                       \
   }
 
 #define MOZ_MAYBE_DOWNCAST()                                          \
@@ -148,6 +158,25 @@ class Maybe_CopyMove_Enabler<T, true, true, true> {
 
   Maybe_CopyMove_Enabler(const Maybe_CopyMove_Enabler&) = default;
   Maybe_CopyMove_Enabler& operator=(const Maybe_CopyMove_Enabler&) = default;
+  constexpr Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&& aOther) {
+    downcast(aOther).reset();
+  }
+  constexpr Maybe_CopyMove_Enabler& operator=(Maybe_CopyMove_Enabler&& aOther) {
+    downcast(aOther).reset();
+    return *this;
+  }
+
+ private:
+  MOZ_MAYBE_DOWNCAST()
+};
+
+template <typename T>
+class Maybe_CopyMove_Enabler<T, true, false, true> {
+ public:
+  Maybe_CopyMove_Enabler() = default;
+
+  Maybe_CopyMove_Enabler(const Maybe_CopyMove_Enabler&) = delete;
+  Maybe_CopyMove_Enabler& operator=(const Maybe_CopyMove_Enabler&) = delete;
   constexpr Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&& aOther) {
     downcast(aOther).reset();
   }
@@ -194,8 +223,9 @@ class Maybe_CopyMove_Enabler<T, false, true, false> {
   MOZ_MAYBE_DOWNCAST()
 };
 
-template <typename T>
-class Maybe_CopyMove_Enabler<T, false, false, false> {
+template <typename T, bool TriviallyDestructibleAndCopyable>
+class Maybe_CopyMove_Enabler<T, TriviallyDestructibleAndCopyable, false,
+                             false> {
  public:
   Maybe_CopyMove_Enabler() = default;
 
@@ -210,8 +240,7 @@ class Maybe_CopyMove_Enabler<T, false, false, false> {
 #undef MOZ_MAYBE_DOWNCAST
 
 template <typename T, bool TriviallyDestructibleAndCopyable =
-                          std::is_trivially_destructible_v<T>&&
-                              std::is_trivially_copy_constructible_v<T>>
+                          IsTriviallyDestructibleAndCopyable<T>>
 struct MaybeStorage;
 
 template <typename T>
@@ -265,7 +294,7 @@ struct MaybeStorage<T, true> {
   } mStorage;
   char mIsSome = false;  // not bool -- guarantees minimal space consumption
 
-  MaybeStorage() = default;
+  constexpr MaybeStorage() = default;
   constexpr explicit MaybeStorage(const T& aVal)
       : mStorage{aVal}, mIsSome{true} {}
   constexpr explicit MaybeStorage(T&& aVal)
@@ -417,7 +446,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return *this;
   }
 
-  Maybe& operator=(Nothing) {
+  constexpr Maybe& operator=(Nothing) {
     reset();
     return *this;
   }
@@ -458,7 +487,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   /* Returns the contents of this Maybe<T> by pointer. Unsafe unless |isSome()|.
    */
   T* ptr();
-  const T* ptr() const;
+  constexpr const T* ptr() const;
 
   /*
    * Returns the contents of this Maybe<T> by pointer. If |isNothing()|,
@@ -471,7 +500,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return aDefault;
   }
 
-  const T* ptrOr(const T* aDefault) const {
+  constexpr const T* ptrOr(const T* aDefault) const {
     if (isSome()) {
       return ptr();
     }
@@ -701,7 +730,7 @@ T* Maybe<T>::ptr() {
 }
 
 template <typename T>
-const T* Maybe<T>::ptr() const {
+constexpr const T* Maybe<T>::ptr() const {
   MOZ_DIAGNOSTIC_ASSERT(isSome());
   return &ref();
 }
