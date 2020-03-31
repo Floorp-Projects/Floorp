@@ -66,8 +66,6 @@ static LazyLogModule gPredictorLog("NetworkPredictor");
 
 #define NOW_IN_SECONDS() static_cast<uint32_t>(PR_Now() / PR_USEC_PER_SEC)
 
-static const char PREDICTOR_CLEANED_UP_PREF[] = "network.predictor.cleaned-up";
-
 // All these time values are in sec
 static const uint32_t ONE_DAY = 86400U;
 static const uint32_t ONE_WEEK = 7U * ONE_DAY;
@@ -243,7 +241,6 @@ NS_IMPL_ISUPPORTS(Predictor, nsINetworkPredictor, nsIObserver,
 
 Predictor::Predictor()
     : mInitialized(false),
-      mCleanedUp(false),
       mStartupTime(0),
       mLastStartupTime(0),
       mStartupCount(1) {
@@ -271,13 +268,6 @@ nsresult Predictor::InstallObserver() {
   rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCleanedUp = Preferences::GetBool(PREDICTOR_CLEANED_UP_PREF, false);
-
-  if (!mCleanedUp) {
-    NS_NewTimerWithObserver(getter_AddRefs(mCleanupTimer), this, 60 * 1000,
-                            nsITimer::TYPE_ONE_SHOT);
-  }
-
   return rv;
 }
 
@@ -287,11 +277,6 @@ void Predictor::RemoveObserver() {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  }
-
-  if (mCleanupTimer) {
-    mCleanupTimer->Cancel();
-    mCleanupTimer = nullptr;
   }
 }
 
@@ -304,9 +289,6 @@ Predictor::Observe(nsISupports* subject, const char* topic,
 
   if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
     Shutdown();
-  } else if (!strcmp("timer-callback", topic)) {
-    MaybeCleanupOldDBFiles();
-    mCleanupTimer = nullptr;
   }
 
   return rv;
@@ -419,57 +401,6 @@ nsresult Predictor::Init() {
 }
 
 namespace {
-class PredictorOldCleanupRunner : public Runnable {
- public:
-  explicit PredictorOldCleanupRunner(nsIFile* dbFile)
-      : Runnable("net::PredictorOldCleanupRunner"), mDBFile(dbFile) {}
-
-  ~PredictorOldCleanupRunner() = default;
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(!NS_IsMainThread(), "Cleaning up old files on main thread!");
-    nsresult rv = CheckForAndDeleteOldDBFiles();
-
-    if (NS_SUCCEEDED(rv)) {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "net::PredictorOldCleanupMainThread",
-          []() { Preferences::SetBool(PREDICTOR_CLEANED_UP_PREF, true); }));
-    }
-    return NS_OK;
-  }
-
- private:
-  nsresult CheckForAndDeleteOldDBFiles() {
-    nsCOMPtr<nsIFile> oldDBFile;
-    nsresult rv = mDBFile->GetParent(getter_AddRefs(oldDBFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = oldDBFile->AppendNative(NS_LITERAL_CSTRING("seer.sqlite"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool fileExists = false;
-    rv = oldDBFile->Exists(&fileExists);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (fileExists) {
-      rv = oldDBFile->Remove(false);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    fileExists = false;
-    rv = mDBFile->Exists(&fileExists);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (fileExists) {
-      rv = mDBFile->Remove(false);
-    }
-
-    return rv;
-  }
-
-  nsCOMPtr<nsIFile> mDBFile;
-};
-
 class PredictorLearnRunnable final : public Runnable {
  public:
   PredictorLearnRunnable(nsIURI* targetURI, nsIURI* sourceURI,
@@ -508,29 +439,6 @@ class PredictorLearnRunnable final : public Runnable {
 };
 
 }  // namespace
-
-void Predictor::MaybeCleanupOldDBFiles() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::network_predictor_enabled() || mCleanedUp) {
-    return;
-  }
-
-  mCleanedUp = true;
-
-  // This is used for cleaning up junk left over from the old backend
-  // built on top of sqlite, if necessary.
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(dbFile));
-  NS_ENSURE_SUCCESS_VOID(rv);
-  rv = dbFile->AppendNative(NS_LITERAL_CSTRING("netpredictions.sqlite"));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  RefPtr<PredictorOldCleanupRunner> runner =
-      new PredictorOldCleanupRunner(dbFile);
-  NS_DispatchBackgroundTask(runner.forget());
-}
 
 void Predictor::Shutdown() {
   if (!NS_IsMainThread()) {
