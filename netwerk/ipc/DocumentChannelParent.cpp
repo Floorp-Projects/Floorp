@@ -73,6 +73,19 @@ DocumentChannelParent::RedirectToRealChannel(uint32_t aRedirectFlags,
   return SendRedirectToRealChannel(args);
 }
 
+void DocumentChannelParent::CSPViolation(
+    nsCSPContext* aContext, bool aIsCspToInherit, nsIURI* aBlockedURI,
+    nsCSPContext::BlockedContentSource aBlockedContentSource,
+    nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
+    uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject) {
+  CSPInfo cspInfo;
+  Unused << NS_WARN_IF(NS_FAILED(CSPToCSPInfo(aContext, &cspInfo)));
+  Unused << SendCSPViolation(
+      cspInfo, aIsCspToInherit, aBlockedURI, aBlockedContentSource,
+      aOriginalURI, PromiseFlatString(aViolatedDirective), aViolatedPolicyIndex,
+      PromiseFlatString(aObserverSubject));
+}
+
 }  // namespace net
 }  // namespace mozilla
 
