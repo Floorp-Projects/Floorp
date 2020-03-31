@@ -6,8 +6,8 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.recyclerview.widget.RecyclerView
 import android.graphics.Bitmap
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
@@ -16,30 +16,32 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import org.hamcrest.CoreMatchers.containsString
+import androidx.test.uiautomator.Until.findObject
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.not
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Search
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.components.Search
-import org.mozilla.fenix.helpers.withBitmapDrawable
 import org.mozilla.fenix.helpers.matchers.hasItem
+import org.mozilla.fenix.helpers.withBitmapDrawable
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -168,7 +170,8 @@ class HomeScreenRobot {
 
     fun swipeToBottom() = onView(withId(R.id.homeLayout)).perform(ViewActions.swipeUp())
 
-    fun swipeToTop() = onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
+    fun swipeToTop() =
+        onView(withId(R.id.sessionControlRecyclerView)).perform(ViewActions.swipeDown())
 
     fun swipeTabRight(title: String) =
         onView(allOf(withId(R.id.tab_title), withText(title))).perform(ViewActions.swipeRight())
@@ -185,9 +188,20 @@ class HomeScreenRobot {
 
     fun snackBarButtonClick(expectedText: String) {
         onView(allOf(withId(R.id.snackbar_btn), withText(expectedText))).check(
-            matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
-        ).perform(ViewActions.click())
+            matches(withEffectiveVisibility(Visibility.VISIBLE))
+        ).perform(click())
     }
+
+    fun verifyTabMediaControlButtonState(action: String) {
+        mDevice.waitNotNull(
+            Until.findObject(By.res("org.mozilla.fenix.debug:id/play_pause_button")),
+            waitingTime
+        )
+
+        tabMediaControlButton().check(matches(withContentDescription(action)))
+    }
+
+    fun clickTabMediaControlButton() = tabMediaControlButton().click()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -242,16 +256,25 @@ class HomeScreenRobot {
             return NavigationToolbarRobot.Transition()
         }
 
-        fun openContextMenuOnTopSitesWithTitle(title: String, interact: HomeScreenRobot.() -> Unit): Transition {
+        fun openContextMenuOnTopSitesWithTitle(
+            title: String,
+            interact: HomeScreenRobot.() -> Unit
+        ): Transition {
             onView(withId(R.id.top_sites_list)).perform(
-                actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(title)), ViewActions.longClick())
+                actionOnItem<RecyclerView.ViewHolder>(
+                    hasDescendant(withText(title)),
+                    ViewActions.longClick()
+                )
             )
 
             HomeScreenRobot().interact()
             return Transition()
         }
 
-        fun openTopSiteTabWithTitle(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun openTopSiteTabWithTitle(
+            title: String,
+            interact: BrowserRobot.() -> Unit
+        ): BrowserRobot.Transition {
             onView(withId(R.id.top_sites_list)).perform(
                 actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(title)), click())
             )
@@ -280,7 +303,20 @@ class HomeScreenRobot {
 
         fun openCommonMythsLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             onView(withId(R.id.private_session_common_myths))
-                    .perform(click())
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.waitNotNull(findObject(text(title)))
+            onView(
+                allOf(
+                    withId(R.id.tab_title),
+                    withText(title)
+                )
+            ).click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -355,12 +391,12 @@ private fun assertCollectionsHeaderIsNotVisible() =
         .check(doesNotExist())
 
 private fun assertNoCollectionsText() =
-        onView(
-            allOf(
-                withText("Collect the things that matter to you. To start, save open tabs to a new collection.")
-            )
+    onView(
+        allOf(
+            withText("Collect the things that matter to you. To start, save open tabs to a new collection.")
         )
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    )
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertNoCollectionsTextIsNotVisible() =
     onView(
@@ -370,8 +406,9 @@ private fun assertNoCollectionsTextIsNotVisible() =
     )
         .check(doesNotExist())
 
-private fun assertHomeComponent() = onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertHomeComponent() =
+    onView(ViewMatchers.withResourceName("sessionControlRecyclerView"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
 
@@ -485,10 +522,10 @@ private fun assertPrivacyNoticeButton() =
 
 // What's new elements
 private fun assertWhatsNewHeather() = onView(allOf(withText("See what’s new")))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertWhatsNewLink() = onView(allOf(withText("Get answers here")))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertStartBrowsingButton() =
     onView(allOf(withText("Start browsing")))
@@ -496,18 +533,20 @@ private fun assertStartBrowsingButton() =
 
 // Take a position
 private fun assertTakePositionheader() = onView(allOf(withText("Take a position")))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertTakePositionTopRadioButton() = onView(ViewMatchers.withResourceName("toolbar_top_radio_button"))
+private fun assertTakePositionTopRadioButton() =
+    onView(ViewMatchers.withResourceName("toolbar_top_radio_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertTakePositionBottomRadioButton() = onView(ViewMatchers.withResourceName("toolbar_bottom_radio_button"))
+private fun assertTakePositionBottomRadioButton() =
+    onView(ViewMatchers.withResourceName("toolbar_bottom_radio_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 // Private mode elements
 private fun assertPrivateSessionHeader() =
     onView(allOf(withText("Private tabs")))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 const val PRIVATE_SESSION_MESSAGE = "Firefox Preview clears your search and browsing history " +
         "when you quit the app or close all private tabs. While this doesn’t make you anonymous to websites or " +
@@ -521,9 +560,11 @@ private fun assertPrivateSessionMessage(visible: Boolean) =
         )
 
 private fun assertShareTabsButton(visible: Boolean) = onView(allOf(withId(R.id.share_tabs_button)))
-        .check(
-                if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE)) else matches(withEffectiveVisibility(Visibility.INVISIBLE))
+    .check(
+        if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE)) else matches(
+            withEffectiveVisibility(Visibility.INVISIBLE)
         )
+    )
 
 private fun assertCloseTabsButton(title: String) =
     onView(allOf(withId(R.id.close_tab_button), withContentDescription("Close tab $title")))
@@ -588,3 +629,5 @@ private fun assertTopSiteContextMenuItems() {
         waitingTime
     )
 }
+
+private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))

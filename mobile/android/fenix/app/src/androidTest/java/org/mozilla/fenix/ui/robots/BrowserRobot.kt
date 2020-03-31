@@ -26,6 +26,7 @@ import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import androidx.test.uiautomator.Until.hasObject
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.junit.Assert.assertTrue
@@ -34,6 +35,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LongClickDuration
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -57,7 +59,7 @@ class BrowserRobot {
         )
         TestAssetHelper.waitingTime
         onView(withId(R.id.mozac_browser_toolbar_url_view))
-                .check(matches(withText(containsString(url.replace("http://", "")))))
+            .check(matches(withText(containsString(url.replace("http://", "")))))
     }
 
     fun verifyHelpUrl() {
@@ -143,11 +145,6 @@ class BrowserRobot {
         mDevice.waitNotNull(
             Until.findObject(text("Copy image location")), waitingTime
         )
-    }
-
-    fun verifyPrivateTabsNotification() {
-        mDevice.wait(Until.hasObject(text("Close private tabs")), waitingTime)
-        assertPrivateTabsNotification()
     }
 
     fun clickContextOpenLinkInNewTab() {
@@ -289,6 +286,36 @@ class BrowserRobot {
         mDevice.findObject(text(optionToSaveLogin)).click()
     }
 
+    fun clickMediaPlayerPlayButton() {
+        mDevice.waitNotNull(
+            hasObject(
+                By
+                    .clazz("android.widget.Button")
+                    .textContains("Play")
+            ),
+            waitingTime
+        )
+        mediaPlayerPlayButton().click()
+    }
+
+    fun waitForPlaybackToStart() {
+        mDevice.waitNotNull(
+            hasObject(
+                text("Media file is playing")
+            ), waitingTimeShort
+        )
+    }
+
+    fun verifyMediaIsPaused() {
+        mDevice.waitNotNull(
+            hasObject(
+                text("Media file is paused")
+            ), waitingTimeShort
+        )
+
+        mDevice.findObject(UiSelector().text("Media file is paused")).exists()
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
@@ -329,12 +356,11 @@ class BrowserRobot {
             return HomeScreenRobot.Transition()
         }
 
-        fun clickClosePrivateTabsNotification(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            mDevice.wait(Until.hasObject(text("Close private tabs")), waitingTime)
-            closePrivateTabsNotification().clickAndWaitForNewWindow(waitingTime)
+        fun openNotificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot.Transition {
+            mDevice.openNotification()
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            NotificationRobot().interact()
+            return NotificationRobot.Transition()
         }
     }
 }
@@ -355,10 +381,9 @@ fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
 private fun tabsCounter() = onView(withId(R.id.mozac_browser_toolbar_browser_actions))
 
-private fun closePrivateTabsNotification() =
-    mDevice.findObject(UiSelector().text("Close private tabs"))
-
-private fun assertPrivateTabsNotification() {
-    mDevice.findObject(UiSelector().text("Firefox Preview (Private)")).exists()
-    mDevice.findObject(UiSelector().text("Close private tabs")).exists()
-}
+private fun mediaPlayerPlayButton() =
+    mDevice.findObject(
+        By
+            .clazz("android.widget.Button")
+            .textContains("Play")
+    )

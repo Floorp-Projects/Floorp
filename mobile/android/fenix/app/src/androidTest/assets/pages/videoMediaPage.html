@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>Video_Test_Page</title>
+</head>
+<body>
+<p id="testContent">Page content: video player</p>
+<div id="video-container">
+    <video id="videoSample" width="320" height="240" controls loop>
+            <source src="../resources/videoSample.webm">
+    </video>
+</div>
+<div class="playbackState">
+</div>
+<script>
+        const video = document.querySelector('video');
+
+        video.addEventListener('playing', (event) => {
+          document.querySelector('.playbackState').innerText="Media file is playing";
+        });
+
+		video.addEventListener('pause', (event) => {
+          document.querySelector('.playbackState').innerHTML="Media file is paused";
+        });
+</script>
+</body>
+</html>

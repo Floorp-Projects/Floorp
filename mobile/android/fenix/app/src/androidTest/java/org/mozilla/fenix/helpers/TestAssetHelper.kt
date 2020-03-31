@@ -18,7 +18,7 @@ object TestAssetHelper {
     val waitingTime: Long = TimeUnit.SECONDS.toMillis(15)
     val waitingTimeShort: Long = TimeUnit.SECONDS.toMillis(1)
 
-    data class TestAsset(val url: Uri, val content: String)
+    data class TestAsset(val url: Uri, val content: String, val title: String)
 
     /**
      * Hosts 3 simple websites, found at androidTest/assets/pages/generic[1|2|3].html
@@ -33,7 +33,8 @@ object TestAssetHelper {
         return (1..4).map {
             TestAsset(
                 server.url("pages/generic$it.html").toString().toUri()!!,
-                "Page content: $it"
+                "Page content: $it",
+                ""
             )
         }
     }
@@ -41,52 +42,70 @@ object TestAssetHelper {
     fun getGenericAsset(server: MockWebServer, pageNum: Int): TestAsset {
         val url = server.url("pages/generic$pageNum.html").toString().toUri()!!
         val content = "Page content: $pageNum"
+        val title = "Test_Page_$pageNum"
 
-        return TestAsset(url, content)
+        return TestAsset(url, content, title)
     }
 
     fun getLoremIpsumAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/lorem-ipsum.html").toString().toUri()!!
         val content = "Page content: lorem ipsum"
-        return TestAsset(url, content)
+
+        return TestAsset(url, content, "")
     }
 
     fun getRefreshAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/refresh.html").toString().toUri()!!
         val content = "Page content: refresh"
 
-        return TestAsset(url, content)
+        return TestAsset(url, content, "")
     }
 
     fun getUUIDPage(server: MockWebServer): TestAsset {
         val url = server.url("pages/basic_nav_uuid.html").toString().toUri()!!
         val content = "Page content: basic_nav_uuid"
 
-        return TestAsset(url, content)
+        return TestAsset(url, content, "")
     }
 
     fun getDownloadAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/download.html").toString().toUri()!!
         val content = "Page content: Globe.svg"
 
-        return TestAsset(url, content)
+        return TestAsset(url, content, "")
     }
 
     fun getEnhancedTrackingProtectionAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/etp.html").toString().toUri()!!
 
-        return TestAsset(url, "")
+        return TestAsset(url, "", "")
     }
 
     fun getImageAsset(server: MockWebServer): TestAsset {
         val url = server.url("resources/rabbit.jpg").toString().toUri()!!
 
-        return TestAsset(url, "")
+        return TestAsset(url, "", "")
     }
 
     fun getSaveLoginAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/password.html").toString().toUri()!!
 
-        return TestAsset(url, "")
+        return TestAsset(url, "", "")
+    }
+
+    fun getAudioPageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/audioMediaPage.html").toString().toUri()!!
+        val title = "Audio_Test_Page"
+        val content = "Page content: audio player"
+
+        return TestAsset(url, content, title)
+    }
+
+    fun getVideoPageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/videoMediaPage.html").toString().toUri()!!
+        val title = "Video_Test_Page"
+        val content = "Page content: video player"
+
+        return TestAsset(url, content, title)
     }
 }
