@@ -338,7 +338,7 @@ webExtensionTargetPrototype._allowSource = function(source) {
   const url = source.url.split(" -> ").pop();
 
   // Filter out the code introduced by evaluating code in the webconsole.
-  if (url === "debugger eval code" || url === "debugger eager eval code") {
+  if (url === "debugger eval code") {
     return false;
   }
 
