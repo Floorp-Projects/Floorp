@@ -47,6 +47,29 @@ add_task(async function returnAsObjectTypes({ client }) {
   }
 });
 
+add_task(async function returnAsObjectDifferentObjectIds({ client }) {
+  const { Runtime } = client;
+
+  const executionContextId = await enableRuntime(client);
+
+  const expressions = [{}, "document"];
+  for (const expression of expressions) {
+    const { result: result1 } = await Runtime.callFunctionOn({
+      functionDeclaration: `() => ${JSON.stringify(expression)}`,
+      executionContextId,
+    });
+    const { result: result2 } = await Runtime.callFunctionOn({
+      functionDeclaration: `() => ${JSON.stringify(expression)}`,
+      executionContextId,
+    });
+    is(
+      result1.objectId,
+      result2.objectId,
+      `Different object ids returned for ${expression}`
+    );
+  }
+});
+
 add_task(async function returnAsObjectPrimitiveTypes({ client }) {
   const { Runtime } = client;
 
