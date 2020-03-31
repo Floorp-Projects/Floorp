@@ -68,6 +68,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         override fun onAuthenticationProblems() = updateAccountUi()
     }
 
+    // A flag used to track if we're going through the onCreate->onStart->onResume lifecycle chain.
+    // If it's set to `true`, code in `onResume` can assume that `onCreate` executed a moment prior.
+    // This flag is set to `false` at the end of `onResume`.
+    private var creatingFragment = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -78,10 +83,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             autoPause = true
         )
 
-        // It's important to update the account UI state in onCreate, even though we also call it in onResume, since
-        // that ensures we'll never display an incorrect state in the UI. For example, if user is signed-in, and we
-        // don't perform this call in onCreate, we'll briefly display a "Sign In" preference, which will then get
-        // replaced by the correct account information once this call is ran in onResume shortly after.
+        // It's important to update the account UI state in onCreate since that ensures we'll never
+        // display an incorrect state in the UI. We take care to not also call it as part of onResume
+        // if it was just called here (via the 'creatingFragment' flag).
+        // For example, if user is signed-in, and we don't perform this call in onCreate, we'll briefly
+        // display a "Sign In" preference, which will then get replaced by the correct account information
+        // once this call is ran in onResume shortly after.
         updateAccountUIState(
             context!!,
             requireComponents.backgroundServices.accountManager.accountProfile()
@@ -117,12 +124,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         showToolbar(getString(R.string.settings_title))
 
-        update()
+        // Account UI state is updated as part of `onCreate`. To not do it twice in a row, we only
+        // update it here if we're not going through the `onCreate->onStart->onResume` lifecycle chain.
+        update(shouldUpdateAccountUIState = !creatingFragment)
 
         view!!.findViewById<RecyclerView>(R.id.recycler_view)?.hideInitialScrollBar(lifecycleScope)
+
+        // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
+        creatingFragment = false
     }
 
-    private fun update() {
+    private fun update(shouldUpdateAccountUIState: Boolean) {
         val trackingProtectionPreference =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
@@ -157,10 +169,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         setupPreferences()
 
-        updateAccountUIState(
-            context!!,
-            requireComponents.backgroundServices.accountManager.accountProfile()
-        )
+        if (shouldUpdateAccountUIState) {
+            updateAccountUIState(
+                context!!,
+                requireComponents.backgroundServices.accountManager.accountProfile()
+            )
+        }
     }
 
     private fun updatePreferenceVisibilityForFeatureFlags() {
