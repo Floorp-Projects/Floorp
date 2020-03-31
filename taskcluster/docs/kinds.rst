@@ -369,6 +369,10 @@ release-bouncer-aliases
 -----------------------
 Update Bouncer's (download.mozilla.org) "latest" aliases.
 
+release-bouncer-aliases-nazgul
+------------------------------
+Update Bouncer's (download.mozilla.org) "latest" aliases, using the new implementation of bouncer-admin (Nazgul).
+
 cron-bouncer-check
 ------------------
 Checks Bouncer (download.mozilla.org) uptake.
@@ -376,6 +380,10 @@ Checks Bouncer (download.mozilla.org) uptake.
 bouncer-locations
 -----------------
 Updates nightly bouncer locations for version bump
+
+bouncer-locations-nazgul
+------------------------
+Updates nightly bouncer locations for version bump, using new implementation of bouncer-admin (Nazgul).
 
 release-bouncer-check
 ---------------------
@@ -492,6 +500,9 @@ release-partner-repack-bouncer-sub
 ----------------------------------
 Sets up bouncer products for partners.
 
+release-partner-repack-bouncer-sub-nazgul
+-----------------------------------------
+Sets up bouncer products for partners, using new implementation of bouncer-admin (Nazgul).
 
 release-early-tagging
 ---------------------

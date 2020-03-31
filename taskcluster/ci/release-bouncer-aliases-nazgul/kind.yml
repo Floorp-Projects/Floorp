@@ -1,0 +1,109 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.bouncer_aliases:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - release-bouncer-check
+
+job-defaults:
+    description: Update bouncer aliases job
+    worker-type: bouncer
+    worker:
+        implementation: bouncer-aliases
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:bouncer:action:aliases
+                - project:releng:bouncer:server:production-nazgul
+            staging:
+                - project:releng:bouncer:action:aliases
+                - project:releng:bouncer:server:staging-nazgul
+    run-on-projects: []
+    shipping-phase: ship
+    treeherder:
+        symbol: Rel(BncAliasNazgul)
+        kind: test
+        tier: 3
+
+jobs:
+    devedition:
+        bouncer-products-per-alias:
+            firefox-devedition-latest-ssl: installer-ssl
+            firefox-devedition-latest: installer
+            firefox-devedition-stub: stub-installer
+            firefox-devedition-msi-latest-ssl: msi
+        shipping-product: devedition
+        treeherder:
+            platform: devedition-release/opt
+
+    fennec:
+        bouncer-products-per-alias:
+            by-project:
+                mozilla-beta:
+                    fennec-beta-latest: apk
+                mozilla-release:
+                    fennec-latest: apk
+                birch:
+                    fennec-latest: apk
+                maple:
+                    fennec-beta-latest: apk
+                default: {}
+        shipping-product: fennec
+        treeherder:
+            platform: fennec-release/opt
+
+    firefox:
+        bouncer-products-per-alias:
+            by-project:
+                mozilla-beta:
+                    firefox-beta-latest-ssl: installer-ssl
+                    firefox-beta-latest: installer
+                    firefox-beta-stub: stub-installer
+                    firefox-beta-msi-latest-ssl: msi
+                mozilla-release:
+                    firefox-latest-ssl: installer-ssl
+                    firefox-latest: installer
+                    firefox-stub: stub-installer
+                    firefox-msi-latest-ssl: msi
+                mozilla-esr68:
+                    # when there is one ESR branch both sets of aliases work
+                    # when there are two ESR branches ...
+                    # ... these always point to the older branch
+                    firefox-esr-latest-ssl: installer-ssl
+                    firefox-esr-latest: installer
+                    firefox-esr-msi-latest-ssl: msi
+                    # ... these point to the newer branch
+                    firefox-esr-next-latest-ssl: installer-ssl
+                    firefox-esr-next-latest: installer
+                    firefox-esr-next-msi-latest-ssl: msi
+                birch:
+                    firefox-latest-ssl: installer-ssl
+                    firefox-latest: installer
+                    firefox-stub: stub-installer
+                jamun:
+                    firefox-esr-latest-ssl: installer-ssl
+                    firefox-esr-latest: installer
+                maple:
+                    firefox-beta-latest-ssl: installer-ssl
+                    firefox-beta-latest: installer
+                    firefox-beta-stub: stub-installer
+                default: {}
+        partner-bouncer-products-per-alias:
+            by-project:
+                mozilla-beta:
+                    partner-firefox-beta-PARTNER-latest: installer
+                    partner-firefox-beta-PARTNER-stub: stub-installer
+                mozilla-release:
+                    partner-firefox-release-PARTNER-latest: installer
+                    partner-firefox-release-PARTNER-stub: stub-installer
+                default: {}
+        shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
