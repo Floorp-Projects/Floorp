@@ -53,7 +53,7 @@ add_task(async function() {
   await waitForDOMIfNeeded(
     document,
     "#messages-panel .ws-frames-list-table .ws-frame-list-item",
-    4
+    2
   );
 
   // Check the payload of the first frame.
