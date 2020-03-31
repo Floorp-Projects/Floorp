@@ -281,6 +281,7 @@ merge-automation:
                   - '# Disable enforcing that add-ons are signed by the trusted root'
                   - '# Enable enforcing that add-ons are signed by the trusted root'
             merge-old-head: true
+            incr-major-version: false
             base-tag: 'FIREFOX_BETA_{major_version}_BASE'
             end-tag: 'FIREFOX_BETA_{major_version}_END'
             from-repo: 'https://hg.mozilla.org/mozilla-central'
@@ -296,6 +297,7 @@ merge-automation:
                   - "browser/config/version_display.txt"
             replacements: []
             merge-old-head: true
+            incr-major-version: false
             base-tag: 'FIREFOX_RELEASE_{major_version}_BASE'
             end-tag: 'FIREFOX_RELEASE_{major_version}_END'
             from-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
@@ -313,12 +315,32 @@ merge-automation:
                   - "# Enable enforcing that add-ons are signed by the trusted root"
                   - "# Disable enforcing that add-ons are signed by the trusted root"
             merge-old-head: false
+            incr-major-version: false
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
             from-branch: 'release'
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr68'
             to-branch: 'esr68'
-
+        bump-central:
+            version-files: []
+            version-files-suffix:
+                - browser/config/version_display.txt
+                - browser/config/version.txt
+                - config/milestone.txt
+            version-suffix: a1
+            copy-files: []
+            replacements:
+                - - "xpcom/components/Module.h"
+                  - "static const unsigned int kVersion = {current_major_version};"
+                  - "static const unsigned int kVersion = {next_major_version};"
+                - - "services/sync/modules/constants.js"
+                  - 'WEAVE_VERSION: "1.{current_weave_version}.0"'
+                  - 'WEAVE_VERSION: "1.{next_weave_version}.0"'
+            merge-old-head: false
+            incr-major-version: true
+            end-tag: 'FIREFOX_NIGHTLY_{major_version}_END'
+            to-repo: 'https://hg.mozilla.org/mozilla-central'
+            to-branch: 'central'
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
