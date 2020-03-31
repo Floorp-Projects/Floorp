@@ -107,7 +107,7 @@ key:
 
     def test_list_expr(self):
         self.compare(
-            """
+            b"""
 key:
   if x == 1: [a]
   [b]""",
@@ -127,7 +127,7 @@ key:
 
     def test_list_heading(self):
         self.compare(
-            """
+            b"""
 key:
   if x == 1: [a]
 [b]""",
@@ -146,7 +146,7 @@ key:
 
     def test_if_1(self):
         with self.assertRaises(parser.ParseError):
-            self.parse("key: if foo")
+            self.parse(b"key: if foo")
 
 
 if __name__ == "__main__":
