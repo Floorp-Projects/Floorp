@@ -10,6 +10,7 @@ const {
   WS_OPEN_FRAME_DETAILS,
   WS_CLEAR_FRAMES,
   WS_TOGGLE_FRAME_FILTER_TYPE,
+  WS_TOGGLE_CONTROL_FRAMES,
   WS_SET_REQUEST_FILTER_TEXT,
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
@@ -74,6 +75,16 @@ function toggleFrameFilterType(filter) {
   return {
     type: WS_TOGGLE_FRAME_FILTER_TYPE,
     filter,
+  };
+}
+
+/**
+ * Show control frames from the FrameListContent
+ * component belonging to the current channelId
+ */
+function toggleControlFrames() {
+  return {
+    type: WS_TOGGLE_CONTROL_FRAMES,
   };
 }
 
@@ -165,6 +176,7 @@ module.exports = {
   openFrameDetails,
   clearFrames,
   toggleFrameFilterType,
+  toggleControlFrames,
   setFrameFilterText,
   resetWebSocketsColumns,
   closeConnection,

@@ -22,6 +22,11 @@ class FrameFilterMenu extends PureComponent {
     return {
       frameFilterType: PropTypes.string.isRequired,
       toggleFrameFilterType: PropTypes.func.isRequired,
+      // showControlFrames decides if control frames
+      // will be shown in messages panel
+      showControlFrames: PropTypes.bool.isRequired,
+      // toggleControlFrames toggles the value for showControlFrames
+      toggleControlFrames: PropTypes.func.isRequired,
     };
   }
 
@@ -31,13 +36,19 @@ class FrameFilterMenu extends PureComponent {
   }
 
   onShowFilterMenu(event) {
-    const { frameFilterType, toggleFrameFilterType } = this.props;
+    const {
+      frameFilterType,
+      toggleFrameFilterType,
+      showControlFrames,
+      toggleControlFrames,
+    } = this.props;
 
     const menuItems = [
       {
         id: "ws-frame-list-context-filter-all",
         label: L10N.getStr("netmonitor.ws.context.all"),
         accesskey: L10N.getStr("netmonitor.ws.context.all.accesskey"),
+        type: "checkbox",
         checked: frameFilterType === "all",
         click: () => {
           toggleFrameFilterType("all");
@@ -47,6 +58,7 @@ class FrameFilterMenu extends PureComponent {
         id: "ws-frame-list-context-filter-sent",
         label: L10N.getStr("netmonitor.ws.context.sent"),
         accesskey: L10N.getStr("netmonitor.ws.context.sent.accesskey"),
+        type: "checkbox",
         checked: frameFilterType === "sent",
         click: () => {
           toggleFrameFilterType("sent");
@@ -56,9 +68,23 @@ class FrameFilterMenu extends PureComponent {
         id: "ws-frame-list-context-filter-received",
         label: L10N.getStr("netmonitor.ws.context.received"),
         accesskey: L10N.getStr("netmonitor.ws.context.received.accesskey"),
+        type: "checkbox",
         checked: frameFilterType === "received",
         click: () => {
           toggleFrameFilterType("received");
+        },
+      },
+      {
+        type: "separator",
+      },
+      {
+        id: "ws-frame-list-context-filter-controlFrames",
+        label: L10N.getStr("netmonitor.ws.context.controlFrames"),
+        accesskey: L10N.getStr("netmonitor.ws.context.controlFrames.accesskey"),
+        type: "checkbox",
+        checked: showControlFrames,
+        click: () => {
+          toggleControlFrames();
         },
       },
     ];
@@ -67,8 +93,15 @@ class FrameFilterMenu extends PureComponent {
   }
 
   render() {
-    const { frameFilterType } = this.props;
-    const title = L10N.getStr(`netmonitor.ws.context.${frameFilterType}`);
+    const { frameFilterType, showControlFrames } = this.props;
+    const frameFilterTypeTitle = L10N.getStr(
+      `netmonitor.ws.context.${frameFilterType}`
+    );
+    const title =
+      frameFilterTypeTitle +
+      (showControlFrames
+        ? " (" + L10N.getStr(`netmonitor.ws.context.controlFrames`) + ")"
+        : "");
 
     return dom.button(
       {

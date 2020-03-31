@@ -12,14 +12,22 @@ const { createSelector } = require("devtools/client/shared/vendor/reselect");
  */
 const getDisplayedFrames = createSelector(
   state => state.webSockets,
-  ({ frames, frameFilterType, frameFilterText, currentChannelId }) => {
+  ({
+    frames,
+    frameFilterType,
+    showControlFrames,
+    frameFilterText,
+    currentChannelId,
+  }) => {
     if (!currentChannelId || !frames.get(currentChannelId)) {
       return [];
     }
 
     const framesArray = frames.get(currentChannelId);
     if (frameFilterType === "all" && frameFilterText.length === 0) {
-      return framesArray;
+      return framesArray.filter(frame =>
+        typeFilter(frame, frameFilterType, showControlFrames)
+      );
     }
 
     const filter = searchFilter(frameFilterText);
@@ -30,10 +38,19 @@ const getDisplayedFrames = createSelector(
         (frame.payload.initial
           ? filter(frame.payload.initial)
           : filter(frame.payload)) &&
-        (frameFilterType === "all" || frameFilterType === frame.type)
+        typeFilter(frame, frameFilterType, showControlFrames)
     );
   }
 );
+
+function typeFilter(frame, frameFilterType, showControlFrames) {
+  const controlFrames = [0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf];
+  const isControlFrame = controlFrames.includes(frame.opCode);
+  if (frameFilterType === "all" || frameFilterType === frame.type) {
+    return showControlFrames || !isControlFrame;
+  }
+  return false;
+}
 
 function searchFilter(frameFilterText) {
   let regex;
