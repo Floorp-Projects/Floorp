@@ -1197,9 +1197,9 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 
 [[package]]
 name = "euclid"
-version = "0.20.0"
+version = "0.20.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c4786521fec183792e755bf32cd0188e4e7628c6d0fcfd51426435b9081a106"
+checksum = "57d9ae79e19d69ffb5b47b0a744c4215c115dfed4039314c9ca1b8ddc6c333be"
 dependencies = [
  "num-traits",
  "serde",
