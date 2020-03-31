@@ -138,24 +138,6 @@ extern JS_PUBLIC_API bool Evaluate(JSContext* cx,
                                    MutableHandle<Value> rval);
 
 /**
- * Evaluate the provided UTF-8 data in the scope of the current global of |cx|,
- * and return the completion value in |rval|.  If the data contains invalid
- * UTF-8, an error is reported.
- *
- * The "DontInflate" suffix and (semantically unobservable) don't-inflate
- * characteristic are temporary while bugs in UTF-8 compilation are ironed out.
- * In the long term |JS::Evaluate| for UTF-8 will just never inflate, and this
- * separate function will die.
- *
- * NOTE: UTF-8 compilation is currently experimental, and it's possible it has
- *       as-yet-undiscovered bugs that the UTF-16 compilation functions do not
- *       have.  Use only if you're willing to take a risk!
- */
-extern JS_PUBLIC_API bool EvaluateDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf, MutableHandle<Value> rval);
-
-/**
  * Evaluate the UTF-8 contents of the file at the given path, and return the
  * completion value in |rval|.  (The path itself is in the system encoding, not
  * [necessarily] UTF-8.)  If the contents contain any malformed UTF-8, an error

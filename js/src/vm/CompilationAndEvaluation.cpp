@@ -499,29 +499,6 @@ JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
                                 SourceText<Utf8Unit>& srcBuf,
                                 MutableHandle<Value> rval) {
   RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
-
-  size_t length = srcBuf.length();
-  auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(srcBuf.get(), length), &length,
-                                  js::MallocArena)
-          .get());
-  if (!chars) {
-    return false;
-  }
-
-  SourceText<char16_t> inflatedSrc;
-  if (!inflatedSrc.init(cx, std::move(chars), length)) {
-    return false;
-  }
-
-  return EvaluateSourceBuffer(cx, ScopeKind::Global, globalLexical, options,
-                              inflatedSrc, rval);
-}
-
-JS_PUBLIC_API bool JS::EvaluateDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Utf8Unit>& srcBuf, MutableHandle<Value> rval) {
-  RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
   return EvaluateSourceBuffer(cx, ScopeKind::Global, globalLexical, options,
                               srcBuf, rval);
 }
@@ -570,5 +547,5 @@ JS_PUBLIC_API bool JS::EvaluateUtf8Path(
     return false;
   }
 
-  return EvaluateDontInflate(cx, options, srcBuf, rval);
+  return Evaluate(cx, options, srcBuf, rval);
 }

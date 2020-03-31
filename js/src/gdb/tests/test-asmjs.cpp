@@ -36,7 +36,7 @@ FRAGMENT(asmjs, segfault) {
 
   bool ok = srcBuf.init(cx, chars, mozilla::ArrayLength(chars) - 1,
                         JS::SourceOwnership::Borrowed) &&
-            JS::EvaluateDontInflate(cx, opts, srcBuf, &rval);
+            JS::Evaluate(cx, opts, srcBuf, &rval);
 
   breakpoint();
 
