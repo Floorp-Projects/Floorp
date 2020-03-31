@@ -2398,9 +2398,9 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // send the file URL instead.
   auto* sheetCache = GlobalStyleSheetCache::Singleton();
   if (StyleSheet* ucs = sheetCache->GetUserContentSheet()) {
-    SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());
+    xpcomInit.userContentSheetURL() = ucs->GetSheetURI();
   } else {
-    SerializeURI(nullptr, xpcomInit.userContentSheetURL());
+    xpcomInit.userContentSheetURL() = nullptr;
   }
 
   // 1. Build ContentDeviceData first, as it may affect some gfxVars.
@@ -2528,22 +2528,17 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     // shouldn't matter which we look at.
 
     for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-      URIParams uri;
-      SerializeURI(sheet->GetSheetURI(), uri);
-      Unused << SendLoadAndRegisterSheet(uri,
+      Unused << SendLoadAndRegisterSheet(sheet->GetSheetURI(),
                                          nsIStyleSheetService::AGENT_SHEET);
     }
 
     for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
-      URIParams uri;
-      SerializeURI(sheet->GetSheetURI(), uri);
-      Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
+      Unused << SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+                                         nsIStyleSheetService::USER_SHEET);
     }
 
     for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
-      URIParams uri;
-      SerializeURI(sheet->GetSheetURI(), uri);
-      Unused << SendLoadAndRegisterSheet(uri,
+      Unused << SendLoadAndRegisterSheet(sheet->GetSheetURI(),
                                          nsIStyleSheetService::AUTHOR_SHEET);
     }
   }
@@ -2832,14 +2827,13 @@ mozilla::ipc::IPCResult ContentParent::RecvGetExternalClipboardFormats(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvPlaySound(const URIParams& aURI) {
-  nsCOMPtr<nsIURI> soundURI = DeserializeURI(aURI);
+mozilla::ipc::IPCResult ContentParent::RecvPlaySound(nsIURI* aURI) {
   // If the check here fails, it can only mean that this message was spoofed.
-  if (!soundURI || !soundURI->SchemeIs("chrome")) {
+  if (!aURI || !aURI->SchemeIs("chrome")) {
     // PlaySound only accepts a valid chrome URI.
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<nsIURL> soundURL(do_QueryInterface(soundURI));
+  nsCOMPtr<nsIURL> soundURL(do_QueryInterface(aURI));
   if (!soundURL) {
     return IPC_OK();
   }
@@ -3642,14 +3636,12 @@ bool ContentParent::DeallocPParentToChildStreamParent(
 
 already_AddRefed<PExternalHelperAppParent>
 ContentParent::AllocPExternalHelperAppParent(
-    const Maybe<URIParams>& uri,
-    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
+    nsIURI* uri, const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const Maybe<URIParams>& aReferrer,
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
     const bool& aShouldCloseWindow) {
   RefPtr<ExternalHelperAppParent> parent = new ExternalHelperAppParent(
       uri, aContentLength, aWasFileChannel, aContentDisposition,
@@ -3658,14 +3650,13 @@ ContentParent::AllocPExternalHelperAppParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
-    PExternalHelperAppParent* actor, const Maybe<URIParams>& uri,
+    PExternalHelperAppParent* actor, nsIURI* uri,
     const Maybe<LoadInfoArgs>& loadInfoArgs, const nsCString& aMimeContentType,
     const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const Maybe<URIParams>& aReferrer,
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    nsIURI* aReferrer, const MaybeDiscarded<BrowsingContext>& aContext,
     const bool& aShouldCloseWindow) {
   BrowsingContext* context = aContext.IsDiscarded() ? nullptr : aContext.get();
   static_cast<ExternalHelperAppParent*>(actor)->Init(
@@ -3738,46 +3729,43 @@ mozilla::ipc::IPCResult ContentParent::RecvPSpeechSynthesisConstructor(
 #endif
 
 mozilla::ipc::IPCResult ContentParent::RecvStartVisitedQueries(
-    const nsTArray<URIParams>& aUris) {
+    const nsTArray<RefPtr<nsIURI>>& aUris) {
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (!history) {
     return IPC_OK();
   }
   for (const auto& params : aUris) {
-    nsCOMPtr<nsIURI> uri = DeserializeURI(params);
-    if (NS_WARN_IF(!uri)) {
+    if (NS_WARN_IF(!params)) {
       continue;
     }
-    history->RegisterVisitedCallback(uri, nullptr);
+    history->RegisterVisitedCallback(params, nullptr);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvSetURITitle(const URIParams& uri,
+mozilla::ipc::IPCResult ContentParent::RecvSetURITitle(nsIURI* uri,
                                                        const nsString& title) {
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
-  if (!ourURI) {
+  if (!uri) {
     return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (history) {
-    history->SetURITitle(ourURI, title);
+    history->SetURITitle(uri, title);
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvIsSecureURI(
-    const uint32_t& aType, const URIParams& aURI, const uint32_t& aFlags,
+    const uint32_t& aType, nsIURI* aURI, const uint32_t& aFlags,
     const OriginAttributes& aOriginAttributes, bool* aIsSecureURI) {
   nsCOMPtr<nsISiteSecurityService> sss(do_GetService(NS_SSSERVICE_CONTRACTID));
   if (!sss) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
-  if (!ourURI) {
+  if (!aURI) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsresult rv = sss->IsSecureURI(aType, ourURI, aFlags, aOriginAttributes,
+  nsresult rv = sss->IsSecureURI(aType, aURI, aFlags, aOriginAttributes,
                                  nullptr, nullptr, aIsSecureURI);
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
@@ -3786,32 +3774,31 @@ mozilla::ipc::IPCResult ContentParent::RecvIsSecureURI(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAccumulateMixedContentHSTS(
-    const URIParams& aURI, const bool& aActive,
+    nsIURI* aURI, const bool& aActive,
     const OriginAttributes& aOriginAttributes) {
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
-  if (!ourURI) {
+  if (!aURI) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsMixedContentBlocker::AccumulateMixedContentHSTS(ourURI, aActive,
+  nsMixedContentBlocker::AccumulateMixedContentHSTS(aURI, aActive,
                                                     aOriginAttributes);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
-    const URIParams& uri, PBrowserParent* windowContext) {
+    nsIURI* uri, PBrowserParent* windowContext) {
   nsCOMPtr<nsIExternalProtocolService> extProtService(
       do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
   if (!extProtService) {
     return IPC_OK();
   }
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
-  if (!ourURI) {
+
+  if (!uri) {
     return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<RemoteWindowContext> context =
       new RemoteWindowContext(static_cast<BrowserParent*>(windowContext));
-  extProtService->LoadURI(ourURI, context);
+  extProtService->LoadURI(uri, context);
   return IPC_OK();
 }
 
@@ -4193,10 +4180,9 @@ nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
 mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
     const nsCString& aKeyword, const bool& aIsPrivateContext,
     nsString* aProviderName, RefPtr<nsIInputStream>* aPostData,
-    Maybe<URIParams>* aURI) {
+    RefPtr<nsIURI>* aURI) {
   *aPostData = nullptr;
-  *aURI = Nothing();
-
+  *aURI = nullptr;
   nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
   if (!fixup) {
     return IPC_OK();
@@ -4210,10 +4196,9 @@ mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
     return IPC_OK();
   }
   info->GetKeywordProviderName(*aProviderName);
-
   nsCOMPtr<nsIURI> uri;
   info->GetPreferredURI(getter_AddRefs(uri));
-  SerializeURI(uri, *aURI);
+  *aURI = uri;
   return IPC_OK();
 }
 
@@ -4238,18 +4223,16 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyKeywordSearchLoading(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvCopyFavicon(
-    const URIParams& aOldURI, const URIParams& aNewURI,
-    const IPC::Principal& aLoadingPrincipal, const bool& aInPrivateBrowsing) {
-  nsCOMPtr<nsIURI> oldURI = DeserializeURI(aOldURI);
-  if (!oldURI) {
-    return IPC_OK();
+    nsIURI* aOldURI, nsIURI* aNewURI, const IPC::Principal& aLoadingPrincipal,
+    const bool& aInPrivateBrowsing) {
+  if (!aOldURI) {
+    return IPC_FAIL(this, "aOldURI should not be null");
   }
-  nsCOMPtr<nsIURI> newURI = DeserializeURI(aNewURI);
-  if (!newURI) {
-    return IPC_OK();
+  if (!aNewURI) {
+    return IPC_FAIL(this, "aNewURI should not be null");
   }
 
-  nsDocShell::CopyFavicon(oldURI, newURI, aLoadingPrincipal,
+  nsDocShell::CopyFavicon(aOldURI, aNewURI, aLoadingPrincipal,
                           aInPrivateBrowsing);
   return IPC_OK();
 }
@@ -4465,7 +4448,7 @@ void ContentParent::NotifyRebuildFontList() {
 
 already_AddRefed<mozilla::docshell::POfflineCacheUpdateParent>
 ContentParent::AllocPOfflineCacheUpdateParent(
-    const URIParams& aManifestURI, const URIParams& aDocumentURI,
+    nsIURI* aManifestURI, nsIURI* aDocumentURI,
     const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument,
     const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
   RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
@@ -4474,8 +4457,8 @@ ContentParent::AllocPOfflineCacheUpdateParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPOfflineCacheUpdateConstructor(
-    POfflineCacheUpdateParent* aActor, const URIParams& aManifestURI,
-    const URIParams& aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
+    POfflineCacheUpdateParent* aActor, nsIURI* aManifestURI,
+    nsIURI* aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
     const bool& aStickDocument,
     const CookieJarSettingsArgs& aCookieJarSettingsArgs) {
   MOZ_ASSERT(aActor);
@@ -4842,10 +4825,10 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     PBrowserParent* aThisTab, PBrowserParent* aNewTab,
     const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-    const bool& aWidthSpecified, const Maybe<URIParams>& aURIToLoad,
-    const nsCString& aFeatures, const float& aFullZoom,
-    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-    nsIReferrerInfo* aReferrerInfo, CreateWindowResolver&& aResolve) {
+    const bool& aWidthSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
+    const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+    CreateWindowResolver&& aResolve) {
   nsresult rv = NS_OK;
   CreatedWindowInfo cwi;
 
@@ -4878,13 +4861,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   const uint64_t nextRemoteTabId = ++sNextRemoteTabId;
   sNextBrowserParents.Put(nextRemoteTabId, newTab);
 
-  const nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
-
   nsCOMPtr<nsIRemoteTab> newRemoteTab;
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ true, aChromeFlags, aCalledFromJS,
-      aWidthSpecified, uriToLoad, aFeatures, aFullZoom, nextRemoteTabId,
+      aWidthSpecified, aURIToLoad, aFeatures, aFullZoom, nextRemoteTabId,
       VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
       aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ false, aCsp);
@@ -4918,21 +4899,19 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
-    const bool& aCalledFromJS, const bool& aWidthSpecified,
-    const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
-    const float& aFullZoom, const nsString& aName,
+    const bool& aCalledFromJS, const bool& aWidthSpecified, nsIURI* aURIToLoad,
+    const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
     nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     nsIReferrerInfo* aReferrerInfo) {
   MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(aName));
 
   nsCOMPtr<nsIRemoteTab> newRemoteTab;
   bool windowIsNew;
-  nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
 
   // If we have enough data, check the schemes of the loader and loadee
   // to make sure they make sense.
-  if (uriToLoad && uriToLoad->SchemeIs("file") &&
+  if (aURIToLoad && aURIToLoad->SchemeIs("file") &&
       !GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE) &&
       Preferences::GetBool("browser.tabs.remote.enforceRemoteTypeRestrictions",
                            false)) {
@@ -4940,7 +4919,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
 #  ifdef DEBUG
     nsAutoCString uriToLoadStr;
     nsAutoCString triggeringUriStr;
-    uriToLoad->GetAsciiSpec(uriToLoadStr);
+    aURIToLoad->GetAsciiSpec(uriToLoadStr);
     aTriggeringPrincipal->GetAsciiSpec(triggeringUriStr);
 
     NS_WARNING(nsPrintfCString(
@@ -4958,7 +4937,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
   nsresult rv;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ false, aChromeFlags, aCalledFromJS,
-      aWidthSpecified, uriToLoad, aFeatures, aFullZoom,
+      aWidthSpecified, aURIToLoad, aFeatures, aFullZoom,
       /* aNextRemoteTabId = */ 0, aName, rv, newRemoteTab, &windowIsNew,
       openLocation, aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ true, aCsp);
@@ -5033,14 +5012,13 @@ mozilla::ipc::IPCResult ContentParent::RecvSetupFamilyCharMap(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetHyphDict(
-    const mozilla::ipc::URIParams& aURI,
-    mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle, uint32_t* aOutSize) {
-  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  if (!uri) {
+    nsIURI* aURI, mozilla::ipc::SharedMemoryBasic::Handle* aOutHandle,
+    uint32_t* aOutSize) {
+  if (!aURI) {
     return IPC_FAIL_NO_REASON(this);
   }
   nsHyphenationManager::Instance()->ShareHyphDictToProcess(
-      uri, Pid(), aOutHandle, aOutSize);
+      aURI, Pid(), aOutHandle, aOutSize);
   return IPC_OK();
 }
 
@@ -5587,7 +5565,7 @@ bool ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor) {
 // PURLClassifierLocalParent
 
 PURLClassifierLocalParent* ContentParent::AllocPURLClassifierLocalParent(
-    const URIParams& aURI, const nsTArray<IPCURLClassifierFeature>& aFeatures) {
+    nsIURI* aURI, const nsTArray<IPCURLClassifierFeature>& aFeatures) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<URLClassifierLocalParent> actor = new URLClassifierLocalParent();
@@ -5595,21 +5573,20 @@ PURLClassifierLocalParent* ContentParent::AllocPURLClassifierLocalParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPURLClassifierLocalConstructor(
-    PURLClassifierLocalParent* aActor, const URIParams& aURI,
+    PURLClassifierLocalParent* aActor, nsIURI* aURI,
     nsTArray<IPCURLClassifierFeature>&& aFeatures) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
 
   nsTArray<IPCURLClassifierFeature> features = std::move(aFeatures);
 
-  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  if (!uri) {
-    NS_WARNING("Failed to DeserializeURI");
+  if (!aURI) {
+    NS_WARNING("aURI should not be null");
     return IPC_FAIL_NO_REASON(this);
   }
 
   auto* actor = static_cast<URLClassifierLocalParent*>(aActor);
-  return actor->StartClassify(uri, features);
+  return actor->StartClassify(aURI, features);
 }
 
 bool ContentParent::DeallocPURLClassifierLocalParent(
@@ -5623,7 +5600,7 @@ bool ContentParent::DeallocPURLClassifierLocalParent(
 }
 
 PLoginReputationParent* ContentParent::AllocPLoginReputationParent(
-    const URIParams& aURI) {
+    nsIURI* aURI) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<LoginReputationParent> actor = new LoginReputationParent();
@@ -5631,17 +5608,16 @@ PLoginReputationParent* ContentParent::AllocPLoginReputationParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPLoginReputationConstructor(
-    PLoginReputationParent* aActor, const URIParams& aURI) {
+    PLoginReputationParent* aActor, nsIURI* aURI) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
 
-  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  if (!uri) {
+  if (!aURI) {
     return IPC_FAIL_NO_REASON(this);
   }
 
   auto* actor = static_cast<LoginReputationParent*>(aActor);
-  return actor->QueryReputation(uri);
+  return actor->QueryReputation(aURI);
 }
 
 bool ContentParent::DeallocPLoginReputationParent(
