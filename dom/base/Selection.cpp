@@ -888,7 +888,7 @@ nsresult Selection::AddRangesForUserSelectableNodes(
       // See https://github.com/w3c/selection-api/issues/53.
       const bool executeDefaultAction = MaybeDispatchSelectstartEvent(
           *aRange, nsFrameSelection::sSelectionEventsOnTextControlsEnabled,
-          GetDocument());
+          doc);
 
       if (!executeDefaultAction) {
         return NS_OK;
