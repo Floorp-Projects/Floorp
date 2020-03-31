@@ -726,24 +726,23 @@ static MOZ_MUST_USE bool SavedFrame_checkThis(JSContext* cx, CallArgs& args,
 
 } /* namespace js */
 
-namespace JS {
-
-static inline js::SavedFrame* UnwrapSavedFrame(JSContext* cx,
-                                               JSPrincipals* principals,
-                                               HandleObject obj,
-                                               SavedFrameSelfHosted selfHosted,
-                                               bool& skippedAsync) {
+js::SavedFrame* js::UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals,
+                                     HandleObject obj,
+                                     JS::SavedFrameSelfHosted selfHosted,
+                                     bool& skippedAsync) {
   if (!obj) {
     return nullptr;
   }
 
-  js::RootedSavedFrame frame(cx, obj->maybeUnwrapAs<js::SavedFrame>());
+  RootedSavedFrame frame(cx, obj->maybeUnwrapAs<SavedFrame>());
   if (!frame) {
     return nullptr;
   }
 
   return GetFirstSubsumedFrame(cx, principals, frame, selfHosted, skippedAsync);
 }
+
+namespace JS {
 
 JS_PUBLIC_API SavedFrameResult GetSavedFrameSource(
     JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
