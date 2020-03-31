@@ -24,11 +24,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=743049
 var expected = [
 { name: "Error", message: "foo", filename: String(location), lineNumber: 45 },
 { name: "Error", message: "foo", filename: "bar", lineNumber: 123 },
-{ name: "", message: "uncaught exception: [object Object]", filename: location.href, lineNumber: 80 },
+{ name: "", message: "uncaught exception: [object Object]" },
 { name: "DuckError", message: "foo", filename: "bar", lineNumber: 123 },
-{ name: "", message: "uncaught exception: [object Object]", filename: location.href, lineNumber: 80 },
+{ name: "", message: "uncaught exception: [object Object]" },
 { name: "", message: "foo", filename: "baz", lineNumber: 123 },
-{ name: "", message: "uncaught exception: [object Object]", filename: location.href, lineNumber: 80 },
+{ name: "", message: "uncaught exception: [object Object]" },
 { name: "InvalidStateError", message: "Cannot set 'responseType' property on XMLHttpRequest after 'send()' (when its state is LOADING or DONE).", filename: String(location), lineNumber: 62 },
 { name: "ReferenceError", message: "xxx is not defined", filename: String(location), lineNumber: 64 },
 { name: "ReferenceError", message: "xxx is not defined", filename: String(location), lineNumber: 66 }
@@ -76,6 +76,8 @@ window.onmessage = function(e) {
 			is(e.lineNumber, expected[counter].lineNumber, counter + " catch lineno");
 		} else {
 			is("uncaught exception: " + e, expected[counter].message, counter + " catch message");
+			is(undefined, expected[counter].filename, counter + " catch filename");
+			is(undefined, expected[counter].lineNumber, counter + " catch lineno");
 		}
 		throw e;
 	}
@@ -83,8 +85,8 @@ window.onmessage = function(e) {
 };
 window.onerror = function(message, filename, lineno) {
 	is(message, Error.prototype.toString.call(expected[counter]), counter + " onerror message");
-	is(filename, expected[counter].filename, counter + " onerror filename");
-	is(lineno, expected[counter].lineNumber, counter + " onerror lineno");
+	is(filename, expected[counter].filename || "", counter + " onerror filename");
+	is(lineno, expected[counter].lineNumber || 0, counter + " onerror lineno");
 	postMessage(++counter, origin);
 	return true;
 };
