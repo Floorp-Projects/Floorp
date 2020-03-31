@@ -503,7 +503,7 @@ void GeckoViewHistory::HandleVisitedState(
       }
 
       VisitedQueryResult& result = *visitedURIs.AppendElement();
-      SerializeURI(visitedURI.mURI, result.uri());
+      result.uri() = visitedURI.mURI;
       result.visited() = visitedURI.mVisited;
     }
     if (visitedURIs.IsEmpty()) {
