@@ -740,7 +740,6 @@ function run_test_real() {
   do_get_profile();
 
   Services.prefs.setBoolPref("network.predictor.enabled", true);
-  Services.prefs.setBoolPref("network.predictor.cleaned-up", true);
   Services.prefs.setBoolPref("network.predictor.doing-tests", true);
 
   predictor = Cc["@mozilla.org/network/predictor;1"].getService(
@@ -752,7 +751,6 @@ function run_test_real() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.predictor.preconnect-min-confidence");
     Services.prefs.clearUserPref("network.predictor.enabled");
-    Services.prefs.clearUserPref("network.predictor.cleaned-up");
     Services.prefs.clearUserPref("network.predictor.preresolve-min-confidence");
     Services.prefs.clearUserPref("network.predictor.enable-prefetch");
     Services.prefs.clearUserPref(

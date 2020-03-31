@@ -11,7 +11,7 @@ that encompasses a variety of things.
 - Things that might need locking in an enterprise installation.
 - Application data (e.g.
   `browser.onboarding.tour.onboarding-tour-addons.completed`,
-  `services.sync.clients.lastSync`, `network.predictor.cleaned-up`).
+  `services.sync.clients.lastSync`).
 - A cheap and dirty form of IPC(!) (some devtools prefs).
 
 Some of these (particularly the last two) are not an ideal use of libpref.
