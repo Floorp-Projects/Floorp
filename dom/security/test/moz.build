@@ -33,4 +33,5 @@ BROWSER_CHROME_MANIFESTS += [
     'cors/browser.ini',
     'csp/browser.ini',
     'general/browser.ini',
+    'https-only/browser.ini',
 ]
