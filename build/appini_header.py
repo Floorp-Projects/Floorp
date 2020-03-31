@@ -29,7 +29,7 @@ def main(output, file):
     appdata['App:profile'] = ('"%s"' % appdata['App:profile']
                               if 'App:profile' in appdata else 'NULL')
     expected = ('App:vendor', 'App:name', 'App:remotingname', 'App:version', 'App:buildid',
-                'App:id', 'Gecko:minversion', 'Gecko:maxversion', 'AppUpdate:url')
+                'App:id', 'Gecko:minversion', 'Gecko:maxversion')
     missing = [var for var in expected if var not in appdata]
     if missing:
         print("Missing values in %s: %s" % (file, ', '.join(missing)),
@@ -43,6 +43,9 @@ def main(output, file):
         appdata['App:sourceurl'] = '"%(App:sourcerepository)s/rev/%(App:sourcestamp)s"' % appdata
     else:
         appdata['App:sourceurl'] = 'NULL'
+
+    if 'AppUpdate:url' not in appdata:
+        appdata['AppUpdate:url'] = ''
 
     output.write('''#include "mozilla/XREAppData.h"
              static const mozilla::StaticXREAppData sAppData = {
