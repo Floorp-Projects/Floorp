@@ -158,7 +158,12 @@ class ExperimentsTest {
         // Run this test with experiment updates as async to help validate async library operations
         resetExperiments()
 
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         verify(experimentStorage).retrieve()
         verify(experimentsUpdater).initialize(any())
@@ -175,7 +180,12 @@ class ExperimentsTest {
         val snapshot = ExperimentsSnapshot(experimentsList, null)
         `when`(experimentSource.getExperiments(any())).thenReturn(snapshot)
 
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         verify(experimentStorage, times(1)).retrieve()
         verify(experimentSource, times(1)).getExperiments(any())
@@ -191,7 +201,12 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(emptySnapshot)).thenReturn(updateResult)
         `when`(experimentStorage.retrieve()).thenReturn(emptySnapshot)
 
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         verify(experimentSource).getExperiments(emptySnapshot)
         verify(experiments).onExperimentsUpdated(updateResult)
@@ -212,7 +227,12 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(storageSnapshot)).thenReturn(updateResult)
         `when`(experimentStorage.retrieve()).thenReturn(storageSnapshot)
 
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         verify(experimentSource).getExperiments(storageSnapshot)
         verify(experiments).onExperimentsUpdated(updateResult)
@@ -232,7 +252,13 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(any())).then {
             throw ExperimentDownloadException("oops")
         }
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         val returned = experiments.experiments
         assertEquals(2, returned.size)
@@ -278,7 +304,12 @@ class ExperimentsTest {
         val snapshot1 = ExperimentsSnapshot(experimentsList1, null)
         `when`(experimentSource.getExperiments(any())).thenReturn(snapshot1)
 
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         verify(experimentStorage, times(1)).retrieve()
         verify(experimentSource, times(1)).getExperiments(any())
@@ -309,7 +340,13 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(any())).thenReturn(snapshot1)
 
         var canary = false
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration) { canary = true }
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         verify(experimentStorage, times(1)).retrieve()
         verify(experimentSource, times(1)).getExperiments(any())
@@ -322,7 +359,13 @@ class ExperimentsTest {
     @Test
     fun getActiveExperiments() {
         resetExperiments()
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(mockContext, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
         experiments.experimentsResult = ExperimentsSnapshot(experimentsList, null)
         experiments.findAndStartActiveExperiment()
 
@@ -333,7 +376,13 @@ class ExperimentsTest {
     @Test
     fun `enrollment and unenrollment recorded in Glean`() {
         resetExperiments()
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(mockContext, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         // Update the experiments with an empty list to unenroll from any experiments
         experiments.onExperimentsUpdated(ExperimentsSnapshot(listOf(), null))
@@ -371,7 +420,12 @@ class ExperimentsTest {
                 )
             )
 
+            // Since initialization is performed off of the calling thread, we must be careful to
+            // await it in tests to prevent async issues.
             experiments.initialize(mockContext, configuration)
+            runBlocking {
+                experiments.testInitJob?.join()
+            }
             experiments.experimentsResult = ExperimentsSnapshot(experimentsList, null)
             experiments.findAndStartActiveExperiment()
 
@@ -391,7 +445,12 @@ class ExperimentsTest {
                 )
             )
 
+            // Since initialization is performed off of the calling thread, we must be careful to
+            // await it in tests to prevent async issues.
             experiments.initialize(mockContext, configuration)
+            runBlocking {
+                experiments.testInitJob?.join()
+            }
             experiments.experimentsResult = ExperimentsSnapshot(experimentsList, null)
             experiments.findAndStartActiveExperiment()
 
@@ -427,7 +486,13 @@ class ExperimentsTest {
         // First no experiment should be active.
         branchDiceRoll = 0
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(emptyList(), null))
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(mockContext, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         val invocations: MutableList<String> = java.util.ArrayList()
         experiments.withExperiment("first-id") {
@@ -471,7 +536,13 @@ class ExperimentsTest {
         doAnswer {
             throw ExperimentDownloadException("test")
         }.`when`(experimentSource).getExperiments(any())
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(mockContext, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         experiments.withExperiment("first-id") {
             invocations.add(it)
@@ -536,7 +607,13 @@ class ExperimentsTest {
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         assertEquals(experimentsList[0], experiments.getExperiment("first-id"))
         assertNull(experiments.getExperiment("other-id"))
@@ -584,7 +661,13 @@ class ExperimentsTest {
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         val (
             context: Context,
@@ -621,7 +704,13 @@ class ExperimentsTest {
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         val (
             context: Context,
@@ -655,7 +744,13 @@ class ExperimentsTest {
             )
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
+
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
 
         val (
             context: Context,
@@ -758,7 +853,12 @@ class ExperimentsTest {
         `when`(experiments.getExperimentsUpdater(context)).thenReturn(experimentsUpdater)
         `when`(experimentsUpdater.getExperimentSource(configuration)).thenReturn(experimentSource)
 
+        // Since initialization is performed off of the calling thread, we must be careful to
+        // await it in tests to prevent async issues.
         experiments.initialize(context, configuration)
+        runBlocking {
+            experiments.testInitJob?.join()
+        }
         experiments.loadExperiments() // Should not throw
     }
 }
