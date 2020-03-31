@@ -491,8 +491,6 @@ static bool ExecuteInExtensibleLexicalEnvironment(JSContext* cx,
     if (!script) {
       return false;
     }
-
-    DebugAPI::onNewScript(cx, script);
   }
 
   RootedValue rval(cx);
