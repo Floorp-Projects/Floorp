@@ -496,7 +496,7 @@ void AutoJSAPI::ReportException() {
   JS::Rooted<JSObject*> exnStack(cx());
   js::ErrorReport jsReport(cx());
   if (StealExceptionAndStack(&exn, &exnStack) &&
-      jsReport.init(cx(), exn, js::ErrorReport::WithSideEffects, exnStack)) {
+      jsReport.init(cx(), exn, js::ErrorReport::WithSideEffects)) {
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
