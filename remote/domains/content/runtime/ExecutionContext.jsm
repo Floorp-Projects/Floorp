@@ -69,6 +69,16 @@ class ExecutionContext {
     return this._remoteObjects.get(objectId);
   }
 
+  getRemoteObjectByNodeId(nodeId) {
+    for (const value of this._remoteObjects.values()) {
+      if (value.nodeId == nodeId) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
   releaseObject(objectId) {
     return this._remoteObjects.delete(objectId);
   }

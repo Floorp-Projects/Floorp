@@ -288,6 +288,34 @@ class Runtime extends ContentProcessDomain {
     return null;
   }
 
+  _serializeRemoteObject(debuggerObj, executionContextId) {
+    const ctx = this.contexts.get(executionContextId);
+    return ctx._toRemoteObject(debuggerObj);
+  }
+
+  _getRemoteObjectByNodeId(nodeId, executionContextId) {
+    let debuggerObj = null;
+
+    if (typeof executionContextId != "undefined") {
+      const ctx = this.contexts.get(executionContextId);
+      debuggerObj = ctx.getRemoteObjectByNodeId(nodeId);
+    } else {
+      for (const ctx of this.contexts.values()) {
+        const obj = ctx.getRemoteObjectByNodeId(nodeId);
+        if (obj) {
+          debuggerObj = obj;
+          break;
+        }
+      }
+    }
+
+    return debuggerObj;
+  }
+
+  _setRemoteObject(debuggerObj, context) {
+    return context.setRemoteObject(debuggerObj);
+  }
+
   _getDefaultContextForWindow(innerWindowId) {
     if (!innerWindowId) {
       const { windowUtils } = this.content;
