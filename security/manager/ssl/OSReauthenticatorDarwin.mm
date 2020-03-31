@@ -13,6 +13,8 @@ using namespace mozilla;
 #include <CoreFoundation/CoreFoundation.h>
 #include <LocalAuthentication/LocalAuthentication.h>
 
+static const int32_t kPasswordNotSetErrorCode = -1000;
+
 nsresult ReauthenticateUserMacOS(const nsAString& aPrompt,
                                  /* out */ bool& aReauthenticated) {
   // The idea here is that we ask to be authorized to unlock the user's session.
@@ -24,7 +26,7 @@ nsresult ReauthenticateUserMacOS(const nsAString& aPrompt,
 
   dispatch_semaphore_t sema = dispatch_semaphore_create(0);
 
-  __block BOOL biometricSuccess;  // mark variable r/w across the block
+  __block BOOL biometricSuccess = NO;  // mark variable r/w across the block
 
   // Note: This is an async callback in an already-async Promise chain.
   [context evaluatePolicy:LAPolicyDeviceOwnerAuthentication
@@ -34,8 +36,11 @@ nsresult ReauthenticateUserMacOS(const nsAString& aPrompt,
                         // error is not particularly useful in this context, and we have no
                         // mechanism to really return it. We could use it to set the nsresult,
                         // but this is a best-effort mechanism and there's no particular case for
-                        // propagating up XPCOM.
-                        biometricSuccess = success;
+                        // propagating up XPCOM. The one exception being a user account that
+                        // has no passcode set, which we handle below.
+                        if (success || [error code] == kPasswordNotSetErrorCode) {
+                          biometricSuccess = YES;
+                        }
                         dispatch_semaphore_signal(sema);
                       });
                     }];
