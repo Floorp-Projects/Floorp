@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release:run_on_releases
+    - taskgraph.transforms.bouncer_submission_partners:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: release partners bouncer submission job
+    worker-type: bouncer
+    worker:
+        implementation: bouncer-submission
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:bouncer:action:submission
+                - project:releng:bouncer:server:production-nazgul
+            staging:
+                - project:releng:bouncer:action:submission
+                - project:releng:bouncer:server:staging-nazgul
+    run-on-projects: []
+    shipping-phase: promote
+    locales-file: browser/locales/shipped-locales
+    treeherder:
+        symbol: Rel(BncSubNazgul-P)
+        kind: test
+        tier: 3
+
+jobs:
+    firefox:
+        bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
+        bouncer-products:
+            by-release-type:
+                default: ['installer', 'stub-installer']
+                esr.*: []
+        shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt

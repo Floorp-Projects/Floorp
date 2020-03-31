@@ -24,15 +24,15 @@ job-defaults:
         by-project:
             mozilla-central:
                 - project:releng:bouncer:action:locations
-                - project:releng:bouncer:server:production
+                - project:releng:bouncer:server:production-nazgul
             default:
                 - project:releng:bouncer:action:locations
-                - project:releng:bouncer:server:staging
+                - project:releng:bouncer:server:staging-nazgul
     shipping-phase: ship
     treeherder:
-        symbol: BncLoc
+        symbol: BncLocNazgul
         kind: other
-        tier: 1
+        tier: 3
 
 jobs:
     firefox:
