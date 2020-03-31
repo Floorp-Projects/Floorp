@@ -54,6 +54,7 @@ have registered to open.
 
 | Name | Summary |
 |---|---|
+| [interceptsAppInitiatedRequests](../../mozilla.components.concept.engine.request/-request-interceptor/intercepts-app-initiated-requests.md) | `open fun interceptsAppInitiatedRequests(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [RequestInterceptor](../../mozilla.components.concept.engine.request/-request-interceptor/index.md) should intercept load requests initiated by the app (via direct calls to [EngineSession.loadUrl](../../mozilla.components.concept.engine/-engine-session/load-url.md)). All other requests triggered by users interacting with web content (e.g. following links) or redirects will always be intercepted. |
 | [onErrorRequest](../../mozilla.components.concept.engine.request/-request-interceptor/on-error-request.md) | `open fun onErrorRequest(session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`, errorType: `[`ErrorType`](../../mozilla.components.browser.errorpages/-error-type/index.md)`, uri: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`ErrorResponse`](../../mozilla.components.concept.engine.request/-request-interceptor/-error-response/index.md)`?`<br>A request that the engine wasn't able to handle that resulted in an error. |
 
 ### Extension Functions

@@ -2,7 +2,7 @@
 
 # Url
 
-`data class Url : `[`InterceptionResponse`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L25)
+`data class Url : `[`InterceptionResponse`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/request/RequestInterceptor.kt#L26)
 
 ### Constructors
 
