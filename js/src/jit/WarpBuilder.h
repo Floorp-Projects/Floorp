@@ -112,8 +112,8 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool startNewEntryBlock(size_t stackDepth, BytecodeLocation loc);
   MOZ_MUST_USE bool startNewBlock(MBasicBlock* predecessor,
                                   BytecodeLocation loc, size_t numToPop = 0);
-  MOZ_MUST_USE bool startNewLoopHeaderBlock(MBasicBlock* predecessor,
-                                            BytecodeLocation loc);
+  MOZ_MUST_USE bool startNewLoopHeaderBlock(BytecodeLocation loopHead);
+  MOZ_MUST_USE bool startNewOsrPreHeaderBlock(BytecodeLocation loopHead);
 
   bool hasTerminatedBlock() const { return current == nullptr; }
   void setTerminatedBlock() { current = nullptr; }
