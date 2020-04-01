@@ -17,8 +17,8 @@ export class InfoItem extends HTMLElement {
       infoItemTemplate.content.cloneNode(true)
     );
 
-    document.l10n.translateFragment(this.shadowRoot);
     document.l10n.connectRoot(this.shadowRoot);
+    document.l10n.translateFragment(this.shadowRoot);
 
     this.render();
   }
