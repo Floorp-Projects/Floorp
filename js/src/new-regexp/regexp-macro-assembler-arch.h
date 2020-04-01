@@ -104,6 +104,11 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual Handle<HeapObject> GetCode(Handle<String> source);
 
  private:
+  size_t frameSize_ = 0;
+
+  void createStackFrame();
+  void initFrameAndRegs();
+
   // Push a register on the backtrack stack.
   void Push(js::jit::Register value);
 
@@ -134,6 +139,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   }
 
   void CheckBacktrackStackLimit();
+
+  static bool GrowBacktrackStack(RegExpStack* regexp_stack);
 
   static uint32_t CaseInsensitiveCompareStrings(const char16_t* substring1,
                                                 const char16_t* substring2,
