@@ -97,28 +97,16 @@ class IpcResourceUpdateQueue {
   // we need to know which WR document to generate a frame for when they change.
   IpcResourceUpdateQueue& SubQueue(wr::RenderRoot aRenderRoot) {
     MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
-    if (aRenderRoot == wr::RenderRoot::Default) {
-      MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
-      return *this;
-    }
-    if (!mSubQueues[aRenderRoot]) {
-      mSubQueues[aRenderRoot] = MakeUnique<IpcResourceUpdateQueue>(
-          mWriter.WrBridge(), aRenderRoot, mWriter.ChunkSize());
-    }
-    return *mSubQueues[aRenderRoot];
+    MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
+    return *this;
   }
 
   bool HasAnySubQueue() {
-    for (auto renderRoot : wr::kNonDefaultRenderRoots) {
-      if (mSubQueues[renderRoot]) {
-        return true;
-      }
-    }
     return false;
   }
 
   bool HasSubQueue(wr::RenderRoot aRenderRoot) {
-    return aRenderRoot == wr::RenderRoot::Default || !!mSubQueues[aRenderRoot];
+    return aRenderRoot == wr::RenderRoot::Default;
   }
 
   wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
@@ -194,7 +182,6 @@ class IpcResourceUpdateQueue {
  protected:
   ShmSegmentsWriter mWriter;
   nsTArray<layers::OpUpdateResource> mUpdates;
-  wr::NonDefaultRenderRootArray<UniquePtr<IpcResourceUpdateQueue>> mSubQueues;
   wr::RenderRoot mRenderRoot;
 };
 

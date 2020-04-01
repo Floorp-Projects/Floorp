@@ -329,14 +329,6 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       WrBridge()->GetPipeline(), wrRects[wr::RenderRoot::Default].size,
       mLastDisplayListSizes[wr::RenderRoot::Default], &mDisplayItemCache);
 
-  for (auto renderRoot : wr::kNonDefaultRenderRoots) {
-    if (!rects[renderRoot].IsEmpty()) {
-      builder.CreateSubBuilder(wrRects[renderRoot].size,
-                               mLastDisplayListSizes[renderRoot], nullptr,
-                               renderRoot);
-    }
-  }
-
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
   bool containsSVGGroup = false;
