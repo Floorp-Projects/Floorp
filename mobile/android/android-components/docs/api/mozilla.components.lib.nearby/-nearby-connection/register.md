@@ -2,7 +2,7 @@
 
 # register
 
-`fun register(observer: `[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L231)
+`fun register(observer: `[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L232)
 
 Overrides [Observable.register](../../mozilla.components.support.base.observer/-observable/register.md)
 
@@ -10,7 +10,7 @@ Registers an observer to get notified about changes.
 
 ### Parameters
 
-`observer` - the observer to register.`fun register(observer: `[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L236)
+`observer` - the observer to register.`fun register(observer: `[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`, view: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L237)
 
 Overrides [Observable.register](../../mozilla.components.support.base.observer/-observable/register.md)
 
@@ -23,7 +23,7 @@ registered if the attached state changes.
 
 `observer` - the observer to register.
 
-`view` - the view the provided observer is bound to.`fun register(observer: `[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`, owner: LifecycleOwner, autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L241)
+`view` - the view the provided observer is bound to.`fun register(observer: `[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`, owner: LifecycleOwner, autoPause: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L242)
 
 Overrides [Observable.register](../../mozilla.components.support.base.observer/-observable/register.md)
 
