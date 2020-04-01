@@ -245,23 +245,24 @@ class Scope : public js::gc::TenuredCell {
   friend class GCMarker;
   friend class frontend::ScopeCreationData;
 
+  // If there are any aliased bindings, the shape for the
+  // EnvironmentObject. Otherwise nullptr.
+  using HeaderWithShape = gc::CellHeaderWithTenuredGCPointer<Shape>;
+  HeaderWithShape headerAndEnvironmentShape_;
+
   // The enclosing scope or nullptr.
   const GCPtrScope enclosing_;
 
   // The kind determines data_.
   const ScopeKind kind_;
 
-  // If there are any aliased bindings, the shape for the
-  // EnvironmentObject. Otherwise nullptr.
-  const GCPtrShape environmentShape_;
-
  protected:
   BaseScopeData* data_;
 
   Scope(ScopeKind kind, Scope* enclosing, Shape* environmentShape)
-      : enclosing_(enclosing),
+      : headerAndEnvironmentShape_(environmentShape),
+        enclosing_(enclosing),
         kind_(kind),
-        environmentShape_(environmentShape),
         data_(nullptr) {}
 
   static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
@@ -288,6 +289,9 @@ class Scope : public js::gc::TenuredCell {
       MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Scope;
+  const gc::CellHeader& cellHeader() const {
+    return headerAndEnvironmentShape_;
+  }
 
   template <typename T>
   bool is() const {
@@ -310,7 +314,7 @@ class Scope : public js::gc::TenuredCell {
 
   Scope* enclosing() const { return enclosing_; }
 
-  Shape* environmentShape() const { return environmentShape_; }
+  Shape* environmentShape() const { return headerAndEnvironmentShape_.ptr(); }
 
   static bool hasEnvironment(ScopeKind kind, bool environmentShape) {
     switch (kind) {
@@ -325,7 +329,7 @@ class Scope : public js::gc::TenuredCell {
   }
 
   bool hasEnvironment() const {
-    return hasEnvironment(kind_, environmentShape_);
+    return hasEnvironment(kind_, environmentShape());
   }
 
   uint32_t chainLength() const;
