@@ -60,6 +60,14 @@ class MediaController final
   void SeekBackward();
   void SeekForward();
 
+  // If any of controlled media is being used in Picture-In-Picture mode, then
+  // this function should be callled and set the value.
+  void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode);
+
+  // Reture true if any of controlled media is being used in Picture-In-Picture
+  // mode.
+  bool IsInPictureInPictureMode() const;
+
   // Calling this method explicitly would mark this controller as deprecated,
   // then calling any its method won't take any effect.
   void Shutdown();
@@ -101,6 +109,7 @@ class MediaController final
   int64_t mControlledMediaNum = 0;
   int64_t mPlayingControlledMediaNum = 0;
   bool mShutdown = false;
+  bool mIsInPictureInPictureMode = false;
 
   // This state can match to the `guessed playback state` in the spec [1], it
   // indicates if we have any media element playing within the tab which this
