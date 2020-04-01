@@ -37,6 +37,7 @@
   --urlbar-popup-action-color: #30e60b;
 
   /* Colors copied from in-content button styling */
+  --urlbarView-button-background: rgba(249, 249, 250, 0.24);
   --urlbarView-button-background-hover: rgba(249, 249, 250, 0.15);
   --urlbarView-button-background-active: rgba(249, 249, 250, 0.2);
 }
@@ -353,19 +354,26 @@
   flex-shrink: 0;
 }
 
+.urlbarView-tip-button:hover {
+  background-color: var(--urlbarView-button-background-hover);
+}
+
+.urlbarView-tip-button:hover:active {
+  background-color: var(--urlbarView-button-background-active);
+}
+
 .urlbarView-tip-button[selected] {
   color: var(--urlbarView-primary-button-text);
   background-color: var(--urlbarView-primary-button-background);
   border-color: #0a84ff;
   box-shadow: 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
-.urlbarView-tip-button:hover {
-  color: var(--urlbarView-primary-button-text);
+
+.urlbarView-tip-button[selected]:hover {
   background-color: var(--urlbarView-primary-button-background-hover);
 }
 
-.urlbarView-tip-button:hover:active {
-  color: var(--urlbarView-primary-button-text);
+.urlbarView-tip-button[selected]:hover:active {
   background-color: var(--urlbarView-primary-button-background-active);
 }
 
