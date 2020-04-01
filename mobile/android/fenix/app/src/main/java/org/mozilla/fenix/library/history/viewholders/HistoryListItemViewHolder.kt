@@ -46,8 +46,6 @@ class HistoryListItemViewHolder(
         showDeleteButton: Boolean,
         mode: HistoryFragmentState.Mode
     ) {
-        this.item = item
-
         itemView.history_layout.titleView.text = item.title
         itemView.history_layout.urlView.text = item.url
 
@@ -58,12 +56,18 @@ class HistoryListItemViewHolder(
 
         itemView.history_layout.setSelectionInteractor(item, selectionHolder, historyInteractor)
         itemView.history_layout.changeSelected(item in selectionHolder.selectedItems)
-        itemView.history_layout.loadFavicon(item.url)
-        if (mode === HistoryFragmentState.Mode.Normal) {
+
+        if (this.item?.url != item.url) {
+            itemView.history_layout.loadFavicon(item.url)
+        }
+
+        if (item !in selectionHolder.selectedItems) {
             itemView.overflow_menu.showAndEnable()
         } else {
             itemView.overflow_menu.hideAndDisable()
         }
+
+        this.item = item
     }
 
     private fun toggleHeader(headerText: String?) {

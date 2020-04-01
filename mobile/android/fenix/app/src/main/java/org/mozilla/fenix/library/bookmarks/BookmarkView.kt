@@ -127,8 +127,7 @@ class BookmarkView(
                 setUiForNormalMode(state.tree)
             is BookmarkFragmentState.Mode.Selecting ->
                 setUiForSelectingMode(
-                    context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size),
-                    view.bookmark_list
+                    context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
                 )
         }
         view.bookmarks_progress_bar.isVisible = state.isLoading
@@ -150,8 +149,7 @@ class BookmarkView(
 
     private fun setUiForNormalMode(root: BookmarkNode?) {
         super.setUiForNormalMode(
-            if (BookmarkRoot.Mobile.id == root?.guid) context.getString(R.string.library_bookmarks) else root?.title,
-            view.bookmark_list
+            if (BookmarkRoot.Mobile.id == root?.guid) context.getString(R.string.library_bookmarks) else root?.title
         )
     }
 

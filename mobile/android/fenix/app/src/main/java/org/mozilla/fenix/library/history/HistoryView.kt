@@ -106,14 +106,13 @@ class HistoryView(
         items = state.items
         mode = state.mode
 
-        if (state.mode != oldMode) {
-            interactor.onModeSwitched()
-            historyAdapter.updateMode(state.mode)
+        historyAdapter.updateMode(state.mode)
+        val first = layoutManager.findFirstVisibleItemPosition()
+        val last = layoutManager.findLastVisibleItemPosition() + 1
+        historyAdapter.notifyItemRangeChanged(first, last - first)
 
-            // Deselect all the previously selected items
-            oldMode.selectedItems.forEach {
-                historyAdapter.notifyItemChanged(it.id)
-            }
+        if (state.mode::class != oldMode::class) {
+            interactor.onModeSwitched()
         }
 
         if (state.mode is HistoryFragmentState.Mode.Editing) {
@@ -127,12 +126,10 @@ class HistoryView(
         when (val mode = state.mode) {
             is HistoryFragmentState.Mode.Normal ->
                 setUiForNormalMode(
-                    context.getString(R.string.library_history),
-                    view.history_list)
+                    context.getString(R.string.library_history))
             is HistoryFragmentState.Mode.Editing ->
                 setUiForSelectingMode(
-                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size),
-                    view.history_list)
+                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size))
         }
     }
 
