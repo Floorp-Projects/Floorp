@@ -38,7 +38,7 @@ function targetsReducer(state = initialReducerState, action) {
       };
     }
 
-    case "CLEAR_TARGET": {
+    case "UNREGISTER_TARGET": {
       const targets = state.targets.filter(
         target => target._targetFront !== action.targetFront
       );

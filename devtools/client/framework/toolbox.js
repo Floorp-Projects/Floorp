@@ -67,7 +67,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "clearTarget",
+  "unregisterTarget",
   "devtools/client/framework/actions/index",
   true
 );
@@ -698,7 +698,7 @@ Toolbox.prototype = {
     }
 
     if (this.hostType !== Toolbox.HostType.PAGE) {
-      this.store.dispatch(clearTarget(targetFront));
+      this.store.dispatch(unregisterTarget(targetFront));
     }
   },
 
