@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=402788
+-->
+<head>
+  <title>Test for Bug 1398169</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1398169">Mozilla Bug 1398169</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  async function tests() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.registerContentHandler.enabled", false],
+        ["dom.registerProtocolHandler.insecure.enabled", false],
+      ],
+    });
+    ok(!navigator.registerContentHandler, "navigator.registerContentHandler should be undefined");
+    ok(!navigator.registerProtocolHandler, "navigator.registerProtocolHandler should be undefined");
+    SimpleTest.finish();
+  }
+
+  tests();
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for disabled registerProtocolHandler</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<iframe id="test"></iframe>
+<script type="text/javascript">
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.registerContentHandler.enabled", true],
+      ["dom.registerProtocolHandler.insecure.enabled", false],
+    ],
+  });
+
+  let result = "registerProtocolHandler" in navigator;
+  ok(!result, "Insecure registerProtocolHandler is undefined");
+});
+</script>
+</body>
+</html>
