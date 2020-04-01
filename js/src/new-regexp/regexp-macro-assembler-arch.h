@@ -110,6 +110,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   void initFrameAndRegs();
   void successHandler();
   void exitHandler();
+  void backtrackHandler();
+  void stackOverflowHandler();
 
   // Push a register on the backtrack stack.
   void Push(js::jit::Register value);

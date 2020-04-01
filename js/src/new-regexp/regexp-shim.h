@@ -980,6 +980,10 @@ class Isolate {
   //********** Isolate code **********//
   RegExpStack* regexp_stack() const { return regexpStack_; }
   byte* top_of_regexp_stack() const;
+
+  // This is called from inside no-GC code. Instead of suppressing GC
+  // to allocate the error, we return false from Execute and call
+  // ReportOverRecursed in the caller.
   void StackOverflow() {}
 
 #ifndef V8_INTL_SUPPORT
