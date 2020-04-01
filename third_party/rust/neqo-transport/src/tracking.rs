@@ -478,12 +478,11 @@ impl IndexMut<PNSpace> for AckTracker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neqo_common::once::OnceResult;
+    use lazy_static::lazy_static;
     use std::collections::HashSet;
 
-    fn now() -> Instant {
-        static mut NOW_ONCE: OnceResult<Instant> = OnceResult::new();
-        *unsafe { NOW_ONCE.call_once(Instant::now) }
+    lazy_static! {
+        static ref NOW: Instant = Instant::now();
     }
 
     fn test_ack_range(pns: &[u64], nranges: usize) {
@@ -491,7 +490,7 @@ mod tests {
         let mut packets = HashSet::new();
 
         for pn in pns {
-            rp.set_received(now(), *pn, true);
+            rp.set_received(*NOW, *pn, true);
             packets.insert(*pn);
         }
 
@@ -546,7 +545,7 @@ mod tests {
 
         // This will add one too many disjoint ranges.
         for i in 0..=MAX_TRACKED_RANGES {
-            rp.set_received(now(), (i * 2) as u64, true);
+            rp.set_received(*NOW, (i * 2) as u64, true);
         }
 
         assert_eq!(rp.ranges.len(), MAX_TRACKED_RANGES);
@@ -563,18 +562,18 @@ mod tests {
         // Only application data packets are delayed.
         let mut rp = RecvdPackets::new(PNSpace::ApplicationData);
         assert!(rp.ack_time().is_none());
-        assert!(!rp.ack_now(now()));
+        assert!(!rp.ack_now(*NOW));
 
         // One packet won't cause an ACK to be needed.
-        rp.set_received(now(), 0, true);
-        assert_eq!(Some(now() + ACK_DELAY), rp.ack_time());
-        assert!(!rp.ack_now(now()));
-        assert!(rp.ack_now(now() + ACK_DELAY));
+        rp.set_received(*NOW, 0, true);
+        assert_eq!(Some(*NOW + ACK_DELAY), rp.ack_time());
+        assert!(!rp.ack_now(*NOW));
+        assert!(rp.ack_now(*NOW + ACK_DELAY));
 
         // A second packet will move the ACK time to now.
-        rp.set_received(now(), 1, true);
-        assert_eq!(Some(now()), rp.ack_time());
-        assert!(rp.ack_now(now()));
+        rp.set_received(*NOW, 1, true);
+        assert_eq!(Some(*NOW), rp.ack_time());
+        assert!(rp.ack_now(*NOW));
     }
 
     #[test]
@@ -582,12 +581,12 @@ mod tests {
         for space in &[PNSpace::Initial, PNSpace::Handshake] {
             let mut rp = RecvdPackets::new(*space);
             assert!(rp.ack_time().is_none());
-            assert!(!rp.ack_now(now()));
+            assert!(!rp.ack_now(*NOW));
 
             // Any packet will be acknowledged straight away.
-            rp.set_received(now(), 0, true);
-            assert_eq!(Some(now()), rp.ack_time());
-            assert!(rp.ack_now(now()));
+            rp.set_received(*NOW, 0, true);
+            assert_eq!(Some(*NOW), rp.ack_time());
+            assert!(rp.ack_now(*NOW));
         }
     }
 
@@ -600,12 +599,12 @@ mod tests {
         ] {
             let mut rp = RecvdPackets::new(*space);
             assert!(rp.ack_time().is_none());
-            assert!(!rp.ack_now(now()));
+            assert!(!rp.ack_now(*NOW));
 
             // Any OoO packet will be acknowledged straight away.
-            rp.set_received(now(), 3, true);
-            assert_eq!(Some(now()), rp.ack_time());
-            assert!(rp.ack_now(now()));
+            rp.set_received(*NOW, 3, true);
+            assert_eq!(Some(*NOW), rp.ack_time());
+            assert!(rp.ack_now(*NOW));
         }
     }
 
@@ -613,15 +612,15 @@ mod tests {
     fn aggregate_ack_time() {
         let mut tracker = AckTracker::default();
         // This packet won't trigger an ACK.
-        tracker[PNSpace::Handshake].set_received(now(), 0, false);
+        tracker[PNSpace::Handshake].set_received(*NOW, 0, false);
         assert_eq!(None, tracker.ack_time());
 
         // This should be delayed.
-        tracker[PNSpace::ApplicationData].set_received(now(), 0, true);
-        assert_eq!(Some(now() + ACK_DELAY), tracker.ack_time());
+        tracker[PNSpace::ApplicationData].set_received(*NOW, 0, true);
+        assert_eq!(Some(*NOW + ACK_DELAY), tracker.ack_time());
 
         // This should move the time forward.
-        let later = now() + ACK_DELAY.checked_div(2).unwrap();
+        let later = *NOW + ACK_DELAY.checked_div(2).unwrap();
         tracker[PNSpace::Initial].set_received(later, 0, true);
         assert_eq!(Some(later), tracker.ack_time());
     }

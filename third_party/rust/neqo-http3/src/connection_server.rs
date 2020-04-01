@@ -17,6 +17,7 @@ use std::time::Instant;
 pub struct Http3ServerHandler {
     base_handler: Http3Connection<TransactionServer>,
     events: Http3ServerConnEvents,
+    needs_processing: bool,
 }
 
 impl ::std::fmt::Display for Http3ServerHandler {
@@ -30,6 +31,7 @@ impl Http3ServerHandler {
         Self {
             base_handler: Http3Connection::new(max_table_size, max_blocked_streams),
             events: Http3ServerConnEvents::default(),
+            needs_processing: false,
         }
     }
     pub fn set_response(&mut self, stream_id: u64, headers: &[Header], data: Vec<u8>) -> Res<()> {
@@ -51,6 +53,7 @@ impl Http3ServerHandler {
     ) -> Res<()> {
         self.base_handler.stream_reset(conn, stream_id, app_error)?;
         self.events.remove_events_for_stream_id(stream_id);
+        self.needs_processing = true;
         Ok(())
     }
 
@@ -77,7 +80,11 @@ impl Http3ServerHandler {
         self.events.next_event()
     }
 
-    pub fn should_be_processed(&self) -> bool {
+    pub fn should_be_processed(&mut self) -> bool {
+        if self.needs_processing {
+            self.needs_processing = false;
+            return true;
+        }
         self.base_handler.has_data_to_send() | self.events.has_events()
     }
 

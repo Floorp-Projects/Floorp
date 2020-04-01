@@ -76,7 +76,7 @@ impl Http3Server {
             .http3_handlers
             .iter()
             .filter(|(conn, handler)| {
-                handler.borrow().should_be_processed() && !active_conns.contains(&conn)
+                handler.borrow_mut().should_be_processed() && !active_conns.contains(&conn)
             })
             .map(|(conn, _)| conn)
             .cloned()

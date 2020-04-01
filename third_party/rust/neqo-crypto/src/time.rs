@@ -4,15 +4,25 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::agentio::as_c_void;
 use crate::err::{Error, Res};
+use crate::once::OnceResult;
+use crate::ssl::{PRFileDesc, SSLTimeFunc};
 
-use neqo_common::once::OnceResult;
-
+use std::boxed::Box;
 use std::convert::{TryFrom, TryInto};
 use std::ops::Deref;
+use std::os::raw::c_void;
+use std::pin::Pin;
 use std::time::{Duration, Instant};
 
 include!(concat!(env!("OUT_DIR"), "/nspr_time.rs"));
+
+experimental_api!(SSL_SetTimeFunc(
+    fd: *mut PRFileDesc,
+    cb: SSLTimeFunc,
+    arg: *mut c_void,
+));
 
 /// This struct holds the zero time used for converting between `Instant` and `PRTime`.
 #[derive(Debug)]
@@ -161,6 +171,34 @@ impl TryInto<PRTime> for Interval {
     type Error = Error;
     fn try_into(self) -> Res<PRTime> {
         Ok(PRTime::try_from(self.d.as_micros())?)
+    }
+}
+
+/// `TimeHolder` maintains a `PRTime` value in a form that is accessible to the TLS stack.
+#[derive(Debug)]
+pub struct TimeHolder {
+    t: Pin<Box<PRTime>>,
+}
+
+impl TimeHolder {
+    unsafe extern "C" fn time_func(arg: *mut c_void) -> PRTime {
+        let p = arg as *mut PRTime as *const PRTime;
+        *p.as_ref().unwrap()
+    }
+
+    pub fn bind(&mut self, fd: *mut PRFileDesc) -> Res<()> {
+        unsafe { SSL_SetTimeFunc(fd, Some(Self::time_func), as_c_void(&mut self.t)) }
+    }
+
+    pub fn set(&mut self, t: Instant) -> Res<()> {
+        *self.t = Time::from(t).try_into()?;
+        Ok(())
+    }
+}
+
+impl Default for TimeHolder {
+    fn default() -> Self {
+        TimeHolder { t: Box::pin(0) }
     }
 }
 
