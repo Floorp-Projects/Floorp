@@ -17,6 +17,11 @@ git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
 tag = "v0.2.2"
 
+[source."https://github.com/mozilla/application-services"]
+git = "https://github.com/mozilla/application-services"
+replace-with = "vendored-sources"
+rev = "120e51dd5f2aab4194cf0f7e93b2a8923f4504bb"
+
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
