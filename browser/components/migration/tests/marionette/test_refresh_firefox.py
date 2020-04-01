@@ -532,8 +532,16 @@ class TestFirefoxRefresh(MarionetteTestCase):
                     shutil.rmtree(cleanup.reset_profile_local_path,
                                   ignore_errors=False, onerror=handleRemoveReadonly)
 
+                # TODO (Bug 1626581) - Move this to mozfile.remove.
+                os = self.marionette.session_capabilities["platformName"]
+                # Prepend the "\\?\" prefix on Windows to avoid file name too long issue.
+                if os == "windows" and not cleanup.reset_profile_path.startswith('\\\\?\\'):
+                    profile_path = r"\\?\%s" % cleanup.reset_profile_path
+                else:
+                    profile_path = cleanup.reset_profile_path
+
                 # And delete all the files.
-                shutil.rmtree(cleanup.reset_profile_path,
+                shutil.rmtree(profile_path,
                               ignore_errors=False, onerror=handleRemoveReadonly)
 
     def doReset(self):
