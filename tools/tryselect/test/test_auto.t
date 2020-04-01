@@ -4,7 +4,7 @@
 
 Test auto selector
 
-  $ ./mach try auto --no-push
+  $ ./mach try auto $testargs
   Commit message:
   Tasks automatically selected.
   
@@ -16,14 +16,14 @@ Test auto selector
           "target_tasks_method": "try_auto",
           "try_mode": "try_auto",
           "try_task_config": {
-              "optimize-strategies": "taskgraph.optimize:bugbug_push_schedules"
+              "optimize-strategies": "taskgraph.optimize:experimental.bugbug_push_schedules"
           }
       },
       "version": 2
   }
   
 
-  $ ./mach try auto --no-push --closed-tree
+  $ ./mach try auto $testargs --closed-tree
   Commit message:
   Tasks automatically selected. ON A CLOSED TREE
   
@@ -35,13 +35,13 @@ Test auto selector
           "target_tasks_method": "try_auto",
           "try_mode": "try_auto",
           "try_task_config": {
-              "optimize-strategies": "taskgraph.optimize:bugbug_push_schedules"
+              "optimize-strategies": "taskgraph.optimize:experimental.bugbug_push_schedules"
           }
       },
       "version": 2
   }
   
-  $ ./mach try auto --no-push --closed-tree -m "foo {msg} bar"
+  $ ./mach try auto $testargs --closed-tree -m "foo {msg} bar"
   Commit message:
   foo Tasks automatically selected. bar ON A CLOSED TREE
   
@@ -53,7 +53,7 @@ Test auto selector
           "target_tasks_method": "try_auto",
           "try_mode": "try_auto",
           "try_task_config": {
-              "optimize-strategies": "taskgraph.optimize:bugbug_push_schedules"
+              "optimize-strategies": "taskgraph.optimize:experimental.bugbug_push_schedules"
           }
       },
       "version": 2
