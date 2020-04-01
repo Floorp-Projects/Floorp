@@ -392,10 +392,8 @@
 #editBMPanel_folderMenuList {
   margin: 0;
   min-height: 22px;
-  padding-top: 2px;
-  padding-bottom: 1px;
-  padding-inline-start: 8px;
-  padding-inline-end: 4px;
+  padding-block: 2px 1px;
+  padding-inline: 8px 4px;
 }
 
 #editBMPanel_folderMenuList:-moz-focusring {
@@ -710,8 +708,7 @@ menulist.translate-infobar-element {
 menulist.translate-infobar-element > .menulist-label-box {
   padding-top: 1px;
   padding-inline-start: 0.3em;
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
 }
 
 menulist.translate-infobar-element:hover {

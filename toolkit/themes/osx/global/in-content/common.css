@@ -28,8 +28,7 @@ xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
 
 xul|*.menulist-dropmarker {
   display: -moz-box;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-block: 1px;
 }
 
 xul|menulist > xul|menupopup xul|menu,
