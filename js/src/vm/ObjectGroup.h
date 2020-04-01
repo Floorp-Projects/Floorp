@@ -89,8 +89,9 @@ class ObjectGroup : public gc::TenuredCell {
   class Property;
 
  private:
-  /* Class shared by objects in this group. */
-  const JSClass* const clasp_;  // set by constructor
+  /* Class shared by objects in this group stored in header. */
+  using HeaderWithJSClass = gc::CellHeaderWithNonGCPointer<const JSClass>;
+  HeaderWithJSClass headerAndClasp_;
 
   /* Prototype shared by objects in this group. */
   GCPtr<TaggedProto> proto_;  // set by constructor
@@ -152,7 +153,8 @@ class ObjectGroup : public gc::TenuredCell {
 
  private:
   static inline uint32_t offsetOfClasp() {
-    return offsetof(ObjectGroup, clasp_);
+    return offsetof(ObjectGroup, headerAndClasp_) +
+           HeaderWithJSClass::offsetOfPtr();
   }
 
   static inline uint32_t offsetOfProto() {
@@ -178,7 +180,7 @@ class ObjectGroup : public gc::TenuredCell {
   friend class js::jit::MacroAssembler;
 
  public:
-  const JSClass* clasp() const { return clasp_; }
+  const JSClass* clasp() const { return headerAndClasp_.ptr(); }
 
   bool hasDynamicPrototype() const { return proto_.isDynamic(); }
 
@@ -435,6 +437,7 @@ class ObjectGroup : public gc::TenuredCell {
   void finalize(JSFreeOp* fop);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
+  const gc::CellHeader& cellHeader() const { return headerAndClasp_; }
 
  public:
   const ObjectGroupFlags* addressOfFlags() const { return &flags_; }
