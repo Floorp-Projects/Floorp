@@ -27,6 +27,7 @@ mod err;
 pub mod ext;
 pub mod hkdf;
 pub mod hp;
+mod once;
 mod prio;
 mod replay;
 mod secrets;
@@ -46,7 +47,7 @@ pub use self::replay::AntiReplay;
 pub use self::secrets::SecretDirection;
 pub use auth::AuthenticationStatus;
 
-use neqo_common::once::OnceResult;
+use self::once::OnceResult;
 
 use std::ffi::CString;
 use std::os::raw::c_char;
