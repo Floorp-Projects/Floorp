@@ -5117,9 +5117,9 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
                                        &invoke);
     masm.loadJitCodeRaw(calleereg, objreg);
   } else {
-    // If we are using the jitCodeNoArgCheck entry point, the canonical targets
-    // are known, but due to lambda cloning we may still see lazy versions.
-    masm.loadJitCodeMaybeNoArgCheck(calleereg, objreg);
+    // NOTE: We checked that canonical function script had a valid JitScript.
+    // This will not be tossed without all Ion code being tossed first.
+    masm.loadJitCodeNoArgCheck(calleereg, objreg);
   }
 
   // Target may be a different realm even if same compartment.
@@ -5232,7 +5232,7 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
   } else {
     // NOTE: We checked that canonical function script had a valid JitScript.
     // This will not be tossed without all Ion code being tossed first.
-    masm.loadJitCodeMaybeNoArgCheck(calleereg, objreg);
+    masm.loadJitCodeNoArgCheck(calleereg, objreg);
   }
 
   // Nestle the StackPointer up to the argument vector.
