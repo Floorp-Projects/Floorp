@@ -382,8 +382,7 @@ var SitePermissions = {
 
   /**
    * Checks whether a UI for managing permissions should be exposed for a given
-   * principal. This excludes file URIs, for instance, as they don't have a host,
-   * even though nsIPermissionManager can still handle them.
+   * principal.
    *
    * @param {nsIPrincipal} principal
    *        The principal to check.
@@ -399,7 +398,7 @@ var SitePermissions = {
         "Argument passed as principal is not an instance of Ci.nsIPrincipal"
       );
     }
-    return ["http", "https", "moz-extension"].some(scheme =>
+    return ["http", "https", "moz-extension", "file"].some(scheme =>
       principal.schemeIs(scheme)
     );
   },
