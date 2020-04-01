@@ -4,6 +4,14 @@
 ---
 job-defaults:
     e10s: false
+    fetches:
+        toolchain:
+            by-test-platform:
+                android-em-7.*:
+                    - android-sdk-linux
+                    - linux64-node
+                    - linux64-minidump-stackwalk
+                default: []
     mozharness:
         script:
             by-test-platform:

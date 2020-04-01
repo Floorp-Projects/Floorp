@@ -6,6 +6,13 @@ job-defaults:
     suite:
         category: web-platform-tests
     instance-size: xlarge
+    fetches:
+        toolchain:
+            by-test-platform:
+                android-em-7.*:
+                    - android-sdk-linux
+                    - linux64-minidump-stackwalk
+                default: []
     max-run-time:
         by-test-platform:
             android-em-7.0-x86_64/debug: 7200

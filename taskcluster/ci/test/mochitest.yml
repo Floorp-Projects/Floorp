@@ -10,6 +10,13 @@ job-defaults:
             android-em-7.*: geckoview-androidTest.apk
             android-hw.*: geckoview-androidTest.apk
             default: null
+    fetches:
+        toolchain:
+            by-test-platform:
+                android-em-7.*:
+                    - android-sdk-linux
+                    - linux64-minidump-stackwalk
+                default: []
     variants:
         by-test-platform:
             linux.*64/debug: ['fission']

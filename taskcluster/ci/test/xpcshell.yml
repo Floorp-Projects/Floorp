@@ -91,5 +91,6 @@ xpcshell:
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
                 android-em-7.*:
+                    - android-sdk-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
