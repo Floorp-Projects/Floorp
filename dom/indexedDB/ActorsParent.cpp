@@ -120,6 +120,7 @@
 #include "prsystem.h"
 #include "prtime.h"
 #include "ReportInternalError.h"
+#include "SafeRefPtr.h"
 #include "snappy/snappy.h"
 
 #define DISABLE_ASSERTS_FOR_FUZZING 0
@@ -419,7 +420,7 @@ struct FullDatabaseMetadata {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullDatabaseMetadata)
 
-  MOZ_MUST_USE RefPtr<FullDatabaseMetadata> Duplicate() const;
+  MOZ_MUST_USE SafeRefPtr<FullDatabaseMetadata> Duplicate() const;
 
  private:
   ~FullDatabaseMetadata() = default;
@@ -5890,7 +5891,7 @@ class Database final
 
  private:
   RefPtr<Factory> mFactory;
-  RefPtr<FullDatabaseMetadata> mMetadata;
+  SafeRefPtr<FullDatabaseMetadata> mMetadata;
   RefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTHashtable<nsPtrHashKey<TransactionBase>> mTransactions;
@@ -5924,7 +5925,7 @@ class Database final
   Database(RefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
            const Maybe<ContentParentId>& aOptionalContentParentId,
            const nsACString& aGroup, const nsACString& aOrigin,
-           uint32_t aTelemetryId, RefPtr<FullDatabaseMetadata> aMetadata,
+           uint32_t aTelemetryId, SafeRefPtr<FullDatabaseMetadata> aMetadata,
            RefPtr<FileManager> aFileManager,
            RefPtr<DirectoryLock> aDirectoryLock, bool aFileHandleDisabled,
            bool aChromeWriteAccessAllowed);
@@ -5967,9 +5968,14 @@ class Database final
 
   FileManager* GetFileManager() const { return mFileManager; }
 
-  FullDatabaseMetadata* Metadata() const {
+  const FullDatabaseMetadata& Metadata() const {
     MOZ_ASSERT(mMetadata);
-    return mMetadata;
+    return *mMetadata;
+  }
+
+  SafeRefPtr<FullDatabaseMetadata> MetadataPtr() const {
+    MOZ_ASSERT(mMetadata);
+    return mMetadata.clonePtr();
   }
 
   PBackgroundParent* GetBackgroundParent() const {
@@ -6585,7 +6591,7 @@ class VersionChangeTransaction final
   friend class OpenDatabaseOp;
 
   RefPtr<OpenDatabaseOp> mOpenDatabaseOp;
-  RefPtr<FullDatabaseMetadata> mOldMetadata;
+  SafeRefPtr<FullDatabaseMetadata> mOldMetadata;
 
   FlippedOnce<false> mActorWasAlive;
 
@@ -6959,7 +6965,7 @@ class OpenDatabaseOp final : public FactoryOp {
 
   Maybe<ContentParentId> mOptionalContentParentId;
 
-  RefPtr<FullDatabaseMetadata> mMetadata;
+  SafeRefPtr<FullDatabaseMetadata> mMetadata;
 
   uint64_t mRequestedVersion;
   RefPtr<FileManager> mFileManager;
@@ -6991,7 +6997,7 @@ class OpenDatabaseOp final : public FactoryOp {
 
   void MetadataToSpec(DatabaseSpec& aSpec);
 
-  void AssertMetadataConsistency(const FullDatabaseMetadata* aMetadata)
+  void AssertMetadataConsistency(const FullDatabaseMetadata& aMetadata)
 #ifdef DEBUG
       ;
 #else
@@ -8475,12 +8481,13 @@ class Utils final : public PBackgroundIndexedDBUtilsParent {
 struct DatabaseActorInfo final {
   friend class mozilla::DefaultDelete<DatabaseActorInfo>;
 
-  RefPtr<FullDatabaseMetadata> mMetadata;
+  SafeRefPtr<FullDatabaseMetadata> mMetadata;
   nsTArray<CheckedUnsafePtr<Database>> mLiveDatabases;
   RefPtr<FactoryOp> mWaitingFactoryOp;
 
-  DatabaseActorInfo(FullDatabaseMetadata* aMetadata, Database* aDatabase)
-      : mMetadata(aMetadata) {
+  DatabaseActorInfo(SafeRefPtr<FullDatabaseMetadata> aMetadata,
+                    Database* aDatabase)
+      : mMetadata(std::move(aMetadata)) {
     MOZ_ASSERT(aDatabase);
 
     MOZ_COUNT_CTOR(DatabaseActorInfo);
@@ -13347,12 +13354,12 @@ bool FullObjectStoreMetadata::HasLiveIndexes() const {
   });
 }
 
-RefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
+SafeRefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
   AssertIsOnBackgroundThread();
 
   // FullDatabaseMetadata contains two hash tables of pointers that we need to
   // duplicate so we can't just use the copy constructor.
-  auto newMetadata = MakeRefPtr<FullDatabaseMetadata>(mCommonMetadata);
+  auto newMetadata = MakeSafeRefPtr<FullDatabaseMetadata>(mCommonMetadata);
 
   newMetadata->mDatabaseId = mDatabaseId;
   newMetadata->mFilePath = mFilePath;
@@ -13700,7 +13707,7 @@ Database::Database(RefPtr<Factory> aFactory,
                    const Maybe<ContentParentId>& aOptionalContentParentId,
                    const nsACString& aGroup, const nsACString& aOrigin,
                    uint32_t aTelemetryId,
-                   RefPtr<FullDatabaseMetadata> aMetadata,
+                   SafeRefPtr<FullDatabaseMetadata> aMetadata,
                    RefPtr<FileManager> aFileManager,
                    RefPtr<DirectoryLock> aDirectoryLock,
                    bool aFileHandleDisabled, bool aChromeWriteAccessAllowed)
@@ -14612,8 +14619,8 @@ RefPtr<FullObjectStoreMetadata> TransactionBase::GetMetadataForObjectStoreId(
   }
 
   RefPtr<FullObjectStoreMetadata> metadata;
-  if (!mDatabase->Metadata()->mObjectStores.Get(aObjectStoreId,
-                                                getter_AddRefs(metadata)) ||
+  if (!mDatabase->Metadata().mObjectStores.Get(aObjectStoreId,
+                                               getter_AddRefs(metadata)) ||
       metadata->mDeleted) {
     return nullptr;
   }
@@ -15525,27 +15532,25 @@ bool VersionChangeTransaction::CopyDatabaseMetadata() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mOldMetadata);
 
-  const RefPtr<FullDatabaseMetadata> origMetadata = GetDatabase()->Metadata();
-  MOZ_ASSERT(origMetadata);
+  const auto& origMetadata = GetDatabase()->Metadata();
 
-  RefPtr<FullDatabaseMetadata> newMetadata = origMetadata->Duplicate();
+  SafeRefPtr<FullDatabaseMetadata> newMetadata = origMetadata.Duplicate();
   if (NS_WARN_IF(!newMetadata)) {
     return false;
   }
 
   // Replace the live metadata with the new mutable copy.
   DatabaseActorInfo* info;
-  MOZ_ALWAYS_TRUE(
-      gLiveDatabaseHashtable->Get(origMetadata->mDatabaseId, &info));
+  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(origMetadata.mDatabaseId, &info));
   MOZ_ASSERT(!info->mLiveDatabases.IsEmpty());
-  MOZ_ASSERT(info->mMetadata == origMetadata);
+  MOZ_ASSERT(info->mMetadata == &origMetadata);
 
   mOldMetadata = std::move(info->mMetadata);
   info->mMetadata = std::move(newMetadata);
 
   // Replace metadata pointers for all live databases.
   for (const auto& liveDatabase : info->mLiveDatabases) {
-    liveDatabase->mMetadata = info->mMetadata;
+    liveDatabase->mMetadata = info->mMetadata.clonePtr();
   }
 
   return true;
@@ -15562,7 +15567,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
     return;
   }
 
-  RefPtr<FullDatabaseMetadata> oldMetadata = std::move(mOldMetadata);
+  SafeRefPtr<FullDatabaseMetadata> oldMetadata = std::move(mOldMetadata);
 
   DatabaseActorInfo* info;
   if (!gLiveDatabaseHashtable->Get(oldMetadata->mDatabaseId, &info)) {
@@ -15600,7 +15605,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
     info->mMetadata = std::move(oldMetadata);
 
     for (auto& liveDatabase : info->mLiveDatabases) {
-      liveDatabase->mMetadata = info->mMetadata;
+      liveDatabase->mMetadata = info->mMetadata.clonePtr();
     }
   }
 }
@@ -15692,8 +15697,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
-  MOZ_ASSERT(dbMetadata);
+  const SafeRefPtr<FullDatabaseMetadata> dbMetadata =
+      GetDatabase()->MetadataPtr();
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
@@ -15746,11 +15751,10 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
-  MOZ_ASSERT(dbMetadata);
-  MOZ_ASSERT(dbMetadata->mNextObjectStoreId > 0);
+  const auto& dbMetadata = GetDatabase()->Metadata();
+  MOZ_ASSERT(dbMetadata.mNextObjectStoreId > 0);
 
-  if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
+  if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -15772,7 +15776,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
 
   DebugOnly<bool> foundTargetId = false;
   const bool isLastObjectStore = std::all_of(
-      dbMetadata->mObjectStores.begin(), dbMetadata->mObjectStores.end(),
+      dbMetadata.mObjectStores.begin(), dbMetadata.mObjectStores.end(),
       [&foundTargetId, aObjectStoreId](const auto& objectStoreEntry) -> bool {
         if (uint64_t(aObjectStoreId) == objectStoreEntry.GetKey()) {
           foundTargetId = true;
@@ -15805,13 +15809,14 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
-  MOZ_ASSERT(dbMetadata);
-  MOZ_ASSERT(dbMetadata->mNextObjectStoreId > 0);
+  {
+    const auto& dbMetadata = GetDatabase()->Metadata();
+    MOZ_ASSERT(dbMetadata.mNextObjectStoreId > 0);
 
-  if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
-    ASSERT_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
+      ASSERT_UNLESS_FUZZING();
+      return IPC_FAIL_NO_REASON(this);
+    }
   }
 
   RefPtr<FullObjectStoreMetadata> foundMetadata =
@@ -15857,8 +15862,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
-  MOZ_ASSERT(dbMetadata);
+  const auto dbMetadata = GetDatabase()->MetadataPtr();
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
@@ -15923,20 +15927,20 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
+  {
+    const auto& dbMetadata = GetDatabase()->Metadata();
+    MOZ_ASSERT(dbMetadata.mNextObjectStoreId > 0);
+    MOZ_ASSERT(dbMetadata.mNextIndexId > 0);
 
-  const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
-  MOZ_ASSERT(dbMetadata);
-  MOZ_ASSERT(dbMetadata->mNextObjectStoreId > 0);
-  MOZ_ASSERT(dbMetadata->mNextIndexId > 0);
+    if (NS_WARN_IF(aObjectStoreId >= dbMetadata.mNextObjectStoreId)) {
+      ASSERT_UNLESS_FUZZING();
+      return IPC_FAIL_NO_REASON(this);
+    }
 
-  if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
-    ASSERT_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
-    ASSERT_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    if (NS_WARN_IF(aIndexId >= dbMetadata.mNextIndexId)) {
+      ASSERT_UNLESS_FUZZING();
+      return IPC_FAIL_NO_REASON(this);
+    }
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16005,7 +16009,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
+  const SafeRefPtr<FullDatabaseMetadata> dbMetadata =
+      GetDatabase()->MetadataPtr();
   MOZ_ASSERT(dbMetadata);
   MOZ_ASSERT(dbMetadata->mNextObjectStoreId > 0);
   MOZ_ASSERT(dbMetadata->mNextIndexId > 0);
@@ -21239,7 +21244,7 @@ OpenDatabaseOp::OpenDatabaseOp(RefPtr<Factory> aFactory,
                                const CommonFactoryRequestParams& aParams)
     : FactoryOp(std::move(aFactory), std::move(aContentParent), aParams,
                 /* aDeleting */ false),
-      mMetadata(new FullDatabaseMetadata(aParams.metadata())),
+      mMetadata(MakeRefPtr<FullDatabaseMetadata>(aParams.metadata())),
       mRequestedVersion(aParams.metadata().version()),
       mVersionChangeOp(nullptr),
       mTelemetryId(0) {
@@ -21954,7 +21959,7 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   }
 
   MOZ_ASSERT(info->mMetadata != mMetadata);
-  mMetadata = info->mMetadata;
+  mMetadata = info->mMetadata.clonePtr();
 
   Maybe<uint64_t> newVersion = Some(mRequestedVersion);
 
@@ -21989,7 +21994,7 @@ void OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase) {
   if (mState != State::WaitingForOtherDatabasesToClose) {
     MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
     MOZ_ASSERT(
-        mRequestedVersion > aDatabase->Metadata()->mCommonMetadata.version(),
+        mRequestedVersion > aDatabase->Metadata().mCommonMetadata.version(),
         "Must only be closing databases for a previous version!");
     return;
   }
@@ -22248,20 +22253,20 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
 
   DatabaseActorInfo* info;
   if (gLiveDatabaseHashtable->Get(mDatabaseId, &info)) {
-    AssertMetadataConsistency(info->mMetadata);
-    mMetadata = info->mMetadata;
+    AssertMetadataConsistency(*info->mMetadata);
+    mMetadata = info->mMetadata.clonePtr();
   }
 
   mDatabase = MakeRefPtr<Database>(
       static_cast<Factory*>(Manager()), mCommonParams.principalInfo(),
-      mOptionalContentParentId, mGroup, mOrigin, mTelemetryId, mMetadata,
-      mFileManager, std::move(mDirectoryLock), mFileHandleDisabled,
-      mChromeWriteAccessAllowed);
+      mOptionalContentParentId, mGroup, mOrigin, mTelemetryId,
+      mMetadata.clonePtr(), mFileManager, std::move(mDirectoryLock),
+      mFileHandleDisabled, mChromeWriteAccessAllowed);
 
   if (info) {
     info->mLiveDatabases.AppendElement(mDatabase);
   } else {
-    info = new DatabaseActorInfo(mMetadata, mDatabase);
+    info = new DatabaseActorInfo(mMetadata.clonePtr(), mDatabase);
     gLiveDatabaseHashtable->Put(mDatabaseId, info);
   }
 
@@ -22328,41 +22333,39 @@ void OpenDatabaseOp::MetadataToSpec(DatabaseSpec& aSpec) {
 #ifdef DEBUG
 
 void OpenDatabaseOp::AssertMetadataConsistency(
-    const FullDatabaseMetadata* aMetadata) {
+    const FullDatabaseMetadata& aMetadata) {
   AssertIsOnBackgroundThread();
 
-  const FullDatabaseMetadata* thisDB = mMetadata;
-  const FullDatabaseMetadata* otherDB = aMetadata;
+  const FullDatabaseMetadata& thisDB = *mMetadata;
+  const FullDatabaseMetadata& otherDB = aMetadata;
 
-  MOZ_ASSERT(thisDB);
-  MOZ_ASSERT(otherDB);
-  MOZ_ASSERT(thisDB != otherDB);
+  MOZ_ASSERT(&thisDB != &otherDB);
 
-  MOZ_ASSERT(thisDB->mCommonMetadata.name() == otherDB->mCommonMetadata.name());
-  MOZ_ASSERT(thisDB->mCommonMetadata.version() ==
-             otherDB->mCommonMetadata.version());
-  MOZ_ASSERT(thisDB->mCommonMetadata.persistenceType() ==
-             otherDB->mCommonMetadata.persistenceType());
-  MOZ_ASSERT(thisDB->mDatabaseId == otherDB->mDatabaseId);
-  MOZ_ASSERT(thisDB->mFilePath == otherDB->mFilePath);
+  MOZ_ASSERT(thisDB.mCommonMetadata.name() == otherDB.mCommonMetadata.name());
+  MOZ_ASSERT(thisDB.mCommonMetadata.version() ==
+             otherDB.mCommonMetadata.version());
+  MOZ_ASSERT(thisDB.mCommonMetadata.persistenceType() ==
+             otherDB.mCommonMetadata.persistenceType());
+  MOZ_ASSERT(thisDB.mDatabaseId == otherDB.mDatabaseId);
+  MOZ_ASSERT(thisDB.mFilePath == otherDB.mFilePath);
 
   // |thisDB| reflects the latest objectStore and index ids that have committed
   // to disk. The in-memory metadata |otherDB| keeps track of objectStores and
   // indexes that were created and then removed as well, so the next ids for
   // |otherDB| may be higher than for |thisDB|.
-  MOZ_ASSERT(thisDB->mNextObjectStoreId <= otherDB->mNextObjectStoreId);
-  MOZ_ASSERT(thisDB->mNextIndexId <= otherDB->mNextIndexId);
+  MOZ_ASSERT(thisDB.mNextObjectStoreId <= otherDB.mNextObjectStoreId);
+  MOZ_ASSERT(thisDB.mNextIndexId <= otherDB.mNextIndexId);
 
-  MOZ_ASSERT(thisDB->mObjectStores.Count() == otherDB->mObjectStores.Count());
+  MOZ_ASSERT(thisDB.mObjectStores.Count() == otherDB.mObjectStores.Count());
 
-  for (const auto& objectStoreEntry : thisDB->mObjectStores) {
+  for (const auto& objectStoreEntry : thisDB.mObjectStores) {
     FullObjectStoreMetadata* thisObjectStore = objectStoreEntry.GetData();
     MOZ_ASSERT(thisObjectStore);
     MOZ_ASSERT(!thisObjectStore->mDeleted);
 
     auto* otherObjectStore =
         MetadataNameOrIdMatcher<FullObjectStoreMetadata>::Match(
-            otherDB->mObjectStores, thisObjectStore->mCommonMetadata.id());
+            otherDB.mObjectStores, thisObjectStore->mCommonMetadata.id());
     MOZ_ASSERT(otherObjectStore);
 
     MOZ_ASSERT(thisObjectStore != otherObjectStore);
