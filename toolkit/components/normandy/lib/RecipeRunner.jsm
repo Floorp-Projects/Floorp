@@ -42,15 +42,14 @@ const TIMER_NAME = "recipe-client-addon-run";
 const REMOTE_SETTINGS_COLLECTION = "normandy-recipes-capabilities";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 
-const PREF_PREFIX = "app.normandy";
-const RUN_INTERVAL_PREF = `${PREF_PREFIX}.run_interval_seconds`;
-const FIRST_RUN_PREF = `${PREF_PREFIX}.first_run`;
-const SHIELD_ENABLED_PREF = `${PREF_PREFIX}.enabled`;
-const DEV_MODE_PREF = `${PREF_PREFIX}.dev_mode`;
-const API_URL_PREF = `${PREF_PREFIX}.api_url`;
-const LAZY_CLASSIFY_PREF = `${PREF_PREFIX}.experiments.lazy_classify`;
-const LAST_BUILDID_PREF = `${PREF_PREFIX}.last_seen_buildid`;
-const ONSYNC_SKEW_SEC_PREF = `${PREF_PREFIX}.onsync_skew_sec`;
+const RUN_INTERVAL_PREF = "app.normandy.run_interval_seconds";
+const FIRST_RUN_PREF = "app.normandy.first_run";
+const SHIELD_ENABLED_PREF = "app.normandy.enabled";
+const DEV_MODE_PREF = "app.normandy.dev_mode";
+const API_URL_PREF = "app.normandy.api_url";
+const LAZY_CLASSIFY_PREF = "app.normandy.experiments.lazy_classify";
+const LAST_BUILDID_PREF = "app.normandy.last_seen_buildid";
+const ONSYNC_SKEW_SEC_PREF = "app.normandy.onsync_skew_sec";
 
 // Timer last update preference.
 // see https://searchfox.org/mozilla-central/rev/11cfa0462/toolkit/components/timermanager/UpdateTimerManager.jsm#8
