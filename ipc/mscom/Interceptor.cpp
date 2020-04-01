@@ -707,6 +707,10 @@ Interceptor::QueryInterfaceTarget(REFIID aIid, void** aOutput,
     return E_NOINTERFACE;
   }
 
+  if (mEventSink->IsInterfaceMaybeSupported(aIid) == E_NOINTERFACE) {
+    return E_NOINTERFACE;
+  }
+
   MainThreadInvoker invoker;
   HRESULT hr;
   auto runOnMainThread = [&]() -> void {

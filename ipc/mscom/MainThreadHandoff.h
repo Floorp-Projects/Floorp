@@ -66,6 +66,7 @@ class MainThreadHandoff final : public IInterceptorSink,
                                    NotNull<IStream*> aStream) override;
   STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
   STDMETHODIMP DisconnectHandlerRemotes() override;
+  STDMETHODIMP IsInterfaceMaybeSupported(REFIID aIid) override;
 
   // ICallFrameWalker
   STDMETHODIMP OnWalkInterface(REFIID aIid, PVOID* aInterface, BOOL aIsInParam,

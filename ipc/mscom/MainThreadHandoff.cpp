@@ -551,6 +551,14 @@ MainThreadHandoff::DisconnectHandlerRemotes() {
 }
 
 HRESULT
+MainThreadHandoff::IsInterfaceMaybeSupported(REFIID aIid) {
+  if (!mHandlerProvider) {
+    return S_OK;
+  }
+  return mHandlerProvider->IsInterfaceMaybeSupported(aIid);
+}
+
+HRESULT
 MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
                                    BOOL aIsInParam, BOOL aIsOutParam) {
   MOZ_ASSERT(aInterface && aIsOutParam);
