@@ -197,16 +197,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   MOZ_ASSERT(trc);
   MOZ_ASSERT(thing);
 
-  // Check that CellHeader is the first field in the cell.
-  static_assert(
-      std::is_base_of<CellHeader,
-                      typename std::remove_const<typename std::remove_reference<
-                          decltype(thing->cellHeader())>::type>::type>::value,
-      "GC things must provide a cellHeader() method that returns a reference "
-      "to the cell header");
-  MOZ_ASSERT(static_cast<const void*>(&thing->cellHeader()) ==
-             static_cast<const void*>(thing));
-
   if (!trc->checkEdges()) {
     return;
   }
@@ -1136,7 +1126,7 @@ void BaseScript::traceChildren(JSTracer* trc) {
 }
 
 void Shape::traceChildren(JSTracer* trc) {
-  TraceEdge(trc, &headerAndBase_, "base");
+  TraceEdge(trc, &base_, "base");
   TraceEdge(trc, &propidRef(), "propid");
   if (parent) {
     TraceEdge(trc, &parent, "parent");
@@ -1367,13 +1357,13 @@ void WasmFunctionScope::Data::trace(JSTracer* trc) {
 }
 void Scope::traceChildren(JSTracer* trc) {
   TraceNullableEdge(trc, &enclosing_, "scope enclosing");
-  TraceNullableEdge(trc, &headerAndEnvironmentShape_, "scope env shape");
+  TraceNullableEdge(trc, &environmentShape_, "scope env shape");
   applyScopeDataTyped([trc](auto data) { data->trace(trc); });
 }
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   do {
-    if (scope->environmentShape()) {
-      traverseEdge(scope, scope->environmentShape());
+    if (scope->environmentShape_) {
+      traverseEdge(scope, scope->environmentShape_.get());
     }
     TrailingNamesArray* names = nullptr;
     uint32_t length = 0;
@@ -1965,7 +1955,8 @@ scan_obj : {
   }
 
   markImplicitEdges(obj);
-  traverseEdge(obj, obj->groupRaw());
+  ObjectGroup* group = obj->groupFromGC();
+  traverseEdge(obj, group);
 
   NativeObject* nobj = CallTraceHook(
       [this, obj](auto thingp) { this->traverseEdge(obj, *thingp); }, this, obj,

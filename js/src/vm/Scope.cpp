@@ -382,13 +382,14 @@ uint32_t Scope::environmentChainLength() const {
 
 Shape* Scope::maybeCloneEnvironmentShape(JSContext* cx) {
   // Clone the environment shape if cloning into a different zone.
-  Shape* shape = environmentShape();
-  if (shape && shape->zoneFromAnyThread() != cx->zone()) {
+  if (environmentShape_ &&
+      environmentShape_->zoneFromAnyThread() != cx->zone()) {
     BindingIter bi(this);
-    return CreateEnvironmentShape(cx, bi, shape->getObjectClass(),
-                                  shape->slotSpan(), shape->getObjectFlags());
+    return CreateEnvironmentShape(cx, bi, environmentShape_->getObjectClass(),
+                                  environmentShape_->slotSpan(),
+                                  environmentShape_->getObjectFlags());
   }
-  return shape;
+  return environmentShape_;
 }
 
 /* static */

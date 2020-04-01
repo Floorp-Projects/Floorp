@@ -97,11 +97,10 @@ class RegExpShared : public gc::TenuredCell {
     }
   };
 
-  /* Source to the RegExp, for lazy compilation. */
-  using HeaderWithAtom = gc::CellHeaderWithTenuredGCPointer<JSAtom>;
-  HeaderWithAtom headerAndSource;
-
   RegExpCompilation compilationArray[4];
+
+  /* Source to the RegExp, for lazy compilation. */
+  const GCPtrAtom source;
 
   uint32_t parenCount;
   JS::RegExpFlags flags;
@@ -165,7 +164,7 @@ class RegExpShared : public gc::TenuredCell {
   /* Accounts for the "0" (whole match) pair. */
   size_t pairCount() const { return getParenCount() + 1; }
 
-  JSAtom* getSource() const { return headerAndSource.ptr(); }
+  JSAtom* getSource() const { return source; }
   JS::RegExpFlags getFlags() const { return flags; }
 
   bool global() const { return flags.global(); }
@@ -188,10 +187,7 @@ class RegExpShared : public gc::TenuredCell {
   void discardJitCode();
   void finalize(JSFreeOp* fop);
 
-  static size_t offsetOfSource() {
-    return offsetof(RegExpShared, headerAndSource) +
-           HeaderWithAtom::offsetOfPtr();
-  }
+  static size_t offsetOfSource() { return offsetof(RegExpShared, source); }
 
   static size_t offsetOfFlags() { return offsetof(RegExpShared, flags); }
 
@@ -216,10 +212,6 @@ class RegExpShared : public gc::TenuredCell {
   static bool dumpBytecode(JSContext* cx, MutableHandleRegExpShared res,
                            bool match_only, HandleLinearString input);
 #endif
-
- public:
-  static const JS::TraceKind TraceKind = JS::TraceKind::RegExpShared;
-  const gc::CellHeader& cellHeader() const { return headerAndSource; }
 };
 
 class RegExpZone {
