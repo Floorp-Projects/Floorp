@@ -3793,6 +3793,20 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
   return Ok();
 }
 
+MDefinition* IonBuilder::maybeConvertToNumber(MDefinition* def) {
+  // Try converting strings to numbers during IonBuilder MIR construction,
+  // because MIR foldsTo-folding runs off-main thread.
+  if (def->type() == MIRType::String && def->isConstant()) {
+    JSContext* cx = TlsContext.get();
+    double d;
+    if (StringToNumberPure(cx, def->toConstant()->toString(), &d)) {
+      def->setImplicitlyUsedUnchecked();
+      return constant(NumberValue(d));
+    }
+  }
+  return def;
+}
+
 AbortReasonOr<Ok> IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left,
                                                 MDefinition* right) {
   bool emitted = false;
@@ -3801,6 +3815,11 @@ AbortReasonOr<Ok> IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left,
     MOZ_TRY(binaryArithTryConcat(&emitted, op, left, right));
     if (emitted) {
       return Ok();
+    }
+
+    if (op != JSOp::Add) {
+      left = maybeConvertToNumber(left);
+      right = maybeConvertToNumber(right);
     }
 
     MOZ_TRY(binaryArithTrySpecialized(&emitted, op, left, right));
