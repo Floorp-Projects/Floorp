@@ -19,6 +19,8 @@ bool IsAllowedPath(const nsAString& aFilePath);
 bool IsAllowedPath(const nsACString& aFilePath);
 #endif
 
+extern const char kPathSeparator;
+
 namespace testing {
 
 void SetBlockUNCPaths(bool aBlock);
