@@ -107,23 +107,56 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
+class NoDebug {
+ public:
+  template <typename T>
+  static void print(T v) {}
+};
+
+class DebugCodegenVal {
+  template <typename T>
+  static void print(const char* fmt, T v) {
+    DebugCodegen(DebugChannel::Function, fmt, v);
+  }
+
+ public:
+  static void print(int32_t v) { print(" i32(%d)", v); }
+  static void print(int64_t v) { print(" i64(%" PRId64 ")", v); }
+  static void print(float v) { print(" f32(%f)", v); }
+  static void print(double v) { print(" f64(%lf)", v); }
+  static void print(void* v) { print(" ptr(%p)", v); }
+};
+
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val,
                                    int32_t* loc) {
-  return ToInt32(cx, val, loc);
+  bool ok = ToInt32(cx, val, loc);
+  Debug::print(*loc);
+  return ok;
 }
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val,
                                    int64_t* loc) {
   MOZ_ASSERT(ENABLE_WASM_BIGINT);
+  MOZ_ASSERT(I64BigIntConversionAvailable(cx));
   JS_TRY_VAR_OR_RETURN_FALSE(cx, *loc, ToBigInt64(cx, val));
+  Debug::print(*loc);
   return true;
 }
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc) {
-  return RoundFloat32(cx, val, loc);
+  bool ok = RoundFloat32(cx, val, loc);
+  Debug::print(*loc);
+  return ok;
 }
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_f64(JSContext* cx, HandleValue val,
                                    double* loc) {
-  return ToNumber(cx, val, loc);
+  bool ok = ToNumber(cx, val, loc);
+  Debug::print(*loc);
+  return ok;
 }
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_anyref(JSContext* cx, HandleValue val,
                                       void** loc) {
   RootedAnyRef result(cx, AnyRef::null());
@@ -131,8 +164,10 @@ static bool ToWebAssemblyValue_anyref(JSContext* cx, HandleValue val,
     return false;
   }
   *loc = result.get().forCompiledCode();
+  Debug::print(*loc);
   return true;
 }
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_nullref(JSContext* cx, HandleValue val,
                                        void** loc) {
   if (!val.isNull()) {
@@ -141,8 +176,10 @@ static bool ToWebAssemblyValue_nullref(JSContext* cx, HandleValue val,
     return false;
   }
   *loc = nullptr;
+  Debug::print(*loc);
   return true;
 }
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val,
                                        void** loc) {
   RootedFunction fun(cx);
@@ -150,30 +187,127 @@ static bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val,
     return false;
   }
   *loc = fun;
+  Debug::print(*loc);
   return true;
 }
 
+template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                                void* loc) {
   switch (type.kind()) {
     case ValType::I32:
-      return ToWebAssemblyValue_i32(cx, val, (int32_t*)loc);
+      return ToWebAssemblyValue_i32<Debug>(cx, val, (int32_t*)loc);
     case ValType::I64:
-      return ToWebAssemblyValue_i64(cx, val, (int64_t*)loc);
+      return ToWebAssemblyValue_i64<Debug>(cx, val, (int64_t*)loc);
     case ValType::F32:
-      return ToWebAssemblyValue_f32(cx, val, (float*)loc);
+      return ToWebAssemblyValue_f32<Debug>(cx, val, (float*)loc);
     case ValType::F64:
-      return ToWebAssemblyValue_f64(cx, val, (double*)loc);
+      return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc);
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
-          return ToWebAssemblyValue_funcref(cx, val, (void**)loc);
+          return ToWebAssemblyValue_funcref<Debug>(cx, val, (void**)loc);
         case RefType::Any:
-          return ToWebAssemblyValue_anyref(cx, val, (void**)loc);
+          return ToWebAssemblyValue_anyref<Debug>(cx, val, (void**)loc);
         case RefType::Null:
-          return ToWebAssemblyValue_nullref(cx, val, (void**)loc);
+          return ToWebAssemblyValue_nullref<Debug>(cx, val, (void**)loc);
         case RefType::TypeIndex:
           MOZ_CRASH("temporarily unsupported Ref type in ToWebAssemblyValue");
+      }
+  }
+  MOZ_CRASH("unreachable");
+}
+
+template <typename Debug = NoDebug>
+static bool ToJSValue_i32(JSContext* cx, int32_t src, MutableHandleValue dst) {
+  dst.set(Int32Value(src));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_i64(JSContext* cx, int64_t src, MutableHandleValue dst) {
+#ifdef ENABLE_WASM_BIGINT
+  MOZ_ASSERT(I64BigIntConversionAvailable(cx),
+             "unexpected conversion of i64 from wasm to JS value");
+  // If bi is manipulated other than test & storing, it would need
+  // to be rooted here.
+  BigInt* bi = BigInt::createFromInt64(cx, src);
+  if (!bi) {
+    return false;
+  }
+  dst.set(BigIntValue(bi));
+  Debug::print(src);
+  return true;
+#else
+  MOZ_CRASH("unexpected conversion of i64 from wasm to JS value");
+#endif
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_f32(JSContext* cx, float src, MutableHandleValue dst) {
+  dst.set(JS::CanonicalizedDoubleValue(src));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_f64(JSContext* cx, double src, MutableHandleValue dst) {
+  dst.set(JS::CanonicalizedDoubleValue(src));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_funcref(JSContext* cx, void* src,
+                              MutableHandleValue dst) {
+  dst.set(UnboxFuncRef(FuncRef::fromCompiledCode(src)));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_nullref(JSContext* cx, MutableHandleValue dst) {
+  dst.setNull();
+  Debug::print((void*)nullptr);
+  return true;
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
+  dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+static bool ToJSValue_typeref(JSContext* cx, void* src,
+                              MutableHandleValue dst) {
+  MOZ_CRASH("temporarily unsupported conversion of typeref to JS value");
+}
+
+template <typename Debug = NoDebug>
+static bool ToJSValue(JSContext* cx, const void* src, ValType type,
+                      MutableHandleValue dst) {
+  switch (type.kind()) {
+    case ValType::I32:
+      return ToJSValue_i32<Debug>(cx, *reinterpret_cast<const int32_t*>(src),
+                                  dst);
+    case ValType::I64:
+      return ToJSValue_i64<Debug>(cx, *reinterpret_cast<const int64_t*>(src),
+                                  dst);
+    case ValType::F32:
+      return ToJSValue_f32<Debug>(cx, *reinterpret_cast<const float*>(src),
+                                  dst);
+    case ValType::F64:
+      return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
+                                  dst);
+    case ValType::Ref:
+      switch (type.refTypeKind()) {
+        case RefType::Func:
+          return ToJSValue_funcref<Debug>(
+              cx, *reinterpret_cast<void* const*>(src), dst);
+        case RefType::Null:
+          return ToJSValue_nullref<Debug>(cx, dst);
+        case RefType::Any:
+          return ToJSValue_anyref<Debug>(
+              cx, *reinterpret_cast<void* const*>(src), dst);
+        case RefType::TypeIndex:
+          return ToJSValue_typeref<Debug>(
+              cx, *reinterpret_cast<void* const*>(src), dst);
       }
   }
   MOZ_CRASH("unreachable");
@@ -297,51 +431,10 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
       continue;
     }
     size_t naturalIndex = argTypes.naturalIndex(i);
+    ValType type = fi.funcType().args()[naturalIndex];
     MutableHandleValue argValue = args[naturalIndex];
-    switch (fi.funcType().args()[naturalIndex].kind()) {
-      case ValType::I32: {
-        argValue.set(Int32Value(*(int32_t*)rawArgLoc));
-        break;
-      }
-      case ValType::I64: {
-#ifdef ENABLE_WASM_BIGINT
-        MOZ_ASSERT(I64BigIntConversionAvailable(cx));
-        // If bi is manipulated other than test & storing, it would need
-        // to be rooted here.
-        BigInt* bi = BigInt::createFromInt64(cx, *(int64_t*)rawArgLoc);
-        if (!bi) {
-          return false;
-        }
-        argValue.set(BigIntValue(bi));
-        break;
-#else
-        MOZ_CRASH("unhandled type in callImport");
-#endif
-      }
-      case ValType::F32: {
-        argValue.set(JS::CanonicalizedDoubleValue(*(float*)rawArgLoc));
-        break;
-      }
-      case ValType::F64: {
-        argValue.set(JS::CanonicalizedDoubleValue(*(double*)rawArgLoc));
-        break;
-      }
-      case ValType::Ref: {
-        switch (fi.funcType().args()[naturalIndex].refTypeKind()) {
-          case RefType::Func:
-            argValue.set(
-                UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)rawArgLoc)));
-            break;
-          case RefType::Any:
-          case RefType::Null:
-            argValue.set(
-                UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)rawArgLoc)));
-            break;
-          case RefType::TypeIndex:
-            MOZ_CRASH("temporarily unsupported Ref type in callImport");
-        }
-        break;
-      }
+    if (!ToJSValue(cx, rawArgLoc, type, argValue)) {
+      return false;
     }
   }
 
@@ -1880,96 +1973,60 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   ASSERT_ANYREF_IS_JSOBJECT;
   Rooted<GCVector<JSObject*, 8, SystemAllocPolicy>> refs(cx);
 
-  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments ",
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments [",
                funcIndex);
   RootedValue v(cx);
   for (size_t i = 0; i < funcType->args().length(); ++i) {
     v = i < args.length() ? args[i] : UndefinedValue();
-    switch (funcType->arg(i).kind()) {
-      case ValType::I32:
-        if (!ToInt32(cx, v, (int32_t*)&exportArgs[i])) {
-          return false;
+    ValType type = funcType->arg(i);
+    void* rawArgLoc = &exportArgs[i];
+    if (!ToWebAssemblyValue<DebugCodegenVal>(cx, v, type, rawArgLoc)) {
+      return false;
+    }
+    if (type.isReference()) {
+      void* ptr = *reinterpret_cast<void**>(rawArgLoc);
+      // Store in rooted array until no more GC is possible.
+      switch (type.refTypeKind()) {
+        case RefType::Func: {
+          RootedFunction ref(cx, FuncRef::fromCompiledCode(ptr).asJSFunction());
+          if (!refs.emplaceBack(ref)) {
+            return false;
+          }
+          break;
         }
-        DebugCodegen(DebugChannel::Function, "i32(%d) ",
-                     *(int32_t*)&exportArgs[i]);
-        break;
-      case ValType::I64: {
-#ifdef ENABLE_WASM_BIGINT
-        MOZ_ASSERT(I64BigIntConversionAvailable(cx),
-                   "unexpected i64 flowing into callExport");
-        RootedBigInt bigint(cx, ToBigInt(cx, v));
-        if (!bigint) {
-          return false;
+        case RefType::Null:
+        case RefType::Any: {
+          RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));
+          ASSERT_ANYREF_IS_JSOBJECT;
+          if (!refs.emplaceBack(ref.get().asJSObject())) {
+            return false;
+          }
+          break;
         }
-
-        int64_t* res = (int64_t*)&exportArgs[i];
-        *res = BigInt::toInt64(bigint);
-        DebugCodegen(DebugChannel::Function, "i64(%" PRId64 ") ",
-                     *(int64_t*)&exportArgs[i]);
-        break;
-#else
-        MOZ_CRASH("unexpected i64 flowing into callExport");
-#endif
+        case RefType::TypeIndex:
+          MOZ_CRASH("temporarily unsupported Ref type in callExport");
       }
-      case ValType::F32:
-        if (!RoundFloat32(cx, v, (float*)&exportArgs[i])) {
-          return false;
-        }
-        DebugCodegen(DebugChannel::Function, "f32(%f) ",
-                     *(float*)&exportArgs[i]);
-        break;
-      case ValType::F64:
-        if (!ToNumber(cx, v, (double*)&exportArgs[i])) {
-          return false;
-        }
-        DebugCodegen(DebugChannel::Function, "f64(%lf) ",
-                     *(double*)&exportArgs[i]);
-        break;
-      case ValType::Ref:
-        RootedFunction fun(cx);
-        RootedAnyRef any(cx, AnyRef::null());
-        if (!CheckRefType(cx, funcType->arg(i).refTypeKind(), v, &fun, &any)) {
-          return false;
-        }
-        ASSERT_ANYREF_IS_JSOBJECT;
-        // Store in rooted array until no more GC is possible.
-        switch (funcType->arg(i).refTypeKind()) {
-          case RefType::Func:
-            if (!refs.emplaceBack(fun)) {
-              return false;
-            }
-            break;
-          case RefType::Null:
-          case RefType::Any:
-            if (!refs.emplaceBack(any.get().asJSObject())) {
-              return false;
-            }
-            break;
-          case RefType::TypeIndex:
-            MOZ_CRASH("temporarily unsupported Ref type in callExport");
-        }
-        DebugCodegen(DebugChannel::Function, "ref(#%d) ",
-                     int(refs.length() - 1));
-        break;
+      DebugCodegen(DebugChannel::Function, "/(#%d)", int(refs.length() - 1));
     }
   }
-
-  DebugCodegen(DebugChannel::Function, "\n");
 
   // Copy over reference values from the rooted array, if any.
   if (refs.length() > 0) {
     DebugCodegen(DebugChannel::Function, "; ");
     size_t nextRef = 0;
     for (size_t i = 0; i < funcType->args().length(); ++i) {
-      if (funcType->arg(i).isReference()) {
-        ASSERT_ANYREF_IS_JSOBJECT;
-        *(void**)&exportArgs[i] = (void*)refs[nextRef++];
-        DebugCodegen(DebugChannel::Function, "ptr(#%d) = %p ", int(nextRef - 1),
-                     *(void**)&exportArgs[i]);
+      ValType type = funcType->arg(i);
+      if (type.isReference()) {
+        void** rawArgLoc = (void**)&exportArgs[i];
+        *rawArgLoc = refs[nextRef++];
+        DebugCodegen(DebugChannel::Function, " ref(#%d) := %p ",
+                     int(nextRef - 1), *rawArgLoc);
       }
     }
     refs.clear();
   }
+
+  DebugCodegen(DebugChannel::Function, "]\n");
 
   {
     JitActivation activation(cx);
@@ -1994,72 +2051,23 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return true;
   }
 
-  // Note that we're not rooting the return value; we depend on Unbox*Ref()
-  // not allocating for this to be safe.  The constraint has been noted in
-  // that function.
-  void* retAddr = &exportArgs[0];
-
+  // Note that we're not rooting the register result, if any; we depend
+  // on ResultsCollector::collect to root the value on our behalf,
+  // before causing any GC.
+  void* registerResultLoc = &exportArgs[0];
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; results [",
+               funcIndex);
   const ValTypeVector& results = funcType->results();
-  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; returns %u value(s)",
-               funcIndex, uint32_t(results.length()));
   if (results.length() == 0) {
     args.rval().set(UndefinedValue());
   } else {
     MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-    DebugCodegen(DebugChannel::Function, ": ");
-    switch (results[0].kind()) {
-      case ValType::I32:
-        args.rval().set(Int32Value(*(int32_t*)retAddr));
-        DebugCodegen(DebugChannel::Function, "i32(%d)", *(int32_t*)retAddr);
-        break;
-      case ValType::I64: {
-#ifdef ENABLE_WASM_BIGINT
-        MOZ_ASSERT(I64BigIntConversionAvailable(cx),
-                   "unexpected i64 flowing from callExport");
-        // If bi is manipulated other than test & storing, it would need
-        // to be rooted here.
-        BigInt* bi = BigInt::createFromInt64(cx, *(int64_t*)retAddr);
-        if (!bi) {
-          return false;
-        }
-        args.rval().set(BigIntValue(bi));
-        break;
-#else
-        MOZ_CRASH("unexpected i64 flowing from callExport");
-#endif
-      }
-      case ValType::F32:
-        args.rval().set(NumberValue(*(float*)retAddr));
-        DebugCodegen(DebugChannel::Function, "f32(%f)", *(float*)retAddr);
-        break;
-      case ValType::F64:
-        args.rval().set(NumberValue(*(double*)retAddr));
-        DebugCodegen(DebugChannel::Function, "f64(%lf)", *(double*)retAddr);
-        break;
-      case ValType::Ref:
-        switch (results[0].refTypeKind()) {
-          case RefType::Func:
-            args.rval().set(
-                UnboxFuncRef(FuncRef::fromCompiledCode(*(void**)retAddr)));
-            DebugCodegen(DebugChannel::Function, "funcptr(%p)",
-                         *(void**)retAddr);
-            break;
-          case RefType::Null:
-            args.rval().setNull();
-            DebugCodegen(DebugChannel::Function, "null ");
-            break;
-          case RefType::Any:
-            args.rval().set(
-                UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
-            DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
-            break;
-          case RefType::TypeIndex:
-            MOZ_CRASH("temporarily unsupported Ref type in callExport");
-        }
-        break;
+    if (!ToJSValue<DebugCodegenVal>(cx, registerResultLoc, results[0],
+                                    args.rval())) {
+      return false;
     }
   }
-  DebugCodegen(DebugChannel::Function, "\n");
+  DebugCodegen(DebugChannel::Function, "]\n");
 
   return true;
 }
