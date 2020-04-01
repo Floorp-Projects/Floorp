@@ -161,6 +161,46 @@ declTest("getActor with remoteType mismatch", {
   },
 });
 
+declTest("getActor with iframe messageManagerGroups match", {
+  allFrames: true,
+  messageManagerGroups: ["browsers"],
+
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+
+    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+      let child = content.windowGlobalChild;
+      ok(child, "WindowGlobalChild should have value.");
+      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+    });
+  },
+});
+
+declTest("getActor with iframe messageManagerGroups mismatch", {
+  allFrames: true,
+  messageManagerGroups: ["sidebars"],
+
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    Assert.throws(
+      () => parent.getActor("Test"),
+      /NS_ERROR_NOT_AVAILABLE/,
+      "Should throw if its messageManagerGroups doesn't match."
+    );
+
+    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+      let child = content.windowGlobalChild;
+      ok(child, "WindowGlobalChild should have value.");
+      Assert.throws(
+        () => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/,
+        "Should throw if its messageManagerGroups doesn't match."
+      );
+    });
+  },
+});
+
 declTest("getActor without allFrames", {
   allFrames: false,
 

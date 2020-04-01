@@ -29,6 +29,7 @@ function declTest(name, cfg) {
     includeChrome = false,
     matches,
     remoteTypes,
+    messageManagerGroups,
     fission,
     test,
   } = cfg;
@@ -45,6 +46,9 @@ function declTest(name, cfg) {
   }
   if (remoteTypes !== undefined) {
     actorOptions.remoteTypes = remoteTypes;
+  }
+  if (messageManagerGroups !== undefined) {
+    actorOptions.messageManagerGroups = messageManagerGroups;
   }
 
   // Add a new task for the actor test declared here.
