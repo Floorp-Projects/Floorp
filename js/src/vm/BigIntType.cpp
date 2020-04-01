@@ -193,6 +193,23 @@ size_t BigInt::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   return hasInlineDigits() ? 0 : mallocSizeOf(heapDigits_);
 }
 
+size_t BigInt::sizeOfExcludingThisInNursery(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  MOZ_ASSERT(!isTenured());
+
+  if (hasInlineDigits()) {
+    return 0;
+  }
+
+  const Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+  if (nursery.isInside(heapDigits_)) {
+    // See |AllocateBigIntDigits()|.
+    return RoundUp(digitLength() * sizeof(Digit), sizeof(Value));
+  }
+
+  return mallocSizeOf(heapDigits_);
+}
+
 BigInt* BigInt::zero(JSContext* cx, gc::InitialHeap heap) {
   return createUninitialized(cx, 0, false, heap);
 }
@@ -3639,8 +3656,10 @@ JS::ubi::Node::Size JS::ubi::Concrete<BigInt>::size(
   size_t size = sizeof(JS::BigInt);
   if (IsInsideNursery(&bi)) {
     size += Nursery::bigIntHeaderSize();
+    size += bi.sizeOfExcludingThisInNursery(mallocSizeOf);
+  } else {
+    size += bi.sizeOfExcludingThis(mallocSizeOf);
   }
-  size += bi.sizeOfExcludingThis(mallocSizeOf);
   return size;
 }
 
