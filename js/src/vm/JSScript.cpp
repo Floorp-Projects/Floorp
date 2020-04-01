@@ -581,13 +581,7 @@ bool js::BaseScript::isUsingInterpreterTrampoline(JSRuntime* rt) const {
 }
 
 js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
-  JSObject* source = MaybeForwarded(sourceObject());
-
-  // This may be called during GC. It's OK not to expose the source object
-  // here as it doesn't escape.
-  return UncheckedUnwrapWithoutExpose(source)
-      ->as<ScriptSourceObject>()
-      .source();
+  return MaybeForwarded(sourceObject())->source();
 }
 
 void js::BaseScript::setEnclosingScript(BaseScript* enclosingScript) {
