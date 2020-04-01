@@ -99,7 +99,6 @@
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
 }
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   :root {
     /* Keep this in sync with layout/base/PresShell.cpp! */
@@ -144,7 +143,6 @@
 
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
-}
 }
 
 :root {

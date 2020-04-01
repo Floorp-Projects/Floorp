@@ -9,12 +9,10 @@
   --in-content-warning-container: var(--grey-20);
 }
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   :root {
     --in-content-warning-container: var(--grey-90-a30);
   }
-}
 }
 
 #preferences-root {
