@@ -159,6 +159,7 @@ class BigInt final : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
   void finalize(JSFreeOp* fop);
   js::HashNumber hash() const;
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t sizeOfExcludingThisInNursery(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static BigInt* createUninitialized(
       JSContext* cx, size_t digitLength, bool isNegative,
