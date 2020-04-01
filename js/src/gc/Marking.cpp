@@ -197,6 +197,16 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   MOZ_ASSERT(trc);
   MOZ_ASSERT(thing);
 
+  // Check that CellHeader is the first field in the cell.
+  static_assert(
+      std::is_base_of<CellHeader,
+                      typename std::remove_const<typename std::remove_reference<
+                          decltype(thing->cellHeader())>::type>::type>::value,
+      "GC things must provide a cellHeader() method that returns a reference "
+      "to the cell header");
+  MOZ_ASSERT(static_cast<const void*>(&thing->cellHeader()) ==
+             static_cast<const void*>(thing));
+
   if (!trc->checkEdges()) {
     return;
   }
