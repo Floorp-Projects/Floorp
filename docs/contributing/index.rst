@@ -1,20 +1,18 @@
 Contributing to Firefox
 =======================
 
-This is the preferred location for all Firefox development process and
-source code documentation.
+This section has the details about how we make changes to Firefox, and how you can
+do the same. 
 
 .. toctree::
+   :caption: Making Changes To Firefox
    :maxdepth: 1
-   :glob:
 
    how_to_contribute_firefox
    reviews
-   directory_structure
-
 
 .. toctree::
-   :caption: Version control system
+   :caption: The Mercurial Version Control System
    :maxdepth: 1
    :glob:
 
@@ -22,9 +20,11 @@ source code documentation.
 
 
 .. toctree::
-   :caption: How to build Firefox
+   :caption: Additional Information
    :maxdepth: 1
-   :glob:
-
-   build/*
+   
+   directory_structure
+   build/artifact_builds
+   build/building_mobile_firefox
+   build/supported_configurations
 
