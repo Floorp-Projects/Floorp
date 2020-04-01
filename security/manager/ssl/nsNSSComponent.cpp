@@ -1478,7 +1478,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
 nsresult nsNSSComponent::SetEnabledTLSVersions() {
   // Keep these values in sync with all.js.
   // 1 means TLS 1.0, 2 means TLS 1.1, etc.
-  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 3;
+  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
   static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 4;
   static const uint32_t PSM_DEPRECATED_TLS_VERSION = 1;
 
