@@ -40,10 +40,7 @@ using namespace js;
 
 ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
                          JS::Realm* realm, ObjectGroupFlags initialFlags)
-    : headerAndClasp_(clasp),
-      proto_(proto),
-      realm_(realm),
-      flags_(initialFlags) {
+    : clasp_(clasp), proto_(proto), realm_(realm), flags_(initialFlags) {
   /* Windows may not appear on prototype chains. */
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
   MOZ_ASSERT(JS::StringIsASCII(clasp->name));
@@ -357,7 +354,7 @@ ObjectGroup* JSObject::makeLazyGroup(JSContext* cx, HandleObject obj) {
     group->setInterpretedFunction(&obj->as<JSFunction>());
   }
 
-  obj->setGroupRaw(group);
+  obj->group_ = group;
 
   return group;
 }

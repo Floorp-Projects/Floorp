@@ -136,7 +136,7 @@ bool Shape::makeOwnBaseShape(JSContext* cx) {
   new (nbase) BaseShape(StackBaseShape(this));
   nbase->setOwned(base()->toUnowned());
 
-  setBase(nbase);
+  this->base_ = nbase;
 
   return true;
 }
@@ -155,10 +155,10 @@ void Shape::handoffTableTo(Shape* shape) {
   MOZ_ASSERT_IF(!shape->isEmptyShape() && shape->isDataProperty(),
                 nbase->slotSpan() > shape->slot());
 
-  setBase(nbase->baseUnowned());
+  this->base_ = nbase->baseUnowned();
   nbase->adoptUnowned(shape->base()->toUnowned());
 
-  shape->setBase(nbase);
+  shape->base_ = nbase;
 }
 
 /* static */
@@ -1090,7 +1090,7 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
     if (updateLast) {
       shape->base()->adoptUnowned(nbase);
     } else {
-      shape->setBase(nbase);
+      shape->base_ = nbase;
     }
 
     shape->setSlot(slot);
@@ -1196,7 +1196,7 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
     if (updateLast) {
       shape->base()->adoptUnowned(nbase);
     } else {
-      shape->setBase(nbase);
+      shape->base_ = nbase;
     }
 
     shape->setSlot(SHAPE_INVALID_SLOT);
@@ -1324,7 +1324,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
       if (!nbase) {
         return false;
       }
-      previous->setBase(nbase);
+      previous->base_ = nbase;
     }
   }
 
@@ -1582,14 +1582,11 @@ Shape* Shape::setObjectFlags(JSContext* cx, BaseShape::Flag flags,
 }
 
 inline BaseShape::BaseShape(const StackBaseShape& base)
-    : headerAndClasp_(base.clasp),
-      flags(base.flags),
-      slotSpan_(0),
-      unowned_(nullptr) {}
+    : clasp_(base.clasp), flags(base.flags), slotSpan_(0), unowned_(nullptr) {}
 
 /* static */
 void BaseShape::copyFromUnowned(BaseShape& dest, UnownedBaseShape& src) {
-  dest.headerAndClasp_.setPtr(src.clasp());
+  dest.clasp_ = src.clasp_;
   dest.slotSpan_ = src.slotSpan_;
   dest.unowned_ = &src;
   dest.flags = src.flags | OWNED_SHAPE;
