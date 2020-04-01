@@ -1014,11 +1014,27 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
     // a leak. So if the active window is being destroyed, call WindowLowered
     // directly.
 
-    // TODO mActiveWindow in content process
-    if (mActiveWindow == mFocusedWindow || mActiveWindow == window)
-      WindowLowered(mActiveWindow);
-    else
-      ClearFocus(mActiveWindow);
+    if (XRE_IsParentProcess()) {
+      if (mActiveWindow == mFocusedWindow || mActiveWindow == window) {
+        WindowLowered(mActiveWindow);
+      } else {
+        ClearFocus(mActiveWindow);
+      }
+    } else {
+      BrowsingContext* active = GetActiveBrowsingContext();
+      if (active) {
+        nsPIDOMWindowOuter* activeWindow = active->GetDOMWindow();
+        if (activeWindow) {
+          if ((mFocusedWindow &&
+               mFocusedWindow->GetBrowsingContext() == active) ||
+              (window->GetBrowsingContext() == active)) {
+            WindowLowered(activeWindow);
+          } else {
+            ClearFocus(activeWindow);
+          }
+        }  // else do nothing when an out-of-process iframe is torn down
+      }
+    }
     return NS_OK;
   }
 
