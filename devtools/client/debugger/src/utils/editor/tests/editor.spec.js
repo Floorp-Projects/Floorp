@@ -192,7 +192,7 @@ describe("removeLineClass", () => {
     removeLineClass(codeMirror, line, className);
     expect(codeMirror.removeLineClass).toHaveBeenCalledWith(
       line,
-      "line",
+      "wrapClass",
       className
     );
   });

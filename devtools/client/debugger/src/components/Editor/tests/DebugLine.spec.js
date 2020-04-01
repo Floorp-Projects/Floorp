@@ -84,7 +84,7 @@ describe("DebugLine Component", () => {
 
       expect(doc.removeLineClass.mock.calls).toEqual([]);
       expect(doc.addLineClass.mock.calls).toEqual([
-        [toEditorLine("foo", line), "line", "new-debug-line"],
+        [toEditorLine("foo", line), "wrapClass", "new-debug-line"],
       ]);
     });
 
@@ -112,12 +112,12 @@ describe("DebugLine Component", () => {
         });
 
         expect(doc.removeLineClass.mock.calls).toEqual([
-          [toEditorLine("foo", firstLine), "line", "new-debug-line"],
+          [toEditorLine("foo", firstLine), "wrapClass", "new-debug-line"],
         ]);
 
         expect(doc.addLineClass.mock.calls).toEqual([
-          [toEditorLine("foo", firstLine), "line", "new-debug-line"],
-          [toEditorLine("foo", secondLine), "line", "new-debug-line"],
+          [toEditorLine("foo", firstLine), "wrapClass", "new-debug-line"],
+          [toEditorLine("foo", secondLine), "wrapClass", "new-debug-line"],
         ]);
 
         expect(doc.markText.mock.calls).toEqual([
