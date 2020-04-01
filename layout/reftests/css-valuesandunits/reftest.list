@@ -14,6 +14,6 @@ fuzzy(0-1,0-4) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto-ref.htm
 fails-if(!Android) == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html
 fails-if(!Android) == unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x-ref.html
 fails-if(!Android) == unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y-ref.html
-fuzzy-if(gtkWidget,0-1,0-2) skip-if(gtkWidget) skip-if(cocoaWidget) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html #bug 1564882
+fuzzy-if(gtkWidget,0-1,0-4) fuzzy-if(cocoaWidget,0-1,0-4) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html
 
 == ch-width-1.html ch-width-1-ref.html
