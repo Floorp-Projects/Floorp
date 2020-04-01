@@ -11,18 +11,22 @@
 #include "jit/Linker.h"
 #include "new-regexp/regexp-macro-assembler-arch.h"
 #include "new-regexp/regexp-stack.h"
+#include "vm/MatchPairs.h"
 
 #include "jit/MacroAssembler-inl.h"
 
 namespace v8 {
 namespace internal {
 
+using js::MatchPairs;
 using js::jit::AbsoluteAddress;
 using js::jit::Address;
 using js::jit::AllocatableGeneralRegisterSet;
 using js::jit::Assembler;
 using js::jit::BaseIndex;
 using js::jit::CodeLocationLabel;
+using js::jit::GeneralRegisterBackwardIterator;
+using js::jit::GeneralRegisterForwardIterator;
 using js::jit::GeneralRegisterSet;
 using js::jit::Imm32;
 using js::jit::ImmPtr;
@@ -31,6 +35,7 @@ using js::jit::JitCode;
 using js::jit::Linker;
 using js::jit::LiveGeneralRegisterSet;
 using js::jit::Register;
+using js::jit::Registers;
 using js::jit::StackMacroAssembler;
 
 SMRegExpMacroAssembler::SMRegExpMacroAssembler(JSContext* cx, Isolate* isolate,
@@ -825,7 +830,8 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
 
   masm_.bind(&entry_label_);
 
-  // TODO: create and initialize stack frame
+  createStackFrame();
+  initFrameAndRegs();
 
   masm_.jump(&start_label_);
 
@@ -844,6 +850,163 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
   }
 
   return Handle<HeapObject>(JS::PrivateGCThingValue(code), isolate());
+}
+
+/*
+ * The stack will have the following structure:
+ *  sp-> - FrameData
+ *         - inputStart
+ *         - backtrack stack base
+ *         - matches
+ *         - numMatches
+ *       - Registers
+ *         - Capture positions
+ *         - Scratch registers
+ *       --- frame alignment ---
+ *       - Saved register area
+ *       - Return address
+ */
+void SMRegExpMacroAssembler::createStackFrame() {
+#ifdef JS_CODEGEN_ARM64
+  // ARM64 communicates stack address via SP, but uses a pseudo-sp (PSP) for
+  // addressing.  The register we use for PSP may however also be used by
+  // calling code, and it is nonvolatile, so save it.  Do this as a special
+  // case first because the generic save/restore code needs the PSP to be
+  // initialized already.
+  MOZ_ASSERT(js::jit::PseudoStackPointer64.Is(masm_.GetStackPointer64()));
+  masm_.Str(js::jit::PseudoStackPointer64,
+            vixl::MemOperand(js::jit::sp, -16, vixl::PreIndex));
+
+  // Initialize the PSP from the SP.
+  masm_.initPseudoStackPtr();
+#endif
+
+  // Push non-volatile registers which might be modified by jitcode.
+  size_t pushedNonVolatileRegisters = 0;
+  for (GeneralRegisterForwardIterator iter(savedRegisters_); iter.more();
+       ++iter) {
+    masm_.Push(*iter);
+    pushedNonVolatileRegisters++;
+  }
+
+  // The pointer to InputOutputData is passed as the first argument.
+  // On x86 we have to load it off the stack into temp0_.
+  // On other platforms it is already in a register.
+#ifdef JS_CODEGEN_X86
+  Address ioDataAddr(masm_.getStackPointer(),
+                     (pushedNonVolatileRegisters + 1) * sizeof(void*));
+  masm_.loadPtr(ioDataAddr, temp0_);
+#else
+  if (js::jit::IntArgReg0 != temp0_) {
+    masm_.movePtr(js::jit::IntArgReg0, temp0_);
+  }
+#endif
+
+  // Start a new stack frame.
+  size_t frameBytes = sizeof(FrameData) + num_registers_ * sizeof(void*);
+  frameSize_ = js::jit::StackDecrementForCall(js::jit::ABIStackAlignment,
+                                              masm_.framePushed(), frameBytes);
+  masm_.reserveStack(frameSize_);
+  masm_.checkStackAlignment();
+
+  // Check if we have space on the stack. Use the *NoInterrupt stack limit to
+  // avoid failing repeatedly when the regex code is called from Ion JIT code.
+  // (See bug 1208819)
+  js::jit::Label stack_ok;
+  AbsoluteAddress limit_addr(cx_->addressOfJitStackLimitNoInterrupt());
+  masm_.branchStackPtrRhs(Assembler::Below, limit_addr, &stack_ok);
+
+  // There is not enough space on the stack. Exit with an exception.
+  masm_.movePtr(ImmWord(js::RegExpRunStatus_Error), temp0_);
+  masm_.jump(&exit_label_);
+
+  masm_.bind(&stack_ok);
+}
+
+void SMRegExpMacroAssembler::initFrameAndRegs() {
+  // At this point, an uninitialized stack frame has been created,
+  // and the address of the InputOutputData is in temp0_.
+  Register ioDataReg = temp0_;
+
+  Register matchesReg = temp1_;
+  masm_.loadPtr(Address(ioDataReg, offsetof(InputOutputData, matches)),
+                matchesReg);
+
+  // Initialize output registers
+  masm_.loadPtr(Address(matchesReg, MatchPairs::offsetOfPairs()), temp2_);
+  masm_.storePtr(temp2_, matches());
+  masm_.load32(Address(matchesReg, MatchPairs::offsetOfPairCount()), temp2_);
+  masm_.store32(temp2_, numMatches());
+
+#ifdef DEBUG
+  // Bounds-check numMatches.
+  js::jit::Label enoughRegisters;
+  masm_.branchPtr(Assembler::GreaterThanOrEqual, temp2_,
+                  ImmWord(num_capture_registers_ / 2), &enoughRegisters);
+  masm_.assumeUnreachable("Not enough output pairs for RegExp");
+  masm_.bind(&enoughRegisters);
+#endif
+
+  // Load input start pointer.
+  masm_.loadPtr(Address(ioDataReg, offsetof(InputOutputData, inputStart)),
+                current_position_);
+
+  // Load input end pointer
+  masm_.loadPtr(Address(ioDataReg, offsetof(InputOutputData, inputEnd)),
+                input_end_pointer_);
+
+  // Set up input position to be negative offset from string end.
+  masm_.subPtr(input_end_pointer_, current_position_);
+
+  // Store inputStart
+  masm_.storePtr(current_position_, inputStart());
+
+  // Load start index
+  Register startIndexReg = temp1_;
+  masm_.loadPtr(Address(ioDataReg, offsetof(InputOutputData, startIndex)),
+                startIndexReg);
+  masm_.computeEffectiveAddress(
+      BaseIndex(current_position_, startIndexReg, factor()), current_position_);
+
+  // Initialize current_character_.
+  // Load newline if index is at start, or previous character otherwise.
+  js::jit::Label start_regexp;
+  js::jit::Label load_previous_character;
+  masm_.branchPtr(Assembler::NotEqual, startIndexReg, ImmWord(0),
+                  &load_previous_character);
+  masm_.movePtr(ImmWord('\n'), current_character_);
+  masm_.jump(&start_regexp);
+
+  masm_.bind(&load_previous_character);
+  LoadCurrentCharacterUnchecked(-1, 1);
+  masm_.bind(&start_regexp);
+
+  // Initialize captured registers with inputStart - 1
+  MOZ_ASSERT(num_capture_registers_ > 0);
+  Register inputStartMinusOneReg = temp2_;
+  masm_.loadPtr(inputStart(), inputStartMinusOneReg);
+  masm_.subPtr(Imm32(char_size()), inputStartMinusOneReg);
+  if (num_capture_registers_ > 8) {
+    masm_.movePtr(ImmWord(register_offset(0)), temp1_);
+    js::jit::Label init_loop;
+    masm_.bind(&init_loop);
+    masm_.storePtr(inputStartMinusOneReg, BaseIndex(masm_.getStackPointer(),
+                                                    temp1_, js::jit::TimesOne));
+    masm_.addPtr(ImmWord(sizeof(void*)), temp1_);
+    masm_.branchPtr(Assembler::LessThan, temp1_,
+                    ImmWord(register_offset(num_capture_registers_)),
+                    &init_loop);
+  } else {
+    // Unroll the loop
+    for (int i = 0; i < num_capture_registers_; i++) {
+      masm_.storePtr(inputStartMinusOneReg, register_location(i));
+    }
+  }
+
+  // Initialize backtrack stack pointer
+  masm_.loadPtr(AbsoluteAddress(isolate()->top_of_regexp_stack()),
+                backtrack_stack_pointer_);
+  masm_.storePtr(backtrack_stack_pointer_, backtrackStackBase());
 }
 
 // This is only used by tracing code.
