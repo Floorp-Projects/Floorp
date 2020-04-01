@@ -4,7 +4,7 @@
 
 @import url(resource://devtools/client/themes/variables.css);
 @import url(resource://devtools/client/themes/common.css);
-@import url(chrome://devtools/skin/toolbars.css);
+@import url(resource://devtools/client/themes/toolbars.css);
 @import url(chrome://devtools/skin/tooltips.css);
 
 body {
