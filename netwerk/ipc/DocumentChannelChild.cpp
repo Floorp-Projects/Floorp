@@ -353,56 +353,31 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
   return NS_OK;
 }
 
-mozilla::ipc::IPCResult DocumentChannelChild::RecvCSPViolation(
-    const CSPInfo& aCSP, bool aIsCspToInherit, nsIURI* aBlockedURI,
-    uint32_t aBlockedContentSource, nsIURI* aOriginalURI,
-    const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
-    const nsAString& aObserverSubject) {
-  if (aBlockedContentSource > nsCSPContext::BlockedContentSource::eSelf) {
-    return IPC_FAIL(this, "Invalid BlockedContentSource value");
-  }
-  nsCSPContext::BlockedContentSource blockedContentSource =
-      static_cast<nsCSPContext::BlockedContentSource>(aBlockedContentSource);
-
-  RefPtr<dom::Document> cspLoadingDocument;
-  if (aIsCspToInherit) {
-    // If this is the cspToInherit from the loadstate, then it should match
-    // the csp from the load state. Copy across the loading context from
-    // that policy.
-    nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadState->Csp();
-    MOZ_ASSERT(policy,
-               "How is this a CSP to inherit violation if we didn't have a "
-               "policy to inherit!");
+IPCResult DocumentChannelChild::RecvConfirmRedirect(
+    LoadInfoArgs&& aLoadInfo, nsIURI* aNewUri,
+    ConfirmRedirectResolver&& aResolve) {
+  // This is effectively the same as AsyncOnChannelRedirect, except since we're
+  // not propagating the redirect into this process, we don't have an nsIChannel
+  // for the redirection and we have to do the checks manually.
+  // This just checks CSP thus far, hopefully there's not much else needed.
+  RefPtr<dom::Document> cspToInheritLoadingDocument;
+  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadState->Csp();
+  if (policy) {
     nsWeakPtr ctx =
         static_cast<nsCSPContext*>(policy.get())->GetLoadingContext();
-    cspLoadingDocument = do_QueryReferent(ctx);
-  } else {
-    // Otherwise we're the normal csp (preload csp is never used for
-    // Documents), so the loading context is that of our embedder
-    // Element. Note that this won't necessarily work with fission
-    // enabled, since the embedder Element might be OOP, bug 1625366
-    // is filed to fix this.
-    nsCOMPtr<nsINode> loadingContext;
-    RefPtr<BrowsingContext> frameBrowsingContext =
-        GetDocShell()->GetBrowsingContext();
-    if (frameBrowsingContext) {
-      loadingContext = frameBrowsingContext->GetEmbedderElement();
-      if (loadingContext) {
-        cspLoadingDocument = loadingContext->OwnerDoc();
-      }
-    }
+    cspToInheritLoadingDocument = do_QueryReferent(ctx);
   }
-  nsCOMPtr<nsIContentSecurityPolicy> csp =
-      CSPInfoToCSP(aCSP, cspLoadingDocument);
-  if (!csp) {
-    return IPC_OK();
-  }
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(Some(std::move(aLoadInfo)),
+                                             cspToInheritLoadingDocument,
+                                             getter_AddRefs(loadInfo)));
 
-  nsCSPContext::AsyncReportViolation(
-      static_cast<nsCSPContext*>(csp.get()), nullptr, nullptr, aBlockedURI,
-      blockedContentSource, aOriginalURI, aViolatedDirective,
-      aViolatedPolicyIndex, aObserverSubject, nsString(), nsString(), 0, 0);
-
+  nsCOMPtr<nsIURI> originalUri;
+  GetOriginalURI(getter_AddRefs(originalUri));
+  Maybe<nsresult> cancelCode;
+  nsresult rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri,
+                                                  loadInfo, cancelCode);
+  aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(rv, cancelCode));
   return IPC_OK();
 }
 
