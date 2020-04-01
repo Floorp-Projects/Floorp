@@ -169,7 +169,9 @@ class Selection final : public nsSupportsWeakReference,
   /**
    * See `AddRangesForSelectableNodes`.
    */
-  MOZ_MUST_USE nsresult AddRangesForUserSelectableNodes(
+  // TODO: annotate with `MOZ_CAN_RUN_SCRIPT` instead.
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  AddRangesForUserSelectableNodes(
       nsRange* aRange, int32_t* aOutIndex,
       const DispatchSelectstartEvent aDispatchSelectstartEvent);
 
@@ -184,7 +186,9 @@ class Selection final : public nsSupportsWeakReference,
    *                  containing it. -1 if mStyledRanges.mRanges was empty and
    * no range was added.
    */
-  MOZ_MUST_USE nsresult AddRangesForSelectableNodes(
+  // TODO: annotate with `MOZ_CAN_RUN_SCRIPT` instead.
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  AddRangesForSelectableNodes(
       nsRange* aRange, int32_t* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
@@ -795,9 +799,7 @@ class Selection final : public nsSupportsWeakReference,
      *                  is already contained, to the one containing it. Hence
      *                  it'll always be in [0, mRanges.Length()).
      */
-    // TODO: annotate with `MOZ_CAN_RUN_SCRIPT`
-    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1625429).
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult MaybeAddRangeAndTruncateOverlaps(
+    MOZ_CAN_RUN_SCRIPT nsresult MaybeAddRangeAndTruncateOverlaps(
         nsRange* aRange, int32_t* aOutIndex, Selection& aSelection);
 
     /**
