@@ -51,7 +51,7 @@ inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
   // Do an end run around JSObject::group() to avoid doing AutoUnprotectCell
   // on the templateObj, which is not a GC thing and can't use
   // runtimeFromAnyThread.
-  ObjectGroup* group = templateObj->group_;
+  ObjectGroup* group = templateObj->groupRaw();
 
   // If we did the lookup based on the proto we might have a group/object from a
   // different (same-compartment) realm, so we have to do a realm check.
