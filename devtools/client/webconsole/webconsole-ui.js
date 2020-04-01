@@ -627,12 +627,12 @@ class WebConsoleUI {
       return this.webConsoleFront;
     }
 
-    const threadFront = this.hud.toolbox.getSelectedThreadFront();
-    if (!threadFront) {
+    const targetFront = this.hud.toolbox.getSelectedTargetFront();
+    if (!targetFront) {
       return this.webConsoleFront;
     }
 
-    return threadFront.getWebconsoleFront();
+    return targetFront.getFront("console");
   }
 
   getSelectedNodeActorID() {

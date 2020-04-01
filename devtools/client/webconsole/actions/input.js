@@ -92,6 +92,7 @@ function evaluateExpression(expression) {
       .evaluateJSAsync(expression, {
         frameActor: await webConsoleUI.getFrameActor(),
         selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
+        selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
         mapped,
       })
       .then(onSettled, onSettled);
@@ -251,6 +252,7 @@ function terminalInputChanged(expression, force = false) {
     const response = await client.evaluateJSAsync(expression, {
       frameActor: await webConsoleUI.getFrameActor(),
       selectedNodeActor: webConsoleUI.getSelectedNodeActorID(),
+      selectedTargetFront: toolbox && toolbox.getSelectedTargetFront(),
       mapped,
       eager: true,
     });

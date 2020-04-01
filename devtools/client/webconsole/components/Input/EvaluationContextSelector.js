@@ -17,8 +17,8 @@ const frameworkActions = require("devtools/client/framework/actions/index");
 const webconsoleActions = require("devtools/client/webconsole/actions/index");
 
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const threadSelectors = require("devtools/client/framework/reducers/threads");
-const { THREAD_TYPES } = frameworkActions;
+const targetSelectors = require("devtools/client/framework/reducers/targets");
+const { TARGET_TYPES } = frameworkActions;
 
 // Additional Components
 const MenuButton = createFactory(
@@ -40,67 +40,67 @@ loader.lazyGetter(this, "MenuList", function() {
 class EvaluationContextSelector extends Component {
   static get propTypes() {
     return {
-      selectThread: PropTypes.func.isRequired,
+      selectTarget: PropTypes.func.isRequired,
       updateInstantEvaluationResultForCurrentExpression:
         PropTypes.func.isRequired,
-      selectedThread: PropTypes.object,
-      threads: PropTypes.array,
+      selectedTarget: PropTypes.object,
+      targets: PropTypes.array,
       webConsoleUI: PropTypes.object.isRequired,
     };
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.selectedThread !== prevProps.selectedThread) {
+    if (this.props.selectedTarget !== prevProps.selectedTarget) {
       this.props.updateInstantEvaluationResultForCurrentExpression();
     }
   }
 
-  renderMenuItem(thread) {
-    const { selectThread, selectedThread } = this.props;
+  renderMenuItem(target) {
+    const { selectTarget, selectedTarget } = this.props;
 
     const label =
-      thread.type == THREAD_TYPES.MAIN_THREAD
+      target.type == TARGET_TYPES.MAIN_TARGET
         ? l10n.getStr("webconsole.input.selector.top")
-        : thread.name;
+        : target.name;
 
     return MenuItem({
-      key: `webconsole-evaluation-selector-item-${thread.actorID}`,
+      key: `webconsole-evaluation-selector-item-${target.actorID}`,
       className: "menu-item webconsole-evaluation-selector-item",
       type: "checkbox",
-      checked: selectedThread
-        ? selectedThread == thread
-        : thread.type == THREAD_TYPES.MAIN_THREAD,
+      checked: selectedTarget
+        ? selectedTarget == target
+        : target.type == TARGET_TYPES.MAIN_TARGET,
       label,
-      tooltip: thread.url,
-      onClick: () => selectThread(thread.actorID),
+      tooltip: target.url,
+      onClick: () => selectTarget(target.actorID),
     });
   }
 
   renderMenuItems() {
-    const { threads } = this.props;
+    const { targets } = this.props;
 
-    let mainThread;
-    const processes = [];
+    let mainTarget;
+    const contentProcesses = [];
     const workers = [];
 
-    for (const thread of threads) {
-      const menuItem = this.renderMenuItem(thread);
+    for (const target of targets) {
+      const menuItem = this.renderMenuItem(target);
 
-      if (thread.type == THREAD_TYPES.MAIN_THREAD) {
-        mainThread = menuItem;
-      } else if (thread.type == THREAD_TYPES.CONTENT_PROCESS) {
-        processes.push(menuItem);
-      } else if (thread.type == THREAD_TYPES.WORKER) {
+      if (target.type == TARGET_TYPES.MAIN_TARGET) {
+        mainTarget = menuItem;
+      } else if (target.type == TARGET_TYPES.CONTENT_PROCESS) {
+        contentProcesses.push(menuItem);
+      } else if (target.type == TARGET_TYPES.WORKER) {
         workers.push(menuItem);
       }
     }
 
-    const items = [mainThread];
+    const items = [mainTarget];
 
-    if (processes.length > 0) {
+    if (contentProcesses.length > 0) {
       items.push(
         MenuItem({ role: "menuseparator", key: "process-separator" }),
-        ...processes
+        ...contentProcesses
       );
     }
 
@@ -115,21 +115,21 @@ class EvaluationContextSelector extends Component {
   }
 
   getLabel() {
-    const { selectedThread } = this.props;
+    const { selectedTarget } = this.props;
 
-    if (!selectedThread || selectedThread.type == THREAD_TYPES.MAIN_THREAD) {
+    if (!selectedTarget || selectedTarget.type == TARGET_TYPES.MAIN_TARGET) {
       return l10n.getStr("webconsole.input.selector.top");
     }
 
-    return selectedThread.name;
+    return selectedTarget.name;
   }
 
   render() {
-    const { webConsoleUI, threads, selectedThread } = this.props;
+    const { webConsoleUI, targets, selectedTarget } = this.props;
     const doc = webConsoleUI.document;
     const { toolbox } = webConsoleUI.wrapper;
 
-    if (threads.length <= 1) {
+    if (targets.length <= 1) {
       return null;
     }
 
@@ -140,7 +140,7 @@ class EvaluationContextSelector extends Component {
         label: this.getLabel(),
         className:
           "webconsole-evaluation-selector-button devtools-button devtools-dropdown-button" +
-          (selectedThread && selectedThread.type !== THREAD_TYPES.MAIN_THREAD
+          (selectedTarget && selectedTarget.type !== TARGET_TYPES.MAIN_TARGET
             ? " webconsole-evaluation-selector-button-non-top"
             : ""),
         title: l10n.getStr("webconsole.input.selector.tooltip"),
@@ -154,12 +154,11 @@ class EvaluationContextSelector extends Component {
 
 const toolboxConnected = connect(
   state => ({
-    threads: threadSelectors.getToolboxThreads(state),
-    selectedThread: threadSelectors.getSelectedThread(state),
+    targets: targetSelectors.getToolboxTargets(state),
+    selectedTarget: targetSelectors.getSelectedTarget(state),
   }),
   dispatch => ({
-    selectThread: threadActorID =>
-      dispatch(frameworkActions.selectThread(threadActorID)),
+    selectTarget: actorID => dispatch(frameworkActions.selectTarget(actorID)),
   }),
   undefined,
   { storeKey: "toolbox-store" }

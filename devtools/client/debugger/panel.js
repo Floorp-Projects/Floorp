@@ -84,8 +84,15 @@ class DebuggerPanel {
   _onDebuggerStateChange(state, oldState) {
     const { getCurrentThread } = this._selectors;
 
-    if (getCurrentThread(state) !== getCurrentThread(oldState)) {
-      this.toolbox.selectThread(getCurrentThread(state));
+    const currentThreadActorID = getCurrentThread(state);
+    if (
+      currentThreadActorID &&
+      currentThreadActorID !== getCurrentThread(oldState)
+    ) {
+      const threadFront = this.toolbox.target.client.getFrontByID(
+        currentThreadActorID
+      );
+      this.toolbox.selectTarget(threadFront?.targetFront?.actorID);
     }
   }
 
