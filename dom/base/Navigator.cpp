@@ -1489,8 +1489,8 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
         [self, p](bool isSupported) {
           self->FinishGetVRDisplays(isSupported, p);
         },
-        [](const mozilla::ipc::ResponseRejectReason) {
-          MOZ_CRASH("Failed to make IPC call to IsWindowSupportingWebVR");
+        [p](const mozilla::ipc::ResponseRejectReason) {
+          p->MaybeRejectWithTypeError("Unable to start display enumeration");
         });
   }
 
