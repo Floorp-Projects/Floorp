@@ -21,6 +21,7 @@ else:
     from .tasks_win import run_all_tests
 
 from .progressbar import ProgressBar, NullProgressBar
+from .remote import init_remote_dir, init_device
 from .results import TestOutput, escape_cmdline
 from .structuredlog import TestLogger
 
@@ -442,11 +443,12 @@ def run_test_remote(test, device, prefix, options):
     if options.show_cmd:
         print(escape_cmdline(cmd))
 
-    env = {}
+    env = {
+        'LD_LIBRARY_PATH': os.path.dirname(prefix[0])
+    }
+
     if test.tz_pacific:
         env['TZ'] = 'PST8PDT'
-
-    env['LD_LIBRARY_PATH'] = options.remote_test_root
 
     cmd = ADBDevice._escape_command_line(cmd)
     start = datetime.now()
@@ -783,7 +785,7 @@ def run_tests_local(tests, num_tests, prefix, options, slog):
 
 def get_remote_results(tests, device, prefix, options):
     try:
-        for i in xrange(0, options.repeat):
+        for i in range(0, options.repeat):
             for test in tests:
                 yield run_test_remote(test, device, prefix, options)
     except Exception as e:
@@ -793,61 +795,25 @@ def get_remote_results(tests, device, prefix, options):
         sys.stderr.write("Error running remote tests: {}".format(e.message))
 
 
-def push_libs(options, device):
-    # This saves considerable time in pushing unnecessary libraries
-    # to the device but needs to be updated if the dependencies change.
-    required_libs = ['libnss3.so', 'libmozglue.so', 'libnspr4.so',
-                     'libplc4.so', 'libplds4.so']
-
-    for file in os.listdir(options.local_lib):
-        if file in required_libs:
-            remote_file = posixpath.join(options.remote_test_root, file)
-            device.push(os.path.join(options.local_lib, file), remote_file)
-            device.chmod(remote_file, root=True)
-
-
-def push_progs(options, device, progs):
-    for local_file in progs:
-        remote_file = posixpath.join(options.remote_test_root,
-                                     os.path.basename(local_file))
-        device.push(local_file, remote_file)
-        device.chmod(remote_file, root=True)
-
-
-def init_remote_dir(device, path, root=True):
-    device.rm(path, recursive=True, force=True, root=root)
-    device.mkdir(path, parents=True, root=root)
-    device.chmod(path, recursive=True, root=root)
-
-
 def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
-    from mozdevice import ADBDevice, ADBError, ADBTimeoutError
+    from mozdevice import ADBError, ADBTimeoutError
     try:
-        device = ADBDevice(device=options.device_serial,
-                           test_root=options.remote_test_root)
+        device = init_device(options)
 
-        init_remote_dir(device, options.remote_test_root)
-
+        prefix[0] = posixpath.join(options.remote_test_root, 'bin', 'js')
         # Update the test root to point to our test directory.
-        jit_tests_dir = posixpath.join(options.remote_test_root, 'jit-tests')
-        options.remote_test_root = posixpath.join(jit_tests_dir, 'jit-tests')
+        jit_tests_dir = posixpath.join(options.remote_test_root, 'tests')
+        options.remote_test_root = posixpath.join(jit_tests_dir, 'tests')
+        jtd_tests = posixpath.join(options.remote_test_root)
 
-        # Push js shell and libraries.
         init_remote_dir(device, jit_tests_dir)
-        push_libs(options, device)
-        push_progs(options, device, [prefix[0]])
-        device.chmod(options.remote_test_root, recursive=True, root=True)
-
-        jtd_tests = posixpath.join(jit_tests_dir, 'tests')
-        init_remote_dir(device, jtd_tests)
         device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
         device.chmod(jtd_tests, recursive=True, root=True)
 
         device.push(os.path.dirname(TEST_DIR), options.remote_test_root,
                     timeout=600)
         device.chmod(options.remote_test_root, recursive=True, root=True)
-        prefix[0] = os.path.join(options.remote_test_root, 'js')
     except (ADBError, ADBTimeoutError):
         print("TEST-UNEXPECTED-FAIL | jit_test.py" +
               " : Device initialization failed")

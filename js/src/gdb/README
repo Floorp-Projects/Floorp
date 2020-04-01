@@ -121,7 +121,7 @@ after importing our other SpiderMonkey support modules. For example:
         def display_hint(self): return 'string'
         def to_string(self):
             c = u''
-            for i in xrange(50):
+            for i in range(50):
                 if self.value[i] == 0: break
                 c += unichr(self.value[i])
             return c

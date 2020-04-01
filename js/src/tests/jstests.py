@@ -11,7 +11,10 @@ See the adjacent README.txt for more details.
 
 from __future__ import print_function
 
+import math
 import os
+import posixpath
+import re
 import shlex
 import sys
 import tempfile
@@ -20,12 +23,13 @@ import platform
 from os.path import abspath, dirname, isfile, realpath
 from contextlib import contextmanager
 from copy import copy
+from datetime import datetime
 from itertools import chain
 from subprocess import list2cmdline, call
 
 from lib.tests import RefTestCase, get_jitflags, get_cpu_count, \
     get_environment_overlay, change_env
-from lib.results import ResultsSink
+from lib.results import ResultsSink, TestOutput
 from lib.progressbar import ProgressBar
 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
@@ -148,6 +152,25 @@ def parse_args():
                             help='Run tests under RR record-and-replay debugger.')
     harness_og.add_argument('-C', '--check-output', action='store_true',
                             help='Run tests to check output for different jit-flags')
+    harness_og.add_argument('--remote', action='store_true',
+                            help='Run tests on a remote device')
+    harness_og.add_argument('--deviceIP', action='store',
+                            type=str, dest='device_ip',
+                            help='IP address of remote device to test')
+    harness_og.add_argument('--devicePort', action='store',
+                            type=int, dest='device_port', default=20701,
+                            help='port of remote device to test')
+    harness_og.add_argument('--deviceSerial', action='store',
+                            type=str, dest='device_serial', default=None,
+                            help='ADB device serial number of remote device to test')
+    harness_og.add_argument('--remoteTestRoot', dest='remote_test_root', action='store',
+                            type=str, default='/data/local/tests',
+                            help='The remote directory to use as test root'
+                            ' (e.g. %(default)s)')
+    harness_og.add_argument('--localLib', dest='local_lib', action='store',
+                            type=str,
+                            help='The location of libraries to push -- preferably'
+                            ' stripped')
 
     input_og = op.add_argument_group("Inputs", "Change what tests are run.")
     input_og.add_argument('-f', '--file', dest='test_file', action='append',
@@ -207,6 +230,10 @@ def parse_args():
                            ' (default %(default)s).')
     output_og.add_argument('--log-wptreport', dest='wptreport', action='store',
                            help='Path to write a Web Platform Tests report (wptreport)')
+    output_og.add_argument('--this-chunk', type=int, default=1,
+                           help='The test chunk to run.')
+    output_og.add_argument('--total-chunks', type=int, default=1,
+                           help='The total number of test chunks.')
 
     special_og = op.add_argument_group("Special", "Special modes that do not run tests.")
     special_og.add_argument('--make-manifests', metavar='BASE_TEST_PATH',
@@ -441,7 +468,7 @@ def load_tests(options, requested_paths, excluded_paths):
             xul_debug = xul_debug.lower() == 'true'
             xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
         feature_args = shlex.split(options.feature_args)
-        xul_tester = manifest.XULInfoTester(xul_info, options.js_shell, feature_args)
+        xul_tester = manifest.XULInfoTester(xul_info, options, feature_args)
 
     test_dir = dirname(abspath(__file__))
     path_options = PathOptions(test_dir, requested_paths, excluded_paths)
@@ -559,6 +586,37 @@ def main():
             call(cmd)
         return 0
 
+    # The test_gen generator is converted into a list in
+    # run_all_tests. Go ahead and do it here so we can apply
+    # chunking.
+    #
+    # If chunking is enabled, determine which tests are part of this chunk.
+    # This code was adapted from testing/mochitest/runtestsremote.py.
+    if options.total_chunks > 1:
+        tests_per_chunk = math.ceil(test_count / float(options.total_chunks))
+        start = int(round((options.this_chunk - 1) * tests_per_chunk))
+        end = int(round(options.this_chunk * tests_per_chunk))
+        test_gen = list(test_gen)[start:end]
+
+    if options.remote:
+        results = ResultsSink('jstests', options, test_count)
+        try:
+            from lib.remote import init_remote_dir, init_device
+            device = init_device(options)
+            jtd_tests = posixpath.join(options.remote_test_root, 'tests', 'tests')
+            init_remote_dir(device, jtd_tests)
+            device.push(test_dir, jtd_tests, timeout=600)
+            device.chmod(jtd_tests, recursive=True, root=True)
+            prefix[0] = options.js_shell
+            for test in test_gen:
+                out = run_test_remote(test, device, prefix, options)
+                results.push(out)
+            results.finish(True)
+        except KeyboardInterrupt:
+            results.finish(False)
+
+        return 0 if results.all_passed() else 1
+
     with changedir(test_dir), change_env(test_environment):
         results = ResultsSink('jstests', options, test_count)
         try:
@@ -571,6 +629,47 @@ def main():
         return 0 if results.all_passed() else 1
 
     return 0
+
+
+def run_test_remote(test, device, prefix, options):
+    from mozdevice import ADBDevice, ADBProcessError
+
+    cmd = test.get_command(prefix)
+    test_root_parent = os.path.dirname(test.root)
+    jtd_tests = posixpath.join(options.remote_test_root, 'tests')
+    cmd = [_.replace(test_root_parent, jtd_tests) for _ in cmd]
+
+    env = {
+        'TZ': 'PST8PDT',
+        'LD_LIBRARY_PATH': os.path.dirname(prefix[0])
+    }
+
+    adb_cmd = ADBDevice._escape_command_line(cmd)
+    start = datetime.now()
+    try:
+        # Allow ADBError or ADBTimeoutError to terminate the test run,
+        # but handle ADBProcessError in order to support the use of
+        # non-zero exit codes in the JavaScript shell tests.
+        out = device.shell_output(adb_cmd, env=env,
+                                  cwd=options.remote_test_root,
+                                  timeout=int(options.timeout))
+        returncode = 0
+    except ADBProcessError as e:
+        # Treat ignorable intermittent adb communication errors as
+        # skipped tests.
+        out = str(e.adb_process.stdout)
+        returncode = e.adb_process.exitcode
+        re_ignore = re.compile(r'error: (closed|device .* not found)')
+        if returncode == 1 and re_ignore.search(out):
+            print("Skipping {} due to ignorable adb error {}".format(test.path, out))
+            test.skip_if_cond = "true"
+            returncode = test.SKIPPED_EXIT_STATUS
+
+    elapsed = (datetime.now() - start).total_seconds()
+
+    # We can't distinguish between stdout and stderr so we pass
+    # the same buffer to both.
+    return TestOutput(test, cmd, out, out, returncode, elapsed, False)
 
 
 if __name__ == '__main__':

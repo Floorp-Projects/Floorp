@@ -5,10 +5,12 @@
 from __future__ import print_function
 
 import os
+import posixpath
 import re
 import sys
 from subprocess import Popen, PIPE
 
+from .remote import init_device
 from .tests import RefTestCase
 
 
@@ -56,7 +58,7 @@ class XULInfo:
 
         path = None
         for dir in dirs:
-            _path = os.path.join(dir, 'config/autoconf.mk')
+            _path = posixpath.join(dir, 'config', 'autoconf.mk')
             if os.path.isfile(_path):
                 path = _path
                 break
@@ -84,14 +86,72 @@ class XULInfo:
 
 
 class XULInfoTester:
-    def __init__(self, xulinfo, js_bin, js_args):
+    def __init__(self, xulinfo, options, js_args):
         self.js_prologue = xulinfo.as_js()
-        self.js_bin = js_bin
+        self.js_bin = options.js_shell
         self.js_args = js_args
+        # options here are the command line options
+        self.options = options
         # Maps JS expr to evaluation result.
         self.cache = {}
 
+        if not self.options.remote:
+            return
+        self.device = init_device(options)
+        self.js_bin = posixpath.join(options.remote_test_root, 'bin', 'js')
+
     def test(self, cond, options=[]):
+        if self.options.remote:
+            return self._test_remote(cond, options=options)
+        return self._test_local(cond, options=options)
+
+    def _test_remote(self, cond, options=[]):
+        from mozdevice import ADBDevice, ADBProcessError
+
+        ans = self.cache.get(cond, None)
+        if ans is not None:
+            return ans
+
+        env = {
+            'LD_LIBRARY_PATH': posixpath.join(self.options.remote_test_root, 'bin'),
+        }
+
+        cmd = [
+            self.js_bin
+        ] + self.js_args + options + [
+            # run in safe configuration, since it is hard to debug
+            # crashes when running code here. In particular, msan will
+            # error out if the jit is active.
+            '--no-baseline',
+            '--no-blinterp',
+            '-e', self.js_prologue,
+            '-e', 'print(!!({}))'.format(cond)
+        ]
+        cmd = ADBDevice._escape_command_line(cmd)
+        try:
+            # Allow ADBError or ADBTimeoutError to terminate the test run,
+            # but handle ADBProcessError in order to support the use of
+            # non-zero exit codes in the JavaScript shell tests.
+            out = self.device.shell_output(cmd, env=env,
+                                           cwd=self.options.remote_test_root,
+                                           timeout=None)
+            err = ''
+        except ADBProcessError as e:
+            out = ''
+            err = str(e.adb_process.stdout)
+
+        if out == 'true':
+            ans = True
+        elif out == 'false':
+            ans = False
+        else:
+            raise Exception("Failed to test XUL condition {!r};"
+                            " output was {!r}, stderr was {!r}".format(
+                                cond, out, err))
+        self.cache[cond] = ans
+        return ans
+
+    def _test_local(self, cond, options=[]):
         """Test a XUL predicate condition against this local info."""
         ans = self.cache.get(cond, None)
         if ans is None:
