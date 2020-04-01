@@ -25,6 +25,16 @@ struct HandlerProvider {
                                            NotNull<IStream*> aStream) = 0;
   virtual STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) = 0;
   virtual STDMETHODIMP DisconnectHandlerRemotes() = 0;
+
+  /**
+   * Determine whether this interface might be supported by objects using
+   * this HandlerProvider.
+   * This is used to avoid unnecessary cross-thread QueryInterface calls for
+   * interfaces known to be unsupported.
+   * Return S_OK if the interface might be supported, E_NOINTERFACE if it
+   * definitely isn't supported.
+   */
+  virtual STDMETHODIMP IsInterfaceMaybeSupported(REFIID aIid) { return S_OK; }
 };
 
 struct IHandlerProvider : public IUnknown, public HandlerProvider {
