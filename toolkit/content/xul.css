@@ -12,11 +12,8 @@
  *
  * This file should also not contain any app specific styling.  Defaults for
  * widgets of a particular application should be in that application's style
- * sheet.  For example, style definitions for navigator can be found in
- * navigator.css.
- *
- * THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST
- * HAVING YOUR CHANGES REVIEWED BY enndeakin@gmail.com
+ * sheet.  For example, style definitions for browser can be found in
+ * browser.css.
  */
 
 @import url("chrome://global/skin/tooltip.css");

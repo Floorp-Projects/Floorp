@@ -9,13 +9,8 @@
  * xul.css.  (This split of the XUL rules is to minimize memory use and improve
  * performance in HTML/SVG documents.)
  *
- * This file should also not contain any app specific styling.  Defaults for
- * widgets of a particular application should be in that application's style
- * sheet.  For example style definitions for navigator can be found in
- * navigator.css.
- *
- * THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST
- * HAVING YOUR CHANGES REVIEWED BY enndeakin@gmail.com
+ * ANYTHING ADDED TO THIS FILE WILL APPLY TO ALL DOCUMENTS, INCLUDING WEB CONTENT.
+ * IF UA RULES ARE ONLY NEEDED IN CHROME, THEY SHOULD BE ADDED TO xul.css.
  */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
