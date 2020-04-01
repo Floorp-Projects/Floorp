@@ -82,48 +82,6 @@ const TEST_DATA = [
     expected: COMPATIBILITY_STATUS.TOO_RECENT,
   },
   {
-    description: "debugger backward compatibility issue for 67 -> 66",
-    localBuildId: "20190131000000",
-    localVersion: "67.0",
-    runtimeBuildId: "20190131000000",
-    runtimeVersion: "66.0",
-    expected: COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER,
-  },
-  {
-    description: "debugger backward compatibility issue for 67 -> 65",
-    localBuildId: "20190131000000",
-    localVersion: "67.0",
-    runtimeBuildId: "20190131000000",
-    runtimeVersion: "65.0",
-    expected: COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER,
-  },
-  {
-    description: "debugger backward compatibility issue for 68 -> 66",
-    localBuildId: "20190131000000",
-    localVersion: "68.0",
-    runtimeBuildId: "20190131000000",
-    runtimeVersion: "66.0",
-    expected: COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER,
-  },
-  {
-    description:
-      "regular compatibility issue for 67 -> 64 (not debugger-related)",
-    localBuildId: "20190131000000",
-    localVersion: "67.0",
-    runtimeBuildId: "20190131000000",
-    runtimeVersion: "64.0",
-    expected: COMPATIBILITY_STATUS.TOO_OLD,
-  },
-  {
-    description:
-      "debugger backward compatibility error not raised for 68 -> 67",
-    localBuildId: "20190131000000",
-    localVersion: "68.0",
-    runtimeBuildId: "20190202000000",
-    runtimeVersion: "67.0",
-    expected: COMPATIBILITY_STATUS.COMPATIBLE,
-  },
-  {
     description:
       "fennec 68 compatibility error not raised for 68 -> 68 Android",
     localBuildId: "20190131000000",
