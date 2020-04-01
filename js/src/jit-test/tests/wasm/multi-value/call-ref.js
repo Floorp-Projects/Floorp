@@ -12,14 +12,18 @@ function unboxThreeInts(x, y, z) {
     return [unboxInt(x), unboxInt(y), unboxInt(z)];
 }
 
+function testAddNextThreeIntsInner(addNextThreeInts) {
+    resetCounter();
+    for (let n = 0; n < 100000; n += 3) {
+        assertEq(addNextThreeInts(), n * 3 + 3);
+    }
+}
+
 function testAddNextThreeInts(text, imports) {
     let i = new WebAssembly.Instance(
         new WebAssembly.Module(wasmTextToBinary(text)), { imports });
 
-    resetCounter();
-    for (let n = 0; n < 100000; n += 3) {
-        assertEq(i.exports.addNextThreeInts(), n * 3 + 3);
-    }
+    testAddNextThreeIntsInner(() => i.exports.addNextThreeInts());
 }
 
 testAddNextThreeInts(`
@@ -62,3 +66,18 @@ testAddNextThreeInts(`
           i32.add
           i32.add))`,
                    {boxNextThreeInts, unboxThreeInts});
+
+{
+    let i = wasmEvalText(`
+      (module
+        (func $boxNextThreeInts (import "imports" "boxNextThreeInts")
+          (result anyref anyref anyref))
+
+        (func (export "boxNextThreeInts") (result anyref anyref anyref)
+          call $boxNextThreeInts))`,
+                         {imports: {boxNextThreeInts}});
+    testAddNextThreeIntsInner(() => {
+        let [a, b, c] = i.exports.boxNextThreeInts();
+        return unboxInt(a) + unboxInt(b) + unboxInt(c);
+    });
+}
