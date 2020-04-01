@@ -30,10 +30,6 @@ browser/chrome/browser/content/branding/icon128.png
 browser/chrome/icons/default/default128.png
 #endif
 
-# Bug 1626043
-browser/chrome/devtools/modules/devtools/client/themes/toolbars.css
-browser/chrome/devtools/skin/toolbars.css
-
 # https://github.com/mozilla/pdf.js/issues/11766
 browser/chrome/pdfjs/content/web/images/findbarButton-next-rtl.png
 browser/chrome/pdfjs/content/web/images/findbarButton-next-rtl@2x.png
