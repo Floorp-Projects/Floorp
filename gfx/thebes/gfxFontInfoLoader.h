@@ -20,19 +20,10 @@
 // data retrieved for a given face
 
 struct FontFaceData {
-  FontFaceData() : mUVSOffset(0) {}
-
-  FontFaceData(const FontFaceData& aFontFaceData) {
-    mFullName = aFontFaceData.mFullName;
-    mPostscriptName = aFontFaceData.mPostscriptName;
-    mCharacterMap = aFontFaceData.mCharacterMap;
-    mUVSOffset = aFontFaceData.mUVSOffset;
-  }
-
   nsCString mFullName;
   nsCString mPostscriptName;
   RefPtr<gfxCharacterMap> mCharacterMap;
-  uint32_t mUVSOffset;
+  uint32_t mUVSOffset = 0;
 };
 
 // base class used to contain cached system-wide font info.
