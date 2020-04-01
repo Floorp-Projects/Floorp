@@ -472,6 +472,17 @@ class HTMLMediaElement::MediaControlEventListener final
     }
   }
 
+  void SetPictureInPictureModeEnabled(bool aIsEnabled) {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(IsStarted());
+    if (mIsPictureInPictureEnabled == aIsEnabled) {
+      return;
+    }
+    mIsPictureInPictureEnabled = aIsEnabled;
+    mControlAgent->NotifyPictureInPictureModeChanged(
+        this, mIsPictureInPictureEnabled);
+  }
+
   void OnKeyPressed(MediaControlKeysEvent aEvent) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
@@ -528,6 +539,7 @@ class HTMLMediaElement::MediaControlEventListener final
   ControlledMediaState mState = ControlledMediaState::eStopped;
   WeakPtr<HTMLMediaElement> mElement;
   RefPtr<ContentMediaAgent> mControlAgent;
+  bool mIsPictureInPictureEnabled = false;
   bool mIsOwnerAudible = false;
 };
 
@@ -7736,6 +7748,11 @@ void HTMLMediaElement::StartListeningMediaControlEventIfNeeded() {
   // but the audible state update could happen before that. Therefore, we have
   // to manually update media's audible state as well.
   mMediaControlEventListener->UpdateMediaAudibleState(IsAudible());
+
+  // Picture-in-Picture mode can be enabled before we start the listener so we
+  // manually update the status here in case not to forgot to propagate that.
+  mMediaControlEventListener->SetPictureInPictureModeEnabled(
+      IsBeingUsedInPictureInPictureMode());
 }
 
 void HTMLMediaElement::StopListeningMediaControlEventIfNeeded() {
@@ -7792,6 +7809,19 @@ void HTMLMediaElement::ClearStopMediaControlTimerIfNeeded() {
     MEDIACONTROL_LOG("Cancel stop media control timer");
     mStopMediaControlTimer->Cancel();
     mStopMediaControlTimer = nullptr;
+  }
+}
+
+void HTMLMediaElement::UpdateMediaControlAfterPictureInPictureModeChanged() {
+  // Hasn't started to connect with media control, no need to update anything.
+  if (!mMediaControlEventListener || !mMediaControlEventListener->IsStarted()) {
+    return;
+  }
+  if (IsBeingUsedInPictureInPictureMode()) {
+    mMediaControlEventListener->SetPictureInPictureModeEnabled(true);
+  } else {
+    mMediaControlEventListener->SetPictureInPictureModeEnabled(false);
+    CreateStopMediaControlTimerIfNeeded();
   }
 }
 
