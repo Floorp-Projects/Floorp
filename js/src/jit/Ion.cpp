@@ -1850,10 +1850,8 @@ static bool ScriptIsTooLarge(JSContext* cx, JSScript* script) {
                                 : JitOptions.ionMaxLocalsAndArgsMainThread;
 
   if (script->length() > maxScriptSize || numLocalsAndArgs > maxLocalsAndArgs) {
-    JitSpew(JitSpew_IonAbort,
-            "Script too large (%zu bytes) (%zu locals/args) @ %s:%u:%u",
-            script->length(), numLocalsAndArgs, script->filename(),
-            script->lineno(), script->column());
+    JitSpew(JitSpew_IonAbort, "Script too large (%zu bytes) (%zu locals/args)",
+            script->length(), numLocalsAndArgs);
     TrackIonAbort(cx, script, script->code(), "too large");
     return true;
   }
