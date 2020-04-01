@@ -780,6 +780,11 @@ class MIRGraph {
     blocks_.remove(block);
     blocks_.insertBefore(at, block);
   }
+  void moveBlockAfter(MBasicBlock* at, MBasicBlock* block) {
+    MOZ_ASSERT(block->id());
+    blocks_.remove(block);
+    blocks_.insertAfter(at, block);
+  }
   void removeBlockFromList(MBasicBlock* block) {
     blocks_.remove(block);
     numBlocks_--;

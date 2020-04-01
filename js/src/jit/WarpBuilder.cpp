@@ -101,16 +101,167 @@ bool WarpBuilder::startNewEntryBlock(size_t stackDepth, BytecodeLocation loc) {
   return true;
 }
 
-bool WarpBuilder::startNewLoopHeaderBlock(MBasicBlock* predecessor,
-                                          BytecodeLocation loc) {
+bool WarpBuilder::startNewLoopHeaderBlock(BytecodeLocation loopHead) {
   MBasicBlock* header = MBasicBlock::NewPendingLoopHeader(
-      graph(), info(), predecessor, newBytecodeSite(loc));
+      graph(), info(), current, newBytecodeSite(loopHead));
   if (!header) {
     return false;
   }
 
   initBlock(header);
   return loopStack_.emplaceBack(header);
+}
+
+bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
+  MOZ_ASSERT(loopHead.is(JSOp::LoopHead));
+  MOZ_ASSERT(loopHead.toRawBytecode() == info().osrPc());
+
+  // Create two blocks:
+  // * The OSR entry block. This is always the graph's second block and has no
+  //   predecessors. This is the entry point for OSR from the Baseline JIT.
+  // * The OSR preheader block. This has two predecessors: the OSR entry block
+  //   and the current block.
+
+  MBasicBlock* pred = current;
+
+  // Create the OSR entry block.
+  if (!startNewEntryBlock(pred->stackDepth(), loopHead)) {
+    return false;
+  }
+
+  MBasicBlock* osrBlock = current;
+  graph().setOsrBlock(osrBlock);
+  graph().moveBlockAfter(*graph().begin(), osrBlock);
+
+  MOsrEntry* entry = MOsrEntry::New(alloc());
+  osrBlock->add(entry);
+
+  // Initialize environment chain.
+  {
+    uint32_t slot = info().environmentChainSlot();
+    MInstruction* envv;
+    if (usesEnvironmentChain()) {
+      envv = MOsrEnvironmentChain::New(alloc(), entry);
+    } else {
+      // Use an undefined value if the script does not need its environment
+      // chain, to match the main entry point.
+      envv = MConstant::New(alloc(), UndefinedValue());
+    }
+    osrBlock->add(envv);
+    osrBlock->initSlot(slot, envv);
+  }
+
+  // Initialize return value.
+  {
+    MInstruction* returnValue;
+    if (!script_->noScriptRval()) {
+      returnValue = MOsrReturnValue::New(alloc(), entry);
+    } else {
+      returnValue = MConstant::New(alloc(), UndefinedValue());
+    }
+    osrBlock->add(returnValue);
+    osrBlock->initSlot(info().returnValueSlot(), returnValue);
+  }
+
+  // Initialize arguments object.
+  bool needsArgsObj = info().needsArgsObj();
+  MInstruction* argsObj = nullptr;
+  if (info().hasArguments()) {
+    if (needsArgsObj) {
+      argsObj = MOsrArgumentsObject::New(alloc(), entry);
+    } else {
+      argsObj = MConstant::New(alloc(), UndefinedValue());
+    }
+    osrBlock->add(argsObj);
+    osrBlock->initSlot(info().argsObjSlot(), argsObj);
+  }
+
+  if (info().funMaybeLazy()) {
+    // Initialize |this| parameter.
+    MParameter* thisv =
+        MParameter::New(alloc(), MParameter::THIS_SLOT, nullptr);
+    osrBlock->add(thisv);
+    osrBlock->initSlot(info().thisSlot(), thisv);
+
+    // Initialize arguments. There are three cases:
+    //
+    // 1) There's no ArgumentsObject or it doesn't alias formals. In this case
+    //    we can just use the frame's argument slot.
+    // 2) The ArgumentsObject aliases formals and the argument is stored in the
+    //    CallObject. Use |undefined| because we can't load from the arguments
+    //    object and code will use the CallObject anyway.
+    // 3) The ArgumentsObject aliases formals and the argument isn't stored in
+    //    the CallObject. We have to load it from the ArgumentsObject.
+    for (uint32_t i = 0; i < info().nargs(); i++) {
+      uint32_t slot = info().argSlotUnchecked(i);
+      MInstruction* osrv;
+      if (!needsArgsObj || !info().argsObjAliasesFormals()) {
+        osrv = MParameter::New(alloc().fallible(), i, nullptr);
+      } else if (script_->formalIsAliased(i)) {
+        osrv = MConstant::New(alloc().fallible(), UndefinedValue());
+      } else {
+        osrv = MGetArgumentsObjectArg::New(alloc().fallible(), argsObj, i);
+      }
+      if (!osrv) {
+        return false;
+      }
+      current->add(osrv);
+      current->initSlot(slot, osrv);
+    }
+  }
+
+  // Initialize locals.
+  uint32_t nlocals = info().nlocals();
+  for (uint32_t i = 0; i < nlocals; i++) {
+    uint32_t slot = info().localSlot(i);
+    ptrdiff_t offset = BaselineFrame::reverseOffsetOfLocal(i);
+    MOsrValue* osrv = MOsrValue::New(alloc().fallible(), entry, offset);
+    if (!osrv) {
+      return false;
+    }
+    current->add(osrv);
+    current->initSlot(slot, osrv);
+  }
+
+  // Initialize expression stack slots.
+  uint32_t numStackSlots = current->stackDepth() - info().firstStackSlot();
+  for (uint32_t i = 0; i < numStackSlots; i++) {
+    uint32_t slot = info().stackSlot(i);
+    ptrdiff_t offset = BaselineFrame::reverseOffsetOfLocal(nlocals + i);
+    MOsrValue* osrv = MOsrValue::New(alloc().fallible(), entry, offset);
+    if (!osrv) {
+      return false;
+    }
+    current->add(osrv);
+    current->initSlot(slot, osrv);
+  }
+
+  current->add(MStart::New(alloc()));
+
+  // TODO: IonBuilder has code to add type barriers to the OSR block and
+  // therefore needs some complicated resume point logic (see linkOsrValues,
+  // maybeAddOsrTypeBarriers). Our OSR block is infallible and values are boxed.
+  // If this becomes a performance issue we should consider changing it somehow.
+
+  // Create the preheader block, with the predecessor block and OSR block as
+  // predecessors.
+  if (!startNewBlock(pred, loopHead)) {
+    return false;
+  }
+
+  pred->end(MGoto::New(alloc(), current));
+  osrBlock->end(MGoto::New(alloc(), current));
+
+  if (!current->addPredecessor(alloc(), osrBlock)) {
+    return false;
+  }
+
+  // Give the preheader block the same hit count as the code before the loop.
+  if (pred->getHitState() == MBasicBlock::HitState::Count) {
+    current->setHitCount(pred->getHitCount());
+  }
+
+  return true;
 }
 
 bool WarpBuilder::addPendingEdge(const PendingEdge& edge,
@@ -932,12 +1083,17 @@ bool WarpBuilder::build_LoopHead(BytecodeLocation loc) {
     return true;
   }
 
-  // TODO: support OSR
+  // Handle OSR from Baseline JIT code.
+  if (loc.toRawBytecode() == info().osrPc()) {
+    if (!startNewOsrPreHeaderBlock(loc)) {
+      return false;
+    }
+  }
 
   loopDepth_++;
 
   MBasicBlock* pred = current;
-  if (!startNewLoopHeaderBlock(pred, loc)) {
+  if (!startNewLoopHeaderBlock(loc)) {
     return false;
   }
 
