@@ -47,10 +47,10 @@ class AppLinksUseCases(
     private val alwaysDeniedSchemes: Set<String> = setOf("file")
 ) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val browserPackageNames: Set<String>
+    internal val browserPackageNames: Lazy<Set<String>>
 
     init {
-        this.browserPackageNames = browserPackageNames ?: findExcludedPackages(unguessableWebUrl)
+        this.browserPackageNames = lazy { browserPackageNames ?: findExcludedPackages(unguessableWebUrl) }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -66,7 +66,7 @@ class AppLinksUseCases(
     private fun findExcludedPackages(randomWebURLString: String): Set<String> {
         // We generate a URL is not likely to be opened by a native app
         // but will fallback to a browser.
-        // In this way, we're looking for only the browsers — including us.
+        // In this way, we're looking for only the browsers — including us.
         return findActivities(Intent.parseUri(randomWebURLString, 0).addCategory(Intent.CATEGORY_BROWSABLE))
             .map { it.activityInfo.packageName }
             .toHashSet()
@@ -97,7 +97,7 @@ class AppLinksUseCases(
             // since redirectCache is mutable, get the latest
             val cache = redirectCache
             if (cache != null && urlHash == cache.cachedUrlHash &&
-                    currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL) {
+                currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL) {
                 return cache.cachedAppLinkRedirect
             }
 
@@ -131,7 +131,7 @@ class AppLinksUseCases(
         private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {
             return findActivities(intent)
                 .map { it.activityInfo.packageName to it }
-                .filter { !browserPackageNames.contains(it.first) || intent.`package` == it.first }
+                .filter { !browserPackageNames.value.contains(it.first) || intent.`package` == it.first }
                 .map { it.second }
         }
 

@@ -36,7 +36,7 @@ class AppLinksFeature(
     private val sessionManager: SessionManager,
     private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,
-    private val dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
+    private var dialog: RedirectDialogFragment? = null,
     private val launchInApp: () -> Boolean = { false },
     private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
     private val failedToLaunchAction: () -> Unit = {}
@@ -62,6 +62,7 @@ class AppLinksFeature(
                 return
             }
 
+            val dialog = getOrCreateDialog()
             dialog.setAppLinkRedirectUrl(url)
             dialog.onConfirmRedirect = doOpenApp
 
@@ -85,6 +86,18 @@ class AppLinksFeature(
 
     override fun stop() {
         observer.stop()
+    }
+
+    private fun getOrCreateDialog(): RedirectDialogFragment {
+        val existingDialog = dialog
+        if (existingDialog != null) {
+            return existingDialog
+        }
+
+        SimpleRedirectDialogFragment.newInstance().also {
+            dialog = it
+            return it
+        }
     }
 
     private fun isAlreadyADialogCreated(): Boolean {
