@@ -112,7 +112,7 @@ class EditorEventListener : public nsIDOMEventListener {
    * Returns false if the editor is detached from the listener, i.e.,
    * impossible to continue to handle the event.  Otherwise, true.
    */
-  [[nodiscard]] bool EnsureCommitComposition();
+  MOZ_MUST_USE bool EnsureCommitComposition();
 
   EditorBase* mEditorBase;  // weak
   RefPtr<nsCaret> mCaret;
