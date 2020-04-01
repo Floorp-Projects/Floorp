@@ -23,6 +23,7 @@ struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
+class PromiseObject;
 class ReadableStream;
 
 /**
@@ -134,7 +135,7 @@ extern MOZ_MUST_USE bool ReadableStreamReaderGenericInitialize(
 extern MOZ_MUST_USE bool ReadableStreamReaderGenericRelease(
     JSContext* cx, JS::Handle<ReadableStreamReader*> unwrappedReader);
 
-extern MOZ_MUST_USE JSObject* ReadableStreamDefaultReaderRead(
+extern MOZ_MUST_USE PromiseObject* ReadableStreamDefaultReaderRead(
     JSContext* cx, JS::Handle<ReadableStreamDefaultReader*> unwrappedReader);
 
 }  // namespace js

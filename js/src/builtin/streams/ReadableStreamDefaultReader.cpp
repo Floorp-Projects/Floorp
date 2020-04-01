@@ -18,25 +18,27 @@
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}
 #include "js/Class.h"                              // JSClass, JS_NULL_CLASS_OPS
 #include "js/RootingAPI.h"                         // JS::Handle, JS::Rooted
+#include "vm/PromiseObject.h"                      // js::PromiseObject
 
 #include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheckThis
 #include "vm/JSObject-inl.h"      // js::NewObjectWithClassProto
 #include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
-
-using js::ForAuthorCodeBool;
-using js::GetErrorMessage;
-using js::ListObject;
-using js::NewObjectWithClassProto;
-using js::ReadableStream;
-using js::ReadableStreamDefaultReader;
-using js::ReadableStreamReader;
-using js::UnwrapAndTypeCheckThis;
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::Handle;
 using JS::Rooted;
 using JS::Value;
+
+using js::ForAuthorCodeBool;
+using js::GetErrorMessage;
+using js::ListObject;
+using js::NewObjectWithClassProto;
+using js::PromiseObject;
+using js::ReadableStream;
+using js::ReadableStreamDefaultReader;
+using js::ReadableStreamReader;
+using js::UnwrapAndTypeCheckThis;
 
 /*** 3.6. Class ReadableStreamDefaultReader *********************************/
 
@@ -196,7 +198,7 @@ static MOZ_MUST_USE bool ReadableStreamDefaultReader_read(JSContext* cx,
   }
 
   // Step 3: Return ! ReadableStreamDefaultReaderRead(this, true).
-  JSObject* readPromise =
+  PromiseObject* readPromise =
       js::ReadableStreamDefaultReaderRead(cx, unwrappedReader);
   if (!readPromise) {
     return false;
