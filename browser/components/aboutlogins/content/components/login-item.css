@@ -29,6 +29,13 @@
   padding: 40px;
   box-sizing: border-box;
   height: 100%;
+  min-width: 520px;
+}
+
+@media (max-width: 830px) {
+  .container {
+    padding-inline: 20px;
+  }
 }
 
 .column {
