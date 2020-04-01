@@ -646,6 +646,10 @@ void BrowsingContext::RegisterWindowContext(WindowContext* aWindow) {
   MOZ_ASSERT(!mWindowContexts.Contains(aWindow),
              "WindowContext already registered!");
   mWindowContexts.AppendElement(aWindow);
+  if (aWindow->InnerWindowId() == GetCurrentInnerWindowId()) {
+    MOZ_ASSERT(aWindow->GetBrowsingContext() == this);
+    mCurrentWindowContext = aWindow;
+  }
 }
 
 void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
