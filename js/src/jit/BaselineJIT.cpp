@@ -981,9 +981,7 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
       }
       JSScript* script = base->asJSScript();
       if (enable) {
-        if (JitScript* jitScript = script->maybeJitScript()) {
-          jitScript->ensureProfileString(cx, script);
-        }
+        script->jitScript()->ensureProfileString(cx, script);
       }
       if (!script->hasBaselineScript()) {
         continue;
