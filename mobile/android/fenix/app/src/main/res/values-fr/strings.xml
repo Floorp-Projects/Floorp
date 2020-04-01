@@ -979,7 +979,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Sur votre ordinateur, ouvrez Firefox et accédez à <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Prêt à scanner</string>
+    <string name="sign_in_ready_for_scan">Prêt·e à scanner</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Connectez-vous avec votre appareil photo</string>
     <!-- Text shown for settings option for sign with email -->
@@ -999,7 +999,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protection renforcée contre le pistage</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Naviguer sans être suivi·e</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Naviguez sans être suivi·e</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Gardez vos données pour vous. %s vous protège de la plupart des traqueurs les plus courants qui suivent ce que vous faites en ligne.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1027,7 +1027,7 @@
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ce qui est bloqué par la protection stricte contre le pistage</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom">Personnalisé</string>
+    <string name="preference_enhanced_tracking_protection_custom">Personnalisée</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description">Choisissez les traqueurs et les scripts à bloquer.</string>
     <!--  Accessibility text for the Strict protection information icon  -->

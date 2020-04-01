@@ -408,6 +408,14 @@
     <string name="history_delete_all_dialog">Ste prepričani, da želite počistiti vašo zgodovino?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Počisti</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopiraj</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Deli</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Odpri v novem zavihku</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Odpri v zasebnem zavihku</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Izbriši</string>
     <!-- Text for the button to clear selected history items. The first parameter
@@ -693,6 +701,9 @@
     <string name="onboarding_private_browsing_button">Odpri nastavitve</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaša zasebnost</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Zapri</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Začnite brskati</string>
