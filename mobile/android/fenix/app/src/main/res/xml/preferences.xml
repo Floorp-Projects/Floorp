@@ -136,8 +136,7 @@
             android:icon="@drawable/ic_info"
             android:key="@string/pref_key_leakcanary"
             android:title="@string/preference_leakcanary"
-            app:isPreferenceVisible="@bool/IS_DEBUG"
-        android:layout="@layout/preference_cat_style" />
+            app:isPreferenceVisible="@bool/IS_DEBUG" />
 
         <androidx.preference.SwitchPreference
             android:icon="@drawable/ic_energy"
