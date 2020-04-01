@@ -130,7 +130,8 @@ try_task_config_schema = Schema({
     Optional(
         "worker-overrides",
         description="Mapping of worker alias to worker pools to use for those aliases."
-    ): {text_type: text_type}
+    ): {text_type: text_type},
+    Optional('routes'): [text_type],
 })
 """
 Schema for try_task_config.json files.

@@ -84,13 +84,15 @@ def check_working_directory(push=True):
         sys.exit(1)
 
 
-def generate_try_task_config(method, labels, try_config=None):
+def generate_try_task_config(method, labels, try_config=None, routes=None):
     try_task_config = try_config or {}
     try_task_config.setdefault('env', {})['TRY_SELECTOR'] = method
     try_task_config.update({
         'version': 1,
         'tasks': sorted(labels),
     })
+    if routes:
+        try_task_config["routes"] = routes
 
     return try_task_config
 
