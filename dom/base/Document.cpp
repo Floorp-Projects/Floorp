@@ -3547,7 +3547,7 @@ nsresult Document::InitReferrerInfo(nsIChannel* aChannel) {
         return NS_OK;
       }
 
-      MOZ_ASSERT(NodePrincipal()->GetIsNullPrincipal(),
+      MOZ_ASSERT(bc->IsInProcess() || NodePrincipal()->GetIsNullPrincipal(),
                  "srcdoc without null principal as toplevel!");
     }
   }
