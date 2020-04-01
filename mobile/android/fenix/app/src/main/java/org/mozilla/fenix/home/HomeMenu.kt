@@ -99,7 +99,7 @@ class HomeMenu(
             onItemTapped.invoke(Item.Bookmarks)
         }
 
-        val libraryItem = BrowserMenuImageText(
+        val historyItem = BrowserMenuImageText(
             context.getString(R.string.library_history),
             R.drawable.ic_history,
             primaryTextColor) {
@@ -139,7 +139,7 @@ class HomeMenu(
                 textColorResource = menuCategoryTextColor
             ),
             bookmarksItem,
-            libraryItem,
+            historyItem,
             BrowserMenuDivider(),
             settingsItem,
             helpItem,
