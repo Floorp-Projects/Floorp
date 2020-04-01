@@ -40,6 +40,7 @@
 #include "vm/Realm-inl.h"      // js::AutoRealm
 
 using js::ClassSpec;
+using js::PromiseObject;
 using js::ReadableStream;
 using js::ReadableStreamController;
 using js::ReadableStreamControllerCallPullIfNeeded;
@@ -433,7 +434,7 @@ MOZ_MUST_USE JSObject* js::ReadableStreamControllerCancelSteps(
  * Streams spec, 3.9.5.2.
  *     ReadableStreamDefaultController [[PullSteps]]( forAuthorCode )
  */
-JSObject* js::ReadableStreamDefaultControllerPullSteps(
+PromiseObject* js::ReadableStreamDefaultControllerPullSteps(
     JSContext* cx,
     Handle<ReadableStreamDefaultController*> unwrappedController) {
   // Step 1: Let stream be this.[[controlledReadableStream]].

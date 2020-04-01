@@ -24,6 +24,8 @@
 
 namespace js {
 
+class PromiseObject;
+
 class ReadableStreamController : public StreamController {
  public:
   /**
@@ -227,7 +229,7 @@ extern MOZ_MUST_USE JSObject* ReadableStreamControllerCancelSteps(
     JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController,
     JS::Handle<JS::Value> reason);
 
-extern JSObject* ReadableStreamDefaultControllerPullSteps(
+extern PromiseObject* ReadableStreamDefaultControllerPullSteps(
     JSContext* cx,
     JS::Handle<ReadableStreamDefaultController*> unwrappedController);
 
