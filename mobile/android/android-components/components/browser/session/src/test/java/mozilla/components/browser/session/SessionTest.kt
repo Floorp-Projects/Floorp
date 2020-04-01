@@ -18,7 +18,6 @@ import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
-import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.store.BrowserStore
@@ -731,7 +730,6 @@ class SessionTest {
         defaultObserver.onContentPermissionRequested(session, contentPermissionRequest)
         defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
         defaultObserver.onWebAppManifestChanged(session, mock())
-        defaultObserver.onReaderableStateUpdated(session, true)
         defaultObserver.onRecordingDevicesChanged(session, emptyList())
     }
 
@@ -872,74 +870,6 @@ class SessionTest {
         session.crashed = false
         assertFalse(session.crashed)
         assertFalse(observedCrashState!!)
-    }
-
-    @Test
-    fun `observer is notified when readerable state updated`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-        assertFalse(session.readerable)
-
-        session.readerable = true
-
-        verify(observer).onReaderableStateUpdated(
-                eq(session),
-                eq(true))
-
-        // We want to notify observers every time readerability is determined,
-        // not only when the state changed.
-        session.readerable = true
-
-        verify(observer, times(2)).onReaderableStateUpdated(
-                eq(session),
-                eq(true))
-
-        assertTrue(session.readerable)
-    }
-
-    @Test
-    fun `action is dispatched when readerable state changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-        session.readerable = true
-
-        verify(store).dispatch(ReaderAction.UpdateReaderableAction(session.id, true))
-        verifyNoMoreInteractions(store)
-    }
-
-    @Test
-    fun `observer is notified when reader mode state changes`() {
-        val observer = mock(Session.Observer::class.java)
-
-        val session = Session("https://www.mozilla.org")
-        session.register(observer)
-        assertFalse(session.readerMode)
-
-        session.readerMode = true
-
-        verify(observer).onReaderModeChanged(
-                eq(session),
-                eq(true))
-
-        assertTrue(session.readerMode)
-    }
-
-    @Test
-    fun `action is dispatched when reader mode state changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-        session.readerMode = true
-
-        verify(store).dispatch(ReaderAction.UpdateReaderActiveAction(session.id, true))
-        verifyNoMoreInteractions(store)
     }
 
     @Test

@@ -22,6 +22,12 @@ internal object ReaderStateReducer {
         is ReaderAction.UpdateReaderActiveAction -> state.copyWithReaderState(action.tabId) {
             it.copy(active = action.active)
         }
+        is ReaderAction.UpdateReaderableCheckRequiredAction -> state.copyWithReaderState(action.tabId) {
+            it.copy(checkRequired = action.checkRequired)
+        }
+        is ReaderAction.UpdateReaderConnectRequiredAction -> state.copyWithReaderState(action.tabId) {
+            it.copy(connectRequired = action.connectRequired)
+        }
     }
 }
 

@@ -71,7 +71,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             feature = ReaderViewIntegration(
                 requireContext(),
                 components.engine,
-                components.sessionManager,
+                components.store,
                 layout.toolbar,
                 layout.readerViewBar,
                 layout.readerViewAppearanceButton

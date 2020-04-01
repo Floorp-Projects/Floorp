@@ -13,8 +13,11 @@ import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction.LinkEngineSessionAction
 import mozilla.components.browser.state.action.EngineAction.UpdateEngineSessionStateAction
 import mozilla.components.browser.state.action.EngineAction.UnlinkEngineSessionAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -98,12 +101,36 @@ class SessionManager(
      *
      * @return [Snapshot] of the current session state.
      */
-    fun createSnapshot(): Snapshot = delegate.createSnapshot()
+    fun createSnapshot(): Snapshot {
+        val snapshot = delegate.createSnapshot()
+
+        // The reader state is no longer part of the browser session so we copy
+        // it from the store if it exists. This can be removed once browser-state
+        // migration is complete and the session storage uses the store instead
+        // of the session manager.
+        return snapshot.copy(
+            sessions = snapshot.sessions.map { item ->
+                store?.state?.findTab(item.session.id)?.let {
+                    item.copy(readerState = it.readerState)
+                } ?: item
+            }
+        )
+    }
 
     /**
      * Produces a [Snapshot.Item] of a single [Session], suitable for restoring via [SessionManager.restore].
      */
-    fun createSessionSnapshot(session: Session): Snapshot.Item = delegate.createSessionSnapshot(session)
+    fun createSessionSnapshot(session: Session): Snapshot.Item {
+        val item = delegate.createSessionSnapshot(session)
+
+        // The reader state is no longer part of the browser session so we copy
+        // it from the store if it exists. This can be removed once browser-state
+        // migration is complete and the session storage uses the store instead
+        // of the session manager.
+        return store?.state?.findTab(item.session.id)?.let {
+            item.copy(readerState = it.readerState)
+        } ?: item
+    }
 
     /**
      * Gets the currently selected session if there is one.
@@ -228,6 +255,7 @@ class SessionManager(
      * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
      * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
+    @Suppress("ComplexMethod")
     fun restore(snapshot: Snapshot, updateSelection: Boolean = true) {
         // Add store to each Session so that it can dispatch actions whenever it changes.
         snapshot.sessions.forEach { it.session.store = store }
@@ -261,6 +289,9 @@ class SessionManager(
         items.forEach { item ->
             item.engineSession?.let { store?.syncDispatch(LinkEngineSessionAction(item.session.id, it)) }
             item.engineSessionState?.let { store?.syncDispatch(UpdateEngineSessionStateAction(item.session.id, it)) }
+            item.readerState?.let {
+                store?.syncDispatch(ReaderAction.UpdateReaderActiveAction(item.session.id, it.active))
+            }
         }
     }
 
@@ -404,7 +435,8 @@ class SessionManager(
         data class Item(
             val session: Session,
             val engineSession: EngineSession? = null,
-            val engineSessionState: EngineSessionState? = null
+            val engineSessionState: EngineSessionState? = null,
+            val readerState: ReaderState? = null
         )
 
         companion object {

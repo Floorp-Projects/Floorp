@@ -6,9 +6,14 @@ package mozilla.components.browser.session.storage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager.Snapshot
+import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.concept.engine.Engine
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -26,7 +31,6 @@ class SnapshotSerializerTest {
             id = "test-id",
             contextId = "test-context-id").apply {
             title = "Hello World"
-            readerMode = true
         }
 
         val json = serializeSession(originalSession)
@@ -37,7 +41,30 @@ class SnapshotSerializerTest {
         assertEquals("test-id", restoredSession.id)
         assertEquals("test-context-id", restoredSession.contextId)
         assertEquals("Hello World", restoredSession.title)
-        assertTrue(restoredSession.readerMode)
+    }
+
+    @Test
+    fun `Serialize and deserialize session with reader state`() {
+        val engine: Engine = mock()
+        whenever(engine.createSessionState(any())).thenReturn(mock())
+        val originalSession = Session(
+            "https://www.mozilla.org",
+            source = Session.Source.ACTION_VIEW,
+            id = "test-id",
+            contextId = "test-context-id").apply {
+            title = "Hello World"
+        }
+
+        val serializer = SnapshotSerializer()
+        val json = serializer.itemToJSON(Snapshot.Item(originalSession, readerState = ReaderState(active = true)))
+        val restoredItem = serializer.itemFromJSON(engine, json)
+
+        assertEquals("https://www.mozilla.org", restoredItem.session.url)
+        assertEquals(Session.Source.ACTION_VIEW, restoredItem.session.source)
+        assertEquals("test-id", restoredItem.session.id)
+        assertEquals("test-context-id", restoredItem.session.contextId)
+        assertEquals("Hello World", restoredItem.session.title)
+        assertEquals(ReaderState(active = true), restoredItem.readerState)
     }
 
     @Test
@@ -54,7 +81,6 @@ class SnapshotSerializerTest {
         assertEquals("https://www.mozilla.org", restoredSession.url)
         assertEquals(Session.Source.ACTION_VIEW, restoredSession.source)
         assertEquals("test-id", restoredSession.id)
-        assertFalse(restoredSession.readerMode)
     }
 
     @Test
@@ -78,7 +104,6 @@ class SnapshotSerializerTest {
             source = Session.Source.ACTION_VIEW,
             id = "test-id").apply {
             title = "Hello World"
-            readerMode = true
         }
 
         val json = serializeSession(originalSession)
@@ -89,7 +114,6 @@ class SnapshotSerializerTest {
         assertNotEquals("test-id", restoredSession.id)
         assertTrue(restoredSession.id.isNotBlank())
         assertEquals("Hello World", restoredSession.title)
-        assertTrue(restoredSession.readerMode)
 
         val restoredSessionAgain = deserializeSession(json, restoreId = false, restoreParentId = false)
         assertNotEquals("test-id", restoredSessionAgain.id)
@@ -105,7 +129,6 @@ class SnapshotSerializerTest {
                 id = "test-id").apply {
             parentId = "test-parent-id"
             title = "Hello World"
-            readerMode = true
         }
 
         val json = serializeSession(originalSession)
@@ -116,7 +139,6 @@ class SnapshotSerializerTest {
         assertEquals("test-parent-id", restoredSession.parentId)
         assertTrue(restoredSession.id.isNotBlank())
         assertEquals("Hello World", restoredSession.title)
-        assertTrue(restoredSession.readerMode)
 
         val restoredSessionAgain = deserializeSession(json, restoreId = true, restoreParentId = false)
         assertEquals("test-id", restoredSessionAgain.id)

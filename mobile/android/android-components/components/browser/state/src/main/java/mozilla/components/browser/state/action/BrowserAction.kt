@@ -397,6 +397,16 @@ sealed class ReaderAction : BrowserAction() {
      * Updates the [ReaderState.active] flag.
      */
     data class UpdateReaderActiveAction(val tabId: String, val active: Boolean) : ReaderAction()
+
+    /**
+     * Updates the [ReaderState.checkRequired] flag.
+     */
+    data class UpdateReaderableCheckRequiredAction(val tabId: String, val checkRequired: Boolean) : ReaderAction()
+
+    /**
+     * Updates the [ReaderState.connectRequired] flag.
+     */
+    data class UpdateReaderConnectRequiredAction(val tabId: String, val connectRequired: Boolean) : ReaderAction()
 }
 
 /**

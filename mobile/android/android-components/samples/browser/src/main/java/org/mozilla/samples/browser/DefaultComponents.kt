@@ -53,6 +53,7 @@ import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
+import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
@@ -108,7 +109,8 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     val store by lazy {
         BrowserStore(middleware = listOf(
-            MediaMiddleware(applicationContext, MediaService::class.java)
+            MediaMiddleware(applicationContext, MediaService::class.java),
+            ReaderViewMiddleware()
         ))
     }
 
