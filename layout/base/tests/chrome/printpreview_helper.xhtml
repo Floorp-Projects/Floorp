@@ -438,8 +438,14 @@ async function runTest13() {
   requestAnimationFrame(function() { setTimeout(runTest14); } );
 }
 
-// Crash test for bug 1615261
+// bug 1622322
 async function runTest14() {
+  await compareFiles("test_shared_adopted_styles.html", "test_shared_adopted_styles_ref.html");
+  requestAnimationFrame(function() { setTimeout(runTest15); } );
+}
+
+// Crash test for bug 1615261
+async function runTest15() {
   frameElts[0].contentDocument.body.innerHTML =
     '<style> div { width: 100px; height: 100px; background-image: url("animated.gif"); } </style>' +
     '<div>Firefox will crash if you try and print this page</div>';

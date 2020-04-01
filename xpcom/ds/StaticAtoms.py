@@ -69,6 +69,7 @@ STATIC_ATOMS = [
     Atom("activateontab", "activateontab"),
     Atom("actuate", "actuate"),
     Atom("address", "address"),
+    Atom("adoptedsheetclones", "adoptedsheetclones"),
     Atom("after", "after"),
     Atom("align", "align"),
     Atom("alink", "alink"),
