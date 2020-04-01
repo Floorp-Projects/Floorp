@@ -11,6 +11,13 @@ geckoview-junit:
     target: geckoview-androidTest.apk
     max-run-time: 3600
     tier: default
+    fetches:
+        toolchain:
+            by-test-platform:
+                android-em-7.*:
+                    - android-sdk-linux
+                    - linux64-minidump-stackwalk
+                default: []
     mozharness:
         script: android_emulator_unittest.py
         config:
@@ -92,6 +99,7 @@ test-verify:
                     - win32-node
                     - win32-minidump-stackwalk
                 android-em-7.*:
+                    - android-sdk-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
 
