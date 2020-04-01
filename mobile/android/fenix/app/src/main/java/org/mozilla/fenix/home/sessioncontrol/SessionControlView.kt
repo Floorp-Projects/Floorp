@@ -205,7 +205,7 @@ class SessionControlView(
                 }
                 loadedTopSites?.run {
                     homeScreenViewModel.shouldScrollToTopSites = false
-                    view.scrollToPosition(stateAdapterList.indexOf(this))
+                    view.scrollToPosition(0)
                 }
             }
         } else {
