@@ -316,6 +316,12 @@ function getRelativeFile(relativePath, baseFile) {
   }
 
   let file = baseFile.clone();
+
+  if (Services.appinfo.OS === "WINNT") {
+    let winFile = file.QueryInterface(Ci.nsILocalFileWin);
+    winFile.useDOSDevicePathSyntax = true;
+  }
+
   relativePath.split("/").forEach(function(component) {
     if (component == "..") {
       file = file.parent;
