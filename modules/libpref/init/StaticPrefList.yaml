@@ -2254,12 +2254,6 @@
   value: false
   mirror: always
 
-# Is support for Navigator.registerContentHandler enabled?
-- name: dom.registerContentHandler.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Reporting API.
 - name: dom.reporting.enabled
   type: RelaxedAtomicBool
