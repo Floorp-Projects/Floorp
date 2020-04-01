@@ -7148,12 +7148,16 @@
   value: false
   mirror: always
 
-# 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign,
-# 4-rejectTracker
-# Keep the old default of accepting all cookies
+# See the full list of values in nsICookieService.idl.
 - name: network.cookie.cookieBehavior
   type: RelaxedAtomicInt32
-  value: 0
+  value: 0 # accept all cookies
+  mirror: always
+
+# See the full list of values in nsICookieService.idl.
+- name: network.cookie.rejectForeignWithExceptions.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Stale threshold for cookies in seconds.
