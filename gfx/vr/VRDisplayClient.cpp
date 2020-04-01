@@ -238,8 +238,38 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.numButtons = 6;
       aControllerState.numAxes = 2;
       break;
+    case VRControllerType::PicoGaze:
+      aControllerState.buttonPressed = ShiftButtonBitForNewSlot(0, 0);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 0, true);
+      aControllerState.numButtons = 1;
+      aControllerState.numAxes = 0;
+      break;
+    case VRControllerType::PicoG2:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(0, 2) | ShiftButtonBitForNewSlot(1, 0);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 2, true) |
+                                       ShiftButtonBitForNewSlot(1, 0, true);
+      aControllerState.numButtons = 2;
+      aControllerState.numAxes = 2;
+      break;
+    case VRControllerType::PicoNeo2:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(0, 3) | ShiftButtonBitForNewSlot(1, 0) |
+          ShiftButtonBitForNewSlot(2, 1) | ShiftButtonBitForNewSlot(3, 4) |
+          ShiftButtonBitForNewSlot(4, 5) | ShiftButtonBitForNewSlot(5, 6);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 3, true) |
+                                       ShiftButtonBitForNewSlot(1, 0, true) |
+                                       ShiftButtonBitForNewSlot(2, 1, true) |
+                                       ShiftButtonBitForNewSlot(3, 4, true) |
+                                       ShiftButtonBitForNewSlot(4, 5, true) |
+                                       ShiftButtonBitForNewSlot(5, 6, true);
+      aControllerState.axisValue[0] = aControllerState.axisValue[2];
+      aControllerState.axisValue[1] = aControllerState.axisValue[3];
+      aControllerState.numButtons = 6;
+      aControllerState.numAxes = 2;
+      break;
     default:
-      // Undefined controller type, we will keep its the same order.
+      // Undefined controller types, we will keep its the same order.
       break;
   }
 }
