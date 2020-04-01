@@ -21,7 +21,7 @@
 #include "js/Value.h"          // JS::Value, JS::UndefinedHandleValue
 #include "vm/Interpreter.h"    // js::GetAndClearException
 #include "vm/JSContext.h"      // JSContext
-#include "vm/PromiseObject.h"  // js::PromiseObject
+#include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/Runtime.h"        // JSRuntime
 
 #include "builtin/Promise-inl.h" // js::SetSettledPromiseIsHandled
@@ -94,8 +94,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     // Step 5: Otherwise, if stream.[[state]] is "closed",
     // Step a: Set reader.[[closedPromise]] to a promise resolved with
     //         undefined.
-    promise = PromiseObject::unforgeableResolveWithNonPromise(
-        cx, UndefinedHandleValue);
+    promise = PromiseResolvedWithUndefined(cx);
   } else {
     // Step 6: Otherwise,
     // Step a: Assert: stream.[[state]] is "errored".
@@ -251,7 +250,7 @@ MOZ_MUST_USE JSObject* js::ReadableStreamDefaultReaderRead(
     }
 
     Rooted<Value> iterResultVal(cx, JS::ObjectValue(*iterResult));
-    return PromiseObject::unforgeableResolve(cx, iterResultVal);
+    return PromiseObject::unforgeableResolveWithNonPromise(cx, iterResultVal);
   }
 
   // Step 6: If stream.[[state]] is "errored", return a promise rejected

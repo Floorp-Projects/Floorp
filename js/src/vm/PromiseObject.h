@@ -15,7 +15,7 @@
 #include "js/Class.h"         // JSClass
 #include "js/Promise.h"       // JS::PromiseState
 #include "js/RootingAPI.h"    // JS::{,Mutable}Handle
-#include "js/Value.h"         // JS::Value, JS::Int32Value
+#include "js/Value.h"  // JS::Value, JS::Int32Value, JS::UndefinedHandleValue
 #include "vm/NativeObject.h"  // js::NativeObject
 
 class JS_PUBLIC_API JSObject;
@@ -114,8 +114,15 @@ class PromiseObject : public NativeObject {
   static JSObject* unforgeableResolve(JSContext* cx,
                                       JS::Handle<JS::Value> value);
 
-  // Create an instance of the original Promise binding, rejected with the given
-  // value.
+  // Create an instance of the original Promise binding, resolved with the given
+  // value *that is not a promise* -- from this realm/compartment or from any
+  // other.
+  //
+  // If you don't know for certain that your value will never be a promise, use
+  // |PromiseObject::unforgeableResolve| instead.
+  //
+  // Use |PromiseResolvedWithUndefined| (defined below) if your value is always
+  // |undefined|.
   static PromiseObject* unforgeableResolveWithNonPromise(
       JSContext* cx, JS::Handle<JS::Value> value);
 
@@ -218,6 +225,15 @@ class PromiseObject : public NativeObject {
 
   void copyUserInteractionFlagsFrom(PromiseObject& rhs);
 };
+
+/**
+ * Create an instance of the original Promise binding, resolved with the value
+ * |undefined|.
+ */
+inline PromiseObject* PromiseResolvedWithUndefined(JSContext* cx) {
+  return PromiseObject::unforgeableResolveWithNonPromise(
+      cx, JS::UndefinedHandleValue);
+}
 
 }  // namespace js
 
