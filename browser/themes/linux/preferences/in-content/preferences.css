@@ -12,7 +12,3 @@ body {
   /* override the Linux only toolkit rule */
   -moz-appearance: none;
 }
-
-.actionsMenu > .menulist-label-box > .menulist-icon {
-  margin-inline: 1px 8px;
-}
