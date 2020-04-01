@@ -49,8 +49,7 @@ menuitem[appHandlerIcon="plugin"] {
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
-  padding-inline-start: 0px;
-  padding-inline-end: 2px;
+  padding-inline: 0 2px;
 }
 
 .actionsMenu > menupopup > menuitem {

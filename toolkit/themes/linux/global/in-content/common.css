@@ -42,8 +42,7 @@ xul|menulist {
 
 xul|*.menulist-dropmarker {
   display: -moz-box;
-  margin-top: 6px;
-  margin-bottom: 6px;
+  margin-block: 6px;
 }
 
 xul|checkbox[checked] > xul|*.checkbox-check,
