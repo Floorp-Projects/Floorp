@@ -28,7 +28,7 @@
 #include "vm/Compartment.h"    // JS::Compartment
 #include "vm/JSContext.h"      // JSContext
 #include "vm/List.h"           // js::ListObject
-#include "vm/PromiseObject.h"  // js::PromiseObject
+#include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 
 #include "builtin/Promise-inl.h"  // js::SetSettledPromiseIsHandled
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
@@ -138,7 +138,7 @@ JSObject* js::WritableStreamAbort(JSContext* cx,
   // Step 2: If state is "closed" or "errored", return a promise resolved with
   //         undefined.
   if (unwrappedStream->closed() || unwrappedStream->errored()) {
-    return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    return PromiseResolvedWithUndefined(cx);
   }
 
   // Step 3: If stream.[[pendingAbortRequest]] is not undefined, return

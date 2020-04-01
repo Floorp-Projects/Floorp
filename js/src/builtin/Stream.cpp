@@ -23,7 +23,7 @@
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
-#include "vm/PromiseObject.h"  // js::PromiseObject
+#include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/SelfHosting.h"
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler
@@ -316,9 +316,7 @@ MOZ_MUST_USE bool js::SetUpExternalReadableByteStreamController(
   // Step 14: Let startResult be the result of performing startAlgorithm.
   // (For external sources, this algorithm does nothing and returns undefined.)
   // Step 15: Let startPromise be a promise resolved with startResult.
-  Rooted<PromiseObject*> startPromise(
-      cx, PromiseObject::unforgeableResolveWithNonPromise(
-              cx, UndefinedHandleValue));
+  Rooted<PromiseObject*> startPromise(cx, PromiseResolvedWithUndefined(cx));
   if (!startPromise) {
     return false;
   }
@@ -501,7 +499,7 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
     if (!unwrappedReader) {
       return nullptr;
     }
-    RootedObject readResult(
+    Rooted<PlainObject*> readResult(
         cx, ReadableStreamCreateReadResult(cx, val, false,
                                            unwrappedReader->forAuthorCode()));
     if (!readResult) {
@@ -509,7 +507,7 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
     }
     val.setObject(*readResult);
 
-    return PromiseObject::unforgeableResolve(cx, val);
+    return PromiseObject::unforgeableResolveWithNonPromise(cx, val);
   }
 
   // Step 4: Let autoAllocateChunkSize be this.[[autoAllocateChunkSize]].

@@ -26,7 +26,7 @@
 #include "js/Value.h"          // JS::Value
 #include "vm/Compartment.h"    // JS::Compartment
 #include "vm/JSContext.h"      // JSContext
-#include "vm/PromiseObject.h"  // js::PromiseObject
+#include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 
 #include "builtin/Promise-inl.h" // js::SetSettledPromiseIsHandled
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndTypeCheck{Argument,This}
@@ -84,7 +84,7 @@ MOZ_MUST_USE WritableStreamDefaultWriter* js::CreateWritableStreamDefaultWriter(
     // Step 6.a: If ! WritableStreamCloseQueuedOrInFlight(stream) is false and
     //           stream.[[backpressure]] is true, set this.[[readyPromise]] to a
     //           new promise.
-    JSObject* promise;
+    PromiseObject* promise;
     if (!WritableStreamCloseQueuedOrInFlight(unwrappedStream) &&
         unwrappedStream->backpressure()) {
       promise = PromiseObject::createSkippingExecutor(cx);
@@ -92,7 +92,7 @@ MOZ_MUST_USE WritableStreamDefaultWriter* js::CreateWritableStreamDefaultWriter(
     // Step 6.b: Otherwise, set this.[[readyPromise]] to a promise resolved with
     //           undefined.
     else {
-      promise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+      promise = PromiseResolvedWithUndefined(cx);
     }
     if (!promise) {
       return nullptr;
@@ -110,8 +110,7 @@ MOZ_MUST_USE WritableStreamDefaultWriter* js::CreateWritableStreamDefaultWriter(
   // Step 8: Otherwise, if state is "closed",
   else if (unwrappedStream->closed()) {
     // Step 8.a: Set this.[[readyPromise]] to a promise resolved with undefined.
-    JSObject* readyPromise =
-        PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    PromiseObject* readyPromise = PromiseResolvedWithUndefined(cx);
     if (!readyPromise) {
       return nullptr;
     }
@@ -120,8 +119,7 @@ MOZ_MUST_USE WritableStreamDefaultWriter* js::CreateWritableStreamDefaultWriter(
 
     // Step 8.b: Set this.[[closedPromise]] to a promise resolved with
     //           undefined.
-    JSObject* closedPromise =
-        PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    PromiseObject* closedPromise = PromiseResolvedWithUndefined(cx);
     if (!closedPromise) {
       return nullptr;
     }
