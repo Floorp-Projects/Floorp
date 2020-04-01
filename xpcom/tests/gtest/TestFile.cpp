@@ -7,11 +7,19 @@
 #include "prsystem.h"
 
 #include "nsIFile.h"
+#ifdef XP_WIN
+#  include "nsILocalFileWin.h"
+#endif
 #include "nsString.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsPrintfCString.h"
 
 #include "gtest/gtest.h"
+
+#ifdef XP_WIN
+bool gTestWithPrefix_Win = false;
+#endif
 
 static bool VerifyResult(nsresult aRV, const char* aMsg) {
   bool failed = NS_FAILED(aRV);
@@ -19,12 +27,30 @@ static bool VerifyResult(nsresult aRV, const char* aMsg) {
   return !failed;
 }
 
+#ifdef XP_WIN
+static void SetUseDOSDevicePathSyntax(nsIFile* aFile) {
+  if (gTestWithPrefix_Win) {
+    nsresult rv;
+    nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(aFile, &rv);
+    VerifyResult(rv, "Querying nsILocalFileWin");
+
+    MOZ_ASSERT(winFile);
+    winFile->SetUseDOSDevicePathSyntax(true);
+  }
+}
+#endif
+
 static already_AddRefed<nsIFile> NewFile(nsIFile* aBase) {
   nsresult rv;
   nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   VerifyResult(rv, "Creating nsIFile");
   rv = file->InitWithFile(aBase);
   VerifyResult(rv, "InitWithFile");
+
+#ifdef XP_WIN
+  SetUseDOSDevicePathSyntax(file);
+#endif
+
   return file.forget();
 }
 
@@ -365,15 +391,21 @@ static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart) {
   return true;
 }
 
-TEST(TestFile, Tests)
-{
+static void SetupAndTestFunctions(const nsAString& aDirName,
+                                  bool aTestCreateUnique, bool aTestNormalize) {
   nsCOMPtr<nsIFile> base;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(base));
   ASSERT_TRUE(VerifyResult(rv, "Getting temp directory"));
 
-  rv = base->AppendNative(nsDependentCString("mozfiletests"));
+#ifdef XP_WIN
+  SetUseDOSDevicePathSyntax(base);
+#endif
+
+  rv = base->Append(aDirName);
   ASSERT_TRUE(
-      VerifyResult(rv, "Appending mozfiletests to temp directory name"));
+      VerifyResult(rv, nsPrintfCString("Appending %s to temp directory name",
+                                       NS_ConvertUTF16toUTF8(aDirName).get())
+                           .get()));
 
   // Remove the directory in case tests failed and left it behind.
   // don't check result since it might not be there
@@ -384,8 +416,10 @@ TEST(TestFile, Tests)
   ASSERT_TRUE(VerifyResult(rv, "Creating temp directory"));
 
   // Now we can safely normalize the path
-  rv = base->Normalize();
-  ASSERT_TRUE(VerifyResult(rv, "Normalizing temp directory name"));
+  if (aTestNormalize) {
+    rv = base->Normalize();
+    ASSERT_TRUE(VerifyResult(rv, "Normalizing temp directory name"));
+  }
 
   // Initialize subdir object for later use
   nsCOMPtr<nsIFile> subdir = NewFile(base);
@@ -397,6 +431,12 @@ TEST(TestFile, Tests)
   // ---------------
   // End setup code.
   // ---------------
+
+  // Test leafName
+  nsString leafName;
+  rv = base->GetLeafName(leafName);
+  ASSERT_TRUE(VerifyResult(rv, "Getting leafName"));
+  ASSERT_TRUE(leafName.Equals(aDirName));
 
   // Test path parsing
   ASSERT_TRUE(TestInvalidFileName(base, "a/b"));
@@ -423,16 +463,22 @@ TEST(TestFile, Tests)
   // Test copying across directoreis
   ASSERT_TRUE(TestCopy(base, subdir, "file4.txt", "file5.txt"));
 
-  // Run normalization tests while the directory exists
-  ASSERT_TRUE(TestNormalizeNativePath(base, subdir));
+  if (aTestNormalize) {
+    // Run normalization tests while the directory exists
+    ASSERT_TRUE(TestNormalizeNativePath(base, subdir));
+  }
 
   // Test recursive directory removal
   ASSERT_TRUE(TestRemove(base, "subdir", true));
 
-  ASSERT_TRUE(TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600));
-  ASSERT_TRUE(TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600));
-  ASSERT_TRUE(TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700));
-  ASSERT_TRUE(TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700));
+  if (aTestCreateUnique) {
+    ASSERT_TRUE(TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600));
+    ASSERT_TRUE(TestCreateUnique(base, "foo", nsIFile::NORMAL_FILE_TYPE, 0600));
+    ASSERT_TRUE(
+        TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700));
+    ASSERT_TRUE(
+        TestCreateUnique(base, "bar.xx", nsIFile::DIRECTORY_TYPE, 0700));
+  }
 
   ASSERT_TRUE(
       TestDeleteOnClose(base, "file7.txt", PR_RDWR | PR_CREATE_FILE, 0600));
@@ -440,4 +486,56 @@ TEST(TestFile, Tests)
   // Clean up temporary stuff
   rv = base->Remove(true);
   VerifyResult(rv, "Cleaning up temp directory");
+}
+
+TEST(TestFile, Unprefixed)
+{
+#ifdef XP_WIN
+  gTestWithPrefix_Win = false;
+#endif
+
+  SetupAndTestFunctions(NS_LITERAL_STRING("mozfiletests"),
+                        /* aTestCreateUnique */ true,
+                        /* aTestNormalize */ true);
+
+#ifdef XP_WIN
+  gTestWithPrefix_Win = true;
+#endif
+}
+
+// This simulates what QM_NewLocalFile does (NS_NewLocalFiles and then
+// SetUseDOSDevicePathSyntax if it's on Windows for NewFile)
+TEST(TestFile, PrefixedOnWin)
+{
+  SetupAndTestFunctions(NS_LITERAL_STRING("mozfiletests"),
+                        /* aTestCreateUnique */ true,
+                        /* aTestNormalize */ true);
+}
+
+TEST(TestFile, PrefixedOnWin_PathExceedsMaxPath)
+{
+  // We want to verify if the prefix would allow as to create a file with over
+  // 260 char for its path. However, on Windows, the maximum length of filename
+  // is 255. Given the base file path and we are going append some other file
+  // to the current base file, let's assume the file path will exceed 260 so
+  // that we are able to verify if the prefix works or not.
+  nsString dirName;
+  dirName.AssignLiteral("mozfiletests");
+  for (uint32_t i = 255 - dirName.Length(); i > 0; --i) {
+    dirName.AppendLiteral("a");
+  }
+
+  // Bypass the test for CreateUnique because there is a check for the max
+  // length of the root on all platforms.
+  SetupAndTestFunctions(dirName, /* aTestCreateUnique */ false,
+                        /* aTestNormalize */ true);
+}
+
+TEST(TestFile, PrefixedOnWin_ComponentEndsWithPeriod)
+{
+  // Bypass the normalization for this because it would strip the trailing
+  // period.
+  SetupAndTestFunctions(NS_LITERAL_STRING("mozfiletests."),
+                        /* aTestCreateUnique */ true,
+                        /* aTestNormalize */ false);
 }
