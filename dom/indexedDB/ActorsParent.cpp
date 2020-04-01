@@ -4742,13 +4742,15 @@ class DatabaseConnection final {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DatabaseConnection)
 
-  mozIStorageConnection* GetStorageConnection() const {
-    if (mStorageConnection) {
-      AssertIsOnConnectionThread();
-      return mStorageConnection->get();
-    }
+  bool HasStorageConnection() const {
+    return static_cast<bool>(mStorageConnection);
+  }
 
-    return nullptr;
+  mozIStorageConnection& MutableStorageConnection() const {
+    AssertIsOnConnectionThread();
+    MOZ_ASSERT(mStorageConnection);
+
+    return **mStorageConnection;
   }
 
   UpdateRefcountFunction* GetUpdateRefcountFunction() const {
@@ -5651,7 +5653,7 @@ class DatabaseOperationBase : public Runnable,
 };
 
 class MOZ_STACK_CLASS DatabaseOperationBase::AutoSetProgressHandler final {
-  mozIStorageConnection* mConnection;
+  Maybe<mozIStorageConnection&> mConnection;
 #ifdef DEBUG
   DatabaseOperationBase* mDEBUGDatabaseOp;
 #endif
@@ -5661,7 +5663,7 @@ class MOZ_STACK_CLASS DatabaseOperationBase::AutoSetProgressHandler final {
 
   ~AutoSetProgressHandler();
 
-  nsresult Register(mozIStorageConnection* aConnection,
+  nsresult Register(mozIStorageConnection& aConnection,
                     DatabaseOperationBase* aDatabaseOp);
 
   void Unregister();
@@ -11908,7 +11910,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   MOZ_ASSERT(connection);
   connection->AssertIsOnConnectionThread();
 
-  MOZ_ASSERT(connection->GetStorageConnection());
+  MOZ_ASSERT(connection->HasStorageConnection());
 
   nsresult rv;
   if (!mUpdateStatement) {
@@ -11942,7 +11944,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::DatabaseUpdateFunction::
   }
 
   int32_t rows;
-  rv = connection->GetStorageConnection()->GetAffectedRows(&rows);
+  rv = connection->MutableStorageConnection().GetAffectedRows(&rows);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -13834,7 +13836,7 @@ nsresult Database::EnsureConnection() {
 
   AUTO_PROFILER_LABEL("Database::EnsureConnection", DOM);
 
-  if (!mConnection || !mConnection->GetStorageConnection()) {
+  if (!mConnection || !mConnection->HasStorageConnection()) {
     nsresult rv = gConnectionPool->GetOrCreateConnection(*this, &mConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -20293,7 +20295,7 @@ DatabaseOperationBase::OnProgress(mozIStorageConnection* aConnection,
 }
 
 DatabaseOperationBase::AutoSetProgressHandler::AutoSetProgressHandler()
-    : mConnection(nullptr)
+    : mConnection(Nothing())
 #ifdef DEBUG
       ,
       mDEBUGDatabaseOp(nullptr)
@@ -20311,24 +20313,23 @@ DatabaseOperationBase::AutoSetProgressHandler::~AutoSetProgressHandler() {
 }
 
 nsresult DatabaseOperationBase::AutoSetProgressHandler::Register(
-    mozIStorageConnection* aConnection, DatabaseOperationBase* aDatabaseOp) {
+    mozIStorageConnection& aConnection, DatabaseOperationBase* aDatabaseOp) {
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(aConnection);
   MOZ_ASSERT(aDatabaseOp);
   MOZ_ASSERT(!mConnection);
 
   nsCOMPtr<mozIStorageProgressHandler> oldProgressHandler;
 
   nsresult rv =
-      aConnection->SetProgressHandler(kStorageProgressGranularity, aDatabaseOp,
-                                      getter_AddRefs(oldProgressHandler));
+      aConnection.SetProgressHandler(kStorageProgressGranularity, aDatabaseOp,
+                                     getter_AddRefs(oldProgressHandler));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   MOZ_ASSERT(!oldProgressHandler);
 
-  mConnection = aConnection;
+  mConnection = SomeRef(aConnection);
 #ifdef DEBUG
   mDEBUGDatabaseOp = aDatabaseOp;
 #endif
@@ -20345,7 +20346,7 @@ void DatabaseOperationBase::AutoSetProgressHandler::Unregister() {
       mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler)));
   MOZ_ASSERT(oldHandler == mDEBUGDatabaseOp);
 
-  mConnection = nullptr;
+  mConnection = Nothing();
 }
 
 MutableFile::MutableFile(nsIFile* aFile, SafeRefPtr<Database> aDatabase,
@@ -21467,7 +21468,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   }
 
   AutoSetProgressHandler asph;
-  rv = asph.Register(connection, this);
+  rv = asph.Register(*connection, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -23119,11 +23120,12 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
     } else {
       DatabaseConnection* connection = database.GetConnection();
       MOZ_ASSERT(connection);
-      MOZ_ASSERT(connection->GetStorageConnection());
+
+      auto& storageConnection = connection->MutableStorageConnection();
 
       AutoSetProgressHandler autoProgress;
       if (mLoggingSerialNumber) {
-        rv = autoProgress.Register(connection->GetStorageConnection(), this);
+        rv = autoProgress.Register(storageConnection, this);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           SetFailureCode(rv);
         }
@@ -23890,7 +23892,7 @@ nsresult CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   {
     int64_t id;
     MOZ_ALWAYS_SUCCEEDS(
-        aConnection->GetStorageConnection()->GetLastInsertRowID(&id));
+        aConnection->MutableStorageConnection().GetLastInsertRowID(&id));
     MOZ_ASSERT(mMetadata.id() == id);
   }
 #endif
@@ -24064,8 +24066,9 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
     {
       int32_t deletedRowCount;
-      MOZ_ALWAYS_SUCCEEDS(aConnection->GetStorageConnection()->GetAffectedRows(
-          &deletedRowCount));
+      MOZ_ALWAYS_SUCCEEDS(
+          aConnection->MutableStorageConnection().GetAffectedRows(
+              &deletedRowCount));
       MOZ_ASSERT(deletedRowCount == 1);
     }
 #endif
@@ -24177,9 +24180,7 @@ nsresult CreateIndexOp::InsertDataFromObjectStore(
 
   AUTO_PROFILER_LABEL("CreateIndexOp::InsertDataFromObjectStore", DOM);
 
-  nsCOMPtr<mozIStorageConnection> storageConnection =
-      aConnection->GetStorageConnection();
-  MOZ_ASSERT(storageConnection);
+  auto& storageConnection = aConnection->MutableStorageConnection();
 
   RefPtr<UpdateIndexDataValuesFunction> updateFunction =
       new UpdateIndexDataValuesFunction(this, aConnection);
@@ -24187,14 +24188,14 @@ nsresult CreateIndexOp::InsertDataFromObjectStore(
   NS_NAMED_LITERAL_CSTRING(updateFunctionName, "update_index_data_values");
 
   nsresult rv =
-      storageConnection->CreateFunction(updateFunctionName, 4, updateFunction);
+      storageConnection.CreateFunction(updateFunctionName, 4, updateFunction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = InsertDataFromObjectStoreInternal(aConnection);
 
-  MOZ_ALWAYS_SUCCEEDS(storageConnection->RemoveFunction(updateFunctionName));
+  MOZ_ALWAYS_SUCCEEDS(storageConnection.RemoveFunction(updateFunctionName));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -24209,8 +24210,7 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(mMaybeUniqueIndexTable);
 
-  DebugOnly<void*> storageConnection = aConnection->GetStorageConnection();
-  MOZ_ASSERT(storageConnection);
+  MOZ_ASSERT(aConnection->HasStorageConnection());
 
   // The parameter names are not used, parameters are bound by index only
   // locally in the same function.
@@ -24351,7 +24351,7 @@ nsresult CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   {
     int64_t id;
     MOZ_ALWAYS_SUCCEEDS(
-        aConnection->GetStorageConnection()->GetLastInsertRowID(&id));
+        aConnection->MutableStorageConnection().GetLastInsertRowID(&id));
     MOZ_ASSERT(mMetadata.id() == id);
   }
 #endif
@@ -24966,8 +24966,8 @@ nsresult DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 #ifdef DEBUG
   {
     int32_t deletedRowCount;
-    MOZ_ALWAYS_SUCCEEDS(
-        aConnection->GetStorageConnection()->GetAffectedRows(&deletedRowCount));
+    MOZ_ALWAYS_SUCCEEDS(aConnection->MutableStorageConnection().GetAffectedRows(
+        &deletedRowCount));
     MOZ_ASSERT(deletedRowCount == 1);
   }
 #endif
@@ -25419,7 +25419,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
     DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT(aConnection->GetStorageConnection());
+  MOZ_ASSERT(aConnection->HasStorageConnection());
 
   AUTO_PROFILER_LABEL("ObjectStoreAddOrPutRequestOp::DoDatabaseWork", DOM);
 
