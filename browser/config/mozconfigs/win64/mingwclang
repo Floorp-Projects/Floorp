@@ -71,4 +71,3 @@ mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
-. "$topsrcdir/build/mozconfig.cache"
