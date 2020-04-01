@@ -317,7 +317,7 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
           masm.loadPtr(src, iter->gpr());
         } else if (type == MIRType::StackResults) {
           MOZ_ASSERT(args.isSyntheticStackResultPointerArg(iter.index()));
-          MOZ_CRASH("multiple function results not yet implemented");
+          masm.loadPtr(src, iter->gpr());
         } else {
           MOZ_CRASH("unknown GPR type");
         }
@@ -380,7 +380,9 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
           }
           case MIRType::StackResults: {
             MOZ_ASSERT(args.isSyntheticStackResultPointerArg(iter.index()));
-            MOZ_CRASH("multiple function results not yet implemented");
+            masm.loadPtr(src, scratch);
+            masm.storePtr(scratch, Address(masm.getStackPointer(),
+                                           iter->offsetFromArgBase()));
             break;
           }
           default:
@@ -394,33 +396,37 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
   }
 }
 
-static void StoreABIReturn(MacroAssembler& masm, const FuncExport& fe,
-                           Register argv) {
-  // Store the return value in argv[0].
-  const ValTypeVector& results = fe.funcType().results();
-  if (results.length() == 0) {
-    return;
+static void StoreRegisterResult(MacroAssembler& masm, const FuncExport& fe,
+                                Register loc) {
+  ResultType results = ResultType::Vector(fe.funcType().results());
+  DebugOnly<bool> sawRegisterResult = false;
+  for (ABIResultIter iter(results); !iter.done(); iter.next()) {
+    const ABIResult& result = iter.cur();
+    if (result.inRegister()) {
+      MOZ_ASSERT(!sawRegisterResult);
+      sawRegisterResult = true;
+      switch (result.type().kind()) {
+        case ValType::I32:
+          masm.store32(result.gpr(), Address(loc, 0));
+          break;
+        case ValType::I64:
+          masm.store64(result.gpr64(), Address(loc, 0));
+          break;
+        case ValType::F32:
+          masm.canonicalizeFloat(result.fpr());
+          masm.storeFloat32(result.fpr(), Address(loc, 0));
+          break;
+        case ValType::F64:
+          masm.canonicalizeDouble(result.fpr());
+          masm.storeDouble(result.fpr(), Address(loc, 0));
+          break;
+        case ValType::Ref:
+          masm.storePtr(result.gpr(), Address(loc, 0));
+          break;
+      }
+    }
   }
-  MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
-  switch (results[0].kind()) {
-    case ValType::I32:
-      masm.store32(ReturnReg, Address(argv, 0));
-      break;
-    case ValType::I64:
-      masm.store64(ReturnReg64, Address(argv, 0));
-      break;
-    case ValType::F32:
-      masm.canonicalizeFloat(ReturnFloat32Reg);
-      masm.storeFloat32(ReturnFloat32Reg, Address(argv, 0));
-      break;
-    case ValType::F64:
-      masm.canonicalizeDouble(ReturnDoubleReg);
-      masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
-      break;
-    case ValType::Ref:
-      masm.storePtr(ReturnReg, Address(argv, 0));
-      break;
-  }
+  MOZ_ASSERT(sawRegisterResult == (results.length() > 0));
 }
 
 #if defined(JS_CODEGEN_ARM)
@@ -641,12 +647,6 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
 #  endif
 #endif
 
-  if (fe.funcType().temporarilyUnsupportedResultCountForEntry()) {
-    // Unreachable as the Instance::callExport doesn't let us get here.
-    masm.breakpoint();
-    return FinishOffsets(masm, offsets);
-  }
-
   // Save all caller non-volatile registers before we clobber them here and in
   // the wasm callee (which does not preserve non-volatile registers).
   masm.setFramePushed(0);
@@ -745,8 +745,8 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   WasmPop(masm, WasmTlsReg);
 #endif
 
-  // Store the return value in argv[0].
-  StoreABIReturn(masm, fe, argv);
+  // Store the register result, if any, in argv[0].
+  StoreRegisterResult(masm, fe, argv);
 
   // After the ReturnReg is stored into argv[0] but before fp is clobbered by
   // the PopRegsInMask(NonVolatileRegs) below, set the return value based on
@@ -2709,8 +2709,9 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
     return true;
   }
 
-  // Returning multiple values to JS not yet implemented (see bug 1595031).
-  if (fe.funcType().temporarilyUnsupportedResultCountForEntry()) {
+  // Returning multiple values to JS JIT code not yet implemented (see
+  // bug 1595031).
+  if (fe.funcType().temporarilyUnsupportedResultCountForJitEntry()) {
     return true;
   }
 
@@ -2758,9 +2759,9 @@ bool wasm::GenerateStubs(const ModuleEnvironment& env,
       continue;
     }
 
-    // Exit to JS returning multiple values not yet implemented (see bug
-    // 1595031).
-    if (fi.funcType().temporarilyUnsupportedResultCountForExit()) {
+    // Exit to JS JIT code returning multiple values not yet implemented
+    // (see bug 1595031).
+    if (fi.funcType().temporarilyUnsupportedResultCountForJitExit()) {
       continue;
     }
 
