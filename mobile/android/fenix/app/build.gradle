@@ -31,6 +31,7 @@ apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 import com.android.build.OutputFile
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.mozilla.fenix.gradle.tasks.LintUnitTestRunner
 
 import static org.gradle.api.tasks.testing.TestResult.ResultType
 
@@ -683,6 +684,8 @@ task buildTranslationArray {
     def foundLocalesString = foundLocales.toString().replaceAll(',}','}')
     android.defaultConfig.buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", foundLocalesString
 }
+
+task lintUnitTestRunner(type: LintUnitTestRunner)
 
 afterEvaluate {
 
