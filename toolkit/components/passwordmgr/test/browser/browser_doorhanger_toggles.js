@@ -77,8 +77,81 @@ let testCases = [
           inputType: "password",
           toggleChecked: false,
         },
-        // ensure nothing changes if we attempt to click on it
-        afterToggleClick0: {
+      },
+    },
+  },
+  {
+    /* Test that the reveal password checkbox is hidden when editing the
+     * password of an autofilled login
+     */
+    name: "test_edit_autofilled_password",
+    logins: [{ username: "username1", password: "password" }],
+    formDefaults: {},
+    formChanges: {
+      [passwordInputSelector]: "password!",
+    },
+    expected: {
+      initialForm: {
+        username: "username1",
+        password: "password",
+      },
+      passwordChangedDoorhanger: {
+        type: "password-change",
+        dismissed: true,
+        username: "username1",
+        password: "password!",
+        toggleVisible: false,
+        initialToggleState: {
+          inputType: "password",
+          toggleChecked: false,
+        },
+      },
+      submitDoorhanger: {
+        type: "password-change",
+        dismissed: false,
+        username: "username1",
+        password: "password!",
+        toggleVisible: false,
+        initialToggleState: {
+          inputType: "password",
+          toggleChecked: false,
+        },
+      },
+    },
+  },
+  {
+    /* Test that the reveal password checkbox is hidden when editing the
+     * username of an autofilled login
+     */
+    name: "test_edit_autofilled_username",
+    logins: [{ username: "username1", password: "password" }],
+    formDefaults: {},
+    formChanges: {
+      [usernameInputSelector]: "username2",
+    },
+    expected: {
+      initialForm: {
+        username: "username1",
+        password: "password",
+      },
+      passwordChangedDoorhanger: {
+        type: "password-save",
+        dismissed: true,
+        username: "username2",
+        password: "password",
+        toggleVisible: false,
+        initialToggleState: {
+          inputType: "password",
+          toggleChecked: false,
+        },
+      },
+      submitDoorhanger: {
+        type: "password-save",
+        dismissed: false,
+        username: "username2",
+        password: "password",
+        toggleVisible: false,
+        initialToggleState: {
           inputType: "password",
           toggleChecked: false,
         },
@@ -88,6 +161,10 @@ let testCases = [
 ];
 
 for (let testData of testCases) {
+  if (testData.skip) {
+    info("Skipping test:", testData.name);
+    continue;
+  }
   let tmp = {
     async [testData.name]() {
       await testDoorhangerToggles(testData);
@@ -130,115 +207,165 @@ async function testDoorhangerToggles({
       info("form checked");
 
       // some tests check the dismissed doorhanger from editing the password
-      if (passwordInputSelector in formChanges) {
-        let passwordEditedMessage = listenForTestNotification(
-          "PasswordEditedOrGenerated"
-        );
-        await changeContentFormValues(browser, formChanges);
-        info(
-          "form edited, waiting for test notification of PasswordEditedOrGenerated"
-        );
-        await passwordEditedMessage;
-      }
+      let formChanged = expected.passwordChangedDoorhanger
+        ? listenForTestNotification("PasswordEditedOrGenerated")
+        : Promise.resolve();
+      await changeContentFormValues(browser, formChanges);
+      await formChanged;
 
-      // submit the form and wait for the doorhanger
-      let submittedPromise = listenForTestNotification("FormSubmit");
-      SpecialPowers.spawn(browser, [], () => {
-        content.document.getElementById("form-basic").submit();
-      });
-      await submittedPromise;
-      let notif = await getCaptureDoorhangerThatMayOpen(
-        expected.submitDoorhanger.type
-      );
-      ok(notif, "got notification popup");
-
-      // Check the actual content of the popup notification.
-      await checkDoorhangerUsernamePassword(
-        expected.submitDoorhanger.username,
-        expected.submitDoorhanger.password
-      );
-
-      let notificationElement = PopupNotifications.panel.childNodes[0];
-      let passwordTextbox = notificationElement.querySelector(
-        "#password-notification-password"
-      );
-      let toggleCheckbox = notificationElement.querySelector(
-        "#password-notification-visibilityToggle"
-      );
-      let {
-        toggleVisible,
-        initialToggleState,
-        afterToggleClick0,
-        afterToggleClick1,
-      } = expected.submitDoorhanger;
-
-      if (toggleVisible) {
-        ok(
-          BrowserTestUtils.is_visible(toggleCheckbox),
-          "The visibility checkbox is shown"
-        );
-      } else {
-        ok(
-          BrowserTestUtils.is_hidden(toggleCheckbox),
-          "The visibility checkbox is hidden"
-        );
-      }
-
-      if (initialToggleState) {
+      if (expected.passwordChangedDoorhanger) {
+        let expectedDoorhanger = expected.passwordChangedDoorhanger;
+        info("Verifying dismissed doorhanger from password change");
+        let notif = await waitForDoorhanger(browser, expectedDoorhanger.type);
+        ok(notif, "got notification popup");
         is(
-          toggleCheckbox.checked,
-          initialToggleState.toggleChecked,
-          `Initially, toggle is ${
-            initialToggleState.toggleChecked ? "checked" : "unchecked"
-          }`
+          notif.dismissed,
+          expectedDoorhanger.dismissed,
+          "Check notification dismissed property"
         );
-        is(
-          passwordTextbox.type,
-          initialToggleState.inputType,
-          `Initially, password input has type: ${initialToggleState.inputType}`
-        );
-      }
-      if (afterToggleClick0) {
-        info("Clicking on the visibility toggle");
-        await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
+        let { panel } = browser.ownerGlobal.PopupNotifications;
+        // we will open dismissed doorhanger to check panel contents
+        is(panel.state, "closed", "Panel is initially closed");
+        let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
+        info("Opening the doorhanger popup");
+        // synthesize click on anchor as this also blurs the form field triggering
+        // a change event
+        EventUtils.synthesizeMouseAtCenter(notif.anchorElement, {});
+        await promiseShown;
         await TestUtils.waitForTick();
-        is(
-          toggleCheckbox.checked,
-          afterToggleClick0.toggleChecked,
-          `After 1st click, expect toggle to be checked? ${afterToggleClick0.toggleChecked}, actual: ${toggleCheckbox.checked}`
+        ok(
+          panel.children.length,
+          `Check the popup has at least one notification (${panel.children.length})`
         );
-        is(
-          passwordTextbox.type,
-          afterToggleClick0.inputType,
-          `After 1st click, expect password input to have type: ${afterToggleClick0.inputType}`
-        );
+
+        // Check the password-changed-capture doorhanger contents & behaviour
+        info("Verifying the doorhanger");
+        await verifyDoorhangerToggles(browser, notif, expectedDoorhanger);
+        await hideDoorhangerPopup(notif);
       }
-      if (afterToggleClick1) {
-        info("Clicking on the visibility toggle again");
-        await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
-        await TestUtils.waitForTick();
+
+      if (expected.submitDoorhanger) {
+        let expectedDoorhanger = expected.submitDoorhanger;
+        let { panel } = browser.ownerGlobal.PopupNotifications;
+        // submit the form and wait for the doorhanger
+        info("Submitting the form");
+        let submittedPromise = listenForTestNotification("FormSubmit");
+        let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
+        await submitForm(browser, "/");
+        await submittedPromise;
+        info("Waiting for doorhanger popup to open");
+        await promiseShown;
+        let notif = await getCaptureDoorhanger(expectedDoorhanger.type);
+        ok(notif, "got notification popup");
         is(
-          toggleCheckbox.checked,
-          afterToggleClick1.toggleChecked,
-          `After 2nd click, expect toggle to be checked? ${afterToggleClick0.toggleChecked}, actual: ${toggleCheckbox.checked}`
+          notif.dismissed,
+          expectedDoorhanger.dismissed,
+          "Check notification dismissed property"
         );
-        is(
-          passwordTextbox.type,
-          afterToggleClick1.inputType,
-          `After 2nd click, expect password input to have type: ${afterToggleClick1.inputType}`
+        ok(
+          panel.children.length,
+          `Check the popup has at least one notification (${panel.children.length})`
         );
+
+        // Check the submit-capture doorhanger contents & behaviour
+        info("Verifying the submit doorhanger");
+        await verifyDoorhangerToggles(browser, notif, expectedDoorhanger);
+        await cleanupDoorhanger(notif);
       }
-      await cleanupDoorhanger(notif);
     }
   );
   await LoginTestUtils.clearData();
   if (enabledMasterPassword) {
     LoginTestUtils.masterPassword.disable();
   }
+  await cleanupPasswordNotifications();
 }
 
 // --------------------------------------------------------------------
 // Helpers
+
+async function verifyDoorhangerToggles(browser, notif, expected) {
+  let { initialToggleState, afterToggleClick0, afterToggleClick1 } = expected;
+
+  let { panel } = browser.ownerGlobal.PopupNotifications;
+  let notificationElement = panel.childNodes[0];
+  let passwordTextbox = notificationElement.querySelector(
+    "#password-notification-password"
+  );
+  let toggleCheckbox = notificationElement.querySelector(
+    "#password-notification-visibilityToggle"
+  );
+  is(panel.state, "open", "Panel is open");
+  ok(
+    BrowserTestUtils.is_visible(passwordTextbox),
+    "The doorhanger password field is visible"
+  );
+
+  await checkDoorhangerUsernamePassword(expected.username, expected.password);
+  if (expected.toggleVisible) {
+    ok(
+      BrowserTestUtils.is_visible(toggleCheckbox),
+      "The visibility checkbox is shown"
+    );
+  } else {
+    ok(
+      BrowserTestUtils.is_hidden(toggleCheckbox),
+      "The visibility checkbox is hidden"
+    );
+  }
+  if (initialToggleState) {
+    is(
+      toggleCheckbox.checked,
+      initialToggleState.toggleChecked,
+      `Initially, toggle is ${
+        initialToggleState.toggleChecked ? "checked" : "unchecked"
+      }`
+    );
+    is(
+      passwordTextbox.type,
+      initialToggleState.inputType,
+      `Initially, password input has type: ${initialToggleState.inputType}`
+    );
+  }
+  if (afterToggleClick0) {
+    ok(
+      !toggleCheckbox.hidden,
+      "The checkbox shouldnt be hidden when clicking on it"
+    );
+    info("Clicking on the visibility toggle");
+    await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
+    await TestUtils.waitForTick();
+    is(
+      toggleCheckbox.checked,
+      afterToggleClick0.toggleChecked,
+      `After 1st click, expect toggle to be checked? ${afterToggleClick0.toggleChecked}, actual: ${toggleCheckbox.checked}`
+    );
+    is(
+      passwordTextbox.type,
+      afterToggleClick0.inputType,
+      `After 1st click, expect password input to have type: ${afterToggleClick0.inputType}`
+    );
+  }
+  if (afterToggleClick1) {
+    ok(
+      !toggleCheckbox.hidden,
+      "The checkbox shouldnt be hidden when clicking on it"
+    );
+    info("Clicking on the visibility toggle again");
+    await EventUtils.synthesizeMouseAtCenter(toggleCheckbox, {});
+    await TestUtils.waitForTick();
+    is(
+      toggleCheckbox.checked,
+      afterToggleClick1.toggleChecked,
+      `After 2nd click, expect toggle to be checked? ${afterToggleClick0.toggleChecked}, actual: ${toggleCheckbox.checked}`
+    );
+    is(
+      passwordTextbox.type,
+      afterToggleClick1.inputType,
+      `After 2nd click, expect password input to have type: ${afterToggleClick1.inputType}`
+    );
+  }
+}
 
 async function initForm(browser, formDefaults) {
   await ContentTask.spawn(browser, formDefaults, async function(
@@ -264,4 +391,23 @@ async function checkForm(browser, expected) {
       }
     }
   );
+}
+
+async function submitForm(browser, action = "") {
+  // Submit the form
+  await SpecialPowers.spawn(browser, [action], async function(actionPathname) {
+    let form = content.document.querySelector("form");
+    if (actionPathname) {
+      form.action = actionPathname;
+    }
+    info("Submitting form to:" + form.action);
+    form.submit();
+
+    await ContentTaskUtils.waitForCondition(() => {
+      return (
+        content.location.pathname == actionPathname &&
+        content.document.readyState == "complete"
+      );
+    }, "Wait for form submission load");
+  });
 }

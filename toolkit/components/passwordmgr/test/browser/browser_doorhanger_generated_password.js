@@ -117,7 +117,7 @@ async function verifyConfirmationHint(browser, forceClose) {
     } else {
       info("verifyConfirmationHint, assertion ok, wait for poopuphidden");
       await BrowserTestUtils.waitForPopupEvent(hintElem, "hidden");
-      info("verifyConfirmationHint, hintElem poup is hidden");
+      info("verifyConfirmationHint, hintElem popup is hidden");
     }
   } catch (ex) {
     ok(false, "Confirmation hint not shown: " + ex.message);
