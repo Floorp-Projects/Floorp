@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.collections
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import assertk.assertThat
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -27,8 +27,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.TestApplication
-import org.robolectric.annotation.Config
 
 private const val URL_MOZILLA = "www.mozilla.org"
 private const val SESSION_ID_MOZILLA = "0"
@@ -40,8 +38,7 @@ private const val SESSION_ID_BAD_2 = "definitely not a real session id"
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class CollectionCreationFragmentTest {
 
     @MockK private lateinit var sessionManager: SessionManager

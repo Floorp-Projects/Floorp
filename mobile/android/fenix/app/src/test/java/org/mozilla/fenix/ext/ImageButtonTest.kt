@@ -6,18 +6,15 @@ package org.mozilla.fenix.ext
 
 import android.view.View
 import mozilla.components.support.test.robolectric.testContext
-import org.mozilla.fenix.TestApplication
 import org.junit.Test
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import android.widget.ImageButton
 
-@RunWith(RobolectricTestRunner::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class ImageButtonTest {
     private val imageButton = ImageButton(testContext)
 

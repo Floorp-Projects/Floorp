@@ -4,19 +4,16 @@
 
 package org.mozilla.fenix.whatsnew
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.utils.Settings
-import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class WhatsNewStorageTest {
     private lateinit var storage: SharedPreferenceWhatsNewStorage
     private lateinit var settings: Settings

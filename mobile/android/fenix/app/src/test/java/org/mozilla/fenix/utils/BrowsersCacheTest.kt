@@ -10,7 +10,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.Browsers
 import org.junit.Assert.assertEquals
@@ -18,12 +18,9 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.TestApplication
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class BrowsersCacheTest {
 
     // NB: There is always one more browser than pretendBrowsersAreInstalled installs because

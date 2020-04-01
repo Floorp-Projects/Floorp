@@ -7,17 +7,14 @@ package org.mozilla.fenix.utils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.TestApplication
-import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class ClipboardHandlerTest {
 
     private val clipboardUrl = "https://www.mozilla.org"

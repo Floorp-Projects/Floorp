@@ -6,7 +6,7 @@
 
 package org.mozilla.fenix.settings.deletebrowsingdata
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -27,17 +27,14 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
-import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class DeleteAndQuitTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")

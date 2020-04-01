@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.components
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.crash.CrashReporter
@@ -18,12 +18,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.Mockito.verify
-import org.mozilla.fenix.TestApplication
-import org.robolectric.annotation.Config
 import kotlin.reflect.KClass
 
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
+@RunWith(FenixRobolectricTestRunner::class)
 class AccountAbnormalitiesTest {
     @Test
     fun `account manager must be configured`() {
