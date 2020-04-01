@@ -4,11 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import hashlib
 import json
 import os
 import re
-import shutil
 import sys
 from collections import defaultdict
 
@@ -41,11 +39,11 @@ https://firefox-source-docs.mozilla.org/taskcluster/taskcluster/mach.html#parame
 """
 
 
-def invalidate(cache, root):
+def invalidate(cache):
     if not os.path.isfile(cache):
         return
 
-    tc_dir = os.path.join(root, 'taskcluster')
+    tc_dir = os.path.join(build.topsrcdir, 'taskcluster')
     tmod = max(os.path.getmtime(os.path.join(tc_dir, p)) for p, _ in FileFinder(tc_dir))
     cmod = os.path.getmtime(cache)
 
@@ -54,23 +52,11 @@ def invalidate(cache, root):
 
 
 def generate_tasks(params=None, full=False):
-    # TODO: Remove after January 1st, 2020.
-    # Try to delete the old taskgraph cache directories.
-    root = build.topsrcdir
-    root_hash = hashlib.sha256(os.path.abspath(root)).hexdigest()
-    old_cache_dirs = [
-        os.path.join(get_state_dir(), 'cache', 'taskgraph'),
-        os.path.join(get_state_dir(), 'cache', root_hash, 'taskgraph'),
-    ]
-    for cache_dir in old_cache_dirs:
-        if os.path.isdir(cache_dir):
-            shutil.rmtree(cache_dir)
-
     cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
     attr = 'full_task_set' if full else 'target_task_set'
     cache = os.path.join(cache_dir, attr)
 
-    invalidate(cache, root)
+    invalidate(cache)
     if os.path.isfile(cache):
         with open(cache, 'r') as fh:
             return TaskGraph.from_json(json.load(fh))[1]
@@ -82,9 +68,9 @@ def generate_tasks(params=None, full=False):
 
     taskgraph.fast = True
     cwd = os.getcwd()
-    os.chdir(root)
+    os.chdir(build.topsrcdir)
 
-    root = os.path.join(root, 'taskcluster', 'ci')
+    root = os.path.join(build.topsrcdir, 'taskcluster', 'ci')
     params = parameters_loader(params, strict=False, overrides={'try_mode': 'try_select'})
 
     # Cache both full_task_set and target_task_set regardless of whether or not
