@@ -246,7 +246,8 @@ class NetworkObserver {
     const loadContext = getLoadContext(httpChannel);
     if (
       !loadContext ||
-      !this._browserSessionCount.has(loadContext.topFrameElement)
+      !this._browserSessionCount.has(loadContext.topFrameElement) ||
+      !loadContext.topFrameElement.currentURI
     ) {
       return;
     }
