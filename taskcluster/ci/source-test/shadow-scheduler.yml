@@ -44,6 +44,17 @@ bugbug_push_schedules:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.all
 
+bugbug_debug:
+    description: Runs the bugbug.debug optimization strategy instead of the default.
+    treeherder:
+        symbol: SS(bugbug_debug)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_debug
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.debug
+
 seta:
     description: Runs the SETA optimization strategy instead of the default.
     treeherder:
