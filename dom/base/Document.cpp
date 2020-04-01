@@ -12024,7 +12024,11 @@ void Document::FlushPendingLinkUpdates() {
 
 already_AddRefed<Document> Document::CreateStaticClone(
     nsIDocShell* aCloneContainer) {
+  MOZ_ASSERT(!mCreatingStaticClone);
+  MOZ_ASSERT(!GetProperty(nsGkAtoms::adoptedsheetclones));
   mCreatingStaticClone = true;
+  SetProperty(nsGkAtoms::adoptedsheetclones, new AdoptedStyleSheetCloneCache(),
+              nsINode::DeleteProperty<AdoptedStyleSheetCloneCache>);
 
   // Make document use different container during cloning.
   RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
@@ -12094,6 +12098,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
       clonedDoc->mPreloadReferrerInfo = clonedDoc->mReferrerInfo;
     }
   }
+  RemoveProperty(nsGkAtoms::adoptedsheetclones);
   mCreatingStaticClone = false;
   return clonedDoc.forget();
 }

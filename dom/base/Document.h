@@ -488,6 +488,8 @@ class Document : public nsINode,
  public:
   typedef dom::ExternalResourceMap::ExternalResourceLoad ExternalResourceLoad;
   typedef dom::ReferrerPolicy ReferrerPolicyEnum;
+  using AdoptedStyleSheetCloneCache =
+      nsRefPtrHashtable<nsPtrHashKey<const StyleSheet>, StyleSheet>;
 
   // nsINode overrides the new operator for DOM Arena allocation.
   // to use the default one, we need to bring it back again
@@ -2810,7 +2812,7 @@ class Document : public nsINode,
    * Note that static documents are also "loaded as data" (if this method
    * returns true, IsLoadedAsData() will also return true).
    */
-  bool IsStaticDocument() { return mIsStaticDocument; }
+  bool IsStaticDocument() const { return mIsStaticDocument; }
 
   /**
    * Clones the document along with any subdocuments, stylesheet, etc.

@@ -412,7 +412,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   }
 
   // Ture if the sheet's constructor document matches the given document
-  bool ConstructorDocumentMatches(dom::Document& aDocument) const {
+  bool ConstructorDocumentMatches(const dom::Document& aDocument) const {
     return mConstructorDocument == &aDocument;
   }
 

@@ -249,7 +249,7 @@ class DocumentOrShadowRoot {
    * Clone's the argument's adopted style sheets into this.
    * This should only be used when cloning a static document for printing.
    */
-  void CloneAdoptedSheetsFrom(DocumentOrShadowRoot&);
+  void CloneAdoptedSheetsFrom(const DocumentOrShadowRoot&);
 
   // Returns the reference to the sheet, if found in mStyleSheets.
   already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
