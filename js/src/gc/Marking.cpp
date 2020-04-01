@@ -1126,7 +1126,7 @@ void BaseScript::traceChildren(JSTracer* trc) {
 }
 
 void Shape::traceChildren(JSTracer* trc) {
-  TraceEdge(trc, &base_, "base");
+  TraceEdge(trc, &headerAndBase_, "base");
   TraceEdge(trc, &propidRef(), "propid");
   if (parent) {
     TraceEdge(trc, &parent, "parent");
