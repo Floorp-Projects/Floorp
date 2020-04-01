@@ -9,6 +9,8 @@
 #include "nsISupportsImpl.h"
 #include "mozmemory.h"
 
+#include "mozilla/mozalloc_oom.h"  // for mozalloc_handle_oom
+
 #define NS_DECL_DOMARENA_DESTROY void Destroy(void);
 
 #define NS_IMPL_DOMARENA_DESTROY(class)                              \
@@ -40,7 +42,7 @@ class DOMArena {
   void* Allocate(size_t aSize) {
     void* ret = moz_arena_malloc(mArenaId, aSize);
     if (!ret) {
-      MOZ_CRASH("run out of memory");
+      mozalloc_handle_oom(aSize);
     }
     return ret;
   }
