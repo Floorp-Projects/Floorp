@@ -34,7 +34,17 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
 
   nsresult rv;
 
+  // This heuristic works only on the parent process.
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
   if (!StaticPrefs::privacy_restrict3rdpartystorage_heuristic_redirect()) {
+    return;
+  }
+
+  nsCOMPtr<nsIHttpChannel> oldChannel = do_QueryInterface(aOldChannel);
+  if (!oldChannel) {
     return;
   }
 
