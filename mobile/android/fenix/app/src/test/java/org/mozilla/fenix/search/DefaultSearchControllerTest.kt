@@ -30,6 +30,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.DefaultSearchController.Companion.KEYBOARD_ANIMATION_DELAY
@@ -242,7 +243,7 @@ class DefaultSearchControllerTest {
 
         controller.handleClickSearchEngineSettings()
 
-        verify { navController.navigate(directions) }
+        verify { navController.navigateSafe(R.id.searchEngineFragment, directions) }
     }
 
     @Test

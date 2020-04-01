@@ -59,3 +59,12 @@ fun recordIdException(actual: Int?, expected: Int?) {
         Sentry.capture("Fragment id $actual did not match expected $expected")
     }
 }
+
+fun NavController.navigateSafe(
+    @IdRes resId: Int,
+    directions: NavDirections
+) {
+    if (currentDestination?.id == resId) {
+        this.navigate(directions)
+    }
+}

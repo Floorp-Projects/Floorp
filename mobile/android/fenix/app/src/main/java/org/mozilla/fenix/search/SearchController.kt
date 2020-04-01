@@ -15,6 +15,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.ACTION
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.NONE
@@ -23,6 +24,7 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -159,7 +161,7 @@ class DefaultSearchController(
 
     override fun handleClickSearchEngineSettings() {
         val directions = SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
-        navController.navigate(directions)
+        navController.navigateSafe(R.id.searchFragment, directions)
     }
 
     override fun handleExistingSessionSelected(session: Session) {
