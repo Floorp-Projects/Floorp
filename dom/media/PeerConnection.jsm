@@ -1294,7 +1294,16 @@ class RTCPeerConnection {
     usernameFragment,
   }) {
     this._checkClosed();
-    return this._chain(() => {
+    return this._chain(async () => {
+      if (
+        !this._impl.pendingRemoteDescription.length &&
+        !this._impl.currentRemoteDescription.length
+      ) {
+        throw new this._win.DOMException(
+          "No remoteDescription.",
+          "InvalidStateError"
+        );
+      }
       return new Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
         this._onAddIceCandidateError = reject;
