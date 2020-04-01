@@ -80,7 +80,7 @@ describe("Toolbox store - targets", () => {
     });
   });
 
-  describe("clearTarget", () => {
+  describe("unregisterTarget", () => {
     it("removes the target from the list", () => {
       const store = createToolboxStore();
 
@@ -97,12 +97,12 @@ describe("Toolbox store - targets", () => {
       let targets = getToolboxTargets(store.getState());
       expect(targets.length).toEqual(2);
 
-      store.dispatch(actions.clearTarget(targetFront1));
+      store.dispatch(actions.unregisterTarget(targetFront1));
       targets = getToolboxTargets(store.getState());
       expect(targets.length).toEqual(1);
       expect(targets[0].actorID).toEqual("target/2");
 
-      store.dispatch(actions.clearTarget(targetFront2));
+      store.dispatch(actions.unregisterTarget(targetFront2));
       expect(getToolboxTargets(store.getState()).length).toEqual(0);
     });
 
@@ -119,7 +119,7 @@ describe("Toolbox store - targets", () => {
       store.dispatch(actions.registerTarget(targetFront1));
 
       const state = store.getState();
-      store.dispatch(actions.clearTarget(targetFront2));
+      store.dispatch(actions.unregisterTarget(targetFront2));
       expect(store.getState()).toStrictEqual(state);
     });
 
@@ -134,7 +134,7 @@ describe("Toolbox store - targets", () => {
       store.dispatch(actions.selectTarget("target/1"));
       expect(getSelectedTarget(store.getState()).actorID).toBe("target/1");
 
-      store.dispatch(actions.clearTarget(targetFront1));
+      store.dispatch(actions.unregisterTarget(targetFront1));
       expect(getSelectedTarget(store.getState())).toBe(null);
     });
   });
