@@ -21,6 +21,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.WhatsNew
@@ -50,6 +51,7 @@ class HomeMenu(
 
     private val menuCategoryTextColor =
         ThemeManager.resolveAttribute(R.attr.menuCategoryText, context)
+    private val shouldUseBottomToolbar = context.settings().shouldUseBottomToolbar
 
     // 'Reconnect' and 'Quit' items aren't needed most of the time, so we'll only create the if necessary.
     private val reconnectToSyncItem by lazy {
@@ -102,7 +104,8 @@ class HomeMenu(
         val historyItem = BrowserMenuImageText(
             context.getString(R.string.library_history),
             R.drawable.ic_history,
-            primaryTextColor) {
+            primaryTextColor
+        ) {
             onItemTapped.invoke(Item.History)
         }
 
@@ -130,22 +133,42 @@ class HomeMenu(
             null
         }
 
-        listOfNotNull(
-            accountAuthItem,
-            whatsNewItem,
-            BrowserMenuDivider(),
-            BrowserMenuCategory(
-                context.getString(R.string.browser_menu_library),
-                textColorResource = menuCategoryTextColor
-            ),
-            bookmarksItem,
-            historyItem,
-            BrowserMenuDivider(),
-            settingsItem,
-            helpItem,
-            if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null
-        ).also { items ->
-            items.getHighlight()?.let { onHighlightPresent(it) }
+        if (shouldUseBottomToolbar) {
+            listOfNotNull(
+                accountAuthItem,
+                whatsNewItem,
+                BrowserMenuDivider(),
+                BrowserMenuCategory(
+                    context.getString(R.string.browser_menu_library),
+                    textColorResource = menuCategoryTextColor
+                ),
+                bookmarksItem,
+                historyItem,
+                BrowserMenuDivider(),
+                settingsItem,
+                helpItem,
+                if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null
+            ).also { items ->
+                items.getHighlight()?.let { onHighlightPresent(it) }
+            }
+        } else {
+            listOfNotNull(
+                if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null,
+                helpItem,
+                settingsItem,
+                accountAuthItem,
+                BrowserMenuDivider(),
+                BrowserMenuCategory(
+                    context.getString(R.string.browser_menu_library),
+                    textColorResource = menuCategoryTextColor
+                ),
+                bookmarksItem,
+                historyItem,
+                BrowserMenuDivider(),
+                whatsNewItem
+            ).also { items ->
+                items.getHighlight()?.let { onHighlightPresent(it) }
+            }
         }
     }
 
