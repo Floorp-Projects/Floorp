@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8">
+<body>
+  <div class="target"></div>
+  <span id="shadowHostA"></span>
+  <span id="shadowHostB"></span>
+</body>
+<script>
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(".target { width: 100px; height: 100px; border-style: solid; border-color: blue; }");
+
+  const innerHTMLText = `<div class="target"></div>`
+  shadowHostA.attachShadow({mode: "open"}).innerHTML = innerHTMLText;
+  shadowHostB.attachShadow({mode: "open"}).innerHTML = innerHTMLText;
+
+  document.adoptedStyleSheets = [sheet];
+  shadowHostA.shadowRoot.adoptedStyleSheets = [sheet];
+  shadowHostB.shadowRoot.adoptedStyleSheets = [sheet];
+</script>
