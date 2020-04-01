@@ -133,7 +133,8 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var duration_adjusted = DURATION / 4;
+    var oac = new OfflineAudioContext(2, duration_adjusted * samplerate, samplerate);
     for (var i = 0; i < 100; i++) {
       var source0 = oac.createBufferSource();
       source0.buffer = getSpecificFile({rate: 38000, channels:1});
@@ -148,7 +149,8 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(2, DURATION * samplerate, samplerate);
+    var duration_adjusted = DURATION / 4;
+    var oac = new OfflineAudioContext(2, duration_adjusted * samplerate, samplerate);
     var reference = getSpecificFile({rate: 38000, channels:1}).getChannelData(0);
     for (var i = 0; i < 100; i++) {
       var source0 = oac.createBufferSource();
@@ -201,7 +203,8 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    var duration_adjusted = DURATION / 8;
+    var oac = new OfflineAudioContext(1, duration_adjusted * samplerate, samplerate);
     var i,l;
     var decay = 10;
     var duration = 4;
@@ -231,7 +234,10 @@ registerTestCase({
 
 registerTestCase({
   func: function() {
-    var oac = new OfflineAudioContext(1, DURATION * samplerate, samplerate);
+    // this test case is very slow in chrome, reduce the total duration to avoid
+    // timeout
+    var duration_adjusted = DURATION / 8;
+    var oac = new OfflineAudioContext(1, duration_adjusted * samplerate, samplerate);
     var duration = DURATION * samplerate;
     var audiobuffer = getSpecificFile({rate: samplerate, channels:1});
     var offset = 0;
