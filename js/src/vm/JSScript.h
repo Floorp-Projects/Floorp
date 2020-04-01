@@ -376,7 +376,7 @@ struct SourceTypeTraits<char16_t> {
 
 // Synchronously compress the source of |script|, for testing purposes.
 extern MOZ_MUST_USE bool SynchronouslyCompressSource(
-    JSContext* cx, JS::Handle<JSScript*> script);
+    JSContext* cx, JS::Handle<BaseScript*> script);
 
 // Retrievable source can be retrieved using the source hook (and therefore
 // need not be XDR'd, can be discarded if desired because it can always be
@@ -398,7 +398,7 @@ class ScriptSource {
 
   friend class SourceCompressionTask;
   friend bool SynchronouslyCompressSource(JSContext* cx,
-                                          JS::Handle<JSScript*> script);
+                                          JS::Handle<BaseScript*> script);
 
  private:
   // Common base class of the templated variants of PinnedUnits<T>.

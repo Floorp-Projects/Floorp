@@ -2713,7 +2713,7 @@ void SourceCompressionTask::complete() {
 }
 
 bool js::SynchronouslyCompressSource(JSContext* cx,
-                                     JS::Handle<JSScript*> script) {
+                                     JS::Handle<BaseScript*> script) {
   MOZ_ASSERT(!cx->isHelperThreadContext(),
              "should only sync-compress on the main thread");
 
