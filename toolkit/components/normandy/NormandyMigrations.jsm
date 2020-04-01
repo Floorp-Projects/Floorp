@@ -28,8 +28,8 @@ const BOOTSTRAP_LOGGER_NAME = "app.normandy.bootstrap";
 
 const PREF_PREFIX = "app.normandy";
 const LEGACY_PREF_PREFIX = "extensions.shield-recipe-client";
-const PREF_LOGGING_LEVEL = `${PREF_PREFIX}.logging.level`;
-const PREF_MIGRATIONS_APPLIED = `${PREF_PREFIX}.migrationsApplied`;
+const PREF_LOGGING_LEVEL = "app.normandy.logging.level";
+const PREF_MIGRATIONS_APPLIED = "app.normandy.migrationsApplied";
 const PREF_OPTOUTSTUDIES_ENABLED = "app.shield.optoutstudies.enabled";
 
 // Logging
