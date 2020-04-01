@@ -105,30 +105,6 @@ class RenderRootArray : public Array<T, kRenderRootCount> {
   const T& operator[](size_t aIndex) const = delete;
 };
 
-template <typename T>
-class NonDefaultRenderRootArray : public Array<T, kRenderRootCount - 1> {
-  typedef Array<T, kRenderRootCount - 1> Super;
-
- public:
-  NonDefaultRenderRootArray() {
-    // See RenderRootArray constructor
-    if (IsPod<T>::value) {
-      PodArrayZero(*this);
-    }
-  }
-
-  T& operator[](wr::RenderRoot aIndex) {
-    return (*(Super*)this)[(size_t)aIndex - 1];
-  }
-
-  const T& operator[](wr::RenderRoot aIndex) const {
-    return (*(Super*)this)[(size_t)aIndex - 1];
-  }
-
-  T& operator[](size_t aIndex) = delete;
-  const T& operator[](size_t aIndex) const = delete;
-};
-
 RenderRoot RenderRootFromId(DocumentId id);
 
 inline DebugFlags NewDebugFlags(uint32_t aFlags) { return {aFlags}; }
