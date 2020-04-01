@@ -142,8 +142,7 @@ const kDocumentChannelDeniedURIs = [
   "about:privatebrowsing",
 ];
 
-// Changes here should also be made in SchemeUsesDocChannel in
-// nsDocShell.cpp.
+// Changes here should also be made in URIUsesDocChannel in nsDocShell.cpp.
 function documentChannelPermittedForURI(aURI) {
   return (
     !kDocumentChannelDeniedSchemes.includes(aURI.scheme) &&

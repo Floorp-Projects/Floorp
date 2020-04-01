@@ -9357,7 +9357,7 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
 
 // Changes here should also be made in
 // E10SUtils.documentChannelPermittedForURI().
-static bool SchemeUsesDocChannel(nsIURI* aURI) {
+static bool URIUsesDocChannel(nsIURI* aURI) {
   if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
     return false;
   }
@@ -9928,7 +9928,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   bool canUseDocumentChannel =
       aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC)
           ? (sandboxFlags & SANDBOXED_ORIGIN)
-          : SchemeUsesDocChannel(aLoadState->URI());
+          : URIUsesDocChannel(aLoadState->URI());
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
