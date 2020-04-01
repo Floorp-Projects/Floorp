@@ -107,11 +107,6 @@ experimental_api!(SSL_SetResumptionTokenCallback(
     cb: SSLResumptionTokenCallback,
     arg: *mut c_void,
 ));
-experimental_api!(SSL_SetTimeFunc(
-    fd: *mut PRFileDesc,
-    cb: SSLTimeFunc,
-    arg: *mut c_void,
-));
 
 #[cfg(test)]
 mod tests {

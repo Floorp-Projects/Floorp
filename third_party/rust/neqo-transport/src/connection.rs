@@ -51,6 +51,8 @@ pub const LOCAL_STREAM_LIMIT_UNI: u64 = 16;
 
 const LOCAL_MAX_DATA: u64 = 0x3FFF_FFFF_FFFF_FFFF; // 2^62-1
 
+const MIN_CC_WINDOW: usize = 0x200; // let's not send packets smaller than 512
+
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// Client or Server.
 pub enum Role {
@@ -1135,6 +1137,7 @@ impl Connection {
         builder: &mut PacketBuilder,
         space: PNSpace,
         limit: usize,
+        cc_limited: bool,
         now: Instant,
     ) -> (Vec<RecoveryToken>, bool) {
         let mut tokens = Vec::new();
@@ -1144,17 +1147,21 @@ impl Connection {
             let remaining = limit - builder.len();
             // Try to get a frame from frame sources
             let mut frame = self.acks.get_frame(now, space);
-            if frame.is_none() && space == PNSpace::ApplicationData && self.role == Role::Server {
-                frame = self.state_signaling.send_done();
-            }
-            if frame.is_none() {
-                frame = self.crypto.streams.get_frame(space, remaining)
-            }
-            if frame.is_none() {
-                frame = self.flow_mgr.borrow_mut().get_frame(space, remaining);
-            }
-            if frame.is_none() {
-                frame = self.send_streams.get_frame(space, remaining);
+            // If we are cc limited we can only send acks!
+            if !cc_limited {
+                if frame.is_none() && space == PNSpace::ApplicationData && self.role == Role::Server
+                {
+                    frame = self.state_signaling.send_done();
+                }
+                if frame.is_none() {
+                    frame = self.crypto.streams.get_frame(space, remaining)
+                }
+                if frame.is_none() {
+                    frame = self.flow_mgr.borrow_mut().get_frame(space, remaining);
+                }
+                if frame.is_none() {
+                    frame = self.send_streams.get_frame(space, remaining);
+                }
             }
 
             if let Some((frame, token)) = frame {
@@ -1178,17 +1185,22 @@ impl Connection {
         let mut needs_padding = false;
 
         // Check whether we are sending packets in PTO mode.
-        let (pto, cong_avail, min_pn_space) =
+        let (pto, cong_avail, min_pn_space, cc_limited) =
             if let Some((min_pto_pn_space, can_send)) = self.loss_recovery.check_pto() {
                 if !can_send {
                     return Ok(None);
                 }
-                (true, path.mtu(), min_pto_pn_space)
+                (true, path.mtu(), min_pto_pn_space, false)
+            } else if self.loss_recovery.cwnd_avail() < MIN_CC_WINDOW {
+                // If avail == 0 we do not have available congestion window, we may send only
+                // non-congestion controlled frames
+                (false, path.mtu(), PNSpace::Initial, true)
             } else {
                 (
                     false,
-                    usize::try_from(self.loss_recovery.cwnd_avail()).unwrap(),
+                    self.loss_recovery.cwnd_avail(),
                     PNSpace::Initial,
+                    false,
                 )
             };
 
@@ -1217,9 +1229,11 @@ impl Connection {
             }
             let limit = limit - tx.expansion();
 
+            debug_assert!(!(pto && cc_limited));
+
             // Add frames to the packet.
             let (tokens, ack_eliciting) = if *space >= min_pn_space {
-                let r = self.add_frames(&mut builder, *space, limit, now);
+                let r = self.add_frames(&mut builder, *space, limit, cc_limited, now);
                 if builder.is_empty() {
                     if pto {
                         // Add a PING if there is a PTO and nothing to send.
@@ -3649,7 +3663,17 @@ mod tests {
 
     /// Determine the number of packets required to fill the CWND.
     const fn cwnd_packets(data: usize) -> usize {
-        (data + PATH_MTU_V6 - 1) / PATH_MTU_V6
+        (data + MIN_CC_WINDOW - 1) / PATH_MTU_V6
+    }
+
+    /// Determin the size of the last packet.
+    /// The minimal size of a packet is MIN_CC_WINDOW.
+    fn last_packet(cwnd: usize) -> usize {
+        if (cwnd % PATH_MTU_V6) > MIN_CC_WINDOW {
+            cwnd % PATH_MTU_V6
+        } else {
+            PATH_MTU_V6
+        }
     }
 
     /// Assert that the set of packets fill the CWND.
@@ -3657,7 +3681,7 @@ mod tests {
         assert_eq!(packets.len(), cwnd_packets(cwnd));
         let (last, rest) = packets.split_last().unwrap();
         assert!(rest.iter().all(|d| d.len() == PATH_MTU_V6));
-        assert_eq!(last.len(), cwnd % PATH_MTU_V6);
+        assert_eq!(last.len(), last_packet(cwnd));
     }
 
     #[test]
@@ -3680,7 +3704,7 @@ mod tests {
         assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
         let c_tx_dgrams = send_bytes(&mut client, 2, now);
         assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
-        assert_eq!(client.loss_recovery.cwnd_avail(), 0);
+        assert!(client.loss_recovery.cwnd_avail() < MIN_CC_WINDOW);
     }
 
     #[test]
@@ -4221,5 +4245,35 @@ mod tests {
         let dgram = client.process(dgram, now()).dgram();
         assert!(dgram.is_none());
         assert!(client.initiate_key_update().is_ok());
+    }
+
+    #[test]
+    fn ack_are_not_cc() {
+        let mut client = default_client();
+        let mut server = default_server();
+        connect(&mut client, &mut server);
+
+        // Create a stream
+        assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
+
+        // Buffer up lot of data and generate packets, so thatt cc window is filled.
+        let c_tx_dgrams = send_bytes(&mut client, 0, now());
+        assert_full_cwnd(&c_tx_dgrams, POST_HANDSHAKE_CWND);
+
+        // Server send a ack-eliciting packet
+        assert_eq!(server.stream_create(StreamType::BiDi).unwrap(), 1);
+        server.stream_send(1, &[6; 100]).unwrap();
+        let ack_eliciting_pkt = server.process(None, now()).dgram();
+        assert!(ack_eliciting_pkt.is_some());
+
+        // Make sure client can ack the server packet even if cc windows is full.
+        let ack_pkt = client.process(ack_eliciting_pkt, now()).dgram();
+        assert!(ack_pkt.is_some());
+        let frames = server.test_process_input(ack_pkt.unwrap(), now());
+        assert_eq!(frames.len(), 1);
+        assert!(matches!(
+            frames[0],
+            (Frame::Ack { .. }, PNSpace::ApplicationData)
+        ));
     }
 }
