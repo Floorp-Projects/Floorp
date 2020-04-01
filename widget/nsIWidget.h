@@ -375,6 +375,9 @@ class nsIWidget : public nsISupports {
   typedef mozilla::ScreenPoint ScreenPoint;
   typedef mozilla::CSSToScreenScale CSSToScreenScale;
   typedef mozilla::DesktopIntRect DesktopIntRect;
+  typedef mozilla::DesktopPoint DesktopPoint;
+  typedef mozilla::DesktopRect DesktopRect;
+  typedef mozilla::DesktopSize DesktopSize;
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSRect CSSRect;
 
@@ -723,16 +726,12 @@ class nsIWidget : public nsISupports {
   /**
    * Reposition this widget so that the client area has the given offset.
    *
-   * @param aX       the new x offset of the client area expressed as an
-   *                 offset from the origin of the client area of the parent
-   *                 widget (for root widgets and popup widgets it is in
-   *                 screen coordinates)
-   * @param aY       the new y offset of the client area expressed as an
+   * @param aOffset  the new offset of the client area expressed as an
    *                 offset from the origin of the client area of the parent
    *                 widget (for root widgets and popup widgets it is in
    *                 screen coordinates)
    **/
-  virtual void MoveClient(double aX, double aY) = 0;
+  virtual void MoveClient(const DesktopPoint& aOffset) = 0;
 
   /**
    * Resize this widget. Any size constraints set for the window by a
@@ -778,30 +777,22 @@ class nsIWidget : public nsISupports {
   /**
    * Resize the widget so that the inner client area has the given size.
    *
-   * @param aWidth   the new width of the client area.
-   * @param aHeight  the new height of the client area.
+   * @param aSize    the new size of the client area.
    * @param aRepaint whether the widget should be repainted
    */
-  virtual void ResizeClient(double aWidth, double aHeight, bool aRepaint) = 0;
+  virtual void ResizeClient(const DesktopSize& aSize, bool aRepaint) = 0;
 
   /**
    * Resize and reposition the widget so tht inner client area has the given
    * offset and size.
    *
-   * @param aX       the new x offset of the client area expressed as an
-   *                 offset from the origin of the client area of the parent
-   *                 widget (for root widgets and popup widgets it is in
-   *                 screen coordinates)
-   * @param aY       the new y offset of the client area expressed as an
-   *                 offset from the origin of the client area of the parent
-   *                 widget (for root widgets and popup widgets it is in
-   *                 screen coordinates)
-   * @param aWidth   the new width of the client area.
-   * @param aHeight  the new height of the client area.
+   * @param aRect    the new offset and size of the client area. The offset is
+   *                 expressed as an offset from the origin of the client area
+   *                 of the parent widget (for root widgets and popup widgets it
+   *                 is in screen coordinates).
    * @param aRepaint whether the widget should be repainted
    */
-  virtual void ResizeClient(double aX, double aY, double aWidth, double aHeight,
-                            bool aRepaint) = 0;
+  virtual void ResizeClient(const DesktopRect& aRect, bool aRepaint) = 0;
 
   /**
    * Sets the widget's z-index.

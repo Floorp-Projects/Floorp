@@ -1429,22 +1429,23 @@ void nsBaseWidget::OnDestroy() {
   ReleaseContentController();
 }
 
-void nsBaseWidget::MoveClient(double aX, double aY) {
+void nsBaseWidget::MoveClient(const DesktopPoint& aOffset) {
   LayoutDeviceIntPoint clientOffset(GetClientOffset());
 
   // GetClientOffset returns device pixels; scale back to desktop pixels
   // if that's what this widget uses for the Move/Resize APIs
   if (BoundsUseDesktopPixels()) {
     DesktopPoint desktopOffset = clientOffset / GetDesktopToDeviceScale();
-    Move(aX - desktopOffset.x, aY - desktopOffset.y);
+    Move(aOffset.x - desktopOffset.x, aOffset.y - desktopOffset.y);
   } else {
-    Move(aX - clientOffset.x, aY - clientOffset.y);
+    // TODO: deal with units mismatch
+    Move(aOffset.x - clientOffset.x, aOffset.y - clientOffset.y);
   }
 }
 
-void nsBaseWidget::ResizeClient(double aWidth, double aHeight, bool aRepaint) {
-  NS_ASSERTION((aWidth >= 0), "Negative width passed to ResizeClient");
-  NS_ASSERTION((aHeight >= 0), "Negative height passed to ResizeClient");
+void nsBaseWidget::ResizeClient(const DesktopSize& aSize, bool aRepaint) {
+  NS_ASSERTION((aSize.width >= 0), "Negative width passed to ResizeClient");
+  NS_ASSERTION((aSize.height >= 0), "Negative height passed to ResizeClient");
 
   LayoutDeviceIntRect clientBounds = GetClientBounds();
 
@@ -1455,18 +1456,18 @@ void nsBaseWidget::ResizeClient(double aWidth, double aHeight, bool aRepaint) {
         (LayoutDeviceIntSize(mBounds.Width(), mBounds.Height()) -
          clientBounds.Size()) /
         GetDesktopToDeviceScale();
-    Resize(aWidth + desktopDelta.width, aHeight + desktopDelta.height,
+    Resize(aSize.width + desktopDelta.width, aSize.height + desktopDelta.height,
            aRepaint);
   } else {
-    Resize(mBounds.Width() + (aWidth - clientBounds.Width()),
-           mBounds.Height() + (aHeight - clientBounds.Height()), aRepaint);
+    // TODO: deal with units mismatch
+    Resize(mBounds.Width() + (aSize.width - clientBounds.Width()),
+           mBounds.Height() + (aSize.height - clientBounds.Height()), aRepaint);
   }
 }
 
-void nsBaseWidget::ResizeClient(double aX, double aY, double aWidth,
-                                double aHeight, bool aRepaint) {
-  NS_ASSERTION((aWidth >= 0), "Negative width passed to ResizeClient");
-  NS_ASSERTION((aHeight >= 0), "Negative height passed to ResizeClient");
+void nsBaseWidget::ResizeClient(const DesktopRect& aRect, bool aRepaint) {
+  NS_ASSERTION((aRect.Width() >= 0), "Negative width passed to ResizeClient");
+  NS_ASSERTION((aRect.Height() >= 0), "Negative height passed to ResizeClient");
 
   LayoutDeviceIntRect clientBounds = GetClientBounds();
   LayoutDeviceIntPoint clientOffset = GetClientOffset();
@@ -1478,13 +1479,14 @@ void nsBaseWidget::ResizeClient(double aX, double aY, double aWidth,
         (LayoutDeviceIntSize(mBounds.Width(), mBounds.Height()) -
          clientBounds.Size()) /
         scale;
-    Resize(aX - desktopOffset.x, aY - desktopOffset.y,
-           aWidth + desktopDelta.width, aHeight + desktopDelta.height,
-           aRepaint);
+    Resize(aRect.X() - desktopOffset.x, aRect.Y() - desktopOffset.y,
+           aRect.Width() + desktopDelta.width,
+           aRect.Height() + desktopDelta.height, aRepaint);
   } else {
-    Resize(aX - clientOffset.x, aY - clientOffset.y,
-           aWidth + mBounds.Width() - clientBounds.Width(),
-           aHeight + mBounds.Height() - clientBounds.Height(), aRepaint);
+    // TODO: deal with units mismatch
+    Resize(aRect.X() - clientOffset.x, aRect.Y() - clientOffset.y,
+           aRect.Width() + mBounds.Width() - clientBounds.Width(),
+           aRect.Height() + mBounds.Height() - clientBounds.Height(), aRepaint);
   }
 }
 
