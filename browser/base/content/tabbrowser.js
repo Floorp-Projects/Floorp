@@ -208,6 +208,13 @@
      */
     _windowIsClosing: false,
 
+    /**
+     * We'll use this to cache the accessor to the title element.
+     * It's important that the defualt is `undefined`, so that it
+     * can be set to `null` by the `querySelector`.
+     */
+    _titleElement: undefined,
+
     preloadedBrowser: null,
 
     /**
@@ -913,32 +920,9 @@
     },
 
     getWindowTitleForBrowser(aBrowser) {
-      var newTitle = "";
-      var docElement = document.documentElement;
-      var sep = docElement.getAttribute("titlemenuseparator");
-      let tab = this.getTabForBrowser(aBrowser);
-      let docTitle;
+      let title = "";
 
-      if (tab._labelIsContentTitle) {
-        // Strip out any null bytes in the content title, since the
-        // underlying widget implementations of nsWindow::SetTitle pass
-        // null-terminated strings to system APIs.
-        docTitle = tab.getAttribute("label").replace(/\0/g, "");
-      }
-
-      if (!docTitle) {
-        docTitle = docElement.getAttribute("titledefault");
-      }
-
-      var modifier = docElement.getAttribute("titlemodifier");
-      if (docTitle) {
-        newTitle += docElement.getAttribute("titlepreface") || "";
-        newTitle += docTitle;
-        if (modifier) {
-          newTitle += sep;
-        }
-      }
-      newTitle += modifier;
+      let docElement = document.documentElement;
 
       // If location bar is hidden and the URL type supports a host,
       // add the scheme and host to the title to prevent spoofing.
@@ -946,30 +930,69 @@
       try {
         if (docElement.getAttribute("chromehidden").includes("location")) {
           const uri = Services.io.createExposableURI(aBrowser.currentURI);
-          if (uri.scheme === "about") {
-            newTitle = `${uri.spec}${sep}${newTitle}`;
-          } else if (uri.scheme === "moz-extension") {
+          let prefix = uri.prePath;
+          if (uri.scheme == "about") {
+            prefix = uri.spec;
+          } else if (uri.scheme == "moz-extension") {
             const ext = WebExtensionPolicy.getByHostname(uri.host);
             if (ext && ext.name) {
-              const prefix = document.querySelector("#urlbar-label-extension")
-                .value;
-              newTitle = `${prefix} (${ext.name})${sep}${newTitle}`;
-            } else {
-              newTitle = `${uri.prePath}${sep}${newTitle}`;
+              let extensionLabel = document.getElementById(
+                "urlbar-label-extension"
+              );
+              prefix = `${extensionLabel.value} (${ext.name})`;
             }
-          } else {
-            newTitle = `${uri.prePath}${sep}${newTitle}`;
           }
+          title = prefix + " - ";
         }
       } catch (e) {
         // ignored
       }
 
-      return newTitle;
+      if (docElement.hasAttribute("titlepreface")) {
+        title += docElement.getAttribute("titlepreface");
+      }
+
+      let tab = this.getTabForBrowser(aBrowser);
+
+      if (tab._labelIsContentTitle) {
+        // Strip out any null bytes in the content title, since the
+        // underlying widget implementations of nsWindow::SetTitle pass
+        // null-terminated strings to system APIs.
+        title += tab.getAttribute("label").replace(/\0/g, "");
+      }
+
+      let mode =
+        docElement.getAttribute("privatebrowsingmode") == "temporary"
+          ? "private"
+          : "default";
+
+      if (title) {
+        return {
+          id:
+            mode == "private"
+              ? "browser-main-window-content-title-private"
+              : "browser-main-window-content-title-default",
+          args: {
+            title,
+          },
+        };
+      }
+      return {
+        id: "browser-main-window-title",
+        args: {
+          mode,
+        },
+      };
     },
 
-    updateTitlebar() {
-      document.title = this.getWindowTitleForBrowser(this.selectedBrowser);
+    async updateTitlebar() {
+      if (!this._titleElement) {
+        this._titleElement = document.documentElement.querySelector("title");
+      }
+
+      let { id, args } = this.getWindowTitleForBrowser(this.selectedBrowser);
+      document.l10n.setAttributes(this._titleElement, id, args);
+      await document.l10n.translateElements([this._titleElement]);
     },
 
     updateCurrentBrowser(aForceUpdate) {
