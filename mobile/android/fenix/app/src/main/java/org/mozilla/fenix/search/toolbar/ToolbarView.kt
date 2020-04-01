@@ -13,21 +13,14 @@ import androidx.annotation.LayoutRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
-import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.util.dpToPx
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
@@ -89,8 +82,6 @@ class ToolbarView(
     init {
         view.apply {
             editMode()
-
-            setScrollFlagsForTopToolbar()
 
             elevation = TOOLBAR_ELEVATION_IN_DP.dpToPx(resources.displayMetrics).toFloat()
 
@@ -182,31 +173,5 @@ class ToolbarView(
 
     companion object {
         private const val TOOLBAR_ELEVATION_IN_DP = 16
-    }
-}
-
-/**
- * Dynamically sets scroll flags for the top toolbar when the user does not have a screen reader enabled
- * Note that the bottom toolbar is currently fixed and will never have scroll flags set
- */
-fun BrowserToolbar.setScrollFlagsForTopToolbar() {
-    // Don't set scroll flags for bottom toolbar
-    if (context.settings().shouldUseBottomToolbar) {
-        if (FeatureFlags.dynamicBottomToolbar && layoutParams is CoordinatorLayout.LayoutParams) {
-            (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                behavior = BrowserToolbarBottomBehavior(context, null)
-            }
-        }
-
-        return
-    }
-
-    val params = layoutParams as AppBarLayout.LayoutParams
-    params.scrollFlags = when (context.settings().shouldUseFixedTopToolbar) {
-        true -> 0
-        false -> {
-            SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP or
-                SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
-        }
     }
 }

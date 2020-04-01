@@ -15,6 +15,11 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
@@ -26,6 +31,7 @@ import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
 import mozilla.components.support.utils.URLStringUtils
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
@@ -33,7 +39,6 @@ import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.search.toolbar.setScrollFlagsForTopToolbar
 import org.mozilla.fenix.theme.ThemeManager
 
 interface BrowserToolbarViewInteractor {
@@ -240,16 +245,42 @@ class BrowserToolbarView(
     }
 
     fun expand() {
-        if (settings.shouldUseBottomToolbar) {
+        if (settings.shouldUseBottomToolbar && FeatureFlags.dynamicBottomToolbar) {
             (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
                 (behavior as BrowserToolbarBottomBehavior).forceExpand(view)
             }
-        } else {
+        } else if (!settings.shouldUseBottomToolbar) {
             layout.app_bar?.setExpanded(true)
         }
     }
 
     companion object {
         private const val TOOLBAR_ELEVATION = 16
+    }
+}
+
+/**
+ * Dynamically sets scroll flags for the toolbar when the user does not have a screen reader enabled
+ * Note that the bottom toolbar has a feature flag for being dynamic, so it may not get flags set.
+ */
+fun BrowserToolbar.setScrollFlagsForTopToolbar() {
+    // Don't set scroll flags for bottom toolbar
+    if (context.settings().shouldUseBottomToolbar) {
+        if (FeatureFlags.dynamicBottomToolbar && layoutParams is CoordinatorLayout.LayoutParams) {
+            (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                behavior = BrowserToolbarBottomBehavior(context, null)
+            }
+        }
+
+        return
+    }
+
+    val params = layoutParams as AppBarLayout.LayoutParams
+    params.scrollFlags = when (context.settings().shouldUseFixedTopToolbar) {
+        true -> 0
+        false -> {
+            SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP or
+                SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
+        }
     }
 }

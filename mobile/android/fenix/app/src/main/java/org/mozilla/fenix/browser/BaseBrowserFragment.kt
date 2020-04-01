@@ -430,7 +430,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
                         if (FeatureFlags.dynamicBottomToolbar) {
                             engineView.setDynamicToolbarMaxHeight(0)
-                            // TODO We need to call force expand here to update verticalClipping #8697
+                            browserToolbarView.expand()
                             // Without this, fullscreen has a margin at the top.
                             engineView.setVerticalClipping(0)
                         }
