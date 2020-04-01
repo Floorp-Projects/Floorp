@@ -51,7 +51,6 @@ devtools.jar:
     skin/devtools-browser.css (themes/devtools-browser.css)
     skin/dark-theme.css (themes/dark-theme.css)
     skin/light-theme.css (themes/light-theme.css)
-    skin/toolbars.css (themes/toolbars.css)
     skin/toolbox.css (themes/toolbox.css)
     skin/tooltips.css (themes/tooltips.css)
     skin/images/accessibility.svg (themes/images/accessibility.svg)
