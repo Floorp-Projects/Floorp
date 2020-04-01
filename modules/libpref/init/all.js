@@ -19,7 +19,11 @@
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
 
-pref("security.tls.version.min", 3);
+#if MOZ_UPDATE_CHANNEL == release || MOZ_UPDATE_CHANNEL == esr
+  pref("security.tls.version.min", 1);
+#else
+  pref("security.tls.version.min", 3);
+#endif
 pref("security.tls.version.max", 4);
 pref("security.tls.version.enable-deprecated", false);
 pref("security.tls.version.fallback-limit", 4);
