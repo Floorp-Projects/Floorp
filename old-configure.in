@@ -584,6 +584,25 @@ case "$target" in
     MOZ_GFX_OPTIMIZE_MOBILE=1
     if test -z "$CLANG_CC"; then
         MOZ_OPTIMIZE_FLAGS="-freorder-blocks -fno-reorder-functions -Os"
+    elif test -n "$RELEASE_OR_BETA"; then
+        # From https://github.com/android-ndk/ndk/issues/133#issuecomment-308549264
+        # -Oz is smaller than -Os on clang.
+        MOZ_OPTIMIZE_FLAGS="-Oz"
+        # Disable the outliner, which causes performance regressions, and is
+        # enabled on some platforms at -Oz.
+        if test -z "$MOZ_LTO"; then
+            DISABLE_OUTLINER="-mno-outline"
+            _SAVE_CFLAGS=$CFLAGS
+            CFLAGS="$CFLAGS $DISABLE_OUTLINER"
+            AC_TRY_COMPILE(,,[MOZ_OPTIMIZE_FLAGS="$MOZ_OPTIMIZE_FLAGS $DISABLE_OUTLINER"])
+            CFLAGS="$_SAVE_CFLAGS"
+        else
+            DISABLE_OUTLINER="-Wl,-plugin-opt=-enable-machine-outliner=never"
+            _SAVE_LDFLAGS=$LDFLAGS
+            LDFLAGS="$LDFLAGS $MOZ_LTO_LDFLAGS $DISABLE_OUTLINER"
+            AC_TRY_LINK(,,[MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS $DISABLE_OUTLINER"])
+            LDFLAGS="$_SAVE_LDFLAGS"
+        fi
     else
         MOZ_OPTIMIZE_FLAGS="-O2"
     fi
