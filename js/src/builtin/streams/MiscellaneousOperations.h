@@ -16,6 +16,7 @@
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"       // JS::Value
 #include "vm/JSObject.h"    // JSObject
+#include "vm/PromiseObject.h"  // js::PromiseObject
 
 struct JS_PUBLIC_API JSContext;
 
@@ -23,11 +24,12 @@ namespace js {
 
 class PropertyName;
 
-extern MOZ_MUST_USE JSObject* PromiseRejectedWithPendingError(JSContext* cx);
+extern MOZ_MUST_USE PromiseObject* PromiseRejectedWithPendingError(
+    JSContext* cx);
 
 inline MOZ_MUST_USE bool ReturnPromiseRejectedWithPendingError(
     JSContext* cx, const JS::CallArgs& args) {
-  JSObject* promise = PromiseRejectedWithPendingError(cx);
+  PromiseObject* promise = PromiseRejectedWithPendingError(cx);
   if (!promise) {
     return false;
   }
