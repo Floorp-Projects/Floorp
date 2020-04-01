@@ -83,7 +83,7 @@ function runTest()
       }
 
       if (expectedFocus[0] == "_")
-        match = (activeElement.dlgType == expectedFocus.substring(1));
+        match = (activeElement.getAttribute("dlgtype") == expectedFocus.substring(1));
       else
         match = (activeElement.id == expectedFocus);
       info("match = " + match);
