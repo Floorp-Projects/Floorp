@@ -10,6 +10,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
+import okhttp3.Headers
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
@@ -86,9 +87,11 @@ abstract class FetchTestCases {
                 println(request.headers.name(i) + " = " + request.headers.value(i))
             }
 
-            assertEquals(6, request.headers.size())
+            val headers = request.headers.filtered()
 
-            val names = request.headers.names()
+            assertEquals(6, headers.size())
+
+            val names = headers.names()
             assertTrue(names.contains("Host"))
             assertTrue(names.contains("User-Agent"))
             assertTrue(names.contains("Connection"))
@@ -526,3 +529,20 @@ private fun gzip(data: String): Buffer {
     sink.close()
     return result
 }
+
+private fun Headers.filtered(): Headers {
+    val builder = newBuilder()
+    ignoredHeaders.forEach { header ->
+        builder.removeAll(header)
+    }
+    return builder.build()
+}
+
+// The following headers are getting ignored when verifying headers sent by a Client implementation
+private val ignoredHeaders = listOf(
+    // GeckoView"s GeckoWebExecutor sends additional "Sec-Fetch-*" headers. Instead of
+    // adding those headers to all our implementations, we are just ignoring them in tests.
+    "Sec-Fetch-Dest",
+    "Sec-Fetch-Mode",
+    "Sec-Fetch-Site"
+)
