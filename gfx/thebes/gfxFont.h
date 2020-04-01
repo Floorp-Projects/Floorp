@@ -398,8 +398,6 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
     // When constructing a new entry in the hashtable, we'll leave this
     // blank. The caller of Put() will fill this in.
     explicit HashEntry(KeyTypePointer aStr) : mFont(nullptr) {}
-    HashEntry(const HashEntry& toCopy) : mFont(toCopy.mFont) {}
-    ~HashEntry() = default;
 
     bool KeyEquals(const KeyTypePointer aKey) const;
     static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
@@ -2053,10 +2051,10 @@ class gfxFont {
     // When constructing a new entry in the hashtable, the caller of Put()
     // will fill us in.
     explicit CacheHashEntry(KeyTypePointer aKey) {}
-    CacheHashEntry(const CacheHashEntry& toCopy) {
-      NS_ERROR("Should not be called");
-    }
-    ~CacheHashEntry() = default;
+    CacheHashEntry(const CacheHashEntry&) = delete;
+    CacheHashEntry& operator=(const CacheHashEntry&) = delete;
+    CacheHashEntry(CacheHashEntry&&) = default;
+    CacheHashEntry& operator=(CacheHashEntry&&) = default;
 
     bool KeyEquals(const KeyTypePointer aKey) const;
 

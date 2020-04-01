@@ -44,7 +44,6 @@ class gfxSparseBitSet {
   enum { NO_BLOCK = 0xffff };  // index value indicating missing (empty) block
 
   struct Block {
-    Block(const Block& aBlock) { memcpy(mBits, aBlock.mBits, sizeof(mBits)); }
     explicit Block(unsigned char memsetValue = 0) {
       memset(mBits, memsetValue, BLOCK_SIZE);
     }
@@ -53,10 +52,6 @@ class gfxSparseBitSet {
 
  public:
   gfxSparseBitSet() = default;
-  gfxSparseBitSet(const gfxSparseBitSet& aBitset) {
-    mBlockIndex.AppendElements(aBitset.mBlockIndex);
-    mBlocks.AppendElements(aBitset.mBlocks);
-  }
 
   bool Equals(const gfxSparseBitSet* aOther) const {
     if (mBlockIndex.Length() != aOther->mBlockIndex.Length()) {

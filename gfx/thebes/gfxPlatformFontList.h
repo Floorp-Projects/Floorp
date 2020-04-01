@@ -91,10 +91,8 @@ class ShmemCharMapHashEntry final : public PLDHashEntryHdr {
    */
   explicit ShmemCharMapHashEntry(const gfxSparseBitSet* aCharMap);
 
-  ShmemCharMapHashEntry(const ShmemCharMapHashEntry& aOther)
-      : mList(aOther.mList), mCharMap(aOther.mCharMap), mHash(aOther.mHash) {}
-
-  ~ShmemCharMapHashEntry() = default;
+  ShmemCharMapHashEntry(ShmemCharMapHashEntry&&) = default;
+  ShmemCharMapHashEntry& operator=(ShmemCharMapHashEntry&&) = default;
 
   /**
    * Return a shared-memory Pointer that refers to the wrapped SharedBitSet.

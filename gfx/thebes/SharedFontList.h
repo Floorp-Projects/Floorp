@@ -51,6 +51,8 @@ struct Pointer {
     mBlockAndOffset.store(aOther.mBlockAndOffset);
   }
 
+  Pointer(Pointer&& aOther) { mBlockAndOffset.store(aOther.mBlockAndOffset); }
+
   bool IsNull() const { return mBlockAndOffset == kNullValue; }
 
   uint32_t Block() const { return mBlockAndOffset >> kBlockShift; }
@@ -65,6 +67,11 @@ struct Pointer {
   void* ToPtr(FontList* aFontList) const;
 
   Pointer& operator=(const Pointer& aOther) {
+    mBlockAndOffset.store(aOther.mBlockAndOffset);
+    return *this;
+  }
+
+  Pointer& operator=(Pointer&& aOther) {
     mBlockAndOffset.store(aOther.mBlockAndOffset);
     return *this;
   }
