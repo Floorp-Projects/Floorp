@@ -61,7 +61,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
   // The factory must be kept alive when IndexedDB is used in multiple
   // processes. If it dies then the entire actor tree will be destroyed with it
   // and the world will explode.
-  RefPtr<IDBFactory> mFactory;
+  SafeRefPtr<IDBFactory> mFactory;
 
   UniquePtr<DatabaseSpec> mSpec;
 
@@ -89,7 +89,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
  public:
   static MOZ_MUST_USE RefPtr<IDBDatabase> Create(
-      IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
+      IDBOpenDBRequest* aRequest, SafeRefPtr<IDBFactory> aFactory,
       indexedDB::BackgroundDatabaseChild* aActor,
       UniquePtr<DatabaseSpec> aSpec);
 
@@ -146,12 +146,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
   // Called when a versionchange transaction is aborted to reset the
   // DatabaseInfo.
   void RevertToPreviousState();
-
-  IDBFactory* Factory() const {
-    AssertIsOnOwningThread();
-
-    return mFactory;
-  }
 
   void RegisterTransaction(IDBTransaction* aTransaction);
 
@@ -238,7 +232,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
+  IDBDatabase(IDBOpenDBRequest* aRequest, SafeRefPtr<IDBFactory> aFactory,
               indexedDB::BackgroundDatabaseChild* aActor,
               UniquePtr<DatabaseSpec> aSpec);
 

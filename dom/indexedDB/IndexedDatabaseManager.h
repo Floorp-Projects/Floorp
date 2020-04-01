@@ -133,7 +133,7 @@ class IndexedDatabaseManager final {
   static const nsCString& GetLocale();
 
   static nsresult CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
-                                        IDBFactory* aFactory);
+                                        const IDBFactory& aFactory);
 
   static bool ResolveSandboxBinding(JSContext* aCx);
 

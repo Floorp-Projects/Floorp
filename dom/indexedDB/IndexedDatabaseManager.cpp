@@ -380,9 +380,8 @@ void IndexedDatabaseManager::Destroy() {
 
 // static
 nsresult IndexedDatabaseManager::CommonPostHandleEvent(
-    EventChainPostVisitor& aVisitor, IDBFactory* aFactory) {
+    EventChainPostVisitor& aVisitor, const IDBFactory& aFactory) {
   MOZ_ASSERT(aVisitor.mDOMEvent);
-  MOZ_ASSERT(aFactory);
 
   if (!gPrefErrorEventToSelfError) {
     return NS_OK;
@@ -475,8 +474,8 @@ nsresult IndexedDatabaseManager::CommonPostHandleEvent(
 
   // Log the error to the error console.
   ScriptErrorHelper::Dump(errorName, init.mFilename, init.mLineno, init.mColno,
-                          nsIScriptError::errorFlag, aFactory->IsChrome(),
-                          aFactory->InnerWindowID());
+                          nsIScriptError::errorFlag, aFactory.IsChrome(),
+                          aFactory.InnerWindowID());
 
   return NS_OK;
 }
@@ -525,11 +524,12 @@ bool IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
     return false;
   }
 
-  RefPtr<IDBFactory> factory;
-  if (NS_FAILED(
-          IDBFactory::CreateForMainThreadJS(global, getter_AddRefs(factory)))) {
+  auto res = IDBFactory::CreateForMainThreadJS(global);
+  if (res.isErr()) {
     return false;
   }
+
+  auto factory = res.unwrap();
 
   MOZ_ASSERT(factory, "This should never fail for chrome!");
 

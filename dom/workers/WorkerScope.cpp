@@ -480,14 +480,14 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
     const PrincipalInfo& principalInfo =
         mWorkerPrivate->GetEffectiveStoragePrincipalInfo();
 
-    nsresult rv = IDBFactory::CreateForWorker(this, principalInfo,
-                                              mWorkerPrivate->WindowID(),
-                                              getter_AddRefs(indexedDB));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aErrorResult = rv;
+    auto res = IDBFactory::CreateForWorker(this, principalInfo,
+                                           mWorkerPrivate->WindowID());
+    if (NS_WARN_IF(res.isErr())) {
+      aErrorResult = res.unwrapErr();
       return nullptr;
     }
 
+    indexedDB = res.unwrap();
     mIndexedDB = indexedDB;
   }
 

@@ -4625,7 +4625,12 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
 IDBFactory* nsGlobalWindowInner::GetIndexedDB(ErrorResult& aError) {
   if (!mIndexedDB) {
     // This may keep mIndexedDB null without setting an error.
-    aError = IDBFactory::CreateForWindow(this, getter_AddRefs(mIndexedDB));
+    auto res = IDBFactory::CreateForWindow(this);
+    if (res.isErr()) {
+      aError = res.unwrapErr();
+    } else {
+      mIndexedDB = res.unwrap();
+    }
   }
 
   return mIndexedDB;
