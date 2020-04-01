@@ -62,10 +62,6 @@ class CompatibilityWarning extends PureComponent {
         statusClassName = "qa-compatibility-warning-too-recent";
         localizationId = "about-debugging-browser-version-too-recent";
         break;
-      case COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER:
-        statusClassName = "qa-compatibility-warning-too-old-67-debugger";
-        localizationId = "about-debugging-browser-version-too-old-67-debugger";
-        break;
       case COMPATIBILITY_STATUS.TOO_OLD_FENNEC:
         statusClassName = "qa-compatibility-warning-too-old-fennec";
         localizationId = "about-debugging-browser-version-too-old-fennec";
