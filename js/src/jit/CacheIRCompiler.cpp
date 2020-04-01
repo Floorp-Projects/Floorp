@@ -2138,6 +2138,21 @@ bool CacheIRCompiler::emitGuardAndGetIndexFromString() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardAndGetInt32FromNumber() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Failure on -0 and other non-int32 doubles.
+  masm.convertDoubleToInt32(FloatReg0, output, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadProto() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());

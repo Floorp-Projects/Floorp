@@ -244,6 +244,7 @@ extern const uint32_t ArgLengths[];
   _(GuardAndGetIndexFromString, Id, Id)                                        \
   _(GuardAndGetNumberFromString, Id, Id)                                       \
   _(GuardAndGetNumberFromBoolean, Id, Id)                                      \
+  _(GuardAndGetInt32FromNumber, Id, Id)                                        \
   _(GuardAndGetIterator, Id, Id, Field, Field)                                 \
   _(GuardHasGetterSetter, Id, Field)                                           \
   _(GuardGroupHasUnanalyzedNewScript, Field)                                   \
@@ -1125,6 +1126,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   NumberOperandId guardAndGetNumberFromBoolean(Int32OperandId boolean) {
     NumberOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetNumberFromBoolean, boolean);
+    writeOperandId(res);
+    return res;
+  }
+
+  Int32OperandId guardAndGetInt32FromNumber(NumberOperandId number) {
+    Int32OperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::GuardAndGetInt32FromNumber, number);
     writeOperandId(res);
     return res;
   }
@@ -2868,6 +2876,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringNumberConcat();
   AttachDecision tryAttachStringBooleanConcat();
   AttachDecision tryAttachBigInt();
+  AttachDecision tryAttachStringInt32Arith();
 
  public:
   BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
