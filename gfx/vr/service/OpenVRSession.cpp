@@ -308,7 +308,7 @@ bool OpenVRSession::SetupContollerActions() {
       controllerAction = output;
     }
 
-    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::Vive,
+    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::HTCVive,
                                                   &output)) {
       viveManifest = output;
     }
@@ -325,7 +325,7 @@ bool OpenVRSession::SetupContollerActions() {
     }
 
 #if defined(XP_WIN)
-    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::WMR,
+    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::MSMR,
                                                   &output)) {
       WMRManifest = output;
     }
@@ -341,7 +341,7 @@ bool OpenVRSession::SetupContollerActions() {
       }
     }
 #endif
-    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::Knuckles,
+    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::ValveIndex,
                                                   &output)) {
       knucklesManifest = output;
     }
@@ -356,8 +356,8 @@ bool OpenVRSession::SetupContollerActions() {
         knucklesBindingFile.close();
       }
     }
-    if (vrParent->GetOpenVRControllerManifestPath(VRControllerType::Cosmos,
-                                                  &output)) {
+    if (vrParent->GetOpenVRControllerManifestPath(
+            VRControllerType::HTCViveCosmos, &output)) {
       cosmosManifest = output;
     }
     if (!cosmosManifest.Length() || !FileIsExisting(cosmosManifest)) {
@@ -662,13 +662,13 @@ bool OpenVRSession::SetupContollerActions() {
           Unused << vrParent->SendOpenVRControllerActionPathToParent(
               controllerAction);
           Unused << vrParent->SendOpenVRControllerManifestPathToParent(
-              VRControllerType::Vive, viveManifest);
+              VRControllerType::HTCVive, viveManifest);
           Unused << vrParent->SendOpenVRControllerManifestPathToParent(
-              VRControllerType::WMR, WMRManifest);
+              VRControllerType::MSMR, WMRManifest);
           Unused << vrParent->SendOpenVRControllerManifestPathToParent(
-              VRControllerType::Knuckles, knucklesManifest);
+              VRControllerType::ValveIndex, knucklesManifest);
           Unused << vrParent->SendOpenVRControllerManifestPathToParent(
-              VRControllerType::Cosmos, cosmosManifest);
+              VRControllerType::HTCViveCosmos, cosmosManifest);
         }));
   } else {
     sControllerActionFile->SetFileName(controllerAction.BeginReading());
@@ -1011,18 +1011,18 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
   // Create controller mapper
   if (controllerType != VRControllerType::_empty) {
     switch (controllerType) {
-      case VRControllerType::Vive:
+      case VRControllerType::HTCVive:
         mControllerMapper = MakeUnique<OpenVRViveMapper>();
         break;
-      case VRControllerType::Cosmos:
+      case VRControllerType::HTCViveCosmos:
         mControllerMapper = MakeUnique<OpenVRCosmosMapper>();
         break;
 #if defined(XP_WIN)
-      case VRControllerType::WMR:
+      case VRControllerType::MSMR:
         mControllerMapper = MakeUnique<OpenVRWMRMapper>();
         break;
 #endif
-      case VRControllerType::Knuckles:
+      case VRControllerType::ValveIndex:
         // TODO: Replace Knuckles with Valve Index.
         mControllerMapper = MakeUnique<OpenVRDefaultMapper>();
         break;
@@ -1138,20 +1138,20 @@ void OpenVRSession::GetControllerDeviceId(
       if (deviceId.Find("vr_controller_vive") != kNotFound) {
         aId.AssignLiteral("OpenVR Gamepad");
         isFound = true;
-        aControllerType = VRControllerType::Vive;
+        aControllerType = VRControllerType::HTCVive;
       } else if (deviceId.Find("knuckles") != kNotFound ||
-        deviceId.Find("valve_controller_knu") != kNotFound) {
+                 deviceId.Find("valve_controller_knu") != kNotFound) {
         aId.AssignLiteral("OpenVR Knuckles");
         isFound = true;
-        aControllerType = VRControllerType::Knuckles;
+        aControllerType = VRControllerType::ValveIndex;
       } else if (deviceId.Find("vive_cosmos_controller") != kNotFound) {
         aId.AssignLiteral("OpenVR Cosmos");
         isFound = true;
-        aControllerType = VRControllerType::Cosmos;
+        aControllerType = VRControllerType::HTCViveCosmos;
       }
       if (!isFound) {
         requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(
-          aDeviceIndex, ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
+            aDeviceIndex, ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
         if (requiredBufferLen > 128) {
           MOZ_CRASH("Larger than the buffer size.");
         }
@@ -1161,7 +1161,7 @@ void OpenVRSession::GetControllerDeviceId(
           aId.AssignLiteral("Spatial Controller (Spatial Interaction Source) ");
           mIsWindowsMR = true;
           isFound = true;
-          aControllerType = VRControllerType::WMR;
+          aControllerType = VRControllerType::MSMR;
         }
       }
       if (!isFound) {
