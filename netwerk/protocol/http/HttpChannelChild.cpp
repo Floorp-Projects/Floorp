@@ -1527,7 +1527,7 @@ void HttpChannelChild::ContinueDoNotifyListener() {
   if (!IsNavigation()) {
     if (mLoadGroup) {
       FlushConsoleReports(mLoadGroup);
-    } else if (mLoadInfo) {
+    } else {
       RefPtr<dom::Document> doc;
       mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
       FlushConsoleReports(doc);
@@ -1966,19 +1966,17 @@ void HttpChannelChild::CleanupRedirectingChannel(nsresult rv) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, NS_BINDING_ABORTED);
 
   if (NS_SUCCEEDED(rv)) {
-    if (mLoadInfo) {
-      nsCString remoteAddress;
-      Unused << GetRemoteAddress(remoteAddress);
-      nsCOMPtr<nsIURI> referrer;
-      if (mReferrerInfo) {
-        referrer = mReferrerInfo->GetComputedReferrer();
-      }
-
-      nsCOMPtr<nsIRedirectHistoryEntry> entry = new nsRedirectHistoryEntry(
-          GetURIPrincipal(), referrer, remoteAddress);
-
-      mLoadInfo->AppendRedirectHistoryEntry(entry, false);
+    nsCString remoteAddress;
+    Unused << GetRemoteAddress(remoteAddress);
+    nsCOMPtr<nsIURI> referrer;
+    if (mReferrerInfo) {
+      referrer = mReferrerInfo->GetComputedReferrer();
     }
+
+    nsCOMPtr<nsIRedirectHistoryEntry> entry =
+        new nsRedirectHistoryEntry(GetURIPrincipal(), referrer, remoteAddress);
+
+    mLoadInfo->AppendRedirectHistoryEntry(entry, false);
   } else {
     NS_WARNING("CompleteRedirectSetup failed, HttpChannelChild already open?");
   }
@@ -2241,9 +2239,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
   }
 
   uint32_t sourceRequestBlockingReason = 0;
-  if (mLoadInfo) {
-    mLoadInfo->GetRequestBlockingReason(&sourceRequestBlockingReason);
-  }
+  mLoadInfo->GetRequestBlockingReason(&sourceRequestBlockingReason);
 
   Maybe<ChildLoadInfoForwarderArgs> targetLoadInfoForwarder;
   nsCOMPtr<nsIChannel> newChannel = do_QueryInterface(mRedirectChannelChild);
@@ -2386,9 +2382,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   nsresult rv = AsyncOpenInternal(aListener);
   if (NS_FAILED(rv)) {
     uint32_t blockingReason = 0;
-    if (mLoadInfo) {
-      mLoadInfo->GetRequestBlockingReason(&blockingReason);
-    }
+    mLoadInfo->GetRequestBlockingReason(&blockingReason);
     LOG(
         ("HttpChannelChild::AsyncOpen failed [this=%p rv=0x%08x "
          "blocking-reason=%u]\n",
@@ -2410,7 +2404,7 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   }
 
   MOZ_ASSERT(
-      !mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
+      mLoadInfo->GetSecurityMode() == 0 ||
           mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
@@ -3855,7 +3849,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvIssueDeprecationWarning(
 
 bool HttpChannelChild::ShouldInterceptURI(nsIURI* aURI, bool& aShouldUpgrade) {
   nsCOMPtr<nsIPrincipal> resultPrincipal;
-  if (!aURI->SchemeIs("https") && mLoadInfo) {
+  if (!aURI->SchemeIs("https")) {
     nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
         this, getter_AddRefs(resultPrincipal));
   }
@@ -3932,15 +3926,12 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvLogBlockedCORSRequest(
 NS_IMETHODIMP
 HttpChannelChild::LogBlockedCORSRequest(const nsAString& aMessage,
                                         const nsACString& aCategory) {
-  if (mLoadInfo) {
-    uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
-    bool privateBrowsing =
-        !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
-    bool fromChromeContext =
-        mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal();
-    nsCORSListenerProxy::LogBlockedCORSRequest(
-        innerWindowID, privateBrowsing, fromChromeContext, aMessage, aCategory);
-  }
+  uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
+  bool privateBrowsing = !!mLoadInfo->GetOriginAttributes().mPrivateBrowsingId;
+  bool fromChromeContext =
+      mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal();
+  nsCORSListenerProxy::LogBlockedCORSRequest(
+      innerWindowID, privateBrowsing, fromChromeContext, aMessage, aCategory);
   return NS_OK;
 }
 
@@ -3956,9 +3947,7 @@ HttpChannelChild::LogMimeTypeMismatch(const nsACString& aMessageName,
                                       bool aWarning, const nsAString& aURL,
                                       const nsAString& aContentType) {
   RefPtr<Document> doc;
-  if (mLoadInfo) {
-    mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
-  }
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
 
   AutoTArray<nsString, 2> params;
   params.AppendElement(aURL);
