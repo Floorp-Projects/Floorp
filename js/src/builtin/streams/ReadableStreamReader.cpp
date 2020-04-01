@@ -29,12 +29,13 @@
 #include "vm/List-inl.h"         // js::StoreNewListInFixedSlot
 #include "vm/Realm-inl.h"        // js::AutoRealm
 
-using js::ReadableStreamController;
-using js::UnwrapStreamFromReader;
-
 using JS::Handle;
 using JS::Rooted;
 using JS::Value;
+
+using js::PromiseObject;
+using js::ReadableStreamController;
+using js::UnwrapStreamFromReader;
 
 /*** 3.8. Readable stream reader abstract operations ************************/
 
@@ -225,7 +226,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericRelease(
  * Streams spec, 3.8.7.
  *      ReadableStreamDefaultReaderRead ( reader [, forAuthorCode ] )
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamDefaultReaderRead(
+MOZ_MUST_USE PromiseObject* js::ReadableStreamDefaultReaderRead(
     JSContext* cx, Handle<ReadableStreamDefaultReader*> unwrappedReader) {
   // Step 1: If forAuthorCode was not passed, set it to false (implicit).
 
