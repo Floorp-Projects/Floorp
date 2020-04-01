@@ -27,7 +27,6 @@ dependencies {
     implementation project(':concept-push')
 
     implementation Dependencies.mozilla_push
-    implementation project(':lib-crash')
 
     // Remove when the MessageBus is implemented somewhere else.
     implementation project(':support-base')

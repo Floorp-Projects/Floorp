@@ -35,10 +35,10 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.top.sites.TopSiteStorage
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.SignInWithShareableAccountResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
 import mozilla.components.support.test.eq
@@ -683,7 +683,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - no master password`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key").also {
             it.wipeLocal()
         }
@@ -736,7 +736,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - with master password`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
@@ -762,7 +762,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - with mp and empty key4db`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key").also {
             it.wipeLocal()
         }
@@ -788,7 +788,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - with mp and no nss in key4db`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
@@ -813,7 +813,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - missing profile`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key").also {
             it.wipeLocal()
         }
@@ -837,7 +837,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - with master password, old signons version`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
@@ -861,7 +861,7 @@ class FennecMigratorTest {
 
     @Test
     fun `logins migrations - without master password, old signons version`() = runBlocking {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val loginStorage = SyncableLoginsStorage(testContext, "test key")
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateLogins(lazy { loginStorage })
@@ -885,7 +885,7 @@ class FennecMigratorTest {
     @Test
     fun `settings migration - no fennec prefs`() = runBlocking {
         // Fennec SharedPreferences are missing / empty
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateSettings()
             .setCoroutineContext(this.coroutineContext)
@@ -907,7 +907,7 @@ class FennecMigratorTest {
         // Make prefs non-empty.
         fennecAppPrefs.edit().putString("dummy", "key").apply()
 
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateSettings()
             .setCoroutineContext(this.coroutineContext)
@@ -936,7 +936,7 @@ class FennecMigratorTest {
             callbackCaptor.value.invoke(emptyList())
         }
 
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
@@ -969,7 +969,7 @@ class FennecMigratorTest {
             disableSuccessCallback.value.invoke(mock())
         }
 
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
@@ -994,7 +994,7 @@ class FennecMigratorTest {
             errorCallback.value.invoke(IllegalArgumentException())
         }
 
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)
@@ -1046,7 +1046,7 @@ class FennecMigratorTest {
             }
         }
 
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val migrator = FennecMigrator.Builder(testContext, crashReporter)
             .migrateAddons(engine, addonCollectionProvider, addonUpdater)
             .setCoroutineContext(this.coroutineContext)

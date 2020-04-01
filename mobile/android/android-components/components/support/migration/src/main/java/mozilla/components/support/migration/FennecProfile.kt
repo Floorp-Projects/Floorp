@@ -5,7 +5,7 @@
 package mozilla.components.support.migration
 
 import android.content.Context
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.io.IOException
@@ -44,7 +44,7 @@ data class FennecProfile(
          */
         fun findDefault(
             context: Context,
-            crashReporter: CrashReporter,
+            crashReporter: CrashReporting,
             mozillaDirectory: File = getMozillaDirectory(context),
             fileName: String = "profiles.ini"
         ): FennecProfile? {
@@ -59,7 +59,7 @@ private fun getMozillaDirectory(context: Context): File {
 
 @Suppress("ReturnCount")
 private fun findDefaultProfile(
-    crashReporter: CrashReporter,
+    crashReporter: CrashReporting,
     mozillaDirectory: File,
     fileName: String
 ): FennecProfile? {

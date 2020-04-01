@@ -18,7 +18,7 @@ import mozilla.components.feature.push.AutoPushFeature.Companion.LAST_VERIFIED
 import mozilla.components.feature.push.AutoPushFeature.Companion.PERIODIC_INTERVAL_MILLISECONDS
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREFERENCE_NAME
 import mozilla.components.feature.push.AutoPushFeature.Companion.PREF_TOKEN
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -303,7 +303,7 @@ class AutoPushFeatureTest {
     @Test
     fun `crash reporter is notified of errors`() = runBlockingTest {
         val native: PushConnection = TestPushConnection(true)
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val feature = spy(
             AutoPushFeature(
                 context = testContext,

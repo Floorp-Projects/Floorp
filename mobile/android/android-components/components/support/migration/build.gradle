@@ -73,9 +73,9 @@ dependencies {
     implementation project(':service-sync-logins')
     implementation project(':service-glean')
 
-    implementation project(':lib-crash')
     implementation project(':lib-state')
 
+    implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(':support-utils')
 

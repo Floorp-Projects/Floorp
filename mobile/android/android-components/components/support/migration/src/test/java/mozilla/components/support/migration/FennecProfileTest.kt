@@ -6,7 +6,7 @@ package mozilla.components.support.migration
 
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -23,7 +23,7 @@ import java.io.File
 class FennecProfileTest {
     @Test
     fun `default fennec profile`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "fennec_default.txt")
 
@@ -37,7 +37,7 @@ class FennecProfileTest {
 
     @Test
     fun `mozillazine default profile`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "mozillazine_default.txt")
 
@@ -50,7 +50,7 @@ class FennecProfileTest {
 
     @Test
     fun `mozillazine multiple profiles`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "mozillazine_multiple.txt")
 
@@ -63,7 +63,7 @@ class FennecProfileTest {
 
     @Test
     fun `desktop profiles`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "desktop.txt")
 
@@ -76,7 +76,7 @@ class FennecProfileTest {
 
     @Test
     fun `profiles-ini not existing in path`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(testContext, crashReporter, getTestPath("profiles"))
         assertNull(profile)
         verifyZeroInteractions(crashReporter)
@@ -84,7 +84,7 @@ class FennecProfileTest {
 
     @Test
     fun `with comments`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "with_comments.txt")
 
@@ -97,7 +97,7 @@ class FennecProfileTest {
 
     @Test
     fun `weird broken`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "broken.txt")
 
@@ -110,7 +110,7 @@ class FennecProfileTest {
 
     @Test
     fun `multiple profiles without default`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val profile = FennecProfile.findDefault(
             testContext, crashReporter, getTestPath("profiles"), "no_default.txt")
 

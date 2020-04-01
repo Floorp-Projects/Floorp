@@ -46,6 +46,12 @@ permalink: /changelog/
 * **feature-p2p**
   * Add new `P2PFeature` to send URLs and web pages through peer-to-peer networking.
 
+* **lib-crash**
+  * ⚠️ **This is a breaking change**: added `support-base` dependency.
+
+* **support-base**
+  * `CrashReporting` allowing adding support for `submitCaughtException` without `lib-crash` dependency.
+
 # 37.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v36.0.0...v37.0.0)

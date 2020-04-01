@@ -5,8 +5,8 @@
 package mozilla.components.service.fxa
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -71,7 +71,7 @@ class SharedPrefAccountStorageTest {
         // Clear the underlying storage layer "behind the back" of account storage.
         SecureAbove22Preferences(testContext, "fxaStateAC").clear()
 
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val plainStorage = SharedPrefAccountStorage(testContext, crashReporter)
         assertCaughtException(crashReporter, AbnormalAccountStorageEvent.UnexpectedlyMissingAccountState::class)
 
@@ -88,7 +88,7 @@ class SecureAbove22AccountStorageTest {
     @Config(sdk = [21])
     @Test
     fun `secure storage crud`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val storage = SecureAbove22AccountStorage(testContext, crashReporter)
         val account = FirefoxAccount(
             mozilla.appservices.fxaclient.Config(Server.RELEASE, "someId", "http://www.firefox.com")
@@ -114,7 +114,7 @@ class SecureAbove22AccountStorageTest {
         assertNotNull(plainStorage.read())
 
         // Now that we have account state in plainStorage, it should be migrated over to secureStorage when it's init'd.
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val secureStorage = SecureAbove22AccountStorage(testContext, crashReporter)
         assertNotNull(secureStorage.read())
         // And plainStorage must have been cleared during this migration.
@@ -125,7 +125,7 @@ class SecureAbove22AccountStorageTest {
     @Config(sdk = [21])
     @Test
     fun `missing state is reported`() {
-        val crashReporter: CrashReporter = mock()
+        val crashReporter: CrashReporting = mock()
         val storage = SecureAbove22AccountStorage(testContext, crashReporter)
         val account = FirefoxAccount(
             mozilla.appservices.fxaclient.Config(Server.RELEASE, "someId", "http://www.firefox.com")
@@ -157,7 +157,7 @@ class SecureAbove22AccountStorageTest {
     }
 }
 
-private fun <T : AbnormalAccountStorageEvent> assertCaughtException(crashReporter: CrashReporter, type: KClass<T>) {
+private fun <T : AbnormalAccountStorageEvent> assertCaughtException(crashReporter: CrashReporting, type: KClass<T>) {
     val captor = argumentCaptor<AbnormalAccountStorageEvent>()
     verify(crashReporter).submitCaughtException(captor.capture())
     Assert.assertEquals(type, captor.value::class)

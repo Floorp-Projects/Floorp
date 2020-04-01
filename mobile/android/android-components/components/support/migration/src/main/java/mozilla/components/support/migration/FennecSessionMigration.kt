@@ -6,7 +6,7 @@ package mozilla.components.support.migration
 
 import android.net.Uri
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.session.StreamingSessionStoreParser
 import org.json.JSONException
@@ -26,7 +26,7 @@ internal object FennecSessionMigration {
      */
     fun migrate(
         profilePath: File,
-        crashReporter: CrashReporter
+        crashReporter: CrashReporting
     ): Result<SessionManager.Snapshot> {
         val sessionFiles = findSessionFiles(profilePath)
         if (sessionFiles.isEmpty()) {
@@ -78,7 +78,7 @@ internal object FennecSessionMigration {
 @Suppress("TooGenericExceptionCaught")
 private fun Result.Success<SessionManager.Snapshot>.filter(
     logger: Logger,
-    crashReporter: CrashReporter
+    crashReporter: CrashReporting
 ): Result.Success<SessionManager.Snapshot> {
     var selectedIndex = value.selectedSessionIndex
 

@@ -9,10 +9,10 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
-import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.service.sync.logins.toLogin
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.pkcs7unpad
 import mozilla.components.support.ktx.kotlin.toHexString
@@ -133,7 +133,7 @@ internal object FennecLoginsMigration {
 
     @Suppress("TooGenericExceptionCaught", "ReturnCount", "LongParameterList", "ComplexMethod")
     internal suspend fun migrate(
-        crashReporter: CrashReporter,
+        crashReporter: CrashReporting,
         signonsDbPath: String,
         key4DbPath: String,
         loginsStorage: SyncableLoginsStorage,
@@ -209,7 +209,7 @@ internal object FennecLoginsMigration {
     @Suppress("LongMethod")
     @VisibleForTesting
     internal fun getLogins(
-        crashReporter: CrashReporter,
+        crashReporter: CrashReporting,
         masterPassword: String,
         signonsDbPath: String,
         key4DbPath: String
