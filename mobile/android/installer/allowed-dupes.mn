@@ -5,9 +5,6 @@
 # PLEASE DO NOT ADD MORE EXCEPTIONS TO THIS LIST
 #
 
-modules/devtools/Loader.jsm
-modules/devtools/shared/Loader.jsm
-
 # Row and column icons are duplicated
 res/table-remove-column-active.gif
 res/table-remove-row-active.gif
