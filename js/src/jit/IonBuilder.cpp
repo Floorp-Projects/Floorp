@@ -3871,12 +3871,21 @@ AbortReasonOr<Ok> IonBuilder::jsop_pos() {
     return Ok();
   }
 
-  // Compile +x as x * 1.
   MDefinition* value = current->pop();
   MConstant* one = MConstant::New(alloc(), Int32Value(1));
   current->add(one);
 
-  return jsop_binary_arith(JSOp::Mul, value, one);
+  // Compile +x as x * 1.
+  MBinaryArithInstruction* ins = MBinaryArithInstruction::New(
+      alloc(), MDefinition::Opcode::Mul, value, one);
+
+  // Decrease type from 'any type' to 'empty type' when one of the operands
+  // is 'empty typed'.
+  maybeMarkEmpty(ins);
+
+  current->add(ins);
+  current->push(ins);
+  return resumeAfter(ins);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_neg() {
