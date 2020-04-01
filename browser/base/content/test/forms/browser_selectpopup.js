@@ -1239,28 +1239,3 @@ let select = document.querySelector("select");
 
   BrowserTestUtils.removeTab(tab);
 });
-
-add_task(async function test_label_not_text() {
-  const PAGE_CONTENT = `
-<!doctype html>
-<select>
-  <option label="Some nifty Label">Some Element Text Instead</option>
-</select>
-`;
-
-  const pageUrl = "data:text/html," + escape(PAGE_CONTENT);
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
-
-  let menulist = document.getElementById("ContentSelectDropdown");
-  let selectPopup = menulist.menupopup;
-
-  await openSelectPopup(selectPopup, "click");
-
-  is(
-    selectPopup.children[0].label,
-    "Some nifty Label",
-    "Use the label not the text."
-  );
-
-  BrowserTestUtils.removeTab(tab);
-});

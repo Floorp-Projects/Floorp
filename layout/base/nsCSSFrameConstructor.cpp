@@ -5159,16 +5159,8 @@ void nsCSSFrameConstructor::AddFrameConstructionItems(
 static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
                                         const nsIContent& aChild) {
   if (!aParent ||
-      !aParent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup,
-                                    nsGkAtoms::option)) {
+      !aParent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup)) {
     return false;
-  }
-
-  // Options with labels have their label text added in ::before by forms.css.
-  // Suppress frames for their child text.
-  if (aParent->IsHTMLElement(nsGkAtoms::option) &&
-      !aChild.IsRootOfAnonymousSubtree()) {
-    return aParent->AsElement()->HasNonEmptyAttr(nsGkAtoms::label);
   }
 
   // If we're in any display: contents subtree, just suppress the frame.

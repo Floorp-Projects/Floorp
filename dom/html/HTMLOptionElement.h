@@ -83,9 +83,8 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
 
   HTMLFormElement* GetForm();
 
-  void GetLabel(nsAString& aLabel) {
-    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel) ||
-        aLabel.IsEmpty()) {
+  void GetLabel(DOMString& aLabel) {
+    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel)) {
       GetText(aLabel);
     }
   }

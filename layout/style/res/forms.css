@@ -342,10 +342,6 @@ select > button[orientation="right"]:active {
   line-height: -moz-block-height;
 }
 
-option[label]::before {
-  content: attr(label);
-}
-
 option {
   display: block;
   float: none !important;
