@@ -1471,7 +1471,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetter() {
   // Push frame descriptor.
   masm.Push(scratch2);
 
-  // Load callee->nargs in scratch2 and the JIT code in scratch.
+  // Load callee->nargs in scratch2 and the JIT code in scratch1.
   Label noUnderflow;
   masm.load16ZeroExtend(Address(scratch1, JSFunction::offsetOfNargs()),
                         scratch2);
