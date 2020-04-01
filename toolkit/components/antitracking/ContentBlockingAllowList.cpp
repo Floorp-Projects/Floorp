@@ -68,6 +68,14 @@ using namespace mozilla;
 }
 
 /* static */ bool ContentBlockingAllowList::Check(nsPIDOMWindowInner* aWindow) {
+  // TODO: this is a quick fix to ensure that we allow storage permission for
+  // a chrome window. We should check if there is a better way to do this in
+  // Bug 1626223.
+  if (nsGlobalWindowInner::Cast(aWindow)->GetPrincipal() ==
+      nsContentUtils::GetSystemPrincipal()) {
+    return true;
+  }
+
   // We can check the IsOnContentBlockingAllowList flag in the document's
   // CookieJarSettings. Because this flag represents the fact that whether the
   // top-level document is on the content blocking allow list. And this flag was
