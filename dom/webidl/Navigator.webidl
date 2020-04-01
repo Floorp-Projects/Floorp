@@ -85,13 +85,8 @@ interface mixin NavigatorContentUtils {
   void checkProtocolHandlerAllowed(DOMString scheme, URI handlerURI, URI documentURI);
   [Throws, Func="nsGlobalWindowInner::RegisterProtocolHandlerAllowedForContext"]
   void registerProtocolHandler(DOMString scheme, DOMString url, DOMString title);
-  [Pref="dom.registerContentHandler.enabled", Throws]
-  void registerContentHandler(DOMString mimeType, DOMString url, DOMString title);
   // NOT IMPLEMENTED
-  //DOMString isProtocolHandlerRegistered(DOMString scheme, DOMString url);
-  //DOMString isContentHandlerRegistered(DOMString mimeType, DOMString url);
   //void unregisterProtocolHandler(DOMString scheme, DOMString url);
-  //void unregisterContentHandler(DOMString mimeType, DOMString url);
 };
 
 [SecureContext]
