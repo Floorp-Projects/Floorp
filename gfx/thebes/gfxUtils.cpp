@@ -1492,15 +1492,6 @@ bool gfxUtils::DumpDisplayList() {
           XRE_IsContentProcess());
 }
 
-wr::RenderRoot gfxUtils::GetContentRenderRoot() {
-  return wr::RenderRoot::Default;
-}
-
-wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
-    const nsIFrame* aFrame) {
-  return wr::RenderRoot::Default;
-}
-
 FILE* gfxUtils::sDumpPaintFile = stderr;
 
 namespace mozilla {
