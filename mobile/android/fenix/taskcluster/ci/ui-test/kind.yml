@@ -28,7 +28,7 @@ jobs:
             commands:
                 - [wget, {artifact-reference: '<signing/public/build/x86/geckoNightly/target.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/geckoNightly/target.apk>'}, '-O', android-test.apk]
-                - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '-1']
+                - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '50']
             secrets:
                 - name: project/mobile/fenix/firebase
                   key: firebaseToken
