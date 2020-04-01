@@ -24,6 +24,7 @@
 #include "jit/Label.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/Value.h"
+#include "new-regexp/RegExpTypes.h"
 #include "new-regexp/util/flags.h"
 #include "new-regexp/util/vector.h"
 #include "new-regexp/util/zone.h"
