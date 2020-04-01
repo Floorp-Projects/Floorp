@@ -125,9 +125,9 @@ inline Shape* Shape::new_(JSContext* cx, Handle<StackShape> other,
 }
 
 inline void Shape::updateBaseShapeAfterMovingGC() {
-  BaseShape* base = this->base();
+  BaseShape* base = base_;
   if (IsForwarded(base)) {
-    headerAndBase_.unsafeSetPtr(Forwarded(base));
+    base_.unsafeSet(Forwarded(base));
   }
 }
 

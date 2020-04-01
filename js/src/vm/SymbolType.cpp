@@ -86,14 +86,14 @@ void Symbol::dump() {
 void Symbol::dump(js::GenericPrinter& out) {
   if (isWellKnownSymbol()) {
     // All the well-known symbol names are ASCII.
-    description()->dumpCharsNoNewline(out);
+    description_->dumpCharsNoNewline(out);
   } else if (code_ == SymbolCode::InSymbolRegistry ||
              code_ == SymbolCode::UniqueSymbol) {
     out.printf(code_ == SymbolCode::InSymbolRegistry ? "Symbol.for("
                                                      : "Symbol(");
 
-    if (description()) {
-      description()->dumpCharsNoNewline(out);
+    if (description_) {
+      description_->dumpCharsNoNewline(out);
     } else {
       out.printf("undefined");
     }

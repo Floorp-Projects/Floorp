@@ -123,12 +123,12 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
   MOZ_ASSERT(!obj->isSingleton());
 
   js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(
-      cx, obj->groupRaw(), obj->getClass(), obj->taggedProto());
+      cx, obj->group_, obj->getClass(), obj->taggedProto());
   if (!group) {
     return false;
   }
 
-  obj->setGroupRaw(group);
+  obj->group_ = group;
   return true;
 }
 
@@ -141,14 +141,14 @@ js::NativeObject::updateDictionaryListPointerAfterMinorGC(NativeObject* old) {
     }
     return makeLazyGroup(cx, obj);
   }
-  return obj->groupRaw();
+  return obj->group_;
 }
 
 inline void JSObject::setGroup(js::ObjectGroup* group) {
   MOZ_RELEASE_ASSERT(group);
   MOZ_ASSERT(!isSingleton());
   MOZ_ASSERT(maybeCCWRealm() == group->realm());
-  setGroupRaw(group);
+  group_ = group;
 }
 
 /* * */
