@@ -8,8 +8,8 @@
 #define mozilla_dom_indexeddb_filemanager_h__
 
 #include "mozilla/dom/quota/PersistenceType.h"
+#include "mozilla/InitializedOnce.h"
 #include "FileManagerBase.h"
-#include "InitializedOnce.h"
 
 class nsIFile;
 class mozIStorageConnection;
@@ -28,8 +28,8 @@ class FileManager final : public FileManagerBase<FileManager> {
   const nsCString mOrigin;
   const nsString mDatabaseName;
 
-  InitializedOnce<const nsString, LazyInit::Allow> mDirectoryPath;
-  InitializedOnce<const nsString, LazyInit::Allow> mJournalDirectoryPath;
+  LazyInitializedOnce<const nsString> mDirectoryPath;
+  LazyInitializedOnce<const nsString> mJournalDirectoryPath;
 
   const bool mEnforcingQuota;
 

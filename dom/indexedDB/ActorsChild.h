@@ -24,6 +24,7 @@
 #include "mozilla/dom/PBackgroundFileHandleChild.h"
 #include "mozilla/dom/PBackgroundFileRequestChild.h"
 #include "mozilla/dom/PBackgroundMutableFileChild.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -637,7 +638,7 @@ class BackgroundCursorChildBase : public PBackgroundIDBCursorChild {
  private:
   NS_DECL_OWNINGTHREAD
  protected:
-  InitializedOnceMustBeTrue<IDBRequest* const> mRequest;
+  InitializedOnceNotNull<IDBRequest* const> mRequest;
   IDBTransaction* mTransaction;
 
   // These are only set while a request is in progress.
@@ -682,7 +683,7 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
   friend class BackgroundTransactionChild;
   friend class BackgroundVersionChangeTransactionChild;
 
-  InitializedOnceMustBeTrue<SourceType* const> mSource;
+  InitializedOnceNotNull<SourceType* const> mSource;
   IDBCursorImpl<CursorType>* mCursor;
 
   std::deque<CursorData<CursorType>> mCachedResponses, mDelayedResponses;

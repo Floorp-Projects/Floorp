@@ -3422,12 +3422,12 @@ void BackgroundCursorChild<CursorType>::SendDeleteMeInternal() {
   MOZ_ASSERT(!mStrongRequest);
   MOZ_ASSERT(!mStrongCursor);
 
-  mRequest.reset();
+  mRequest.destroy();
   mTransaction = nullptr;
   // TODO: The things until here could be pulled up to
   // BackgroundCursorChildBase.
 
-  mSource.reset();
+  mSource.destroy();
 
   if (mCursor) {
     mCursor->ClearBackgroundActor();
@@ -3678,9 +3678,9 @@ void BackgroundCursorChild<CursorType>::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
 #ifdef DEBUG
-  mRequest.maybeReset();
+  mRequest.maybeDestroy();
   mTransaction = nullptr;
-  mSource.maybeReset();
+  mSource.maybeDestroy();
 #endif
 }
 

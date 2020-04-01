@@ -17,7 +17,6 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "IndexedDatabaseManager.h"
-#include "InitializedOnce.h"
 #include "js/StructuredClone.h"
 #include "js/Value.h"
 #include "jsapi.h"
@@ -30,6 +29,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/JSObjectHolder.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"
@@ -4718,9 +4718,9 @@ class DatabaseConnection final {
   class UpdateRefcountFunction;
 
  private:
-  InitializedOnceMustBeTrue<const nsCOMPtr<mozIStorageConnection>>
+  InitializedOnceNotNull<const nsCOMPtr<mozIStorageConnection>>
       mStorageConnection;
-  InitializedOnceMustBeTrue<const SafeRefPtr<FileManager>> mFileManager;
+  InitializedOnceNotNull<const SafeRefPtr<FileManager>> mFileManager;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
   RefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
@@ -5023,7 +5023,7 @@ class ConnectionPool final {
   };
 
   struct IdleDatabaseInfo final : public IdleResource {
-    InitializedOnceMustBeTrue<DatabaseInfo* const> mDatabaseInfo;
+    InitializedOnceNotNull<DatabaseInfo* const> mDatabaseInfo;
 
    public:
     explicit IdleDatabaseInfo(DatabaseInfo* aDatabaseInfo);
@@ -5677,7 +5677,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
     Completed
   };
 
-  InitializedOnce<const OwningNonNull<TransactionBase>> mTransaction;
+  InitializedOnceNotNull<const RefPtr<TransactionBase>> mTransaction;
   InternalState mInternalState = InternalState::Initial;
   bool mWaitingForContinue = false;
   const bool mTransactionIsAborted;
@@ -6256,7 +6256,7 @@ class DatabaseFile final : public PBackgroundIDBDatabaseFileParent {
     MOZ_ASSERT(!IsOnBackgroundThread());
 
     MOZ_ASSERT(*mBlobImpl);
-    mBlobImpl.reset();
+    mBlobImpl.destroy();
   }
 
  public:
@@ -6318,7 +6318,7 @@ class TransactionBase {
   const SafeRefPtr<Database> mDatabase;
   nsTArray<RefPtr<FullObjectStoreMetadata>>
       mModifiedAutoIncrementObjectStoreMetadataArray;
-  InitializedOnceMustBeTrue<const uint64_t, LazyInit::Allow> mTransactionId;
+  LazyInitializedOnceNotNull<const uint64_t> mTransactionId;
   const nsCString mDatabaseId;
   const int64_t mLoggingSerialNumber;
   uint64_t mActiveRequestCount;
@@ -6334,8 +6334,7 @@ class TransactionBase {
   FlippedOnce<false> mCommitOrAbortReceived;
   FlippedOnce<false> mCommittedOrAborted;
   FlippedOnce<false> mForceAborted;
-  InitializedOnce<const Maybe<int64_t>, LazyInit::Allow>
-      mLastRequestBeforeCommit;
+  LazyInitializedOnce<const Maybe<int64_t>> mLastRequestBeforeCommit;
   Maybe<int64_t> mLastFailedRequest;
 
  public:
@@ -7204,7 +7203,7 @@ class DatabaseOp : public DatabaseOperationBase,
 class CreateFileOp final : public DatabaseOp {
   const CreateFileParams mParams;
 
-  InitializedOnce<const SafeRefPtr<FileInfo>, LazyInit::Allow> mFileInfo;
+  LazyInitializedOnce<const SafeRefPtr<FileInfo>> mFileInfo;
 
  public:
   CreateFileOp(SafeRefPtr<Database> aDatabase,
@@ -7452,7 +7451,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
   class StoredFileInfo final {
-    InitializedOnceMustBeTrue<const SafeRefPtr<FileInfo>> mFileInfo;
+    InitializedOnceNotNull<const SafeRefPtr<FileInfo>> mFileInfo;
     // Either nothing, a file actor or a non-Blob-backed inputstream to write to
     // disk.
     using FileActorOrInputStream =
@@ -7705,9 +7704,9 @@ ObjectStoreAddOrPutRequestOp::StoredFileInfo::GetInputStream() {
       },
       [this](const nsCOMPtr<nsIInputStream>& inputStream) -> InputStreamResult {
         auto res = inputStream;
-        // reset() clears the inputStream parameter, so we needed to make a
+        // destroy() clears the inputStream parameter, so we needed to make a
         // copy before
-        mFileActorOrInputStream.reset();
+        mFileActorOrInputStream.destroy();
         AssertInvariants();
         return res;
       });
@@ -8008,12 +8007,12 @@ class CursorBase : public PBackgroundIDBCursorParent {
   // This should only be touched on the PBackground thread to check whether
   // the objectStore has been deleted. Holding these saves a hash lookup for
   // every call to continue()/advance().
-  InitializedOnceMustBeTrue<const RefPtr<FullObjectStoreMetadata>>
+  InitializedOnceNotNull<const RefPtr<FullObjectStoreMetadata>>
       mObjectStoreMetadata;
 
   const IndexOrObjectStoreId mObjectStoreId;
 
-  InitializedOnce<const Key, LazyInit::Allow>
+  LazyInitializedOnce<const Key>
       mLocaleAwareRangeBound;  ///< If the cursor is based on a key range, the
                                ///< bound in the direction of iteration (e.g.
                                ///< the upper bound in case of mDirection ==
@@ -8067,7 +8066,7 @@ class IndexCursorBase : public CursorBase {
   // This should only be touched on the PBackground thread to check whether
   // the index has been deleted. Holding these saves a hash lookup for every
   // call to continue()/advance().
-  InitializedOnceMustBeTrue<const RefPtr<FullIndexMetadata>> mIndexMetadata;
+  InitializedOnceNotNull<const RefPtr<FullIndexMetadata>> mIndexMetadata;
   const IndexOrObjectStoreId mIndexId;
   const bool mUniqueIndex;
   const nsCString
@@ -8141,7 +8140,7 @@ class ValueCursorBase {
   const SafeRefPtr<Database> mDatabase;
   const SafeRefPtr<FileManager> mFileManager;
 
-  InitializedOnceMustBeTrue<PBackgroundParent* const> mBackgroundParent;
+  InitializedOnceNotNull<PBackgroundParent* const> mBackgroundParent;
 };
 
 class KeyCursorBase {
@@ -8198,8 +8197,7 @@ class Cursor final
 
   CursorOpBase* mCurrentlyRunningOp = nullptr;
 
-  InitializedOnce<const typename Base::ContinueQueries, LazyInit::Allow>
-      mContinueQueries;
+  LazyInitializedOnce<const typename Base::ContinueQueries> mContinueQueries;
 
   // Only called by TransactionBase.
   bool Start(const OpenCursorParams& aParams) final;
@@ -9137,14 +9135,11 @@ class DEBUGThreadSlower final : public nsIThreadObserver {
 class MOZ_STACK_CLASS FileHelper final {
   const SafeRefPtr<FileManager> mFileManager;
 
-  InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
-      mFileDirectory;
-  InitializedOnceMustBeTrue<const nsCOMPtr<nsIFile>, LazyInit::Allow>
-      mJournalDirectory;
+  LazyInitializedOnceNotNull<const nsCOMPtr<nsIFile>> mFileDirectory;
+  LazyInitializedOnceNotNull<const nsCOMPtr<nsIFile>> mJournalDirectory;
 
   class ReadCallback;
-  InitializedOnceMustBeTrue<const RefPtr<ReadCallback>, LazyInit::Allow>
-      mReadCallback;
+  LazyInitializedOnceNotNull<const RefPtr<ReadCallback>> mReadCallback;
 
  public:
   explicit FileHelper(SafeRefPtr<FileManager>&& aFileManager)
@@ -10207,8 +10202,7 @@ struct ValuePopulateResponseHelper {
   }
 
  private:
-  InitializedOnce<const StructuredCloneReadInfoParent,
-                  LazyInit::AllowResettable>
+  LazyInitializedOnceEarlyDestructible<const StructuredCloneReadInfoParent>
       mCloneInfo;
 };
 
@@ -11350,9 +11344,9 @@ void DatabaseConnection::Close() {
   mCachedStatements.Clear();
 
   MOZ_ALWAYS_SUCCEEDS((*mStorageConnection)->Close());
-  mStorageConnection.reset();
+  mStorageConnection.destroy();
 
-  mFileManager.reset();
+  mFileManager.destroy();
 }
 
 nsresult DatabaseConnection::DisableQuotaChecks() {
@@ -16421,11 +16415,11 @@ void Cursor<CursorType>::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   if constexpr (IsValueCursor) {
-    this->mBackgroundParent.reset();
+    this->mBackgroundParent.destroy();
   }
-  this->mObjectStoreMetadata.reset();
+  this->mObjectStoreMetadata.destroy();
   if constexpr (IsIndexCursor) {
-    this->mIndexMetadata.reset();
+    this->mIndexMetadata.destroy();
   }
 }
 
@@ -23269,7 +23263,7 @@ void TransactionDatabaseOperationBase::Cleanup() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInternalState == InternalState::SendingResults);
 
-  mTransaction.reset();
+  mTransaction.destroy();
 }
 
 NS_IMETHODIMP

@@ -8,10 +8,10 @@
 #define mozilla_dom_indexeddatabase_h__
 
 #include "js/StructuredClone.h"
+#include "mozilla/InitializedOnce.h"
 #include "mozilla/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "InitializedOnce.h"
 #include "FileInfoFwd.h"
 #include "SafeRefPtr.h"
 
