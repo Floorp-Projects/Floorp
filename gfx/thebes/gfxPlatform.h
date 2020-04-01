@@ -40,6 +40,7 @@ class nsAtom;
 class nsIObserver;
 class SRGBOverrideObserver;
 class gfxTextPerfMetrics;
+struct FontMatchingStats;
 typedef struct FT_LibraryRec_* FT_Library;
 
 namespace mozilla {
@@ -373,6 +374,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle* aStyle,
                                 gfxTextPerfMetrics* aTextPerf,
+                                FontMatchingStats* aFontMatchingStats,
                                 gfxUserFontSet* aUserFontSet,
                                 gfxFloat aDevToCssSize) const;
 
