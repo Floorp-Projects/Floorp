@@ -18,7 +18,8 @@
         android:key="@string/pref_key_account_category"
         android:title="@string/preferences_category_account"
         app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false">
+        app:isPreferenceVisible="false"
+        android:layout="@layout/preference_cat_style" >
 
         <org.mozilla.fenix.settings.account.AccountPreference
             android:icon="@drawable/ic_account"

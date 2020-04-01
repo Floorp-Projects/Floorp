@@ -73,7 +73,8 @@
             app:iconTint="?contrastText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/signInInstructions" />
+            app:layout_constraintTop_toBottomOf="@id/signInInstructions"
+            app:fontFamily="@font/metropolis_semibold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signInEmailButton"
