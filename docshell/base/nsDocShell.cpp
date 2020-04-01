@@ -9355,6 +9355,8 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return NS_OK;
 }
 
+// Changes here should also be made in
+// E10SUtils.documentChannelPermittedForURI().
 static bool SchemeUsesDocChannel(nsIURI* aURI) {
   if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
     return false;
