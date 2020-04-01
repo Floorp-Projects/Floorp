@@ -249,11 +249,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
                                  int32_t* aY) override {}
-  virtual void MoveClient(double aX, double aY) override;
-  virtual void ResizeClient(double aWidth, double aHeight,
-                            bool aRepaint) override;
-  virtual void ResizeClient(double aX, double aY, double aWidth, double aHeight,
-                            bool aRepaint) override;
+  virtual void MoveClient(const DesktopPoint& aOffset) override;
+  virtual void ResizeClient(const DesktopSize& aSize, bool aRepaint) override;
+  virtual void ResizeClient(const DesktopRect& aRect, bool aRepaint) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;

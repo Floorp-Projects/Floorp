@@ -347,15 +347,13 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly, bool aInvalidateChangedSize) {
   DesktopRect deskRect = newBounds / scale;
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
-      widget->ResizeClient(deskRect.X(), deskRect.Y(), deskRect.Width(),
-                           deskRect.Height(), aInvalidateChangedSize);
+      widget->ResizeClient(deskRect, aInvalidateChangedSize);
     } else {
-      widget->MoveClient(deskRect.X(), deskRect.Y());
+      widget->MoveClient(deskRect.TopLeft());
     }
   } else {
     if (changedSize && !aMoveOnly) {
-      widget->ResizeClient(deskRect.Width(), deskRect.Height(),
-                           aInvalidateChangedSize);
+      widget->ResizeClient(deskRect.Size(), aInvalidateChangedSize);
     }  // else do nothing!
   }
 
