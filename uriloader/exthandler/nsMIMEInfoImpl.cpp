@@ -309,7 +309,9 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile) {
 NS_IMETHODIMP
 nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
                               nsIInterfaceRequestor* aWindowContext) {
-  // This is only being called with protocol handlers
+  // for now, this is only being called with protocol handlers; that
+  // will change once we get to more general registerContentHandler
+  // support
   NS_ASSERTION(mClass == eProtocolInfo,
                "nsMIMEInfoBase should be a protocol handler");
 

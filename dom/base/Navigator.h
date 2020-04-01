@@ -123,6 +123,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
                                    ErrorResult& aRv);
   void RegisterProtocolHandler(const nsAString& aScheme, const nsAString& aURL,
                                const nsAString& aTitle, ErrorResult& aRv);
+  void RegisterContentHandler(const nsAString& aMIMEType, const nsAString& aURL,
+                              const nsAString& aTitle, ErrorResult& aRv);
   nsMimeTypeArray* GetMimeTypes(ErrorResult& aRv);
   nsPluginArray* GetPlugins(ErrorResult& aRv);
   Permissions* GetPermissions(ErrorResult& aRv);
