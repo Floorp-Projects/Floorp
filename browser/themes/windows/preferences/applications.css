@@ -9,16 +9,13 @@
  * Also make sure the labels are the same distance away from the icons.
  */
 .actionsMenu {
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-inline-start: -2px;
-  margin-inline-end: 0;
+  margin-block: 0;
+  margin-inline: -2px 0;
 }
 
 .typeIcon,
 .actionIcon {
-  margin-inline-start: 3px;
-  margin-inline-end: 3px;
+  margin-inline: 3px;
 }
 
 #handlersView > richlistitem label {
@@ -46,7 +43,7 @@ menuitem[appHandlerIcon="plugin"] {
 }
 
 .actionsMenu .menulist-icon {
-  margin-inline-end: 3px;
+  margin-inline-end: 9px;
   height: 16px;
   width: 16px;
 }

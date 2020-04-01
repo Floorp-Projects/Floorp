@@ -8,12 +8,6 @@ body {
   font-size: 1.36em;
 }
 
-.actionsMenu > .menulist-label-box > .menulist-icon {
-  margin-top: 2px;
-  margin-inline-start: 2px;
-  margin-inline-end: 8px !important;
-}
-
 #popupPolicyRow {
   /* Override styles from
      browser/themes/osx/preferences/preferences.css */

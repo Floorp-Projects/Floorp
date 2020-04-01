@@ -10,8 +10,12 @@
  */
 .actionsMenu {
   margin-inline-start: -2px;
-  margin-top: 0;
-  margin-bottom: -1px;
+  margin-block: 0 -1px;
+}
+
+.typeIcon,
+.actionIcon {
+  margin-inline: 3px 2px;
 }
 
 #handlersView > richlistitem label {
@@ -24,16 +28,15 @@
 }
 
 .typeIcon,
-.actionIcon {
-  margin-inline-start: 3px;
-}
-
-.typeIcon,
 .actionIcon,
 .actionsMenu .menulist-icon {
-  margin-inline-end: 2px;
   height: 16px;
   width: 16px;
+}
+
+.actionsMenu .menulist-icon {
+  margin-top: 2px;
+  margin-inline: 2px 8px;
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
