@@ -133,4 +133,29 @@ add_task(async function test() {
   info("waiting for os auth dialog");
   await osAuthDialogShown;
   info("OS auth dialog shown and passed after timeout expiration");
+
+  // Disable the OS auth feature and confirm the prompt doesn't appear
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.management.page.os-auth.enabled", false]],
+  });
+  info("Reload about:logins to reset the timeout");
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:logins",
+  });
+
+  info("'Edit' shouldn't show the prompt since the feature has been disabled");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    ok(!loginItem.dataset.editing, "Not in edit mode before clicking 'Edit'");
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+
+    await ContentTaskUtils.waitForCondition(
+      () => loginItem.dataset.editing,
+      "waiting for 'edit' mode"
+    );
+    ok(loginItem.dataset.editing, "In edit mode");
+  });
 });
