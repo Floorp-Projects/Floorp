@@ -578,7 +578,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
  * and
  * Streams spec, 3.11.5.2. [[PullSteps]] ( forAuthorCode )
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamControllerPullSteps(
+MOZ_MUST_USE PromiseObject* js::ReadableStreamControllerPullSteps(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController) {
   if (unwrappedController->is<ReadableStreamDefaultController>()) {
     Rooted<ReadableStreamDefaultController*> unwrappedDefaultController(
