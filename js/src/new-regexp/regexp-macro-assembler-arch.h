@@ -101,6 +101,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void SetRegister(int register_index, int to);
   virtual void ClearRegisters(int reg_from, int reg_to);
 
+  virtual Handle<HeapObject> GetCode(Handle<String> source);
+
  private:
   // Push a register on the backtrack stack.
   void Push(js::jit::Register value);
@@ -217,6 +219,40 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   js::jit::Label exit_label_;
   js::jit::Label stack_overflow_label_;
   js::jit::Label exit_with_exception_label_;
+
+  // When we generate the code to push a backtrack label's address
+  // onto the backtrack stack, we don't know its final address. We
+  // have to patch it after linking. This is slightly delicate, as the
+  // Label itself (which is allocated on the stack) may not exist by
+  // the time we link. The approach is as follows:
+  //
+  // 1. When we push a label on the backtrack stack (PushBacktrack),
+  //    we bind the label's patchOffset_ field to the offset within
+  //    the code that should be overwritten. This works because each
+  //    label is only pushed by a single instruction.
+  //
+  // 2. When we bind a label (Bind), we check to see if it has a
+  //    bound patchOffset_. If it does, we create a LabelPatch mapping
+  //    its patch offset to the offset of the label itself.
+  //
+  // 3. While linking the code, we walk the list of label patches
+  //    and patch the code accordingly.
+  class LabelPatch {
+   public:
+    LabelPatch(js::jit::CodeOffset patchOffset, size_t labelOffset)
+        : patchOffset_(patchOffset), labelOffset_(labelOffset) {}
+
+    js::jit::CodeOffset patchOffset_;
+    size_t labelOffset_ = 0;
+  };
+
+  js::Vector<LabelPatch, 4, js::SystemAllocPolicy> labelPatches_;
+  void AddLabelPatch(js::jit::CodeOffset patchOffset, size_t labelOffset) {
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!labelPatches_.emplaceBack(patchOffset, labelOffset)) {
+      oomUnsafe.crash("Irregexp label patch");
+    }
+  }
 
   Mode mode_;
   int num_registers_;

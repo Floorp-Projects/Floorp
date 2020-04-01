@@ -8,6 +8,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "jit/Linker.h"
 #include "new-regexp/regexp-macro-assembler-arch.h"
 #include "new-regexp/regexp-stack.h"
 
@@ -21,10 +22,13 @@ using js::jit::Address;
 using js::jit::AllocatableGeneralRegisterSet;
 using js::jit::Assembler;
 using js::jit::BaseIndex;
+using js::jit::CodeLocationLabel;
 using js::jit::GeneralRegisterSet;
 using js::jit::Imm32;
 using js::jit::ImmPtr;
 using js::jit::ImmWord;
+using js::jit::JitCode;
+using js::jit::Linker;
 using js::jit::LiveGeneralRegisterSet;
 using js::jit::Register;
 using js::jit::StackMacroAssembler;
@@ -92,6 +96,9 @@ void SMRegExpMacroAssembler::Backtrack() {
 
 void SMRegExpMacroAssembler::Bind(Label* label) {
   masm_.bind(label->inner());
+  if (label->patchOffset_.bound()) {
+    AddLabelPatch(label->patchOffset_, label->pos());
+  }
 }
 
 // Check if current_position + cp_offset is the input start
@@ -802,6 +809,41 @@ void SMRegExpMacroAssembler::CheckBacktrackStackLimit() {
                      &exit_with_exception_label_);
 
   masm_.bind(&no_stack_overflow);
+}
+
+// This is used to sneak an OOM through the V8 layer.
+static Handle<HeapObject> DummyCode() {
+  return Handle<HeapObject>::fromHandleValue(JS::UndefinedHandleValue);
+}
+
+// Finalize code. This is called last, so that we know how many
+// registers we need.
+Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
+  if (!cx_->realm()->ensureJitRealmExists(cx_)) {
+    return DummyCode();
+  }
+
+  masm_.bind(&entry_label_);
+
+  // TODO: create and initialize stack frame
+
+  masm_.jump(&start_label_);
+
+  // TODO: success/exit/backtrack/overflow handlers
+
+  Linker linker(masm_);
+  JitCode* code = linker.newCode(cx_, js::jit::CodeKind::RegExp);
+  if (!code) {
+    return DummyCode();
+  }
+
+  for (LabelPatch& lp : labelPatches_) {
+    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, lp.patchOffset_),
+                                       ImmPtr(code->raw() + lp.labelOffset_),
+                                       ImmPtr(nullptr));
+  }
+
+  return Handle<HeapObject>(JS::PrivateGCThingValue(code), isolate());
 }
 
 // This is only used by tracing code.
