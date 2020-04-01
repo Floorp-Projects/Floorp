@@ -681,8 +681,9 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_TRUE(docShellAsItem, NS_OK);
 
   // set this as the active window
-  mActiveWindow = window;
-  if (!XRE_IsParentProcess()) {
+  if (XRE_IsParentProcess()) {
+    mActiveWindow = window;
+  } else {
     BrowsingContext* bc = window->GetBrowsingContext();
     if (bc == bc->Top()) {
       SetActiveBrowsingContextInContent(bc);
@@ -788,8 +789,9 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   // window can be prevented until we return. Otherwise, focus can get into
   // an unusual state.
   mWindowBeingLowered = window;
-  mActiveWindow = nullptr;
-  if (!XRE_IsParentProcess()) {
+  if (XRE_IsParentProcess()) {
+    mActiveWindow = nullptr;
+  } else {
     BrowsingContext* bc = window->GetBrowsingContext();
     if (bc == bc->Top()) {
       SetActiveBrowsingContextInContent(nullptr);
