@@ -327,14 +327,22 @@ class experimental(object):
     }
     """Runs task containing tests in the same directories as modified files."""
 
-    bugbug_push_schedules = {
-        'test': Either('skip-unless-schedules', 'bugbug-push-schedules'),
-    }
-    """Queries the bugbug push schedules endpoint which uses machine learning to
-    determine which tasks to run."""
-
     seta = {
         'test': Either('skip-unless-schedules', 'seta'),
     }
     """Provides a stable history of SETA's performance in the event we make it
-    non-default in the future."""
+    non-default in the future. Only useful as a benchmark."""
+
+    class bugbug(object):
+        """Strategies that query the bugbug push schedules endpoint which uses machine
+        learning to determine which tasks to run."""
+
+        all = {
+            'test': Either('skip-unless-schedules', 'bugbug-all'),
+        }
+        """Doesn't limit platforms."""
+
+        debug = {
+            'test': Either('skip-unless-schedules', 'bugbug-debug'),
+        }
+        """Restricts tests to debug platforms."""
