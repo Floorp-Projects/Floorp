@@ -281,8 +281,9 @@ static MOZ_MUST_USE bool OnDestClosed(JSContext* cx,
 
   // i. Assert: no chunks have been read or written.
   //
-  // This assertion holds when this function is called by |CanPipeStreams|,
-  // prior to any asynchronous internal piping operations happening.
+  // This assertion holds when this function is called by
+  // |SourceOrDestErroredOrClosed|, before any async internal piping operations
+  // happen.
   //
   // But it wouldn't hold for streams that can spontaneously close of their own
   // accord, like say a hypothetical DOM TCP socket.  I think?
@@ -326,17 +327,13 @@ static MOZ_MUST_USE bool OnDestClosed(JSContext* cx,
  * applied in order.", as applied at the very start of piping, before any reads
  * from source or writes to dest have been triggered.
  */
-static MOZ_MUST_USE bool CanPipeStreams(JSContext* cx,
-                                        Handle<PipeToState*> state,
-                                        Handle<ReadableStream*> unwrappedSource,
-                                        Handle<WritableStream*> unwrappedDest,
-                                        bool* shouldStart) {
+static MOZ_MUST_USE bool SourceOrDestErroredOrClosed(
+    JSContext* cx, Handle<PipeToState*> state,
+    Handle<ReadableStream*> unwrappedSource,
+    Handle<WritableStream*> unwrappedDest, bool* erroredOrClosed) {
   cx->check(state);
 
-  // At start of piping, we don't yet have reactions added for source/dest
-  // closure or error, so we have to check for this manually.  Assume we
-  // shouldn't start, then override that once all preconditions are checked.
-  *shouldStart = false;
+  *erroredOrClosed = true;
 
   // a. Errors must be propagated forward: if source.[[state]] is or becomes
   //    "errored", then
@@ -364,7 +361,7 @@ static MOZ_MUST_USE bool CanPipeStreams(JSContext* cx,
     return OnDestClosed(cx, state);
   }
 
-  *shouldStart = true;
+  *erroredOrClosed = false;
   return true;
 }
 
@@ -455,17 +452,18 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
                                      Handle<WritableStream*> unwrappedDest) {
   cx->check(state);
 
-  // Initially, check for source/dest closed or in error manually.
-  bool shouldStart;
-  if (!CanPipeStreams(cx, state, unwrappedSource, unwrappedDest,
-                      &shouldStart)) {
+  // If source/dest are closed or errored, don't start piping.
+  bool erroredOrClosed;
+  if (!SourceOrDestErroredOrClosed(cx, state, unwrappedSource, unwrappedDest,
+                                   &erroredOrClosed)) {
     return false;
   }
-  if (!shouldStart) {
+  if (erroredOrClosed) {
     return true;
   }
 
-  // After this point, react to source/dest closing or erroring as it happens.
+  // In the long run, react to source/dest becoming errored or closed using
+  // separate promises.
   {
     Rooted<JSObject*> unwrappedClosedPromise(cx);
     Rooted<JSObject*> onClosed(cx);
