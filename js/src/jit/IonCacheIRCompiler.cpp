@@ -899,9 +899,6 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResultShared(
   MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) ==
              0);
 
-  // The getter currently has a jit entry or a non-lazy script. We will only
-  // relazify when we do a shrinking GC and when that happens we will also
-  // purge IC stubs.
   MOZ_ASSERT(target->hasJitEntry());
   masm.loadJitCodeRaw(scratch, scratch);
   masm.callJit(scratch);
@@ -1913,9 +1910,6 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) ==
              0);
 
-  // The setter currently has a jit entry or a non-lazy script. We will only
-  // relazify when we do a shrinking GC and when that happens we will also
-  // purge IC stubs.
   MOZ_ASSERT(target->hasJitEntry());
   masm.loadJitCodeRaw(scratch, scratch);
   masm.callJit(scratch);

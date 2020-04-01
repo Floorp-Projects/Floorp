@@ -6016,9 +6016,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.computeEffectiveAddress(frame.addressOfStackValue(-1), callerStackPtr);
 
   // Branch to |interpret| to resume the generator in the C++ interpreter if the
-  // script does not have a JitScript. Note that we don't relazify generator
-  // scripts (asserted in JSFunction::maybeRelazify) so the function is
-  // guaranteed to be non-lazy.
+  // script does not have a JitScript.
   Label interpret;
   Register scratch1 = regs.takeAny();
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
