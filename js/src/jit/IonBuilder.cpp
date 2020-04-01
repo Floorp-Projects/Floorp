@@ -190,12 +190,15 @@ IonBuilder::IonBuilder(JSContext* analysisContext, MIRGenerator& mirGen,
 
 mozilla::GenericErrorResult<AbortReason> IonBuilder::abort(AbortReason r) {
   auto res = mirGen_.abort(r);
+  unsigned line, column;
 #ifdef DEBUG
-  JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(),
-          PCToLineNumber(script(), pc));
+  line = PCToLineNumber(script(), pc, &column);
 #else
-  JitSpew(JitSpew_IonAbort, "aborted @ %s", script()->filename());
+  line = script()->lineno();
+  column = script()->column();
 #endif
+  JitSpew(JitSpew_IonAbort, "aborted @ %s:%u:%u", script()->filename(), line,
+          column);
   return res;
 }
 
@@ -207,12 +210,15 @@ mozilla::GenericErrorResult<AbortReason> IonBuilder::abort(AbortReason r,
   va_start(ap, message);
   auto res = mirGen_.abortFmt(r, message, ap);
   va_end(ap);
+  unsigned line, column;
 #ifdef DEBUG
-  JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(),
-          PCToLineNumber(script(), pc));
+  line = PCToLineNumber(script(), pc, &column);
 #else
-  JitSpew(JitSpew_IonAbort, "aborted @ %s", script()->filename());
+  line = script()->lineno();
+  column = script()->column();
 #endif
+  JitSpew(JitSpew_IonAbort, "aborted @ %s:%u:%u", script()->filename(), line,
+          column);
   return res;
 }
 
