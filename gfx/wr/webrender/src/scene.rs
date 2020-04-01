@@ -4,7 +4,9 @@
 
 use api::{BuiltDisplayList, DisplayListWithCache, ColorF, DynamicProperties, Epoch, FontRenderMode};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, PropertyValue, MixBlendMode, StackingContext};
+use api::MemoryReport;
 use api::units::*;
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipDataStore};
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
@@ -235,6 +237,16 @@ impl Scene {
         }
 
         false
+    }
+
+    pub fn report_memory(
+        &self,
+        ops: &mut MallocSizeOfOps,
+        report: &mut MemoryReport
+    ) {
+        for (_, pipeline) in &self.pipelines {
+            report.display_list += pipeline.display_list.size_of(ops)
+        }
     }
 }
 

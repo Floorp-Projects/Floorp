@@ -694,6 +694,7 @@ impl SceneBuilderThread {
         let mut report = MemoryReport::default();
         for doc in self.documents.values() {
             doc.interners.report_memory(ops, &mut report);
+            doc.scene.report_memory(ops, &mut report);
         }
 
         report

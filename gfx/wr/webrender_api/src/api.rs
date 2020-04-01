@@ -1242,6 +1242,7 @@ pub struct MemoryReport {
     pub rasterized_blobs: usize,
     pub shader_cache: usize,
     pub interning: InterningMemoryReport,
+    pub display_list: usize,
 
     //
     // GPU memory.

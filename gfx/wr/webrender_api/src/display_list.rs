@@ -16,6 +16,7 @@ use std::ops::Range;
 use std::mem;
 use std::collections::HashMap;
 use time::precise_time_ns;
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 // local imports
 use crate::display_item as di;
 use crate::display_item_cache::*;
@@ -169,6 +170,12 @@ impl DisplayListWithCache {
 
     pub fn data(&self) -> &[u8] {
         self.display_list.data()
+    }
+}
+
+impl MallocSizeOf for DisplayListWithCache {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        self.display_list.data.size_of(ops) + self.cache.size_of(ops)
     }
 }
 
