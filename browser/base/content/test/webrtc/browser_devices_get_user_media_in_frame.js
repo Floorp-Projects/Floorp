@@ -518,7 +518,7 @@ var gTests = [
 
       for (let t = 0; t < 2; t++) {
         let frame1BC = gShouldObserveSubframes
-          ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+          ? gBrowser.selectedBrowser.browsingContext.children[0]
           : undefined;
 
         let observerPromise = expectObserverCalled(
