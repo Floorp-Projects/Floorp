@@ -923,8 +923,10 @@ nsresult Selection::AddRangesForUserSelectableNodes(
   for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
     int32_t index;
     const RefPtr<Selection> selection{this};
+    // `MOZ_KnownLive` needed because of broken static analysis
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253#c1).
     nsresult rv = mStyledRanges.MaybeAddRangeAndTruncateOverlaps(
-        rangesToAdd[i], &index, *selection);
+        MOZ_KnownLive(rangesToAdd[i]), &index, *selection);
     NS_ENSURE_SUCCESS(rv, rv);
     if (i == newAnchorFocusIndex) {
       *aOutIndex = index;
