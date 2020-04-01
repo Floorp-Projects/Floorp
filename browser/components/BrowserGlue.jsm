@@ -2931,7 +2931,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 93;
+    const UI_VERSION = 94;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3482,6 +3482,23 @@ BrowserGlue.prototype = {
           .then(() => enableProfilerButton(wasAddonActive))
           .catch(Cu.reportError);
       }, Cu.reportError);
+    }
+
+    // Clear unused socks proxy backup values - see bug 1625773.
+    if (currentUIVersion < 94) {
+      let backup = Services.prefs.getCharPref("network.proxy.backup.socks", "");
+      let backupPort = Services.prefs.getIntPref(
+        "network.proxy.backup.socks_port",
+        0
+      );
+      let socksProxy = Services.prefs.getCharPref("network.proxy.socks", "");
+      let socksPort = Services.prefs.getIntPref("network.proxy.socks_port", 0);
+      if (backup == socksProxy) {
+        Services.prefs.clearUserPref("network.proxy.backup.socks");
+      }
+      if (backupPort == socksPort) {
+        Services.prefs.clearUserPref("network.proxy.backup.socks_port");
+      }
     }
 
     // Update the migration version.
