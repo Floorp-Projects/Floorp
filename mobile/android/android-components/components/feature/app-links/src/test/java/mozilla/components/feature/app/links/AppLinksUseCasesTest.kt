@@ -169,12 +169,23 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `browser package names is lazily intialized`() {
+        val unguessable = "https://unguessable-test-url.com"
+        val context = createContext(unguessable to browserPackage)
+        val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
+        assertFalse(subject.browserPackageNames.isInitialized())
+    }
+
+    @Test
     fun `A list of browser package names can be generated if not supplied`() {
         val unguessable = "https://unguessable-test-url.com"
         val context = createContext(unguessable to browserPackage)
         val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
+        assertFalse(subject.browserPackageNames.isInitialized())
 
-        assertEquals(subject.browserPackageNames, setOf(browserPackage))
+        subject.appLinkRedirect(unguessable)
+        assertTrue(subject.browserPackageNames.isInitialized())
+        assertEquals(subject.browserPackageNames.value, setOf(browserPackage))
     }
 
     @Test
