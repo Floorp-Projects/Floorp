@@ -247,7 +247,7 @@ export function removeLineClass(
   line: number,
   className: string
 ) {
-  codeMirror.removeLineClass(line, "line", className);
+  codeMirror.removeLineClass(line, "wrapClass", className);
 }
 
 export function clearLineClass(codeMirror: Object, className: string) {
