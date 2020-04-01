@@ -95,6 +95,7 @@ impl App {
                     clip_id,
                 }
             ),
+            LayoutRect::new(LayoutPoint::zero(), bounds.size),
             color,
         );
 

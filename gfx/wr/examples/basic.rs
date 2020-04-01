@@ -229,6 +229,7 @@ impl Example for App {
                 (100, 100).to(200, 200),
                 SpaceAndClipInfo { spatial_id, clip_id },
             ),
+            (100, 100).to(200, 200),
             ColorF::new(0.0, 1.0, 0.0, 1.0),
         );
 
@@ -237,6 +238,7 @@ impl Example for App {
                 (250, 100).to(350, 200),
                 SpaceAndClipInfo { spatial_id, clip_id },
             ),
+            (250, 100).to(350, 200),
             ColorF::new(0.0, 1.0, 0.0, 1.0),
         );
         let border_side = BorderSide {

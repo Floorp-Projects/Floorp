@@ -43,6 +43,7 @@ impl Example for App {
         for _ in 0 .. self.rect_count {
             builder.push_rect(
                 &CommonItemProperties::new(bounds, space_and_clip),
+                bounds,
                 ColorF::new(1.0, 1.0, 1.0, 0.05)
             );
         }

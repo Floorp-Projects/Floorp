@@ -2564,19 +2564,17 @@ fn prim_flags(is_backface_visible: bool, prefer_compositor_surface: bool) -> Pri
 
 fn common_item_properties_for_rect(
     state: &mut WrState,
-    rect: LayoutRect,
-    clip: LayoutRect,
+    clip_rect: LayoutRect,
     is_backface_visible: bool,
     parent: &WrSpaceAndClipChain,
 ) -> CommonItemProperties {
     let space_and_clip = parent.to_webrender(state.pipeline_id);
-    let clip_rect = clip.intersection(&rect);
 
     CommonItemProperties {
         // NB: the damp-e10s talos-test will frequently crash on startup if we
         // early-return here for empty rects. I couldn't figure out why, but
         // it's pretty harmless to feed these through, so, uh, we do?
-        clip_rect: clip_rect.unwrap_or(LayoutRect::zero()),
+        clip_rect,
         clip_id: space_and_clip.clip_id,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
@@ -2595,9 +2593,9 @@ pub extern "C" fn wr_dp_push_rect(
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = common_item_properties_for_rect(state, rect, clip, is_backface_visible, parent);
+    let prim_info = common_item_properties_for_rect(state, clip, is_backface_visible, parent);
 
-    state.frame_builder.dl_builder.push_rect(&prim_info, color);
+    state.frame_builder.dl_builder.push_rect(&prim_info, rect, color);
 }
 
 #[no_mangle]
@@ -2612,7 +2610,7 @@ pub extern "C" fn wr_dp_push_rect_with_animation(
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = common_item_properties_for_rect(state, rect, clip, is_backface_visible, parent);
+    let prim_info = common_item_properties_for_rect(state, clip, is_backface_visible, parent);
 
     let anim = unsafe { animation.as_ref() };
     if let Some(anim) = anim {
@@ -2620,6 +2618,7 @@ pub extern "C" fn wr_dp_push_rect_with_animation(
         match anim.effect_type {
             WrAnimationType::BackgroundColor => state.frame_builder.dl_builder.push_rect_with_animation(
                 &prim_info,
+                rect,
                 PropertyBinding::Binding(PropertyBindingKey::new(anim.id), color),
             ),
             _ => unreachable!("Didn't expect {:?} animation", anim.effect_type),
@@ -2631,7 +2630,7 @@ pub extern "C" fn wr_dp_push_rect_with_animation(
 pub extern "C" fn wr_dp_push_rect_with_parent_clip(
     state: &mut WrState,
     rect: LayoutRect,
-    clip: LayoutRect,
+    clip_rect: LayoutRect,
     is_backface_visible: bool,
     parent: &WrSpaceAndClip,
     color: ColorF,
@@ -2640,20 +2639,15 @@ pub extern "C" fn wr_dp_push_rect_with_parent_clip(
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
 
-    let clip_rect = clip.intersection(&rect);
-    if clip_rect.is_none() {
-        return;
-    }
-
     let prim_info = CommonItemProperties {
-        clip_rect: clip_rect.unwrap(),
+        clip_rect,
         clip_id: space_and_clip.clip_id,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(is_backface_visible, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
     };
 
-    state.frame_builder.dl_builder.push_rect(&prim_info, color);
+    state.frame_builder.dl_builder.push_rect(&prim_info, rect, color);
 }
 
 #[no_mangle]
@@ -2713,27 +2707,22 @@ pub extern "C" fn wr_dp_push_backdrop_filter_with_parent_clip(
 pub extern "C" fn wr_dp_push_clear_rect(
     state: &mut WrState,
     rect: LayoutRect,
-    clip: LayoutRect,
+    clip_rect: LayoutRect,
     parent: &WrSpaceAndClipChain,
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
 
-    let clip_rect = clip.intersection(&rect);
-    if clip_rect.is_none() {
-        return;
-    }
-
     let prim_info = CommonItemProperties {
-        clip_rect: clip_rect.unwrap(),
+        clip_rect,
         clip_id: space_and_clip.clip_id,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(true, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
     };
 
-    state.frame_builder.dl_builder.push_clear_rect(&prim_info);
+    state.frame_builder.dl_builder.push_clear_rect(&prim_info, rect);
 }
 
 #[no_mangle]
@@ -2768,27 +2757,22 @@ pub extern "C" fn wr_dp_push_hit_test(
 pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
     state: &mut WrState,
     rect: LayoutRect,
-    clip: LayoutRect,
+    clip_rect: LayoutRect,
     parent: &WrSpaceAndClip,
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let space_and_clip = parent.to_webrender(state.pipeline_id);
 
-    let clip_rect = clip.intersection(&rect);
-    if clip_rect.is_none() {
-        return;
-    }
-
     let prim_info = CommonItemProperties {
-        clip_rect: clip_rect.unwrap(),
+        clip_rect,
         clip_id: space_and_clip.clip_id,
         spatial_id: space_and_clip.spatial_id,
         flags: prim_flags(true, /* prefer_compositor_surface */ false),
         hit_info: state.current_tag,
     };
 
-    state.frame_builder.dl_builder.push_clear_rect(&prim_info);
+    state.frame_builder.dl_builder.push_clear_rect(&prim_info, rect);
 }
 
 #[no_mangle]
