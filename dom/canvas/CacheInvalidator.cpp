@@ -10,7 +10,7 @@ namespace mozilla {
 
 void CacheInvalidator::InvalidateCaches() const {
   // The only sane approach is to require caches to remove invalidators.
-  while (mCaches.size()) {
+  while (!mCaches.empty()) {
     const auto& itr = mCaches.begin();
     const auto pEntry = *itr;
     pEntry->OnInvalidate();
