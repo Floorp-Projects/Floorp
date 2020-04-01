@@ -16,6 +16,7 @@ struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
+class PromiseObject;
 class ReadableByteStreamController;
 class ReadableStreamController;
 
@@ -27,7 +28,7 @@ extern MOZ_MUST_USE bool ReadableByteStreamControllerClose(
     JSContext* cx,
     JS::Handle<ReadableByteStreamController*> unwrappedController);
 
-extern MOZ_MUST_USE JSObject* ReadableStreamControllerPullSteps(
+extern MOZ_MUST_USE PromiseObject* ReadableStreamControllerPullSteps(
     JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController);
 
 }  // namespace js
