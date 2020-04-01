@@ -5786,6 +5786,19 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
   }
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult ContentParent::RecvNotifyPictureInPictureModeChanged(
+    const MaybeDiscarded<BrowsingContext>& aContext, bool aEnabled) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  if (RefPtr<MediaController> controller =
+          aContext.get_canonical()->GetMediaController()) {
+    controller->SetIsInPictureInPictureMode(aEnabled);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvUpdateSHEntriesInBC(
     PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
     const MaybeDiscarded<BrowsingContext>& aMaybeContext) {

@@ -1238,6 +1238,9 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aAudible);
 
+  mozilla::ipc::IPCResult RecvNotifyPictureInPictureModeChanged(
+      const MaybeDiscarded<BrowsingContext>& aContext, bool aEnabled);
+
   mozilla::ipc::IPCResult RecvNotifyMediaSessionUpdated(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aIsCreated);
 
