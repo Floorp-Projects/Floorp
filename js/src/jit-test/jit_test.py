@@ -171,7 +171,7 @@ def main(argv):
     op.add_argument('--remoteTestRoot', dest='remote_test_root', action='store',
                     type=str, default='/data/local/tests',
                     help='The remote directory to use as test root'
-                    ' (eg. /data/local/tests)')
+                    ' (e.g.  %(default)s)')
     op.add_argument('--localLib', dest='local_lib', action='store',
                     type=str,
                     help='The location of libraries to push -- preferably'
@@ -341,7 +341,7 @@ def main(argv):
     prologue = os.path.join(jittests.LIB_DIR, 'prologue.js')
     if options.remote:
         prologue = posixpath.join(options.remote_test_root,
-                                  'jit-tests', 'jit-tests', 'lib', 'prologue.js')
+                                  'tests', 'tests', 'lib', 'prologue.js')
 
     prefix += ['-f', prologue]
 
