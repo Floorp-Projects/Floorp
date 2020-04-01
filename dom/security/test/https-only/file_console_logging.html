@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1625448 - HTTPS Only Mode - Tests for console logging</title>
+</head>
+<body>
+  <!-- These files don't exist since we only care if the webserver can respond. -->
+  <!-- This request can get upgraded. -->
+  <img src="http://example.com/file_1.jpg">
+  <!-- This request can't get upgraded -->
+  <img src="http://mochi.test:8888/file_2.jpg">
+</body>
+</html>
