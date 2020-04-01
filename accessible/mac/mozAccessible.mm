@@ -592,22 +592,21 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
       proxy->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
     }
   } else if ([action isEqualToString:NSAccessibilityShowMenuAction]) {
-    DesktopIntRect geckoRect;
+    // We don't need to convert this rect into mac coordinates because the
+    // mouse event synthesizer expects layout (gecko) coordinates.
+    LayoutDeviceIntRect geckoRect;
     id objOrView = nil;
     if (accWrap) {
-      geckoRect = DesktopIntRect::FromUnknownRect(accWrap->Bounds());
+      geckoRect = LayoutDeviceIntRect::FromUnknownRect(accWrap->Bounds());
       objOrView =
           GetObjectOrRepresentedView(GetNativeFromGeckoAccessible(accWrap->RootAccessible()));
     } else if (proxy) {
-      geckoRect = DesktopIntRect::FromUnknownRect(proxy->Bounds());
+      geckoRect = LayoutDeviceIntRect::FromUnknownRect(proxy->Bounds());
       objOrView = GetObjectOrRepresentedView(
           GetNativeFromGeckoAccessible(proxy->OuterDocOfRemoteBrowser()->RootAccessible()));
     }
 
-    NSRect cocoaRect =
-        NSMakeRect(geckoRect.x, geckoRect.YMost(), geckoRect.width, geckoRect.height);
-    LayoutDeviceIntPoint p =
-        LayoutDeviceIntPoint(NSToIntRound(NSMidX(cocoaRect)), NSToIntRound(NSMidY(cocoaRect)));
+    LayoutDeviceIntPoint p = LayoutDeviceIntPoint(geckoRect.X(), geckoRect.Y());
     nsIWidget* widget = [objOrView widget];
     // XXX: NSRightMouseDown is depreciated in 10.12, should be
     // changed to NSEventTypeRightMouseDown after refactoring.
