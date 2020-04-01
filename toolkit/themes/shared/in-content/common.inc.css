@@ -380,7 +380,7 @@ xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon[src] {
 }
 
 xul|*.close-icon > xul|*.button-box {
-  padding-block: 0 ;
+  padding-block: 0;
   padding-inline: 0 !important;
 }
 
