@@ -596,9 +596,9 @@ set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')
 # Do not remove until Cranelift supports multi-value.
 # =====================================================
 
-@depends(milestone.is_nightly, building_js)
-def default_wasm_multi_value(is_nightly, building_js):
-    return is_nightly and building_js
+@depends(milestone.is_nightly)
+def default_wasm_multi_value(is_nightly):
+    return is_nightly
 
 js_option('--enable-wasm-multi-value',
           default=default_wasm_multi_value,
