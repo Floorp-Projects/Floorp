@@ -113,7 +113,8 @@ class WindowProxyHolder;
   FIELD(CurrentOrientationAngle, float)                                      \
   FIELD(CurrentOrientationType, mozilla::dom::OrientationType)               \
   FIELD(UserAgentOverride, nsString)                                         \
-  FIELD(EmbedderElementType, Maybe<nsString>)
+  FIELD(EmbedderElementType, Maybe<nsString>)                                \
+  FIELD(MessageManagerGroup, nsString)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -649,6 +650,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_EmbedderElementType>,
               const Maybe<nsString>& aInitiatorType, ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_MessageManagerGroup>,
+              const nsString& aMessageManagerGroup, ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_AllowContentRetargeting>,
               const bool& aAllowContentRetargeting, ContentParent* aSource);

@@ -408,16 +408,25 @@ void BrowsingContext::CleanUpDanglingRemoteOuterWindowProxies(
 
 void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
   mEmbeddedByThisProcess = true;
-  // Notify the parent process of the embedding status. We don't need to do
+
+  // Update embedder-element-specific fields in a shared transaction.
   // this when clearing our embedder, as we're being destroyed either way.
   if (aEmbedder) {
+    Transaction txn;
+    txn.SetEmbedderElementType(Some(aEmbedder->LocalName()));
     if (nsCOMPtr<nsPIDOMWindowInner> inner =
             do_QueryInterface(aEmbedder->GetOwnerGlobal())) {
-      Transaction txn;
       txn.SetEmbedderInnerWindowId(inner->WindowID());
-      txn.SetEmbedderElementType(Some(aEmbedder->LocalName()));
-      txn.Commit(this);
     }
+    if (XRE_IsParentProcess() && IsTopContent()) {
+      nsAutoString messageManagerGroup;
+      if (aEmbedder->IsXULElement()) {
+        aEmbedder->GetAttr(kNameSpaceID_None, nsGkAtoms::messagemanagergroup,
+                           messageManagerGroup);
+      }
+      txn.SetMessageManagerGroup(messageManagerGroup);
+    }
+    txn.Commit(this);
   }
 
   mEmbedderElement = aEmbedder;
@@ -1614,6 +1623,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsPopupSpam>) {
   if (GetIsPopupSpam()) {
     PopupBlocker::RegisterOpenPopupSpam();
   }
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_MessageManagerGroup>,
+                             const nsString& aMessageManagerGroup,
+                             ContentParent* aSource) {
+  // Should only be set in the parent process on toplevel.
+  return XRE_IsParentProcess() && !aSource && IsTopContent();
 }
 
 bool BrowsingContext::IsLoading() {
