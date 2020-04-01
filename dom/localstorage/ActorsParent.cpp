@@ -642,15 +642,15 @@ nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
   MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
   MOZ_ASSERT(aConnection);
 
-  nsCOMPtr<nsIFile> databaseFile;
-  nsresult rv =
-      NS_NewLocalFile(aDatabaseFilePath, false, getter_AddRefs(databaseFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto databaseFileOrErr = QM_NewLocalFile(aDatabaseFilePath);
+  if (NS_WARN_IF(databaseFileOrErr.isErr())) {
+    return databaseFileOrErr.unwrapErr();
   }
 
+  nsCOMPtr<nsIFile> databaseFile = databaseFileOrErr.unwrap();
+
   bool exists;
-  rv = databaseFile->Exists(&exists);
+  nsresult rv = databaseFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -685,14 +685,14 @@ nsresult GetArchiveFile(const nsAString& aStoragePath, nsIFile** aArchiveFile) {
   MOZ_ASSERT(!aStoragePath.IsEmpty());
   MOZ_ASSERT(aArchiveFile);
 
-  nsCOMPtr<nsIFile> archiveFile;
-  nsresult rv =
-      NS_NewLocalFile(aStoragePath, false, getter_AddRefs(archiveFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto archiveFileOrErr = QM_NewLocalFile(aStoragePath);
+  if (NS_WARN_IF(archiveFileOrErr.isErr())) {
+    return archiveFileOrErr.unwrapErr();
   }
 
-  rv = archiveFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_FILE_NAME));
+  nsCOMPtr<nsIFile> archiveFile = archiveFileOrErr.unwrap();
+
+  nsresult rv = archiveFile->Append(NS_LITERAL_STRING(LS_ARCHIVE_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -826,13 +826,15 @@ nsresult GetShadowFile(const nsAString& aBasePath, nsIFile** aArchiveFile) {
   MOZ_ASSERT(!aBasePath.IsEmpty());
   MOZ_ASSERT(aArchiveFile);
 
-  nsCOMPtr<nsIFile> archiveFile;
-  nsresult rv = NS_NewLocalFile(aBasePath, false, getter_AddRefs(archiveFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto archiveFileOrErr = QM_NewLocalFile(aBasePath);
+  if (NS_WARN_IF(archiveFileOrErr.isErr())) {
+    return archiveFileOrErr.unwrapErr();
   }
 
-  rv = archiveFile->Append(NS_LITERAL_STRING(WEB_APPS_STORE_FILE_NAME));
+  nsCOMPtr<nsIFile> archiveFile = archiveFileOrErr.unwrap();
+
+  nsresult rv =
+      archiveFile->Append(NS_LITERAL_STRING(WEB_APPS_STORE_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1102,14 +1104,14 @@ nsresult GetUsageFile(const nsAString& aDirectoryPath, nsIFile** aUsageFile) {
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
   MOZ_ASSERT(aUsageFile);
 
-  nsCOMPtr<nsIFile> usageFile;
-  nsresult rv =
-      NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto usageFileOrErr = QM_NewLocalFile(aDirectoryPath);
+  if (NS_WARN_IF(usageFileOrErr.isErr())) {
+    return usageFileOrErr.unwrapErr();
   }
 
-  rv = usageFile->Append(NS_LITERAL_STRING(USAGE_FILE_NAME));
+  nsCOMPtr<nsIFile> usageFile = usageFileOrErr.unwrap();
+
+  nsresult rv = usageFile->Append(NS_LITERAL_STRING(USAGE_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1124,14 +1126,15 @@ nsresult GetUsageJournalFile(const nsAString& aDirectoryPath,
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
   MOZ_ASSERT(aUsageJournalFile);
 
-  nsCOMPtr<nsIFile> usageJournalFile;
-  nsresult rv =
-      NS_NewLocalFile(aDirectoryPath, false, getter_AddRefs(usageJournalFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto usageJournalFileOrErr = QM_NewLocalFile(aDirectoryPath);
+  if (NS_WARN_IF(usageJournalFileOrErr.isErr())) {
+    return usageJournalFileOrErr.unwrapErr();
   }
 
-  rv = usageJournalFile->Append(NS_LITERAL_STRING(USAGE_JOURNAL_FILE_NAME));
+  nsCOMPtr<nsIFile> usageJournalFile = usageJournalFileOrErr.unwrap();
+
+  nsresult rv =
+      usageJournalFile->Append(NS_LITERAL_STRING(USAGE_JOURNAL_FILE_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4271,12 +4274,12 @@ nsresult Connection::EnsureStorageConnection() {
     return rv;
   }
 
-  nsCOMPtr<nsIFile> directoryEntry;
-  rv = NS_NewLocalFile(originDirectoryPath, false,
-                       getter_AddRefs(directoryEntry));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto directoryEntryOrErr = QM_NewLocalFile(originDirectoryPath);
+  if (NS_WARN_IF(directoryEntryOrErr.isErr())) {
+    return directoryEntryOrErr.unwrapErr();
   }
+
+  nsCOMPtr<nsIFile> directoryEntry = directoryEntryOrErr.unwrap();
 
   rv = directoryEntry->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
