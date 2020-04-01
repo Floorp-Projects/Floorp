@@ -123,8 +123,6 @@ class TextDrawTarget : public DrawTarget {
     return true;
   }
 
-  wr::RenderRoot GetRenderRoot() { return mResources->GetRenderRoot(); }
-
   wr::FontInstanceFlags GetWRGlyphFlags() const { return mWRGlyphFlags; }
   void SetWRGlyphFlags(wr::FontInstanceFlags aFlags) { mWRGlyphFlags = aFlags; }
 
