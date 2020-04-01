@@ -525,8 +525,14 @@
       this.appendChild(MozXULElement.parseXULToFragment(this._markup));
 
       MozXULElement.insertFTLIfNeeded("toolkit/global/wizard.ftl");
-      document.l10n.connectRoot(this);
-      document.l10n.translateFragment(this);
+      document.addEventListener(
+        "DOMContentLoaded",
+        e => {
+          document.l10n.connectRoot(this);
+          document.l10n.translateRoots();
+        },
+        { once: true }
+      );
 
       this._wizardButtonDeck = this.querySelector(".wizard-next-deck");
 
