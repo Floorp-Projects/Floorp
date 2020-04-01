@@ -955,7 +955,7 @@ impl YamlFrameReader {
         &mut self,
         dl: &mut DisplayListBuilder,
         item: &Yaml,
-        info: &mut CommonItemProperties,
+        info: &CommonItemProperties,
     ) {
         let bounds_key = if item["type"].is_badvalue() {
             "rect"
@@ -963,26 +963,19 @@ impl YamlFrameReader {
             "bounds"
         };
 
-        info.clip_rect = try_intersect!(
-            self.resolve_rect(&item[bounds_key]),
-            &info.clip_rect
-        );
-
+        let bounds = self.resolve_rect(&item[bounds_key]);
         let color = self.resolve_colorf(&item["color"], ColorF::BLACK);
-        dl.push_rect(&info, color);
+        dl.push_rect(&info, bounds, color);
     }
 
     fn handle_clear_rect(
         &mut self,
         dl: &mut DisplayListBuilder,
         item: &Yaml,
-        info: &mut CommonItemProperties,
+        info: &CommonItemProperties,
     ) {
-        info.clip_rect = try_intersect!(
-            item["bounds"].as_rect().expect("clear-rect type must have bounds"),
-            &info.clip_rect
-        );
-        dl.push_clear_rect(&info);
+        let bounds = item["bounds"].as_rect().expect("clear-rect type must have bounds");
+        dl.push_clear_rect(&info, bounds);
     }
 
     fn handle_hit_test(

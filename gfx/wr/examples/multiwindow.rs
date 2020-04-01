@@ -201,6 +201,10 @@ impl Window {
                 ),
                 space_and_clip,
             ),
+            LayoutRect::new(
+                LayoutPoint::new(100.0, 200.0),
+                LayoutSize::new(100.0, 200.0),
+            ),
             ColorF::new(0.0, 1.0, 0.0, 1.0));
 
         let text_bounds = LayoutRect::new(

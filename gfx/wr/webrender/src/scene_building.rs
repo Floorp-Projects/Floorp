@@ -1194,9 +1194,9 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::Rectangle(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties(
+                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
-                    None,
+                    &info.bounds,
                     apply_pipeline_clip,
                 );
 
@@ -1220,9 +1220,9 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::ClearRectangle(ref info) => {
-                let (layout, _, clip_and_scroll) = self.process_common_properties(
+                let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
-                    None,
+                    &info.bounds,
                     apply_pipeline_clip,
                 );
 
