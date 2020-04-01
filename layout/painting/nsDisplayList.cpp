@@ -1581,8 +1581,6 @@ void nsDisplayListBuilder::ComputeDefaultRenderRootRect(
   LayoutDeviceIntRegion cutout;
   LayoutDeviceIntRect clientRect(LayoutDeviceIntPoint(), aClientSize);
   cutout.OrWith(clientRect);
-  cutout.SubOut(
-      RoundedToInt(mRenderRootRects[mozilla::wr::RenderRoot::Content]));
 
   mRenderRootRects[mozilla::wr::RenderRoot::Default] =
       LayoutDeviceRect(cutout.GetBounds());
