@@ -11,6 +11,7 @@
 
 #include "mozilla/Result.h"
 
+#include <iterator>
 #include <type_traits>
 
 namespace mozilla {
