@@ -252,7 +252,8 @@ function validatedWebRemoteType(
 
   if (
     allowLinkedWebInFileUriProcess &&
-    // This is not supported with documentchannel
+    // This is not supported with documentchannel and will go away in
+    // Bug 1603007
     !documentChannel &&
     aPreferredRemoteType == FILE_REMOTE_TYPE
   ) {
@@ -261,6 +262,9 @@ function validatedWebRemoteType(
     // when it is same origin as target or the current URI is already a
     // file:// URI.
     if (aCurrentUri) {
+      if (aCurrentUri.scheme == "file" || aCurrentUri.spec == "about:blank") {
+        return FILE_REMOTE_TYPE;
+      }
       try {
         // checkSameOriginURI throws when not same origin.
         // todo: if you intend to update CheckSameOriginURI to log the error to the
@@ -838,6 +842,8 @@ var E10SUtils = {
     let { useRemoteSubframes } = aDocShell;
     this.log().debug(`shouldLoadURI(${this._uriStr(aURI)})`);
 
+    let remoteType = Services.appinfo.remoteType;
+
     // Inner frames should always load in the current process
     // XXX(nika): Handle shouldLoadURI-triggered process switches for remote
     // subframes! (bug 1548942)
@@ -849,7 +855,7 @@ var E10SUtils = {
     let sessionHistory = webNav.sessionHistory;
     if (
       !aHasPostData &&
-      Services.appinfo.remoteType == WEB_REMOTE_TYPE &&
+      remoteType == WEB_REMOTE_TYPE &&
       sessionHistory.count == 1 &&
       webNav.currentURI.spec == "about:newtab"
     ) {
@@ -868,7 +874,7 @@ var E10SUtils = {
     // We should never be sending a POST request from the parent process to a
     // http(s) uri, so make sure we switch if we're currently in that process.
     if (
-      Services.appinfo.remoteType != NOT_REMOTE &&
+      remoteType != NOT_REMOTE &&
       (useRemoteSubframes || documentChannel) &&
       kDocumentChannelAllowedSchemes.includes(aURI.scheme)
     ) {
@@ -884,7 +890,7 @@ var E10SUtils = {
       aDocShell.browsingContext.group.getToplevels().length == 1;
     if (
       !aHasPostData &&
-      Services.appinfo.remoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
+      remoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
       !aDocShell.awaitingLargeAlloc &&
       isOnlyToplevelBrowsingContext
     ) {
@@ -893,6 +899,14 @@ var E10SUtils = {
       );
       return false;
     }
+
+    let wantRemoteType = this.getRemoteTypeForURIObject(
+      aURI,
+      true,
+      useRemoteSubframes,
+      remoteType,
+      webNav.currentURI
+    );
 
     // Allow history load if loaded in this process before.
     let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
@@ -908,14 +922,6 @@ var E10SUtils = {
 
       // If not originally loaded in this process allow it if the URI would
       // normally be allowed to load in this process by default.
-      let remoteType = Services.appinfo.remoteType;
-      let wantRemoteType = this.getRemoteTypeForURIObject(
-        aURI,
-        true,
-        useRemoteSubframes,
-        remoteType,
-        webNav.currentURI
-      );
       this.log().debug(
         `Checking remote type, got: ${remoteType} want: ${wantRemoteType}\n`
       );
@@ -923,7 +929,7 @@ var E10SUtils = {
     }
 
     // If the URI can be loaded in the current process then continue
-    return this.shouldLoadURIInThisProcess(aURI, useRemoteSubframes);
+    return remoteType == wantRemoteType;
   },
 
   redirectLoad(
