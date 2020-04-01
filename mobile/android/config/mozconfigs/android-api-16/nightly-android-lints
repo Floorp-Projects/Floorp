@@ -30,8 +30,7 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 
 export MOZILLA_OFFICIAL=1
 
-. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
-
+# mozconfigs/common.override would be here, but it needs to be last in the file.
 # End ../android-api-16/nightly.
 
 # Disable Keyfile Loading (and checks) since.
@@ -39,3 +38,5 @@ export MOZILLA_OFFICIAL=1
 ac_add_options --without-mozilla-api-keyfile
 ac_add_options --without-google-location-service-api-keyfile
 ac_add_options --without-google-safebrowsing-api-keyfile
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
