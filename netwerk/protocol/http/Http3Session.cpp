@@ -191,7 +191,7 @@ Http3Session::~Http3Session() {
 //   HttpConnectionUDP::OnInputStreamReady ->
 //   HttpConnectionUDP::OnSocketReadable ->
 //   Http3Session::WriteSegmentsAgain
-nsresult Http3Session::ProcessInput() {
+nsresult Http3Session::ProcessInput(uint32_t* aCountRead) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mSegmentReaderWriter);
 
@@ -199,14 +199,15 @@ nsresult Http3Session::ProcessInput() {
        mSegmentReaderWriter.get(), this, mState));
 
   uint8_t packet[UDP_MAX_PACKET_SIZE];
-  uint32_t read = 0;
   nsresult rv = NS_OK;
   // Read from socket until NS_BASE_STREAM_WOULD_BLOCK or another error.
   do {
+    uint32_t read = 0;
     rv = mSegmentReaderWriter->OnWriteSegment((char*)packet,
                                               UDP_MAX_PACKET_SIZE, &read);
     if (NS_SUCCEEDED(rv)) {
       mHttp3Connection->ProcessInput(packet, read);
+      *aCountRead += read;
     }
   } while (NS_SUCCEEDED(rv));
   // Call ProcessHttp3 if there has not been any socket error.
@@ -286,7 +287,7 @@ nsresult Http3Session::ProcessTransactionRead(Http3Stream* stream,
   return NS_OK;
 }
 
-nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten) {
+nsresult Http3Session::ProcessEvents(uint32_t count) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   LOG(("Http3Session::ProcessEvents [this=%p]", this));
@@ -306,7 +307,8 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten) {
           id = event.data_readable.stream_id;
         }
 
-        nsresult rv = ProcessTransactionRead(id, count, countWritten);
+        uint32_t read = 0;
+        nsresult rv = ProcessTransactionRead(id, count, &read);
 
         if (NS_FAILED(rv)) {
           LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32,
@@ -457,8 +459,7 @@ nsresult Http3Session::ProcessOutputAndEvents() {
     return rv;
   }
   mHttp3Connection->ProcessHttp3();
-  uint32_t n = 0;
-  return ProcessEvents(nsIOService::gDefaultSegmentSize, &n);
+  return ProcessEvents(nsIOService::gDefaultSegmentSize);
 }
 
 void Http3Session::SetupTimer(uint64_t aTimeout) {
@@ -798,7 +799,7 @@ void Http3Session::MaybeResumeSend() {
   }
 }
 
-nsresult Http3Session::ProcessSlowConsumers(uint32_t* countWritten) {
+nsresult Http3Session::ProcessSlowConsumers() {
   if (mSlowConsumersReadyForRead.GetSize() == 0) {
     return NS_OK;
   }
@@ -806,10 +807,11 @@ nsresult Http3Session::ProcessSlowConsumers(uint32_t* countWritten) {
   Http3Stream* slowConsumer =
       static_cast<Http3Stream*>(mSlowConsumersReadyForRead.PopFront());
 
+  uint32_t countRead = 0;
   nsresult rv = ProcessTransactionRead(slowConsumer,
-      nsIOService::gDefaultSegmentSize, countWritten);
+      nsIOService::gDefaultSegmentSize, &countRead);
 
-  if (NS_SUCCEEDED(rv) && (*countWritten > 0) && !slowConsumer->Done()) {
+  if (NS_SUCCEEDED(rv) && (countRead > 0) && !slowConsumer->Done()) {
     // There have been buffered bytes successfully fed into the
     // formerly blocked consumer. Repeat until buffer empty or
     // consumer is blocked again.
@@ -832,20 +834,20 @@ nsresult Http3Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
   *again = false;
 
   // Process slow consumers.
-  nsresult rv = ProcessSlowConsumers(countWritten);
+  nsresult rv = ProcessSlowConsumers();
   if (NS_FAILED(rv)) {
     LOG3(("Http3Session %p ProcessSlowConsumers returns 0x%" PRIx32 "\n", this,
           static_cast<uint32_t>(rv)));
     return rv;
   }
 
-  rv = ProcessInput();
+  rv = ProcessInput(countWritten);
   if (NS_FAILED(rv)) {
     LOG3(("Http3Session %p processInput returns 0x%" PRIx32 "\n", this,
           static_cast<uint32_t>(rv)));
     return rv;
   }
-  rv = ProcessEvents(count, countWritten);
+  rv = ProcessEvents(count);
   if (NS_FAILED(rv)) {
     return rv;
   }
