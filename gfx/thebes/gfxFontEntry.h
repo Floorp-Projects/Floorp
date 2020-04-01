@@ -770,7 +770,8 @@ enum class FontVisibility : uint8_t {
   LangPack = 2,  // From an optional OS component such as language support
   User = 3,      // User-installed font (or installed by another app, etc)
   Hidden = 4,    // Internal system font, should never exposed to users
-  Count = 5,     // Count of values, for IPC serialization
+  Webfont = 5,   // Webfont defined by @font-face
+  Count = 6,     // Count of values, for IPC serialization
 };
 
 namespace IPC {
@@ -944,6 +945,9 @@ class gfxFontFamily {
 
   FontVisibility Visibility() const { return mVisibility; }
   bool IsHidden() const { return Visibility() == FontVisibility::Hidden; }
+  bool IsWebFontFamily() const {
+    return Visibility() == FontVisibility::Webfont;
+  }
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
