@@ -564,7 +564,7 @@ void Http3Session::RemoveStreamFromQueues(Http3Stream* aStream) {
   RemoveStreamFromQueue(aStream, mReadyForWrite);
   RemoveStreamFromQueue(aStream, mQueuedStreams);
   mReadyForWriteButBlocked.RemoveElement(aStream->StreamId());
-  RemoveStreamFromQueue(aStream, mSlowConsumersReadyForRead);
+  mSlowConsumersReadyForRead.RemoveElement(aStream);
 }
 
 // This is called by Http3Stream::OnReadSegment.
@@ -800,12 +800,12 @@ void Http3Session::MaybeResumeSend() {
 }
 
 nsresult Http3Session::ProcessSlowConsumers() {
-  if (mSlowConsumersReadyForRead.GetSize() == 0) {
+  if (mSlowConsumersReadyForRead.IsEmpty()) {
     return NS_OK;
   }
 
-  Http3Stream* slowConsumer =
-      static_cast<Http3Stream*>(mSlowConsumersReadyForRead.PopFront());
+  RefPtr<Http3Stream> slowConsumer = mSlowConsumersReadyForRead.ElementAt(0);
+  mSlowConsumersReadyForRead.RemoveElementAt(0);
 
   uint32_t countRead = 0;
   nsresult rv = ProcessTransactionRead(slowConsumer,
@@ -1170,7 +1170,7 @@ void Http3Session::TransactionHasDataToRecv(nsAHttpTransaction* caller) {
 void Http3Session::ConnectSlowConsumer(Http3Stream* stream) {
   LOG3(("Http3Session::ConnectSlowConsumer %p 0x%" PRIx64 "\n", this,
         stream->StreamId()));
-  mSlowConsumersReadyForRead.Push(stream);
+  mSlowConsumersReadyForRead.AppendElement(stream);
   Unused << ForceRecv();
 }
 

@@ -142,7 +142,7 @@ class Http3Session final : public nsAHttpTransaction,
 
   nsDeque mReadyForWrite;
   nsTArray<uint64_t> mReadyForWriteButBlocked;
-  nsDeque mSlowConsumersReadyForRead;
+  nsTArray<RefPtr<Http3Stream>> mSlowConsumersReadyForRead;
   nsDeque mQueuedStreams;
 
   enum State { INITIALIZING, CONNECTED, CLOSING, CLOSED } mState;
