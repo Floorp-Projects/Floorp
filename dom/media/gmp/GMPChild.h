@@ -69,7 +69,7 @@ class GMPChild : public PGMPChild {
 
   nsTArray<std::pair<nsCString, nsCString>> MakeCDMHostVerificationPaths();
 
-  nsTArray<RefPtr<GMPContentChild>> mGMPContentChildren;
+  nsTArray<UniquePtr<GMPContentChild>> mGMPContentChildren;
 
   RefPtr<GMPTimerChild> mTimerChild;
   RefPtr<GMPStorageChild> mStorage;
