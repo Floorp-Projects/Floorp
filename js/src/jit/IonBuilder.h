@@ -392,6 +392,7 @@ class MOZ_STACK_CLASS IonBuilder {
       bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
   AbortReasonOr<Ok> arithTryBinaryStub(bool* emitted, JSOp op,
                                        MDefinition* left, MDefinition* right);
+  MDefinition* maybeConvertToNumber(MDefinition* def);
 
   // jsop_bitop helpers.
   AbortReasonOr<MBinaryBitwiseInstruction*> binaryBitOpEmit(

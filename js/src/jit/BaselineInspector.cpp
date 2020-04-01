@@ -241,7 +241,9 @@ static void SkipBinaryGuards(CacheIRReader& reader) {
     if (reader.matchOp(CacheOp::GuardToInt32) ||
         reader.matchOp(CacheOp::GuardType) ||
         reader.matchOp(CacheOp::TruncateDoubleToUInt32) ||
-        reader.matchOp(CacheOp::GuardToBoolean)) {
+        reader.matchOp(CacheOp::GuardToBoolean) ||
+        reader.matchOp(CacheOp::GuardAndGetNumberFromString) ||
+        reader.matchOp(CacheOp::GuardAndGetInt32FromNumber)) {
       reader.skip();  // Skip over operandId
       reader.skip();  // Skip over result/type.
       continue;
