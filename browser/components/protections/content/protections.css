@@ -143,33 +143,33 @@ a.hidden,
   z-index: 1;
 }
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --social-highlight-color: #9661FF;
-      --cookie-highlight-color: #2BA8FF;
-      --tracker-highlight-color: #39E1BC;
-      --fingerprinter-highlight-color: #FFB65E;
-      --cryptominer-highlight-color: #BEBECA;
-    }
 
-    .etp-card .icon.dark {
-      display: block;
-    }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --social-highlight-color: #9661FF;
+    --cookie-highlight-color: #2BA8FF;
+    --tracker-highlight-color: #39E1BC;
+    --fingerprinter-highlight-color: #FFB65E;
+    --cryptominer-highlight-color: #BEBECA;
+  }
 
-    .etp-card .icon.light {
-      display: none;
-    }
+  .etp-card .icon.dark {
+    display: block;
+  }
 
-    .mobile-app-icon.dark {
-      display: block;
-    }
+  .etp-card .icon.light {
+    display: none;
+  }
 
-    .mobile-app-icon.light {
-      display: none;
-    }
+  .mobile-app-icon.dark {
+    display: block;
+  }
+
+  .mobile-app-icon.light {
+    display: none;
   }
 }
+
 
 .card {
   display: grid;

@@ -4,13 +4,11 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   /* Don't apply scrollbar-color since it removes the native scrollbar style on Linux */
   :root {
     scrollbar-color: initial;
   }
-}
 }
 
 xul|tab[visuallyselected] {

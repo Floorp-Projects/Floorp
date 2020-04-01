@@ -29,13 +29,11 @@ p {
   height: 52px;
 }
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   #header > img {
     -moz-context-properties: fill;
     fill: currentColor;
   }
-}
 }
 
 #content {

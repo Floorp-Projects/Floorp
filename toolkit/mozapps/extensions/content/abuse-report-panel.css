@@ -37,14 +37,12 @@
   --input-radio-focus-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
 @media (prefers-color-scheme: dark) {
   :root {
     --input-radio-background: #202023;
     --input-radio-background-hover: #303033;
     --input-radio-background-active: #404044;
   }
-}
 }
 
 /* Ensure that the document (embedded in the XUL about:addons using a

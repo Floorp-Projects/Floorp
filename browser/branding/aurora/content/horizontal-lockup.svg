@@ -112,12 +112,10 @@
       fill: url(#u);
     }
 
-    @supports -moz-bool-pref("browser.in-content.dark-mode") {
     @media (prefers-color-scheme: dark) {
       .channel-name {
         fill: url(#v);
       }
-    }
     }
   </style>
   <path fill="#09204d" d="M22.361 46.629l2.442 6.77 3.669 4.951 8.614 1.644 4.121 0.35 7.036-1.758 3.031-2.905-28.913-9.052z"/>
