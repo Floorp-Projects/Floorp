@@ -30,7 +30,6 @@ NS_DEFINE_NAMED_CID(NS_COLORPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FILEPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
-NS_DEFINE_NAMED_CID(NS_SHAREPICKER_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
@@ -59,8 +58,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
      Module::CONTENT_PROCESS_ONLY},
     {"@mozilla.org/sound;1", &kNS_SOUND_CID, Module::CONTENT_PROCESS_ONLY},
     {"@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID,
-     Module::CONTENT_PROCESS_ONLY},
-    {"@mozilla.org/sharepicker;1", &kNS_SHAREPICKER_CID,
      Module::CONTENT_PROCESS_ONLY},
     {nullptr}};
 
