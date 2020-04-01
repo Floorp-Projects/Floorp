@@ -24,6 +24,8 @@
 
 #include "harfbuzz/hb.h"
 
+#include "StandardFonts-win10.inc"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::intl::OSPreferences;
@@ -992,6 +994,17 @@ gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
   return fe;
 }
 
+FontVisibility gfxDWriteFontList::GetVisibilityForFamily(
+    const nsACString& aName) const {
+  if (FamilyInList(aName, kBaseFonts, ArrayLength(kBaseFonts))) {
+    return FontVisibility::Base;
+  }
+  if (FamilyInList(aName, kLangPackFonts, ArrayLength(kLangPackFonts))) {
+    return FontVisibility::Base;
+  }
+  return FontVisibility::User;
+}
+
 void gfxDWriteFontList::AppendFamiliesFromCollection(
     IDWriteFontCollection* aCollection,
     nsTArray<fontlist::Family::InitData>& aFamilies,
@@ -1012,7 +1025,7 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
     BuildKeyNameFromFontName(key);
     bool bad = mBadUnderlineFamilyNames.ContainsSorted(key);
     bool classic = aForceClassicFams && aForceClassicFams->ContainsSorted(key);
-    FontVisibility visibility = FontVisibility::Unknown;  // TODO
+    FontVisibility visibility = GetVisibilityForFamily(name);
     aFamilies.AppendElement(fontlist::Family::InitData(
         key, name, i, visibility, aCollection != mSystemFonts, bad, classic));
   }
@@ -1504,7 +1517,7 @@ void gfxDWriteFontList::GetFontsFromCollection(
       continue;
     }
 
-    FontVisibility visibility = FontVisibility::Unknown;  // TODO
+    FontVisibility visibility = GetVisibilityForFamily(familyName);
 
     fam = new gfxDWriteFontFamily(familyName, visibility, family,
                                   aCollection == mSystemFonts);
