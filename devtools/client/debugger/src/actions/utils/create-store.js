@@ -11,7 +11,7 @@
  * @module utils/create-store
  */
 
-import { createStore, applyMiddleware } from "redux";
+import { createStore, applyMiddleware, type StoreCreator } from "redux";
 import { waitUntilService } from "./middleware/wait-service";
 import { log } from "./middleware/log";
 import { history } from "./middleware/history";
@@ -45,8 +45,10 @@ type ReduxStoreOptions = {
  * @memberof utils/create-store
  * @static
  */
-const configureStore = (opts: ReduxStoreOptions = {}) => {
-  const middleware = [
+const configureStore = (
+  opts: ReduxStoreOptions = {}
+): StoreCreator<any, any, any> => {
+  const middleware: any = [
     thunk(opts.makeThunkArgs),
     context,
     promise,
