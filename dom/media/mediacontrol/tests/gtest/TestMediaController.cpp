@@ -187,3 +187,15 @@ TEST(MediaController, ControllerShouldRemainPlayingIfAnyPlayingMediaExists)
   // both foo and bar have been destroyed, no playing media exists.
   ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Paused);
 }
+
+TEST(MediaController, PictureInPictureMode)
+{
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
+  ASSERT_TRUE(!controller->IsInPictureInPictureMode());
+
+  controller->SetIsInPictureInPictureMode(true);
+  ASSERT_TRUE(controller->IsInPictureInPictureMode());
+
+  controller->SetIsInPictureInPictureMode(false);
+  ASSERT_TRUE(!controller->IsInPictureInPictureMode());
+}
