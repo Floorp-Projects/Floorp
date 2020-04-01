@@ -1,4 +1,0 @@
-EXTRA_COMPONENTS += [
-    'SharePicker.js',
-    'SharePicker.manifest',
-]

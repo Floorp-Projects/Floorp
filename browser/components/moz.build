@@ -57,7 +57,6 @@ DIRS += [
     'uitour',
     'urlbar',
     'translation',
-    'webshare',
 ]
 
 DIRS += ['build']
