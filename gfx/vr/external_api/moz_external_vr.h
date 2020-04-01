@@ -142,6 +142,9 @@ enum class VRControllerType : uint8_t {
   OculusGo,
   OculusTouch,
   OculusTouch2,
+  PicoGaze,
+  PicoG2,
+  PicoNeo2,
   _end
 };
 
