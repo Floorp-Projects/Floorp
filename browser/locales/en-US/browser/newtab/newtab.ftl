@@ -60,6 +60,11 @@ newtab-menu-section-tooltip =
     .title = Open menu
     .aria-label = Open menu
 
+# Tooltip for dismiss button
+newtab-dismiss-button-tooltip =
+    .title = Remove
+    .aria-label = Remove
+
 # This tooltip is for the context menu of Pocket cards or Topsites
 # Variables:
 #  $title (String): The label or hostname of the site. This is for screen readers when the context menu button is focused/active.

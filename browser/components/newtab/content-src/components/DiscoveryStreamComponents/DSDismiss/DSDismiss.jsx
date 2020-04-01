@@ -43,12 +43,11 @@ export class DSDismiss extends React.PureComponent {
         {this.props.children}
         <button
           className="ds-dismiss-button"
+          data-l10n-id="newtab-dismiss-button-tooltip"
           onHover={this.onHover}
           onClick={this.onDismissClick}
           onMouseEnter={this.onHover}
           onMouseLeave={this.offHover}
-          aria-label="dismiss"
-          title="Remove"
         >
           <span className="icon icon-dismiss" />
         </button>
