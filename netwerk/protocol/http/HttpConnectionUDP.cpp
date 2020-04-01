@@ -623,7 +623,7 @@ nsresult HttpConnectionUDP::OnSocketReadable() {
   // accommodate exhausted sender TCP congestion windows or minor I/O delays.
   mLastReadTime = now;
 
-  uint32_t n;
+  uint32_t n = 0;
   bool again = true;
 
   nsresult rv = mHttp3Session->WriteSegmentsAgain(
