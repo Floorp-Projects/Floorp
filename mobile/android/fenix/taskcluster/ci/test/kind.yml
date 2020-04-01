@@ -9,11 +9,18 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+kind-dependencies:
+    - toolchain
+
+
 job-defaults:
-    description: Test Fenix
-    include-pull-request-number: false
     attributes:
         retrigger: true
+    description: Test Fenix
+    fetches:
+        toolchain:
+            - android-sdk-linux
+    include-pull-request-number: false
     run:
         using: gradlew
         use-caches: false
@@ -31,10 +38,6 @@ jobs:
             build-type: debug
             geckoview-engine: geckoNightly
             code-review: true
-        treeherder:
-            platform: 'android-all/opt'
-            symbol: debug(T)
-            tier: 1
         run:
             gradlew: ['clean', '-Pcoverage', 'jacocoGeckoNightlyDebugTestReport']
             post-gradlew:
@@ -43,6 +46,10 @@ jobs:
                 - name: project/mobile/fenix/public-tokens
                   key: codecov
                   path: .cc_token
+        treeherder:
+            platform: 'android-all/opt'
+            symbol: debug(T)
+            tier: 1
         worker:
             artifacts:
                 - name: public/reports/index.html

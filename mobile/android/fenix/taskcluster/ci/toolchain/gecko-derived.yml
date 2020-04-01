@@ -1,0 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    run:
+        using: index-search
+    run-on-projects: []
+    worker-type: always-optimized
+
+
+browsertime:
+    attributes:
+        toolchain-artifact: public/build/browsertime.tar.bz2
+    description: "Browsertime toolchain"
+    run:
+        index-search:
+            - gecko.cache.level-3.toolchains.v3.browsertime.latest
+
+linux64-ffmpeg-4.1.4:
+    attributes:
+        toolchain-artifact: 'public/ffmpeg-4.1.4-i686-static.tar.xz'
+    description: "FFMPEG fetch"
+    run:
+        index-search:
+            - gecko.cache.level-3.content.v1.linux64-ffmpeg-4.1.4.latest
+
+linux64-geckodriver:
+    attributes:
+        toolchain-artifact: public/build/geckodriver.tar.xz
+    description: "Geckodriver toolchain"
+    run:
+        index-search:
+            - gecko.cache.level-3.toolchains.v3.linux64-geckodriver.latest
+
+linux64-minidump-stackwalk:
+    attributes:
+        toolchain-artifact: public/build/minidump_stackwalk.tar.xz
+    description: "minidump-stackwalk toolchain"
+    run:
+        index-search:
+            - gecko.cache.level-3.toolchains.v3.linux64-minidump-stackwalk.latest
+
+linux64-node:
+    attributes:
+        toolchain-artifact: public/build/node.tar.xz
+    description: "Node.js toolchain"
+    run:
+        index-search:
+            - gecko.cache.level-3.toolchains.v3.linux64-node-10.latest
+
+visual-metrics:
+    attributes:
+        toolchain-artifact: public/visualmetrics.py
+    description: "Browsertime visual metrics analysis script"
+    run:
+        index-search:
+            - gecko.cache.level-3.content.v1.visual-metrics.latest

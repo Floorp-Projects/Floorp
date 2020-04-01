@@ -9,8 +9,27 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+kind-dependencies:
+    - toolchain
+
+
 job-defaults:
+    # Builds generate multiple APKs with different ABIs. For each APK described
+    # by `gradlew printVariant`, an artifact will be generated. `variant` and
+    # the per-apk config from `printVariant` can be used as substitutions in
+    # `name` and `path`.
+    apk-artifact-template:
+        type: file
+        name: public/build/{abi}/{geckoview_engine}/target.apk
+        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{geckoview_engine}/{gradle_build_type}/{fileName}'
     description: Build Fenix from source code.
+    fetches:
+        toolchain:
+            - android-sdk-linux
+    run:
+        using: gradlew
+        use-caches: false
+    run-on-tasks-for: []
     treeherder:
         kind: build
         symbol: B
@@ -21,18 +40,7 @@ job-defaults:
         docker-image: {in-tree: base}
         max-run-time: 7200
         chain-of-trust: true
-    run:
-        using: gradlew
-        use-caches: false
-    run-on-tasks-for: []
-    # Builds generate multiple APKs with different ABIs. For each APK described
-    # by `gradlew printVariant`, an artifact will be generated. `variant` and
-    # the per-apk config from `printVariant` can be used as substitutions in
-    # `name` and `path`.
-    apk-artifact-template:
-        type: file
-        name: public/build/{abi}/{geckoview_engine}/target.apk
-        path: '/builds/worker/checkouts/src/app/build/outputs/apk/{geckoview_engine}/{gradle_build_type}/{fileName}'
+
 
 jobs:
     debug:

@@ -5,7 +5,8 @@ MAINTAINER Johan Lorenzo <jlorenzo+tc@mozilla.com>
 
 USER worker:worker
 
-ENV HUB_ARCHIVE='hub.tgz' \
+ENV CURL='curl --location --retry 5' \
+  HUB_ARCHIVE='hub.tgz' \
   HUB_ROOT='/builds/worker/hub' \
   HUB_SHA256='734733c9d807715a4ec26ccce0f9987bd19f1c3f84dd35e56451711766930ef0' \
   HUB_VERSION='2.14.1'

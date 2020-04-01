@@ -4,8 +4,10 @@ treeherder:
     group-names:
         'beta': 'Beta-related tasks'
         'betaFennec': 'Beta-related tasks with same APK configuration as Fennec'
+        'Btime': 'Raptor-Browsertime tests'
         'bump': 'Bump dependencies'
         'debug': 'Builds made for testing'
+        'Fetch': 'Fetch and store content'
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'
         'I': 'Docker Image Builds'
         'nightly': 'Nightly-related tasks'
@@ -14,7 +16,7 @@ treeherder:
         'productionFennec': 'Production-related tasks with same APK configuration as Fennec'
         'Rap': 'Raptor tests'
         'Rap-P': 'Raptor power tests'
-        'Btime': 'Raptor-Browsertime tests'
+        'TL': 'Toolchain builds for Linux 64-bits'
 
 task-priority: highest
 
