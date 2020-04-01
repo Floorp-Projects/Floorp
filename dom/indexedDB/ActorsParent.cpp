@@ -5586,7 +5586,7 @@ class DatabaseOperationBase : public Runnable,
                                           const nsCString& aLocale);
 
   static nsresult GetUniqueIndexTableForObjectStore(
-      TransactionBase* aTransaction, IndexOrObjectStoreId aObjectStoreId,
+      TransactionBase& aTransaction, IndexOrObjectStoreId aObjectStoreId,
       Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable);
 
   static nsresult IndexDataValuesFromUpdateInfos(
@@ -5677,7 +5677,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
     Completed
   };
 
-  InitializedOnceNotNull<const RefPtr<TransactionBase>> mTransaction;
+  InitializedOnceNotNull<const SafeRefPtr<TransactionBase>> mTransaction;
   InternalState mInternalState = InternalState::Initial;
   bool mWaitingForContinue = false;
   const bool mTransactionIsAborted;
@@ -5731,7 +5731,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   // May be overridden by subclasses if they need to perform work on the
   // background thread before being dispatched. Returning false will kill the
   // child actors and prevent dispatch.
-  virtual bool Init(TransactionBase* aTransaction);
+  virtual bool Init(TransactionBase& aTransaction);
 
   // This callback will be called on the background thread before releasing the
   // final reference to this request object. Subclasses may perform any
@@ -5740,9 +5740,9 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
 
  protected:
   explicit TransactionDatabaseOperationBase(
-      RefPtr<TransactionBase> aTransaction);
+      SafeRefPtr<TransactionBase> aTransaction);
 
-  TransactionDatabaseOperationBase(RefPtr<TransactionBase> aTransaction,
+  TransactionDatabaseOperationBase(SafeRefPtr<TransactionBase> aTransaction,
                                    uint64_t aLoggingSerialNumber);
 
   ~TransactionDatabaseOperationBase() override;
@@ -5997,9 +5997,9 @@ class Database final
     return mFactory->GetLoggingInfo();
   }
 
-  bool RegisterTransaction(TransactionBase* aTransaction);
+  bool RegisterTransaction(TransactionBase& aTransaction);
 
-  void UnregisterTransaction(TransactionBase* aTransaction);
+  void UnregisterTransaction(TransactionBase& aTransaction);
 
   bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
@@ -6142,7 +6142,7 @@ class Database::StartTransactionOp final
   friend class Database;
 
  private:
-  explicit StartTransactionOp(RefPtr<TransactionBase> aTransaction)
+  explicit StartTransactionOp(SafeRefPtr<TransactionBase> aTransaction)
       : TransactionDatabaseOperationBase(std::move(aTransaction),
                                          /* aLoggingSerialNumber */ 0) {}
 
@@ -6521,14 +6521,14 @@ class TransactionBase::CommitOp final : public DatabaseOperationBase,
                                         public ConnectionPool::FinishCallback {
   friend class TransactionBase;
 
-  RefPtr<TransactionBase> mTransaction;
+  SafeRefPtr<TransactionBase> mTransaction;
   nsresult mResultCode;  ///< TODO: There is also a mResultCode in
                          ///< DatabaseOperationBase. Is there a reason not to
                          ///< use that? At least a more specific name should be
                          ///< given to this one.
 
  private:
-  CommitOp(TransactionBase* aTransaction, nsresult aResultCode);
+  CommitOp(SafeRefPtr<TransactionBase> aTransaction, nsresult aResultCode);
 
   ~CommitOp() override = default;
 
@@ -6618,10 +6618,11 @@ class VersionChangeTransaction final
 
   FlippedOnce<false> mActorWasAlive;
 
- private:
+ public:
   // Only called by OpenDatabaseOp.
   explicit VersionChangeTransaction(OpenDatabaseOp* aOpenDatabaseOp);
 
+ private:
   // Reference counted.
   ~VersionChangeTransaction() override;
 
@@ -6999,7 +7000,7 @@ class OpenDatabaseOp final : public FactoryOp {
   SafeRefPtr<FileManager> mFileManager;
 
   SafeRefPtr<Database> mDatabase;
-  RefPtr<VersionChangeTransaction> mVersionChangeTransaction;
+  SafeRefPtr<VersionChangeTransaction> mVersionChangeTransaction;
 
   // This is only set while a VersionChangeOp is live. It holds a strong
   // reference to its OpenDatabaseOp object so this is a weak pointer to avoid
@@ -7067,7 +7068,7 @@ class OpenDatabaseOp::VersionChangeOp final
  private:
   explicit VersionChangeOp(OpenDatabaseOp* aOpenDatabaseOp)
       : TransactionDatabaseOperationBase(
-            aOpenDatabaseOp->mVersionChangeTransaction,
+            aOpenDatabaseOp->mVersionChangeTransaction.clonePtr(),
             aOpenDatabaseOp->LoggingSerialNumber()),
         mOpenDatabaseOp(aOpenDatabaseOp),
         mRequestedVersion(aOpenDatabaseOp->mRequestedVersion),
@@ -7225,7 +7226,7 @@ class VersionChangeTransactionOp : public TransactionDatabaseOperationBase {
 
  protected:
   explicit VersionChangeTransactionOp(
-      RefPtr<VersionChangeTransaction> aTransaction)
+      SafeRefPtr<VersionChangeTransaction> aTransaction)
       : TransactionDatabaseOperationBase(std::move(aTransaction)) {}
 
   ~VersionChangeTransactionOp() override = default;
@@ -7243,7 +7244,7 @@ class CreateObjectStoreOp final : public VersionChangeTransactionOp {
 
  private:
   // Only created by VersionChangeTransaction.
-  CreateObjectStoreOp(RefPtr<VersionChangeTransaction> aTransaction,
+  CreateObjectStoreOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                       const ObjectStoreMetadata& aMetadata)
       : VersionChangeTransactionOp(std::move(aTransaction)),
         mMetadata(aMetadata) {
@@ -7263,7 +7264,7 @@ class DeleteObjectStoreOp final : public VersionChangeTransactionOp {
 
  private:
   // Only created by VersionChangeTransaction.
-  DeleteObjectStoreOp(RefPtr<VersionChangeTransaction> aTransaction,
+  DeleteObjectStoreOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                       FullObjectStoreMetadata* const aMetadata,
                       const bool aIsLastObjectStore)
       : VersionChangeTransactionOp(std::move(aTransaction)),
@@ -7285,7 +7286,7 @@ class RenameObjectStoreOp final : public VersionChangeTransactionOp {
 
  private:
   // Only created by VersionChangeTransaction.
-  RenameObjectStoreOp(RefPtr<VersionChangeTransaction> aTransaction,
+  RenameObjectStoreOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                       FullObjectStoreMetadata* const aMetadata)
       : VersionChangeTransactionOp(std::move(aTransaction)),
         mId(aMetadata->mCommonMetadata.id()),
@@ -7311,7 +7312,7 @@ class CreateIndexOp final : public VersionChangeTransactionOp {
 
  private:
   // Only created by VersionChangeTransaction.
-  CreateIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
+  CreateIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                 IndexOrObjectStoreId aObjectStoreId,
                 const IndexMetadata& aMetadata);
 
@@ -7321,7 +7322,7 @@ class CreateIndexOp final : public VersionChangeTransactionOp {
 
   nsresult InsertDataFromObjectStoreInternal(DatabaseConnection* aConnection);
 
-  bool Init(TransactionBase* aTransaction) override;
+  bool Init(TransactionBase& aTransaction) override;
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
@@ -7358,7 +7359,7 @@ class DeleteIndexOp final : public VersionChangeTransactionOp {
 
  private:
   // Only created by VersionChangeTransaction.
-  DeleteIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
+  DeleteIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                 IndexOrObjectStoreId aObjectStoreId,
                 IndexOrObjectStoreId aIndexId, const bool aUnique,
                 const bool aIsLastIndex);
@@ -7381,7 +7382,7 @@ class RenameIndexOp final : public VersionChangeTransactionOp {
 
  private:
   // Only created by VersionChangeTransaction.
-  RenameIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
+  RenameIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                 FullIndexMetadata* const aMetadata,
                 IndexOrObjectStoreId aObjectStoreId)
       : VersionChangeTransactionOp(std::move(aTransaction)),
@@ -7406,7 +7407,7 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
   void Cleanup() override;
 
  protected:
-  explicit NormalTransactionOp(RefPtr<TransactionBase> aTransaction)
+  explicit NormalTransactionOp(SafeRefPtr<TransactionBase> aTransaction)
       : TransactionDatabaseOperationBase(std::move(aTransaction))
 #ifdef DEBUG
         ,
@@ -7536,14 +7537,14 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 
  private:
   // Only created by TransactionBase.
-  ObjectStoreAddOrPutRequestOp(RefPtr<TransactionBase> aTransaction,
+  ObjectStoreAddOrPutRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                                RequestParams&& aParams);
 
   ~ObjectStoreAddOrPutRequestOp() override = default;
 
   nsresult RemoveOldIndexDataValues(DatabaseConnection* aConnection);
 
-  bool Init(TransactionBase* aTransaction) override;
+  bool Init(TransactionBase& aTransaction) override;
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
 
@@ -7774,7 +7775,7 @@ class ObjectStoreGetRequestOp final : public NormalTransactionOp {
 
  private:
   // Only created by TransactionBase.
-  ObjectStoreGetRequestOp(RefPtr<TransactionBase> aTransaction,
+  ObjectStoreGetRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                           const RequestParams& aParams, bool aGetAll);
 
   ~ObjectStoreGetRequestOp() override = default;
@@ -7802,7 +7803,7 @@ class ObjectStoreGetKeyRequestOp final : public NormalTransactionOp {
 
  private:
   // Only created by TransactionBase.
-  ObjectStoreGetKeyRequestOp(RefPtr<TransactionBase> aTransaction,
+  ObjectStoreGetKeyRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                              const RequestParams& aParams, bool aGetAll);
 
   ~ObjectStoreGetKeyRequestOp() override = default;
@@ -7820,7 +7821,7 @@ class ObjectStoreDeleteRequestOp final : public NormalTransactionOp {
   bool mObjectStoreMayHaveIndexes;
 
  private:
-  ObjectStoreDeleteRequestOp(RefPtr<TransactionBase> aTransaction,
+  ObjectStoreDeleteRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                              const ObjectStoreDeleteParams& aParams);
 
   ~ObjectStoreDeleteRequestOp() override = default;
@@ -7841,7 +7842,7 @@ class ObjectStoreClearRequestOp final : public NormalTransactionOp {
   bool mObjectStoreMayHaveIndexes;
 
  private:
-  ObjectStoreClearRequestOp(RefPtr<TransactionBase> aTransaction,
+  ObjectStoreClearRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                             const ObjectStoreClearParams& aParams);
 
   ~ObjectStoreClearRequestOp() override = default;
@@ -7861,7 +7862,7 @@ class ObjectStoreCountRequestOp final : public NormalTransactionOp {
   ObjectStoreCountResponse mResponse;
 
  private:
-  ObjectStoreCountRequestOp(RefPtr<TransactionBase> aTransaction,
+  ObjectStoreCountRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                             const ObjectStoreCountParams& aParams)
       : NormalTransactionOp(std::move(aTransaction)), mParams(aParams) {}
 
@@ -7880,7 +7881,7 @@ class IndexRequestOpBase : public NormalTransactionOp {
   const RefPtr<FullIndexMetadata> mMetadata;
 
  protected:
-  IndexRequestOpBase(RefPtr<TransactionBase> aTransaction,
+  IndexRequestOpBase(SafeRefPtr<TransactionBase> aTransaction,
                      const RequestParams& aParams)
       : NormalTransactionOp(std::move(aTransaction)),
         mMetadata(IndexMetadataForParams(Transaction(), aParams)) {}
@@ -7904,7 +7905,7 @@ class IndexGetRequestOp final : public IndexRequestOpBase {
 
  private:
   // Only created by TransactionBase.
-  IndexGetRequestOp(RefPtr<TransactionBase> aTransaction,
+  IndexGetRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                     const RequestParams& aParams, bool aGetAll);
 
   ~IndexGetRequestOp() override = default;
@@ -7924,7 +7925,7 @@ class IndexGetKeyRequestOp final : public IndexRequestOpBase {
 
  private:
   // Only created by TransactionBase.
-  IndexGetKeyRequestOp(RefPtr<TransactionBase> aTransaction,
+  IndexGetKeyRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                        const RequestParams& aParams, bool aGetAll);
 
   ~IndexGetKeyRequestOp() override = default;
@@ -7942,7 +7943,7 @@ class IndexCountRequestOp final : public IndexRequestOpBase {
 
  private:
   // Only created by TransactionBase.
-  IndexCountRequestOp(RefPtr<TransactionBase> aTransaction,
+  IndexCountRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                       const RequestParams& aParams)
       : IndexRequestOpBase(std::move(aTransaction), aParams),
         mParams(aParams.get_IndexCountParams()) {}
@@ -8002,7 +8003,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
   friend class CommonOpenOpHelper;
 
  protected:
-  const RefPtr<TransactionBase> mTransaction;
+  const SafeRefPtr<TransactionBase> mTransaction;
 
   // This should only be touched on the PBackground thread to check whether
   // the objectStore has been deleted. Holding these saves a hash lookup for
@@ -8031,7 +8032,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::CursorBase)
 
-  CursorBase(RefPtr<TransactionBase> aTransaction,
+  CursorBase(SafeRefPtr<TransactionBase> aTransaction,
              RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
              Direction aDirection,
              ConstructFromTransactionBase aConstructionTag);
@@ -8048,7 +8049,7 @@ class IndexCursorBase : public CursorBase {
  public:
   bool IsLocaleAware() const { return !mLocale.IsEmpty(); }
 
-  IndexCursorBase(RefPtr<TransactionBase> aTransaction,
+  IndexCursorBase(SafeRefPtr<TransactionBase> aTransaction,
                   RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
                   RefPtr<FullIndexMetadata> aIndexMetadata,
                   Direction aDirection,
@@ -8218,22 +8219,22 @@ class Cursor final
       const Key& aCurrentObjectStoreKey) override;
 
  public:
-  Cursor(RefPtr<TransactionBase> aTransaction,
+  Cursor(SafeRefPtr<TransactionBase> aTransaction,
          RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
          RefPtr<FullIndexMetadata> aIndexMetadata,
          typename Base::Direction aDirection,
          typename Base::ConstructFromTransactionBase aConstructionTag)
       : Base{std::move(aTransaction), std::move(aObjectStoreMetadata),
              std::move(aIndexMetadata), aDirection, aConstructionTag},
-        KeyValueBase{mTransaction} {}
+        KeyValueBase{this->mTransaction.unsafeGetRawPtr()} {}
 
-  Cursor(RefPtr<TransactionBase> aTransaction,
+  Cursor(SafeRefPtr<TransactionBase> aTransaction,
          RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
          typename Base::Direction aDirection,
          typename Base::ConstructFromTransactionBase aConstructionTag)
       : Base{std::move(aTransaction), std::move(aObjectStoreMetadata),
              aDirection, aConstructionTag},
-        KeyValueBase{mTransaction} {}
+        KeyValueBase{this->mTransaction.unsafeGetRawPtr()} {}
 
  private:
   void SetOptionalKeyRange(const Maybe<SerializedKeyRange>& aOptionalKeyRange,
@@ -8263,7 +8264,7 @@ class Cursor<CursorType>::CursorOpBase
 
  protected:
   explicit CursorOpBase(Cursor* aCursor)
-      : TransactionDatabaseOperationBase(aCursor->mTransaction),
+      : TransactionDatabaseOperationBase(aCursor->mTransaction.clonePtr()),
         mCursor(aCursor)
 #ifdef DEBUG
         ,
@@ -13845,27 +13846,25 @@ nsresult Database::EnsureConnection() {
   return NS_OK;
 }
 
-bool Database::RegisterTransaction(TransactionBase* aTransaction) {
+bool Database::RegisterTransaction(TransactionBase& aTransaction) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aTransaction);
-  MOZ_ASSERT(!mTransactions.GetEntry(aTransaction));
+  MOZ_ASSERT(!mTransactions.GetEntry(&aTransaction));
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(!mInvalidated);
   MOZ_ASSERT(!mClosed);
 
-  if (NS_WARN_IF(!mTransactions.PutEntry(aTransaction, fallible))) {
+  if (NS_WARN_IF(!mTransactions.PutEntry(&aTransaction, fallible))) {
     return false;
   }
 
   return true;
 }
 
-void Database::UnregisterTransaction(TransactionBase* aTransaction) {
+void Database::UnregisterTransaction(TransactionBase& aTransaction) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aTransaction);
-  MOZ_ASSERT(mTransactions.GetEntry(aTransaction));
+  MOZ_ASSERT(mTransactions.GetEntry(&aTransaction));
 
-  mTransactions.RemoveEntry(aTransaction);
+  mTransactions.RemoveEntry(&aTransaction);
 
   MaybeCloseConnection();
 }
@@ -14369,7 +14368,8 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
 
   auto* transaction = static_cast<NormalTransaction*>(aActor);
 
-  RefPtr<StartTransactionOp> startOp = new StartTransactionOp(transaction);
+  RefPtr<StartTransactionOp> startOp = new StartTransactionOp(
+      SafeRefPtr{transaction, AcquireStrongRefFromRawPtr{}});
 
   uint64_t transactionId = startOp->StartOnConnectionPool(
       GetLoggingInfo()->Id(), mMetadata->mDatabaseId,
@@ -14378,7 +14378,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
 
   transaction->Init(transactionId);
 
-  if (NS_WARN_IF(!RegisterTransaction(transaction))) {
+  if (NS_WARN_IF(!RegisterTransaction(*transaction))) {
     IDB_REPORT_INTERNAL_ERR();
     transaction->Abort(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, /* aForce */ false);
     return IPC_OK();
@@ -14633,7 +14633,9 @@ void TransactionBase::CommitOrAbort() {
     mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
   }
 
-  RefPtr<CommitOp> commitOp = new CommitOp(this, ClampResultCode(mResultCode));
+  RefPtr<CommitOp> commitOp =
+      new CommitOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                   ClampResultCode(mResultCode));
 
   gConnectionPool->Finish(TransactionId(), commitOp);
 }
@@ -15188,59 +15190,79 @@ PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
   switch (aParams.type()) {
     case RequestParams::TObjectStoreAddParams:
     case RequestParams::TObjectStorePutParams:
-      actor = new ObjectStoreAddOrPutRequestOp(this, std::move(aParams));
+      actor = new ObjectStoreAddOrPutRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, std::move(aParams));
       break;
 
     case RequestParams::TObjectStoreGetParams:
-      actor = new ObjectStoreGetRequestOp(this, aParams, /* aGetAll */ false);
+      actor = new ObjectStoreGetRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
+          /* aGetAll */ false);
       break;
 
     case RequestParams::TObjectStoreGetAllParams:
-      actor = new ObjectStoreGetRequestOp(this, aParams, /* aGetAll */ true);
+      actor = new ObjectStoreGetRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
+          /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreGetKeyParams:
-      actor =
-          new ObjectStoreGetKeyRequestOp(this, aParams, /* aGetAll */ false);
+      actor = new ObjectStoreGetKeyRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
+          /* aGetAll */ false);
       break;
 
     case RequestParams::TObjectStoreGetAllKeysParams:
-      actor = new ObjectStoreGetKeyRequestOp(this, aParams, /* aGetAll */ true);
+      actor = new ObjectStoreGetKeyRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
+          /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreDeleteParams:
       actor = new ObjectStoreDeleteRequestOp(
-          this, aParams.get_ObjectStoreDeleteParams());
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+          aParams.get_ObjectStoreDeleteParams());
       break;
 
     case RequestParams::TObjectStoreClearParams:
       actor = new ObjectStoreClearRequestOp(
-          this, aParams.get_ObjectStoreClearParams());
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+          aParams.get_ObjectStoreClearParams());
       break;
 
     case RequestParams::TObjectStoreCountParams:
       actor = new ObjectStoreCountRequestOp(
-          this, aParams.get_ObjectStoreCountParams());
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+          aParams.get_ObjectStoreCountParams());
       break;
 
     case RequestParams::TIndexGetParams:
-      actor = new IndexGetRequestOp(this, aParams, /* aGetAll */ false);
+      actor =
+          new IndexGetRequestOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                                aParams, /* aGetAll */ false);
       break;
 
     case RequestParams::TIndexGetKeyParams:
-      actor = new IndexGetKeyRequestOp(this, aParams, /* aGetAll */ false);
+      actor = new IndexGetKeyRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
+          /* aGetAll */ false);
       break;
 
     case RequestParams::TIndexGetAllParams:
-      actor = new IndexGetRequestOp(this, aParams, /* aGetAll */ true);
+      actor =
+          new IndexGetRequestOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                                aParams, /* aGetAll */ true);
       break;
 
     case RequestParams::TIndexGetAllKeysParams:
-      actor = new IndexGetKeyRequestOp(this, aParams, /* aGetAll */ true);
+      actor = new IndexGetKeyRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
+          /* aGetAll */ true);
       break;
 
     case RequestParams::TIndexCountParams:
-      actor = new IndexCountRequestOp(this, aParams);
+      actor = new IndexCountRequestOp(
+          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams);
       break;
 
     default:
@@ -15259,7 +15281,7 @@ bool TransactionBase::StartRequest(PBackgroundIDBRequestParent* aActor) {
 
   auto* op = static_cast<NormalTransactionOp*>(aActor);
 
-  if (NS_WARN_IF(!op->Init(this))) {
+  if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
     return false;
   }
@@ -15331,23 +15353,27 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
     case OpenCursorParams::TObjectStoreOpenCursorParams:
       MOZ_ASSERT(!indexMetadata);
       return MakeAndAddRef<Cursor<IDBCursorType::ObjectStore>>(
-                 this, std::move(objectStoreMetadata), direction,
+                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                 std::move(objectStoreMetadata), direction,
                  CursorBase::ConstructFromTransactionBase{})
           .take();
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams:
       MOZ_ASSERT(!indexMetadata);
       return MakeAndAddRef<Cursor<IDBCursorType::ObjectStoreKey>>(
-                 this, std::move(objectStoreMetadata), direction,
+                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                 std::move(objectStoreMetadata), direction,
                  CursorBase::ConstructFromTransactionBase{})
           .take();
     case OpenCursorParams::TIndexOpenCursorParams:
       return MakeAndAddRef<Cursor<IDBCursorType::Index>>(
-                 this, std::move(objectStoreMetadata), std::move(indexMetadata),
+                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                 std::move(objectStoreMetadata), std::move(indexMetadata),
                  direction, CursorBase::ConstructFromTransactionBase{})
           .take();
     case OpenCursorParams::TIndexOpenKeyCursorParams:
       return MakeAndAddRef<Cursor<IDBCursorType::IndexKey>>(
-                 this, std::move(objectStoreMetadata), std::move(indexMetadata),
+                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                 std::move(objectStoreMetadata), std::move(indexMetadata),
                  direction, CursorBase::ConstructFromTransactionBase{})
           .take();
     default:
@@ -15758,9 +15784,10 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
 
   dbMetadata->mNextObjectStoreId++;
 
-  RefPtr<CreateObjectStoreOp> op = new CreateObjectStoreOp(this, aMetadata);
+  RefPtr<CreateObjectStoreOp> op = new CreateObjectStoreOp(
+      SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aMetadata);
 
-  if (NS_WARN_IF(!op->Init(this))) {
+  if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -15816,9 +15843,10 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
   MOZ_ASSERT_IF(isLastObjectStore, foundTargetId);
 
   RefPtr<DeleteObjectStoreOp> op =
-      new DeleteObjectStoreOp(this, foundMetadata, isLastObjectStore);
+      new DeleteObjectStoreOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                              foundMetadata, isLastObjectStore);
 
-  if (NS_WARN_IF(!op->Init(this))) {
+  if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -15862,10 +15890,10 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
 
   foundMetadata->mCommonMetadata.name() = aName;
 
-  RefPtr<RenameObjectStoreOp> renameOp =
-      new RenameObjectStoreOp(this, foundMetadata);
+  RefPtr<RenameObjectStoreOp> renameOp = new RenameObjectStoreOp(
+      SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, foundMetadata);
 
-  if (NS_WARN_IF(!renameOp->Init(this))) {
+  if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -15929,9 +15957,11 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
 
   dbMetadata->mNextIndexId++;
 
-  RefPtr<CreateIndexOp> op = new CreateIndexOp(this, aObjectStoreId, aMetadata);
+  RefPtr<CreateIndexOp> op =
+      new CreateIndexOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                        aObjectStoreId, aMetadata);
 
-  if (NS_WARN_IF(!op->Init(this))) {
+  if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -16009,10 +16039,10 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
   MOZ_ASSERT_IF(isLastIndex, foundTargetId);
 
   RefPtr<DeleteIndexOp> op = new DeleteIndexOp(
-      this, aObjectStoreId, aIndexId,
+      SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aObjectStoreId, aIndexId,
       foundIndexMetadata->mCommonMetadata.unique(), isLastIndex);
 
-  if (NS_WARN_IF(!op->Init(this))) {
+  if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -16077,9 +16107,10 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
   foundIndexMetadata->mCommonMetadata.name() = aName;
 
   RefPtr<RenameIndexOp> renameOp =
-      new RenameIndexOp(this, foundIndexMetadata, aObjectStoreId);
+      new RenameIndexOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
+                        foundIndexMetadata, aObjectStoreId);
 
-  if (NS_WARN_IF(!renameOp->Init(this))) {
+  if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -16153,7 +16184,7 @@ bool VersionChangeTransaction::DeallocPBackgroundIDBCursorParent(
  * CursorBase
  ******************************************************************************/
 
-CursorBase::CursorBase(RefPtr<TransactionBase> aTransaction,
+CursorBase::CursorBase(SafeRefPtr<TransactionBase> aTransaction,
                        RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
                        const Direction aDirection,
                        const ConstructFromTransactionBase /*aConstructionTag*/)
@@ -16313,7 +16344,7 @@ bool Cursor<CursorType>::Start(const OpenCursorParams& aParams) {
 
   const RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
 
-  if (NS_WARN_IF(!openOp->Init(mTransaction))) {
+  if (NS_WARN_IF(!openOp->Init(*mTransaction))) {
     openOp->Cleanup();
     return false;
   }
@@ -16503,7 +16534,7 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
 
   const RefPtr<ContinueOp> continueOp =
       new ContinueOp(this, aParams, positionOrError.unwrap());
-  if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
+  if (NS_WARN_IF(!continueOp->Init(*mTransaction))) {
     continueOp->Cleanup();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -19736,15 +19767,14 @@ void CommonOpenOpHelperBase::AppendConditionClause(
 
 // static
 nsresult DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
-    TransactionBase* aTransaction, const IndexOrObjectStoreId aObjectStoreId,
+    TransactionBase& aTransaction, const IndexOrObjectStoreId aObjectStoreId,
     Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(aMaybeUniqueIndexTable.isNothing());
 
   const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
-      aTransaction->GetMetadataForObjectStoreId(aObjectStoreId);
+      aTransaction.GetMetadataForObjectStoreId(aObjectStoreId);
   MOZ_ASSERT(objectStoreMetadata);
 
   if (!objectStoreMetadata->mIndexes.Count()) {
@@ -21985,8 +22015,7 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   MOZ_ASSERT(!info->mWaitingFactoryOp);
   MOZ_ASSERT(info->mMetadata == mMetadata);
 
-  RefPtr<VersionChangeTransaction> transaction =
-      new VersionChangeTransaction(this);
+  auto transaction = MakeSafeRefPtr<VersionChangeTransaction>(this);
 
   if (NS_WARN_IF(!transaction->CopyDatabaseMetadata())) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -22108,7 +22137,7 @@ nsresult OpenDatabaseOp::DispatchToWorkThread() {
   const nsID& backgroundChildLoggingId =
       mVersionChangeTransaction->GetLoggingInfo()->Id();
 
-  if (NS_WARN_IF(!mDatabase->RegisterTransaction(mVersionChangeTransaction))) {
+  if (NS_WARN_IF(!mDatabase->RegisterTransaction(*mVersionChangeTransaction))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -22145,7 +22174,7 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  const RefPtr<VersionChangeTransaction> transaction =
+  const SafeRefPtr<VersionChangeTransaction> transaction =
       std::move(mVersionChangeTransaction);
 
   nsresult rv = EnsureDatabaseActorIsAlive();
@@ -22157,8 +22186,9 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
   transaction->SetActorAlive();
 
   if (!mDatabase->SendPBackgroundIDBVersionChangeTransactionConstructor(
-          transaction, mMetadata->mCommonMetadata.version(), mRequestedVersion,
-          mMetadata->mNextObjectStoreId, mMetadata->mNextIndexId)) {
+          transaction.unsafeGetRawPtr(), mMetadata->mCommonMetadata.version(),
+          mRequestedVersion, mMetadata->mNextObjectStoreId,
+          mMetadata->mNextIndexId)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -23006,7 +23036,7 @@ nsresult DeleteDatabaseOp::VersionChangeOp::Run() {
 }
 
 TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
-    RefPtr<TransactionBase> aTransaction)
+    SafeRefPtr<TransactionBase> aTransaction)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
       mTransaction(std::move(aTransaction)),
@@ -23016,7 +23046,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
 }
 
 TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
-    RefPtr<TransactionBase> aTransaction, uint64_t aLoggingSerialNumber)
+    SafeRefPtr<TransactionBase> aTransaction, uint64_t aLoggingSerialNumber)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aLoggingSerialNumber),
       mTransaction(std::move(aTransaction)),
@@ -23251,10 +23281,9 @@ void TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
   }
 }
 
-bool TransactionDatabaseOperationBase::Init(TransactionBase* aTransaction) {
+bool TransactionDatabaseOperationBase::Init(TransactionBase& aTransaction) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mInternalState == InternalState::Initial);
-  MOZ_ASSERT(aTransaction);
 
   return true;
 }
@@ -23290,13 +23319,13 @@ TransactionDatabaseOperationBase::Run() {
   }
 }
 
-TransactionBase::CommitOp::CommitOp(TransactionBase* aTransaction,
+TransactionBase::CommitOp::CommitOp(SafeRefPtr<TransactionBase> aTransaction,
                                     nsresult aResultCode)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
-      mTransaction(aTransaction),
+      mTransaction(std::move(aTransaction)),
       mResultCode(aResultCode) {
-  MOZ_ASSERT(aTransaction);
+  MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(LoggingSerialNumber());
 }
 
@@ -23523,7 +23552,7 @@ void TransactionBase::CommitOp::TransactionFinishedAfterUnblock() {
 
   mTransaction->SendCompleteNotification(ClampResultCode(mResultCode));
 
-  mTransaction->GetMutableDatabase().UnregisterTransaction(mTransaction);
+  mTransaction->GetMutableDatabase().UnregisterTransaction(*mTransaction);
 
   mTransaction = nullptr;
 
@@ -24126,7 +24155,7 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   return NS_OK;
 }
 
-CreateIndexOp::CreateIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
+CreateIndexOp::CreateIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                              const IndexOrObjectStoreId aObjectStoreId,
                              const IndexMetadata& aMetadata)
     : VersionChangeTransactionOp(std::move(aTransaction)),
@@ -24205,9 +24234,8 @@ nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
   return NS_OK;
 }
 
-bool CreateIndexOp::Init(TransactionBase* aTransaction) {
+bool CreateIndexOp::Init(TransactionBase& aTransaction) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aTransaction);
 
   nsresult rv = GetUniqueIndexTableForObjectStore(aTransaction, mObjectStoreId,
                                                   mMaybeUniqueIndexTable);
@@ -24528,7 +24556,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   return NS_OK;
 }
 
-DeleteIndexOp::DeleteIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
+DeleteIndexOp::DeleteIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
                              const IndexOrObjectStoreId aObjectStoreId,
                              const IndexOrObjectStoreId aIndexId,
                              const bool aUnique, const bool aIsLastIndex)
@@ -25206,7 +25234,7 @@ mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(
 }
 
 ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
-    RefPtr<TransactionBase> aTransaction, RequestParams&& aParams)
+    SafeRefPtr<TransactionBase> aTransaction, RequestParams&& aParams)
     : NormalTransactionOp(std::move(aTransaction)),
       mParams(
           std::move(aParams.type() == RequestParams::TObjectStoreAddParams
@@ -25294,7 +25322,7 @@ nsresult ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   return NS_OK;
 }
 
-bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
+bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
   AssertIsOnOwningThread();
 
   const nsTArray<IndexUpdateInfo>& indexUpdateInfos =
@@ -25380,7 +25408,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
 
   if (mDataOverThreshold) {
     mStoredFileInfos.EmplaceBack(StoredFileInfo::CreateForStructuredClone(
-        aTransaction->GetDatabase().GetFileManager().CreateFileInfo(),
+        aTransaction.GetDatabase().GetFileManager().CreateFileInfo(),
         MakeRefPtr<SCInputStream>(mParams.cloneInfo().data().data)));
   }
 
@@ -25769,7 +25797,7 @@ ObjectStoreAddOrPutRequestOp::SCInputStream::IsNonBlocking(bool* _retval) {
 }
 
 ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(
-    RefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
+    SafeRefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
     bool aGetAll)
     : NormalTransactionOp(std::move(aTransaction)),
       mObjectStoreId(aGetAll
@@ -25995,7 +26023,7 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
 }
 
 ObjectStoreGetKeyRequestOp::ObjectStoreGetKeyRequestOp(
-    RefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
+    SafeRefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
     bool aGetAll)
     : NormalTransactionOp(std::move(aTransaction)),
       mObjectStoreId(
@@ -26102,7 +26130,7 @@ void ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
 }
 
 ObjectStoreDeleteRequestOp::ObjectStoreDeleteRequestOp(
-    RefPtr<TransactionBase> aTransaction,
+    SafeRefPtr<TransactionBase> aTransaction,
     const ObjectStoreDeleteParams& aParams)
     : NormalTransactionOp(std::move(aTransaction)),
       mParams(aParams),
@@ -26184,7 +26212,8 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
 }
 
 ObjectStoreClearRequestOp::ObjectStoreClearRequestOp(
-    RefPtr<TransactionBase> aTransaction, const ObjectStoreClearParams& aParams)
+    SafeRefPtr<TransactionBase> aTransaction,
+    const ObjectStoreClearParams& aParams)
     : NormalTransactionOp(std::move(aTransaction)),
       mParams(aParams),
       mObjectStoreMayHaveIndexes(false) {
@@ -26376,7 +26405,7 @@ RefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
   return indexMetadata;
 }
 
-IndexGetRequestOp::IndexGetRequestOp(RefPtr<TransactionBase> aTransaction,
+IndexGetRequestOp::IndexGetRequestOp(SafeRefPtr<TransactionBase> aTransaction,
                                      const RequestParams& aParams, bool aGetAll)
     : IndexRequestOpBase(std::move(aTransaction), aParams),
       mDatabase(Transaction().GetDatabasePtr()),
@@ -26553,9 +26582,9 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
   }
 }
 
-IndexGetKeyRequestOp::IndexGetKeyRequestOp(RefPtr<TransactionBase> aTransaction,
-                                           const RequestParams& aParams,
-                                           bool aGetAll)
+IndexGetKeyRequestOp::IndexGetKeyRequestOp(
+    SafeRefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
+    bool aGetAll)
     : IndexRequestOpBase(std::move(aTransaction), aParams),
       mOptionalKeyRange(
           aGetAll ? aParams.get_IndexGetAllKeysParams().optionalKeyRange()
