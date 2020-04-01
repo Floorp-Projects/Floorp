@@ -908,7 +908,6 @@ DisplayListBuilder::DisplayListBuilder(PipelineId aId,
       mPipelineId(aId),
       mContentSize(aContentSize),
       mRenderRoot(aRenderRoot),
-      mSendSubBuilderDisplayList(aRenderRoot == wr::RenderRoot::Default),
       mDisplayItemCache(aCache) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize, aCapacity);
@@ -927,29 +926,15 @@ void DisplayListBuilder::Save() { wr_dp_save(mWrState); }
 void DisplayListBuilder::Restore() { wr_dp_restore(mWrState); }
 void DisplayListBuilder::ClearSave() { wr_dp_clear_save(mWrState); }
 
-DisplayListBuilder& DisplayListBuilder::CreateSubBuilder(
-    const wr::LayoutSize& aContentSize, size_t aCapacity,
-    layers::DisplayItemCache* aCache, wr::RenderRoot aRenderRoot) {
-  MOZ_ASSERT(mRenderRoot == wr::RenderRoot::Default);
-  MOZ_ASSERT(!mSubBuilders[aRenderRoot]);
-  mSubBuilders[aRenderRoot] = MakeUnique<DisplayListBuilder>(
-      mPipelineId, aContentSize, aCapacity, aCache, aRenderRoot);
-  return *mSubBuilders[aRenderRoot];
-}
-
 DisplayListBuilder& DisplayListBuilder::SubBuilder(RenderRoot aRenderRoot) {
-  if (aRenderRoot == mRenderRoot) {
-    return *this;
-  }
-  return *mSubBuilders[aRenderRoot];
+  MOZ_ASSERT(aRenderRoot == mRenderRoot);
+  return *this;
 }
 
 bool DisplayListBuilder::HasSubBuilder(RenderRoot aRenderRoot) {
-  if (aRenderRoot == RenderRoot::Default) {
-    MOZ_ASSERT(mRenderRoot == RenderRoot::Default);
-    return true;
-  }
-  return !!mSubBuilders[aRenderRoot];
+  MOZ_ASSERT(aRenderRoot == RenderRoot::Default);
+  MOZ_ASSERT(mRenderRoot == RenderRoot::Default);
+  return true;
 }
 
 usize DisplayListBuilder::Dump(usize aIndent, const Maybe<usize>& aStart,

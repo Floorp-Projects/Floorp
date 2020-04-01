@@ -430,15 +430,7 @@ class DisplayListBuilder final {
   DisplayListBuilder& SubBuilder(RenderRoot aRenderRoot);
 
   bool GetSendSubBuilderDisplayList(RenderRoot aRenderRoot) {
-    if (aRenderRoot == RenderRoot::Default) {
-      return true;
-    }
-    return mSubBuilders[aRenderRoot] &&
-           mSubBuilders[aRenderRoot]->mSendSubBuilderDisplayList;
-  }
-
-  void SetSendSubBuilderDisplayList(RenderRoot aRenderRoot) {
-    mSubBuilders[aRenderRoot]->mSendSubBuilderDisplayList = true;
+    return true;
   }
 
   Maybe<wr::WrSpatialId> PushStackingContext(
@@ -738,13 +730,11 @@ class DisplayListBuilder final {
 
   FixedPosScrollTargetTracker* mActiveFixedPosTracker;
 
-  NonDefaultRenderRootArray<UniquePtr<DisplayListBuilder>> mSubBuilders;
   wr::PipelineId mPipelineId;
   wr::LayoutSize mContentSize;
 
   nsTArray<wr::PipelineId> mRemotePipelineIds;
   RenderRoot mRenderRoot;
-  bool mSendSubBuilderDisplayList;
 
   layers::DisplayItemCache* mDisplayItemCache;
   Maybe<uint16_t> mCurrentCacheSlot;
