@@ -20,6 +20,8 @@ from textwrap import dedent
 
 import mozpack.path as mozpath
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
+from taskgraph.util.python_path import find_object
+
 from .tasks import resolve_tests_by_suite
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -317,6 +319,16 @@ class OptimizeStrategies(TryConfig):
         if strategy:
             if ':' not in strategy:
                 strategy = "taskgraph.optimize:experimental.{}".format(strategy)
+
+            try:
+                obj = find_object(strategy)
+            except (ImportError, AttributeError):
+                print("error: invalid module path '{}'".format(strategy))
+                sys.exit(1)
+
+            if not isinstance(obj, dict):
+                print("error: object at '{}' must be a dict".format(strategy))
+                sys.exit(1)
 
             return {
                 'optimize-strategies': strategy,
