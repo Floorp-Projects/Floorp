@@ -21,8 +21,8 @@ function registerTarget(targetFront) {
   return { type: "REGISTER_TARGET", target };
 }
 
-function clearTarget(targetFront) {
-  return { type: "CLEAR_TARGET", targetFront };
+function unregisterTarget(targetFront) {
+  return { type: "UNREGISTER_TARGET", targetFront };
 }
 
 /**
@@ -49,7 +49,7 @@ function getTargetType(target) {
 
 module.exports = {
   registerTarget,
-  clearTarget,
+  unregisterTarget,
   selectTarget,
   TARGET_TYPES,
 };
