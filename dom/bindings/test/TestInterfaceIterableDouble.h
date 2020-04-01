@@ -8,6 +8,7 @@
 #define mozilla_dom_TestInterfaceIterableDouble_h
 
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
