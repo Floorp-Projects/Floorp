@@ -1189,11 +1189,13 @@ impl DisplayListBuilder {
     pub fn push_rect(
         &mut self,
         common: &di::CommonItemProperties,
+        bounds: LayoutRect,
         color: ColorF,
     ) {
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
             common: *common,
             color: PropertyBinding::Value(color),
+            bounds,
         });
         self.push_item(&item);
     }
@@ -1201,11 +1203,13 @@ impl DisplayListBuilder {
     pub fn push_rect_with_animation(
         &mut self,
         common: &di::CommonItemProperties,
+        bounds: LayoutRect,
         color: PropertyBinding<ColorF>,
     ) {
         let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
             common: *common,
             color,
+            bounds,
         });
         self.push_item(&item);
     }
@@ -1213,9 +1217,11 @@ impl DisplayListBuilder {
     pub fn push_clear_rect(
         &mut self,
         common: &di::CommonItemProperties,
+        bounds: LayoutRect,
     ) {
         let item = di::DisplayItem::ClearRectangle(di::ClearRectangleDisplayItem {
             common: *common,
+            bounds,
         });
         self.push_item(&item);
     }

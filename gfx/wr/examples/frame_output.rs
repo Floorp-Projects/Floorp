@@ -124,6 +124,7 @@ impl App {
 
         builder.push_rect(
             &CommonItemProperties::new(document.content_rect, space_and_clip),
+            document.content_rect,
             ColorF::new(1.0, 1.0, 0.0, 1.0)
         );
         builder.pop_stacking_context();
