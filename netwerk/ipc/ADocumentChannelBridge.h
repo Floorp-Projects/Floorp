@@ -8,7 +8,6 @@
 #define mozilla_net_ADocumentChannelBridge_h
 
 #include "mozilla/net/PDocumentChannelParent.h"
-#include "mozilla/dom/nsCSPContext.h"
 
 namespace mozilla {
 namespace net {
@@ -38,17 +37,11 @@ class ADocumentChannelBridge {
   // Delete the bridge, and drop any refs to the DocumentLoadListener
   virtual void Delete() = 0;
 
-  // Report a CSP violation event in the originating process, using
-  // nsCSPContext::AsyncReportViolation.
-  // aIsCspToInherit is true if aContext is the CSP to inherit (from
-  // the nsDocShellLoadState), which is used to determine the right
-  // loading Document when deserializing aContext. This should no longer be
-  // necessary after bug 1625366.
-  virtual void CSPViolation(
-      nsCSPContext* aContext, bool aIsCspToInherit, nsIURI* aBlockedURI,
-      nsCSPContext::BlockedContentSource aBlockedContentSource,
-      nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
-      uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject) = 0;
+  // Checks if we should allow a redirect to aNewURI.
+  // We need this because we currently can only do CSP checks in the content
+  // process in order to get the right events fired.
+  virtual RefPtr<PDocumentChannelParent::ConfirmRedirectPromise>
+  ConfirmRedirect(const LoadInfoArgs& aLoadInfo, nsIURI* aNewURI) = 0;
 
   // Initate a switch from the DocumentChannel to the protocol-specific
   // real channel.
