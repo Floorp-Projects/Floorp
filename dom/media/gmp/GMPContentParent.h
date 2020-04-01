@@ -22,9 +22,7 @@ class GMPContentParent final : public PGMPContentParent, public GMPSharedMem {
   friend class PGMPContentParent;
 
  public:
-  // Mark AddRef and Release as `final`, as they overload pure virtual
-  // implementations in PGMPContentParent.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPContentParent, final)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPContentParent)
 
   explicit GMPContentParent(GMPParent* aParent = nullptr);
 

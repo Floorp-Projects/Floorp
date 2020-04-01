@@ -14,6 +14,12 @@
 namespace mozilla {
 namespace gmp {
 
+GMPContentChild::GMPContentChild(GMPChild* aChild) : mGMPChild(aChild) {
+  MOZ_COUNT_CTOR(GMPContentChild);
+}
+
+GMPContentChild::~GMPContentChild() { MOZ_COUNT_DTOR(GMPContentChild); }
+
 MessageLoop* GMPContentChild::GMPMessageLoop() {
   return mGMPChild->GMPMessageLoop();
 }
