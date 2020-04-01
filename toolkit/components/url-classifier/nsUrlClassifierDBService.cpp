@@ -1038,16 +1038,15 @@ nsresult nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(
 
     if (result->miss) {
       return tuV2->NewMissPrefix(result->prefix);
-    } else {
-      LOG(("CacheCompletion hash %X, Addchunk %d",
-           result->completion.ToUint32(), result->addChunk));
-
-      nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      return tuV2->NewAddChunk(result->addChunk);
     }
+    LOG(("CacheCompletion hash %X, Addchunk %d", result->completion.ToUint32(),
+         result->addChunk));
+
+    nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return tuV2->NewAddChunk(result->addChunk);
   }
 
   RefPtr<TableUpdateV4> tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
