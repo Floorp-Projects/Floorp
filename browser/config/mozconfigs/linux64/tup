@@ -7,10 +7,10 @@ TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 export TUP=${MOZ_FETCHES_DIR}/tup/tup
 
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
-. "$topsrcdir/build/mozconfig.common.override"
 
 ac_add_options --enable-build-backends=Tup
 unset ENABLE_CLANG_PLUGIN
 # To enable the option to upload the tup database, uncomment the line below
 # ac_add_options --upload-tup-db
 
+. "$topsrcdir/build/mozconfig.common.override"
