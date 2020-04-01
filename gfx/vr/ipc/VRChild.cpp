@@ -126,17 +126,17 @@ void VRChild::Init() {
   if (sOpenVRControllerManifestManager->GetActionPath(&output)) {
     SendOpenVRControllerActionPathToVR(output);
   }
-  if (sOpenVRControllerManifestManager->GetManifestPath(VRControllerType::Vive,
-                                                        &output)) {
-    SendOpenVRControllerManifestPathToVR(VRControllerType::Vive, output);
+  if (sOpenVRControllerManifestManager->GetManifestPath(
+          VRControllerType::HTCVive, &output)) {
+    SendOpenVRControllerManifestPathToVR(VRControllerType::HTCVive, output);
   }
-  if (sOpenVRControllerManifestManager->GetManifestPath(VRControllerType::WMR,
+  if (sOpenVRControllerManifestManager->GetManifestPath(VRControllerType::MSMR,
                                                         &output)) {
-    SendOpenVRControllerManifestPathToVR(VRControllerType::WMR, output);
+    SendOpenVRControllerManifestPathToVR(VRControllerType::MSMR, output);
   }
   if (sOpenVRControllerManifestManager->GetManifestPath(
-          VRControllerType::Knuckles, &output)) {
-    SendOpenVRControllerManifestPathToVR(VRControllerType::Knuckles, output);
+          VRControllerType::ValveIndex, &output)) {
+    SendOpenVRControllerManifestPathToVR(VRControllerType::ValveIndex, output);
   }
   gfxVars::AddReceiver(this);
 }
