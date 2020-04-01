@@ -655,9 +655,12 @@ mozilla::ipc::IPCResult GMPChild::RecvInitGMPContentChild(
 
 void GMPChild::GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild) {
   for (uint32_t i = mGMPContentChildren.Length(); i > 0; i--) {
-    RefPtr<GMPContentChild>& destroyedActor = mGMPContentChildren[i - 1];
-    if (destroyedActor.get() == aGMPContentChild) {
+    UniquePtr<GMPContentChild>& toDestroy = mGMPContentChildren[i - 1];
+    if (toDestroy.get() == aGMPContentChild) {
       SendPGMPContentChildDestroyed();
+      RefPtr<DeleteTask<GMPContentChild>> task =
+          new DeleteTask<GMPContentChild>(toDestroy.release());
+      MessageLoop::current()->PostTask(task.forget());
       mGMPContentChildren.RemoveElementAt(i - 1);
       break;
     }

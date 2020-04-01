@@ -10,7 +10,7 @@ include protocol PChromiumCDM;
 namespace mozilla {
 namespace gmp {
 
-intr refcounted protocol PGMPContent
+intr protocol PGMPContent
 {
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;
