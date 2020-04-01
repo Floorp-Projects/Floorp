@@ -683,6 +683,44 @@ static int nr_ice_get_default_local_address(nr_ice_ctx *ctx, int ip_version, nr_
     return(_status);
   }
 
+/* if handed a IPv4 default_local_addr, looks for IPv6 address on same interface
+   if handed a IPv6 default_local_addr, looks for IPv4 address on same interface
+*/
+static int nr_ice_get_assoc_interface_address(nr_local_addr* default_local_addr,
+                                              nr_local_addr* local_addrs, int addr_ct,
+                                              nr_local_addr* assoc_addrp)
+  {
+    int r, _status;
+    int i, ip_version;
+
+    if (!default_local_addr || !local_addrs || !addr_ct) {
+      ABORT(R_BAD_ARGS);
+    }
+
+    /* set _status to R_EOD in case we don't find an associated address */
+    _status = R_EOD;
+
+    /* look for IPv6 if we have IPv4, look for IPv4 if we have IPv6 */
+    ip_version = (NR_IPV4 == default_local_addr->addr.ip_version?NR_IPV6:NR_IPV4);
+
+    for (i=0; i<addr_ct; ++i) {
+      /* if we find the ip_version we're looking for on the matching interface,
+         copy it to assoc_addrp.
+      */
+      if (local_addrs[i].addr.ip_version == ip_version &&
+          !strcmp(local_addrs[i].addr.ifname, default_local_addr->addr.ifname)) {
+        if (r=nr_local_addr_copy(assoc_addrp, &local_addrs[i])) {
+          ABORT(r);
+        }
+        _status = 0;
+        break;
+      }
+    }
+
+  abort:
+    return(_status);
+  }
+
 int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
                                nr_local_addr* stun_addrs, int stun_addr_ct)
   {
@@ -738,7 +776,21 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
         if(!nr_ice_get_default_local_address(
                ctx, ctx->target_for_default_local_address_lookup->ip_version,
                local_addrs, addr_ct, &default_addrs[default_addr_ct])) {
+          nr_local_addr *new_addr = &default_addrs[default_addr_ct];
+
           ++default_addr_ct;
+
+          /* If we have a default target address, check for an associated
+             address on the same interface.  For example, if the default
+             target address is IPv6, this will find an associated IPv4
+             address on the same interface.
+             This makes ICE w/ dual stacks work better - Bug 1609124.
+          */
+          if(!nr_ice_get_assoc_interface_address(
+              new_addr, local_addrs, addr_ct,
+              &default_addrs[default_addr_ct])) {
+            ++default_addr_ct;
+          }
         }
       } else {
         /* Get just the default IPv4 and IPv6 addrs */
