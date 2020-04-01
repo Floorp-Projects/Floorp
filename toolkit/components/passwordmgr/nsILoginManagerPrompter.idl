@@ -26,11 +26,14 @@ interface nsILoginManagerPrompter : nsISupports {
    * @param notifySaved
    *        A boolean value indicating whether the notification should indicate that
    *        a login has been saved
+   * @param autoFilledLoginGuid
+   *        A string guid value for the login which was autofilled into the form
    */
   void promptToSavePassword(in Element aBrowser,
                             in nsILoginInfo aLogin,
                             [optional] in boolean dismissed,
-                            [optional] in boolean notifySaved);
+                            [optional] in boolean notifySaved,
+                            [optional] in AString autoFilledLoginGuid);
 
   /**
    * Ask the user if they want to change a login's password or username.
@@ -48,13 +51,16 @@ interface nsILoginManagerPrompter : nsISupports {
    * @param autoSavedLoginGuid
    *        A string guid value for the old login to be removed if the changes
    *        match it to a different login
+   * @param autoFilledLoginGuid
+   *        A string guid value for the login which was autofilled into the form
    */
   void promptToChangePassword(in Element aBrowser,
                               in nsILoginInfo aOldLogin,
                               in nsILoginInfo aNewLogin,
                               [optional] in boolean dismissed,
                               [optional] in boolean notifySaved,
-                              [optional] in AString autoSavedLoginGuid);
+                              [optional] in AString autoSavedLoginGuid,
+                              [optional] in AString autoFilledLoginGuid);
 
   /**
    * Ask the user if they want to change the password for one of
