@@ -81,6 +81,7 @@ class JSWindowActorProtocol final : public nsIObserver,
   explicit JSWindowActorProtocol(const nsAString& aName) : mName(aName) {}
   extensions::MatchPatternSet* GetURIMatcher();
   bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
+  bool MessageManagerGroupMatches(BrowsingContext* aBrowsingContext);
   ~JSWindowActorProtocol() = default;
 
   nsString mName;
@@ -88,6 +89,7 @@ class JSWindowActorProtocol final : public nsIObserver,
   bool mIncludeChrome = false;
   nsTArray<nsString> mMatches;
   nsTArray<nsString> mRemoteTypes;
+  nsTArray<nsString> mMessageManagerGroups;
 
   ParentSide mParent;
   ChildSide mChild;

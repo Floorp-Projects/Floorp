@@ -249,6 +249,7 @@ struct JSWindowActorInfo
   nsCString[] observers;
   nsString[] matches;
   nsString[] remoteTypes;
+  nsString[] messageManagerGroups;
 };
 
 struct GMPAPITags

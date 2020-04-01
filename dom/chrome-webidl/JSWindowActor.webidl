@@ -140,6 +140,12 @@ dictionary WindowActorOptions {
    */
   sequence<DOMString> remoteTypes;
 
+  /**
+   * An array of MessageManagerGroup values which restrict which type
+   * of browser elements the actor is allowed to be loaded within.
+   */
+  sequence<DOMString> messageManagerGroups;
+
   /** This fields are used for configuring individual sides of the actor. */
   WindowActorSidedOptions parent;
   WindowActorChildOptions child;

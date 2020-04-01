@@ -47,6 +47,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   proto->mAllFrames = aInfo.allFrames();
   proto->mMatches = aInfo.matches();
   proto->mRemoteTypes = aInfo.remoteTypes();
+  proto->mMessageManagerGroups = aInfo.messageManagerGroups();
   proto->mChild.mModuleURI = aInfo.url();
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
@@ -73,6 +74,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
   info.allFrames() = mAllFrames;
   info.matches() = mMatches;
   info.remoteTypes() = mRemoteTypes;
+  info.messageManagerGroups() = mMessageManagerGroups;
   info.url() = mChild.mModuleURI;
 
   info.events().SetCapacity(mChild.mEvents.Length());
@@ -109,6 +111,10 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
   if (aOptions.mRemoteTypes.WasPassed()) {
     MOZ_ASSERT(aOptions.mRemoteTypes.Value().Length());
     proto->mRemoteTypes = aOptions.mRemoteTypes.Value();
+  }
+
+  if (aOptions.mMessageManagerGroups.WasPassed()) {
+    proto->mMessageManagerGroups = aOptions.mMessageManagerGroups.Value();
   }
 
   if (aOptions.mParent.WasPassed()) {
@@ -328,6 +334,17 @@ bool JSWindowActorProtocol::RemoteTypePrefixMatches(
   return false;
 }
 
+bool JSWindowActorProtocol::MessageManagerGroupMatches(
+    BrowsingContext* aBrowsingContext) {
+  BrowsingContext* top = aBrowsingContext->Top();
+  for (auto& group : mMessageManagerGroups) {
+    if (group == top->GetMessageManagerGroup()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
                                     nsIURI* aURI,
                                     const nsAString& aRemoteType) {
@@ -344,6 +361,11 @@ bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
 
   if (!mRemoteTypes.IsEmpty() &&
       !RemoteTypePrefixMatches(RemoteTypePrefix(aRemoteType))) {
+    return false;
+  }
+
+  if (!mMessageManagerGroups.IsEmpty() &&
+      !MessageManagerGroupMatches(aBrowsingContext)) {
     return false;
   }
 
