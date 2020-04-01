@@ -7,9 +7,6 @@
   html {
     font-family: helvetica, arial;
   }
-  #in-progress {
-    display: none;
-  }
   table {
     margin: 1em;
     border-collapse: collapse;
@@ -24,14 +21,20 @@
     border: 1px solid black;
     text-align: center;
   }
-  #run-all {
+  #controls {
+    display: none;
+  }
+  #in-progress {
     display: none;
   }
 </style>
 </head>
 <body>
-<progress id=loading></progress>
-<div class=controls>
+<div id=loading>
+Loading assets
+<progress></progress>
+</div>
+<div id=controls>
   <button id=run-all>Run all</button>
   <div id=in-progress>
     <progress id=progress-bar> </progress>

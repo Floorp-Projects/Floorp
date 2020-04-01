@@ -7,7 +7,7 @@ $ = document.querySelectorAll.bind(document);
 
 let DURATION = null;
 if (location.search) {
-  let duration = location.search.match(/duration=(\d+)/);
+  let duration = location.search.match(/rendering-buffer-length=(\d+)/);
   if (duration) {
     DURATION = duration[1];
   } else {
@@ -205,14 +205,19 @@ function loadAllSources(endCallback) {
 
 document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("run-all").addEventListener("click", function() {
-    document.getElementById("in-progress").style.display = "inline";
     document.getElementById("run-all").disabled = true;
+    document.getElementById("in-progress").style.display = "inline";
     runAll();
   });
   loadAllSources(function() {
+    // auto-run when running in raptor
     document.getElementById("loading").remove();
-    document.getElementById("run-all").style.display = "inline";
-    setTimeout(runAll, 100);
+    document.getElementById("controls").style.display = "block";
+    if (location.search.includes("raptor")) {
+      document.getElementById("run-all").disabled = true;
+      document.getElementById("in-progress").style.display = "inline";
+      setTimeout(runAll, 100);
+    }
   });
 });
 
