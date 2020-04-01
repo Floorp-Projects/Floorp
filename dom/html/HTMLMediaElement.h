@@ -1346,6 +1346,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // key events.
   void ClearStopMediaControlTimerIfNeeded();
 
+  // This function is used to update the status of media control when the media
+  // changes its status of being used in the Picture-in-Picture mode.
+  void UpdateMediaControlAfterPictureInPictureModeChanged();
+
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
