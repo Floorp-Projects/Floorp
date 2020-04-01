@@ -24,6 +24,11 @@ AddonTestUtils.overrideCertDB();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+// Currently security.tls.version.min has a different default
+// value in Nightly and Beta as opposed to Release builds.
+const tlsMinPref = Services.prefs.getIntPref("security.tls.version.min");
+const tlsMinVer = tlsMinPref === 3 ? "TLSv1.2" : "TLSv1";
+
 add_task(async function test_privacy() {
   // Create an object to hold the values to which we will initialize the prefs.
   const SETTINGS = {
@@ -279,7 +284,7 @@ add_task(async function test_privacy_other_prefs() {
       "media.peerconnection.ice.proxy_only": false,
     },
     "network.tlsVersionRestriction": {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 4,
     },
     "network.peerConnectionEnabled": {
@@ -586,11 +591,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.1",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 4,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.3",
     }
   );
@@ -602,11 +607,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.2",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 3,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.2",
     }
   );
@@ -618,11 +623,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "invalid",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 4,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.3",
     }
   );
@@ -664,11 +669,11 @@ add_task(async function test_privacy_other_prefs() {
       maximum: "TLSv1.2",
     },
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 3,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.2",
     }
   );
