@@ -66,7 +66,7 @@ SI int32_t if_then_else(int32_t c, int32_t t, int32_t e) { return c ? t : e; }
 SI float if_then_else(int32_t c, float t, float e) { return c ? t : e; }
 
 SI Float if_then_else(I32 c, float t, float e) {
-  return Float((c & I32(Float(t))) | (~c & I32(Float(e))));
+  return bit_cast<Float>((c & bit_cast<I32>(Float(t))) | (~c & bit_cast<I32>(Float(e))));
 }
 
 SI I32 if_then_else(I32 c, int32_t t, int32_t e) {
@@ -74,7 +74,7 @@ SI I32 if_then_else(I32 c, int32_t t, int32_t e) {
 }
 
 SI Float if_then_else(I32 c, Float t, Float e) {
-  return Float((c & I32(t)) | (~c & I32(e)));
+  return bit_cast<Float>((c & bit_cast<I32>(t)) | (~c & bit_cast<I32>(e)));
 }
 
 SI Float if_then_else(int32_t c, Float t, Float e) { return c ? t : e; }
@@ -489,7 +489,7 @@ Float abs(Float v) {
 #if USE_NEON
   return vabsq_f32(v);
 #else
-  return Float(I32(v) & I32(0.0f - v));
+  return bit_cast<Float>(bit_cast<I32>(v) & bit_cast<I32>(0.0f - v));
 #endif
 }
 
