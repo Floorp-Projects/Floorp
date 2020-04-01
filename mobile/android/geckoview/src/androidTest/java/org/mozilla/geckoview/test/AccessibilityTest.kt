@@ -331,6 +331,15 @@ class AccessibilityTest : BaseSessionTest() {
             }
         })
 
+        // reset caret position
+        mainSession.evaluateJS("""
+            this.select(document.body, 0, 0);
+        """.trimIndent())
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onFocused(event: AccessibilityEvent) {}
+        })
+
         mainSession.finder.find("Hell", 0)
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
