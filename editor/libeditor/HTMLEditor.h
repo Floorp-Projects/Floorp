@@ -4657,9 +4657,11 @@ class MOZ_STACK_CLASS AlignStateAtSelection final {
   nsIHTMLEditor::EAlignment AlignmentAtSelectionStart() const {
     return mFirstAlign;
   }
+  bool IsSelectionRangesFound() const { return mFoundSelectionRanges; }
 
  private:
   nsIHTMLEditor::EAlignment mFirstAlign = nsIHTMLEditor::eLeft;
+  bool mFoundSelectionRanges = false;
 };
 
 /**

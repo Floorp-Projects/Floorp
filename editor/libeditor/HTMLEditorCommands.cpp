@@ -861,6 +861,17 @@ nsresult AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   ErrorResult error;
   AlignStateAtSelection state(*aHTMLEditor, error);
   if (error.Failed()) {
+    if (!state.IsSelectionRangesFound()) {
+      // If there was no selection ranges, we shouldn't throw exception for
+      // compatibility with the other browsers, but I have no better idea
+      // than returning empty string in this case.  Oddly, Blink/WebKit returns
+      // "true" or "false", but it's different from us and the value does not
+      // make sense.  Additionally, WPT loves our behavior.
+      error.SuppressException();
+      aParams.SetBool(STATE_MIXED, false);
+      aParams.SetCString(STATE_ATTRIBUTE, EmptyCString());
+      return NS_OK;
+    }
     NS_WARNING("AlignStateAtSelection failed");
     return error.StealNSResult();
   }
