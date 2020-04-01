@@ -77,6 +77,8 @@
 #include <time.h>
 #include <dlfcn.h>
 
+#include "StandardFonts-macos.inc"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -855,6 +857,16 @@ void gfxMacPlatformFontList::AddFamily(const nsACString& aFamilyName, FontVisibi
   }
 }
 
+FontVisibility gfxMacPlatformFontList::GetVisibilityForFamily(const nsACString& aName) const {
+  if (aName[0] == '.' || aName.LowerCaseEqualsLiteral("lastresort")) {
+    return FontVisibility::Hidden;
+  }
+  if (FamilyInList(aName, kBaseFonts, ArrayLength(kBaseFonts))) {
+    return FontVisibility::Base;
+  }
+  return FontVisibility::User;
+}
+
 void gfxMacPlatformFontList::AddFamily(CFStringRef aFamily) {
   NSString* family = (NSString*)aFamily;
 
@@ -868,8 +880,8 @@ void gfxMacPlatformFontList::AddFamily(CFStringRef aFamily) {
   nsAutoString familyName;
   nsCocoaUtils::GetStringForNSString(family, familyName);
 
-  FontVisibility visibility = familyName[0] == '.' ? FontVisibility::Hidden : FontVisibility::Unknown;
-  AddFamily(NS_ConvertUTF16toUTF8(familyName), visibility);
+  NS_ConvertUTF16toUTF8 nameUtf8(familyName);
+  AddFamily(nameUtf8, GetVisibilityForFamily(nameUtf8));
 }
 
 void gfxMacPlatformFontList::ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList) {
@@ -955,10 +967,8 @@ void gfxMacPlatformFontList::InitSharedFontListForPlatform() {
       NS_ConvertUTF16toUTF8 name(name16);
       nsAutoCString key;
       GenerateFontListKey(name, key);
-      FontVisibility visibility = key.EqualsLiteral("lastresort") || key[0] == '.'
-                                      ? FontVisibility::Hidden
-                                      : FontVisibility::Unknown;
-      families.AppendElement(fontlist::Family::InitData(key, name, 0, visibility));
+      families.AppendElement(
+          fontlist::Family::InitData(key, name, 0, GetVisibilityForFamily(name)));
     }
     CFRelease(familyNames);
     ApplyWhitelist(families);

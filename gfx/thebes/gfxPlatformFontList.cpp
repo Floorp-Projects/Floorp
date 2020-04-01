@@ -371,6 +371,16 @@ void gfxPlatformFontList::ApplyWhitelist(
   aFamilies = accepted;
 }
 
+bool gfxPlatformFontList::FamilyInList(const nsACString& aName,
+                                       const char* aList[], size_t aCount) {
+  auto cmp = [&](const char* const aVal) -> int {
+    nsCaseInsensitiveUTF8StringComparator cmp;
+    return cmp(aName.BeginReading(), aVal, aName.Length(), strlen(aVal));
+  };
+  size_t result;
+  return BinarySearchIf(aList, 0, aCount, cmp, &result);
+}
+
 bool gfxPlatformFontList::AddWithLegacyFamilyName(const nsACString& aLegacyName,
                                                   gfxFontEntry* aFontEntry,
                                                   FontVisibility aVisibility) {
