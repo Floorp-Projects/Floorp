@@ -141,8 +141,8 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   void UpgradeToSecure(ErrorResult& aRv);
 
   bool Suspended() const { return mSuspended; }
-
-  void SetSuspended(bool aSuspended, ErrorResult& aRv);
+  void Suspend(ErrorResult& aRv);
+  void Resume(const nsCString& aText, ErrorResult& aRv);
 
   void GetContentType(nsCString& aContentType) const;
   void SetContentType(const nsACString& aContentType);
@@ -315,6 +315,8 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   bool mResponseStarted = false;
 
   nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsIRemoteTab> mAddonEntries;
+
+  mozilla::TimeStamp mSuspendTime;
 
   class RequestListener final : public nsIStreamListener,
                                 public nsIThreadRetargetableStreamListener {

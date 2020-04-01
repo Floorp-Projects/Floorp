@@ -956,11 +956,13 @@ HttpObserverManager = {
     responseHeaders
   ) {
     let shouldResume = !channel.suspended;
+    let suspenders = [];
 
     try {
       for (let { opts, result } of handlerResults) {
         if (isThenable(result)) {
-          channel.suspended = true;
+          suspenders.push(opts.addonId);
+          channel.suspend();
           try {
             result = await result;
           } catch (e) {
@@ -995,7 +997,13 @@ HttpObserverManager = {
         }
 
         if (result.cancel) {
-          channel.suspended = false;
+          let text = "";
+          if (Services.profiler?.IsActive()) {
+            text =
+              `${kind} ${channel.finalURL}` +
+              ` by ${suspenders.join(", ")} canceled`;
+          }
+          channel.resume(text);
           channel.cancel(
             Cr.NS_ERROR_ABORT,
             Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST
@@ -1012,7 +1020,14 @@ HttpObserverManager = {
 
         if (result.redirectUrl) {
           try {
-            channel.suspended = false;
+            let text = "";
+            if (Services.profiler?.IsActive()) {
+              text =
+                `${kind} ${channel.finalURL}` +
+                ` by ${suspenders.join(", ")}` +
+                ` redirected to ${result.redirectUrl}`;
+            }
+            channel.resume(text);
             channel.redirectTo(Services.io.newURI(result.redirectUrl));
             // Web Extensions using the WebRequest API are allowed
             // to redirect a channel to a data: URI, hence we mark
@@ -1072,7 +1087,11 @@ HttpObserverManager = {
 
     // Only resume the channel if it was suspended by this call.
     if (shouldResume) {
-      channel.suspended = false;
+      let text = "";
+      if (Services.profiler?.IsActive()) {
+        text = `${kind} ${channel.finalURL} by ${suspenders.join(", ")}`;
+      }
+      channel.resume(text);
     }
   },
 

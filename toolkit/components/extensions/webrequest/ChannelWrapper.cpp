@@ -245,20 +245,35 @@ void ChannelWrapper::UpgradeToSecure(ErrorResult& aRv) {
   }
 }
 
-void ChannelWrapper::SetSuspended(bool aSuspended, ErrorResult& aRv) {
-  if (aSuspended != mSuspended) {
+void ChannelWrapper::Suspend(ErrorResult& aRv) {
+  if (!mSuspended) {
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
-      if (aSuspended) {
-        rv = chan->Suspend();
-      } else {
-        rv = chan->Resume();
-      }
+      mSuspendTime = mozilla::TimeStamp::NowUnfuzzed();
+      rv = chan->Suspend();
     }
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
     } else {
-      mSuspended = aSuspended;
+      mSuspended = true;
+    }
+  }
+}
+
+void ChannelWrapper::Resume(const nsCString& aText, ErrorResult& aRv) {
+  if (mSuspended) {
+    nsresult rv = NS_ERROR_UNEXPECTED;
+    if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
+      rv = chan->Resume();
+
+      PROFILER_ADD_TEXT_MARKER("Extension Suspend", aText,
+                               JS::ProfilingCategoryPair::NETWORK, mSuspendTime,
+                               mozilla::TimeStamp::NowUnfuzzed());
+    }
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+    } else {
+      mSuspended = false;
     }
   }
 }

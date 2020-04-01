@@ -63,6 +63,8 @@
 #  define PROFILER_ADD_NETWORK_MARKER(uri, pri, channel, type, start, end,  \
                                       count, cache, innerWindowID, timings, \
                                       redirect, ...)
+#  define PROFILER_ADD_TEXT_MARKER(markerName, text, categoryPair, startTime, \
+                                   endTime, ...)
 
 #  define PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair, \
                                   kind)
@@ -909,6 +911,10 @@ void profiler_add_text_marker(
     const mozilla::Maybe<uint64_t>& aInnerWindowID = mozilla::Nothing(),
     UniqueProfilerBacktrace aCause = nullptr);
 
+#  define PROFILER_ADD_TEXT_MARKER(markerName, text, categoryPair, startTime, \
+                                   endTime, ...)                              \
+    profiler_add_text_marker(markerName, text, categoryPair, startTime,       \
+                             endTime, ##__VA_ARGS__)
 class MOZ_RAII AutoProfilerTextMarker {
  public:
   AutoProfilerTextMarker(const char* aMarkerName, const nsACString& aText,
