@@ -6469,6 +6469,9 @@ AttachDecision BinaryArithIRGenerator::tryAttachStub() {
   // Arithmetic operations or bitwise operations with BigInt operands
   TRY_ATTACH(tryAttachBigInt());
 
+  // Arithmetic operations (without addition) with String x Int32.
+  TRY_ATTACH(tryAttachStringInt32Arith());
+
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
 }
@@ -6857,6 +6860,67 @@ AttachDecision BinaryArithIRGenerator::tryAttachBigInt() {
       break;
     default:
       MOZ_CRASH("Unhandled op in tryAttachBigInt");
+  }
+
+  writer.returnFromIC();
+  return AttachDecision::Attach;
+}
+
+AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
+  // Check for either int32 x string or string x int32.
+  if (!(lhs_.isInt32() && rhs_.isString()) &&
+      !(lhs_.isString() && rhs_.isInt32())) {
+    return AttachDecision::NoAction;
+  }
+
+  // The created ICs will fail if the result can't be encoded as as int32.
+  // Thus skip this IC, if the sample result is not an int32.
+  if (!res_.isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Must _not_ support Add, because it would be string concatenation instead.
+  if (op_ != JSOp::Sub && op_ != JSOp::Mul && op_ != JSOp::Div &&
+      op_ != JSOp::Mod) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId lhsId(writer.setInputOperandId(0));
+  ValOperandId rhsId(writer.setInputOperandId(1));
+
+  auto guardToInt32 = [&](ValOperandId id, HandleValue v) {
+    if (v.isInt32()) {
+      return writer.guardToInt32(id);
+    }
+
+    MOZ_ASSERT(v.isString());
+    StringOperandId strId = writer.guardToString(id);
+    NumberOperandId numId = writer.guardAndGetNumberFromString(strId);
+    return writer.guardAndGetInt32FromNumber(numId);
+  };
+
+  Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);
+  Int32OperandId rhsIntId = guardToInt32(rhsId, rhs_);
+
+  switch (op_) {
+    case JSOp::Sub:
+      writer.int32SubResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringInt32.Sub");
+      break;
+    case JSOp::Mul:
+      writer.int32MulResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringInt32.Mul");
+      break;
+    case JSOp::Div:
+      writer.int32DivResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringInt32.Div");
+      break;
+    case JSOp::Mod:
+      writer.int32ModResult(lhsIntId, rhsIntId);
+      trackAttached("BinaryArith.StringInt32.Mod");
+      break;
+    default:
+      MOZ_CRASH("Unhandled op in tryAttachStringInt32Arith");
   }
 
   writer.returnFromIC();
