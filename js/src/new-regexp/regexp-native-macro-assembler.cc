@@ -837,8 +837,8 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
 
   successHandler();
   exitHandler();
-
-  // TODO: backtrack/overflow handlers
+  backtrackHandler();
+  stackOverflowHandler();
 
   Linker linker(masm_);
   JitCode* code = linker.newCode(cx_, js::jit::CodeKind::RegExp);
@@ -1088,6 +1088,69 @@ void SMRegExpMacroAssembler::exitHandler() {
   }
 }
 
+void SMRegExpMacroAssembler::backtrackHandler() {
+  if (!backtrack_label_.used()) {
+    return;
+  }
+  masm_.bind(&backtrack_label_);
+  Backtrack();
+}
+
+void SMRegExpMacroAssembler::stackOverflowHandler() {
+  if (!stack_overflow_label_.used()) {
+    return;
+  }
+
+  // Called if the backtrack-stack limit has been hit.
+  // NOTE: depending on architecture, the call may have
+  // changed the stack pointer. We adjust for that below.
+  masm_.bind(&stack_overflow_label_);
+
+  // Load argument
+  masm_.movePtr(ImmPtr(isolate()->regexp_stack()), temp1_);
+
+  // Save registers before calling C function
+  LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
+
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
+
+  // Adjust for the return address on the stack.
+  size_t frameOffset = sizeof(void*);
+
+  volatileRegs.takeUnchecked(temp0_);
+  volatileRegs.takeUnchecked(temp1_);
+  masm_.PushRegsInMask(volatileRegs);
+
+  masm_.setupUnalignedABICall(temp0_);
+  masm_.passABIArg(temp1_);
+  masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GrowBacktrackStack));
+  masm_.storeCallBoolResult(temp0_);
+
+  masm_.PopRegsInMask(volatileRegs);
+
+  // If GrowBacktrackStack returned false, we have failed to grow the
+  // stack, and must exit with a stack-overflow exception. Do this in
+  // the caller so that the stack is adjusted by our return instruction.
+  js::jit::Label overflow_return;
+  masm_.branchTest32(Assembler::Zero, temp0_, temp0_, &overflow_return);
+
+  // Otherwise, store the new backtrack stack base and recompute the new
+  // top of the stack.
+  Address bsbAddress(masm_.getStackPointer(),
+                     offsetof(FrameData, backtrackStackBase) + frameOffset);
+  masm_.subPtr(bsbAddress, backtrack_stack_pointer_);
+
+  masm_.loadPtr(AbsoluteAddress(isolate()->top_of_regexp_stack()), temp1_);
+  masm_.storePtr(temp1_, bsbAddress);
+  masm_.addPtr(temp1_, backtrack_stack_pointer_);
+
+  // Resume execution in calling code.
+  masm_.bind(&overflow_return);
+  masm_.ret();
+}
+
 // This is only used by tracing code.
 // The return value doesn't matter.
 RegExpMacroAssembler::IrregexpImplementation
@@ -1139,6 +1202,13 @@ uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareUCStrings(
   }
 
   return 1;
+}
+
+/* static */
+bool SMRegExpMacroAssembler::GrowBacktrackStack(RegExpStack* regexp_stack) {
+  js::AutoUnsafeCallWithABI unsafe;
+  size_t size = regexp_stack->stack_capacity();
+  return !!regexp_stack->EnsureCapacity(size * 2);
 }
 
 }  // namespace internal
