@@ -175,12 +175,6 @@ class LoginManagerPrompter {
         ? "PWMGR_PROMPT_REMEMBER_ACTION"
         : "PWMGR_PROMPT_UPDATE_ACTION";
     let histogram = Services.telemetry.getHistogramById(histogramName);
-    histogram.add(PROMPT_DISPLAYED);
-    Services.obs.notifyObservers(
-      null,
-      "weave:telemetry:histogram",
-      histogramName
-    );
 
     let chromeDoc = browser.ownerDocument;
     let currentNotification;
@@ -468,6 +462,17 @@ class LoginManagerPrompter {
             switch (topic) {
               case "showing":
                 currentNotification = this;
+
+                // Record the first time this instance of the doorhanger is shown.
+                if (!this.timeShown) {
+                  histogram.add(PROMPT_DISPLAYED);
+                  Services.obs.notifyObservers(
+                    null,
+                    "weave:telemetry:histogram",
+                    histogramName
+                  );
+                }
+
                 chromeDoc
                   .getElementById("password-notification-password")
                   .removeAttribute("focused");
