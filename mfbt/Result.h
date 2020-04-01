@@ -327,6 +327,9 @@ class MOZ_MUST_USE_TYPE Result final {
   Impl mImpl;
 
  public:
+  using ok_type = V;
+  using err_type = E;
+
   /** Create a success result. */
   MOZ_IMPLICIT Result(V&& aValue) : mImpl(std::forward<V>(aValue)) {
     MOZ_ASSERT(isOk());

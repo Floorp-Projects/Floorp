@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    'TestAlgorithm.cpp',
     'TestInitializedOnce.cpp',
 ]
 
