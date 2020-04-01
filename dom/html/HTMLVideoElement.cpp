@@ -552,6 +552,7 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
     if (container) {
       mDecoder->SetSecondaryVideoContainer(container);
     }
+    UpdateMediaControlAfterPictureInPictureModeChanged();
   } else if (mSrcStream) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
@@ -561,6 +562,7 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
           this, container, mAbstractMainThread);
       mSelectedVideoStreamTrack->AddVideoOutput(mSecondaryVideoOutput);
     }
+    UpdateMediaControlAfterPictureInPictureModeChanged();
   }
 }
 
@@ -582,7 +584,7 @@ void HTMLVideoElement::EndCloningVisually() {
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
   Unused << SetVisualCloneTarget(nullptr);
 
-  CreateStopMediaControlTimerIfNeeded();
+  UpdateMediaControlAfterPictureInPictureModeChanged();
 
   if (IsInComposedDoc() && !StaticPrefs::media_cloneElementVisually_testing()) {
     NotifyUAWidgetSetupOrChange();
