@@ -123,6 +123,19 @@ interface ChannelWrapper : EventTarget {
   void upgradeToSecure();
 
   /**
+   * Suspends the underlying channel.
+   */
+  [Throws]
+  void suspend();
+
+  /**
+   * Resumes (un-suspends) the underlying channel.  The profilerText parameter
+   * is only used to annotate profiles.
+   */
+  [Throws]
+  void resume(ByteString profileText);
+
+  /**
    * The content type of the request, usually as read from the Content-Type
    * header. This should be used in preference to the header to determine the
    * content type of the channel.
@@ -151,8 +164,8 @@ interface ChannelWrapper : EventTarget {
    * the request is not suspended by the wrapper, but may still be suspended
    * by another caller.
    */
-  [Pure, SetterThrows]
-  attribute boolean suspended;
+  [Pure]
+  readonly attribute boolean suspended;
 
 
   /**
