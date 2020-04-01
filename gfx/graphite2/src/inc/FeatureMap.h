@@ -56,9 +56,12 @@ class FeatureRef
     static const uint8  SIZEOF_CHUNK = sizeof(chunk_t)*8;
 
 public:
+    enum flags_t : uint16 {
+        HIDDEN = 0x0800
+    };
     FeatureRef() throw();
     FeatureRef(const Face & face, unsigned short & bits_offset, uint32 max_val,
-               uint32 name, uint16 uiName, uint16 flags,
+               uint32 name, uint16 uiName, flags_t flags,
                FeatureSetting *settings, uint16 num_set) throw();
     ~FeatureRef() throw();
 
@@ -75,6 +78,7 @@ public:
     uint16 getNumSettings() const { return m_numSet; }
     uint16 getSettingName(uint16 index) const { return m_nameValues[index].label(); }
     int16  getSettingValue(uint16 index) const { return m_nameValues[index].value(); }
+    flags_t getFlags() const { return m_flags; }
     uint32 maxVal() const { return m_max; }
     const Face & getFace() const { assert(m_face); return *m_face;}
     const FeatureMap* getFeatureMap() const;// { return m_pFace;}
@@ -88,9 +92,9 @@ private:
     chunk_t m_mask,             // bit mask to get the value from the vector
             m_max;              // max value the value can take
     uint32  m_id;               // feature identifier/name
-    uint16  m_nameid,            // Name table id for feature name
-            m_flags,             // feature flags (unused at the moment but read from the font)
-            m_numSet;            // number of values (number of entries in m_nameValues)
+    uint16  m_nameid,           // Name table id for feature name
+            m_numSet;           // number of values (number of entries in m_nameValues)
+    flags_t m_flags;            // feature flags see FeatureRef::flags_t.
     byte    m_bits,             // how many bits to shift the value into place
             m_index;            // index into the array to find the ulong to mask
 
@@ -103,8 +107,8 @@ FeatureRef::FeatureRef() throw()
 : m_face(0),
   m_nameValues(0),
   m_mask(0), m_max(0),
-  m_id(0),
-  m_nameid(0), m_flags(0), m_numSet(0),
+  m_id(0), m_nameid(0), m_numSet(0), 
+  m_flags(flags_t(0)),
   m_bits(0), m_index(0)
 {
 }
