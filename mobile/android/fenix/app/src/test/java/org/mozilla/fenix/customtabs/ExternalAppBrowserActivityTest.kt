@@ -14,18 +14,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.components.metrics.Event
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
-@RunWith(RobolectricTestRunner::class)
-@Config(application = TestApplication::class)
 class ExternalAppBrowserActivityTest {
 
     @Test
