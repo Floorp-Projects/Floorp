@@ -2268,53 +2268,69 @@ impl BatchBuilder {
                     BlendMode::None
                 };
 
-                if let Some(ref cache_handle) = gradient.cache_handle {
-                    let rt_cache_entry = ctx.resource_cache
-                        .get_cached_render_task(cache_handle);
-                    let cache_item = ctx.resource_cache
-                        .get_texture_cache_item(&rt_cache_entry.handle);
+                if !gradient.cache_segments.is_empty() {
 
-                    if cache_item.texture_id == TextureSource::Invalid {
-                        return;
+                    for segment in &gradient.cache_segments {
+                        let ref cache_handle = segment.handle;
+                        let rt_cache_entry = ctx.resource_cache
+                            .get_cached_render_task(cache_handle);
+                        let cache_item = ctx.resource_cache
+                            .get_texture_cache_item(&rt_cache_entry.handle);
+
+                        if cache_item.texture_id == TextureSource::Invalid {
+                            return;
+                        }
+
+                        let textures = BatchTextures::color(cache_item.texture_id);
+                        let batch_kind = BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id));
+                        let prim_user_data = ImageBrushData {
+                            color_mode: ShaderColorMode::Image,
+                            alpha_type: AlphaType::PremultipliedAlpha,
+                            raster_space: RasterizationSpace::Local,
+                            opacity: 1.0,
+                        }.encode();
+
+                        let specific_resource_address = cache_item.uv_rect_handle.as_int(gpu_cache);
+                        prim_header.specific_prim_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
+
+                        let segment_local_clip_rect = prim_header.local_clip_rect.intersection(&segment.local_rect);
+                        if segment_local_clip_rect.is_none() {
+                            continue;
+                        }
+
+                        let segment_prim_header = PrimitiveHeader {
+                            local_rect: segment.local_rect,
+                            local_clip_rect: segment_local_clip_rect.unwrap(),
+                            specific_prim_address: prim_header.specific_prim_address,
+                            transform_id: prim_header.transform_id,
+                        };
+
+                        let prim_header_index = prim_headers.push(
+                            &segment_prim_header,
+                            z_id,
+                            prim_user_data,
+                        );
+
+                        let batch_key = BatchKey {
+                            blend_mode: non_segmented_blend_mode,
+                            kind: BatchKind::Brush(batch_kind),
+                            textures,
+                        };
+
+                        self.add_brush_instance_to_batches(
+                            batch_key,
+                            batch_features,
+                            bounding_rect,
+                            z_id,
+                            INVALID_SEGMENT_INDEX,
+                            EdgeAaSegmentMask::all(),
+                            clip_task_address.unwrap(),
+                            BrushFlags::PERSPECTIVE_INTERPOLATION,
+                            prim_header_index,
+                            specific_resource_address,
+                            prim_vis_mask,
+                        );
                     }
-
-                    let textures = BatchTextures::color(cache_item.texture_id);
-                    let batch_kind = BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id));
-                    let prim_user_data = ImageBrushData {
-                        color_mode: ShaderColorMode::Image,
-                        alpha_type: AlphaType::PremultipliedAlpha,
-                        raster_space: RasterizationSpace::Local,
-                        opacity: 1.0,
-                    }.encode();
-
-                    let specific_resource_address = cache_item.uv_rect_handle.as_int(gpu_cache);
-                    prim_header.specific_prim_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
-
-                    let prim_header_index = prim_headers.push(
-                        &prim_header,
-                        z_id,
-                        prim_user_data,
-                    );
-
-                    let batch_key = BatchKey {
-                        blend_mode: non_segmented_blend_mode,
-                        kind: BatchKind::Brush(batch_kind),
-                        textures,
-                    };
-
-                    self.add_brush_instance_to_batches(
-                        batch_key,
-                        batch_features,
-                        bounding_rect,
-                        z_id,
-                        INVALID_SEGMENT_INDEX,
-                        EdgeAaSegmentMask::all(),
-                        clip_task_address.unwrap(),
-                        BrushFlags::PERSPECTIVE_INTERPOLATION,
-                        prim_header_index,
-                        specific_resource_address,
-                        prim_vis_mask,
-                    );
                 } else if gradient.visible_tiles_range.is_empty() {
                     let batch_params = BrushBatchParameters::shared(
                         BrushBatchKind::LinearGradient,
