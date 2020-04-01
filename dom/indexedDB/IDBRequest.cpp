@@ -369,15 +369,15 @@ void IDBRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.SetParentTarget(mTransaction, false);
 }
 
-IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory,
+IDBOpenDBRequest::IDBOpenDBRequest(SafeRefPtr<IDBFactory> aFactory,
                                    nsIGlobalObject* aGlobal,
                                    bool aFileHandleDisabled)
     : IDBRequest(aGlobal),
-      mFactory(aFactory),
+      mFactory(std::move(aFactory)),
       mFileHandleDisabled(aFileHandleDisabled),
       mIncreasedActiveDatabaseCount(false) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aFactory);
+  MOZ_ASSERT(mFactory);
   MOZ_ASSERT(aGlobal);
 }
 
@@ -387,9 +387,8 @@ IDBOpenDBRequest::~IDBOpenDBRequest() {
 }
 
 // static
-RefPtr<IDBOpenDBRequest> IDBOpenDBRequest::Create(JSContext* aCx,
-                                                  IDBFactory* aFactory,
-                                                  nsIGlobalObject* aGlobal) {
+RefPtr<IDBOpenDBRequest> IDBOpenDBRequest::Create(
+    JSContext* aCx, SafeRefPtr<IDBFactory> aFactory, nsIGlobalObject* aGlobal) {
   MOZ_ASSERT(aFactory);
   aFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aGlobal);
@@ -397,7 +396,7 @@ RefPtr<IDBOpenDBRequest> IDBOpenDBRequest::Create(JSContext* aCx,
   bool fileHandleDisabled = !IndexedDatabaseManager::IsFileHandleEnabled();
 
   RefPtr<IDBOpenDBRequest> request =
-      new IDBOpenDBRequest(aFactory, aGlobal, fileHandleDisabled);
+      new IDBOpenDBRequest(std::move(aFactory), aGlobal, fileHandleDisabled);
   CaptureCaller(aCx, request->mFilename, &request->mLineNo, &request->mColumn);
 
   if (!NS_IsMainThread()) {
@@ -500,7 +499,7 @@ NS_IMPL_RELEASE_INHERITED(IDBOpenDBRequest, IDBRequest)
 
 nsresult IDBOpenDBRequest::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   nsresult rv =
-      IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, mFactory);
+      IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, *mFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
