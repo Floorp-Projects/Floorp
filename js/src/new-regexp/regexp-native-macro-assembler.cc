@@ -835,7 +835,10 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
 
   masm_.jump(&start_label_);
 
-  // TODO: success/exit/backtrack/overflow handlers
+  successHandler();
+  exitHandler();
+
+  // TODO: backtrack/overflow handlers
 
   Linker linker(masm_);
   JitCode* code = linker.newCode(cx_, js::jit::CodeKind::RegExp);
@@ -1007,6 +1010,82 @@ void SMRegExpMacroAssembler::initFrameAndRegs() {
   masm_.loadPtr(AbsoluteAddress(isolate()->top_of_regexp_stack()),
                 backtrack_stack_pointer_);
   masm_.storePtr(backtrack_stack_pointer_, backtrackStackBase());
+}
+
+void SMRegExpMacroAssembler::successHandler() {
+  MOZ_ASSERT(success_label_.used());
+  masm_.bind(&success_label_);
+
+  // Copy captures to the MatchPairs pointed to by the InputOutputData.
+  // Captures are stored as positions, which are negative byte offsets
+  // from the end of the string.  We must convert them to actual
+  // indices.
+  //
+  // Index:        [ 0 ][ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][END]
+  // Pos (1-byte): [-6 ][-5 ][-4 ][-3 ][-2 ][-1 ][ 0 ] // IS = -6
+  // Pos (2-byte): [-12][-10][-8 ][-6 ][-4 ][-2 ][ 0 ] // IS = -12
+  //
+  // To convert a position to an index, we subtract InputStart, and
+  // divide the result by char_size.
+  Register matchesReg = temp1_;
+  masm_.loadPtr(matches(), matchesReg);
+
+  Register inputStartReg = temp2_;
+  masm_.loadPtr(inputStart(), inputStartReg);
+
+  for (int i = 0; i < num_capture_registers_; i++) {
+    masm_.loadPtr(register_location(i), temp0_);
+    masm_.subPtr(inputStartReg, temp0_);
+    if (mode_ == UC16) {
+      masm_.rshiftPtrArithmetic(Imm32(1), temp0_);
+    }
+    masm_.store32(temp0_, Address(matchesReg, i * sizeof(int32_t)));
+  }
+
+  masm_.movePtr(ImmWord(js::RegExpRunStatus_Success), temp0_);
+  // This falls through to the exit handler.
+}
+
+void SMRegExpMacroAssembler::exitHandler() {
+  masm_.bind(&exit_label_);
+
+  if (temp0_ != js::jit::ReturnReg) {
+    masm_.movePtr(temp0_, js::jit::ReturnReg);
+  }
+
+  masm_.freeStack(frameSize_);
+
+  // Restore registers which were saved on entry
+  for (GeneralRegisterBackwardIterator iter(savedRegisters_); iter.more();
+       ++iter) {
+    masm_.Pop(*iter);
+  }
+
+#ifdef JS_CODEGEN_ARM64
+  // Now restore the value that was in the PSP register on entry, and return.
+
+  // Obtain the correct SP from the PSP.
+  masm_.Mov(js::jit::sp, js::jit::PseudoStackPointer64);
+
+  // Restore the saved value of the PSP register, this value is whatever the
+  // caller had saved in it, not any actual SP value, and it must not be
+  // overwritten subsequently.
+  masm_.Ldr(js::jit::PseudoStackPointer64,
+            vixl::MemOperand(js::jit::sp, 16, vixl::PostIndex));
+
+  // Perform a plain Ret(), as abiret() will move SP <- PSP and that is wrong.
+  masm_.Ret(vixl::lr);
+#else
+  masm_.abiret();
+#endif
+
+  if (exit_with_exception_label_.used()) {
+    masm_.bind(&exit_with_exception_label_);
+
+    // Exit with an error result to signal thrown exception
+    masm_.movePtr(ImmWord(js::RegExpRunStatus_Error), temp0_);
+    masm_.jump(&exit_label_);
+  }
 }
 
 // This is only used by tracing code.
