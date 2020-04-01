@@ -57,6 +57,8 @@ fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" 
 fluent = { version = "0.11" , features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 
+sync15-traits = { git = "https://github.com/mozilla/application-services", rev = "120e51dd5f2aab4194cf0f7e93b2a8923f4504bb" }
+
 [build-dependencies]
 rustc_version = "0.2"
 

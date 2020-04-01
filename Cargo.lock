@@ -1700,6 +1700,7 @@ dependencies = [
  "shift_or_euc_c",
  "static_prefs",
  "storage",
+ "sync15-traits",
  "unic-langid",
  "unic-langid-ffi",
  "webrender_bindings",
@@ -4199,6 +4200,28 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "sync-guid"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=120e51dd5f2aab4194cf0f7e93b2a8923f4504bb#120e51dd5f2aab4194cf0f7e93b2a8923f4504bb"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "sync15-traits"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=120e51dd5f2aab4194cf0f7e93b2a8923f4504bb#120e51dd5f2aab4194cf0f7e93b2a8923f4504bb"
+dependencies = [
+ "failure",
+ "ffi-support",
+ "log",
+ "serde",
+ "serde_json",
+ "sync-guid",
+ "url",
 ]
 
 [[package]]
