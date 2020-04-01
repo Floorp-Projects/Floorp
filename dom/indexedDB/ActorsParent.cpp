@@ -4619,13 +4619,12 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
 nsCOMPtr<nsIFile> GetFileForPath(const nsAString& aPath) {
   MOZ_ASSERT(!aPath.IsEmpty());
 
-  nsCOMPtr<nsIFile> file;
-  if (NS_WARN_IF(
-          NS_FAILED(NS_NewLocalFile(aPath, false, getter_AddRefs(file))))) {
+  auto fileOrErr = QM_NewLocalFile(aPath);
+  if (NS_WARN_IF(fileOrErr.isErr())) {
     return nullptr;
   }
 
-  return file;
+  return fileOrErr.unwrap();
 }
 
 nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
@@ -11419,16 +11418,17 @@ nsresult DatabaseConnection::GetFileSize(const nsAString& aPath,
   MOZ_ASSERT(!aPath.IsEmpty());
   MOZ_ASSERT(aResult);
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(aPath, false, getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto fileOrErr = QM_NewLocalFile(aPath);
+  if (NS_WARN_IF(fileOrErr.isErr())) {
+    return fileOrErr.unwrapErr();
   }
+
+  nsCOMPtr<nsIFile> file = fileOrErr.unwrap();
 
   int64_t fileSize;
 
   bool exists;
-  rv = file->Exists(&exists);
+  nsresult rv = file->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
