@@ -65,6 +65,8 @@ class nsLocalFile final : public nsILocalFileWin {
   bool mResolveDirty;
   bool mFollowSymlinks;  // should we follow symlinks when working on this file
 
+  bool mUseDOSDevicePathSyntax = false;
+
   // this string will always be in native format!
   nsString mWorkingPath;
 

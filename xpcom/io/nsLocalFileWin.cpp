@@ -2950,6 +2950,20 @@ nsLocalFile::SetFileAttributesWin(uint32_t aAttribs) {
 }
 
 NS_IMETHODIMP
+nsLocalFile::GetUseDOSDevicePathSyntax(bool* aUseDOSDevicePathSyntax) {
+  MOZ_ASSERT(aUseDOSDevicePathSyntax);
+
+  *aUseDOSDevicePathSyntax = mUseDOSDevicePathSyntax;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetUseDOSDevicePathSyntax(bool aUseDOSDevicePathSyntax) {
+  mUseDOSDevicePathSyntax = aUseDOSDevicePathSyntax;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLocalFile::Reveal() {
   // This API should be main thread only
   MOZ_ASSERT(NS_IsMainThread());

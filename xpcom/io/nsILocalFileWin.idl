@@ -80,6 +80,26 @@ interface nsILocalFileWin : nsIFile
     attribute unsigned long fileAttributesWin;
 
     /**
+     * Setting this to true will prepend the prefix "\\?\" to all parsed file
+     * paths which match ^[A-Za-z]:\\.* (regex) syntax.
+     *
+     * There are two known issues (and potentially more) which can be resolved
+     * by the prefix:
+     * - In the Windows API, the maximum length for a path is MAX_PATH in
+     *   general. However, Windows API has many functions that also have Unicode
+     *   versions to permit an extended-length path for a maximum total path
+     *   length of 32,767 characters.
+     *
+     * - A path component which ends with a dot is not allowed for Windows
+     *   API.
+     *
+     * If either of these issues are expected to be common in your code, you
+     * should set this flag to true. (You should probably not have to set this
+     * flag to true.)
+     */
+    attribute boolean useDOSDevicePathSyntax;
+
+    /**
      * Identical to nsIFile::openNSPRFileDesc except it also uses the
      * FILE_SHARE_DELETE flag.
     */
