@@ -1047,7 +1047,8 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-  bool imageOK = ImageOk(mContent->AsElement()->State());
+  bool imageOK =
+      mKind != Kind::ImageElement || ImageOk(mContent->AsElement()->State());
 
   // Determine if the size is available
   bool haveSize = false;
@@ -1356,7 +1357,8 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
 
   // Whether we draw the broken or loading icon.
-  bool isLoading = ImageOk(mContent->AsElement()->State());
+  bool isLoading =
+      mKind != Kind::ImageElement || ImageOk(mContent->AsElement()->State());
 
   // Calculate the inner area
   nsRect inner = GetInnerArea() + aPt;
@@ -1511,7 +1513,8 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
 
   // Whether we draw the broken or loading icon.
-  bool isLoading = ImageOk(mContent->AsElement()->State());
+  bool isLoading =
+      mKind != Kind::ImageElement || ImageOk(mContent->AsElement()->State());
 
   // Calculate the inner area
   nsRect inner = GetInnerArea() + aPt;
@@ -2094,7 +2097,8 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       aBuilder, this, clipFlags);
 
   if (mComputedSize.width != 0 && mComputedSize.height != 0) {
-    bool imageOK = ImageOk(mContent->AsElement()->State());
+    bool imageOK =
+        mKind != Kind::ImageElement || ImageOk(mContent->AsElement()->State());
 
     nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
 
