@@ -23,6 +23,7 @@ import type { SourceActorsState } from "./source-actors";
 import type { TabsState } from "./tabs";
 import type { UIState } from "./ui";
 import type { QuickOpenState } from "./quick-open";
+import type { SourceTreeState } from "./source-tree";
 import type { EventListenersState } from "./event-listeners";
 import type { URL } from "../types";
 
@@ -39,6 +40,7 @@ export type State = {
   projectTextSearch: ProjectTextSearchState,
   sources: SourcesState,
   sourceActors: SourceActorsState,
+  sourceTree: SourceTreeState,
   tabs: TabsState,
   ui: UIState,
   quickOpen: QuickOpenState,

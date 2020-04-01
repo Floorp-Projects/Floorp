@@ -9,7 +9,7 @@
  * @module utils/test-head
  */
 
-import { combineReducers } from "redux";
+import { combineReducers, type Store } from "redux";
 import sourceMaps from "devtools-source-map";
 import reducers from "../reducers";
 import actions from "../actions";
@@ -18,7 +18,25 @@ import { getHistory } from "../test/utils/history";
 import { parserWorker, evaluationsParser } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
-import type { Source, OriginalSourceData, GeneratedSourceData } from "../types";
+import type {
+  ThreadContext,
+  Source,
+  OriginalSourceData,
+  GeneratedSourceData,
+} from "../types";
+import type { State } from "../reducers/types";
+import type { Action } from "../actions/types";
+
+type TestStore = Store<State, Action, any> & {
+  thunkArgs: () => {
+    dispatch: any,
+    getState: () => State,
+    client: any,
+    sourceMaps: any,
+    panel: {||},
+  },
+  cx: ThreadContext,
+};
 
 /**
  * This file contains older interfaces used by tests that have not been
@@ -29,8 +47,12 @@ import type { Source, OriginalSourceData, GeneratedSourceData } from "../types";
  * @memberof utils/test-head
  * @static
  */
-function createStore(client: any, initialState: any = {}, sourceMapsMock: any) {
-  const store = configureStore({
+function createStore(
+  client: any,
+  initialState: any = {},
+  sourceMapsMock: any
+): TestStore {
+  const store: any = configureStore({
     log: false,
     history: getHistory(),
     makeThunkArgs: args => {
