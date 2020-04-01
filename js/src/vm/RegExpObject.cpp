@@ -932,7 +932,10 @@ bool js::StringHasRegExpMetaChars(JSLinearString* str) {
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom* source, RegExpFlags flags)
-    : source(source), parenCount(0), flags(flags), canStringMatch(false) {}
+    : headerAndSource(source),
+      parenCount(0),
+      flags(flags),
+      canStringMatch(false) {}
 
 void RegExpShared::traceChildren(JSTracer* trc) {
   // Discard code to avoid holding onto ExecutablePools.
@@ -940,7 +943,7 @@ void RegExpShared::traceChildren(JSTracer* trc) {
     discardJitCode();
   }
 
-  TraceNullableEdge(trc, &source, "RegExpShared source");
+  TraceNullableEdge(trc, &headerAndSource, "RegExpShared source");
   for (auto& comp : compilationArray) {
     TraceNullableEdge(trc, &comp.jitCode, "RegExpShared code");
   }
@@ -972,7 +975,7 @@ bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
 
-  RootedAtom pattern(cx, re->source);
+  RootedAtom pattern(cx, re->getSource());
   return compile(cx, re, pattern, input, mode, force);
 }
 
@@ -1079,14 +1082,14 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
 
   if (re->canStringMatch) {
     MOZ_ASSERT(re->pairCount() == 1);
-    size_t sourceLength = re->source->length();
+    size_t sourceLength = re->getSource()->length();
     if (re->sticky()) {
       // First part checks size_t overflow.
       if (sourceLength + start < sourceLength ||
           sourceLength + start > length) {
         return RegExpRunStatus_Success_NotFound;
       }
-      if (!HasSubstringAt(input, re->source, start)) {
+      if (!HasSubstringAt(input, re->getSource(), start)) {
         return RegExpRunStatus_Success_NotFound;
       }
 
@@ -1101,7 +1104,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
       return RegExpRunStatus_Success;
     }
 
-    int res = StringFindPattern(input, re->source, start);
+    int res = StringFindPattern(input, re->getSource(), start);
     if (res == -1) {
       return RegExpRunStatus_Success_NotFound;
     }
