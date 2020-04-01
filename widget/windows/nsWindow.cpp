@@ -6764,10 +6764,10 @@ bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
   }
   HANDLE source = aOSEvent[0].hSource;
   std::string deviceName;
-  UINT dataSize;
+  UINT dataSize = 0;
   // The first call just queries how long the name string will be.
   GetRawInputDeviceInfoA(source, RIDI_DEVICENAME, nullptr, &dataSize);
-  if (!dataSize) {
+  if (!dataSize || dataSize > 0x10000) {
     return false;
   }
   deviceName.resize(dataSize);
