@@ -111,7 +111,7 @@ if  (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         add_definitions(-mfpmath=sse -msse2)
     endif()
     if (CMAKE_COMPILER_IS_GNUCXX)
-        add_definitions(-Wdouble-promotion)
+        add_definitions(-Wno-class-memaccess -Wdouble-promotion)
     endif()
     message(STATUS "Compiler ID is: ${CMAKE_CXX_COMPILER_ID}")
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
@@ -136,9 +136,12 @@ endif()
 
 if  (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set_target_properties(graphite2 PROPERTIES
-        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wimplicit-fallthrough -Wendif-labels -Wshadow -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -mfpmath=sse -msse2"
+        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wimplicit-fallthrough -Wendif-labels -Wshadow -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden"
         LINK_FLAGS      "-nodefaultlibs"
         LINKER_LANGUAGE C)
+    if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86|i.86")
+        add_definitions(-mfpmath=sse -msse2)
+    endif()
     target_link_libraries(graphite2 c)
     include(Graphite)
     nolib_test(stdc++ $<TARGET_SONAME_FILE:graphite2>)
