@@ -19,7 +19,7 @@ namespace indexedDB {
 template <typename FileManager>
 FileInfoT<FileManager>::FileInfoT(
     const typename FileManager::FileManagerGuard& aGuard,
-    RefPtr<FileManager> aFileManager, const int64_t aFileId,
+    SafeRefPtr<FileManager> aFileManager, const int64_t aFileId,
     const nsrefcnt aInitialDBRefCnt)
     : mFileId(aFileId),
       mDBRefCnt(aInitialDBRefCnt),
@@ -58,8 +58,8 @@ void FileInfoT<FileManager>::GetReferences(int32_t* const aRefCnt,
 }
 
 template <typename FileManager>
-FileManager* FileInfoT<FileManager>::Manager() const {
-  return mFileManager;
+FileManager& FileInfoT<FileManager>::Manager() const {
+  return *mFileManager;
 }
 
 template <typename FileManager>
@@ -136,7 +136,7 @@ void FileInfoT<FileManager>::Cleanup() {
 
 template <typename FileManager>
 nsCOMPtr<nsIFile> FileInfoT<FileManager>::GetFileForFileInfo() const {
-  const nsCOMPtr<nsIFile> directory = Manager()->GetDirectory();
+  const nsCOMPtr<nsIFile> directory = Manager().GetDirectory();
   if (NS_WARN_IF(!directory)) {
     return nullptr;
   }

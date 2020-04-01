@@ -60,8 +60,10 @@ class FileManagerBase {
 
       const int64_t id = ++mLastFileId;
 
-      fileInfo =
-          new FileInfo(FileManagerGuard{}, static_cast<FileManager*>(this), id);
+      fileInfo = new FileInfo(FileManagerGuard{},
+                              SafeRefPtr{static_cast<FileManager*>(this),
+                                         AcquireStrongRefFromRawPtr{}},
+                              id);
 
       mFileInfos.Put(id, fileInfo);
     }
