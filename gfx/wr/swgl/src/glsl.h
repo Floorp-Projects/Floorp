@@ -521,9 +521,32 @@ Float ceil(Float v) {
   return roundtrip + if_then_else(roundtrip < v, Float(1), Float(0));
 }
 
-SI int32_t roundto(float v, float scale) { return int32_t(v * scale + 0.5f); }
+// Round to nearest even
+SI int32_t roundeven(float v, float scale) {
+#if USE_SSE2
+  return _mm_cvtss_si32(_mm_set_ss(v * scale));
+#else
+  return bit_cast<int32_t>(v * scale + float(0xC00000)) - 0x4B400000;
+#endif
+}
 
-SI I32 roundto(Float v, Float scale) {
+SI I32 roundeven(Float v, Float scale) {
+#if USE_SSE2
+  return _mm_cvtps_epi32(v * scale);
+#else
+  // Magic number implementation of round-to-nearest-even
+  // see http://stereopsis.com/sree/fpu2006.html
+  return bit_cast<I32>(v * scale + Float(0xC00000)) - 0x4B400000;
+#endif
+}
+
+// Round towards zero
+SI int32_t roundzero(float v, float scale) { return int32_t(v * scale); }
+
+SI I32 roundzero(Float v, Float scale) { return cast(v * scale); }
+
+// Round whichever direction is fastest for positive numbers
+SI I32 roundfast(Float v, Float scale) {
 #if USE_SSE2
   return _mm_cvtps_epi32(v * scale);
 #else
@@ -566,8 +589,8 @@ Float approx_log2(Float x) {
 Float approx_pow2(Float x) {
   Float f = fract(x);
   return bit_cast<Float>(
-      roundto(1.0f * (1 << 23), x + 121.274057500f - 1.490129070f * f +
-                                    27.728023300f / (4.84252568f - f)));
+      roundfast(1.0f * (1 << 23), x + 121.274057500f - 1.490129070f * f +
+                                      27.728023300f / (4.84252568f - f)));
 }
 
 // From skia
@@ -1629,9 +1652,9 @@ vec4 make_vec4(const X& x, const Y& y, const Z& z, const W& w) {
   return vec4(x, y, z, w);
 }
 
-SI ivec4 roundto(vec4 v, Float scale) {
-  return ivec4(roundto(v.x, scale), roundto(v.y, scale), roundto(v.z, scale),
-               roundto(v.w, scale));
+SI ivec4 roundfast(vec4 v, Float scale) {
+  return ivec4(roundfast(v.x, scale), roundfast(v.y, scale),
+               roundfast(v.z, scale), roundfast(v.w, scale));
 }
 
 vec4 operator*(vec4_scalar a, Float b) {
@@ -2652,7 +2675,7 @@ vec4 texture(sampler2D sampler, vec2 P) {
       return textureLinearR8(sampler, P);
     }
   } else {
-    ivec2 coord(roundto(P.x, sampler->width), roundto(P.y, sampler->height));
+    ivec2 coord(roundzero(P.x, sampler->width), roundzero(P.y, sampler->height));
     return texelFetch(sampler, coord, 0);
   }
 }
@@ -2663,7 +2686,7 @@ vec4 texture(sampler2DRect sampler, vec2 P) {
     return textureLinearRGBA8(sampler,
                               P * vec2_scalar{1.0f / sampler->width, 1.0f / sampler->height});
   } else {
-    ivec2 coord(roundto(P.x, 1.0f), roundto(P.y, 1.0f));
+    ivec2 coord(roundzero(P.x, 1.0f), roundzero(P.y, 1.0f));
     return texelFetch(sampler, coord);
   }
 }
@@ -2676,7 +2699,7 @@ vec4 texture(sampler2DArray sampler, vec3 P, Float layer) {
 vec4 texture(sampler2DArray sampler, vec3 P) {
   if (sampler->filter == TextureFilter::LINEAR) {
     I32 zoffset =
-        clampCoord(roundto(P.z, 1.0f), sampler->depth) * sampler->height_stride;
+        clampCoord(roundeven(P.z, 1.0f), sampler->depth) * sampler->height_stride;
     if (sampler->format == TextureFormat::RGBA32F) {
       return textureLinearRGBA32F(sampler, vec2(P.x, P.y), zoffset);
     } else if (sampler->format == TextureFormat::RGBA8) {
@@ -2687,8 +2710,8 @@ vec4 texture(sampler2DArray sampler, vec3 P) {
     }
   } else {
     // just do nearest for now
-    ivec3 coord(roundto(P.x, sampler->width), roundto(P.y, sampler->height),
-                roundto(P.z, 1.0f));
+    ivec3 coord(roundzero(P.x, sampler->width), roundzero(P.y, sampler->height),
+                roundeven(P.z, 1.0f));
     return texelFetch(sampler, coord, 0);
   }
 }
