@@ -42,7 +42,7 @@ TASK_CONFIG_TESTS = {
     ],
     'strategy': [
         ([], None),
-        (['--strategy', 'foo'], {'optimize-strategies': 'taskgraph.optimize:foo'}),
+        (['--strategy', 'foo'], {'optimize-strategies': 'taskgraph.optimize:experimental.foo'}),
         (['--strategy', 'foo:bar'], {'optimize-strategies': 'foo:bar'}),
     ],
     'worker-overrides': [
