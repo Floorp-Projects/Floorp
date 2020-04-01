@@ -72,11 +72,9 @@ login-item {
   fill: #20123a;
 }
 
-@supports -moz-bool-pref("browser.in-content.dark-mode") {
-  @media (prefers-color-scheme: dark) {
-    #branding-logo {
-      fill: #fff;
-    }
+@media (prefers-color-scheme: dark) {
+  #branding-logo {
+    fill: #fff;
   }
 }
 

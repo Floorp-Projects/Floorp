@@ -999,9 +999,6 @@ pref("browser.flash-protected-mode-flip.enable", false);
 // Whether we've already flipped protected mode automatically
 pref("browser.flash-protected-mode-flip.done", false);
 
-// Dark in-content pages
-pref("browser.in-content.dark-mode", true);
-
 pref("dom.ipc.shims.enabledWarnings", false);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
