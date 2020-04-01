@@ -311,11 +311,6 @@ class gfxUtils {
   static bool DumpDisplayList();
 
   static FILE* sDumpPaintFile;
-
-  static mozilla::wr::RenderRoot GetContentRenderRoot();
-
-  static mozilla::wr::RenderRoot RecursivelyGetRenderRootForFrame(
-      const nsIFrame* aFrame);
 };
 
 namespace mozilla {
