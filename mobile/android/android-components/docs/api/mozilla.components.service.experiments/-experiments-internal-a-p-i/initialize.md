@@ -2,7 +2,7 @@
 
 # initialize
 
-`fun initialize(applicationContext: <ERROR CLASS>, configuration: `[`Configuration`](../-configuration/index.md)` = Configuration(), onExperimentsUpdated: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L59)
+`fun initialize(applicationContext: <ERROR CLASS>, configuration: `[`Configuration`](../-configuration/index.md)` = Configuration(), onExperimentsUpdated: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L78)
 
 Initialize the experiments library.
 
@@ -16,3 +16,8 @@ the initialize function is a applicationContext, there could potentially be a me
 if the initializing application doesn't comply.
 
 `configuration` - [Configuration](../-configuration/index.md) containing information about the experiments endpoint.
+
+**Return**
+Returns a [Job](#) so that off-thread initialization can be monitored and interacted
+with.
+

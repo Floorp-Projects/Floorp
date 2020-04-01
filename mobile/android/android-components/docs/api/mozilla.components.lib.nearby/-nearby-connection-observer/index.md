@@ -2,7 +2,7 @@
 
 # NearbyConnectionObserver
 
-`interface NearbyConnectionObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L442)
+`interface NearbyConnectionObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L443)
 
 Interface definition for observing changes in a [NearbyConnection](../-nearby-connection/index.md).
 

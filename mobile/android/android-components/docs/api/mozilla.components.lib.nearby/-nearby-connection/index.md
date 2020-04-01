@@ -20,6 +20,12 @@ from any thread.
 |---|---|
 | [&lt;init&gt;](-init-.md) | `NearbyConnection(context: <ERROR CLASS>, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = Build.MODEL)`<br>Another constructor`NearbyConnection(connectionsClient: ConnectionsClient, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = Build.MODEL, delegate: `[`ObserverRegistry`](../../mozilla.components.support.base.observer/-observer-registry/index.md)`<`[`NearbyConnectionObserver`](../-nearby-connection-observer/index.md)`> = ObserverRegistry())`<br>Constructs a new connection, which will call [NearbyConnectionObserver.onStateUpdated](../-nearby-connection-observer/on-state-updated.md)     with an argument of type [ConnectionState.Isolated](-connection-state/-isolated.md). No further action will be taken unless     other methods are called by the client. |
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [connectionState](connection-state.md) | `var connectionState: `[`ConnectionState`](-connection-state/index.md) |
+
 ### Functions
 
 | Name | Summary |

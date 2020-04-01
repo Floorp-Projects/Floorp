@@ -2,7 +2,7 @@
 
 # startAdvertising
 
-`fun startAdvertising(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L264)
+`fun startAdvertising(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/nearby/src/main/java/mozilla/components/lib/nearby/NearbyConnection.kt#L265)
 
 Starts advertising this device. After calling this, the state will be updated to
 [ConnectionState.Advertising](-connection-state/-advertising.md) or [ConnectionState.Failure](-connection-state/-failure/index.md). If all goes well, eventually

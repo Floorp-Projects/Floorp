@@ -493,6 +493,11 @@
 | [mozilla.components.feature.customtabs.verify.OriginVerifier](../mozilla.components.feature.customtabs.verify/-origin-verifier/index.md) | Used to verify postMessage origin for a designated package name. |
 | [mozilla.components.feature.customtabs.feature.OriginVerifierFeature](../mozilla.components.feature.customtabs.feature/-origin-verifier-feature/index.md) |  |
 | [mozilla.components.concept.sync.OuterDeviceCommandIncoming](../mozilla.components.concept.sync/-outer-device-command-incoming.md) |  |
+| [mozilla.components.feature.p2p.view.P2PBar](../mozilla.components.feature.p2p.view/-p2-p-bar/index.md) | A toolbar for peer-to-peer communication between browsers. Setting [listener](../mozilla.components.feature.p2p.view/-p2-p-bar/listener.md) causes the buttons to become active. |
+| [mozilla.components.feature.p2p.P2PFeature](../mozilla.components.feature.p2p/-p2-p-feature/index.md) | Feature implementation for peer-to-peer communication between browsers. |
+| [mozilla.components.feature.p2p.internal.P2PInteractor](../mozilla.components.feature.p2p.internal/-p2-p-interactor/index.md) | Handle requests from [P2PView](../mozilla.components.feature.p2p.view/-p2-p-view/index.md), including interactions with the extension. |
+| [mozilla.components.feature.p2p.internal.P2PPresenter](../mozilla.components.feature.p2p.internal/-p2-p-presenter/index.md) | Sends updates to [P2PView](../mozilla.components.feature.p2p.view/-p2-p-view/index.md) based on updates from [NearbyConnection](../mozilla.components.lib.nearby/-nearby-connection/index.md). |
+| [mozilla.components.feature.p2p.view.P2PView](../mozilla.components.feature.p2p.view/-p2-p-view/index.md) | An interface for views that can display the peer-to-peer communication toolbar. |
 | [mozilla.components.support.base.android.Padding](../mozilla.components.support.base.android/-padding/index.md) | A representation of an Android Padding. |
 | [mozilla.components.concept.storage.PageObservation](../mozilla.components.concept.storage/-page-observation/index.md) |  |
 | [mozilla.components.concept.storage.PageVisit](../mozilla.components.concept.storage/-page-visit/index.md) | Information to record about a visit. |
