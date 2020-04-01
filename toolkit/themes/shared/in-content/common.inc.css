@@ -382,10 +382,8 @@ xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon[src] {
 }
 
 xul|*.close-icon > xul|*.button-box {
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
+  padding-block: 0 ;
+  padding-inline: 0 !important;
 }
 
 xul|*.menulist-dropmarker {

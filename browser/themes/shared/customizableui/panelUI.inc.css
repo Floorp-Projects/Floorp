@@ -2251,8 +2251,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
 }
 
 .PanelUI-profiler-buttons {
-  margin-inline: 10px;
-  margin-block: 7px 12px;
+  margin: 7px 10px 12px;
 }
 
 .PanelUI-profiler-info-icon {

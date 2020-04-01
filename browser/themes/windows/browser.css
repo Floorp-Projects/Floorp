@@ -667,8 +667,7 @@ notification[value="translation"] {
   notification[value="translation"] button,
   notification[value="translation"] menulist,
   notification[value="translation"] menulist > .menulist-label-box {
-    margin-inline-start: 1ch;
-    margin-inline-end: 1ch;
+    margin-inline: 1ch;
   }
 
   notification[value="translation"] button:hover,
