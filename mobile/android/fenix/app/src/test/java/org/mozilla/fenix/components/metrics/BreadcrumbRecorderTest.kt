@@ -6,21 +6,15 @@ package org.mozilla.fenix.components.metrics
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mozilla.fenix.TestApplication
-import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
-@Config(application = TestApplication::class)
 internal class BreadcrumbRecorderTest {
     @Test
     fun `ensure crash reporter recordCrashBreadcrumb is called`() {
