@@ -25,7 +25,7 @@ class FenixRobolectricTestRunner(testClass: Class<*>) : RobolectricTestRunner(te
 
     override fun buildGlobalConfig(): Config {
         return Config.Builder()
-            .setApplication(TestApplication::class.java)
+            .setApplication(FenixRobolectricTestApplication::class.java)
             .build()
     }
 }

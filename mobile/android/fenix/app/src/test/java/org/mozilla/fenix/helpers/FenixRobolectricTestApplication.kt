@@ -7,7 +7,10 @@ package org.mozilla.fenix.helpers
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.components.TestComponents
 
-class TestApplication : FenixApplication() {
+/**
+ * An override of our application for use in Robolectric-based unit tests.
+ */
+class FenixRobolectricTestApplication : FenixApplication() {
 
     override val components = TestComponents(this)
 
