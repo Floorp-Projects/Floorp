@@ -883,8 +883,9 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   EditorRawDOMPoint atBodyOrDocumentElement(bodyOrDocumentElement);
 
   nsRange* firstRange = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
-  MOZ_ASSERT(firstRange);
-  if (NS_WARN_IF(!firstRange)) {
+  mFoundSelectionRanges = !!firstRange;
+  if (!mFoundSelectionRanges) {
+    NS_WARNING("There was no selection range");
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
