@@ -133,9 +133,7 @@ nsChangeHint HTMLOptionElement::GetAttributeChangeHint(const nsAtom* aAttribute,
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
 
-  if (aAttribute == nsGkAtoms::label) {
-    retval |= nsChangeHint_ReconstructFrame;
-  } else if (aAttribute == nsGkAtoms::text) {
+  if (aAttribute == nsGkAtoms::label || aAttribute == nsGkAtoms::text) {
     retval |= NS_STYLE_HINT_REFLOW;
   }
   return retval;
