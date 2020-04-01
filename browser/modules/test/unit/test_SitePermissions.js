@@ -49,9 +49,9 @@ add_task(async function testPermissionsListing() {
 
 add_task(async function testGetAllByPrincipal() {
   // check that it returns an empty array on an invalid principal
-  // like a principal with a file URI, which doesn't support site permissions
+  // like a principal with an about URI, which doesn't support site permissions
   let wrongPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "file:///example.js"
+    "about:config"
   );
   Assert.deepEqual(SitePermissions.getAllByPrincipal(wrongPrincipal), []);
 
@@ -352,4 +352,22 @@ add_task(async function testCanvasPermission() {
     "privacy.resistFingerprinting",
     resistFingerprinting
   );
+});
+
+add_task(async function testFilePermissions() {
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "file:///example.js"
+  );
+  Assert.deepEqual(SitePermissions.getAllByPrincipal(principal), []);
+
+  SitePermissions.setForPrincipal(principal, "camera", SitePermissions.ALLOW);
+  Assert.deepEqual(SitePermissions.getAllByPrincipal(principal), [
+    {
+      id: "camera",
+      state: SitePermissions.ALLOW,
+      scope: SitePermissions.SCOPE_PERSISTENT,
+    },
+  ]);
+  SitePermissions.removeFromPrincipal(principal, "camera");
+  Assert.deepEqual(SitePermissions.getAllByPrincipal(principal), []);
 });
