@@ -29,7 +29,7 @@
 #include "vm/JSFunction.h"     // JSFunction, js::NewNativeFunction
 #include "vm/NativeObject.h"   // js::NativeObject, js::PlainObject
 #include "vm/ObjectGroup.h"    // js::GenericObject
-#include "vm/PromiseObject.h"  // js::PromiseObject
+#include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/Realm.h"          // JS::Realm
 #include "vm/StringType.h"     // js::PropertyName
 
@@ -129,8 +129,7 @@ MOZ_MUST_USE JSObject* js::ReadableStreamCancel(
   // Step 2: If stream.[[state]] is "closed", return a promise resolved with
   //         undefined.
   if (unwrappedStream->closed()) {
-    return PromiseObject::unforgeableResolveWithNonPromise(
-        cx, UndefinedHandleValue);
+    return PromiseResolvedWithUndefined(cx);
   }
 
   // Step 3: If stream.[[state]] is "errored", return a promise rejected with
