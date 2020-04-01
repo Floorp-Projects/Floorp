@@ -46,7 +46,7 @@ interface nsIFocusManager : nsISupports
 {
   /**
    * The most active (frontmost) window, or null if no window that is part of
-   * the application is active.
+   * the application is active. Do not use outside the parent process.
    */
   readonly attribute mozIDOMWindowProxy activeWindow;
 
