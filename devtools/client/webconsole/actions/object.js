@@ -29,9 +29,9 @@ function storeAsGlobal(actor) {
     if (hud.toolbox) {
       const objectFront = client.getFrontByID(actor);
       if (objectFront) {
-        const threadActorID = objectFront.targetFront?.threadFront?.actorID;
-        if (threadActorID) {
-          hud.toolbox.selectThread(threadActorID);
+        const targetActorID = objectFront.targetFront?.actorID;
+        if (targetActorID) {
+          hud.toolbox.selectTarget(targetActorID);
         }
       }
     }

@@ -15,19 +15,28 @@ class ConsoleCommands {
   }
 
   async evaluateJSAsync(expression, options = {}) {
-    const { selectedObjectActor, selectedNodeActor, frameActor } = options;
-    let front = await this.hud.currentTarget.getFront("console");
+    const {
+      selectedObjectActor,
+      selectedNodeActor,
+      frameActor,
+      selectedTargetFront,
+    } = options;
+
+    let targetFront = this.hud.currentTarget;
 
     const selectedActor =
       selectedObjectActor || selectedNodeActor || frameActor;
 
-    if (selectedActor) {
+    if (selectedTargetFront) {
+      targetFront = selectedTargetFront;
+    } else if (selectedActor) {
       const selectedFront = this.getFrontByID(selectedActor);
       if (selectedFront) {
-        front = await selectedFront.targetFront.getFront("console");
+        targetFront = selectedFront.targetFront;
       }
     }
 
+    const front = await targetFront.getFront("console");
     return front.evaluateJSAsync(expression, options);
   }
 }
