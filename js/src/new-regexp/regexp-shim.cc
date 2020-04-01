@@ -74,6 +74,8 @@ Handle<T>::Handle(T object, Isolate* isolate)
     : location_(isolate->getHandleLocation(JS::Value(object))) {}
 
 template Handle<ByteArray>::Handle(ByteArray b, Isolate* isolate);
+template Handle<HeapObject>::Handle(JS::Value v, Isolate* isolate);
+template Handle<JSRegExp>::Handle(JSRegExp re, Isolate* isolate);
 template Handle<String>::Handle(String s, Isolate* isolate);
 
 template <typename T>

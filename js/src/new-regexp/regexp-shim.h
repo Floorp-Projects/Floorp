@@ -572,10 +572,8 @@ class ByteArray : public HeapObject {
   ByteArrayData* inner() const {
     return static_cast<ByteArrayData*>(value_.toPrivate());
   }
-  PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
-
-  friend class SMRegExpMacroAssembler;
 public:
+  PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
   byte get(uint32_t index) {
     MOZ_ASSERT(index < length());
     return inner()->data()[index];
@@ -675,15 +673,19 @@ class MOZ_NONHEAP_CLASS Handle {
   };
   inline ObjectRef operator->() const { return ObjectRef{**this}; }
 
+  static Handle<T> fromHandleValue(JS::HandleValue handle) {
+    return Handle(handle.address());
+  }
+
  private:
-  Handle(JS::Value* location) : location_(location) {}
+  Handle(const JS::Value* location) : location_(location) {}
 
   template <typename>
   friend class Handle;
   template <typename>
   friend class MaybeHandle;
 
-  JS::Value* location_;
+  const JS::Value* location_;
 };
 
 // A Handle can be converted into a MaybeHandle. Converting a MaybeHandle
@@ -1091,7 +1093,6 @@ class Code : public HeapObject {
     c.value_ = JS::PrivateGCThingValue(JS::Value(object).toGCThing());
     return c;
   }
-private:
   js::jit::JitCode* inner() {
     return value_.toGCThing()->as<js::jit::JitCode>();
   }
