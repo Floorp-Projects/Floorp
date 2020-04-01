@@ -1031,7 +1031,7 @@ void nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame) {
 void nsListControlFrame::GetOptionText(uint32_t aIndex, nsAString& aStr) {
   aStr.Truncate();
   if (dom::HTMLOptionElement* optionElement = GetOption(aIndex)) {
-    optionElement->GetText(aStr);
+    optionElement->GetLabel(aStr);
   }
 }
 
@@ -2272,7 +2272,7 @@ nsresult nsListControlFrame::KeyPress(dom::Event* aKeyEvent) {
     }
 
     nsAutoString text;
-    optionElement->GetText(text);
+    optionElement->GetLabel(text);
     if (!StringBeginsWith(
             nsContentUtils::TrimWhitespace<
                 nsContentUtils::IsHTMLWhitespaceOrNBSP>(text, false),
