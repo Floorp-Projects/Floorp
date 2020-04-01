@@ -824,11 +824,6 @@ uint32_t Navigator::MaxTouchPoints(CallerType aCallerType) {
 //    Navigator::nsIDOMClientInformation
 //*****************************************************************************
 
-void Navigator::RegisterContentHandler(const nsAString& aMIMEType,
-                                       const nsAString& aURI,
-                                       const nsAString& aTitle,
-                                       ErrorResult& aRv) {}
-
 // This list should be kept up-to-date with the spec:
 // https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers
 // If you change this list, please also update the copy in E10SUtils.jsm.
