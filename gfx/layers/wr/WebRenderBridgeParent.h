@@ -616,7 +616,6 @@ class WebRenderBridgeParent final
   // Kind of clunky, but I can't sort out a more elegant way of getting this to
   // work.
   Mutex mRenderRootRectMutex;
-  wr::NonDefaultRenderRootArray<ScreenRect> mRenderRootRects;
 
   Maybe<wr::RenderRoot> mRenderRoot;
 #if defined(MOZ_WIDGET_ANDROID)
