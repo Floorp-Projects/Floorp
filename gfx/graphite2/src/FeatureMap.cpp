@@ -71,7 +71,7 @@ namespace
 
 FeatureRef::FeatureRef(const Face & face,
     unsigned short & bits_offset, uint32 max_val,
-    uint32 name, uint16 uiName, uint16 flags,
+    uint32 name, uint16 uiName, flags_t flags,
     FeatureSetting *settings, uint16 num_set) throw()
 : m_face(&face),
   m_nameValues(settings),
@@ -79,8 +79,8 @@ FeatureRef::FeatureRef(const Face & face,
   m_max(max_val),
   m_id(name),
   m_nameid(uiName),
-  m_flags(flags),
-  m_numSet(num_set)
+  m_numSet(num_set),
+  m_flags(flags)
 {
     const uint8 need_bits = bit_set_count(m_mask);
     m_index = (bits_offset + need_bits) / SIZEOF_CHUNK;
@@ -163,7 +163,8 @@ bool FeatureMap::readFeats(const Face & face)
         }
 
         ::new (m_feats + i) FeatureRef (face, bits, maxVal,
-                                       label, uiName, flags,
+                                       label, uiName, 
+                                       FeatureRef::flags_t(flags),
                                        uiSet, num_settings);
     }
     new (&m_defaultFeatures) Features(bits/(sizeof(uint32)*8) + 1, *this);

@@ -163,14 +163,25 @@ const gr_feature_ref* gr_face_find_fref(const gr_face* pFace, gr_uint32 featId) 
 unsigned short gr_face_n_fref(const gr_face* pFace)
 {
     assert(pFace);
-    return pFace->numFeatures();
+    int res = 0;
+    for (int i = 0; i < pFace->numFeatures(); ++i)
+        if (!(pFace->feature(i)->getFlags() & FeatureRef::HIDDEN))
+            ++res;
+    return res;
 }
 
 const gr_feature_ref* gr_face_fref(const gr_face* pFace, gr_uint16 i) //When finished with the FeatureRef, call destroy_FeatureRef
 {
     assert(pFace);
-    const FeatureRef* pRef = pFace->feature(i);
-    return static_cast<const gr_feature_ref*>(pRef);
+    int count = 0;
+    for (int j = 0; j < pFace->numFeatures(); ++j)
+    {
+        const FeatureRef* pRef = pFace->feature(j);
+        if (!(pRef->getFlags() & FeatureRef::HIDDEN))
+            if (count++ == i)
+                return static_cast<const gr_feature_ref*>(pRef);
+    }
+    return 0;
 }
 
 unsigned short gr_face_n_languages(const gr_face* pFace)
