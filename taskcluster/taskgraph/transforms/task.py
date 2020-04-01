@@ -1831,6 +1831,17 @@ def try_task_config_chemspill_prio(config, tasks):
 
 
 @transforms.add
+def try_task_config_routes(config, tasks):
+    """Set routes in the task."""
+    routes = config.params['try_task_config'].get('routes')
+    for task in tasks:
+        if routes:
+            task_routes = task.setdefault('routes', [])
+            task_routes.extend(routes)
+        yield task
+
+
+@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         level = str(config.params['level'])
