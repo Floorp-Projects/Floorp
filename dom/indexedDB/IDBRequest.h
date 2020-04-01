@@ -13,6 +13,7 @@
 #include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "SafeRefPtr.h"
 
 #define PRIVATE_IDBREQUEST_IID                       \
   {                                                  \
@@ -181,7 +182,7 @@ class NS_NO_VTABLE IDBRequest::ResultCallback {
 
 class IDBOpenDBRequest final : public IDBRequest {
   // Only touched on the owning thread.
-  RefPtr<IDBFactory> mFactory;
+  SafeRefPtr<IDBFactory> mFactory;
 
   RefPtr<StrongWorkerRef> mWorkerRef;
 
@@ -189,9 +190,9 @@ class IDBOpenDBRequest final : public IDBRequest {
   bool mIncreasedActiveDatabaseCount;
 
  public:
-  static MOZ_MUST_USE RefPtr<IDBOpenDBRequest> Create(JSContext* aCx,
-                                                      IDBFactory* aFactory,
-                                                      nsIGlobalObject* aGlobal);
+  static MOZ_MUST_USE RefPtr<IDBOpenDBRequest> Create(
+      JSContext* aCx, SafeRefPtr<IDBFactory> aFactory,
+      nsIGlobalObject* aGlobal);
 
   bool IsFileHandleDisabled() const { return mFileHandleDisabled; }
 
@@ -204,8 +205,6 @@ class IDBOpenDBRequest final : public IDBRequest {
   // EventTarget
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  IDBFactory* Factory() const { return mFactory; }
-
   IMPL_EVENT_HANDLER(blocked);
   IMPL_EVENT_HANDLER(upgradeneeded);
 
@@ -217,7 +216,7 @@ class IDBOpenDBRequest final : public IDBRequest {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  IDBOpenDBRequest(IDBFactory* aFactory, nsIGlobalObject* aGlobal,
+  IDBOpenDBRequest(SafeRefPtr<IDBFactory> aFactory, nsIGlobalObject* aGlobal,
                    bool aFileHandleDisabled);
 
   ~IDBOpenDBRequest();

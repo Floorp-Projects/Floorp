@@ -56,6 +56,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   class BackgroundCreateCallback;
   struct PendingRequestInfo;
+  struct IDBFactoryGuard {};
 
   UniquePtr<PrincipalInfo> mPrincipalInfo;
 
@@ -79,16 +80,17 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   bool mPrivateBrowsingMode;
 
  public:
-  static nsresult CreateForWindow(nsPIDOMWindowInner* aWindow,
-                                  IDBFactory** aFactory);
+  explicit IDBFactory(const IDBFactoryGuard&);
 
-  static nsresult CreateForMainThreadJS(nsIGlobalObject* aGlobal,
-                                        IDBFactory** aFactory);
+  static Result<RefPtr<IDBFactory>, nsresult> CreateForWindow(
+      nsPIDOMWindowInner* aWindow);
 
-  static nsresult CreateForWorker(nsIGlobalObject* aGlobal,
-                                  const PrincipalInfo& aPrincipalInfo,
-                                  uint64_t aInnerWindowID,
-                                  IDBFactory** aFactory);
+  static Result<RefPtr<IDBFactory>, nsresult> CreateForMainThreadJS(
+      nsIGlobalObject* aGlobal);
+
+  static Result<RefPtr<IDBFactory>, nsresult> CreateForWorker(
+      nsIGlobalObject* aGlobal, const PrincipalInfo& aPrincipalInfo,
+      uint64_t aInnerWindowID);
 
   static bool AllowedForWindow(nsPIDOMWindowInner* aWindow);
 
@@ -182,17 +184,14 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  IDBFactory();
   ~IDBFactory();
 
-  static nsresult CreateForMainThreadJSInternal(
-      nsIGlobalObject* aGlobal, UniquePtr<PrincipalInfo> aPrincipalInfo,
-      IDBFactory** aFactory);
+  static Result<RefPtr<IDBFactory>, nsresult> CreateForMainThreadJSInternal(
+      nsIGlobalObject* aGlobal, UniquePtr<PrincipalInfo> aPrincipalInfo);
 
-  static nsresult CreateInternal(nsIGlobalObject* aGlobal,
-                                 UniquePtr<PrincipalInfo> aPrincipalInfo,
-                                 uint64_t aInnerWindowID,
-                                 IDBFactory** aFactory);
+  static Result<RefPtr<IDBFactory>, nsresult> CreateInternal(
+      nsIGlobalObject* aGlobal, UniquePtr<PrincipalInfo> aPrincipalInfo,
+      uint64_t aInnerWindowID);
 
   static nsresult AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
                                            nsCOMPtr<nsIPrincipal>* aPrincipal);

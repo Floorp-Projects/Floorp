@@ -491,18 +491,18 @@ class MOZ_STACK_CLASS ResultHelper final : public IDBRequest::ResultCallback {
 
 class PermissionRequestMainProcessHelper final : public PermissionRequestBase {
   BackgroundFactoryRequestChild* mActor;
-  RefPtr<IDBFactory> mFactory;
+  SafeRefPtr<IDBFactory> mFactory;
 
  public:
   PermissionRequestMainProcessHelper(BackgroundFactoryRequestChild* aActor,
-                                     IDBFactory* aFactory,
+                                     SafeRefPtr<IDBFactory> aFactory,
                                      Element* aOwnerElement,
                                      nsIPrincipal* aPrincipal)
       : PermissionRequestBase(aOwnerElement, aPrincipal),
         mActor(aActor),
-        mFactory(aFactory) {
+        mFactory(std::move(aFactory)) {
     MOZ_ASSERT(aActor);
-    MOZ_ASSERT(aFactory);
+    MOZ_ASSERT(mFactory);
     aActor->AssertIsOnOwningThread();
   }
 
@@ -857,16 +857,16 @@ class WorkerPermissionChallenge final : public Runnable {
  public:
   WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
                             BackgroundFactoryRequestChild* aActor,
-                            IDBFactory* aFactory,
+                            SafeRefPtr<IDBFactory> aFactory,
                             PrincipalInfo&& aPrincipalInfo)
       : Runnable("indexedDB::WorkerPermissionChallenge"),
         mWorkerPrivate(aWorkerPrivate),
         mActor(aActor),
-        mFactory(aFactory),
+        mFactory(std::move(aFactory)),
         mPrincipalInfo(std::move(aPrincipalInfo)) {
     MOZ_ASSERT(mWorkerPrivate);
     MOZ_ASSERT(aActor);
-    MOZ_ASSERT(aFactory);
+    MOZ_ASSERT(mFactory);
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
 
@@ -908,7 +908,7 @@ class WorkerPermissionChallenge final : public Runnable {
 
     MaybeCollectGarbageOnIPCMessage();
 
-    const RefPtr<IDBFactory> factory = std::move(mFactory);
+    const SafeRefPtr<IDBFactory> factory = std::move(mFactory);
     Unused << factory;  // XXX see Bug 1605075
 
     mActor->SendPermissionRetry();
@@ -976,7 +976,7 @@ class WorkerPermissionChallenge final : public Runnable {
  private:
   WorkerPrivate* const mWorkerPrivate;
   BackgroundFactoryRequestChild* mActor;
-  RefPtr<IDBFactory> mFactory;
+  SafeRefPtr<IDBFactory> mFactory;
   const PrincipalInfo mPrincipalInfo;
 };
 
@@ -1442,11 +1442,10 @@ void BackgroundRequestChildBase::AssertIsOnOwningThread() const {
  * BackgroundFactoryChild
  ******************************************************************************/
 
-BackgroundFactoryChild::BackgroundFactoryChild(IDBFactory* aFactory)
-    : mFactory(aFactory) {
+BackgroundFactoryChild::BackgroundFactoryChild(IDBFactory& aFactory)
+    : mFactory(&aFactory) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aFactory);
-  aFactory->AssertIsOnOwningThread();
+  mFactory->AssertIsOnOwningThread();
 
   MOZ_COUNT_CTOR(indexedDB::BackgroundFactoryChild);
 }
@@ -1531,16 +1530,16 @@ BackgroundFactoryChild::RecvPBackgroundIDBDatabaseConstructor(
  ******************************************************************************/
 
 BackgroundFactoryRequestChild::BackgroundFactoryRequestChild(
-    IDBFactory* aFactory, IDBOpenDBRequest* aOpenRequest, bool aIsDeleteOp,
-    uint64_t aRequestedVersion)
+    SafeRefPtr<IDBFactory> aFactory, IDBOpenDBRequest* aOpenRequest,
+    bool aIsDeleteOp, uint64_t aRequestedVersion)
     : BackgroundRequestChildBase(aOpenRequest),
-      mFactory(aFactory),
+      mFactory(std::move(aFactory)),
       mDatabaseActor(nullptr),
       mRequestedVersion(aRequestedVersion),
       mIsDeleteOp(aIsDeleteOp) {
   // Can't assert owning thread here because IPDL has not yet set our manager!
-  MOZ_ASSERT(aFactory);
-  aFactory->AssertIsOnOwningThread();
+  MOZ_ASSERT(mFactory);
+  mFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aOpenRequest);
 
   MOZ_COUNT_CTOR(indexedDB::BackgroundFactoryRequestChild);
@@ -1702,7 +1701,7 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     workerPrivate->AssertIsOnWorkerThread();
 
     RefPtr<WorkerPermissionChallenge> challenge = new WorkerPermissionChallenge(
-        workerPrivate, this, mFactory, std::move(aPrincipalInfo));
+        workerPrivate, this, mFactory.clonePtr(), std::move(aPrincipalInfo));
     if (!challenge->Dispatch()) {
       return IPC_FAIL_NO_REASON(this);
     }
@@ -1733,8 +1732,8 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     }
 
     RefPtr<PermissionRequestMainProcessHelper> helper =
-        new PermissionRequestMainProcessHelper(this, mFactory, ownerElement,
-                                               principal);
+        new PermissionRequestMainProcessHelper(this, mFactory.clonePtr(),
+                                               ownerElement, principal);
 
     PermissionRequestBase::PermissionValue permission;
     if (NS_WARN_IF(NS_FAILED(helper->PromptIfNeeded(&permission)))) {
@@ -1854,12 +1853,15 @@ void BackgroundDatabaseChild::EnsureDOMObject() {
   auto request = mOpenRequestActor->GetOpenDBRequest();
   MOZ_ASSERT(request);
 
-  auto factory =
+  auto& factory =
       static_cast<BackgroundFactoryChild*>(Manager())->GetDOMObject();
-  MOZ_ASSERT(factory);
 
-  mTemporaryStrongDatabase =
-      IDBDatabase::Create(request, factory, this, std::move(mSpec));
+  // TODO: This AcquireStrongRefFromRawPtr looks suspicious. This should be
+  // changed or at least well explained, see also comment on
+  // BackgroundFactoryChild.
+  mTemporaryStrongDatabase = IDBDatabase::Create(
+      request, SafeRefPtr{&factory, AcquireStrongRefFromRawPtr{}}, this,
+      std::move(mSpec));
 
   MOZ_ASSERT(mTemporaryStrongDatabase);
   mTemporaryStrongDatabase->AssertIsOnOwningThread();

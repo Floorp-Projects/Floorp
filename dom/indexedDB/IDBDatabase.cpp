@@ -146,11 +146,12 @@ class IDBDatabase::Observer final : public nsIObserver {
   NS_DECL_NSIOBSERVER
 };
 
-IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
+IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest,
+                         SafeRefPtr<IDBFactory> aFactory,
                          BackgroundDatabaseChild* aActor,
                          UniquePtr<DatabaseSpec> aSpec)
     : DOMEventTargetHelper(aRequest),
-      mFactory(aFactory),
+      mFactory(std::move(aFactory)),
       mSpec(std::move(aSpec)),
       mBackgroundActor(aActor),
       mFileHandleDisabled(aRequest->IsFileHandleDisabled()),
@@ -159,8 +160,8 @@ IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest, IDBFactory* aFactory,
       mQuotaExceeded(false),
       mIncreasedActiveDatabaseCount(false) {
   MOZ_ASSERT(aRequest);
-  MOZ_ASSERT(aFactory);
-  aFactory->AssertIsOnOwningThread();
+  MOZ_ASSERT(mFactory);
+  mFactory->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(mSpec);
 }
@@ -173,7 +174,7 @@ IDBDatabase::~IDBDatabase() {
 
 // static
 RefPtr<IDBDatabase> IDBDatabase::Create(IDBOpenDBRequest* aRequest,
-                                        IDBFactory* aFactory,
+                                        SafeRefPtr<IDBFactory> aFactory,
                                         BackgroundDatabaseChild* aActor,
                                         UniquePtr<DatabaseSpec> aSpec) {
   MOZ_ASSERT(aRequest);
@@ -183,7 +184,7 @@ RefPtr<IDBDatabase> IDBDatabase::Create(IDBOpenDBRequest* aRequest,
   MOZ_ASSERT(aSpec);
 
   RefPtr<IDBDatabase> db =
-      new IDBDatabase(aRequest, aFactory, aActor, std::move(aSpec));
+      new IDBDatabase(aRequest, aFactory.clonePtr(), aActor, std::move(aSpec));
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window =
@@ -228,7 +229,7 @@ void IDBDatabase::AssertIsOnOwningThread() const {
 
 nsIEventTarget* IDBDatabase::EventTarget() const {
   AssertIsOnOwningThread();
-  return Factory()->EventTarget();
+  return mFactory->EventTarget();
 }
 
 void IDBDatabase::CloseInternal() {
@@ -1042,7 +1043,7 @@ void IDBDatabase::LastRelease() {
 
 nsresult IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   nsresult rv =
-      IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, mFactory);
+      IndexedDatabaseManager::CommonPostHandleEvent(aVisitor, *mFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
