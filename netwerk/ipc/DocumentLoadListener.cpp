@@ -1181,41 +1181,65 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     return NS_BINDING_ABORTED;
   }
 
-  // Currently the CSP code expects to run in the content
-  // process so that it can send events. Send a message to
-  // our content process to ask CSP if we should allow this
-  // redirect, and wait for confirmation.
-  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
-  Maybe<LoadInfoArgs> loadInfoArgs;
-  MOZ_ALWAYS_SUCCEEDS(ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-  MOZ_ASSERT(loadInfoArgs.isSome());
-
-  nsCOMPtr<nsIURI> newUri;
-  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newUri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAsyncVerifyRedirectCallback> callback(aCallback);
-  nsCOMPtr<nsIChannel> oldChannel(aOldChannel);
-  mDocumentChannelBridge->ConfirmRedirect(*loadInfoArgs, newUri)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [callback,
-           oldChannel](const Tuple<nsresult, Maybe<nsresult>>& aResult) {
-            if (Get<1>(aResult)) {
-              oldChannel->Cancel(*Get<1>(aResult));
-            }
-            callback->OnRedirectVerifyCallback(Get<0>(aResult));
-          },
-          [callback, oldChannel](const mozilla::ipc::ResponseRejectReason) {
-            oldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-            callback->OnRedirectVerifyCallback(NS_BINDING_ABORTED);
-          });
-
   // Clear out our nsIParentChannel functions, since a normal parent
   // channel would actually redirect and not have those values on the new one.
   // We expect the URI classifier to run on the redirected channel with
   // the new URI and set these again.
   mIParentChannelFunctions.Clear();
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
+
+  nsCOMPtr<nsIURI> originalUri;
+  nsresult rv = aOldChannel->GetOriginalURI(getter_AddRefs(originalUri));
+  if (NS_FAILED(rv)) {
+    aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
+    return rv;
+  }
+
+  nsCOMPtr<nsIURI> newUri;
+  rv = aNewChannel->GetURI(getter_AddRefs(newUri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<ADocumentChannelBridge> bridge = mDocumentChannelBridge;
+  auto callback =
+      [bridge, loadInfo](
+          nsCSPContext* aContext, mozilla::dom::Element* aTriggeringElement,
+          nsICSPEventListener* aCSPEventListener, nsIURI* aBlockedURI,
+          nsCSPContext::BlockedContentSource aBlockedContentSource,
+          nsIURI* aOriginalURI, const nsAString& aViolatedDirective,
+          uint32_t aViolatedPolicyIndex, const nsAString& aObserverSubject,
+          const nsAString& aSourceFile, const nsAString& aScriptSample,
+          uint32_t aLineNum, uint32_t aColumnNum) -> nsresult {
+    MOZ_ASSERT(!aTriggeringElement);
+    MOZ_ASSERT(!aCSPEventListener);
+    MOZ_ASSERT(aSourceFile.IsVoid() || aSourceFile.IsEmpty());
+    MOZ_ASSERT(aScriptSample.IsVoid() || aScriptSample.IsEmpty());
+    nsCOMPtr<nsIContentSecurityPolicy> cspToInherit =
+        loadInfo->GetCspToInherit();
+
+    // The CSPContext normally contains the loading Document (used
+    // for targeting events), but this gets lost when serializing across
+    // IPDL. We need to know which CSPContext we're serializing, so that
+    // we can find the right loading Document on the content process
+    // side.
+    bool isCspToInherit = (aContext == cspToInherit);
+    bridge->CSPViolation(aContext, isCspToInherit, aBlockedURI,
+                         aBlockedContentSource, aOriginalURI,
+                         aViolatedDirective, aViolatedPolicyIndex,
+                         aObserverSubject);
+    return NS_OK;
+  };
+
+  Maybe<nsresult> cancelCode;
+  rv = CSPService::ConsultCSPForRedirect(callback, originalUri, newUri,
+                                         loadInfo, cancelCode);
+
+  if (cancelCode) {
+    aOldChannel->Cancel(*cancelCode);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aCallback->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 

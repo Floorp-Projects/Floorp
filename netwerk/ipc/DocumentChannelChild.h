@@ -11,6 +11,7 @@
 #include "mozilla/net/PDocumentChannelChild.h"
 #include "mozilla/net/DocumentChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "mozilla/dom/nsCSPContext.h"
 
 namespace mozilla {
 namespace net {
@@ -48,9 +49,11 @@ class DocumentChannelChild final : public DocumentChannel,
   mozilla::ipc::IPCResult RecvAttachStreamFilter(
       Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvConfirmRedirect(
-      LoadInfoArgs&& aLoadInfo, nsIURI* aNewUri,
-      ConfirmRedirectResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvCSPViolation(
+      const CSPInfo& aCSP, bool aIsCspToInherit, nsIURI* aBlockedURI,
+      uint32_t aBlockedContentSource, nsIURI* aOriginalURI,
+      const nsAString& aViolatedDirective, uint32_t aViolatedPolicyIndex,
+      const nsAString& aObserverSubject);
 
  private:
   void ShutdownListeners(nsresult aStatusCode);
