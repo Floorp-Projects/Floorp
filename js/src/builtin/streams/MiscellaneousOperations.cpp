@@ -31,7 +31,8 @@ using JS::MutableHandle;
 using JS::ToNumber;
 using JS::Value;
 
-MOZ_MUST_USE JSObject* js::PromiseRejectedWithPendingError(JSContext* cx) {
+MOZ_MUST_USE js::PromiseObject* js::PromiseRejectedWithPendingError(
+    JSContext* cx) {
   Rooted<Value> exn(cx);
   if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
     // Uncatchable error. This happens when a slow script is killed or a
