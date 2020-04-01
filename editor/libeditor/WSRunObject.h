@@ -677,7 +677,7 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   /**
    * Scrub() removes any non-visible whitespaces at aPoint.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult Scrub(
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE static nsresult Scrub(
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint);
 
   /**
@@ -685,7 +685,7 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    * and the start of aRightBlockElement in preperation for them to be joined.
    * For example, trailing whitespaces in aLeftBlockElement needs to be removed.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult PrepareToJoinBlocks(
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE static nsresult PrepareToJoinBlocks(
       HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
       dom::Element& aRightBlockElement);
 
