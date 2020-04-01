@@ -81,7 +81,7 @@ class FunctionFlags {
     LAMBDA = 1 << 9,
 
     // The WASM function has a JIT entry which emulates the
-    // js::BaseScript::jitCodeRaw_ mechanism.
+    // js::BaseScript::jitCodeRaw mechanism.
     WASM_JIT_ENTRY = 1 << 10,
 
     // Function had no explicit name, but a name was set by SetFunctionName at
