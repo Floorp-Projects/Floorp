@@ -6,6 +6,13 @@
 
 #include "QuotaCommon.h"
 
+#include "mozilla/Logging.h"  // LazyLogModule
+#include "nsIFile.h"
+#ifdef XP_WIN
+#  include "nsILocalFileWin.h"
+#endif
+#include "nsXPCOM.h"
+
 namespace mozilla {
 namespace dom {
 namespace quota {
@@ -63,6 +70,27 @@ void AnonymizeOriginString(nsACString& aOriginString) {
   }
 
   AnonymizeCString(aOriginString, start);
+}
+
+Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv =
+      NS_NewLocalFile(aPath, /* aFollowLinks */ false, getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+#ifdef XP_WIN
+  nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(file, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  MOZ_ASSERT(winFile);
+  winFile->SetUseDOSDevicePathSyntax(true);
+#endif
+
+  return file;
 }
 
 }  // namespace quota
