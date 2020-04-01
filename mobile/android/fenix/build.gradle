@@ -18,7 +18,7 @@ buildscript {
 }
 
 plugins {
-    id("io.gitlab.arturbosch.detekt").version("1.0.0-RC16")
+    id("io.gitlab.arturbosch.detekt").version("1.6.0")
 }
 
 allprojects {
@@ -48,10 +48,9 @@ task clean(type: Delete) {
 
 detekt {
     // The version number is duplicated, please refer to plugins block for more details
-    version = "1.0.0-RC16"
+    version = "1.6.0"
     input = files("$projectDir/app/src")
     config = files("$projectDir/config/detekt.yml")
-    filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
 
     reports {
         html {
@@ -79,4 +78,10 @@ task ktlint(type: JavaExec, group: "verification") {
     classpath = configurations.ktlint
     main = "com.pinterest.ktlint.Main"
     args "app/src/**/*.kt"
+}
+
+tasks.withType(io.gitlab.arturbosch.detekt.Detekt.class) {
+    exclude("**/resources/**")
+    exclude("**/test/**")
+    exclude("**/tmp/**")
 }

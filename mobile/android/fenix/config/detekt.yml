@@ -1,6 +1,3 @@
-autoCorrect: true
-failFast: false
-
 build:
   maxIssues: 0
   weights:
@@ -27,7 +24,7 @@ console-reports:
   #  - 'FindingsReport'
   #  - 'BuildFailureReport'
 
-output-reports:
+console-reports:
   active: true
   exclude:
   #  - 'HtmlOutputReport'
@@ -64,7 +61,7 @@ complexity:
     includeStaticDeclarations: false
   ComplexMethod:
     active: true
-    threshold: 10
+    threshold: 15
     ignoreSingleWhenExpression: true
   LabeledExpression:
     active: false
@@ -193,6 +190,9 @@ exceptions:
      - Throwable
      - RuntimeException
 
+formatting:
+  autoCorrect: true
+
 naming:
   active: true
   ClassNaming:
@@ -219,7 +219,7 @@ naming:
     active: true
   MemberNameEqualsClassName:
     active: false
-    ignoreOverriddenFunction: true
+    ignoreOverridden: true
   ObjectPropertyNaming:
     active: true
     propertyPattern: '[A-Za-z][_A-Za-z0-9]*'
