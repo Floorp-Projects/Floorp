@@ -26,6 +26,13 @@
   font-size: 13px;
 }
 
+@media (max-width: 830px) {
+  .fxaccounts-extra-text,
+  .fxaccount-email {
+    display: none;
+  }
+}
+
 .fxaccount-avatar,
 .fxaccounts-enable-button {
   margin-inline-start: 9px;

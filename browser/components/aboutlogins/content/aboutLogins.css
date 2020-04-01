@@ -16,6 +16,12 @@ body {
                        "logins login";
 }
 
+@media (max-width: 830px) {
+  body {
+    --sidebar-width: 270px;
+  }
+}
+
 header {
   display: flex;
   grid-area: header;
