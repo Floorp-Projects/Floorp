@@ -288,8 +288,8 @@ var ContentPolicyManager = {
       msg.data
     );
 
-    this.runChannelListener("opening", data);
-    runLater(() => this.runChannelListener("onStop", data));
+    this.runChannelListener("onBeforeRequest", data);
+    runLater(() => this.runChannelListener("onCompleted", data));
   },
 
   shouldRunListener(policyType, url, opts) {
@@ -536,7 +536,7 @@ class AuthRequestor {
       }
     };
 
-    this.httpObserver.runChannelListener(wrapper, "authRequired", data);
+    this.httpObserver.runChannelListener(wrapper, "onAuthRequired", data);
 
     return {
       QueryInterface: ChromeUtils.generateQI([Ci.nsICancelable]),
@@ -559,38 +559,62 @@ AuthRequestor.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIAuthPrompt2",
 ]);
 
+// Most WebRequest events are implemented via the observer services, but
+// a few use custom xpcom interfaces.  This class (HttpObserverManager)
+// serves two main purposes:
+//  1. It abstracts away the names and details of the underlying
+//     implementation (e.g., onBeforeBeforeRequest is dispatched from
+//     the http-on-modify-request observable).
+//  2. It aggregates multiple listeners so that a single observer or
+//     handler can serve multiple webRequest listeners.
 HttpObserverManager = {
+  listeners: {
+    // onBeforeRequest uses http-on-modify observer for HTTP(S),
+    // and content policy for the other protocols (notably, data:)
+    onBeforeRequest: new Map(),
+
+    // onBeforeSendHeaders and onSendHeaders correspond to the
+    // http-on-before-connect observer.
+    onBeforeSendHeaders: new Map(),
+    onSendHeaders: new Map(),
+
+    // onHeadersReceived corresponds to the http-on-examine-* obserservers.
+    onHeadersReceived: new Map(),
+
+    // onAuthRequired is handled via the nsIAuthPrompt2 xpcom interface
+    // which is managed here by AuthRequestor.
+    onAuthRequired: new Map(),
+
+    // onBeforeRedirect is handled by the nsIChannelEVentSink xpcom interface
+    // which is managed here by ChannelEventSink.
+    onBeforeRedirect: new Map(),
+
+    // onResponseStarted, onErrorOccurred, and OnCompleted correspond
+    // to events dispatched by the ChannelWrapper EventTarget.
+    onResponseStarted: new Map(),
+    onErrorOccurred: new Map(),
+    onCompleted: new Map(),
+  },
+
   openingInitialized: false,
-  modifyInitialized: false,
+  beforeConnectInitialized: false,
   examineInitialized: false,
   redirectInitialized: false,
   activityInitialized: false,
   needTracing: false,
   hasRedirects: false,
 
-  listeners: {
-    opening: new Map(),
-    modify: new Map(),
-    afterModify: new Map(),
-    headersReceived: new Map(),
-    authRequired: new Map(),
-    onRedirect: new Map(),
-    onStart: new Map(),
-    onError: new Map(),
-    onStop: new Map(),
-  },
-
   getWrapper(nativeChannel) {
     let wrapper = ChannelWrapper.get(nativeChannel);
     if (!wrapper._addedListeners) {
       /* eslint-disable mozilla/balanced-listeners */
-      if (this.listeners.onError.size) {
+      if (this.listeners.onErrorOccurred.size) {
         wrapper.addEventListener("error", this);
       }
-      if (this.listeners.onStart.size) {
+      if (this.listeners.onResponseStarted.size) {
         wrapper.addEventListener("start", this);
       }
-      if (this.listeners.onStop.size) {
+      if (this.listeners.onCompleted.size) {
         wrapper.addEventListener("stop", this);
       }
       /* eslint-enable mozilla/balanced-listeners */
@@ -606,10 +630,16 @@ HttpObserverManager = {
     );
   },
 
+  // This method is called whenever webRequest listeners are added or removed.
+  // It reconciles the set of listeners with underlying observers, event
+  // handlers, etc. by adding new low-level handlers for any newly added
+  // webRequest listeners and removing those that are no longer needed if
+  // there are no more listeners for corresponding webRequest events.
   addOrRemove() {
-    let needOpening = this.listeners.opening.size;
-    let needModify =
-      this.listeners.modify.size || this.listeners.afterModify.size;
+    let needOpening = this.listeners.onBeforeRequest.size;
+    let needBeforeConnect =
+      this.listeners.onBeforeSendHeaders.size ||
+      this.listeners.onSendHeaders.size;
     if (needOpening && !this.openingInitialized) {
       this.openingInitialized = true;
       Services.obs.addObserver(this, "http-on-modify-request");
@@ -617,11 +647,11 @@ HttpObserverManager = {
       this.openingInitialized = false;
       Services.obs.removeObserver(this, "http-on-modify-request");
     }
-    if (needModify && !this.modifyInitialized) {
-      this.modifyInitialized = true;
+    if (needBeforeConnect && !this.beforeConnectInitialized) {
+      this.beforeConnectInitialized = true;
       Services.obs.addObserver(this, "http-on-before-connect");
-    } else if (!needModify && this.modifyInitialized) {
-      this.modifyInitialized = false;
+    } else if (!needBeforeConnect && this.beforeConnectInitialized) {
+      this.beforeConnectInitialized = false;
       Services.obs.removeObserver(this, "http-on-before-connect");
     }
 
@@ -630,15 +660,15 @@ HttpObserverManager = {
     );
 
     this.needTracing =
-      this.listeners.onStart.size ||
-      this.listeners.onError.size ||
-      this.listeners.onStop.size ||
+      this.listeners.onResponseStarted.size ||
+      this.listeners.onErrorOccurred.size ||
+      this.listeners.onCompleted.size ||
       haveBlocking;
 
     let needExamine =
       this.needTracing ||
-      this.listeners.headersReceived.size ||
-      this.listeners.authRequired.size;
+      this.listeners.onHeadersReceived.size ||
+      this.listeners.onAuthRequired.size;
 
     if (needExamine && !this.examineInitialized) {
       this.examineInitialized = true;
@@ -655,9 +685,9 @@ HttpObserverManager = {
     // If we have any listeners, we need the channelsink so the channelwrapper is
     // updated properly. Otherwise events for channels that are redirected will not
     // happen correctly.  If we have no listeners, shut it down.
-    this.hasRedirects = this.listeners.onRedirect.size > 0;
+    this.hasRedirects = this.listeners.onBeforeRedirect.size > 0;
     let needRedirect =
-      this.hasRedirects || needExamine || needOpening || needModify;
+      this.hasRedirects || needExamine || needOpening || needBeforeConnect;
     if (needRedirect && !this.redirectInitialized) {
       this.redirectInitialized = true;
       ChannelEventSink.register();
@@ -666,7 +696,7 @@ HttpObserverManager = {
       ChannelEventSink.unregister();
     }
 
-    let needActivity = this.listeners.onError.size;
+    let needActivity = this.listeners.onErrorOccurred.size;
     if (needActivity && !this.activityInitialized) {
       this.activityInitialized = true;
       this.activityDistributor.addObserver(this);
@@ -690,10 +720,10 @@ HttpObserverManager = {
     let channel = this.getWrapper(subject);
     switch (topic) {
       case "http-on-modify-request":
-        this.runChannelListener(channel, "opening");
+        this.runChannelListener(channel, "onBeforeRequest");
         break;
       case "http-on-before-connect":
-        this.runChannelListener(channel, "modify");
+        this.runChannelListener(channel, "onBeforeSendHeaders");
         break;
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
@@ -744,7 +774,7 @@ HttpObserverManager = {
       Services.tm.dispatchToMainThread(() => {
         channel.errorCheck();
         if (!channel.errorString) {
-          this.runChannelListener(channel, "onError", {
+          this.runChannelListener(channel, "onErrorOccurred", {
             error:
               this.activityErrorsMap.get(lastActivity) ||
               `NS_ERROR_NET_UNKNOWN_${lastActivity}`,
@@ -798,33 +828,33 @@ HttpObserverManager = {
     let channel = event.currentTarget;
     switch (event.type) {
       case "error":
-        this.runChannelListener(channel, "onError", {
+        this.runChannelListener(channel, "onErrorOccurred", {
           error: channel.errorString,
         });
         break;
       case "start":
-        this.runChannelListener(channel, "onStart");
+        this.runChannelListener(channel, "onResponseStarted");
         break;
       case "stop":
-        this.runChannelListener(channel, "onStop");
+        this.runChannelListener(channel, "onCompleted");
         break;
     }
   },
 
   STATUS_TYPES: new Set([
-    "headersReceived",
-    "authRequired",
-    "onRedirect",
-    "onStart",
-    "onStop",
+    "onHeadersReceived",
+    "onAuthRequired",
+    "onBeforeRedirect",
+    "onResponseStarted",
+    "onCompleted",
   ]),
   FILTER_TYPES: new Set([
-    "opening",
-    "modify",
-    "afterModify",
-    "headersReceived",
-    "authRequired",
-    "onRedirect",
+    "onBeforeRequest",
+    "onBeforeSendHeaders",
+    "onSendHeaders",
+    "onHeadersReceived",
+    "onAuthRequired",
+    "onBeforeRedirect",
   ]),
 
   runChannelListener(channel, kind, extraData = null) {
@@ -833,7 +863,7 @@ HttpObserverManager = {
     let responseHeaders;
 
     try {
-      if (kind !== "onError" && channel.errorString) {
+      if (kind !== "onErrorOccurred" && channel.errorString) {
         return;
       }
 
@@ -951,7 +981,7 @@ HttpObserverManager = {
         }
 
         if (
-          kind === "authRequired" &&
+          kind === "onAuthRequired" &&
           result.authCredentials &&
           channel.authPromptCallback
         ) {
@@ -1008,7 +1038,7 @@ HttpObserverManager = {
           }
         }
 
-        if (result.upgradeToSecure && kind === "opening") {
+        if (result.upgradeToSecure && kind === "onBeforeRequest") {
           try {
             channel.upgradeToSecure();
           } catch (e) {
@@ -1027,13 +1057,13 @@ HttpObserverManager = {
 
       // If a listener did not cancel the request or provide credentials, we
       // forward the auth request to the base handler.
-      if (kind === "authRequired" && channel.authPromptForward) {
+      if (kind === "onAuthRequired" && channel.authPromptForward) {
         channel.authPromptForward();
       }
 
-      if (kind === "modify" && this.listeners.afterModify.size) {
-        await this.runChannelListener(channel, "afterModify");
-      } else if (kind !== "onError") {
+      if (kind === "onBeforeSendHeaders" && this.listeners.onSendHeaders.size) {
+        await this.runChannelListener(channel, "onSendHeaders");
+      } else if (kind !== "onErrorOccurred") {
         channel.errorCheck();
       }
     } catch (e) {
@@ -1060,13 +1090,13 @@ HttpObserverManager = {
   },
 
   examine(channel, topic, data) {
-    if (this.listeners.headersReceived.size) {
-      this.runChannelListener(channel, "headersReceived");
+    if (this.listeners.onHeadersReceived.size) {
+      this.runChannelListener(channel, "onHeadersReceived");
     }
 
     if (
       !channel.hasAuthRequestor &&
-      this.shouldHookListener(this.listeners.authRequired, channel, {
+      this.shouldHookListener(this.listeners.onAuthRequired, channel, {
         isProxy: true,
       })
     ) {
@@ -1084,7 +1114,7 @@ HttpObserverManager = {
     // We want originalURI, this will provide a moz-ext rather than jar or file
     // uri on redirects.
     if (this.hasRedirects) {
-      this.runChannelListener(channel, "onRedirect", {
+      this.runChannelListener(channel, "onBeforeRedirect", {
         redirectUrl: newChannel.originalURI.spec,
       });
     }
@@ -1101,11 +1131,11 @@ var onBeforeRequest = {
     ContentPolicyManager.addListener(callback, opts);
 
     opts = Object.assign({}, opts, optionsObject);
-    HttpObserverManager.addListener("opening", callback, opts);
+    HttpObserverManager.addListener("onBeforeRequest", callback, opts);
   },
 
   removeListener(callback) {
-    HttpObserverManager.removeListener("opening", callback);
+    HttpObserverManager.removeListener("onBeforeRequest", callback);
     ContentPolicyManager.removeListener(callback);
   },
 };
@@ -1127,51 +1157,34 @@ HttpEvent.prototype = {
   },
 };
 
-var onBeforeSendHeaders = new HttpEvent("modify", [
+var onBeforeSendHeaders = new HttpEvent("onBeforeSendHeaders", [
   "requestHeaders",
   "blocking",
 ]);
-var onSendHeaders = new HttpEvent("afterModify", ["requestHeaders"]);
-var onHeadersReceived = new HttpEvent("headersReceived", [
+var onSendHeaders = new HttpEvent("onSendHeaders", ["requestHeaders"]);
+var onHeadersReceived = new HttpEvent("onHeadersReceived", [
   "blocking",
   "responseHeaders",
 ]);
-var onAuthRequired = new HttpEvent("authRequired", [
+var onAuthRequired = new HttpEvent("onAuthRequired", [
   "blocking",
   "responseHeaders",
 ]);
-var onBeforeRedirect = new HttpEvent("onRedirect", ["responseHeaders"]);
-var onResponseStarted = new HttpEvent("onStart", ["responseHeaders"]);
-var onCompleted = new HttpEvent("onStop", ["responseHeaders"]);
-var onErrorOccurred = new HttpEvent("onError");
+var onBeforeRedirect = new HttpEvent("onBeforeRedirect", ["responseHeaders"]);
+var onResponseStarted = new HttpEvent("onResponseStarted", ["responseHeaders"]);
+var onCompleted = new HttpEvent("onCompleted", ["responseHeaders"]);
+var onErrorOccurred = new HttpEvent("onErrorOccurred");
 
 var WebRequest = {
-  // http-on-modify observer for HTTP(S), content policy for the other protocols (notably, data:)
-  onBeforeRequest: onBeforeRequest,
-
-  // http-on-modify observer.
-  onBeforeSendHeaders: onBeforeSendHeaders,
-
-  // http-on-modify observer.
-  onSendHeaders: onSendHeaders,
-
-  // http-on-examine-*observer.
-  onHeadersReceived: onHeadersReceived,
-
-  // http-on-examine-*observer.
-  onAuthRequired: onAuthRequired,
-
-  // nsIChannelEventSink.
-  onBeforeRedirect: onBeforeRedirect,
-
-  // OnStartRequest channel listener.
-  onResponseStarted: onResponseStarted,
-
-  // OnStopRequest channel listener.
-  onCompleted: onCompleted,
-
-  // nsIHttpActivityObserver.
-  onErrorOccurred: onErrorOccurred,
+  onBeforeRequest,
+  onBeforeSendHeaders,
+  onSendHeaders,
+  onHeadersReceived,
+  onAuthRequired,
+  onBeforeRedirect,
+  onResponseStarted,
+  onCompleted,
+  onErrorOccurred,
 
   getSecurityInfo: details => {
     let channel = ChannelWrapper.getRegisteredChannel(
