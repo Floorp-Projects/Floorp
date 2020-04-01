@@ -135,15 +135,6 @@
       return this.getAttribute("disabled") == "true";
     }
 
-    set dlgType(val) {
-      this.setAttribute("dlgtype", val);
-      return val;
-    }
-
-    get dlgType() {
-      return this.getAttribute("dlgtype");
-    }
-
     set group(val) {
       this.setAttribute("group", val);
       return val;
