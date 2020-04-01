@@ -133,7 +133,23 @@ const kSafeSchemes = [
   "xmpp",
 ];
 
-const kDocumentChannelAllowedSchemes = ["http", "https", "ftp", "data"];
+const kDocumentChannelDeniedSchemes = ["javascript"];
+const kDocumentChannelDeniedURIs = [
+  "about:blank",
+  "about:crashcontent",
+  "about:newtab",
+  "about:printpreview",
+  "about:privatebrowsing",
+];
+
+// Changes here should also be made in SchemeUsesDocChannel in
+// nsDocShell.cpp.
+function documentChannelPermittedForURI(aURI) {
+  return (
+    !kDocumentChannelDeniedSchemes.includes(aURI.scheme) &&
+    !kDocumentChannelDeniedURIs.includes(aURI.spec)
+  );
+}
 
 // Note that even if the scheme fits the criteria for a web-handled scheme
 // (ie it is compatible with the checks registerProtocolHandler uses), it may
@@ -799,9 +815,10 @@ var E10SUtils = {
     // for now, and let DocumentChannel do it during the response.
     if (
       currentRemoteType != NOT_REMOTE &&
+      requiredRemoteType != NOT_REMOTE &&
       uriObject &&
       (remoteSubframes || documentChannel) &&
-      kDocumentChannelAllowedSchemes.includes(uriObject.scheme)
+      documentChannelPermittedForURI(uriObject)
     ) {
       mustChangeProcess = false;
     }
@@ -867,16 +884,22 @@ var E10SUtils = {
       return false;
     }
 
-    // If we are performing HTTP response process selection, and are loading an
-    // HTTP URI, we can start the load in the current process, and then perform
-    // the switch later-on using the RedirectProcessChooser mechanism.
-    //
-    // We should never be sending a POST request from the parent process to a
-    // http(s) uri, so make sure we switch if we're currently in that process.
+    let wantRemoteType = this.getRemoteTypeForURIObject(
+      aURI,
+      true,
+      useRemoteSubframes,
+      remoteType,
+      webNav.currentURI
+    );
+
+    // If we are using DocumentChannel or remote subframes (fission), we
+    // can start the load in the current process, and then perform the
+    // switch later-on using the nsIProcessSwitchRequestor mechanism.
     if (
-      remoteType != NOT_REMOTE &&
       (useRemoteSubframes || documentChannel) &&
-      kDocumentChannelAllowedSchemes.includes(aURI.scheme)
+      remoteType != NOT_REMOTE &&
+      wantRemoteType != NOT_REMOTE &&
+      documentChannelPermittedForURI(aURI)
     ) {
       return true;
     }
@@ -899,14 +922,6 @@ var E10SUtils = {
       );
       return false;
     }
-
-    let wantRemoteType = this.getRemoteTypeForURIObject(
-      aURI,
-      true,
-      useRemoteSubframes,
-      remoteType,
-      webNav.currentURI
-    );
 
     // Allow history load if loaded in this process before.
     let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
