@@ -14,6 +14,9 @@ module.exports = async function(context, commands) {
   await commands.wait.byTime(post_startup_delay);
 
   for (let count = 0; count < page_cycles; count++) {
+    context.log.info("Navigating to about:blank");
+    await commands.navigate("about:blank");
+
     context.log.info("Cycle %d, waiting for %d ms", count, page_cycle_delay);
     await commands.wait.byTime(page_cycle_delay);
 
