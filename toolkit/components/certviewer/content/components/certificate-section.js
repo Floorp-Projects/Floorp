@@ -21,6 +21,7 @@ class CertificateSection extends HTMLElement {
     this.attachShadow({ mode: "open" }).appendChild(templateHtml);
 
     document.l10n.connectRoot(this.shadowRoot);
+    document.l10n.translateFragment(this.shadowRoot);
 
     this.infoGroupsContainers = [];
 
