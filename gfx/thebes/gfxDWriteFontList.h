@@ -370,6 +370,8 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
   nsresult InitFontListForPlatform() override;
   void InitSharedFontListForPlatform() override;
 
+  FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
+
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
                                   FontVisibility aVisibility) const override;
 
