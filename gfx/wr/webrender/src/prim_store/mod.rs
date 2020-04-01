@@ -970,6 +970,13 @@ pub struct VisibleGradientTile {
     pub local_clip_rect: LayoutRect,
 }
 
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct CachedGradientSegment {
+    pub handle: RenderTaskCacheEntryHandle,
+    pub local_rect: LayoutRect,
+}
+
 /// Information about how to cache a border segment,
 /// along with the current render task cache entry.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -3284,7 +3291,7 @@ impl PrimitiveStore {
                     };
 
                     // Build the cache key, including information about the stops.
-                    let mut stops = [GradientStopKey::empty(); GRADIENT_FP_STOPS];
+                    let mut stops = vec![GradientStopKey::empty(); prim_data.stops.len()];
 
                     // Reverse the stops as required, same as the gradient builder does
                     // for the slow path.
@@ -3302,35 +3309,124 @@ impl PrimitiveStore {
                         }
                     }
 
-                    let cache_key = GradientCacheKey {
-                        orientation,
-                        start_stop_point: VectorKey {
-                            x: start_point,
-                            y: end_point,
-                        },
-                        stops,
-                    };
+                    // To support clamping, we need to make sure that quads are emitted for the
+                    // segments before and after the 0.0...1.0 range of offsets.  The loop below
+                    // can handle that by duplicating the first and last point if necessary:
+                    if start_point < 0.0 {
+                        stops.insert(0, GradientStopKey {
+                            offset: start_point,
+                            color : stops[0].color
+                        });
+                    }
 
-                    // Request the render task each frame.
-                    gradient.cache_handle = Some(frame_state.resource_cache.request_render_task(
-                        RenderTaskCacheKey {
-                            size,
-                            kind: RenderTaskCacheKeyKind::Gradient(cache_key),
-                        },
-                        frame_state.gpu_cache,
-                        frame_state.render_tasks,
-                        None,
-                        prim_data.stops_opacity.is_opaque,
-                        |render_tasks| {
-                            render_tasks.add().init(RenderTask::new_gradient(
-                                size,
-                                stops,
-                                orientation,
-                                start_point,
-                                end_point,
-                            ))
+                    if end_point > 1.0 {
+                        stops.push( GradientStopKey {
+                            offset: end_point,
+                            color : stops[stops.len()-1].color
+                        });
+                    }
+
+                    gradient.cache_segments.clear();
+
+                    let mut first_stop = 0;
+                    // look for an inclusive range of stops [first_stop, last_stop].
+                    // once first_stop points at (or past) the last stop, we're done.
+                    while first_stop < stops.len()-1 {
+
+                        // if the entire segment starts at an offset that's past the primitive's
+                        // end_point, we're done.
+                        if stops[first_stop].offset > end_point {
+                            break;
                         }
-                    ));
+
+                        // accumulate stops until we have GRADIENT_FP_STOPS of them, or we hit
+                        // a hard stop:
+                        let mut last_stop = first_stop;
+                        let mut hard_stop = false;   // did we stop on a hard stop?
+                        while last_stop < stops.len()-1 &&
+                              last_stop - first_stop + 1 < GRADIENT_FP_STOPS
+                        {
+                            if stops[last_stop+1].offset == stops[last_stop].offset {
+                                hard_stop = true;
+                                break;
+                            }
+
+                            last_stop = last_stop + 1;
+                        }
+
+                        let num_stops = last_stop - first_stop + 1;
+
+                        // repeated hard stops at the same offset, skip
+                        if num_stops == 0 {
+                            first_stop = last_stop + 1;
+                            continue;
+                        }
+
+                        // if the last stop offset is before start_point, the segment's not visible:
+                        if stops[last_stop].offset < start_point {
+                            first_stop = if hard_stop { last_stop+1 } else { last_stop };
+                            continue;
+                        }
+
+                        let segment_start_point = start_point.max(stops[first_stop].offset);
+                        let segment_end_point   = end_point  .min(stops[last_stop ].offset);
+
+                        let mut segment_stops = [GradientStopKey::empty(); GRADIENT_FP_STOPS];
+                        for i in 0..num_stops {
+                            segment_stops[i] = stops[first_stop + i];
+                        }
+
+                        let cache_key = GradientCacheKey {
+                            orientation,
+                            start_stop_point: VectorKey {
+                                x: segment_start_point,
+                                y: segment_end_point,
+                            },
+                            stops: segment_stops,
+                        };
+
+                        let mut prim_origin = prim_instance.prim_origin;
+                        let mut prim_size   = prim_data.common.prim_size;
+
+                        let inv_length = 1.0 / ( end_point - start_point );
+                        if orientation == LineOrientation::Horizontal {
+                            prim_origin.x    += ( segment_start_point - start_point )       * inv_length * prim_size.width;
+                            prim_size.width  *= ( segment_end_point - segment_start_point ) * inv_length;
+                        } else {
+                            prim_origin.y    += ( segment_start_point - start_point )       * inv_length * prim_size.height;
+                            prim_size.height *= ( segment_end_point - segment_start_point ) * inv_length;
+                        }
+
+                        let local_rect = LayoutRect::new( prim_origin, prim_size );
+
+                        // Request the render task each frame.
+                        gradient.cache_segments.push(
+                            CachedGradientSegment {
+                                handle: frame_state.resource_cache.request_render_task(
+                                    RenderTaskCacheKey {
+                                        size,
+                                        kind: RenderTaskCacheKeyKind::Gradient(cache_key),
+                                    },
+                                    frame_state.gpu_cache,
+                                    frame_state.render_tasks,
+                                    None,
+                                    prim_data.stops_opacity.is_opaque,
+                                    |render_tasks| {
+                                        render_tasks.add().init(RenderTask::new_gradient(
+                                            size,
+                                            segment_stops,
+                                            orientation,
+                                            segment_start_point,
+                                            segment_end_point,
+                                        ))
+                                    }),
+                                local_rect: local_rect,
+                            }
+                        );
+
+                        // if ending on a hardstop, skip past it for the start of the next run:
+                        first_stop = if hard_stop { last_stop + 1 } else { last_stop };
+                    }
                 }
 
                 if prim_data.tile_spacing != LayoutSize::zero() {
