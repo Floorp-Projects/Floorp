@@ -64,6 +64,11 @@ class ContentMediaAgent : public MediaControlKeysEventSource {
   virtual void NotifyAudibleStateChanged(
       const MediaControlKeysEventListener* aMedia, bool aAudible) = 0;
 
+  // Use this method to update the picture in picture mode state of controlled
+  // media, and it's safe to notify same state again.
+  virtual void NotifyPictureInPictureModeChanged(
+      const MediaControlKeysEventListener* aMedia, bool aEnabled) = 0;
+
  private:
   // We don't need them in our case, so make them private to prevent usage.
   bool Open() override { return true; }
@@ -117,6 +122,8 @@ class ContentMediaController final : public ContentMediaAgent,
                                ControlledMediaState aState) override;
   void NotifyAudibleStateChanged(const MediaControlKeysEventListener* aMedia,
                                  bool aAudible) override;
+  void NotifyPictureInPictureModeChanged(
+      const MediaControlKeysEventListener* aMedia, bool aEnabled) override;
 
   // ContentControlKeyEventReceiver method
   void OnKeyPressed(MediaControlKeysEvent aEvent) override;

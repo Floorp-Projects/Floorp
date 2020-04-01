@@ -145,6 +145,33 @@ void ContentMediaController::NotifyAudibleStateChanged(
   }
 }
 
+void ContentMediaController::NotifyPictureInPictureModeChanged(
+    const MediaControlKeysEventListener* aMedia, bool aEnabled) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mListeners.Contains(aMedia)) {
+    return;
+  }
+
+  RefPtr<BrowsingContext> bc = GetTopLevelBrowsingContext();
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify media Picture-in-Picture mode '%s' in BC %" PRId64,
+      aEnabled ? "enabled" : "disabled", bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyPictureInPictureModeChanged(bc, aEnabled);
+  } else {
+    // Currently this only happen when we disable e10s, otherwise all controlled
+    // media would be run in the content process.
+    if (RefPtr<MediaController> controller =
+            bc->Canonical()->GetMediaController()) {
+      controller->SetIsInPictureInPictureMode(aEnabled);
+    }
+  }
+}
+
 void ContentMediaController::OnKeyPressed(MediaControlKeysEvent aEvent) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG("Handle '%s' event, listener num=%zu", ToMediaControlKeysEventStr(aEvent),
