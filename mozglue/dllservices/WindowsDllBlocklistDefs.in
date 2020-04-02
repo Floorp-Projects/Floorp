@@ -230,9 +230,12 @@ ALL_PROCESSES += [
     DllBlocklistEntry("dgapi.dll", (7, 5, 0, 0xffff)),
     DllBlocklistEntry("dgapi64.dll", (7, 5, 0, 0xffff)),
 
-    # Old versions of COMODO Internet Security
+    # Old versions of COMODO Internet Security, bug 1608048
     DllBlocklistEntry("IseGuard32.dll", (1, 6, 13835, 184)),
     DllBlocklistEntry("IseGuard64.dll", (1, 6, 13835, 184)),
+
+    # Old version of COMODO Firewall, bug 1624336
+    DllBlocklistEntry("guard64.dll", (5, 12, 59641, 2599)),
 ]
 
 ALL_PROCESSES_TESTS += [
