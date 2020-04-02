@@ -109,7 +109,7 @@ impl GlobalDesc {
                 TypeCode::I64 => Ok(pos.ins().iconst(ir::types::I64, v.u.i64)),
                 TypeCode::F32 => Ok(pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32))),
                 TypeCode::F64 => Ok(pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64))),
-                TypeCode::Ref | TypeCode::AnyRef | TypeCode::FuncRef | TypeCode::NullRef => {
+                TypeCode::OptRef | TypeCode::AnyRef | TypeCode::FuncRef | TypeCode::NullRef => {
                     assert!(v.u.r as usize == 0);
                     Ok(pos.ins().null(REF_TYPE))
                 }

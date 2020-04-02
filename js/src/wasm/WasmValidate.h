@@ -404,7 +404,7 @@ class Encoder {
   MOZ_MUST_USE bool writeValType(ValType type) {
     static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
     if (type.isTypeIndex()) {
-      return writeFixedU8(uint8_t(TypeCode::Ref)) &&
+      return writeFixedU8(uint8_t(TypeCode::OptRef)) &&
              writeVarU32(type.refType().typeIndex());
     }
     TypeCode tc = UnpackTypeCodeType(type.packed());
@@ -659,7 +659,7 @@ class Decoder {
   MOZ_MUST_USE ValType uncheckedReadValType() {
     uint8_t code = uncheckedReadFixedU8();
     switch (code) {
-      case uint8_t(TypeCode::Ref):
+      case uint8_t(TypeCode::OptRef):
         return RefType::fromTypeIndex(uncheckedReadVarU32());
       case uint8_t(TypeCode::AnyRef):
       case uint8_t(TypeCode::FuncRef):
@@ -693,9 +693,9 @@ class Decoder {
         *type = RefType::fromTypeCode(TypeCode(code));
         return true;
 #  ifdef ENABLE_WASM_GC
-      case uint8_t(TypeCode::Ref): {
+      case uint8_t(TypeCode::OptRef): {
         if (!gcTypesEnabled) {
-          return fail("(ref T) types not enabled");
+          return fail("(optref T) types not enabled");
         }
         uint32_t typeIndex;
         if (!readVarU32(&typeIndex)) {
