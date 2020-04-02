@@ -612,11 +612,22 @@ const FEEDS_DATA = [
         Services.prefs.getStringPref(REGION_STORIES_CONFIG) || "";
       const preffedRegions = preffedRegionsString.split(",").map(s => s.trim());
       const locales = {
-        US: ["en-CA", "en-GB", "en-US", "en-ZA"],
-        CA: ["en-CA", "en-GB", "en-US", "en-ZA"],
-        GB: ["en-CA", "en-GB", "en-US", "en-ZA"],
-        DE: ["de", "de-DE", "de-AT", "de-CH"],
-        JP: ["ja", "ja-JP"],
+        US: ["en-CA", "en-GB", "en-US"],
+        CA: ["en-CA", "en-GB", "en-US"],
+        GB: ["en-CA", "en-GB", "en-US"],
+        AU: ["en-CA", "en-GB", "en-US"],
+        NZ: ["en-CA", "en-GB", "en-US"],
+        IN: ["en-CA", "en-GB", "en-US"],
+        ZA: ["en-CA", "en-GB", "en-US"],
+        CH: ["de", "fr", "it"],
+        BE: ["fr", "de"],
+        DE: ["de"],
+        AT: ["de"],
+        IT: ["it"],
+        FR: ["fr"],
+        ES: ["es"],
+        PL: ["pl"],
+        JP: ["ja", "ja-JP-mac"],
       }[geo];
       return (
         preffedRegions.includes(geo) && !!locales && locales.includes(locale)
