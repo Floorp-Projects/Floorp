@@ -1,12 +1,12 @@
+use crate::ast::annotation;
 use crate::lexer::FloatVal;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::str;
-use crate::ast::annotation;
 
 /// A position in the original source stream, used to render errors.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Span {
     pub(crate) offset: usize,
 }
@@ -235,7 +235,7 @@ impl Peek for &'_ [u8] {
 
 impl<'a> Parse<'a> for &'a str {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        str::from_utf8(parser.parse()?).map_err(|_| parser.error("invalid UTF-8 encoding"))
+        str::from_utf8(parser.parse()?).map_err(|_| parser.error("malformed UTF-8 encoding"))
     }
 }
 

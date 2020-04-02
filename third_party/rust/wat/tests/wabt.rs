@@ -12,6 +12,7 @@ use rayon::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::str;
 use std::sync::atomic::{AtomicUsize, Ordering::SeqCst};
 use wast::parser::ParseBuffer;
 use wast::*;
@@ -138,23 +139,25 @@ fn test_wast(test: &Path, contents: &str, ntests: &AtomicUsize) -> anyhow::Resul
                     }
                 }
 
+                WastDirective::QuoteModule { source, span } => {
+                    if let Err(e) = parse_quote_module(span, &source) {
+                        let (line, col) = span.linecol_in(&contents);
+                        anyhow::bail!(
+                            "in test {}:{}:{} parsed with\nerror: {}",
+                            test.display(),
+                            line + 1,
+                            col + 1,
+                            e,
+                        );
+                    }
+                }
+
                 WastDirective::AssertMalformed {
                     span,
                     module: QuoteModule::Quote(source),
                     message,
                 } => {
-                    let source = source.join(" ");
-                    let result = ParseBuffer::new(&source)
-                        .map_err(|e| e.into())
-                        .and_then(|b| -> Result<(), wast::Error> {
-                            let mut wat = parser::parse::<Wat>(&b)?;
-                            wat.module.encode()?;
-                            Ok(())
-                        })
-                        .map_err(|mut e| {
-                            e.set_text(&source);
-                            e
-                        });
+                    let result = parse_quote_module(span, &source);
                     let (line, col) = span.linecol_in(&contents);
                     match result {
                         Ok(()) => anyhow::bail!(
@@ -208,6 +211,26 @@ fn test_wast(test: &Path, contents: &str, ntests: &AtomicUsize) -> anyhow::Resul
     anyhow::bail!("{}", s)
 }
 
+fn parse_quote_module(span: Span, source: &[&[u8]]) -> Result<(), wast::Error> {
+    let mut ret = String::new();
+    for src in source {
+        match str::from_utf8(src) {
+            Ok(s) => ret.push_str(s),
+            Err(_) => {
+                return Err(wast::Error::new(
+                    span,
+                    "malformed UTF-8 encoding".to_string(),
+                ))
+            }
+        }
+        ret.push_str(" ");
+    }
+    let buf = ParseBuffer::new(&ret)?;
+    let mut wat = parser::parse::<Wat>(&buf)?;
+    wat.module.encode()?;
+    Ok(())
+}
+
 fn error_matches(error: &str, message: &str) -> bool {
     if error.contains(message) {
         return true;
@@ -223,11 +246,25 @@ fn error_matches(error: &str, message: &str) -> bool {
         || message == "malformed annotation id"
         || message == "alignment must be a power of two"
     {
-        return error.contains("expected ") || error.contains("constant out of range");
+        return error.contains("expected ")
+            || error.contains("constant out of range")
+            || error.contains("extra tokens remaining");
+    }
+
+    if message == "illegal character" {
+        return error.contains("unexpected character");
     }
 
     if message == "unclosed string" {
         return error.contains("unexpected end-of-file");
+    }
+
+    if message == "invalid UTF-8 encoding" {
+        return error.contains("malformed UTF-8 encoding");
+    }
+
+    if message == "duplicate identifier" {
+        return error.contains("duplicate") && error.contains("identifier");
     }
 
     return false;
@@ -249,6 +286,7 @@ fn find_tests() -> Vec<PathBuf> {
     find_tests("tests/regression".as_ref(), &mut tests);
     find_tests("tests/testsuite".as_ref(), &mut tests);
     tests.sort();
+
     return tests;
 
     fn find_tests(path: &Path, tests: &mut Vec<PathBuf>) {
@@ -454,9 +492,15 @@ fn skip_test(test: &Path, contents: &str) -> bool {
         return true;
     }
 
-    // Waiting for https://github.com/WebAssembly/annotations/pull/7 to make its
-    // way into the testsuite repo.
-    if test.ends_with("testsuite/proposals/annotations/annotations.wast") {
+    // Waiting for wabt to recognize the integer abs simd opcodes; they have been added
+    // upstream in the spec test suite, https://github.com/WebAssembly/simd/pull/197,
+    // but need to be pulled, filed https://github.com/WebAssembly/wabt/issues/1379.
+    if test.ends_with("wabt/third_party/testsuite/proposals/simd/simd_f32x4.wast") {
+        return true;
+    }
+
+    // wait for wabt to catch up on the annotations spec test
+    if test.ends_with("wabt/third_party/testsuite/proposals/annotations/annotations.wast") {
         return true;
     }
 

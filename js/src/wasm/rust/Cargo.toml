@@ -9,5 +9,5 @@ crate-type = ["rlib"]
 name = "wasm_rust"
 
 [dependencies]
-wat = { version = "1.0.12" }
+wat = { version = "1.0.14" }
 wasmparser = { version = "0.48.2" }

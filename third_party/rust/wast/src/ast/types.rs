@@ -9,11 +9,18 @@ pub enum ValType<'a> {
     I64,
     F32,
     F64,
-    Anyref,
-    Funcref,
     V128,
+    I8,
+    I16,
+    Funcref,
+    Anyref,
     Nullref,
-    Ref(ast::Index<'a>)
+    Exnref,
+    Ref(ast::Index<'a>),
+    Optref(ast::Index<'a>),
+    Eqref,
+    I31ref,
+    Rtt(ast::Index<'a>),
 }
 
 impl<'a> Parse<'a> for ValType<'a> {
@@ -31,26 +38,79 @@ impl<'a> Parse<'a> for ValType<'a> {
         } else if l.peek::<kw::f64>() {
             parser.parse::<kw::f64>()?;
             Ok(ValType::F64)
-        } else if l.peek::<kw::anyref>() {
-            parser.parse::<kw::anyref>()?;
-            Ok(ValType::Anyref)
+        } else if l.peek::<kw::v128>() {
+            parser.parse::<kw::v128>()?;
+            Ok(ValType::V128)
+        } else if l.peek::<kw::i8>() {
+            parser.parse::<kw::i8>()?;
+            Ok(ValType::I8)
+        } else if l.peek::<kw::i16>() {
+            parser.parse::<kw::i16>()?;
+            Ok(ValType::I16)
         } else if l.peek::<kw::funcref>() {
             parser.parse::<kw::funcref>()?;
             Ok(ValType::Funcref)
         } else if l.peek::<kw::anyfunc>() {
             parser.parse::<kw::anyfunc>()?;
             Ok(ValType::Funcref)
+        } else if l.peek::<kw::anyref>() {
+            parser.parse::<kw::anyref>()?;
+            Ok(ValType::Anyref)
         } else if l.peek::<kw::nullref>() {
             parser.parse::<kw::nullref>()?;
             Ok(ValType::Nullref)
-        } else if l.peek::<kw::v128>() {
-            parser.parse::<kw::v128>()?;
-            Ok(ValType::V128)
         } else if l.peek::<ast::LParen>() {
             parser.parens(|p| {
-                p.parse::<kw::r#ref>()?;
-                Ok(ValType::Ref(parser.parse()?))
+                let mut l = parser.lookahead1();
+                if l.peek::<kw::r#ref>() {
+                    p.parse::<kw::r#ref>()?;
+
+                    let mut l = parser.lookahead1();
+                    if l.peek::<kw::func>() {
+                        parser.parse::<kw::func>()?;
+                        Ok(ValType::Funcref)
+                    } else if l.peek::<kw::any>() {
+                        parser.parse::<kw::any>()?;
+                        Ok(ValType::Anyref)
+                    } else if l.peek::<kw::null>() {
+                        parser.parse::<kw::null>()?;
+                        Ok(ValType::Nullref)
+                    } else if l.peek::<kw::exn>() {
+                        parser.parse::<kw::exn>()?;
+                        Ok(ValType::Exnref)
+                    } else if l.peek::<kw::eq>() {
+                        parser.parse::<kw::eq>()?;
+                        Ok(ValType::Eqref)
+                    } else if l.peek::<kw::i31>() {
+                        parser.parse::<kw::i31>()?;
+                        Ok(ValType::I31ref)
+                    } else if l.peek::<kw::opt>() {
+                        parser.parse::<kw::opt>()?;
+                        Ok(ValType::Optref(parser.parse()?))
+                    } else if l.peek::<ast::Index>() {
+                        Ok(ValType::Ref(parser.parse()?))
+                    } else {
+                        Err(l.error())
+                    }
+                } else if l.peek::<kw::optref>() {
+                    p.parse::<kw::optref>()?;
+                    Ok(ValType::Optref(parser.parse()?))
+                } else if l.peek::<kw::rtt>() {
+                    p.parse::<kw::rtt>()?;
+                    Ok(ValType::Rtt(parser.parse()?))
+                } else {
+                    Err(l.error())
+                }
             })
+        } else if l.peek::<kw::exnref>() {
+            parser.parse::<kw::exnref>()?;
+            Ok(ValType::Exnref)
+        } else if l.peek::<kw::eqref>() {
+            parser.parse::<kw::eqref>()?;
+            Ok(ValType::Eqref)
+        } else if l.peek::<kw::i31ref>() {
+            parser.parse::<kw::i31ref>()?;
+            Ok(ValType::I31ref)
         } else {
             Err(l.error())
         }
@@ -96,6 +156,8 @@ pub enum TableElemType {
     Anyref,
     /// An element for a table that is a list of `nullref` values.
     Nullref,
+    /// An element for a table that is a list of `exnref` values.
+    Exnref,
 }
 
 impl<'a> Parse<'a> for TableElemType {
@@ -115,6 +177,9 @@ impl<'a> Parse<'a> for TableElemType {
         } else if l.peek::<kw::nullref>() {
             parser.parse::<kw::nullref>()?;
             Ok(TableElemType::Nullref)
+        } else if l.peek::<kw::exnref>() {
+            parser.parse::<kw::exnref>()?;
+            Ok(TableElemType::Exnref)
         } else {
             Err(l.error())
         }
@@ -127,6 +192,7 @@ impl Peek for TableElemType {
             || kw::anyref::peek(cursor)
             || kw::nullref::peek(cursor)
             || /* legacy */ kw::anyfunc::peek(cursor)
+            || kw::exnref::peek(cursor)
     }
     fn display() -> &'static str {
         "table element type"
@@ -267,10 +333,15 @@ impl<'a> Parse<'a> for StructType<'a> {
             fields: Vec::new(),
         };
         while !parser.is_empty() {
-            parser.parens(|parser| {
-                ret.fields.push(parser.parse()?);
-                Ok(())
-            })?;
+            let field = if parser.peek2::<kw::field>() {
+                parser.parens(|parser| {
+                    parser.parse::<kw::field>()?;
+                    StructField::parse(parser, true)
+                })
+            } else {
+                StructField::parse(parser, false)
+            };
+            ret.fields.push(field?);
         }
         Ok(ret)
     }
@@ -287,10 +358,13 @@ pub struct StructField<'a> {
     pub ty: ValType<'a>,
 }
 
-impl<'a> Parse<'a> for StructField<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        parser.parse::<kw::field>()?;
-        let id = parser.parse()?;
+impl<'a> StructField<'a> {
+    fn parse(parser: Parser<'a>, with_id: bool) -> Result<Self> {
+        let id = if with_id {
+            parser.parse()?
+        } else {
+            None
+        };
         let (ty, mutable) = if parser.peek2::<kw::r#mut>() {
             let ty = parser.parens(|parser| {
                 parser.parse::<kw::r#mut>()?;
@@ -308,6 +382,34 @@ impl<'a> Parse<'a> for StructField<'a> {
     }
 }
 
+/// An array type with fields.
+#[derive(Clone, Debug)]
+pub struct ArrayType<'a> {
+    /// Whether this field may be mutated or not.
+    pub mutable: bool,
+    /// The value type stored in this field.
+    pub ty: ValType<'a>,
+}
+
+impl<'a> Parse<'a> for ArrayType<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parse::<kw::array>()?;
+        let (ty, mutable) = if parser.peek2::<kw::r#mut>() {
+            let ty = parser.parens(|parser| {
+                parser.parse::<kw::r#mut>()?;
+                parser.parse()
+            })?;
+            (ty, true)
+        } else {
+            (parser.parse::<ValType<'a>>()?, false)
+        };
+        Ok(ArrayType {
+            mutable,
+            ty
+        })
+    }
+}
+
 /// A definition of a type.
 #[derive(Debug)]
 pub enum TypeDef<'a> {
@@ -315,6 +417,8 @@ pub enum TypeDef<'a> {
     Func(FunctionType<'a>),
     /// A struct type definition.
     Struct(StructType<'a>),
+    /// An array type definition.
+    Array(ArrayType<'a>),
 }
 
 /// A type declaration in a module
@@ -337,6 +441,8 @@ impl<'a> Parse<'a> for Type<'a> {
                 Ok(TypeDef::Func(parser.parse()?))
             } else if l.peek::<kw::r#struct>() {
                 Ok(TypeDef::Struct(parser.parse()?))
+            } else if l.peek::<kw::array>() {
+                Ok(TypeDef::Array(parser.parse()?))
             } else {
                 Err(l.error())
             }
