@@ -38,7 +38,8 @@ class ProfileBufferChunkManager {
   // Estimated maximum buffer size.
   virtual MOZ_MUST_USE size_t MaxTotalSize() const = 0;
 
-  // Create or recycle a chunk right now.
+  // Create or recycle a chunk right now. May return null in case of allocation
+  // failure.
   // Note that the chunk-destroyed callback may be invoked during this call;
   // user should be careful with reentrancy issues.
   virtual MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetChunk() = 0;
