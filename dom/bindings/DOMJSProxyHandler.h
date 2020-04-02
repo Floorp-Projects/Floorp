@@ -102,7 +102,7 @@ class DOMProxyHandler : public BaseDOMProxyHandler {
   virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
                               JS::Handle<JS::PropertyDescriptor> desc,
-                              JS::ObjectOpResult& result, bool* defined) const;
+                              JS::ObjectOpResult& result, bool* done) const;
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                JS::ObjectOpResult& result) const override;
   bool preventExtensions(JSContext* cx, JS::Handle<JSObject*> proxy,

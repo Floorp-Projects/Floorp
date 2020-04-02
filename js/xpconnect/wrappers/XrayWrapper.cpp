@@ -1702,18 +1702,18 @@ bool DOMXrayTraits::delete_(JSContext* cx, JS::HandleObject wrapper,
 bool DOMXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
                                    HandleId id, Handle<PropertyDescriptor> desc,
                                    Handle<PropertyDescriptor> existingDesc,
-                                   JS::ObjectOpResult& result, bool* defined) {
+                                   JS::ObjectOpResult& result, bool* done) {
   // Check for an indexed property on a Window.  If that's happening, do
-  // nothing but claim we defined it so it won't get added as an expando.
+  // nothing but set done to tru so it won't get added as an expando.
   if (IsWindow(cx, wrapper)) {
     if (IsArrayIndex(GetArrayIndexFromId(id))) {
-      *defined = true;
+      *done = true;
       return result.succeed();
     }
   }
 
   JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
-  return XrayDefineProperty(cx, wrapper, obj, id, desc, result, defined);
+  return XrayDefineProperty(cx, wrapper, obj, id, desc, result, done);
 }
 
 bool DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
@@ -1990,12 +1990,12 @@ bool XrayWrapper<Base, Traits>::defineProperty(JSContext* cx,
     }
   }
 
-  bool defined = false;
+  bool done = false;
   if (!Traits::singleton.defineProperty(cx, wrapper, id, desc, existing_desc,
-                                        result, &defined)) {
+                                        result, &done)) {
     return false;
   }
-  if (defined) {
+  if (done) {
     return true;
   }
 
