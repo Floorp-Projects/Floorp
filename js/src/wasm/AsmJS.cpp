@@ -1353,7 +1353,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
                      /* ref types */ false, /* gc types */ false,
                      /* huge memory */ false, /* bigint */ false),
         env_(&compilerEnv_, Shareable::False, ModuleKind::AsmJS) {
-    compilerEnv_.computeParameters(/* gc types */ false);
+    compilerEnv_.computeParameters();
     env_.minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
   }
 
