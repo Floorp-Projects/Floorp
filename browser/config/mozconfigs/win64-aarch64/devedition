@@ -5,8 +5,6 @@
 # Add-on signing is not required for DevEdition
 MOZ_REQUIRE_SIGNING=0
 
-export MOZ_LTO=cross
-
 ac_add_options --with-branding=browser/branding/aurora
 
 . "$topsrcdir/build/mozconfig.common.override"
