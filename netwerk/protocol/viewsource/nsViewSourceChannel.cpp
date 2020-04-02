@@ -1064,6 +1064,12 @@ void nsViewSourceChannel::SetHasNonEmptySandboxingFlag(
   }
 }
 
+void nsViewSourceChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
+  if (mHttpChannelInternal) {
+    mHttpChannelInternal->DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
+  }
+}
+
 // nsIChildChannel methods
 
 NS_IMETHODIMP
