@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    div {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+#pt {
+  scale: 12;
+}
+
+#pp {
+  /*animation: flyR 1s infinite;*/
+  animation-iteration-count: infinite;
+  animation-duration: 1s;
+  animation-name: flyR;
+  animation-timing-function: steps(2, end)
+}
+
+@keyframes flyR {
+  from {
+    scale: 0.51;
+  }
+
+  1% {
+    scale: 12;
+  }
+
+
+  50% {
+    scale: 12;
+  }
+
+  to {
+    scale: 12;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div>
+    <svg width="600px" height="600px">
+
+      <text id="pp" x="10" y="16" font-size="12">some text</text>
+      <text id="pt" x="10" y="16" font-size="12">some text</text>
+      <rect fill="#DAD6CC" width="600" height="100"></rect>
+      <rect fill="#DAD6CC" width="120" height="400"></rect>
+
+    </svg>
+  </div>
+</body></html>
