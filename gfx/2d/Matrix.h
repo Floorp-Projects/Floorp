@@ -830,6 +830,10 @@ class Matrix4x4Typed {
   size_t TransformAndClipRect(const RectTyped<SourceUnits, F>& aRect,
                               const RectTyped<TargetUnits, F>& aClip,
                               PointTyped<TargetUnits, F>* aVerts) const {
+    if (aRect.IsEmpty() || aClip.IsEmpty()) {
+      return 0;
+    }
+
     // Initialize a double-buffered array of points in homogenous space with
     // the input rectangle, aRect.
     Point4DTyped<UnknownUnits, F> points[2][kTransformAndClipRectMaxVerts];
