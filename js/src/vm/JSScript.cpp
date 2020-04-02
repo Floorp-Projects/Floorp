@@ -1198,8 +1198,9 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     SourceExtent extent{sourceStart, sourceEnd, toStringStart,
                         toStringEnd, lineno,    column};
-    script = JSScript::New(cx, functionOrGlobal, sourceObject, extent,
-                           immutableFlags);
+
+    script = JSScript::Create(cx, functionOrGlobal, sourceObject,
+                              ImmutableScriptFlags(immutableFlags), extent);
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -4220,37 +4221,13 @@ void PrivateScriptData::trace(JSTracer* trc) {
   }
 }
 
-/* static */
-JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
-                        HandleScriptSourceObject sourceObject,
-                        const SourceExtent& extent, uint32_t immutableFlags) {
-  void* script = Allocate<BaseScript>(cx);
-  if (!script) {
-    return nullptr;
-  }
-
-#ifndef JS_CODEGEN_NONE
-  uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
-#else
-  uint8_t* stubEntry = nullptr;
-#endif
-
-  return new (script) JSScript(stubEntry, functionOrGlobal, sourceObject,
-                               extent, immutableFlags);
-}
-
 /*static*/
 JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
                            js::HandleScriptSourceObject sourceObject,
                            js::ImmutableScriptFlags flags,
                            SourceExtent extent) {
-  RootedScript script(
-      cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent, flags));
-  if (!script) {
-    return nullptr;
-  }
-
-  return script;
+  return static_cast<JSScript*>(
+      BaseScript::New(cx, functionOrGlobal, sourceObject, extent, flags));
 }
 
 #ifdef MOZ_VTUNE
@@ -4910,8 +4887,8 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   SourceExtent extent{src->sourceStart(),   src->sourceEnd(),
                       src->toStringStart(), src->toStringEnd(),
                       src->lineno(),        src->column()};
-  RootedScript dst(cx, JSScript::New(cx, functionOrGlobal, sourceObject, extent,
-                                     src->immutableFlags()));
+  RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, sourceObject,
+                                        src->immutableFlags(), extent));
   if (!dst) {
     return nullptr;
   }
@@ -5367,15 +5344,12 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
 }
 
 /* static */
-BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
-                                      HandleFunction fun,
-                                      HandleScriptSourceObject sourceObject,
-                                      const SourceExtent& extent,
-                                      uint32_t immutableFlags) {
-  cx->check(fun);
-
-  void* res = Allocate<BaseScript>(cx);
-  if (!res) {
+BaseScript* BaseScript::New(JSContext* cx, HandleObject functionOrGlobal,
+                            HandleScriptSourceObject sourceObject,
+                            const SourceExtent& extent,
+                            uint32_t immutableFlags) {
+  void* script = Allocate<BaseScript>(cx);
+  if (!script) {
     return nullptr;
   }
 
@@ -5385,8 +5359,19 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  BaseScript* lazy = new (res)
-      BaseScript(stubEntry, fun, sourceObject, extent, immutableFlags);
+  return new (script) BaseScript(stubEntry, functionOrGlobal, sourceObject,
+                                 extent, immutableFlags);
+}
+
+/* static */
+BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
+                                      HandleFunction fun,
+                                      HandleScriptSourceObject sourceObject,
+                                      const SourceExtent& extent,
+                                      uint32_t immutableFlags) {
+  cx->check(fun);
+
+  BaseScript* lazy = New(cx, fun, sourceObject, extent, immutableFlags);
   if (!lazy) {
     return nullptr;
   }

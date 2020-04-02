@@ -1797,6 +1797,11 @@ class BaseScript : public gc::TenuredCell {
   }
 
  public:
+  static BaseScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
+                         js::HandleScriptSourceObject sourceObject,
+                         const js::SourceExtent& extent,
+                         uint32_t immutableFlags);
+
   // Create a lazy BaseScript without initializing any gc-things.
   static BaseScript* CreateRawLazy(JSContext* cx, uint32_t ngcthings,
                                    HandleFunction fun,
@@ -2215,10 +2220,6 @@ class JSScript : public js::BaseScript {
 
  private:
   using js::BaseScript::BaseScript;
-
-  static JSScript* New(JSContext* cx, js::HandleObject functionOrGlobal,
-                       js::HandleScriptSourceObject sourceObject,
-                       const js::SourceExtent& extent, uint32_t immutableFlags);
 
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
