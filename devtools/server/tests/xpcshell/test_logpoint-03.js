@@ -9,11 +9,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    const rootActor = client.transport._serverConnection.rootActor;
-    const threadActor =
-      rootActor._parameters.tabList._targetActors[0].threadActor;
-
+  threadFrontTest(async ({ threadActor, threadFront, debuggee, client }) => {
     let lastMessage, lastExpression;
     threadActor._parent._consoleActor = {
       onConsoleAPICall(message) {

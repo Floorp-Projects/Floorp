@@ -864,8 +864,23 @@ function threadFrontTest(test, options = {}) {
       scriptName
     );
 
+    // Cross the client/server boundary to retrieve the target actor & thread
+    // actor instances, used by some tests.
+    const rootActor = client.transport._serverConnection.rootActor;
+    const targetActor = rootActor._parameters.tabList.getTargetActorForTab(
+      "debuggee.js"
+    );
+    const { threadActor } = targetActor;
+
     // Run the test function
-    const args = { threadFront, debuggee, client, server, targetFront };
+    const args = {
+      threadActor,
+      threadFront,
+      debuggee,
+      client,
+      server,
+      targetFront,
+    };
     if (waitForFinish) {
       // Use dispatchToMainThread so that the test function does not have to
       // finish executing before the test itself finishes.

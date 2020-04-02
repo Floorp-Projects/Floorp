@@ -19,6 +19,7 @@ const protocol = require("devtools/shared/protocol");
 const {
   browsingContextTargetSpec,
 } = require("devtools/shared/specs/targets/browsing-context");
+const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 
 var gTestGlobals = new Set();
 DevToolsServer.addTestGlobal = function(global) {
@@ -58,19 +59,23 @@ function TestTabList(connection) {
 
   // An array of actors for each global added with
   // DevToolsServer.addTestGlobal.
-  this._targetActors = [];
+  this._descriptorActors = [];
 
   // A pool mapping those actors' names to the actors.
-  this._targetActorPool = new LazyPool(connection);
+  this._descriptorActorPool = new LazyPool(connection);
 
   for (const global of gTestGlobals) {
     const actor = new TestTargetActor(connection, global);
     actor.selected = false;
-    this._targetActors.push(actor);
-    this._targetActorPool.manage(actor);
+    this._descriptorActorPool.manage(actor);
+
+    const descriptorActor = new TestDescriptorActor(connection, actor);
+    this._descriptorActorPool.manage(descriptorActor);
+
+    this._descriptorActors.push(descriptorActor);
   }
-  if (this._targetActors.length > 0) {
-    this._targetActors[0].selected = true;
+  if (this._descriptorActors.length > 0) {
+    this._descriptorActors[0]._targetActor.selected = true;
   }
 }
 
@@ -78,7 +83,15 @@ TestTabList.prototype = {
   constructor: TestTabList,
   destroy() {},
   getList: function() {
-    return Promise.resolve([...this._targetActors]);
+    return Promise.resolve([...this._descriptorActors]);
+  },
+  // Helper method only available for the xpcshell implementation of tablist.
+  getTargetActorForTab: function(title) {
+    const descriptorActor = this._descriptorActors.find(d => d.title === title);
+    if (!descriptorActor) {
+      return null;
+    }
+    return descriptorActor._targetActor;
   },
 };
 
@@ -96,6 +109,39 @@ exports.createRootActor = function createRootActor(connection) {
   root.applicationType = "xpcshell-tests";
   return root;
 };
+
+const TestDescriptorActor = protocol.ActorClassWithSpec(tabDescriptorSpec, {
+  initialize: function(conn, targetActor) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this.conn = conn;
+    this._targetActor = targetActor;
+  },
+
+  get title() {
+    return this._targetActor.title;
+  },
+
+  form() {
+    const form = {
+      actor: this.actorID,
+      traits: {
+        getFavicon: true,
+      },
+      title: this._targetActor.title,
+      url: this._targetActor.url,
+    };
+
+    return form;
+  },
+
+  getFavicon() {
+    return "";
+  },
+
+  getTarget() {
+    return this._targetActor.form();
+  },
+});
 
 const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
   initialize: function(conn, global) {
@@ -130,6 +176,11 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
     return this._global;
   },
 
+  // Both title and url point to this._global.__name
+  get title() {
+    return this._global.__name;
+  },
+
   get url() {
     return this._global.__name;
   },
@@ -142,7 +193,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
   },
 
   form: function() {
-    const response = { actor: this.actorID, title: this._global.__name };
+    const response = { actor: this.actorID, title: this.title };
 
     // Walk over target-scoped actors and add them to a new LazyPool.
     const actorPool = new LazyPool(this.conn);
@@ -152,8 +203,8 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
       this
     );
     if (!actorPool.isEmpty()) {
-      this._targetActorPool = actorPool;
-      this.conn.addActorPool(this._targetActorPool);
+      this._descriptorActorPool = actorPool;
+      this.conn.addActorPool(this._descriptorActorPool);
     }
 
     return { ...response, ...actors };
@@ -182,8 +233,8 @@ const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
 
   removeActorByName: function(name) {
     const actor = this._extraActors[name];
-    if (this._targetActorPool) {
-      this._targetActorPool.removeActor(actor);
+    if (this._descriptorActorPool) {
+      this._descriptorActorPool.removeActor(actor);
     }
     delete this._extraActors[name];
   },
