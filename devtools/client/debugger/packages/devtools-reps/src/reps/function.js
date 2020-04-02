@@ -68,7 +68,7 @@ function FunctionRep(props) {
     dir: "ltr",
   };
 
-  const parameterNames = (grip.parameterNames || []).filter(param => param);
+  const parameterNames = (grip.parameterNames || []).filter(Boolean);
 
   if (grip.isClassConstructor) {
     return span(

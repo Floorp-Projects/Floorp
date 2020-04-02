@@ -40,13 +40,11 @@ export default class PreviewFunction extends Component<Props> {
 
   renderParams(func: FunctionType) {
     const { parameterNames = [] } = func;
-    const params = parameterNames
-      .filter(i => i)
-      .map(param => (
-        <span className="param" key={param}>
-          {param}
-        </span>
-      ));
+    const params = parameterNames.filter(Boolean).map(param => (
+      <span className="param" key={param}>
+        {param}
+      </span>
+    ));
 
     const commas = times(params.length - 1).map((_, i) => (
       <span className="delimiter" key={i}>
