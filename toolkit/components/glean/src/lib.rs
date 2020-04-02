@@ -21,6 +21,7 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use nserror::{nsresult, NS_OK};
+use nsstring::nsAString;
 
 use client_info::ClientInfo;
 use glean_core::Configuration;
@@ -35,6 +36,7 @@ mod core_metrics;
 /// Glean instance.
 #[no_mangle]
 pub unsafe extern "C" fn fog_init(
+    data_path: &nsAString,
     app_build: *const c_char,
     app_display_version: *const c_char,
     channel: *const c_char,
@@ -61,7 +63,7 @@ pub unsafe extern "C" fn fog_init(
     log::debug!("Client Info: {:#?}", client_info);
 
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
-    let data_path = "/tmp".to_string(); // need to pass in something
+    let data_path = data_path.to_string();
     let configuration = Configuration {
         upload_enabled,
         data_path,
@@ -71,6 +73,12 @@ pub unsafe extern "C" fn fog_init(
     };
 
     log::debug!("Configuration: {:#?}", configuration);
+
+    if configuration.data_path.len() > 0 {
+        if let Err(e) = api::initialize(configuration, client_info) {
+            log::error!("Failed to init FOG due to {:?}", e);
+        }
+    }
 
     NS_OK
 }
