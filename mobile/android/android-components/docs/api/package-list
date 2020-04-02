@@ -277,6 +277,7 @@ mozilla.components.support.android.test.rules
 mozilla.components.support.base.android
 mozilla.components.support.base.android.view
 mozilla.components.support.base.coroutines
+mozilla.components.support.base.crash
 mozilla.components.support.base.facts
 mozilla.components.support.base.facts.processor
 mozilla.components.support.base.feature

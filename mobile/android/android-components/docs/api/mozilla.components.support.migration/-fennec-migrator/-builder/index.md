@@ -10,7 +10,7 @@ Data migration builder. Allows configuring which migrations to run, their versio
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Builder(context: <ERROR CLASS>, crashReporter: `[`CrashReporter`](../../../mozilla.components.lib.crash/-crash-reporter/index.md)`)`<br>Data migration builder. Allows configuring which migrations to run, their versions and relative order. |
+| [&lt;init&gt;](-init-.md) | `Builder(context: <ERROR CLASS>, crashReporter: `[`CrashReporting`](../../../mozilla.components.support.base.crash/-crash-reporting/index.md)`)`<br>Data migration builder. Allows configuring which migrations to run, their versions and relative order. |
 
 ### Functions
 
