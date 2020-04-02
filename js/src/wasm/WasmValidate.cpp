@@ -1441,55 +1441,6 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   return true;
 }
 
-#ifdef ENABLE_WASM_GC
-static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
-  MaybeSectionRange range;
-  if (!d.startSection(SectionId::GcFeatureOptIn, env, &range,
-                      "gcfeatureoptin")) {
-    return false;
-  }
-  if (!range) {
-    return true;
-  }
-
-  uint32_t version;
-  if (!d.readVarU32(&version)) {
-    return d.fail("expected gc feature version");
-  }
-
-  // For documentation of what's in the various versions, see
-  // https://github.com/lars-t-hansen/moz-gc-experiments
-  //
-  // Version 1 is complete and obsolete.
-  // Version 2 is incomplete but obsolete.
-  // Version 3 is in progress.
-
-  switch (version) {
-    case 1:
-    case 2:
-      return d.fail(
-          "Wasm GC feature versions 1 and 2 are no longer supported by this "
-          "engine.\n"
-          "The current version is 3, which is not backward-compatible with "
-          "earlier\n"
-          "versions:\n"
-          " - The v1 encoding of ref.null is no longer accepted.\n"
-          " - The v2 encodings of ref.eq, table.get, table.set, and "
-          "table.size\n"
-          "   are no longer accepted.\n");
-    case 3:
-      break;
-    default:
-      return d.fail(
-          "The specified Wasm GC feature version is unknown.\n"
-          "The current version is 3.");
-  }
-
-  env->gcFeatureOptIn = true;
-  return d.finishSection(*range, "gcfeatureoptin");
-}
-#endif
-
 static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::Type, env, &range, "type")) {
@@ -2621,16 +2572,7 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-#ifdef ENABLE_WASM_GC
-  if (!DecodeGCFeatureOptInSection(d, env)) {
-    return false;
-  }
-  bool gcFeatureOptIn = env->gcFeatureOptIn;
-#else
-  bool gcFeatureOptIn = false;
-#endif
-
-  env->compilerEnv->computeParameters(d, gcFeatureOptIn);
+  env->compilerEnv->computeParameters(d);
 
   if (!DecodeTypeSection(d, env)) {
     return false;

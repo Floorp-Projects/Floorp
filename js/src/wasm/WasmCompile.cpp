@@ -438,24 +438,21 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
       hugeMemory_(hugeMemory),
       bigInt_(bigIntConfigured) {}
 
-void CompilerEnvironment::computeParameters(bool gcFeatureOptIn) {
+void CompilerEnvironment::computeParameters() {
   MOZ_ASSERT(state_ == InitialWithModeTierDebug);
 
-  if (gcTypes_) {
-    gcTypes_ = gcFeatureOptIn;
-  }
   state_ = Computed;
 }
 
-void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
+void CompilerEnvironment::computeParameters(Decoder& d) {
   MOZ_ASSERT(!isComputed());
 
   if (state_ == InitialWithModeTierDebug) {
-    computeParameters(gcFeatureOptIn);
+    computeParameters();
     return;
   }
 
-  bool gcEnabled = args_->gcEnabled && gcFeatureOptIn;
+  bool gcEnabled = args_->gcEnabled;
   bool baselineEnabled = args_->baselineEnabled;
   bool ionEnabled = args_->ionEnabled;
   bool debugEnabled = args_->debugEnabled;
