@@ -1583,10 +1583,9 @@ import android.view.inputmethod.EditorInfo;
                 // TYPE_TEXT_FLAG_IME_MULTI_LINE flag makes the fullscreen IME line wrap
                 outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_AUTO_CORRECT |
                         InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE;
-                if (typeHint.equalsIgnoreCase("textarea") ||
-                        typeHint.length() == 0) {
-                    // empty typeHint indicates contentEditable/designMode documents
-                    outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+                if (!typeHint.equalsIgnoreCase("text")) {
+                    // auto-capitalized mode is the default for types other than text (bug 871884)
+                    outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
                 }
             }
         }
