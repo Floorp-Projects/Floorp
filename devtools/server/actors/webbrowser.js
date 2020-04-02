@@ -338,7 +338,7 @@ BrowserTabList.prototype.getList = async function(browserActorOptions) {
 /**
  * @param browserActorOptions see options argument of TabDescriptorActor constructor.
  */
-BrowserTabList.prototype._getActorForBrowser = function(
+BrowserTabList.prototype._getActorForBrowser = async function(
   browser,
   browserActorOptions
 ) {
@@ -346,7 +346,8 @@ BrowserTabList.prototype._getActorForBrowser = function(
   let actor = this._actorByBrowser.get(browser);
   if (actor) {
     this._foundCount++;
-    return actor.update(browserActorOptions);
+    await actor.update();
+    return actor;
   }
 
   actor = new TabDescriptorActor(

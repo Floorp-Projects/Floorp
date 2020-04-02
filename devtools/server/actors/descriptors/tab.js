@@ -15,7 +15,6 @@
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
-
 loader.lazyImporter(
   this,
   "PlacesUtils",
@@ -49,6 +48,17 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     // update is pending. This property will hold a reject callback that can be
     // used to reject the current update promise and avoid blocking the client.
     this._formUpdateReject = null;
+  },
+
+  form() {
+    return {
+      actor: this.actorID,
+      traits: {
+        // Backward compatibility for FF75 or older.
+        // Remove when FF76 is on the release channel.
+        getFavicon: true,
+      },
+    };
   },
 
   async getTarget() {
@@ -87,10 +97,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         );
 
         const form = this._createTargetForm(connectForm);
-        if (this.options.favicons) {
-          form.favicon = await this.getFaviconData();
-        }
-
         this._form = form;
         resolve(form);
       } catch (e) {
@@ -117,7 +123,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     );
   },
 
-  async getFaviconData() {
+  async getFavicon() {
     if (!AppConstants.MOZ_PLACES) {
       // PlacesUtils is not supported
       return null;
@@ -143,8 +149,8 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     // If the child happens to be crashed/close/detach, it won't have _form set,
     // so only request form update if some code is still listening on the other
     // side.
-    if (this.exited) {
-      return this.getTarget();
+    if (!this._form) {
+      return;
     }
 
     // This function may be called if we are inspecting tabs and the actor proxy
@@ -170,11 +176,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     });
 
     this._form = form;
-    if (this.options.favicons) {
-      this._form.favicon = await this.getFaviconData();
-    }
-
-    return this;
   },
 
   _isZombieTab() {
