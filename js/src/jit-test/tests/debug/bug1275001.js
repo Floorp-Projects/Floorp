@@ -11,7 +11,7 @@ function check_one(expected, f, err) {
         f()
     } catch (ex) {
         s = ex.message;
-        assertEq(s.slice(-(err.length + expected.length), -err.length), expected)
+        assertEq(s.includes("undefined"), true);
     }
 }
 ieval = eval
