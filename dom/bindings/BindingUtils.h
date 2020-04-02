@@ -2233,13 +2233,15 @@ bool XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
  *     interface or interface prototype object.
  * id and desc are the parameters for the property to be defined.
  * result is the out-parameter indicating success (read it only if
- *     this returns true and also sets *defined to true).
- * defined will be set to true if a property was set as a result of this call.
+ *     this returns true and also sets *done to true).
+ * done will be set to true if a property was set as a result of this call
+ *      or if we want to always avoid setting this property
+ *      (i.e. indexed properties on DOM objects)
  */
 bool XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                         JS::Handle<JS::PropertyDescriptor> desc,
-                        JS::ObjectOpResult& result, bool* defined);
+                        JS::ObjectOpResult& result, bool* done);
 
 /**
  * Add to props the property keys of all indexed or named properties of obj and
