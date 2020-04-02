@@ -58,7 +58,7 @@ while(true) {
   if (res == 0) {
     limit = 1024 * 1024 * 1024;
   } else if (res == 1) { // Started and finished in Ion.
-    if (limit == 0) // If we are not in the Jit.
+    if (limit <= 1) // If we are not in the Jit.
       break;
     // We want to converge quickly to a state where the memory is limited
     // enough to cause failures in array.prototype.push.
