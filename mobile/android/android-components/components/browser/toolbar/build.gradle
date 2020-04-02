@@ -26,6 +26,7 @@ dependencies {
     api project(':ui-autocomplete')
     api project(':support-base')
 
+    implementation project(':concept-engine')
     implementation project(':browser-menu')
     implementation project(':ui-icons')
     implementation project(':ui-colors')

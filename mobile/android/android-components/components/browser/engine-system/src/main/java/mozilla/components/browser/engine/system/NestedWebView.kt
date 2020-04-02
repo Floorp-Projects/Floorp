@@ -17,6 +17,7 @@ import android.view.MotionEvent.obtain
 import android.webkit.WebView
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
+import mozilla.components.concept.engine.EngineView
 
 /**
  * WebView that supports nested scrolls (for using in a CoordinatorLayout).
@@ -29,6 +30,7 @@ import androidx.core.view.ViewCompat
  * https://github.com/takahirom/webview-in-coordinatorlayout
  */
 
+@Suppress("TooManyFunctions")
 class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
 
     @VisibleForTesting
@@ -44,6 +46,19 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
 
     @VisibleForTesting
     internal var childHelper: NestedScrollingChildHelper = NestedScrollingChildHelper(this)
+
+    /**
+     * Integer indicating how user's MotionEvent was handled.
+     *
+     * There must be a 1-1 relation between this values and [EngineView.InputResult]'s.
+     */
+    internal val inputResult: Int
+        get() = getInputResult(eventHandled)
+
+    /**
+     * Holder for if the previous [android.view.MotionEvent] was handled by us or not.
+     */
+    private var eventHandled: Boolean = false
 
     init {
         isNestedScrollingEnabled = true
@@ -90,7 +105,7 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
         }
 
         // Execute event handler from parent class in all cases
-        val eventHandled = super.onTouchEvent(event)
+        eventHandled = super.onTouchEvent(event)
 
         // Recycle previously obtained event
         event.recycle()
@@ -140,5 +155,13 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
 
     override fun dispatchNestedPreFling(velocityX: Float, velocityY: Float): Boolean {
         return childHelper.dispatchNestedPreFling(velocityX, velocityY)
+    }
+
+    private fun getInputResult(eventHandled: Boolean): Int {
+        return if (eventHandled) {
+            EngineView.InputResult.INPUT_RESULT_HANDLED.value
+        } else {
+            EngineView.InputResult.INPUT_RESULT_UNHANDLED.value
+        }
     }
 }

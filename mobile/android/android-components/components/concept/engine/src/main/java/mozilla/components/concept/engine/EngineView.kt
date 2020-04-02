@@ -90,6 +90,11 @@ interface EngineView {
     fun canScrollVerticallyDown(): Boolean = true
 
     /**
+     * @return [InputResult] indicating how user's last [android.view.MotionEvent] was handled.
+     */
+    fun getInputResult(): InputResult = InputResult.INPUT_RESULT_UNHANDLED
+
+    /**
      * Request a screenshot of the visible portion of the web page currently being rendered.
      * @param onFinish A callback to inform that process of capturing a thumbnail has finished.
      */
@@ -119,6 +124,31 @@ interface EngineView {
      * A delegate that will handle interactions with text selection context menus.
      */
     var selectionActionDelegate: SelectionActionDelegate?
+
+    /**
+     * Enumeration of all possible ways user's [android.view.MotionEvent] was handled.
+     *
+     * @see [INPUT_RESULT_UNHANDLED]
+     * @see [INPUT_RESULT_HANDLED]
+     * @see [INPUT_RESULT_HANDLED_CONTENT]
+     */
+    enum class InputResult(val value: Int) {
+        /**
+         * Last [android.view.MotionEvent] was not handled by neither us nor the webpage.
+         */
+        INPUT_RESULT_UNHANDLED(0),
+
+        /**
+         * We handled the last [android.view.MotionEvent].
+         */
+        INPUT_RESULT_HANDLED(1),
+
+        /**
+         * Webpage handled the last [android.view.MotionEvent].
+         * (through it's own touch event listeners)
+         */
+        INPUT_RESULT_HANDLED_CONTENT(2),
+    }
 }
 
 /**

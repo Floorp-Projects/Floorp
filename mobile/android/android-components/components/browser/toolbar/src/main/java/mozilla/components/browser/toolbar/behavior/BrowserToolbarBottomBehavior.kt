@@ -15,6 +15,8 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import kotlin.math.max
 import kotlin.math.min
 
@@ -46,6 +48,25 @@ class BrowserToolbarBottomBehavior(
         duration = SNAP_ANIMATION_DURATION
     }
 
+    /**
+     * Reference to [EngineView] used to check user's [android.view.MotionEvent]s.
+     */
+    private var engineView: EngineView? = null
+
+    /**
+     * Depending on how user's touch was consumed by EngineView / current website,
+     *
+     * we will animate the dynamic navigation bar if:
+     * - touches were used for zooming / panning operations in the website.
+     *
+     * We will do nothing if:
+     * - the website is not scrollable
+     * - the website handles the touch events itself through it's own touch event listeners.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val shouldScroll: Boolean
+        get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED
+
     override fun onStartNestedScroll(
         coordinatorLayout: CoordinatorLayout,
         child: BrowserToolbar,
@@ -54,7 +75,7 @@ class BrowserToolbarBottomBehavior(
         axes: Int,
         type: Int
     ): Boolean {
-        return if (axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
+        return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
             snapAnimator.cancel()
             true
@@ -87,11 +108,15 @@ class BrowserToolbarBottomBehavior(
         consumed: IntArray,
         type: Int
     ) {
-        super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type)
-        child.translationY = max(0f, min(child.height.toFloat(), child.translationY + dy))
+        if (shouldScroll) {
+            super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type)
+            child.translationY = max(0f, min(child.height.toFloat(), child.translationY + dy))
+        }
     }
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: BrowserToolbar, dependency: View): Boolean {
+        engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
+
         if (dependency is Snackbar.SnackbarLayout) {
             positionSnackbar(child, dependency)
         }

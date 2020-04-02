@@ -701,6 +701,16 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
 
+    override fun getInputResult(): EngineView.InputResult {
+        (session?.webView as? NestedWebView)?.let { nestedWebView ->
+            // Direct mapping of WebView's returned values.
+            // There should be a 1-1 relation. If not fail fast to allow for a quick fix.
+            return EngineView.InputResult.values().first { it.value == nestedWebView.inputResult }
+        }
+        // Let's be preventive about not knowing if user's touch was handled and say no.
+        return EngineView.InputResult.INPUT_RESULT_UNHANDLED
+    }
+
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val webView = session?.webView
         if (webView == null) {

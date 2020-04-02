@@ -39,12 +39,13 @@ class SwipeRefreshFeature(
 
     /**
      * Callback that checks whether it is possible for the child view to scroll up.
-     * If the child view cannot scroll up, attempted to scroll up triggers a refresh gesture.
+     * If the child view cannot scroll up and the scroll event is not handled by the webpage
+     * it means we need to trigger the pull down to refresh functionality.
      */
     override fun canChildScrollUp(parent: SwipeRefreshLayout, child: View?) =
         if (child is EngineView) {
-            val result = child.canScrollVerticallyUp()
-            result
+            child.canScrollVerticallyUp() ||
+                (child.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT)
         } else {
             true
         }
