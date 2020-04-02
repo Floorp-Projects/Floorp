@@ -4239,16 +4239,6 @@ JSScript* JSScript::New(JSContext* cx, HandleObject functionOrGlobal,
                                extent, immutableFlags);
 }
 
-/* static */
-JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
-                           const ReadOnlyCompileOptions& options,
-                           HandleScriptSourceObject sourceObject,
-                           const SourceExtent& extent) {
-  return JSScript::Create(cx, functionOrGlobal, sourceObject,
-                          ImmutableScriptFlags::fromCompileOptions(options),
-                          extent);
-}
-
 /*static*/
 JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
                            js::HandleScriptSourceObject sourceObject,

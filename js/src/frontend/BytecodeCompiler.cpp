@@ -465,8 +465,9 @@ static bool InternalCreateScript(CompilationInfo& compilationInfo,
                       compilationInfo.options.lineno,
                       compilationInfo.options.column};
   compilationInfo.script = JSScript::Create(
-      compilationInfo.cx, functionOrGlobal, compilationInfo.options,
-      compilationInfo.sourceObject, extent);
+      compilationInfo.cx, functionOrGlobal, compilationInfo.sourceObject,
+      ImmutableScriptFlags::fromCompileOptions(compilationInfo.options),
+      extent);
   return compilationInfo.script != nullptr;
 }
 
@@ -773,9 +774,10 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   }
 
   SourceExtent extent(0, len, 0, len, 0, 0);
-  RootedScript script(cx,
-                      JSScript::Create(cx, cx->global(), options,
-                                       compilationInfo.sourceObject, extent));
+  RootedScript script(
+      cx, JSScript::Create(cx, cx->global(), compilationInfo.sourceObject,
+                           ImmutableScriptFlags::fromCompileOptions(options),
+                           extent));
 
   if (!script) {
     return nullptr;
