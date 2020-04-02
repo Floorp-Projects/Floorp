@@ -1,10 +1,13 @@
 extern crate byteorder;
 extern crate digest;
 extern crate murmurhash3;
+extern crate sha2;
 
 use byteorder::ReadBytesExt;
 use murmurhash3::murmurhash3_x86_32;
-
+use sha2::{Digest, Sha256};
+use std::convert::{TryFrom, TryInto};
+use std::fmt;
 use std::io::{Error, ErrorKind};
 
 /// Helper struct to provide read-only bit access to a slice of bytes.
@@ -50,14 +53,14 @@ impl<'a> BitSlice<'a> {
         let final_bit_index = bit_index % 8;
         let byte = self.bytes[byte_index];
         let test_value = match final_bit_index {
-            0 => byte & 0b00000001u8,
-            1 => byte & 0b00000010u8,
-            2 => byte & 0b00000100u8,
-            3 => byte & 0b00001000u8,
-            4 => byte & 0b00010000u8,
-            5 => byte & 0b00100000u8,
-            6 => byte & 0b01000000u8,
-            7 => byte & 0b10000000u8,
+            0 => byte & 0b0000_0001u8,
+            1 => byte & 0b0000_0010u8,
+            2 => byte & 0b0000_0100u8,
+            3 => byte & 0b0000_1000u8,
+            4 => byte & 0b0001_0000u8,
+            5 => byte & 0b0010_0000u8,
+            6 => byte & 0b0100_0000u8,
+            7 => byte & 0b1000_0000u8,
             _ => panic!("impossible final_bit_index value: {}", final_bit_index),
         };
         test_value > 0
@@ -67,16 +70,43 @@ impl<'a> BitSlice<'a> {
 /// A Bloom filter representing a specific level in a multi-level cascading Bloom filter.
 struct Bloom<'a> {
     /// What level this filter is in
-    level: u32,
+    level: u8,
     /// How many hash functions this filter uses
     n_hash_funcs: u32,
     /// The bit length of the filter
-    size: usize,
+    size: u32,
     /// The data of the filter
     bit_slice: BitSlice<'a>,
+    /// The hash algorithm enumeration in use
+    hash_algorithm: HashAlgorithm,
 }
 
-const HASH_ALGORITHM_MURMUR_3: u8 = 1;
+#[repr(u8)]
+#[derive(Copy, Clone)]
+/// These enumerations need to match the python filter-cascade project:
+/// https://github.com/mozilla/filter-cascade/blob/v0.3.0/filtercascade/fileformats.py
+enum HashAlgorithm {
+    MurmurHash3 = 1,
+    Sha256 = 2,
+}
+
+impl fmt::Display for HashAlgorithm {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", *self as u8)
+    }
+}
+
+impl TryFrom<u8> for HashAlgorithm {
+    type Error = ();
+    fn try_from(value: u8) -> Result<HashAlgorithm, ()> {
+        match value {
+            // Naturally, these need to match the enum declaration
+            1 => Ok(Self::MurmurHash3),
+            2 => Ok(Self::Sha256),
+            _ => Err(()),
+        }
+    }
+}
 
 impl<'a> Bloom<'a> {
     /// Attempts to decode and return a pair that consists of the Bloom filter represented by the
@@ -96,21 +126,22 @@ impl<'a> Bloom<'a> {
         let mut cursor = bytes;
         // Load the layer metadata. bloomer.py writes size, nHashFuncs and level as little-endian
         // unsigned ints.
-        let hash_algorithm = cursor.read_u8()?;
-        if hash_algorithm != HASH_ALGORITHM_MURMUR_3 {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                format!(
-                    "Invalid Bloom filter: unsupported algorithm ({})",
-                    hash_algorithm
-                ),
-            ));
-        }
-        let size = cursor.read_u32::<byteorder::LittleEndian>()? as usize;
-        let n_hash_funcs = cursor.read_u32::<byteorder::LittleEndian>()?;
-        let level = cursor.read_u8()? as u32;
+        let hash_algorithm_val = cursor.read_u8()?;
+        let hash_algorithm = match HashAlgorithm::try_from(hash_algorithm_val) {
+            Ok(algo) => algo,
+            Err(()) => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Unexpected hash algorithm",
+                ))
+            }
+        };
 
-        let shifted_size = size.wrapping_shr(3);
+        let size = cursor.read_u32::<byteorder::LittleEndian>()?;
+        let n_hash_funcs = cursor.read_u32::<byteorder::LittleEndian>()?;
+        let level = cursor.read_u8()?;
+
+        let shifted_size = size.wrapping_shr(3) as usize;
         let byte_count = if size % 8 != 0 {
             shifted_size + 1
         } else {
@@ -127,28 +158,60 @@ impl<'a> Bloom<'a> {
             level,
             n_hash_funcs,
             size,
-            bit_slice: BitSlice::new(bits_bytes, size),
+            bit_slice: BitSlice::new(bits_bytes, size as usize),
+            hash_algorithm,
         };
         Ok((bloom, rest_of_bytes))
     }
 
-    fn hash(&self, n_fn: u32, key: &[u8]) -> usize {
-        let hash_seed = (n_fn << 16) + self.level;
-        let h = murmurhash3_x86_32(key, hash_seed) as usize % self.size;
-        h
+    fn hash(&self, n_fn: u32, key: &[u8], salt: Option<&[u8]>) -> u32 {
+        match self.hash_algorithm {
+            HashAlgorithm::MurmurHash3 => {
+                if salt.is_some() {
+                    panic!("murmur does not support salts")
+                }
+                let hash_seed = (n_fn << 16) + self.level as u32;
+                murmurhash3_x86_32(key, hash_seed) % self.size
+            }
+            HashAlgorithm::Sha256 => {
+                let mut hasher = Sha256::new();
+                if let Some(salt_bytes) = salt {
+                    hasher.input(salt_bytes)
+                }
+                hasher.input(n_fn.to_le_bytes());
+                hasher.input(self.level.to_le_bytes());
+                hasher.input(key);
+
+                u32::from_le_bytes(
+                    hasher.result()[0..4]
+                        .try_into()
+                        .expect("sha256 should have given enough bytes"),
+                ) % self.size
+            }
+        }
     }
 
     /// Test for the presence of a given sequence of bytes in this Bloom filter.
     ///
     /// # Arguments
     /// `item` - The slice of bytes to test for
-    pub fn has(&self, item: &[u8]) -> bool {
+    pub fn has(&self, item: &[u8], salt: Option<&[u8]>) -> bool {
         for i in 0..self.n_hash_funcs {
-            if !self.bit_slice.get(self.hash(i, item)) {
+            if !self.bit_slice.get(self.hash(i, item, salt) as usize) {
                 return false;
             }
         }
         true
+    }
+}
+
+impl<'a> fmt::Display for Bloom<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "level={} n_hash_funcs={} hash_algorithm={} size={}",
+            self.level, self.n_hash_funcs, self.hash_algorithm, self.size
+        )
     }
 }
 
@@ -158,6 +221,10 @@ pub struct Cascade<'a> {
     filter: Bloom<'a>,
     /// The next (lower) level in the cascade
     child_layer: Option<Box<Cascade<'a>>>,
+    /// The salt in use, if any
+    salt: Option<&'a [u8]>,
+    /// Whether the logic should be inverted
+    inverted: bool,
 }
 
 impl<'a> Cascade<'a> {
@@ -167,28 +234,62 @@ impl<'a> Cascade<'a> {
     ///
     /// # Arguments
     /// `bytes` - The encoded representation of the Bloom filters in this cascade. Starts with 2
-    /// little endian bytes indicating the version. The current version is 1. See the documentation
-    /// for `Bloom`. May be of length 0, in which case `None` is returned.
+    /// little endian bytes indicating the version. The current version is 2. The Python
+    /// filter-cascade project defines the formats, see
+    /// https://github.com/mozilla/filter-cascade/blob/v0.3.0/filtercascade/fileformats.py
+    ///
+    /// May be of length 0, in which case `None` is returned.
     pub fn from_bytes(bytes: &'a [u8]) -> Result<Option<Box<Cascade<'a>>>, Error> {
-        if bytes.len() == 0 {
+        if bytes.is_empty() {
             return Ok(None);
         }
         let mut cursor = bytes;
         let version = cursor.read_u16::<byteorder::LittleEndian>()?;
-        if version != 1 {
-            return Err(Error::new(ErrorKind::InvalidData, "Invalid version"));
+        let mut salt = None;
+        let mut inverted = false;
+
+        if version >= 2 {
+            inverted = cursor.read_u8()? != 0;
+            let salt_len = cursor.read_u8()? as usize;
+
+            if salt_len > cursor.len() {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Invalid Bloom filter: too short",
+                ));
+            }
+
+            let (salt_bytes, remaining_bytes) = cursor.split_at(salt_len);
+            if salt_len > 0 {
+                salt = Some(salt_bytes)
+            }
+            cursor = remaining_bytes;
         }
-        Cascade::child_layer_from_bytes(cursor)
+
+        if version > 2 {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                format!("Invalid version: {}", version),
+            ));
+        }
+
+        Cascade::child_layer_from_bytes(cursor, salt, inverted)
     }
 
-    fn child_layer_from_bytes(bytes: &'a [u8]) -> Result<Option<Box<Cascade<'a>>>, Error> {
-        if bytes.len() == 0 {
+    fn child_layer_from_bytes(
+        bytes: &'a [u8],
+        salt: Option<&'a [u8]>,
+        inverted: bool,
+    ) -> Result<Option<Box<Cascade<'a>>>, Error> {
+        if bytes.is_empty() {
             return Ok(None);
         }
         let (filter, rest_of_bytes) = Bloom::from_bytes(bytes)?;
         Ok(Some(Box::new(Cascade {
             filter,
-            child_layer: Cascade::child_layer_from_bytes(rest_of_bytes)?,
+            child_layer: Cascade::child_layer_from_bytes(rest_of_bytes, salt, inverted)?,
+            salt,
+            inverted,
         })))
     }
 
@@ -197,10 +298,18 @@ impl<'a> Cascade<'a> {
     /// # Arguments
     /// `entry` - The slice of bytes to test for
     pub fn has(&self, entry: &[u8]) -> bool {
-        if self.filter.has(&entry) {
+        let result = self.has_internal(entry);
+        if self.inverted {
+            return !result;
+        }
+        result
+    }
+
+    pub fn has_internal(&self, entry: &[u8]) -> bool {
+        if self.filter.has(&entry, self.salt) {
             match self.child_layer {
                 Some(ref child) => {
-                    let child_value = !child.has(entry);
+                    let child_value = !child.has_internal(entry);
                     return child_value;
                 }
                 None => {
@@ -208,7 +317,21 @@ impl<'a> Cascade<'a> {
                 }
             }
         }
-        return false;
+        false
+    }
+}
+
+impl<'a> fmt::Display for Cascade<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "salt={:?} inverted={} filter=[{}] ",
+            self.salt, self.inverted, self.filter
+        )?;
+        match &self.child_layer {
+            Some(layer) => write!(f, "[child={}]", layer),
+            None => Ok(()),
+        }
     }
 }
 
@@ -218,7 +341,7 @@ mod tests {
     use Cascade;
 
     #[test]
-    fn bloom_test_from_bytes() {
+    fn bloom_v1_test_from_bytes() {
         let src: Vec<u8> = vec![
             0x01, 0x09, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x41, 0x00,
         ];
@@ -226,9 +349,9 @@ mod tests {
         match Bloom::from_bytes(&src) {
             Ok((bloom, rest_of_bytes)) => {
                 assert!(rest_of_bytes.len() == 0);
-                assert!(bloom.has(b"this") == true);
-                assert!(bloom.has(b"that") == true);
-                assert!(bloom.has(b"other") == false);
+                assert!(bloom.has(b"this", None) == true);
+                assert!(bloom.has(b"that", None) == true);
+                assert!(bloom.has(b"other", None) == false);
             }
             Err(_) => {
                 panic!("Parsing failed");
@@ -242,8 +365,14 @@ mod tests {
     }
 
     #[test]
-    fn cascade_from_file_bytes_test() {
-        let v = include_bytes!("../test_data/test_mlbf");
+    fn bloom_v3_unsupported() {
+        let src: Vec<u8> = vec![0x03, 0x01, 0x00];
+        assert!(Bloom::from_bytes(&src).is_err());
+    }
+
+    #[test]
+    fn cascade_v1_murmur_from_file_bytes_test() {
+        let v = include_bytes!("../test_data/test_v1_murmur_mlbf");
         let cascade = Cascade::from_bytes(v)
             .expect("parsing Cascade should succeed")
             .expect("Cascade should be Some");
@@ -272,7 +401,77 @@ mod tests {
               0x77, 0x8e ];
         assert!(!cascade.has(&key_for_valid_cert));
 
-        let v = include_bytes!("../test_data/test_short_mlbf");
+        let v = include_bytes!("../test_data/test_v1_murmur_short_mlbf");
         assert!(Cascade::from_bytes(v).is_err());
+    }
+
+    #[test]
+    fn cascade_v2_sha256_from_file_bytes_test() {
+        let v = include_bytes!("../test_data/test_v2_sha256_mlbf");
+        let cascade = Cascade::from_bytes(v)
+            .expect("parsing Cascade should succeed")
+            .expect("Cascade should be Some");
+
+        assert!(cascade.salt == None);
+        assert!(cascade.inverted == false);
+        assert!(cascade.has(b"this") == true);
+        assert!(cascade.has(b"that") == true);
+        assert!(cascade.has(b"other") == false);
+    }
+
+    #[test]
+    fn cascade_v2_sha256_with_salt_from_file_bytes_test() {
+        let v = include_bytes!("../test_data/test_v2_sha256_salt_mlbf");
+        let cascade = Cascade::from_bytes(v)
+            .expect("parsing Cascade should succeed")
+            .expect("Cascade should be Some");
+
+        assert!(cascade.salt == Some(b"nacl"));
+        assert!(cascade.inverted == false);
+        assert!(cascade.has(b"this") == true);
+        assert!(cascade.has(b"that") == true);
+        assert!(cascade.has(b"other") == false);
+    }
+
+    #[test]
+    fn cascade_v2_murmur_from_file_bytes_test() {
+        let v = include_bytes!("../test_data/test_v2_murmur_mlbf");
+        let cascade = Cascade::from_bytes(v)
+            .expect("parsing Cascade should succeed")
+            .expect("Cascade should be Some");
+
+        assert!(cascade.salt == None);
+        assert!(cascade.inverted == false);
+        assert!(cascade.has(b"this") == true);
+        assert!(cascade.has(b"that") == true);
+        assert!(cascade.has(b"other") == false);
+    }
+
+    #[test]
+    fn cascade_v2_murmur_inverted_from_file_bytes_test() {
+        let v = include_bytes!("../test_data/test_v2_murmur_inverted_mlbf");
+        let cascade = Cascade::from_bytes(v)
+            .expect("parsing Cascade should succeed")
+            .expect("Cascade should be Some");
+
+        assert!(cascade.salt == None);
+        assert!(cascade.inverted == true);
+        assert!(cascade.has(b"this") == true);
+        assert!(cascade.has(b"that") == true);
+        assert!(cascade.has(b"other") == false);
+    }
+
+    #[test]
+    fn cascade_v2_sha256_inverted_from_file_bytes_test() {
+        let v = include_bytes!("../test_data/test_v2_sha256_inverted_mlbf");
+        let cascade = Cascade::from_bytes(v)
+            .expect("parsing Cascade should succeed")
+            .expect("Cascade should be Some");
+
+        assert!(cascade.salt == None);
+        assert!(cascade.inverted == true);
+        assert!(cascade.has(b"this") == true);
+        assert!(cascade.has(b"that") == true);
+        assert!(cascade.has(b"other") == false);
     }
 }
