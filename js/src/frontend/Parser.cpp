@@ -44,7 +44,9 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVerify.h"
 #include "frontend/TokenStream.h"
-#include "irregexp/RegExpParser.h"
+#ifndef ENABLE_NEW_REGEXP
+#  include "irregexp/RegExpParser.h"
+#endif
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
@@ -9674,10 +9676,14 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
     LifoAllocScope allocScope(&cx_->tempLifoAlloc());
+#ifdef ENABLE_NEW_REGEXP
+    MOZ_CRASH("TODO");
+#else
     if (!irregexp::ParsePatternSyntax(anyChars, allocScope.alloc(), range,
                                       flags.unicode())) {
       return nullptr;
     }
+#endif
   }
 
   RegExpIndex index(this->getCompilationInfo().regExpData.length());
@@ -9704,10 +9710,14 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   {
     LifoAllocScope scopeAlloc(&alloc_);
+#ifdef ENABLE_NEW_REGEXP
+    MOZ_CRASH("TODO");
+#else
     if (!js::irregexp::ParsePatternSyntax(anyChars, scopeAlloc.alloc(), source,
                                           flags.unicode())) {
       return null();
     }
+#endif
   }
 
   return handler_.newRegExp(SyntaxParseHandler::NodeGeneric, pos());
