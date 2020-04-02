@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+
+  <style type="text/css">
+    .tabs {
+      padding: 1em;
+    }
+
+    [role="tablist"] {
+      margin-bottom: -1px;
+    }
+
+    [role="tab"] {
+      position: relative;
+      z-index: 1;
+      background: white;
+      border-radius: 5px 5px 0 0;
+      border: 1px solid grey;
+      border-bottom: 0;
+      padding: 0.2em;
+    }
+
+    [role="tab"][aria-selected="true"] {
+      z-index: 3;
+    }
+
+    [role="tabpanel"] {
+      position: relative;
+      padding: 0 0.5em 0.5em 0.7em;
+      border: 1px solid grey;
+      border-radius: 0 0 5px 5px;
+      background: white;
+      z-index: 2;
+    }
+
+    [role="tabpanel"]:focus {
+      border-color: orange;
+      outline: 1px solid orange;
+    }
+  </style>
+  <script>
+    'use strict';
+    /* exported changeTabs */
+    function changeTabs(target) {
+      const parent = target.parentNode;
+      const grandparent = parent.parentNode;
+
+      // Remove all current selected tabs
+      parent
+        .querySelectorAll('[aria-selected="true"]')
+        .forEach(t => t.setAttribute("aria-selected", false));
+
+      // Set this tab as selected
+      target.setAttribute("aria-selected", true);
+
+      // Hide all tab panels
+      grandparent
+        .querySelectorAll('[role="tabpanel"]')
+        .forEach(p => p.setAttribute("hidden", true));
+
+      // Show the selected panel
+      grandparent.parentNode
+        .querySelector(`#${target.getAttribute("aria-controls")}`)
+        .removeAttribute("hidden");
+    }
+  </script>
+  <title>ARIA: tab role - Example - code sample</title>
+</head>
+<body id="body">
+
+  <div class="tabs">
+    <div id="tablist" role="tablist" aria-label="Sample Tabs">
+      <button onclick="changeTabs(this)" role="tab" aria-selected="true" aria-controls="panel-1" id="tab-1">
+        First Tab
+      </button>
+      <button onclick="changeTabs(this)" role="tab" aria-selected="false" aria-controls="panel-2" id="tab-2">
+        Second Tab
+      </button>
+      <button onclick="changeTabs(this)" role="tab" aria-selected="false" aria-controls="panel-3" id="tab-3">
+        Third Tab
+      </button>
+    </div>
+    <div id="panel-1" role="tabpanel" tabindex="0" aria-labelledby="tab-1">
+      <p>Content for the first panel</p>
+    </div>
+    <div id="panel-2" role="tabpanel" tabindex="0" aria-labelledby="tab-2" hidden="">
+      <p>Content for the second panel</p>
+    </div>
+    <div id="panel-3" role="tabpanel" tabindex="0" aria-labelledby="tab-3" hidden="">
+      <p>Content for the third panel</p>
+    </div>
+  </div>
+</body></html>

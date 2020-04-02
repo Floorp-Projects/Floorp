@@ -15,7 +15,7 @@ loadScripts(
  * Test input[type=range]
  */
 addAccessibleTask(
-  `data:text/html,<input id="range" type="range" min="1" max="100" value="1" step="10">`,
+  `<input id="range" type="range" min="1" max="100" value="1" step="10">`,
   async (browser, accDoc) => {
     let range = getNativeInterface(accDoc, "range");
     is(range.getAttributeValue("AXRole"), "AXSlider", "Correct AXSlider role");

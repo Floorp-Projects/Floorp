@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 // Test ARIA Dialog
 addAccessibleTask(
-  "doc_treeupdate_ariadialog.html",
+  "e10s/doc_treeupdate_ariadialog.html",
   async function(browser, accDoc) {
     testAccessibleTree(accDoc, {
       role: ROLE_DOCUMENT,

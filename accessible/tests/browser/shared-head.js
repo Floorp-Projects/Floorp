@@ -339,7 +339,7 @@ function wrapWithIFrame(doc, options = {}) {
   if (options.remoteIframe) {
     const srcURL = new URL(`http://example.net/document-builder.sjs`);
     if (doc.endsWith("html")) {
-      srcURL.searchParams.append("file", `${CURRENT_FILE_DIR}e10s/${doc}`);
+      srcURL.searchParams.append("file", `${CURRENT_FILE_DIR}${doc}`);
     } else {
       srcURL.searchParams.append(
         "html",
@@ -356,7 +356,7 @@ function wrapWithIFrame(doc, options = {}) {
   } else {
     const mimeType = doc.endsWith("xhtml") ? XHTML_MIME_TYPE : HTML_MIME_TYPE;
     if (doc.endsWith("html")) {
-      doc = loadHTMLFromFile(`${CURRENT_FILE_DIR}e10s/${doc}`);
+      doc = loadHTMLFromFile(`${CURRENT_FILE_DIR}${doc}`);
       doc = doc.replace(
         /<body[.\s\S]*?>/,
         `<body ${attrsToString(iframeDocBodyAttrs)}>`
@@ -417,7 +417,7 @@ function accessibleTask(doc, task, options = {}) {
     gIsIframe = options.iframe || gIsRemoteIframe;
     let url;
     if (doc.endsWith("html") && !gIsIframe) {
-      url = `${CURRENT_CONTENT_DIR}e10s/${doc}`;
+      url = `${CURRENT_CONTENT_DIR}${doc}`;
     } else {
       url = snippetToURL(doc, options);
     }
