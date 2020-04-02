@@ -137,11 +137,14 @@ static bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val,
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val,
                                    int64_t* loc) {
-  MOZ_ASSERT(ENABLE_WASM_BIGINT);
+#ifdef ENABLE_WASM_BIGINT
   MOZ_ASSERT(I64BigIntConversionAvailable(cx));
   JS_TRY_VAR_OR_RETURN_FALSE(cx, *loc, ToBigInt64(cx, val));
   Debug::print(*loc);
   return true;
+#else
+  MOZ_CRASH("unexpected conversion of i64 from js to wasm value");
+#endif
 }
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc) {
