@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const PASSWORD_FIELDNAME_HINTS = ["current-password", "new-password"];
+
 function openContextMenu(aMessage, aBrowser, aActor) {
   if (BrowserHandler.kiosk) {
     // Don't display context menus in kiosk mode
@@ -928,25 +930,26 @@ class nsContextMenu {
 
       // Disable the fill option if the user hasn't unlocked with their master password
       // or if the password field or target field are disabled.
-      // XXX: Bug 1529025 to respect signon.rememberSignons
+      // XXX: Bug 1529025 to maybe respect signon.rememberSignons.
       let disableFill =
-        !loginFillInfo ||
-        !Services.logins ||
         !Services.logins.isLoggedIn ||
         loginFillInfo.passwordField.disabled ||
-        (!this.onPassword && loginFillInfo.usernameField.disabled);
-
+        loginFillInfo.activeField.disabled;
       this.setItemAttr("fill-login", "disabled", disableFill);
 
+      let onPasswordLikeField = PASSWORD_FIELDNAME_HINTS.includes(
+        loginFillInfo.activeField.fieldNameHint
+      );
       // Set the correct label for the fill menu
       let fillMenu = document.getElementById("fill-login");
-      if (this.onPassword) {
+      if (onPasswordLikeField) {
         fillMenu.setAttribute("label", fillMenu.getAttribute("label-password"));
         fillMenu.setAttribute(
           "accesskey",
           fillMenu.getAttribute("accesskey-password")
         );
       } else {
+        // On a username field
         fillMenu.setAttribute("label", fillMenu.getAttribute("label-login"));
         fillMenu.setAttribute(
           "accesskey",
@@ -958,7 +961,7 @@ class nsContextMenu {
       let isGeneratedPasswordEnabled =
         LoginHelper.generationAvailable && LoginHelper.generationEnabled;
       showGenerate =
-        this.onPassword &&
+        onPasswordLikeField &&
         isGeneratedPasswordEnabled &&
         Services.logins.getLoginSavingEnabled(formOrigin);
 
