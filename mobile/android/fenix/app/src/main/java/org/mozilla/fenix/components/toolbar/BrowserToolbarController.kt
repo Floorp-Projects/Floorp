@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -211,10 +212,12 @@ class DefaultBrowserToolbarController(
                 activity.components.analytics.metrics.track(Event.FindInPageOpened)
             }
             ToolbarMenu.Item.ReportIssue -> {
-                val currentUrl = currentSession?.url
-                currentUrl?.apply {
-                    val reportUrl = String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, this)
-                    activity.components.useCases.tabsUseCases.addTab.invoke(reportUrl)
+                val selectedTab = activity.components.core.store.state.selectedTab
+                selectedTab?.let {
+                    val currentUrl = it.content.url
+                    val reportUrl = String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, currentUrl)
+                    val private = it.content.private
+                    reportSiteIssue(reportUrl, private)
                 }
             }
 
@@ -320,6 +323,14 @@ class DefaultBrowserToolbarController(
                     BrowserFragmentDirections.actionGlobalHome()
                 )
             }
+        }
+    }
+
+    private fun reportSiteIssue(reportUrl: String, private: Boolean) {
+        if (private) {
+            activity.components.useCases.tabsUseCases.addPrivateTab.invoke(reportUrl)
+        } else {
+            activity.components.useCases.tabsUseCases.addTab.invoke(reportUrl)
         }
     }
 
