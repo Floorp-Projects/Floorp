@@ -62,8 +62,7 @@ add_task(async () => {
 
   let tab = selectedTabs[0];
   is(tab.getAttributeValue("AXRole"), "AXRadioButton", "Correct role for tab");
-  // Bug 1626638
-  todo_is(
+  is(
     tab.getAttributeValue("AXSubrole"),
     "AXTabButton",
     "Correct subrole for tab"
