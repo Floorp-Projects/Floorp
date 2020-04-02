@@ -92,12 +92,12 @@ struct CompilerEnvironment {
                       bool hugeMemory, bool bigIntConfigured);
 
   // Compute any remaining compilation parameters.
-  void computeParameters(Decoder& d, bool gcFeatureOptIn);
+  void computeParameters(Decoder& d);
 
   // Compute any remaining compilation parameters.  Only use this method if
   // the CompilerEnvironment was created with values for mode, tier, and
   // debug.
-  void computeParameters(bool gcFeatureOptIn);
+  void computeParameters();
 
   bool isComputed() const { return state_ == Computed; }
   CompileMode mode() const {
@@ -157,15 +157,6 @@ struct ModuleEnvironment {
 
   // Module fields decoded from the module environment (or initialized while
   // validating an asm.js module) and immutable during compilation:
-#ifdef ENABLE_WASM_GC
-  // `gcFeatureOptIn` reflects the presence in a module of a GcFeatureOptIn
-  // section.  This variable will be removed eventually, allowing it to be
-  // replaced everywhere by the value true.
-  //
-  // The flag is used in the value of gcTypesEnabled(), which controls whether
-  // struct types and associated instructions are accepted during validation.
-  bool gcFeatureOptIn;
-#endif
   Maybe<uint32_t> dataCount;
   MemoryUsage memoryUsage;
   uint32_t minMemoryLength;
@@ -197,13 +188,9 @@ struct ModuleEnvironment {
       : kind(kind),
         sharedMemoryEnabled(sharedMemoryEnabled),
         compilerEnv(compilerEnv),
-#ifdef ENABLE_WASM_GC
-        gcFeatureOptIn(false),
-#endif
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0),
-        numStructTypes(0) {
-  }
+        numStructTypes(0) {}
 
   Tier tier() const { return compilerEnv->tier(); }
   OptimizedBackend optimizedBackend() const {
