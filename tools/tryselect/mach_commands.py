@@ -328,7 +328,8 @@ class TrySelect(MachCommandBase):
     @SubCommand('try',
                 'auto',
                 description='Automatically determine which tasks to run. This runs the same '
-                            'set of tasks that would be run on autoland.',
+                            'set of tasks that would be run on autoland. This '
+                            'selector is EXPERIMENTAL.',
                 parser=get_parser('auto'))
     def try_auto(self, **kwargs):
         return self.run(**kwargs)
