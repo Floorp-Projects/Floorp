@@ -48,9 +48,15 @@ registerCleanupFunction(function() {
   let pdfHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
     "application/pdf"
   );
-  removeDummyHandlers(pdfHandlerInfo.possibleApplicationHandlers);
   pdfHandlerInfo.preferredAction = Ci.nsIHandlerInfo.handleInternally;
   pdfHandlerInfo.preferredApplicationHandler = gOriginalPreferredPDFHandler;
+  let handlers = pdfHandlerInfo.possibleApplicationHandlers;
+  for (let i = handlers.Count() - 1; i >= 0; i--) {
+    let app = handlers.queryElementAt(i, Ci.nsIHandlerApp);
+    if (app.name == "Foopydoopydoo") {
+      handlers.removeElementAt(i);
+    }
+  }
   gHandlerService.store(pdfHandlerInfo);
 
   gBrowser.removeCurrentTab();
@@ -114,7 +120,9 @@ add_task(async function setup() {
   appHandler.executable = Services.dirsvc.get("ProfD", Ci.nsIFile);
   appHandler.executable.append("dummy.exe");
   // Prefs are picky and want this to exist and be executable (bug 1626009):
-  appHandler.executable.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o777);
+  if (!appHandler.executable.exists()) {
+    appHandler.executable.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o777);
+  }
 
   handlers.appendElement(appHandler);
 
