@@ -1,3 +1,6 @@
+// |jit-test| --no-warp
+// This is hitting bug 1505387 with WarpBuilder and eager compilation.
+
 // LiveSavedFrameCache should not be confused by eval-in-frame-prev links.
 
 const g = newGlobal({newCompartment: true});
