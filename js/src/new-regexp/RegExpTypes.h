@@ -17,6 +17,10 @@ class MatchPairs;
 namespace v8 {
 namespace internal {
 
+class Isolate;
+class RegExpStack;
+class RegExpStackScope;
+
 struct InputOutputData {
   const void* inputStart;
   const void* inputEnd;
@@ -43,6 +47,9 @@ struct InputOutputData {
 namespace js {
 namespace irregexp {
 
+using Isolate = v8::internal::Isolate;
+using RegExpStack = v8::internal::RegExpStack;
+using RegExpStackScope = v8::internal::RegExpStackScope;
 using InputOutputData = v8::internal::InputOutputData;
 
 } // namespace irregexp
