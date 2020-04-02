@@ -277,7 +277,7 @@ class AddonsManagerAdapter(
 
         // Add unsupported section
         if (unsupportedAddons.isNotEmpty()) {
-            itemsWithSections.add(NotYetSupportedSection(R.string.mozac_feature_addons_unsupported_section))
+            itemsWithSections.add(NotYetSupportedSection(R.string.mozac_feature_addons_unavailable_section))
         }
 
         return itemsWithSections

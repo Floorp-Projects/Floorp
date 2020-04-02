@@ -88,7 +88,7 @@ class AddonsManagerAdapterTest {
         )
         assertEquals(recommendedAddon, itemsWithSections[5])
         assertEquals(
-            R.string.mozac_feature_addons_unsupported_section,
+            R.string.mozac_feature_addons_unavailable_section,
             (itemsWithSections[6] as NotYetSupportedSection).title
         )
     }
