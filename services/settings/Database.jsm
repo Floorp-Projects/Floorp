@@ -521,7 +521,7 @@ function ensureShutdownBlocker() {
     },
     {
       fetchState() {
-        return gPendingWriteOperations.map(op => op.desc);
+        return Array.from(gPendingWriteOperations).map(op => op.desc);
       },
     }
   );
