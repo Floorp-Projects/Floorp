@@ -376,6 +376,11 @@ static nsTArray<uint8_t> GetDisplayICCProfile(Display* dpy, Window& root) {
 }
 
 nsTArray<uint8_t> gfxPlatformGtk::GetPlatformCMSOutputProfileData() {
+  nsTArray<uint8_t> prefProfileData = GetPrefCMSOutputProfileData();
+  if (!prefProfileData.IsEmpty()) {
+    return prefProfileData;
+  }
+
   if (!mIsX11Display) {
     return nsTArray<uint8_t>();
   }

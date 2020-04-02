@@ -2204,29 +2204,33 @@ DeviceColor gfxPlatform::TransformPixel(const sRGBColor& in,
 }
 
 nsTArray<uint8_t> gfxPlatform::GetPlatformCMSOutputProfileData() {
-  return nsTArray<uint8_t>();
+  return GetPrefCMSOutputProfileData();
 }
 
-nsTArray<uint8_t> gfxPlatform::GetCMSOutputProfileData() {
+nsTArray<uint8_t> gfxPlatform::GetPrefCMSOutputProfileData() {
   nsAutoCString fname;
   Preferences::GetCString("gfx.color_management.display_profile", fname);
 
   if (fname.IsEmpty()) {
-    return gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
+    return nsTArray<uint8_t>();
   }
 
   void* mem = nullptr;
   size_t size = 0;
   qcms_data_from_path(fname.get(), &mem, &size);
-  if (mem == nullptr) {
-    return gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
-  }
 
   nsTArray<uint8_t> result;
-  result.AppendElements(static_cast<uint8_t*>(mem), size);
-  free(mem);
+
+  if (mem) {
+    result.AppendElements(static_cast<uint8_t*>(mem), size);
+    free(mem);
+  }
 
   return result;
+}
+
+const mozilla::gfx::ContentDeviceData* gfxPlatform::GetInitContentDeviceData() {
+  return gContentDeviceInitData;
 }
 
 void gfxPlatform::CreateCMSOutputProfile() {
@@ -2243,7 +2247,8 @@ void gfxPlatform::CreateCMSOutputProfile() {
     }
 
     if (!gCMSOutputProfile) {
-      nsTArray<uint8_t> outputProfileData = GetCMSOutputProfileData();
+      nsTArray<uint8_t> outputProfileData =
+          gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
       if (!outputProfileData.IsEmpty()) {
         gCMSOutputProfile = qcms_profile_from_memory(
             outputProfileData.Elements(), outputProfileData.Length());
@@ -3418,7 +3423,8 @@ void gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj) {
 }
 
 void gfxPlatform::GetCMSSupportInfo(mozilla::widget::InfoObject& aObj) {
-  nsTArray<uint8_t> outputProfileData = GetCMSOutputProfileData();
+  nsTArray<uint8_t> outputProfileData =
+      gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
   if (outputProfileData.IsEmpty()) {
     nsPrintfCString msg("Empty profile data");
     aObj.DefineProperty("CMSOutputProfile", msg.get());

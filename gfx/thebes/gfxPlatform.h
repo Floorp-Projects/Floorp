@@ -729,6 +729,12 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   const gfxSkipChars& EmptySkipChars() const { return kEmptySkipChars; }
 
   /**
+   * Returns a buffer containing the CMS output profile data. The way this
+   * is obtained is platform-specific.
+   */
+  virtual nsTArray<uint8_t> GetPlatformCMSOutputProfileData();
+
+  /**
    * Return information on how child processes should initialize graphics
    * devices.
    */
@@ -807,6 +813,23 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
       const mozilla::gfx::ContentDeviceData& aData);
 
   /**
+   * Returns the contents of the file pointed to by the
+   * gfx.color_management.display_profile pref, if set.
+   * Returns an empty array if not set, or if an error occurs
+   */
+  nsTArray<uint8_t> GetPrefCMSOutputProfileData();
+
+  /**
+   * If inside a child process and currently being initialized by the
+   * SetXPCOMProcessAttributes message, this can be used by subclasses to
+   * retrieve the ContentDeviceData passed by the message
+   *
+   * If not currently being initialized, will return nullptr. In this case,
+   * child should send a sync message to ask parent for color profile
+   */
+  const mozilla::gfx::ContentDeviceData* GetInitContentDeviceData();
+
+  /**
    * Increase the global device counter after a device has been removed/reset.
    */
   void BumpDeviceCounter();
@@ -881,11 +904,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void InitOpenGLConfig();
   static void CreateCMSOutputProfile();
 
-  static nsTArray<uint8_t> GetCMSOutputProfileData();
-
   friend void RecordingPrefChanged(const char* aPrefName, void* aClosure);
-
-  virtual nsTArray<uint8_t> GetPlatformCMSOutputProfileData();
 
   /**
    * Calling this function will compute and set the ideal tile size for the

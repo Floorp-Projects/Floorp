@@ -358,6 +358,12 @@ const startupPhases = {
       read: 1,
     },
     {
+      // Bug 1626738
+      path: "SysD:spool/drivers/color/*",
+      condition: WIN,
+      read: 1,
+    },
+    {
       // bug 1541246
       path: "UAppData:",
       ignoreIfUnused: true, // sometimes before opening first browser window,
