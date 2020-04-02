@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- This was just "drawn by hand" well after the original test landed to look
+     like the proper rendering of the test file without any transforms or
+     preserve3d. It's not identical, but a fuzzy match should be a good test
+     considering the original test just checked that it wasn't rendering blank
+-->
+<html>
+  <style>
+    div {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <svg width="600px" height="600px">
+
+      <polygon fill="#DAD6CC" points="57, 51 114, 84 66, 124 10, 91"/>
+      <ellipse fill="#F8F1E5" cx="62" cy="88" rx="27" ry="19"/>
+
+      <polygon fill="#DAD6CC" points="57, -1 114, 32 66, 72 10, 39"/>
+      <ellipse fill="#F8F1E5" cx="62" cy="36" rx="27" ry="19"/>
+
+    </svg>
+  </div>
+</body></html>
