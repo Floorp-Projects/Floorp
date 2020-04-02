@@ -1,6 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+EXPECTED_BREACH = {
+  AddedDate: "2018-12-20T23:56:26Z",
+  BreachDate: "2018-12-16",
+  Domain: "breached.example.com",
+  Name: "Breached",
+  PwnCount: 1643100,
+  DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
+  _status: "synced",
+  id: "047940fe-d2fd-4314-b636-b4a952ee0043",
+  last_modified: "1541615610052",
+  schema: "1541615609018",
+};
+
 add_task(async function setup() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
@@ -121,4 +134,76 @@ add_task(async function testTabToCreateButton() {
     await tab();
     is(getFocusedEl(), null, "login-list isn't focused again");
   });
+});
+
+add_task(async function testTabToEditButton() {
+  TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
+  let browser = gBrowser.selectedBrowser;
+  await SpecialPowers.spawn(
+    browser,
+    [[TEST_LOGIN1.guid, TEST_LOGIN3.guid]],
+    async ([testLoginNormalGuid, testLoginBreachedGuid]) => {
+      const EventUtils = ContentTaskUtils.getEventUtils(content);
+
+      function waitForAnimationFrame() {
+        return new Promise(resolve => content.requestAnimationFrame(resolve));
+      }
+
+      async function tab() {
+        EventUtils.synthesizeKey("KEY_Tab", {}, content);
+        await waitForAnimationFrame();
+      }
+
+      let loginList = content.document.querySelector("login-list");
+      let loginItem = content.document.querySelector("login-item");
+      let createButton = loginList.shadowRoot.querySelector(
+        ".create-login-button"
+      );
+      let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+      let breachAlert = loginItem.shadowRoot.querySelector(".breach-alert");
+      let getFocusedEl = () => {
+        if (content.document.activeElement == loginList) {
+          return loginList.shadowRoot.activeElement;
+        }
+        if (content.document.activeElement == loginItem) {
+          return loginItem.shadowRoot.activeElement;
+        }
+        ok(
+          false,
+          "not expecting a different element to get focused in this test: " +
+            content.document.activeElement.outerHTML
+        );
+        return undefined;
+      };
+
+      for (let guidToSelect of [testLoginNormalGuid, testLoginBreachedGuid]) {
+        let loginListItem = loginList.shadowRoot.querySelector(
+          `.login-list-item[data-guid="${guidToSelect}"]`
+        );
+        loginListItem.click();
+        await ContentTaskUtils.waitForCondition(() => {
+          let waivedLoginItem = Cu.waiveXrays(loginItem);
+          return (
+            waivedLoginItem._login &&
+            waivedLoginItem._login.guid == guidToSelect
+          );
+        }, "waiting for login-item to show the selected login");
+
+        is(
+          breachAlert.hidden,
+          guidToSelect == testLoginNormalGuid,
+          ".breach-alert should be hidden if the login is not breached. current login breached? " +
+            (guidToSelect == testLoginBreachedGuid)
+        );
+
+        createButton.focus();
+        await waitForAnimationFrame();
+        is(getFocusedEl(), createButton, "create button is focused");
+
+        await tab();
+        await waitForAnimationFrame();
+        is(getFocusedEl(), editButton, "edit button is focused");
+      }
+    }
+  );
 });
