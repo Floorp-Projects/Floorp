@@ -90,7 +90,7 @@
 @implementation mozSelectableChildAccessible
 
 - (id)value {
-  return [NSNumber numberWithBool:([self state] & states::SELECTED) != 0];
+  return [NSNumber numberWithBool:[self stateWithMask:states::SELECTED] != 0];
 }
 
 @end

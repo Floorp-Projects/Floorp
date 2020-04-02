@@ -129,7 +129,11 @@ static const uintptr_t IS_PROXY = 1;
 // internal method to retrieve a child at a given index.
 - (id)childAt:(uint32_t)i;
 
+// Get gecko accessible's state.
 - (uint64_t)state;
+
+// Get gecko accessible's state filtered through given mask.
+- (uint64_t)stateWithMask:(uint64_t)mask;
 
 #pragma mark -
 
