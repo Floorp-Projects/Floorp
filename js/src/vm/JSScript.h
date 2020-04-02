@@ -2030,8 +2030,6 @@ setterLevel:                                                                  \
                            : frontend::ParseGoal::Script;
   }
 
-  void setArgumentsHasVarBinding();
-
   bool hasEnclosingScript() const { return warmUpData_.isEnclosingScript(); }
   BaseScript* enclosingScript() const {
     return warmUpData_.toEnclosingScript();
