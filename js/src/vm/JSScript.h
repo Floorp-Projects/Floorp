@@ -2222,11 +2222,6 @@ class JSScript : public js::BaseScript {
 
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
-                          const JS::ReadOnlyCompileOptions& options,
-                          js::HandleScriptSourceObject sourceObject,
-                          const js::SourceExtent& extent);
-
-  static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           js::HandleScriptSourceObject sourceObject,
                           js::ImmutableScriptFlags flags,
                           js::SourceExtent extent);
