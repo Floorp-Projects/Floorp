@@ -115,6 +115,14 @@ policy-InstallAddonsPermission = Allow certain websites to install add-ons.
 
 policy-LegacyProfiles = Disable the feature enforcing a separate profile for each installation.
 
+## Do not translate "SameSite", it's the name of a cookie attribute.
+
+policy-LegacySameSiteCookieBehaviorEnabled = Enable default legacy SameSite cookie behavior setting.
+
+policy-LegacySameSiteCookieBehaviorEnabledForDomainList = Revert to legacy SameSite behavior for cookies on specified sites.
+
+##
+
 policy-LocalFileLinks = Allow specific websites to link to local files.
 
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).
