@@ -52,6 +52,11 @@ TEST(Matrix, TransformAndClipRect)
                   .IsEqualInterior(Rect(100, 100, 50, 100)));
   EXPECT_TRUE(m.TransformAndClipBounds(Rect(150, 50, 100, 200), c)
                   .IsEqualInterior(Rect(150, 100, 50, 100)));
+
+  Matrix4x4 m2 = Matrix4x4::From2D(Matrix(22.68, 0, 0, 12, 16, 164));
+  EXPECT_TRUE(
+      m2.TransformAndClipBounds(Rect(0, 0, 100, 100), Rect(1024, 1024, 0, 0))
+          .IsEmpty());
 }
 
 TEST(Matrix4x4Flagged, Mult)
