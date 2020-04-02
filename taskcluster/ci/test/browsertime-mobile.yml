@@ -78,7 +78,6 @@ browsertime-tp6m:
     raptor-subtests:
         by-app:
             fenix:
-                - aframe
                 - allrecipes
                 - amazon
                 - amazon-search

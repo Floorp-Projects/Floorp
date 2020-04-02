@@ -172,10 +172,6 @@ Mobile
 ------
 Page-load performance test suite on Android.
 
-Browsertime aframe
-^^^^^^^^^^^^^^^^^^
-Android page-load performance test for aframe using Browsertime.
-
 Browsertime allrecipes
 ^^^^^^^^^^^^^^^^^^^^^^
 Android page-load performance test for allrecipes using Browsertime.
@@ -259,10 +255,6 @@ Android page-load performance test for jianshu using Browsertime.
 Browsertime microsoft-support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Android page-load performance test for microsoft-support using Browsertime.
-
-raptor-tp6m-aframeio-animation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Cold and warm android page-load performance test for aframeio-animation on geckoview, refbrow, fenix, and fennec68 using WebExtension.
 
 raptor-tp6m-allrecipes
 ^^^^^^^^^^^^^^^^^^^^^^

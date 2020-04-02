@@ -122,17 +122,6 @@ raptor-tp6m-9-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
-raptor-tp6m-10-geckoview:
-    description: "Raptor tp6m-10 on GeckoView"
-    try-name: raptor-tp6m-10-geckoview
-    treeherder-symbol: Rap(tp6m-10)
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6m-10
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
-            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
-
 raptor-speedometer-geckoview:
     description: "Raptor Speedometer on GeckoView"
     try-name: raptor-speedometer-geckoview
@@ -649,19 +638,6 @@ raptor-tp6m-25-geckoview-cold:
     mozharness:
         extra-options:
             - --test=raptor-tp6m-25-cold
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
-            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
-
-raptor-tp6m-26-geckoview-cold:
-    description: "Raptor tp6m-26 cold page-load on GeckoView Example"
-    max-run-time: 2700
-    try-name: raptor-tp6m-26-geckoview-cold
-    treeherder-symbol: Rap(tp6m-c-26)
-    e10s: true
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6m-26-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity

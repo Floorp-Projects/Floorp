@@ -112,16 +112,6 @@ raptor-tp6m-9-refbrow:
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
-raptor-tp6m-10-refbrow:
-    description: "Raptor tp6m-10 on the reference browser"
-    treeherder-symbol: Rap-refbrow(tp6m-10)
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6m-10
-            - --app=refbrow
-            - --binary-path=org.mozilla.reference.browser.raptor
-            - --activity=org.mozilla.reference.browser.BrowserTestActivity
-
 raptor-scn-power-idle-refbrow:
     description: "Raptor idle-browser power on Reference Browser"
     try-name: raptor-scn-power-idle-refbrow
@@ -532,18 +522,6 @@ raptor-tp6m-25-refbrow-cold:
     mozharness:
         extra-options:
             - --test=raptor-tp6m-25-cold
-            - --app=refbrow
-            - --binary-path=org.mozilla.reference.browser.raptor
-            - --activity=org.mozilla.reference.browser.BrowserTestActivity
-
-raptor-tp6m-26-refbrow-cold:
-    description: "Raptor tp6m-26 cold page-load on the reference browser"
-    try-name: raptor-tp6m-26-refbrow-cold
-    treeherder-symbol: Rap-refbrow(tp6m-c-26)
-    e10s: true
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6m-26-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
