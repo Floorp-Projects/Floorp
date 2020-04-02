@@ -47,3 +47,4 @@ build: false
 
 test_script:
 - cargo test --verbose %cargoflags%
+- bash -c "! rustc -V | grep nightly || cargo bench --features benchmark --verbose %cargoflags%"

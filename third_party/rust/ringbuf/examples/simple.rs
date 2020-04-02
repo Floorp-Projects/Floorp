@@ -1,6 +1,6 @@
 extern crate ringbuf;
 
-use ringbuf::{RingBuffer, PushError, PopError};
+use ringbuf::RingBuffer;
 
 fn main() {
     let rb = RingBuffer::<i32>::new(2);
@@ -8,7 +8,7 @@ fn main() {
 
     prod.push(0).unwrap();
     prod.push(1).unwrap();
-    assert_eq!(prod.push(2), Err(PushError::Full(2)));
+    assert_eq!(prod.push(2), Err(2));
 
     assert_eq!(cons.pop().unwrap(), 0);
 
@@ -16,5 +16,5 @@ fn main() {
 
     assert_eq!(cons.pop().unwrap(), 1);
     assert_eq!(cons.pop().unwrap(), 2);
-    assert_eq!(cons.pop(), Err(PopError::Empty));
+    assert_eq!(cons.pop(), None);
 }

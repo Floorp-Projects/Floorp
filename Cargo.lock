@@ -942,7 +942,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=8069f8f4189982e0b38fa6dc8993dd4fab41f728#8069f8f4189982e0b38fa6dc8993dd4fab41f728"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=72f813a03cefbdf8e2c58c7410f3556c79429a06#72f813a03cefbdf8e2c58c7410f3556c79429a06"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -3311,7 +3311,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=8069f8f4189982e0b38fa6dc8993dd4fab41f728#8069f8f4189982e0b38fa6dc8993dd4fab41f728"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=72f813a03cefbdf8e2c58c7410f3556c79429a06#72f813a03cefbdf8e2c58c7410f3556c79429a06"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -3320,7 +3320,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=8069f8f4189982e0b38fa6dc8993dd4fab41f728#8069f8f4189982e0b38fa6dc8993dd4fab41f728"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=72f813a03cefbdf8e2c58c7410f3556c79429a06#72f813a03cefbdf8e2c58c7410f3556c79429a06"
 dependencies = [
  "libc",
 ]
@@ -3567,12 +3567,9 @@ dependencies = [
 
 [[package]]
 name = "ringbuf"
-version = "0.1.4"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "588456c74d5ff0a5806bc084818e043e767533f743c11ee6f3ccf298599c6847"
-dependencies = [
- "rustc_version",
-]
+checksum = "7c2b29d87cfbdce39849012bb5020fff88b8f01f4f5b55846a0b6ef360774eae"
 
 [[package]]
 name = "rkv"

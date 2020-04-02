@@ -174,23 +174,12 @@ impl BufferManager {
         match &mut self.producer {
             RingBufferProducer::FloatRingBufferProducer(p) => {
                 let input_data = unsafe { slice::from_raw_parts::<f32>(input_data as *const f32, read_samples) };
-                match p.push_slice(input_data) {
-                    Ok(_) => { }
-                    Err(_) => {
-                        // do nothing: the data are ignored. This happens when underruning the
-                        // output callback.
-                    }
-                }
+                // we don't do anything in particular if we can't push everything
+                p.push_slice(input_data);
             }
             RingBufferProducer::IntegerRingBufferProducer(p) => {
                 let input_data = unsafe { slice::from_raw_parts::<i16>(input_data as *const i16, read_samples) };
-                match p.push_slice(input_data) {
-                    Ok(_) => { }
-                    Err(_) => {
-                        // do nothing: the data are ignored. This happens when underruning the
-                        // output callback.
-                    }
-                }
+                p.push_slice(input_data);
             }
         }
     }
@@ -199,37 +188,19 @@ impl BufferManager {
         match &mut self.consumer {
             IntegerRingBufferConsumer(p) => {
                 let mut input: &mut[i16] = unsafe { slice::from_raw_parts_mut::<i16>(input_data as *mut i16, needed_samples) };
-                match p.pop_slice(&mut input) {
-                    Ok(read) => {
-                        if read < needed_samples {
-                            for i in 0..(needed_samples - read) {
-                                input[read + i] = 0;
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        // Buffer empty
-                        for i in input.iter_mut() {
-                            *i = 0;
-                        }
+                let read = p.pop_slice(&mut input);
+                if read < needed_samples {
+                    for i in 0..(needed_samples - read) {
+                        input[read + i] = 0;
                     }
                 }
             }
             FloatRingBufferConsumer(p) => {
                 let mut input: &mut[f32] = unsafe { slice::from_raw_parts_mut::<f32>(input_data as *mut f32, needed_samples) };
-                match p.pop_slice(&mut input) {
-                    Ok(read) => {
-                        if read < needed_samples {
-                            for i in 0..(needed_samples - read) {
-                                input[read + i] = 0.;
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        // Buffer empty
-                        for i in input.iter_mut() {
-                            *i = 0.;
-                        }
+                let read = p.pop_slice(&mut input);
+                if read < needed_samples {
+                    for i in 0..(needed_samples - read) {
+                        input[read + i] = 0.;
                     }
                 }
             }
