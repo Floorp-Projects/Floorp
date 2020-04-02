@@ -246,7 +246,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 }
 
 static const uint64_t kCachedStates =
-    states::CHECKED states::PRESSED | states::MIXED | states::EXPANDED;
+    states::CHECKED | states::PRESSED | states::MIXED | states::EXPANDED | states::CURRENT;
 static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (uint64_t)state {
@@ -328,7 +328,11 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   }
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self value];
   if ([attribute isEqualToString:NSAccessibilityARIACurrentAttribute]) {
-    return utils::GetAccAttr(self, "current");
+    if ([self stateWithMask:states::CURRENT]) {
+      return utils::GetAccAttr(self, "current");
+    } else {
+      return nil;
+    }
   }
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return [self roleDescription];
