@@ -57,10 +57,9 @@ class gfxDWriteFontFamily final : public gfxFontFamily {
    * \param aFamily IDWriteFontFamily object representing the directwrite
    * family object.
    */
-  gfxDWriteFontFamily(const nsACString& aName, FontVisibility aVisibility,
-                      IDWriteFontFamily* aFamily,
+  gfxDWriteFontFamily(const nsACString& aName, IDWriteFontFamily* aFamily,
                       bool aIsSystemFontFamily = false)
-      : gfxFontFamily(aName, aVisibility),
+      : gfxFontFamily(aName),
         mDWFamily(aFamily),
         mIsSystemFontFamily(aIsSystemFontFamily),
         mForceGDIClassic(false) {}
@@ -370,10 +369,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
   nsresult InitFontListForPlatform() override;
   void InitSharedFontListForPlatform() override;
 
-  FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
-
-  gfxFontFamily* CreateFontFamily(const nsACString& aName,
-                                  FontVisibility aVisibility) const override;
+  gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
   gfxFontEntry* CreateFontEntry(
       mozilla::fontlist::Face* aFace,

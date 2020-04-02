@@ -149,8 +149,8 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
 
 class gfxFontconfigFontFamily final : public gfxFontFamily {
  public:
-  gfxFontconfigFontFamily(const nsACString& aName, FontVisibility aVisibility)
-      : gfxFontFamily(aName, aVisibility),
+  explicit gfxFontconfigFontFamily(const nsACString& aName)
+      : gfxFontFamily(aName),
         mContainsAppFonts(false),
         mHasNonScalableFaces(false),
         mForceScalable(false) {}
@@ -308,8 +308,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
-  gfxFontFamily* CreateFontFamily(const nsACString& aName,
-                                  FontVisibility aVisibility) const override;
+  gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
   // helper method for finding an appropriate lang string
   bool TryLangForGroup(const nsACString& aOSLang, nsAtom* aLangGroup,

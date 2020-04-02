@@ -568,10 +568,10 @@ void FT2FontFamily::AddFacesToFontList(nsTArray<FontListEntry>* aFontList) {
       continue;
     }
 
-    aFontList->AppendElement(FontListEntry(
-        Name(), fe->Name(), fe->mFilename, fe->Weight().AsScalar(),
-        fe->Stretch().AsScalar(), fe->SlantStyle().AsScalar(), fe->mFTFontIndex,
-        Visibility()));
+    aFontList->AppendElement(
+        FontListEntry(Name(), fe->Name(), fe->mFilename,
+                      fe->Weight().AsScalar(), fe->Stretch().AsScalar(),
+                      fe->SlantStyle().AsScalar(), fe->mFTFontIndex));
   }
 }
 
@@ -978,11 +978,6 @@ bool gfxFT2FontList::AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
     }
     nsAutoCString fullname(start, end - start);
 
-    if (!nextField(start, end)) {
-      break;
-    }
-    FontVisibility visibility = FontVisibility(strtoul(start, nullptr, 10));
-
     FontListEntry fle(
         familyName, faceName, aFileName,
         WeightRange(FontWeight(minWeight), FontWeight(maxWeight)).AsScalar(),
@@ -991,7 +986,7 @@ bool gfxFT2FontList::AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
         SlantStyleRange(FontSlantStyle::FromString(minStyle.get()),
                         FontSlantStyle::FromString(maxStyle.get()))
             .AsScalar(),
-        index, visibility);
+        index);
 
     aCollectFace(fle, psname, fullname, aStdFile);
     count++;
@@ -1005,8 +1000,7 @@ bool gfxFT2FontList::AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
 void FT2FontEntry::AppendToFaceList(nsCString& aFaceList,
                                     const nsACString& aFamilyName,
                                     const nsACString& aPSName,
-                                    const nsACString& aFullName,
-                                    FontVisibility aVisibility) {
+                                    const nsACString& aFullName) {
   aFaceList.Append(aFamilyName);
   aFaceList.Append(FontNameCache::kFieldSep);
   aFaceList.Append(Name());
@@ -1030,8 +1024,6 @@ void FT2FontEntry::AppendToFaceList(nsCString& aFaceList,
   aFaceList.Append(aPSName);
   aFaceList.Append(FontNameCache::kFieldSep);
   aFaceList.Append(aFullName);
-  aFaceList.Append(FontNameCache::kFieldSep);
-  aFaceList.AppendInt(int(aVisibility));
   aFaceList.Append(FontNameCache::kRecordSep);
 }
 
@@ -1227,21 +1219,18 @@ void gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
     nsAutoCString familyKey(familyName);
     BuildKeyNameFromFontName(familyKey);
 
-    FontVisibility visibility = FontVisibility::Unknown;
-
     nsAutoCString psname;
     GetName(aFace, HB_OT_NAME_ID_POSTSCRIPT_NAME, psname);
 
     if (SharedFontList()) {
       FontListEntry fle(familyName, fe->Name(), fe->mFilename,
                         fe->Weight().AsScalar(), fe->Stretch().AsScalar(),
-                        fe->SlantStyle().AsScalar(), fe->mFTFontIndex,
-                        visibility);
+                        fe->SlantStyle().AsScalar(), fe->mFTFontIndex);
       CollectInitData(fle, psname, fullname, aStdFile);
     } else {
       RefPtr<gfxFontFamily> family = mFontFamilies.GetWeak(familyKey);
       if (!family) {
-        family = new FT2FontFamily(familyName, visibility);
+        family = new FT2FontFamily(familyName);
         mFontFamilies.Put(familyKey, RefPtr{family});
         if (mSkipSpaceLookupCheckFamilies.Contains(familyKey)) {
           family->SetSkipSpaceFeatureCheck(true);
@@ -1254,7 +1243,7 @@ void gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
       fe->CheckForBrokenFont(family);
     }
 
-    fe->AppendToFaceList(aFaceList, familyName, psname, fullname, visibility);
+    fe->AppendToFaceList(aFaceList, familyName, psname, fullname);
     if (LOG_ENABLED()) {
       nsAutoCString weightString;
       fe->Weight().ToString(weightString);
@@ -1488,7 +1477,7 @@ void gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
     fe->mStandardFace = (aStdFile == kStandard);
     RefPtr<gfxFontFamily> family = mFontFamilies.GetWeak(key);
     if (!family) {
-      family = new FT2FontFamily(aFLE.familyName(), aFLE.visibility());
+      family = new FT2FontFamily(aFLE.familyName());
       mFontFamilies.Put(key, RefPtr{family});
       if (mSkipSpaceLookupCheckFamilies.Contains(key)) {
         family->SetSkipSpaceFeatureCheck(true);
@@ -1601,8 +1590,7 @@ gfxFontEntry* gfxFT2FontList::CreateFontEntry(fontlist::Face* aFace,
   nsAutoCString desc(aFace->mDescriptor.AsString(list));
   FontListEntry fle(aFamily->DisplayName().AsString(list), desc, desc,
                     aFace->mWeight.AsScalar(), aFace->mStretch.AsScalar(),
-                    aFace->mStyle.AsScalar(), aFace->mIndex,
-                    aFamily->Visibility());
+                    aFace->mStyle.AsScalar(), aFace->mIndex);
   FT2FontEntry* fe = FT2FontEntry::CreateFontEntry(fle);
 
   fe->mFixedPitch = aFace->mFixedPitch;
@@ -1712,9 +1700,8 @@ gfxFontEntry* gfxFT2FontList::MakePlatformFont(const nsACString& aFontName,
                                        aFontData, aLength);
 }
 
-gfxFontFamily* gfxFT2FontList::CreateFontFamily(
-    const nsACString& aName, FontVisibility aVisibility) const {
-  return new FT2FontFamily(aName, aVisibility);
+gfxFontFamily* gfxFT2FontList::CreateFontFamily(const nsACString& aName) const {
+  return new FT2FontFamily(aName);
 }
 
 void gfxFT2FontList::WillShutdown() {
