@@ -4101,20 +4101,21 @@ CookieStatus nsCookieService::CheckPrefs(
     }
   }
 
-  // No cookies allowed if this request comes from a tracker, in a 3rd party
+  // No cookies allowed if this request comes from a resource in a 3rd party
   // context, when anti-tracking protection is enabled and when we don't have
   // access to the first-party cookie jar.
   if (aIsForeign && aIsThirdPartyTrackingResource &&
       !aFirstPartyStorageAccessGranted &&
-      aCookieJarSettings->GetRejectThirdPartyTrackers()) {
-    // Explicitly pass nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
-    // here to ensure that we are testing the partitioning configuration only
-    // for the nsICookieService::BEHAVIOR_REJECT_TRACKER configuration.
-    // When partitioning for BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, we
-    // don't want to give a free pass to tracker cookies here!
-    if (StoragePartitioningEnabled(
-            nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-            aCookieJarSettings)) {
+      aCookieJarSettings->GetRejectThirdPartyContexts()) {
+    bool rejectThirdPartyWithExceptions =
+        CookieJarSettings::IsRejectThirdPartyWithExceptions(
+            aCookieJarSettings->GetCookieBehavior());
+
+    uint32_t rejectReason =
+        rejectThirdPartyWithExceptions
+            ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
+            : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+    if (StoragePartitioningEnabled(rejectReason, aCookieJarSettings)) {
       MOZ_ASSERT(!aOriginAttrs.mFirstPartyDomain.IsEmpty(),
                  "We must have a StoragePrincipal here!");
       return STATUS_ACCEPTED;
@@ -4126,6 +4127,8 @@ CookieStatus nsCookieService::CheckPrefs(
     if (aIsThirdPartySocialTrackingResource) {
       *aRejectedReason =
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
+    } else if (rejectThirdPartyWithExceptions) {
+      *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
     } else {
       *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
     }

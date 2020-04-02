@@ -134,10 +134,10 @@ CookieJarSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
 }
 
 NS_IMETHODIMP
-CookieJarSettings::GetRejectThirdPartyTrackers(
-    bool* aRejectThirdPartyTrackers) {
-  *aRejectThirdPartyTrackers =
-      CookieJarSettings::IsRejectThirdPartyTrackers(mCookieBehavior);
+CookieJarSettings::GetRejectThirdPartyContexts(
+    bool* aRejectThirdPartyContexts) {
+  *aRejectThirdPartyContexts =
+      CookieJarSettings::IsRejectThirdPartyContexts(mCookieBehavior);
   return NS_OK;
 }
 
@@ -406,10 +406,18 @@ void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
 }
 
 // static
-bool CookieJarSettings::IsRejectThirdPartyTrackers(uint32_t aCookieBehavior) {
+bool CookieJarSettings::IsRejectThirdPartyContexts(uint32_t aCookieBehavior) {
   return aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
          aCookieBehavior ==
-             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+             nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
+         IsRejectThirdPartyWithExceptions(aCookieBehavior);
+}
+
+// static
+bool CookieJarSettings::IsRejectThirdPartyWithExceptions(
+    uint32_t aCookieBehavior) {
+  return aCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
+         StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled();
 }
 
 NS_IMPL_ISUPPORTS(CookieJarSettings, nsICookieJarSettings)
