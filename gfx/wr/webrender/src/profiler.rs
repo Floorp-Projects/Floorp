@@ -753,6 +753,12 @@ impl IpcProfileCounters {
         consume_end: u64,
         display_len: usize,
     ) {
+        self.total_time.reset();
+        self.build_time.reset();
+        self.consume_time.reset();
+        self.send_time.reset();
+        self.display_lists.reset();
+
         let build_time = build_end - build_start;
         let consume_time = consume_end - consume_start;
         let send_time = consume_start - send_start;
@@ -837,11 +843,6 @@ impl BackendProfileCounters {
 
     pub fn reset(&mut self) {
         self.total_time.reset();
-        self.ipc.total_time.reset();
-        self.ipc.build_time.reset();
-        self.ipc.consume_time.reset();
-        self.ipc.send_time.reset();
-        self.ipc.display_lists.reset();
         self.resources.texture_cache.rasterized_blob_pixels.reset();
     }
 }
