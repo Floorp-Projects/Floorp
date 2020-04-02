@@ -1961,8 +1961,6 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
   IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasRest, HasRest)
-  // See FunctionBox::argumentsHasLocalBinding_ comment.
-  // N.B.: no setter -- custom logic in JSScript.
   IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
   IMMUTABLE_FLAG_GETTER(isForEval, IsForEval)
   IMMUTABLE_FLAG_GETTER(isModule, IsModule)
@@ -1977,8 +1975,6 @@ setterLevel:                                                                  \
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
   MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
-  // Access the flag for whether this script has a DebugScript in its realm's
-  // map. This should only be used by the DebugScript class.
   MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
   MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
   MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
@@ -2395,14 +2391,14 @@ class JSScript : public js::BaseScript {
   }
 
   /*
-   * As an optimization, even when argsHasLocalBinding, the function prologue
-   * may not need to create an arguments object. This is determined by
+   * As an optimization, even when argumentsHasVarBinding, the function
+   * prologue may not need to create an arguments object. This is determined by
    * needsArgsObj which is set by AnalyzeArgumentsUsage. When !needsArgsObj,
    * the prologue may simply write MagicValue(JS_OPTIMIZED_ARGUMENTS) to
-   * 'arguments's slot and any uses of 'arguments' will be guaranteed to
-   * handle this magic value. To avoid spurious arguments object creation, we
-   * maintain the invariant that needsArgsObj is only called after the script
-   * has been analyzed.
+   * 'arguments's slot and any uses of 'arguments' will be guaranteed to handle
+   * this magic value. To avoid spurious arguments object creation, we maintain
+   * the invariant that needsArgsObj is only called after the script has been
+   * analyzed.
    */
   inline bool ensureHasAnalyzedArgsUsage(JSContext* cx);
   bool needsArgsObj() const {
