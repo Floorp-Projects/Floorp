@@ -47,6 +47,7 @@ class HandlerProvider final : public IGeckoBackChannel,
                                    NotNull<IStream*> aStream) override;
   STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
   STDMETHODIMP DisconnectHandlerRemotes() override;
+  STDMETHODIMP IsInterfaceMaybeSupported(REFIID aIid) override;
   STDMETHODIMP_(REFIID)
   GetEffectiveOutParamIid(REFIID aCallIid, ULONG aCallMethod) override;
   STDMETHODIMP NewInstance(

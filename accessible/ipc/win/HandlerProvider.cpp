@@ -11,13 +11,17 @@
 #include <utility>
 
 #include "Accessible2_3.h"
+#include "AccessibleApplication.h"
 #include "AccessibleDocument.h"
+#include "AccessibleEditableText.h"
+#include "AccessibleImage.h"
 #include "AccessibleRelation.h"
 #include "AccessibleTable.h"
 #include "AccessibleTable2.h"
 #include "AccessibleTableCell.h"
 #include "HandlerData.h"
 #include "HandlerData_i.c"
+#include "ISimpleDOM.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/a11y/AccessibleWrap.h"
@@ -33,6 +37,7 @@
 #include "mozilla/mscom/Utils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "uiautomation.h"
 
 namespace mozilla {
 namespace a11y {
@@ -424,6 +429,29 @@ HandlerProvider::DisconnectHandlerRemotes() {
 
   IUnknown* unk = static_cast<IGeckoBackChannel*>(this);
   return ::CoDisconnectObject(unk, 0);
+}
+
+HRESULT
+HandlerProvider::IsInterfaceMaybeSupported(REFIID aIid) {
+  static_assert(&NEWEST_IA2_IID == &IID_IAccessible2_3,
+                "You have modified NEWEST_IA2_IID. This code needs updating.");
+  if (aIid == IID_IUnknown || aIid == IID_IDispatch ||
+      aIid == IID_IAccessible || aIid == IID_IServiceProvider ||
+      aIid == IID_IEnumVARIANT || aIid == IID_IAccessible2 ||
+      aIid == IID_IAccessible2_2 || aIid == IID_IAccessible2_3 ||
+      aIid == IID_IAccessibleAction || aIid == IID_IAccessibleApplication ||
+      aIid == IID_IAccessibleComponent || aIid == IID_IAccessibleDocument ||
+      aIid == IID_IAccessibleEditableText || aIid == IID_IAccessibleHyperlink ||
+      aIid == IID_IAccessibleHypertext || aIid == IID_IAccessibleHypertext2 ||
+      aIid == IID_IAccessibleImage || aIid == IID_IAccessibleRelation ||
+      aIid == IID_IAccessibleTable || aIid == IID_IAccessibleTable2 ||
+      aIid == IID_IAccessibleTableCell || aIid == IID_IAccessibleText ||
+      aIid == IID_IAccessibleValue || aIid == IID_ISimpleDOMNode ||
+      aIid == IID_ISimpleDOMDocument || aIid == IID_ISimpleDOMText ||
+      aIid == IID_IAccessibleEx || aIid == IID_IRawElementProviderSimple) {
+    return S_OK;
+  }
+  return E_NOINTERFACE;
 }
 
 REFIID
