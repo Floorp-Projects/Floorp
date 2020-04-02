@@ -1232,9 +1232,9 @@ bool Module::makeStructTypeDescrs(
       } else {
         // TypedObjects don't yet have a sufficient notion of type
         // constraints on TypedObject properties.  Thus we handle fields
-        // of type (ref T) by marking them as immutable for JS and by
+        // of type (optref T) by marking them as immutable for JS and by
         // rendering the objects non-constructible from JS.  Wasm
-        // however sees properly-typed (ref T) fields with appropriate
+        // however sees properly-typed (optref T) fields with appropriate
         // mutability.
         if (v.isTypeIndex()) {
           // Validation ensures that v references a struct type here.

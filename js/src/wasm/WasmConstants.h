@@ -68,7 +68,7 @@ enum class TypeCode {
   NullRef = 0x6e,  // SLEB128(-0x12)
 
   // Type constructor for reference types.
-  Ref = 0x6d,
+  OptRef = 0x6c,
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
