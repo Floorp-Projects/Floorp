@@ -21,7 +21,7 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use nserror::{nsresult, NS_OK};
-use nsstring::nsAString;
+use nsstring::nsACString;
 
 use client_info::ClientInfo;
 use glean_core::Configuration;
@@ -36,18 +36,15 @@ mod core_metrics;
 /// Glean instance.
 #[no_mangle]
 pub unsafe extern "C" fn fog_init(
-    data_path: &nsAString,
-    app_build: *const c_char,
-    app_display_version: *const c_char,
+    data_path: &nsACString,
+    app_build: &nsACString,
+    app_display_version: &nsACString,
     channel: *const c_char,
 ) -> nsresult {
     log::debug!("Initializing FOG.");
 
-    let app_build = CStr::from_ptr(app_build);
-    let app_build = app_build.to_string_lossy().to_string();
-
-    let app_display_version = CStr::from_ptr(app_display_version);
-    let app_display_version = app_display_version.to_string_lossy().to_string();
+    let app_build = app_build.to_string();
+    let app_display_version = app_display_version.to_string();
 
     let channel = CStr::from_ptr(channel);
     let channel = Some(channel.to_string_lossy().to_string());
