@@ -238,6 +238,26 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.numButtons = 6;
       aControllerState.numAxes = 2;
       break;
+    case VRControllerType::ValveIndex:
+      aControllerState.buttonPressed =
+          ShiftButtonBitForNewSlot(1, 0) | ShiftButtonBitForNewSlot(2, 1) |
+          ShiftButtonBitForNewSlot(0, 2) | ShiftButtonBitForNewSlot(5, 3) |
+          ShiftButtonBitForNewSlot(3, 4) | ShiftButtonBitForNewSlot(4, 5) |
+          ShiftButtonBitForNewSlot(6, 6) | ShiftButtonBitForNewSlot(7, 7) |
+          ShiftButtonBitForNewSlot(8, 8) | ShiftButtonBitForNewSlot(9, 9);
+      aControllerState.buttonTouched = ShiftButtonBitForNewSlot(1, 0, true) |
+                                       ShiftButtonBitForNewSlot(2, 1, true) |
+                                       ShiftButtonBitForNewSlot(0, 2, true) |
+                                       ShiftButtonBitForNewSlot(5, 3, true) |
+                                       ShiftButtonBitForNewSlot(3, 4, true) |
+                                       ShiftButtonBitForNewSlot(4, 5, true) |
+                                       ShiftButtonBitForNewSlot(6, 6, true) |
+                                       ShiftButtonBitForNewSlot(7, 7, true) |
+                                       ShiftButtonBitForNewSlot(8, 8, true) |
+                                       ShiftButtonBitForNewSlot(9, 9, true);
+      aControllerState.numButtons = 10;
+      aControllerState.numAxes = 4;
+      break;
     case VRControllerType::PicoGaze:
       aControllerState.buttonPressed = ShiftButtonBitForNewSlot(0, 0);
       aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 0, true);
