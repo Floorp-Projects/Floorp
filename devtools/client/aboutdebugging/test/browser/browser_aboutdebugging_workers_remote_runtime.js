@@ -135,7 +135,14 @@ async function testWorkerOnMockedRemoteClient(
   // tab. We assume that if the worker update mechanism had started, it would also be done
   // when the new tab was processed.
   info("Wait until the tab target for 'http://some.random/url.com' appears");
-  const testTab = { outerWindowID: 0, url: "http://some.random/url.com" };
+  const testTab = {
+    getFavicon: () => {},
+    outerWindowID: 0,
+    traits: {
+      getFavicon: true,
+    },
+    url: "http://some.random/url.com",
+  };
   remoteClient.listTabs = () => [testTab];
   remoteClient._eventEmitter.emit("tabListChanged");
   await waitUntil(() =>
