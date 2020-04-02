@@ -13,6 +13,7 @@ const COMPATIBILITY_STATUS = {
   COMPATIBLE: "compatible",
   TOO_OLD: "too-old",
   TOO_OLD_67_DEBUGGER: "too-old-67-debugger",
+  TOO_OLD_FENNEC: "too-old-fennec",
   TOO_RECENT: "too-recent",
 };
 exports.COMPATIBILITY_STATUS = COMPATIBILITY_STATUS;
@@ -122,7 +123,11 @@ function _compareVersionCompatibility(localDescription, deviceDescription) {
 
   let status;
   if (isTooOld) {
-    status = COMPATIBILITY_STATUS.TOO_OLD;
+    if (runtimeMajorVersion === 68 && deviceDescription.os === "Android") {
+      status = COMPATIBILITY_STATUS.TOO_OLD_FENNEC;
+    } else {
+      status = COMPATIBILITY_STATUS.TOO_OLD;
+    }
   } else if (isTooRecent) {
     status = COMPATIBILITY_STATUS.TOO_RECENT;
   } else if (isSameMajorVersion && runtimeDate - localDate > 7 * MS_PER_DAY) {
