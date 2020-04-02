@@ -55,8 +55,7 @@ scripts:
   tdd: =>tddmc
 
   # Utility scripts for use when vendoring in Node packages
-  vendor:
-    react: node ./bin/vendor-react.js
+  vendor: node ./bin/vendor.js
 
   fix:
     # Note that since we're currently running eslint-plugin-prettier,
