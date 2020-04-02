@@ -329,6 +329,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   }
   NS_IMETHOD HTTPUpgrade(const nsACString& aProtocolName,
                          nsIHttpUpgradeListener* aListener) override;
+  void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() override;
 
   // nsISupportsPriority
   NS_IMETHOD GetPriority(int32_t* value) override;
