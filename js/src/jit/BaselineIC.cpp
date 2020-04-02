@@ -99,7 +99,7 @@ void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...) {
 
     JitSpew(
         JitSpew_BaselineICFallback,
-        "Fallback hit for (%s:%u:%u) (pc=%zu,line=%d,uses=%d,stubs=%zu): %s",
+        "Fallback hit for (%s:%u:%u) (pc=%zu,line=%u,uses=%u,stubs=%zu): %s",
         script->filename(), script->lineno(), script->column(),
         script->pcToOffset(pc), PCToLineNumber(script, pc),
         script->getWarmUpCount(), stub->numOptimizedStubs(), fmtbuf);
@@ -120,7 +120,7 @@ void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub,
 
     JitSpew(JitSpew_BaselineICFallback,
             "Type monitor fallback hit for (%s:%u:%u) "
-            "(pc=%zu,line=%d,uses=%d,stubs=%d): %s",
+            "(pc=%zu,line=%u,uses=%u,stubs=%d): %s",
             script->filename(), script->lineno(), script->column(),
             script->pcToOffset(pc), PCToLineNumber(script, pc),
             script->getWarmUpCount(), (int)stub->numOptimizedMonitorStubs(),

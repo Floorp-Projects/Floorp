@@ -596,7 +596,7 @@ bool SnapshotWriter::add(const RValueAllocation& alloc) {
   if (JitSpewEnabled(JitSpew_IonSnapshots)) {
     JitSpewHeader(JitSpew_IonSnapshots);
     Fprinter& out = JitSpewPrinter();
-    out.printf("    slot %u (%d): ", allocWritten_, offset);
+    out.printf("    slot %u (%u): ", allocWritten_, offset);
     alloc.dump(out);
     out.printf("\n");
   }

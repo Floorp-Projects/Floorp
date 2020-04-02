@@ -302,7 +302,7 @@ void CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx) {
     }
   }
   JitSpewStart(
-      JitSpew_Profiling, "    %08zx [+%-6d] => %-6ld [%-4d] {%-10s} (%s:%u:%u",
+      JitSpew_Profiling, "    %08zx [+%-6u] => %-6ld [%-4u] {%-10s} (%s:%u:%u",
       ref.nativeOffset.offset(), nativeDelta, (long)(ref.pc - script->code()),
       pcDelta, CodeName(JSOp(*ref.pc)), script->filename(), script->lineno(),
       script->column());

@@ -2249,7 +2249,7 @@ struct DumpOp {
 
   unsigned int i_;
   void operator()(const Value& v) {
-    fprintf(stderr, "  actual (arg %d): ", i_);
+    fprintf(stderr, "  actual (arg %u): ", i_);
 #if defined(DEBUG) || defined(JS_JITSPEW)
     DumpValue(v);
 #else
@@ -2300,7 +2300,7 @@ void InlineFrameIterator::dump() const {
       } else if (i == 1) {
         fprintf(stderr, "  this: ");
       } else if (i - 2 < calleeTemplate()->nargs()) {
-        fprintf(stderr, "  formal (arg %d): ", i - 2);
+        fprintf(stderr, "  formal (arg %u): ", i - 2);
       } else {
         if (i - 2 == calleeTemplate()->nargs() &&
             numActualArgs() > calleeTemplate()->nargs()) {

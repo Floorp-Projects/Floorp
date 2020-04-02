@@ -1535,7 +1535,7 @@ void MBasicBlock::dumpStack(GenericPrinter& out) {
   out.printf(" %-3s %-16s %-6s %-10s\n", "#", "name", "copyOf", "first/next");
   out.printf("-------------------------------------------\n");
   for (uint32_t i = 0; i < stackPosition_; i++) {
-    out.printf(" %-3d", i);
+    out.printf(" %-3u", i);
     out.printf(" %-16p\n", (void*)slots_[i]);
   }
 #endif

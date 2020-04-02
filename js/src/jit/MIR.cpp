@@ -643,7 +643,7 @@ void MDefinition::dumpLocation(GenericPrinter& out) const {
   while (rp) {
     JSScript* script = rp->block()->info().script();
     uint32_t lineno = PCToLineNumber(rp->block()->info().script(), rp->pc());
-    out.printf("  %s %s:%d\n", linkWord, script->filename(), lineno);
+    out.printf("  %s %s:%u\n", linkWord, script->filename(), lineno);
     rp = rp->caller();
     linkWord = "in";
   }
@@ -5096,14 +5096,14 @@ MDefinition* MLoadSlot::foldsTo(TempAllocator& alloc) {
 #ifdef JS_JITSPEW
 void MLoadSlot::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
-  out.printf(" %d", slot());
+  out.printf(" %u", slot());
 }
 
 void MStoreSlot::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
   out.printf(" ");
   getOperand(0)->printName(out);
-  out.printf(" %d ", slot());
+  out.printf(" %u ", slot());
   getOperand(1)->printName(out);
 }
 #endif

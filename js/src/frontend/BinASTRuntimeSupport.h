@@ -54,7 +54,7 @@ struct BinaryASTSupport {
         fprintf(stderr, "%c", c);
       }
 
-      fprintf(stderr, " (%d)", byteLen_);
+      fprintf(stderr, " (%u)", byteLen_);
     }
 #endif  // DEBUG
 

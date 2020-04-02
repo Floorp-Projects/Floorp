@@ -339,7 +339,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
   SprintfLiteral(buffer,
                  "Zones: %d of %d (-%d); Compartments: %d of %d (-%d); "
                  "HeapSize: %.3f MiB; "
-                 "HeapChange (abs): %+d (%d); ",
+                 "HeapChange (abs): %+d (%u); ",
                  zoneStats.collectedZoneCount, zoneStats.zoneCount,
                  zoneStats.sweptZoneCount, zoneStats.collectedCompartmentCount,
                  zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
