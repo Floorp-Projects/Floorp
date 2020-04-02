@@ -112,16 +112,6 @@ raptor-tp6m-9-fennec68:
             - --app=fennec
             - --binary=org.mozilla.firefox
 
-raptor-tp6m-10-fennec68:
-    description: "Raptor tp6m-10 on Fennec68"
-    try-name: raptor-tp6m-10-fennec68
-    treeherder-symbol: Rap(tp6m-10-f68)
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6m-10-fennec68
-            - --app=fennec
-            - --binary=org.mozilla.firefox
-
 raptor-tp6m-1-fennec68-cold:
     description: "Raptor tp6m-1 cold page-load on Fennec68"
     max-run-time: 3600
