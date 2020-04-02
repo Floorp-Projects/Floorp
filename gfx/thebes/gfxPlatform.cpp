@@ -1216,6 +1216,23 @@ static bool IsFeatureSupported(long aFeature, bool aDefault) {
   }
   return status == nsIGfxInfo::FEATURE_STATUS_OK;
 }
+
+static void ApplyGfxInfoFeature(long aFeature, FeatureState &aFeatureState) {
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCString blockId;
+  int32_t status;
+  if (!NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, blockId, &status))) {
+      aFeatureState.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
+                            NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_GFX_INFO"));
+
+  } else {
+    if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+      aFeatureState.Disable(FeatureStatus::Blacklisted, "Blacklisted by gfxInfo",
+                            blockId);
+    }
+  }
+}
+
 /* static*/
 bool gfxPlatform::IsDXInterop2Blocked() {
   return !IsFeatureSupported(nsIGfxInfo::FEATURE_DX_INTEROP2, false);
@@ -3031,10 +3048,7 @@ void gfxPlatform::InitWebRenderConfig() {
     featureComp.UserForceEnable("Force enabled by pref");
   }
 
-  if (!IsFeatureSupported(nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR, false)) {
-    featureComp.Disable(FeatureStatus::Blacklisted, "Blacklisted",
-                        NS_LITERAL_CSTRING("FEATURE_FAILURE_BLACKLIST"));
-  }
+  ApplyGfxInfoFeature(nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR, featureComp);
 
 #ifdef XP_WIN
   if (!gfxVars::UseWebRenderDCompWin()) {
