@@ -267,6 +267,22 @@ OpKind wasm::Classify(OpBytes op) {
       WASM_REF_OP(OpKind::RefFunc);
     case Op::RefEq:
       WASM_GC_OP(OpKind::Comparison);
+    case Op::GcPrefix: {
+      switch (GcOp(op.b1)) {
+        case GcOp::Limit:
+          // Reject Limit for GcPrefix encoding
+          break;
+        case GcOp::StructNew:
+          WASM_GC_OP(OpKind::StructNew);
+        case GcOp::StructGet:
+          WASM_GC_OP(OpKind::StructGet);
+        case GcOp::StructSet:
+          WASM_GC_OP(OpKind::StructSet);
+        case GcOp::StructNarrow:
+          WASM_GC_OP(OpKind::StructNarrow);
+      }
+      break;
+    }
     case Op::MiscPrefix: {
       switch (MiscOp(op.b1)) {
         case MiscOp::Limit:
@@ -298,14 +314,6 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_REF_OP(OpKind::TableGrow);
         case MiscOp::TableSize:
           WASM_REF_OP(OpKind::TableSize);
-        case MiscOp::StructNew:
-          WASM_GC_OP(OpKind::StructNew);
-        case MiscOp::StructGet:
-          WASM_GC_OP(OpKind::StructGet);
-        case MiscOp::StructSet:
-          WASM_GC_OP(OpKind::StructSet);
-        case MiscOp::StructNarrow:
-          WASM_GC_OP(OpKind::StructNarrow);
       }
       break;
     }

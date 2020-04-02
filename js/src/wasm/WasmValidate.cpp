@@ -842,6 +842,45 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readReturn(&nothings));
       case uint16_t(Op::Unreachable):
         CHECK(iter.readUnreachable());
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew): {
+            if (!env.gcTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            uint32_t unusedUint;
+            NothingVector unusedArgs;
+            CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
+          }
+          case uint32_t(GcOp::StructGet): {
+            if (!env.gcTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            uint32_t unusedUint1, unusedUint2;
+            CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
+          }
+          case uint32_t(GcOp::StructSet): {
+            if (!env.gcTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            uint32_t unusedUint1, unusedUint2;
+            CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
+                                     &nothing));
+          }
+          case uint32_t(GcOp::StructNarrow): {
+            if (!env.gcTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            ValType unusedTy, unusedTy2;
+            CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
+          }
+          default:
+            return iter.unrecognizedOpcode(&op);
+        }
+        break;
+      }
+#endif
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
           case uint32_t(MiscOp::I32TruncSSatF32):
@@ -958,38 +997,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableSize(&unusedTableIndex));
-          }
-#endif
-#ifdef ENABLE_WASM_GC
-          case uint32_t(MiscOp::StructNew): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
-            uint32_t unusedUint;
-            NothingVector unusedArgs;
-            CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
-          }
-          case uint32_t(MiscOp::StructGet): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
-            uint32_t unusedUint1, unusedUint2;
-            CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
-          }
-          case uint32_t(MiscOp::StructSet): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
-            uint32_t unusedUint1, unusedUint2;
-            CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
-                                     &nothing));
-          }
-          case uint32_t(MiscOp::StructNarrow): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
-            ValType unusedTy, unusedTy2;
-            CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
           }
 #endif
           default:
