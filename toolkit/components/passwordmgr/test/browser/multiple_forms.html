@@ -122,8 +122,19 @@
     <input id='test-password-14' type='password' name='pname' expectedFail>
 </div>
 
+<form class="test-form"
+      description="Simple username and password blank form with the password field unmasked by JS">
+    <input id='test-username-15' type='text'     name='uname' value=''>
+    <input id='test-password-15' type='password' name='pname' value='' data-type="password">
+    <button type='submit'>Submit</button>
+</form>
+
+
 <!-- Form in an iframe -->
 <iframe src="https://example.org/browser/toolkit/components/passwordmgr/test/browser/form_basic.html" id="test-iframe"></iframe>
 
+<script>
+  document.getElementById("test-password-15").type = "text";
+</script>
 </body>
 </html>
