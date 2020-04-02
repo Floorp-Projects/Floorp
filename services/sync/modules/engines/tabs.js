@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ["TabEngine", "TabSetRecord"];
 
-const TABS_TTL = 1814400; // 21 days.
+const TABS_TTL = 31622400; // 366 days (1 leap year).
 const TAB_ENTRIES_LIMIT = 5; // How many URLs to include in tab history.
 
 const { XPCOMUtils } = ChromeUtils.import(
