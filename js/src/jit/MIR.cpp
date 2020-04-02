@@ -1077,10 +1077,10 @@ void MConstant::printOpcode(GenericPrinter& out) const {
       out.printf(toBoolean() ? "true" : "false");
       break;
     case MIRType::Int32:
-      out.printf("0x%x", toInt32());
+      out.printf("0x%x", uint32_t(toInt32()));
       break;
     case MIRType::Int64:
-      out.printf("0x%" PRIx64, toInt64());
+      out.printf("0x%" PRIx64, uint64_t(toInt64()));
       break;
     case MIRType::Double:
       out.printf("%.16g", toDouble());

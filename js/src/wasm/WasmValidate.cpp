@@ -1604,7 +1604,7 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
 
   if (flags & ~uint8_t(mask)) {
     return d.failf("unexpected bits set in flags: %" PRIu32,
-                   (flags & ~uint8_t(mask)));
+                   uint32_t(flags & ~uint8_t(mask)));
   }
 
   if (!d.readVarU32(&limits->initial)) {

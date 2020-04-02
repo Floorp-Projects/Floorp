@@ -2072,7 +2072,7 @@ void Shape::dump(js::GenericPrinter& out) const {
   out.printf(" g/s %p/%p slot %d attrs %x ",
              JS_FUNC_TO_DATA_PTR(void*, getter()),
              JS_FUNC_TO_DATA_PTR(void*, setter()),
-             isDataProperty() ? slot() : -1, attrs);
+             isDataProperty() ? int32_t(slot()) : -1, attrs);
 
   if (attrs) {
     int first = 1;
