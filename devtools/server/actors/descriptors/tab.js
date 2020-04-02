@@ -153,11 +153,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       return;
     }
 
-    // This function may be called if we are inspecting tabs and the actor proxy
-    // has already been generated. In that case we need to unzombify tabs.
-    // If we are not inspecting tabs then this will be a no-op.
-    await this._unzombifyIfNeeded();
-
     const form = await new Promise((resolve, reject) => {
       this._formUpdateReject = reject;
       const onFormUpdate = msg => {
@@ -232,7 +227,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   },
 
   async _unzombifyIfNeeded() {
-    if (!this.options.forceUnzombify || !this._isZombieTab()) {
+    if (!this._isZombieTab()) {
       return;
     }
 
