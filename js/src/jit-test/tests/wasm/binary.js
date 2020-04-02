@@ -245,6 +245,24 @@ function checkIllegalPrefixed(prefix, opcode) {
     assertEq(WebAssembly.validate(binary), false);
 }
 
+// Illegal GcPrefix opcodes
+
+let reservedGc = {};
+if (wasmGcEnabled()) {
+    reservedGc = {
+        0x0: true,
+        0x3: true,
+        0x6: true,
+        0x7: true
+    };
+}
+for (let i = 0; i < 256; i++) {
+    if (reservedGc.hasOwnProperty(i)) {
+        continue;
+    }
+    checkIllegalPrefixed(GcPrefix, i);
+}
+
 // Illegal ThreadPrefix opcodes
 //
 // June 2017 threads draft:

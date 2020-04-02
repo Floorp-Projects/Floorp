@@ -4,8 +4,6 @@ var conf = getBuildConfiguration();
 
 var bin = wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 3)
-
       (table 2 funcref)
       (elem (i32.const 0) $doit $doitagain)
 
@@ -226,10 +224,9 @@ assertEq(withfloats._4, 0x1337);
 
 var stress = wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 3)
-      (type $node (struct (field i32) (field (ref $node))))
+      (type $node (struct (field i32) (field (ref opt $node))))
       (func (export "iota1") (param $n i32) (result anyref)
-       (local $list (ref $node))
+       (local $list (ref opt $node))
        (block $exit
         (loop $loop
          (br_if $exit (i32.eqz (local.get $n)))
@@ -254,29 +251,27 @@ assertEq(the_list, null);
 {
     let txt =
         `(module
-          (gc_feature_opt_in 3)
-
           (type $big (struct
                       (field (mut i32))
                       (field (mut i64))
                       (field (mut i32))))
 
           (func (export "set") (param anyref)
-           (local (ref $big))
-           (local.set 1 (struct.narrow anyref (ref $big) (local.get 0)))
+           (local (ref opt $big))
+           (local.set 1 (struct.narrow anyref (ref opt $big) (local.get 0)))
            (struct.set $big 1 (local.get 1) (i64.const 0x3333333376544567)))
 
           (func (export "set2") (param $p anyref)
            (struct.set $big 1
-            (struct.narrow anyref (ref $big) (local.get $p))
+            (struct.narrow anyref (ref opt $big) (local.get $p))
             (i64.const 0x3141592653589793)))
 
           (func (export "low") (param $p anyref) (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (struct.narrow anyref (ref $big) (local.get $p)))))
+           (i32.wrap/i64 (struct.get $big 1 (struct.narrow anyref (ref opt $big) (local.get $p)))))
 
           (func (export "high") (param $p anyref) (result i32)
            (i32.wrap/i64 (i64.shr_u
-                          (struct.get $big 1 (struct.narrow anyref (ref $big) (local.get $p)))
+                          (struct.get $big 1 (struct.narrow anyref (ref opt $big) (local.get $p)))
                           (i64.const 32))))
 
           (func (export "mk") (result anyref)
@@ -314,14 +309,12 @@ assertEq(the_list, null);
 {
     let txt =
         `(module
-          (gc_feature_opt_in 3)
-
           (type $big (struct
                       (field (mut i32))
                       (field (mut i64))
                       (field (mut i32))))
 
-          (global $g (mut (ref $big)) (ref.null))
+          (global $g (mut (ref opt $big)) (ref.null))
 
           (func (export "make") (result anyref)
            (global.set $g
@@ -389,11 +382,9 @@ assertEq(the_list, null);
 
 var bin = wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 3)
+      (type $cons (struct (field i32) (field (ref opt $cons))))
 
-      (type $cons (struct (field i32) (field (ref $cons))))
-
-      (global $g (mut (ref $cons)) (ref.null))
+      (global $g (mut (ref opt $cons)) (ref.null))
 
       (func (export "push") (param i32)
        (global.set $g (struct.new $cons (local.get 0) (global.get $g))))
@@ -432,12 +423,11 @@ assertErrorMessage(() => ins.pop(),
 {
     var ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 3)
           (type $Node (struct (field i32)))
           (func (export "mk") (result anyref)
            (struct.new $Node (i32.const 37)))
           (func (export "f") (param $n anyref) (result anyref)
-           (struct.narrow anyref (ref $Node) (local.get $n))))`).exports;
+           (struct.narrow anyref (ref opt $Node) (local.get $n))))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
     assertEq(ins.f(wrapWithProto(n, {})), null);
@@ -450,16 +440,14 @@ assertErrorMessage(() => ins.pop(),
 {
     let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 3)
-
           (type $s (struct
                     (field $x i32)
                     (field $y i32)))
 
-          (func $f (param $p (ref $s)) (result i32)
+          (func $f (param $p (ref opt $s)) (result i32)
            (struct.get $s $x (local.get $p)))
 
-          (func $g (param $p (ref $s)) (result i32)
+          (func $g (param $p (ref opt $s)) (result i32)
            (struct.get $s $y (local.get $p)))
 
           (func (export "testf") (param $n i32) (result i32)
@@ -478,8 +466,6 @@ assertErrorMessage(() => ins.pop(),
 
 assertErrorMessage(() => wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 3)
-
       (type $s (struct (field $x i32)))
       (type $t (struct (field $x i32)))
      )`),
@@ -492,7 +478,6 @@ assertErrorMessage(() => wasmTextToBinary(
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
-  (gc_feature_opt_in 3)
   (type $r (struct (field i32)))
   (func $f (param f64) (result anyref)
     (struct.new $r (local.get 0)))
@@ -503,7 +488,6 @@ WebAssembly.CompileError, /type mismatch/);
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
-  (gc_feature_opt_in 3)
   (type $r (struct (field i32) (field i32)))
   (func $f (result anyref)
     (struct.new $r (i32.const 0)))
@@ -514,7 +498,6 @@ WebAssembly.CompileError, /popping value from empty stack/);
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
-  (gc_feature_opt_in 3)
   (type $r (struct (field i32) (field i32)))
   (func $f (result anyref)
     (i32.const 0)
@@ -528,7 +511,6 @@ WebAssembly.CompileError, /unused values/);
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
-  (gc_feature_opt_in 3)
   (type (func (param i32) (result i32)))
   (func $f (result anyref)
     (struct.new 0))
@@ -540,10 +522,9 @@ WebAssembly.CompileError, /not a struct type/);
 
 wasmEvalText(`
  (module
-   (gc_feature_opt_in 3)
    (type $p (struct (field i32)))
    (type $q (struct (field i32)))
-   (func $f (result (ref $p))
+   (func $f (result (ref opt $p))
     (struct.new $q (i32.const 0))))
 `);
 
@@ -551,7 +532,6 @@ wasmEvalText(`
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct (field i32))))
 `)
 
@@ -559,7 +539,6 @@ wasmEvalText(`
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct)))
 `)
 
@@ -567,7 +546,6 @@ wasmEvalText(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct (field $x i32)))
  (type $s (struct (field $y i32))))
 `),
@@ -577,35 +555,30 @@ SyntaxError, /duplicate type identifier/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s))
 `),
 SyntaxError, /wasm text error/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (field $x i32)))
 `),
-SyntaxError, /expected `func` or `struct`/);
+SyntaxError, /expected one of: `func`, `struct`, `array`/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct (field $x i31))))
 `),
 SyntaxError, /wasm text error/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct (fjeld $x i32))))
 `),
 SyntaxError, /wasm text error/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct abracadabra)))
 `),
 SyntaxError, /wasm text error/);
@@ -614,7 +587,6 @@ SyntaxError, /wasm text error/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 3)
  (type $s (struct))
  (type $f (func (param i32) (result i32)))
  (func (type 0) (param i32) (result i32) (unreachable)))
@@ -626,7 +598,6 @@ WebAssembly.CompileError, /signature index references non-signature/);
 {
     let ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 3)
           (type $s (struct
                     (field i32)
                     (field (mut i64))))
@@ -649,14 +620,10 @@ WebAssembly.CompileError, /signature index references non-signature/);
 var bad = new Uint8Array([0x00, 0x61, 0x73, 0x6d,
                           0x01, 0x00, 0x00, 0x00,
 
-                          0x2a,                   // GcFeatureOptIn section
-                          0x01,                   // Section size
-                          0x03,                   // Version
-
                           0x01,                   // Type section
                           0x03,                   // Section size
                           0x01,                   // One type
-                          0x50,                   // Struct
+                          0x5f,                   // Struct
                           0x00,                   // Zero fields
 
                           0x03,                   // Function section

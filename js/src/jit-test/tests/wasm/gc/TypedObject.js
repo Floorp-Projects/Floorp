@@ -4,8 +4,6 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 3)
-
                              (type $p (struct (field f64) (field (mut i32))))
 
                              (func (export "mkp") (result anyref)
@@ -24,8 +22,6 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 3)
-
                              (type $p (struct (field f64)))
 
                              (func (export "mkp") (result anyref)
@@ -44,10 +40,8 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 3)
-
                              (type $q (struct (field (mut f64))))
-                             (type $p (struct (field (mut (ref $q)))))
+                             (type $p (struct (field (mut (ref opt $q)))))
 
                              (type $r (struct (field (mut anyref))))
 
@@ -74,10 +68,8 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 3)
-
                              (type $q (struct (field (mut f64))))
-                             (type $p (struct (field (mut (ref $q))) (field (mut anyref))))
+                             (type $p (struct (field (mut (ref opt $q))) (field (mut anyref))))
 
                              (func (export "mkq") (result anyref)
                               (struct.new $q (f64.const 1.5)))
@@ -104,7 +96,6 @@
 
 {
     let ins = wasmEvalText(`(module
-                             (gc_feature_opt_in 3)
                              (type $p (struct (field (mut i64))))
                              (func (export "mkp") (result anyref)
                               (struct.new $p (i64.const 0x1234567887654321))))`).exports;
@@ -133,13 +124,12 @@
 {
     let ins = wasmEvalText(
         `(module
-          (gc_feature_opt_in 3)
           (type $p (struct (field i64)))
           (type $q (struct (field i32) (field i32)))
           (func $f (param anyref) (result i32)
-           (ref.is_null (struct.narrow anyref (ref $q) (local.get 0))))
+           (ref.is_null (struct.narrow anyref (ref opt $q) (local.get 0))))
           (func $g (param anyref) (result i32)
-           (ref.is_null (struct.narrow anyref (ref $p) (local.get 0))))
+           (ref.is_null (struct.narrow anyref (ref opt $p) (local.get 0))))
           (func (export "t1") (result i32)
            (call $f (struct.new $p (i64.const 0))))
           (func (export "t2") (result i32)

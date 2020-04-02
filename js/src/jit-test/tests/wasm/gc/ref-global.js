@@ -6,15 +6,13 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 3)
-
           (type $point (struct
                         (field $x f64)
                         (field $y f64)))
 
-          (global $g1 (mut (ref $point)) (ref.null))
-          (global $g2 (mut (ref $point)) (ref.null))
-          (global $g3 (ref $point) (ref.null))
+          (global $g1 (mut (ref opt $point)) (ref.null))
+          (global $g2 (mut (ref opt $point)) (ref.null))
+          (global $g3 (ref opt $point) (ref.null))
 
           ;; Restriction: cannot expose Refs outside the module, not even
           ;; as a return value.  See ref-restrict.js.
@@ -42,13 +40,11 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 3)
-
           (type $point (struct
                         (field $x f64)
                         (field $y f64)))
 
-          (global $glob (mut (ref $point)) (ref.null))
+          (global $glob (mut (ref opt $point)) (ref.null))
 
           (func (export "init")
            (global.set $glob (struct.new $point (f64.const 0.5) (f64.const 2.75))))
@@ -87,7 +83,6 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 3)
           (import "" "g" (global $g anyref))
           (global $glob anyref (global.get $g))
           (func (export "get") (result anyref)
@@ -105,9 +100,8 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 3)
           (type $box (struct (field $val i32)))
-          (import "m" "g" (global (mut (ref $box)))))`);
+          (import "m" "g" (global (mut (ref opt $box)))))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
                        /cannot expose indexed reference type/);
@@ -120,9 +114,8 @@
 {
     let bin = wasmTextToBinary(
         `(module
-          (gc_feature_opt_in 3)
           (type $box (struct (field $val i32)))
-          (global $boxg (export "box") (mut (ref $box)) (ref.null)))`);
+          (global $boxg (export "box") (mut (ref opt $box)) (ref.null)))`);
 
     assertErrorMessage(() => new WebAssembly.Module(bin), WebAssembly.CompileError,
                        /cannot expose indexed reference type/);

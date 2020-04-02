@@ -25,7 +25,6 @@ const elemId           = 9;
 const codeId           = 10;
 const dataId           = 11;
 const dataCountId      = 12;
-const gcFeatureOptInId = 42;
 
 // User-defined section names
 const nameName         = "name";
@@ -42,7 +41,7 @@ const F32Code          = 0x7d;
 const F64Code          = 0x7c;
 const AnyFuncCode      = 0x70;
 const AnyrefCode       = 0x6f;
-const RefCode          = 0x6d;
+const OptRefCode       = 0x6c;
 const FuncCode         = 0x60;
 const VoidCode         = 0x40;
 
@@ -104,7 +103,8 @@ const RefIsNullCode    = 0xd1;
 const RefFuncCode      = 0xd2;
 
 const FirstInvalidOpcode = 0xc5;
-const LastInvalidOpcode = 0xfb;
+const LastInvalidOpcode = 0xfa;
+const GcPrefix = 0xfb;
 const MiscPrefix = 0xfc;
 const SimdPrefix = 0xfd;
 const ThreadPrefix = 0xfe;
@@ -167,10 +167,10 @@ const TableInitCode = 0x0c;     // Pending
 const ElemDropCode = 0x0d;      // Pending
 const TableCopyCode = 0x0e;     // Pending
 
-const StructNew = 0x50;         // UNOFFICIAL
-const StructGet = 0x51;         // UNOFFICIAL
-const StructSet = 0x52;         // UNOFFICIAL
-const StructNarrow = 0x53;      // UNOFFICIAL
+const StructNew = 0x00;         // UNOFFICIAL
+const StructGet = 0x03;         // UNOFFICIAL
+const StructSet = 0x06;         // UNOFFICIAL
+const StructNarrow = 0x07;      // UNOFFICIAL
 
 // DefinitionKind
 const FunctionCode     = 0x00;
@@ -242,10 +242,6 @@ function moduleWithSections(sectionArray) {
         bytes.push(...section.body);
     }
     return toU8(bytes);
-}
-
-function gcFeatureOptInSection(version) {
-    return { name: gcFeatureOptInId, body: [ version & 0x7F ] }
 }
 
 function sigSection(sigs) {
