@@ -61,6 +61,7 @@ permalink: /changelog/
 * **feature-session**
   * `SwipeRefreshLayout` will now trigger pull down to refresh only if the website is scrolled to top and it itself did not consume the swype event.
   * See above changes to browser-engine-*, concept-engine.
+  * Added androidx_swiperefreshlayout as a dependency because google_materials dependency was incremented to version 1.1.0 which no longer includes SwipeRefreshLayout
 
 * **lib-crash**
   * ⚠️ **This is a breaking change**: added `support-base` dependency.
