@@ -2038,6 +2038,7 @@ fuzzy-if(webrender,0-129,0-48) == 1406179.html 1406179-ref.html
 == 1410028.html 1410028-ref.html
 fuzzy-if(!(webrender&&(gtkWidget||geckoview)),1-2,17500-17500) == 1412375.html 1412375-ref.html
 test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
+fuzzy(0-255,0-4054) == 1415987-1.html 1415987-1-ref.html # this is a large fuzz, without the fix the test fails in the range 246-255,3237-25110, which overlaps the fuzz range, but would still catch regressing this bug some of the time which is better than not having a test.
 == 1419820-1.html 1419820-1-ref.html
 == 1420946-1.html 1420946-1-ref.html
 == 1422393.html 1422393-ref.html
