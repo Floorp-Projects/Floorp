@@ -268,12 +268,13 @@ function newElement(aTagName, aClassName) {
 const explicitTreeDescription =
   "This tree covers explicit memory allocations by the application.  It includes \
 \n\n\
-* allocations made at the operating system level (via calls to functions such as \
-VirtualAlloc, vm_allocate, and mmap), \
-\n\n\
-* allocations made at the heap allocation level (via functions such as malloc, \
+* all allocations made at the heap allocation level (via functions such as malloc, \
 calloc, realloc, memalign, operator new, and operator new[]) that have not been \
 explicitly decommitted (i.e. evicted from memory and swap), and \
+\n\n\
+* some allocations (those covered by memory reporters) made at the operating \
+system level (via calls to functions such as VirtualAlloc, vm_allocate, and \
+mmap), \
 \n\n\
 * where possible, the overhead of the heap allocator itself.\
 \n\n\
