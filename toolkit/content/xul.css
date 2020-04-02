@@ -112,6 +112,7 @@ label.text-link, label[onclick] {
 
 label html|span.accesskey {
   text-decoration: underline;
+  text-decoration-skip-ink: none;
 }
 
 /********** toolbarbutton **********/
