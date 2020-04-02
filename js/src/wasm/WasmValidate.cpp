@@ -1373,6 +1373,11 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 
   StructMetaTypeDescr::Layout layout;
   for (uint32_t i = 0; i < numFields; i++) {
+    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
+                       env->gcTypesEnabled(), &fields[i].type)) {
+      return false;
+    }
+
     uint8_t flags;
     if (!d.readFixedU8(&flags)) {
       return d.fail("expected flag");
@@ -1381,10 +1386,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
       return d.fail("garbage flag bits");
     }
     fields[i].isMutable = flags & uint8_t(FieldFlags::Mutable);
-    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
-                       env->gcTypesEnabled(), &fields[i].type)) {
-      return false;
-    }
+
     if (!ValidateTypeState(d, typeState, fields[i].type)) {
       return false;
     }
