@@ -35,7 +35,7 @@ use crate::picture::{RetainedTiles, TileCacheLogger};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use crate::prim_store::interned::*;
-use crate::profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
+use crate::profiler::{BackendProfileCounters, ResourceProfileCounters};
 use crate::record::ApiRecordingReceiver;
 use crate::record::LogRecorder;
 use crate::render_task_graph::RenderTaskGraphCounters;
@@ -786,7 +786,6 @@ impl RenderBackend {
         message: SceneMsg,
         frame_counter: u32,
         txn: &mut Transaction,
-        ipc_profile_counters: &mut IpcProfileCounters,
     ) {
         let doc = self.documents.get_mut(&document_id).expect("No document?");
 
@@ -845,9 +844,8 @@ impl RenderBackend {
                 }
 
                 let display_list_len = built_display_list.data().len();
-                let (builder_start_time, builder_finish_time, send_start_time) =
+                let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
                     built_display_list.times();
-                let display_list_received_time = precise_time_ns();
 
                 txn.display_list_updates.push(DisplayListUpdate {
                     built_display_list,
@@ -856,15 +854,16 @@ impl RenderBackend {
                     background,
                     viewport_size,
                     content_size,
+                    timings: TransactionTimings {
+                        builder_start_time_ns,
+                        builder_end_time_ns,
+                        send_time_ns,
+                        scene_build_start_time_ns: 0,
+                        scene_build_end_time_ns: 0,
+                        blob_rasterization_end_time_ns: 0,
+                        display_list_len,
+                    },
                 });
-
-                ipc_profile_counters.set(
-                    builder_start_time,
-                    builder_finish_time,
-                    send_start_time,
-                    display_list_received_time,
-                    display_list_len,
-                );
             }
             SceneMsg::SetRootPipeline(pipeline_id) => {
                 profile_scope!("SetRootPipeline");
@@ -911,11 +910,19 @@ impl RenderBackend {
                         for mut txn in txns.drain(..) {
                             let has_built_scene = txn.built_scene.is_some();
 
-                            if has_built_scene {
-                                let scene_build_time =
-                                    txn.scene_build_end_time - txn.scene_build_start_time;
-                                profile_counters.scene_build_time.set(scene_build_time);
-                                profile_counters.scene_changed = true;
+                            if let Some(timings) = txn.timings {
+                                if has_built_scene {
+                                    profile_counters.scene_changed = true;
+                                }
+
+                                profile_counters.ipc.set(
+                                    timings.builder_start_time_ns,
+                                    timings.builder_end_time_ns,
+                                    timings.send_time_ns,
+                                    timings.scene_build_start_time_ns,
+                                    timings.scene_build_end_time_ns,
+                                    timings.display_list_len,
+                                );
                             }
 
                             if let Some(doc) = self.documents.get_mut(&txn.document_id) {
@@ -1397,7 +1404,6 @@ impl RenderBackend {
                         scene_msg,
                         *frame_counter,
                         &mut txn,
-                        &mut profile_counters.ipc,
                     )
                 }
 
