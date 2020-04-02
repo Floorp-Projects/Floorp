@@ -714,6 +714,18 @@ var dataProviders = {
     done(data);
   },
 
+  startupCache: function startupCache(done) {
+    const startupInfo = Cc["@mozilla.org/startupcacheinfo;1"].getService(
+      Ci.nsIStartupCacheInfo
+    );
+    done({
+      DiskCachePath: startupInfo.DiskCachePath,
+      IgnoreDiskCache: startupInfo.IgnoreDiskCache,
+      FoundDiskCacheOnInit: startupInfo.FoundDiskCacheOnInit,
+      WroteToDiskCache: startupInfo.WroteToDiskCache,
+    });
+  },
+
   libraryVersions: function libraryVersions(done) {
     let data = {};
     let verInfo = Cc["@mozilla.org/security/nssversion;1"].getService(
