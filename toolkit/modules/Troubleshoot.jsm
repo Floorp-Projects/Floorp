@@ -714,12 +714,6 @@ var dataProviders = {
     done(data);
   },
 
-  startupCache: function startupCache(done) {
-    done(
-      Cc["@mozilla.org/startupcacheinfo;1"].getService(Ci.nsIStartupCacheInfo)
-    );
-  },
-
   libraryVersions: function libraryVersions(done) {
     let data = {};
     let verInfo = Cc["@mozilla.org/security/nssversion;1"].getService(

@@ -300,12 +300,6 @@ sandbox-proc-type-file = file content
 sandbox-proc-type-media-plugin = media plugin
 sandbox-proc-type-data-decoder = data decoder
 
-startup-cache-title = Startup Cache
-startup-cache-disk-cache-path = Disk Cache Path
-startup-cache-ignore-disk-cache = Ignore Disk Cache
-startup-cache-found-disk-cache-on-init = Found Disk Cache on Init
-startup-cache-wrote-to-disk-cache = Wrote to Disk Cache
-
 launcher-process-status-0 = Enabled
 launcher-process-status-1 = Disabled due to failure
 launcher-process-status-2 = Disabled forcibly
