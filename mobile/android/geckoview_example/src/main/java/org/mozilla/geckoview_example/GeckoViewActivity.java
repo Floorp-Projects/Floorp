@@ -389,6 +389,7 @@ public class GeckoViewActivity
     private boolean mDesktopMode;
     private TabSession mPopupSession;
     private View mPopupView;
+    private int mPreferredColorScheme;
 
     private boolean mShowNotificationsRejected;
     private ArrayList<String> mAcceptedPersistentStorage = new ArrayList<String>();
@@ -436,6 +437,9 @@ public class GeckoViewActivity
                 getString(R.string.key_tracking_protection), true);
         boolean autoplay = preferences.getBoolean(
                 getString(R.string.key_autoplay), false);
+        int colorScheme = Integer.parseInt(preferences.getString(
+                getString(R.string.key_preferred_color_scheme),
+                Integer.toString(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)));
 
         if (mEnableRemoteDebugging != remoteDebugging) {
             if (sGeckoRuntime != null) {
@@ -462,6 +466,16 @@ public class GeckoViewActivity
                 currentSession.reload();
             }
             mAllowAutoplay = autoplay;
+        }
+
+        if (mPreferredColorScheme != colorScheme) {
+            if (sGeckoRuntime != null) {
+                sGeckoRuntime.getSettings().setPreferredColorScheme(colorScheme);
+            }
+            mPreferredColorScheme = colorScheme;
+            if (currentSession != null) {
+                currentSession.reload();
+            }
         }
     }
 
@@ -523,6 +537,7 @@ public class GeckoViewActivity
                         .enhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.DEFAULT)
                         .build())
                     .crashHandler(ExampleCrashHandler.class)
+                    .preferredColorScheme(mPreferredColorScheme)
                     .telemetryDelegate(new ExampleTelemetryDelegate())
                     .aboutConfigEnabled(true);
 
