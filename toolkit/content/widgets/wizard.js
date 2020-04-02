@@ -425,47 +425,47 @@
     }
 
     _adjustWizardHeader() {
-      if (document.l10n) {
-        this._adjustFluentHeaders();
-        return;
-      }
-      var label = this.currentPage.getAttribute("label");
-      if (!label && this.onFirstPage && this._bundle) {
-        if (AppConstants.platform == "macosx") {
-          label = this._bundle.GetStringFromName("default-first-title-mac");
-        } else {
-          label = this._bundle.formatStringFromName("default-first-title", [
-            this.title,
-          ]);
-        }
-      } else if (!label && this.onLastPage && this._bundle) {
-        if (AppConstants.platform == "macosx") {
-          label = this._bundle.GetStringFromName("default-last-title-mac");
-        } else {
-          label = this._bundle.formatStringFromName("default-last-title", [
-            this.title,
-          ]);
-        }
-      }
-      this._wizardHeader.querySelector(
+      let labelElement = this._wizardHeader.querySelector(
         ".wizard-header-label"
-      ).textContent = label;
+      );
+      // First deal with fluent. Ideally, we'd stop supporting anything else,
+      // but right now the migration wizard still uses non-fluent l10n
+      // (fixing is bug 1518234), as do some comm-central consumers
+      // (bug 1627049). Removing the DTD support is bug 1627051.
+      if (this.currentPage.hasAttribute("data-header-label-id")) {
+        let id = this.currentPage.getAttribute("data-header-label-id");
+        document.l10n.setAttributes(labelElement, id);
+      } else {
+        // Otherwise, make sure we remove any fluent IDs leftover:
+        if (labelElement.hasAttribute("data-l10n-id")) {
+          labelElement.removeAttribute("data-l10n-id");
+        }
+        // And use the label attribute or the default:
+        var label = this.currentPage.getAttribute("label") || "";
+        if (!label && this.onFirstPage && this._bundle) {
+          if (AppConstants.platform == "macosx") {
+            label = this._bundle.GetStringFromName("default-first-title-mac");
+          } else {
+            label = this._bundle.formatStringFromName("default-first-title", [
+              this.title,
+            ]);
+          }
+        } else if (!label && this.onLastPage && this._bundle) {
+          if (AppConstants.platform == "macosx") {
+            label = this._bundle.GetStringFromName("default-last-title-mac");
+          } else {
+            label = this._bundle.formatStringFromName("default-last-title", [
+              this.title,
+            ]);
+          }
+        }
+        labelElement.textContent = label;
+      }
       let headerDescEl = this._wizardHeader.querySelector(
         ".wizard-header-description"
       );
       if (headerDescEl) {
         headerDescEl.textContent = this.currentPage.getAttribute("description");
-      }
-    }
-
-    _adjustFluentHeaders() {
-      let value = this.currentPage.getAttribute("data-header-label-id");
-      let label = this._wizardHeader.querySelector(".wizard-header-label");
-      if (value) {
-        document.l10n.setAttributes(label, value);
-      } else {
-        label.removeAttribute("data-l10n-id");
-        label.textContent = "";
       }
     }
 
