@@ -545,3 +545,62 @@ async function testToggleHelper(browser, videoID, canToggle, policy) {
   await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
   await assertSawMouseEvents(browser, true);
 }
+
+/**
+ * Helper function that ensures that a provided async function
+ * causes a window to fully enter fullscreen mode.
+ *
+ * @param window (DOM Window)
+ *   The window that is expected to enter fullscreen mode.
+ * @param asyncFn (Async Function)
+ *   The async function to run to trigger the fullscreen switch.
+ * @return Promise
+ * @resolves When the fullscreen entering transition completes.
+ */
+async function promiseFullscreenEntered(window, asyncFn) {
+  let entered = BrowserTestUtils.waitForEvent(
+    window,
+    "MozDOMFullscreen:Entered"
+  );
+
+  await asyncFn();
+
+  await entered;
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return !TelemetryStopwatch.running("FULLSCREEN_CHANGE_MS");
+  });
+}
+
+/**
+ * Helper function that ensures that a provided async function
+ * causes a window to fully exit fullscreen mode.
+ *
+ * @param window (DOM Window)
+ *   The window that is expected to exit fullscreen mode.
+ * @param asyncFn (Async Function)
+ *   The async function to run to trigger the fullscreen switch.
+ * @return Promise
+ * @resolves When the fullscreen exiting transition completes.
+ */
+async function promiseFullscreenExited(window, asyncFn) {
+  let exited = BrowserTestUtils.waitForEvent(window, "MozDOMFullscreen:Exited");
+
+  await asyncFn();
+
+  await exited;
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return !TelemetryStopwatch.running("FULLSCREEN_CHANGE_MS");
+  });
+
+  if (AppConstants.platform == "macosx") {
+    // On macOS, the fullscreen transition takes some extra time
+    // to complete, and we don't receive events for it. We need to
+    // wait for it to complete or else input events in the next test
+    // might get eaten up. This is the best we can currently do.
+    //
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+}
