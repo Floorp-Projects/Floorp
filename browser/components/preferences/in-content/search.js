@@ -688,9 +688,9 @@ EngineStore.prototype = {
       throw new Error("invalid engine?");
     }
 
-    let removedEngine = this._engines.splice(index, 1)[0];
+    this._engines.splice(index, 1)[0];
 
-    if (this._defaultEngines.some(this._isSameEngine, removedEngine)) {
+    if (aEngine.isAppProvided) {
       gSearchPane.showRestoreDefaults(true);
     }
     gSearchPane.buildDefaultEngineDropDowns();

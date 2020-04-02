@@ -4107,12 +4107,10 @@ const BrowserSearch = {
       throw new Error("Expected an engineName to be specified");
     }
 
-    let defaultEngines = await Services.search.getDefaultEngines();
+    const engine = Services.search.getEngineByName(engineName);
     const prefName =
       "browser.urlbar.placeholderName" + (isPrivate ? ".private" : "");
-    if (
-      defaultEngines.some(defaultEngine => defaultEngine.name == engineName)
-    ) {
+    if (engine.isAppProvided) {
       Services.prefs.setStringPref(prefName, engineName);
     } else {
       Services.prefs.clearUserPref(prefName);
