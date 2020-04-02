@@ -7,18 +7,19 @@
 
 extern crate coreaudio_sys_utils;
 extern crate libc;
+extern crate ringbuf;
 
 mod aggregate_device;
-mod auto_array;
 mod auto_release;
+mod buffer_manager;
 mod device_property;
 mod mixer;
 mod resampler;
 mod utils;
 
 use self::aggregate_device::*;
-use self::auto_array::*;
 use self::auto_release::*;
+use self::buffer_manager::*;
 use self::coreaudio_sys_utils::aggregate_device::*;
 use self::coreaudio_sys_utils::audio_object::*;
 use self::coreaudio_sys_utils::audio_unit::*;
@@ -45,7 +46,6 @@ use std::slice;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
-
 const NO_ERR: OSStatus = 0;
 
 const AU_OUT_BUS: AudioUnitElement = 0;
@@ -264,36 +264,6 @@ fn create_stream_description(stream_params: &StreamParams) -> Result<AudioStream
     Ok(desc)
 }
 
-fn create_auto_array(
-    desc: AudioStreamBasicDescription,
-    latency_frames: u32,
-    capacity: usize,
-) -> Result<Box<dyn AutoArrayWrapper>> {
-    assert_ne!(desc.mFormatFlags, 0);
-    assert_ne!(desc.mChannelsPerFrame, 0);
-    assert_ne!(latency_frames, 0);
-    assert!(!contains_bits(
-        desc.mFormatFlags,
-        kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsFloat
-    ));
-
-    let size = (latency_frames * desc.mChannelsPerFrame) as usize * capacity;
-
-    if desc.mFormatFlags & kAudioFormatFlagIsSignedInteger != 0 {
-        return Ok(Box::new(AutoArrayImpl::<i16>::new(size)));
-    }
-
-    if desc.mFormatFlags & kAudioFormatFlagIsFloat != 0 {
-        return Ok(Box::new(AutoArrayImpl::<f32>::new(size)));
-    }
-
-    fn contains_bits(mask: AudioFormatFlags, bits: AudioFormatFlags) -> bool {
-        mask & bits == bits
-    }
-
-    Err(Error::invalid_format())
-}
-
 fn set_volume(unit: AudioUnit, volume: f32) -> Result<()> {
     assert!(!unit.is_null());
     let r = audio_unit_set_parameter(
@@ -385,6 +355,7 @@ extern "C" fn audiounit_input_callback(
                    bus: u32,
                    input_frames: u32|
      -> ErrorHandle {
+        let input_buffer_manager = stm.core_stream_data.input_buffer_manager.as_mut().unwrap();
         assert_eq!(
             stm.core_stream_data.stm_ptr,
             user_ptr as *const AudioUnitStream
@@ -433,22 +404,14 @@ extern "C" fn audiounit_input_callback(
             );
             let elements =
                 (input_frames * stm.core_stream_data.input_desc.mChannelsPerFrame) as usize;
-            stm.core_stream_data
-                .input_linear_buffer
-                .as_mut()
-                .unwrap()
-                .push_zeros(elements);
+            input_buffer_manager.push_silent_data(elements);
             ErrorHandle::Reinit
         } else {
             assert_eq!(status, NO_ERR);
             // Copy input data in linear buffer.
             let elements =
                 (input_frames * stm.core_stream_data.input_desc.mChannelsPerFrame) as usize;
-            stm.core_stream_data
-                .input_linear_buffer
-                .as_mut()
-                .unwrap()
-                .push(input_buffer_list.mBuffers[0].mData, elements);
+            input_buffer_manager.push_data(input_buffer_list.mBuffers[0].mData, elements);
             ErrorHandle::Return(status)
         };
 
@@ -463,11 +426,7 @@ extern "C" fn audiounit_input_callback(
             input_buffer_list.mBuffers[0].mDataByteSize,
             input_buffer_list.mBuffers[0].mNumberChannels,
             input_frames,
-            stm.core_stream_data
-                .input_linear_buffer
-                .as_ref()
-                .unwrap()
-                .elements()
+            input_buffer_manager.available_samples()
                 / stm.core_stream_data.input_desc.mChannelsPerFrame as usize
         );
 
@@ -478,36 +437,11 @@ extern "C" fn audiounit_input_callback(
 
         // Input only. Call the user callback through resampler.
         // Resampler will deliver input buffer in the correct rate.
-        assert!(
-            input_frames as usize
-                <= stm
-                    .core_stream_data
-                    .input_linear_buffer
-                    .as_ref()
-                    .unwrap()
-                    .elements()
-                    / stm.core_stream_data.input_desc.mChannelsPerFrame as usize
-        );
-        let mut total_input_frames =
-            (stm.core_stream_data
-                .input_linear_buffer
-                .as_ref()
-                .unwrap()
-                .elements()
-                / stm.core_stream_data.input_desc.mChannelsPerFrame as usize) as i64;
-        assert!(!stm
-            .core_stream_data
-            .input_linear_buffer
-            .as_ref()
-            .unwrap()
-            .as_ptr()
-            .is_null());
-        let input_buffer = stm
-            .core_stream_data
-            .input_linear_buffer
-            .as_mut()
-            .unwrap()
-            .as_mut_ptr();
+        let mut total_input_frames = (input_buffer_manager.available_samples()
+            / stm.core_stream_data.input_desc.mChannelsPerFrame as usize)
+            as i64;
+        assert!(input_frames as i64 <= total_input_frames);
+        let input_buffer = input_buffer_manager.get_linear_data(total_input_frames as usize);
         let outframes = stm.core_stream_data.resampler.fill(
             input_buffer,
             &mut total_input_frames,
@@ -517,12 +451,6 @@ extern "C" fn audiounit_input_callback(
         if outframes < total_input_frames {
             stm.draining.store(true, Ordering::SeqCst);
         }
-        // Reset input buffer
-        stm.core_stream_data
-            .input_linear_buffer
-            .as_mut()
-            .unwrap()
-            .clear();
 
         handle
     };
@@ -653,7 +581,7 @@ extern "C" fn audiounit_output_callback(
 
         // Also get the input buffer if the stream is duplex
         let (input_buffer, mut input_frames) = if !stm.core_stream_data.input_unit.is_null() {
-            assert!(stm.core_stream_data.input_linear_buffer.is_some());
+            let input_buffer_manager = stm.core_stream_data.input_buffer_manager.as_mut().unwrap();
             assert_ne!(stm.core_stream_data.input_desc.mChannelsPerFrame, 0);
             let input_channels = stm.core_stream_data.input_desc.mChannelsPerFrame as usize;
             // If the output callback came first and this is a duplex stream, we need to
@@ -666,35 +594,22 @@ extern "C" fn audiounit_output_callback(
                 f64::from(stm.core_stream_data.output_stream_params.rate()),
                 output_frames as usize,
             );
-            let buffered_input_frames = stm
-                .core_stream_data
-                .input_linear_buffer
-                .as_ref()
-                .unwrap()
-                .elements()
-                / input_channels;
+            let buffered_input_frames = input_buffer_manager.available_samples() / input_channels;
             // Else if the input has buffered a lot already because the output started late, we
             // need to trim the input buffer
             if prev_frames_written == 0 && buffered_input_frames > input_frames_needed as usize {
-                let samples_to_pop =
-                    (buffered_input_frames - input_frames_needed as usize) * input_channels;
-                stm.core_stream_data
-                    .input_linear_buffer
-                    .as_mut()
-                    .unwrap()
-                    .pop(samples_to_pop);
-                stm.frames_read
-                    .fetch_sub((samples_to_pop / input_channels) as usize, Ordering::SeqCst);
+                input_buffer_manager.trim(input_frames_needed * input_channels);
+                let popped_samples =
+                    ((buffered_input_frames - input_frames_needed) * input_channels) as usize;
+                stm.frames_read.fetch_sub(popped_samples, Ordering::SeqCst);
+
+                cubeb_log!("Dropping {} frames in input buffer.", popped_samples);
             }
 
             if input_frames_needed > buffered_input_frames {
                 let silent_frames_to_push = input_frames_needed - buffered_input_frames;
                 let silent_samples_to_push = silent_frames_to_push * input_channels;
-                stm.core_stream_data
-                    .input_linear_buffer
-                    .as_mut()
-                    .unwrap()
-                    .push_zeros(silent_samples_to_push);
+                input_buffer_manager.push_silent_data(silent_samples_to_push);
                 stm.frames_read
                     .fetch_add(input_frames_needed, Ordering::SeqCst);
                 cubeb_log!(
@@ -710,28 +625,16 @@ extern "C" fn audiounit_output_callback(
                     silent_frames_to_push
                 );
             }
-            let input_frames = stm
-                .core_stream_data
-                .input_linear_buffer
-                .as_ref()
-                .unwrap()
-                .elements()
-                / stm.core_stream_data.input_desc.mChannelsPerFrame as usize;
-            cubeb_logv!("Total input frames: {}", input_frames);
+
+            let input_samples_needed = input_frames_needed * input_channels;
             (
-                stm.core_stream_data
-                    .input_linear_buffer
-                    .as_mut()
-                    .unwrap()
-                    .as_mut_ptr(),
-                input_frames as i64,
+                input_buffer_manager.get_linear_data(input_samples_needed),
+                input_frames_needed as i64,
             )
         } else {
             (ptr::null_mut::<c_void>(), 0)
         };
 
-        // Call user callback through resampler.
-        assert!(!output_buffer.is_null());
         let outframes = stm.core_stream_data.resampler.fill(
             input_buffer,
             if input_buffer.is_null() {
@@ -742,16 +645,6 @@ extern "C" fn audiounit_output_callback(
             output_buffer,
             i64::from(output_frames),
         );
-        if !input_buffer.is_null() {
-            // Pop from the buffer the frames used by the the resampler.
-            let elements =
-                input_frames as usize * stm.core_stream_data.input_desc.mChannelsPerFrame as usize;
-            stm.core_stream_data
-                .input_linear_buffer
-                .as_mut()
-                .unwrap()
-                .pop(elements);
-        }
 
         if outframes < 0 || outframes > i64::from(output_frames) {
             stm.shutdown.store(true, Ordering::SeqCst);
@@ -2303,9 +2196,7 @@ struct CoreStreamData<'ctx> {
     output_hw_rate: f64,
     // Channel layout of the output AudioUnit.
     device_layout: Vec<mixer::Channel>,
-    // Hold the input samples in every input callback iteration.
-    // Only accessed on input/output callback thread and during initial configure.
-    input_linear_buffer: Option<Box<dyn AutoArrayWrapper>>,
+    input_buffer_manager: Option<BufferManager>,
     // Listeners indicating what system events are monitored.
     default_input_listener: Option<device_property_listener>,
     default_output_listener: Option<device_property_listener>,
@@ -2344,7 +2235,7 @@ impl<'ctx> Default for CoreStreamData<'ctx> {
             input_hw_rate: 0_f64,
             output_hw_rate: 0_f64,
             device_layout: Vec::new(),
-            input_linear_buffer: None,
+            input_buffer_manager: None,
             default_input_listener: None,
             default_output_listener: None,
             input_alive_listener: None,
@@ -2389,7 +2280,7 @@ impl<'ctx> CoreStreamData<'ctx> {
             input_hw_rate: 0_f64,
             output_hw_rate: 0_f64,
             device_layout: Vec::new(),
-            input_linear_buffer: None,
+            input_buffer_manager: None,
             default_input_listener: None,
             default_output_listener: None,
             input_alive_listener: None,
@@ -2597,16 +2488,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            let array_capacity = if self.has_output() {
-                8 // Full-duplex increase capacity
-            } else {
-                1 // Input only capacity
-            };
-            self.input_linear_buffer = Some(create_auto_array(
-                self.input_desc,
-                stream.latency_frames,
-                array_capacity,
-            )?);
+            self.input_buffer_manager = Some(BufferManager::new(self.input_stream_params.format()));
 
             let aurcbs_in = AURenderCallbackStruct {
                 inputProc: Some(audiounit_input_callback),
