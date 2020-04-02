@@ -2589,14 +2589,13 @@ already_AddRefed<Console> Console::GetConsoleInternal(
   }
 
   // Debugger worker scope
-  else {
-    WorkerDebuggerGlobalScope* debuggerScope =
-        workerPrivate->DebuggerGlobalScope();
-    MOZ_ASSERT(debuggerScope);
-    MOZ_ASSERT(debuggerScope == global, "Which kind of global do we have?");
 
-    return debuggerScope->GetConsole(aRv);
-  }
+  WorkerDebuggerGlobalScope* debuggerScope =
+      workerPrivate->DebuggerGlobalScope();
+  MOZ_ASSERT(debuggerScope);
+  MOZ_ASSERT(debuggerScope == global, "Which kind of global do we have?");
+
+  return debuggerScope->GetConsole(aRv);
 }
 
 bool Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
