@@ -96,47 +96,16 @@ expectMultiValueError(() => (function*() { yield 52; yield 10; yield 0; yield 0;
     assertEq(calls.join(','), '52,10,0');
 }
 
-function expectMultiValueResult(text, expected) {
-    let instance = wasmEvalText(text);
-    assertDeepEq(instance.exports.run(), expected);
+function expectRunFailure(text, pattern, imports) {
+    let instance = wasmEvalText(text, imports);
+    assertErrorMessage(() => instance.exports.run(),
+		       TypeError,
+                       pattern);
 }
 
-expectMultiValueResult(`
+expectRunFailure(`
   (module
-    (func (export "run") (result i32 i32 i32)
-      (i32.const 0)
+    (func (export "run") (result i32 i32)
       (i32.const 52)
-      (i32.const 10)))`, [0, 52, 10]);
-expectMultiValueResult(`
-  (module
-    (func (export "run") (result f32 f32 f32)
-      (f32.const 0.5)
-      (f32.const 52.5)
-      (f32.const 10.5)))`, [0.5, 52.5, 10.5]);
-expectMultiValueResult(`
-  (module
-    (func (export "run") (result f64 f64 f64)
-      (f64.const 0.5)
-      (f64.const 52.5)
-      (f64.const 10.5)))`, [0.5, 52.5, 10.5]);
-
-if (wasmBigIntEnabled()) {
-  expectMultiValueResult(`
-    (module
-      (func (export "run") (result i32 i64 i32)
-        (i32.const 0)
-        (i64.const 52)
-        (i32.const 10)))`, [0, 52n, 10]);
-  expectMultiValueResult(`
-    (module
-      (func (export "run") (result i64 i32 i64)
-        (i64.const 0)
-        (i32.const 52)
-        (i64.const 10)))`, [0n, 52, 10n]);
-  expectMultiValueResult(`
-    (module
-      (func (export "run") (result i64 i64 i64)
-        (i64.const 0)
-        (i64.const 52)
-        (i64.const 10)))`, [0n, 52n, 10n]);
-}
+      (i32.const 10)))`,
+                 /calling WebAssembly functions with multiple results from JavaScript not yet implemented/);
