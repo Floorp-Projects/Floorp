@@ -62,6 +62,11 @@ static const uintptr_t IS_PROXY = 1;
    * The role of our gecko accessible.
    */
   mozilla::a11y::role mRole;
+
+  /**
+   * A cache of a subset of our states.
+   */
+  uint64_t mCachedState;
 }
 
 // return the Accessible for this mozAccessible if it exists.
@@ -134,6 +139,12 @@ static const uintptr_t IS_PROXY = 1;
 
 // Get gecko accessible's state filtered through given mask.
 - (uint64_t)stateWithMask:(uint64_t)mask;
+
+// Notify of a state change, so the cache can be altered.
+- (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled;
+
+// Invalidate cached state.
+- (void)invalidateState;
 
 #pragma mark -
 

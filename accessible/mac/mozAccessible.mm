@@ -245,20 +245,55 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+static const uint64_t kCachedStates =
+    states::CHECKED states::PRESSED | states::MIXED | states::EXPANDED;
+static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
+
 - (uint64_t)state {
+  uint64_t state = 0;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    return accWrap->State();
+    state = accWrap->State();
   }
 
   if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    return proxy->State();
+    state = proxy->State();
   }
 
-  return 0;
+  if (!(mCachedState & kCacheInitialized)) {
+    mCachedState = state & kCachedStates;
+    mCachedState |= kCacheInitialized;
+  }
+
+  return state;
 }
 
 - (uint64_t)stateWithMask:(uint64_t)mask {
+  if ((mask & kCachedStates) == mask && (mCachedState & kCacheInitialized) != 0) {
+    return mCachedState & mask;
+  }
+
   return [self state] & mask;
+}
+
+- (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
+  if ((state & kCachedStates) == 0) {
+    return;
+  }
+
+  if (!(mCachedState & kCacheInitialized)) {
+    [self state];
+    return;
+  }
+
+  if (enabled) {
+    mCachedState |= state;
+  } else {
+    mCachedState &= ~state;
+  }
+}
+
+- (void)invalidateState {
+  mCachedState = 0;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
@@ -622,6 +657,8 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     } else if (proxy) {
       proxy->DoAction(0);
     }
+    // Activating accessible may alter its state.
+    [self invalidateState];
   }
 }
 
@@ -1247,6 +1284,8 @@ struct RoleDescrComparator {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [self invalidateChildren];
+
+  [self invalidateState];
 
   mGeckoAccessible = 0;
 
