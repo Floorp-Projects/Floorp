@@ -90,8 +90,8 @@
 /*
  * A helper macro for asserting that an enumerator does not have an initializer.
  *
- * The static_assert and the comparison to 0 are just scaffolding; the
- * important part is forming the expression |aEnumName::aEnumeratorDecl|.
+ * The static_assert and the comparison are just scaffolding; the important
+ * part is forming the expression |aEnumName::aEnumeratorDecl|.
  *
  * If |aEnumeratorDecl| is just the enumerator name without an identifier,
  * this expression compiles fine. However, if |aEnumeratorDecl| includes an
@@ -99,21 +99,22 @@
  * compile in expression context, since |eEnumerator| is not an lvalue.
  *
  * (The static_assert itself should always pass in the absence of the above
- * error, since you can't get a negative enumerator value without having
+ * error, since you can't get a higher enumerator value without having
  * an initializer somewhere. It just provides a place to put the expression
  * we want to form.)
  */
-#define MOZ_ASSERT_ENUMERATOR_HAS_NO_INITIALIZER(aEnumName, aEnumeratorDecl) \
+#define MOZ_ASSERT_ENUMERATOR_HAS_NO_INITIALIZER(aEnumName, prefix,          \
+                                                 aEnumeratorDecl)            \
   static_assert(                                                             \
-      (aEnumName::aEnumeratorDecl) >= aEnumName(0),                          \
+      (aEnumName::aEnumeratorDecl) <= aEnumName(prefix##Highest##aEnumName), \
       "MOZ_DEFINE_ENUM does not allow enumerators to have initializers");
 
 #define MOZ_DEFINE_ENUM_IMPL(aEnumName, aClassSpec, aBaseSpec, aEnumerators) \
   enum aClassSpec aEnumName aBaseSpec{MOZ_UNWRAP_ARGS aEnumerators};         \
   constexpr size_t k##aEnumName##Count = MOZ_ARG_COUNT aEnumerators;         \
-  constexpr aEnumName k##Highest##aEnumName =                                \
+  constexpr aEnumName kHighest##aEnumName =                                  \
       aEnumName(k##aEnumName##Count - 1);                                    \
-  MOZ_FOR_EACH(MOZ_ASSERT_ENUMERATOR_HAS_NO_INITIALIZER, (aEnumName, ),      \
+  MOZ_FOR_EACH(MOZ_ASSERT_ENUMERATOR_HAS_NO_INITIALIZER, (aEnumName, k, ),   \
                aEnumerators)
 
 #define MOZ_DEFINE_ENUM(aEnumName, aEnumerators) \
@@ -132,9 +133,9 @@
                                             aEnumerators)                     \
   enum aClassSpec aEnumName aBaseSpec{MOZ_UNWRAP_ARGS aEnumerators};          \
   constexpr static size_t s##aEnumName##Count = MOZ_ARG_COUNT aEnumerators;   \
-  constexpr static aEnumName s##Highest##aEnumName =                          \
+  constexpr static aEnumName sHighest##aEnumName =                            \
       aEnumName(s##aEnumName##Count - 1);                                     \
-  MOZ_FOR_EACH(MOZ_ASSERT_ENUMERATOR_HAS_NO_INITIALIZER, (aEnumName, ),       \
+  MOZ_FOR_EACH(MOZ_ASSERT_ENUMERATOR_HAS_NO_INITIALIZER, (aEnumName, s, ),    \
                aEnumerators)
 
 #define MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(aEnumName, aEnumerators) \
