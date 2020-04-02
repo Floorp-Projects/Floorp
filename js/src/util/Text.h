@@ -171,11 +171,12 @@ class InflatedChar16Sequence {
   const CharT* units_;
   const CharT* limit_;
 
-  static_assert(std::is_same_v<CharT, char16_t> || std::is_same_v<CharT, JS::Latin1Char>,
+  static_assert(std::is_same_v<CharT, char16_t> ||
+                    std::is_same_v<CharT, JS::Latin1Char>,
                 "InflatedChar16Sequence only supports UTF-8/Latin-1/WTF-16");
 
  public:
-  InflatedChar16Sequence(const char16_t* units, size_t len)
+  InflatedChar16Sequence(const CharT* units, size_t len)
       : units_(units), limit_(units_ + len) {}
 
   bool hasMore() { return units_ < limit_; }
