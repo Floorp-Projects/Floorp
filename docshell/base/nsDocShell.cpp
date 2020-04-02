@@ -6381,8 +6381,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
       nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
       Document* doc = GetDocument();
       if (!info->TriggeringPrincipal()->IsSystemPrincipal() &&
-          StaticPrefs::dom_no_unknown_protocol_error_enabled() &&
-          doc && !doc->IsInitialDocument()) {
+          StaticPrefs::dom_no_unknown_protocol_error_enabled() && doc &&
+          !doc->IsInitialDocument()) {
         nsTArray<nsString> params;
         if (NS_FAILED(NS_GetSanitizedURIStringFromURI(
                 url, *params.AppendElement()))) {
@@ -8384,11 +8384,10 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       MOZ_ASSERT(!aLoadState->LoadReplace());
       MOZ_ASSERT(aLoadState->PrincipalToInherit() ==
                  aLoadState->TriggeringPrincipal());
-      MOZ_ASSERT(
-          aLoadState->LoadFlags() == INTERNAL_LOAD_FLAGS_NO_OPENER ||
-          aLoadState->LoadFlags() ==
-              (INTERNAL_LOAD_FLAGS_NO_OPENER |
-               INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
+      MOZ_ASSERT(aLoadState->LoadFlags() == INTERNAL_LOAD_FLAGS_NO_OPENER ||
+                 aLoadState->LoadFlags() ==
+                     (INTERNAL_LOAD_FLAGS_NO_OPENER |
+                      INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
       MOZ_ASSERT(!aLoadState->PostDataStream());
       MOZ_ASSERT(!aLoadState->HeadersStream());
       // If OnLinkClickSync was invoked inside the onload handler, the load
@@ -9319,8 +9318,8 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
 
 /* static */ nsresult nsDocShell::CreateRealChannelForDocument(
     nsIChannel** aChannel, nsIURI* aURI, nsILoadInfo* aLoadInfo,
-    nsIInterfaceRequestor* aCallbacks,
-    nsLoadFlags aLoadFlags, const nsAString& aSrcdoc, nsIURI* aBaseURI) {
+    nsIInterfaceRequestor* aCallbacks, nsLoadFlags aLoadFlags,
+    const nsAString& aSrcdoc, nsIURI* aBaseURI) {
   nsCOMPtr<nsIChannel> channel;
   if (aSrcdoc.IsVoid()) {
     MOZ_TRY(NS_NewChannelInternal(getter_AddRefs(channel), aURI, aLoadInfo,
@@ -9365,7 +9364,6 @@ static bool URIUsesDocChannel(nsIURI* aURI) {
   nsCString spec = aURI->GetSpecOrDefault();
 
   if (spec.EqualsLiteral("about:printpreview") ||
-      spec.EqualsLiteral("about:privatebrowsing") ||
       spec.EqualsLiteral("about:crashcontent")) {
     return false;
   }
@@ -9439,8 +9437,8 @@ static bool URIUsesDocChannel(nsIURI* aURI) {
 
   nsCOMPtr<nsIChannel> channel;
   aRv = CreateRealChannelForDocument(getter_AddRefs(channel), aLoadState->URI(),
-                                     aLoadInfo, aCallbacks,
-                                     aLoadFlags, srcdoc, aLoadState->BaseURI());
+                                     aLoadInfo, aCallbacks, aLoadFlags, srcdoc,
+                                     aLoadState->BaseURI());
   NS_ENSURE_SUCCESS(aRv, false);
 
   if (!channel) {
