@@ -689,7 +689,6 @@ impl GpuCacheProfileCounters {
 #[derive(Clone)]
 pub struct BackendProfileCounters {
     pub total_time: TimeProfileCounter,
-    pub scene_build_time: TimeProfileCounter,
     pub resources: ResourceProfileCounters,
     pub ipc: IpcProfileCounters,
     pub intern: InternProfileCounters,
@@ -707,11 +706,12 @@ pub struct ResourceProfileCounters {
 
 #[derive(Clone)]
 pub struct IpcProfileCounters {
-    pub build_time: TimeProfileCounter,
+    pub display_list_build_time: TimeProfileCounter,
+    pub scene_build_time: TimeProfileCounter,
     /// Time between when the display list is built and when it is sent by the API.
     pub content_send_time: TimeProfileCounter,
     /// Time between sending the SetDisplayList from the API and picking it up on
-    /// the render backend thread.
+    /// the render scene builder thread.
     pub api_send_time: TimeProfileCounter,
     /// Sum of content_send_time and api_send_time.
     pub total_send_time: TimeProfileCounter,
@@ -754,22 +754,26 @@ enumerate_interners!(declare_intern_profile_counters);
 impl IpcProfileCounters {
     pub fn set(
         &mut self,
-        build_start: u64,
-        build_end: u64,
+        dl_build_start: u64,
+        dl_build_end: u64,
         send_start: u64,
-        consume_start: u64,
+        scene_build_start: u64,
+        scene_build_end: u64,
         display_len: usize,
     ) {
-        self.build_time.reset();
+        self.display_list_build_time.reset();
         self.content_send_time.reset();
         self.api_send_time.reset();
         self.total_send_time.reset();
+        self.scene_build_time.reset();
         self.display_lists.reset();
 
-        let build_time = build_end - build_start;
-        let content_send_time = send_start - build_end;
-        let api_send_time = consume_start - send_start;
-        self.build_time.inc(build_time);
+        let dl_build_time = dl_build_end - dl_build_start;
+        let scene_build_time = scene_build_end - scene_build_start;
+        let content_send_time = send_start - dl_build_end;
+        let api_send_time = scene_build_start - send_start;
+        self.display_list_build_time.inc(dl_build_time);
+        self.scene_build_time.inc(scene_build_time);
         self.content_send_time.inc(content_send_time);
         self.api_send_time.inc(api_send_time);
         self.total_send_time.inc(content_send_time + api_send_time);
@@ -783,10 +787,6 @@ impl BackendProfileCounters {
             total_time: TimeProfileCounter::new(
                 "Backend CPU Time", false,
                 Some(expected::MAX_BACKEND_CPU_TIME),
-            ),
-            scene_build_time: TimeProfileCounter::new(
-                "Scene build time", false,
-                Some(expected::MAX_SCENE_BUILD_TIME),
             ),
             resources: ResourceProfileCounters {
                 font_templates: ResourceProfileCounter::new(
@@ -807,9 +807,13 @@ impl BackendProfileCounters {
                 gpu_cache: GpuCacheProfileCounters::new(),
             },
             ipc: IpcProfileCounters {
-                build_time: TimeProfileCounter::new(
+                display_list_build_time: TimeProfileCounter::new(
                     "DisplayList Build Time", false,
                     Some(expected::DISPLAY_LIST_BUILD_TIME)
+                ),
+                scene_build_time: TimeProfileCounter::new(
+                    "Scene build time", false,
+                    Some(expected::MAX_SCENE_BUILD_TIME),
                 ),
                 content_send_time: TimeProfileCounter::new(
                     "Content Send Time", false,
@@ -1593,7 +1597,8 @@ impl Profiler {
 
         Profiler::draw_counters(
             &[
-                &backend_profile.ipc.build_time,
+                &backend_profile.ipc.display_list_build_time,
+                &backend_profile.ipc.scene_build_time,
                 &backend_profile.ipc.content_send_time,
                 &backend_profile.ipc.api_send_time,
                 &backend_profile.ipc.total_send_time,
@@ -1795,9 +1800,9 @@ impl Profiler {
         self.ipc_graph
             .push(backend_profile.ipc.total_send_time.nanoseconds);
         self.display_list_build_graph
-            .push(backend_profile.ipc.build_time.nanoseconds);
+            .push(backend_profile.ipc.display_list_build_time.nanoseconds);
         self.scene_build_graph
-            .push(backend_profile.scene_build_time.nanoseconds);
+            .push(backend_profile.ipc.scene_build_time.nanoseconds);
         self.blob_raster_graph
             .push(backend_profile.resources.texture_cache.rasterized_blob_pixels.size as u64);
         self.ipc_time.set(backend_profile.ipc.total_send_time.nanoseconds);
