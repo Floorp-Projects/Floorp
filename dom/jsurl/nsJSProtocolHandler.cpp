@@ -375,7 +375,6 @@ class nsJSChannel : public nsIChannel,
 
   void CleanupStrongRefs();
 
- protected:
   nsCOMPtr<nsIChannel> mStreamChannel;
   nsCOMPtr<nsIPropertyBag2> mPropertyBag;
   nsCOMPtr<nsIStreamListener> mListener;              // Our final listener
