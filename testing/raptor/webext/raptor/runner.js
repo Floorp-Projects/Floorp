@@ -30,7 +30,7 @@ var postStartupDelay;
 var pageCycleDelay = 1000;
 
 var newTabDelay = 1000;
-var reuseTab = false;
+var newTabPerCycle = false;
 
 // delay (ms) for foregrounding app
 var foregroundDelay = 5000;
@@ -146,7 +146,7 @@ async function getTestSettings() {
   }
 
   if (settings.newtab_per_cycle !== undefined) {
-    reuseTab = settings.newtab_per_cycle;
+    newTabPerCycle = settings.newtab_per_cycle;
   }
 
   if (settings.page_timeout !== undefined) {
@@ -441,7 +441,7 @@ async function nextCycle() {
           break;
       }
 
-      if (reuseTab && testTabID != 0) {
+      if (newTabPerCycle && testTabID != 0) {
         // close previous test tab
         ext.tabs.remove(testTabID);
         await postToControlServer("status", `closing Tab: ${testTabID}`);
