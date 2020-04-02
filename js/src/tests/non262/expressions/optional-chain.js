@@ -48,6 +48,19 @@ function shouldThrowTypeError(func, messagePrefix) {
     if (!error.message.includes(messagePrefix))
         throw new Error(`TypeError has wrong message!, expected ${messagePrefix} but got ${error.message}`);
 }
+
+function shouldThrowReferenceError(script) {
+    let error;
+    try {
+        eval(script);
+    } catch (e) {
+        error = e;
+    }
+
+    if (!(error instanceof ReferenceError))
+        throw new Error('Expected ReferenceError!');
+}
+
 function testBasicSuccessCases() {
     shouldBe(undefined?.valueOf(), undefined);
     shouldBe(null?.valueOf(), undefined);
@@ -172,6 +185,7 @@ shouldThrowSyntaxError('class C {} new C?.();')
 shouldThrowSyntaxError('function foo() { new?.target; }');
 shouldThrowSyntaxError('function tag() {} tag?.``;');
 shouldThrowSyntaxError('const o = { tag() {} }; o?.tag``;');
+shouldThrowReferenceError('`${G}`?.r');
 
 // NOT an optional chain
 shouldBe(false?.4:5, 5);
