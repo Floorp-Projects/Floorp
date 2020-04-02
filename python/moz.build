@@ -38,6 +38,10 @@ with Files('mozrelease/**'):
 with Files('mach_commands.py'):
     BUG_COMPONENT = ('Testing', 'Python Test')
 
+with Files('mozperftest/**'):
+    BUG_COMPONENT = ('Testing', 'Performance')
+
+
 SPHINX_PYTHON_PACKAGE_DIRS += [
     'mach',
     'mozbuild/mozbuild',
@@ -63,6 +67,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     'mozbuild/mozbuild/test/python2.ini',
     'mozbuild/mozpack/test/python.ini',
     'mozlint/test/python.ini',
+    'mozperftest/mozperftest/tests/python.ini',
     'mozrelease/test/python.ini',
     'mozterm/test/python.ini',
     'mozversioncontrol/test/python.ini',

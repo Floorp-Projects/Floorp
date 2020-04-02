@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 from argparse import Namespace
 from collections import defaultdict
+import functools
 import logging
 import os
 import sys
@@ -255,21 +256,6 @@ def setup_junit_argument_parser():
     return parser
 
 
-# condition filters
-
-def is_buildapp_in(*apps):
-    def is_buildapp_supported(cls):
-        for a in apps:
-            c = getattr(conditions, 'is_{}'.format(a), None)
-            if c and c(cls):
-                return True
-        return False
-
-    is_buildapp_supported.__doc__ = 'Must have a {} build.'.format(
-        ' or '.join(apps))
-    return is_buildapp_supported
-
-
 def verify_host_bin():
     # validate MOZ_HOST_BIN environment variables for Android tests
     MOZ_HOST_BIN = os.environ.get('MOZ_HOST_BIN')
@@ -289,7 +275,7 @@ def verify_host_bin():
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('mochitest', category='testing',
-             conditions=[is_buildapp_in(*SUPPORTED_APPS)],
+             conditions=[functools.partial(conditions.is_buildapp_in, apps=SUPPORTED_APPS)],
              description='Run any flavor of mochitest (integration test).',
              parser=setup_argument_parser)
     def run_mochitest_general(self, flavor=None, test_objects=None, resolve_tests=True, **kwargs):
@@ -300,7 +286,7 @@ class MachCommands(MachCommandBase):
 
         buildapp = None
         for app in SUPPORTED_APPS:
-            if is_buildapp_in(app)(self):
+            if conditions.is_buildapp_in(self, apps=[app]):
                 buildapp = app
                 break
 

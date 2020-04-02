@@ -1017,6 +1017,15 @@ class MachCommandConditions(object):
             return not MachCommandConditions.is_artifact_build(cls)
         return False
 
+    @staticmethod
+    def is_buildapp_in(cls, apps):
+        """Must have a build for one of the given app"""
+        for app in apps:
+            attr = getattr(MachCommandConditions, 'is_{}'.format(app), None)
+            if attr and attr(cls):
+                return True
+        return False
+
 
 class PathArgument(object):
     """Parse a filesystem path argument and transform it in various ways."""
