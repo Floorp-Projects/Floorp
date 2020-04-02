@@ -1960,7 +1960,7 @@ bool gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList) {
     uint32_t dataLength;
     const char* nameData = hb_blob_get_data(nameTable, &dataLength);
     if (LookForLegacyFamilyName(Name(), nameData, dataLength, legacyName)) {
-      if (aFontList->AddWithLegacyFamilyName(legacyName, fe)) {
+      if (aFontList->AddWithLegacyFamilyName(legacyName, fe, mVisibility)) {
         added = true;
       }
     }

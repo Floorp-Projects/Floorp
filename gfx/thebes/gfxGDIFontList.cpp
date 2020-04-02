@@ -630,7 +630,8 @@ int CALLBACK gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW* lpelfe,
 
   if (!fontList->mFontFamilies.GetWeak(key)) {
     NS_ConvertUTF16toUTF8 faceName(lf.lfFaceName);
-    RefPtr<GDIFontFamily> family = new GDIFontFamily(faceName);
+    FontVisibility visibility = FontVisibility::Unknown;  // TODO
+    RefPtr<GDIFontFamily> family = new GDIFontFamily(faceName, visibility);
     fontList->mFontFamilies.Put(key, RefPtr{family});
 
     // if locale is such that CJK font names are the default coming from
@@ -1053,8 +1054,9 @@ already_AddRefed<FontInfoData> gfxGDIFontList::CreateFontInfoData() {
   return fi.forget();
 }
 
-gfxFontFamily* gfxGDIFontList::CreateFontFamily(const nsACString& aName) const {
-  return new GDIFontFamily(aName);
+gfxFontFamily* gfxGDIFontList::CreateFontFamily(
+    const nsACString& aName, FontVisibility aVisibility) const {
+  return new GDIFontFamily(aName, aVisibility);
 }
 
 #ifdef MOZ_BUNDLED_FONTS
