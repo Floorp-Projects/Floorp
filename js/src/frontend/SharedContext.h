@@ -363,40 +363,6 @@ class FunctionBox : public SharedContext {
                            * body like: () => 1
                            * Only used by Reflect.parse */
 
-  // Technically, every function has a binding named 'arguments'. Internally,
-  // this binding is only added when 'arguments' is mentioned by the function
-  // body. This flag indicates whether 'arguments' has been bound either
-  // through implicit use:
-  //   function f() { return arguments }
-  // or explicit redeclaration:
-  //   function f() { var arguments; return arguments }
-  //
-  // Note 1: overwritten arguments (function() { arguments = 3 }) will cause
-  // this flag to be set but otherwise require no special handling:
-  // 'arguments' is just a local variable and uses of 'arguments' will just
-  // read the local's current slot which may have been assigned. The only
-  // special semantics is that the initial value of 'arguments' is the
-  // arguments object (not undefined, like normal locals).
-  //
-  // Note 2: if 'arguments' is bound as a formal parameter, there will be an
-  // 'arguments' in Bindings, but, as the "LOCAL" in the name indicates, this
-  // flag will not be set. This is because, as a formal, 'arguments' will
-  // have no special semantics: the initial value is unconditionally the
-  // actual argument (or undefined if nactual < nformal).
-  //
-  bool argumentsHasLocalBinding_ : 1;
-
-  // In many cases where 'arguments' has a local binding (as described above)
-  // we do not need to actually create an arguments object in the function
-  // prologue: instead we can analyze how 'arguments' is used (using the
-  // simple dataflow analysis in analyzeSSA) to determine that uses of
-  // 'arguments' can just read from the stack frame directly. However, the
-  // dataflow analysis only looks at how JSOp::Arguments is used, so it will
-  // be unsound in several cases. The frontend filters out such cases by
-  // setting this flag which eagerly sets script->needsArgsObj to true.
-  //
-  bool definitelyNeedsArgsObj_ : 1;
-
   uint16_t nargs_;
 
   JSAtom* explicitName_;
@@ -550,8 +516,12 @@ class FunctionBox : public SharedContext {
   bool hasThisBinding() const {
     return immutableFlags_.hasFlag(ImmutableFlags::FunctionHasThisBinding);
   }
-  bool argumentsHasLocalBinding() const { return argumentsHasLocalBinding_; }
-  bool definitelyNeedsArgsObj() const { return definitelyNeedsArgsObj_; }
+  bool argumentsHasVarBinding() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::ArgumentsHasVarBinding);
+  }
+  bool alwaysNeedsArgsObj() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::AlwaysNeedsArgsObj);
+  }
   bool needsHomeObject() const {
     return immutableFlags_.hasFlag(ImmutableFlags::NeedsHomeObject);
   }
@@ -583,10 +553,12 @@ class FunctionBox : public SharedContext {
   void setHasThisBinding() {
     immutableFlags_.setFlag(ImmutableFlags::FunctionHasThisBinding);
   }
-  void setArgumentsHasLocalBinding() { argumentsHasLocalBinding_ = true; }
-  void setDefinitelyNeedsArgsObj() {
-    MOZ_ASSERT(argumentsHasLocalBinding_);
-    definitelyNeedsArgsObj_ = true;
+  void setArgumentsHasVarBinding() {
+    immutableFlags_.setFlag(ImmutableFlags::ArgumentsHasVarBinding);
+  }
+  void setAlwaysNeedsArgsObj() {
+    MOZ_ASSERT(argumentsHasVarBinding());
+    immutableFlags_.setFlag(ImmutableFlags::AlwaysNeedsArgsObj);
   }
   void setNeedsHomeObject() {
     MOZ_ASSERT_IF(hasFunction(), function()->allowSuperProperty());
@@ -614,7 +586,7 @@ class FunctionBox : public SharedContext {
     // script-cloning will have more impact than TI type-precision would gain.
     //
     // See also: Bug 864218
-    return explicitName() || argumentsHasLocalBinding() || isGenerator() ||
+    return explicitName() || argumentsHasVarBinding() || isGenerator() ||
            isAsync();
   }
 

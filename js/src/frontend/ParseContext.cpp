@@ -590,11 +590,11 @@ bool ParseContext::declareFunctionArgumentsObject(
     // needed?
     //
     // Also see the flags' comments in ContextFlags.
-    funbox->setArgumentsHasLocalBinding();
+    funbox->setArgumentsHasVarBinding();
 
     // Dynamic scope access destroys all hope of optimization.
     if (sc()->bindingsAccessedDynamically()) {
-      funbox->setDefinitelyNeedsArgsObj();
+      funbox->setAlwaysNeedsArgsObj();
     }
   }
 
