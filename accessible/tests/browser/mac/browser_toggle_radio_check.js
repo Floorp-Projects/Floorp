@@ -89,3 +89,37 @@ addAccessibleTask(
     is(checkbox.getAttributeValue("AXValue"), 2, "Correct checked value");
   }
 );
+
+/**
+ * Test input[type=radio]
+ */
+addAccessibleTask(
+  `<input type="radio" id="huey" name="drone" value="huey" checked>
+   <label for="huey">Huey</label>
+   <input type="radio" id="dewey" name="drone" value="dewey">
+   <label for="dewey">Dewey</label>`,
+  async (browser, accDoc) => {
+    let huey = getNativeInterface(accDoc, "huey");
+    is(huey.getAttributeValue("AXValue"), 1, "Correct initial value for huey");
+
+    let dewey = getNativeInterface(accDoc, "dewey");
+    is(
+      dewey.getAttributeValue("AXValue"),
+      0,
+      "Correct initial value for dewey"
+    );
+
+    let actions = dewey.actionNames;
+    ok(actions.includes("AXPick"), "Has pick action");
+
+    let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "huey");
+    dewey.performAction("AXPick");
+    await stateChanged;
+    is(
+      dewey.getAttributeValue("AXValue"),
+      1,
+      "Correct checked value for dewey"
+    );
+    is(huey.getAttributeValue("AXValue"), 0, "Correct checked value for huey");
+  }
+);
