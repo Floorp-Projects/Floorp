@@ -18,7 +18,7 @@ body {
   margin: 0;
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   height: 100%;
   min-width: 40em;
@@ -77,9 +77,8 @@ tr:-moz-any([selected], :hover) > td > .action-icon {
   height: 200%;
   position: absolute;
   top: -50%;
-  left: -3px;
-  padding-left: 13px;
-  padding-right: 13px;
+  inset-inline-start: -3px;
+  padding-inline: 13px;
 }
 
 /* square background */
@@ -98,16 +97,16 @@ tr:-moz-any([selected], :hover) > td > .action-icon {
 /* icons */
 .action-icon::after {
   -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
   fill-opacity: 0;
   background-repeat: no-repeat;
   background-position: center;
-  fill: currentColor;
   line-height: 100%;
 }
 .addon-icon::after {
   content: url("chrome://global/skin/icons/shortcut.svg");
   top: 2px;
-  left: -11px;
+  inset-inline-start: -11px;
   width: 16px;
 }
 .addon-icon:dir(rtl)::after {
@@ -117,7 +116,7 @@ tr:-moz-any([selected], :hover) > td > .action-icon {
   content: url("chrome://global/skin/icons/close.svg");
   height: 100%;
   top: 0;
-  left: -13px;
+  inset-inline-start: -13px;
   transform: scale(1.2);
 }
 
@@ -152,7 +151,7 @@ td {
   -moz-context-properties: fill;
   fill: currentColor;
 }
-#dispatch-tbody > tr > td.root{
+#dispatch-tbody > tr > td.root {
   background-position-x: left 36px;
   padding-inline-start: 62px;
 }
@@ -160,10 +159,8 @@ td {
   background-position-x: right 36px;
 }
 .twisty {
-  margin-inline-start: -62px;
-  margin-inline-end: 26px;
-  padding-inline-end: 18px;
-  padding-inline-start: 18px;
+  margin-inline: -62px 26px;
+  padding-inline: 18px;
   position: relative;
 }
 /* Putting the background image in a positioned pseudo element lets us
@@ -175,7 +172,7 @@ td {
   line-height: 50%;
   top: 4px; /* Half the image's height */
   width: 100%;
-  left: 0;
+  inset-inline-start: 0;
   text-align: center;
   -moz-context-properties: fill;
   fill: currentColor;
@@ -217,7 +214,7 @@ td {
   background-position: right 4px center;
 }
 .clickable:dir(rtl) {
-  background-position: left 4px center;
+  background-position-x: left 4px;
 }
 .asc {
   background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
