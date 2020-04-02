@@ -40,6 +40,8 @@ pub unsafe extern "C" fn fog_init(
     app_build: &nsACString,
     app_display_version: &nsACString,
     channel: *const c_char,
+    os_version: &nsACString,
+    architecture: &nsACString
 ) -> nsresult {
     log::debug!("Initializing FOG.");
 
@@ -49,13 +51,15 @@ pub unsafe extern "C" fn fog_init(
     let channel = CStr::from_ptr(channel);
     let channel = Some(channel.to_string_lossy().to_string());
 
-    let os_version = String::from("unknown");
+    let os_version = os_version.to_string();
+    let architecture = architecture.to_string();
 
     let client_info = ClientInfo {
         app_build,
         app_display_version,
         channel,
         os_version,
+        architecture,
     };
     log::debug!("Client Info: {:#?}", client_info);
 

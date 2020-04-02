@@ -13,4 +13,6 @@ pub struct ClientInfo {
     pub channel: Option<String>,
     /// The user-visible version of the operating system (e.g. "1.2.3").
     pub os_version: String,
+    /// The architecture of the device, (e.g. "x86-64", "arm").
+    pub architecture: String,
 }

@@ -83,6 +83,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsXPCOMPrivate.h"
 #include "nsXULAppAPI.h"
+#include "nsIPropertyBag2.h"
 #include "nsIXULAppInfo.h"
 #include "other/CombinedStacks.h"
 #include "other/TelemetryIOInterposeObserver.h"
@@ -1165,7 +1166,14 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
 // C functions with the "fog_" prefix.
 // See toolkit/components/glean/*.
 extern "C" {
-nsresult fog_init(const nsACString* dataPath, const nsACString* buildId, const nsACString* appDisplayVersion, const char* channel);
+nsresult fog_init(
+    const nsACString* dataPath,
+    const nsACString* buildId,
+    const nsACString* appDisplayVersion,
+    const char* channel,
+    const nsACString* osVersion,
+    const nsACString* architecture
+);
 }
 
 static void internal_initGlean() {
@@ -1193,7 +1201,27 @@ static void internal_initGlean() {
   nsAutoCString appVersion;
   rv = appInfo->GetVersion(appVersion);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Can't get version. FOG will not be initialized.");
+    NS_WARNING("Can't get app version. FOG will not be initialized.");
+    return;
+  }
+
+  nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
+  if (!appInfo) {
+    NS_WARNING("Can't fetch info service. FOG will not be initialized.");
+    return;
+  }
+
+  nsAutoCString osVersion;
+  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("version"), osVersion);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't get OS version. FOG will not be initialized.");
+    return;
+  }
+
+  nsAutoCString architecture;
+  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("arch"), architecture);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't get architecture. FOG will not be initialized.");
     return;
   }
 
@@ -1202,7 +1230,9 @@ static void internal_initGlean() {
           &dataPath,
           &buildID,
           &appVersion,
-          MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)
+          MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL),
+          &osVersion,
+          &architecture
         )
   ));
 }
