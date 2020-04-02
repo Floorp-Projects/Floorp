@@ -206,14 +206,46 @@ function requestTabs() {
         DEBUG_TARGET_PANE.TAB
       );
       const tabs = isSupported
-        ? await clientWrapper.listTabs({ favicons: true })
+        ? await clientWrapper.listTabs({
+            // Backward compatibility: this is only used for FF75 or older.
+            // The argument can be dropped when FF76 hits the release channel.
+            favicons: true,
+          })
         : [];
+
+      // Fetch the favicon for all tabs.
+      await Promise.all(
+        tabs.map(async tab => (tab.favicon = await getTabFavicon(tab)))
+      );
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {
       dispatch({ type: REQUEST_TABS_FAILURE, error: e });
     }
   };
+}
+
+async function getTabFavicon(targetFront) {
+  const { descriptorFront } = targetFront;
+  if (!descriptorFront || !descriptorFront.traits.getFavicon) {
+    // Backward compatibility for FF75 or older.
+    // The favicon used to be included directly on the target form.
+    // Starting with Firefox 76, consumers should retrieve the favicon
+    // using the getFavicon request.
+    return targetFront.favicon;
+  }
+
+  try {
+    const favicon = await descriptorFront.getFavicon();
+    return favicon;
+  } catch (e) {
+    // We might request the favicon for a tab which is going to be destroyed.
+    // In this case targetFront.actorID will be null. Otherwise log an error.
+    if (targetFront.actorID) {
+      console.error("Failed to retrieve the favicon for " + targetFront.url, e);
+    }
+    return "";
+  }
 }
 
 function requestExtensions() {

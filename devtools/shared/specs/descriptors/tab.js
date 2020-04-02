@@ -15,6 +15,12 @@ const tabDescriptorSpec = generateActorSpec({
         frame: RetVal("json"),
       },
     },
+    getFavicon: {
+      request: {},
+      response: {
+        favicon: RetVal("string"),
+      },
+    },
   },
 });
 

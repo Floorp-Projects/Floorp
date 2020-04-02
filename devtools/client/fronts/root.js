@@ -230,9 +230,12 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   /**
    * Override default listTabs request in order to return a list of
    * BrowsingContextTargetFronts while updating their selected state.
+   *
+   * Backward compatibility: favicons is only useful for FF75 or older.
+   * It can be removed when Firefox 76 hits the release channel.
    */
-  async listTabs(options) {
-    const { selected, tabs } = await super.listTabs(options);
+  async listTabs({ favicons } = {}) {
+    const { selected, tabs } = await super.listTabs({ favicons });
     const targets = [];
     for (const i in tabs) {
       if (!this.actorID) {
