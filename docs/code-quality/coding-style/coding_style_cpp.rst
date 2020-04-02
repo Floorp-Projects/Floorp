@@ -496,7 +496,7 @@ explicitly mark the return value should always be checked. For example:
    create();
 
    // for C++, add this in *declaration*, do not add it again in implementation.
-   MOZ_MUST_USE nsresult
+   [[nodiscard]] nsresult
    DoSomething();
 
 There are some exceptions:
@@ -511,7 +511,7 @@ There are some exceptions:
    SomeMap::GetValue(const nsString& key, nsString& value);
 
 If most callers need to check the output value first, then adding
-``MOZ_MUST_USE`` might be too verbose. In this case, change the return value
+``[[nodiscard]]`` might be too verbose. In this case, change the return value
 to void might be a reasonable choice.
 
 There is also a static analysis attribute ``MOZ_MUST_USE_TYPE``, which can
