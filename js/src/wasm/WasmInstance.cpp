@@ -483,7 +483,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   }
 
   // Functions that return multiple values don't have a jit exit at the moment.
-  if (fi.funcType().temporarilyUnsupportedResultCountForJitExit()) {
+  if (fi.funcType().temporarilyUnsupportedResultCountForExit()) {
     return true;
   }
 
@@ -1933,125 +1933,6 @@ static bool GetInterpEntry(Instance& instance, uint32_t funcIndex,
   return true;
 }
 
-class MOZ_RAII ReturnToJSResultCollector {
-  class MOZ_RAII StackResultsRooter : public JS::CustomAutoRooter {
-    ReturnToJSResultCollector& collector_;
-
-   public:
-    StackResultsRooter(JSContext* cx, ReturnToJSResultCollector& collector)
-        : JS::CustomAutoRooter(cx), collector_(collector) {}
-
-    void trace(JSTracer* trc) final {
-      for (ABIResultIter iter(collector_.type_); !iter.done(); iter.next()) {
-        const ABIResult& result = iter.cur();
-        if (result.onStack() && result.type().isReference()) {
-          char* loc = collector_.stackResultsArea_.get() + result.stackOffset();
-          JSObject** refLoc = reinterpret_cast<JSObject**>(loc);
-          TraceNullableRoot(trc, refLoc, "StackResultsRooter::trace");
-        }
-      }
-    }
-  };
-  friend class StackResultsRooter;
-
-  ResultType type_;
-  UniquePtr<char[], JS::FreePolicy> stackResultsArea_;
-  Maybe<StackResultsRooter> rooter_;
-
- public:
-  explicit ReturnToJSResultCollector(const ResultType& type) : type_(type){};
-  bool init(JSContext* cx) {
-    bool needRooter = false;
-    ABIResultIter iter(type_);
-    for (; !iter.done(); iter.next()) {
-      const ABIResult& result = iter.cur();
-      if (result.onStack() && result.type().isReference()) {
-        needRooter = true;
-      }
-    }
-    uint32_t areaBytes = iter.stackBytesConsumedSoFar();
-    MOZ_ASSERT_IF(needRooter, areaBytes > 0);
-    if (areaBytes > 0) {
-      // It is necessary to zero storage for ref results, and it doesn't
-      // hurt to do so for other POD results.
-      stackResultsArea_ = cx->make_zeroed_pod_array<char>(areaBytes);
-      if (!stackResultsArea_) {
-        return false;
-      }
-      if (needRooter) {
-        rooter_.emplace(cx, *this);
-      }
-    }
-    return true;
-  }
-
-  void* stackResultsArea() {
-    MOZ_ASSERT(stackResultsArea_);
-    return stackResultsArea_.get();
-  }
-
-  bool collect(JSContext* cx, void* registerResultLoc,
-               MutableHandleValue rval) {
-    if (type_.empty()) {
-      // No results: set to undefined, and we're done.
-      rval.setUndefined();
-      return true;
-    }
-
-    // Stack results written to stackResultsArea_; register result
-    // written to registerResultLoc.
-
-    // First, convert the register return value, and prepare to iterate
-    // in push order.  Note that if the register result is a reference
-    // type, it is unrooted, so ToJSValue_anyref must not GC in that
-    // case.
-    ABIResultIter iter(type_);
-    DebugOnly<bool> usedRegisterResult = false;
-    for (; !iter.done(); iter.next()) {
-      if (iter.cur().inRegister()) {
-        MOZ_ASSERT(!usedRegisterResult);
-        if (!ToJSValue<DebugCodegenVal>(cx, registerResultLoc,
-                                        iter.cur().type(), rval)) {
-          return false;
-        }
-        usedRegisterResult = true;
-      }
-    }
-    MOZ_ASSERT(usedRegisterResult);
-
-    MOZ_ASSERT((stackResultsArea_ != nullptr) == (iter.count() > 1));
-    if (!stackResultsArea_) {
-      // A single result: we're done.
-      return true;
-    }
-
-    // Otherwise, collect results in an array, in push order.
-    Rooted<ArrayObject*> array(cx, NewDenseEmptyArray(cx));
-    if (!array) {
-      return false;
-    }
-    RootedValue tmp(cx);
-    for (iter.switchToPrev(); !iter.done(); iter.prev()) {
-      const ABIResult& result = iter.cur();
-      if (result.onStack()) {
-        char* loc = stackResultsArea_.get() + result.stackOffset();
-        if (!ToJSValue<DebugCodegenVal>(cx, loc, result.type(), &tmp)) {
-          return false;
-        }
-        if (!NewbornArrayPush(cx, array, tmp)) {
-          return false;
-        }
-      } else {
-        if (!NewbornArrayPush(cx, array, rval)) {
-          return false;
-        }
-      }
-    }
-    rval.set(ObjectValue(*array));
-    return true;
-  }
-};
-
 bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   if (memory_) {
     // If there has been a moving grow, this Instance should have been notified.
@@ -2070,10 +1951,9 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  ArgTypeVector argTypes(*funcType);
-  ResultType resultType(ResultType::Vector(funcType->results()));
-  ReturnToJSResultCollector results(resultType);
-  if (!results.init(cx)) {
+  if (funcType->temporarilyUnsupportedResultCountForEntry()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_MULTIPLE_RESULT_ENTRY_UNIMPLEMENTED);
     return false;
   }
 
@@ -2086,25 +1966,20 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   // stored in the first element of the array (which, therefore, must have
   // length >= 1).
   Vector<ExportArg, 8> exportArgs(cx);
-  if (!exportArgs.resize(std::max<size_t>(1, argTypes.length()))) {
+  if (!exportArgs.resize(std::max<size_t>(1, funcType->args().length()))) {
     return false;
   }
 
   ASSERT_ANYREF_IS_JSOBJECT;
   Rooted<GCVector<JSObject*, 8, SystemAllocPolicy>> refs(cx);
 
-  DebugCodegen(DebugChannel::Function, "wasm-function[%d] arguments [",
+  DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments [",
                funcIndex);
   RootedValue v(cx);
-  for (size_t i = 0; i < argTypes.length(); ++i) {
+  for (size_t i = 0; i < funcType->args().length(); ++i) {
+    v = i < args.length() ? args[i] : UndefinedValue();
+    ValType type = funcType->arg(i);
     void* rawArgLoc = &exportArgs[i];
-    if (argTypes.isSyntheticStackResultPointerArg(i)) {
-      *reinterpret_cast<void**>(rawArgLoc) = results.stackResultsArea();
-      continue;
-    }
-    size_t naturalIdx = argTypes.naturalIndex(i);
-    v = naturalIdx < args.length() ? args[naturalIdx] : UndefinedValue();
-    ValType type = funcType->arg(naturalIdx);
     if (!ToWebAssemblyValue<DebugCodegenVal>(cx, v, type, rawArgLoc)) {
       return false;
     }
@@ -2139,12 +2014,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   if (refs.length() > 0) {
     DebugCodegen(DebugChannel::Function, "; ");
     size_t nextRef = 0;
-    for (size_t i = 0; i < argTypes.length(); ++i) {
-      if (argTypes.isSyntheticStackResultPointerArg(i)) {
-        continue;
-      }
-      size_t naturalIdx = argTypes.naturalIndex(i);
-      ValType type = funcType->arg(naturalIdx);
+    for (size_t i = 0; i < funcType->args().length(); ++i) {
+      ValType type = funcType->arg(i);
       if (type.isReference()) {
         void** rawArgLoc = (void**)&exportArgs[i];
         *rawArgLoc = refs[nextRef++];
@@ -2186,8 +2057,15 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   void* registerResultLoc = &exportArgs[0];
   DebugCodegen(DebugChannel::Function, "wasm-function[%d]; results [",
                funcIndex);
-  if (!results.collect(cx, registerResultLoc, args.rval())) {
-    return false;
+  const ValTypeVector& results = funcType->results();
+  if (results.length() == 0) {
+    args.rval().set(UndefinedValue());
+  } else {
+    MOZ_ASSERT(results.length() == 1, "multi-value return unimplemented");
+    if (!ToJSValue<DebugCodegenVal>(cx, registerResultLoc, results[0],
+                                    args.rval())) {
+      return false;
+    }
   }
   DebugCodegen(DebugChannel::Function, "]\n");
 
