@@ -485,6 +485,10 @@ impl TimeProfileCounter {
     pub fn get(&self) -> u64 {
         self.nanoseconds
     }
+
+    pub fn get_ms(&self) -> f64 {
+        self.nanoseconds as f64 / 1000000.0
+    }
 }
 
 impl ProfileCounter for TimeProfileCounter {
@@ -496,7 +500,7 @@ impl ProfileCounter for TimeProfileCounter {
         if self.invert {
             format!("{:.2} fps", 1000000000.0 / self.nanoseconds as f64)
         } else {
-            format!("{:.2} ms", self.nanoseconds as f64 / 1000000.0)
+            format!("{:.2} ms", self.get_ms())
         }
     }
 
