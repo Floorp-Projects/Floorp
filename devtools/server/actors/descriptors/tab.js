@@ -32,17 +32,14 @@ const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
  *
  * @param connection The main RDP connection.
  * @param browser <xul:browser> or <iframe mozbrowser> element to connect to.
- * @param options
- *        - {Boolean} favicons: true if the form should include the favicon for the tab.
  */
 const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
-  initialize(connection, browser, options = {}) {
+  initialize(connection, browser) {
     Actor.prototype.initialize.call(this, connection);
     this._conn = connection;
     this._browser = browser;
     this._form = null;
     this.exited = false;
-    this.options = options;
 
     // The update request could timeout if the descriptor is destroyed while an
     // update is pending. This property will hold a reject callback that can be
@@ -138,14 +135,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     }
   },
 
-  /**
-   * @param {Object} options
-   *        See TabDescriptorActor constructor.
-   */
-  async update(options = {}) {
-    // Update the TabDescriptorActor options.
-    this.options = options;
-
+  async update() {
     // If the child happens to be crashed/close/detach, it won't have _form set,
     // so only request form update if some code is still listening on the other
     // side.
