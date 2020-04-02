@@ -2,7 +2,7 @@
 
 # CrashReporter
 
-`class CrashReporter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L54)
+`class CrashReporter : `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L55)
 
 A generic crash reporter that can report crashes to multiple services.
 

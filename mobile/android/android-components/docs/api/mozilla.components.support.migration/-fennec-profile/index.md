@@ -24,7 +24,7 @@ A profile of "Fennec" (Firefox for Android).
 
 | Name | Summary |
 |---|---|
-| [findDefault](find-default.md) | `fun findDefault(context: <ERROR CLASS>, crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`, mozillaDirectory: `[`File`](https://developer.android.com/reference/java/io/File.html)` = getMozillaDirectory(context), fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "profiles.ini"): `[`FennecProfile`](./index.md)`?`<br>Returns the default [FennecProfile](./index.md) - the default profile used by Fennec or `null` if no profile could be found. |
+| [findDefault](find-default.md) | `fun findDefault(context: <ERROR CLASS>, crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`, mozillaDirectory: `[`File`](https://developer.android.com/reference/java/io/File.html)` = getMozillaDirectory(context), fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "profiles.ini"): `[`FennecProfile`](./index.md)`?`<br>Returns the default [FennecProfile](./index.md) - the default profile used by Fennec or `null` if no profile could be found. |
 
 ### Extension Functions
 
