@@ -246,11 +246,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
   if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
     mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
   }
-
-  // TODO: check whether this is too expensive to do for all pages;
-  // maybe we could throttle and only collect stats on 1% of page-loads,
-  // or something like that.
-  mFontStats = MakeUnique<FontMatchingStats>();
 }
 
 static const char* gExactCallbackPrefs[] = {
