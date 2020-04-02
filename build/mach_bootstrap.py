@@ -53,6 +53,7 @@ MACH_MODULES = [
     'python/mozbuild/mozbuild/compilation/codecomplete.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
     'python/mozbuild/mozbuild/mach_commands.py',
+    'python/mozperftest/mozperftest/mach_commands.py',
     'python/mozrelease/mozrelease/mach_commands.py',
     'python/safety/mach_commands.py',
     'remote/mach_commands.py',

@@ -312,11 +312,11 @@ mozbuild:
         toolchain:
             by-platform:
                 linux1804-64/opt:
-                    - linux64-node
+                    - linux64-node-10
                 macosx1014-64/opt:
-                    - macosx64-node
+                    - macosx64-node-10
                 windows10-64/opt:
-                    - win64-node
+                    - win64-node-10
     when:
         files-changed:
             - '**/moz.configure'
@@ -325,6 +325,7 @@ mozbuild:
             - 'python/mach/**'
             - 'python/mozboot/**'
             - 'python/mozbuild/**'
+            - 'python/mozperftest/**'
             - 'python/mozterm/**'
             - 'python/mozversioncontrol/**'
             - 'testing/mozbase/**'

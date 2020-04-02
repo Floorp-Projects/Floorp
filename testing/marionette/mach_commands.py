@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import functools
 import os
 import sys
 
@@ -62,25 +63,12 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
         return 0
 
 
-def is_buildapp_in(*apps):
-    def is_buildapp_supported(cls):
-        for a in apps:
-            c = getattr(conditions, 'is_{}'.format(a), None)
-            if c and c(cls):
-                return True
-        return False
-
-    is_buildapp_supported.__doc__ = 'Must have a {} build.'.format(
-        ' or '.join(apps))
-    return is_buildapp_supported
-
-
 @CommandProvider
 class MarionetteTest(MachCommandBase):
     @Command("marionette-test",
              category="testing",
              description="Remote control protocol to Gecko, used for browser automation.",
-             conditions=[is_buildapp_in(*SUPPORTED_APPS)],
+             conditions=[functools.partial(conditions.is_buildapp_in, apps=SUPPORTED_APPS)],
              parser=create_parser_tests,
              )
     def marionette_test(self, tests, **kwargs):
