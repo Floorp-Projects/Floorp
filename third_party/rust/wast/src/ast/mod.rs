@@ -307,7 +307,6 @@ reexport! {
     mod export;
     mod expr;
     mod func;
-    mod gc;
     mod global;
     mod import;
     mod memory;
@@ -320,8 +319,10 @@ reexport! {
 /// Common keyword used to parse WebAssembly text files.
 pub mod kw {
     custom_keyword!(after);
+    custom_keyword!(any);
     custom_keyword!(anyfunc);
     custom_keyword!(anyref);
+    custom_keyword!(array);
     custom_keyword!(assert_exhaustion);
     custom_keyword!(assert_invalid);
     custom_keyword!(assert_malformed);
@@ -344,7 +345,11 @@ pub mod kw {
     custom_keyword!(elem);
     custom_keyword!(end);
     custom_keyword!(event);
+    custom_keyword!(exn);
+    custom_keyword!(exnref);
     custom_keyword!(export);
+    custom_keyword!(eq);
+    custom_keyword!(eqref);
     custom_keyword!(f32);
     custom_keyword!(f32x4);
     custom_keyword!(f64);
@@ -353,14 +358,17 @@ pub mod kw {
     custom_keyword!(first);
     custom_keyword!(func);
     custom_keyword!(funcref);
-    custom_keyword!(gc_feature_opt_in);
     custom_keyword!(get);
     custom_keyword!(global);
+    custom_keyword!(i16);
     custom_keyword!(i16x8);
+    custom_keyword!(i31);
+    custom_keyword!(i31ref);
     custom_keyword!(i32);
     custom_keyword!(i32x4);
     custom_keyword!(i64);
     custom_keyword!(i64x2);
+    custom_keyword!(i8);
     custom_keyword!(i8x16);
     custom_keyword!(import);
     custom_keyword!(invoke);
@@ -371,8 +379,11 @@ pub mod kw {
     custom_keyword!(module);
     custom_keyword!(nan_arithmetic = "nan:arithmetic");
     custom_keyword!(nan_canonical = "nan:canonical");
+    custom_keyword!(null);
     custom_keyword!(nullref);
     custom_keyword!(offset);
+    custom_keyword!(opt);
+    custom_keyword!(optref);
     custom_keyword!(param);
     custom_keyword!(passive);
     custom_keyword!(quote);
@@ -386,6 +397,7 @@ pub mod kw {
     custom_keyword!(ref_null = "ref.null");
     custom_keyword!(register);
     custom_keyword!(result);
+    custom_keyword!(rtt);
     custom_keyword!(shared);
     custom_keyword!(start);
     custom_keyword!(r#struct = "struct");

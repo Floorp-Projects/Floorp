@@ -15,12 +15,12 @@ pub struct Wat<'a> {
 
 impl<'a> Parse<'a> for Wat<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
+        if !parser.has_meaningful_tokens() {
+            return Err(parser.error("expected at least one module field"));
+        }
         let _r = parser.register_annotation("custom");
         let module = if !parser.peek2::<kw::module>() {
             let fields = ModuleField::parse_remaining(parser)?;
-            if fields.is_empty() {
-                return Err(parser.error("expected at least one module field"));
-            }
             Module {
                 span: ast::Span { offset: 0 },
                 id: None,
@@ -170,7 +170,6 @@ pub enum ModuleField<'a> {
     Elem(ast::Elem<'a>),
     Data(ast::Data<'a>),
     Event(ast::Event<'a>),
-    GcOptIn(ast::GcOptIn),
     Custom(ast::Custom<'a>),
 }
 
@@ -219,9 +218,6 @@ impl<'a> Parse<'a> for ModuleField<'a> {
         }
         if parser.peek::<kw::event>() {
             return Ok(ModuleField::Event(parser.parse()?));
-        }
-        if parser.peek::<kw::gc_feature_opt_in>() {
-            return Ok(ModuleField::GcOptIn(parser.parse()?));
         }
         if parser.peek::<annotation::custom>() {
             return Ok(ModuleField::Custom(parser.parse()?));
