@@ -137,7 +137,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // as well as expired elements.
 
   return [[self role] isEqualToString:NSAccessibilityUnknownRole] &&
-         ([self state] & states::FOCUSABLE);
+         [self stateWithMask:states::FOCUSABLE];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -257,6 +257,10 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   return 0;
 }
 
+- (uint64_t)stateWithMask:(uint64_t)mask {
+  return [self state] & mask;
+}
+
 - (id)accessibilityAttributeValue:(NSString*)attribute {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -271,7 +275,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) return [self children];
   if ([attribute isEqualToString:NSAccessibilityExpandedAttribute]) {
-    return [NSNumber numberWithBool:([self state] & states::EXPANDED) != 0];
+    return [NSNumber numberWithBool:[self stateWithMask:states::EXPANDED] != 0];
   }
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) return [self parent];
 
@@ -285,7 +289,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   if ([attribute isEqualToString:NSAccessibilityEnabledAttribute])
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
-    return [NSNumber numberWithBool:([self state] & states::HASPOPUP) != 0];
+    return [NSNumber numberWithBool:[self stateWithMask:states::HASPOPUP] != 0];
   }
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self value];
   if ([attribute isEqualToString:NSAccessibilityARIACurrentAttribute]) {
@@ -1108,7 +1112,7 @@ struct RoleDescrComparator {
 - (NSString*)orientation {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  uint64_t state = [self state];
+  uint64_t state = [self stateWithMask:(states::HORIZONTAL | states::VERTICAL)];
 
   if (state & states::HORIZONTAL) {
     return NSAccessibilityHorizontalOrientationValue;
@@ -1141,7 +1145,7 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)canBeFocused {
-  return (([self state] & states::FOCUSABLE) != 0);
+  return [self stateWithMask:states::FOCUSABLE] != 0;
 }
 
 - (BOOL)focus {
@@ -1156,7 +1160,7 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)isEnabled {
-  return (([self state] & states::UNAVAILABLE) == 0);
+  return [self stateWithMask:states::UNAVAILABLE] == 0;
 }
 
 - (void)firePlatformEvent:(uint32_t)eventType {
