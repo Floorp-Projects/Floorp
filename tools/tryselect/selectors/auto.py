@@ -22,6 +22,7 @@ class AutoParser(BaseTryParser):
 
 
 def run(message='{msg}', push=True, closed_tree=False, try_config=None):
+    print("warning: 'mach try auto' is experimental, results may vary!")
     msg = message.format(msg='Tasks automatically selected.')
     try_config = try_config or {}
 
