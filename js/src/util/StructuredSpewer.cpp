@@ -61,7 +61,7 @@ void StructuredSpewer::tryToInitializeOutput(const char* path) {
   static mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> threadCounter;
 
   char suffix_path[2048] = {0};
-  SprintfLiteral(suffix_path, "%s.%d.%d", path, getpid(), threadCounter++);
+  SprintfLiteral(suffix_path, "%s.%d.%u", path, getpid(), threadCounter++);
 
   if (!output_.init(suffix_path)) {
     // Returning here before we've emplaced the JSONPrinter
@@ -86,7 +86,7 @@ static bool MatchJSScript(JSScript* script, const char* pattern) {
   }
 
   char signature[2048] = {0};
-  SprintfLiteral(signature, "%s:%d:%d", script->filename(), script->lineno(),
+  SprintfLiteral(signature, "%s:%u:%u", script->filename(), script->lineno(),
                  script->column());
 
   // Trivial containment match.

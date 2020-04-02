@@ -233,7 +233,7 @@ IonBuilder* IonBuilder::outermostBuilder() {
 void IonBuilder::spew(const char* message) {
   // Don't call PCToLineNumber in release builds.
 #ifdef DEBUG
-  JitSpew(JitSpew_IonMIR, "%s @ %s:%d", message, script()->filename(),
+  JitSpew(JitSpew_IonMIR, "%s @ %s:%u", message, script()->filename(),
           PCToLineNumber(script(), pc));
 #endif
 }

@@ -410,18 +410,18 @@ UniqueChars LDefinition::toString() const {
 static UniqueChars PrintUse(const LUse* use) {
   switch (use->policy()) {
     case LUse::REGISTER:
-      return JS_smprintf("v%d:r", use->virtualRegister());
+      return JS_smprintf("v%u:r", use->virtualRegister());
     case LUse::FIXED:
-      return JS_smprintf("v%d:%s", use->virtualRegister(),
+      return JS_smprintf("v%u:%s", use->virtualRegister(),
                          AnyRegister::FromCode(use->registerCode()).name());
     case LUse::ANY:
-      return JS_smprintf("v%d:r?", use->virtualRegister());
+      return JS_smprintf("v%u:r?", use->virtualRegister());
     case LUse::KEEPALIVE:
-      return JS_smprintf("v%d:*", use->virtualRegister());
+      return JS_smprintf("v%u:*", use->virtualRegister());
     case LUse::STACK:
-      return JS_smprintf("v%d:s", use->virtualRegister());
+      return JS_smprintf("v%u:s", use->virtualRegister());
     case LUse::RECOVERED_INPUT:
-      return JS_smprintf("v%d:**", use->virtualRegister());
+      return JS_smprintf("v%u:**", use->virtualRegister());
     default:
       MOZ_CRASH("invalid use policy");
   }
@@ -446,13 +446,13 @@ UniqueChars LAllocation::toString() const {
         buf = JS_smprintf("%s", toFloatReg()->reg().name());
         break;
       case LAllocation::STACK_SLOT:
-        buf = JS_smprintf("stack:%d", toStackSlot()->slot());
+        buf = JS_smprintf("stack:%u", toStackSlot()->slot());
         break;
       case LAllocation::ARGUMENT_SLOT:
-        buf = JS_smprintf("arg:%d", toArgument()->index());
+        buf = JS_smprintf("arg:%u", toArgument()->index());
         break;
       case LAllocation::STACK_AREA:
-        buf = JS_smprintf("stackarea:%d+%d", toStackArea()->base(),
+        buf = JS_smprintf("stackarea:%u+%u", toStackArea()->base(),
                           toStackArea()->size());
         break;
       case LAllocation::USE:

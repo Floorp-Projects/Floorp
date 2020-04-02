@@ -3651,7 +3651,7 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
   }
 
   if (shape.isDataProperty()) {
-    out.printf(" slot %d", shape.maybeSlot());
+    out.printf(" slot %u", shape.maybeSlot());
   }
 
   out.printf(")\n");
@@ -3745,7 +3745,7 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (reserved) {
       out.printf("  reserved slots:\n");
       for (uint32_t i = 0; i < reserved; i++) {
-        out.printf("    %3d ", i);
+        out.printf("    %3u ", i);
         out.put(": ");
         dumpValue(nobj->getSlot(i), out);
         out.putChar('\n');
@@ -3769,7 +3769,7 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (slots) {
       out.put("  elements:\n");
       for (uint32_t i = 0; i < slots; i++) {
-        out.printf("    %3d: ", i);
+        out.printf("    %3u: ", i);
         dumpValue(nobj->getDenseElement(i), out);
         out.putChar('\n');
       }
@@ -3910,7 +3910,7 @@ JS_FRIEND_API void js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out) {
             ? 'i'
             : i.isBaseline() ? 'b' : i.isIon() ? 'I' : i.isWasm() ? 'W' : '?';
 
-    out.printf("#%zu %14p %c   %s:%d", depth, i.rawFramePtr(), frameType,
+    out.printf("#%zu %14p %c   %s:%u", depth, i.rawFramePtr(), frameType,
                filename, line);
 
     if (i.hasScript()) {

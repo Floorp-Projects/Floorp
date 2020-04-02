@@ -3059,7 +3059,7 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
 
       case SrcNoteType::ColSpan:
         colspan = SrcNote::ColSpan::getSpan(sn);
-        if (!sp->jsprintf("%d", colspan)) {
+        if (!sp->jsprintf("%u", colspan)) {
           return false;
         }
         break;

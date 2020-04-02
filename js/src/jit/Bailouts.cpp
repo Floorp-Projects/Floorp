@@ -56,7 +56,7 @@ bool jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLogTimestamp(logger, TraceLogger_Bailout);
 
-  JitSpew(JitSpew_IonBailouts, "Took bailout! Snapshot offset: %d",
+  JitSpew(JitSpew_IonBailouts, "Took bailout! Snapshot offset: %u",
           frame.snapshotOffset());
 
   MOZ_ASSERT(IsBaselineJitEnabled(cx));
@@ -130,7 +130,7 @@ bool jit::InvalidationBailout(InvalidationBailoutStack* sp,
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   TraceLogTimestamp(logger, TraceLogger_Invalidation);
 
-  JitSpew(JitSpew_IonBailouts, "Took invalidation bailout! Snapshot offset: %d",
+  JitSpew(JitSpew_IonBailouts, "Took invalidation bailout! Snapshot offset: %u",
           frame.snapshotOffset());
 
   // Note: the frame size must be computed before we return from this function.

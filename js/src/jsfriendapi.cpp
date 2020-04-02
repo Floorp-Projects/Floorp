@@ -854,7 +854,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
   }
 
   // print filename, line number and column
-  if (!sp.printf("%s [\"%s\":%d:%d]\n", fun ? ")" : "",
+  if (!sp.printf("%s [\"%s\":%u:%u]\n", fun ? ")" : "",
                  filename ? filename : "<unknown>", lineno, column)) {
     return false;
   }
@@ -966,7 +966,7 @@ static bool FormatWasmFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
     return false;
   }
 
-  if (!sp.printf(" [\"%s\":wasm-function[%d]:0x%x]\n",
+  if (!sp.printf(" [\"%s\":wasm-function[%u]:0x%x]\n",
                  iter.filename() ? iter.filename() : "<unknown>",
                  iter.wasmFuncIndex(), iter.wasmBytecodeOffset())) {
     return false;
