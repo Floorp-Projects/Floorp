@@ -15,9 +15,11 @@
   <body>
     <p>Request cause test</p>
     <img src="img_request" />
+    <div style="height: 200vh;"></div>
+    <img loading="lazy" src="lazy_img_request" />
     <script type="text/javascript">
       "use strict";
-      
+
       function performXhrRequest() {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", "xhr_request", true);
@@ -46,6 +48,14 @@
         });
       }
 
+      function performLazyLoadingImage() {
+        return new Promise(function (resolve) {
+          const lazyImg = document.querySelector("img[loading='lazy']");
+          lazyImg.addEventListener("error", resolve);
+          lazyImg.scrollIntoView({ behavior: "instant" });
+        });
+      }
+
       function performBeaconRequest() {
         navigator.sendBeacon("beacon_request");
       }
@@ -55,6 +65,7 @@
         await performFetchRequest();
         await performPromiseFetchRequest();
         await performTimeoutFetchRequest();
+        await performLazyLoadingImage();
 
         // Finally, send a beacon request
         performBeaconRequest();

@@ -40,7 +40,7 @@ const EXPECTED_REQUESTS = [
     causeType: "xhr",
     causeUri: INITIATOR_URL,
     stack: [
-      { fn: "performXhrRequestCallback", file: INITIATOR_FILE_NAME, line: 26 },
+      { fn: "performXhrRequestCallback", file: INITIATOR_FILE_NAME, line: 28 },
     ],
   },
   {
@@ -48,7 +48,7 @@ const EXPECTED_REQUESTS = [
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: INITIATOR_URL,
-    stack: [{ fn: "performFetchRequest", file: INITIATOR_FILE_NAME, line: 31 }],
+    stack: [{ fn: "performFetchRequest", file: INITIATOR_FILE_NAME, line: 33 }],
   },
   {
     method: "GET",
@@ -59,12 +59,12 @@ const EXPECTED_REQUESTS = [
       {
         fn: "performPromiseFetchRequestCallback",
         file: INITIATOR_FILE_NAME,
-        line: 37,
+        line: 39,
       },
       {
         fn: "performPromiseFetchRequest",
         file: INITIATOR_FILE_NAME,
-        line: 36,
+        line: 38,
         asyncCause: "promise callback",
       },
     ],
@@ -78,15 +78,22 @@ const EXPECTED_REQUESTS = [
       {
         fn: "performTimeoutFetchRequestCallback2",
         file: INITIATOR_FILE_NAME,
-        line: 44,
+        line: 46,
       },
       {
         fn: "performTimeoutFetchRequestCallback1",
         file: INITIATOR_FILE_NAME,
-        line: 43,
+        line: 45,
         asyncCause: "setTimeout handler",
       },
     ],
+  },
+  {
+    method: "GET",
+    url: EXAMPLE_URL + "lazy_img_request",
+    causeType: "lazy-img",
+    causeUri: INITIATOR_URL,
+    stack: false,
   },
   {
     method: "POST",
@@ -94,7 +101,7 @@ const EXPECTED_REQUESTS = [
     causeType: "beacon",
     causeUri: INITIATOR_URL,
     stack: [
-      { fn: "performBeaconRequest", file: INITIATOR_FILE_NAME, line: 50 },
+      { fn: "performBeaconRequest", file: INITIATOR_FILE_NAME, line: 60 },
     ],
   },
 ];
