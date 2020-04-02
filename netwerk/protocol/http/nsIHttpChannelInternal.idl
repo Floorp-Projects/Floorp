@@ -395,7 +395,4 @@ interface nsIHttpChannelInternal : nsISupports
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
 
     [notxpcom, nostdcall] attribute boolean hasNonEmptySandboxingFlag;
-
-    [noscript, notxpcom, nostdcall]
-    void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
 };

@@ -204,17 +204,6 @@ HttpChannelChild::HttpChannelChild()
 HttpChannelChild::~HttpChannelChild() {
   LOG(("Destroying HttpChannelChild @%p\n", this));
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy &&
-      !mOnStopRequestCalled) {
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "~HttpChannelChild, mOnStopRequestCalled=false, mStatus=0x%08x, "
-        "mActorDestroyReason=%d",
-        static_cast<uint32_t>(nsresult(mStatus)),
-        static_cast<int32_t>(mActorDestroyReason ? *mActorDestroyReason : -1));
-  }
-#endif
-
   ReleaseMainThreadOnlyReferences();
 }
 
@@ -3909,10 +3898,6 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvCancelDiversion() {
 void HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  mActorDestroyReason.emplace(aWhy);
-#endif
-
   // OnStartRequest might be dropped if IPDL is destroyed abnormally
   // and BackgroundChild might have pending IPC messages.
   // Clean up BackgroundChild at this time to prevent memleak.
@@ -3994,12 +3979,6 @@ nsresult HttpChannelChild::CrossProcessRedirectFinished(nsresult aStatus) {
   }
 
   return mStatus;
-}
-
-void HttpChannelChild::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy = true;
-#endif
 }
 
 }  // namespace net
