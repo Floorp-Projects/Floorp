@@ -9,21 +9,21 @@
 
 [crates_badge]: https://img.shields.io/crates/v/ringbuf.svg
 [docs_badge]: https://docs.rs/ringbuf/badge.svg
-[travis_badge]: https://api.travis-ci.org/nthend/ringbuf.svg
-[appveyor_badge]: https://ci.appveyor.com/api/projects/status/github/nthend/ringbuf?branch=master&svg=true
-[codecov_badge]: https://codecov.io/gh/nthend/ringbuf/graphs/badge.svg
+[travis_badge]: https://api.travis-ci.org/agerasev/ringbuf.svg
+[appveyor_badge]: https://ci.appveyor.com/api/projects/status/github/agerasev/ringbuf?branch=master&svg=true
+[codecov_badge]: https://codecov.io/gh/agerasev/ringbuf/graphs/badge.svg
 [license_badge]: https://img.shields.io/crates/l/ringbuf.svg
 
 [crates]: https://crates.io/crates/ringbuf
 [docs]: https://docs.rs/ringbuf
-[travis]: https://travis-ci.org/nthend/ringbuf
-[appveyor]: https://ci.appveyor.com/project/nthend/ringbuf
-[codecov]: https://codecov.io/gh/nthend/ringbuf
+[travis]: https://travis-ci.org/agerasev/ringbuf
+[appveyor]: https://ci.appveyor.com/project/agerasev/ringbuf
+[codecov]: https://codecov.io/gh/agerasev/ringbuf
 [license]: #license
 
 Lock-free single-producer single-consumer (SPSC) FIFO ring buffer with direct access to inner data.
 
-## Overview
+# Overview
 
 `RingBuffer` is the initial structure representing ring buffer itself.
 Ring buffer can be splitted into pair of `Producer` and `Consumer`.
@@ -38,23 +38,21 @@ And finally, there are `unsafe` methods allowing thread-safe direct access in pl
 [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
 [`Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
 
-## Documentation
-+ [`crates.io` version documentation](https://docs.rs/ringbuf)
-+ [`master` branch documentation](https://nthend.github.io/ringbuf/target/doc/ringbuf/index.html)
+When building with nightly toolchain it is possible to run benchmarks via `cargo bench --features benchmark`.
 
-## Examples
+# Examples
 
-### Simple example
+## Simple example
 
 ```rust
-use ringbuf::{RingBuffer, PushError, PopError};
+use ringbuf::RingBuffer;
 
 let rb = RingBuffer::<i32>::new(2);
 let (mut prod, mut cons) = rb.split();
 
 prod.push(0).unwrap();
 prod.push(1).unwrap();
-assert_eq!(prod.push(2), Err(PushError::Full(2)));
+assert_eq!(prod.push(2), Err(2));
 
 assert_eq!(cons.pop().unwrap(), 0);
 
@@ -62,22 +60,22 @@ prod.push(2).unwrap();
 
 assert_eq!(cons.pop().unwrap(), 1);
 assert_eq!(cons.pop().unwrap(), 2);
-assert_eq!(cons.pop(), Err(PopError::Empty));
+assert_eq!(cons.pop(), None);
 ```
 
-### Message transfer
+## Message transfer
 
 This is more complicated example of transfering text message between threads.
 
 ```rust
-use std::io::{Read};
+use std::io::Read;
 use std::thread;
-use std::time::{Duration};
+use std::time::Duration;
 
-use ringbuf::{RingBuffer};
+use ringbuf::RingBuffer;
 
-let rb = RingBuffer::<u8>::new(10);
-let (mut prod, mut cons) = rb.split();
+let buf = RingBuffer::<u8>::new(10);
+let (mut prod, mut cons) = buf.split();
 
 let smsg = "The quick brown fox jumps over the lazy dog";
 
@@ -87,17 +85,15 @@ let pjh = thread::spawn(move || {
     let zero = [0 as u8];
     let mut bytes = smsg.as_bytes().chain(&zero[..]);
     loop {
-        match prod.read_from(&mut bytes, None) {
-            Ok(n) => {
-                if n == 0 {
-                    break;
-                }
-                println!("-> {} bytes sent", n);
-            },
-            Err(_) => {
-                println!("-> buffer is full, waiting");
-                thread::sleep(Duration::from_millis(1));
-            },
+        if prod.is_full() {
+            println!("-> buffer is full, waiting");
+            thread::sleep(Duration::from_millis(1));
+        } else {
+            let n = prod.read_from(&mut bytes, None).unwrap();
+            if n == 0 {
+                break;
+            }
+            println!("-> {} bytes sent", n);
         }
     }
 
@@ -109,16 +105,16 @@ let cjh = thread::spawn(move || {
 
     let mut bytes = Vec::<u8>::new();
     loop {
-        match cons.write_into(&mut bytes, None) {
-            Ok(n) => println!("<- {} bytes received", n),
-            Err(_) => {
-                if bytes.ends_with(&[0]) {
-                    break;
-                } else {
-                    println!("<- buffer is empty, waiting");
-                    thread::sleep(Duration::from_millis(1));
-                }
-            },
+        if cons.is_empty() {
+            if bytes.ends_with(&[0]) {
+                break;
+            } else {
+                println!("<- buffer is empty, waiting");
+                thread::sleep(Duration::from_millis(1));
+            }
+        } else {
+            let n = cons.write_into(&mut bytes, None).unwrap();
+            println!("<- {} bytes received", n);
         }
     }
 

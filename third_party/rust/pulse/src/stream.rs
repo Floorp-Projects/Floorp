@@ -323,7 +323,7 @@ impl Stream {
         Ok(unsafe { operation::from_raw_ptr(r) })
     }
 
-    pub fn get_time(&self) -> Result<(USec)> {
+    pub fn get_time(&self) -> Result<USec> {
         let mut usec: USec = 0;
         let r = unsafe { ffi::pa_stream_get_time(self.raw_mut(), &mut usec) };
         error_result!(usec, r)

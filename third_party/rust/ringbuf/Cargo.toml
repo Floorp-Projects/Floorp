@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -13,9 +13,8 @@
 [package]
 edition = "2018"
 name = "ringbuf"
-version = "0.1.4"
+version = "0.2.1"
 authors = ["Alexey Gerasev <alexey.gerasev@gmail.com>"]
-build = "build.rs"
 description = "Lock-free SPSC FIFO ring buffer with direct access to inner data"
 homepage = "https://github.com/nthend/ringbuf"
 documentation = "https://docs.rs/ringbuf"
@@ -26,8 +25,7 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/nthend/ringbuf.git"
 
 [dependencies]
-[build-dependencies.rustc_version]
-version = "0.2"
 
 [features]
+benchmark = []
 default = []
