@@ -1193,8 +1193,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvScrollbarPreferenceChanged(
   MOZ_ASSERT(!mIsTopLevel,
              "Scrollbar visibility should be derived from chrome flags for "
              "top-level windows");
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  nsDocShell::Cast(docShell)->SetScrollbarPreference(aPreference);
+  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
+    nsDocShell::Cast(docShell)->SetScrollbarPreference(aPreference);
+  }
   return IPC_OK();
 }
 
