@@ -305,7 +305,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         download = download,
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
-                            FenixSnackbar.makeWithToolbarPadding(view, Snackbar.LENGTH_SHORT)
+                            FenixSnackbar.make(
+                                view = view,
+                                duration = Snackbar.LENGTH_SHORT,
+                                isDisplayedOnBrowserFragment = true
+                            )
                                 .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
                                 .show()
                         }
@@ -422,7 +426,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     customTabSessionId
                 ) { inFullScreen ->
                     if (inFullScreen) {
-                        FenixSnackbar.make(view.rootView, Snackbar.LENGTH_SHORT)
+                        FenixSnackbar.make(
+                            view = view,
+                            duration = Snackbar.LENGTH_SHORT,
+                            isDisplayedOnBrowserFragment = true
+                        )
                             .setText(getString(R.string.full_screen_notification))
                             .show()
                         activity?.enterToImmersiveMode()
@@ -785,7 +793,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 requireComponents.analytics.metrics.track(Event.AddBookmark)
 
                 view?.let { view ->
-                    FenixSnackbar.makeWithToolbarPadding(view, FenixSnackbar.LENGTH_LONG)
+                    FenixSnackbar.make(
+                        view = view,
+                        duration = FenixSnackbar.LENGTH_LONG,
+                        isDisplayedOnBrowserFragment = true
+                    )
                         .setText(getString(R.string.bookmark_saved_snackbar))
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(

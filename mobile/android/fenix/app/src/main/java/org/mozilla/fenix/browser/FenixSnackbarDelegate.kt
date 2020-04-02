@@ -19,12 +19,19 @@ class FenixSnackbarDelegate(val view: View) :
         listener: ((v: View) -> Unit)?
     ) {
         if (listener != null && action != 0) {
-            FenixSnackbar.makeWithToolbarPadding(view, duration = FenixSnackbar.LENGTH_SHORT)
+            FenixSnackbar.make(
+                view = view,
+                duration = FenixSnackbar.LENGTH_SHORT,
+                isDisplayedOnBrowserFragment = true
+            )
                 .setText(view.context.getString(text))
                 .setAction(view.context.getString(action)) { listener.invoke(view) }
                 .show()
         } else {
-            FenixSnackbar.makeWithToolbarPadding(view, duration = FenixSnackbar.LENGTH_SHORT)
+            FenixSnackbar.make(view,
+                duration = FenixSnackbar.LENGTH_SHORT,
+                isDisplayedOnBrowserFragment = true
+            )
                 .setText(view.context.getString(text))
                 .show()
         }

@@ -181,7 +181,11 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
 
         private fun showCopiedSnackbar(copiedItem: String) {
             view?.let {
-                FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(copiedItem).show()
+                FenixSnackbar.make(
+                    view = it,
+                    duration = Snackbar.LENGTH_SHORT,
+                    isDisplayedOnBrowserFragment = false
+                ).setText(copiedItem).show()
             }
         }
     }

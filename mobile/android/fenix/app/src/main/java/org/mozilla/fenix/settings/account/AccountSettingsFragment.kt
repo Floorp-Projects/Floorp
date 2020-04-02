@@ -310,7 +310,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     private fun getChangeListenerForDeviceName(): Preference.OnPreferenceChangeListener {
         return Preference.OnPreferenceChangeListener { _, newValue ->
             accountSettingsInteractor.onChangeDeviceName(newValue as String) {
-                FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
+                FenixSnackbar.make(
+                    view = view!!,
+                    duration = FenixSnackbar.LENGTH_LONG,
+                    isDisplayedOnBrowserFragment = false
+                )
                     .setText(getString(R.string.empty_device_name_error))
                     .show()
             }

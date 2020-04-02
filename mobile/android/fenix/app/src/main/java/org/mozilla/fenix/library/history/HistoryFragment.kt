@@ -64,7 +64,11 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             historyStore,
             findNavController(),
             resources,
-            FenixSnackbar.make(view, FenixSnackbar.LENGTH_LONG),
+            FenixSnackbar.make(
+                view = view,
+                duration = FenixSnackbar.LENGTH_LONG,
+                isDisplayedOnBrowserFragment = false
+            ),
             activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager,
             ::openItem,
             ::displayDeleteAllDialog,

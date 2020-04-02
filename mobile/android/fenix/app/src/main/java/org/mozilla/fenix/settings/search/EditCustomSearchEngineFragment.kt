@@ -154,7 +154,11 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                         .getString(R.string.search_edit_custom_engine_success_message, name)
 
                     view?.also {
-                        FenixSnackbar.make(it, FenixSnackbar.LENGTH_SHORT)
+                        FenixSnackbar.make(
+                            view = it,
+                            duration = FenixSnackbar.LENGTH_SHORT,
+                            isDisplayedOnBrowserFragment = false
+                        )
                             .setText(successMessage)
                             .show()
                     }

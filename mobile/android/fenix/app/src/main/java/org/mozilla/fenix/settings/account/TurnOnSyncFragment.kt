@@ -81,11 +81,19 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         // Since the snackbar can be presented in BrowserFragment or in SettingsFragment we must
         // base our display method on the padSnackbar argument
         if (args.padSnackbar) {
-            FenixSnackbar.makeWithToolbarPadding(requireView(), snackbarLength)
+            FenixSnackbar.make(
+                view = requireView(),
+                duration = snackbarLength,
+                isDisplayedOnBrowserFragment = true
+            )
                 .setText(snackbarText)
                 .show()
         } else {
-            FenixSnackbar.make(requireView(), snackbarLength)
+            FenixSnackbar.make(
+                view = requireView(),
+                duration = snackbarLength,
+                isDisplayedOnBrowserFragment = false
+            )
                 .setText(snackbarText)
                 .show()
         }

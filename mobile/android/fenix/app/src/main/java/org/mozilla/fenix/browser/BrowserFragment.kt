@@ -210,7 +210,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         private fun showTabSavedToCollectionSnackbar() {
             view?.let { view ->
-                FenixSnackbar.makeWithToolbarPadding(view, Snackbar.LENGTH_SHORT)
+                FenixSnackbar.make(
+                    view = view,
+                    duration = Snackbar.LENGTH_SHORT,
+                    isDisplayedOnBrowserFragment = true
+                )
                     .setText(view.context.getString(R.string.create_collection_tab_saved))
                     .show()
             }

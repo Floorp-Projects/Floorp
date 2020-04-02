@@ -166,7 +166,11 @@ class DefaultBrowserToolbarController(
                         topSiteStorage.addTopSite(it.title, it.url)
                     }
                     MainScope().launch {
-                        FenixSnackbar.makeWithToolbarPadding(swipeRefresh, Snackbar.LENGTH_SHORT)
+                        FenixSnackbar.make(
+                            view = swipeRefresh,
+                            duration = Snackbar.LENGTH_SHORT,
+                            isDisplayedOnBrowserFragment = true
+                        )
                             .setText(
                                 swipeRefresh.context.getString(R.string.snackbar_added_to_top_sites)
                             )
@@ -258,7 +262,11 @@ class DefaultBrowserToolbarController(
                 // browsing data on quit" is activated). After the deletion is over, the snackbar
                 // is dismissed.
                 val snackbar: FenixSnackbar? = activity.getRootView()?.let { v ->
-                    FenixSnackbar.makeWithToolbarPadding(v)
+                    FenixSnackbar.make(
+                        view = v,
+                        duration = Snackbar.LENGTH_LONG,
+                        isDisplayedOnBrowserFragment = true
+                    )
                         .setText(v.context.getString(R.string.deleting_browsing_data_in_progress))
                 }
 

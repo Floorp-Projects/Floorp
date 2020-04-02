@@ -85,7 +85,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         customTabSessionId
                     ) { exception ->
                         components.analytics.crashReporter.submitCaughtException(exception)
-                        FenixSnackbar.make(view.swipeRefresh, FenixSnackbar.LENGTH_LONG).apply {
+                        FenixSnackbar.make(
+                            view = view.swipeRefresh,
+                            duration = FenixSnackbar.LENGTH_LONG,
+                            isDisplayedOnBrowserFragment = true
+                        ).apply {
                             setText(resources.getString(R.string.unknown_scheme_error_message))
                             setAppropriateBackground(true)
                         }.show()

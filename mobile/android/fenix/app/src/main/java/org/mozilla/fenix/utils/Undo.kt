@@ -44,7 +44,11 @@ fun CoroutineScope.allowUndo(
 
     fun showUndoSnackbar() {
         val snackbar = FenixSnackbar
-            .make(view, FenixSnackbar.LENGTH_INDEFINITE)
+            .make(
+                view = view,
+                duration = FenixSnackbar.LENGTH_INDEFINITE,
+                isDisplayedOnBrowserFragment = false
+            )
             .setText(message)
             .setAnchorView(anchorView)
             .setAction(undoActionTitle) {

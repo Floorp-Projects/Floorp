@@ -15,7 +15,11 @@ class ItsNotBrokenSnack(val context: Context) {
             context.getRootView()
 
         rootView?.let {
-            FenixSnackbar.make(it, FenixSnackbar.LENGTH_SHORT)
+            FenixSnackbar.make(
+                view = it,
+                duration = FenixSnackbar.LENGTH_SHORT,
+                isDisplayedOnBrowserFragment = false
+            )
                 .setText(message.replace("%", issueNumber))
                 .setAction("Add Tab to Issue") {
                     context.components.useCases.tabsUseCases.addTab

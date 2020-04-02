@@ -26,7 +26,11 @@ internal fun getFormattedAmount(amount: Int): String {
  * @param text The text to display in the [FenixSnackbar].
  */
 internal fun showSnackBar(view: View, text: String) {
-    FenixSnackbar.make(view, FenixSnackbar.LENGTH_SHORT)
+    FenixSnackbar.make(
+        view = view,
+        duration = FenixSnackbar.LENGTH_SHORT,
+        isDisplayedOnBrowserFragment = true
+    )
         .setText(text)
         .show()
 }

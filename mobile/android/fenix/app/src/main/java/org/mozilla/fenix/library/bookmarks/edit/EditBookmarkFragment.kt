@@ -164,7 +164,10 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                                 .popBackStack()
 
                             bookmarkNode?.let { bookmark ->
-                                FenixSnackbar.makeWithToolbarPadding(activity.getRootView()!!)
+                                FenixSnackbar.make(
+                                    view = activity.getRootView()!!,
+                                    isDisplayedOnBrowserFragment = true
+                                )
                                     .setText(
                                         getString(
                                             R.string.bookmark_deletion_snackbar_message,

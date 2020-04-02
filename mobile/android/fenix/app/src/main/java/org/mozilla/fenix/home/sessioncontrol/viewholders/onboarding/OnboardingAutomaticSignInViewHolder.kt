@@ -39,7 +39,11 @@ class OnboardingAutomaticSignInViewHolder(private val view: View) : RecyclerView
                             R.string.onboarding_firefox_account_auto_signin_confirm
                         )
                         it.turn_on_sync_button.isEnabled = true
-                        FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
+                        FenixSnackbar.make(
+                            view = it,
+                            duration = Snackbar.LENGTH_SHORT,
+                            isDisplayedOnBrowserFragment = false
+                        ).setText(
                             it.context.getString(R.string.onboarding_firefox_account_automatic_signin_failed)
                         ).show()
                     }

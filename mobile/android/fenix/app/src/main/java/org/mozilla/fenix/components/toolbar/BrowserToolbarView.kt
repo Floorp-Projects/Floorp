@@ -108,9 +108,10 @@ class BrowserToolbarView(
                     clipboard.text = selectedSession?.url
                 }
 
-                FenixSnackbar.makeWithToolbarPadding(
-                    view.rootView.findViewById(android.R.id.content),
-                    Snackbar.LENGTH_SHORT
+                FenixSnackbar.make(
+                    view = view,
+                    duration = Snackbar.LENGTH_SHORT,
+                    isDisplayedOnBrowserFragment = true
                 )
                     .setText(view.context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
                     .show()
