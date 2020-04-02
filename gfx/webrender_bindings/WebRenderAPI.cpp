@@ -505,7 +505,7 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
       aRenderThread.UpdateAndRender(aWindowId, VsyncId(), mStartTime,
                                     /* aRender */ true, Some(mSize),
                                     wr::SurfaceFormatToImageFormat(mFormat),
-                                    Some(mBuffer), false);
+                                    Some(mBuffer));
       layers::AutoCompleteTask complete(mTask);
     }
 

@@ -188,8 +188,7 @@ class RenderThread final {
                        const TimeStamp& aStartTime, bool aRender,
                        const Maybe<gfx::IntSize>& aReadbackSize,
                        const Maybe<wr::ImageFormat>& aReadbackFormat,
-                       const Maybe<Range<uint8_t>>& aReadbackBuffer,
-                       bool aHadSlowFrame);
+                       const Maybe<Range<uint8_t>>& aReadbackBuffer);
 
   void Pause(wr::WindowId aWindowId);
   bool Resume(wr::WindowId aWindowId);
@@ -225,7 +224,6 @@ class RenderThread final {
                             uint8_t aDocFrameCount);
   /// Can be called from any thread.
   void DecPendingFrameBuildCount(wr::WindowId aWindowId);
-  void NotifySlowFrame(wr::WindowId aWindowId);
 
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
@@ -323,7 +321,6 @@ class RenderThread final {
     std::queue<PendingFrameInfo> mPendingFrames;
     uint8_t mPendingFrameBuild = 0;
     bool mIsDestroyed = false;
-    bool mHadSlowFrame = false;
   };
 
   DataMutex<std::unordered_map<uint64_t, WindowInfo*>> mWindowInfos;
