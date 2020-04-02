@@ -459,6 +459,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   friend class mozilla::fontlist::FontList;
   friend class InitOtherFamilyNamesForStylo;
 
+  static bool FamilyInList(const nsACString& aName, const char* aList[],
+                           size_t aCount);
+
   class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable {
    public:
     InitOtherFamilyNamesRunnable()

@@ -173,6 +173,8 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   // helper function to lookup in both hidden system fonts and normal fonts
   gfxFontFamily* FindSystemFontFamily(const nsACString& aFamily);
 
+  FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
+
   static void RegisteredFontsChangedNotificationCallback(
       CFNotificationCenterRef center, void* observer, CFStringRef name,
       const void* object, CFDictionaryRef userInfo);
