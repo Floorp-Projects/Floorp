@@ -27,7 +27,6 @@ var PdfJsDefaultPreferences = Object.freeze({
  "disablePageLabels": false,
  "enablePrintAutoRotate": false,
  "enableWebGL": false,
- "eventBusDispatchToDOM": false,
  "externalLinkTarget": 0,
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,

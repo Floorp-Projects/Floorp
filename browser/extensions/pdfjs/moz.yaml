@@ -20,7 +20,7 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: version 2.5.42
+  release: version 2.5.49
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
