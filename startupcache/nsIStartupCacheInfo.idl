@@ -1,0 +1,38 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/* NOTE: this interface is completely undesigned, not stable and likely to change */
+[scriptable, builtinclass, uuid(a6b2f8b0-7438-11ea-bc55-0242ac130003)]
+interface nsIStartupCacheInfo : nsISupports
+{
+  /**
+   * Returns true if the startup cache will not load from the cache from disk.
+   * This can happen if the cache file is corrupt or has been invalidated.
+   */
+  readonly attribute boolean IgnoreDiskCache;
+
+  /**
+   * Returns true if during initialization of the startup cache an existing
+   * cache file was found on disk. This does NOT indicate if the file loaded
+   * successfully.
+   */
+  readonly attribute boolean FoundDiskCacheOnInit;
+
+  /**
+   * Returns true once the current cache file as been written to disk at least
+   * once. If the cache was loaded from disk and never changed this may never
+   * be set to true.
+   */
+  readonly attribute boolean WroteToDiskCache;
+
+  /**
+   * The full path and filename of the startup cache file that will be stored on
+   * disk.
+   */
+  readonly attribute AString DiskCachePath;
+};
