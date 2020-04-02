@@ -2968,15 +2968,13 @@ nsPoint nsLayoutUtils::TransformAncestorPointToFrame(nsIFrame* aFrame,
   Point result(NSAppUnitsToFloatPixels(aPoint.x, factor),
                NSAppUnitsToFloatPixels(aPoint.y, factor));
 
+  if (!TransformGfxPointFromAncestor(text ? text : aFrame, result, aAncestor,
+                                     &result)) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
   if (text) {
-    if (!TransformGfxPointFromAncestor(text, result, aAncestor, &result)) {
-      return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    }
     result = text->TransformFramePointToTextChild(result, aFrame);
-  } else {
-    if (!TransformGfxPointFromAncestor(aFrame, result, nullptr, &result)) {
-      return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    }
   }
 
   return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
