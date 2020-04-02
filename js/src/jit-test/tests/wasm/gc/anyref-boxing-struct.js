@@ -44,7 +44,6 @@ for (let v of VALUES)
 {
     let ins = wasmEvalText(
         `(module
-           (gc_feature_opt_in 3)
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (param $v anyref) (result anyref)
              (struct.new $S (local.get $v))))`);
@@ -58,12 +57,11 @@ for (let v of VALUES)
 {
     let ins = wasmEvalText(
         `(module
-           (gc_feature_opt_in 3)
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
              (struct.new $S (ref.null)))
            (func (export "get") (param $o anyref) (result anyref)
-             (struct.get $S 0 (struct.narrow anyref (ref $S) (local.get $o)))))`);
+             (struct.get $S 0 (struct.narrow anyref (ref opt $S) (local.get $o)))))`);
     let x = ins.exports.make();
     x._0 = v;
     assertEq(ins.exports.get(x), v);
@@ -75,12 +73,11 @@ for (let v of VALUES)
 {
     let ins = wasmEvalText(
         `(module
-           (gc_feature_opt_in 3)
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
              (struct.new $S (ref.null)))
            (func (export "get") (param $o anyref) (result anyref)
-             (struct.get $S 0 (struct.narrow anyref (ref $S) (local.get $o)))))`);
+             (struct.get $S 0 (struct.narrow anyref (ref opt $S) (local.get $o)))))`);
     let constructor = ins.exports.make().constructor;
     let x = new constructor({_0: v});
     assertEq(ins.exports.get(x), v);
@@ -109,7 +106,6 @@ for (let v of VALUES) {
 {
     let ins = wasmEvalText(
         `(module
-           (gc_feature_opt_in 3)
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
              (struct.new $S (ref.null))))`);
@@ -124,7 +120,6 @@ for (let v of VALUES) {
 {
     let ins = wasmEvalText(
         `(module
-           (gc_feature_opt_in 3)
            (type $S (struct (field $S.x (mut anyref))))
            (func (export "make") (result anyref)
              (struct.new $S (ref.null))))`);
@@ -150,7 +145,6 @@ for (let v of VALUES) {
     let params = iota(10).map((i) => `(param $${i} anyref)`).join(' ');
     let args = iota(10).map((i) => `(local.get $${i})`).join(' ');
     let txt = `(module
-                 (gc_feature_opt_in 3)
                  (type $S (struct ${fields}))
                  (func (export "make") ${params} (result anyref)
                    (struct.new $S ${args})))`;
