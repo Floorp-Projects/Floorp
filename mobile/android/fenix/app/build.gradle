@@ -590,7 +590,6 @@ dependencies {
     testImplementation Deps.mockito_core
     androidTestImplementation Deps.mockito_android
     testImplementation Deps.mockk
-    testImplementation Deps.assertk
 
     // For the initial release of Glean 19, we require consumer applications to
     // depend on a separate library for unit tests. This will be removed in future releases.
