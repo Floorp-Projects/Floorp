@@ -372,6 +372,10 @@ class DefaultExternalServices {
     });
   }
 
+  static get isInAutomation() {
+    return (0, _pdfjsLib.shadow)(this, "isInAutomation", false);
+  }
+
 }
 
 exports.DefaultExternalServices = DefaultExternalServices;
@@ -536,11 +540,11 @@ const PDFViewerApplication = {
 
   async _initializeViewerComponents() {
     const appConfig = this.appConfig;
-    this.overlayManager = new _overlay_manager.OverlayManager();
     const eventBus = appConfig.eventBus || new _ui_utils.EventBus({
-      dispatchToDOM: _app_options.AppOptions.get("eventBusDispatchToDOM")
+      isInAutomation: this.externalServices.isInAutomation
     });
     this.eventBus = eventBus;
+    this.overlayManager = new _overlay_manager.OverlayManager();
     const pdfRenderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
     pdfRenderingQueue.onIdle = this.cleanup.bind(this);
     this.pdfRenderingQueue = pdfRenderingQueue;
@@ -2540,7 +2544,6 @@ exports.isValidRotation = isValidRotation;
 exports.isValidScrollMode = isValidScrollMode;
 exports.isValidSpreadMode = isValidSpreadMode;
 exports.isPortraitOrientation = isPortraitOrientation;
-exports.getGlobalEventBus = getGlobalEventBus;
 exports.clamp = clamp;
 exports.getPDFFileNameFromURL = getPDFFileNameFromURL;
 exports.noContextMenuHandler = noContextMenuHandler;
@@ -3104,11 +3107,9 @@ function dispatchDOMEvent(eventName, args = null) {
 }
 
 class EventBus {
-  constructor({
-    dispatchToDOM = false
-  } = {}) {
+  constructor(options) {
     this._listeners = Object.create(null);
-    this._dispatchToDOM = dispatchToDOM === true;
+    this._isInAutomation = (options && options.isInAutomation) === true;
   }
 
   on(eventName, listener) {
@@ -3127,7 +3128,7 @@ class EventBus {
     const eventListeners = this._listeners[eventName];
 
     if (!eventListeners || eventListeners.length === 0) {
-      if (this._dispatchToDOM) {
+      if (this._isInAutomation) {
         const args = Array.prototype.slice.call(arguments, 1);
         dispatchDOMEvent(eventName, args);
       }
@@ -3160,7 +3161,7 @@ class EventBus {
       externalListeners = null;
     }
 
-    if (this._dispatchToDOM) {
+    if (this._isInAutomation) {
       dispatchDOMEvent(eventName, args);
     }
   }
@@ -3196,19 +3197,6 @@ class EventBus {
 }
 
 exports.EventBus = EventBus;
-let globalEventBus = null;
-
-function getGlobalEventBus(dispatchToDOM = false) {
-  console.error("getGlobalEventBus is deprecated, use a manually created EventBus instance instead.");
-
-  if (!globalEventBus) {
-    globalEventBus = new EventBus({
-      dispatchToDOM
-    });
-  }
-
-  return globalEventBus;
-}
 
 function clamp(v, min, max) {
   return Math.min(Math.max(v, min), max);
@@ -3358,10 +3346,6 @@ const defaultOptions = {
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   enableWebGL: {
-    value: false,
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
-  },
-  eventBusDispatchToDOM: {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
@@ -5032,9 +5016,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFFindBar = void 0;
 
-var _ui_utils = __webpack_require__(2);
-
 var _pdf_find_controller = __webpack_require__(15);
+
+var _ui_utils = __webpack_require__(2);
 
 const MATCHES_COUNT_LIMIT = 1000;
 
@@ -5051,7 +5035,7 @@ class PDFFindBar {
     this.findResultsCount = options.findResultsCount || null;
     this.findPreviousButton = options.findPreviousButton || null;
     this.findNextButton = options.findNextButton || null;
-    this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this.eventBus = eventBus;
     this.l10n = l10n;
     this.toggleButton.addEventListener("click", () => {
       this.toggle();
@@ -5243,11 +5227,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFFindController = exports.FindState = void 0;
 
-var _ui_utils = __webpack_require__(2);
-
 var _pdfjsLib = __webpack_require__(4);
 
 var _pdf_find_utils = __webpack_require__(16);
+
+var _ui_utils = __webpack_require__(2);
 
 const FindState = {
   FOUND: 0,
@@ -5291,7 +5275,7 @@ class PDFFindController {
     eventBus
   }) {
     this._linkService = linkService;
-    this._eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this._eventBus = eventBus;
 
     this._reset();
 
@@ -6038,7 +6022,7 @@ class PDFHistory {
     eventBus
   }) {
     this.linkService = linkService;
-    this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this.eventBus = eventBus;
     this._initialized = false;
     this._fingerprint = "";
     this.reset();
@@ -6616,7 +6600,7 @@ class PDFLinkService {
     externalLinkEnabled = true,
     ignoreDestinationZoom = false
   } = {}) {
-    this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this.eventBus = eventBus;
     this.externalLinkTarget = externalLinkTarget;
     this.externalLinkRel = externalLinkRel;
     this.externalLinkEnabled = externalLinkEnabled;
@@ -8623,7 +8607,7 @@ class BaseViewer {
     this._name = this.constructor.name;
     this.container = options.container;
     this.viewer = options.viewer || options.container.firstElementChild;
-    this.eventBus = options.eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this.eventBus = options.eventBus;
     this.linkService = options.linkService || new _pdf_link_service.SimpleLinkService();
     this.downloadManager = options.downloadManager || null;
     this.findController = options.findController || null;
@@ -9807,7 +9791,7 @@ class PDFPageView {
     this.renderInteractiveForms = options.renderInteractiveForms || false;
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
     this.maxCanvasPixels = options.maxCanvasPixels || MAX_CANVAS_PIXELS;
-    this.eventBus = options.eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this.eventBus = options.eventBus;
     this.renderingQueue = options.renderingQueue;
     this.textLayerFactory = options.textLayerFactory;
     this.annotationLayerFactory = options.annotationLayerFactory;
@@ -10348,8 +10332,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.DefaultTextLayerFactory = exports.TextLayerBuilder = void 0;
 
-var _ui_utils = __webpack_require__(2);
-
 var _pdfjsLib = __webpack_require__(4);
 
 const EXPAND_DIVS_TIMEOUT = 300;
@@ -10364,7 +10346,7 @@ class TextLayerBuilder {
     enhanceTextSelection = false
   }) {
     this.textLayerDiv = textLayerDiv;
-    this.eventBus = eventBus || (0, _ui_utils.getGlobalEventBus)();
+    this.eventBus = eventBus;
     this.textContent = null;
     this.textContentItemsStr = [];
     this.textContentStream = null;
@@ -11838,6 +11820,11 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
     return (0, _pdfjsLib.shadow)(this, "supportedMouseWheelZoomModifierKeys", support);
   }
 
+  static get isInAutomation() {
+    const isInAutomation = FirefoxCom.requestSync("isInAutomation");
+    return (0, _pdfjsLib.shadow)(this, "isInAutomation", isInAutomation);
+  }
+
 }
 
 _app.PDFViewerApplication.externalServices = FirefoxExternalServices;
@@ -11996,7 +11983,6 @@ function getDefaultPreferences() {
       "disablePageLabels": false,
       "enablePrintAutoRotate": false,
       "enableWebGL": false,
-      "eventBusDispatchToDOM": false,
       "externalLinkTarget": 0,
       "historyUpdateUrl": false,
       "ignoreDestinationZoom": false,
