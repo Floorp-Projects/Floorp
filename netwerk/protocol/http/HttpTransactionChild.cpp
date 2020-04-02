@@ -328,8 +328,8 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     optionalHead = Some(*head);
     if (mTransaction->Caps() & NS_HTTP_CALL_CONTENT_SNIFFER) {
       nsAutoCString contentTypeOptionsHeader;
-      if (head->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
-          contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
+      if (!(head->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+            contentTypeOptionsHeader.EqualsIgnoreCase("nosniff"))) {
         RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
         pump->PeekStream(GetDataForSniffer, &dataForSniffer);
       }
