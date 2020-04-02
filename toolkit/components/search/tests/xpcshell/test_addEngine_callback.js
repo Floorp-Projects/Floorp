@@ -44,6 +44,10 @@ add_task(async function simple_callback_test() {
   );
   Assert.ok(!!engine);
   Assert.notEqual(engine.name, (await Services.search.getDefault()).name);
+  Assert.ok(
+    !engine.isAppProvided,
+    "Should not be shown as an app-provided engine"
+  );
   Assert.equal(
     engine.wrappedJSObject._loadPath,
     "[http]localhost/test-search-engine.xml"
