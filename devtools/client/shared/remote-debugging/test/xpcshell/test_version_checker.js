@@ -123,6 +123,45 @@ const TEST_DATA = [
     runtimeVersion: "67.0",
     expected: COMPATIBILITY_STATUS.COMPATIBLE,
   },
+  {
+    description:
+      "fennec 68 compatibility error not raised for 68 -> 68 Android",
+    localBuildId: "20190131000000",
+    localVersion: "68.0",
+    runtimeBuildId: "20190202000000",
+    runtimeVersion: "68.0",
+    runtimeOs: "Android",
+    expected: COMPATIBILITY_STATUS.COMPATIBLE,
+  },
+  {
+    description:
+      "fennec 68 compatibility error not raised for 70 -> 68 Android",
+    localBuildId: "20190131000000",
+    localVersion: "70.0",
+    runtimeBuildId: "20190202000000",
+    runtimeVersion: "68.0",
+    runtimeOs: "Android",
+    expected: COMPATIBILITY_STATUS.COMPATIBLE,
+  },
+  {
+    description: "fennec 68 compatibility error raised for 71 -> 68 Android",
+    localBuildId: "20190131000000",
+    localVersion: "71.0",
+    runtimeBuildId: "20190202000000",
+    runtimeVersion: "68.0",
+    runtimeOs: "Android",
+    expected: COMPATIBILITY_STATUS.TOO_OLD_FENNEC,
+  },
+  {
+    description:
+      "fennec 68 compatibility error not raised for 71 -> 68 non-Android",
+    localBuildId: "20190131000000",
+    localVersion: "71.0",
+    runtimeBuildId: "20190202000000",
+    runtimeVersion: "68.0",
+    runtimeOs: "NotAndroid",
+    expected: COMPATIBILITY_STATUS.TOO_OLD,
+  },
 ];
 
 add_task(async function testVersionChecker() {
@@ -135,6 +174,7 @@ add_task(async function testVersionChecker() {
     const runtimeDescription = {
       appbuildid: testData.runtimeBuildId,
       platformversion: testData.runtimeVersion,
+      os: testData.runtimeOs,
     };
 
     const report = _compareVersionCompatibility(
