@@ -24,6 +24,7 @@ class gfxTextPerfMetrics;
 class nsDeviceContext;
 class nsAtom;
 struct nsBoundingMetrics;
+struct FontMatchingStats;
 
 namespace mozilla {
 namespace gfx {
@@ -61,6 +62,7 @@ class nsFontMetrics final {
     FontOrientation orientation = eHorizontal;
     gfxUserFontSet* userFontSet = nullptr;
     gfxTextPerfMetrics* textPerf = nullptr;
+    FontMatchingStats* fontStats = nullptr;
     gfxFontFeatureValueSet* featureValueLookup = nullptr;
   };
 
