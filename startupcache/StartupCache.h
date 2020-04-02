@@ -193,8 +193,6 @@ class StartupCache : public nsIMemoryReporter {
   StartupCache();
   virtual ~StartupCache();
 
-  friend class StartupCacheInfo;
-
   Result<Ok, nsresult> LoadArchive();
   nsresult Init();
 
@@ -240,7 +238,6 @@ class StartupCache : public nsIMemoryReporter {
   static StaticRefPtr<StartupCache> gStartupCache;
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
-  static bool gFoundDiskCacheOnInit;
   PRThread* mWriteThread;
   PRThread* mPrefetchThread;
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;

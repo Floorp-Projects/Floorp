@@ -959,14 +959,6 @@ var snapshotFormatters = {
     }
   },
 
-  startupCache(data) {
-    $("startup-cache-disk-cache-path").textContent = data.DiskCachePath;
-    $("startup-cache-ignore-disk-cache").textContent = data.IgnoreDiskCache;
-    $("startup-cache-found-disk-cache-on-init").textContent =
-      data.FoundDiskCacheOnInit;
-    $("startup-cache-wrote-to-disk-cache").textContent = data.WroteToDiskCache;
-  },
-
   libraryVersions(data) {
     let trs = [
       $.new("tr", [
