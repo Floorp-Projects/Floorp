@@ -1883,6 +1883,7 @@ pub struct Renderer {
     new_frame_indicator: ChangeIndicator,
     new_scene_indicator: ChangeIndicator,
     slow_frame_indicator: ChangeIndicator,
+    slow_txn_indicator: ChangeIndicator,
 
     last_time: u64,
 
@@ -2465,6 +2466,7 @@ impl Renderer {
             new_frame_indicator: ChangeIndicator::new(),
             new_scene_indicator: ChangeIndicator::new(),
             slow_frame_indicator: ChangeIndicator::new(),
+            slow_txn_indicator: ChangeIndicator::new(),
             max_recorded_profiles: options.max_recorded_profiles,
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
@@ -3346,6 +3348,16 @@ impl Renderer {
             self.slow_frame_indicator.changed();
         }
 
+        if self.backend_profile_counters.scene_changed {
+            let txn_time_ns = self.backend_profile_counters.ipc.total_send_time.get()
+                + self.backend_profile_counters.ipc.build_time.get()
+                + self.backend_profile_counters.scene_build_time.get();
+            let txn_time_ms = txn_time_ns as f64 / 1000000.0;
+            if txn_time_ms > 100.0 {
+                self.slow_txn_indicator.changed();
+            }
+        }
+
         if self.max_recorded_profiles > 0 {
             while self.cpu_profiles.len() >= self.max_recorded_profiles {
                 self.cpu_profiles.pop_front();
@@ -3412,8 +3424,13 @@ impl Renderer {
 
         if self.debug_flags.contains(DebugFlags::SLOW_FRAME_INDICATOR) {
             if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
-                self.slow_frame_indicator.draw(
+                self.slow_txn_indicator.draw(
                     x, 0.0,
+                    ColorU::new(250, 80, 80, 255),
+                    debug_renderer,
+                );
+                self.slow_frame_indicator.draw(
+                    x, 10.0,
                     ColorU::new(220, 30, 10, 255),
                     debug_renderer,
                 );
