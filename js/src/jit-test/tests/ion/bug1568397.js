@@ -1,4 +1,4 @@
-// |jit-test| error:tmp is undefined
+// |jit-test| error:TypeError: can't access property
 let obj = {x: 1};
 obj.x = 1.1;
 
