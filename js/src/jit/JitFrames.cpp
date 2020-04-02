@@ -155,44 +155,59 @@ class TryNoteIterIon : public TryNoteIter<IonTryNoteFilter> {
       : TryNoteIter(cx, frame.script(), frame.pc(), IonTryNoteFilter(frame)) {}
 };
 
+static bool ShouldBailoutForDebugger(JSContext* cx,
+                                     const InlineFrameIterator& frame,
+                                     bool hitBailoutException) {
+  if (hitBailoutException) {
+    MOZ_ASSERT(!cx->isPropagatingForcedReturn());
+    return false;
+  }
+
+  // Bail out if we're propagating a forced return, even if the realm is no
+  // longer a debuggee.
+  if (cx->isPropagatingForcedReturn()) {
+    return true;
+  }
+
+  if (!cx->realm()->isDebuggee()) {
+    return false;
+  }
+
+  // Bail out if there's a catchable exception and we are the debuggee of a
+  // Debugger with a live onExceptionUnwind hook.
+  if (cx->isExceptionPending() &&
+      DebugAPI::hasExceptionUnwindHook(cx->global())) {
+    return true;
+  }
+
+  // Bail out if a Debugger has observed this frame (e.g., for onPop).
+  JitActivation* act = cx->activation()->asJit();
+  RematerializedFrame* rematFrame =
+      act->lookupRematerializedFrame(frame.frame().fp(), frame.frameNo());
+  return rematFrame && rematFrame->isDebuggee();
+}
+
 static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
                                ResumeFromException* rfe,
                                bool* hitBailoutException) {
-  if (cx->realm()->isDebuggee()) {
-    // We need to bail when there is a catchable exception, and we are the
-    // debuggee of a Debugger with a live onExceptionUnwind hook, or if a
-    // Debugger has observed this frame (e.g., for onPop).
-    bool shouldBail = DebugAPI::hasExceptionUnwindHook(cx->global());
-    RematerializedFrame* rematFrame = nullptr;
-    if (!shouldBail) {
-      JitActivation* act = cx->activation()->asJit();
-      rematFrame =
-          act->lookupRematerializedFrame(frame.frame().fp(), frame.frameNo());
-      shouldBail = rematFrame && rematFrame->isDebuggee();
+  if (ShouldBailoutForDebugger(cx, frame, *hitBailoutException)) {
+    // We do the following:
+    //
+    //   1. Bailout to baseline to reconstruct a baseline frame.
+    //   2. Resume immediately into the exception tail afterwards, and
+    //      handle the exception again with the top frame now a baseline
+    //      frame.
+    //
+    // An empty exception info denotes that we're propagating an Ion
+    // exception due to debug mode, which BailoutIonToBaseline needs to
+    // know. This is because we might not be able to fully reconstruct up
+    // to the stack depth at the snapshot, as we could've thrown in the
+    // middle of a call.
+    ExceptionBailoutInfo propagateInfo;
+    if (ExceptionHandlerBailout(cx, frame, rfe, propagateInfo)) {
+      return;
     }
-
-    if (shouldBail && !*hitBailoutException) {
-      // If we have an exception from within Ion and the debugger is active,
-      // we do the following:
-      //
-      //   1. Bailout to baseline to reconstruct a baseline frame.
-      //   2. Resume immediately into the exception tail afterwards, and
-      //      handle the exception again with the top frame now a baseline
-      //      frame.
-      //
-      // An empty exception info denotes that we're propagating an Ion
-      // exception due to debug mode, which BailoutIonToBaseline needs to
-      // know. This is because we might not be able to fully reconstruct up
-      // to the stack depth at the snapshot, as we could've thrown in the
-      // middle of a call.
-      ExceptionBailoutInfo propagateInfo;
-      if (ExceptionHandlerBailout(cx, frame, rfe, propagateInfo)) {
-        return;
-      }
-      // Note: the bailout code deleted rematFrame. Don't use after this
-      // point!
-      *hitBailoutException = true;
-    }
+    *hitBailoutException = true;
   }
 
   RootedScript script(cx, frame.script());
