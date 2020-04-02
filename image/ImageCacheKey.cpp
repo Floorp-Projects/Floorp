@@ -172,8 +172,8 @@ nsCString ImageCacheKey::GetTopLevelBaseDomain(Document* aDocument,
 
   // If the window is 3rd party resource, let's see if first-party storage
   // access is granted for this image.
-  if (nsContentUtils::IsThirdPartyTrackingResourceWindow(
-          aDocument->GetInnerWindow())) {
+  if (nsContentUtils::IsThirdPartyWindowOrChannel(aDocument->GetInnerWindow(),
+                                                  nullptr, nullptr)) {
     return StorageDisabledByAntiTracking(aDocument, aURI)
                ? aDocument->GetBaseDomain()
                : EmptyCString();
