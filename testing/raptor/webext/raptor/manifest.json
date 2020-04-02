@@ -14,7 +14,6 @@
   "content_scripts": [
     {
       "matches": [
-                  "*://*.aframe.io/*",
                   "*://*.allrecipes.com/*",
                   "*://*.apple.com/*",
                   "*://*.amazon.com/*",
