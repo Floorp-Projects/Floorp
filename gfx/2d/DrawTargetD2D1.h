@@ -188,7 +188,7 @@ class DrawTargetD2D1 : public DrawTarget {
   bool ShouldClipTemporarySurfaceDrawing(CompositionOp aOp,
                                          const Pattern& aPattern,
                                          bool aClipIsComplex);
-  void PrepareForDrawing(CompositionOp aOp, const Pattern& aPattern);
+  bool PrepareForDrawing(CompositionOp aOp, const Pattern& aPattern);
   void FinalizeDrawing(CompositionOp aOp, const Pattern& aPattern);
   void FlushTransformToDC() {
     if (mTransformDirty) {
