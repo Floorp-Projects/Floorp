@@ -83,6 +83,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsXPCOMPrivate.h"
 #include "nsXULAppAPI.h"
+#include "nsIXULAppInfo.h"
 #include "other/CombinedStacks.h"
 #include "other/TelemetryIOInterposeObserver.h"
 #include "plstr.h"
@@ -1164,24 +1165,44 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
 // C functions with the "fog_" prefix.
 // See toolkit/components/glean/*.
 extern "C" {
-nsresult fog_init(const nsAString* dataPath, const char* buildId, const char* appDisplayVersion, const char* channel);
+nsresult fog_init(const nsACString* dataPath, const nsACString* buildId, const nsACString* appDisplayVersion, const char* channel);
 }
 
 static void internal_initGlean() {
-  nsAutoString dataPath;
-  nsresult rv = Preferences::GetString("telemetry.fog.temporary_and_just_for_testing.data_path", dataPath);
+  nsAutoCString dataPath;
+  nsresult rv = Preferences::GetCString("telemetry.fog.temporary_and_just_for_testing.data_path", dataPath);
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't read data path preference. FOG will not be initialized");
     return;
   }
 
+  nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  if (!appInfo) {
+    NS_WARNING("Can't fetch app info. FOG will not be initialized.");
+    return;
+  }
+
+  nsAutoCString buildID;
+  rv = appInfo->GetAppBuildID(buildID);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't get build ID. FOG will not be initialized.");
+    return;
+  }
+
+  nsAutoCString appVersion;
+  rv = appInfo->GetVersion(appVersion);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't get version. FOG will not be initialized.");
+    return;
+  }
+
   Unused << NS_WARN_IF(NS_FAILED(
         fog_init(
           &dataPath,
-          /* build id    */ "build-id",
-          /* app version */ "0.0a1",
-          /* channel     */ "nightly"
+          &buildID,
+          &appVersion,
+          MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)
         )
   ));
 }
