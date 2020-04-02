@@ -26,10 +26,6 @@ add_task(async function test_addEngineWithDetailsWithExtensionID() {
 
   let engine = Services.search.getEngineByName(kSearchEngineID);
   Assert.notEqual(engine, null);
-  Assert.ok(
-    !engine.isAppProvided,
-    "Should not be shown as an app-provided engine"
-  );
 
   let engines = await Services.search.getEnginesByExtensionID(kExtensionID1);
   Assert.equal(engines.length, 1);
