@@ -199,7 +199,7 @@ void JSONPrinter::property(const char* name, const mozilla::TimeDuration& dur,
     case MICROSECONDS:
       MOZ_ASSERT_UNREACHABLE("");
   };
-  out_.printf("%llu.%03llu", split.quot, split.rem);
+  out_.printf("%lld.%03lld", split.quot, split.rem);
 }
 
 void JSONPrinter::endObject() {
