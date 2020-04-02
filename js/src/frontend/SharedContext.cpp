@@ -145,8 +145,6 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       usesThis(false),
       usesReturn(false),
       hasExprBody_(false),
-      argumentsHasLocalBinding_(false),
-      definitelyNeedsArgsObj_(false),
       nargs_(0),
       explicitName_(explicitName),
       flags_(flags) {

@@ -216,24 +216,50 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // Set if this function has a rest parameter.
   HasRest = 1 << 17,
 
-  // See comments below.
+  // Whether 'arguments' has a local binding.
+  //
+  // Technically, every function has a binding named 'arguments'. Internally,
+  // this binding is only added when 'arguments' is mentioned by the function
+  // body. This flag indicates whether 'arguments' has been bound either
+  // through implicit use:
+  //   function f() { return arguments }
+  // or explicit redeclaration:
+  //   function f() { var arguments; return arguments }
+  //
+  // Note 1: overwritten arguments (function() { arguments = 3 }) will cause
+  // this flag to be set but otherwise require no special handling:
+  // 'arguments' is just a local variable and uses of 'arguments' will just
+  // read the local's current slot which may have been assigned. The only
+  // special semantics is that the initial value of 'arguments' is the
+  // arguments object (not undefined, like normal locals).
+  //
+  // Note 2: if 'arguments' is bound as a formal parameter, there will be an
+  // 'arguments' in Bindings, but, as the "LOCAL" in the name indicates, this
+  // flag will not be set. This is because, as a formal, 'arguments' will
+  // have no special semantics: the initial value is unconditionally the
+  // actual argument (or undefined if nactual < nformal).
   ArgumentsHasVarBinding = 1 << 18,
 
+  // Whether 'arguments' always must be the arguments object. If this is unset,
+  // but ArgumentsHasVarBinding is set then an analysis pass is performed at
+  // runtime to decide if we can optimize it away.
+  AlwaysNeedsArgsObj = 1 << 19,
+
+  // Whether the Parser declared 'arguments'.
+  ShouldDeclareArguments = 1 << 20,
+
   // Script came from eval().
-  IsForEval = 1 << 19,
+  IsForEval = 1 << 21,
 
   // Script is parsed with a top-level goal of Module. This may be a top-level
   // or an inner-function script.
-  IsModule = 1 << 20,
-
-  // Whether the Parser declared 'arguments'.
-  ShouldDeclareArguments = 1 << 21,
+  IsModule = 1 << 22,
 
   // Script is for function.
-  IsFunction = 1 << 22,
+  IsFunction = 1 << 23,
 
   // Whether this script contains a direct eval statement.
-  HasDirectEval = 1 << 23,
+  HasDirectEval = 1 << 24,
   // ----
 
   // Bytecode Emitter Flags
@@ -244,16 +270,12 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // True if the script has a non-syntactic scope on its dynamic scope chain.
   // That is, there are objects about which we know nothing between the
   // outermost syntactic scope and the global.
-  HasNonSyntacticScope = 1 << 24,
+  HasNonSyntacticScope = 1 << 25,
 
-  FunctionHasExtraBodyVarScope = 1 << 25,
+  FunctionHasExtraBodyVarScope = 1 << 26,
 
   // Whether this function needs a call object or named lambda environment.
-  NeedsFunctionEnvironmentObjects = 1 << 26,
-
-  // True if the ArgumentsAnalysis is expected to always indicate an arguments
-  // object is needed.
-  AlwaysNeedsArgsObj = 1 << 27,
+  NeedsFunctionEnvironmentObjects = 1 << 27,
 };
 
 class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
