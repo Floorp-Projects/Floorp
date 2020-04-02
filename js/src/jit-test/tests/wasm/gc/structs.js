@@ -571,7 +571,7 @@ assertErrorMessage(() => wasmEvalText(`
  (type $s (struct (field $x i32)))
  (type $s (struct (field $y i32))))
 `),
-SyntaxError, /duplicate identifier for type/);
+SyntaxError, /duplicate type identifier/);
 
 // Bogus type definition syntax.
 

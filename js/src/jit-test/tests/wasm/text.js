@@ -9,11 +9,11 @@ assertErrorMessage(() => wasmEvalText('(module (func) (export "a'), SyntaxError,
 assertErrorMessage(() => wasmEvalText('(module (func (local $a i32) (param $b f32)))'), SyntaxError, parsingError);
 
 assertErrorMessage(() => wasmEvalText('(module (func $a) (func) (export "a" (func $a)) (export "b" (func $b)))'), SyntaxError, /failed to find func/);
-assertErrorMessage(() => wasmEvalText('(module (import "a" "b" (func $foo)) (import "a" "b" (func $foo)))'), SyntaxError, /duplicate identifier for func/);
-assertErrorMessage(() => wasmEvalText('(module (func $foo) (func $foo))'), SyntaxError, /duplicate identifier for func/);
-assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate identifier for local/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b" (func $foo)) (import "a" "b" (func $foo)))'), SyntaxError, /duplicate func identifier/);
+assertErrorMessage(() => wasmEvalText('(module (func $foo) (func $foo))'), SyntaxError, /duplicate func identifier/);
+assertErrorMessage(() => wasmEvalText('(module (func (param $a i32) (local $a i32)))'), SyntaxError, /duplicate local identifier/);
 assertErrorMessage(() => wasmEvalText('(module (func (local.get $a)))'), SyntaxError, /failed to find local/);
-assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (type $a (func (param i32))))'), SyntaxError, /duplicate identifier for type/);
+assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (type $a (func (param i32))))'), SyntaxError, /duplicate type identifier/);
 assertErrorMessage(() => wasmEvalText('(module (import "a" "" (func)) (func (call $abc)))'), SyntaxError, /failed to find func/);
 assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (type $b) (i32.const 13)))'), SyntaxError, /failed to find type/);
 assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indirect (type $c) (i32.const 0) (local.get 0))))'), SyntaxError, /failed to find type/);
