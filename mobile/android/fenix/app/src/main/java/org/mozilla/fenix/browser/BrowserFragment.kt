@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
@@ -35,6 +36,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.shortcut.FirstTimePwaObserver
 import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
 /**
@@ -107,14 +109,30 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun onStart() {
         super.onStart()
+        val context = requireContext()
+        val settings = context.settings()
+        val session = getSessionById()
+
         val toolbarSessionObserver = TrackingProtectionOverlay(
-            context = requireContext(),
-            settings = requireContext().settings()
+            context = context,
+            settings = settings
         ) {
             browserToolbarView.view
         }
-        getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
+        session?.register(toolbarSessionObserver, this, autoPause = true)
         updateEngineBottomMargin()
+
+        if (settings.shouldShowFirstTimePwaFragment) {
+            session?.register(
+                FirstTimePwaObserver(
+                    navController = findNavController(),
+                    settings = settings,
+                    webAppUseCases = context.components.useCases.webAppUseCases
+                ),
+                owner = this,
+                autoPause = true
+            )
+        }
     }
 
     private fun updateEngineBottomMargin() {

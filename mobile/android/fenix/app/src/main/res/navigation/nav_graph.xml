@@ -212,6 +212,9 @@
             android:id="@+id/action_browserFragment_to_createShortcutFragment"
             app:destination="@id/createShortcutFragment" />
         <action
+            android:id="@+id/action_browserFragment_to_firstTimePwaFragment"
+            app:destination="@id/firstTimePwaFragment" />
+        <action
             android:id="@+id/action_browserFragment_to_shareFragment"
             app:destination="@id/shareFragment" />
         <action
@@ -649,10 +652,17 @@
             app:argType="org.mozilla.fenix.collections.SaveCollectionStep"
             app:nullable="false" />
     </dialog>
+
     <dialog
         android:id="@+id/createShortcutFragment"
         android:name="org.mozilla.fenix.shortcut.CreateShortcutFragment"
         tools:layout="@layout/fragment_create_shortcut" />
+    <dialog
+        android:id="@+id/firstTimePwaFragment"
+        android:name="org.mozilla.fenix.shortcut.FirstTimePwaFragment"
+        android:label="fragment_pwa_first_time"
+        tools:layout="@layout/fragment_pwa_first_time" />
+
     <dialog
         android:id="@+id/shareFragment"
         android:name="org.mozilla.fenix.share.ShareFragment"
