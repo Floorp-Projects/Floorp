@@ -168,6 +168,7 @@ class InstalledAddonDetailsFragment : Fragment() {
             val optionsPageUrl = addon.installedState?.optionsPageUrl
             isVisible = !optionsPageUrl.isNullOrEmpty()
             setOnClickListener {
+                val settingUrl = addon.installedState?.optionsPageUrl ?: return@setOnClickListener
                 val directions = if (addon.installedState?.openOptionsPageInTab == true) {
                     val components = it.context.components
                     val shouldCreatePrivateSession =
@@ -176,9 +177,9 @@ class InstalledAddonDetailsFragment : Fragment() {
                             ?: false
 
                     if (shouldCreatePrivateSession) {
-                        components.tabsUseCases.addPrivateTab(optionsPageUrl as String)
+                        components.tabsUseCases.addPrivateTab(settingUrl)
                     } else {
-                        components.tabsUseCases.addTab(optionsPageUrl as String)
+                        components.tabsUseCases.addTab(settingUrl)
                     }
 
                     InstalledAddonDetailsFragmentDirections
