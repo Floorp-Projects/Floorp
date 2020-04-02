@@ -53,17 +53,4 @@
     <string name="key_tracking_protection">tracking_protection</string>
     <string name="key_autoplay">autoplay</string>
     <string name="key_remote_debugging">remote_debugging</string>
-    <string name="key_preferred_color_scheme">preferred_color_scheme</string>
-
-    <string-array name="pref_preferred_color_scheme_display_names">
-        <item>Follow System Preference</item>
-        <item>Light</item>
-        <item>Dark</item>
-    </string-array>
-    <string-array name="pref_preferred_color_scheme_values">
-        <item>-1</item>
-        <item>0</item>
-        <item>1</item>
-    </string-array>
-
 </resources>
