@@ -1199,8 +1199,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     SourceExtent extent{sourceStart, sourceEnd, toStringStart,
                         toStringEnd, lineno,    column};
 
-    script = JSScript::Create(cx, functionOrGlobal, sourceObject,
-                              ImmutableScriptFlags(immutableFlags), extent);
+    script = JSScript::Create(cx, functionOrGlobal, sourceObject, extent,
+                              ImmutableScriptFlags(immutableFlags));
     if (!script) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -4224,8 +4224,8 @@ void PrivateScriptData::trace(JSTracer* trc) {
 /*static*/
 JSScript* JSScript::Create(JSContext* cx, js::HandleObject functionOrGlobal,
                            js::HandleScriptSourceObject sourceObject,
-                           js::ImmutableScriptFlags flags,
-                           SourceExtent extent) {
+                           SourceExtent extent,
+                           js::ImmutableScriptFlags flags) {
   return static_cast<JSScript*>(
       BaseScript::New(cx, functionOrGlobal, sourceObject, extent, flags));
 }
@@ -4888,7 +4888,7 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
                       src->toStringStart(), src->toStringEnd(),
                       src->lineno(),        src->column()};
   RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, sourceObject,
-                                        src->immutableFlags(), extent));
+                                        extent, src->immutableFlags()));
   if (!dst) {
     return nullptr;
   }

@@ -2224,8 +2224,8 @@ class JSScript : public js::BaseScript {
  public:
   static JSScript* Create(JSContext* cx, js::HandleObject functionOrGlobal,
                           js::HandleScriptSourceObject sourceObject,
-                          js::ImmutableScriptFlags flags,
-                          js::SourceExtent extent);
+                          js::SourceExtent extent,
+                          js::ImmutableScriptFlags flags);
 
   // NOTE: This should only be used while delazifying.
   static JSScript* CastFromLazy(js::BaseScript* lazy) {
