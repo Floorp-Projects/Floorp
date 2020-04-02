@@ -25,6 +25,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsXULAppAPI.h"
 #include "SharedFontList-impl.h"
+#include "StandardFonts-linux.inc"
 
 #include "mozilla/gfx/HelpersCairo.h"
 
@@ -1355,7 +1356,7 @@ void gfxFcPlatformFontList::AddPatternToFontList(
     aFontFamily =
         static_cast<gfxFontconfigFontFamily*>(mFontFamilies.GetWeak(keyName));
     if (!aFontFamily) {
-      FontVisibility visibility = FontVisibility::Unknown;  // TODO
+      FontVisibility visibility = GetVisibilityForFamily(keyName);
       aFontFamily = new gfxFontconfigFontFamily(aFamilyName, visibility);
       mFontFamilies.Put(keyName, RefPtr{aFontFamily});
     }
@@ -1608,7 +1609,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
         }
         */
 
-        FontVisibility visibility = FontVisibility::Unknown;  // TODO
+        FontVisibility visibility = GetVisibilityForFamily(keyName);
         families.AppendElement(fontlist::Family::InitData(
             keyName, aFamilyName, /*index*/ 0, visibility,
             /*bundled*/ aAppFont, /*badUnderline*/ false));
@@ -1696,6 +1697,56 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
 
   for (uint32_t i = 0; i < families.Length(); i++) {
     list->Families()[i].AddFaces(list, *faces.Get(families[i].mKey));
+  }
+}
+
+gfxFcPlatformFontList::DistroID gfxFcPlatformFontList::GetDistroID() const {
+  // Helper called to initialize sResult the first time this is used.
+  auto getDistroID = []() {
+    DistroID result = DistroID::Unknown;
+    FILE* fp = fopen("/etc/os-release", "r");
+    if (fp) {
+      char buf[512];
+      while (fgets(buf, sizeof(buf), fp)) {
+        if (strncmp(buf, "ID=", 3) == 0) {
+          if (strncmp(buf + 3, "ubuntu", 6) == 0) {
+            result = DistroID::Ubuntu;
+          } else if (strncmp(buf + 3, "fedora", 6) == 0) {
+            result = DistroID::Fedora;
+          }
+          break;
+        }
+      }
+      fclose(fp);
+    }
+    return result;
+  };
+  static DistroID sResult = getDistroID();
+  return sResult;
+}
+
+FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
+    const nsACString& aName) const {
+  switch (GetDistroID()) {
+    case DistroID::Ubuntu:
+      if (FamilyInList(aName, kBaseFonts_Ubuntu_20_04,
+                       ArrayLength(kBaseFonts_Ubuntu_20_04))) {
+        return FontVisibility::Base;
+      }
+      if (FamilyInList(aName, kLangFonts_Ubuntu_20_04,
+                       ArrayLength(kLangFonts_Ubuntu_20_04))) {
+        return FontVisibility::LangPack;
+      }
+      return FontVisibility::User;
+    case DistroID::Fedora:
+      if (FamilyInList(aName, kBaseFonts_Fedora_32,
+                       ArrayLength(kBaseFonts_Fedora_32))) {
+        return FontVisibility::Base;
+      }
+      return FontVisibility::User;
+    default:
+      // We don't know how to categorize fonts on this system
+      return FontVisibility::Unknown;
   }
 }
 
