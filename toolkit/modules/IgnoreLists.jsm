@@ -82,7 +82,6 @@ class IgnoreListsManager {
       ) {
         // The local database is invalid, try and reset it.
         await this._ignoreListSettings.db.clear();
-        await this._ignoreListSettings.db.close();
         // Now call this again.
         return this._getIgnoreListSettings(false);
       }

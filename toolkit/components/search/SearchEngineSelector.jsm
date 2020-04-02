@@ -138,7 +138,6 @@ class SearchEngineSelector {
       ) {
         // The local database is invalid, try and reset it.
         await this._remoteConfig.db.clear();
-        await this._remoteConfig.db.close();
         // Now call this again.
         return this._getConfiguration(false);
       }

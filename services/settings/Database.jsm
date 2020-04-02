@@ -24,40 +24,301 @@ const DB_VERSION = 2;
  * Wrap IndexedDB errors to catch them more easily.
  */
 class IndexedDBError extends Error {
-  constructor(error, method = "") {
-    super(`IndexedDB: ${method} ${error.message}`);
+  constructor(error, method = "", identifier = "") {
+    super(`IndexedDB: ${identifier} ${method} ${error.message}`);
     this.name = error.name;
     this.stack = error.stack;
   }
 }
 
 class ShutdownError extends IndexedDBError {
-  constructor(error, method) {
-    super(error, method);
+  constructor(error, method = "", identifier = "") {
+    if (typeof error == "string") {
+      error = new Error(error);
+    }
+    super(error, method, identifier);
   }
 }
 
 /**
- * InternalDatabase is a tiny wrapper with the objective
+ * Database is a tiny wrapper with the objective
  * of providing major kinto-offline-client collection API.
  * (with the objective of getting rid of kinto-offline-client)
  */
-class InternalDatabase {
-  /* Expose the IDBError class publicly */
+class Database {
+  /* Expose the IDBError and ShutdownError class publicly */
   static get IDBError() {
     return IndexedDBError;
   }
 
-  constructor(identifier) {
-    this.identifier = identifier;
-    this._idb = null;
+  static get ShutdownError() {
+    return ShutdownError;
   }
 
-  async open() {
-    if (!this._idb) {
-      // Open and initialize/upgrade if needed.
-      this._idb = await openIDB(DB_NAME, DB_VERSION, event => {
+  constructor(identifier) {
+    ensureShutdownBlocker();
+    this.identifier = identifier;
+  }
+
+  async list(options = {}) {
+    const { filters = {}, sort = "" } = options;
+    const objFilters = transformSubObjectFilters(filters);
+    let results = [];
+    try {
+      await executeIDB(
+        "records",
+        store => {
+          const request = store
+            .index("cid")
+            .openCursor(IDBKeyRange.only(this.identifier));
+          request.onsuccess = event => {
+            const cursor = event.target.result;
+            if (cursor) {
+              const { value } = cursor;
+              if (filterObject(objFilters, value)) {
+                results.push(value);
+              }
+              cursor.continue();
+            }
+          };
+        },
+        { mode: "readonly" }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "list()", this.identifier);
+    }
+    // Remove IDB key field from results.
+    for (const result of results) {
+      delete result._cid;
+    }
+    return sort ? sortObjects(sort, results) : results;
+  }
+
+  async importBulk(toInsert) {
+    const _cid = this.identifier;
+    try {
+      await executeIDB(
+        "records",
+        store => {
+          // Chain the put operations together, the last one will be waited by
+          // the `transaction.oncomplete` callback.
+          let i = 0;
+          putNext();
+
+          function putNext() {
+            if (i == toInsert.length) {
+              return;
+            }
+            const entry = { ...toInsert[i], _cid };
+            store.put(entry).onsuccess = putNext; // On error, `transaction.onerror` is called.
+            ++i;
+          }
+        },
+        { desc: "importBulk() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "importBulk()", this.identifier);
+    }
+  }
+
+  async deleteBulk(toDelete) {
+    const _cid = this.identifier;
+    try {
+      await executeIDB(
+        "records",
+        store => {
+          // Chain the delete operations together, the last one will be waited by
+          // the `transaction.oncomplete` callback.
+          let i = 0;
+          deleteNext();
+
+          function deleteNext() {
+            if (i == toDelete.length) {
+              return;
+            }
+            store.delete([_cid, toDelete[i].id]).onsuccess = deleteNext; // On error, `transaction.onerror` is called.
+            ++i;
+          }
+        },
+        { desc: "deleteBulk() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "deleteBulk()", this.identifier);
+    }
+  }
+
+  async getLastModified() {
+    let entry = null;
+    try {
+      await executeIDB(
+        "timestamps",
+        store => {
+          store.get(this.identifier).onsuccess = e => (entry = e.target.result);
+        },
+        { mode: "readonly" }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "getLastModified()", this.identifier);
+    }
+    return entry ? entry.value : null;
+  }
+
+  async saveLastModified(lastModified) {
+    const value = parseInt(lastModified, 10) || null;
+    try {
+      await executeIDB(
+        "timestamps",
+        store => {
+          if (value === null) {
+            store.delete(this.identifier);
+          } else {
+            store.put({ cid: this.identifier, value });
+          }
+        },
+        { desc: "saveLastModified() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "saveLastModified()", this.identifier);
+    }
+    return value;
+  }
+
+  async getMetadata() {
+    let entry = null;
+    try {
+      await executeIDB(
+        "collections",
+        store => {
+          store.get(this.identifier).onsuccess = e => (entry = e.target.result);
+        },
+        { mode: "readonly" }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "getMetadata()", this.identifier);
+    }
+    return entry ? entry.metadata : null;
+  }
+
+  async saveMetadata(metadata) {
+    try {
+      await executeIDB(
+        "collections",
+        store => store.put({ cid: this.identifier, metadata }),
+        { desc: "saveMetadata() in " + this.identifier }
+      );
+      return metadata;
+    } catch (e) {
+      throw new IndexedDBError(e, "saveMetadata()", this.identifier);
+    }
+  }
+
+  async clear() {
+    try {
+      await this.saveLastModified(null);
+      await this.saveMetadata(null);
+      await executeIDB(
+        "records",
+        store => {
+          const range = IDBKeyRange.only(this.identifier);
+          const request = store.index("cid").openKeyCursor(range);
+          request.onsuccess = event => {
+            const cursor = event.target.result;
+            if (cursor) {
+              store.delete(cursor.primaryKey);
+              cursor.continue();
+            }
+          };
+          return request;
+        },
+        { desc: "clear() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "clear()", this.identifier);
+    }
+  }
+
+  /*
+   * Methods used by unit tests.
+   */
+
+  async create(record) {
+    if (!("id" in record)) {
+      record = { ...record, id: CommonUtils.generateUUID() };
+    }
+    try {
+      await executeIDB(
+        "records",
+        store => {
+          store.add({ ...record, _cid: this.identifier });
+        },
+        { desc: "create() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "create()", this.identifier);
+    }
+    return record;
+  }
+
+  async update(record) {
+    try {
+      await executeIDB(
+        "records",
+        store => {
+          store.put({ ...record, _cid: this.identifier });
+        },
+        { desc: "update() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "update()", this.identifier);
+    }
+  }
+
+  async delete(recordId) {
+    try {
+      await executeIDB(
+        "records",
+        store => {
+          store.delete([this.identifier, recordId]); // [_cid, id]
+        },
+        { desc: "delete() in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "delete()", this.identifier);
+    }
+  }
+}
+
+let gDB = null;
+let gDBPromise = null;
+
+/**
+ * This function attempts to ensure `gDB` points to a valid database value.
+ * If gDB is already a database, it will do no-op (but this may take a
+ * microtask or two).
+ * If opening the database fails, it will throw an IndexedDBError.
+ */
+async function openIDB(callback) {
+  // We can be called multiple times in a race; always ensure that when
+  // we complete, `gDB` is no longer null, but avoid doing the actual
+  // IndexedDB work more than once.
+  if (!gDBPromise) {
+    // Open and initialize/upgrade if needed.
+    gDBPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = event => {
+        // When an upgrade is needed, a transaction is started.
+        const transaction = event.target.transaction;
+        transaction.onabort = event => {
+          const error =
+            event.target.error ||
+            transaction.error ||
+            new DOMException("The operation has been aborted", "AbortError");
+          reject(new IndexedDBError(error, "open()"));
+        };
+
         const db = event.target.result;
+        db.onerror = event => reject(new IndexedDBError(event.target.error));
+
         if (event.oldVersion < 1) {
           // Records store
           const recordsStore = db.createObjectStore("records", {
@@ -78,244 +339,23 @@ class InternalDatabase {
             keyPath: "cid",
           });
         }
-      });
-    }
-    return this._idb;
-  }
-
-  async close() {
-    if (this._idb) {
-      this._idb.close();
-    }
-    this._idb = null;
-  }
-
-  async list(options = {}) {
-    const { filters = {}, sort = "" } = options;
-    const objFilters = transformSubObjectFilters(filters);
-    let results = [];
-    try {
-      await executeIDB(await this.open(), "records", store => {
-        const request = store
-          .index("cid")
-          .openCursor(IDBKeyRange.only(this.identifier));
-        request.onsuccess = event => {
-          const cursor = event.target.result;
-          if (cursor) {
-            const { value } = cursor;
-            if (filterObject(objFilters, value)) {
-              results.push(value);
-            }
-            cursor.continue();
-          }
-        };
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "list()");
-    }
-    // Remove IDB key field from results.
-    for (const result of results) {
-      delete result._cid;
-    }
-    return sort ? sortObjects(sort, results) : results;
-  }
-
-  async importBulk(toInsert) {
-    const _cid = this.identifier;
-    try {
-      await executeIDB(await this.open(), "records", store => {
-        // Chain the put operations together, the last one will be waited by
-        // the `transaction.oncomplete` callback.
-        let i = 0;
-        putNext();
-
-        function putNext() {
-          if (i == toInsert.length) {
-            return;
-          }
-          const entry = { ...toInsert[i], _cid };
-          store.put(entry).onsuccess = putNext; // On error, `transaction.onerror` is called.
-          ++i;
-        }
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "importBulk()");
-    }
-  }
-
-  async deleteBulk(toDelete) {
-    const _cid = this.identifier;
-    try {
-      await executeIDB(await this.open(), "records", store => {
-        // Chain the delete operations together, the last one will be waited by
-        // the `transaction.oncomplete` callback.
-        let i = 0;
-        deleteNext();
-
-        function deleteNext() {
-          if (i == toDelete.length) {
-            return;
-          }
-          store.delete([_cid, toDelete[i].id]).onsuccess = deleteNext; // On error, `transaction.onerror` is called.
-          ++i;
-        }
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "deleteBulk()");
-    }
-  }
-
-  async getLastModified() {
-    let entry = null;
-    try {
-      await executeIDB(
-        await this.open(),
-        "timestamps",
-        store => {
-          store.get(this.identifier).onsuccess = e => (entry = e.target.result);
-        },
-        { mode: "readonly" }
-      );
-    } catch (e) {
-      throw new IndexedDBError(e, "getLastModified()");
-    }
-    return entry ? entry.value : null;
-  }
-
-  async saveLastModified(lastModified) {
-    const value = parseInt(lastModified, 10) || null;
-    try {
-      await executeIDB(await this.open(), "timestamps", store => {
-        if (value === null) {
-          store.delete(this.identifier);
-        } else {
-          store.put({ cid: this.identifier, value });
-        }
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "saveLastModified()");
-    }
-    return value;
-  }
-
-  async getMetadata() {
-    let entry = null;
-    try {
-      await executeIDB(
-        await this.open(),
-        "collections",
-        store => {
-          store.get(this.identifier).onsuccess = e => (entry = e.target.result);
-        },
-        { mode: "readonly" }
-      );
-    } catch (e) {
-      throw new IndexedDBError(e, "getMetadata()");
-    }
-    return entry ? entry.metadata : null;
-  }
-
-  async saveMetadata(metadata) {
-    try {
-      await executeIDB(await this.open(), "collections", store =>
-        store.put({ cid: this.identifier, metadata })
-      );
-      return metadata;
-    } catch (e) {
-      throw new IndexedDBError(e, "saveMetadata()");
-    }
-  }
-
-  async clear() {
-    try {
-      await this.saveLastModified(null);
-      await this.saveMetadata(null);
-      await executeIDB(await this.open(), "records", store => {
-        const range = IDBKeyRange.only(this.identifier);
-        const request = store.index("cid").openKeyCursor(range);
-        request.onsuccess = event => {
-          const cursor = event.target.result;
-          if (cursor) {
-            store.delete(cursor.primaryKey);
-            cursor.continue();
-          }
-        };
-        return request;
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "clear()");
-    }
-  }
-
-  /*
-   * Methods used by unit tests.
-   */
-
-  async create(record) {
-    if (!("id" in record)) {
-      record = { ...record, id: CommonUtils.generateUUID() };
-    }
-    try {
-      await executeIDB(await this.open(), "records", store => {
-        store.add({ ...record, _cid: this.identifier });
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "create()");
-    }
-    return record;
-  }
-
-  async update(record) {
-    try {
-      await executeIDB(await this.open(), "records", store => {
-        store.put({ ...record, _cid: this.identifier });
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "update()");
-    }
-  }
-
-  async delete(recordId) {
-    try {
-      await executeIDB(await this.open(), "records", store => {
-        store.delete([this.identifier, recordId]); // [_cid, id]
-      });
-    } catch (e) {
-      throw new IndexedDBError(e, "delete()");
-    }
-  }
-}
-
-/**
- * Helper to wrap indexedDB.open() into a promise.
- */
-async function openIDB(dbname, version, callback) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbname, version);
-    request.onupgradeneeded = event => {
-      // When an upgrade is needed, a transaction is started.
-      const transaction = event.target.transaction;
-      transaction.onabort = event => {
-        const error =
-          event.target.error ||
-          transaction.error ||
-          new DOMException("The operation has been aborted", "AbortError");
-        reject(new IndexedDBError(error));
       };
-
-      const db = event.target.result;
-      db.onerror = event => reject(new IndexedDBError(event.target.error));
-
-      callback(event);
-    };
-    request.onerror = event => reject(new IndexedDBError(event.target.error));
-    request.onsuccess = event => {
-      const db = event.target.result;
-      resolve(db);
-    };
-  });
+      request.onerror = event =>
+        reject(new IndexedDBError(event.target.error, "open()"));
+      request.onsuccess = event => {
+        const db = event.target.result;
+        resolve(db);
+      };
+    });
+  }
+  let db = await gDBPromise;
+  if (!gDB) {
+    gDB = db;
+  }
 }
 
+const gPendingReadOnlyTransactions = new Set();
+const gPendingWriteOperations = new Set();
 /**
  * Helper to wrap some IDBObjectStore operations into a promise.
  *
@@ -324,23 +364,61 @@ async function openIDB(dbname, version, callback) {
  * @param {function} callback
  * @param {Object} options
  * @param {String} options.mode
+ * @param {String} options.desc   for shutdown tracking.
  */
-async function executeIDB(db, storeName, callback, options = {}) {
+async function executeIDB(storeName, callback, options = {}) {
+  if (!gDB) {
+    // Check if we're shutting down. Services.startup.shuttingDown will
+    // be true sooner, but is never true in xpcshell tests, so we check
+    // both that and a bool we set ourselves when `profile-before-change`
+    // starts.
+    if (gShutdownStarted || Services.startup.shuttingDown) {
+      throw new ShutdownError("The application is shutting down", "execute()");
+    }
+    await openIDB();
+  } else {
+    // Even if we have a db, wait a tick to avoid making IndexedDB sad.
+    // We should be able to remove this once bug 1626935 is fixed.
+    await Promise.resolve();
+  }
+  let db = gDB;
   const { mode = "readwrite" } = options;
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], mode);
+  const transaction = db.transaction([storeName], mode);
+
+  let promise = new Promise((resolve, reject) => {
     const store = transaction.objectStore(storeName);
     let result;
     try {
       result = callback(store);
     } catch (e) {
       transaction.abort();
-      reject(new IndexedDBError(e));
+      reject(new IndexedDBError(e, "execute()", storeName));
     }
     transaction.onerror = event =>
-      reject(new IndexedDBError(event.target.error));
+      reject(new IndexedDBError(event.target.error, "execute()"));
     transaction.oncomplete = event => resolve(result);
   });
+  // We track all readonly transactions and abort them at shutdown.
+  // We track all the other ones and await their completion at
+  // shutdown (to avoid dataloss when writes fail).
+  if (mode == "readonly") {
+    gPendingReadOnlyTransactions.add(transaction);
+    promise
+      .finally(() => gPendingReadOnlyTransactions.delete(transaction))
+      // The finally clause creates another promise, which will also
+      // be in a "rejected" state if `promise` is rejected. To not
+      // upset our "uncaught promise rejection" handler, no-op catch
+      // rejections on the end of that chain:
+      .catch(() => {});
+  } else {
+    let obj = { promise, desc: options.desc };
+    gPendingWriteOperations.add(obj);
+    promise
+      .finally(() => gPendingWriteOperations.delete(obj))
+      // Same as above.
+      .catch(() => {});
+  }
+  return promise;
 }
 
 function _isUndefined(value) {
@@ -414,93 +492,8 @@ function sortObjects(order, list) {
   });
 }
 
-const gPendingOperations = new Set();
-const kWrappedMethods = new Set([
-  "open",
-  "close",
-  "list",
-  "importBulk",
-  "deleteBulk",
-  "getLastModified",
-  "saveLastModified",
-  "getMetadata",
-  "saveMetadata",
-  "clear",
-  "create",
-  "update",
-  "delete",
-]);
-
-/**
- * We need to block shutdown on any pending indexeddb operations, and also
- * want to avoid starting new ones if we already know we're going to be
- * shutting down. In order to do this, we wrap all the database objects
- * we create in a proxy that lets us catch any pending operations, and remove
- * them when finished.
- */
-function Database(identifier) {
-  ensureShutdownBlocker();
-  let db = new InternalDatabase(identifier);
-  // This helper returns a function that gets executed when consumers runs an
-  // async operation on the underlying database. It throws if run after
-  // shutdown has started. Otherwise, it wraps the result from the "real"
-  // method call and adds it as a pending operation, removing it when the
-  // operation is done.
-  function _getWrapper(target, method) {
-    return function(...args) {
-      // For everything other than `close`, check if we're shutting down:
-      if (method != "close" && Services.startup.shuttingDown) {
-        throw new ShutdownError(
-          "The application is shutting down, can't call " + method
-        );
-      }
-      // We're not shutting down yet. Kick off the actual method call,
-      // and stash the result.
-      let promise = target[method].apply(target, args);
-      // Now put a "safe" wrapper of the promise in our shutdown tracker,
-      let safePromise = promise.catch(ex => Cu.reportError(ex));
-      let operationInfo = {
-        promise: safePromise,
-        method,
-        identifier,
-      };
-      gPendingOperations.add(operationInfo);
-      // And ensure we remove it once done.
-      safePromise.then(() => gPendingOperations.delete(operationInfo));
-      // Now return the original.
-      return promise;
-    };
-  }
-
-  return new Proxy(db, {
-    get(target, property, receiver) {
-      // For tests so they can stub methods. Otherwise, we end up fetching
-      // wrappers from the proxy, and then assigning them onto the real
-      // object when the test is finished, and then callers to that method
-      // hit infinite recursion...
-      if (property == "_wrappedDBForTestOnly") {
-        return target;
-      }
-      if (kWrappedMethods.has(property)) {
-        return _getWrapper(target, property);
-      }
-      if (typeof target[property] == "function") {
-        // If we get here, someone's tried to use some other operation that we
-        // don't yet know how to proxy. Throw to ensure we fix that:
-        throw new Error(
-          `Don't know how to process access to 'database.${property}()'` +
-            " Add to kWrappedMethods or otherwise update the proxy to deal."
-        );
-      }
-      return target[property];
-    },
-  });
-}
-
-Database.IDBError = InternalDatabase.IDBError;
-Database.ShutdownError = ShutdownError;
-
 let gShutdownBlocker = false;
+let gShutdownStarted = false;
 function ensureShutdownBlocker() {
   if (gShutdownBlocker) {
     return;
@@ -509,15 +502,26 @@ function ensureShutdownBlocker() {
   AsyncShutdown.profileBeforeChange.addBlocker(
     "RemoteSettingsClient - finish IDB access.",
     () => {
-      return Promise.all(Array.from(gPendingOperations).map(op => op.promise));
+      gShutdownStarted = true;
+      // Duplicate the list (to avoid it being modified) and then
+      // abort all read-only transactions.
+      for (let transaction of Array.from(gPendingReadOnlyTransactions)) {
+        transaction.abort();
+      }
+      if (gDB) {
+        // This will return immediately; the actual close will happen once
+        // there are no more running transactions.
+        gDB.close();
+        gDB = null;
+      }
+      gDBPromise = null;
+      return Promise.allSettled(
+        Array.from(gPendingWriteOperations).map(op => op.promise)
+      );
     },
     {
       fetchState() {
-        let info = [];
-        for (let op of gPendingOperations) {
-          info.push({ method: op.method, identifier: op.identifier });
-        }
-        return info;
+        return gPendingWriteOperations.map(op => op.desc);
       },
     }
   );
