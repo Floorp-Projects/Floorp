@@ -690,7 +690,7 @@ impl GpuCacheProfileCounters {
 pub struct BackendProfileCounters {
     pub total_time: TimeProfileCounter,
     pub resources: ResourceProfileCounters,
-    pub ipc: IpcProfileCounters,
+    pub txn: TransactionProfileCounters,
     pub intern: InternProfileCounters,
     pub scene_changed: bool,
 }
@@ -705,7 +705,7 @@ pub struct ResourceProfileCounters {
 }
 
 #[derive(Clone)]
-pub struct IpcProfileCounters {
+pub struct TransactionProfileCounters {
     pub display_list_build_time: TimeProfileCounter,
     pub scene_build_time: TimeProfileCounter,
     /// Time between when the display list is built and when it is sent by the API.
@@ -751,7 +751,7 @@ macro_rules! declare_intern_profile_counters {
 
 enumerate_interners!(declare_intern_profile_counters);
 
-impl IpcProfileCounters {
+impl TransactionProfileCounters {
     pub fn set(
         &mut self,
         dl_build_start: u64,
@@ -806,7 +806,7 @@ impl BackendProfileCounters {
                 texture_cache: TextureCacheProfileCounters::new(),
                 gpu_cache: GpuCacheProfileCounters::new(),
             },
-            ipc: IpcProfileCounters {
+            txn: TransactionProfileCounters {
                 display_list_build_time: TimeProfileCounter::new(
                     "DisplayList Build Time", false,
                     Some(expected::DISPLAY_LIST_BUILD_TIME)
@@ -1587,7 +1587,7 @@ impl Profiler {
                 &backend_profile.resources.texture_cache.pages_alpha8_linear,
                 &backend_profile.resources.texture_cache.pages_color8_linear,
                 &backend_profile.resources.texture_cache.pages_color8_nearest,
-                &backend_profile.ipc.display_lists,
+                &backend_profile.txn.display_lists,
             ],
             None,
             debug_renderer,
@@ -1597,11 +1597,11 @@ impl Profiler {
 
         Profiler::draw_counters(
             &[
-                &backend_profile.ipc.display_list_build_time,
-                &backend_profile.ipc.scene_build_time,
-                &backend_profile.ipc.content_send_time,
-                &backend_profile.ipc.api_send_time,
-                &backend_profile.ipc.total_send_time,
+                &backend_profile.txn.display_list_build_time,
+                &backend_profile.txn.scene_build_time,
+                &backend_profile.txn.content_send_time,
+                &backend_profile.txn.api_send_time,
+                &backend_profile.txn.total_send_time,
             ],
             None,
             debug_renderer,
@@ -1751,7 +1751,7 @@ impl Profiler {
                 &backend_profile.resources.image_templates,
                 &backend_profile.resources.font_templates,
                 &backend_profile.resources.texture_cache.rasterized_blob_pixels,
-                &backend_profile.ipc.display_lists,
+                &backend_profile.txn.display_lists,
             ],
         ];
 
@@ -1798,14 +1798,14 @@ impl Profiler {
             .push(renderer_timers.cpu_time.nanoseconds);
         self.renderer_time.set(renderer_timers.cpu_time.nanoseconds);
         self.ipc_graph
-            .push(backend_profile.ipc.total_send_time.nanoseconds);
+            .push(backend_profile.txn.total_send_time.nanoseconds);
         self.display_list_build_graph
-            .push(backend_profile.ipc.display_list_build_time.nanoseconds);
+            .push(backend_profile.txn.display_list_build_time.nanoseconds);
         self.scene_build_graph
-            .push(backend_profile.ipc.scene_build_time.nanoseconds);
+            .push(backend_profile.txn.scene_build_time.nanoseconds);
         self.blob_raster_graph
             .push(backend_profile.resources.texture_cache.rasterized_blob_pixels.size as u64);
-        self.ipc_time.set(backend_profile.ipc.total_send_time.nanoseconds);
+        self.ipc_time.set(backend_profile.txn.total_send_time.nanoseconds);
         self.gpu_graph.push(gpu_graph);
         self.gpu_time.set(gpu_graph);
         self.gpu_frames.push(gpu_graph, gpu_graphrs);
