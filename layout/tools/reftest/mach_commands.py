@@ -64,7 +64,7 @@ class ReftestRunner(MozbuildObject):
             "reftest": (self.topsrcdir, "layout", "reftests", "reftest.list"),
             "crashtest": (self.topsrcdir, "testing", "crashtest", "crashtests.list"),
             "jstestbrowser": (self.topobjdir, "dist", "test-stage", "jsreftest", "tests",
-                              "jstests.list")
+                              "js", "src", "tests", "jstests.list")
         }
 
         args.extraProfileFiles.append(os.path.join(self.topobjdir, "dist", "plugins"))
@@ -77,6 +77,7 @@ class ReftestRunner(MozbuildObject):
         if args.suite == "jstestbrowser":
             args.extraProfileFiles.append(os.path.join(self.topobjdir, "dist",
                                                        "test-stage", "jsreftest",
+                                                       "tests", "js", "src",
                                                        "tests", "user.js"))
 
         self.log_manager.enable_unstructured()
