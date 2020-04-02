@@ -139,7 +139,6 @@ const kDocumentChannelDeniedURIs = [
   "about:crashcontent",
   "about:newtab",
   "about:printpreview",
-  "about:privatebrowsing",
 ];
 
 // Changes here should also be made in URIUsesDocChannel in nsDocShell.cpp.
