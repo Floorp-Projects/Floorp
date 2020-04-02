@@ -12,9 +12,6 @@ const sortFnOptions = {
   "last-used": (a, b) => a.timeLastUsed < b.timeLastUsed,
   "last-changed": (a, b) => a.timePasswordChanged < b.timePasswordChanged,
   alerts: (a, b, breachesByLoginGUID, vulnerableLoginsByLoginGUID) => {
-    if (!breachesByLoginGUID && !vulnerableLoginsByLoginGUID) {
-      return 0;
-    }
     const aIsBreached = breachesByLoginGUID && breachesByLoginGUID.has(a.guid);
     const bIsBreached = breachesByLoginGUID && breachesByLoginGUID.has(b.guid);
     const aIsVulnerable =
@@ -29,7 +26,7 @@ const sortFnOptions = {
     if ((!aIsBreached && bIsBreached) || (!aIsVulnerable && bIsVulnerable)) {
       return 1;
     }
-    return collator.compare(a.title, b.title);
+    return sortFnOptions.name(a, b);
   },
 };
 
@@ -429,6 +426,14 @@ export default class LoginList extends HTMLElement {
   }
 
   setSortDirection(sortDirection) {
+    // The 'alerts' sort becomes visible when there are known alerts.
+    // Don't restore to the 'alerts' sort if there are no alerts to show.
+    if (
+      sortDirection == "alerts" &&
+      this._sortSelect.namedItem("alerts").hidden
+    ) {
+      return;
+    }
     this._sortSelect.value = sortDirection;
     this._applySortAndScrollToTop();
     this._selectFirstVisibleLogin();
@@ -544,15 +549,12 @@ export default class LoginList extends HTMLElement {
     this._loginGuidsSortedOrder = this._loginGuidsSortedOrder.sort((a, b) => {
       let loginA = this._logins[a].login;
       let loginB = this._logins[b].login;
-      if (this._breachesByLoginGUID && this._vulnerableLoginsByLoginGUID) {
-        return sortFnOptions[sort](
-          loginA,
-          loginB,
-          this._breachesByLoginGUID,
-          this._vulnerableLoginsByLoginGUID
-        );
-      }
-      return sortFnOptions[sort](loginA, loginB);
+      return sortFnOptions[sort](
+        loginA,
+        loginB,
+        this._breachesByLoginGUID,
+        this._vulnerableLoginsByLoginGUID
+      );
     });
   }
 
