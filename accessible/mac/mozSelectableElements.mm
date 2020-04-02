@@ -53,28 +53,13 @@
 - (id)selectedChildren {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSMutableArray* selectedChildren = [[NSMutableArray alloc] init];
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    AutoTArray<Accessible*, 10> selectedItems;
-    accWrap->SelectedItems(&selectedItems);
-    for (uint64_t i = 0; i < selectedItems.Length(); i++) {
-      mozAccessible* nativeChild;
-      selectedItems.ElementAt(i)->GetNativeInterface((void**)&nativeChild);
-      if (nativeChild) {
-        [selectedChildren addObject:nativeChild];
-      }
-    }
-  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    AutoTArray<ProxyAccessible*, 10> selectedItems;
-    proxy->SelectedItems(&selectedItems);
-    for (uint64_t i = 0; i < selectedItems.Length(); i++) {
-      if (mozAccessible* nativeChild = GetNativeFromProxy(selectedItems.ElementAt(i))) {
-        [selectedChildren addObject:nativeChild];
-      }
-    }
-  }
-
-  return selectedChildren;
+  return [[self children]
+      filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
+                                                                        NSDictionary* bindings) {
+        // Return mozSelectableChildAccessibles that have are selected (truthy value).
+        return
+            [child isKindOfClass:[mozSelectableChildAccessible class]] && [[child value] boolValue];
+      }]];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -90,6 +75,7 @@
 @implementation mozSelectableChildAccessible
 
 - (id)value {
+  // Retuens true if item is selected.
   return [NSNumber numberWithBool:[self stateWithMask:states::SELECTED] != 0];
 }
 
