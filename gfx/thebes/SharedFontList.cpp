@@ -81,7 +81,7 @@ Family::Family(FontList* aList, const InitData& aData)
       mCharacterMap(Pointer::Null()),
       mFaces(Pointer::Null()),
       mIndex(aData.mIndex),
-      mIsHidden(aData.mHidden),
+      mVisibility(aData.mVisibility),
       mIsBadUnderlineFamily(aData.mBadUnderline),
       mIsForceClassic(aData.mForceClassic),
       mIsSimple(false) {
@@ -676,7 +676,7 @@ void FontList::SetAliases(
   aliasArray.SetCapacity(aAliasTable.Count());
   for (auto i = aAliasTable.Iter(); !i.Done(); i.Next()) {
     aliasArray.AppendElement(Family::InitData(
-        i.Key(), i.Key(), i.Data()->mIndex, i.Data()->mHidden,
+        i.Key(), i.Key(), i.Data()->mIndex, i.Data()->mVisibility,
         i.Data()->mBundled, i.Data()->mBadUnderline, i.Data()->mForceClassic));
   }
   aliasArray.Sort();
@@ -767,8 +767,10 @@ Family* FontList::FindFamily(const nsCString& aName, bool aAllowHidden) {
   size_t match;
   if (BinarySearchIf(families, 0, header.mFamilyCount,
                      FamilyNameComparator(this, aName), &match)) {
-    return !aAllowHidden && families[match].IsHidden() ? nullptr
-                                                       : &families[match];
+    return !aAllowHidden &&
+                   families[match].Visibility() == FontVisibility::Hidden
+               ? nullptr
+               : &families[match];
   }
 
   if (header.mAliasCount) {
@@ -776,8 +778,10 @@ Family* FontList::FindFamily(const nsCString& aName, bool aAllowHidden) {
     size_t match;
     if (BinarySearchIf(families, 0, header.mAliasCount,
                        FamilyNameComparator(this, aName), &match)) {
-      return !aAllowHidden && families[match].IsHidden() ? nullptr
-                                                         : &families[match];
+      return !aAllowHidden &&
+                     families[match].Visibility() == FontVisibility::Hidden
+                 ? nullptr
+                 : &families[match];
     }
   }
 
