@@ -53,6 +53,7 @@ class SmokeTests {
 
     @Test
     fun loadWebsiteTest() {
+        // Disable on API21 due to https://github.com/mozilla-mobile/android-components/issues/6482
         if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP) {
             waitForIdle()
 
@@ -65,6 +66,7 @@ class SmokeTests {
 
     @Test
     fun loadWebsitesInMultipleTabsTest() {
+        // Disable on API21 due to https://github.com/mozilla-mobile/android-components/issues/6482
         if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP) {
             waitForIdle()
 
