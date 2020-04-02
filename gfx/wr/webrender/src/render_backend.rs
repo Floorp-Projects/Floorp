@@ -915,6 +915,7 @@ impl RenderBackend {
                                 let scene_build_time =
                                     txn.scene_build_end_time - txn.scene_build_start_time;
                                 profile_counters.scene_build_time.set(scene_build_time);
+                                profile_counters.scene_changed = true;
                             }
 
                             if let Some(doc) = self.documents.get_mut(&txn.document_id) {

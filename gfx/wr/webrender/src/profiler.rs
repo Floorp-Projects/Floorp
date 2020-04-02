@@ -693,6 +693,7 @@ pub struct BackendProfileCounters {
     pub resources: ResourceProfileCounters,
     pub ipc: IpcProfileCounters,
     pub intern: InternProfileCounters,
+    pub scene_changed: bool,
 }
 
 #[derive(Clone)]
@@ -844,12 +845,14 @@ impl BackendProfileCounters {
                 filter_data: ResourceProfileCounter::new("Interned filter data", None, None),
                 backdrop: ResourceProfileCounter::new("Interned backdrops", None, None),
             },
+            scene_changed: false,
         }
     }
 
     pub fn reset(&mut self) {
         self.total_time.reset();
         self.resources.texture_cache.rasterized_blob_pixels.reset();
+        self.scene_changed = false;
     }
 }
 
@@ -1772,7 +1775,7 @@ impl Profiler {
         style: ProfileStyle,
     ) {
         self.draw_state.x_left = 20.0;
-        self.draw_state.y_left = 40.0;
+        self.draw_state.y_left = 50.0;
         self.draw_state.x_right = 450.0;
         self.draw_state.y_right = 40.0;
 
