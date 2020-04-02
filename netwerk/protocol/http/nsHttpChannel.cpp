@@ -10451,7 +10451,7 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
   if (!cjs) {
     cjs = net::CookieJarSettings::Create();
   }
-  if (cjs->GetRejectThirdPartyTrackers()) {
+  if (cjs->GetRejectThirdPartyContexts()) {
     bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
     // If our referrer has been set before, and our referrer policy is unset
     // (default policy) if we thought the channel wasn't a third-party

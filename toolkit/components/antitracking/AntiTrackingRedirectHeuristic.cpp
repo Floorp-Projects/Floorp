@@ -182,7 +182,7 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
 
   int32_t behavior = cookieJarSettings->GetCookieBehavior();
 
-  if (!cookieJarSettings->GetRejectThirdPartyTrackers()) {
+  if (!cookieJarSettings->GetRejectThirdPartyContexts()) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
@@ -190,6 +190,7 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
+  // TODO TODO
   MOZ_ASSERT(
       behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
       behavior ==
