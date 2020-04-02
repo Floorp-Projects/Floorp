@@ -33,3 +33,6 @@
 /.cron.yml /@mozilla-mobile/releng @mozilla-mobile/act
 /automation/ @mozilla-mobile/releng @mozilla-mobile/act
 /CODEOWNERS @mozilla-mobile/releng @mozilla-mobile/act
+
+# Nearby component
+/components/lib/nearby @espertus @mozilla-mobile/act
