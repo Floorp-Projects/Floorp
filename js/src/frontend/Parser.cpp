@@ -48,6 +48,9 @@
 #  include "irregexp/RegExpParser.h"
 #endif
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
+#ifdef ENABLE_NEW_REGEXP
+#  include "new-regexp/RegExpAPI.h"
+#endif
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
@@ -9677,7 +9680,9 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     // skip this.
     LifoAllocScope allocScope(&cx_->tempLifoAlloc());
 #ifdef ENABLE_NEW_REGEXP
-    MOZ_CRASH("TODO");
+    if (!irregexp::CheckPatternSyntax(cx_, anyChars, range, flags)) {
+      return nullptr;
+    }
 #else
     if (!irregexp::ParsePatternSyntax(anyChars, allocScope.alloc(), range,
                                       flags.unicode())) {
@@ -9711,7 +9716,9 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   {
     LifoAllocScope scopeAlloc(&alloc_);
 #ifdef ENABLE_NEW_REGEXP
-    MOZ_CRASH("TODO");
+    if (!irregexp::CheckPatternSyntax(cx_, anyChars, source, flags)) {
+      return null();
+    }
 #else
     if (!js::irregexp::ParsePatternSyntax(anyChars, scopeAlloc.alloc(), source,
                                           flags.unicode())) {

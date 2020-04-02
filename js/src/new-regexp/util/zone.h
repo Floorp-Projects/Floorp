@@ -21,9 +21,7 @@ namespace internal {
 // V8::Zone ~= LifoAlloc
 class Zone {
  public:
-  Zone(size_t defaultChunkSize) : lifoAlloc_(defaultChunkSize) {
-    lifoAlloc_.setAsInfallibleByDefault();
-  }
+  Zone(js::LifoAlloc& alloc) : lifoAlloc_(alloc) {}
 
   void* New(size_t size) {
     js::LifoAlloc::AutoFallibleScope fallible(&lifoAlloc_);
@@ -43,7 +41,7 @@ class Zone {
     return lifoAlloc_.computedSizeOfExcludingThis() > kExcessLimit;
   }
 private:
-  js::LifoAlloc lifoAlloc_;
+ js::LifoAlloc& lifoAlloc_;
 };
 
 // Superclass for classes allocated in a Zone.
@@ -95,7 +93,7 @@ class ZoneList final {
   // to use after operations that can change the list's backing store
   // (e.g. Add).
   inline T& operator[](int i) const {
-    MOZ_ASSERT(0 < i);
+    MOZ_ASSERT(i >= 0);
     MOZ_ASSERT(static_cast<unsigned>(i) < static_cast<unsigned>(length_));
     return data_[i];
   }

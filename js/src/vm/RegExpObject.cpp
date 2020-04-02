@@ -26,6 +26,9 @@
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/StableStringChars.h"
+#ifdef ENABLE_NEW_REGEXP
+#  include "new-regexp/RegExpAPI.h"
+#endif
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"
@@ -252,7 +255,9 @@ RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
                                    NewObjectKind newKind) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 #ifdef ENABLE_NEW_REGEXP
-  MOZ_CRASH("TODO");
+  if (!irregexp::CheckPatternSyntax(cx, tokenStream, source, flags)) {
+    return nullptr;
+  }
 #else
   if (!irregexp::ParsePatternSyntax(tokenStream, allocScope.alloc(), source,
                                     flags.unicode())) {
@@ -297,7 +302,9 @@ RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 #ifdef ENABLE_NEW_REGEXP
-  MOZ_CRASH("TODO");
+  if (!irregexp::CheckPatternSyntax(cx, dummyTokenStream, source, flags)) {
+    return nullptr;
+  }
 #else
   if (!irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
                                     source, flags.unicode())) {

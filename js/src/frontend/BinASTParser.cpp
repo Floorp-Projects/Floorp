@@ -3570,7 +3570,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
 
     LifoAllocScope allocScope(&cx_->tempLifoAlloc());
 #ifdef ENABLE_NEW_REGEXP
-    MOZ_CRASH("TODO");
+    BINJS_TRY(irregexp::CheckPatternSyntax(cx_, dummyTokenStream, pattern,
+					   reflags);
 #else
     BINJS_TRY(irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
                                            pattern, reflags.unicode()));
