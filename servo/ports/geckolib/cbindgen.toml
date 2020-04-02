@@ -450,7 +450,7 @@ renaming_overrides_prefixing = true
 """
 
 # TODO(emilio): Add hooks to cbindgen to be able to generate MOZ_MUST_USE_TYPE
-# or MOZ_MUST_USE on the functions.
+# or [[nodiscard]] on the functions.
 "Owned" = """
   UniquePtr<GeckoType> Consume() {
     UniquePtr<GeckoType> ret(ptr);
@@ -546,7 +546,7 @@ renaming_overrides_prefixing = true
   // Increase the reference count.
   inline void IncrementRef();
   // Release the reference count, and return whether the result must be freed or not.
-  MOZ_MUST_USE inline bool DecrementRef();
+  [[nodiscard]] inline bool DecrementRef();
 """
 
 "ArcSlice" = """
