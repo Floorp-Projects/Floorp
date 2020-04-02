@@ -110,7 +110,10 @@ UrlClassifierFeatureFingerprintingProtection::MaybeCreate(
            "with uri %s",
            aChannel, spec.get()));
     }
+    return nullptr;
+  }
 
+  if (UrlClassifierCommon::IsPassiveContent(aChannel)) {
     return nullptr;
   }
 

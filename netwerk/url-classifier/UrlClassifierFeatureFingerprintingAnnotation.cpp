@@ -93,6 +93,10 @@ UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(
     return nullptr;
   }
 
+  if (UrlClassifierCommon::IsPassiveContent(aChannel)) {
+    return nullptr;
+  }
+
   MaybeInitialize();
   MOZ_ASSERT(gFeatureFingerprintingAnnotation);
 

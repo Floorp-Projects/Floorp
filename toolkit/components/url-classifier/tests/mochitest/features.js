@@ -208,14 +208,18 @@ async function runTest(test, expectedFlag, expectedTrackingResource, prefs) {
     });
   }
 
-  // Let's load an image with a random query string, just to avoid network cache.
+  // Let's load a script with a random query string to avoid network cache.
+  // Using a script as the fingerprinting feature does not block display content
   let result = await new Promise(resolve => {
-    let image = new Image();
-    image.src =
-      "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?" +
-      Math.random();
-    image.onload = _ => resolve(true);
-    image.onerror = _ => resolve(false);
+    let script = document.createElement("script");
+    script.setAttribute(
+      "src",
+      "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?" +
+        Math.random()
+    );
+    script.onload = _ => resolve(true);
+    script.onerror = _ => resolve(false);
+    document.body.appendChild(script);
   });
 
   is(result, test.loadExpected, "The loading happened correctly");
@@ -253,7 +257,7 @@ function runTests(flag, prefs, trackingResource) {
         !channel ||
         !classifiedChannel ||
         !channel.URI.spec.startsWith(
-          "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg"
+          "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"
         )
       ) {
         return;
