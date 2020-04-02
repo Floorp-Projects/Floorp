@@ -1031,6 +1031,9 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     case roles::TOGGLE_BUTTON:
       return @"AXToggle";
 
+    case roles::PAGETAB:
+      return @"AXTabButton";
+
     default:
       break;
   }
