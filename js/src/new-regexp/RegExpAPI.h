@@ -9,11 +9,20 @@
 #ifndef regexp_RegExpAPI_h
 #define regexp_RegExpAPI_h
 
+#include "frontend/TokenStream.h"
 #include "vm/JSContext.h"
+#include "vm/RegExpShared.h"
+
 namespace js {
 namespace irregexp {
 
 Isolate* CreateIsolate(JSContext* cx);
+
+bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
+                        const mozilla::Range<const char16_t> chars,
+                        JS::RegExpFlags flags);
+bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
+                        HandleAtom pattern, JS::RegExpFlags flags);
 
 }  // namespace irregexp
 }  // namespace js

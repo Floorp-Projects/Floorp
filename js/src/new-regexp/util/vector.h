@@ -58,8 +58,8 @@ class Vector {
   // Returns a vector using the same backing storage as this one,
   // spanning from and including 'from', to but not including 'to'.
   Vector<T> SubVector(size_t from, size_t to) const {
-    MOZ_ASSERT(from < to);
-    MOZ_ASSERT(to < length_);
+    MOZ_ASSERT(from <= to);
+    MOZ_ASSERT(to <= length_);
     return Vector<T>(begin() + from, to - from);
   }
 
