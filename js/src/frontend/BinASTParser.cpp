@@ -27,7 +27,9 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
-#include "irregexp/RegExpParser.h"
+#ifndef ENABLE_NEW_REGEXP
+#  include "irregexp/RegExpParser.h"
+#endif
 #include "js/RegExpFlags.h"  //  JS::RegExpFlag, JS::RegExpFlags
 #include "vm/RegExpObject.h"
 
@@ -3567,8 +3569,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
     TokenStream dummyTokenStream(cx_, dummyOptions, nullptr, 0, nullptr);
 
     LifoAllocScope allocScope(&cx_->tempLifoAlloc());
+#ifdef ENABLE_NEW_REGEXP
+    MOZ_CRASH("TODO");
+#else
     BINJS_TRY(irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
                                            pattern, reflags.unicode()));
+#endif
   }
 
   RegExpIndex index(this->getCompilationInfo().regExpData.length());

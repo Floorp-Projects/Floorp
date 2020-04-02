@@ -111,9 +111,12 @@ bool JSContext::init(ContextKind kind) {
   if (kind == ContextKind::MainThread) {
     TlsContext.set(this);
     currentThread_ = ThreadId::ThisThreadId();
+
+#ifndef ENABLE_NEW_REGEXP
     if (!regexpStack.ref().init()) {
       return false;
     }
+#endif
 
     if (!fx.initInstance()) {
       return false;
@@ -852,7 +855,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       defaultFreeOp_(this, runtime, true),
       freeUnusedMemory(false),
       jitActivation(this, nullptr),
+#ifndef ENABLE_NEW_REGEXP
       regexpStack(this),
+#endif
       activation_(this, nullptr),
       profilingActivation_(nullptr),
       nativeStackBase(GetNativeStackBase()),

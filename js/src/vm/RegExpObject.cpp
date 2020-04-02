@@ -16,10 +16,12 @@
 #include "builtin/SelfHostingDefines.h"  // REGEXP_*_FLAG
 #include "frontend/TokenStream.h"
 #include "gc/HashUtil.h"
-#ifdef DEBUG
-#  include "irregexp/RegExpBytecode.h"
+#ifndef ENABLE_NEW_REGEXP
+#  ifdef DEBUG
+#    include "irregexp/RegExpBytecode.h"
+#  endif
+#  include "irregexp/RegExpParser.h"
 #endif
-#include "irregexp/RegExpParser.h"
 #include "jit/VMFunctions.h"
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
@@ -249,11 +251,14 @@ RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
                                    frontend::TokenStreamAnyChars& tokenStream,
                                    NewObjectKind newKind) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+#ifdef ENABLE_NEW_REGEXP
+  MOZ_CRASH("TODO");
+#else
   if (!irregexp::ParsePatternSyntax(tokenStream, allocScope.alloc(), source,
                                     flags.unicode())) {
     return nullptr;
   }
-
+#endif
   return createSyntaxChecked(cx, source, flags, newKind);
 }
 
@@ -291,10 +296,14 @@ RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
                                nullptr);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+#ifdef ENABLE_NEW_REGEXP
+  MOZ_CRASH("TODO");
+#else
   if (!irregexp::ParsePatternSyntax(dummyTokenStream, allocScope.alloc(),
                                     source, flags.unicode())) {
     return nullptr;
   }
+#endif
 
   Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, newKind));
   if (!regexp) {
@@ -555,7 +564,7 @@ JSLinearString* RegExpObject::toString(JSContext* cx) const {
   return sb.finishString();
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(ENABLE_NEW_REGEXP)
 /* static */
 bool RegExpShared::dumpBytecode(JSContext* cx, MutableHandleRegExpShared re,
                                 bool match_only, HandleLinearString input) {
@@ -878,7 +887,7 @@ bool RegExpObject::dumpBytecode(JSContext* cx, Handle<RegExpObject*> regexp,
 
   return RegExpShared::dumpBytecode(cx, &shared, match_only, input);
 }
-#endif
+#endif  // DEBUG && !ENABLE_NEW_REGEXP
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool IsRegExpMetaChar(CharT ch) {
@@ -976,6 +985,30 @@ bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
   return compile(cx, re, pattern, input, mode, force);
 }
 
+#ifdef ENABLE_NEW_REGEXP
+bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
+                           HandleAtom pattern, HandleLinearString input,
+                           CompilationMode mode, ForceByteCodeEnum force) {
+  MOZ_CRASH("TODO");
+}
+/* static */
+bool RegExpShared::compileIfNecessary(JSContext* cx,
+                                      MutableHandleRegExpShared re,
+                                      HandleLinearString input,
+                                      CompilationMode mode,
+                                      ForceByteCodeEnum force) {
+  MOZ_CRASH("TODO");
+}
+
+/* static */
+RegExpRunStatus RegExpShared::execute(JSContext* cx,
+                                      MutableHandleRegExpShared re,
+                                      HandleLinearString input, size_t start,
+                                      VectorMatchPairs* matches,
+                                      size_t* endIndex) {
+  MOZ_CRASH("TODO");
+}
+#else
 /* static */
 bool RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re,
                            HandleAtom pattern, HandleLinearString input,
@@ -1191,6 +1224,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   }
   return result;
 }
+#endif  // ENABLE_NEW_REGEXP
 
 size_t RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   size_t n = 0;

@@ -31,7 +31,9 @@
 #include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
-#include "irregexp/RegExpStack.h"
+#ifndef ENABLE_NEW_REGEXP
+#  include "irregexp/RegExpStack.h"
+#endif
 #include "js/AllocationRecording.h"
 #include "js/BuildId.h"  // JS::BuildIdOp
 #include "js/Debug.h"
