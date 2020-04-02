@@ -260,14 +260,6 @@ UNIFIED_SOURCES += [
     'ds/Bitmap.cpp',
     'ds/LifoAlloc.cpp',
     'ds/MemoryProtectionExceptionHandler.cpp',
-    'irregexp/NativeRegExpMacroAssembler.cpp',
-    'irregexp/RegExpAST.cpp',
-    'irregexp/RegExpCharacters.cpp',
-    'irregexp/RegExpEngine.cpp',
-    'irregexp/RegExpInterpreter.cpp',
-    'irregexp/RegExpMacroAssembler.cpp',
-    'irregexp/RegExpParser.cpp',
-    'irregexp/RegExpStack.cpp',
     'jsapi.cpp',
     'jsdate.cpp',
     'jsexn.cpp',
@@ -455,6 +447,18 @@ if CONFIG['MOZ_VTUNE']:
     if CONFIG['CC_TYPE'] == 'gcc':
         SOURCES['vtune/ittnotify_static.c'].flags += [
             '-Wno-stringop-overflow'
+        ]
+
+if not CONFIG['ENABLE_NEW_REGEXP']:
+    UNIFIED_SOURCES += [
+        'irregexp/NativeRegExpMacroAssembler.cpp',
+        'irregexp/RegExpAST.cpp',
+        'irregexp/RegExpCharacters.cpp',
+        'irregexp/RegExpEngine.cpp',
+        'irregexp/RegExpInterpreter.cpp',
+        'irregexp/RegExpMacroAssembler.cpp',
+        'irregexp/RegExpParser.cpp',
+        'irregexp/RegExpStack.cpp',
         ]
 
 DIRS += [

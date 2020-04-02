@@ -445,9 +445,11 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<js::jit::JitActivation*> jitActivation;
 
+#ifndef ENABLE_NEW_REGEXP
   // Information about the heap allocated backtrack stack used by RegExp JIT
   // code.
   js::ContextData<js::irregexp::RegExpStack> regexpStack;
+#endif
 
   /*
    * Points to the most recent activation running on the thread.
