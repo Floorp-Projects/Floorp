@@ -1052,7 +1052,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                         HandleObject funOrMod, MutableHandleScript scriptp) {
   using ImmutableFlags = JSScript::ImmutableFlags;
 
-  /* NB: Keep this in sync with CopyScript. */
+  /* NB: Keep this in sync with CopyScriptImpl. */
 
   enum XDRScriptFlags {
     OwnSource = 1 << 0,
@@ -4869,10 +4869,10 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   return true;
 }
 
-JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
-                                 HandleObject functionOrGlobal,
-                                 HandleScriptSourceObject sourceObject,
-                                 MutableHandle<GCVector<Scope*>> scopes) {
+static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
+                                HandleObject functionOrGlobal,
+                                HandleScriptSourceObject sourceObject,
+                                MutableHandle<GCVector<Scope*>> scopes) {
   if (src->treatAsRunOnce() && !src->isFunction()) {
     JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
     return nullptr;
@@ -4883,12 +4883,9 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
   JS::AssertObjectIsNotGray(sourceObject);
 
-  // Create a new JSScript to fill in
-  SourceExtent extent{src->sourceStart(),   src->sourceEnd(),
-                      src->toStringStart(), src->toStringEnd(),
-                      src->lineno(),        src->column()};
+  // Create a new JSScript to fill in.
   RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, sourceObject,
-                                        extent, src->immutableFlags()));
+                                        src->extent(), src->immutableFlags()));
   if (!dst) {
     return nullptr;
   }
@@ -4909,7 +4906,7 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   if (cx->zone() != src->zoneFromAnyThread()) {
     src->sharedData()->markForCrossZone(cx);
   }
-  dst->sharedData_ = src->sharedData();
+  dst->initSharedData(src->sharedData());
 
   return dst;
 }
@@ -4936,8 +4933,7 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
   }
 
   RootedObject global(cx, cx->global());
-  RootedScript dst(cx,
-                   detail::CopyScript(cx, src, global, sourceObject, &scopes));
+  RootedScript dst(cx, CopyScriptImpl(cx, src, global, sourceObject, &scopes));
   if (!dst) {
     return nullptr;
   }
@@ -4989,7 +4985,7 @@ JSScript* js::CloneScriptIntoFunction(
 
   // Save flags in case we need to undo the early mutations.
   const FunctionFlags preservedFlags = fun->flags();
-  RootedScript dst(cx, detail::CopyScript(cx, src, fun, sourceObject, &scopes));
+  RootedScript dst(cx, CopyScriptImpl(cx, src, fun, sourceObject, &scopes));
   if (!dst) {
     fun->setFlags(preservedFlags);
     return nullptr;
