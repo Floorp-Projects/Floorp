@@ -66,7 +66,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edit markah</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Pengelola Pengaya</string>
+    <string name="browser_menu_add_ons">Pengaya</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Tidak ada pengaya di sini</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -76,7 +76,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Setelan</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Pustaka Anda</string>
+    <string name="browser_menu_library">Pustaka</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Situs desktop</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -90,7 +90,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Tab baru</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Simpan ke Koleksi</string>
+    <string name="browser_menu_save_to_collection_2">Simpan ke koleksi</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Laporkan masalah situs</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -158,6 +158,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Cari di Web</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Pencarian suara</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Setelan</string>
@@ -208,6 +211,12 @@
     <string name="preferences_add_private_browsing_shortcut">Tambahkan pintasan penjelajahan pribadi</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Aksesibilitas</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Penyedia Firefox Account khusus</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Penyedia Sync khusus</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Penyedia Firefox Account/Sync dimodifikasi. Keluar dari aplikasi untuk menerapkan pengubahan…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akun</string>
     <!-- Preference shown on banner to sign into account -->
@@ -471,6 +480,14 @@
     <string name="history_delete_all_dialog">Yakin akan menghapus riwayat Anda?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Bersihkan</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Salin</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Bagikan</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Buka di tab baru</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Buka di tab pribadi</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Hapus</string>
     <!-- History multi select title in app bar
@@ -619,19 +636,16 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Nonaktif</string>
 
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video dan audio diblokir</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video dan audio diizinkan</string>
-
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Izinkan audio dan video</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Izinkan audio dan video hanya lewat Wi-Fi</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Blokir suara dan video hanya pada mode data seluler</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Suara dan video akan diputar dalam mode Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Blokir audio</string>
+    <string name="preference_option_autoplay_block_audio2">Blokir suara saja</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Blokir video dan audio</string>
+    <string name="preference_option_autoplay_blocked3">Blokir suara dan video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Aktif</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -922,6 +936,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Pelajari pemberitahuan privasi kami</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Tutup</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Mulai menjelajah</string>
 
@@ -1060,6 +1077,9 @@
     <string name="etp_panel_off">Perlindungan DINONAKTIFKAN untuk situs ini</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Perlindungan Pelacakan Dipertingkat tidak aktif untuk situs web ini</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Arahkan kembali</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Hak anda</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1080,6 +1100,11 @@
     <string name="about_licensing_information">Informasi lisensi</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Pustaka yang kami gunakan</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menu debug: %1$d klik lagi untuk mengaktifkan</string>
+    <string name="about_debug_menu_toast_done">Menu debug diaktifkan</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 tab</string>

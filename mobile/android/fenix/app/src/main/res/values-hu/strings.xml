@@ -155,6 +155,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Keresés a weben</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Hangalapú keresés</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Beállítások</string>
@@ -203,6 +206,12 @@
     <string name="preferences_add_private_browsing_shortcut">Privát böngészési parancsikon hozzáadása</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Akadálymentesítés</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Egyéni Firefox-fiókkiszolgáló</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Egyéni Sync kiszolgáló</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">A Firefox-fiók/Sync-kiszolgáló módosítva. Kilépés az alkalmazásból a változások érvényesítéséhez…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Fiók</string>
     <!-- Preference shown on banner to sign into account -->
@@ -462,6 +471,14 @@
     <string name="history_delete_all_dialog">Biztos, hogy törli az előzményeket?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Törlés</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Másolás</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Megosztás</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Megnyitás új lapon</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Megnyitás privát lapon</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Törlés</string>
     <!-- History multi select title in app bar
@@ -908,6 +925,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Olvassa el az adatvédelmi nyilatkozatunkat</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Bezárás</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Böngészés megkezdése</string>
 
@@ -1071,6 +1091,11 @@
     <string name="about_licensing_information">Licencinformációk</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Az általunk használt programkönyvtárak</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Hibakeresési menü: %1$d kattintás van hátra az engedélyezésig</string>
+    <string name="about_debug_menu_toast_done">Hibakeresési menü engedélyezve</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 lap</string>

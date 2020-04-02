@@ -136,6 +136,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Iskanje po spletu</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Glasovno iskanje</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Nastavitve</string>
@@ -691,6 +694,10 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Da, prijavi me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Prijavljanje …</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Prijavite se v Firefox</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Ostanite odjavljeni</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Zaščitite se</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -883,10 +890,17 @@
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Ustvarjeno %s</string>
 
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Posodabljanje %s …</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Zaženi %s</string>
+
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Varna povezava</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Nevarna povezava</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Top članki</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ali ste prepričani, da želite izbrisati ta zaznamek?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->

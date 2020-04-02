@@ -154,6 +154,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Sykje op it web</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Sprutsen sykopdracht</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Ynstellingen</string>
@@ -202,6 +205,12 @@
     <string name="preferences_add_private_browsing_shortcut">Fluchkeppeling nei priveenavigaasje tafoegje</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Tagonklikheid</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Oanpaste Firefox Accountserver</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Oanpaste Syncserver</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox Account-/Syncserver oanpast. Tapassing wurdt ôfsluten om wizigingen ta te passen…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
@@ -457,6 +466,14 @@
     <string name="history_delete_all_dialog">Binne jo wis dat jo jo skiednis wiskje wolle?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Wiskje</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopiearje</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Diele</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Iepenje yn nij ljepblêd</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Iepenje yn priveeljepblêd</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Fuortsmite</string>
     <!-- History multi select title in app bar
@@ -900,6 +917,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lês ús privacyferklearring</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Slute</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Begjinne mei sneupen</string>
 
@@ -1038,6 +1058,9 @@
     <string name="etp_panel_off">Beskermingen foar dizze website stean ÚT</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Ferbettere beskerming tsjin folgjen is út foar dizze websites</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Werom blêdzje</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Jo rjochten</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1059,6 +1082,11 @@
 
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Brûkte biblioteken</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Debuggingmenu: noch %1$d klik(ken) om yn te skeakeljen</string>
+    <string name="about_debug_menu_toast_done">Debuggingmenu ynskeakele</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ljepblêd</string>

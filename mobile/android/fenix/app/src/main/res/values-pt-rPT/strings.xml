@@ -1042,7 +1042,7 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bloqueia os cookies que as redes de anúncios e empresas de análise utilizam para compilar os seus dados de navegação entre vários sites.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_title">Cripto-mineradores</string>
+    <string name="etp_cryptominers_title">Criptomineradores</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Impede que scripts maliciosos obtenham acesso ao seu dispositivo para minerar moedas digitais.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
