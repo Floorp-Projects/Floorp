@@ -158,4 +158,25 @@ class SelectorsKtTest {
                 state.findTabOrCustomTab("test-id")!!.content.url)
         }
     }
+
+    @Test
+    fun `findTabByUrl finds a regular tab with same url or returns null`() {
+        BrowserState(
+            tabs = listOf(createTab("https://www.mozilla.org", id = "test-id"))
+        ).also { state ->
+            assertNotNull(state.findTabByUrl("https://www.mozilla.org"))
+            assertEquals(
+                "https://www.mozilla.org",
+                state.findTabByUrl("https://www.mozilla.org")!!.content.url)
+            assertEquals(
+                "test-id",
+                state.findTabByUrl("https://www.mozilla.org")!!.id)
+        }
+
+        BrowserState(
+            customTabs = listOf(createCustomTab("https://www.mozilla.org", id = "test-id"))
+        ).also { state ->
+            assertNull(state.findTabByUrl("https://www.mozilla.com"))
+        }
+    }
 }
