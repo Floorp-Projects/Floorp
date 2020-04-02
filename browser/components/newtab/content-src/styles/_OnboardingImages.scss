@@ -1,0 +1,72 @@
+// Used for Trailhead and about:welcome
+$icon-path: '../data/content/assets/';
+
+.onboardingMessageImage {
+  &.addons {
+    background-image: url('#{$icon-path}illustration-addons@2x.png');
+  }
+
+  &.privatebrowsing {
+    background-image: url('#{$icon-path}illustration-privatebrowsing@2x.png');
+  }
+
+  &.screenshots {
+    background-image: url('#{$icon-path}illustration-screenshots@2x.png');
+  }
+
+  &.gift {
+    background-image: url('#{$icon-path}illustration-gift@2x.png');
+  }
+
+  &.sync {
+    background-image: url('#{$icon-path}illustration-sync@2x.png');
+  }
+
+  &.devices {
+    background-image: url('#{$icon-path}trailhead/card-illo-devices.svg');
+  }
+
+  &.fbcont {
+    background-image: url('#{$icon-path}trailhead/card-illo-fbcont.svg');
+  }
+
+  &.import {
+    background-image: url('#{$icon-path}trailhead/card-illo-import.svg');
+  }
+
+  &.ffmonitor {
+    background-image: url('#{$icon-path}trailhead/card-illo-ffmonitor.svg');
+  }
+
+  &.ffsend {
+    background-image: url('#{$icon-path}trailhead/card-illo-ffsend.svg');
+  }
+
+  &.lockwise {
+    background-image: url('#{$icon-path}trailhead/card-illo-lockwise.svg');
+  }
+
+  &.mobile {
+    background-image: url('#{$icon-path}trailhead/card-illo-mobile.svg');
+  }
+
+  &.pledge {
+    background-image: url('#{$icon-path}trailhead/card-illo-pledge.svg');
+  }
+
+  &.pocket {
+    background-image: url('#{$icon-path}trailhead/card-illo-pocket.svg');
+  }
+
+  &.private {
+    background-image: url('#{$icon-path}trailhead/card-illo-private.svg');
+  }
+
+  &.sendtab {
+    background-image: url('#{$icon-path}trailhead/card-illo-sendtab.svg');
+  }
+
+  &.tracking {
+    background-image: url('#{$icon-path}trailhead/card-illo-tracking.svg');
+  }
+}
