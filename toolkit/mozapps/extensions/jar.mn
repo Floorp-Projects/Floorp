@@ -22,6 +22,7 @@ toolkit.jar:
   content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
   content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
   content/mozapps/extensions/default-theme.svg                  (content/default-theme.svg)
+  content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
   content/mozapps/extensions/firefox-compact-dark.svg           (content/firefox-compact-dark.svg)
   content/mozapps/extensions/firefox-compact-light.svg          (content/firefox-compact-light.svg)
   content/mozapps/extensions/message-bar.css                    (content/message-bar.css)

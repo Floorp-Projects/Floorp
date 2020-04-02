@@ -20,12 +20,13 @@ addons = [
 output_dir = OBJDIR_FILES._tests.testing.mochitest.browser.toolkit.mozapps.extensions.test.browser.addons
 
 for addon in addons:
-    indir = 'addons/%s' % addon
-    xpi = '%s.xpi' % indir
+    for file_type in ['xpi', 'zip']:
+        indir = 'addons/%s' % addon
+        path = '%s.%s' % (indir, file_type)
 
-    GENERATED_FILES += [xpi]
-    GENERATED_FILES[xpi].script = '../create_xpi.py'
-    GENERATED_FILES[xpi].inputs = [indir]
+        GENERATED_FILES += [path]
+        GENERATED_FILES[path].script = '../create_xpi.py'
+        GENERATED_FILES[path].inputs = [indir]
 
-    output_dir += ['!%s' % xpi]
+        output_dir += ['!%s' % path]
 
