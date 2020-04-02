@@ -3017,8 +3017,8 @@ BrowserGlue.prototype = {
         // attempting to reset their settings.
         if (
           currentEngine._extensionID ||
-          currentEngine._isDefault ||
-          !Services.search.originalDefaultEngine.wrappedJSObject._isDefault
+          currentEngine.isAppProvided ||
+          !Services.search.originalDefaultEngine.isAppProvided
         ) {
           return;
         }
