@@ -4486,7 +4486,7 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   RootedScript script(cx, scriptArg);
   AutoEnterAnalysis enter(cx);
 
-  MOZ_ASSERT(!script->analyzedArgsUsage());
+  MOZ_ASSERT(script->needsArgsAnalysis());
   MOZ_ASSERT(script->argumentsHasVarBinding());
 
   // Treat the script as needing an arguments object until we determine it

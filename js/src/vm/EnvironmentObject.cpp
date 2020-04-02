@@ -2751,7 +2751,7 @@ void DebugEnvironments::takeFrameSnapshot(
      * Copy in formals that are not aliased via the scope chain
      * but are aliased via the arguments object.
      */
-    if (script->analyzedArgsUsage() && script->needsArgsObj() &&
+    if (!script->needsArgsAnalysis() && script->needsArgsObj() &&
         frame.hasArgsObj()) {
       for (unsigned i = 0; i < frame.numFormalArgs(); ++i) {
         if (script->formalLivesInArgumentsObject(i)) {

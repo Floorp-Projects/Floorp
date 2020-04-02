@@ -160,10 +160,10 @@ inline js::Shape* JSScript::initialEnvironmentShape() const {
 }
 
 inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
-  if (analyzedArgsUsage()) {
-    return true;
+  if (needsArgsAnalysis()) {
+    return js::jit::AnalyzeArgumentsUsage(cx, this);
   }
-  return js::jit::AnalyzeArgumentsUsage(cx, this);
+  return true;
 }
 
 inline bool JSScript::isDebuggee() const {
