@@ -10,6 +10,7 @@ import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.concept.fetch.isDataUri
 import mozilla.components.lib.fetch.okhttp.OkHttpClient.Companion.CACHE_MAX_SIZE
 import mozilla.components.lib.fetch.okhttp.OkHttpClient.Companion.getOrCreateCookieManager
 import okhttp3.Cache
@@ -30,6 +31,10 @@ class OkHttpClient(
     private val context: Context? = null
 ) : Client() {
     override fun fetch(request: Request): Response {
+        if (request.isDataUri()) {
+            return fetchDataUri(request)
+        }
+
         val requestClient = client.rebuildFor(request, context)
 
         val requestBuilder = createRequestBuilderWithBody(request)

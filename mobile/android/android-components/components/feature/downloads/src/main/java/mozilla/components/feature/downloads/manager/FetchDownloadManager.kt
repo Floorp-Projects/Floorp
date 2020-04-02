@@ -55,8 +55,8 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      * @return the id reference of the scheduled download.
      */
     override fun download(download: DownloadState, cookie: String): Long? {
-        if (!download.isScheme(listOf("http", "https"))) {
-            // We are ignoring everything that is not http or https. This is a limitation of
+        if (!download.isScheme(listOf("http", "https", "data"))) {
+            // We are ignoring everything that is not http(s) or data. This is a limitation of
             // GeckoView: https://bugzilla.mozilla.org/show_bug.cgi?id=1501735 and
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1432949
             return null

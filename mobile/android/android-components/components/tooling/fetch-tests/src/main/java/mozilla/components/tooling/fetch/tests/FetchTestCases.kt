@@ -494,6 +494,25 @@ abstract class FetchTestCases {
         }
     }
 
+    @Test
+    open fun getDataUri() {
+        val client = createNewClient()
+        val response = client.fetch(Request(url = "data:text/plain;charset=utf-8;base64,SGVsbG8sIFdvcmxkIQ=="))
+        assertEquals("13", response.headers["Content-Length"])
+        assertEquals("text/plain;charset=utf-8", response.headers["Content-Type"])
+        assertEquals("Hello, World!", response.body.string())
+
+        val responseNoCharset = client.fetch(Request(url = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="))
+        assertEquals("13", responseNoCharset.headers["Content-Length"])
+        assertEquals("text/plain", responseNoCharset.headers["Content-Type"])
+        assertEquals("Hello, World!", responseNoCharset.body.string())
+
+        val responseNoContentType = client.fetch(Request(url = "data:;base64,SGVsbG8sIFdvcmxkIQ=="))
+        assertEquals("13", responseNoContentType.headers["Content-Length"])
+        assertNull(responseNoContentType.headers["Content-Type"])
+        assertEquals("Hello, World!", responseNoContentType.body.string())
+    }
+
     private inline fun withServerResponding(
         vararg responses: MockResponse,
         crossinline block: MockWebServer.(Client) -> Unit

@@ -9,6 +9,7 @@ import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.concept.fetch.isDataUri
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient.Companion.getOrCreateCookieManager
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -25,6 +26,10 @@ import java.util.zip.GZIPInputStream
 class HttpURLConnectionClient : Client() {
     @Throws(IOException::class)
     override fun fetch(request: Request): Response {
+        if (request.isDataUri()) {
+            return fetchDataUri(request)
+        }
+
         val connection = (URL(request.url).openConnection() as HttpURLConnection)
 
         connection.setupWith(request)

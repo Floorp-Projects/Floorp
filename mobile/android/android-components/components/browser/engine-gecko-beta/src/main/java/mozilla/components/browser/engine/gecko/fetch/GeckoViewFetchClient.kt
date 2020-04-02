@@ -11,6 +11,7 @@ import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.concept.fetch.isDataUri
 
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoWebExecutor
@@ -39,6 +40,10 @@ class GeckoViewFetchClient(
 
     @Throws(IOException::class)
     override fun fetch(request: Request): Response {
+        if (request.isDataUri()) {
+            return fetchDataUri(request)
+        }
+
         val webRequest = request.toWebRequest(defaultHeaders)
 
         val readTimeOut = request.readTimeout ?: maxReadTimeOut
