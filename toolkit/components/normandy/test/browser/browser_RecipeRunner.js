@@ -304,7 +304,6 @@ decorate_task(
       signature: fakeSig,
     });
     await db.saveLastModified(42);
-    db.close();
 
     let recipesFromRS = (
       await RecipeRunner._remoteSettingsClientForTesting.get()
@@ -380,7 +379,6 @@ decorate_task(
       signature: fakeSig,
     });
     await db.saveLastModified(42);
-    db.close();
 
     await RecipeRunner.run();
 

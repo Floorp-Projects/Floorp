@@ -212,7 +212,6 @@ const NormandyTestUtils = {
             }
             lastModified = (await db.getLastModified()) || 0;
             await db.saveLastModified(lastModified + 1);
-            await db.close();
           },
         };
 
@@ -223,7 +222,6 @@ const NormandyTestUtils = {
           await db.clear();
           lastModified = await db.getLastModified();
           await db.saveLastModified(lastModified + 1);
-          await db.close();
         }
       };
     };
