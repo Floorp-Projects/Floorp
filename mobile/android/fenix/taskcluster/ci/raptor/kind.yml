@@ -77,7 +77,7 @@ job-defaults:
             - '--cfg=mozharness/configs/raptor/android_hw_config.py'
             - '--app=fenix'
             - '--binary=org.mozilla.fenix.performancetest'
-            - '--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity'
+            - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
     fetches:
         toolchain:

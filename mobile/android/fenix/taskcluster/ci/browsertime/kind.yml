@@ -80,7 +80,7 @@ job-defaults:
             - '--browsertime'
             - '--cold'
             - '--binary=org.mozilla.fenix.performancetest'
-            - '--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity'
+            - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
             - '--browsertime-node=$MOZ_FETCHES_DIR/node/bin/node'
             - '--browsertime-geckodriver=$MOZ_FETCHES_DIR/geckodriver'
@@ -224,3 +224,8 @@ jobs:
         test-name: cnn
         treeherder:
             symbol: 'Btime(tp6m-27-c)'
+
+    tp6m-28-cold:
+        test-name: google-search-restaurants
+        treeherder:
+            symbol: 'Btime(tp6m-28-c)'
