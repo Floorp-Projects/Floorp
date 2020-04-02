@@ -53,11 +53,6 @@ void BCEScriptStencil::init() {
     immutableFlags.setFlag(
         ImmutableScriptFlagsEnum::FunctionHasExtraBodyVarScope,
         funbox->hasExtraBodyVarScope());
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::AlwaysNeedsArgsObj,
-                           funbox->definitelyNeedsArgsObj());
-    immutableFlags.setFlag(ImmutableScriptFlagsEnum::ArgumentsHasVarBinding,
-                           funbox->argumentsHasLocalBinding());
-
   } /* isFunctionBox */
 }
 
