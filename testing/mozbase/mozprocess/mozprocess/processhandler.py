@@ -1147,7 +1147,8 @@ class StreamOutput(object):
 
     def __call__(self, line):
         try:
-            self.stream.write(line + '\n'.encode('utf8'))
+            self.stream.write(line + b"\n" if isinstance(line, six.binary_type)
+                              else "\n")
         except UnicodeDecodeError:
             # TODO: Workaround for bug #991866 to make sure we can display when
             # when normal UTF-8 display is failing
