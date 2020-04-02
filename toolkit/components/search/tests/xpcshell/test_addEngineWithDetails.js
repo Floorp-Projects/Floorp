@@ -23,10 +23,6 @@ add_task(async function test_addEngineWithDetails() {
   // though we can't point to a specific file.
   let engine = Services.search.getEngineByName(kSearchEngineID);
   Assert.equal(engine.wrappedJSObject._loadPath, "[other]addEngineWithDetails");
-  Assert.ok(
-    !engine.isAppProvided,
-    "Should not be shown as an app-provided engine"
-  );
 
   // Set the engine as default; this should set a loadPath verification hash,
   // which should ensure we don't show the search reset prompt.
