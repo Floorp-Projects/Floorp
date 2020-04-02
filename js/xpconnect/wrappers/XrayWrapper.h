@@ -161,7 +161,7 @@ class DOMXrayTraits : public XrayTraits {
   bool defineProperty(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
                       JS::Handle<JS::PropertyDescriptor> desc,
                       JS::Handle<JS::PropertyDescriptor> existingDesc,
-                      JS::ObjectOpResult& result, bool* defined);
+                      JS::ObjectOpResult& result, bool* done);
   virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper,
                               unsigned flags, JS::MutableHandleIdVector props);
   static bool call(JSContext* cx, JS::HandleObject wrapper,

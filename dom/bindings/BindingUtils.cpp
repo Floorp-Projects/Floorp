@@ -1754,11 +1754,11 @@ static bool ResolvePrototypeOrConstructor(
 bool XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                         JS::Handle<JS::PropertyDescriptor> desc,
-                        JS::ObjectOpResult& result, bool* defined) {
+                        JS::ObjectOpResult& result, bool* done) {
   if (!js::IsProxy(obj)) return true;
 
   const DOMProxyHandler* handler = GetDOMProxyHandler(obj);
-  return handler->defineProperty(cx, wrapper, id, desc, result, defined);
+  return handler->defineProperty(cx, wrapper, id, desc, result, done);
 }
 
 template <typename SpecType>

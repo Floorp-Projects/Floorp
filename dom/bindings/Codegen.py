@@ -12454,7 +12454,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::Handle<JS::PropertyDescriptor>', 'desc'),
                 Argument('JS::ObjectOpResult&', 'opresult'),
-                Argument('bool*', 'defined')]
+                Argument('bool*', 'done')]
         ClassMethod.__init__(self, "defineProperty", "bool", args, virtual=True, override=True, const=True)
         self.descriptor = descriptor
 
@@ -12481,7 +12481,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 uint32_t index = GetArrayIndexFromId(id);
                 if (IsArrayIndex(index)) {
                   $*{cxDecl}
-                  *defined = true;
+                  *done = true;
                   // https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
                   // Step 1.1.  The no-indexed-setter case is handled by step 1.2.
                   if (!desc.isDataDescriptor()) {
@@ -12503,7 +12503,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             set += dedent(
                 """
                 if (IsArrayIndex(GetArrayIndexFromId(id))) {
-                  *defined = true;
+                  *done = true;
                   return opresult.failNoIndexedSetter();
                 }
                 """)
@@ -12529,7 +12529,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                                 "should work!")
             tailCode = dedent(
                 """
-                *defined = true;
+                *done = true;
                 return opresult.succeed();
                 """)
             set += CGProxyNamedSetter(self.descriptor, tailCode).define()
@@ -12547,7 +12547,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     $*{presenceChecker}
 
                     if (found) {
-                      *defined = true;
+                      *done = true;
                       return opresult.failNoNamedSetter();
                     }
                     """,
