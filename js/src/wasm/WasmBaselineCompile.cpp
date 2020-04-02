@@ -12501,6 +12501,28 @@ bool BaseCompiler::emitBody() {
         break;
 #endif
 
+#ifdef ENABLE_WASM_GC
+      // "GC" operations
+      case uint16_t(Op::GcPrefix): {
+        if (!env_.gcTypesEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew):
+            CHECK_NEXT(emitStructNew());
+          case uint32_t(GcOp::StructGet):
+            CHECK_NEXT(emitStructGet());
+          case uint32_t(GcOp::StructSet):
+            CHECK_NEXT(emitStructSet());
+          case uint32_t(GcOp::StructNarrow):
+            CHECK_NEXT(emitStructNarrow());
+          default:
+            break;
+        }  // switch (op.b1)
+        return iter_.unrecognizedOpcode(&op);
+      }
+#endif
+
       // "Miscellaneous" operations
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
@@ -12581,28 +12603,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitTableGrow());
           case uint32_t(MiscOp::TableSize):
             CHECK_NEXT(emitTableSize());
-#endif
-#ifdef ENABLE_WASM_GC
-          case uint32_t(MiscOp::StructNew):
-            if (!env_.gcTypesEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(emitStructNew());
-          case uint32_t(MiscOp::StructGet):
-            if (!env_.gcTypesEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(emitStructGet());
-          case uint32_t(MiscOp::StructSet):
-            if (!env_.gcTypesEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(emitStructSet());
-          case uint32_t(MiscOp::StructNarrow):
-            if (!env_.gcTypesEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(emitStructNarrow());
 #endif
           default:
             break;

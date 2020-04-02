@@ -4301,6 +4301,22 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I64Extend32S):
         CHECK(EmitSignExtend(f, 4, 8));
 
+        // Gc operations
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew):
+          case uint32_t(GcOp::StructGet):
+          case uint32_t(GcOp::StructSet):
+          case uint32_t(GcOp::StructNarrow):
+            // Not yet supported
+            return f.iter().unrecognizedOpcode(&op);
+          default:
+            return f.iter().unrecognizedOpcode(&op);
+        }
+      }
+#endif
+
       // Miscellaneous operations
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
@@ -4341,14 +4357,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitTableGrow(f));
           case uint32_t(MiscOp::TableSize):
             CHECK(EmitTableSize(f));
-#endif
-#ifdef ENABLE_WASM_GC
-          case uint32_t(MiscOp::StructNew):
-          case uint32_t(MiscOp::StructGet):
-          case uint32_t(MiscOp::StructSet):
-          case uint32_t(MiscOp::StructNarrow):
-            // Not yet supported
-            return f.iter().unrecognizedOpcode(&op);
 #endif
           default:
             return f.iter().unrecognizedOpcode(&op);
