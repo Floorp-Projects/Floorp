@@ -215,14 +215,6 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
           }
         };
         win.addEventListener("DOMContentLoaded", onLoaded, { once: true });
-
-        // There is a possibility that DOMContentLoaded won't be fired. This
-        // unload event (which cannot be cancelled) will attempt to remove
-        // the listener for the DOMContentLoaded event.
-        const onUnloaded = () => {
-          win.removeEventListener("DOMContentLoaded", onLoaded);
-        };
-        win.addEventListener("unload", onUnloaded, { once: true });
         break;
       }
     }
