@@ -50,7 +50,7 @@ rev = "3541e3818fdc7c2a24f87e3459151a4ce955a67a"
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"
 replace-with = "vendored-sources"
-rev = "8069f8f4189982e0b38fa6dc8993dd4fab41f728"
+rev = "72f813a03cefbdf8e2c58c7410f3556c79429a06"
 
 [source."https://github.com/bytecodealliance/wasmtime"]
 git = "https://github.com/bytecodealliance/wasmtime"
