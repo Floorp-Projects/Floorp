@@ -83,16 +83,14 @@ impl<'a> Resolver<'a> {
                             }
                         }
                     }
+                    TypeDef::Array(_) => {}
                 }
                 Ok(())
             }
             ModuleField::Elem(e) => register(Ns::Elem, e.id),
             ModuleField::Data(d) => register(Ns::Data, d.id),
             ModuleField::Event(e) => register(Ns::Event, e.id),
-            ModuleField::Start(_)
-            | ModuleField::Export(_)
-            | ModuleField::GcOptIn(_)
-            | ModuleField::Custom(_) => Ok(()),
+            ModuleField::Start(_) | ModuleField::Export(_) | ModuleField::Custom(_) => Ok(()),
         }
     }
 
@@ -205,18 +203,18 @@ impl<'a> Resolver<'a> {
 
             ModuleField::Event(e) => self.resolve_event_type(e.span, &mut e.ty),
 
-            ModuleField::Table(_)
-            | ModuleField::Memory(_)
-            | ModuleField::GcOptIn(_)
-            | ModuleField::Custom(_) => Ok(()),
+            ModuleField::Table(_) | ModuleField::Memory(_) | ModuleField::Custom(_) => Ok(()),
         }
     }
 
     fn resolve_valtype(&self, ty: &mut ValType<'a>) -> Result<(), Error> {
-        if let ValType::Ref(id) = ty {
-            self.ns(Ns::Type)
-                .resolve(id)
-                .map_err(|id| self.resolve_error(id, "type"))?;
+        match ty {
+            ValType::Ref(i) | ValType::Optref(i) | ValType::Rtt(i) => {
+                self.ns(Ns::Type)
+                    .resolve(i)
+                    .map_err(|id| self.resolve_error(id, "type"))?;
+            }
+            _ => {}
         }
         Ok(())
     }
@@ -225,6 +223,7 @@ impl<'a> Resolver<'a> {
         match &mut ty.def {
             TypeDef::Func(func) => self.resolve_function_type(func),
             TypeDef::Struct(r#struct) => self.resolve_struct_type(r#struct),
+            TypeDef::Array(array) => self.resolve_array_type(array),
         }
     }
 
@@ -242,6 +241,11 @@ impl<'a> Resolver<'a> {
         for field in &mut r#struct.fields {
             self.resolve_valtype(&mut field.ty)?;
         }
+        Ok(())
+    }
+
+    fn resolve_array_type(&self, array: &mut ArrayType<'a>) -> Result<(), Error> {
+        self.resolve_valtype(&mut array.ty)?;
         Ok(())
     }
 
@@ -341,7 +345,7 @@ impl<'a> Namespace<'a> {
                 if desc != "elem" && desc != "data" {
                     return Err(Error::new(
                         name.span(),
-                        format!("duplicate identifier for {}", desc),
+                        format!("duplicate {} identifier", desc),
                     ));
                 }
             }
@@ -435,6 +439,8 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 Ok(())
             }
 
+            FuncBind(i) => self.resolver.resolve_idx(i, Ns::Type),
+
             Block(bt) | If(bt) | Loop(bt) | Try(bt) => {
                 self.labels.push(bt.label);
 
@@ -508,7 +514,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 ));
             }
 
-            Br(i) | BrIf(i) => self.resolve_label(i),
+            Br(i) | BrIf(i) | BrOnCast(i) => self.resolve_label(i),
 
             BrTable(i) => {
                 for label in i.labels.iter_mut() {
@@ -530,8 +536,10 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 Ok(())
             }
 
-            StructNew(s) => self.resolver.resolve_idx(s, Ns::Type),
-            StructSet(s) | StructGet(s) => {
+            StructNew(i) | StructNewSub(i) | StructNewDefault(i) | ArrayNew(i) | ArrayNewSub(i)
+            | ArrayNewDefault(i) | ArrayGet(i) | ArrayGetS(i) | ArrayGetU(i) | ArraySet(i)
+            | ArrayLen(i) | RTTGet(i) | RTTSub(i) => self.resolver.resolve_idx(i, Ns::Type),
+            StructSet(s) | StructGet(s) | StructGetS(s) | StructGetU(s) => {
                 self.resolver.resolve_idx(&mut s.r#struct, Ns::Type)?;
                 self.resolver.resolve_idx(&mut s.field, Ns::Field)
             }

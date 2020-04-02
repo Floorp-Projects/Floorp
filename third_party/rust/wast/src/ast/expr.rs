@@ -352,8 +352,16 @@ instructions! {
         Return : [0x0f] : "return",
         Call(ast::Index<'a>) : [0x10] : "call",
         CallIndirect(CallIndirect<'a>) : [0x11] : "call_indirect",
+
+        // tail-call proposal
         ReturnCall(ast::Index<'a>) : [0x12] : "return_call",
         ReturnCallIndirect(CallIndirect<'a>) : [0x13] : "return_call_indirect",
+
+        // function-references proposal
+        CallRef : [0x14] : "call_ref",
+        ReturnCallRef : [0x15] : "return_call_ref",
+        FuncBind(ast::Index<'a>) : [0x16] : "func.bind",
+
         Drop : [0x1a] : "drop",
         Select(SelectTypes<'a>) : [] : "select",
         LocalGet(ast::Index<'a>) : [0x20] : "local.get" | "get_local",
@@ -405,15 +413,47 @@ instructions! {
 
         RefNull : [0xd0] : "ref.null",
         RefIsNull : [0xd1] : "ref.is_null",
-        RefEq : [0xf0] : "ref.eq", // unofficial, part of gc proposal
         RefHost(u32) : [0xff] : "ref.host", // only used in test harness
-        RefFunc(ast::Index<'a>) : [0xd2] : "ref.func", // only used in test harness
+        RefFunc(ast::Index<'a>) : [0xd2] : "ref.func",
 
-        // unofficial, part of gc proposal
-        StructNew(ast::Index<'a>) : [0xfc, 0x50] : "struct.new",
-        StructGet(StructAccess<'a>) : [0xfc, 0x51] : "struct.get",
-        StructSet(StructAccess<'a>) : [0xfc, 0x52] : "struct.set",
-        StructNarrow(StructNarrow<'a>) : [0xfc, 0x53] : "struct.narrow",
+        // function-references proposal
+        RefAsNonNull : [0xd3] : "ref.as_non_null",
+        BrOnNull(ast::Index<'a>) : [0xd4] : "br_on_null",
+
+        // gc proposal: eqref
+        RefEq : [0xd5] : "ref.eq",
+
+        // gc proposal: struct
+        StructNew(ast::Index<'a>) : [0xfb, 0x00] : "struct.new",
+        StructNewSub(ast::Index<'a>) : [0xfb, 0x01] : "struct.new_sub",
+        StructNewDefault(ast::Index<'a>) : [0xfb, 0x02] : "struct.new_default",
+        StructGet(StructAccess<'a>) : [0xfb, 0x03] : "struct.get",
+        StructGetS(StructAccess<'a>) : [0xfb, 0x04] : "struct.get_s",
+        StructGetU(StructAccess<'a>) : [0xfb, 0x05] : "struct.get_u",
+        StructSet(StructAccess<'a>) : [0xfb, 0x06] : "struct.set",
+        StructNarrow(StructNarrow<'a>) : [0xfb, 0x07] : "struct.narrow",
+
+        // gc proposal: array
+        ArrayNew(ast::Index<'a>) : [0xfb, 0x10] : "array.new",
+        ArrayNewSub(ast::Index<'a>) : [0xfb, 0x11] : "array.new_sub",
+        ArrayNewDefault(ast::Index<'a>) : [0xfb, 0x12] : "array.new_default",
+        ArrayGet(ast::Index<'a>) : [0xfb, 0x13] : "array.get",
+        ArrayGetS(ast::Index<'a>) : [0xfb, 0x14] : "array.get_s",
+        ArrayGetU(ast::Index<'a>) : [0xfb, 0x15] : "array.get_u",
+        ArraySet(ast::Index<'a>) : [0xfb, 0x16] : "array.set",
+        ArrayLen(ast::Index<'a>) : [0xfb, 0x17] : "array.len",
+
+        // gc proposal, i31
+        I31New : [0xfb, 0x20] : "i31.new",
+        I31GetS : [0xfb, 0x21] : "i31.get_s",
+        I31GetU : [0xfb, 0x22] : "i31.get_u",
+
+        // gc proposal, rtt/casting
+        RTTGet(ast::Index<'a>) : [0xfb, 0x30] : "rtt.get",
+        RTTSub(ast::Index<'a>) : [0xfb, 0x31] : "rtt.sub",
+        RefTest : [0xfb, 0x40] : "ref.test",
+        RefCast : [0xfb, 0x41] : "ref.cast",
+        BrOnCast(ast::Index<'a>) : [0xfb, 0x42] : "br_on_cast",
 
         I32Const(i32) : [0x41] : "i32.const",
         I64Const(i64) : [0x42] : "i64.const",
@@ -836,6 +876,10 @@ instructions! {
 
         I8x16AvgrU : [0xfd, 0xd9] : "i8x16.avgr_u",
         I16x8AvgrU : [0xfd, 0xda] : "i16x8.avgr_u",
+
+        I8x16Abs : [0xfd, 0xe1] : "i8x16.abs",
+        I16x8Abs : [0xfd, 0xe2] : "i16x8.abs",
+        I32x4Abs : [0xfd, 0xe3] : "i32x4.abs",
 
         Try(BlockType<'a>) : [0x06] : "try",
         Catch : [0x07] : "catch",
