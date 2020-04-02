@@ -36,6 +36,7 @@ permalink: /changelog/
 * **feature-customtabs**
   * ⚠️ **This is a breaking change**: add parameter `handleError` to `CustomTabWindowFeature` constructor
     * This is used to show an error when the url can't be handled
+  * `CustomTabIntentProcessor` to support `Browser.EXTRA_HEADERS`.
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Fixed a memory leak when using a `SelectionActionDelegate` on `GeckoEngineView`.

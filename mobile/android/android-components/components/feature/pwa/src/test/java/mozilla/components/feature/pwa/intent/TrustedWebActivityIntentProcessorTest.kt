@@ -93,7 +93,7 @@ class TrustedWebActivityIntentProcessorTest {
         assertNotNull(sessionState.config)
         assertEquals(ExternalAppType.TRUSTED_WEB_ACTIVITY, sessionState.config.externalAppType)
 
-        verify(loadUrlUseCase).invoke(eq("https://example.com"), any(), eq(EngineSession.LoadUrlFlags.external()))
+        verify(loadUrlUseCase).invoke(eq("https://example.com"), any(), eq(EngineSession.LoadUrlFlags.external()), any())
         verify(customTabsStore, never()).state
     }
 }

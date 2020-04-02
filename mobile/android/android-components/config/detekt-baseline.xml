@@ -471,6 +471,7 @@
     <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun &lt;T : Parcelable&gt; getParcelable(name: String): T?</ID>
     <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun getInt(name: String, defaultValue: Int = 0): Int</ID>
     <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun getString(name: String): String?</ID>
+    <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun keySet(): Set&lt;String&gt;?</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun &lt;T : Parcelable&gt; getParcelableArrayListExtra(name: String): ArrayList&lt;T&gt;?</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun &lt;T : Parcelable&gt; getParcelableExtra(name: String): T?</ID>
     <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getBooleanExtra(name: String, defaultValue: Boolean): Boolean</ID>
@@ -522,7 +523,6 @@
     <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.Snapshot$fun isEmpty()</ID>
     <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.Snapshot.Companion$fun empty()</ID>
     <ID>UndocumentedPublicFunction:SessionManager.kt$SessionManager.Snapshot.Companion$fun singleItem(item: Item)</ID>
-    <ID>UndocumentedPublicFunction:SessionUseCases.kt$SessionUseCases.LoadUrlUseCase$fun invoke(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$UnsupportedSetting$operator fun getValue(thisRef: Any?, prop: KProperty&lt;*&gt;): T</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$UnsupportedSetting$operator fun setValue(thisRef: Any?, prop: KProperty&lt;*&gt;, value: T)</ID>
     <ID>UndocumentedPublicFunction:SitePermissions.kt$SitePermissions.Status$fun doNotAskAgain()</ID>
