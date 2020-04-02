@@ -6,6 +6,8 @@
     <dimen name="mozac_browser_menu_corner_radius">4dp</dimen>
     <dimen name="mozac_browser_menu_elevation">8dp</dimen>
     <dimen name="mozac_browser_menu_width">250dp</dimen>
+    <dimen name="mozac_browser_menu_width_min">250dp</dimen>
+    <dimen name="mozac_browser_menu_width_max">250dp</dimen>
     <dimen name="mozac_browser_menu_padding_vertical">0dp</dimen>
 
     <!--Menu Item -->
