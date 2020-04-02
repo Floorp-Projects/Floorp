@@ -628,7 +628,7 @@ async function fillGeneratedPasswordFromOpenACPopup(
  */
 async function openPasswordContextMenu(
   browser,
-  passwordInput,
+  input,
   assertCallback = null,
   browsingContext = null
 ) {
@@ -651,14 +651,14 @@ async function openPasswordContextMenu(
   // (which it does for real user input) in order to not show the password autocomplete.
   let eventDetails = { type: "mousedown", button: 2 };
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    passwordInput,
+    input,
     eventDetails,
     browsingContext
   );
   // Synthesize a contextmenu event to actually open the context menu.
   eventDetails = { type: "contextmenu", button: 2 };
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    passwordInput,
+    input,
     eventDetails,
     browsingContext
   );
