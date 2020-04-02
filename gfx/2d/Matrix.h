@@ -1948,10 +1948,10 @@ class Matrix4x4TypedFlagged
       F max_y = std::max(std::max(std::max(p1.y, p2.y), p3.y), p4.y);
 
       TargetPoint topLeft(std::max(min_x, aClip.x), std::max(min_y, aClip.y));
-      F xMost = std::min(max_x, aClip.XMost()) - topLeft.x;
-      F yMost = std::min(max_y, aClip.YMost()) - topLeft.y;
+      F width = std::min(max_x, aClip.XMost()) - topLeft.x;
+      F height = std::min(max_y, aClip.YMost()) - topLeft.y;
 
-      return RectTyped<TargetUnits, F>(topLeft.x, topLeft.y, xMost, yMost);
+      return RectTyped<TargetUnits, F>(topLeft.x, topLeft.y, width, height);
     }
     return Parent::TransformAndClipBounds(aRect, aClip);
   }
