@@ -800,7 +800,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
           arg = MagicValue(JS_OPTIMIZED_OUT);
         }
       } else if (iter.hasUsableAbstractFramePtr()) {
-        if (script->analyzedArgsUsage() && script->argsObjAliasesFormals() &&
+        if (!script->needsArgsAnalysis() && script->argsObjAliasesFormals() &&
             iter.hasArgsObj()) {
           arg = iter.argsObj().arg(i);
         } else {

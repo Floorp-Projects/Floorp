@@ -5303,7 +5303,7 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 /* static */
 void JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
   MOZ_ASSERT(script->isFunction());
-  MOZ_ASSERT(script->analyzedArgsUsage());
+  MOZ_ASSERT(!script->needsArgsAnalysis());
   MOZ_ASSERT(script->argumentsHasVarBinding());
 
   /*
