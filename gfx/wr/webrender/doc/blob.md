@@ -1,17 +1,43 @@
 # Blob images
 
-The blob image mechanism now has two traits:
-- [`BlobImageHandler`](https://github.com/servo/webrender/pull/2785/files#diff-2b72a28a40b83edf41a59adfd46b1a11R188) is roughly the equivalent of the previous `BlobImageRenderer` except that it doesn't do any rendering (it manages the state of the blob commands, and resources like fonts).
-- [`AsyncBlobImageRasterizer`](https://github.com/servo/webrender/pull/2785/files#diff-2b72a28a40b83edf41a59adfd46b1a11R211) is created by the handler and sent over to the scene builder thread. the async rasterizer is meant to be a snapshot of the state of blob image commands that can execute the commands if provided some requests.
+Blob image is fallback mechanism for webrender that Gecko uses to render primitives that aren't currently supported by webrender. The main idea is to provide webrender with a custom handler that can take arbitray drawing commands serialized as buffers of bytes (the blobs) and turn them into images that webrender internally will treat as regular images.
 
-When receiving a transaction, the render backend / resource cache look at the list of added and updated blob images in that transaction, [collect the list of blob images and tiles that need to be rendered](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R848), create a rasterizer, and ship the two to the scene builder.
-After building the scene the rasterizer gets handed the list of blob requests and [does all of the rasterization](https://github.com/servo/webrender/pull/2785/files#diff-856af4d4ff2333d4204e7e5a87a93c58R153), blocking the scene builder thread until the work is done.
+At the API level, blob images are treated as other images. They are resources created and associated with image keys, and are used in the display list with regular image display items. 
 
-When the scene building and rasterization is done, the render backend receives the rasterized blobs and [stores them](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R520) so that they are available when frame building needs them.
 
-Because blob images can be huge, we don't always want to rasterize them entirely during scene building. To decide what should be rasterized, we rely on gecko giving us a hint through the added `set_image_visible_area` API. When the render backend receives that message [it decides which tiles are going to be rasterized](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R469). This information is also used to [decide which tiles to evict](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R430), so that we don't keep thousands of tiles if we scroll through a massive blob image. The idea is for the visible area to correspond to the size of the display list.
+## Active area
 
-Sometimes, however, Gecko gets this visible area "wrong", or at least gives webrender a certain visible area but eventually webrender requests tiles during frame building that weren't in that area. I think that this is inevitable because the culling logic in gecko and webrender works very differently, so relying on them to match exactly is fragile at best.
-So to work around this type of situation, [keep around the async blob rasterizer](https://github.com/servo/webrender/pull/2785/files#diff-3722af8f0bcba9c3ce197a9aa3052014R769) that we sent to the scene builder, and store it in the resource cache when we swap the scene. This blob rasterizer represents the state of the blob commands at the time the transaction was built (and is potentially different from the state of the blob image handler). Frame building [collects a list of blob images](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R811) (or blob tiles) that are not already rasterized, and asks the current async blob rasterizer to rasterize them synchronously on the render backend. The hope is that this would happen rarely.
+In order to support scrolling very large content, blob images don't necessarily have a finite size. They can grow in any direction. At any time they do have an "active area", also called "visible area" which defines the portion that has to be rasterized. Typically this active area moves along large blob images depending on the scroll position.
+The coordinate system of active area the *should* be the one of the blob's drawing commands (this is really up to the blob handler implementation to enforce that, Gecko does), and its scale should correspond to device pixels. The active area's coordinates can be negative.
 
-Another important detail is that for this to work, resources that are used by blob images (so currently only fonts), need to be in sync with the blobs. Fortunately, fonts are currently immutable so we mostly need to make sure they are added [before the transaction](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R440) is built and [removed after](https://github.com/servo/webrender/pull/2785/files#diff-77cbdf7ba9ebae81feb38a64c21b8454R400) the transaction is swapped. If blob images were to use images, then we'd have to either do the same for these images (and disallow updating them), or maintain the state of images before and after scene building like we effectively do for blobs.
+As far as positioning goes, the active area maps to the image display item's bounds. In other words the content at the top-left corner of the active area will be rendered on screen at the position of the top-left corner of the display item's local rect.
+
+In Gecko, the active area corresponds to the intersection of the fallback content's rect and the displayport.
+
+The terms "visible area" and "visible rect" are used a lot in the blobs code, unfortunately they collide with frame building's visibility/culling terminology. They don't correspond to what is visible to the user, but rather what is in the displayport.
+
+
+## Tiling
+
+Blob images can be either tiled or non-tiled. Non-tiled blob images support invalid rects while tiled blob images track only validty at the tile level. In gecko all blobs are tiled with a tile size of 256x256.
+
+Just like regular tiled images, blob image tiles along the border of the image are shrinked to fit the remaining size. The only difference is that the tiling pattern always starts at the top-left corner for regular images (smaller boundary tiles only along the right and bottom edges), while it can be aribtrarily positioned for blob images (smaller boundary tiles potentially on all sides).
+
+The tiling logic is in webrender/src/image.rs.
+
+
+## Async rasterization
+
+Blobs are typically too slow to rasterize on the critical path. We try to avoid blocking frame building on blob image rasterization. In order to do that we rasterize blobs as part of scene building. Rather than rasterize tiles on demand from visibility informating, we rasterize the entire active area during scene building. This means we potentially process a lot more content than will be displayed if the user doesn't scroll through all of the visible area.
+
+When the render backend receives a transaction, it looks for all new and update blob images, and generate blob rasterization requests for all tiles of the blob images that overlap their active area. The requests are bundled with an `AsyncBlobImageRasterizer` object in the transaction that is sent to the scene builder thread. The async rasterizer is created by the `BlobImageHandler` at each transaction. It is a snapshot of the state of the blobs as well as external information such as fonts, and does the actual rasterization.
+
+While tiles are rasterized eagerly during scene building, their content is uploaded lazily to the texture cache depending on the result of the visibility pass during frame building.
+
+
+## Late rasterization
+
+In some case we run into a missing blob image during frame building and have to rasterize it synchronously. This happens when a rasterized tile is uploaded to the texture cache (at which point the CPU side is discarded), the texture cache entry expires and after scrolling back into view the tile is needed again.
+We should really keep the rasterized blobs around just like we keep regular images in the cache. Hopefully this section will become obsolete eventually and we'll be able to remove late blob rasterization.
+
+The information needed for async rasterization corresponds to the state of blobs before scene building while late rasterization needs the state of blobs after the last complete scene build. This means we have to be careful about which version we manipulate in the resource cache.
