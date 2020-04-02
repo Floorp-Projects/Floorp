@@ -10,6 +10,11 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+
+namespace dom {
+class Document;
+}
+
 namespace layers {
 
 // ScrollLinkedEffectDetector is used to detect the existence of a scroll-linked

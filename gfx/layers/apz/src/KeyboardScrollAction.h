@@ -7,6 +7,8 @@
 #ifndef mozilla_layers_KeyboardScrollAction_h
 #define mozilla_layers_KeyboardScrollAction_h
 
+#include <cstdint>  // for uint8_t
+
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/DefineEnum.h"  // for MOZ_DEFINE_ENUM
 
