@@ -334,7 +334,7 @@ static void RemoveFromSuccessors(MBasicBlock* block) {
     if (succ->isDead()) {
       continue;
     }
-    JitSpew(JitSpew_Prune, "Remove block edge %d -> %d.", block->id(),
+    JitSpew(JitSpew_Prune, "Remove block edge %u -> %u.", block->id(),
             succ->id());
     succ->removePredecessor(block);
   }
@@ -371,12 +371,12 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
       return false;
     }
 
-    JitSpew(JitSpew_Prune, "Investigate Block %d:", block->id());
+    JitSpew(JitSpew_Prune, "Investigate Block %u:", block->id());
     JitSpewIndent indent(JitSpew_Prune);
 
     // Do not touch entry basic blocks.
     if (*block == graph.osrBlock() || *block == graph.entryBlock()) {
-      JitSpew(JitSpew_Prune, "Block %d is an entry point.", block->id());
+      JitSpew(JitSpew_Prune, "Block %u is an entry point.", block->id());
       continue;
     }
 
@@ -537,7 +537,7 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
       }
 
       JitSpew(JitSpew_Prune,
-              "info: block %d,"
+              "info: block %u,"
               " predCount: %zu, domInst: %zu"
               ", span: %zu, effectful: %zu, "
               " isLoopExit: %s, numSuccessorsOfPred: %zu."
@@ -555,12 +555,12 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
 
     someUnreachable = true;
     if (isUnreachable) {
-      JitSpew(JitSpew_Prune, "Mark block %d as unreachable.", block->id());
+      JitSpew(JitSpew_Prune, "Mark block %u as unreachable.", block->id());
       block->setUnreachable();
       // If the block is unreachable, then there is no need to convert it
       // to a bailing block.
     } else if (shouldBailout) {
-      JitSpew(JitSpew_Prune, "Mark block %d as bailing block.", block->id());
+      JitSpew(JitSpew_Prune, "Mark block %u as bailing block.", block->id());
       block->markUnchecked();
     }
 
@@ -568,7 +568,7 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
     // removed first, otherwise this triggers an assertion in
     // removePredecessorsWithoutPhiOperands.
     if (block->isLoopHeader()) {
-      JitSpew(JitSpew_Prune, "Mark block %d as bailing block. (loop backedge)",
+      JitSpew(JitSpew_Prune, "Mark block %u as bailing block. (loop backedge)",
               block->backedge()->id());
       block->backedge()->markUnchecked();
     }
@@ -611,7 +611,7 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
       continue;
     }
 
-    JitSpew(JitSpew_Prune, "Remove / Replace block %d.", block->id());
+    JitSpew(JitSpew_Prune, "Remove / Replace block %u.", block->id());
     JitSpewIndent indent(JitSpew_Prune);
 
     // As we are going to replace/remove the last instruction, we first have
@@ -621,7 +621,7 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
     // Convert the current basic block to a bailing block which ends with an
     // Unreachable control instruction.
     if (block->isMarked()) {
-      JitSpew(JitSpew_Prune, "Convert Block %d to a bailing block.",
+      JitSpew(JitSpew_Prune, "Convert Block %u to a bailing block.",
               block->id());
       if (!graph.alloc().ensureBallast()) {
         return false;
@@ -632,7 +632,7 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
 
     // Remove all instructions.
     if (block->unreachable()) {
-      JitSpew(JitSpew_Prune, "Remove Block %d.", block->id());
+      JitSpew(JitSpew_Prune, "Remove Block %u.", block->id());
       JitSpewIndent indent(JitSpew_Prune);
       graph.removeBlock(block);
     }

@@ -67,9 +67,9 @@ void AliasAnalysis::spewDependencyList() {
         JitSpewHeader(JitSpew_AliasSummaries);
         print.printf(" ");
         MDefinition::PrintOpcodeName(print, def->op());
-        print.printf("%d marked depending on ", def->id());
+        print.printf("%u marked depending on ", def->id());
         MDefinition::PrintOpcodeName(print, def->dependency()->op());
-        print.printf("%d\n", def->dependency()->id());
+        print.printf("%u\n", def->dependency()->id());
       }
     }
   }
@@ -312,7 +312,7 @@ bool AliasAnalysis::analyze() {
     }
 
     if (block->isLoopHeader()) {
-      JitSpew(JitSpew_Alias, "Processing loop header %d", block->id());
+      JitSpew(JitSpew_Alias, "Processing loop header %u", block->id());
       loop_ = new (alloc().fallible()) LoopAliasInfo(alloc(), loop_, *block);
       if (!loop_) {
         return false;
@@ -396,7 +396,7 @@ bool AliasAnalysis::analyze() {
 
     if (block->isLoopBackedge()) {
       MOZ_ASSERT(loop_->loopHeader() == block->loopHeaderOfBackedge());
-      JitSpew(JitSpew_Alias, "Processing loop backedge %d (header %d)",
+      JitSpew(JitSpew_Alias, "Processing loop backedge %u (header %u)",
               block->id(), loop_->loopHeader()->id());
       LoopAliasInfo* outerLoop = loop_->outer();
       MInstruction* firstLoopIns = *loop_->loopHeader()->begin();

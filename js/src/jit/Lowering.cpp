@@ -4889,7 +4889,7 @@ static void SpewResumePoint(MBasicBlock* block, MInstruction* ins,
     out.printf("    taken after: ");
     ins->printName(out);
   } else {
-    out.printf("    taken at block %d entry", block->id());
+    out.printf("    taken at block %u entry", block->id());
   }
   out.printf("\n");
 

@@ -3834,7 +3834,7 @@ void MResumePoint::dump(GenericPrinter& out) const {
   switch (mode()) {
     case MResumePoint::ResumeAt:
       if (instruction_) {
-        out.printf("At(%d)", instruction_->id());
+        out.printf("At(%u)", instruction_->id());
       } else {
         out.printf("At");
       }
