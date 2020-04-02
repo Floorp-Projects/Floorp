@@ -39,6 +39,17 @@ use crate::debug_server;
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, DisplayItem};
 
+/// Various timing information that will be truned into
+/// IpcProfileCounters later down the pipeline.
+pub struct TransactionTimings {
+    pub builder_start_time_ns: u64,
+    pub builder_end_time_ns: u64,
+    pub send_time_ns: u64,
+    pub scene_build_start_time_ns: u64,
+    pub scene_build_end_time_ns: u64,
+    pub blob_rasterization_end_time_ns: u64,
+    pub display_list_len: usize,
+}
 
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
@@ -102,6 +113,7 @@ pub struct BuiltTransaction {
     pub scene_build_end_time: u64,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
+    pub timings: Option<TransactionTimings>,
 }
 
 pub struct DisplayListUpdate {
@@ -111,6 +123,7 @@ pub struct DisplayListUpdate {
     pub background: Option<ColorF>,
     pub viewport_size: LayoutSize,
     pub content_size: LayoutSize,
+    pub timings: TransactionTimings,
 }
 
 /// Contains the render backend data needed to build a scene.
@@ -452,6 +465,7 @@ impl SceneBuilderThread {
                 scene_build_start_time,
                 scene_build_end_time: precise_time_ns(),
                 interner_updates,
+                timings: None,
             })];
 
             self.forward_built_transactions(txns);
@@ -548,6 +562,7 @@ impl SceneBuilderThread {
             self.removed_pipelines.insert(pipeline_id);
         }
 
+        let mut timings = None;
         for update in txn.display_list_updates.drain(..) {
             if self.removed_pipelines.contains(&update.pipeline_id) {
                 continue;
@@ -561,6 +576,8 @@ impl SceneBuilderThread {
                 update.viewport_size,
                 update.content_size,
             );
+
+            timings = Some(update.timings);
         }
 
         self.removed_pipelines.clear();
@@ -596,6 +613,12 @@ impl SceneBuilderThread {
         let is_low_priority = false;
         txn.rasterize_blobs(is_low_priority);
 
+        if let Some(timings) = timings.as_mut() {
+            timings.blob_rasterization_end_time_ns = precise_time_ns();
+            timings.scene_build_start_time_ns = scene_build_start_time;
+            timings.scene_build_end_time_ns = scene_build_end_time;
+        }
+
         drain_filter(
             &mut txn.notifications,
             |n| { n.when() == Checkpoint::SceneBuilt },
@@ -620,6 +643,7 @@ impl SceneBuilderThread {
             interner_updates,
             scene_build_start_time,
             scene_build_end_time,
+            timings,
         })
     }
 
