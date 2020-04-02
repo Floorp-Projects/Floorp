@@ -4,13 +4,11 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
-import assertk.assertAll
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isTrue
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class QuickSettingsInteractorTest {
@@ -36,9 +34,8 @@ class QuickSettingsInteractorTest {
         verify {
             controller.handlePermissionToggled(capture(permission))
         }
-        assertAll {
-            assertThat(permission.isCaptured).isTrue()
-            assertThat(permission.captured).isEqualTo(websitePermission)
-        }
+
+        assertTrue(permission.isCaptured)
+        assertEquals(websitePermission, permission.captured)
     }
 }

@@ -4,11 +4,10 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -21,12 +20,12 @@ class BookmarkFragmentStoreTest {
         val initialState = BookmarkFragmentState(null)
         val store = BookmarkFragmentStore(initialState)
 
-        assertThat(BookmarkFragmentState(null, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
+        assertEquals(store.state, BookmarkFragmentState(null, BookmarkFragmentState.Mode.Normal()))
 
         store.dispatch(BookmarkFragmentAction.Change(tree)).join()
 
-        assertThat(tree).isEqualTo(store.state.tree)
-        assertThat(initialState.mode).isEqualTo(store.state.mode)
+        assertEquals(store.state.tree, tree)
+        assertEquals(store.state.mode, initialState.mode)
     }
 
     @Test
@@ -34,12 +33,12 @@ class BookmarkFragmentStoreTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
+        assertEquals(store.state, BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal()))
 
         store.dispatch(BookmarkFragmentAction.Change(newTree)).join()
 
-        assertThat(newTree).isEqualTo(store.state.tree)
-        assertThat(initialState.mode).isEqualTo(store.state.mode)
+        assertEquals(store.state.tree, newTree)
+        assertEquals(store.state.mode, initialState.mode)
     }
 
     @Test
@@ -47,12 +46,12 @@ class BookmarkFragmentStoreTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
+        assertEquals(store.state, BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal()))
 
         store.dispatch(BookmarkFragmentAction.Change(tree)).join()
 
-        assertThat(initialState.tree).isEqualTo(store.state.tree)
-        assertThat(initialState.mode).isEqualTo(store.state.mode)
+        assertEquals(store.state.tree, initialState.tree)
+        assertEquals(store.state.mode, initialState.mode)
     }
 
     @Test
@@ -62,8 +61,8 @@ class BookmarkFragmentStoreTest {
 
         store.dispatch(BookmarkFragmentAction.Change(newTree)).join()
 
-        assertThat(newTree).isEqualTo(store.state.tree)
-        assertThat(BookmarkFragmentState.Mode.Selecting(setOf(subfolder))).isEqualTo(store.state.mode)
+        assertEquals(store.state.tree, newTree)
+        assertEquals(store.state.mode, BookmarkFragmentState.Mode.Selecting(setOf(subfolder)))
     }
 
     @Test
@@ -73,11 +72,11 @@ class BookmarkFragmentStoreTest {
 
         store.dispatch(BookmarkFragmentAction.Select(childItem)).join()
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(childItem)))).isEqualTo(store.state)
+        assertEquals(store.state, BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(childItem))))
 
         store.dispatch(BookmarkFragmentAction.Deselect(childItem)).join()
 
-        assertThat(BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
+        assertEquals(store.state, BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal()))
     }
 
     @Test
@@ -117,7 +116,7 @@ class BookmarkFragmentStoreTest {
 
         store.dispatch(BookmarkFragmentAction.DeselectAll).join()
 
-        assertThat(initialState.copy(mode = BookmarkFragmentState.Mode.Normal())).isEqualTo(store.state)
+        assertEquals(store.state, initialState.copy(mode = BookmarkFragmentState.Mode.Normal()))
     }
 
     @Test
@@ -138,8 +137,8 @@ class BookmarkFragmentStoreTest {
         store.dispatch(BookmarkFragmentAction.Change(newTree)).join()
 
         store.state.run {
-            assertThat(newTree).isEqualTo(tree)
-            assertThat(BookmarkFragmentState.Mode.Normal()).isEqualTo(mode)
+            assertEquals(tree, newTree)
+            assertEquals(mode, BookmarkFragmentState.Mode.Normal())
         }
     }
 
@@ -174,8 +173,8 @@ class BookmarkFragmentStoreTest {
 
         store.dispatch(BookmarkFragmentAction.Change(rootFolder)).join()
 
-        assertThat(rootFolder).isEqualTo(store.state.tree)
-        assertThat(BookmarkFragmentState.Mode.Normal(false)).isEqualTo(store.state.mode)
+        assertEquals(store.state.tree, rootFolder)
+        assertEquals(store.state.mode, BookmarkFragmentState.Mode.Normal(false))
     }
 
     private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)

@@ -5,8 +5,6 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.content.Context
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -16,6 +14,7 @@ import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
@@ -52,32 +51,22 @@ class DesktopFoldersTest {
     fun `withRootTitle and do showMobileRoot`() {
         val desktopFolders = DesktopFolders(context, showMobileRoot = true)
 
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("root")).title)
-            .isEqualTo(testContext.getString(R.string.library_bookmarks))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("mobile")).title)
-            .isEqualTo(testContext.getString(R.string.library_bookmarks))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("menu")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_menu))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("toolbar")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_toolbar))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("unfiled")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_unfiled))
+        assertEquals(testContext.getString(R.string.library_bookmarks), desktopFolders.withRootTitle(mockNodeWithTitle("root")).title)
+        assertEquals(testContext.getString(R.string.library_bookmarks), desktopFolders.withRootTitle(mockNodeWithTitle("mobile")).title)
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_menu), desktopFolders.withRootTitle(mockNodeWithTitle("menu")).title)
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_toolbar), desktopFolders.withRootTitle(mockNodeWithTitle("toolbar")).title)
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_unfiled), desktopFolders.withRootTitle(mockNodeWithTitle("unfiled")).title)
     }
 
     @Test
     fun `withRootTitle and do not showMobileRoot`() {
         val desktopFolders = DesktopFolders(context, showMobileRoot = false)
 
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("root")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_root))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("mobile")))
-            .isEqualTo(mockNodeWithTitle("mobile"))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("menu")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_menu))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("toolbar")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_toolbar))
-        assertThat(desktopFolders.withRootTitle(mockNodeWithTitle("unfiled")).title)
-            .isEqualTo(testContext.getString(R.string.library_desktop_bookmarks_unfiled))
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_root), desktopFolders.withRootTitle(mockNodeWithTitle("root")).title)
+        assertEquals(mockNodeWithTitle("mobile"), desktopFolders.withRootTitle(mockNodeWithTitle("mobile")))
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_menu), desktopFolders.withRootTitle(mockNodeWithTitle("menu")).title)
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_toolbar), desktopFolders.withRootTitle(mockNodeWithTitle("toolbar")).title)
+        assertEquals(testContext.getString(R.string.library_desktop_bookmarks_unfiled), desktopFolders.withRootTitle(mockNodeWithTitle("unfiled")).title)
     }
 
     @Test

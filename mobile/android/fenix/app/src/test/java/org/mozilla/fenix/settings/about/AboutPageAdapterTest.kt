@@ -6,8 +6,6 @@ package org.mozilla.fenix.settings.about
 
 import android.view.ViewGroup
 import android.widget.TextView
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -16,6 +14,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.about_list_item.view.*
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder
@@ -39,7 +38,7 @@ class AboutPageAdapterTest {
     fun `getItemCount on a default instantiated Adapter should return 0`() {
         val adapter = AboutPageAdapter(listener)
 
-        assertThat(adapter.itemCount).isEqualTo(0)
+        assertEquals(0, adapter.itemCount)
     }
 
     @Test
@@ -48,7 +47,7 @@ class AboutPageAdapterTest {
 
         adapter.submitList(aboutList)
 
-        assertThat(adapter.itemCount).isEqualTo(2)
+        assertEquals(2, adapter.itemCount)
     }
 
     @Test
@@ -59,7 +58,7 @@ class AboutPageAdapterTest {
 
         val viewHolder = adapter.onCreateViewHolder(parentView, AboutItemViewHolder.LAYOUT_ID)
 
-        assertThat(viewHolder::class).isEqualTo(AboutItemViewHolder::class)
+        assertEquals(AboutItemViewHolder::class, viewHolder::class)
     }
 
     @Test

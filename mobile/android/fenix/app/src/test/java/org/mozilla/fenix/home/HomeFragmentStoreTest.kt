@@ -5,8 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -65,26 +63,26 @@ class HomeFragmentStoreTest {
     @Test
     fun `Test toggling the mode in HomeFragmentStore`() = runBlocking {
         // Verify that the default mode and tab states of the HomeFragment are correct.
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Normal)
+        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
         assertEquals(0, homeFragmentStore.state.tabs.size)
 
         // Change the HomeFragmentStore to Private mode.
         homeFragmentStore.dispatch(HomeFragmentAction.ModeChange(Mode.Private)).join()
 
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Private)
+        assertEquals(Mode.Private, homeFragmentStore.state.mode)
         assertEquals(0, homeFragmentStore.state.tabs.size)
 
         // Change the HomeFragmentStore back to Normal mode.
         homeFragmentStore.dispatch(HomeFragmentAction.ModeChange(Mode.Normal)).join()
 
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Normal)
+        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
         assertEquals(0, homeFragmentStore.state.tabs.size)
     }
 
     @Test
     fun `Test toggling the mode with tabs in HomeFragmentStore`() = runBlocking {
         // Verify that the default mode and tab states of the HomeFragment are correct.
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Normal)
+        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
         assertEquals(0, homeFragmentStore.state.tabs.size)
 
         // Add 2 Tabs to the HomeFragmentStore.
@@ -96,7 +94,7 @@ class HomeFragmentStoreTest {
         // Change the HomeFragmentStore to Private mode.
         homeFragmentStore.dispatch(HomeFragmentAction.ModeChange(Mode.Private)).join()
 
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Private)
+        assertEquals(Mode.Private, homeFragmentStore.state.mode)
         assertEquals(0, homeFragmentStore.state.tabs.size)
     }
 
@@ -108,7 +106,7 @@ class HomeFragmentStoreTest {
         val tabCollections: List<TabCollection> = listOf(mockk(), mockk())
         homeFragmentStore.dispatch(HomeFragmentAction.CollectionsChange(tabCollections)).join()
 
-        assertThat(homeFragmentStore.state.collections).isEqualTo(tabCollections)
+        assertEquals(tabCollections, homeFragmentStore.state.collections)
     }
 
     @Test
@@ -119,7 +117,7 @@ class HomeFragmentStoreTest {
         val topSites: List<TopSite> = listOf(mockk(), mockk())
         homeFragmentStore.dispatch(HomeFragmentAction.TopSitesChange(topSites)).join()
 
-        assertThat(homeFragmentStore.state.topSites).isEqualTo(topSites)
+        assertEquals(topSites, homeFragmentStore.state.topSites)
     }
 
     @Test
@@ -154,7 +152,7 @@ class HomeFragmentStoreTest {
         assertEquals(0, homeFragmentStore.state.collections.size)
         assertEquals(0, homeFragmentStore.state.tabs.size)
         assertEquals(0, homeFragmentStore.state.topSites.size)
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Normal)
+        assertEquals(Mode.Normal, homeFragmentStore.state.mode)
 
         val collections: List<TabCollection> = listOf(mockk())
         val tabs: List<Tab> = listOf(mockk(), mockk())
@@ -170,7 +168,7 @@ class HomeFragmentStoreTest {
         ).join()
 
         assertEquals(1, homeFragmentStore.state.collections.size)
-        assertThat(homeFragmentStore.state.mode).isEqualTo(Mode.Private)
+        assertEquals(Mode.Private, homeFragmentStore.state.mode)
         assertEquals(2, homeFragmentStore.state.tabs.size)
         assertEquals(2, homeFragmentStore.state.topSites.size)
     }

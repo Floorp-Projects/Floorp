@@ -5,15 +5,6 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.content.pm.PackageManager
-import assertk.assertAll
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
-import assertk.assertions.isNotSameAs
-import assertk.assertions.isSameAs
-import assertk.assertions.isTrue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -22,10 +13,16 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.getInsecureWebsiteUiValues
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.getPermissionStatus
@@ -35,7 +32,6 @@ import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class QuickSettingsFragmentStoreTest {
@@ -58,12 +54,10 @@ class QuickSettingsFragmentStoreTest {
             context, "url", "Hello", "issuer", true, permissions, settings
         )
 
-        assertAll {
-            assertThat(store).isNotNull()
-            assertThat(store.state).isNotNull()
-            assertThat(store.state.webInfoState).isNotNull()
-            assertThat(store.state.websitePermissionsState).isNotNull()
-        }
+        assertNotNull(store)
+        assertNotNull(store.state)
+        assertNotNull(store.state.webInfoState)
+        assertNotNull(store.state.websitePermissionsState)
     }
 
     @Test
@@ -75,14 +69,12 @@ class QuickSettingsFragmentStoreTest {
 
         val state = QuickSettingsFragmentStore.createWebsiteInfoState(websiteUrl, websiteTitle, securedStatus, certificateIssuer)
 
-        assertAll {
-            assertThat(state).isNotNull()
-            assertThat(state.websiteUrl).isSameAs(websiteUrl)
-            assertThat(state.websiteTitle).isSameAs(websiteTitle)
-            assertThat(state.securityInfoRes).isEqualTo(secureStringRes)
-            assertThat(state.iconRes).isEqualTo(secureDrawableRes)
-            assertThat(state.iconTintRes).isEqualTo(secureColorRes)
-        }
+        assertNotNull(state)
+        assertSame(websiteUrl, state.websiteUrl)
+        assertSame(websiteTitle, state.websiteTitle)
+        assertEquals(secureStringRes, state.securityInfoRes)
+        assertEquals(secureDrawableRes, state.iconRes)
+        assertEquals(secureColorRes, state.iconTintRes)
     }
 
     @Test
@@ -94,14 +86,12 @@ class QuickSettingsFragmentStoreTest {
 
         val state = QuickSettingsFragmentStore.createWebsiteInfoState(websiteUrl, websiteTitle, securedStatus, certificateIssuer)
 
-        assertAll {
-            assertThat(state).isNotNull()
-            assertThat(state.websiteUrl).isSameAs(websiteUrl)
-            assertThat(state.websiteTitle).isSameAs(websiteTitle)
-            assertThat(state.securityInfoRes).isEqualTo(insecureStringRes)
-            assertThat(state.iconRes).isEqualTo(insecureDrawableRes)
-            assertThat(state.iconTintRes).isEqualTo(insecureColorRes)
-        }
+        assertNotNull(state)
+        assertSame(websiteUrl, state.websiteUrl)
+        assertSame(websiteTitle, state.websiteTitle)
+        assertEquals(insecureStringRes, state.securityInfoRes)
+        assertEquals(insecureDrawableRes, state.iconRes)
+        assertEquals(insecureColorRes, state.iconTintRes)
     }
 
     @Test
@@ -127,15 +117,13 @@ class QuickSettingsFragmentStoreTest {
 
         // Just need to know that the WebsitePermissionsState properties are initialized.
         // Making sure they are correctly initialized is tested in the `initWebsitePermission` test.
-        assertAll {
-            assertThat(state).isNotNull()
-            assertThat(state.camera).isNotNull()
-            assertThat(state.microphone).isNotNull()
-            assertThat(state.notification).isNotNull()
-            assertThat(state.location).isNotNull()
-            assertThat(state.autoplayAudible).isNotNull()
-            assertThat(state.autoplayInaudible).isNotNull()
-        }
+        assertNotNull(state)
+        assertNotNull(state.camera)
+        assertNotNull(state.microphone)
+        assertNotNull(state.notification)
+        assertNotNull(state.location)
+        assertNotNull(state.autoplayAudible)
+        assertNotNull(state.autoplayInaudible)
     }
 
     @Test
@@ -153,14 +141,12 @@ class QuickSettingsFragmentStoreTest {
 
         val websitePermission = cameraFeature.toWebsitePermission(context, permissions, appSettings)
 
-        assertAll {
-            assertThat(websitePermission).isNotNull()
-            assertThat(websitePermission).isInstanceOf(WebsitePermission.Camera::class)
-            assertThat(websitePermission.status).isEqualTo(allowedStatus)
-            assertThat(websitePermission.isVisible).isTrue()
-            assertThat(websitePermission.isEnabled).isTrue()
-            assertThat(websitePermission.isBlockedByAndroid).isFalse()
-        }
+        assertNotNull(websitePermission)
+        assertEquals(WebsitePermission.Camera::class, websitePermission::class)
+        assertEquals(allowedStatus, websitePermission.status)
+        assertTrue(websitePermission.isVisible)
+        assertTrue(websitePermission.isEnabled)
+        assertFalse(websitePermission.isBlockedByAndroid)
     }
 
     @Test
@@ -177,12 +163,11 @@ class QuickSettingsFragmentStoreTest {
             phoneFeature.shouldBeEnabled(context, permissions, appSettings)
             phoneFeature.isAndroidPermissionGranted(context)
         }
-        assertAll {
-            // Check that we only have a non-null permission status.
-            // Having each property calculated in a separate delegate means their correctness is
-            // to be tested in that delegated method.
-            assertThat(permissionsStatus).isNotNull()
-        }
+
+        // Check that we only have a non-null permission status.
+        // Having each property calculated in a separate delegate means their correctness is
+        // to be tested in that delegated method.
+        assertNotNull(permissionsStatus)
     }
 
     @Test
@@ -247,105 +232,58 @@ class QuickSettingsFragmentStoreTest {
                 )
             ).join()
 
-            assertAll {
-                assertThat(store.state).isNotNull()
-                assertThat(store.state).isNotSameAs(initialState)
-                assertThat(store.state.websitePermissionsState).isNotSameAs(
-                    initialWebsitePermissionsState
-                )
-                assertThat(store.state.webInfoState).isSameAs(websiteInfoState)
+            assertNotNull(store.state)
+            assertNotSame(initialState, store.state)
+            assertNotSame(initialWebsitePermissionsState, store.state.websitePermissionsState)
+            assertSame(websiteInfoState, store.state.webInfoState)
 
-                assertThat(store.state.websitePermissionsState.camera).isNotNull()
-                assertThat((store.state.websitePermissionsState.camera as WebsitePermission.Camera).name).isEqualTo(
-                    cameraPermissionName
-                )
-                assertThat(store.state.websitePermissionsState.camera.status).isEqualTo(
-                    initialCameraStatus
-                )
-                assertThat(store.state.websitePermissionsState.camera.isVisible).isEqualTo(
-                    defaultVisibilityStatus
-                )
-                assertThat(store.state.websitePermissionsState.camera.isEnabled).isEqualTo(
-                    defaultEnabledStatus
-                )
-                assertThat(store.state.websitePermissionsState.camera.isBlockedByAndroid).isEqualTo(
-                    defaultBlockedByAndroidStatus
-                )
+            assertNotNull(store.state.websitePermissionsState.camera)
+            assertEquals(cameraPermissionName, (store.state.websitePermissionsState.camera as WebsitePermission.Camera).name)
+            assertEquals(initialCameraStatus, store.state.websitePermissionsState.camera.status)
+            assertEquals(defaultVisibilityStatus, store.state.websitePermissionsState.camera.isVisible)
+            assertEquals(defaultEnabledStatus, store.state.websitePermissionsState.camera.isEnabled)
+            assertEquals(defaultBlockedByAndroidStatus, store.state.websitePermissionsState.camera.isBlockedByAndroid)
 
-                assertThat(store.state.websitePermissionsState.microphone).isNotNull()
-                assertThat((store.state.websitePermissionsState.microphone as WebsitePermission.Microphone).name).isEqualTo(
-                    microphonePermissionName
-                )
-                // Only the following two properties must have been changed!
-                assertThat(store.state.websitePermissionsState.microphone.status).isEqualTo(
-                    updatedMicrophoneStatus
-                )
-                assertThat(store.state.websitePermissionsState.microphone.isEnabled).isEqualTo(
-                    updatedMicrophoneEnabledStatus
-                )
+            assertNotNull(store.state.websitePermissionsState.microphone)
+            assertEquals(microphonePermissionName, (store.state.websitePermissionsState.microphone as WebsitePermission.Microphone).name)
 
-                assertThat(store.state.websitePermissionsState.microphone.isVisible).isEqualTo(
-                    defaultVisibilityStatus
-                )
-                assertThat(store.state.websitePermissionsState.microphone.isBlockedByAndroid).isEqualTo(
-                    defaultBlockedByAndroidStatus
-                )
+            // Only the following two properties must have been changed!
+            assertEquals(updatedMicrophoneStatus, store.state.websitePermissionsState.microphone.status)
+            assertEquals(updatedMicrophoneEnabledStatus, store.state.websitePermissionsState.microphone.isEnabled)
 
-                assertThat(store.state.websitePermissionsState.notification).isNotNull()
-                assertThat((store.state.websitePermissionsState.notification as WebsitePermission.Notification).name).isEqualTo(
-                    notificationPermissionName
-                )
-                assertThat(store.state.websitePermissionsState.notification.status).isEqualTo(
-                    initialNotificationStatus
-                )
-                assertThat(store.state.websitePermissionsState.notification.isVisible).isEqualTo(
-                    defaultVisibilityStatus
-                )
-                assertThat(store.state.websitePermissionsState.notification.isEnabled).isEqualTo(
-                    defaultEnabledStatus
-                )
-                assertThat(store.state.websitePermissionsState.notification.isBlockedByAndroid).isEqualTo(
-                    defaultBlockedByAndroidStatus
-                )
+            assertEquals(defaultVisibilityStatus, store.state.websitePermissionsState.microphone.isVisible)
+            assertEquals(defaultBlockedByAndroidStatus, store.state.websitePermissionsState.microphone.isBlockedByAndroid)
 
-                assertThat(store.state.websitePermissionsState.location).isNotNull()
-                assertThat((store.state.websitePermissionsState.location as WebsitePermission.Location).name).isEqualTo(
-                    locationPermissionName
-                )
-                assertThat(store.state.websitePermissionsState.location.status).isEqualTo(
-                    initialLocationStatus
-                )
-                assertThat(store.state.websitePermissionsState.location.isVisible).isEqualTo(
-                    defaultVisibilityStatus
-                )
-                assertThat(store.state.websitePermissionsState.location.isEnabled).isEqualTo(
-                    defaultEnabledStatus
-                )
-                assertThat(store.state.websitePermissionsState.location.isBlockedByAndroid).isEqualTo(
-                    defaultBlockedByAndroidStatus
-                )
-            }
+            assertNotNull(store.state.websitePermissionsState.notification)
+            assertEquals(notificationPermissionName, (store.state.websitePermissionsState.notification as WebsitePermission.Notification).name)
+            assertEquals(initialNotificationStatus, store.state.websitePermissionsState.notification.status)
+            assertEquals(defaultVisibilityStatus, store.state.websitePermissionsState.notification.isVisible)
+            assertEquals(defaultEnabledStatus, store.state.websitePermissionsState.notification.isEnabled)
+            assertEquals(defaultBlockedByAndroidStatus, store.state.websitePermissionsState.notification.isBlockedByAndroid)
+
+            assertNotNull(store.state.websitePermissionsState.location)
+            assertEquals(locationPermissionName, (store.state.websitePermissionsState.location as WebsitePermission.Location).name)
+            assertEquals(initialLocationStatus, store.state.websitePermissionsState.location.status)
+            assertEquals(defaultVisibilityStatus, store.state.websitePermissionsState.location.isVisible)
+            assertEquals(defaultEnabledStatus, store.state.websitePermissionsState.location.isEnabled)
+            assertEquals(defaultBlockedByAndroidStatus, store.state.websitePermissionsState.location.isBlockedByAndroid)
         }
 
     @Test
     fun `getSecuredWebsiteUiValues() should return the right values`() {
         val uiValues = getSecuredWebsiteUiValues
 
-        assertAll {
-            assertThat(uiValues.first).isEqualTo(secureStringRes)
-            assertThat(uiValues.second).isEqualTo(secureDrawableRes)
-            assertThat(uiValues.third).isEqualTo(secureColorRes)
-        }
+        assertEquals(secureStringRes, uiValues.first)
+        assertEquals(secureDrawableRes, uiValues.second)
+        assertEquals(secureColorRes, uiValues.third)
     }
 
     @Test
     fun `getInsecureWebsiteUiValues() should return the right values`() {
         val uiValues = getInsecureWebsiteUiValues
 
-        assertAll {
-            assertThat(uiValues.first).isEqualTo(insecureStringRes)
-            assertThat(uiValues.second).isEqualTo(insecureDrawableRes)
-            assertThat(uiValues.third).isEqualTo(insecureColorRes)
-        }
+        assertEquals(insecureStringRes, uiValues.first)
+        assertEquals(insecureDrawableRes, uiValues.second)
+        assertEquals(insecureColorRes, uiValues.third)
     }
 }

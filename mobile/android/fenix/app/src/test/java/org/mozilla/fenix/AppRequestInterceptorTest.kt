@@ -6,8 +6,6 @@ package org.mozilla.fenix
 
 import android.net.ConnectivityManager
 import androidx.core.content.getSystemService
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -15,6 +13,7 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,7 +66,7 @@ class AppRequestInterceptorTest {
                 html = LOW_AND_MEDIUM_RISK_ERROR_PAGES
             )
 
-            assertThat(actualPage).isEqualTo(expectedPage)
+            assertEquals(expectedPage, actualPage)
         }
     }
 
@@ -84,7 +83,7 @@ class AppRequestInterceptorTest {
                 html = LOW_AND_MEDIUM_RISK_ERROR_PAGES
             )
 
-            assertThat(actualPage).isEqualTo(expectedPage)
+            assertEquals(expectedPage, actualPage)
         }
     }
 
@@ -102,7 +101,7 @@ class AppRequestInterceptorTest {
                 html = HIGH_RISK_ERROR_PAGES
             )
 
-            assertThat(actualPage).isEqualTo(expectedPage)
+            assertEquals(expectedPage, actualPage)
         }
     }
 

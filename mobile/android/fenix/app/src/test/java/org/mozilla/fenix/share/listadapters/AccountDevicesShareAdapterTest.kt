@@ -5,8 +5,6 @@
 package org.mozilla.fenix.share.listadapters
 
 import android.view.ViewGroup
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -14,6 +12,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.share.ShareInteractor
@@ -28,7 +27,7 @@ class AccountDevicesShareAdapterTest {
     fun `getItemCount on a default instantiated Adapter should return 0`() {
         val adapter = AccountDevicesShareAdapter(mockk())
 
-        assertThat(adapter.itemCount).isEqualTo(0)
+        assertEquals(0, adapter.itemCount)
     }
 
     @Test
@@ -39,7 +38,7 @@ class AccountDevicesShareAdapterTest {
 
         val viewHolder = adapter.onCreateViewHolder(parentView, 0)
 
-        assertThat(viewHolder::class).isEqualTo(AccountDeviceViewHolder::class)
+        assertEquals(AccountDeviceViewHolder::class, viewHolder::class)
     }
 
     @Test
@@ -50,7 +49,7 @@ class AccountDevicesShareAdapterTest {
 
         val viewHolder = adapter.onCreateViewHolder(parentView, 0)
 
-        assertThat(viewHolder.interactor).isEqualTo(interactor)
+        assertEquals(interactor, viewHolder.interactor)
     }
 
     @Test

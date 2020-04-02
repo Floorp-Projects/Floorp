@@ -4,14 +4,10 @@
 
 package org.mozilla.fenix.ext
 
-import assertk.assertThat
-import assertk.assertions.contains
-import assertk.assertions.doesNotContain
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import assertk.assertions.isTrue
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,13 +46,13 @@ class StringTest {
         val split = display.split(".")
 
         // If the list ends with 25.com...
-        assertThat(split.dropLast(1).last()).isEqualTo("25")
+        assertEquals("25", split.dropLast(1).last())
         // ...and each value is 1 larger than the last...
         split.dropLast(1)
             .map { it.toInt() }
             .windowed(2, 1)
             .forEach { (prev, next) ->
-                assertThat(prev + 1).isEqualTo(next)
+                assertEquals(next, prev + 1)
             }
         // ...that means that all removed values came from the front of the list
     }
@@ -67,7 +63,7 @@ class StringTest {
         // See https://chromium.googlesource.com/chromium/src/+/master/docs/security/url_display_guidelines/url_display_guidelines.md#eliding-urls
 
         val bigRegistrableDomain = "evil-but-also-shockingly-long-registrable-domain.com"
-        assertThat("https://login.your-bank.com.$bigRegistrableDomain/enter/your/password".shortened()).contains(bigRegistrableDomain)
+        assertTrue("https://login.your-bank.com.$bigRegistrableDomain/enter/your/password".shortened().contains(bigRegistrableDomain))
     }
 
     @Test
@@ -75,10 +71,10 @@ class StringTest {
         // See https://url.spec.whatwg.org/#url-rendering-simplification
         // See https://chromium.googlesource.com/chromium/src/+/master/docs/security/url_display_guidelines/url_display_guidelines.md#simplify
 
-        assertThat("https://examplecorp.com@attacker.example/".shortened()).doesNotContain("examplecorp")
-        assertThat("https://examplecorp.com@attacker.example/".shortened()).doesNotContain("com")
-        assertThat("https://user:password@example.com/".shortened()).doesNotContain("user")
-        assertThat("https://user:password@example.com/".shortened()).doesNotContain("password")
+        assertFalse("https://examplecorp.com@attacker.example/".shortened().contains("examplecorp"))
+        assertFalse("https://examplecorp.com@attacker.example/".shortened().contains("com"))
+        assertFalse("https://user:password@example.com/".shortened().contains("user"))
+        assertFalse("https://user:password@example.com/".shortened().contains("password"))
     }
 
     @Test
@@ -207,39 +203,39 @@ class StringTest {
     // (https://searchfox.org/mozilla-mobile/source/firefox-echo-show/app/src/test/java/org/mozilla/focus/utils/TestFormattedDomain.java#228)
     @Test
     fun testIsIPv4RealAddress() {
-        assertThat("192.168.1.1".isIpv4()).isTrue()
-        assertThat("8.8.8.8".isIpv4()).isTrue()
-        assertThat("63.245.215.20".isIpv4()).isTrue()
+        assertTrue("192.168.1.1".isIpv4())
+        assertTrue("8.8.8.8".isIpv4())
+        assertTrue("63.245.215.20".isIpv4())
     }
 
     @Test
     fun testIsIPv4WithProtocol() {
-        assertThat("http://8.8.8.8".isIpv4()).isFalse()
-        assertThat("https://8.8.8.8".isIpv4()).isFalse()
+        assertFalse("http://8.8.8.8".isIpv4())
+        assertFalse("https://8.8.8.8".isIpv4())
     }
 
     @Test
     fun testIsIPv4WithPort() {
-        assertThat("8.8.8.8:400".isIpv4()).isFalse()
-        assertThat("8.8.8.8:1337".isIpv4()).isFalse()
+        assertFalse("8.8.8.8:400".isIpv4())
+        assertFalse("8.8.8.8:1337".isIpv4())
     }
 
     @Test
     fun testIsIPv4WithPath() {
-        assertThat("8.8.8.8/index.html".isIpv4()).isFalse()
-        assertThat("8.8.8.8/".isIpv4()).isFalse()
+        assertFalse("8.8.8.8/index.html".isIpv4())
+        assertFalse("8.8.8.8/".isIpv4())
     }
 
     @Test
     fun testIsIPv4WithIPv6() {
-        assertThat("2001:db8::1 ".isIpv4()).isFalse()
-        assertThat("2001:db8:0:1:1:1:1:1".isIpv4()).isFalse()
-        assertThat("[2001:db8:a0b:12f0::1]".isIpv4()).isFalse()
+        assertFalse("2001:db8::1 ".isIpv4())
+        assertFalse("2001:db8:0:1:1:1:1:1".isIpv4())
+        assertFalse("[2001:db8:a0b:12f0::1]".isIpv4())
     }
     // END test cases borrowed from FFTV
 
     private infix fun String.shortenedShouldBecome(expect: String) {
-        assertThat(this.shortened()).isEqualTo(expect)
+        assertEquals(expect, this.shortened())
     }
 
     private fun String.shortened() = this.toShortUrl(publicSuffixList)

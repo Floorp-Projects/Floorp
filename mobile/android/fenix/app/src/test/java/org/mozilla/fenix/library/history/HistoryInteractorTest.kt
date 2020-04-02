@@ -4,11 +4,10 @@
 
 package org.mozilla.fenix.library.history
 
-import assertk.assertThat
-import assertk.assertions.isTrue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyAll
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 
@@ -55,7 +54,7 @@ class HistoryInteractorTest {
         verifyAll {
             controller.handleBackPressed()
         }
-        assertThat(backpressHandled).isTrue()
+        assertTrue(backpressHandled)
     }
 
     @Test

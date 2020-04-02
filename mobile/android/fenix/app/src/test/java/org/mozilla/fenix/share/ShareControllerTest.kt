@@ -8,11 +8,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import androidx.navigation.NavController
-import assertk.assertAll
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNotEqualTo
-import assertk.assertions.isTrue
 import com.google.android.material.snackbar.Snackbar
 import io.mockk.Runs
 import io.mockk.every
@@ -32,6 +27,9 @@ import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -101,15 +99,14 @@ class ShareControllerTest {
         testController.handleShareToApp(appShareOption)
 
         // Check that the Intent used for querying apps has the expected structure
-        assertAll {
-            assertThat(shareIntent.isCaptured).isTrue()
-            assertThat(shareIntent.captured.action).isEqualTo(Intent.ACTION_SEND)
-            assertThat(shareIntent.captured.extras!![Intent.EXTRA_TEXT]).isEqualTo(textToShare)
-            assertThat(shareIntent.captured.type).isEqualTo("text/plain")
-            assertThat(shareIntent.captured.flags).isEqualTo(Intent.FLAG_ACTIVITY_NEW_TASK)
-            assertThat(shareIntent.captured.component!!.packageName).isEqualTo(appPackageName)
-            assertThat(shareIntent.captured.component!!.className).isEqualTo(appClassName)
-        }
+        assertTrue(shareIntent.isCaptured)
+        assertEquals(Intent.ACTION_SEND, shareIntent.captured.action)
+        assertEquals(textToShare, shareIntent.captured.extras!![Intent.EXTRA_TEXT])
+        assertEquals("text/plain", shareIntent.captured.type)
+        assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, shareIntent.captured.flags)
+        assertEquals(appPackageName, shareIntent.captured.component!!.packageName)
+        assertEquals(appClassName, shareIntent.captured.component!!.className)
+
         verifyOrder {
             recentAppStorage.updateRecentApp(appShareOption.activityName)
             activityContext.startActivity(shareIntent.captured)
@@ -158,12 +155,11 @@ class ShareControllerTest {
             sendTabUseCases.sendToDeviceAsync(capture(deviceId), capture(tabsShared))
             // dismiss() is also to be called, but at the moment cannot test it in a coroutine.
         }
-        assertAll {
-            assertThat(deviceId.isCaptured).isTrue()
-            assertThat(deviceId.captured).isEqualTo(deviceToShareTo.id)
-            assertThat(tabsShared.isCaptured).isTrue()
-            assertThat(tabsShared.captured).isEqualTo(tabsData)
-        }
+
+        assertTrue(deviceId.isCaptured)
+        assertEquals(deviceToShareTo.id, deviceId.captured)
+        assertTrue(tabsShared.isCaptured)
+        assertEquals(tabsData, tabsShared.captured)
     }
 
     @Test
@@ -181,11 +177,10 @@ class ShareControllerTest {
             sendTabUseCases.sendToAllAsync(capture(tabsShared))
             // dismiss() is also to be called, but at the moment cannot test it in a coroutine.
         }
-        assertAll {
-            // SendTabUseCases should send a the `shareTabs` mapped to tabData
-            assertThat(tabsShared.isCaptured).isTrue()
-            assertThat(tabsShared.captured).isEqualTo(tabsData)
-        }
+
+        // SendTabUseCases should send a the `shareTabs` mapped to tabData
+        assertTrue(tabsShared.isCaptured)
+        assertEquals(tabsData, tabsShared.captured)
     }
 
     @Test
@@ -267,16 +262,14 @@ class ShareControllerTest {
         val tabSharedMessage = controllerWithOneSharedTab.getSuccessMessage()
         val tabsSharedMessage = controllerWithMoreSharedTabs.getSuccessMessage()
 
-        assertAll {
-            assertThat(tabSharedMessage).isNotEqualTo(tabsSharedMessage)
-            assertThat(tabSharedMessage).isEqualTo(expectedTabSharedMessage)
-            assertThat(tabsSharedMessage).isEqualTo(expectedTabsSharedMessage)
-        }
+        assertNotEquals(tabsSharedMessage, tabSharedMessage)
+        assertEquals(expectedTabSharedMessage, tabSharedMessage)
+        assertEquals(expectedTabsSharedMessage, tabsSharedMessage)
     }
 
     @Test
     fun `getShareText should respect concatenate shared tabs urls`() {
-        assertThat(controller.getShareText()).isEqualTo(textToShare)
+        assertEquals(textToShare, controller.getShareText())
     }
 
     @Test
@@ -287,7 +280,7 @@ class ShareControllerTest {
             tabData = shareData.toTabData()
         }
 
-        assertThat(tabData).isEqualTo(tabsData)
+        assertEquals(tabsData, tabData)
     }
 
     @Test
@@ -305,6 +298,6 @@ class ShareControllerTest {
             ).toTabData()
         }
 
-        assertThat(tabData).isEqualTo(expected)
+        assertEquals(expected, tabData)
     }
 }

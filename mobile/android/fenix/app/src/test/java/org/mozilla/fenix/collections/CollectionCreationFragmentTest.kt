@@ -4,12 +4,6 @@
 
 package org.mozilla.fenix.collections
 
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import assertk.assertThat
-import assertk.assertions.isNotNull
-import assertk.assertions.isNull
-import assertk.assertions.isTrue
-import mozilla.components.support.test.robolectric.createAddedTestFragment
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -23,10 +17,15 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.support.test.robolectric.createAddedTestFragment
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 private const val URL_MOZILLA = "www.mozilla.org"
 private const val SESSION_ID_MOZILLA = "0"
@@ -72,10 +71,10 @@ class CollectionCreationFragmentTest {
             }
         }
 
-        assertThat(fragment.dialog).isNotNull()
-        assertThat(fragment.requireDialog().isShowing).isTrue()
+        assertNotNull(fragment.dialog)
+        assertTrue(fragment.requireDialog().isShowing)
         fragment.dismiss()
-        assertThat(fragment.dialog).isNull()
+        assertNull(fragment.dialog)
     }
 
     @Test

@@ -9,18 +9,14 @@ import android.content.ClipboardManager
 import android.content.res.Resources
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import assertk.assertAll
-import assertk.assertThat
-import assertk.assertions.hasSize
-import assertk.assertions.isEqualTo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.concept.engine.prompt.ShareData
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -164,11 +160,9 @@ class HistoryControllerTest {
             clipboardManager.primaryClip = capture(clipdata)
             snackbar.show()
         }
-        assertAll {
-            assertEquals(clipdata.captured.itemCount, 1)
-            assertThat(clipdata.captured.description.label).isEqualTo(historyItem.url)
-            assertThat(clipdata.captured.getItemAt(0).text).isEqualTo(historyItem.url)
-        }
+        assertEquals(1, clipdata.captured.itemCount)
+        assertEquals(historyItem.url, clipdata.captured.description.label)
+        assertEquals(historyItem.url, clipdata.captured.getItemAt(0).text)
     }
 
     @Test
@@ -186,17 +180,13 @@ class HistoryControllerTest {
                 capture(directions)
             )
         }
-        assertAll {
-            // The below class is private, can't easily assert using `instanceOf`
-            assertEquals(
-                directions.captured::class.simpleName,
-                "ActionHistoryFragmentToShareFragment"
-            )
-            assertThat(directions.captured.arguments["data"] as Array<ShareData>).hasSize(1)
-            assertThat(((directions.captured.arguments["data"] as Array<ShareData>)[0]).title)
-                .isEqualTo(historyItem.title)
-            assertThat(((directions.captured.arguments["data"] as Array<ShareData>)[0]).url)
-                .isEqualTo(historyItem.url)
-        }
+
+        assertEquals(
+            directions.captured::class.simpleName,
+            "ActionHistoryFragmentToShareFragment"
+        )
+        assertEquals(1, (directions.captured.arguments["data"] as Array<ShareData>).size)
+        assertEquals(historyItem.title, (directions.captured.arguments["data"] as Array<ShareData>)[0].title)
+        assertEquals(historyItem.url, (directions.captured.arguments["data"] as Array<ShareData>)[0].url)
     }
 }

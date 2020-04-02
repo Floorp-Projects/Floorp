@@ -5,8 +5,6 @@
 package org.mozilla.fenix.share.listadapters
 
 import android.view.ViewGroup
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -15,6 +13,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.share.ShareInteractor
@@ -49,14 +48,14 @@ class AppShareAdapterTest {
     fun `getItemCount on a default instantiated Adapter should return 0`() {
         val adapter = AppShareAdapter(mockk())
 
-        assertThat(adapter.itemCount).isEqualTo(0)
+        assertEquals(0, adapter.itemCount)
     }
 
     @Test
     fun `getItemCount after updateData() call should return the the passed in list's size`() {
         val adapter = AppShareAdapter(mockk()).apply { submitList(appOptions) }
 
-        assertThat(adapter.itemCount).isEqualTo(2)
+        assertEquals(2, adapter.itemCount)
     }
 
     @Test
@@ -67,7 +66,7 @@ class AppShareAdapterTest {
 
         val viewHolder = adapter.onCreateViewHolder(parentView, 0)
 
-        assertThat(viewHolder::class).isEqualTo(AppViewHolder::class)
+        assertEquals(AppViewHolder::class, viewHolder::class)
     }
 
     @Test
@@ -78,7 +77,7 @@ class AppShareAdapterTest {
 
         val viewHolder = adapter.onCreateViewHolder(parentView, 0)
 
-        assertThat(viewHolder.interactor).isEqualTo(interactor)
+        assertEquals(interactor, viewHolder.interactor)
     }
 
     @Test

@@ -6,12 +6,6 @@ package org.mozilla.fenix.settings.quicksettings
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import assertk.assertAll
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isSameAs
-import assertk.assertions.isTrue
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -29,6 +23,10 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -94,10 +92,9 @@ class DefaultQuickSettingsControllerTest {
         verify {
             controller.handleAndroidPermissionRequest(capture(androidPermissions))
         }
-        assertAll {
-            assertThat(androidPermissions.isCaptured).isTrue()
-            assertThat(androidPermissions.captured).isEqualTo(cameraFeature.androidPermissionsList)
-        }
+
+        assertTrue(androidPermissions.isCaptured)
+        assertArrayEquals(cameraFeature.androidPermissionsList, androidPermissions.captured)
     }
 
     @Test
@@ -116,7 +113,7 @@ class DefaultQuickSettingsControllerTest {
         controller.handlePermissionToggled(websitePermission)
 
         // We want to verify that the Status is toggled and this event is passed to Controller also.
-        assertThat(sitePermissions.camera).isSameAs(NO_DECISION)
+        assertSame(NO_DECISION, sitePermissions.camera)
         verifyOrder {
             val permission = sitePermissions.toggle(capture(toggledFeature))
             controller.handlePermissionsChange(permission)
@@ -125,15 +122,14 @@ class DefaultQuickSettingsControllerTest {
         verify {
             store.dispatch(capture(action))
         }
-        assertAll {
-            assertThat(toggledFeature.isCaptured).isTrue()
-            assertThat(toggledFeature.captured).isSameAs(PhoneFeature.CAMERA)
 
-            assertThat(action.isCaptured).isTrue()
-            assertThat(action.captured).isInstanceOf(WebsitePermissionAction.TogglePermission::class)
-            assertThat((action.captured as WebsitePermissionAction.TogglePermission).websitePermission)
-                .isInstanceOf(websitePermission::class)
-        }
+        assertTrue(toggledFeature.isCaptured)
+        assertSame(PhoneFeature.CAMERA, toggledFeature.captured)
+
+        assertTrue(action.isCaptured)
+        assertEquals(WebsitePermissionAction.TogglePermission::class, action.captured::class)
+        assertEquals(websitePermission::class,
+            (action.captured as WebsitePermissionAction.TogglePermission).websitePermission::class)
     }
 
     @Test
@@ -183,19 +179,12 @@ class DefaultQuickSettingsControllerTest {
         verify {
             store.dispatch(capture(action))
         }
-        assertAll {
-            assertThat(action.isCaptured).isTrue()
-            assertThat(action.captured).isInstanceOf(WebsitePermissionAction.TogglePermission::class)
-            assertThat((action.captured as WebsitePermissionAction.TogglePermission).websitePermission).isEqualTo(
-                permission
-            )
-            assertThat((action.captured as WebsitePermissionAction.TogglePermission).updatedStatus).isEqualTo(
-                permissionStatus
-            )
-            assertThat((action.captured as WebsitePermissionAction.TogglePermission).updatedEnabledStatus).isEqualTo(
-                permissionEnabled
-            )
-        }
+
+        assertTrue(action.isCaptured)
+        assertEquals(WebsitePermissionAction.TogglePermission::class, action.captured::class)
+        assertEquals(permission, (action.captured as WebsitePermissionAction.TogglePermission).websitePermission)
+        assertEquals(permissionStatus, (action.captured as WebsitePermissionAction.TogglePermission).updatedStatus)
+        assertEquals(permissionEnabled, (action.captured as WebsitePermissionAction.TogglePermission).updatedEnabledStatus)
     }
 
     @Test
@@ -207,10 +196,9 @@ class DefaultQuickSettingsControllerTest {
         controller.handleAndroidPermissionRequest(testPermissions)
 
         verify { requestPermissions(capture(requiredPermissions)) }
-        assertAll {
-            assertThat(requiredPermissions.isCaptured).isTrue()
-            assertThat(requiredPermissions.captured).isEqualTo(testPermissions)
-        }
+
+        assertTrue(requiredPermissions.isCaptured)
+        assertArrayEquals(testPermissions, requiredPermissions.captured)
     }
 
     @Test
@@ -228,12 +216,11 @@ class DefaultQuickSettingsControllerTest {
                 permissionStorage.updateSitePermissions(capture(permissions))
                 reload(capture(session))
             }
-            assertAll {
-                assertThat(permissions.isCaptured).isTrue()
-                assertThat(permissions.captured).isEqualTo(testPermissions)
-                assertThat(session.isCaptured).isTrue()
-                assertThat(session.captured).isEqualTo(browserSession)
-            }
+
+            assertTrue(permissions.isCaptured)
+            assertEquals(testPermissions, permissions.captured)
+            assertTrue(session.isCaptured)
+            assertEquals(browserSession, session.captured)
         }
 
     @Test
@@ -244,32 +231,22 @@ class DefaultQuickSettingsControllerTest {
         val locationPermission = mockk<WebsitePermission.Location>()
 
         with(controller) {
-            assertAll {
-                assertThat(cameraPermission.getBackingFeature()).isSameAs(PhoneFeature.CAMERA)
-                assertThat(microphonePermission.getBackingFeature()).isSameAs(PhoneFeature.MICROPHONE)
-                assertThat(notificationPermission.getBackingFeature()).isSameAs(PhoneFeature.NOTIFICATION)
-                assertThat(locationPermission.getBackingFeature()).isSameAs(PhoneFeature.LOCATION)
-            }
+            assertSame(PhoneFeature.CAMERA, cameraPermission.getBackingFeature())
+            assertSame(PhoneFeature.MICROPHONE, microphonePermission.getBackingFeature())
+            assertSame(PhoneFeature.NOTIFICATION, notificationPermission.getBackingFeature())
+            assertSame(PhoneFeature.LOCATION, locationPermission.getBackingFeature())
         }
     }
 
     @Test
     fun `PhoneFeature#getCorrespondingPermission should return the WebsitePermission which it maps to`() {
         with(controller) {
-            assertAll {
-                assertThat(PhoneFeature.CAMERA.getCorrespondingPermission())
-                    .isInstanceOf(WebsitePermission.Camera::class)
-                assertThat(PhoneFeature.MICROPHONE.getCorrespondingPermission())
-                    .isInstanceOf(WebsitePermission.Microphone::class)
-                assertThat(PhoneFeature.NOTIFICATION.getCorrespondingPermission())
-                    .isInstanceOf(WebsitePermission.Notification::class)
-                assertThat(PhoneFeature.LOCATION.getCorrespondingPermission())
-                    .isInstanceOf(WebsitePermission.Location::class)
-                assertThat(PhoneFeature.AUTOPLAY_AUDIBLE.getCorrespondingPermission())
-                    .isInstanceOf(WebsitePermission.AutoplayAudible::class)
-                assertThat(PhoneFeature.AUTOPLAY_INAUDIBLE.getCorrespondingPermission())
-                    .isInstanceOf(WebsitePermission.AutoplayInaudible::class)
-            }
+            assertEquals(WebsitePermission.Camera::class, PhoneFeature.CAMERA.getCorrespondingPermission()::class)
+            assertEquals(WebsitePermission.Microphone::class, PhoneFeature.MICROPHONE.getCorrespondingPermission()::class)
+            assertEquals(WebsitePermission.Notification::class, PhoneFeature.NOTIFICATION.getCorrespondingPermission()::class)
+            assertEquals(WebsitePermission.Location::class, PhoneFeature.LOCATION.getCorrespondingPermission()::class)
+            assertEquals(WebsitePermission.AutoplayAudible::class, PhoneFeature.AUTOPLAY_AUDIBLE.getCorrespondingPermission()::class)
+            assertEquals(WebsitePermission.AutoplayInaudible::class, PhoneFeature.AUTOPLAY_INAUDIBLE.getCorrespondingPermission()::class)
         }
     }
 }
