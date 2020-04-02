@@ -17,6 +17,7 @@
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/Telemetry.h"                // for Telemetry
 #include "mozilla/layers/IAPZCTreeManager.h"  // for AllowedTouchBehavior
+#include "LayersLogging.h"                    // for Stringify
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
 

@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "nsContainerFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
