@@ -1760,9 +1760,6 @@ bool LazyScriptCreationData::create(JSContext* cx,
   if (funbox->hasMappedArgsObj()) {
     lazy->setHasMappedArgsObj();
   }
-  if (funbox->argumentsHasVarBinding()) {
-    lazy->setArgumentsHasVarBinding();
-  }
 
   function->initLazyScript(lazy);
 
