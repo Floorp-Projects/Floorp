@@ -6,7 +6,8 @@ package org.mozilla.fenix.detektrules
 
 import io.gitlab.arturbosch.detekt.test.lint
 import io.gitlab.arturbosch.detekt.api.YamlConfig
-import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -22,8 +23,8 @@ internal class MozillaBannedPropertyAccessTest {
             MozillaBannedPropertyAccess(YamlConfig.loadResource(this.javaClass.getResource("/config.yml"))).lint(
                 NONCOMPLIANT_ACCESS.trimIndent()
             )
-        assertThat(findings).hasSize(1)
-        assertThat(findings[0].issue.description).isEqualTo(DESCR)
+        assertEquals(1, findings.size)
+        assertEquals(DESCR, findings[0].issue.description)
     }
 
     @DisplayName("compliant ")
@@ -34,7 +35,7 @@ internal class MozillaBannedPropertyAccessTest {
             MozillaBannedPropertyAccess(YamlConfig.loadResource(this.javaClass.getResource("/config.yml"))).lint(
                 source
             )
-        assertThat(findings).isEmpty()
+        assertTrue(findings.isEmpty())
     }
 
     companion object {

@@ -8,7 +8,6 @@ dependencies {
   implementation Deps.kotlin_stdlib
   testImplementation Deps.junitApi
   testImplementation Deps.junitParams
-  testImplementation Deps.assertJ
   testRuntimeOnly Deps.junitEngine
 }
 

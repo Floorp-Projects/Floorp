@@ -39,7 +39,6 @@ object Versions {
     const val installreferrer = "1.0"
 
     const val junit = "5.5.2"
-    const val assertJ = "3.13.2"
     const val mockito = "2.24.5"
     const val mockk = "1.9.kotlin12"
     const val assertk = "0.19"
@@ -207,6 +206,5 @@ object Deps {
     const val detektTest = "io.gitlab.arturbosch.detekt:detekt-test:${Versions.detekt}"
     const val junitApi = "org.junit.jupiter:junit-jupiter-api:${Versions.junit}"
     const val junitParams = "org.junit.jupiter:junit-jupiter-params:${Versions.junit}"
-    const val assertJ = "org.assertj:assertj-core:${Versions.assertJ}"
     const val junitEngine = "org.junit.jupiter:junit-jupiter-engine:${Versions.junit}"
 }
