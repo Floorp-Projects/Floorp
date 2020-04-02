@@ -20,6 +20,10 @@
 class nsDisplayItemGeometry;
 
 namespace mozilla {
+namespace webgpu {
+class WebGPUChild;
+}
+
 namespace wr {
 class IpcResourceUpdateQueue;
 }
@@ -34,9 +38,10 @@ class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
 class WebRenderCanvasData;
-class WebRenderCanvasRendererAsync;
+class WebRenderCanvasRenderer;
 class WebRenderImageData;
 class WebRenderFallbackData;
+class WebRenderLocalCanvasData;
 class RenderRootStateManager;
 class WebRenderGroupData;
 
@@ -72,6 +77,7 @@ class WebRenderUserData {
   virtual WebRenderImageData* AsImageData() { return nullptr; }
   virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
   virtual WebRenderCanvasData* AsCanvasData() { return nullptr; }
+  virtual WebRenderLocalCanvasData* AsLocalCanvasData() { return nullptr; }
   virtual WebRenderGroupData* AsGroupData() { return nullptr; }
 
   enum class UserDataType {
@@ -80,6 +86,7 @@ class WebRenderUserData {
     eAPZAnimation,
     eAnimation,
     eCanvas,
+    eLocalCanvas,
     eRemote,
     eGroup,
     eMask,
@@ -267,6 +274,26 @@ class WebRenderCanvasData : public WebRenderUserData {
  protected:
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
   RefPtr<ImageContainer> mContainer;
+};
+
+// WebRender data assocatiated with canvases that don't need to
+// synchronize across content-GPU process barrier.
+class WebRenderLocalCanvasData : public WebRenderUserData {
+ public:
+  WebRenderLocalCanvasData(RenderRootStateManager* aManager,
+                           nsDisplayItem* aItem);
+  virtual ~WebRenderLocalCanvasData();
+
+  WebRenderLocalCanvasData* AsLocalCanvasData() override { return this; }
+  UserDataType GetType() override { return UserDataType::eLocalCanvas; }
+  static UserDataType Type() { return UserDataType::eLocalCanvas; }
+
+  void Present();
+
+  WeakPtr<webgpu::WebGPUChild> mGpuBridge;
+  uint64_t mGpuTextureId;
+  wr::ExternalImageId mExternalImageId;
+  gfx::SurfaceFormat mFormat;
 };
 
 class WebRenderRemoteData : public WebRenderUserData {

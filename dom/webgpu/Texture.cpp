@@ -25,7 +25,7 @@ Texture::~Texture() { Cleanup(); }
 void Texture::Cleanup() {
   if (mValid && mParent) {
     mValid = false;
-    WebGPUChild* bridge = mParent->mBridge;
+    auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
       bridge->SendTextureDestroy(mId);
     }
@@ -34,8 +34,8 @@ void Texture::Cleanup() {
 
 already_AddRefed<TextureView> Texture::CreateView(
     const dom::GPUTextureViewDescriptor& aDesc) {
-  RawId id =
-      mParent->mBridge->TextureCreateView(mId, aDesc, *mDefaultViewDescriptor);
+  RawId id = mParent->GetBridge()->TextureCreateView(mId, aDesc,
+                                                     *mDefaultViewDescriptor);
   RefPtr<TextureView> view = new TextureView(this, id);
   return view.forget();
 }
