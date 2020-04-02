@@ -281,7 +281,7 @@ async function removeNotARIAOwnedEl(browser, accDoc) {
 }
 
 addAccessibleTask(
-  "doc_treeupdate_ariaowns.html",
+  "e10s/doc_treeupdate_ariaowns.html",
   async function(browser, accDoc) {
     await testContainer1(browser, accDoc);
     await removeContainer(browser, accDoc);

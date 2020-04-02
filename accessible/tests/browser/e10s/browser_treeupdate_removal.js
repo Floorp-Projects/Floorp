@@ -8,7 +8,7 @@
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
-  "doc_treeupdate_removal.xhtml",
+  "e10s/doc_treeupdate_removal.xhtml",
   async function(browser, accDoc) {
     ok(
       isAccessible(findAccessibleChildByID(accDoc, "the_table")),

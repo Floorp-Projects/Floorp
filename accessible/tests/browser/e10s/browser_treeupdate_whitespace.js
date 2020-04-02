@@ -8,7 +8,7 @@
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
-  "doc_treeupdate_whitespace.html",
+  "e10s/doc_treeupdate_whitespace.html",
   async function(browser, accDoc) {
     let container1 = findAccessibleChildByID(accDoc, "container1");
     let container2Parent = findAccessibleChildByID(accDoc, "container2-parent");
