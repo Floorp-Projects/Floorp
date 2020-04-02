@@ -329,7 +329,7 @@ void JSJitFrameIter::dumpBaseline() const {
           uint32_t(script->pcToOffset(pc)));
   fprintf(stderr, "  current op: %s\n", CodeName(JSOp(*pc)));
 
-  fprintf(stderr, "  actual args: %d\n", numActualArgs());
+  fprintf(stderr, "  actual args: %u\n", numActualArgs());
 
   for (unsigned i = 0; i < baselineFrameNumValueSlots(); i++) {
     fprintf(stderr, "  slot %u: ", i);
@@ -440,7 +440,7 @@ bool JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap() {
   MOZ_ASSERT(depth > 0 && depth != UINT32_MAX);
   MOZ_ASSERT(location.length() == depth);
 
-  JitSpew(JitSpew_Profiling, "Found bytecode location of depth %d:", depth);
+  JitSpew(JitSpew_Profiling, "Found bytecode location of depth %u:", depth);
   for (size_t i = 0; i < location.length(); i++) {
     JitSpew(JitSpew_Profiling, "   %s:%u - %zu", location[i].script->filename(),
             location[i].script->lineno(),

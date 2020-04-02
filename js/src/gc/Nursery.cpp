@@ -1054,7 +1054,7 @@ void js::Nursery::collect(JS::GCReason reason) {
     if (reportTenurings_) {
       for (auto& entry : tenureCounts.entries) {
         if (entry.count >= reportTenurings_) {
-          fprintf(stderr, "  %d x ", entry.count);
+          fprintf(stderr, "  %u x ", entry.count);
           AutoSweepObjectGroup sweep(entry.group);
           entry.group->print(sweep);
         }

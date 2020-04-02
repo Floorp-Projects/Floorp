@@ -26,8 +26,8 @@ void js::Mutex::preLockChecks() const {
   if (prev) {
     if (id_.order <= prev->id_.order) {
       fprintf(stderr,
-              "Attempt to acquire mutex %s with order %d while holding %s with "
-              "order %d\n",
+              "Attempt to acquire mutex %s with order %u while holding %s with "
+              "order %u\n",
               id_.name, id_.order, prev->id_.name, prev->id_.order);
       MOZ_CRASH("Mutex ordering violation");
     }
