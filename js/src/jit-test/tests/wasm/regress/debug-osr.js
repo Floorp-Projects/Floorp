@@ -13,4 +13,4 @@ let func = wasmEvalText(`
   (module (import "" "inc" (func $imp)) (func) (func $start (call $imp)) (start $start) (export "" (func $start)))
 `, { "": { inc: function() { o = o.set; } } }).exports[""];
 
-assertErrorMessage(func, TypeError, /is undefined/);
+assertErrorMessage(func, TypeError, /(is|of) undefined/);
