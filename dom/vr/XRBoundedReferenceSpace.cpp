@@ -24,6 +24,27 @@ JSObject* XRBoundedReferenceSpace::WrapObject(
 
 void XRBoundedReferenceSpace::GetBoundsGeometry(
     nsTArray<RefPtr<DOMPointReadOnly>>& result) {
+  const auto size =
+      mSession->GetDisplayClient()->GetDisplayInfo().GetStageSize();
+  if (size.width == 0 || size.height == 0) {
+    return;
+  }
+
+  // https://immersive-web.github.io/webxr/#dom-xrboundedreferencespace-boundsgeometry
+  // bounds geometry must be premultiplied by the inverse of the origin offset.
+  gfx::PointDouble3D offset = mNativeOrigin->GetPosition();
+
+  const auto addPoint = [&](const double x, const double z) {
+    RefPtr<DOMPointReadOnly> obj = new DOMPointReadOnly(
+        GetParentObject(), x - offset.x, 0.0f, z - offset.z, 1.0f);
+    result.EmplaceBack(obj);
+  };
+
+  addPoint(-size.width * 0.5f, size.height * 0.5f);
+  addPoint(size.width * 0.5f, size.height * 0.5f);
+  addPoint(size.width * 0.5f, -size.height * 0.5f);
+  addPoint(-size.width * 0.5f, -size.height * 0.5f);
+
   // TODO (Bug 1611526): Support WebXR bounded reference spaces
 }
 
