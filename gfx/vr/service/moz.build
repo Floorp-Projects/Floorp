@@ -43,6 +43,7 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
         'OpenVRControllerMapper.cpp',
         'OpenVRCosmosMapper.cpp',
         'OpenVRDefaultMapper.cpp',
+        'OpenVRKnucklesMapper.cpp',
         'OpenVRSession.cpp',
         'OpenVRViveMapper.cpp',
     ]
