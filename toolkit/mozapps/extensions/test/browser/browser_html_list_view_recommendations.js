@@ -51,10 +51,7 @@ add_task(async function setup() {
 });
 
 function checkExtraContents(doc, type, opts = {}) {
-  let {
-    showAmoButton = false,
-    showThemeRecommendationFooter = type === "theme",
-  } = opts;
+  let { showThemeRecommendationFooter = type === "theme" } = opts;
   let footer = doc.querySelector("footer");
   let amoButton = footer.querySelector('[action="open-amo"]');
   let privacyPolicyLink = footer.querySelector(".privacy-policy-link");
@@ -67,15 +64,11 @@ function checkExtraContents(doc, type, opts = {}) {
 
   if (type == "extension") {
     ok(taarNotice, "There is a TAAR notice");
-    if (showAmoButton) {
-      is_element_visible(amoButton, "The AMO button is shown");
-    } else {
-      is_element_hidden(amoButton, "The AMO button is hidden");
-    }
+    is_element_visible(amoButton, "The AMO button is shown");
     is_element_visible(privacyPolicyLink, "The privacy policy is visible");
   } else if (type == "theme") {
     ok(!taarNotice, "There is no TAAR notice");
-    ok(!amoButton, "There is no AMO button");
+    ok(amoButton, "AMO button is shown");
     ok(!privacyPolicyLink, "There is no privacy policy");
   } else {
     throw new Error(`Unknown type ${type}`);
@@ -232,7 +225,7 @@ add_task(async function testInstallAllExtensions() {
   let recommendedList = doc.querySelector("recommended-addon-list");
   await recommendedList.cardsReady;
 
-  // Find more button is hidden.
+  // Find more button is shown.
   checkExtraContents(doc, type);
 
   let cards = Array.from(doc.querySelectorAll("recommended-addon-card"));
@@ -242,16 +235,16 @@ add_task(async function testInstallAllExtensions() {
     cards.map(card => installAddon({ card, recommendedList }))
   );
 
-  // The find more on AMO button is now shown.
-  checkExtraContents(doc, type, { showAmoButton: true });
+  // The find more on AMO button is shown.
+  checkExtraContents(doc, type);
 
-  // Uninstall one of the extensions, the button should be hidden again.
+  // Uninstall one of the extensions, the button should still be shown.
   let extension = extensions.pop();
   let shown = BrowserTestUtils.waitForEvent(recommendedList, "card-shown");
   await extension.unload();
   await shown;
 
-  // The find more on AMO button is now hidden.
+  // The find more on AMO button is shown.
   checkExtraContents(doc, type);
 
   await Promise.all(extensions.map(extension => extension.unload()));
@@ -270,7 +263,7 @@ add_task(async function testError() {
   let recommendedList = doc.querySelector("recommended-addon-list");
   await recommendedList.cardsReady;
 
-  checkExtraContents(doc, "extension", { showAmoButton: true });
+  checkExtraContents(doc, "extension");
 
   await closeView(win);
   await SpecialPowers.popPrefEnv();
