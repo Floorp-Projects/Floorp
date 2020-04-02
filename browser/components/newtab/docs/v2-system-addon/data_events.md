@@ -1173,6 +1173,39 @@ CFR impression ping has two forms, in which the message_id could be of different
 }
 ```
 
+#### Onboarding Simplified Welcome impression
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": "SIMPLIFIED_ABOUT_WELCOME",
+  "event": "IMPRESSION",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome" }
+}
+```
+#### Onboarding Simplified Welcome Session End ping
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034"
+  "message_id": "ABOUT_WELCOME_SESSION_END",
+  "id": "ABOUT_WELCOME",
+  "event": "SESSION_END",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": { "page": "about:welcome", "reason":
+    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated" | "unknown"]}
+}
+```
+
 ### User interaction pings
 
 This reports the user's interaction with Activity Stream Router.
