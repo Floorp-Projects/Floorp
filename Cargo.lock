@@ -3670,13 +3670,14 @@ checksum = "8a654c5bda722c699be6b0fe4c0d90de218928da5b724c3e467fc48865c37263"
 
 [[package]]
 name = "rust_cascade"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ea6999b1c6f2bd14e0208f7f3ffbd2774a9a98078148afc7251e789da930595"
+checksum = "9a5b9bba8f5b985e4923dadd273a987f83669083f3355d65c699e02b9d3d854d"
 dependencies = [
  "byteorder",
  "digest",
  "murmurhash3",
+ "sha2",
 ]
 
 [[package]]

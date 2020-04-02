@@ -1,5 +1,12 @@
 # rust-cascade
-A filter cascade implementation in rust. This uses the 32 bit version of the MurmurHash3 algorithm and is specifically implemented for compatibility with a specific
-python filter cascade implementation (https://github.com/mozilla/crlite/blob/master/create_filter_cascade/FilterCascade.py).
+A Bloom filter cascade implementation in rust. This can utilize one of two hash
+functions:
+
+* MurmurHash32, or
+* SHA256, with an optional salt
+
+This implementation is designed to match up with the Python [filter-cascade
+project](https://pypi.org/project/filtercascade/)
+[[github](https://github.com/mozilla/filter-cascade)]
 
 See tests in src/lib.rs to get an idea of usage.
