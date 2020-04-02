@@ -2228,13 +2228,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      {
-        condition: Services.prefs.getBoolPref("corroborator.enabled", false),
-        task: () => {
-          Corroborate.init().catch(Cu.reportError);
-        },
-      },
-
       // request startup of Chromium remote debugging protocol
       // (observer will only be notified when --remote-debugger is passed)
       {
@@ -2367,6 +2360,12 @@ BrowserGlue.prototype = {
 
       () => {
         RemoteSecuritySettings.init();
+      },
+
+      () => {
+        if (Services.prefs.getBoolPref("corroborator.enabled", false)) {
+          Corroborate.init().catch(Cu.reportError);
+        }
       },
     ];
 
