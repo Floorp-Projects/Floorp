@@ -6,6 +6,7 @@
 
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
+#include "InputUtils.h"
 #include "mozilla/StaticPrefs_apz.h"
 
 // Note: There are additional tests that test gesture detection behaviour
