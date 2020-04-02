@@ -1,11 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Huā sa \'iaj chì\' guendâ gāyi\'ìj</string>
+
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">A\'ngô ñû</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_go_back">Nanikàj rukù</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Na\'ue gārayinaj sa achín nì\'iát</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Nitāj ni\'īn nùhuin saj gire\' ma.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Gire\' koneksiûn dugumî sò\'</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>\'Ngō paginâ ni\'iājt nan nī na\'ue nāyi\'nïn dadin\' na\'ue nāni\'in sà\' aga\' nan nej datô nahuin ra\'ât.</li>
+        <li>Gi\'iaj \'ngō sunnūj nī nanà\'uì\'t ahuin si si\'iaj huin sitiô nan nī gatāj nan\'ānj si gunînt nùhuin saj \'ia dànanj.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Gire\' koneksiûn dugumî sò\'</string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Nitaj si \'iaj redireksionando hue\'ê pajinâ nan</string>
