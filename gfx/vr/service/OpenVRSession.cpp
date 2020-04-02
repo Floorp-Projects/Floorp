@@ -30,6 +30,7 @@
 #include "binding/OpenVRViveBinding.h"
 #include "OpenVRCosmosMapper.h"
 #include "OpenVRDefaultMapper.h"
+#include "OpenVRKnucklesMapper.h"
 #include "OpenVRViveMapper.h"
 #if defined(XP_WIN)  // Windows Mixed Reality is only available in Windows.
 #  include "OpenVRWMRMapper.h"
@@ -1023,8 +1024,7 @@ void OpenVRSession::EnumerateControllers(VRSystemState& aState) {
         break;
 #endif
       case VRControllerType::ValveIndex:
-        // TODO: Replace Knuckles with Valve Index.
-        mControllerMapper = MakeUnique<OpenVRDefaultMapper>();
+        mControllerMapper = MakeUnique<OpenVRKnucklesMapper>();
         break;
       default:
         mControllerMapper = MakeUnique<OpenVRDefaultMapper>();
