@@ -215,16 +215,17 @@ nsresult nsZipHandle::Init(nsIFile* file, nsZipHandle** ret, PRFileDesc** aFd) {
 #else
   handle->mNSPRFileDesc = fd.forget();
 #endif
-  handle->mMap = map;
   handle->mFile.Init(file);
   handle->mTotalLen = (uint32_t)size;
   handle->mFileStart = buf;
   rv = handle->findDataStart();
   if (NS_FAILED(rv)) {
     PR_MemUnmap(buf, (uint32_t)size);
+    handle->mFileStart = nullptr;
     PR_CloseFileMap(map);
     return rv;
   }
+  handle->mMap = map;
   handle.forget(ret);
   return NS_OK;
 }
