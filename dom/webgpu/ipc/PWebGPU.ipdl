@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using layers::RGBDescriptor from "mozilla/layers/LayersSurfaces.h";
+using wr::ExternalImageId from "mozilla/webrender/WebRenderAPI.h";
 using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using BufferAddress from "mozilla/webgpu/WebGPUTypes.h";
 using SerialBindGroupLayoutDescriptor from "mozilla/webgpu/WebGPUTypes.h";
@@ -72,6 +74,9 @@ parent:
   async ComputePipelineDestroy(RawId selfId);
   async DeviceCreateRenderPipeline(RawId selfId, SerialRenderPipelineDescriptor desc, RawId newId);
   async RenderPipelineDestroy(RawId selfId);
+  async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, ExternalImageId externalId);
+  async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);
+  async SwapChainDestroy(ExternalImageId externalId);
   async Shutdown();
 
 child:
