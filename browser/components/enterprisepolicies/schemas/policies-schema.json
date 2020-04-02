@@ -552,6 +552,17 @@
       "type": "boolean"
     },
 
+    "LegacySameSiteCookieBehaviorEnabled": {
+      "type": "boolean"
+    },
+
+    "LegacySameSiteCookieBehaviorEnabledForDomainList": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
     "LocalFileLinks": {
       "type": "array",
       "items": {

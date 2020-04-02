@@ -641,6 +641,32 @@ const POLICIES_TESTS = [
       "media.autoplay.default": 5,
     },
   },
+
+  // POLICY: LegacySameSiteCookieBehaviorEnabled
+
+  {
+    policies: {
+      LegacySameSiteCookieBehaviorEnabled: true,
+    },
+    unlockedPrefs: {
+      "network.cookie.sameSite.laxByDefault": false,
+    },
+  },
+
+  // POLICY: LegacySameSiteCookieBehaviorEnabledForDomainList
+
+  {
+    policies: {
+      LegacySameSiteCookieBehaviorEnabledForDomainList: [
+        "example.com",
+        "example.org",
+      ],
+    },
+    unlockedPrefs: {
+      "network.cookie.sameSite.laxByDefault.disabledHosts":
+        "example.com,example.org",
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
