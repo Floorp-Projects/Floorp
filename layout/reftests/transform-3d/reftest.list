@@ -94,7 +94,7 @@ fuzzy-if(winWidget,0-150,0-120) == component-alpha-1.html component-alpha-1-ref.
 == intermediate-1.html intermediate-1-ref.html
 == preserves3d-nested-filter-1.html preserves3d-nested-filter-1-ref.html
 != preserve3d-scale.html about:blank
-fuzzy(0-51,0-1309) == preserve3d-scale.html preserve3d-scale-ref.html
+fuzzy(0-51,0-1320) == preserve3d-scale.html preserve3d-scale-ref.html
 fuzzy-if(webrender,0-1,0-5) == perspective-overflow-1.html perspective-overflow-1-ref.html
 == 1544995-1.html 1544995-1-ref.html
 == preserve3d-will-change-large-frame.html preserve3d-will-change-ref.html
