@@ -9,6 +9,7 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.AboutPage
+import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Collections
@@ -490,6 +491,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.DarkThemeSelected -> EventWrapper(
             { AppTheme.darkThemeSelected.record(it) },
             { AppTheme.darkThemeSelectedKeys.valueOf(it) }
+        )
+        is Event.AddonsOpenInSettings -> EventWrapper<NoExtraKeys>(
+            { Addons.openAddonsInSettings.record(it) }
+        )
+        is Event.AddonsOpenInToolbarMenu -> EventWrapper<NoExtraKeys>(
+            { Addons.openAddonInToolbarMenu.record(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null

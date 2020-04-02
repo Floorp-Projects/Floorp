@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.browser.errorpages.ErrorType
+import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
@@ -19,7 +20,9 @@ import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
@@ -152,10 +155,16 @@ sealed class Event {
     object PocketTopSiteClicked : Event()
     object PocketTopSiteRemoved : Event()
     object FennecToFenixMigrated : Event()
+    object AddonsOpenInSettings : Event()
+    object AddonsOpenInToolbarMenu : Event()
 
     // Interaction events with extras
 
-    data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
+    data class PreferenceToggled(
+        val preferenceKey: String,
+        val enabled: Boolean,
+        val context: Context
+    ) : Event() {
         private val booleanPreferenceTelemetryAllowList = listOf(
             context.getString(R.string.pref_key_show_search_suggestions),
             context.getString(R.string.pref_key_remote_debugging),
@@ -186,18 +195,21 @@ sealed class Event {
 
     data class ToolbarPositionChanged(val position: Position) : Event() {
         enum class Position { TOP, BOTTOM }
+
         override val extras: Map<ToolbarSettings.changedPositionKeys, String>?
             get() = hashMapOf(ToolbarSettings.changedPositionKeys.position to position.name)
     }
 
     data class OpenedLink(val mode: Mode) : Event() {
         enum class Mode { NORMAL, PRIVATE }
+
         override val extras: Map<Events.openedLinkKeys, String>?
             get() = hashMapOf(Events.openedLinkKeys.mode to mode.name)
     }
 
     data class TrackingProtectionSettingChanged(val setting: Setting) : Event() {
         enum class Setting { STRICT, STANDARD }
+
         override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
             get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)
     }
@@ -211,6 +223,7 @@ sealed class Event {
 
     data class OpenedApp(val source: Source) : Event() {
         enum class Source { APP_ICON, LINK, CUSTOM_TAB }
+
         override val extras: Map<Events.appOpenedKeys, String>?
             get() = hashMapOf(Events.appOpenedKeys.source to source.name)
     }
@@ -249,6 +262,7 @@ sealed class Event {
 
     data class SearchBarTapped(val source: Source) : Event() {
         enum class Source { HOME, BROWSER }
+
         override val extras: Map<Events.searchBarTappedKeys, String>?
             get() = mapOf(Events.searchBarTappedKeys.source to source.name)
     }
@@ -263,8 +277,11 @@ sealed class Event {
             abstract val engine: SearchEngine
             abstract val isCustom: Boolean
 
-            data class Default(override val engine: SearchEngine, override val isCustom: Boolean) : EngineSource()
-            data class Shortcut(override val engine: SearchEngine, override val isCustom: Boolean) : EngineSource()
+            data class Default(override val engine: SearchEngine, override val isCustom: Boolean) :
+                EngineSource()
+
+            data class Shortcut(override val engine: SearchEngine, override val isCustom: Boolean) :
+                EngineSource()
 
             // https://github.com/mozilla-mobile/fenix/issues/1607
             // Sanitize identifiers for custom search engines.
@@ -285,7 +302,9 @@ sealed class Event {
         }
 
         sealed class EventSource(open val engineSource: EngineSource) {
-            data class Suggestion(override val engineSource: EngineSource) : EventSource(engineSource)
+            data class Suggestion(override val engineSource: EngineSource) :
+                EventSource(engineSource)
+
             data class Action(override val engineSource: EngineSource) : EventSource(engineSource)
             data class Widget(override val engineSource: EngineSource) : EventSource(engineSource)
             data class Shortcut(override val engineSource: EngineSource) : EventSource(engineSource)
@@ -323,6 +342,7 @@ sealed class Event {
 
     data class DarkThemeSelected(val source: Source) : Event() {
         enum class Source { SETTINGS, ONBOARDING }
+
         override val extras: Map<AppTheme.darkThemeSelectedKeys, String>?
             get() = mapOf(AppTheme.darkThemeSelectedKeys.source to source.name)
     }
@@ -332,7 +352,8 @@ sealed class Event {
             get() = mapOf(ContextMenu.itemTappedKeys.named to item)
 
         companion object {
-            fun create(context_item: String) = allowList[context_item]?.let { ContextMenuItemTapped(it) }
+            fun create(context_item: String) =
+                allowList[context_item]?.let { ContextMenuItemTapped(it) }
 
             private val allowList = mapOf(
                 "mozac.feature.contextmenu.open_in_new_tab" to "open_in_new_tab",
@@ -380,6 +401,7 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
         metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
     }
+    Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> Event.AddonsOpenInToolbarMenu
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> Event.CustomTabsClosed
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> Event.CustomTabsActionTapped
 
@@ -408,6 +430,21 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
             Action.STOP -> Event.MediaStopState
             else -> null
         }
+    }
+    Component.SUPPORT_WEBEXTENSIONS to WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED -> {
+        metadata?.get("installed")?.let { installedAddons ->
+            if (installedAddons is List<*>) {
+                Addons.hasInstalledAddons.set(installedAddons.size > 0)
+            }
+        }
+
+        metadata?.get("enabled")?.let { enabledAddons ->
+            if (enabledAddons is List<*>) {
+                Addons.hasEnabledAddons.set(enabledAddons.size > 0)
+            }
+        }
+
+        null
     }
     else -> null
 }
@@ -440,7 +477,8 @@ interface MetricController {
                 ReleaseMetricController(
                     services,
                     isDataTelemetryEnabled,
-                    isMarketingDataTelemetryEnabled)
+                    isMarketingDataTelemetryEnabled
+                )
             } else DebugMetricController()
         }
     }
@@ -480,7 +518,9 @@ private class ReleaseMetricController(
     override fun start(type: MetricServiceType) {
         val isEnabled = isTelemetryEnabled(type)
         val isInitialized = isInitialized(type)
-        if (!isEnabled || isInitialized) { return }
+        if (!isEnabled || isInitialized) {
+            return
+        }
 
         services
             .filter { it.type == type }
@@ -492,7 +532,9 @@ private class ReleaseMetricController(
     override fun stop(type: MetricServiceType) {
         val isEnabled = isTelemetryEnabled(type)
         val isInitialized = isInitialized(type)
-        if (isEnabled || !isInitialized) { return }
+        if (isEnabled || !isInitialized) {
+            return
+        }
 
         services
             .filter { it.type == type }
@@ -507,7 +549,9 @@ private class ReleaseMetricController(
             .forEach {
                 val isEnabled = isTelemetryEnabled(it.type)
                 val isInitialized = isInitialized(it.type)
-                if (!isEnabled || !isInitialized) { return }
+                if (!isEnabled || !isInitialized) {
+                    return
+                }
 
                 it.track(event)
             }

@@ -210,6 +210,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToLocaleSettingsFragment()
             }
             resources.getString(R.string.pref_key_addons) -> {
+                requireContext().metrics.track(Event.AddonsOpenInSettings)
                 SettingsFragmentDirections.actionSettingsFragmentToAddonsFragment()
             }
             resources.getString(R.string.pref_key_make_default_browser) -> {

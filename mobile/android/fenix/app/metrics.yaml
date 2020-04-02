@@ -1934,3 +1934,53 @@ installation:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+
+addons:
+  open_addons_in_settings:
+    type: event
+    description: >
+      A user accessed "Add-ons" from the Settings
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6174
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8318
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  open_addon_in_toolbar_menu:
+    type: event
+    description: >
+      A user interacted with an installed add-on in the toolbar menu
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6174
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8318
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  has_installed_addons:
+    type: boolean
+    description: >
+      Whether or not the user has installed add-ons on the device.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6174
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8318
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  has_enabled_addons:
+    type: boolean
+    description: >
+      Whether or not the user has enabled add-ons on the device.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6174
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/8318
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
