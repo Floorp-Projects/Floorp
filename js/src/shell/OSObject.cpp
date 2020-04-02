@@ -141,8 +141,8 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
     // The docs say it can return EINVAL, but the compiler says it's void
     _splitpath(scriptFilename.get(), nullptr, buffer, nullptr, nullptr);
 #else
-    strncpy(buffer, scriptFilename.get(), PATH_MAX + 1);
-    if (buffer[PATH_MAX] != '\0') {
+    strncpy(buffer, scriptFilename.get(), PATH_MAX);
+    if (buffer[PATH_MAX - 1] != '\0') {
       return nullptr;
     }
 
