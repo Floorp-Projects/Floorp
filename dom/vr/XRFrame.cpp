@@ -60,6 +60,14 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
   float depthNear = (float)renderState->DepthNear();
   float depthFar = (float)renderState->DepthFar();
 
+  const gfx::PointDouble3D& originPosition =
+      aReferenceSpace.GetEffectiveOriginPosition();
+  const gfx::QuaternionDouble& originOrientation =
+      aReferenceSpace.GetEffectiveOriginOrientation();
+
+  gfx::QuaternionDouble invOriginOrientation = originOrientation;
+  invOriginOrientation.Invert();
+
   gfx::VRDisplayClient* display = mSession->GetDisplayClient();
   if (display) {
     // Have a VRDisplayClient
@@ -74,25 +82,38 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
         sensorState.pose.orientation[0], sensorState.pose.orientation[1],
         sensorState.pose.orientation[2], sensorState.pose.orientation[3]);
 
-    const gfx::VRFieldOfView leftFOV =
-        displayInfo.mDisplayState.eyeFOV[gfx::VRDisplayState::Eye_Left];
-    Matrix4x4 leftProjection =
-        leftFOV.ConstructProjectionMatrix(depthNear, depthFar, true);
-    RefPtr<XRView> leftView =
-        new XRView(mParent, XREye::Left,
-                   displayInfo.GetEyeTranslation(gfx::VRDisplayState::Eye_Left),
-                   leftProjection);
-    views.AppendElement(leftView);
+    // Quaternion was inverted for WebVR. We need to invert it here again.
+    // TODO: Remove those extra inverts when WebVR support is disabled.
+    viewerOrientation.Invert();
 
-    const gfx::VRFieldOfView rightFOV =
-        displayInfo.mDisplayState.eyeFOV[gfx::VRDisplayState::Eye_Right];
-    Matrix4x4 rightProjection =
-        rightFOV.ConstructProjectionMatrix(depthNear, depthFar, true);
-    RefPtr<XRView> rightView = new XRView(
-        mParent, XREye::Right,
-        displayInfo.GetEyeTranslation(gfx::VRDisplayState::Eye_Right),
-        rightProjection);
-    views.AppendElement(rightView);
+    viewerPosition = invOriginOrientation.RotatePoint(viewerPosition);
+    viewerPosition -= originPosition;
+    viewerOrientation *= invOriginOrientation;
+
+    gfx::Matrix4x4Double headTransform;
+    headTransform.SetRotationFromQuaternion(viewerOrientation);
+    headTransform.PostTranslate(viewerPosition);
+
+    auto addEye = [&](XREye xrEye, VRDisplayState::Eye eye) {
+      auto offset = displayInfo.GetEyeTranslation(eye);
+      auto eyeFromHead = gfx::Matrix4x4Double::Translation(
+          gfx::PointDouble3D(offset.x, offset.y, offset.z));
+      auto eyeTransform = eyeFromHead * headTransform;
+      gfx::PointDouble3D eyePosition;
+      gfx::QuaternionDouble eyeRotation;
+      gfx::PointDouble3D eyeScale;
+      eyeTransform.Decompose(eyePosition, eyeRotation, eyeScale);
+
+      const gfx::VRFieldOfView fov = displayInfo.mDisplayState.eyeFOV[eye];
+      Matrix4x4 projection =
+          fov.ConstructProjectionMatrix(depthNear, depthFar, true);
+      RefPtr<XRView> view =
+          new XRView(mParent, xrEye, eyePosition, eyeRotation, projection);
+      views.AppendElement(view);
+    };
+
+    addEye(XREye::Left, gfx::VRDisplayState::Eye_Left);
+    addEye(XREye::Right, gfx::VRDisplayState::Eye_Right);
   } else {
     // Without a VRDisplayClient, viewerPosition and orientation should be
     // identity
@@ -101,18 +122,6 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     // TODO (Bug 1618725) - Create XRView for inline sessions without a
     // VRDisplayClient
   }
-
-  const gfx::PointDouble3D& originPosition =
-      aReferenceSpace.GetEffectiveOriginPosition();
-  const gfx::QuaternionDouble& originOrientation =
-      aReferenceSpace.GetEffectiveOriginOrientation();
-
-  gfx::QuaternionDouble invOriginOrientation = originOrientation;
-  invOriginOrientation.Invert();
-
-  viewerPosition = invOriginOrientation.RotatePoint(viewerPosition);
-  viewerPosition -= originPosition;
-  viewerOrientation *= invOriginOrientation;
 
   RefPtr<XRRigidTransform> transform =
       new XRRigidTransform(mParent, viewerPosition, viewerOrientation);

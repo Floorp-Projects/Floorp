@@ -24,7 +24,8 @@ class XRView final : public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRView)
 
   explicit XRView(nsISupports* aParent, const XREye& aEye,
-                  const gfx::Point3D& aPosition,
+                  const gfx::PointDouble3D& aPosition,
+                  const gfx::QuaternionDouble& aOrientation,
                   const gfx::Matrix4x4& aProjectionMatrix);
 
   // WebIDL Boilerplate
@@ -46,7 +47,8 @@ class XRView final : public nsWrapperCache {
 
   nsCOMPtr<nsISupports> mParent;
   XREye mEye;
-  gfx::Point3D mPosition;
+  gfx::PointDouble3D mPosition;
+  gfx::QuaternionDouble mOrientation;
   gfx::Matrix4x4 mProjectionMatrix;
   JS::Heap<JSObject*> mJSProjectionMatrix;
 };
