@@ -76,6 +76,7 @@ class UAWidgetsChild extends JSWindowActorChild {
         prefKeys = [
           "media.videocontrols.picture-in-picture.video-toggle.enabled",
           "media.videocontrols.picture-in-picture.video-toggle.always-show",
+          "media.videocontrols.picture-in-picture.video-toggle.min-video-secs",
         ];
         break;
       case "input":

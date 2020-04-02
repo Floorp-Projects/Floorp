@@ -130,7 +130,11 @@ this.VideoControlsWidget = class {
       return true;
     }
 
-    const MIN_VIDEO_LENGTH = 45; // seconds
+    const MIN_VIDEO_LENGTH =
+      prefs[
+        "media.videocontrols.picture-in-picture.video-toggle.min-video-secs"
+      ];
+
     if (someVideo.duration < MIN_VIDEO_LENGTH) {
       return false;
     }
