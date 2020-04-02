@@ -2787,10 +2787,10 @@ impl TileCacheInstance {
                     if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
                         if let Some(id) = id.take() {
                             frame_state.resource_cache.destroy_compositor_tile(id);
-                            tile.surface = None;
-                            // Invalidate the entire tile to force a redraw.
-                            tile.invalidate(None, InvalidationReason::CompositorKindChanged);
                         }
+                        tile.surface = None;
+                        // Invalidate the entire tile to force a redraw.
+                        tile.invalidate(None, InvalidationReason::CompositorKindChanged);
                     }
                 }
 
