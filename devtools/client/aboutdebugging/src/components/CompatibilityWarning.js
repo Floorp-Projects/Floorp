@@ -26,6 +26,8 @@ const {
 
 const TROUBLESHOOTING_URL =
   "https://developer.mozilla.org/docs/Tools/about:debugging#Troubleshooting";
+const FENNEC_TROUBLESHOOTING_URL =
+  "https://developer.mozilla.org/docs/Tools/about:debugging#Connection_to_Firefox_for_Android_68";
 
 const Types = require("devtools/client/aboutdebugging/src/types/index");
 
@@ -64,18 +66,32 @@ class CompatibilityWarning extends PureComponent {
         statusClassName = "qa-compatibility-warning-too-old-67-debugger";
         localizationId = "about-debugging-browser-version-too-old-67-debugger";
         break;
+      case COMPATIBILITY_STATUS.TOO_OLD_FENNEC:
+        statusClassName = "qa-compatibility-warning-too-old-fennec";
+        localizationId = "about-debugging-browser-version-too-old-fennec";
+        break;
     }
+
+    const troubleshootingUrl =
+      status === COMPATIBILITY_STATUS.TOO_OLD_FENNEC
+        ? FENNEC_TROUBLESHOOTING_URL
+        : TROUBLESHOOTING_URL;
+
+    const messageLevel =
+      status === COMPATIBILITY_STATUS.TOO_OLD_FENNEC
+        ? MESSAGE_LEVEL.ERROR
+        : MESSAGE_LEVEL.WARNING;
 
     return Message(
       {
-        level: MESSAGE_LEVEL.WARNING,
+        level: messageLevel,
         isCloseable: true,
       },
       Localized(
         {
           id: localizationId,
           a: dom.a({
-            href: TROUBLESHOOTING_URL,
+            href: troubleshootingUrl,
             target: "_blank",
           }),
           $localID: localID,
