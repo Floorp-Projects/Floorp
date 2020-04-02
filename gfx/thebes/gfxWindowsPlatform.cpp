@@ -897,36 +897,66 @@ void gfxWindowsPlatform::CheckForContentOnlyDeviceReset() {
 }
 
 nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
-  HDC dc = ::GetDC(nullptr);
-  if (!dc) {
-    return nsTArray<uint8_t>();
+  if (XRE_IsContentProcess()) {
+    // This will be passed in during InitChild so we can avoid sending a
+    // sync message back to the parent during init.
+    const mozilla::gfx::ContentDeviceData* contentDeviceData =
+        GetInitContentDeviceData();
+    if (contentDeviceData) {
+      MOZ_ASSERT(!contentDeviceData->cmsOutputProfileData().IsEmpty());
+      return contentDeviceData->cmsOutputProfileData();
+    }
+
+    // Otherwise we need to ask the parent for the updated color profile
+    mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+    nsTArray<uint8_t> result;
+    Unused << cc->SendGetOutputColorProfileData(&result);
+    return result;
   }
 
-  WCHAR profilePath[MAX_PATH];
-  DWORD profilePathLen = MAX_PATH;
-
-  bool getProfileResult = ::GetICMProfileW(dc, &profilePathLen, profilePath);
-
-  ::ReleaseDC(nullptr, dc);
-
-  if (!getProfileResult) {
-    return nsTArray<uint8_t>();
+  if (!mCachedOutputColorProfile.IsEmpty()) {
+    return nsTArray<uint8_t>(mCachedOutputColorProfile);
   }
 
-  void* mem = nullptr;
-  size_t size = 0;
+  mCachedOutputColorProfile = [&] {
+    nsTArray<uint8_t> prefProfileData = GetPrefCMSOutputProfileData();
+    if (!prefProfileData.IsEmpty()) {
+      return prefProfileData;
+    }
 
-  qcms_data_from_unicode_path(profilePath, &mem, &size);
-  if (!mem) {
-    return nsTArray<uint8_t>();
-  }
+    HDC dc = ::GetDC(nullptr);
+    if (!dc) {
+      return nsTArray<uint8_t>();
+    }
 
-  nsTArray<uint8_t> result;
-  result.AppendElements(static_cast<uint8_t*>(mem), size);
+    WCHAR profilePath[MAX_PATH];
+    DWORD profilePathLen = MAX_PATH;
 
-  free(mem);
+    bool getProfileResult = ::GetICMProfileW(dc, &profilePathLen, profilePath);
 
-  return result;
+    ::ReleaseDC(nullptr, dc);
+
+    if (!getProfileResult) {
+      return nsTArray<uint8_t>();
+    }
+
+    void* mem = nullptr;
+    size_t size = 0;
+
+    qcms_data_from_unicode_path(profilePath, &mem, &size);
+    if (!mem) {
+      return nsTArray<uint8_t>();
+    }
+
+    nsTArray<uint8_t> result;
+    result.AppendElements(static_cast<uint8_t*>(mem), size);
+
+    free(mem);
+
+    return result;
+  }();
+
+  return nsTArray<uint8_t>(mCachedOutputColorProfile);
 }
 
 void gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath,
@@ -1907,6 +1937,9 @@ void gfxWindowsPlatform::ImportContentDeviceData(
     DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ImportDeviceInfo(aData.d3d11());
   }
+
+  // aData->cmsOutputProfileData() will be read during color profile init,
+  // not as part of this import function
 }
 
 void gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut) {
@@ -1923,6 +1956,9 @@ void gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut) {
     DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ExportDeviceInfo(&aOut->d3d11());
   }
+
+  aOut->cmsOutputProfileData() =
+      gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
 }
 
 bool gfxWindowsPlatform::CheckVariationFontSupport() {
