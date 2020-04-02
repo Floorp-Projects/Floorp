@@ -7722,6 +7722,7 @@ bool BytecodeEmitter::emitOptionalTree(
           kind == ParseNodeKind::Function || kind == ParseNodeKind::ClassDecl ||
           kind == ParseNodeKind::RegExpExpr ||
           kind == ParseNodeKind::TemplateStringExpr ||
+          kind == ParseNodeKind::TemplateStringListExpr ||
           kind == ParseNodeKind::RawUndefinedExpr || pn->isInParens();
 
       // https://tc39.es/ecma262/#sec-left-hand-side-expressions
