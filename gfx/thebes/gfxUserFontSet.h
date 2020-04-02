@@ -141,8 +141,7 @@ class gfxUserFontFamily : public gfxFontFamily {
  public:
   friend class gfxUserFontSet;
 
-  explicit gfxUserFontFamily(const nsACString& aName)
-      : gfxFontFamily(aName, FontVisibility::Webfont) {}
+  explicit gfxUserFontFamily(const nsACString& aName) : gfxFontFamily(aName) {}
 
   virtual ~gfxUserFontFamily();
 

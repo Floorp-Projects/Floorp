@@ -115,7 +115,6 @@ using base::SharedMemoryHandle from "base/shared_memory.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
-using FontVisibility from "gfxFontEntry.h";
 using mozilla::dom::MediaControlKeysEvent from "ipc/MediaControlIPC.h";
 using mozilla::dom::ControlledMediaState from "ipc/MediaControlIPC.h";
 using mozilla::dom::MaybeMediaMetadataBase from "mozilla/dom/MediaSessionIPCUtils.h";
@@ -138,7 +137,7 @@ namespace dom {
 // but each platform needs different details so we have platform-specific
 // versions of the SystemFontListEntry type:
 #if defined(ANDROID)
-// Used on Android to pass the list of fonts on the device
+// Used on Android/B2G to pass the list of fonts on the device
 // to the child process
 struct SystemFontListEntry {
     nsCString familyName;
@@ -148,7 +147,6 @@ struct SystemFontListEntry {
     uint32_t  stretchRange;
     uint32_t  styleRange;
     uint8_t   index;
-    FontVisibility visibility;
 };
 #elif defined(XP_MACOSX)
 // Used on Mac OS X to pass the list of font families (not faces)
@@ -157,7 +155,6 @@ struct SystemFontListEntry {
 // record; see gfxMacPlatformFontList.h for values and meaning.
 struct SystemFontListEntry {
     nsCString familyName;
-    FontVisibility visibility;
     uint8_t   entryType;
 };
 #else

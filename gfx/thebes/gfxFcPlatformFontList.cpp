@@ -1355,8 +1355,7 @@ void gfxFcPlatformFontList::AddPatternToFontList(
     aFontFamily =
         static_cast<gfxFontconfigFontFamily*>(mFontFamilies.GetWeak(keyName));
     if (!aFontFamily) {
-      FontVisibility visibility = FontVisibility::Unknown;  // TODO
-      aFontFamily = new gfxFontconfigFontFamily(aFamilyName, visibility);
+      aFontFamily = new gfxFontconfigFontFamily(aFamilyName);
       mFontFamilies.Put(keyName, RefPtr{aFontFamily});
     }
     // Record if the family contains fonts from the app font set
@@ -1608,9 +1607,8 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
         }
         */
 
-        FontVisibility visibility = FontVisibility::Unknown;  // TODO
         families.AppendElement(fontlist::Family::InitData(
-            keyName, aFamilyName, /*index*/ 0, visibility,
+            keyName, aFamilyName, /*index*/ 0, /*hidden*/ false,
             /*bundled*/ aAppFont, /*badUnderline*/ false));
       }
     }
@@ -2252,8 +2250,8 @@ void gfxFcPlatformFontList::CheckFontUpdates(nsITimer* aTimer, void* aThis) {
 }
 
 gfxFontFamily* gfxFcPlatformFontList::CreateFontFamily(
-    const nsACString& aName, FontVisibility aVisibility) const {
-  return new gfxFontconfigFontFamily(aName, aVisibility);
+    const nsACString& aName) const {
+  return new gfxFontconfigFontFamily(aName);
 }
 
 // mapping of moz lang groups ==> default lang

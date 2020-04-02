@@ -86,8 +86,7 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
    * not be able to find it when the shared font list is in use.
    */
   void AppendToFaceList(nsCString& aFaceList, const nsACString& aFamilyName,
-                        const nsACString& aPSName, const nsACString& aFullName,
-                        FontVisibility aVisibility);
+                        const nsACString& aPSName, const nsACString& aFullName);
 
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontListSizes* aSizes) const override;
@@ -112,8 +111,7 @@ class FT2FontFamily final : public gfxFontFamily {
   using FontListEntry = mozilla::dom::SystemFontListEntry;
 
  public:
-  explicit FT2FontFamily(const nsACString& aName, FontVisibility aVisibility)
-      : gfxFontFamily(aName, aVisibility) {}
+  explicit FT2FontFamily(const nsACString& aName) : gfxFontFamily(aName) {}
 
   // Append this family's faces to the IPC fontlist
   void AddFacesToFontList(nsTArray<FontListEntry>* aFontList);
@@ -151,8 +149,7 @@ class gfxFT2FontList final : public gfxPlatformFontList {
         gfxPlatformFontList::PlatformFontList());
   }
 
-  gfxFontFamily* CreateFontFamily(const nsACString& aName,
-                                  FontVisibility aVisibility) const override;
+  gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
   void WillShutdown();
 

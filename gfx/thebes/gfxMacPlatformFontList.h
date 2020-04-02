@@ -112,8 +112,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
     return static_cast<gfxMacPlatformFontList*>(sPlatformFontList);
   }
 
-  gfxFontFamily* CreateFontFamily(const nsACString& aName,
-                                  FontVisibility aVisibility) const override;
+  gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
   static int32_t AppleWeightToCSSWeight(int32_t aAppleWeight);
 
@@ -145,8 +144,9 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   // from chrome to content process.
   enum FontFamilyEntryType {
     kStandardFontFamily = 0,          // a standard installed font family
-    kTextSizeSystemFontFamily = 1,    // name of 'system' font at text sizes
-    kDisplaySizeSystemFontFamily = 2  // 'system' font at display sizes
+    kHiddenSystemFontFamily = 1,      // hidden system family, not exposed to UI
+    kTextSizeSystemFontFamily = 2,    // name of 'system' font at text sizes
+    kDisplaySizeSystemFontFamily = 3  // 'system' font at display sizes
   };
   void ReadSystemFontList(nsTArray<FontFamilyListEntry>* aList);
 
@@ -173,8 +173,6 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   // helper function to lookup in both hidden system fonts and normal fonts
   gfxFontFamily* FindSystemFontFamily(const nsACString& aFamily);
 
-  FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
-
   static void RegisteredFontsChangedNotificationCallback(
       CFNotificationCenterRef center, void* observer, CFStringRef name,
       const void* object, CFDictionaryRef userInfo);
@@ -190,14 +188,14 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
 
   already_AddRefed<FontInfoData> CreateFontInfoData() override;
 
-  // Add the specified family to mFontFamilies.
+  // Add the specified family to mSystemFontFamilies or mFontFamilies.
   // Ideally we'd use NSString* instead of CFStringRef here, but this header
   // file is included in .cpp files, so we can't use objective C classes here.
   // But CFStringRef and NSString* are the same thing anyway (they're
   // toll-free bridged).
   void AddFamily(CFStringRef aFamily);
 
-  void AddFamily(const nsACString& aFamilyName, FontVisibility aVisibility);
+  void AddFamily(const nsACString& aFamilyName, bool aSystemFont);
 
   void ActivateFontsFromDir(nsIFile* aDir);
 
@@ -220,6 +218,10 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
 
   // default font for use with system-wide font fallback
   CTFontRef mDefaultFont;
+
+  // hidden system fonts used within UI elements, there may be a whole set
+  // for different locales (e.g. .Helvetica Neue UI, .SF NS Text)
+  FontFamilyTable mSystemFontFamilies;
 
   // font families that -apple-system maps to
   // Pre-10.11 this was always a single font family, such as Lucida Grande

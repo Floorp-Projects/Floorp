@@ -68,7 +68,6 @@ class nsRefreshDriver;
 class nsIWidget;
 class nsDeviceContext;
 class gfxMissingFontRecorder;
-struct FontMatchingStats;
 
 namespace mozilla {
 class AnimationEventDispatcher;
@@ -835,7 +834,6 @@ class nsPresContext : public nsISupports,
   }
 
   gfxTextPerfMetrics* GetTextPerfMetrics() { return mTextPerf.get(); }
-  FontMatchingStats* GetFontMatchingStats() { return mFontStats.get(); }
 
   bool IsDynamic() {
     return (mType == eContext_PageLayout || mType == eContext_Galley);
@@ -1195,8 +1193,6 @@ class nsPresContext : public nsISupports,
 
   // text performance metrics
   mozilla::UniquePtr<gfxTextPerfMetrics> mTextPerf;
-
-  mozilla::UniquePtr<FontMatchingStats> mFontStats;
 
   mozilla::UniquePtr<gfxMissingFontRecorder> mMissingFonts;
 

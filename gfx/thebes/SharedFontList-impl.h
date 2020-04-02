@@ -34,14 +34,14 @@ namespace fontlist {
 struct AliasData {
   nsTArray<Pointer> mFaces;
   uint32_t mIndex = 0;
-  FontVisibility mVisibility = FontVisibility::Unknown;
+  bool mHidden = false;
   bool mBundled = false;
   bool mBadUnderline = false;
   bool mForceClassic = false;
 
   void InitFromFamily(const Family* aFamily) {
     mIndex = aFamily->Index();
-    mVisibility = aFamily->Visibility();
+    mHidden = aFamily->IsHidden();
     mBundled = aFamily->IsBundled();
     mBadUnderline = aFamily->IsBadUnderlineFamily();
     mForceClassic = aFamily->IsForceClassic();

@@ -5,11 +5,15 @@
 #ifndef SharedFontList_h
 #define SharedFontList_h
 
-#include "gfxFontEntry.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/FontPropertyTypes.h"
 #include <atomic>
 
 class gfxCharacterMap;
 struct gfxFontStyle;
+class gfxFontEntry;
 struct GlobalFontMatch;
 
 namespace mozilla {
@@ -172,8 +176,8 @@ struct Family {
   struct InitData {
     InitData(const nsACString& aKey,   // lookup key (lowercased)
              const nsACString& aName,  // display name
-             uint32_t aIndex = 0,  // [win] index in the system font collection
-             FontVisibility aVisibility = FontVisibility::Unknown,
+             uint32_t aIndex = 0,   // [win] index in the system font collection
+             bool aHidden = false,  // [mac] hidden font (e.g. .SFNSText)?
              bool aBundled = false,       // [win] font was bundled with the app
                                           // rather than system-installed
              bool aBadUnderline = false,  // underline-position in font is bad
@@ -182,20 +186,20 @@ struct Family {
         : mKey(aKey),
           mName(aName),
           mIndex(aIndex),
-          mVisibility(aVisibility),
+          mHidden(aHidden),
           mBundled(aBundled),
           mBadUnderline(aBadUnderline),
           mForceClassic(aForceClassic) {}
     bool operator<(const InitData& aRHS) const { return mKey < aRHS.mKey; }
     bool operator==(const InitData& aRHS) const {
       return mKey == aRHS.mKey && mName == aRHS.mName &&
-             mVisibility == aRHS.mVisibility && mBundled == aRHS.mBundled &&
+             mHidden == aRHS.mHidden && mBundled == aRHS.mBundled &&
              mBadUnderline == aRHS.mBadUnderline;
     }
     const nsCString mKey;
     const nsCString mName;
     uint32_t mIndex;
-    FontVisibility mVisibility;
+    bool mHidden;
     bool mBundled;
     bool mBadUnderline;
     bool mForceClassic;
@@ -242,8 +246,7 @@ struct Family {
     return static_cast<Pointer*>(mFaces.ToPtr(aList));
   }
 
-  FontVisibility Visibility() const { return mVisibility; }
-  bool IsHidden() const { return Visibility() == FontVisibility::Hidden; }
+  bool IsHidden() const { return mIsHidden; }
 
   bool IsBadUnderlineFamily() const { return mIsBadUnderlineFamily; }
   bool IsForceClassic() const { return mIsForceClassic; }
@@ -269,7 +272,7 @@ struct Family {
                           // faces in the family
   Pointer mFaces;         // Pointer to array of |mFaceCount| face pointers
   uint32_t mIndex;        // [win] Top bit set indicates app-bundled font family
-  FontVisibility mVisibility;
+  bool mIsHidden;
   bool mIsBadUnderlineFamily;
   bool mIsForceClassic;
   bool mIsSimple;  // family allows simplified style matching: mFaces contains
