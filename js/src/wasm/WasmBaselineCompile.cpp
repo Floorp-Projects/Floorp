@@ -11785,11 +11785,11 @@ bool BaseCompiler::emitStructNarrow() {
 
   RegPtr rp = popRef();
 
-  // AnyRef -> (ref T) must first unbox; leaves rp or null
+  // AnyRef -> (optref T) must first unbox; leaves rp or null
 
   bool mustUnboxAnyref = inputType.isAnyRef();
 
-  // Dynamic downcast (ref T) -> (ref U), leaves rp or null
+  // Dynamic downcast (optref T) -> (optref U), leaves rp or null
   const StructType& outputStruct =
       env_.types[outputType.refType().typeIndex()].structType();
 
