@@ -344,7 +344,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
                  zoneStats.sweptZoneCount, zoneStats.collectedCompartmentCount,
                  zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
                  double(preTotalHeapBytes) / bytesPerMiB,
-                 counts[COUNT_NEW_CHUNK] - counts[COUNT_DESTROY_CHUNK],
+                 int32_t(counts[COUNT_NEW_CHUNK] - counts[COUNT_DESTROY_CHUNK]),
                  counts[COUNT_NEW_CHUNK] + counts[COUNT_DESTROY_CHUNK]);
   if (!fragments.append(DuplicateString(buffer))) {
     return UniqueChars(nullptr);
