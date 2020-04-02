@@ -392,7 +392,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
    * event whose inputType is "deleteByDrag".
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
 
   /**
@@ -412,7 +412,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    *
    * @ param aString   The string to be set.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   SetTextAsSubAction(const nsAString& aString);
 
   /**
@@ -528,7 +528,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * @param aInsertedLength     Length of the inserted text.
    * @return                    NS_OK or NS_ERROR_EDITOR_DESTROYED.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidInsertText(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult DidInsertText(
       uint32_t aNewLength, uint32_t aInsertedOffset, uint32_t aInsertedLength);
 
  protected:  // edit sub-action handler
@@ -549,7 +549,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * InsertLineFeedCharacterAtSelection() inserts a linefeed character at
    * selection.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   InsertLineFeedCharacterAtSelection();
 
   /**
@@ -581,7 +581,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    *                            EditSubAction::eInsertTextComingFromIME.
    * @param aInsertionString    String to be inserted at selection.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual EditActionResult HandleInsertText(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult HandleInsertText(
       EditSubAction aEditSubAction, const nsAString& aInsertionString);
 
   /**
@@ -592,7 +592,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    *       needs to check if the editor is still available even if this returns
    *       NS_OK.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteSelectionInternal(nsIEditor::EDirection aDirectionAndAmount,
                                 nsIEditor::EStripWrappers aStripWrappers);
 
@@ -602,7 +602,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Always ignored in TextEditor.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers);
 
@@ -621,14 +621,14 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * and `<textarea>.value` to aValue without transaction.  This must be
    * called only when it's not `HTMLEditor` and undo/redo is disabled.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   SetTextWithoutTransaction(const nsAString& aValue);
 
   /**
    * EnsurePaddingBRElementInMultilineEditor() creates a padding `<br>` element
    * at end of multiline text editor.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   EnsurePaddingBRElementInMultilineEditor();
 
   /**
@@ -636,7 +636,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * element (i.e., container becomes the anonymous `<div>` element) if
    * `Selection` is at end of the text node.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult EnsureCaretNotAtEndOfTextNode();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult EnsureCaretNotAtEndOfTextNode();
 
  protected:  // Called by helper classes.
   MOZ_CAN_RUN_SCRIPT virtual void OnStartToHandleTopLevelEditSubAction(
@@ -676,7 +676,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * if it's required in the anonymous `<div>` element and collapse selection
    * at the end if there is no selection ranges.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InitEditorContentAndSelection();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
 
   /**
    * CanEchoPasswordNow() returns true if currently we can echo password.
@@ -695,7 +695,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    *
    * @param aStringToInsert     The string to insert.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   OnInputText(const nsAString& aStringToInsert);
 
   /**
@@ -732,7 +732,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * @param aQuotedText         String to insert.  This will be quoted by ">"
    *                            automatically.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE virtual nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText);
 
   /**
@@ -773,7 +773,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   virtual nsresult PrepareTransferable(nsITransferable** transferable);
 
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertTextFromTransferable(nsITransferable* transferable);
 
   /**
