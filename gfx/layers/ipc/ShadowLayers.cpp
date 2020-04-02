@@ -41,6 +41,7 @@
 #include "nsTArray.h"                      // for AutoTArray, nsTArray, etc
 #include "nsXULAppAPI.h"                   // for XRE_GetProcessType, etc
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/StaticPrefs_layers.h"
 
 namespace mozilla {
 namespace ipc {
