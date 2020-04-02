@@ -8,6 +8,7 @@
 
 #include "AntiTrackingLog.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/dom/Document.h"
 #include "nsIChannel.h"
 #include "nsIPermission.h"
@@ -245,19 +246,21 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   }
 
   int32_t cookieBehavior = cookieJarSettings->GetCookieBehavior();
+
+  bool rejectForeignWithExceptions =
+      net::CookieJarSettings::IsRejectThirdPartyWithExceptions(cookieBehavior);
+
   // We only need to check the storage permission if the cookie behavior is
-  // either BEHAVIOR_REJECT_TRACKER or
-  // BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN. Because ContentBlocking
-  // wouldn't update or check the storage permission if the cookie behavior is
-  // not belongs to these two.
-  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-      cookieBehavior !=
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+  // BEHAVIOR_REJECT_TRACKER, BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN or
+  // BEHAVIOR_REJECT_FOREIGN. Because ContentBlocking wouldn't update or check
+  // the storage permission if the cookie behavior is not belongs to these two.
+  if (!net::CookieJarSettings::IsRejectThirdPartyContexts(cookieBehavior)) {
     return false;
   }
 
   nsCOMPtr<nsIPrincipal> targetPrincipal =
-      (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER)
+      (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+       rejectForeignWithExceptions)
           ? loadInfo->GetTopLevelStorageAreaPrincipal()
           : loadInfo->GetTopLevelPrincipal();
 

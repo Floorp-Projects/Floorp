@@ -23,9 +23,9 @@ interface nsICookieJarSettings : nsISupports
   [infallible] readonly attribute unsigned long cookieBehavior;
 
   /**
-   * Whether our cookie behavior mandates rejecting third-party trackers.
+   * Whether our cookie behavior mandates rejecting third-party contexts.
    */
-  [infallible] readonly attribute boolean rejectThirdPartyTrackers;
+  [infallible] readonly attribute boolean rejectThirdPartyContexts;
 
   [infallible] readonly attribute boolean limitForeignContexts;
 
