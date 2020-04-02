@@ -2576,9 +2576,6 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
             transactionId.mTxnStartTime, transactionId.mRefreshStartTime,
             transactionId.mFwdTime, transactionId.mSceneBuiltTime,
             transactionId.mSkippedComposites, transactionId.mTxnURL));
-
-        wr::RenderThread::Get()->NotifySlowFrame(
-            mApis[wr::RenderRoot::Default]->GetId());
       }
     }
 

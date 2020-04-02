@@ -3020,10 +3020,6 @@ impl Renderer {
         (cpu_profiles, gpu_profiles)
     }
 
-    pub fn notify_slow_frame(&mut self) {
-        self.slow_frame_indicator.changed();
-    }
-
     /// Reset the current partial present state. This forces the entire framebuffer
     /// to be refreshed next time `render` is called.
     pub fn force_redraw(&mut self) {
@@ -3341,6 +3337,13 @@ impl Renderer {
         if device_size.is_some() {
             let ns = current_time - self.last_time;
             self.profile_counters.frame_time.set(ns);
+        }
+
+        let frame_cpu_time_ns = self.backend_profile_counters.total_time.get()
+            + profile_timers.cpu_time.get();
+        let frame_cpu_time_ms = frame_cpu_time_ns as f64 / 1000000.0;
+        if frame_cpu_time_ms > 16.0 {
+            self.slow_frame_indicator.changed();
         }
 
         if self.max_recorded_profiles > 0 {

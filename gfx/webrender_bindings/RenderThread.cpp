@@ -323,7 +323,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
 
   bool render = false;
   PendingFrameInfo frame;
-  bool hadSlowFrame;
   {  // scope lock
     auto windows = mWindowInfos.Lock();
     auto it = windows->find(AsUint64(aWindowId));
@@ -344,7 +343,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     render = frameInfo.mFrameNeedsRender;
 
     frame = frameInfo;
-    hadSlowFrame = info->mHadSlowFrame;
   }
 
   // It is for ensuring that PrepareForUse() is called before
@@ -354,7 +352,7 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
   UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, render,
                   /* aReadbackSize */ Nothing(),
                   /* aReadbackFormat */ Nothing(),
-                  /* aReadbackBuffer */ Nothing(), hadSlowFrame);
+                  /* aReadbackBuffer */ Nothing());
 
   {  // scope lock
     auto windows = mWindowInfos.Lock();
@@ -453,7 +451,7 @@ void RenderThread::UpdateAndRender(
     const TimeStamp& aStartTime, bool aRender,
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
-    const Maybe<Range<uint8_t>>& aReadbackBuffer, bool aHadSlowFrame) {
+    const Maybe<Range<uint8_t>>& aReadbackBuffer) {
   AUTO_PROFILER_TRACING_MARKER("Paint", "Composite", GRAPHICS);
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
@@ -476,7 +474,7 @@ void RenderThread::UpdateAndRender(
   RendererStats stats = {0};
   if (aRender) {
     latestFrameId = renderer->UpdateAndRender(
-        aReadbackSize, aReadbackFormat, aReadbackBuffer, aHadSlowFrame, &stats);
+        aReadbackSize, aReadbackFormat, aReadbackBuffer, &stats);
   } else {
     renderer->Update();
   }
@@ -618,17 +616,6 @@ void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {
   WindowInfo* info = it->second;
   MOZ_RELEASE_ASSERT(info->mPendingFrameBuild >= 1);
   info->mPendingFrameBuild--;
-}
-
-void RenderThread::NotifySlowFrame(wr::WindowId aWindowId) {
-  auto windows = mWindowInfos.Lock();
-  auto it = windows->find(AsUint64(aWindowId));
-  if (it == windows->end()) {
-    MOZ_ASSERT(false);
-    return;
-  }
-  WindowInfo* info = it->second;
-  info->mHadSlowFrame = true;
 }
 
 void RenderThread::RegisterExternalImage(

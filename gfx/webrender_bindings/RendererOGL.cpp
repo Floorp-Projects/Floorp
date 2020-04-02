@@ -107,7 +107,7 @@ static void DoWebRenderDisableNativeCompositor(
 RenderedFrameId RendererOGL::UpdateAndRender(
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
-    const Maybe<Range<uint8_t>>& aReadbackBuffer, bool aHadSlowFrame,
+    const Maybe<Range<uint8_t>>& aReadbackBuffer,
     RendererStats* aOutStats) {
   mozilla::widget::WidgetRenderingContext widgetContext;
 
@@ -151,7 +151,7 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   nsTArray<DeviceIntRect> dirtyRects;
-  if (!wr_renderer_render(mRenderer, size.width, size.height, aHadSlowFrame,
+  if (!wr_renderer_render(mRenderer, size.width, size.height,
                           aOutStats, &dirtyRects)) {
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);
