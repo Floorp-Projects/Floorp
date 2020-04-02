@@ -1,3 +1,5 @@
+@import '../../../styles/OnboardingImages';
+
 .onboardingMessage {
   height: 340px;
   text-align: center;
@@ -131,73 +133,5 @@
   @media (min-width: $break-point-widest) {
     width: 230px;
     background-size: auto 140px;
-  }
-
-  &.addons {
-    background-image: url('#{$image-path}illustration-addons@2x.png');
-  }
-
-  &.privatebrowsing {
-    background-image: url('#{$image-path}illustration-privatebrowsing@2x.png');
-  }
-
-  &.screenshots {
-    background-image: url('#{$image-path}illustration-screenshots@2x.png');
-  }
-
-  &.gift {
-    background-image: url('#{$image-path}illustration-gift@2x.png');
-  }
-
-  &.sync {
-    background-image: url('#{$image-path}illustration-sync@2x.png');
-  }
-
-  &.devices {
-    background-image: url('#{$image-path}trailhead/card-illo-devices.svg');
-  }
-
-  &.fbcont {
-    background-image: url('#{$image-path}trailhead/card-illo-fbcont.svg');
-  }
-
-  &.import {
-    background-image: url('#{$image-path}trailhead/card-illo-import.svg');
-  }
-
-  &.ffmonitor {
-    background-image: url('#{$image-path}trailhead/card-illo-ffmonitor.svg');
-  }
-
-  &.ffsend {
-    background-image: url('#{$image-path}trailhead/card-illo-ffsend.svg');
-  }
-
-  &.lockwise {
-    background-image: url('#{$image-path}trailhead/card-illo-lockwise.svg');
-  }
-
-  &.mobile {
-    background-image: url('#{$image-path}trailhead/card-illo-mobile.svg');
-  }
-
-  &.pledge {
-    background-image: url('#{$image-path}trailhead/card-illo-pledge.svg');
-  }
-
-  &.pocket {
-    background-image: url('#{$image-path}trailhead/card-illo-pocket.svg');
-  }
-
-  &.private {
-    background-image: url('#{$image-path}trailhead/card-illo-private.svg');
-  }
-
-  &.sendtab {
-    background-image: url('#{$image-path}trailhead/card-illo-sendtab.svg');
-  }
-
-  &.tracking {
-    background-image: url('#{$image-path}trailhead/card-illo-tracking.svg');
   }
 }

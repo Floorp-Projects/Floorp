@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @import '../styles/normalize';
+@import '../styles/OnboardingImages';
 
 $break-point-medium: 610px;
 $break-point-large: 866px;
@@ -241,21 +242,4 @@ body {
   &:active {
     background: var(--welcome-button-background-active-color);
   }
-}
-
-// Card image assets
-.onboardingMessageImage.devices {
-  background-image: url('../data/content/assets/trailhead/card-illo-devices.svg');
-}
-
-.onboardingMessageImage.ffmonitor {
-  background-image: url('../data/content/assets/trailhead/card-illo-ffmonitor.svg');
-}
-
-.onboardingMessageImage.private {
-  background-image: url('../data/content/assets/trailhead/card-illo-private.svg');
-}
-
-.onboardingMessageImage.mobile {
-  background-image: url('../data/content/assets/trailhead/card-illo-mobile.svg');
 }
