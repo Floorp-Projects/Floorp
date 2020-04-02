@@ -915,7 +915,7 @@ impl RenderBackend {
                                     profile_counters.scene_changed = true;
                                 }
 
-                                profile_counters.ipc.set(
+                                profile_counters.txn.set(
                                     timings.builder_start_time_ns,
                                     timings.builder_end_time_ns,
                                     timings.send_time_ns,

@@ -3349,9 +3349,9 @@ impl Renderer {
         }
 
         if self.backend_profile_counters.scene_changed {
-            let txn_time_ns = self.backend_profile_counters.ipc.total_send_time.get()
-                + self.backend_profile_counters.ipc.display_list_build_time.get()
-                + self.backend_profile_counters.ipc.scene_build_time.get();
+            let txn_time_ns = self.backend_profile_counters.txn.total_send_time.get()
+                + self.backend_profile_counters.txn.display_list_build_time.get()
+                + self.backend_profile_counters.txn.scene_build_time.get();
             let txn_time_ms = txn_time_ns as f64 / 1000000.0;
             if txn_time_ms > 100.0 {
                 self.slow_txn_indicator.changed();
