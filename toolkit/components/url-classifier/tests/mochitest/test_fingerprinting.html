@@ -13,16 +13,16 @@
 
 var tests = [
   // All disabled.
-  { config: [ false, false ], loadExpected: true },
+  { config: [ false, false ], imgLoadExpected: true, scriptLoadExpected: true },
 
   // Just whitelisted.
-  { config: [ false, true ], loadExpected: true },
+  { config: [ false, true ], imgLoadExpected: true, scriptLoadExpected: true },
 
   // Just blacklisted.
-  { config: [ true, false ], loadExpected: false },
+  { config: [ true, false ], imgLoadExpected: true, scriptLoadExpected: false },
 
   // whitelist + blacklist: whitelist wins
-  { config: [ true, true ], loadExpected: true },
+  { config: [ true, true ], imgLoadExpected: true, scriptLoadExpected: true },
 ];
 
 function prefValue(value, what) {
@@ -44,7 +44,7 @@ async function runTest(test) {
 
   info("Testing: " + JSON.stringify(test.config) + "\n");
 
-  // Let's load an image with a random query string, just to avoid network cache.
+  // Let's load an image with a random query string to avoid network cache.
   let result = await new Promise(resolve => {
     let image = new Image();
     image.src = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?" + Math.random();
@@ -52,9 +52,9 @@ async function runTest(test) {
     image.onerror = _ => resolve(false);
   });
 
-  is(result, test.loadExpected, "The loading happened correctly");
+  is(result, test.imgLoadExpected, "Image loading happened correctly");
 
-  // Let's load an image with a random query string, just to avoid network cache.
+  // Let's load an image with a random query string to avoid network cache.
   result = await new Promise(resolve => {
     let image = new Image();
     image.src = "http://tracking.example.org/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?" + Math.random();
@@ -62,7 +62,37 @@ async function runTest(test) {
     image.onerror = _ => resolve(false);
   });
 
-  is(result, test.loadExpected, "The loading happened correctly (by table)");
+  is(result, test.imgLoadExpected, "Image loading happened correctly (by table)");
+
+  // Let's load a script with a random query string to avoid network cache.
+  result = await new Promise(resolve => {
+    let script = document.createElement("script");
+    script.setAttribute(
+      "src",
+      "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?" +
+      Math.random()
+    );
+    script.onload = _ => resolve(true);
+    script.onerror = _ => resolve(false);
+    document.body.appendChild(script);
+  });
+
+  is(result, test.scriptLoadExpected, "Script loading happened correctly");
+
+  // Let's load a script with a random query string to avoid network cache.
+  result = await new Promise(resolve => {
+    let script = document.createElement("script");
+    script.setAttribute(
+      "src",
+      "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?" +
+      Math.random()
+    );
+    script.onload = _ => resolve(true);
+    script.onerror = _ => resolve(false);
+    document.body.appendChild(script);
+  });
+
+  is(result, test.scriptLoadExpected, "Script loading happened correctly");
 }
 
 async function runTests() {
