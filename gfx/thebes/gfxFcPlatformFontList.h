@@ -308,6 +308,17 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
 
   FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
+  enum class DistroID : int8_t {
+    Unknown = 0,
+    Ubuntu = 1,
+    Fedora = 2,
+    // To be extended with any distros that ship a useful base set of fonts
+    // that we want to explicitly support.
+  };
+  DistroID GetDistroID() const;  // -> DistroID::Unknown if we can't tell
+
+  FontVisibility GetVisibilityForFamily(const nsACString& aName) const;
+
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
                                   FontVisibility aVisibility) const override;
 
