@@ -114,5 +114,66 @@ Matrix4x4 MatrixDouble::operator*(const Matrix4x4& aMatrix) const {
   return resultMatrix;
 }
 
+// Intersect the polygon given by aPoints with the half space induced by
+// aPlaneNormal and return the resulting polygon. The returned points are
+// stored in aDestBuffer, and its meaningful subspan is returned.
+template <typename F>
+Span<Point4DTyped<UnknownUnits, F>> IntersectPolygon(
+    Span<Point4DTyped<UnknownUnits, F>> aPoints,
+    const Point4DTyped<UnknownUnits, F>& aPlaneNormal,
+    Span<Point4DTyped<UnknownUnits, F>> aDestBuffer) {
+  if (aPoints.Length() < 3 || aDestBuffer.Length() < 3) {
+    return {};
+  }
+
+  size_t nextIndex = 0;  // aDestBuffer[nextIndex] is the next emitted point.
+
+  // Iterate over the polygon edges. In each iteration the current edge
+  // is the edge from *prevPoint to point. If the two end points lie on
+  // different sides of the plane, we have an intersection. Otherwise,
+  // the edge is either completely "inside" the half-space created by
+  // the clipping plane, and we add curPoint, or it is completely
+  // "outside", and we discard curPoint. This loop can create duplicated
+  // points in the polygon.
+  const auto* prevPoint = &aPoints[aPoints.Length() - 1];
+  F prevDot = aPlaneNormal.DotProduct(*prevPoint);
+  for (const auto& curPoint : aPoints) {
+    F curDot = aPlaneNormal.DotProduct(curPoint);
+
+    if ((curDot >= 0.0) != (prevDot >= 0.0)) {
+      // An intersection with the clipping plane has been detected.
+      // Interpolate to find the intersecting curPoint and emit it.
+      F t = -prevDot / (curDot - prevDot);
+      aDestBuffer[nextIndex++] = curPoint * t + *prevPoint * (1.0 - t);
+      if (nextIndex >= aDestBuffer.Length()) {
+        break;
+      }
+    }
+
+    if (curDot >= 0.0) {
+      // Emit any source points that are on the positive side of the
+      // clipping plane.
+      aDestBuffer[nextIndex++] = curPoint;
+      if (nextIndex >= aDestBuffer.Length()) {
+        break;
+      }
+    }
+
+    prevPoint = &curPoint;
+    prevDot = curDot;
+  }
+
+  return aDestBuffer.To(nextIndex);
+}
+
+template Span<Point4DTyped<UnknownUnits, Float>> IntersectPolygon(
+    Span<Point4DTyped<UnknownUnits, Float>> aPoints,
+    const Point4DTyped<UnknownUnits, Float>& aPlaneNormal,
+    Span<Point4DTyped<UnknownUnits, Float>> aDestBuffer);
+template Span<Point4DTyped<UnknownUnits, Double>> IntersectPolygon(
+    Span<Point4DTyped<UnknownUnits, Double>> aPoints,
+    const Point4DTyped<UnknownUnits, Double>& aPlaneNormal,
+    Span<Point4DTyped<UnknownUnits, Double>> aDestBuffer);
+
 }  // namespace gfx
 }  // namespace mozilla
