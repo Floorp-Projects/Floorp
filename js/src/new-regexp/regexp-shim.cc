@@ -153,6 +153,14 @@ std::unique_ptr<char[]> String::ToCString() {
   return std::unique_ptr<char[]>();
 }
 
+bool Isolate::init() {
+  regexpStack_ = js_new<RegExpStack>();
+  if (!regexpStack_) {
+    return false;
+  }
+  return true;
+}
+
 byte* Isolate::top_of_regexp_stack() const {
   return reinterpret_cast<byte*>(regexpStack_->memory_top_address_address());
 }

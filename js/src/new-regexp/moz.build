@@ -30,6 +30,7 @@ UNIFIED_SOURCES += [
     'regexp-parser.cc',
     'regexp-shim.cc',
     'regexp-stack.cc',
+    'RegExpAPI.cpp',
     'util/unicode.cc'
 ]
 

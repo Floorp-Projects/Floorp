@@ -37,9 +37,8 @@ struct FrameData {
 
 class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
  public:
-  SMRegExpMacroAssembler(JSContext* cx, Isolate* isolate,
-                         js::jit::StackMacroAssembler& masm, Zone* zone,
-                         Mode mode, uint32_t num_capture_registers);
+  SMRegExpMacroAssembler(JSContext* cx, js::jit::StackMacroAssembler& masm,
+                         Zone* zone, Mode mode, uint32_t num_capture_registers);
   virtual ~SMRegExpMacroAssembler() {} // Nothing to do here
 
   virtual int stack_limit_slack();

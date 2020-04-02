@@ -38,11 +38,11 @@ using js::jit::Register;
 using js::jit::Registers;
 using js::jit::StackMacroAssembler;
 
-SMRegExpMacroAssembler::SMRegExpMacroAssembler(JSContext* cx, Isolate* isolate,
+SMRegExpMacroAssembler::SMRegExpMacroAssembler(JSContext* cx,
                                                StackMacroAssembler& masm,
                                                Zone* zone, Mode mode,
                                                uint32_t num_capture_registers)
-    : NativeRegExpMacroAssembler(isolate, zone),
+    : NativeRegExpMacroAssembler(cx->isolate.ref(), zone),
       cx_(cx),
       masm_(masm),
       mode_(mode),
