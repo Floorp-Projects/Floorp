@@ -160,7 +160,7 @@ bool RangeAnalysis::addBetaNodes() {
 
   for (PostorderIterator i(graph_.poBegin()); i != graph_.poEnd(); i++) {
     MBasicBlock* block = *i;
-    JitSpew(JitSpew_Range, "Looking at block %d", block->id());
+    JitSpew(JitSpew_Range, "Looking at block %u", block->id());
 
     BranchDirection branch_dir;
     MTest* test = block->immediateDominatorBranch(&branch_dir);
@@ -226,14 +226,14 @@ bool RangeAnalysis::addBetaNodes() {
             Range::NewInt32Range(alloc(), JSVAL_INT_MIN, JSVAL_INT_MAX - 1));
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(smaller, beta, block);
-        JitSpew(JitSpew_Range, "Adding beta node for smaller %d",
+        JitSpew(JitSpew_Range, "Adding beta node for smaller %u",
                 smaller->id());
         beta = MBeta::New(
             alloc(), greater,
             Range::NewInt32Range(alloc(), JSVAL_INT_MIN + 1, JSVAL_INT_MAX));
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(greater, beta, block);
-        JitSpew(JitSpew_Range, "Adding beta node for greater %d",
+        JitSpew(JitSpew_Range, "Adding beta node for greater %u",
                 greater->id());
       }
       continue;
@@ -318,7 +318,7 @@ bool RangeAnalysis::addBetaNodes() {
     if (JitSpewEnabled(JitSpew_Range)) {
       JitSpewHeader(JitSpew_Range);
       Fprinter& out = JitSpewPrinter();
-      out.printf("Adding beta node for %d with range ", val->id());
+      out.printf("Adding beta node for %u with range ", val->id());
       comp.dump(out);
     }
 
@@ -343,7 +343,7 @@ bool RangeAnalysis::removeBetaNodes() {
       MDefinition* def = *iter++;
       if (def->isBeta()) {
         MDefinition* op = def->getOperand(0);
-        JitSpew(JitSpew_Range, "Removing beta node %d for %d", def->id(),
+        JitSpew(JitSpew_Range, "Removing beta node %u for %u", def->id(),
                 op->id());
         def->justReplaceAllUsesWith(op);
         block->discardDef(def);
@@ -1263,7 +1263,7 @@ void MPhi::computeRange(TempAllocator& alloc) {
   Range* range = nullptr;
   for (size_t i = 0, e = numOperands(); i < e; i++) {
     if (getOperand(i)->block()->unreachable()) {
-      JitSpew(JitSpew_Range, "Ignoring unreachable input %d",
+      JitSpew(JitSpew_Range, "Ignoring unreachable input %u",
               getOperand(i)->id());
       continue;
     }
@@ -1292,7 +1292,7 @@ void MBeta::computeRange(TempAllocator& alloc) {
   Range opRange(getOperand(0));
   Range* range = Range::intersect(alloc, &opRange, comparison_, &emptyRange);
   if (emptyRange) {
-    JitSpew(JitSpew_Range, "Marking block for inst %d unreachable", id());
+    JitSpew(JitSpew_Range, "Marking block for inst %u unreachable", id());
     block()->setUnreachableUnchecked();
   } else {
     setRange(range);
@@ -2225,7 +2225,7 @@ void RangeAnalysis::analyzeLoopPhi(LoopIterationBound* loopBound, MPhi* phi) {
         SymbolicBound::New(alloc(), loopBound, limitSum));
   }
 
-  JitSpew(JitSpew_Range, "added symbolic range on %d", phi->id());
+  JitSpew(JitSpew_Range, "added symbolic range on %u", phi->id());
   SpewRange(phi);
 }
 
@@ -2366,7 +2366,7 @@ bool RangeAnalysis::analyze() {
       }
 
       def->computeRange(alloc());
-      JitSpew(JitSpew_Range, "computing range on %d", def->id());
+      JitSpew(JitSpew_Range, "computing range on %u", def->id());
       SpewRange(def);
     }
 
@@ -3509,7 +3509,7 @@ bool RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode) {
 
     test->replaceOperand(0, constant);
     JitSpew(JitSpew_Range,
-            "Update condition of %d to reflect unreachable branches.",
+            "Update condition of %u to reflect unreachable branches.",
             test->id());
 
     *shouldRemoveDeadCode = true;
