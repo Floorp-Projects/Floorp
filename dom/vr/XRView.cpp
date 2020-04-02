@@ -30,11 +30,13 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRView, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRView, Release)
 
 XRView::XRView(nsISupports* aParent, const XREye& aEye,
-               const gfx::Point3D& aPosition,
+               const gfx::PointDouble3D& aPosition,
+               const gfx::QuaternionDouble& aOrientation,
                const gfx::Matrix4x4& aProjectionMatrix)
     : mParent(aParent),
       mEye(aEye),
       mPosition(aPosition),
+      mOrientation(aOrientation),
       mProjectionMatrix(aProjectionMatrix),
       mJSProjectionMatrix(nullptr) {
   mozilla::HoldJSObjects(this);
@@ -56,10 +58,8 @@ void XRView::GetProjectionMatrix(JSContext* aCx,
 }
 
 already_AddRefed<XRRigidTransform> XRView::GetTransform(ErrorResult& aRv) {
-  // TODO(kearwood) - Implement eye orientation component of rigid transform
-  RefPtr<XRRigidTransform> transform = new XRRigidTransform(
-      mParent, gfx::PointDouble3D(mPosition.x, mPosition.y, mPosition.z),
-      gfx::QuaternionDouble(0.0f, 0.0f, 0.0f, 1.0f));
+  RefPtr<XRRigidTransform> transform =
+      new XRRigidTransform(mParent, mPosition, mOrientation);
   return transform.forget();
   ;
 }
