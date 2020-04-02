@@ -288,7 +288,7 @@ BrowserTabList.prototype._getChildren = function(window) {
   });
 };
 
-BrowserTabList.prototype.getList = async function(browserActorOptions) {
+BrowserTabList.prototype.getList = async function() {
   const topAppWindow = Services.wm.getMostRecentWindow(
     DevToolsServer.chromeWindowType
   );
@@ -307,10 +307,7 @@ BrowserTabList.prototype.getList = async function(browserActorOptions) {
   for (const browser of this._getBrowsers()) {
     const selected = browser === selectedBrowser;
     try {
-      const actor = await this._getActorForBrowser(
-        browser,
-        browserActorOptions
-      );
+      const actor = await this._getActorForBrowser(browser);
       // Set the 'selected' properties on all actors correctly.
       actor.selected = selected;
       actors.push(actor);
@@ -335,13 +332,7 @@ BrowserTabList.prototype.getList = async function(browserActorOptions) {
   return actors;
 };
 
-/**
- * @param browserActorOptions see options argument of TabDescriptorActor constructor.
- */
-BrowserTabList.prototype._getActorForBrowser = async function(
-  browser,
-  browserActorOptions
-) {
+BrowserTabList.prototype._getActorForBrowser = async function(browser) {
   // Do we have an existing actor for this browser? If not, create one.
   let actor = this._actorByBrowser.get(browser);
   if (actor) {
@@ -350,20 +341,13 @@ BrowserTabList.prototype._getActorForBrowser = async function(
     return actor;
   }
 
-  actor = new TabDescriptorActor(
-    this._connection,
-    browser,
-    browserActorOptions
-  );
+  actor = new TabDescriptorActor(this._connection, browser);
   this._actorByBrowser.set(browser, actor);
   this._checkListening();
   return actor;
 };
 
-BrowserTabList.prototype.getTab = function(
-  { outerWindowID, tabId },
-  browserActorOptions
-) {
+BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
   if (typeof outerWindowID == "number") {
     // First look for in-process frames with this ID
     const window = Services.wm.getOuterWindowWithId(outerWindowID);
@@ -377,14 +361,14 @@ BrowserTabList.prototype.getTab = function(
     if (window) {
       const iframe = window.windowUtils.containerElement;
       if (iframe) {
-        return this._getActorForBrowser(iframe, browserActorOptions);
+        return this._getActorForBrowser(iframe);
       }
     }
     // Then also look on registered <xul:browsers> when using outerWindowID for
     // OOP tabs
     for (const browser of this._getBrowsers()) {
       if (browser.outerWindowID == outerWindowID) {
-        return this._getActorForBrowser(browser, browserActorOptions);
+        return this._getActorForBrowser(browser);
       }
     }
     return Promise.reject({
@@ -398,7 +382,7 @@ BrowserTabList.prototype.getTab = function(
         browser.frameLoader?.remoteTab &&
         browser.frameLoader.remoteTab.tabId === tabId
       ) {
-        return this._getActorForBrowser(browser, browserActorOptions);
+        return this._getActorForBrowser(browser);
       }
     }
     return Promise.reject({
@@ -412,7 +396,7 @@ BrowserTabList.prototype.getTab = function(
   );
   if (topAppWindow) {
     const selectedBrowser = this._getSelectedBrowser(topAppWindow);
-    return this._getActorForBrowser(selectedBrowser, browserActorOptions);
+    return this._getActorForBrowser(selectedBrowser);
   }
   return Promise.reject({
     error: "noTab",

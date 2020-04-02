@@ -278,7 +278,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
    * would trigger any lazy tabs to be loaded, greatly increasing resource usage.  Avoid
    * this method whenever possible.
    */
-  listTabs: async function(options) {
+  listTabs: async function() {
     const tabList = this._parameters.tabList;
     if (!tabList) {
       throw {
@@ -298,7 +298,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     const newActorPool = new Pool(this.conn);
     let selected;
 
-    const tabDescriptorActors = await tabList.getList(options);
+    const tabDescriptorActors = await tabList.getList();
     for (const tabDescriptorActor of tabDescriptorActors) {
       if (tabDescriptorActor.selected) {
         const index = tabDescriptorActors.findIndex(
@@ -330,7 +330,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return reply;
   },
 
-  getTab: async function(options) {
+  getTab: async function({ outerWindowID, tabId }) {
     const tabList = this._parameters.tabList;
     if (!tabList) {
       throw {
@@ -344,7 +344,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     let descriptorActor;
     try {
-      descriptorActor = await tabList.getTab(options);
+      descriptorActor = await tabList.getTab({ outerWindowID, tabId });
     } catch (error) {
       if (error.error) {
         // Pipe expected errors as-is to the client
