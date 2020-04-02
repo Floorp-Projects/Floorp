@@ -432,6 +432,10 @@ recommended-addon-card .addon-description:not(:empty) {
   font-size: small;
 }
 
+.theme-recommendation {
+  text-align: start;
+}
+
 addon-details {
   color: var(--in-content-deemphasized-text);
 }
