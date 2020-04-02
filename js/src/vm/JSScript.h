@@ -85,21 +85,6 @@ class ModuleSharedContext;
 class ScriptStencil;
 }  // namespace frontend
 
-namespace detail {
-
-// Do not call this directly! It is exposed for the friend declarations in
-// this file.
-JSScript* CopyScript(JSContext* cx, HandleScript src,
-                     HandleObject functionOrGlobal,
-                     HandleScriptSourceObject sourceObject,
-                     MutableHandle<GCVector<Scope*>> scopes);
-
-}  // namespace detail
-
-}  // namespace js
-
-namespace js {
-
 class ScriptCounts {
  public:
   typedef mozilla::Vector<PCCounts, 0, SystemAllocPolicy> PCCountsVector;
@@ -2093,6 +2078,10 @@ setterLevel:                                                                  \
   }
 
   RuntimeScriptData* sharedData() const { return sharedData_; }
+  void initSharedData(RuntimeScriptData* data) {
+    MOZ_ASSERT(sharedData_ == nullptr);
+    sharedData_ = data;
+  }
   void freeSharedData() { sharedData_ = nullptr; }
 
   // NOTE: Script only has bytecode if JSScript::fullyInitFromStencil completes
@@ -2212,11 +2201,6 @@ class JSScript : public js::BaseScript {
   friend bool js::PrivateScriptData::InitFromStencil(
       JSContext* cx, js::HandleScript script,
       const js::frontend::ScriptStencil& stencil);
-
-  friend JSScript* js::detail::CopyScript(
-      JSContext* cx, js::HandleScript src, js::HandleObject functionOrGlobal,
-      js::HandleScriptSourceObject sourceObject,
-      js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
   using js::BaseScript::BaseScript;
