@@ -26,8 +26,6 @@ add_task(async function test_async_distribution() {
     "Should have got the distribution engine"
   );
 
-  Assert.ok(engine.isAppProvided, "Should be shown as an app-provided engine");
-
   Assert.equal(
     engine.wrappedJSObject._isBuiltin,
     true,
