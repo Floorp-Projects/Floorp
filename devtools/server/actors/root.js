@@ -344,7 +344,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     let descriptorActor;
     try {
-      descriptorActor = await tabList.getTab(options, { forceUnzombify: true });
+      descriptorActor = await tabList.getTab(options);
     } catch (error) {
       if (error.error) {
         // Pipe expected errors as-is to the client
