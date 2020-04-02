@@ -77,6 +77,8 @@ class UrlClassifierCommon final {
       const nsTArray<nsCString>& aList,
       const std::vector<ClassificationData>& aData, uint32_t aDefaultFlag);
 
+  static bool IsPassiveContent(nsIChannel* aChannel);
+
  private:
   static uint32_t TableToClassificationFlag(
       const nsACString& aTable, const std::vector<ClassificationData>& aData);
