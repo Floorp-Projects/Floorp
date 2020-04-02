@@ -72,6 +72,12 @@ import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.RunWhenReadyQueue
 
+/**
+ * The main activity of the application. The application is primarily a single Activity (this one)
+ * with fragments switching out to display different views. The most important views shown here are the:
+ * - home screen
+ * - browser screen
+ */
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : LocaleAwareAppCompatActivity() {
 
