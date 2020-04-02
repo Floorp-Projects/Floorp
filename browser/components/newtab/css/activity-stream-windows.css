@@ -3864,6 +3864,57 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   .submissionStatus .submitStatusTitle {
     font-size: 20px; }
 
+.onboardingMessageImage.addons {
+  background-image: url("../data/content/assets/illustration-addons@2x.png"); }
+
+.onboardingMessageImage.privatebrowsing {
+  background-image: url("../data/content/assets/illustration-privatebrowsing@2x.png"); }
+
+.onboardingMessageImage.screenshots {
+  background-image: url("../data/content/assets/illustration-screenshots@2x.png"); }
+
+.onboardingMessageImage.gift {
+  background-image: url("../data/content/assets/illustration-gift@2x.png"); }
+
+.onboardingMessageImage.sync {
+  background-image: url("../data/content/assets/illustration-sync@2x.png"); }
+
+.onboardingMessageImage.devices {
+  background-image: url("../data/content/assets/trailhead/card-illo-devices.svg"); }
+
+.onboardingMessageImage.fbcont {
+  background-image: url("../data/content/assets/trailhead/card-illo-fbcont.svg"); }
+
+.onboardingMessageImage.import {
+  background-image: url("../data/content/assets/trailhead/card-illo-import.svg"); }
+
+.onboardingMessageImage.ffmonitor {
+  background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
+
+.onboardingMessageImage.ffsend {
+  background-image: url("../data/content/assets/trailhead/card-illo-ffsend.svg"); }
+
+.onboardingMessageImage.lockwise {
+  background-image: url("../data/content/assets/trailhead/card-illo-lockwise.svg"); }
+
+.onboardingMessageImage.mobile {
+  background-image: url("../data/content/assets/trailhead/card-illo-mobile.svg"); }
+
+.onboardingMessageImage.pledge {
+  background-image: url("../data/content/assets/trailhead/card-illo-pledge.svg"); }
+
+.onboardingMessageImage.pocket {
+  background-image: url("../data/content/assets/trailhead/card-illo-pocket.svg"); }
+
+.onboardingMessageImage.private {
+  background-image: url("../data/content/assets/trailhead/card-illo-private.svg"); }
+
+.onboardingMessageImage.sendtab {
+  background-image: url("../data/content/assets/trailhead/card-illo-sendtab.svg"); }
+
+.onboardingMessageImage.tracking {
+  background-image: url("../data/content/assets/trailhead/card-illo-tracking.svg"); }
+
 .onboardingMessage {
   height: 340px;
   text-align: center;
@@ -3959,40 +4010,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     .onboardingMessageImage {
       width: 230px;
       background-size: auto 140px; } }
-  .onboardingMessageImage.addons {
-    background-image: url("../data/content/assets/illustration-addons@2x.png"); }
-  .onboardingMessageImage.privatebrowsing {
-    background-image: url("../data/content/assets/illustration-privatebrowsing@2x.png"); }
-  .onboardingMessageImage.screenshots {
-    background-image: url("../data/content/assets/illustration-screenshots@2x.png"); }
-  .onboardingMessageImage.gift {
-    background-image: url("../data/content/assets/illustration-gift@2x.png"); }
-  .onboardingMessageImage.sync {
-    background-image: url("../data/content/assets/illustration-sync@2x.png"); }
-  .onboardingMessageImage.devices {
-    background-image: url("../data/content/assets/trailhead/card-illo-devices.svg"); }
-  .onboardingMessageImage.fbcont {
-    background-image: url("../data/content/assets/trailhead/card-illo-fbcont.svg"); }
-  .onboardingMessageImage.import {
-    background-image: url("../data/content/assets/trailhead/card-illo-import.svg"); }
-  .onboardingMessageImage.ffmonitor {
-    background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.svg"); }
-  .onboardingMessageImage.ffsend {
-    background-image: url("../data/content/assets/trailhead/card-illo-ffsend.svg"); }
-  .onboardingMessageImage.lockwise {
-    background-image: url("../data/content/assets/trailhead/card-illo-lockwise.svg"); }
-  .onboardingMessageImage.mobile {
-    background-image: url("../data/content/assets/trailhead/card-illo-mobile.svg"); }
-  .onboardingMessageImage.pledge {
-    background-image: url("../data/content/assets/trailhead/card-illo-pledge.svg"); }
-  .onboardingMessageImage.pocket {
-    background-image: url("../data/content/assets/trailhead/card-illo-pocket.svg"); }
-  .onboardingMessageImage.private {
-    background-image: url("../data/content/assets/trailhead/card-illo-private.svg"); }
-  .onboardingMessageImage.sendtab {
-    background-image: url("../data/content/assets/trailhead/card-illo-sendtab.svg"); }
-  .onboardingMessageImage.tracking {
-    background-image: url("../data/content/assets/trailhead/card-illo-tracking.svg"); }
 
 .EOYSnippetForm {
   margin: 10px 0 8px;

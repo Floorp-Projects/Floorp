@@ -48,9 +48,145 @@ const TEST_REFERENCE_RECIPE = {
   ],
 };
 
+const PERSONAL_DATA_PROMISE_CARD = {
+  id: "TRAILHEAD_CARD_12",
+  content: {
+    title: { string_id: "onboarding-personal-data-promise-title" },
+    text: { string_id: "onboarding-personal-data-promise-text" },
+    icon: "pledge",
+    primary_button: {
+      label: { string_id: "onboarding-personal-data-promise-button" },
+      action: {
+        type: "OPEN_URL",
+        data: {
+          args: "https://www.mozilla.org/firefox/privacy/",
+          where: "tabshifted",
+        },
+      },
+    },
+  },
+};
+
+const BROWSE_PRIVATELY_CARD = {
+  content: {
+    title: {
+      string_id: "onboarding-browse-privately-title",
+    },
+    text: {
+      string_id: "onboarding-browse-privately-text",
+    },
+    icon: "private",
+    primary_button: {
+      label: {
+        string_id: "onboarding-browse-privately-button",
+      },
+      action: {
+        type: "OPEN_PRIVATE_BROWSER_WINDOW",
+      },
+    },
+  },
+  id: "TRAILHEAD_CARD_4",
+};
+
+const FX_MONITOR_CARD = {
+  content: {
+    title: {
+      string_id: "onboarding-firefox-monitor-title",
+    },
+    text: {
+      string_id: "onboarding-firefox-monitor-text2",
+    },
+    icon: "ffmonitor",
+    primary_button: {
+      label: {
+        string_id: "onboarding-firefox-monitor-button",
+      },
+      action: {
+        type: "OPEN_URL",
+        data: {
+          args: "https://monitor.firefox.com/",
+          where: "tabshifted",
+        },
+      },
+    },
+  },
+  id: "TRAILHEAD_CARD_3",
+};
+
+const SYNC_CARD = {
+  content: {
+    title: {
+      string_id: "onboarding-data-sync-title",
+    },
+    text: {
+      string_id: "onboarding-data-sync-text2",
+    },
+    icon: "devices",
+    primary_button: {
+      label: {
+        string_id: "onboarding-data-sync-button2",
+      },
+      action: {
+        type: "OPEN_URL",
+        addFlowParams: true,
+        data: {
+          args:
+            "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead",
+          where: "tabshifted",
+        },
+      },
+    },
+  },
+  id: "TRAILHEAD_CARD_2",
+};
+
+const PULL_FACTOR_PRIVACY_RECIPE = {
+  slug: "aw_pull_factor_privacy", // experiment id
+  branches: [
+    {
+      slug: "control",
+      ratio: 1,
+      value: {},
+    },
+    {
+      slug: "variant_1", // branch id
+      ratio: 1,
+      value: {
+        title: "Welcome to Firefox. Fast, safe, private.",
+        cards: [
+          PERSONAL_DATA_PROMISE_CARD,
+          FX_MONITOR_CARD,
+          BROWSE_PRIVATELY_CARD,
+        ],
+      },
+    },
+    {
+      slug: "variant_2",
+      ratio: 1,
+      value: {
+        title: "Welcome to Firefox",
+        cards: [
+          PERSONAL_DATA_PROMISE_CARD,
+          FX_MONITOR_CARD,
+          BROWSE_PRIVATELY_CARD,
+        ],
+      },
+    },
+    {
+      slug: "variant_3",
+      ratio: 1,
+      value: {
+        title: "Welcome to Firefox. Fast, safe, private.",
+        cards: [SYNC_CARD, FX_MONITOR_CARD, BROWSE_PRIVATELY_CARD],
+      },
+    },
+  ],
+};
+
 const ExperimentAPI = {
   _RECIPES: [
     TEST_REFERENCE_RECIPE,
+    PULL_FACTOR_PRIVACY_RECIPE,
     // Add more recipes below
   ],
 
