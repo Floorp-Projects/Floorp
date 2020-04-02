@@ -858,17 +858,11 @@ impl RenderBackend {
                     content_size,
                 });
 
-                // Note: this isn't quite right as auxiliary values will be
-                // pulled out somewhere in the prim_store, but aux values are
-                // really simple and cheap to access, so it's not a big deal.
-                let display_list_consumed_time = precise_time_ns();
-
                 ipc_profile_counters.set(
                     builder_start_time,
                     builder_finish_time,
                     send_start_time,
                     display_list_received_time,
-                    display_list_consumed_time,
                     display_list_len,
                 );
             }
