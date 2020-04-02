@@ -15,11 +15,12 @@
 #include "mozilla/layers/ImageClient.h"        // for ImageClient
 #include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptor, etc
 #include "mozilla/layers/TextureClient.h"      // for BufferTextureClient, etc
-#include "mozilla/layers/ImageBridgeChild.h"   // for ImageBridgeChild
-#include "mozilla/mozalloc.h"                  // for operator delete, etc
-#include "nsDebug.h"                           // for NS_WARNING, NS_ASSERTION
-#include "nsISupportsImpl.h"                   // for Image::AddRef, etc
-#include "nsRect.h"                            // for mozilla::gfx::IntRect
+#include "mozilla/layers/TextureClientRecycleAllocator.h"  // for ITextureClientAllocationHelper
+#include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
+#include "mozilla/mozalloc.h"                 // for operator delete, etc
+#include "nsDebug.h"                          // for NS_WARNING, NS_ASSERTION
+#include "nsISupportsImpl.h"                  // for Image::AddRef, etc
+#include "nsRect.h"                           // for mozilla::gfx::IntRect
 
 // Just big enough for a 1080p RGBA32 frame
 #define MAX_FRAME_SIZE (16 * 1024 * 1024)
