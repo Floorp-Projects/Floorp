@@ -19,7 +19,6 @@
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "nsGkAtoms.h"
 #include "nsITimer.h"
 #include "nsStubDocumentObserver.h"

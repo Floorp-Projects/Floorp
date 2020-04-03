@@ -87,7 +87,7 @@ nsFrameMessageManager::nsFrameMessageManager(MessageManagerCallback* aCallback,
   NS_ASSERTION(!mIsBroadcaster || !mCallback,
                "Broadcasters cannot have callbacks!");
   if (mOwnsCallback) {
-    mOwnedCallback = aCallback;
+    mOwnedCallback = WrapUnique(aCallback);
   }
 }
 
@@ -837,7 +837,7 @@ void nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback) {
   if (aCallback && mCallback != aCallback) {
     mCallback = aCallback;
     if (mOwnsCallback) {
-      mOwnedCallback = aCallback;
+      mOwnedCallback = WrapUnique(aCallback);
     }
   }
 }

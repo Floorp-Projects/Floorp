@@ -10,7 +10,6 @@
 #include "nsIMessageManager.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsAtom.h"
@@ -28,6 +27,7 @@
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
@@ -334,7 +334,7 @@ class nsFrameMessageManager : public nsIMessageSender {
   bool mClosed;  // true if we can no longer send messages
   bool mDisconnected;
   mozilla::dom::ipc::MessageManagerCallback* mCallback;
-  nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
+  mozilla::UniquePtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
   nsTArray<nsString> mPendingScripts;
   nsTArray<bool> mPendingScriptsGlobalStates;
   JS::Heap<JS::Value> mInitialProcessData;
