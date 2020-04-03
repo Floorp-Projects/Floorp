@@ -591,17 +591,40 @@ add_task(async function testAvailableUpdates() {
 
   let win = await loadInitialView("extension");
   let doc = win.document;
+  let updatesMessage = doc.getElementById("updates-message");
   let categoryUtils = new CategoryUtilities(win.managerWindow);
 
   let availableCat = categoryUtils.get("available-updates");
 
   ok(availableCat.hidden, "Available updates is hidden");
   is(availableCat.badgeCount, 0, "There are no updates");
+  ok(updatesMessage, "There is an updates message");
+  is_element_hidden(updatesMessage, "The message is hidden");
+  ok(!updatesMessage.message.textContent, "The message is empty");
+  ok(!updatesMessage.button.textContent, "The button is empty");
 
   // Check for all updates.
   let updatesFound = TestUtils.topicObserved("EM-update-check-finished");
   doc.querySelector('#page-options [action="check-for-updates"]').click();
+
+  is_element_visible(updatesMessage, "The message is visible");
+  ok(!updatesMessage.message.textContent, "The message is empty");
+  ok(updatesMessage.button.hidden, "The view updates button is hidden");
+
+  // Make sure the message gets populated by fluent.
+  await TestUtils.waitForCondition(
+    () => updatesMessage.message.textContent,
+    "wait for message text"
+  );
+
   await updatesFound;
+
+  // The button should be visible, and should get some text from fluent.
+  ok(!updatesMessage.button.hidden, "The view updates button is visible");
+  await TestUtils.waitForCondition(
+    () => updatesMessage.button.textContent,
+    "wait for button text"
+  );
 
   // Wait for the available updates count to finalize, it's async.
   await BrowserTestUtils.waitForCondition(() => availableCat.badgeCount == 3);
