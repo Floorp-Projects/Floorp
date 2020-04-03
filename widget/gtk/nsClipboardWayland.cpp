@@ -89,13 +89,19 @@ GdkAtom* DataOffer::GetTargets(int* aTargetNum) {
 bool DataOffer::HasTarget(const char* aMimeType) {
   int length = mTargetMIMETypes.Length();
   for (int32_t j = 0; j < length; j++) {
-    if (mTargetMIMETypes[j] == gdk_atom_intern(aMimeType, FALSE)) return true;
+    if (mTargetMIMETypes[j] == gdk_atom_intern(aMimeType, FALSE)) {
+      LOGCLIP(("DataOffer::HasTarget() we have mime %s\n", aMimeType));
+      return true;
+    }
   }
+  LOGCLIP(("DataOffer::HasTarget() missing mime %s\n", aMimeType));
   return false;
 }
 
 char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
                          uint32_t* aContentLength) {
+  LOGCLIP(("DataOffer::GetData() mime %s\n", aMimeType));
+
   int pipe_fd[2];
   if (pipe(pipe_fd) == -1) return nullptr;
 
@@ -131,6 +137,7 @@ char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
   }
   // Quit for poll error() and timeout
   if (pollReturn <= 0) {
+    NS_WARNING("DataOffer::RequestDataTransfer() poll timeout!");
     close(pipe_fd[0]);
     return nullptr;
   }
@@ -165,6 +172,7 @@ char* DataOffer::GetData(wl_display* aDisplay, const char* aMimeType,
   g_io_channel_unref(channel);
   close(pipe_fd[0]);
 
+  LOGCLIP(("  Got clipboard data length %d\n", *aContentLength));
   return clipboardData;
 }
 
@@ -743,7 +751,8 @@ const char* nsRetrievalContextWayland::GetClipboardData(
   NS_ASSERTION(mClipboardData == nullptr && mClipboardDataLength == 0,
                "Looks like we're leaking clipboard data here!");
 
-  LOGCLIP(("nsRetrievalContextWayland::GetClipboardData\n"));
+  LOGCLIP(("nsRetrievalContextWayland::GetClipboardData [%p] mime %s\n", this,
+           aMimeType));
 
   /* If actual clipboard data is owned by us we don't need to go
    * through Wayland but we ask Gtk+ to directly call data
@@ -752,12 +761,14 @@ const char* nsRetrievalContextWayland::GetClipboardData(
    */
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
   if (gdk_selection_owner_get(selection)) {
+    LOGCLIP(("  Internal clipboard content\n"));
     mClipboardRequestNumber++;
     gtk_clipboard_request_contents(
         gtk_clipboard_get(selection), gdk_atom_intern(aMimeType, FALSE),
         wayland_clipboard_contents_received,
         new FastTrackClipboard(mClipboardRequestNumber, this));
   } else {
+    LOGCLIP(("  Remote clipboard content\n"));
     const auto& dataOffer =
         (selection == GDK_SELECTION_PRIMARY) ? mPrimaryOffer : mClipboardOffer;
     if (!dataOffer) {
@@ -778,7 +789,7 @@ const char* nsRetrievalContextWayland::GetClipboardData(
 
 const char* nsRetrievalContextWayland::GetClipboardText(
     int32_t aWhichClipboard) {
-  LOGCLIP(("nsRetrievalContextWayland::GetClipboardText\n"));
+  LOGCLIP(("nsRetrievalContextWayland::GetClipboardText [%p]\n", this));
 
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
   const auto& dataOffer =
@@ -796,7 +807,7 @@ const char* nsRetrievalContextWayland::GetClipboardText(
 
 void nsRetrievalContextWayland::ReleaseClipboardData(
     const char* aClipboardData) {
-  LOGCLIP(("nsRetrievalContextWayland::ReleaseClipboardData\n"));
+  LOGCLIP(("nsRetrievalContextWayland::ReleaseClipboardData [%p]\n", this));
 
   NS_ASSERTION(aClipboardData == mClipboardData,
                "Releasing unknown clipboard data!");
