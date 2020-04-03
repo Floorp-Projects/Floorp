@@ -100,7 +100,7 @@ enum CheckboxValue {
 
 - (int)isChecked {
   // check if we're checked or in a mixed state
-  uint64_t state = [self state];
+  uint64_t state = [self stateWithMask:(states::CHECKED | states::PRESSED | states::MIXED)];
   if (state & (states::CHECKED | states::PRESSED)) {
     return kChecked;
   }

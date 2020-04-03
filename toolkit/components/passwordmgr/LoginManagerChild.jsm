@@ -232,7 +232,7 @@ const observer = {
         break;
       }
 
-      // Used to watch for changes to fields filled with generated passwords.
+      // Used to watch for changes to username and password fields.
       case "change": {
         let formLikeRoot = FormLikeFactory.findRootForField(aEvent.target);
         if (!docState.fieldModificationsByRootElement.get(formLikeRoot)) {
@@ -2256,10 +2256,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * element into form.
    *
    * @param {HTMLInputElement} aField
-   *                           A form field into form.
+   *                           A form field
    * @return {Array} [usernameField, newPasswordField, oldPasswordField]
    *
-   * More detail of these values is same as _getFormFields.
+   * Details of these values are the same as _getFormFields.
    */
   getUserNameAndPasswordFields(aField) {
     let noResult = [null, null, null];
@@ -2314,23 +2314,30 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     ) {
       return null;
     }
+    let { hasBeenTypePassword } = aField;
 
-    let [usernameField, newPasswordField] = this.getUserNameAndPasswordFields(
+    // This array provides labels that correspond to the return values from
+    // `getUserNameAndPasswordFields` so we can know which one aField is.
+    const LOGIN_FIELD_ORDER = ["username", "new-password", "current-password"];
+    let usernameAndPasswordFields = this.getUserNameAndPasswordFields(aField);
+    let fieldNameHint;
+    let indexOfFieldInUsernameAndPasswordFields = usernameAndPasswordFields.indexOf(
       aField
     );
-
-    // If we are not verifying a password field, we want
-    // to use aField as the username field.
-    if (!aField.hasBeenTypePassword) {
-      usernameField = aField;
+    if (indexOfFieldInUsernameAndPasswordFields == -1) {
+      fieldNameHint = hasBeenTypePassword ? "current-password" : "username";
+    } else {
+      fieldNameHint =
+        LOGIN_FIELD_ORDER[indexOfFieldInUsernameAndPasswordFields];
     }
+    let [, newPasswordField] = usernameAndPasswordFields;
 
     return {
-      usernameField: {
-        found: !!usernameField,
-        disabled:
-          usernameField && (usernameField.disabled || usernameField.readOnly),
+      activeField: {
+        disabled: aField.disabled || aField.readOnly,
+        fieldNameHint,
       },
+      // `passwordField` may be the same as `activeField`.
       passwordField: {
         found: !!newPasswordField,
         disabled:

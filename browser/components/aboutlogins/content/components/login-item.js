@@ -117,11 +117,7 @@ export default class LoginItem extends HTMLElement {
   }
 
   focus() {
-    if (!this._breachAlert.hidden) {
-      this._breachAlertLink.focus();
-    } else if (!this._vulnerableAlert.hidden) {
-      this._vulnerableAlertLink.focus();
-    } else if (!this._editButton.disabled) {
+    if (!this._editButton.disabled) {
       this._editButton.focus();
     } else if (!this._deleteButton.disabled) {
       this._deleteButton.focus();

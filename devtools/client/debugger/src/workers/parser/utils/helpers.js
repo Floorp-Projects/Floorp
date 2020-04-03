@@ -123,7 +123,7 @@ export function getVariables(dec: Node) {
     // e.g. const [, a] = arr
     // e.g. const [{a, b }] = 2
     return dec.id.elements
-      .filter(element => element)
+      .filter(Boolean)
       .map(element => ({
         name: t.isAssignmentPattern(element)
           ? element.left.name

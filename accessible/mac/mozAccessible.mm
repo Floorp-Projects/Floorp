@@ -137,7 +137,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   // as well as expired elements.
 
   return [[self role] isEqualToString:NSAccessibilityUnknownRole] &&
-         ([self state] & states::FOCUSABLE);
+         [self stateWithMask:states::FOCUSABLE];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -245,16 +245,55 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+static const uint64_t kCachedStates = states::CHECKED | states::PRESSED | states::MIXED |
+                                      states::EXPANDED | states::CURRENT | states::SELECTED;
+static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
+
 - (uint64_t)state {
+  uint64_t state = 0;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    return accWrap->State();
+    state = accWrap->State();
   }
 
   if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    return proxy->State();
+    state = proxy->State();
   }
 
-  return 0;
+  if (!(mCachedState & kCacheInitialized)) {
+    mCachedState = state & kCachedStates;
+    mCachedState |= kCacheInitialized;
+  }
+
+  return state;
+}
+
+- (uint64_t)stateWithMask:(uint64_t)mask {
+  if ((mask & kCachedStates) == mask && (mCachedState & kCacheInitialized) != 0) {
+    return mCachedState & mask;
+  }
+
+  return [self state] & mask;
+}
+
+- (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
+  if ((state & kCachedStates) == 0) {
+    return;
+  }
+
+  if (!(mCachedState & kCacheInitialized)) {
+    [self state];
+    return;
+  }
+
+  if (enabled) {
+    mCachedState |= state;
+  } else {
+    mCachedState &= ~state;
+  }
+}
+
+- (void)invalidateState {
+  mCachedState = 0;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
@@ -271,7 +310,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) return [self children];
   if ([attribute isEqualToString:NSAccessibilityExpandedAttribute]) {
-    return [NSNumber numberWithBool:([self state] & states::EXPANDED) != 0];
+    return [NSNumber numberWithBool:[self stateWithMask:states::EXPANDED] != 0];
   }
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) return [self parent];
 
@@ -285,11 +324,15 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   if ([attribute isEqualToString:NSAccessibilityEnabledAttribute])
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
-    return [NSNumber numberWithBool:([self state] & states::HASPOPUP) != 0];
+    return [NSNumber numberWithBool:[self stateWithMask:states::HASPOPUP] != 0];
   }
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self value];
   if ([attribute isEqualToString:NSAccessibilityARIACurrentAttribute]) {
-    return utils::GetAccAttr(self, "current");
+    if ([self stateWithMask:states::CURRENT]) {
+      return utils::GetAccAttr(self, "current");
+    } else {
+      return nil;
+    }
   }
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return [self roleDescription];
@@ -618,6 +661,8 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     } else if (proxy) {
       proxy->DoAction(0);
     }
+    // Activating accessible may alter its state.
+    [self invalidateState];
   }
 }
 
@@ -986,6 +1031,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
     case roles::TOGGLE_BUTTON:
       return @"AXToggle";
 
+    case roles::PAGETAB:
+      return @"AXTabButton";
+
     default:
       break;
   }
@@ -1108,7 +1156,7 @@ struct RoleDescrComparator {
 - (NSString*)orientation {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  uint64_t state = [self state];
+  uint64_t state = [self stateWithMask:(states::HORIZONTAL | states::VERTICAL)];
 
   if (state & states::HORIZONTAL) {
     return NSAccessibilityHorizontalOrientationValue;
@@ -1141,7 +1189,7 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)canBeFocused {
-  return (([self state] & states::FOCUSABLE) != 0);
+  return [self stateWithMask:states::FOCUSABLE] != 0;
 }
 
 - (BOOL)focus {
@@ -1156,7 +1204,7 @@ struct RoleDescrComparator {
 }
 
 - (BOOL)isEnabled {
-  return (([self state] & states::UNAVAILABLE) == 0);
+  return [self stateWithMask:states::UNAVAILABLE] == 0;
 }
 
 - (void)firePlatformEvent:(uint32_t)eventType {
@@ -1243,6 +1291,8 @@ struct RoleDescrComparator {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [self invalidateChildren];
+
+  [self invalidateState];
 
   mGeckoAccessible = 0;
 

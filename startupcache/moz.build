@@ -17,7 +17,18 @@ EXPORTS.mozilla.scache += [
 
 UNIFIED_SOURCES += [
     'StartupCache.cpp',
+    'StartupCacheInfo.cpp',
     'StartupCacheUtils.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
+XPIDL_MODULE = 'startupcache'
+
+XPIDL_SOURCES += [
+    'nsIStartupCacheInfo.idl',
 ]
 
 FINAL_LIBRARY = 'xul'
