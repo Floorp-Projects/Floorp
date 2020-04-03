@@ -15,7 +15,6 @@
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Observer.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
 #include "WindowIdentifier.h"
 
 using namespace mozilla;

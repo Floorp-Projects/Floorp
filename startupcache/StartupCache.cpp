@@ -15,7 +15,6 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/ScopeExit.h"
 
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"

@@ -12,7 +12,6 @@
 // Interfaces Needed
 #include "AppWindow.h"
 #include "nsStringFwd.h"
-#include "nsAutoPtr.h"
 #include "nsIRemoteTab.h"
 #include "mozilla/Attributes.h"
 
