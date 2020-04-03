@@ -372,6 +372,11 @@ var ExtensionsUI = {
       await pending;
     }
 
+    // Make sure the tab is the active tab in the window.
+    if (window.gBrowser.selectedBrowser !== browser) {
+      return false;
+    }
+
     let promise = new Promise(resolve => {
       function eventCallback(topic) {
         let doc = this.browser.ownerDocument;
