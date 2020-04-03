@@ -563,7 +563,7 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   handleBlock(msg) {
-    if (msg.bundled) {
+    if (msg.bundled && msg.template !== "onboarding") {
       // If we are blocking a message that belongs to a bundle, block all other messages that are bundled of that same template
       let bundle = this.findOtherBundledMessagesOfSameTemplate(msg.template);
       return () => ASRouterUtils.blockBundle(bundle);
@@ -572,7 +572,7 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   handleUnblock(msg) {
-    if (msg.bundled) {
+    if (msg.bundled && msg.template !== "onboarding") {
       // If we are unblocking a message that belongs to a bundle, unblock all other messages that are bundled of that same template
       let bundle = this.findOtherBundledMessagesOfSameTemplate(msg.template);
       return () => ASRouterUtils.unblockBundle(bundle);
