@@ -2014,10 +2014,6 @@ NS_IMETHODIMP HTMLEditor::GetParagraphState(bool* aMixed,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (NS_WARN_IF(IsSelectionRangeContainerNotContent())) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult error;
   ParagraphStateAtSelection paragraphState(*this, error);
   if (error.Failed()) {

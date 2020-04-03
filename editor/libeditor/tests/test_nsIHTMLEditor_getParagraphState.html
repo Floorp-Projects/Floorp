@@ -1,0 +1,156 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsIHTMLEditor.getParagraphState()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = window.getSelection();
+  let tag, range, mixed = {};
+
+  editor.focus();
+  editor.blur();
+  selection.removeAllRanges();
+
+  try {
+    tag = getHTMLEditor().getParagraphState(mixed);
+    ok(false, "nsIHTMLEditor.getParagraphState() should throw exception when there is no selection range");
+  } catch (e) {
+    ok(true, "nsIHTMLEditor.getParagraphState() should throw exception when there is no selection range");
+  }
+
+  range = document.createRange();
+  range.setStart(document, 0);
+  selection.addRange(range);
+  tag = getHTMLEditor().getParagraphState(mixed);
+  is(tag, "x", "nsIHTMLEditor.getParagraphState() should return \"x\" when selection range starts from document node");
+  is(mixed.value, false, "nsIHTMLEditor.getParagraphState() should return false for mixed state when selection range starts from document node");
+
+  editor.focus();
+  selection.collapse(editor, 0);
+  tag = getHTMLEditor().getParagraphState(mixed);
+  is(tag, "x", "nsIHTMLEditor.getParagraphState() should return \"x\" when the editing host is empty");
+  is(mixed.value, false, "nsIHTMLEditor.getParagraphState() should return false for mixed state when the editing host is empty");
+
+  editor.innerHTML = "foo";
+  selection.collapse(editor.firstChild, 0);
+  tag = getHTMLEditor().getParagraphState(mixed);
+  is(tag, "", "nsIHTMLEditor.getParagraphState() should return \"\" when the editing host has only text node");
+  is(mixed.value, false, "nsIHTMLEditor.getParagraphState() should return false for mixed state when the editing host has only text node");
+
+  for (let test of [
+    {tag: "p",
+     expected: {tag: "p", tagIfEmpty: "p"}},
+    {tag: "pre",
+     expected: {tag: "pre", tagIfEmpty: "pre"}},
+    {tag: "h1",
+     expected: {tag: "h1", tagIfEmpty: "h1"}},
+    {tag: "h2",
+     expected: {tag: "h2", tagIfEmpty: "h2"}},
+    {tag: "h3",
+     expected: {tag: "h3", tagIfEmpty: "h3"}},
+    {tag: "h4",
+     expected: {tag: "h4", tagIfEmpty: "h4"}},
+    {tag: "h5",
+     expected: {tag: "h5", tagIfEmpty: "h5"}},
+    {tag: "h6",
+     expected: {tag: "h6", tagIfEmpty: "h6"}},
+    {tag: "address",
+     expected: {tag: "address", tagIfEmpty: "address"}},
+    {tag: "span",
+     expected: {tag: "", tagIfEmpty: ""}},
+    {tag: "b",
+     expected: {tag: "", tagIfEmpty: ""}},
+    {tag: "i",
+     expected: {tag: "", tagIfEmpty: ""}},
+    {tag: "em",
+     expected: {tag: "", tagIfEmpty: ""}},
+    {tag: "div",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "section",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "article",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "header",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "main",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "footer",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "aside",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "blockquote",
+     expected: {tag: "", tagIfEmpty: "x"}},
+    {tag: "form",
+     expected: {tag: "", tagIfEmpty: "x"}},
+  ]) {
+    editor.innerHTML = `<${test.tag}></${test.tag}>`;
+    selection.collapse(editor.firstChild, 0);
+    tag = getHTMLEditor().getParagraphState(mixed);
+    is(tag, test.expected.tagIfEmpty, `nsIHTMLEditor.getParagraphState() should return "${test.expected.tagIfEmpty}" when the editing host has an empty <${test.tag}>`);
+    is(mixed.value, false, `nsIHTMLEditor.getParagraphState() should return false for mixed state when the editing host has an empty <${test.tag}>`);
+
+    editor.innerHTML = `<${test.tag}>foo</${test.tag}>`;
+    selection.collapse(editor.firstChild.firstChild, 0);
+    tag = getHTMLEditor().getParagraphState(mixed);
+    is(tag, test.expected.tag, `nsIHTMLEditor.getParagraphState() should return "${test.expected.tag}" when the editing host has a <${test.tag}> which has a text node`);
+    is(mixed.value, false, `nsIHTMLEditor.getParagraphState() should return false for mixed state when the editing host has a <${test.tag}> which has a text node`);
+
+    editor.innerHTML = `<${test.tag}><span>foo</span></${test.tag}>`;
+    selection.collapse(editor.firstChild.firstChild.firstChild, 0);
+    tag = getHTMLEditor().getParagraphState(mixed);
+    is(tag, test.expected.tag, `nsIHTMLEditor.getParagraphState() should return "${test.expected.tag}" when the editing host has a <${test.tag}> which has a <span>`);
+    is(mixed.value, false, `nsIHTMLEditor.getParagraphState() should return false for mixed state when the editing host has a <${test.tag}> which has a <span>`);
+
+    editor.innerHTML = `<${test.tag}>foo</${test.tag}>`;
+    selection.collapse(editor.firstChild, 1);
+    tag = getHTMLEditor().getParagraphState(mixed);
+    is(tag, test.expected.tag, `nsIHTMLEditor.getParagraphState() should return "${test.expected.tag}" when the editing host has a <${test.tag}> which has a text node (selection collapsed at end of the element)`);
+    is(mixed.value, false, `nsIHTMLEditor.getParagraphState() should return false for mixed state when the editing host has a <${test.tag}> which has a text node (selection collapsed at end of the element)`);
+  }
+
+  editor.innerHTML = "<main><h1>header1</h1><section><h2>header2</h2><article><h3>header3</h3><p>paragraph</p><pre>preformat</pre></article></section></main>";
+
+  selection.setBaseAndExtent(document.querySelector("[contenteditable] h1").firstChild, 0,
+                             document.querySelector("[contenteditable] h2").firstChild, 0);
+  tag = getHTMLEditor().getParagraphState(mixed);
+  is(tag, "h2", "nsIHTMLEditor.getParagraphState() should return \"h1\" when between <h1> and <h2> is selected");
+  is(mixed.value, true, "nsIHTMLEditor.getParagraphState() should return true for mixed state when between <h1> and <h2> is selected");
+
+  selection.setBaseAndExtent(document.querySelector("[contenteditable] h1").firstChild, 0,
+                             document.querySelector("[contenteditable] h3").firstChild, 0);
+  tag = getHTMLEditor().getParagraphState(mixed);
+  is(tag, "h3", "nsIHTMLEditor.getParagraphState() should return \"h3\" when between <h1> and <h3> is selected (whole of <h2> is also selected)");
+  is(mixed.value, true, "nsIHTMLEditor.getParagraphState() should return true for mixed state when between <h1> and <h3> is selected (whole of <h2> is also selected)");
+
+  selection.setBaseAndExtent(document.querySelector("[contenteditable] p").firstChild, 0,
+                             document.querySelector("[contenteditable] pre").firstChild, 0);
+  tag = getHTMLEditor().getParagraphState(mixed);
+  is(tag, "pre", "nsIHTMLEditor.getParagraphState() should return \"pre\" when between <p> and <pre> is selected");
+  is(mixed.value, true, "nsIHTMLEditor.getParagraphState() should return true for mixed state when between <p> and <pre> is selected");
+
+  SimpleTest.finish();
+});
+
+function getHTMLEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsIHTMLEditor);
+}
+
+</script>
+</body>
+
+</html>
