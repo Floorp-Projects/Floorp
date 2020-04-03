@@ -228,35 +228,33 @@ def fixStackTraces(inputFilename, isZipped, opener):
         def fix(line): return fixModule.fixSymbols(line, jsonMode=True)
 
     else:
-        fix = None
+        return
 
-    if fix:
-        # Fix stacks, writing output to a temporary file, and then
-        # overwrite the original file.
-        tmpFile = tempfile.NamedTemporaryFile(delete=False)
+    # Fix stacks, writing output to a temporary file, and then overwrite the
+    # original file.
+    tmpFile = tempfile.NamedTemporaryFile(delete=False)
 
-        # If the input is gzipped, then the output (written initially to
-        # |tmpFile|) should be gzipped as well.
-        #
-        # And we want to set its pre-gzipped filename to '' rather than the
-        # name of the temporary file, so that programs like the Unix 'file'
-        # utility don't say that it was called 'tmp6ozTxE' (or something like
-        # that) before it was zipped. So that explains the |filename=''|
-        # parameter.
-        #
-        # But setting the filename like that clobbers |tmpFile.name|, so we
-        # must get that now in order to move |tmpFile| at the end.
-        tmpFilename = tmpFile.name
-        if isZipped:
-            tmpFile = gzip.GzipFile(filename='', fileobj=tmpFile)
+    # If the input is gzipped, then the output (written initially to |tmpFile|)
+    # should be gzipped as well.
+    #
+    # And we want to set its pre-gzipped filename to '' rather than the name of
+    # the temporary file, so that programs like the Unix 'file' utility don't
+    # say that it was called 'tmp6ozTxE' (or something like that) before it was
+    # zipped. So that explains the |filename=''| parameter.
+    #
+    # But setting the filename like that clobbers |tmpFile.name|, so we must
+    # get that now in order to move |tmpFile| at the end.
+    tmpFilename = tmpFile.name
+    if isZipped:
+        tmpFile = gzip.GzipFile(filename='', fileobj=tmpFile)
 
-        with opener(inputFilename, 'rb') as inputFile:
-            for line in inputFile:
-                tmpFile.write(fix(line))
+    with opener(inputFilename, 'rb') as inputFile:
+        for line in inputFile:
+            tmpFile.write(fix(line))
 
-        tmpFile.close()
+    tmpFile.close()
 
-        shutil.move(tmpFilename, inputFilename)
+    shutil.move(tmpFilename, inputFilename)
 
 
 def getDigestFromFile(args, inputFile):
