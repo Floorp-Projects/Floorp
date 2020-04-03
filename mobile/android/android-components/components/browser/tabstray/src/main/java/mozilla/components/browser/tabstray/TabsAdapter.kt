@@ -6,6 +6,7 @@ package mozilla.components.browser.tabstray
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
@@ -17,7 +18,8 @@ import mozilla.components.support.base.observer.ObserverRegistry
  */
 @Suppress("TooManyFunctions")
 class TabsAdapter(
-    delegate: Observable<TabsTray.Observer> = ObserverRegistry()
+    delegate: Observable<TabsTray.Observer> = ObserverRegistry(),
+    @LayoutRes private val layoutId: Int = R.layout.mozac_browser_tabstray_item
 ) : RecyclerView.Adapter<TabViewHolder>(),
     TabsTray,
     Observable<TabsTray.Observer> by delegate {
@@ -29,7 +31,7 @@ class TabsAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
         return TabViewHolder(
             LayoutInflater.from(parent.context).inflate(
-                R.layout.mozac_browser_tabstray_item,
+                layoutId,
                 parent,
                 false),
             tabsTray

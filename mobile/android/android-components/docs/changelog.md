@@ -46,27 +46,30 @@ permalink: /changelog/
 
 * **feature-p2p**
   * Add new `P2PFeature` to send URLs and web pages through peer-to-peer networking.
-  
+
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly, **browser-engine-system**
   * Added `GeckoEngineView#getInputResult()` to return an EngineView.InputResult indicating how a MotionEvent was handled by an EngineView.
 
 * **concept-engine**
   * Will expose a new `InputResult` enum through `getInputResult()` indicating how an EngineView handled user's MotionEvent.
-  * See above changes to browser-engine-*. 
-  
+  * See above changes to browser-engine-*.
+
 * **browser-toolbar**
   * `BrowserToolbarBottomBehavior` is now solely responsible to decide if the dynamic nav bar should animate or not.
-  * See above changes to browser-engine-*, concept-engine. 
+  * See above changes to browser-engine-*, concept-engine.
 
 * **feature-session**
   * `SwipeRefreshLayout` will now trigger pull down to refresh only if the website is scrolled to top and it itself did not consume the swype event.
-  * See above changes to browser-engine-*, concept-engine. 
+  * See above changes to browser-engine-*, concept-engine.
 
 * **lib-crash**
   * ⚠️ **This is a breaking change**: added `support-base` dependency.
 
 * **support-base**
   * `CrashReporting` allowing adding support for `submitCaughtException` without `lib-crash` dependency.
+
+* **browser-tabstray**
+ * Added ability to let consumers pass a custom layout of `TabViewHolder` in order to control layout inflation and view binding.
 
 # 37.0.0
 
