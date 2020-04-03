@@ -2,7 +2,7 @@
 
 # OkHttpClient
 
-`class OkHttpClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L28)
+`class OkHttpClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-okhttp/src/main/java/mozilla/components/lib/fetch/okhttp/OkHttpClient.kt#L29)
 
 [Client](../../mozilla.components.concept.fetch/-client/index.md) implementation using OkHttp.
 
@@ -23,6 +23,12 @@
 | Name | Summary |
 |---|---|
 | [fetch](fetch.md) | `fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../../mozilla.components.concept.fetch/-request/index.md) object. This call is synchronous. |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [fetchDataUri](../../mozilla.components.concept.fetch/-client/fetch-data-uri.md) | `fun fetchDataUri(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Generates a [Response](../../mozilla.components.concept.fetch/-response/index.md) by decoding a base64 encoded data URI. |
 
 ### Companion Object Functions
 

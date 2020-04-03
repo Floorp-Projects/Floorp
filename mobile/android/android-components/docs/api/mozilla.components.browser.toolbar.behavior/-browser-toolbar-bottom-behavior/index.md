@@ -2,7 +2,7 @@
 
 # BrowserToolbarBottomBehavior
 
-`class BrowserToolbarBottomBehavior : Behavior<`[`BrowserToolbar`](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/behavior/BrowserToolbarBottomBehavior.kt#L33)
+`class BrowserToolbarBottomBehavior : Behavior<`[`BrowserToolbar`](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/behavior/BrowserToolbarBottomBehavior.kt#L35)
 
 A [CoordinatorLayout.Behavior](#) implementation to be used when placing [BrowserToolbar](../../mozilla.components.browser.toolbar/-browser-toolbar/index.md) at the bottom of the screen.
 

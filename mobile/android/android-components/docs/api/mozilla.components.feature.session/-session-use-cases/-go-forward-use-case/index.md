@@ -2,7 +2,7 @@
 
 # GoForwardUseCase
 
-`class GoForwardUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L133)
+`class GoForwardUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L148)
 
 ### Functions
 

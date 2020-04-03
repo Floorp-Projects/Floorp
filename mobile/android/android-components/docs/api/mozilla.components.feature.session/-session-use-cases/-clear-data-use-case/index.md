@@ -2,7 +2,7 @@
 
 # ClearDataUseCase
 
-`class ClearDataUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L172)
+`class ClearDataUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L187)
 
 ### Functions
 

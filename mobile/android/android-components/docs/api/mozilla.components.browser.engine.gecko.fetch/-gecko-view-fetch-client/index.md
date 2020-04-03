@@ -2,7 +2,7 @@
 
 # GeckoViewFetchClient
 
-`class GeckoViewFetchClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L31)
+`class GeckoViewFetchClient : `[`Client`](../../mozilla.components.concept.fetch/-client/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/fetch/GeckoViewFetchClient.kt#L32)
 
 GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoWebExecutor.html)) based implementation of [Client](../../mozilla.components.concept.fetch/-client/index.md).
 
@@ -23,6 +23,12 @@ GeckoView ([GeckoWebExecutor](https://mozilla.github.io/geckoview/javadoc/mozill
 | Name | Summary |
 |---|---|
 | [fetch](fetch.md) | `fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../../mozilla.components.concept.fetch/-request/index.md) object. This call is synchronous. |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [fetchDataUri](../../mozilla.components.concept.fetch/-client/fetch-data-uri.md) | `fun fetchDataUri(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md)<br>Generates a [Response](../../mozilla.components.concept.fetch/-response/index.md) by decoding a base64 encoded data URI. |
 
 ### Companion Object Properties
 

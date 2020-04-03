@@ -6,6 +6,12 @@
 
 View component that renders web content.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [InputResult](-input-result/index.md) | `enum class InputResult`<br>Enumeration of all possible ways user's [android.view.MotionEvent](#) was handled. |
+
 ### Properties
 
 | Name | Summary |
@@ -22,6 +28,7 @@ View component that renders web content.
 | [canScrollVerticallyUp](can-scroll-vertically-up.md) | `open fun canScrollVerticallyUp(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Check if [EngineView](./index.md) can be scrolled vertically up. true if can and false otherwise. |
 | [captureThumbnail](capture-thumbnail.md) | `abstract fun captureThumbnail(onFinish: (<ERROR CLASS>?) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Request a screenshot of the visible portion of the web page currently being rendered. |
 | [clearSelection](clear-selection.md) | `open fun clearSelection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the current selection if possible. |
+| [getInputResult](get-input-result.md) | `open fun getInputResult(): `[`InputResult`](-input-result/index.md) |
 | [onCreate](on-create.md) | `open fun onCreate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>To be called in response to [Lifecycle.Event.ON_CREATE](#). See [EngineView](./index.md) implementations for details. |
 | [onDestroy](on-destroy.md) | `open fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>To be called in response to [Lifecycle.Event.ON_DESTROY](#). See [EngineView](./index.md) implementations for details. |
 | [onPause](on-pause.md) | `open fun onPause(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>To be called in response to [Lifecycle.Event.ON_PAUSE](#). See [EngineView](./index.md) implementations for details. |

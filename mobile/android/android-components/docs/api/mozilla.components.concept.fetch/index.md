@@ -25,3 +25,9 @@
 |---|---|
 | [isClientError](is-client-error.md) | `val `[`Response`](-response/index.md)`.isClientError: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the response was a client error (status in the range 400-499) or false otherwise. |
 | [isSuccess](is-success.md) | `val `[`Response`](-response/index.md)`.isSuccess: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the response was successful (status in the range 200-299) or false otherwise. |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [isDataUri](is-data-uri.md) | `fun `[`Request`](-request/index.md)`.isDataUri(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks whether or not the request is for a data URI. |

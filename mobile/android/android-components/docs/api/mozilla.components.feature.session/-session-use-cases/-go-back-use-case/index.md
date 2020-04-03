@@ -2,7 +2,7 @@
 
 # GoBackUseCase
 
-`class GoBackUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L120)
+`class GoBackUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SessionUseCases.kt#L135)
 
 ### Functions
 
