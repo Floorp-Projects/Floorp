@@ -331,8 +331,9 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
                       /* toStringEnd = */ length,
                       /* lineno = */ 1,
                       /* column = */ 0);
-  RootedScript script(cx,
-                      JSScript::Create(cx, cx->global(), options, sso, extent));
+  RootedScript script(
+      cx, JSScript::Create(cx, cx->global(), sso, extent,
+                           ImmutableScriptFlags::fromCompileOptions(options)));
 
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
   if (!scopeNotes.resize(smoosh.scope_notes.len)) {
