@@ -1406,6 +1406,15 @@ class AddonUpdatesMessage extends HTMLElement {
     this.shadowRoot.append(style, this.message, this.button);
   }
 
+  connectedCallback() {
+    document.l10n.connectRoot(this.shadowRoot);
+    document.l10n.translateFragment(this.shadowRoot);
+  }
+
+  disconnectedCallback() {
+    document.l10n.disconnectRoot(this.shadowRoot);
+  }
+
   attributeChangedCallback(name, oldVal, newVal) {
     if (name === "state" && oldVal !== newVal) {
       let l10nId = `addon-updates-${newVal}`;
