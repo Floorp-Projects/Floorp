@@ -129,17 +129,18 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   // Get the incumbent script's browsing context to set as source.
   nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
       nsContentUtils::CallerInnerWindow();
+  RefPtr<BrowsingContext> accessingBC;
   if (sourceWindow) {
-    loadState->SetSourceBrowsingContext(sourceWindow->GetBrowsingContext());
+    accessingBC = sourceWindow->GetBrowsingContext();
+    loadState->SetSourceDocShell(sourceWindow->GetDocShell());
   }
 
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
 
-  nsresult rv = bc->LoadURI(loadState);
+  nsresult rv = bc->LoadURI(accessingBC, loadState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
-  }
   }
 }
 
