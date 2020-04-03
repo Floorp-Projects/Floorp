@@ -335,8 +335,9 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mBaseURI = DeserializeURI(aData.baseScriptURL());
   info.mResolvedScriptURI = DeserializeURI(aData.resolvedScriptURL());
 
-  info.mPrincipalInfo = new PrincipalInfo(aData.principalInfo());
-  info.mStoragePrincipalInfo = new PrincipalInfo(aData.storagePrincipalInfo());
+  info.mPrincipalInfo = MakeUnique<PrincipalInfo>(aData.principalInfo());
+  info.mStoragePrincipalInfo =
+      MakeUnique<PrincipalInfo>(aData.storagePrincipalInfo());
 
   info.mReferrerInfo = aData.referrerInfo();
   info.mDomain = aData.domain();
@@ -371,8 +372,8 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     Maybe<mozilla::ipc::CSPInfo> cspInfo = clientInfo.ref().GetCspInfo();
     if (cspInfo.isSome()) {
       info.mCSP = CSPInfoToCSP(cspInfo.ref(), nullptr);
-      info.mCSPInfo = new CSPInfo();
-      rv = CSPToCSPInfo(info.mCSP, info.mCSPInfo);
+      info.mCSPInfo = MakeUnique<CSPInfo>();
+      rv = CSPToCSPInfo(info.mCSP, info.mCSPInfo.get());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
