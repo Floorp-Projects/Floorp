@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/dom/MIDIUtils.h"
+#include "mozilla/UniquePtr.h"
 
 // Taken from MIDI IMPLEMENTATION CHART INSTRUCTIONS, MIDI Spec v1.0, Pg. 97
 static const uint8_t kCommandByte = 0x80;
@@ -78,7 +79,7 @@ uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
                        nsTArray<MIDIMessage>& aMsgArray) {
   uint32_t bytesRead = 0;
   bool inSysexMessage = false;
-  nsAutoPtr<MIDIMessage> currentMsg;
+  UniquePtr<MIDIMessage> currentMsg;
   for (auto& byte : aByteBuffer) {
     bytesRead++;
     if ((byte & kSystemRealtimeMessage) == kSystemRealtimeMessage) {
@@ -96,10 +97,10 @@ uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
       }
       inSysexMessage = false;
     } else if (byte & kCommandByte) {
-      if (currentMsg && IsValidMessage(currentMsg)) {
+      if (currentMsg && IsValidMessage(currentMsg.get())) {
         aMsgArray.AppendElement(*currentMsg);
       }
-      currentMsg = new MIDIMessage();
+      currentMsg = MakeUnique<MIDIMessage>();
       currentMsg->timestamp() = aTimestamp;
     }
     currentMsg->data().AppendElement(byte);
@@ -107,7 +108,7 @@ uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
       inSysexMessage = true;
     }
   }
-  if (currentMsg && IsValidMessage(currentMsg)) {
+  if (currentMsg && IsValidMessage(currentMsg.get())) {
     aMsgArray.AppendElement(*currentMsg);
   }
   return bytesRead;
