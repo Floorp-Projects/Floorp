@@ -30,6 +30,7 @@ class TabViewHolder(
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
+    private val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
 
     internal var tab: Tab? = null
 
@@ -46,6 +47,7 @@ class TabViewHolder(
         }
 
         titleView.text = title
+        urlView?.text = tab.url
 
         itemView.setOnClickListener {
             observable.notifyObservers { onTabSelected(tab) }
