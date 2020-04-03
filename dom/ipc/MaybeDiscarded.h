@@ -73,6 +73,8 @@ class MaybeDiscarded {
   bool IsDiscarded() const { return IsNullOrDiscarded() && !IsNull(); }
   bool IsNull() const { return mId == 0; }
 
+  explicit operator bool() const { return !IsNullOrDiscarded(); }
+
   // Extract the wrapped |T|. Must not be called on a discarded |T|.
   T* get() const {
     MOZ_DIAGNOSTIC_ASSERT(!IsDiscarded());
@@ -81,6 +83,11 @@ class MaybeDiscarded {
   already_AddRefed<T> forget() {
     MOZ_DIAGNOSTIC_ASSERT(!IsDiscarded());
     return mPtr.forget();
+  }
+
+  T* operator->() const {
+    MOZ_ASSERT(!IsNull());
+    return get();
   }
 
   // Like "get", but gets the "Canonical" version of the type. This method may
