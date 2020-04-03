@@ -47,19 +47,16 @@ class MOZ_STACK_CLASS LoadSubScriptOptions : public OptionsBase {
       : OptionsBase(cx, options),
         target(cx),
         ignoreCache(false),
-        useCompilationScope(false),
         wantReturnValue(false) {}
 
   virtual bool Parse() override {
     return ParseObject("target", &target) &&
            ParseBoolean("ignoreCache", &ignoreCache) &&
-           ParseBoolean("useCompilationScope", &useCompilationScope) &&
            ParseBoolean("wantReturnValue", &wantReturnValue);
   }
 
   RootedObject target;
   bool ignoreCache;
-  bool useCompilationScope;
   bool wantReturnValue;
 };
 
@@ -449,9 +446,6 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
                             filePath.EqualsLiteral("welcome");
       isSystem = true;
     }
-  }
-  if (options.useCompilationScope) {
-    useCompilationScope = true;
   }
   bool ignoreCache =
       options.ignoreCache || !isSystem || scheme.EqualsLiteral("blob");

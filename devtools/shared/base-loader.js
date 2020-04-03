@@ -157,17 +157,7 @@ function load(loader, module) {
 
   const originalExports = module.exports;
   try {
-    Services.scriptloader.loadSubScriptWithOptions(module.uri, {
-      target: sandbox,
-      // Calls to loadSubScriptWithOptions run the risk of leaking the target's
-      // global by default because they may strongly cache the JSScript for the
-      // loaded URI. When the JSScript is strongly held, it will also hold onto
-      // the global it is tied to, potentially along with the loader itself.
-      // By using the compilation scope by default, we instead force any cached
-      // script to be one that is tied to the JSM global object, instead of the
-      // sandbox global object (bug 1622718).
-      useCompilationScope: !loader.hasJSMLifetime,
-    });
+    Services.scriptloader.loadSubScript(module.uri, sandbox);
   } catch (error) {
     // loadSubScript sometime throws string errors, which includes no stack.
     // At least provide the current stack by re-throwing a real Error object.
@@ -449,12 +439,6 @@ function Module(id, uri) {
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
 function unload(loader, reason) {
-  // JSM-lifetime loaders leak, so destroying them would indicate a
-  // misunderstanding of this behavior.
-  if (loader.hasJSMLifetime) {
-    throw new Error("A JSM-lifetime loader can't be destroyed");
-  }
-
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be
@@ -482,10 +466,6 @@ function unload(loader, reason) {
 // - `requireHook`: Optional function used to replace native require function
 //   from loader. This function receive the module path as first argument,
 //   and native require method as second argument.
-// - `hasJSMLifetime`: To avoid memory leaks, by default this loader will
-//   load scripts so that they can be fully GCed when the loader is destroyed.
-//   If this loader will always be reachable and will never be destroyed,
-//   you can set this option to true to avoid a small amount of work.
 function Loader(options) {
   let { paths, globals } = options;
   if (!globals) {
@@ -578,11 +558,6 @@ function Loader(options) {
     invisibleToDebugger: {
       enumerable: false,
       value: options.invisibleToDebugger || false,
-    },
-    hasJSMLifetime: {
-      enumerable: false,
-      writable: false,
-      value: options.hasJSMLifetime || false,
     },
     requireHook: {
       enumerable: false,
