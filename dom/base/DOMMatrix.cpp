@@ -359,11 +359,12 @@ already_AddRefed<DOMMatrix> DOMMatrixReadOnly::FlipX() const {
   if (mMatrix3D) {
     gfx::Matrix4x4Double m;
     m._11 = -1;
-    retval->mMatrix3D = new gfx::Matrix4x4Double(m * *mMatrix3D);
+    retval->mMatrix3D = MakeUnique<gfx::Matrix4x4Double>(m * *mMatrix3D);
   } else {
     gfx::MatrixDouble m;
     m._11 = -1;
-    retval->mMatrix2D = new gfx::MatrixDouble(mMatrix2D ? m * *mMatrix2D : m);
+    retval->mMatrix2D =
+        MakeUnique<gfx::MatrixDouble>(mMatrix2D ? m * *mMatrix2D : m);
   }
 
   return retval.forget();
@@ -374,11 +375,12 @@ already_AddRefed<DOMMatrix> DOMMatrixReadOnly::FlipY() const {
   if (mMatrix3D) {
     gfx::Matrix4x4Double m;
     m._22 = -1;
-    retval->mMatrix3D = new gfx::Matrix4x4Double(m * *mMatrix3D);
+    retval->mMatrix3D = MakeUnique<gfx::Matrix4x4Double>(m * *mMatrix3D);
   } else {
     gfx::MatrixDouble m;
     m._22 = -1;
-    retval->mMatrix2D = new gfx::MatrixDouble(mMatrix2D ? m * *mMatrix2D : m);
+    retval->mMatrix2D =
+        MakeUnique<gfx::MatrixDouble>(mMatrix2D ? m * *mMatrix2D : m);
   }
 
   return retval.forget();
@@ -750,8 +752,8 @@ already_AddRefed<DOMMatrix> DOMMatrix::ReadStructuredClone(
 
 void DOMMatrixReadOnly::Ensure3DMatrix() {
   if (!mMatrix3D) {
-    mMatrix3D =
-        new gfx::Matrix4x4Double(gfx::Matrix4x4Double::From2D(*mMatrix2D));
+    mMatrix3D = MakeUnique<gfx::Matrix4x4Double>(
+        gfx::Matrix4x4Double::From2D(*mMatrix2D));
     mMatrix2D = nullptr;
   }
 }
@@ -966,7 +968,7 @@ DOMMatrix* DOMMatrix::InvertSelf() {
   } else if (!mMatrix2D->Invert()) {
     mMatrix2D = nullptr;
 
-    mMatrix3D = new gfx::Matrix4x4Double();
+    mMatrix3D = MakeUnique<gfx::Matrix4x4Double>();
     mMatrix3D->SetNAN();
   }
 
@@ -991,7 +993,7 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::SetMatrixValue(
   if (!contains3dTransform) {
     mMatrix3D = nullptr;
     if (!mMatrix2D) {
-      mMatrix2D = new gfx::MatrixDouble();
+      mMatrix2D = MakeUnique<gfx::MatrixDouble>();
     }
 
     SetA(transform._11);
@@ -1001,7 +1003,7 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::SetMatrixValue(
     SetE(transform._41);
     SetF(transform._42);
   } else {
-    mMatrix3D = new gfx::Matrix4x4Double(transform);
+    mMatrix3D = MakeUnique<gfx::Matrix4x4Double>(transform);
     mMatrix2D = nullptr;
   }
 
