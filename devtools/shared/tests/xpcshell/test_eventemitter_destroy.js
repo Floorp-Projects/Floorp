@@ -5,9 +5,12 @@
 "use strict";
 
 add_task(function() {
-  const { DevToolsLoader } = ChromeUtils.import(
+  const { DevToolsLoader, require } = ChromeUtils.import(
     "resource://devtools/shared/Loader.jsm"
   );
+
+  // Force-load the module once in the global loader to avoid Bug 1622718.
+  require("devtools/shared/event-emitter");
 
   const emitterRef = (function() {
     const loader = new DevToolsLoader();
