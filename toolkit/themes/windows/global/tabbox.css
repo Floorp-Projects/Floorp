@@ -40,6 +40,5 @@ tab:-moz-focusring > .tab-middle {
 }
 
 tab:first-of-type[visuallyselected="true"] {
-  padding-right: 5px;
-  padding-left: 5px;
+  padding-inline: 5px;
 }
