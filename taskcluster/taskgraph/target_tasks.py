@@ -697,7 +697,10 @@ def target_tasks_l10n_bump(full_task_graph, parameters, graph_config):
 def target_tasks_merge_automation(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform repository merges.
     """
-    return ['merge-automation']
+    def filter(task):
+        # For now any task in the repo-update kind is ok
+        return task.kind in ['merge-automation']
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
 @_target_task('cron_bouncer_check')

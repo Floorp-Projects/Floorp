@@ -246,15 +246,15 @@ release-promotion:
 
 
 merge-automation:
-    flavors:
+    behaviors:
         central-to-beta:
             version-files:
-                - browser/config/version.txt
-                - config/milestone.txt
-            version-files-suffix:
-                - browser/config/version_display.txt
-            version-suffix: b1
-            copy-files: []
+                - filename: "config/milestone.txt"
+                  new-suffix: ''
+                - filename: "browser/config/version.txt"
+                  new-suffix: ''
+                - filename: "browser/config/version_display.txt"
+                  new-suffix: 'b1'
             replacements:
                 - - browser/config/mozconfigs/linux32/l10n-mozconfig
                   - ac_add_options --with-branding=browser/branding/nightly
@@ -281,7 +281,6 @@ merge-automation:
                   - '# Disable enforcing that add-ons are signed by the trusted root'
                   - '# Enable enforcing that add-ons are signed by the trusted root'
             merge-old-head: true
-            incr-major-version: false
             base-tag: 'FIREFOX_BETA_{major_version}_BASE'
             end-tag: 'FIREFOX_BETA_{major_version}_END'
             from-repo: 'https://hg.mozilla.org/mozilla-central'
@@ -289,15 +288,11 @@ merge-automation:
             to-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
             to-branch: 'beta'
         beta-to-release:
-            version-files: []
-            version-files-suffix: []
-            version-suffix: ''
-            copy-files:
-                - - "browser/config/version.txt"
-                  - "browser/config/version_display.txt"
+            version-files:
+                - filename: "browser/config/version_display.txt"
+                  new-suffix: ''
             replacements: []
             merge-old-head: true
-            incr-major-version: false
             base-tag: 'FIREFOX_RELEASE_{major_version}_BASE'
             end-tag: 'FIREFOX_RELEASE_{major_version}_END'
             from-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
@@ -306,29 +301,27 @@ merge-automation:
             to-branch: 'release'
         release-to-esr:
             version-files: []
-            version-files-suffix:
-                - browser/config/version_display.txt
-            version-suffix: "esr"
-            copy-files: []
             replacements:
                 - - "build/mozconfig.common"
                   - "# Enable enforcing that add-ons are signed by the trusted root"
                   - "# Disable enforcing that add-ons are signed by the trusted root"
             merge-old-head: false
-            incr-major-version: false
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
             from-branch: 'release'
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr68'
             to-branch: 'esr68'
         bump-central:
-            version-files: []
-            version-files-suffix:
-                - browser/config/version_display.txt
-                - browser/config/version.txt
-                - config/milestone.txt
-            version-suffix: a1
-            copy-files: []
+            version-files:
+                - filename: "config/milestone.txt"
+                  version-bump: "major"
+                  new-suffix: 'a1'
+                - filename: "browser/config/version.txt"
+                  version-bump: "major"
+                  new-suffix: 'a1'
+                - filename: "browser/config/version_display.txt"
+                  version-bump: "major"
+                  new-suffix: 'a1'
             replacements:
                 - - "xpcom/components/Module.h"
                   - "static const unsigned int kVersion = {current_major_version};"
@@ -337,10 +330,33 @@ merge-automation:
                   - 'WEAVE_VERSION: "1.{current_weave_version}.0"'
                   - 'WEAVE_VERSION: "1.{next_weave_version}.0"'
             merge-old-head: false
-            incr-major-version: true
             end-tag: 'FIREFOX_NIGHTLY_{major_version}_END'
             to-repo: 'https://hg.mozilla.org/mozilla-central'
             to-branch: 'central'
+        bump-esr:
+            version-files:
+                - filename: "config/milestone.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version_display.txt"
+                  version-bump: "minor"
+                - filename: "mobile/android/config/version-files/beta/version.txt"
+                  version-bump: "minor"
+                - filename: "mobile/android/config/version-files/beta/version_display.txt"
+                  version-bump: "minor"
+                - filename: "mobile/android/config/version-files/nightly/version.txt"
+                  version-bump: "minor"
+                - filename: "mobile/android/config/version-files/nightly/version_display.txt"
+                  version-bump: "minor"
+                - filename: "mobile/android/config/version-files/release/version.txt"
+                  version-bump: "minor"
+                - filename: "mobile/android/config/version-files/release/version_display.txt"
+                  version-bump: "minor"
+            replacements: []
+            merge-old-head: false
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr68'
+            to-branch: 'esr68'
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
