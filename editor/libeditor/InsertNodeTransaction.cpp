@@ -64,7 +64,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 InsertNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mContentToInsert) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (!mPointToInsert.IsSetAndValid()) {
@@ -89,9 +89,9 @@ InsertNodeTransaction::DoTransaction() {
     }
   }
 
-  RefPtr<EditorBase> editorBase = mEditorBase;
-  nsCOMPtr<nsIContent> contentToInsert = mContentToInsert;
-  nsCOMPtr<nsINode> container = mPointToInsert.GetContainer();
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
+  OwningNonNull<nsINode> container = *mPointToInsert.GetContainer();
   nsCOMPtr<nsIContent> refChild = mPointToInsert.GetChild();
   if (contentToInsert->IsElement()) {
     nsresult rv = editorBase->MarkElementDirty(
@@ -104,7 +104,7 @@ InsertNodeTransaction::DoTransaction() {
   }
 
   ErrorResult error;
-  container->InsertBefore(*contentToInsert, refChild, error);
+  container->InsertBefore(contentToInsert, refChild, error);
   if (error.Failed()) {
     NS_WARNING("nsINode::InsertBefore() failed");
     return error.StealNSResult();
@@ -132,10 +132,10 @@ InsertNodeTransaction::DoTransaction() {
   }
 
   // Place the selection just after the inserted element.
-  EditorRawDOMPoint afterInsertedNode(mContentToInsert);
-  DebugOnly<bool> advanced = afterInsertedNode.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced,
-                       "Failed to advance offset after the inserted node");
+  EditorRawDOMPoint afterInsertedNode(
+      EditorRawDOMPoint::After(contentToInsert));
+  NS_WARNING_ASSERTION(afterInsertedNode.IsSet(),
+                       "Failed to set after the inserted node");
   IgnoredErrorResult ignoredError;
   selection->Collapse(afterInsertedNode, ignoredError);
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
@@ -156,8 +156,10 @@ NS_IMETHODIMP InsertNodeTransaction::UndoTransaction() {
   }
   // XXX If the inserted node has been moved to different container node or
   //     just removed from the DOM tree, this always fails.
+  OwningNonNull<nsINode> container = *mPointToInsert.GetContainer();
+  OwningNonNull<nsIContent> contentToInsert = *mContentToInsert;
   ErrorResult error;
-  mPointToInsert.GetContainer()->RemoveChild(*mContentToInsert, error);
+  container->RemoveChild(contentToInsert, error);
   NS_WARNING("nsINode::RemoveChild() failed");
   return error.StealNSResult();
 }

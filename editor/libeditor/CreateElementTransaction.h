@@ -8,13 +8,12 @@
 
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditTransactionBase.h"
-#include "nsCOMPtr.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/Element.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
 class nsAtom;
-class nsIContent;
-class nsINode;
 
 /**
  * A transaction that creates a new node in the content tree.
@@ -22,9 +21,6 @@ class nsINode;
 namespace mozilla {
 
 class EditorBase;
-namespace dom {
-class Element;
-}  // namespace dom
 
 class CreateElementTransaction final : public EditTransactionBase {
  protected:
@@ -57,7 +53,7 @@ class CreateElementTransaction final : public EditTransactionBase {
 
   NS_IMETHOD RedoTransaction() override;
 
-  already_AddRefed<dom::Element> GetNewNode();
+  dom::Element* GetNewElement() const { return mNewElement; }
 
  protected:
   virtual ~CreateElementTransaction() = default;
@@ -77,7 +73,7 @@ class CreateElementTransaction final : public EditTransactionBase {
   EditorDOMPoint mPointToInsert;
 
   // The new node to insert.
-  nsCOMPtr<dom::Element> mNewNode;
+  RefPtr<dom::Element> mNewElement;
 };
 
 }  // namespace mozilla
