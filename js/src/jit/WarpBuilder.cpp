@@ -2096,6 +2096,8 @@ bool WarpBuilder::build_NewArray(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_NewArrayCopyOnWrite(BytecodeLocation loc) {
+  MOZ_CRASH("Bug 1626854: COW arrays disabled without TI for now");
+
   ArrayObject* templateObject = &loc.getObject(script_)->as<ArrayObject>();
 
   // TODO: pre-tenuring.
