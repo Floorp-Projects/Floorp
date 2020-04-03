@@ -275,7 +275,7 @@ async function openTab() {
 
 async function queryForTabs(options = {}) {
   let tabs;
-    
+
   if (isGecko) {
     tabs = await ext.tabs.query(options);
   } else {
@@ -283,7 +283,7 @@ async function queryForTabs(options = {}) {
       ext.tabs.query(options, resolve);
     });
   }
-    
+
   return tabs;
 }
 
