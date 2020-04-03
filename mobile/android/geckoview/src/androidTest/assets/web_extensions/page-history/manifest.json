@@ -1,0 +1,11 @@
+{
+  "manifest_version": 2,
+  "name": "Page History",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "page-history@tests.mozilla.org"
+    }
+  },
+  "description": "Can load a WebExtension Page."
+}
