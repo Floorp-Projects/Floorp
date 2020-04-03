@@ -251,15 +251,14 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
 
   // Triggers a load in the process which currently owns this BrowsingContext.
-  nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating = false);
+  // aAccessor is the context which initiated the load, and may be null only for
+  // in-process BrowsingContexts.
+  nsresult LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState,
+                   bool aSetNavigating = false);
 
-  nsresult InternalLoad(nsDocShellLoadState* aLoadState,
+  nsresult InternalLoad(BrowsingContext* aAccessor,
+                        nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
-
-  // If the load state includes a source BrowsingContext has been passed, check
-  // to see if we are sandboxed from it as the result of an iframe or CSP
-  // sandbox.
-  nsresult CheckSandboxFlags(nsDocShellLoadState* aLoadState);
 
   void DisplayLoadError(const nsAString& aURI);
 
@@ -536,8 +535,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   // Performs access control to check that 'this' can access 'aTarget'.
   bool CanAccess(BrowsingContext* aTarget, bool aConsiderOpener = true);
-
-  bool IsSandboxedFrom(BrowsingContext* aTarget);
 
   // The runnable will be called once there is idle time, or the top level
   // page has been loaded or if a timeout has fired.
