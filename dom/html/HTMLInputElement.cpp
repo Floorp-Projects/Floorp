@@ -2137,7 +2137,7 @@ void HTMLInputElement::OpenDateTimePicker(const DateTimeValue& aInitialValue) {
     return;
   }
 
-  mDateTimeInputBoxValue = new DateTimeValue(aInitialValue);
+  mDateTimeInputBoxValue = MakeUnique<DateTimeValue>(aInitialValue);
   nsContentUtils::DispatchChromeEvent(
       OwnerDoc(), static_cast<Element*>(this),
       NS_LITERAL_STRING("MozOpenDateTimePicker"), CanBubble::eYes,
@@ -2149,7 +2149,7 @@ void HTMLInputElement::UpdateDateTimePicker(const DateTimeValue& aValue) {
     return;
   }
 
-  mDateTimeInputBoxValue = new DateTimeValue(aValue);
+  mDateTimeInputBoxValue = MakeUnique<DateTimeValue>(aValue);
   nsContentUtils::DispatchChromeEvent(
       OwnerDoc(), static_cast<Element*>(this),
       NS_LITERAL_STRING("MozUpdateDateTimePicker"), CanBubble::eYes,
@@ -3585,7 +3585,8 @@ static bool IgnoreInputEventWithModifier(const WidgetInputEvent& aEvent,
          aEvent.IsFn() || aEvent.IsOS();
 }
 
-bool HTMLInputElement::StepsInputValue(const WidgetKeyboardEvent& aEvent) const {
+bool HTMLInputElement::StepsInputValue(
+    const WidgetKeyboardEvent& aEvent) const {
   if (mType != NS_FORM_INPUT_NUMBER) {
     return false;
   }
