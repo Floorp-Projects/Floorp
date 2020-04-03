@@ -300,32 +300,6 @@ void UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-ProfileBufferEntryWriter::Length TimingMarkerPayload::TagAndSerializationBytes()
-    const {
-  return CommonPropsTagAndSerializationBytes();
-}
-
-void TimingMarkerPayload::SerializeTagAndPayload(
-    ProfileBufferEntryWriter& aEntryWriter) const {
-  static const DeserializerTag tag = TagForDeserializer(Deserialize);
-  SerializeTagAndCommonProps(tag, aEntryWriter);
-}
-
-// static
-UniquePtr<ProfilerMarkerPayload> TimingMarkerPayload::Deserialize(
-    ProfileBufferEntryReader& aEntryReader) {
-  ProfilerMarkerPayload::CommonProps props =
-      DeserializeCommonProps(aEntryReader);
-  return UniquePtr<ProfilerMarkerPayload>(
-      new TimingMarkerPayload(std::move(props)));
-}
-
-void TimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                        const TimeStamp& aProcessStartTime,
-                                        UniqueStacks& aUniqueStacks) const {
-  StreamCommonProps("Timing", aWriter, aProcessStartTime, aUniqueStacks);
-}
-
 ProfileBufferEntryWriter::Length TextMarkerPayload::TagAndSerializationBytes()
     const {
   return CommonPropsTagAndSerializationBytes() +
