@@ -697,11 +697,11 @@ class nsTextFrame : public nsFrame {
       const nsLineList::iterator* aLine = nullptr,
       uint32_t* aFlowEndInTextRun = nullptr);
 
-  gfxTextRun* GetTextRun(TextRunType aWhichTextRun) {
+  gfxTextRun* GetTextRun(TextRunType aWhichTextRun) const {
     if (aWhichTextRun == eInflated || !HasFontSizeInflation()) return mTextRun;
     return GetUninflatedTextRun();
   }
-  gfxTextRun* GetUninflatedTextRun();
+  gfxTextRun* GetUninflatedTextRun() const;
   void SetTextRun(gfxTextRun* aTextRun, TextRunType aWhichTextRun,
                   float aInflation);
   bool IsInTextRunUserData() const {
