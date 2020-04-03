@@ -74,7 +74,9 @@ class AboutWelcomeChild extends JSWindowActorChild {
    */
   AWGetStartupData() {
     // TODO: Fetch this from Experiments
-    const experimentData = ExperimentAPI.getValue({ category: "aboutwelcome" });
+    const experimentData = ExperimentAPI.getExperiment({
+      group: "aboutwelcome",
+    });
     return Cu.cloneInto(experimentData, this.contentWindow);
   }
 
