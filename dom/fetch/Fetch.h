@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_Fetch_h
 #define mozilla_dom_Fetch_h
 
-#include "nsAutoPtr.h"
-
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsProxyRelease.h"
