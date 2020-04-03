@@ -12,7 +12,6 @@
 #include "StorageUtils.h"
 #include "LocalStorageManager.h"
 
-#include "nsAutoPtr.h"
 #include "nsDOMString.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Unused.h"

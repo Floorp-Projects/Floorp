@@ -28,7 +28,6 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsAutoPtr.h"
 #include "mozilla/LoadInfo.h"
 #include "nsGlobalWindow.h"
 #include "nsIScriptGlobalObject.h"

@@ -8,7 +8,6 @@
 #define mozilla_dom_XMLHttpRequestMainThread_h
 
 #include <bitset>
-#include "nsAutoPtr.h"
 #include "nsISupportsUtils.h"
 #include "nsIURI.h"
 #include "nsIHttpChannel.h"

@@ -20,7 +20,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
