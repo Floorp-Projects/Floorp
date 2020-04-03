@@ -9,7 +9,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
@@ -562,7 +562,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
       mValueMissingRadioGroups;
 
   /** The pending submission object */
-  nsAutoPtr<HTMLFormSubmission> mPendingSubmission;
+  UniquePtr<HTMLFormSubmission> mPendingSubmission;
   /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */

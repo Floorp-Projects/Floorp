@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_HTMLMediaElement_h
 #define mozilla_dom_HTMLMediaElement_h
 
-#include "nsAutoPtr.h"
 #include "nsGenericHTMLElement.h"
 #include "AudioChannelService.h"
 #include "MediaEventSource.h"
