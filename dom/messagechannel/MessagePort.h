@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMTypes.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 #ifdef XP_WIN
@@ -213,7 +213,7 @@ class MessagePort final : public DOMEventTargetHelper {
   nsTArray<RefPtr<SharedMessageBody>> mMessages;
   nsTArray<RefPtr<SharedMessageBody>> mMessagesForTheOtherPort;
 
-  nsAutoPtr<MessagePortIdentifier> mIdentifier;
+  UniquePtr<MessagePortIdentifier> mIdentifier;
 
   State mState;
 
