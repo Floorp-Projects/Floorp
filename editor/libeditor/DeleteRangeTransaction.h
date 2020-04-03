@@ -49,7 +49,7 @@ class DeleteRangeTransaction final : public EditAggregateTransaction {
 
   NS_DECL_EDITTRANSACTIONBASE
 
-  NS_IMETHOD RedoTransaction() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
  protected:
   /**

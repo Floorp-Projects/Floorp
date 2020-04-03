@@ -6,6 +6,7 @@
 #include "TransactionItem.h"
 
 #include "mozilla/mozalloc.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/TransactionManager.h"
 #include "mozilla/TransactionStack.h"
 #include "nsCOMPtr.h"
@@ -76,7 +77,8 @@ nsresult TransactionItem::DoTransaction() {
   if (!mTransaction) {
     return NS_OK;
   }
-  nsresult rv = mTransaction->DoTransaction();
+  OwningNonNull<nsITransaction> transaction = *mTransaction;
+  nsresult rv = transaction->DoTransaction();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "nsITransaction::DoTransaction() failed");
   return rv;
@@ -97,7 +99,8 @@ nsresult TransactionItem::UndoTransaction(
     return NS_OK;
   }
 
-  rv = mTransaction->UndoTransaction();
+  OwningNonNull<nsITransaction> transaction = *mTransaction;
+  rv = transaction->UndoTransaction();
   if (NS_SUCCEEDED(rv)) {
     return NS_OK;
   }
@@ -271,7 +274,8 @@ nsresult TransactionItem::RecoverFromRedoError(
     return NS_OK;
   }
 
-  rv = mTransaction->UndoTransaction();
+  OwningNonNull<nsITransaction> transaction = *mTransaction;
+  rv = transaction->UndoTransaction();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "nsITransaction::UndoTransaction() failed");
   return rv;

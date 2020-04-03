@@ -21,7 +21,7 @@ class EditTransactionBase : public nsITransaction {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditTransactionBase, nsITransaction)
 
-  NS_IMETHOD RedoTransaction(void) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction(void) override;
   NS_IMETHOD GetIsTransient(bool* aIsTransient) override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
@@ -31,8 +31,8 @@ class EditTransactionBase : public nsITransaction {
 
 }  // namespace mozilla
 
-#define NS_DECL_EDITTRANSACTIONBASE    \
-  NS_IMETHOD DoTransaction() override; \
-  NS_IMETHOD UndoTransaction() override;
+#define NS_DECL_EDITTRANSACTIONBASE                       \
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DoTransaction() override; \
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD UndoTransaction() override;
 
 #endif  // #ifndef mozilla_EditTransactionBase_h
