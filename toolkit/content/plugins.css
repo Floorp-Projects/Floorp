@@ -15,8 +15,7 @@ body {
 div#outside {
  text-align: justify;
  width: 90%;
- margin-left: 5%;
- margin-right: 5%;
+ margin-inline: 5%;
 }
 
 #plugs {
@@ -31,15 +30,14 @@ div#outside {
 }
 
 .plugname {
-  margin-top: 2em;
-  margin-bottom: 1em;
+  margin-block: 2em 1em;
   font-size: large;
   text-align: start;
   font-weight: bold;
 }
 
 dl {
-  margin: 0px 0px 3px 0px;
+  margin: 0 0 3px;
 }
 
 table {
@@ -49,7 +47,7 @@ table {
   text-align: start;
   width: 100%;
   border: 1px solid ThreeDShadow;
-  border-spacing: 0px;
+  border-spacing: 0;
 }
 
 th, td {
