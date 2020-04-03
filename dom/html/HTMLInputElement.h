@@ -1482,7 +1482,7 @@ class HTMLInputElement final : public TextControlElement,
    * Current value in the input box, in DateTimeValue dictionary format, see
    * HTMLInputElement.webidl for details.
    */
-  nsAutoPtr<DateTimeValue> mDateTimeInputBoxValue;
+  UniquePtr<DateTimeValue> mDateTimeInputBoxValue;
 
   /**
    * The triggering principal for the src attribute.

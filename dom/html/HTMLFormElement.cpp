@@ -14,6 +14,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Document.h"
@@ -22,7 +23,6 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
@@ -640,7 +640,7 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
   NS_ASSERTION(!mWebProgress && !mSubmittingRequest,
                "Web progress / submitting request should not exist here!");
 
-  nsAutoPtr<HTMLFormSubmission> submission;
+  UniquePtr<HTMLFormSubmission> submission;
 
   //
   // prepare the submission object
@@ -672,7 +672,7 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
     // we are in an event handler, JS submitted so we have to
     // defer this submission. let's remember it and return
     // without submitting
-    mPendingSubmission = submission;
+    mPendingSubmission = std::move(submission);
     // ensure reentrancy
     mIsSubmitting = false;
     return NS_OK;
@@ -681,7 +681,7 @@ nsresult HTMLFormElement::DoSubmit(Event* aEvent) {
   //
   // perform the submission
   //
-  return SubmitSubmission(submission);
+  return SubmitSubmission(submission.get());
 }
 
 nsresult HTMLFormElement::BuildSubmission(HTMLFormSubmission** aFormSubmission,
@@ -1536,11 +1536,11 @@ void HTMLFormElement::OnSubmitClickEnd() { mDeferSubmission = false; }
 
 void HTMLFormElement::FlushPendingSubmission() {
   if (mPendingSubmission) {
-    // Transfer owning reference so that the submissioin doesn't get deleted
+    // Transfer owning reference so that the submission doesn't get deleted
     // if we reenter
-    nsAutoPtr<HTMLFormSubmission> submission = std::move(mPendingSubmission);
+    UniquePtr<HTMLFormSubmission> submission = std::move(mPendingSubmission);
 
-    SubmitSubmission(submission);
+    SubmitSubmission(submission.get());
   }
 }
 
