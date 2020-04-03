@@ -120,7 +120,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
             cb, "content of dependent ids hash entry of document accessible");
 
-        AttrRelProvider* provider = (*providers)[provIdx];
+        const auto& provider = (*providers)[provIdx];
         cb.NoteXPCOMChild(provider->mContent);
       }
     }
@@ -1727,10 +1727,10 @@ void DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
       AttrRelProviders* providers = GetRelProviders(relProviderElm, id);
       if (providers) {
         for (uint32_t jdx = 0; jdx < providers->Length();) {
-          AttrRelProvider* provider = (*providers)[jdx];
+          const auto& provider = (*providers)[jdx];
           if (provider->mRelAttr == relAttr &&
               provider->mContent == relProviderElm)
-            providers->RemoveElement(provider);
+            providers->RemoveElementAt(jdx);
           else
             jdx++;
         }
