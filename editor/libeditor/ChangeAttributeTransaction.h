@@ -58,7 +58,7 @@ class ChangeAttributeTransaction final : public EditTransactionBase {
 
   NS_DECL_EDITTRANSACTIONBASE
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+  NS_IMETHOD RedoTransaction() override;
 
  private:
   virtual ~ChangeAttributeTransaction() = default;

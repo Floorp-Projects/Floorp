@@ -31,21 +31,18 @@ interface nsITransactionManager : nsISupports
    * stack is pruned or when the transaction manager is destroyed.
    * @param aTransaction the transaction to do.
    */
-  [can_run_script]
   void doTransaction(in nsITransaction aTransaction);
 
   /**
    * Pops the topmost transaction on the undo stack, calls its
    * undoTransaction() method, then pushes it on the redo stack.
    */
-  [can_run_script]
   void undoTransaction();
 
   /**
    * Pops the topmost transaction on the redo stack, calls its
    * redoTransaction() method, then pushes it on the undo stack.
    */
-  [can_run_script]
   void redoTransaction();
 
   /**
@@ -72,7 +69,6 @@ interface nsITransactionManager : nsISupports
    * @param aData An arbitrary nsISupports object that is associated with the
    * batch. Can be retrieved from the undo or redo stacks.
    */
-  [can_run_script]
   void beginBatch(in nsISupports aData);
 
   /**

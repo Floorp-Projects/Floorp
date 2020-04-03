@@ -24,40 +24,38 @@ using namespace dom;
 
 // static
 already_AddRefed<ChangeStyleTransaction> ChangeStyleTransaction::Create(
-    nsStyledElement& aStyledElement, nsAtom& aProperty,
-    const nsAString& aValue) {
+    Element& aElement, nsAtom& aProperty, const nsAString& aValue) {
   RefPtr<ChangeStyleTransaction> transaction =
-      new ChangeStyleTransaction(aStyledElement, aProperty, aValue, false);
+      new ChangeStyleTransaction(aElement, aProperty, aValue, false);
   return transaction.forget();
 }
 
 // static
 already_AddRefed<ChangeStyleTransaction> ChangeStyleTransaction::CreateToRemove(
-    nsStyledElement& aStyledElement, nsAtom& aProperty,
-    const nsAString& aValue) {
+    Element& aElement, nsAtom& aProperty, const nsAString& aValue) {
   RefPtr<ChangeStyleTransaction> transaction =
-      new ChangeStyleTransaction(aStyledElement, aProperty, aValue, true);
+      new ChangeStyleTransaction(aElement, aProperty, aValue, true);
   return transaction.forget();
 }
 
-ChangeStyleTransaction::ChangeStyleTransaction(nsStyledElement& aStyledElement,
+ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
                                                nsAtom& aProperty,
                                                const nsAString& aValue,
                                                bool aRemove)
     : EditTransactionBase(),
-      mStyledElement(&aStyledElement),
+      mElement(&aElement),
       mProperty(&aProperty),
       mValue(aValue),
+      mRemoveProperty(aRemove),
       mUndoValue(),
       mRedoValue(),
-      mRemoveProperty(aRemove),
       mUndoAttributeWasSet(false),
       mRedoAttributeWasSet(false) {}
 
 #define kNullCh (char16_t('\0'))
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTransactionBase,
-                                   mStyledElement)
+                                   mElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChangeStyleTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
@@ -143,20 +141,20 @@ void ChangeStyleTransaction::RemoveValueFromListOfValues(
 }
 
 NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
-  if (NS_WARN_IF(!mStyledElement)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  // TODO: Change mElement to RefPtr<nsStyleElement>.
+  nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
+  if (NS_WARN_IF(!inlineStyles)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
-  nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
+  nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
 
   // FIXME(bug 1606994): Using atoms forces a string copy here which is not
   // great.
   nsAutoCString propertyNameString;
   mProperty->ToUTF8String(propertyNameString);
 
-  mUndoAttributeWasSet =
-      mStyledElement->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
+  mUndoAttributeWasSet = mElement->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
 
   nsAutoString values;
   nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);
@@ -223,7 +221,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
   uint32_t length = cssDecl->Length();
   if (!length) {
     nsresult rv =
-        styledElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+        mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
     if (NS_FAILED(rv)) {
       NS_WARNING("Element::UnsetAttr(nsGkAtoms::style) failed");
       return rv;
@@ -240,18 +238,16 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
 
 nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
                                           nsAString& aValue) {
-  if (NS_WARN_IF(!mStyledElement)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (aAttributeWasSet) {
-    OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
-
     // The style attribute was not empty, let's recreate the declaration
     nsAutoCString propertyNameString;
     mProperty->ToUTF8String(propertyNameString);
 
-    nsCOMPtr<nsICSSDeclaration> cssDecl = styledElement->Style();
+    nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(mElement);
+    if (NS_WARN_IF(!inlineStyles)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
 
     ErrorResult error;
     if (aValue.IsEmpty()) {
@@ -272,10 +268,7 @@ nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,
                          "nsICSSDeclaration::SetProperty() failed");
     return error.StealNSResult();
   }
-
-  OwningNonNull<nsStyledElement> styledElement = *mStyledElement;
-  nsresult rv =
-      styledElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
+  nsresult rv = mElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Element::UnsetAttr(nsGkAtoms::style) failed");
   return rv;

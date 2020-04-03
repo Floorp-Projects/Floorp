@@ -130,7 +130,7 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteBetween(
   }
 
   // see what kind of node we have
-  if (Text* textNode = Text::FromNode(aStart.Container())) {
+  if (RefPtr<Text> textNode = Text::FromNode(aStart.Container())) {
     // if the node is a chardata node, then delete chardata content
     int32_t numToDel;
     if (aStart == aEnd) {
@@ -193,7 +193,7 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteContent(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Text* textNode = Text::FromNode(aPoint.Container());
+  RefPtr<Text> textNode = Text::FromNode(aPoint.Container());
   if (!textNode) {
     return NS_OK;
   }
@@ -243,13 +243,13 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(
   }
 
   for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-    nsINode* node = subtreeIter.GetCurrentNode();
-    if (NS_WARN_IF(!node) || NS_WARN_IF(!node->IsContent())) {
-      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
+    if (NS_WARN_IF(!node)) {
+      return NS_ERROR_NULL_POINTER;
     }
 
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-        DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node->AsContent());
+        DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node);
     // XXX This is odd handling.  Even if some nodes in the range are not
     //     editable, editor should append transactions because they could
     //     at undoing/redoing.  Additionally, if the transaction needs to

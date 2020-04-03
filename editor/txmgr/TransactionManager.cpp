@@ -211,7 +211,7 @@ nsresult TransactionManager::BeginBatchInternal(nsISupports* aData) {
     return NS_OK;
   }
 
-  rv = BeginTransaction(nullptr, aData);
+  rv = BeginTransaction(0, aData);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TransactionManager::BeginTransaction() failed");
 
