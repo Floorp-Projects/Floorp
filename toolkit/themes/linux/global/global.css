@@ -38,7 +38,7 @@
   font: message-box;
 }
 
-/* ::::: alert icons :::::*/
+/* ::::: Alert icons :::::*/
 
 .message-icon {
   list-style-image: url("moz-icon://stock/gtk-dialog-info?size=dialog");
@@ -84,7 +84,7 @@ xul|toolbar[mode="text"] .toolbarbutton-text {
   margin: 3px 5px !important;
 }
 
-/* ::::: print preview ::::: */
+/* ::::: Print preview ::::: */
 
 .print-preview-navigate-button {
   min-width: 1.9em;
@@ -113,7 +113,7 @@ html|*#print-preview-pageNumber {
   margin: 0 4px;
 }
 
-/* ::::: miscellaneous formatting ::::: */
+/* ::::: Miscellaneous formatting ::::: */
 
 :root:-moz-lwtheme {
   -moz-appearance: none;
@@ -145,24 +145,20 @@ xul|separator.groove:not([orient="vertical"]) {
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
   height: 0;
-  margin-top: 0.4em;
-  margin-bottom: 0.4em;
+  margin-block: 0.4em;
 }
 xul|separator.groove[orient="vertical"] {
   border-left: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
   width: 0;
-  margin-left: 0.4em;
-  margin-right: 0.4em;
+  margin-inline: 0.4em;
 }
 
 xul|description,
 xul|label {
   cursor: default;
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-inline-start: 6px;
-  margin-inline-end: 5px;
+  margin-block: 1px 2px;
+  margin-inline: 6px 5px;
 }
 
 xul|description {
@@ -207,8 +203,7 @@ html|input {
 }
 
 xul|notification > xul|hbox > xul|button {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
 }
 
 xul|popupnotificationcontent {

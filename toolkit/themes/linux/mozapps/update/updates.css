@@ -5,7 +5,8 @@
 /* Elevation Dialog */
 /* Specify the size for the UI so it has a fixed size. 3rd
    party themes should typically specify the same values. */
-#elevationBox, .update-content {
+#elevationBox,
+.update-content {
   height: 360px;
   width: 700px;
 }
@@ -24,7 +25,7 @@
 }
 
 .update-header-box-1 {
-  padding: 5px 0px 5px 0px;
+  padding: 5px 0;
 }
 
 .update-content {
@@ -37,12 +38,11 @@
 
 #update-button-box {
   margin: 0;
-  padding: 6px 10px 10px 10px;
+  padding: 6px 10px 10px;
 }
 
 .update-buttons-separator {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+  margin-block: 0 !important;
 }
 
 #updateFinishedName {
@@ -75,7 +75,7 @@ update {
 
 #historyItems {
   height: 200px;
-  margin: 1px 5px 5px 5px;
+  margin: 1px 5px 5px;
 }
 
 #historyItems .update {
