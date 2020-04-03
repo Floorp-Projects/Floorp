@@ -121,7 +121,8 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     def setup_adb_device(self):
         if self.device is None:
             self.device = ADBDevice(verbose=True)
-            tune_performance(self.device, log=LOG)
+            if not self.config.get("disable_perf_tuning", False):
+                tune_performance(self.device, log=LOG)
 
         self.clear_app_data()
         self.set_debug_app_flag()

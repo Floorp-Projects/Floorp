@@ -132,6 +132,7 @@ def main(args=sys.argv[1:]):
             extra_prefs=args.extra_prefs or {},
             device_name=args.device_name,
             no_conditioned_profile=args.no_conditioned_profile,
+            disable_perf_tuning=args.disable_perf_tuning,
         )
     except Exception:
         traceback.print_exc()

@@ -93,6 +93,7 @@ either Raptor or browsertime."""
         results_handler_class=RaptorResultsHandler,
         no_conditioned_profile=False,
         device_name=None,
+        disable_perf_tuning=False,
         extra_prefs={},
         **kwargs
     ):
@@ -123,6 +124,7 @@ either Raptor or browsertime."""
             "no_conditioned_profile": no_conditioned_profile,
             "device_name": device_name,
             "enable_fission": extra_prefs.get("fission.autostart", False),
+            "disable_perf_tuning": disable_perf_tuning,
             "extra_prefs": extra_prefs,
         }
 

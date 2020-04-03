@@ -52,7 +52,9 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
     def setup_adb_device(self):
         if self.device is None:
             self.device = ADBDevice(verbose=True)
-            tune_performance(self.device, log=LOG)
+            if not self.config.get("disable_perf_tuning", False):
+                tune_performance(self.device, log=LOG)
+
         if self.config['power_test']:
             disable_charging(self.device)
 
