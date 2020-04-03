@@ -11,7 +11,7 @@ description {
 }
 
 #contentTypeImage {
-  margin-right: 3px;
+  margin-inline-end: 3px;
   width: 16px;
 }
 
@@ -21,10 +21,7 @@ description {
   color: inherit;
 }
 
-#container > .small-indent {
-  margin-left: 0;
-}
-
+#container > .small-indent,
 .small-indent label {
-  margin-left: 0;
+  margin-inline-start: 0;
 }

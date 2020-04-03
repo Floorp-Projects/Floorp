@@ -11,7 +11,7 @@ checkbox {
 }
 
 .checkbox-icon {
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 
 .checkbox-label {
@@ -35,5 +35,3 @@ checkbox[disabled="true"] {
   width: 1.3em;
   height: 1.3em;
 }
-  
-
