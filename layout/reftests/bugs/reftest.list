@@ -2094,3 +2094,5 @@ skip-if(!OSX) != 1608124-2.html 1608124-2-notref.html
 fuzzy(0-145,0-48536) == 1614788-1.svg 1614788-1-ref.svg # large fuzz necesary to test bug: 239,202824 is how much it differs when bug exists
 == blob-fallback-clip.html blob-fallback-clip-ref.html
 fuzzy-if(OSX,0-42,0-4) fuzzy-if((Android||winWidget)&&!webrender,0-115,0-2) == 1617515-1.html 1617515-1-ref.html
+fuzzy(0-2,0-21184) == 1626259-1.html 1626259-1-ref.html
+fuzzy(0-2,0-21184) == 1626259-2.html 1626259-2-ref.html
