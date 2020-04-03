@@ -443,19 +443,39 @@ async function nextCycle() {
 
       if (newTabPerCycle && testTabID != 0) {
         // close previous test tab
-        ext.tabs.remove(testTabID);
         await postToControlServer("status", `closing Tab: ${testTabID}`);
+        if (isGecko) {
+          await ext.tabs.remove(testTabID);
+        } else {
+          await new Promise(resolve => {
+            ext.tabs.remove(testTabID, resolve);
+          });
+        }
 
         // open new tab
-        ext.tabs.create({ url: "about:blank" });
-        await postToControlServer("status", "Open new tab");
+        await postToControlServer("status", "openinig new tab");
+        if (isGecko) {
+          await ext.tabs.create({ url: "about:blank" });
+        } else {
+          await new Promise(resolve => {
+            ext.tabs.create({ url: "about:blank" }, resolve);
+          });
+        }
       }
+
       setTimeout(async () => {
         await postToControlServer("status", `update tab: ${testTabID}`);
 
         // update the test page - browse to our test URL
         // "null" = active tab
-        ext.tabs.update(testTabID || null, { url: testURL }, testTabUpdated);
+        if (isGecko) {
+          await ext.tabs.update(testTabID || null, { url: testURL });
+        } else {
+          await new Promise(resolve => {
+            ext.tabs.update(testTabID || null, { url: testURL }, resolve);
+          });
+        }
+        testTabUpdated();
 
         if (testType == TEST_SCENARIO) {
           await scenarioTimer();
@@ -504,32 +524,32 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
 }
 
 async function cancelTimeoutAlarm(timeoutName) {
+  let cleared = false;
+
   if (isGecko) {
-    const alarm = await ext.alarms.clear(timeoutName);
-    if (alarm) {
-      raptorLog(`cancelled raptor alarm ${timeoutName}`);
-    } else {
-      raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
-    }
+    cleared = await ext.alarms.clear(timeoutName);
   } else {
-    chrome.alarms.clear(timeoutName, function(wasCleared) {
-      if (wasCleared) {
-        raptorLog(`cancelled raptor alarm ${timeoutName}`);
-      } else {
-        raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
-      }
+    cleared = await new Promise(resolve => {
+      chrome.alarms.clear(timeoutName, resolve);
     });
+  }
+
+  if (cleared) {
+    raptorLog(`cancelled raptor alarm ${timeoutName}`);
+  } else {
+    raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
   }
 }
 
-async function resultListener(request, sender, sendResponse) {
+function resultListener(request, sender, sendResponse) {
   raptorLog(`received message from ${sender.tab.url}`);
 
   // check if this is a message from pageloaderjs indicating it is ready to start
   if (request.type == "pageloadjs-ready") {
     raptorLog("received pageloadjs-ready!");
+
     sendResponse({ text: "pageloadjs-ready-response" });
-    await collectResults();
+    collectResults();
     return;
   }
 
@@ -641,7 +661,13 @@ async function postToControlServer(msgType, msgData = "") {
 async function cleanUp() {
   // close tab unless raptor debug-mode is enabled
   if (debugMode != 1) {
-    ext.tabs.remove(testTabID);
+    if (isGecko) {
+      await ext.tabs.remove(testTabID);
+    } else {
+      await new Promise(resolve => {
+        ext.tabs.remove(testTabID, resolve);
+      });
+    }
     raptorLog(`closed tab ${testTabID}`);
   } else {
     raptorLog("debug-mode enabled, leaving tab open");
@@ -697,8 +723,14 @@ async function raptorRunner() {
       nextCycle();
     }, postStartupDelay);
   } else {
-    setTimeout(function() {
-      ext.tabs.create({ url: "about:blank" });
+    setTimeout(async function() {
+      if (isGecko) {
+        await ext.tabs.create({ url: "about:blank" });
+      } else {
+        await new Promise(resolve => {
+          ext.tabs.create({ url: "about:blank" }, resolve);
+        });
+      }
       nextCycle();
     }, postStartupDelay);
   }
