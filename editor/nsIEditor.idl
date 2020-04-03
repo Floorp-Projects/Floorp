@@ -261,7 +261,6 @@ interface nsIEditor  : nsISupports
     * Calls to beginTransaction can be nested, as long as endTransaction
     * is called once per beginUpdate.
     */
-  [can_run_script]
   void beginTransaction();
 
   /** endTransaction is a signal to the editor that the caller is

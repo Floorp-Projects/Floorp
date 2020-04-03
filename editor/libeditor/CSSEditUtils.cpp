@@ -383,12 +383,8 @@ bool CSSEditUtils::IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
 nsresult CSSEditUtils::SetCSSProperty(Element& aElement, nsAtom& aProperty,
                                       const nsAString& aValue,
                                       bool aSuppressTxn) {
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
   RefPtr<ChangeStyleTransaction> transaction =
-      ChangeStyleTransaction::Create(*styledElement, aProperty, aValue);
+      ChangeStyleTransaction::Create(aElement, aProperty, aValue);
   if (aSuppressTxn) {
     return transaction->DoTransaction();
   }
@@ -420,12 +416,8 @@ nsresult CSSEditUtils::SetCSSPropertyPixels(Element& aElement,
 nsresult CSSEditUtils::RemoveCSSProperty(Element& aElement, nsAtom& aProperty,
                                          const nsAString& aValue,
                                          bool aSuppressTxn) {
-  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(&aElement);
-  if (NS_WARN_IF(!styledElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
   RefPtr<ChangeStyleTransaction> transaction =
-      ChangeStyleTransaction::CreateToRemove(*styledElement, aProperty, aValue);
+      ChangeStyleTransaction::CreateToRemove(aElement, aProperty, aValue);
   if (aSuppressTxn) {
     nsresult rv = transaction->DoTransaction();
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

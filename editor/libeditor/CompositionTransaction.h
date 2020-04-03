@@ -71,14 +71,14 @@ class CompositionTransaction final : public EditTransactionBase {
 
   void MarkFixed();
 
-  MOZ_CAN_RUN_SCRIPT static nsresult SetIMESelection(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult SetIMESelection(
       EditorBase& aEditorBase, dom::Text* aTextNode, uint32_t aOffsetInNode,
       uint32_t aLengthOfCompositionString, const TextRangeArray* aRanges);
 
  private:
   virtual ~CompositionTransaction() = default;
 
-  MOZ_CAN_RUN_SCRIPT nsresult SetSelectionForRanges();
+  nsresult SetSelectionForRanges();
 
   // The text element to operate upon.
   RefPtr<dom::Text> mTextNode;

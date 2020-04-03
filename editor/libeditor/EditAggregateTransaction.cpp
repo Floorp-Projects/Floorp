@@ -24,8 +24,8 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP EditAggregateTransaction::DoTransaction() {
   // FYI: It's legal (but not very useful) to have an empty child list.
   AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
-  for (OwningNonNull<EditTransactionBase>& childTransaction : children) {
-    nsresult rv = MOZ_KnownLive(childTransaction)->DoTransaction();
+  for (auto& childTransaction : children) {
+    nsresult rv = childTransaction->DoTransaction();
     if (NS_FAILED(rv)) {
       NS_WARNING("EditTransactionBase::DoTransaction() failed");
       return rv;
@@ -38,9 +38,8 @@ NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
   // FYI: It's legal (but not very useful) to have an empty child list.
   // Undo goes through children backwards.
   AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
-  for (OwningNonNull<EditTransactionBase>& childTransaction :
-       Reversed(children)) {
-    nsresult rv = MOZ_KnownLive(childTransaction)->UndoTransaction();
+  for (auto& childTransaction : Reversed(children)) {
+    nsresult rv = childTransaction->UndoTransaction();
     if (NS_FAILED(rv)) {
       NS_WARNING("EditTransactionBase::UndoTransaction() failed");
       return rv;
@@ -52,8 +51,8 @@ NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
 NS_IMETHODIMP EditAggregateTransaction::RedoTransaction() {
   // It's legal (but not very useful) to have an empty child list.
   AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
-  for (OwningNonNull<EditTransactionBase>& childTransaction : children) {
-    nsresult rv = MOZ_KnownLive(childTransaction)->RedoTransaction();
+  for (auto& childTransaction : children) {
+    nsresult rv = childTransaction->RedoTransaction();
     if (NS_FAILED(rv)) {
       NS_WARNING("EditTransactionBase::RedoTransaction() failed");
       return rv;

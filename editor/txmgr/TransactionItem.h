@@ -34,24 +34,18 @@ class TransactionItem final {
   }
   nsresult GetChild(size_t aIndex, TransactionItem** aChild);
 
-  MOZ_CAN_RUN_SCRIPT nsresult DoTransaction();
-  MOZ_CAN_RUN_SCRIPT nsresult
-  UndoTransaction(TransactionManager* aTransactionManager);
-  MOZ_CAN_RUN_SCRIPT nsresult
-  RedoTransaction(TransactionManager* aTransactionManager);
+  nsresult DoTransaction();
+  nsresult UndoTransaction(TransactionManager* aTransactionManager);
+  nsresult RedoTransaction(TransactionManager* aTransactionManager);
 
   nsCOMArray<nsISupports>& GetData() { return mData; }
 
  private:
-  MOZ_CAN_RUN_SCRIPT nsresult
-  UndoChildren(TransactionManager* aTransactionManager);
-  MOZ_CAN_RUN_SCRIPT nsresult
-  RedoChildren(TransactionManager* aTransactionManager);
+  nsresult UndoChildren(TransactionManager* aTransactionManager);
+  nsresult RedoChildren(TransactionManager* aTransactionManager);
 
-  MOZ_CAN_RUN_SCRIPT nsresult
-  RecoverFromUndoError(TransactionManager* aTransactionManager);
-  MOZ_CAN_RUN_SCRIPT nsresult
-  RecoverFromRedoError(TransactionManager* aTransactionManager);
+  nsresult RecoverFromUndoError(TransactionManager* aTransactionManager);
+  nsresult RecoverFromRedoError(TransactionManager* aTransactionManager);
 
   size_t NumberOfUndoItems() const;
   size_t NumberOfRedoItems() const;

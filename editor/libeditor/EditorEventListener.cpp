@@ -1175,7 +1175,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
     }
   }
 
-  editorBase->OnFocus(*eventTargetNode);
+  editorBase->OnFocus(target);
   if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
     return NS_OK;
   }

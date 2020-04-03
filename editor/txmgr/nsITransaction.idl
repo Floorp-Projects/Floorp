@@ -17,13 +17,11 @@ interface nsITransaction : nsISupports
   /**
    * Executes the transaction.
    */
-  [can_run_script]
   void doTransaction();
 
   /**
    * Restores the state to what it was before the transaction was executed.
    */
-  [can_run_script]
   void undoTransaction();
 
   /**
@@ -33,7 +31,6 @@ interface nsITransaction : nsISupports
    * In most cases, the redoTransaction() method will actually call the
    * doTransaction() method to execute the transaction again.
    */
-  [can_run_script]
   void redoTransaction();
 
   /**
