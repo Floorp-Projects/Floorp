@@ -10,8 +10,7 @@ html {
 
 body {
   width: 90%;
-  margin-left: 5%;
-  margin-right: 5%;
+  margin-inline: 5%;
 }
 
 .page-subtitle {
@@ -19,8 +18,7 @@ body {
 }
 
 .major-section {
-  margin-top: 2em;
-  margin-bottom: 1em;
+  margin-block: 2em 1em;
   font-size: large;
   text-align: start;
   font-weight: bold;
@@ -28,10 +26,9 @@ body {
 
 #copy-raw-data-to-clipboard,
 #copy-to-clipboard {
-  padding-top: 2%;
-  width: 100%;
-  padding-bottom: 2%;
+  padding-block: 2%;
   margin: 1%;
+  width: 100%;
 }
 
 table {
@@ -42,7 +39,7 @@ table {
   text-align: start;
   width: 100%;
   border: 1px solid ThreeDShadow;
-  border-spacing: 0px;
+  border-spacing: 0;
 }
 
 th, td {
@@ -62,7 +59,7 @@ th {
 
 th.column {
   white-space: nowrap;
-  width: 0px;
+  width: 0;
 }
 
 td {
@@ -94,4 +91,3 @@ td {
 #reset-box {
   display: none;
 }
-
