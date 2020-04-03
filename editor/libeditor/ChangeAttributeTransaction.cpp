@@ -63,36 +63,48 @@ NS_IMETHODIMP ChangeAttributeTransaction::DoTransaction() {
 
   // Now set the attribute to the new value
   if (mRemoveAttribute) {
-    nsresult rv = mElement->UnsetAttr(kNameSpaceID_None, mAttribute, true);
+    OwningNonNull<Element> element = *mElement;
+    nsresult rv = element->UnsetAttr(kNameSpaceID_None, mAttribute, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::UnsetAttr() failed");
     return rv;
   }
 
-  nsresult rv = mElement->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
+  OwningNonNull<Element> element = *mElement;
+  nsresult rv = element->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::SetAttr() failed");
   return rv;
 }
 
 NS_IMETHODIMP ChangeAttributeTransaction::UndoTransaction() {
+  if (NS_WARN_IF(!mElement)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   if (mAttributeWasSet) {
+    OwningNonNull<Element> element = *mElement;
     nsresult rv =
-        mElement->SetAttr(kNameSpaceID_None, mAttribute, mUndoValue, true);
+        element->SetAttr(kNameSpaceID_None, mAttribute, mUndoValue, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::SetAttr() failed");
     return rv;
   }
-  nsresult rv = mElement->UnsetAttr(kNameSpaceID_None, mAttribute, true);
+  OwningNonNull<Element> element = *mElement;
+  nsresult rv = element->UnsetAttr(kNameSpaceID_None, mAttribute, true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::UnsetAttr() failed");
   return rv;
 }
 
 NS_IMETHODIMP ChangeAttributeTransaction::RedoTransaction() {
+  if (NS_WARN_IF(!mElement)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   if (mRemoveAttribute) {
-    nsresult rv = mElement->UnsetAttr(kNameSpaceID_None, mAttribute, true);
+    OwningNonNull<Element> element = *mElement;
+    nsresult rv = element->UnsetAttr(kNameSpaceID_None, mAttribute, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::UnsetAttr() failed");
     return rv;
   }
 
-  nsresult rv = mElement->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
+  OwningNonNull<Element> element = *mElement;
+  nsresult rv = element->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Element::SetAttr() failed");
   return rv;
 }
