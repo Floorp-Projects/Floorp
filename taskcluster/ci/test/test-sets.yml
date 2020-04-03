@@ -370,11 +370,12 @@ linux1804-qr-tests:
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
-    - mochitest-webgpu
+    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
+    - mochitest-webgpu
     - reftest
     - xpcshell
 
