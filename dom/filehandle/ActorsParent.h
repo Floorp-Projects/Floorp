@@ -10,7 +10,7 @@
 #include "mozilla/dom/FileHandleStorage.h"
 #include "mozilla/dom/PBackgroundMutableFileParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
@@ -49,7 +49,7 @@ class FileHandleThreadPool final {
 
   nsClassHashtable<nsCStringHashKey, DirectoryInfo> mDirectoryInfos;
 
-  nsTArray<nsAutoPtr<StoragesCompleteCallback>> mCompleteCallbacks;
+  nsTArray<UniquePtr<StoragesCompleteCallback>> mCompleteCallbacks;
 
   bool mShutdownRequested;
   bool mShutdownComplete;
