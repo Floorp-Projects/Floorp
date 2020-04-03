@@ -9145,8 +9145,11 @@ bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
     // every time the initializer executes. In non-singleton mode, don't do
     // this if the array is small: copying the elements lazily is not worth it
     // in that case.
+    // Note: for now we don't use COW arrays if TI is disabled. We probably need
+    // a BaseShape flag to optimize this better without TI. See bug 1626854.
     static const size_t MinElementsForCopyOnWrite = 5;
-    if (emitterMode != BytecodeEmitter::SelfHosting &&
+    if (IsTypeInferenceEnabled() &&
+        emitterMode != BytecodeEmitter::SelfHosting &&
         (array->count() >= MinElementsForCopyOnWrite || isSingleton) &&
         isArrayObjLiteralCompatible(array->head())) {
       return emitObjLiteralArray(array->head(), /* isCow = */ !isSingleton);
