@@ -1325,12 +1325,21 @@ def build_treescript_payload(config, task, task_def):
         task_def['payload']['l10n_bump_info'] = [l10n_bump_info]
         actions.append('l10n_bump')
 
-    if worker.get('merge-info'):
-        merge_info = {}
-        for k, v in worker['merge-info'].items():
-            merge_info[k.replace('-', '_')] = worker['merge-info'][k]
-        task_def['payload']['merge_info'] = merge_info
-        actions.append('merge_day')
+    if worker.get("merge-info"):
+        merge_info = {
+            merge_param_name.replace("-", "_"): merge_param_value
+            for merge_param_name, merge_param_value in worker["merge-info"].items()
+            if merge_param_name != "version-files"
+        }
+        merge_info["version_files"] = [
+            {
+                file_param_name.replace("-", "_"): file_param_value
+                for file_param_name, file_param_value in file_entry.items()
+            }
+            for file_entry in worker["merge-info"]["version-files"]
+        ]
+        task_def["payload"]["merge_info"] = merge_info
+        actions.append("merge_day")
 
     if worker['push']:
         actions.append('push')
