@@ -113,7 +113,6 @@ h2 {
 .etp-card.custom-not-blocking #protection-details,
 #manage-protections,
 .etp-card .icon.dark,
-.mobile-app-icon.dark,
 a.hidden,
 .loading .card-body,
 .lockwise-card.hidden,
@@ -160,16 +159,7 @@ a.hidden,
   .etp-card .icon.light {
     display: none;
   }
-
-  .mobile-app-icon.dark {
-    display: block;
-  }
-
-  .mobile-app-icon.light {
-    display: none;
-  }
 }
-
 
 .card {
   display: grid;
@@ -602,10 +592,11 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-gap: 10px;
 }
 
-.lockwise-mobile-app-icon,
 .mobile-app-icon {
   height: 56px;
   width: auto;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #lockwise-app-links,
