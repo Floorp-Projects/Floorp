@@ -10,7 +10,6 @@ Getting Started
 .. toctree::
    :maxdepth: 1
 
-   Introduction <README.md>
    Getting Started <getting-started/README.md>
    Get a Bugzilla account <getting-started/bugzilla.md>
    Get and build the code <getting-started/build.md>
