@@ -11,7 +11,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 
