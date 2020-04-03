@@ -47,10 +47,10 @@ tabmodalprompt label[value=""] {
   align-self: center;
   box-sizing: border-box;
   height: 500px;
-  /* By setting `left` & `right` to `auto` with `position: absolute`, the
+  /* By setting `inset-inline` to `auto` with `position: absolute`, the
    * horizontal position from the `align-self: center` is used.
    * See https://developer.mozilla.org/en-US/docs/Web/CSS/right#Values. */
-  left: auto;
+  inset-inline: auto;
   /* Shrink the height for small browser window sizes so the dialog footer
      remains visible.
      Ideally this would be 100vh minus the #navigator-toolbox height. */
@@ -60,7 +60,6 @@ tabmodalprompt label[value=""] {
    * (with content showing beside) instead of a full-width overlay. */
   max-width: calc(100vw - 16px - 16px);
   position: absolute;
-  right: auto;
   /* Vertically overlap the browser chrome. */
   top: -3px;
   width: 600px;
