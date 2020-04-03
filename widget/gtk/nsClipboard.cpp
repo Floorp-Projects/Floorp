@@ -498,14 +498,17 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
   nsCOMPtr<nsISupports> item;
 
   GdkAtom selectionTarget = gtk_selection_data_get_target(aSelectionData);
+  LOGCLIP(("  selection target %s\n", gdk_atom_name(selectionTarget)));
 
   // Check to see if the selection data is some text type.
   if (gtk_targets_include_text(&selectionTarget, 1)) {
+    LOGCLIP(("  providing text/unicode data\n"));
     // Try to convert our internal type into a text string.  Get
     // the transferable for this clipboard and try to get the
     // text/unicode type for it.
     rv = trans->GetTransferData("text/unicode", getter_AddRefs(item));
     if (NS_FAILED(rv) || !item) {
+      LOGCLIP(("  GetTransferData() failed to get text/unicode!\n"));
       return;
     }
 
@@ -517,6 +520,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     wideString->GetData(ucs2string);
     NS_ConvertUTF16toUTF8 utf8string(ucs2string);
 
+    LOGCLIP(("  sent %d bytes of utf-8 data\n", utf8string.Length()));
     gtk_selection_data_set_text(aSelectionData, utf8string.get(),
                                 utf8string.Length());
     return;
@@ -524,6 +528,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
 
   // Check to see if the selection data is an image type
   if (gtk_targets_include_image(&selectionTarget, 1, TRUE)) {
+    LOGCLIP(("  providing image data\n"));
     // Look through our transfer data for the image
     static const char* const imageMimeTypes[] = {kNativeImageMime,
                                                  kPNGImageMime, kJPEGImageMime,
@@ -533,36 +538,49 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     for (uint32_t i = 0; i < ArrayLength(imageMimeTypes); i++) {
       rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(imageItem));
       if (NS_FAILED(rv)) {
+        LOGCLIP(
+            ("    %s is missing at GetTransferData()\n", imageMimeTypes[i]));
         continue;
       }
 
       image = do_QueryInterface(imageItem);
       if (image) {
+        LOGCLIP(
+            ("    %s is available at GetTransferData()\n", imageMimeTypes[i]));
         break;
       }
     }
 
     if (!image) {  // Not getting an image for an image mime type!?
+      LOGCLIP(("    Failed to get any image mime from GetTransferData()!\n"));
       return;
     }
 
     GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
-    if (!pixbuf) return;
+    if (!pixbuf) {
+      LOGCLIP(("    nsImageToPixbuf::ImageToPixbuf() failed!\n"));
+      return;
+    }
 
+    LOGCLIP(("    Setting pixbuf image data as %s\n",
+             gdk_atom_name(selectionTarget)));
     gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
     g_object_unref(pixbuf);
     return;
   }
 
   if (selectionTarget == gdk_atom_intern(kHTMLMime, FALSE)) {
+    LOGCLIP(("  providing %s data\n", kHTMLMime));
     rv = trans->GetTransferData(kHTMLMime, getter_AddRefs(item));
     if (NS_FAILED(rv) || !item) {
+      LOGCLIP(("  failed to get %s data by GetTransferData()!\n", kHTMLMime));
       return;
     }
 
     nsCOMPtr<nsISupportsString> wideString;
     wideString = do_QueryInterface(item);
     if (!wideString) {
+      LOGCLIP(("  failed to get wideString interface!"));
       return;
     }
 
@@ -574,19 +592,28 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     html.AppendLiteral(kHTMLMarkupPrefix);
     AppendUTF16toUTF8(ucs2string, html);
 
+    LOGCLIP(("  Setting %d bytest of %s data\n", html.Length(),
+             gdk_atom_name(selectionTarget)));
     gtk_selection_data_set(aSelectionData, selectionTarget, 8,
                            (const guchar*)html.get(), html.Length());
     return;
   }
 
+  LOGCLIP(("  Try if we have anything at GetTransferData() for %s\n",
+           gdk_atom_name(selectionTarget)));
+
   // Try to match up the selection data target to something our
   // transferable provides.
   gchar* target_name = gdk_atom_name(selectionTarget);
-  if (!target_name) return;
+  if (!target_name) {
+    LOGCLIP(("  Failed to get target name!\n"));
+    return;
+  }
 
   rv = trans->GetTransferData(target_name, getter_AddRefs(item));
   // nothing found?
   if (NS_FAILED(rv) || !item) {
+    LOGCLIP(("  Failed to get anything from GetTransferData()!\n"));
     g_free(target_name);
     return;
   }
@@ -597,10 +624,14 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
                                               item, &primitive_data, &dataLen);
 
   if (primitive_data) {
+    LOGCLIP(("  Setting %s as a primitive data type, %d bytes\n", target_name,
+             dataLen));
     gtk_selection_data_set(aSelectionData, selectionTarget,
                            8, /* 8 bits in a unit */
                            (const guchar*)primitive_data, dataLen);
     free(primitive_data);
+  } else {
+    LOGCLIP(("  Failed to get primitive data!\n"));
   }
 
   g_free(target_name);
