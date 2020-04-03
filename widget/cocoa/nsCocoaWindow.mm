@@ -1264,9 +1264,19 @@ static CGSRemoveWindowsFromSpacesFunc GetCGSRemoveWindowsFromSpacesFunc() {
   return func;
 }
 
+void nsCocoaWindow::GetWorkspaceID(nsAString& workspaceID) {
+  workspaceID.Truncate();
+  int32_t sid = GetWorkspaceID();
+  if (sid != 0) {
+    workspaceID.AppendInt(sid);
+  }
+}
+
 int32_t nsCocoaWindow::GetWorkspaceID() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Mac OSX space IDs start at '1' (default space), so '0' means 'unknown',
+  // effectively.
   CGSSpaceID sid = 0;
 
   if (!nsCocoaFeatures::OnElCapitanOrLater()) {
@@ -1300,10 +1310,16 @@ int32_t nsCocoaWindow::GetWorkspaceID() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsCocoaWindow::MoveToWorkspace(int32_t workspaceID) {
+void nsCocoaWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!nsCocoaFeatures::OnElCapitanOrLater()) {
+    return;
+  }
+
+  nsresult rv = NS_OK;
+  int32_t workspaceID = workspaceIDStr.ToInteger(&rv);
+  if (NS_FAILED(rv)) {
     return;
   }
 
