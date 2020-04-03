@@ -369,6 +369,8 @@ function grayMarkingMapLast() {
   clearMarkObservers();
   grayRoot().length = 0;
   g.eval("grayRoot().length = 0");
+
+  return vals; // To prevent the JIT from optimizing out vals.
 }
 
 if (this.enqueueMark)

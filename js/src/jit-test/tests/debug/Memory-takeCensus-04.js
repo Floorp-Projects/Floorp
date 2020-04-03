@@ -9,6 +9,7 @@ g.eval(`
     (function () {
       var onStack = allocationMarker();
       f();
+      return onStack; // To prevent the JIT from optimizing out onStack.
     }())
   }
 `);

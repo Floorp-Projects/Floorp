@@ -4,6 +4,7 @@ g.evaluate(`
     function testInnerFun(defaultArg = 1) {
         function innerFun(expectedThis) { return this; }
         h();
+        return innerFun; // To prevent the JIT from optimizing out innerFun.
     }
 `);
 
