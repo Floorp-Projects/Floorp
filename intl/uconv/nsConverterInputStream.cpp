@@ -234,7 +234,7 @@ uint32_t nsConverterInputStream::Fill(nsresult* aErrorCode) {
 NS_IMETHODIMP
 nsConverterInputStream::ReadLine(nsAString& aLine, bool* aResult) {
   if (!mLineBuffer) {
-    mLineBuffer = new nsLineBuffer<char16_t>;
+    mLineBuffer = MakeUnique<nsLineBuffer<char16_t>>();
   }
   return NS_ReadLine(this, mLineBuffer.get(), aLine, aResult);
 }

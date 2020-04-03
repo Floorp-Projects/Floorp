@@ -10,10 +10,10 @@
 #include "nsIConverterInputStream.h"
 #include "nsIUnicharLineInputStream.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsReadLine.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/UniquePtr.h"
 
 #define NS_CONVERTERINPUTSTREAM_CONTRACTID \
   "@mozilla.org/intl/converter-input-stream;1"
@@ -58,7 +58,7 @@ class nsConverterInputStream : public nsIConverterInputStream,
   uint32_t mUnicharDataLength;
   bool mErrorsAreFatal;
 
-  nsAutoPtr<nsLineBuffer<char16_t> > mLineBuffer;
+  mozilla::UniquePtr<nsLineBuffer<char16_t> > mLineBuffer;
 };
 
 #endif
