@@ -22,6 +22,9 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ste v zasebni seji</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s izbriše zgodovino iskanja in brskanja, ko zaprete aplikacijo ali zaprete vse zavihke zasebnega brskanja. Čeprav to ne pomeni, da ste za spletna mesta ali ponudnike internetnih storitev anonimni, vam omogoča uporabo spleta v zasebnosti, skrito pred očmi ostalih uporabnikov te naprave.</string>
     <string name="private_browsing_common_myths">
        Pogoste zmote o zasebnem brskanju
     </string>
@@ -115,10 +118,15 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Išči jezik</string>
 
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Skeniraj</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
     <string name="search_shortcuts_button">Bližnjice</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Nastavitve iskalnika</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Išči z</string>
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with_2">Tokrat išči z iskalnikom:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -127,6 +135,8 @@
     <string name="search_suggestions_onboarding_allow_button">Dovoli</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Ne dovoli</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Dovolite predloge iskanja v zasebnih oknih?</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Več o tem</string>
 
