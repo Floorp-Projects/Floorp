@@ -18,29 +18,34 @@ private val INVALID_TEST_RUNNERS = setOf(
 
 /**
  * A lint check that ensures unit tests do not specify an invalid test runner. See the error message
- * for details.
+ * and the suggested replacement class' kdoc for details.
  *
- * Related notes:
- * - The AndroidJUnit4 runner seems to just delegate to robolectric. Since robolectric non-trivially
- * increases test runtime, using AndroidJUnit4 in place of RobolectricTestRunner is very misleading
- * about how the test will change.
+ * Performance note: AS indicates this task takes 50ms-100ms to run. This isn't too concerning because
+ * it's one task and it only runs for unit test compilation. However, if we add additional lint checks,
+ * we should considering aggregating them - e.g. this task reads the unit test file tree and we can
+ * combine all of our tasks such that the file tree only needs to be read once - or finding more
+ * optimal solutions - e.g. only running on changed files.
  */
 open class LintUnitTestRunner : DefaultTask() {
     init {
         group = "Verification"
         description = "Ensures unit tests do not specify an invalid test runner"
-        attachToAssembleUnitTestTasks()
+        attachToCompilationTasks()
     }
 
-    private fun attachToAssembleUnitTestTasks() {
+    private fun attachToCompilationTasks() {
         project.gradle.projectsEvaluated { project.tasks.let { tasks ->
-            val assembleUnitTestTasks = tasks.filter {
-                it.name.startsWith("assemble") && it.name.endsWith("UnitTest")
+            // We make compile tasks, rather than assemble tasks, depend on us because some tools,
+            // such as AS' test runner, call the compile task directly rather than going through assemble.
+            val compileUnitTestTasks = tasks.filter {
+                it.name.startsWith("compile") && it.name.contains("UnitTest")
             }
+            compileUnitTestTasks.forEach { it.dependsOn(this@LintUnitTestRunner) }
 
-            assembleUnitTestTasks.forEach {
-                it.dependsOn(this@LintUnitTestRunner)
-            }
+            // To return feedback as early as possible, we run before all compile tasks including
+            // compiling the application.
+            val compileAllTasks = tasks.filter { it.name.startsWith("compile") }
+            compileAllTasks.forEach { it.mustRunAfter(this@LintUnitTestRunner) }
         } }
     }
 
