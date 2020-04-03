@@ -33,13 +33,11 @@ toolbarspacer {
   min-width: 24px !important;
 }
 
-/* ..... drag and drop feedback ..... */
+/* Drag and drop feedback */
 
 toolbarpaletteitem[place="toolbar"] {
-  margin-left: -2px;
-  margin-right: -2px;
-  border-left: 2px solid transparent;
-  border-right: 2px solid transparent;
+  margin-inline: -2px;
+  border-inline: 2px solid transparent;
 }
 
 toolbarpaletteitem[dragover="left"] {
