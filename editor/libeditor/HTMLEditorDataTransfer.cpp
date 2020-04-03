@@ -397,12 +397,14 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // Remove invisible `<br>` element at the point because if there is a `<br>`
   // element at end of what we paste, it will make the existing invisible
   // `<br>` element visible.
-  WSRunObject wsObj(*this, pointToInsert);
-  if (wsObj.GetEndReasonContent() &&
-      wsObj.GetEndReasonContent()->IsHTMLElement(nsGkAtoms::br) &&
-      !IsVisibleBRElement(wsObj.GetEndReasonContent())) {
+  WSRunScanner wsRunScannerAtInsertionPoint(this, pointToInsert);
+  if (wsRunScannerAtInsertionPoint.GetEndReasonContent() &&
+      wsRunScannerAtInsertionPoint.GetEndReasonContent()->IsHTMLElement(
+          nsGkAtoms::br) &&
+      !IsVisibleBRElement(wsRunScannerAtInsertionPoint.GetEndReasonContent())) {
     AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-    rv = DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.GetEndReasonContent()));
+    nsresult rv = DeleteNodeWithTransaction(
+        MOZ_KnownLive(*wsRunScannerAtInsertionPoint.GetEndReasonContent()));
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
       return rv;
@@ -442,7 +444,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
       IsBlockNode(pointToInsert.GetContainer())
           ? pointToInsert.GetContainer()
           : GetBlockNodeParent(pointToInsert.GetContainer());
-  nsCOMPtr<nsIContent> lastInsertedContent;
+  EditorDOMPoint lastInsertedPoint;
   nsCOMPtr<nsIContent> insertedContextParentContent;
   for (OwningNonNull<nsIContent>& content : arrayOfTopMostChildContents) {
     if (NS_WARN_IF(content == fragmentAsNode) ||
@@ -486,12 +488,15 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
               "failed");
           break;
         }
+        // If moving node is moved to different place, we should ignore
+        // this result and keep trying to insert next content node to same
+        // position.
         inserted = true;
-        lastInsertedContent = firstChild;
-        pointToInsert = insertedPoint;
-        DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
-        NS_WARNING_ASSERTION(advanced,
-                             "Failed to advance offset from inserted point");
+        if (firstChild->GetParentElement() == insertedPoint.GetContainer()) {
+          lastInsertedPoint.Set(firstChild);
+          pointToInsert = insertedPoint.NextPoint();
+          MOZ_ASSERT(pointToInsert.IsSet());
+        }
       }
     }
     // If a list element on the clipboard, and pasting it into a list or
@@ -515,6 +520,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
                                  "Insertion point is out of the DOM tree");
             if (pointToInsert.GetContainerParent()) {
               pointToInsert.Set(pointToInsert.GetContainer());
+              MOZ_ASSERT(pointToInsert.IsSet());
               AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
               DebugOnly<nsresult> rvIgnored = DeleteNodeWithTransaction(
                   MOZ_KnownLive(*pointToInsert.GetChild()));
@@ -533,13 +539,15 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
                 "SplitAtEdges::eDoNotCreateEmptyContainer) failed");
             break;
           }
-
+          // If moving node is moved to different place, we should ignore
+          // this result and keep trying to insert next content node to
+          // same position.
           inserted = true;
-          lastInsertedContent = firstChild;
-          pointToInsert = insertedPoint;
-          DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
-          NS_WARNING_ASSERTION(advanced,
-                               "Failed to advance offset from inserted point");
+          if (firstChild->GetParentElement() == insertedPoint.GetContainer()) {
+            lastInsertedPoint.Set(firstChild);
+            pointToInsert = insertedPoint.NextPoint();
+            MOZ_ASSERT(pointToInsert.IsSet());
+          }
         }
         // If the child of current node is not list item nor list element,
         // we should remove it from the DOM tree.
@@ -569,22 +577,20 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
               "SplitAtEdges::eDoNotCreateEmptyContainer) failed");
           break;
         }
-
+        // If moving node is moved to different place, we should ignore
+        // this result and keep trying to insert next content node there.
         inserted = true;
-        lastInsertedContent = firstChild;
-        pointToInsert = insertedPoint;
-        DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
-        NS_WARNING_ASSERTION(advanced,
-                             "Failed to advance offset from inserted point");
+        if (firstChild->GetParentElement() == insertedPoint.GetContainer()) {
+          lastInsertedPoint.Set(firstChild);
+          pointToInsert = insertedPoint.NextPoint();
+          MOZ_ASSERT(pointToInsert.IsSet());
+        }
       }
     }
 
     // If we haven't inserted current node nor its children, move current node
     // to the insertion point.
-    // XXX Checking `rv` here is odd since it's set only by `IsEmpty()` in
-    //     the case of list and list item handling.  And may be it may have
-    //     been set not current time.  So, I think that we should ignore it.
-    if (!inserted || NS_FAILED(rv)) {
+    if (!inserted) {
       // MOZ_KnownLive because 'arrayOfTopMostChildContents' is guaranteed to
       // keep it alive.
       EditorDOMPoint insertedPoint =
@@ -596,43 +602,59 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
           "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction("
           "SplitAtEdges::eDoNotCreateEmptyContainer) failed, but ignored");
       if (insertedPoint.IsSet()) {
-        lastInsertedContent = content;
-        pointToInsert = insertedPoint;
-      }
-
-      // Assume failure means no legal parent in the document hierarchy,
-      // try again with the parent of content in the paste hierarchy.
-      for (nsCOMPtr<nsIContent> parentContent = content;
-           parentContent && !insertedPoint.IsSet();
-           parentContent = parentContent->GetParent()) {
-        if (NS_WARN_IF(!parentContent->GetParent()) ||
-            NS_WARN_IF(
-                parentContent->GetParent()->IsHTMLElement(nsGkAtoms::body))) {
-          continue;
-        }
-        OwningNonNull<nsIContent> oldParentContent(*parentContent->GetParent());
-        insertedPoint = InsertNodeIntoProperAncestorWithTransaction(
-            oldParentContent, pointToInsert,
-            SplitAtEdges::eDoNotCreateEmptyContainer);
-        NS_WARNING_ASSERTION(
-            insertedPoint.IsSet(),
-            "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction("
-            "SplitAtEdges::eDoNotCreateEmptyContainer) failed, but ignored");
-        if (insertedPoint.IsSet()) {
-          insertedContextParentContent = oldParentContent;
+        // Moving node is moved to different place, we should keep trying to
+        // insert the next content to same position.
+        if (content->GetParentElement() == insertedPoint.GetContainer()) {
+          lastInsertedPoint.Set(content);
           pointToInsert = insertedPoint;
+        }
+      } else {
+        // Assume failure means no legal parent in the document hierarchy,
+        // try again with the parent of content in the paste hierarchy.
+        // FYI: We cannot use `InclusiveAncestorOfType` here because of
+        //      calling `InsertNodeIntoProperAncestorWithTransaction()`.
+        for (nsCOMPtr<nsIContent> childContent = content; childContent;
+             childContent = childContent->GetParent()) {
+          if (NS_WARN_IF(!childContent->GetParent()) ||
+              NS_WARN_IF(
+                  childContent->GetParent()->IsHTMLElement(nsGkAtoms::body))) {
+            break;
+          }
+          OwningNonNull<nsIContent> oldParentContent(
+              *childContent->GetParent());
+          insertedPoint = InsertNodeIntoProperAncestorWithTransaction(
+              oldParentContent, pointToInsert,
+              SplitAtEdges::eDoNotCreateEmptyContainer);
+          NS_WARNING_ASSERTION(
+              insertedPoint.IsSet(),
+              "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction("
+              "SplitAtEdges::eDoNotCreateEmptyContainer) failed, but ignored");
+          if (!insertedPoint.IsSet()) {
+            continue;
+          }
+          // Moving node is moved to different place, we should keep trying to
+          // insert the next content to same position.
+          if (oldParentContent == insertedPoint.GetContainer()) {
+            insertedContextParentContent = oldParentContent;
+            pointToInsert = insertedPoint;
+          }
+          break;
         }
       }
     }
-    if (lastInsertedContent) {
-      pointToInsert.Set(lastInsertedContent);
-      DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
-      NS_WARNING_ASSERTION(advanced,
-                           "Failed to advance offset from inserted point");
+    if (lastInsertedPoint.IsSet()) {
+      if (lastInsertedPoint.GetContainer() !=
+          lastInsertedPoint.GetChild()->GetParentNode()) {
+        NS_WARNING(
+            "HTMLEditor::DoInsertHTMLWithContext() got lost insertion point");
+        return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+      }
+      pointToInsert = lastInsertedPoint.NextPoint();
+      MOZ_ASSERT(pointToInsert.IsSet());
     }
   }
 
-  if (!lastInsertedContent) {
+  if (!lastInsertedPoint.IsSet()) {
     return NS_OK;
   }
 
@@ -641,14 +663,14 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
 
   // but don't cross tables
   nsIContent* containerContent = nullptr;
-  if (!HTMLEditUtils::IsTable(lastInsertedContent)) {
-    containerContent = GetLastEditableLeaf(*lastInsertedContent);
+  if (!HTMLEditUtils::IsTable(lastInsertedPoint.GetChild())) {
+    containerContent = GetLastEditableLeaf(*lastInsertedPoint.GetChild());
     if (containerContent) {
       Element* mostAncestorTableRelatedElement = nullptr;
       for (Element* maybeTableRelatedElement =
                containerContent->GetAsElementOrParentElement();
            maybeTableRelatedElement &&
-           maybeTableRelatedElement != lastInsertedContent;
+           maybeTableRelatedElement != lastInsertedPoint.GetChild();
            maybeTableRelatedElement =
                maybeTableRelatedElement->GetParentElement()) {
         if (HTMLEditUtils::IsTable(maybeTableRelatedElement)) {
@@ -665,7 +687,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // If we are not in table elements, we should put caret in the last inserted
   // node.
   if (!containerContent) {
-    containerContent = lastInsertedContent;
+    containerContent = lastInsertedPoint.GetChild();
   }
 
   // If the container is a text node or a container element except `<table>`

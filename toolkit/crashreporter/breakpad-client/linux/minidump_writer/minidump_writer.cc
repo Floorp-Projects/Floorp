@@ -278,8 +278,10 @@ class MinidumpWriter {
     dir.CopyIndex(dir_index++, &dirent);
 
     dirent.stream_type = MD_LINUX_LSB_RELEASE;
-    if (!WriteFile(&dirent.location, "/etc/lsb-release"))
+    if (!WriteFile(&dirent.location, "/etc/lsb-release") &&
+        !WriteFile(&dirent.location, "/etc/os-release")) {
       NullifyDirectoryEntry(&dirent);
+    }
     dir.CopyIndex(dir_index++, &dirent);
 
     dirent.stream_type = MD_LINUX_CMD_LINE;

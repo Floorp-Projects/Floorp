@@ -25,6 +25,7 @@ import {
   getThreads,
   getCurrentThread,
   getThreadContext,
+  getPauseReason,
   getSourceFromId,
   getSkipPausing,
   shouldLogEventBreakpoints,
@@ -104,6 +105,7 @@ type Props = {
   skipPausing: boolean,
   logEventBreakpoints: boolean,
   source: ?Source,
+  pauseReason: string,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
   toggleMapScopes: typeof actions.toggleMapScopes,
   evaluateExpressions: typeof actions.evaluateExpressions,
@@ -321,6 +323,8 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getXHRItem(): AccordionPaneItem {
+    const { pauseReason } = this.props;
+
     return {
       header: L10N.getStr("xhrBreakpoints.header"),
       className: "xhr-breakpoints-pane",
@@ -331,7 +335,7 @@ class SecondaryPanes extends Component<Props, State> {
           onXHRAdded={this.onXHRAdded}
         />
       ),
-      opened: prefs.xhrBreakpointsVisible,
+      opened: prefs.xhrBreakpointsVisible || pauseReason === "XHR",
       onToggle: opened => {
         prefs.xhrBreakpointsVisible = opened;
       },
@@ -367,6 +371,7 @@ class SecondaryPanes extends Component<Props, State> {
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
       pauseOnExceptions,
+      pauseReason,
     } = this.props;
 
     return {
@@ -380,7 +385,10 @@ class SecondaryPanes extends Component<Props, State> {
           pauseOnExceptions={pauseOnExceptions}
         />
       ),
-      opened: prefs.breakpointsVisible,
+      opened:
+        prefs.breakpointsVisible ||
+        pauseReason === "breakpoint" ||
+        pauseReason === "resumeLimit",
       onToggle: opened => {
         prefs.breakpointsVisible = opened;
       },
@@ -388,12 +396,14 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getEventListenersItem(): AccordionPaneItem {
+    const { pauseReason } = this.props;
+
     return {
       header: L10N.getStr("eventListenersHeader1"),
       className: "event-listeners-pane",
       buttons: this.getEventButtons(),
       component: <EventListeners />,
-      opened: prefs.eventListenersVisible,
+      opened: prefs.eventListenersVisible || pauseReason === "eventBreakpoint",
       onToggle: opened => {
         prefs.eventListenersVisible = opened;
       },
@@ -401,12 +411,16 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getDOMMutationsItem(): AccordionPaneItem {
+    const { pauseReason } = this.props;
+
     return {
       header: L10N.getStr("domMutationHeader"),
       className: "dom-mutations-pane",
       buttons: [],
       component: <DOMMutationBreakpoints />,
-      opened: prefs.domMutationBreakpointsVisible,
+      opened:
+        prefs.domMutationBreakpointsVisible ||
+        pauseReason === "mutationBreakpoint",
       onToggle: opened => {
         prefs.domMutationBreakpointsVisible = opened;
       },
@@ -536,6 +550,7 @@ function getRenderWhyPauseDelay(state, thread) {
 const mapStateToProps = state => {
   const thread = getCurrentThread(state);
   const selectedFrame = getSelectedFrame(state, thread);
+  const pauseReason = getPauseReason(state, thread);
 
   return {
     cx: getThreadContext(state),
@@ -554,6 +569,7 @@ const mapStateToProps = state => {
     logEventBreakpoints: shouldLogEventBreakpoints(state),
     source:
       selectedFrame && getSourceFromId(state, selectedFrame.location.sourceId),
+    pauseReason: pauseReason?.type ?? "",
   };
 };
 

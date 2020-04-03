@@ -164,7 +164,9 @@ add_task(async function test_context_menu_password_fill() {
               `[description="${description}"]`
             );
             let passwords = Array.from(
-              formElement.querySelectorAll("input[type='password']")
+              formElement.querySelectorAll(
+                "input[type='password'], input[data-type='password']"
+              )
             );
             return passwords.map(p => p.id);
           }
@@ -194,6 +196,10 @@ add_task(async function test_context_menu_password_fill() {
                 Assert.ok(POPUP_HEADER.disabled, "Popup menu is disabled.");
                 await closePopup(CONTEXT_MENU);
               }
+              Assert.ok(
+                POPUP_HEADER.label.includes("Password"),
+                "top-level label is correct"
+              );
 
               return !inputDisabled;
             }
@@ -257,7 +263,9 @@ add_task(async function test_context_menu_username_login_fill() {
               `[description="${description}"]`
             );
             let inputs = Array.from(
-              formElement.querySelectorAll("input[type='text']")
+              formElement.querySelectorAll(
+                "input[type='text']:not([data-type='password'])"
+              )
             );
             return inputs.map(p => p.id);
           }
@@ -273,8 +281,15 @@ add_task(async function test_context_menu_username_login_fill() {
             async function() {
               let headerHidden = POPUP_HEADER.hidden;
               let headerDisabled = POPUP_HEADER.disabled;
+              let headerLabel = POPUP_HEADER.label;
 
-              let data = { description, inputId, headerHidden, headerDisabled };
+              let data = {
+                description,
+                inputId,
+                headerHidden,
+                headerDisabled,
+                headerLabel,
+              };
               let shouldContinue = await SpecialPowers.spawn(
                 browser,
                 [data],
@@ -284,6 +299,7 @@ add_task(async function test_context_menu_username_login_fill() {
                     inputId,
                     headerHidden,
                     headerDisabled,
+                    headerLabel,
                   } = data;
                   let formElement = content.document.querySelector(
                     `[description="${description}"]`
@@ -292,7 +308,7 @@ add_task(async function test_context_menu_username_login_fill() {
                   // We always want to check if the first password field is filled,
                   // since this is the current behavior from the _fillForm function.
                   let passwordField = formElement.querySelector(
-                    "input[type='password']"
+                    "input[type='password'], input[data-type='password']"
                   );
 
                   // If we don't want to see the actual popup menu,
@@ -312,6 +328,10 @@ add_task(async function test_context_menu_username_login_fill() {
                     }
                     return false;
                   }
+                  Assert.ok(
+                    headerLabel.includes("Login"),
+                    "top-level label is correct"
+                  );
                   return true;
                 }
               );
@@ -335,7 +355,9 @@ add_task(async function test_context_menu_username_login_fill() {
               let formElement = content.document.querySelector(
                 `[description="${description}"]`
               );
-              return formElement.querySelector("input[type='password']").id;
+              return formElement.querySelector(
+                "input[type='password'], input[data-type='password']"
+              ).id;
             }
           );
 

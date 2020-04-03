@@ -128,6 +128,18 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       }
       break;
     }
+    case nsIAccessibleEvent::EVENT_STATE_CHANGE:
+      if (Accessible* accessible = aEvent->GetAccessible()) {
+        accessible->GetNativeInterface((void**)&nativeAcc);
+        if (nativeAcc) {
+          AccStateChangeEvent* event = downcast_accEvent(aEvent);
+          [nativeAcc stateChanged:event->GetState() isEnabled:event->IsStateEnabled()];
+          return NS_OK;
+        } else {
+          return NS_ERROR_FAILURE;
+        }
+      }
+      break;
     default:
       break;
   }
