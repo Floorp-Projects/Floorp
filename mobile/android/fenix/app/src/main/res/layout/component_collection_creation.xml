@@ -13,8 +13,11 @@
     <Button
         android:id="@+id/back_button"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         app:drawableStartCompat="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
@@ -28,13 +31,16 @@
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_default="wrap" />
+        app:layout_constraintWidth_default="wrap"/>
 
     <Button
         android:id="@+id/select_all_button"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:paddingStart="8dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:gravity="start|center_vertical"
         android:text="@string/create_collection_select_all"
@@ -45,7 +51,8 @@
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@+id/guideline"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_default="wrap" />
+        app:layout_constraintBottom_toBottomOf="@id/back_button"
+        app:layout_constraintWidth_default="wrap"/>
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
