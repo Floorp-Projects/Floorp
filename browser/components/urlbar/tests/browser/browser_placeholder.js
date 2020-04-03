@@ -72,6 +72,12 @@ add_task(async function test_change_default_engine_updates_placeholder() {
 });
 
 add_task(async function test_delayed_update_placeholder() {
+  // We remove the change of engine listener here as that is set so that
+  // if the engine is changed by the user then the placeholder is always updated
+  // straight away. As we want to test the delay update here, we remove the
+  // listener and call the placeholder update manually with the delay flag.
+  Services.obs.removeObserver(BrowserSearch, "browser-search-engine-modified");
+
   // Since we can't easily test for startup changes, we'll at least test the delay
   // of update for the placeholder works.
   let urlTab = await BrowserTestUtils.openNewForegroundTab(
@@ -84,6 +90,7 @@ add_task(async function test_delayed_update_placeholder() {
   let blankTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   tabs.push(blankTab);
 
+  await Services.search.setDefault(extraEngine);
   // Pretend we've "initialized".
   BrowserSearch._updateURLBarPlaceholder(extraEngine.name, false, true);
 
@@ -104,8 +111,8 @@ add_task(async function test_delayed_update_placeholder() {
   // Do it the other way to check both named engine and fallback code paths.
   await BrowserTestUtils.switchTab(gBrowser, blankTab);
 
+  await Services.search.setDefault(originalEngine);
   BrowserSearch._updateURLBarPlaceholder(originalEngine.name, false, true);
-  await TestUtils.waitForTick();
 
   Assert.equal(
     gURLBar.placeholder,
@@ -122,13 +129,14 @@ add_task(async function test_delayed_update_placeholder() {
 
   // Now check when we have a URL displayed, the placeholder is updated straight away.
   BrowserSearch._updateURLBarPlaceholder(extraEngine.name, false);
-  await TestUtils.waitForTick();
 
   Assert.equal(
     gURLBar.placeholder,
     gURLBar.getAttribute("defaultPlaceholder"),
     "Placeholder should be the default."
   );
+
+  Services.obs.addObserver(BrowserSearch, "browser-search-engine-modified");
 });
 
 add_task(async function test_private_window_no_separate_engine() {
