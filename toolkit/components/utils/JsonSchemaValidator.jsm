@@ -53,20 +53,20 @@ class JsonSchemaValidator {
    *     result.parsedValue.
    *   When false:
    *     Invalid items in arrays will cause validation to fail.
-   * @param {boolean} allowObjectExplicitUndefinedProperties
+   * @param {boolean} allowExplicitUndefinedProperties
    *   When true:
    *     `someProperty: undefined` will be allowed for non-required properties.
    *   When false:
    *     `someProperty: undefined` will cause validation to fail even for
    *     properties that are not required.
-   * @param {boolean} allowObjectNullAsUndefinedProperties
+   * @param {boolean} allowNullAsUndefinedProperties
    *   When true:
    *     `someProperty: null` will be allowed for non-required properties whose
    *     expected types are non-null.
    *   When false:
    *     `someProperty: null` will cause validation to fail for non-required
    *     properties, except for properties whose expected types are null.
-   * @param {boolean} allowObjectExtraProperties
+   * @param {boolean} allowExtraProperties
    *   When true:
    *     Properties that are not defined in the schema will be ignored, and they
    *     won't be included in result.parsedValue.
@@ -146,11 +146,11 @@ class JsonSchemaValidator {
    *
    * @param {boolean} allowArrayNonMatchingItems
    *   See the static `validate` method above.
-   * @param {boolean} allowObjectExplicitUndefinedProperties
+   * @param {boolean} allowExplicitUndefinedProperties
    *   See the static `validate` method above.
-   * @param {boolean} allowObjectNullAsUndefinedProperties
+   * @param {boolean} allowNullAsUndefinedProperties
    *   See the static `validate` method above.
-   * @param {boolean} allowObjectExtraProperties
+   * @param {boolean} allowExtraProperties
    *   See the static `validate` method above.
    */
   constructor({
