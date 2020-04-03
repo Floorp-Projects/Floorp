@@ -11,8 +11,10 @@ import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -40,6 +42,16 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
 
         findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab))?.apply {
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        findPreference<SwitchPreference>(getPreferenceKey
+            (R.string.pref_key_allow_screenshots_in_private_mode))?.apply {
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    return super.onPreferenceChange(preference, newValue).also {
+                        requireActivity().checkAndUpdateScreenshotPermission(requireActivity().settings()) }
+                }
+            }
         }
     }
 }

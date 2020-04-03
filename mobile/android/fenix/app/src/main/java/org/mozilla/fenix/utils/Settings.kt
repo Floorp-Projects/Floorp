@@ -132,6 +132,11 @@ class Settings private constructor(
         default = false
     )
 
+    var allowScreenshotsInPrivateMode by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_allow_screenshots_in_private_mode),
+        default = true
+    )
+
     var defaultSearchEngineName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_engine),
         default = ""
