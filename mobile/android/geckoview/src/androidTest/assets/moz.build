@@ -38,6 +38,10 @@ addons = {
         'borderify.js',
         'manifest.json',
     ],
+    'page-history': [
+        'page.html',
+        'manifest.json',
+    ],
 }
 
 for addon, files in addons.items():
