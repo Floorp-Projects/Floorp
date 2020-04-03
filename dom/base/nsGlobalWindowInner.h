@@ -898,8 +898,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void Maximize();
   void Minimize();
   void Restore();
-  int32_t GetWorkspaceID();
-  void MoveToWorkspace(int32_t workspaceID);
+  void GetWorkspaceID(nsAString& workspaceID);
+  void MoveToWorkspace(const nsAString& workspaceID);
   void NotifyDefaultButtonLoaded(mozilla::dom::Element& aDefaultButton,
                                  mozilla::ErrorResult& aError);
   mozilla::dom::ChromeMessageBroadcaster* MessageManager();
