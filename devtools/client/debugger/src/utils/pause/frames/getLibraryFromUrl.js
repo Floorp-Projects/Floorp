@@ -13,6 +13,10 @@ const libraryMap = [
     pattern: /backbone/i,
   },
   {
+    label: "Babel",
+    pattern: /node_modules\/@babel/i,
+  },
+  {
     label: "jQuery",
     pattern: /jquery/i,
   },
