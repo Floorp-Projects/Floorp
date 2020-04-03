@@ -54,7 +54,6 @@
 #include "nsIDocShell.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
 #include "nsDocShellCID.h"
@@ -76,6 +75,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsIScriptError.h"
@@ -1451,18 +1451,18 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
     timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
   }
 
-  nsAutoPtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
+  UniquePtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
   if (!aRequest->mIntegrity.IsEmpty()) {
     nsAutoCString sourceUri;
     if (mDocument->GetDocumentURI()) {
       mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
     }
-    sriDataVerifier =
-        new SRICheckDataVerifier(aRequest->mIntegrity, sourceUri, mReporter);
+    sriDataVerifier = MakeUnique<SRICheckDataVerifier>(aRequest->mIntegrity,
+                                                       sourceUri, mReporter);
   }
 
   RefPtr<ScriptLoadHandler> handler =
-      new ScriptLoadHandler(this, aRequest, sriDataVerifier.forget());
+      new ScriptLoadHandler(this, aRequest, std::move(sriDataVerifier));
 
   nsCOMPtr<nsIIncrementalStreamLoader> loader;
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
