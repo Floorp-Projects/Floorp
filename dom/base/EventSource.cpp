@@ -19,7 +19,6 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "nsAutoPtr.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsIAuthPrompt.h"

@@ -8349,7 +8349,8 @@ class StringBuilder {
       return false;
     }
 
-    for (StringBuilder* current = this; current; current = current->mNext) {
+    for (StringBuilder* current = this; current;
+         current = current->mNext.get()) {
       uint32_t len = current->mUnits.Length();
       for (uint32_t i = 0; i < len; ++i) {
         Unit& u = current->mUnits[i];
@@ -8405,7 +8406,7 @@ class StringBuilder {
 
   explicit StringBuilder(StringBuilder* aFirst) : mLast(nullptr), mLength(0) {
     MOZ_COUNT_CTOR(StringBuilder);
-    aFirst->mLast->mNext = this;
+    aFirst->mLast->mNext = WrapUnique(this);
     aFirst->mLast = this;
   }
 
@@ -8476,7 +8477,7 @@ class StringBuilder {
   }
 
   AutoTArray<Unit, STRING_BUFFER_UNITS> mUnits;
-  nsAutoPtr<StringBuilder> mNext;
+  mozilla::UniquePtr<StringBuilder> mNext;
   StringBuilder* mLast;
   // mLength is used only in the first StringBuilder object in the linked list.
   CheckedInt<uint32_t> mLength;
