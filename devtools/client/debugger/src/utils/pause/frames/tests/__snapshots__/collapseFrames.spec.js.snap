@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`collapseFrames default 1`] = `
+Array [
+  Object {
+    "displayName": "a",
+  },
+  Array [
+    Object {
+      "displayName": "b",
+      "library": "React",
+    },
+    Object {
+      "displayName": "c",
+      "library": "React",
+    },
+  ],
+]
+`;
+
+exports[`collapseFrames promises 1`] = `
+Array [
+  Object {
+    "displayName": "a",
+  },
+  Array [
+    Object {
+      "displayName": "b",
+      "library": "React",
+    },
+    Object {
+      "displayName": "c",
+      "library": "React",
+    },
+  ],
+  Object {
+    "asyncCause": "promise callback",
+    "displayName": "d",
+    "library": undefined,
+  },
+  Array [
+    Object {
+      "displayName": "e",
+      "library": "React",
+    },
+    Object {
+      "displayName": "f",
+      "library": "React",
+    },
+  ],
+  Object {
+    "asyncCause": null,
+    "displayName": "g",
+    "library": undefined,
+  },
+]
+`;
