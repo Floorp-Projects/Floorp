@@ -4636,7 +4636,7 @@ void nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect,
                                    aRebuildDisplayItems);
 }
 
-gfxTextRun* nsTextFrame::GetUninflatedTextRun() {
+gfxTextRun* nsTextFrame::GetUninflatedTextRun() const {
   return GetProperty(UninflatedTextRunProperty());
 }
 
