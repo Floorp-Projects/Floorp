@@ -16,7 +16,6 @@ StackingContextHelper::StackingContextHelper()
     : mBuilder(nullptr),
       mScale(1.0f, 1.0f),
       mAffectsClipPositioning(false),
-      mIsPreserve3D(false),
       mRasterizeLocally(false) {
   // mOrigin remains at 0,0
 }
@@ -29,7 +28,6 @@ StackingContextHelper::StackingContextHelper(
     : mBuilder(&aBuilder),
       mScale(1.0f, 1.0f),
       mDeferredTransformItem(aParams.mDeferredTransformItem),
-      mIsPreserve3D(aParams.transform_style == wr::TransformStyle::Preserve3D),
       mRasterizeLocally(aParams.mRasterizeLocally ||
                         aParentSC.mRasterizeLocally) {
   mOrigin = aParentSC.mOrigin + aBounds.TopLeft();
@@ -39,7 +37,7 @@ StackingContextHelper::StackingContextHelper(
   if (aParams.mBoundTransform &&
       aParams.mBoundTransform->CanDraw2D(&transform2d) &&
       aParams.reference_frame_kind != wr::WrReferenceFrameKind::Perspective &&
-      !aParentSC.mIsPreserve3D) {
+      aParams.transform_style != wr::TransformStyle::Preserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
 
     int32_t apd = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
