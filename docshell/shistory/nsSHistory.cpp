@@ -1029,7 +1029,7 @@ nsSHistory::EvictAllContentViewers() {
 
 static void LoadURIs(nsTArray<nsSHistory::LoadEntryResult>& aLoadResults) {
   for (nsSHistory::LoadEntryResult& loadEntry : aLoadResults) {
-    loadEntry.mBrowsingContext->LoadURI(nullptr, loadEntry.mLoadState, false);
+    loadEntry.mBrowsingContext->LoadURI(loadEntry.mLoadState, false);
   }
 }
 
