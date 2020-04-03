@@ -8,7 +8,9 @@ import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.components.TestComponents
 
 /**
- * An override of our application for use in Robolectric-based unit tests.
+ * An override of our application for use in Robolectric-based unit tests. We're forced to override
+ * because our standard application fails to initialize in Robolectric with exceptions like:
+ * "Crash handler service must run in a separate process".
  */
 class FenixRobolectricTestApplication : FenixApplication() {
 
