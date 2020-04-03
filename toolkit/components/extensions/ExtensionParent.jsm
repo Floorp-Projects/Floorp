@@ -1705,50 +1705,6 @@ let IconDetails = {
     return { size, icon: DEFAULT };
   },
 
-  convertImageURLToDataURL(imageURL, contentWindow, browserWindow, size = 16) {
-    return new Promise((resolve, reject) => {
-      let image = new contentWindow.Image();
-      image.onload = function() {
-        let canvas = contentWindow.document.createElement("canvas");
-        let ctx = canvas.getContext("2d");
-        let dSize = size * browserWindow.devicePixelRatio;
-
-        // Scales the image while maintaining width to height ratio.
-        // If the width and height differ, the image is centered using the
-        // smaller of the two dimensions.
-        let dWidth, dHeight, dx, dy;
-        if (this.width > this.height) {
-          dWidth = dSize;
-          dHeight = image.height * (dSize / image.width);
-          dx = 0;
-          dy = (dSize - dHeight) / 2;
-        } else {
-          dWidth = image.width * (dSize / image.height);
-          dHeight = dSize;
-          dx = (dSize - dWidth) / 2;
-          dy = 0;
-        }
-
-        canvas.width = dSize;
-        canvas.height = dSize;
-        ctx.drawImage(
-          this,
-          0,
-          0,
-          this.width,
-          this.height,
-          dx,
-          dy,
-          dWidth,
-          dHeight
-        );
-        resolve(canvas.toDataURL("image/png"));
-      };
-      image.onerror = reject;
-      image.src = imageURL;
-    });
-  },
-
   // These URLs should already be properly escaped, but make doubly sure CSS
   // string escape characters are escaped here, since they could lead to a
   // sandbox break.
