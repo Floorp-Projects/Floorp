@@ -155,6 +155,17 @@ promise_test(async testCase => {
 }, 'cookieStore.delete with missing / at the end of path');
 
 promise_test(async testCase => {
+  const currentUrl = new URL(self.location.href);
+  const currentPath = currentUrl.pathname;
+  const currentDirectory =
+      currentPath.substr(0, currentPath.lastIndexOf('/') + 1);
+  const invalidPath = currentDirectory.substr(1);
+
+  await promise_rejects_js(testCase, TypeError, cookieStore.delete(
+      { name: 'cookie-name', path: invalidPath }));
+}, 'cookieStore.delete with path that does not start with /');
+
+promise_test(async testCase => {
   await cookieStore.set('cookie-name', 'cookie-value');
   testCase.add_cleanup(async () => {
     await cookieStore.delete('cookie-name');
