@@ -265,7 +265,6 @@ impl SpatialTree {
         child_index: SpatialNodeIndex,
         parent_index: SpatialNodeIndex,
     ) -> CoordinateSpaceMapping<LayoutPixel, LayoutPixel> {
-        assert!(child_index.0 >= parent_index.0);
         if child_index == parent_index {
             return CoordinateSpaceMapping::Local;
         }
@@ -278,6 +277,26 @@ impl SpatialTree {
                 .inverse()
                 .accumulate(&child.content_transform);
             return CoordinateSpaceMapping::ScaleOffset(scale_offset);
+        }
+
+        if child_index.0 < parent_index.0 {
+            warn!("Unexpected transform queried from {:?} to {:?}, please call the graphics team!", child_index, parent_index);
+            let child_cs = &self.coord_systems[child.coordinate_system_id.0 as usize];
+            let child_transform = child.content_transform
+                .to_transform::<LayoutPixel, LayoutPixel>()
+                .post_transform(&child_cs.world_transform);
+            let parent_cs = &self.coord_systems[parent.coordinate_system_id.0 as usize];
+            let parent_transform = parent.content_transform
+                .to_transform()
+                .post_transform(&parent_cs.world_transform);
+
+            let result = parent_transform
+                .inverse()
+                .unwrap_or_default()
+                .post_transform(&child_transform)
+                .with_source::<LayoutPixel>()
+                .with_destination::<LayoutPixel>();
+            return CoordinateSpaceMapping::Transform(result);
         }
 
         let mut coordinate_system_id = child.coordinate_system_id;
