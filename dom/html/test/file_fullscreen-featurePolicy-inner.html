@@ -21,7 +21,11 @@ function doRequestFullscreen() {
   document.addEventListener("fullscreenchange", handler);
   document.addEventListener("fullscreenerror", handler);
   parent.opener.info("Requesting fullscreen");
-  document.documentElement.requestFullscreen();
+  if (location.search.includes("chrome")) {
+    SpecialPowers.wrap(document.documentElement).requestFullscreen();
+  } else {
+    document.documentElement.requestFullscreen();
+  }
 }
 </script>
 </body>
