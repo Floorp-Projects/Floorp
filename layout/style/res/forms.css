@@ -405,6 +405,14 @@ optgroup:before {
   content: attr(label);
 }
 
+%ifdef ANDROID
+/* These elements are handled by the prompt module. */
+select option,
+select optgroup {
+  pointer-events: none;
+}
+%endif
+
 *|*::-moz-dropdown-list {
   z-index: 2147483647;
   background-color: inherit;
