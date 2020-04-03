@@ -12,12 +12,7 @@ from condprof.desktop import DesktopEnv
 from condprof.android import AndroidEnv
 from condprof.changelog import Changelog
 from condprof.scenarii import scenarii
-from condprof.util import (
-    logger,
-    get_version,
-    get_current_platform,
-    extract_from_dmg,
-)
+from condprof.util import logger, get_version, get_current_platform, extract_from_dmg
 from condprof.customization import get_customizations, find_customization
 from condprof.client import read_changelog, ProfileNotFoundError
 
@@ -116,11 +111,7 @@ class Runner:
             klass = DesktopEnv
 
         return klass(
-            self.profile,
-            self.firefox,
-            self.geckodriver,
-            self.archive,
-            self.device_name,
+            self.profile, self.firefox, self.geckodriver, self.archive, self.device_name
         )
 
     def display_error(self, scenario, customization):

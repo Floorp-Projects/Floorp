@@ -1,6 +1,8 @@
 import random
 import os
 import asyncio
+from arsenic.errors import UnknownError
+
 
 from condprof.util import logger, get_credentials
 from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
@@ -9,6 +11,7 @@ from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
 BOOKMARK_FREQUENCY = 5
 MAX_URLS = 150
 MAX_BOOKMARKS = 250
+CallErrors = asyncio.TimeoutError, UnknownError
 
 
 class Builder:
@@ -88,6 +91,11 @@ class Builder:
         metadata["result_message"] = script_res.get("result_message", "SUCCESS")
         return metadata
 
+    async def _visit_url(self, current, session, url, word):
+        await asyncio.wait_for(session.get(url), 5)
+        if current % self.bookmark_frequency == 0:
+            await asyncio.wait_for(self.add_bookmark(session, url, word), 5)
+
     async def __call__(self, session):
         metadata = {}
 
@@ -100,20 +108,22 @@ class Builder:
             retries = 0
             while retries < 3:
                 try:
-                    await asyncio.wait_for(session.get(url), 5)
+                    await self._visit_url(current, session, url, word)
                     visited += 1
                     break
-                except asyncio.TimeoutError:
+                except CallErrors:
+                    await asyncio.sleep(1.0)
                     retries += 1
-
-            if current % self.bookmark_frequency == 0:
-                await self.add_bookmark(session, url, word)
 
             if current == self.max_urls - 1:
                 break
 
             # switch to the next tab
-            await tabs.switch()
+            try:
+                await asyncio.wait_for(tabs.switch(), 5)
+            except CallErrors:
+                # if we can't switch, it's ok
+                pass
 
         metadata["visited_url"] = visited
         await self.sync(session, metadata)
