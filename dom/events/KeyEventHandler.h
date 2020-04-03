@@ -13,7 +13,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIController.h"
-#include "nsAutoPtr.h"
 #include "nsIWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
 #include "js/TypeDecls.h"
