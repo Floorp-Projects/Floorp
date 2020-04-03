@@ -62,6 +62,9 @@ export const ASRouterUtils = {
   unblockById(id) {
     ASRouterUtils.sendMessage({ type: "UNBLOCK_MESSAGE_BY_ID", data: { id } });
   },
+  blockBundle(bundle) {
+    ASRouterUtils.sendMessage({ type: "BLOCK_BUNDLE", data: { bundle } });
+  },
   unblockBundle(bundle) {
     ASRouterUtils.sendMessage({ type: "UNBLOCK_BUNDLE", data: { bundle } });
   },
