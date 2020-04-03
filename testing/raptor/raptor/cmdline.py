@@ -164,6 +164,8 @@ def create_parser(mach_interface=False):
             help="Flag which indicates if Raptor should not offer to install Android APK.")
     add_arg('--installerpath', dest="installerpath", default=None, type=str,
             help="Location where Android browser APK was extracted to before installation.")
+    add_arg('--disable-perf-tuning', dest='disable_perf_tuning', default=False,
+            action="store_true", help="Disable performance tuning on android.")
 
     # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
     add_arg('--cold', dest="cold", action="store_true",

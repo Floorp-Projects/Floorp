@@ -237,6 +237,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Use Raptor to measure CPU usage."
         }],
+        [["--disable-perf-tuning"], {
+            "action": "store_true",
+            "dest": "disable_perf_tuning",
+            "default": False,
+            "help": "Disable performance tuning on android.",
+        }],
         [["--debug-mode"], {
             "dest": "debug_mode",
             "action": "store_true",
@@ -359,6 +365,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.power_test = self.config.get('power_test')
         self.memory_test = self.config.get('memory_test')
         self.cpu_test = self.config.get('cpu_test')
+        self.disable_perf_tuning = self.config.get('disable_perf_tuning')
         self.extra_prefs = self.config.get('extra_prefs')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
@@ -540,6 +547,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--memory-test'])
         if self.config.get('cpu_test', False):
             options.extend(['--cpu-test'])
+        if self.config.get('disable_perf_tuning', False):
+            options.extend(['--disable-perf-tuning'])
         if self.config.get('cold', False):
             options.extend(['--cold'])
         if self.config.get('enable_webrender', False):
