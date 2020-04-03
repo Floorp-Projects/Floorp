@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #include "nsError.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"

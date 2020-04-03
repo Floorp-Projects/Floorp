@@ -11,7 +11,6 @@
 #include "mozIStorageStatement.h"
 #include "mozIStorageAsyncStatement.h"
 
-#include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
 

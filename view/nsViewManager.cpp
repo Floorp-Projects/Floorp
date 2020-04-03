@@ -11,7 +11,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/dom/Document.h"
-#include "nsAutoPtr.h"
 #include "nsGfxCIID.h"
 #include "nsView.h"
 #include "nsCOMPtr.h"

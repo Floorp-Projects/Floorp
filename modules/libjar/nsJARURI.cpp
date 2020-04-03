@@ -12,7 +12,6 @@
 #include "nsIStandardURL.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
-#include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

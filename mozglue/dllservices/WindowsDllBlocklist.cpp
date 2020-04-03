@@ -13,7 +13,6 @@
 
 #include "Authenticode.h"
 #include "BaseProfiler.h"
-#include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
