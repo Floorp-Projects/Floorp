@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsURILoader.h"
-#include "nsAutoPtr.h"
 #include "nsIURIContentListener.h"
 #include "nsIContentHandler.h"
 #include "nsILoadGroup.h"

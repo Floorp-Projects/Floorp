@@ -28,7 +28,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "ContentHandlerService.h"
 #include "prenv.h"  // for PR_GetEnv()
-#include "nsAutoPtr.h"
 #include "mozilla/Preferences.h"
 #include "nsMimeTypes.h"
 

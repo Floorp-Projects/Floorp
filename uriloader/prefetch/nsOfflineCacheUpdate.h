@@ -8,7 +8,6 @@
 
 #include "nsIOfflineCacheUpdate.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIChannelEventSink.h"
