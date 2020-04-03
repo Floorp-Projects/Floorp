@@ -124,34 +124,6 @@ class WebRenderLayerScrollData final {
     return mFixedPosScrollContainerId;
   }
 
-  void SetStickyPositionScrollContainerId(ScrollableLayerGuid::ViewID aId) {
-    mStickyPosScrollContainerId = aId;
-  }
-  ScrollableLayerGuid::ViewID GetStickyPositionScrollContainerId() const {
-    return mStickyPosScrollContainerId;
-  }
-
-  void SetStickyScrollRangeOuter(const LayerRectAbsolute& scrollRange) {
-    mStickyScrollRangeOuter = scrollRange;
-  }
-  const LayerRectAbsolute& GetStickyScrollRangeOuter() const {
-    return mStickyScrollRangeOuter;
-  }
-
-  void SetStickyScrollRangeInner(const LayerRectAbsolute& scrollRange) {
-    mStickyScrollRangeInner = scrollRange;
-  }
-  const LayerRectAbsolute& GetStickyScrollRangeInner() const {
-    return mStickyScrollRangeInner;
-  }
-
-  void SetStickyPositionAnimationId(const uint64_t& aId) {
-    mStickyPositionAnimationId = Some(aId);
-  }
-  Maybe<uint64_t> GetStickyPositionAnimationId() const {
-    return mStickyPositionAnimationId;
-  }
-
   wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
 
   void SetZoomAnimationId(const uint64_t& aId) { mZoomAnimationId = Some(aId); }
@@ -199,10 +171,6 @@ class WebRenderLayerScrollData final {
   Maybe<uint64_t> mFixedPositionAnimationId;
   SideBits mFixedPositionSides;
   ScrollableLayerGuid::ViewID mFixedPosScrollContainerId;
-  ScrollableLayerGuid::ViewID mStickyPosScrollContainerId;
-  LayerRectAbsolute mStickyScrollRangeOuter;
-  LayerRectAbsolute mStickyScrollRangeInner;
-  Maybe<uint64_t> mStickyPositionAnimationId;
   wr::RenderRoot mRenderRoot;
   Maybe<uint64_t> mZoomAnimationId;
   Maybe<ScrollableLayerGuid::ViewID> mAsyncZoomContainerId;
@@ -306,10 +274,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
     WriteParam(aMsg, aParam.mFixedPositionAnimationId);
     WriteParam(aMsg, aParam.mFixedPositionSides);
     WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
-    WriteParam(aMsg, aParam.mStickyPosScrollContainerId);
-    WriteParam(aMsg, aParam.mStickyScrollRangeOuter);
-    WriteParam(aMsg, aParam.mStickyScrollRangeInner);
-    WriteParam(aMsg, aParam.mStickyPositionAnimationId);
     WriteParam(aMsg, aParam.mRenderRoot);
     WriteParam(aMsg, aParam.mZoomAnimationId);
     WriteParam(aMsg, aParam.mAsyncZoomContainerId);
@@ -331,10 +295,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
            ReadParam(aMsg, aIter, &aResult->mFixedPositionAnimationId) &&
            ReadParam(aMsg, aIter, &aResult->mFixedPositionSides) &&
            ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyPosScrollContainerId) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeOuter) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeInner) &&
-           ReadParam(aMsg, aIter, &aResult->mStickyPositionAnimationId) &&
            ReadParam(aMsg, aIter, &aResult->mRenderRoot) &&
            ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
            ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId);
