@@ -216,7 +216,7 @@ void AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
   AudioChannelWindow* winData = GetWindowData(windowID);
   if (!winData) {
     winData = new AudioChannelWindow(windowID);
-    mWindows.AppendElement(winData);
+    mWindows.AppendElement(WrapUnique(winData));
   }
 
   // To make sure agent would be alive because AppendAgent() would trigger the
@@ -314,15 +314,15 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
       return rv;
     }
 
-    nsAutoPtr<AudioChannelWindow> winData;
+    UniquePtr<AudioChannelWindow> winData;
     {
-      nsTObserverArray<nsAutoPtr<AudioChannelWindow>>::ForwardIterator iter(
+      nsTObserverArray<UniquePtr<AudioChannelWindow>>::ForwardIterator iter(
           mWindows);
       while (iter.HasMore()) {
-        nsAutoPtr<AudioChannelWindow>& next = iter.GetNext();
+        auto& next = iter.GetNext();
         if (next->mWindowID == outerID) {
           uint32_t pos = mWindows.IndexOf(next);
-          winData = next.forget();
+          winData = std::move(next);
           mWindows.RemoveElementAt(pos);
           break;
         }
@@ -422,7 +422,7 @@ AudioChannelService::GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow) {
   AudioChannelWindow* winData = GetWindowData(aWindow->WindowID());
   if (!winData) {
     winData = new AudioChannelWindow(aWindow->WindowID());
-    mWindows.AppendElement(winData);
+    mWindows.AppendElement(WrapUnique(winData));
   }
 
   return winData;
@@ -430,10 +430,10 @@ AudioChannelService::GetOrCreateWindowData(nsPIDOMWindowOuter* aWindow) {
 
 AudioChannelService::AudioChannelWindow* AudioChannelService::GetWindowData(
     uint64_t aWindowID) const {
-  nsTObserverArray<nsAutoPtr<AudioChannelWindow>>::ForwardIterator iter(
+  nsTObserverArray<UniquePtr<AudioChannelWindow>>::ForwardIterator iter(
       mWindows);
   while (iter.HasMore()) {
-    AudioChannelWindow* next = iter.GetNext();
+    AudioChannelWindow* next = iter.GetNext().get();
     if (next->mWindowID == aWindowID) {
       return next;
     }
