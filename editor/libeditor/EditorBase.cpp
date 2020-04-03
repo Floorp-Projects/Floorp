@@ -360,7 +360,7 @@ nsresult EditorBase::PostCreate() {
   // update nsTextStateManager and caret if we have focus
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
-    DebugOnly<nsresult> rvIgnored = InitializeSelection(focusedContent);
+    DebugOnly<nsresult> rvIgnored = InitializeSelection(*focusedContent);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "EditorBase::InitializeSelection() failed, but ignored");
@@ -5074,14 +5074,11 @@ void EditorBase::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit) {
   SelectionRefPtr()->SetAncestorLimiter(&aAncestorLimit);
 }
 
-nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
+nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsCOMPtr<nsINode> targetNode = do_QueryInterface(aFocusEventTarget);
-  if (NS_WARN_IF(!targetNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsCOMPtr<nsIContent> selectionRootContent = FindSelectionRoot(targetNode);
+  nsCOMPtr<nsIContent> selectionRootContent =
+      FindSelectionRoot(&aFocusEventTargetNode);
   if (!selectionRootContent) {
     return NS_OK;
   }
@@ -5113,7 +5110,8 @@ nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
   // Also, make sure to always ignore it for designMode, since that effectively
   // overrides everything and we allow to edit stuff with
   // contenteditable="false" subtrees in such a document.
-  caret->SetIgnoreUserModify(targetNode->OwnerDoc()->HasFlag(NODE_IS_EDITABLE));
+  caret->SetIgnoreUserModify(
+      aFocusEventTargetNode.OwnerDoc()->HasFlag(NODE_IS_EDITABLE));
 
   // Init selection
   rvIgnored =
@@ -5148,15 +5146,16 @@ nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
     EditorRawDOMPoint atStartOfFirstRange(firstRange->StartRef());
     EditorRawDOMPoint betterInsertionPoint =
         FindBetterInsertionPoint(atStartOfFirstRange);
-    Text* textNode = betterInsertionPoint.GetContainerAsText();
+    RefPtr<Text> textNode = betterInsertionPoint.GetContainerAsText();
     MOZ_ASSERT(textNode,
                "There must be text node if composition string is not empty");
     if (textNode) {
       MOZ_ASSERT(textNode->Length() >= mComposition->XPEndOffsetInTextNode(),
                  "The text node must be different from the old text node");
+      RefPtr<TextRangeArray> ranges = mComposition->GetRanges();
       DebugOnly<nsresult> rvIgnored = CompositionTransaction::SetIMESelection(
           *this, textNode, mComposition->XPOffsetInTextNode(),
-          mComposition->XPLengthInTextNode(), mComposition->GetRanges());
+          mComposition->XPLengthInTextNode(), ranges);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "CompositionTransaction::SetIMESelection() failed, but ignored");
@@ -5215,7 +5214,7 @@ void EditorBase::ReinitializeSelection(Element& aElement) {
     return;
   }
 
-  OnFocus(&aElement);
+  OnFocus(aElement);
 
   // If previous focused editor turn on spellcheck and this editor doesn't
   // turn on it, spellcheck state is mismatched.  So we need to re-sync it.
@@ -5493,13 +5492,13 @@ bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
   return IsActiveInDOMWindow();
 }
 
-void EditorBase::OnFocus(EventTarget* aFocusEventTarget) {
+void EditorBase::OnFocus(nsINode& aFocusEventTargetNode) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return;
   }
 
-  InitializeSelection(aFocusEventTarget);
+  InitializeSelection(aFocusEventTargetNode);
   mSpellCheckerDictionaryUpdated = false;
   if (mInlineSpellChecker && CanEnableSpellCheck()) {
     DebugOnly<nsresult> rvIgnored =

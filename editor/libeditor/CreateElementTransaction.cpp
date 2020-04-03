@@ -69,8 +69,7 @@ NS_IMPL_RELEASE_INHERITED(CreateElementTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-CreateElementTransaction::DoTransaction() {
+NS_IMETHODIMP CreateElementTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTag) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;

@@ -50,8 +50,7 @@ NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-SplitNodeTransaction::DoTransaction() {
+NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mStartOfRightContent.IsSet())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -118,8 +117,7 @@ SplitNodeTransaction::DoTransaction() {
   return error.StealNSResult();
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-SplitNodeTransaction::UndoTransaction() {
+NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mNewLeftContent) ||
       NS_WARN_IF(!mContainerParentNode) ||
       NS_WARN_IF(!mStartOfRightContent.IsSet())) {
@@ -143,8 +141,7 @@ SplitNodeTransaction::UndoTransaction() {
  * on the redo stack may depend on the left node existing in its previous
  * state.
  */
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-SplitNodeTransaction::RedoTransaction() {
+NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!mNewLeftContent) || NS_WARN_IF(!mContainerParentNode) ||
       NS_WARN_IF(!mStartOfRightContent.IsSet()) || NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_AVAILABLE;

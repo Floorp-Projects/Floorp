@@ -59,7 +59,7 @@ class ChangeStyleTransaction final : public EditTransactionBase {
 
   NS_DECL_EDITTRANSACTIONBASE
 
-  NS_IMETHOD RedoTransaction() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
   /**
    * Returns true if the list of white-space separated values contains aValue
@@ -106,7 +106,8 @@ class ChangeStyleTransaction final : public EditTransactionBase {
    * is empty, remove the property from element's styles. If the boolean
    * is false, just remove the style attribute.
    */
-  nsresult SetStyle(bool aAttributeWasSet, nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT nsresult SetStyle(bool aAttributeWasSet,
+                                       nsAString& aValue);
 
   // The element to operate upon.
   RefPtr<nsStyledElement> mStyledElement;
