@@ -162,8 +162,7 @@ html|a {
   width: 20px;
   height: 20px;
   margin-top: 4px;
-  margin-inline-start: -24px;
-  margin-inline-end: 4px;
+  margin-inline: -24px 4px;
   border: none;
   border-radius: 2px;
   background-color: transparent;

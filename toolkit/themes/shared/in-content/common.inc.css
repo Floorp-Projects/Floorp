@@ -194,8 +194,7 @@ xul|tabpanels {
 
 xul|tabs {
   margin-bottom: 15px;
-  border-top: 1px solid var(--in-content-box-border-color);
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-block: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-page-background);
   color: var(--in-content-tab-color);
 }
@@ -250,9 +249,8 @@ xul|menulist {
 
 xul|button,
 html|button {
-  /* use the same margin of other elements for the alignment */
-  margin-left: 4px;
-  margin-right: 4px;
+  /* Use the same margin of other elements for the alignment */
+  margin-inline: 4px;
 }
 
 html|button::-moz-focus-inner,
@@ -284,13 +282,12 @@ html|select:not([size]):not([multiple]) {
   fill: currentColor;
   font-size: inherit;
   line-height: 2.1;
-  padding-inline-start: 5px;
-  padding-inline-end: 24px;
+  padding-inline: 5px 24px;
   text-overflow: ellipsis;
 }
 
 html|select:not([size]):not([multiple]):dir(rtl) {
-  background-position: left 3px center;
+  background-position-x: left 3px;
 }
 
 html|select:not([size]):not([multiple]) > html|option {
@@ -412,10 +409,8 @@ xul|menulist > xul|menupopup xul|menuitem {
   -moz-appearance: none;
   font-size: 1em;
   color: var(--in-content-text-color);
-  padding-top: 0.2em;
-  padding-bottom: 0.2em;
-  padding-inline-start: 10px;
-  padding-inline-end: 30px;
+  padding-block: 0.2em;
+  padding-inline: 10px 30px;
 }
 
 xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
@@ -465,8 +460,7 @@ xul|search-textbox {
 
 xul|search-textbox {
   min-height: 30px;
-  padding-right: 8px;
-  padding-left: 8px;
+  padding-inline: 8px;
 }
 
 html|input[type="email"],
@@ -654,8 +648,7 @@ xul|radio[disabled="true"] {
 }
 
 xul|*.radio-label-box {
-  margin-inline-start: -1px; /* negative margin for the transparent border */
-  margin-inline-end: 8px;
+  margin-inline: -1px 8px; /* the negative margin-inline-start for the transparent border */
   padding-inline-start: 0;
 }
 
@@ -679,8 +672,7 @@ html|*#categories {
   min-height: 48px;
   -moz-appearance: none;
   margin-inline-start: 34px;
-  padding-inline-end: 10px;
-  padding-inline-start: 10px;
+  padding-inline: 10px;
   transition: background-color 150ms;
 }
 
@@ -786,8 +778,7 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
   }
 
   .main-content {
-    padding-left: 0;
-    padding-right: 0;
+    padding-inline: 0;
   }
 
   .pane-container {
@@ -818,8 +809,7 @@ html|select[size][multiple],
 xul|listheader,
 xul|richlistbox {
   -moz-appearance: none;
-  margin-left: 0;
-  margin-right: 0;
+  margin-inline: 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
@@ -1040,8 +1030,7 @@ input[type="text"][warning]:enabled:not(:focus) {
 .sidebar-footer-link,
 .sidebar-footer-button > .text-link {
   -moz-box-flex: 1;
-  margin-inline-start: 34px;
-  margin-inline-end: 0;
+  margin-inline: 34px 0;
   text-decoration: none;
   color: currentColor;
   width: 36px;
