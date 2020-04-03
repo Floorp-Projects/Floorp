@@ -34,7 +34,6 @@
     locale/browser/translation.dtd                 (%chrome/browser/translation.dtd)
     locale/browser/translation.properties          (%chrome/browser/translation.properties)
     locale/browser/webrtcIndicator.properties      (%chrome/browser/webrtcIndicator.properties)
-    locale/browser/downloads/downloads.dtd         (%chrome/browser/downloads/downloads.dtd)
     locale/browser/downloads/downloads.properties  (%chrome/browser/downloads/downloads.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)

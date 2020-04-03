@@ -17,8 +17,6 @@
 <!DOCTYPE window [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
-<!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
-%downloadsDTD;
 <!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuOverlayDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -45,6 +43,7 @@
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
     <html:link rel="localization" href="browser/browserSets.ftl"/>
+    <html:link rel="localization" href="browser/downloads.ftl"/>
   </linkset>
 
   <script src="chrome://browser/content/places/places.js"/>
@@ -95,7 +94,6 @@
              oncommand="PlacesOrganizer.forward();"/>
   </commandset>
 #include ../../downloads/content/downloadsCommands.inc.xhtml
-#include ../../downloads/content/downloadsStrings.inc.xhtml
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
@@ -327,10 +325,9 @@
 #endif
 
       <toolbarbutton id="clearDownloadsButton"
+                          data-l10n-id="downloads-clear-downloads-button"
                           class="tabbable"
-                          label="&clearDownloadsButton.label;"
-                          command="downloadsCmd_clearDownloads"
-                          tooltiptext="&clearDownloadsButton.tooltip;"/>
+                          command="downloadsCmd_clearDownloads"/>
 
       <spacer id="libraryToolbarSpacer" flex="1"/>
 
