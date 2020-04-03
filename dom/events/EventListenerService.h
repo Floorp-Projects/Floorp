@@ -9,7 +9,6 @@
 
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEventListenerService.h"
 #include "nsString.h"
