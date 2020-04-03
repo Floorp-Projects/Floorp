@@ -45,8 +45,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTransaction)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(InsertTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-InsertTextTransaction::DoTransaction() {
+NS_IMETHODIMP InsertTextTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -82,8 +81,7 @@ InsertTextTransaction::DoTransaction() {
   return NS_OK;
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-InsertTextTransaction::UndoTransaction() {
+NS_IMETHODIMP InsertTextTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
