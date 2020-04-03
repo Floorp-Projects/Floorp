@@ -138,6 +138,9 @@ add_task(
         let loginList = content.document.querySelector("login-list");
         let loginItem = content.document.querySelector("login-item");
         let loginIntro = content.document.querySelector("login-intro");
+        await ContentTaskUtils.waitForCondition(() => {
+          return !loginList.classList.contains("no-logins");
+        }, "waiting for login-list to leave the no-logins view");
         ok(
           !loginList.classList.contains("empty-search"),
           "login-list should not be showing no logins view since one login exists"

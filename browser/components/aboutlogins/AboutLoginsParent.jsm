@@ -553,7 +553,6 @@ var AboutLogins = {
         if (!login) {
           return;
         }
-        this.messageSubscribers("AboutLogins:LoginAdded", login);
 
         if (BREACH_ALERTS_ENABLED) {
           this.messageSubscribers(
@@ -569,6 +568,8 @@ var AboutLogins = {
             );
           }
         }
+
+        this.messageSubscribers("AboutLogins:LoginAdded", login);
         break;
       }
       case "modifyLogin": {

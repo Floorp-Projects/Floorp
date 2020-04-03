@@ -393,8 +393,10 @@ export default class LoginList extends HTMLElement {
     this[internalMemberName] = mapByLoginGUID;
     if (this[internalMemberName].size) {
       for (let [loginGuid] of mapByLoginGUID) {
-        let { login, listItem } = this._logins[loginGuid];
-        LoginListItemFactory.update(listItem, login);
+        if (this._logins[loginGuid]) {
+          let { login, listItem } = this._logins[loginGuid];
+          LoginListItemFactory.update(listItem, login);
+        }
       }
       if (updateSortAndSelectedLogin) {
         const alertsSortOptionElement = this._sortSelect.namedItem("alerts");

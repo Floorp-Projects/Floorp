@@ -133,6 +133,11 @@ add_task(async function test_create_login() {
       (_, data) => data == "modifyLogin"
     );
     await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
+      await ContentTaskUtils.waitForCondition(() => {
+        return !content.document.documentElement.classList.contains(
+          "no-logins"
+        );
+      }, "waiting for no-logins view to exit");
       ok(
         !content.document.documentElement.classList.contains("no-logins"),
         "Should no longer be in no logins view"
