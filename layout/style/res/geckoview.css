@@ -32,13 +32,6 @@ textarea,
   background-color: white;
 }
 
-/* These elements are handled by the prompt module. */
-select option, select optgroup,
-input[type="date"] div:-moz-native-anonymous.datetime-input-box-wrapper,
-input[type="time"] div:-moz-native-anonymous.datetime-input-box-wrapper {
-  pointer-events: none;
-}
-
 select:not([size]):not([multiple]),
 select[size="0"],
 select[size="1"],
