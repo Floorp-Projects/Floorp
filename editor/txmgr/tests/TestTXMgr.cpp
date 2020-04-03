@@ -270,7 +270,7 @@ class SimpleTransaction : public TestTransaction {
 
   ~SimpleTransaction() override = default;
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DoTransaction() override {
+  NS_IMETHOD DoTransaction() override {
     //
     // Make sure DoTransaction() is called in the order we expect!
     // Notice that we don't check to see if we go past the end of the array.
@@ -286,7 +286,7 @@ class SimpleTransaction : public TestTransaction {
     return (mFlags & THROWS_DO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD UndoTransaction() override {
+  NS_IMETHOD UndoTransaction() override {
     //
     // Make sure UndoTransaction() is called in the order we expect!
     // Notice that we don't check to see if we go past the end of the array.
@@ -302,7 +302,7 @@ class SimpleTransaction : public TestTransaction {
     return (mFlags & THROWS_UNDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override {
+  NS_IMETHOD RedoTransaction() override {
     //
     // Make sure RedoTransaction() is called in the order we expect!
     // Notice that we don't check to see if we go past the end of the array.
@@ -372,7 +372,7 @@ class AggregateTransaction : public SimpleTransaction {
 
   ~AggregateTransaction() override = default;
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DoTransaction() override {
+  NS_IMETHOD DoTransaction() override {
     if (mLevel >= mMaxLevel) {
       // Only leaf nodes can throw errors!
       mFlags |= mErrorFlags;
@@ -390,7 +390,7 @@ class AggregateTransaction : public SimpleTransaction {
     }
 
     if (mFlags & BATCH_FLAG) {
-      rv = MOZ_KnownLive(mTXMgr)->BeginBatch(nullptr);
+      rv = mTXMgr->BeginBatch(nullptr);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -416,7 +416,7 @@ class AggregateTransaction : public SimpleTransaction {
       RefPtr<AggregateTransaction> tximpl = new AggregateTransaction(
           mTXMgr, cLevel, i, mMaxLevel, mNumChildrenPerNode, flags);
 
-      rv = MOZ_KnownLive(mTXMgr)->DoTransaction(tximpl);
+      rv = mTXMgr->DoTransaction(tximpl);
       if (NS_FAILED(rv)) {
         if (mFlags & BATCH_FLAG) {
           mTXMgr->EndBatch(false);
@@ -482,7 +482,7 @@ void reset_globals() {
 /**
  * Test behaviors in non-batch mode.
  **/
-MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
+void quick_test(TestTransactionFactory* factory) {
   /*******************************************************************
    *
    * Create a transaction manager implementation:
@@ -497,7 +497,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *
    *******************************************************************/
 
-  nsresult rv = mgr->DoTransaction(nullptr);
+  nsresult rv = mgr->DoTransaction(0);
   EXPECT_EQ(rv, NS_ERROR_NULL_POINTER);
 
   /*******************************************************************
@@ -1229,8 +1229,7 @@ TEST(TestTXMgr, AggregationTest)
 /**
  * Test behaviors in batch mode.
  **/
-MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
-    TestTransactionFactory* factory) {
+void quick_batch_test(TestTransactionFactory* factory) {
   /*******************************************************************
    *
    * Create a transaction manager implementation:
@@ -1859,8 +1858,7 @@ TEST(TestTXMgr, AggregationBatchTest)
  * Create 'iterations * (iterations + 1) / 2' transactions;
  * do/undo/redo/undo them.
  **/
-MOZ_CAN_RUN_SCRIPT_BOUNDARY void stress_test(TestTransactionFactory* factory,
-                                             int32_t iterations) {
+void stress_test(TestTransactionFactory* factory, int32_t iterations) {
   /*******************************************************************
    *
    * Create a transaction manager:

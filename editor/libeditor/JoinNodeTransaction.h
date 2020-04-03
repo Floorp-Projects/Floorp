@@ -12,7 +12,6 @@
 #include "nsID.h"    // for REFNSIID
 #include "nscore.h"  // for NS_IMETHOD
 
-class nsIContent;
 class nsINode;
 
 namespace mozilla {
@@ -27,8 +26,8 @@ class EditorBase;
  */
 class JoinNodeTransaction final : public EditTransactionBase {
  protected:
-  JoinNodeTransaction(EditorBase& aEditorBase, nsIContent& aLeftContent,
-                      nsIContent& aRightContent);
+  JoinNodeTransaction(EditorBase& aEditorBase, nsINode& aLeftNode,
+                      nsINode& aRightNode);
 
  public:
   /**
@@ -36,12 +35,11 @@ class JoinNodeTransaction final : public EditTransactionBase {
    * nodes.
    *
    * @param aEditorBase     The provider of core editing operations.
-   * @param aLeftContent    The first of two nodes to join.
-   * @param aRightContent   The second of two nodes to join.
+   * @param aLeftNode       The first of two nodes to join.
+   * @param aRightNode      The second of two nodes to join.
    */
   static already_AddRefed<JoinNodeTransaction> MaybeCreate(
-      EditorBase& aEditorBase, nsIContent& aLeftContent,
-      nsIContent& aRightContent);
+      EditorBase& aEditorBase, nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
    * CanDoIt() returns true if there are enough members and can join or
@@ -58,18 +56,18 @@ class JoinNodeTransaction final : public EditTransactionBase {
  protected:
   RefPtr<EditorBase> mEditorBase;
 
-  // The nodes to operate upon.  After the merge, mRightContent remains and
-  // mLeftContent is removed from the content tree.
-  nsCOMPtr<nsIContent> mLeftContent;
-  nsCOMPtr<nsIContent> mRightContent;
+  // The nodes to operate upon.  After the merge, mRightNode remains and
+  // mLeftNode is removed from the content tree.
+  nsCOMPtr<nsINode> mLeftNode;
+  nsCOMPtr<nsINode> mRightNode;
 
   // The offset into mNode where the children of mElement are split (for
   // undo). mOffset is the index of the first child in the right node.  -1
   // means the left node had no children.
   uint32_t mOffset;
 
-  // The parent node containing mLeftContent and mRightContent.
-  nsCOMPtr<nsINode> mParentNode;
+  // The parent node containing mLeftNode and mRightNode.
+  nsCOMPtr<nsINode> mParent;
 };
 
 }  // namespace mozilla

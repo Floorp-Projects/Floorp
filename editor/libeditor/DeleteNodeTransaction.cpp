@@ -14,9 +14,9 @@ namespace mozilla {
 
 // static
 already_AddRefed<DeleteNodeTransaction> DeleteNodeTransaction::MaybeCreate(
-    EditorBase& aEditorBase, nsIContent& aContentToDelete) {
+    EditorBase& aEditorBase, nsINode& aNodeToDelete) {
   RefPtr<DeleteNodeTransaction> transaction =
-      new DeleteNodeTransaction(aEditorBase, aContentToDelete);
+      new DeleteNodeTransaction(aEditorBase, aNodeToDelete);
   if (NS_WARN_IF(!transaction->CanDoIt())) {
     return nullptr;
   }
@@ -24,14 +24,14 @@ already_AddRefed<DeleteNodeTransaction> DeleteNodeTransaction::MaybeCreate(
 }
 
 DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
-                                             nsIContent& aContentToDelete)
+                                             nsINode& aNodeToDelete)
     : mEditorBase(&aEditorBase),
-      mContentToDelete(&aContentToDelete),
-      mParentNode(aContentToDelete.GetParentNode()) {}
+      mNodeToDelete(&aNodeToDelete),
+      mParentNode(aNodeToDelete.GetParentNode()) {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTransactionBase,
-                                   mEditorBase, mContentToDelete, mParentNode,
-                                   mRefContent)
+                                   mEditorBase, mNodeToDelete, mParentNode,
+                                   mRefNode)
 
 NS_IMPL_ADDREF_INHERITED(DeleteNodeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(DeleteNodeTransaction, EditTransactionBase)
@@ -39,8 +39,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 bool DeleteNodeTransaction::CanDoIt() const {
-  if (NS_WARN_IF(!mContentToDelete) || NS_WARN_IF(!mEditorBase) ||
-      !mParentNode || !mEditorBase->IsModifiableNode(*mParentNode)) {
+  if (NS_WARN_IF(!mNodeToDelete) || NS_WARN_IF(!mEditorBase) || !mParentNode ||
+      !mEditorBase->IsModifiableNode(*mParentNode)) {
     return false;
   }
   return true;
@@ -51,26 +51,24 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  if (!mEditorBase->AsHTMLEditor() && mContentToDelete->IsText()) {
-    uint32_t length = mContentToDelete->AsText()->TextLength();
+  if (!mEditorBase->AsHTMLEditor() && mNodeToDelete->IsText()) {
+    uint32_t length = mNodeToDelete->AsText()->TextLength();
     if (length > 0) {
       mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
     }
   }
 
-  // Remember which child mContentToDelete was (by remembering which child was
-  // next).  Note that mRefContent can be nullptr.
-  mRefContent = mContentToDelete->GetNextSibling();
+  // Remember which child mNodeToDelete was (by remembering which child was
+  // next).  Note that mRefNode can be nullptr.
+  mRefNode = mNodeToDelete->GetNextSibling();
 
   // give range updater a chance.  SelAdjDeleteNode() needs to be called
   // *before* we do the action, unlike some of the other RangeItem update
   // methods.
-  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mContentToDelete);
+  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mNodeToDelete);
 
-  OwningNonNull<nsINode> parentNode = *mParentNode;
-  OwningNonNull<nsIContent> contentToDelete = *mContentToDelete;
   ErrorResult error;
-  parentNode->RemoveChild(contentToDelete, error);
+  mParentNode->RemoveChild(*mNodeToDelete, error);
   NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
   return error.StealNSResult();
 }
@@ -82,19 +80,17 @@ DeleteNodeTransaction::UndoTransaction() {
     return NS_OK;
   }
   ErrorResult error;
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  OwningNonNull<nsINode> parentNode = *mParentNode;
-  OwningNonNull<nsIContent> contentToDelete = *mContentToDelete;
-  nsCOMPtr<nsIContent> refContent = mRefContent;
-  // XXX Perhaps, we should check `refContent` is a child of `parentNode`,
-  //     and if it's not, we should stop undoing or something.
-  parentNode->InsertBefore(contentToDelete, refContent, error);
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  nsCOMPtr<nsINode> parent = mParentNode;
+  nsCOMPtr<nsINode> nodeToDelete = mNodeToDelete;
+  nsCOMPtr<nsIContent> refNode = mRefNode;
+  parent->InsertBefore(*nodeToDelete, refNode, error);
   if (error.Failed()) {
     NS_WARNING("nsINode::InsertBefore() failed");
     return error.StealNSResult();
   }
-  if (!editorBase->AsHTMLEditor() && contentToDelete->IsText()) {
-    uint32_t length = contentToDelete->AsText()->TextLength();
+  if (!editorBase->AsHTMLEditor() && nodeToDelete->IsText()) {
+    uint32_t length = nodeToDelete->AsText()->TextLength();
     if (length > 0) {
       nsresult rv = MOZ_KnownLive(editorBase->AsTextEditor())
                         ->DidInsertText(length, 0, length);
@@ -113,19 +109,17 @@ NS_IMETHODIMP DeleteNodeTransaction::RedoTransaction() {
     return NS_OK;
   }
 
-  if (!mEditorBase->AsHTMLEditor() && mContentToDelete->IsText()) {
-    uint32_t length = mContentToDelete->AsText()->TextLength();
+  if (!mEditorBase->AsHTMLEditor() && mNodeToDelete->IsText()) {
+    uint32_t length = mNodeToDelete->AsText()->TextLength();
     if (length > 0) {
       mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
     }
   }
 
-  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mContentToDelete);
+  mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mNodeToDelete);
 
-  OwningNonNull<nsINode> parentNode = *mParentNode;
-  OwningNonNull<nsIContent> contentToDelete = *mContentToDelete;
   ErrorResult error;
-  parentNode->RemoveChild(contentToDelete, error);
+  mParentNode->RemoveChild(*mNodeToDelete, error);
   NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
   return error.StealNSResult();
 }

@@ -590,7 +590,7 @@ class EditorBase : public nsIEditor,
    * All actions that have to be done when the editor is focused needs to be
    * added here.
    */
-  MOZ_CAN_RUN_SCRIPT void OnFocus(nsINode& aFocusEventTargetNode);
+  void OnFocus(dom::EventTarget* aFocusEventTarget);
 
   /** Resyncs spellchecking state (enabled/disabled).  This should be called
    * when anything that affects spellchecking state changes, such as the
@@ -604,7 +604,7 @@ class EditorBase : public nsIEditor,
    * selection state even if this has no focus.  So if destroying editor,
    * we have to call this method for focused editor to set selection state.
    */
-  MOZ_CAN_RUN_SCRIPT void ReinitializeSelection(Element& aElement);
+  void ReinitializeSelection(Element& aElement);
 
   /**
    * InsertTextAsAction() inserts aStringToInsert at selection.
@@ -2361,7 +2361,7 @@ class EditorBase : public nsIEditor,
    * XXX What's the difference with PlaceholderTransaction? Should we always
    *     use it instead?
    */
-  MOZ_CAN_RUN_SCRIPT void BeginTransactionInternal();
+  void BeginTransactionInternal();
   MOZ_CAN_RUN_SCRIPT void EndTransactionInternal();
 
  protected:  // Shouldn't be used by friend classes
@@ -2583,7 +2583,7 @@ class EditorBase : public nsIEditor,
    * a host of the editor, i.e., the editor doesn't get focus, this does
    * nothing.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InitializeSelection(nsINode& aFocusEventTarget);
+  nsresult InitializeSelection(dom::EventTarget* aFocusEventTarget);
 
   enum NotificationForEditorObservers {
     eNotifyEditorObserversOfEnd,
@@ -2638,7 +2638,7 @@ class EditorBase : public nsIEditor,
         EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      MOZ_KnownLive(mEditorBase).BeginTransactionInternal();
+      mEditorBase.BeginTransactionInternal();
     }
 
     MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatch() {

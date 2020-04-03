@@ -79,45 +79,46 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMPL_ADDREF_INHERITED(CompositionTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(CompositionTransaction, EditTransactionBase)
 
-NS_IMETHODIMP CompositionTransaction::DoTransaction() {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
-    return NS_ERROR_NOT_AVAILABLE;
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
+CompositionTransaction::DoTransaction() {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // Fail before making any changes if there's no selection controller
   if (NS_WARN_IF(!mEditorBase->GetSelectionController())) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  OwningNonNull<Text> textNode = *mTextNode;
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
 
   // Advance caret: This requires the presentation shell to get the selection.
   if (mReplaceLength == 0) {
     ErrorResult error;
-    editorBase->DoInsertText(textNode, mOffset, mStringToInsert, error);
+    editorBase->DoInsertText(*textNode, mOffset, mStringToInsert, error);
     if (error.Failed()) {
       NS_WARNING("EditorBase::DoInsertText() failed");
       return error.StealNSResult();
     }
-    editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
+    editorBase->RangeUpdaterRef().SelAdjInsertText(*textNode, mOffset,
                                                    mStringToInsert);
   } else {
     uint32_t replaceableLength = textNode->TextLength() - mOffset;
     ErrorResult error;
-    editorBase->DoReplaceText(textNode, mOffset, mReplaceLength,
+    editorBase->DoReplaceText(*textNode, mOffset, mReplaceLength,
                               mStringToInsert, error);
     if (error.Failed()) {
       NS_WARNING("EditorBase::DoReplaceText() failed");
       return error.StealNSResult();
     }
     DebugOnly<nsresult> rvIgnored =
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(*textNode, mOffset,
                                                        mReplaceLength);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "RangeUpdater::SelAdjDeleteText() failed, but ignored");
-    editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
+    editorBase->RangeUpdaterRef().SelAdjInsertText(*textNode, mOffset,
                                                    mStringToInsert);
 
     // If IME text node is multiple node, ReplaceData doesn't remove all IME
@@ -126,20 +127,19 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
     //     in a text node.
     if (replaceableLength < mReplaceLength) {
       int32_t remainLength = mReplaceLength - replaceableLength;
+      nsCOMPtr<nsINode> node = textNode->GetNextSibling();
       IgnoredErrorResult ignoredError;
-      for (nsIContent* nextSibling = textNode->GetNextSibling();
-           nextSibling && nextSibling->IsText() && remainLength;
-           nextSibling = nextSibling->GetNextSibling()) {
-        OwningNonNull<Text> textNode = *static_cast<Text*>(nextSibling);
+      while (node && node->IsText() && remainLength > 0) {
+        RefPtr<Text> textNode = static_cast<Text*>(node.get());
         uint32_t textLength = textNode->TextLength();
-        editorBase->DoDeleteText(textNode, 0, remainLength, ignoredError);
+        editorBase->DoDeleteText(*textNode, 0, remainLength, ignoredError);
         NS_WARNING_ASSERTION(!ignoredError.Failed(),
                              "EditorBase::DoDeleteText() failed, but ignored");
         ignoredError.SuppressException();
-        // XXX Needs to check whether the text is deleted as expected.
-        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, 0,
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(*textNode, 0,
                                                        remainLength);
         remainLength -= textLength;
+        node = node->GetNextSibling();
       }
     }
   }
@@ -151,22 +151,23 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
   return rv;
 }
 
-NS_IMETHODIMP CompositionTransaction::UndoTransaction() {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
-    return NS_ERROR_NOT_AVAILABLE;
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
+CompositionTransaction::UndoTransaction() {
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // Get the selection first so we'll fail before making any changes if we
   // can't get it
   RefPtr<Selection> selection = mEditorBase->GetSelection();
   if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  OwningNonNull<Text> textNode = *mTextNode;
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
   ErrorResult error;
-  editorBase->DoDeleteText(textNode, mOffset, mStringToInsert.Length(), error);
+  editorBase->DoDeleteText(*textNode, mOffset, mStringToInsert.Length(), error);
   if (error.Failed()) {
     NS_WARNING("EditorBase::DoDeleteText() failed");
     return error.StealNSResult();
@@ -210,14 +211,11 @@ void CompositionTransaction::MarkFixed() { mFixed = true; }
 /* ============ private methods ================== */
 
 nsresult CompositionTransaction::SetSelectionForRanges() {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!mEditorBase)) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  OwningNonNull<Text> textNode = *mTextNode;
-  RefPtr<TextRangeArray> ranges = mRanges;
-  nsresult rv = SetIMESelection(editorBase, textNode, mOffset,
-                                mStringToInsert.Length(), ranges);
+  nsresult rv = SetIMESelection(*mEditorBase, mTextNode, mOffset,
+                                mStringToInsert.Length(), mRanges);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "CompositionTransaction::SetIMESelection() failed");
   return rv;

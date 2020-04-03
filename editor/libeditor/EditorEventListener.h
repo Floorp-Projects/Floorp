@@ -75,7 +75,7 @@ class EditorEventListener : public nsIDOMEventListener {
   }
   MOZ_CAN_RUN_SCRIPT virtual nsresult MouseClick(
       WidgetMouseEvent* aMouseClickEvent);
-  MOZ_CAN_RUN_SCRIPT nsresult Focus(InternalFocusEvent* aFocusEvent);
+  nsresult Focus(InternalFocusEvent* aFocusEvent);
   nsresult Blur(InternalFocusEvent* aBlurEvent);
   MOZ_CAN_RUN_SCRIPT nsresult DragEnter(dom::DragEvent* aDragEvent);
   MOZ_CAN_RUN_SCRIPT nsresult DragOverOrDrop(dom::DragEvent* aDragEvent);
