@@ -39,15 +39,7 @@ object LocaleManager {
      * The latest stored locale saved by [setNewLocale].
      */
     fun getCurrentLocale(context: Context): Locale? {
-        var currentLocale: Locale? = null
-
-        if (currentLocale == null) {
-            val locale = Storage.getLocale(context)
-            if (locale != null) {
-                currentLocale = locale.toLocale()
-            }
-        }
-        return currentLocale
+        return Storage.getLocale(context)?.toLocale()
     }
 
     /**
@@ -63,16 +55,15 @@ object LocaleManager {
     fun resetToSystemDefault(context: Context) {
         clear(context)
         val locale = getSystemDefault()
-        locale?.let {
-            updateSystemLocale(locale)
-            updateConfiguration(context, locale)
-        }
+
+        updateSystemLocale(locale)
+        updateConfiguration(context, locale)
     }
 
     /**
      * Returns the locale set by the system
      */
-    fun getSystemDefault(): Locale? {
+    fun getSystemDefault(): Locale {
         val config = Resources.getSystem().configuration
         return ConfigurationCompat.getLocales(config).get(0)
     }
@@ -80,12 +71,8 @@ object LocaleManager {
     internal fun updateResources(baseContext: Context): Context {
         val locale = getCurrentLocale(baseContext) ?: getSystemDefault()
 
-        return if (locale != null) {
-            updateSystemLocale(locale)
-            updateConfiguration(baseContext, locale)
-        } else {
-            baseContext
-        }
+        updateSystemLocale(locale)
+        return updateConfiguration(baseContext, locale)
     }
 
     private fun updateConfiguration(context: Context, locale: Locale): Context {
