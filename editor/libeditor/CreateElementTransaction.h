@@ -51,7 +51,7 @@ class CreateElementTransaction final : public EditTransactionBase {
 
   NS_DECL_EDITTRANSACTIONBASE
 
-  NS_IMETHOD RedoTransaction() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
   dom::Element* GetNewElement() const { return mNewElement; }
 
@@ -61,7 +61,7 @@ class CreateElementTransaction final : public EditTransactionBase {
   /**
    * InsertNewNode() inserts mNewNode before the child node at mPointToInsert.
    */
-  void InsertNewNode(ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void InsertNewNode(ErrorResult& aError);
 
   // The document into which the new node will be inserted.
   RefPtr<EditorBase> mEditorBase;

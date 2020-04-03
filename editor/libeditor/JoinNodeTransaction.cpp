@@ -54,7 +54,7 @@ bool JoinNodeTransaction::CanDoIt() const {
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from
 // the content tree and right node remains.
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
+NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mLeftContent) ||
       NS_WARN_IF(!mRightContent)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -87,8 +87,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP JoinNodeTransaction::DoTransaction() {
 
 // XXX: What if instead of split, we just deleted the unneeded children of
 //     mRight and re-inserted mLeft?
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-JoinNodeTransaction::UndoTransaction() {
+NS_IMETHODIMP JoinNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mParentNode) || NS_WARN_IF(!mLeftContent) ||
       NS_WARN_IF(!mRightContent) || NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_AVAILABLE;

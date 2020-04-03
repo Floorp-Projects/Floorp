@@ -51,7 +51,7 @@ class SplitNodeTransaction final : public EditTransactionBase {
 
   NS_DECL_EDITTRANSACTIONBASE
 
-  NS_IMETHOD RedoTransaction() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
   nsIContent* GetNewLeftContent() const { return mNewLeftContent; }
 
