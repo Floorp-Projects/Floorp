@@ -8,6 +8,8 @@ const server = createHttpServer({ hosts: HOSTS });
 
 const FETCH_ORIGIN = "http://example.com/dummy";
 
+server.registerDirectory("/data/", do_get_file("data"));
+
 server.registerPathHandler("/redirect", (request, response) => {
   let params = new URLSearchParams(request.queryString);
   response.setStatusLine(request.httpVersion, 302, "Moved Temporarily");
@@ -288,4 +290,55 @@ add_task(async function() {
   extension.sendMessage("done");
   await extension.awaitFinish("stream-filter");
   await extension.unload();
+});
+
+add_task(async function test_alternate_cached_data() {
+  Services.prefs.setBoolPref("dom.script_loader.bytecode_cache.enabled", true);
+  Services.prefs.setIntPref("dom.script_loader.bytecode_cache.strategy", -1);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.webRequest.onHeadersReceived.addListener(
+        details => {
+          let filter = browser.webRequest.filterResponseData(details.requestId);
+          filter.ondata = event => {
+            browser.test.fail(`ondata received when alt-data should be used`);
+          };
+
+          filter.onerror = () => {
+            browser.test.assertEq(
+              filter.error,
+              "Channel is delivering cached alt-data"
+            );
+            browser.test.sendMessage("error-received");
+          };
+        },
+        {
+          urls: ["http://example.com/*/file_script_good.js"],
+        },
+        ["blocking"]
+      );
+    },
+
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/*"],
+    },
+  });
+
+  // Prime the cache so we have the script byte-cached.
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_script.html"
+  );
+  await contentPage.close();
+  await extension.startup();
+
+  let page_cached = await await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_script.html"
+  );
+  await extension.awaitMessage("error-received");
+  await page_cached.close();
+  await extension.unload();
+
+  Services.prefs.clearUserPref("dom.script_loader.bytecode_cache.enabled");
+  Services.prefs.clearUserPref("dom.script_loader.bytecode_cache.strategy");
 });
