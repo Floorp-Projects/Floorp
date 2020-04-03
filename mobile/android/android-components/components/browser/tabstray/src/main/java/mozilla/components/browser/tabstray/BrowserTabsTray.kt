@@ -23,7 +23,8 @@ class BrowserTabsTray @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    val tabsAdapter: TabsAdapter = TabsAdapter()
+    val tabsAdapter: TabsAdapter = TabsAdapter(),
+    layout: LayoutManager = GridLayoutManager(context, 2)
 ) : RecyclerView(context, attrs, defStyleAttr),
     TabsTray by tabsAdapter {
 
@@ -32,7 +33,7 @@ class BrowserTabsTray @JvmOverloads constructor(
     init {
         tabsAdapter.tabsTray = this
 
-        layoutManager = GridLayoutManager(context, 2)
+        layoutManager = layout
         adapter = tabsAdapter
 
         val attr = context.obtainStyledAttributes(attrs, R.styleable.BrowserTabsTray, defStyleAttr, 0)
