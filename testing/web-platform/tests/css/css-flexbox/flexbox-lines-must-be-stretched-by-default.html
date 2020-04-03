@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <title>CSS Flexbox: align-content initial value.</title>
 <link rel="help" href="https://drafts.csswg.org/css-flexbox-1/#align-content-property">
-<meta name="assert" content="This test ensures that 'align-content: initial' on flexbox container gets computed to 'stretch'."/>
+<meta name="assert" content="This test ensures that a flexbox container's align-content value default to 'stretch'."/>
 <style>
 .flex-container {
   display: flex;
@@ -24,30 +24,9 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/check-layout-th.js"></script>
-<body>
-<script>
-  var flexContainer = document.createElement("div");
-  flexContainer.className = "flex-container";
-  document.body.appendChild(flexContainer);
-
-  var flexItem1 = document.createElement("div");
-  flexItem1.id = "flexItem1";
-  flexItem1.className += "flex-item1";
-  flexItem1.setAttribute("data-expected-height", "51");
-  flexContainer.appendChild(flexItem1);
-
-  var flexItem2 = document.createElement("div");
-  flexItem2.id = "flexItem2";
-  flexItem2.className += "flex-item2";
-  flexItem2.setAttribute("data-expected-height", "49");
-  flexContainer.appendChild(flexItem2);
-
-  var br = document.createElement("br");
-  document.body.appendChild(br);
-
-  flexContainer.style.alignContent = "initial";
-
-  checkLayout('.flex-container');
-</script>
-<div id="log"></div>
+<body onload="checkLayout('.flex-container')">
+  <div id="flexContainer" class="flex-container">
+    <div id="flexItem1" class="flex-item1" data-expected-height=51></div>
+    <div id="flexItem2" class="flex-item2" data-expected-height=49></div>
+  </div>
 </body>
