@@ -58,6 +58,7 @@ class RaptorRunner(MozbuildObject):
         self.memory_test = kwargs['memory_test']
         self.power_test = kwargs['power_test']
         self.cpu_test = kwargs['cpu_test']
+        self.disable_perf_tuning = kwargs['disable_perf_tuning']
         self.device_name = kwargs['device_name']
 
         if Conditions.is_android(self) or kwargs["app"] in ANDROID_BROWSERS:
@@ -156,6 +157,7 @@ class RaptorRunner(MozbuildObject):
             'power_test': self.power_test,
             'memory_test': self.memory_test,
             'cpu_test': self.cpu_test,
+            'disable_perf_tuning': self.disable_perf_tuning,
             'is_release_build': self.is_release_build,
             'device_name': self.device_name,
         }
