@@ -11,6 +11,10 @@
 
 var EXPORTED_SYMBOLS = ["DownloadsViewUI"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -29,41 +33,51 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 var gDownloadElementButtons = {
   cancel: {
     commandName: "downloadsCmd_cancel",
-    l10nId: "download-cancel",
-    descriptionL10nId: "download-cancel-description",
+    l10nId: "downloads-cmd-cancel",
+    descriptionL10nId: "downloads-cancel-download",
+    panelL10nId: "downloads-cmd-cancel-panel",
     iconClass: "downloadIconCancel",
   },
   retry: {
     commandName: "downloadsCmd_retry",
-    l10nId: "download-retry",
-    descriptionL10nId: "download-retry-description",
+    l10nId: "downloads-cmd-retry",
+    descriptionL10nId: "downloads-retry-download",
+    panelL10nId: "downloads-cmd-retry-panel",
     iconClass: "downloadIconRetry",
   },
   show: {
     commandName: "downloadsCmd_show",
-    l10nId: "download-show",
-    descriptionL10nId: "download-show-description",
+    l10nId:
+      AppConstants.platform == "macosx"
+        ? "downloads-cmd-show-mac"
+        : "downloads-cmd-show",
+    descriptionL10nId: "downloads-cmd-show-description",
+    panelL10nId: "downloads-cmd-show-panel",
     iconClass: "downloadIconShow",
   },
   subviewOpenOrRemoveFile: {
     commandName: "downloadsCmd_showBlockedInfo",
-    l10nId: "download-open-or-remove-file",
-    descriptionL10nId: "download-show-more-information-description",
+    l10nId: "downloads-cmd-choose-open",
+    descriptionL10nId: "downloads-show-more-information",
+    panelL10nId: "downloads-cmd-choose-open-panel",
     iconClass: "downloadIconSubviewArrow",
   },
   askOpenOrRemoveFile: {
     commandName: "downloadsCmd_chooseOpen",
-    l10nId: "download-open-or-remove-file",
+    l10nId: "downloads-cmd-choose-open",
+    panelL10nId: "downloads-cmd-choose-open-panel",
     iconClass: "downloadIconShow",
   },
   askRemoveFileOrAllow: {
     commandName: "downloadsCmd_chooseUnblock",
-    l10nId: "download-remove-file-or-allow",
+    l10nId: "downloads-cmd-choose-unblock",
+    panelL10nId: "downloads-cmd-choose-unblock-panel",
     iconClass: "downloadIconShow",
   },
   removeFile: {
     commandName: "downloadsCmd_confirmBlock",
-    l10nId: "download-remove-file",
+    l10nId: "downloads-cmd-remove-file",
+    panelL10nId: "downloads-cmd-remove-file-panel",
     iconClass: "downloadIconCancel",
   },
 };
@@ -230,18 +244,6 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   /**
-   * Returns a string from the downloads stringbundleset, which contains legacy
-   * strings that are loaded from DTD files instead of properties files. This
-   * won't be necessary once localization is converted to Fluent (bug 1452637).
-   */
-  string(l10nId) {
-    // These strings are not used often enough to require caching.
-    return this.element.ownerDocument
-      .getElementById("downloadsStrings")
-      .getAttribute("string-" + l10nId);
-  },
-
-  /**
    * URI string for the file type icon displayed in the download element.
    */
   get image() {
@@ -309,12 +311,19 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    * @param hoverStatus
    *        Label to show in the Downloads Panel when the mouse pointer is over
    *        the main area of the item. If not specified, this will be the same
-   *        as the status line. This is ignored in the Downloads View.
+   *        as the status line. This is ignored in the Downloads View. Type is
+   *        either l10n object or string literal.
    */
   showStatus(status, hoverStatus = status) {
     this._downloadDetailsNormal.setAttribute("value", status);
     this._downloadDetailsNormal.setAttribute("tooltiptext", status);
-    this._downloadDetailsHover.setAttribute("value", hoverStatus);
+    if (hoverStatus && hoverStatus.l10n) {
+      let document = this.element.ownerDocument;
+      document.l10n.setAttributes(this._downloadDetailsHover, hoverStatus.l10n);
+    } else {
+      this._downloadDetailsHover.removeAttribute("data-l10n-id");
+      this._downloadDetailsHover.setAttribute("value", hoverStatus);
+    }
   },
 
   /**
@@ -330,7 +339,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    *        Label to show in the Downloads Panel when the mouse pointer is over
    *        the main area of the item. If not specified, this will be the
    *        state label combined with the host and date. This is ignored in the
-   *        Downloads View.
+   *        Downloads View. Type is either l10n object or string literal.
    */
   showStatusWithDetails(stateLabel, hoverStatus) {
     let referrer =
@@ -373,16 +382,18 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       commandName,
       l10nId,
       descriptionL10nId,
+      panelL10nId,
       iconClass,
     } = gDownloadElementButtons[type];
 
     this.buttonCommandName = commandName;
-    let labelAttribute = this.isPanel ? "aria-label" : "tooltiptext";
-    this._downloadButton.setAttribute(labelAttribute, this.string(l10nId));
+    let stringId = this.isPanel ? panelL10nId : l10nId;
+    let document = this.element.ownerDocument;
+    document.l10n.setAttributes(this._downloadButton, stringId);
     if (this.isPanel && descriptionL10nId) {
-      this._downloadDetailsButtonHover.setAttribute(
-        "value",
-        this.string(descriptionL10nId)
+      document.l10n.setAttributes(
+        this._downloadDetailsButtonHover,
+        descriptionL10nId
       );
     }
     this._downloadButton.setAttribute("class", "downloadButton " + iconClass);
@@ -469,10 +480,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
                 sizeWithUnits
               );
             }
-            this.showStatus(
-              status,
-              this.string("download-open-file-description")
-            );
+            this.showStatus(status, { l10n: "downloads-open-file" });
           } else {
             // In the Downloads View, we show the file size in place of the
             // state label, for example "1.5 MB - example.com - 1:45 PM".
@@ -507,7 +515,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
             // Downloads Panel, a subview can be used to remove the file or open
             // the download anyways.
             this.showButton("subviewOpenOrRemoveFile");
-            hover = this.string("download-show-more-information-description");
+            hover = { l10n: "downloads-show-more-information" };
           } else {
             // This download was blocked temporarily by reputation check. In the
             // Downloads View, the interface depends on the threat severity.
