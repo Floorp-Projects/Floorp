@@ -21,7 +21,9 @@ StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)
     : mSheetLoadData(&aSheetLoadData), mStatus(NS_OK) {}
 
 StreamLoader::~StreamLoader() {
-  MOZ_DIAGNOSTIC_ASSERT(mOnStopRequestCalled || mChannelOpenFailed);
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(mOnStopRequestCalled || mChannelOpenFailed);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
@@ -50,8 +52,8 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
 
 NS_IMETHODIMP
 StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
-  MOZ_DIAGNOSTIC_ASSERT(!mOnStopRequestCalled);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(!mOnStopRequestCalled);
   mOnStopRequestCalled = true;
 #endif
 

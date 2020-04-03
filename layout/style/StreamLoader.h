@@ -26,7 +26,7 @@ class StreamLoader : public nsIStreamListener {
   explicit StreamLoader(SheetLoadData&);
 
   void ChannelOpenFailed() {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef NIGHTLY_BUILD
     mChannelOpenFailed = true;
 #endif
   }
@@ -52,7 +52,7 @@ class StreamLoader : public nsIStreamListener {
   nsCString mBytes;
   nsAutoCStringN<3> mBOMBytes;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef NIGHTLY_BUILD
   bool mChannelOpenFailed = false;
   bool mOnStopRequestCalled = false;
 #endif
