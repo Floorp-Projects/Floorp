@@ -108,6 +108,8 @@
     <string name="mozac_feature_addons_updater_notification_title">%1$s ima novo posodobitev</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d zahteva nova dovoljenja</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">Zahtevana so nova dovoljenja</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Posodobitve dodatkov</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
@@ -124,6 +126,8 @@
     <string name="mozac_feature_addons_not_yet_supported_caption">Tehnologija dodatkov za Firefox se posodablja. Ti dodatki uporabljajo ogrodja, ki niso združljivi s Firefoxom 75 in novejšimi.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Prenašanje in preverjanje dodatka …</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Napaka pri pridobivanju dodatkov!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s je bil uspešno nameščen</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
@@ -156,6 +160,8 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">Posodobitev ni na voljo</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Napaka</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">Podatki o posodobitvah</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Zadnji poskus:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
