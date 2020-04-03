@@ -52,6 +52,7 @@ codespell:
             - '**/*.properties'
             - '**/*.rst'
             - '**/*.ftl'
+            - 'tools/lint/codespell.yml'
 
 cpp-virtual-final:
     description: lint C++ virtual function declarations
@@ -64,6 +65,7 @@ cpp-virtual-final:
             - '**/*.cpp'
             - '**/*.h'
             - '**/*.mm'
+            - 'tools/lint/cpp-virtual-final.yml'
 
 eslint:
     description: JS lint check
@@ -86,6 +88,7 @@ eslint:
             - '**/*.html'
             - '**/*.xhtml'
             - '**/*.xml'
+            - 'tools/lint/eslint.yml'
             # Run when eslint policies change.
             - '**/.eslintignore'
             - '**/*eslintrc*'
@@ -116,6 +119,7 @@ license:
             - '**/*.xhtml'
             - '**/*.xml'
             - '**/*.xul'
+            - 'tools/lint/license.yml'
 
 lintpref:
     description: Check for duplicates between all.js and StaticPrefList.yaml.
@@ -138,6 +142,7 @@ lintpref:
             - 'browser/app/profile/channel-prefs.js'
             - 'mobile/android/installer/mobile-l10n.js'
             - 'mobile/android/locales/en-US/mobile-l10n.js'
+            - 'tools/lint/lintpref.yml'
 
 mingw-cap:
     description: lint for MinGW Capitalization issues
@@ -151,6 +156,7 @@ mingw-cap:
             - '**/*.cc'
             - '**/*.c'
             - '**/*.h'
+            - 'tools/lint/mingw-capitalization.yml'
 
 py-compat:
     description: lint for python 2/3 compatibility issues
@@ -162,6 +168,8 @@ py-compat:
         files-changed:
             - '**/*.py'
             - '**/.flake8'
+            - 'tools/lint/py2.yml'
+            - 'tools/lint/py3.yml'
 
 py-flake8:
     description: flake8 run over the gecko codebase
@@ -173,6 +181,7 @@ py-flake8:
         files-changed:
             - '**/*.py'
             - '**/.flake8'
+            - 'tools/lint/flake8.yml'
             # moz.configure files are also Python files.
             - '**/*.configure'
 
@@ -187,6 +196,7 @@ test-manifest:
             - '**/*.ini'
             - 'python/mozlint/**'
             - 'tools/lint/**'
+            - 'tools/lint/test-disable.yml'
 
 wptlint-gecko:
     description: web-platform-tests linter
@@ -198,6 +208,7 @@ wptlint-gecko:
         files-changed:
             - 'testing/web-platform/tests/**'
             - 'testing/web-platform/mozilla/tests/**'
+            - 'tools/lint/wpt.yml'
 
 yaml:
     description: yamllint run over the gecko codebase
@@ -220,6 +231,7 @@ rst:
     when:
         files-changed:
             - '**/*.rst'
+            - 'tools/lint/rst.yml'
 
 shellcheck:
     description: shellcheck run over the gecko codebase
@@ -230,6 +242,7 @@ shellcheck:
     when:
         files-changed:
             - '**/*.sh'
+            - 'tools/lint/shellcheck.yml'
 
 
 localization:
@@ -246,6 +259,7 @@ localization:
             - '**/l10n.toml'
             - 'third_party/python/compare-locales/**'
             - 'third_party/python/fluent/**'
+            - 'tools/lint/l10n.yml'
 
 
 l10n-conflicts:
@@ -263,6 +277,7 @@ l10n-conflicts:
             - '**/l10n.toml'
             - 'third_party/python/compare-locales/**'
             - 'third_party/python/fluent/**'
+            - 'tools/lint/l10n.yml'
 
 
 rustfmt:
@@ -274,6 +289,7 @@ rustfmt:
     when:
         files-changed:
             - '**/*.rs'
+            - 'tools/lint/rustfmt.yml'
 
 
 clippy:
@@ -286,6 +302,7 @@ clippy:
         files-changed:
             - '**/*.rs'
             - '**/Cargo.toml'
+            - 'tools/lint/clippy.yml'
 
 
 file-whitespace:
@@ -303,6 +320,7 @@ file-whitespace:
             - '**/*.h'
             - '**/*.py'
             - '**/*.rs'
+            - 'tools/lint/file-whitespace.yml'
 
 
 file-perm:
@@ -328,6 +346,7 @@ file-perm:
             - '**/*.xhtml'
             - '**/*.xml'
             - '**/*.xul'
+            - 'tools/lint/file-perm.yml'
 
 
 perfdocs-verify:
@@ -344,3 +363,4 @@ perfdocs-verify:
             - 'testing/**/*.ini'
             - 'testing/**/*.yml'
             - 'testing/**/*.rst'
+            - 'tools/lint/perfdocs.yml'
