@@ -125,23 +125,23 @@ const nsIID kDEBUGWorkerEventTargetIID = {
 #endif
 
 template <class T>
-class AutoPtrComparator {
-  typedef nsAutoPtr<T> A;
+class UniquePtrComparator {
+  typedef UniquePtr<T> A;
   typedef T* B;
 
  public:
-  bool Equals(const A& a, const B& b) const {
+  bool Equals(const A& a, const A& b) const {
     return a && b ? *a == *b : !a && !b ? true : false;
   }
-  bool LessThan(const A& a, const B& b) const {
+  bool LessThan(const A& a, const A& b) const {
     return a && b ? *a < *b : b ? true : false;
   }
 };
 
 template <class T>
-inline AutoPtrComparator<T> GetAutoPtrComparator(
-    const nsTArray<nsAutoPtr<T>>&) {
-  return AutoPtrComparator<T>();
+inline UniquePtrComparator<T> GetUniquePtrComparator(
+    const nsTArray<UniquePtr<T>>&) {
+  return UniquePtrComparator<T>();
 }
 
 // This class is used to wrap any runnables that the worker receives via the
@@ -1303,8 +1303,8 @@ void WorkerPrivate::SetCSP(nsIContentSecurityPolicy* aCSP) {
   aCSP->EnsureEventTarget(mMainThreadEventTarget);
 
   mLoadInfo.mCSP = aCSP;
-  mLoadInfo.mCSPInfo = new CSPInfo();
-  nsresult rv = CSPToCSPInfo(mLoadInfo.mCSP, mLoadInfo.mCSPInfo);
+  mLoadInfo.mCSPInfo = MakeUnique<CSPInfo>();
+  nsresult rv = CSPToCSPInfo(mLoadInfo.mCSP, mLoadInfo.mCSPInfo.get());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -1365,8 +1365,8 @@ nsresult WorkerPrivate::SetCSPFromHeaderValues(
   mLoadInfo.mEvalAllowed = evalAllowed;
   mLoadInfo.mReportCSPViolations = reportEvalViolations;
 
-  mLoadInfo.mCSPInfo = new CSPInfo();
-  rv = CSPToCSPInfo(csp, mLoadInfo.mCSPInfo);
+  mLoadInfo.mCSPInfo = MakeUnique<CSPInfo>();
+  rv = CSPToCSPInfo(csp, mLoadInfo.mCSPInfo.get());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3612,7 +3612,8 @@ void WorkerPrivate::PropagateFirstPartyStorageAccessGrantedInternal() {
 void WorkerPrivate::TraverseTimeouts(nsCycleCollectionTraversalCallback& cb) {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
   for (uint32_t i = 0; i < data->mTimeouts.Length(); ++i) {
-    TimeoutInfo* tmp = data->mTimeouts[i];
+    // TODO(erahm): No idea what's going on here.
+    TimeoutInfo* tmp = data->mTimeouts[i].get();
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHandler)
   }
 }
@@ -3829,7 +3830,7 @@ bool WorkerPrivate::RunCurrentSyncLoop() {
   // loop.
   uint32_t currentLoopIndex = mSyncLoopStack.Length() - 1;
 
-  SyncLoopInfo* loopInfo = mSyncLoopStack[currentLoopIndex];
+  SyncLoopInfo* loopInfo = mSyncLoopStack[currentLoopIndex].get();
 
   AutoYieldJSThreadExecution yield;
 
@@ -3901,7 +3902,7 @@ bool WorkerPrivate::RunCurrentSyncLoop() {
   }
 
   // Make sure that the stack didn't change underneath us.
-  MOZ_ASSERT(mSyncLoopStack[currentLoopIndex] == loopInfo);
+  MOZ_ASSERT(mSyncLoopStack[currentLoopIndex].get() == loopInfo);
 
   return DestroySyncLoop(currentLoopIndex);
 }
@@ -3913,7 +3914,7 @@ bool WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex) {
   AutoYieldJSThreadExecution yield;
 
   // We're about to delete the loop, stash its event target and result.
-  SyncLoopInfo* loopInfo = mSyncLoopStack[aLoopIndex];
+  const auto& loopInfo = mSyncLoopStack[aLoopIndex];
   nsIEventTarget* nestedEventTarget =
       loopInfo->mEventTarget->GetWeakNestedEventTarget();
   MOZ_ASSERT(nestedEventTarget);
@@ -4042,7 +4043,7 @@ void WorkerPrivate::StopSyncLoop(nsIEventTarget* aSyncLoopTarget,
   MOZ_ASSERT(!mSyncLoopStack.IsEmpty());
 
   for (uint32_t index = mSyncLoopStack.Length(); index > 0; index--) {
-    nsAutoPtr<SyncLoopInfo>& loopInfo = mSyncLoopStack[index - 1];
+    const auto& loopInfo = mSyncLoopStack[index - 1];
     MOZ_ASSERT(loopInfo);
     MOZ_ASSERT(loopInfo->mEventTarget);
 
@@ -4081,7 +4082,7 @@ void WorkerPrivate::AssertValidSyncLoop(nsIEventTarget* aSyncLoopTarget) {
     MutexAutoLock lock(mMutex);
 
     for (uint32_t index = 0; index < mSyncLoopStack.Length(); index++) {
-      nsAutoPtr<SyncLoopInfo>& loopInfo = mSyncLoopStack[index];
+      const auto& loopInfo = mSyncLoopStack[index];
       MOZ_ASSERT(loopInfo);
       MOZ_ASSERT(loopInfo->mEventTarget);
 
@@ -4474,7 +4475,7 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
     return timerId;
   }
 
-  nsAutoPtr<TimeoutInfo> newInfo(new TimeoutInfo());
+  auto newInfo = MakeUnique<TimeoutInfo>();
   newInfo->mIsInterval = aIsInterval;
   newInfo->mId = timerId;
 
@@ -4491,8 +4492,8 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
 
   newInfo->mTargetTime = TimeStamp::Now() + newInfo->mInterval;
 
-  nsAutoPtr<TimeoutInfo>* insertedInfo = data->mTimeouts.InsertElementSorted(
-      newInfo.forget(), GetAutoPtrComparator(data->mTimeouts));
+  const auto& insertedInfo = data->mTimeouts.InsertElementSorted(
+      std::move(newInfo), GetUniquePtrComparator(data->mTimeouts));
 
   LOG(TimeoutsLog(), ("Worker %p has new timeout: delay=%d interval=%s\n", this,
                       aTimeout, aIsInterval ? "yes" : "no"));
@@ -4535,7 +4536,7 @@ void WorkerPrivate::ClearTimeout(int32_t aId) {
     NS_ASSERTION(data->mTimerRunning, "Huh?!");
 
     for (uint32_t index = 0; index < data->mTimeouts.Length(); index++) {
-      nsAutoPtr<TimeoutInfo>& info = data->mTimeouts[index];
+      const auto& info = data->mTimeouts[index];
       if (info->mId == aId) {
         info->mCanceled = true;
         break;
@@ -4559,8 +4560,7 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
 
   bool retval = true;
 
-  AutoPtrComparator<TimeoutInfo> comparator =
-      GetAutoPtrComparator(data->mTimeouts);
+  auto comparator = GetUniquePtrComparator(data->mTimeouts);
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
 
   // We want to make sure to run *something*, even if the timer fired a little
@@ -4575,7 +4575,7 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
 
   AutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (uint32_t index = 0; index < data->mTimeouts.Length(); index++) {
-    nsAutoPtr<TimeoutInfo>& info = data->mTimeouts[index];
+    TimeoutInfo* info = data->mTimeouts[index].get();
     if (info->mTargetTime > now) {
       break;
     }
@@ -4634,7 +4634,7 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
   for (uint32_t index = 0, expiredTimeoutIndex = 0,
                 expiredTimeoutLength = expiredTimeouts.Length();
        index < data->mTimeouts.Length();) {
-    nsAutoPtr<TimeoutInfo>& info = data->mTimeouts[index];
+    const auto& info = data->mTimeouts[index];
     if ((expiredTimeoutIndex < expiredTimeoutLength &&
          info == expiredTimeouts[expiredTimeoutIndex] &&
          ++expiredTimeoutIndex) ||
