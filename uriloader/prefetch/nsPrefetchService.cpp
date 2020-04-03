@@ -25,7 +25,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStreamUtils.h"
-#include "nsAutoPtr.h"
 #include "prtime.h"
 #include "mozilla/Logging.h"
 #include "plstr.h"

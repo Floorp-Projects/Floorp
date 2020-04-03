@@ -26,10 +26,10 @@
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
 #include "PLDHashTable.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -283,7 +283,7 @@ class nsDocLoader : public nsIDocumentLoader,
     int64_t mMaxProgress;
     bool mUploading;
 
-    nsAutoPtr<nsStatusInfo> mLastStatus;
+    mozilla::UniquePtr<nsStatusInfo> mLastStatus;
   };
 
   static void RequestInfoHashInitEntry(PLDHashEntryHdr* entry, const void* key);

@@ -16,7 +16,6 @@
 #include "nsIURI.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 #include <deque>
 

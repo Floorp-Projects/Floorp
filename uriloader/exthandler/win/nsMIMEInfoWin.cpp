@@ -11,7 +11,6 @@
 #include "nsNetUtil.h"
 #include <windows.h>
 #include <shellapi.h>
-#include "nsAutoPtr.h"
 #include "nsIMutableArray.h"
 #include "nsTArray.h"
 #include "shlobj.h"
