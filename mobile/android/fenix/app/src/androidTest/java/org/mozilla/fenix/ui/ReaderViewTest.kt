@@ -8,6 +8,7 @@ import android.view.View
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -28,6 +29,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper
  *
  */
 
+@Ignore("Temp disable - reader view page detection issues: https://github.com/mozilla-mobile/fenix/issues/9688 ")
 class ReaderViewTest {
     private lateinit var mockWebServer: MockWebServer
     private var readerViewNotificationDot: ViewVisibilityIdlingResource? = null
