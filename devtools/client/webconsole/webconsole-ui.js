@@ -194,11 +194,13 @@ class WebConsoleUI {
       this._onTargetAvailable,
       this._onTargetDestroy
     );
-    const resourceWatcher = this.hud.resourceWatcher;
-    resourceWatcher.unwatch(
-      [resourceWatcher.TYPES.CONSOLE_MESSAGES],
-      this._onResourceAvailable
-    );
+
+    // TODO: Re-enable as part of Bug 1627167.
+    // const resourceWatcher = this.hud.resourceWatcher;
+    // resourceWatcher.unwatch(
+    //   [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    //   this._onResourceAvailable
+    // );
 
     for (const proxy of this.getAllProxies()) {
       proxy.disconnect();
@@ -328,11 +330,12 @@ class WebConsoleUI {
       this._onTargetAvailable,
       this._onTargetDestroy
     );
-    const resourceWatcher = this.hud.resourceWatcher;
-    await resourceWatcher.watch(
-      [resourceWatcher.TYPES.CONSOLE_MESSAGES],
-      this._onResourceAvailable
-    );
+    // TODO: Re-enable as part of Bug 1627167.
+    // const resourceWatcher = this.hud.resourceWatcher;
+    // await resourceWatcher.watch(
+    //   [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    //   this._onResourceAvailable
+    // );
   }
 
   _onResourceAvailable({ resourceType, targetFront, resource }) {
