@@ -675,6 +675,10 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
 
   AddLdconfigPaths(policy.get());
 
+  // Socket process sandbox needs to allow shmem in order to support
+  // profiling.  See Bug 1626385.
+  AddSharedMemoryPaths(policy.get(), aPid);
+
   // Firefox binary dir.
   // Note that unlike the previous cases, we use NS_GetSpecialDirectory
   // instead of GetSpecialSystemDirectory. The former requires a working XPCOM
