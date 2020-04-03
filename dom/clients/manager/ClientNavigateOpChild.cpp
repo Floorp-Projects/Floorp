@@ -255,7 +255,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
 
   loadState->SetReferrerInfo(referrerInfo);
   loadState->SetLoadType(LOAD_STOP_CONTENT);
-  loadState->SetSourceDocShell(docShell);
+  loadState->SetSourceBrowsingContext(docShell->GetBrowsingContext());
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
   rv = docShell->LoadURI(loadState, false);

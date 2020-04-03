@@ -4045,7 +4045,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
   loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
   loadState->SetLoadType(LOAD_ERROR_PAGE);
   loadState->SetFirstParty(true);
-  loadState->SetSourceDocShell(this);
+  loadState->SetSourceBrowsingContext(mBrowsingContext);
 
   return InternalLoad(loadState, nullptr, nullptr);
 }
@@ -4148,7 +4148,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     loadState->SetLoadType(loadType);
     loadState->SetFirstParty(true);
     loadState->SetSrcdocData(srcdoc);
-    loadState->SetSourceDocShell(this);
+    loadState->SetSourceBrowsingContext(mBrowsingContext);
     loadState->SetBaseURI(baseURI);
     rv = InternalLoad(loadState, nullptr, nullptr);
   }
@@ -8793,9 +8793,9 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   // If a source docshell has been passed, check to see if we are sandboxed
   // from it as the result of an iframe or CSP sandbox.
-  if (aLoadState->SourceDocShell() &&
-      aLoadState->SourceDocShell()->GetBrowsingContext()->IsSandboxedFrom(
-          mBrowsingContext)) {
+  const auto& sourceBC = aLoadState->SourceBrowsingContext();
+  if (sourceBC.IsDiscarded() ||
+      (sourceBC && sourceBC->IsSandboxedFrom(mBrowsingContext))) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -12358,7 +12358,7 @@ nsresult nsDocShell::OnLinkClickSync(
   loadState->SetHeadersStream(aHeadersDataStream);
   loadState->SetLoadType(loadType);
   loadState->SetFirstParty(true);
-  loadState->SetSourceDocShell(this);
+  loadState->SetSourceBrowsingContext(mBrowsingContext);
   loadState->SetIsFormSubmission(aContent->IsHTMLElement(nsGkAtoms::form));
   nsresult rv = InternalLoad(loadState, aDocShell, aRequest);
 
