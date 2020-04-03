@@ -766,6 +766,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const MutexAutoLock& aProofOfMapLock,
       ClippedCompositionBoundsMap& aDestMap, ScrollableLayerGuid aGuid);
 
+  ScreenMargin GetCompositorFixedLayerMargins() const;
+
  protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.
