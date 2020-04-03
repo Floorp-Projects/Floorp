@@ -9,7 +9,7 @@ function outer(unaliasedArg) {
   var aliasedVar = unaliasedArg;
 
   inner();
-  return;
+  return unaliasedVar; // To prevent the JIT from optimizing out unaliasedVar.
 
   function inner() {
     aliasedVar++;
