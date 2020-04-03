@@ -481,7 +481,7 @@ html #webconsole-notificationbox {
   padding-inline-start: 16px;
 }
 
-.message.open .stacktrace {
+.message.open .stacktrace:not(:empty) {
   display: block;
 }
 
