@@ -8,7 +8,6 @@
 
 #include <algorithm>
 
-#include "nsAutoPtr.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
