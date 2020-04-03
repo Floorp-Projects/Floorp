@@ -503,10 +503,24 @@ function ensureShutdownBlocker() {
     "RemoteSettingsClient - finish IDB access.",
     () => {
       gShutdownStarted = true;
+      const NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR = 0x80660006;
       // Duplicate the list (to avoid it being modified) and then
       // abort all read-only transactions.
       for (let transaction of Array.from(gPendingReadOnlyTransactions)) {
-        transaction.abort();
+        try {
+          transaction.abort();
+        } catch (ex) {
+          // Ensure we don't throw/break, because either way we're in shutdown.
+
+          // In particular, `transaction.abort` can throw if the transaction
+          // is complete, ie if we manage to get called inbetween the
+          // transaction completing, and our completion handler being called
+          // to remove the item from the set. We don't care about that.
+          if (ex.result != NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR) {
+            // Report any other errors:
+            Cu.reportError(ex);
+          }
+        }
       }
       if (gDB) {
         // This will return immediately; the actual close will happen once
