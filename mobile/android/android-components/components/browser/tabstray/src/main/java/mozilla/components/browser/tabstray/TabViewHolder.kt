@@ -27,7 +27,7 @@ class TabViewHolder(
         elevation = tabsTray.styling.itemElevation
     }
     private val iconView: ImageView = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
-    private val tabView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_url)
+    private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
 
@@ -45,7 +45,7 @@ class TabViewHolder(
             tab.url
         }
 
-        tabView.text = title
+        titleView.text = title
 
         itemView.setOnClickListener {
             observable.notifyObservers { onTabSelected(tab) }
@@ -56,11 +56,11 @@ class TabViewHolder(
         }
 
         if (isSelected) {
-            tabView.setTextColor(tabsTray.styling.selectedItemTextColor)
+            titleView.setTextColor(tabsTray.styling.selectedItemTextColor)
             cardView.setCardBackgroundColor(tabsTray.styling.selectedItemBackgroundColor)
             closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.selectedItemTextColor)
         } else {
-            tabView.setTextColor(tabsTray.styling.itemTextColor)
+            titleView.setTextColor(tabsTray.styling.itemTextColor)
             cardView.setCardBackgroundColor(tabsTray.styling.itemBackgroundColor)
             closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.itemTextColor)
         }
