@@ -5829,6 +5829,18 @@ already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
   }
   pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
 
+  // We need to set the hasStoragePermission for the dummy channel because we
+  // will use this channel to do a content blocking check. The channel URI
+  // is from the NodePrincipal of this document which is the inital document for
+  // the 'about:blank' content viewer. In this case, the NodePrincipal is the
+  // same as the parent document if the parent exists. So, we can copy the flag
+  // from the parent document directly.
+  bool parentDocHasStoragePermissin =
+      mParentDocument ? mParentDocument->HasStoragePermission() : false;
+
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  Unused << loadInfo->SetHasStoragePermission(parentDocHasStoragePermissin);
+
   return channel.forget();
 }
 
