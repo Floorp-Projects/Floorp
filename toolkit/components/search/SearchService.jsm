@@ -2418,7 +2418,7 @@ SearchService.prototype = {
     await this.init();
 
     return this._sortEnginesByDefaults(
-      this._sortedEngines.filter(e => e._isDefault)
+      this._sortedEngines.filter(e => e.isAppProvided)
     );
   },
 
@@ -2966,7 +2966,7 @@ SearchService.prototype = {
     this._ensureInitialized();
     for (let e of this._engines.values()) {
       // Unhide all default engines
-      if (e.hidden && e._isDefault) {
+      if (e.hidden && e.isAppProvided) {
         e.hidden = false;
       }
     }
@@ -2994,7 +2994,7 @@ SearchService.prototype = {
         engine &&
         (this.getGlobalAttr(privateMode ? "privateHash" : "hash") ==
           getVerificationHash(name) ||
-          engine._isDefault)
+          engine.isAppProvided)
       ) {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
@@ -3075,7 +3075,7 @@ SearchService.prototype = {
       SearchUtils.fail("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
     }
 
-    if (!newCurrentEngine._isDefault) {
+    if (!newCurrentEngine.isAppProvided) {
       // If a non default engine is being set as the current engine, ensure
       // its loadPath has a verification hash.
       if (!newCurrentEngine._loadPath) {
@@ -3202,7 +3202,7 @@ SearchService.prototype = {
       name: engine.name ? engine.name : "",
     };
 
-    if (engine._isDefault) {
+    if (engine.isAppProvided) {
       engineData.origin = "default";
     } else {
       let currentHash = engine.getAttr("loadPathHash");
@@ -3216,7 +3216,7 @@ SearchService.prototype = {
     }
 
     // For privacy, we only collect the submission URL for default engines...
-    let sendSubmissionURL = engine._isDefault;
+    let sendSubmissionURL = engine.isAppProvided;
 
     // ... or engines sorted by default near the top of the list.
     if (!sendSubmissionURL) {
@@ -3252,7 +3252,7 @@ SearchService.prototype = {
       let engineHost = engine._getURLOfType(SearchUtils.URL_TYPE.SEARCH)
         .templateHost;
       for (let innerEngine of this._engines.values()) {
-        if (!innerEngine._isDefault) {
+        if (!innerEngine.isAppProvided) {
           continue;
         }
 
@@ -3764,7 +3764,7 @@ var engineUpdateService = {
         ? updateURL.getSubmission("", engine).uri
         : SearchUtils.makeURI(engine._updateURL);
     if (updateURI) {
-      if (engine._isDefault && !updateURI.schemeIs("https")) {
+      if (engine.isAppProvided && !updateURI.schemeIs("https")) {
         this._log("Invalid scheme for default engine update");
         return;
       }
