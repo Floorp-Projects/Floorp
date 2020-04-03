@@ -104,7 +104,11 @@ class AwesomeBarView(
     internal var isKeyboardDismissedProgrammatically: Boolean = false
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
-        override fun invoke(url: String, flags: EngineSession.LoadUrlFlags) {
+        override fun invoke(
+            url: String,
+            flags: EngineSession.LoadUrlFlags,
+            additionalHeaders: Map<String, String>?
+        ) {
             interactor.onUrlTapped(url)
         }
     }
