@@ -21,7 +21,9 @@ NS_IMETHODIMP FileQuotaStream<FileStreamBase>::SetEOF() {
     nsresult rv = FileStreamBase::Tell(&offset);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mQuotaObject->MaybeUpdateSize(offset, /* aTruncate */ true);
+    DebugOnly<bool> res =
+        mQuotaObject->MaybeUpdateSize(offset, /* aTruncate */ true);
+    MOZ_ASSERT(res);
   }
 
   return NS_OK;
@@ -51,7 +53,9 @@ nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mQuotaObject && (FileStreamBase::mOpenParams.ioFlags & PR_TRUNCATE)) {
-    mQuotaObject->MaybeUpdateSize(0, /* aTruncate */ true);
+    DebugOnly<bool> res =
+        mQuotaObject->MaybeUpdateSize(0, /* aTruncate */ true);
+    MOZ_ASSERT(res);
   }
 
   return NS_OK;
