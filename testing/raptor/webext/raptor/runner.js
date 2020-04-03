@@ -29,7 +29,6 @@ var postStartupDelay;
 // delay (ms) between pageload cycles
 var pageCycleDelay = 1000;
 
-var newTabDelay = 1000;
 var newTabPerCycle = false;
 
 // delay (ms) for foregrounding app
@@ -223,29 +222,35 @@ async function scenarioTimer() {
   await postToControlServer("status", `started scenario test timer`);
 }
 
-async function testTabCreated(tab) {
-  testTabID = tab.id;
-  await postToControlServer("status", `opened new empty tab: ${testTabID}`);
+async function closeTab(tabId) {
+  await postToControlServer("status", `closing Tab: ${tabId}`);
 
-  // update raptor browser toolbar icon text, for a visual indicator when debugging
-  ext.browserAction.setTitle({ title: "Raptor RUNNING" });
-}
-
-async function testTabRemoved(tab) {
-  await postToControlServer("status", `Removed tab: ${testTabID}`);
-  testTabID = 0;
-}
-
-async function testTabUpdated(tab) {
-  await postToControlServer("status", `test tab updated: ${testTabID}`);
-
-  // for benchmark or scenario type tests we can proceed directly to waitForResult;
-  // however for page-load tests we must first wait until we hear back from pageloaderjs
-  // that it has been successfully loaded in the test page and has been invoked; and
-  // only then start looking for measurements
-  if (testType != TEST_PAGE_LOAD) {
-    await collectResults();
+  if (isGecko) {
+    await ext.tabs.remove(tabId);
+  } else {
+    await new Promise(resolve => {
+      ext.tabs.remove(tabId, resolve);
+    });
   }
+
+  await postToControlServer("status", `closed tab: ${tabId}`);
+}
+
+async function openTab() {
+  await postToControlServer("status", "openinig new tab");
+
+  let tab;
+  if (isGecko) {
+    tab = await ext.tabs.create({ url: "about:blank" });
+  } else {
+    tab = await new Promise(resolve => {
+      ext.tabs.create({ url: "about:blank" }, resolve);
+    });
+  }
+
+  await postToControlServer("status", `opened new empty tab: ${tab.id}`);
+
+  return tab.id;
 }
 
 async function collectResults() {
@@ -442,45 +447,37 @@ async function nextCycle() {
       }
 
       if (newTabPerCycle && testTabID != 0) {
-        // close previous test tab
-        await postToControlServer("status", `closing Tab: ${testTabID}`);
-        if (isGecko) {
-          await ext.tabs.remove(testTabID);
-        } else {
-          await new Promise(resolve => {
-            ext.tabs.remove(testTabID, resolve);
-          });
-        }
-
-        // open new tab
-        await postToControlServer("status", "openinig new tab");
-        if (isGecko) {
-          await ext.tabs.create({ url: "about:blank" });
-        } else {
-          await new Promise(resolve => {
-            ext.tabs.create({ url: "about:blank" }, resolve);
-          });
-        }
+        // close previous test tab and open a new one
+        await closeTab(testTabID);
+        testTabID = await openTab();
       }
 
-      setTimeout(async () => {
-        await postToControlServer("status", `update tab: ${testTabID}`);
+      await postToControlServer("status", `update tab: ${testTabID}`);
 
-        // update the test page - browse to our test URL
-        // "null" = active tab
-        if (isGecko) {
-          await ext.tabs.update(testTabID || null, { url: testURL });
-        } else {
-          await new Promise(resolve => {
-            ext.tabs.update(testTabID || null, { url: testURL }, resolve);
-          });
-        }
-        testTabUpdated();
+      // update the test page - browse to our test URL
+      // "null" = active tab
+      if (isGecko) {
+        await ext.tabs.update(testTabID || null, { url: testURL });
+      } else {
+        await new Promise(resolve => {
+          ext.tabs.update(testTabID || null, { url: testURL }, resolve);
+        });
+      }
 
-        if (testType == TEST_SCENARIO) {
-          await scenarioTimer();
-        }
-      }, newTabDelay);
+      await postToControlServer("status", `test tab updated: ${testTabID}`);
+
+      // For benchmark or scenario type tests we can proceed directly to
+      // waitForResult. However for page-load tests we must first wait until
+      // we hear back from pageloaderjs that it has been successfully loaded
+      // in the test page and has been invoked; and only then start looking
+      // for measurements.
+      if (testType != TEST_PAGE_LOAD) {
+        await collectResults();
+      }
+
+      if (testType == TEST_SCENARIO) {
+        await scenarioTimer();
+      }
     }, pageCycleDelay);
   } else {
     await verifyResults();
@@ -660,24 +657,16 @@ async function postToControlServer(msgType, msgData = "") {
 
 async function cleanUp() {
   // close tab unless raptor debug-mode is enabled
-  if (debugMode != 1) {
-    if (isGecko) {
-      await ext.tabs.remove(testTabID);
-    } else {
-      await new Promise(resolve => {
-        ext.tabs.remove(testTabID, resolve);
-      });
-    }
-    raptorLog(`closed tab ${testTabID}`);
-  } else {
+  if (debugMode == 1) {
     raptorLog("debug-mode enabled, leaving tab open");
+  } else {
+    await closeTab();
   }
 
   if (testType == TEST_PAGE_LOAD) {
     // remove listeners
     ext.alarms.onAlarm.removeListener(timeoutAlarmListener);
     ext.runtime.onMessage.removeListener(resultListener);
-    ext.tabs.onCreated.removeListener(testTabCreated);
   }
   raptorLog(`${testType} test finished`);
 
@@ -708,8 +697,6 @@ async function raptorRunner() {
 
   ext.alarms.onAlarm.addListener(timeoutAlarmListener);
   ext.runtime.onMessage.addListener(resultListener);
-  ext.tabs.onCreated.addListener(testTabCreated);
-  ext.tabs.onRemoved.addListener(testTabRemoved);
 
   // create new empty tab, which starts the test; we want to
   // wait some time for the browser to settle before beginning
@@ -724,13 +711,7 @@ async function raptorRunner() {
     }, postStartupDelay);
   } else {
     setTimeout(async function() {
-      if (isGecko) {
-        await ext.tabs.create({ url: "about:blank" });
-      } else {
-        await new Promise(resolve => {
-          ext.tabs.create({ url: "about:blank" }, resolve);
-        });
-      }
+      testTabID = await openTab();
       nextCycle();
     }, postStartupDelay);
   }
