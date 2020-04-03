@@ -62,11 +62,8 @@ ul {
   background-position: right 0;
 }
 
+#errorLongContent,
 #errorTitle {
-  margin-inline-start: 80px;
-}
-
-#errorLongContent {
   margin-inline-start: 80px;
 }
 
@@ -83,29 +80,9 @@ ul {
   font-size: 110%;
 }
 
-#errorLongDesc > p {
-}
-
 #errorTryAgain {
   margin-top: 2em;
   margin-inline-start: 80px;
-}
-
-#brand {
-  position: absolute;
-  right: 0;
-  bottom: -1.5em;
-  margin-inline-end: 10px;
-  opacity: .4;
-}
-
-#brand:dir(rtl) {
-  right: auto;
-  left: 0;
-}
-
-#brand > p {
-  margin: 0;
 }
 
 #errorContainer {

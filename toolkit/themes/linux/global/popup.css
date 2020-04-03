@@ -22,14 +22,12 @@ panel[type="arrow"] {
 
 panel[type="arrow"][side="top"],
 panel[type="arrow"][side="bottom"] {
-  margin-left: -20px;
-  margin-right: -20px;
+  margin-inline: -20px;
 }
 
 panel[type="arrow"][side="left"],
 panel[type="arrow"][side="right"] {
-  margin-top: -20px;
-  margin-bottom: -20px;
+  margin-block: -20px;
 }
 
 .panel-arrowcontent {
@@ -61,8 +59,7 @@ panel[type="arrow"].panel-no-padding::part(arrowcontent) {
 :-moz-any(panel, menupopup)[side="bottom"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   position: relative;
-  margin-left: 10px;
-  margin-right: 10px;
+  margin-inline: 10px;
 }
 
 :-moz-any(panel, menupopup)[side="top"]::part(arrow) {
@@ -78,8 +75,7 @@ panel[type="arrow"].panel-no-padding::part(arrowcontent) {
 :-moz-any(panel, menupopup)[side="right"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
   position: relative;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-block: 10px;
 }
 
 :-moz-any(panel, menupopup)[side="left"]::part(arrow) {
@@ -94,8 +90,8 @@ panel[type="arrow"].panel-no-padding::part(arrowcontent) {
 /* rules for popups associated with menulists */
 
 menulist > menupopup {
-  padding: 0px;
-  min-width: 0px;
+  padding: 0;
+  min-width: 0;
 }
 
 menupopup[customoptionstyling="true"] {
