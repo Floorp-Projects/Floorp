@@ -112,13 +112,19 @@ browsertime-tp6m:
     run-on-projects:
         by-raptor-test:
             amazon:
-                by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                    default: []
+                by-app:
+                    chrome-m: []
+                    default:
+                        by-test-platform:
+                            android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                            default: []
             youtube:
-                by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                    default: []
+                by-app:
+                    chrome-m: []
+                    default:
+                        by-test-platform:
+                            android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                            default: []
             default: []
     pageload:
         by-app:

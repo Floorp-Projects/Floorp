@@ -52,6 +52,13 @@ browsertime-tp6:
             firefox: 'both'
             chrome: 'cold'
             default: 'warm'
+    run-on-projects:
+        by-app:
+            chrome: []
+            default:
+                by-test-platform:
+                    .*shippable[^-qr].*: ['mozilla-central', 'try']
+                    default: []
     limit-platforms:
         by-app:
             chrome:
