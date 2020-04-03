@@ -492,6 +492,7 @@ if mozinfo.isWin:
         FILE_ATTRIBUTE_NORMAL = 0x80
         INVALID_HANDLE_VALUE = -1
 
+        log = get_logger()
         file_name = os.path.join(dump_directory,
                                  str(uuid.uuid4()) + ".dmp")
 
@@ -501,7 +502,6 @@ if mozinfo.isWin:
             # python process was compiled for a different architecture than
             # firefox, so we invoke the minidumpwriter utility program.
 
-            log = get_logger()
             minidumpwriter = os.path.normpath(os.path.join(utility_path,
                                                            "minidumpwriter.exe"))
             log.info(u"Using {} to write a dump to {} for [{}]".format(
@@ -519,12 +519,16 @@ if mozinfo.isWin:
                 log.error("minidumpwriter exited with status: %d" % status)
             return
 
+        log.info(u"Writing a dump to {} for [{}]".format(file_name, pid))
+
         proc_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
                                   0, pid)
         if not proc_handle:
+            err = kernel32.GetLastError()
+            log.warning("unable to get handle for pid %d: %d" % (pid, err))
             return
 
-        if not isinstance(file_name, string_types):
+        if not isinstance(file_name, text_type):
             # Convert to unicode explicitly so our path will be valid as input
             # to CreateFileW
             file_name = text_type(file_name, sys.getfilesystemencoding())
@@ -537,18 +541,23 @@ if mozinfo.isWin:
                                            FILE_ATTRIBUTE_NORMAL,
                                            None)
         if file_handle != INVALID_HANDLE_VALUE:
-            ctypes.windll.dbghelp.MiniDumpWriteDump(proc_handle,
-                                                    pid,
-                                                    file_handle,
-                                                    # Dump type - MiniDumpNormal
-                                                    0,
-                                                    # Exception parameter
-                                                    None,
-                                                    # User stream parameter
-                                                    None,
-                                                    # Callback parameter
-                                                    None)
+            if not ctypes.windll.dbghelp.MiniDumpWriteDump(proc_handle,
+                                                           pid,
+                                                           file_handle,
+                                                           # Dump type - MiniDumpNormal
+                                                           0,
+                                                           # Exception parameter
+                                                           None,
+                                                           # User stream parameter
+                                                           None,
+                                                           # Callback parameter
+                                                           None):
+                err = kernel32.GetLastError()
+                log.warning("unable to dump minidump file for pid %d: %d" % (pid, err))
             CloseHandle(file_handle)
+        else:
+            err = kernel32.GetLastError()
+            log.warning("unable to create minidump file for pid %d: %d" % (pid, err))
         CloseHandle(proc_handle)
 
     def kill_pid(pid):

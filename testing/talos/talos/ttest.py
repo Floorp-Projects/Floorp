@@ -223,67 +223,69 @@ class TTest(object):
                 if counter_management:
                     counter_management.stop()
 
-            if test_config['mainthread']:
-                rawlog = os.path.join(here, 'mainthread_io.log')
-                if os.path.exists(rawlog):
-                    processedlog = \
-                        os.path.join(here, 'mainthread_io.json')
-                    xre_path = \
-                        os.path.dirname(browser_config['browser_path'])
-                    mtio_py = os.path.join(here, 'mainthreadio.py')
-                    command = ['python', mtio_py, rawlog,
-                               processedlog, xre_path]
-                    mtio = subprocess.Popen(command,
-                                            env=os.environ.copy(),
-                                            stdout=subprocess.PIPE)
-                    output, stderr = mtio.communicate()
-                    for line in output.split('\n'):
-                        if line.strip() == '':
-                            continue
+            try:
+                if test_config['mainthread']:
+                    rawlog = os.path.join(here, 'mainthread_io.log')
+                    if os.path.exists(rawlog):
+                        processedlog = \
+                            os.path.join(here, 'mainthread_io.json')
+                        xre_path = \
+                            os.path.dirname(browser_config['browser_path'])
+                        mtio_py = os.path.join(here, 'mainthreadio.py')
+                        command = ['python', mtio_py, rawlog,
+                                   processedlog, xre_path]
+                        mtio = subprocess.Popen(command,
+                                                env=os.environ.copy(),
+                                                stdout=subprocess.PIPE)
+                        output, stderr = mtio.communicate()
+                        for line in output.split('\n'):
+                            if line.strip() == '':
+                                continue
 
-                        print(line)
-                        mainthread_error_count += 1
-                    mozfile.remove(rawlog)
+                            print(line)
+                            mainthread_error_count += 1
+                        mozfile.remove(rawlog)
 
-            if test_config['cleanup']:
-                # HACK: add the pid to support xperf where we require
-                # the pid in post processing
-                talosconfig.generateTalosConfig(command_args,
-                                                browser_config,
-                                                test_config,
-                                                pid=pcontext.pid)
-                subprocess.call(
-                    [sys.executable] + test_config['cleanup'].split()
-                )
+                if test_config['cleanup']:
+                    # HACK: add the pid to support xperf where we require
+                    # the pid in post processing
+                    talosconfig.generateTalosConfig(command_args,
+                                                    browser_config,
+                                                    test_config,
+                                                    pid=pcontext.pid)
+                    subprocess.call(
+                        [sys.executable] + test_config['cleanup'].split()
+                    )
 
-            # For startup tests, we launch the browser multiple times
-            # with the same profile
-            for fname in ('sessionstore.js', '.parentlock',
-                          'sessionstore.bak'):
-                mozfile.remove(os.path.join(setup.profile_dir, fname))
+                # For startup tests, we launch the browser multiple times
+                # with the same profile
+                for fname in ('sessionstore.js', '.parentlock',
+                              'sessionstore.bak'):
+                    mozfile.remove(os.path.join(setup.profile_dir, fname))
 
-            # check for xperf errors
-            if os.path.exists(browser_config['error_filename']) or \
-               mainthread_error_count > 0:
-                raise TalosRegression(
-                    'Talos has found a regression, if you have questions'
-                    ' ask for help in irc on #perf'
-                )
+                # check for xperf errors
+                if os.path.exists(browser_config['error_filename']) or \
+                   mainthread_error_count > 0:
+                    raise TalosRegression(
+                        'Talos has found a regression, if you have questions'
+                        ' ask for help in irc on #perf'
+                    )
 
-            # add the results from the browser output
-            if not run_in_debug_mode(browser_config):
-                test_results.add(
-                    '\n'.join(pcontext.output),
-                    counter_results=(counter_management.results()
-                                     if counter_management
-                                     else None)
-                )
+                # add the results from the browser output
+                if not run_in_debug_mode(browser_config):
+                    test_results.add(
+                        '\n'.join(pcontext.output),
+                        counter_results=(counter_management.results()
+                                         if counter_management
+                                         else None)
+                    )
 
-            if setup.gecko_profile:
-                setup.gecko_profile.symbolicate(i)
+                if setup.gecko_profile:
+                    setup.gecko_profile.symbolicate(i)
 
-            self.check_for_crashes(browser_config, minidump_dir,
-                                   test_config['name'])
+            finally:
+                self.check_for_crashes(browser_config, minidump_dir,
+                                       test_config['name'])
 
         # include global (cross-cycle) counters
         test_results.all_counter_results.extend(
