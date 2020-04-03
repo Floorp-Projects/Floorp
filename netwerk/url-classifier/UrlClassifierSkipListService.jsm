@@ -114,8 +114,7 @@ UrlClassifierSkipListService.prototype = {
       // The data will be initially available from the local DB (via a
       // resource:// URI).
       entries = await RemoteSettings(COLLECTION_NAME).get();
-    } catch (e) {
-    }
+    } catch (e) {}
 
     // RemoteSettings.get() could return null, ensure passing a list to
     // onUpdateEntries.
