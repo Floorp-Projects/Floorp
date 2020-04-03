@@ -41,7 +41,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 #include "nsIMutableArray.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsOSHelperAppService.h"

@@ -13,7 +13,6 @@
 #include "nsMIMEInfoWin.h"
 #include "nsMimeTypes.h"
 #include "plstr.h"
-#include "nsAutoPtr.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsLocalFile.h"
 #include "nsIWindowsRegKey.h"

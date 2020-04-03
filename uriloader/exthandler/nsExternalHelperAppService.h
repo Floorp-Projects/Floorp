@@ -29,7 +29,6 @@
 #include "nsIObserver.h"
 #include "nsCOMArray.h"
 #include "nsWeakReference.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
 class nsExternalAppHandler;

@@ -25,7 +25,6 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsAutoPtr.h"
 #include "nsQueryObject.h"
 
 #include "nsPIDOMWindow.h"
@@ -1206,7 +1205,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsresult aStatus,
     // already done.
     if (info) {
       if (!info->mLastStatus) {
-        info->mLastStatus = new nsStatusInfo(aRequest);
+        info->mLastStatus = MakeUnique<nsStatusInfo>(aRequest);
       } else {
         // We're going to move it to the front of the list, so remove
         // it from wherever it is now.
@@ -1215,7 +1214,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsresult aStatus,
       info->mLastStatus->mStatusMessage = msg;
       info->mLastStatus->mStatusCode = aStatus;
       // Put the info at the front of the list
-      mStatusInfoList.insertFront(info->mLastStatus);
+      mStatusInfoList.insertFront(info->mLastStatus.get());
     }
     FireOnStatusChange(this, aRequest, aStatus, msg.get());
   }
