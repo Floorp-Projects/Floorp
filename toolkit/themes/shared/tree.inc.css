@@ -165,9 +165,8 @@ treechildren::-moz-tree-image {
 /* ::::: twisty :::::  */
 
 treechildren::-moz-tree-twisty {
-  padding-inline-end: 4px;
-  padding-inline-start: 4px;
   padding-top: 1px;
+  padding-inline: 4px;
   width: 12px; /* The image's width is 12 pixels */
   list-style-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
   -moz-context-properties: fill;

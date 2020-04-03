@@ -136,7 +136,7 @@ table {
   text-align: start;
   width: 100%;
   border: 1px solid var(--in-content-border-color);
-  border-spacing: 0px;
+  border-spacing: 0;
 }
 
 th, td {
@@ -156,7 +156,7 @@ th {
 
 th.column {
   white-space: nowrap;
-  width: 0px;
+  width: 0;
 }
 
 td {

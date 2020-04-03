@@ -95,8 +95,7 @@ button {
   justify-content: center;
   align-items: center;
   top: 0;
-  left: 3rem;
-  right: 3rem;
+  inset-inline: 3rem;
   width: 17.1rem;
   height: var(--date-picker-item-height);
   z-index: 10;
@@ -106,10 +105,8 @@ button.month-year {
   font-size: 1.3rem;
   border: var(--border);
   border-radius: 0.3rem;
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-  padding-inline-start: 1.2rem;
-  padding-inline-end: 2.6rem;
+  padding-block: 0.2rem;
+  padding-inline: 1.2rem 2.6rem;
 }
 
 button.month-year:hover {
@@ -257,10 +254,7 @@ button.month-year.active::after {
 .days-view > div:hover::before,
 .days-view > .select::before,
 .days-view > .today::before {
-  top: 5%;
-  bottom: 5%;
-  left: 5%;
-  right: 5%;
+  inset: 5%;
 }
 
 #time-picker,
@@ -326,10 +320,7 @@ button.month-year.active::after {
 .spinner-container > .spinner > div::before,
 .calendar-container .days-view > div::before {
   position: absolute;
-  top: 5%;
-  bottom: 5%;
-  left: 5%;
-  right: 5%;
+  inset: 5%;
   z-index: -10;
   border-radius: var(--border-radius);
 }
