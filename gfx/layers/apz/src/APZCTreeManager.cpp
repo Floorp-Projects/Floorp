@@ -1174,14 +1174,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
                           aLayer.GetFixedPositionSides(),
                           aLayer.GetFixedPositionAnimationId());
-    if (aLayer.GetIsStickyPosition()) {
-      node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
-                             aLayer.GetStickyScrollRangeOuter(),
-                             aLayer.GetStickyScrollRangeInner());
-    } else {
-      node->SetStickyPosData(ScrollableLayerGuid::NULL_SCROLL_ID,
-                             LayerRectAbsolute(), LayerRectAbsolute());
-    }
+    node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
+                           aLayer.GetStickyScrollRangeOuter(),
+                           aLayer.GetStickyScrollRangeInner());
     return node;
   }
 
@@ -1408,14 +1403,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
                         aLayer.GetFixedPositionSides(),
                         aLayer.GetFixedPositionAnimationId());
-  if (aLayer.GetIsStickyPosition()) {
-    node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
-                           aLayer.GetStickyScrollRangeOuter(),
-                           aLayer.GetStickyScrollRangeInner());
-  } else {
-    node->SetStickyPosData(ScrollableLayerGuid::NULL_SCROLL_ID,
-                           LayerRectAbsolute(), LayerRectAbsolute());
-  }
+  node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
+                         aLayer.GetStickyScrollRangeOuter(),
+                         aLayer.GetStickyScrollRangeInner());
   return node;
 }
 
