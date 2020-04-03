@@ -391,24 +391,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY updateUnsupported.panelUI.label "You cannot perform further updates">
 <!ENTITY updateRestart.panelUI.label2 "Restart to update &brandShorterName;">
 
-<!ENTITY newTabControlled.header.message "Your New Tab has changed.">
-<!ENTITY newTabControlled.keepButton.label "Keep Changes">
-<!ENTITY newTabControlled.keepButton.accesskey "K">
-<!ENTITY newTabControlled.disableButton.label "Disable Extension">
-<!ENTITY newTabControlled.disableButton.accesskey "D">
-
-<!ENTITY homepageControlled.header.message "Your home page has changed.">
-<!ENTITY homepageControlled.keepButton.label "Keep Changes">
-<!ENTITY homepageControlled.keepButton.accesskey "K">
-<!ENTITY homepageControlled.disableButton.label "Disable Extension">
-<!ENTITY homepageControlled.disableButton.accesskey "D">
-
-<!ENTITY tabHideControlled.header.message "Access Your Hidden Tabs">
-<!ENTITY tabHideControlled.keepButton.label "Keep Tabs Hidden">
-<!ENTITY tabHideControlled.keepButton.accesskey "K">
-<!ENTITY tabHideControlled.disableButton.label "Disable Extension">
-<!ENTITY tabHideControlled.disableButton.accesskey "D">
-
 <!ENTITY pageActionButton.tooltip "Page actions">
 
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">

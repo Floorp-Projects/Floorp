@@ -262,6 +262,15 @@ class ExtensionControlledPopup {
       );
     }
 
+    let elementsToTranslate = panel.querySelectorAll("[data-lazy-l10n-id]");
+    if (elementsToTranslate.length) {
+      win.MozXULElement.insertFTLIfNeeded("browser/appMenuNotifications.ftl");
+      for (let el of elementsToTranslate) {
+        el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
+        el.removeAttribute("data-lazy-l10n-id");
+      }
+      await win.document.l10n.translateFragment(panel);
+    }
     let addon = await AddonManager.getAddonByID(extensionId);
     this.populateDescription(doc, addon);
 
