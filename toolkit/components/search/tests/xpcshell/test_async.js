@@ -20,9 +20,11 @@ add_task(async function test_async() {
   // test jar engine is loaded ok.
   let engine = Services.search.getEngineByName("basic");
   Assert.notEqual(engine, null);
+  Assert.ok(engine.isAppProvided, "Should be shown as an app-provided engine");
 
   engine = Services.search.getEngineByName("Simple Engine");
   Assert.notEqual(engine, null);
+  Assert.ok(engine.isAppProvided, "Should be shown as an app-provided engine");
 
   // Check the hidden engine is not loaded.
   engine = Services.search.getEngineByName("hidden");

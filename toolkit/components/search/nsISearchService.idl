@@ -159,6 +159,13 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString identifier;
 
   /**
+   * Whether or not this extension is provided by the application, e.g. it is
+   * in the list of configured search engines, or provided by a distribution
+   * set-up.
+   */
+  readonly attribute boolean isAppProvided;
+
+  /**
    * Gets a string representing the hostname from which search results for a
    * given responseType are returned.  This can be specified as an url attribute
    * in the engine description file, but will default to host from the <Url>'s
