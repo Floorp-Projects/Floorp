@@ -12,13 +12,13 @@
 #ifndef __CParserContext
 #define __CParserContext
 
+#include "mozilla/UniquePtr.h"
 #include "nsIParser.h"
 #include "nsIDTD.h"
 #include "nsIRequest.h"
 #include "nsScanner.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
 /**
  * Note that the parser is given FULL access to all
@@ -48,7 +48,7 @@ class CParserContext {
   void* const mKey;
   nsCOMPtr<nsITokenizer> mTokenizer;
   CParserContext* const mPrevContext;
-  nsAutoPtr<nsScanner> mScanner;
+  mozilla::UniquePtr<nsScanner> mScanner;
 
   nsCString mMimeType;
   nsDTDMode mDTDMode;
