@@ -12,6 +12,7 @@
 #include "mozilla/Char16.h"
 #include "mozilla/fallible.h"
 #include "nsStringFlags.h"
+#include "nsStringIterator.h"
 #include "nsCharTraits.h"
 
 template <typename T>
