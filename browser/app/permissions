@@ -9,6 +9,7 @@
 # UITour
 # Bug 1557153: www.mozilla.org gets a special workaround in UITourChild.jsm
 origin	uitour	1	https://www.mozilla.org
+origin	uitour	1	https://monitor.firefox.com
 origin	uitour	1	https://screenshots.firefox.com
 origin	uitour	1	https://support.mozilla.org
 origin	uitour	1	about:home
