@@ -44,6 +44,11 @@ add_task(async function test_added_login_shows_breach_warning() {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
+      await ContentTaskUtils.waitForCondition(
+        () => loginList._loginGuidsSortedOrder.length == 1,
+        "waiting for login list count to equal one. count=" +
+          loginList._loginGuidsSortedOrder.length
+      );
       is(
         loginList._loginGuidsSortedOrder.length,
         1,
@@ -81,6 +86,11 @@ add_task(async function test_added_login_shows_breach_warning() {
     async ([aTestLogin3Guid, aVulnerableLoginGuid]) => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
+      );
+      await ContentTaskUtils.waitForCondition(
+        () => loginList._loginGuidsSortedOrder.length == 2,
+        "waiting for login list count to equal two. count=" +
+          loginList._loginGuidsSortedOrder.length
       );
       is(
         loginList._loginGuidsSortedOrder.length,
