@@ -136,12 +136,10 @@ class HitTestingTreeNode {
   /* Sticky pos info */
   void SetStickyPosData(ScrollableLayerGuid::ViewID aStickyPosTarget,
                         const LayerRectAbsolute& aScrollRangeOuter,
-                        const LayerRectAbsolute& aScrollRangeInner,
-                        const Maybe<uint64_t>& aStickyPositionAnimationId);
+                        const LayerRectAbsolute& aScrollRangeInner);
   ScrollableLayerGuid::ViewID GetStickyPosTarget() const;
   const LayerRectAbsolute& GetStickyScrollRangeOuter() const;
   const LayerRectAbsolute& GetStickyScrollRangeInner() const;
-  Maybe<uint64_t> GetStickyPositionAnimationId() const;
 
   /* Convert |aPoint| into the LayerPixel space for the layer corresponding to
    * this node. |aTransform| is the complete (content + async) transform for
@@ -207,9 +205,6 @@ class HitTestingTreeNode {
   ScrollableLayerGuid::ViewID mStickyPosTarget;
   LayerRectAbsolute mStickyScrollRangeOuter;
   LayerRectAbsolute mStickyScrollRangeInner;
-  // This is only set if WebRender is enabled. It holds the animation id that
-  // we use to adjust sticky position content for the toolbar.
-  Maybe<uint64_t> mStickyPositionAnimationId;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions

@@ -409,58 +409,38 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer()) {
-      return mLayer->GetFixedPositionScrollContainerId();
-    }
-    return ScrollableLayerGuid::NULL_SCROLL_ID;
+    // TODO: Restrict this only for AtBottomLayer.
+    return mLayer->GetFixedPositionScrollContainerId();
   }
 
   SideBits GetFixedPositionSides() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer()) {
-      return mLayer->GetFixedPositionSides();
-    }
-    return SideBits::eNone;
+    return mLayer->GetFixedPositionSides();
+  }
+
+  bool GetIsStickyPosition() const {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetIsStickyPosition();
   }
 
   ScrollableLayerGuid::ViewID GetStickyScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer() && mLayer->GetIsStickyPosition()) {
-      return mLayer->GetStickyScrollContainerId();
-    }
-    return ScrollableLayerGuid::NULL_SCROLL_ID;
+    // TODO: Restrict this only for AtBottomLayer.
+    return mLayer->GetStickyScrollContainerId();
   }
 
   const LayerRectAbsolute& GetStickyScrollRangeOuter() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer() && mLayer->GetIsStickyPosition()) {
-      return mLayer->GetStickyScrollRangeOuter();
-    }
-
-    static const LayerRectAbsolute empty;
-    return empty;
+    return mLayer->GetStickyScrollRangeOuter();
   }
-
   const LayerRectAbsolute& GetStickyScrollRangeInner() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer() && mLayer->GetIsStickyPosition()) {
-      return mLayer->GetStickyScrollRangeInner();
-    }
-
-    static const LayerRectAbsolute empty;
-    return empty;
-  }
-
-  Maybe<uint64_t> GetStickyPositionAnimationId() const {
-    MOZ_ASSERT(IsValid());
-    // This function is only really needed for template-compatibility with
-    // WebRenderScrollDataWrapper. Although it will be called, the return
-    // value is not used.
-    return Nothing();
+    return mLayer->GetStickyScrollRangeInner();
   }
 
   Maybe<uint64_t> GetZoomAnimationId() const {

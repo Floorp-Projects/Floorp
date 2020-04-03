@@ -147,12 +147,16 @@ struct APZCTreeManager::TreeBuildingState {
   // codepath.
   Maybe<uint64_t> mZoomAnimationId;
 
-  // See corresponding members of APZCTreeManager. These are the same thing, but
-  // on the tree-walking state. They are populated while walking the tree in
-  // a layers update, and then moved into APZCTreeManager.
-  std::vector<FixedPositionInfo> mFixedPositionInfo;
-  std::vector<RootScrollbarInfo> mRootScrollbarInfo;
-  std::vector<StickyPositionInfo> mStickyPositionInfo;
+  // This is populated with all the HitTestingTreeNodes that have a fixed
+  // position animation id (which indicates that they need to be sampled for
+  // WebRender on the sampler thread).
+  std::vector<HitTestingTreeNode*> mFixedPositionNodesWithAnimationId;
+
+  // This is populated with all the HitTestingTreeNodes that are scrollbar
+  // containers for the root viewport and have a scrollthumb animation id
+  // (which indicates that they need to be sampled for WebRender on the sampler
+  // thread).
+  std::vector<HitTestingTreeNode*> mRootScrollbars;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -473,23 +477,13 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
               state.mScrollThumbs.push_back(node);
             } else if (node->IsScrollbarContainerNode()) {
               // Only scrollbar containers for the root have an animation id.
-              state.mRootScrollbarInfo.emplace_back(
-                  *(node->GetScrollbarAnimationId()),
-                  node->GetScrollbarDirection());
+              state.mRootScrollbars.push_back(node);
             }
           }
 
           // GetFixedPositionAnimationId is only set when webrender is enabled.
           if (node->GetFixedPositionAnimationId().isSome()) {
-            state.mFixedPositionInfo.emplace_back(
-                *(node->GetFixedPositionAnimationId()),
-                node->GetFixedPosSides());
-          }
-          // GetStickyPositionAnimationId is only set when webrender is enabled.
-          if (node->GetStickyPositionAnimationId().isSome()) {
-            state.mStickyPositionInfo.emplace_back(
-                *(node->GetStickyPositionAnimationId()),
-                node->GetFixedPosSides());
+            state.mFixedPositionNodesWithAnimationId.push_back(node);
           }
           if (apzc && node->IsPrimaryHolder()) {
             state.mScrollTargets[apzc->GetGuid()] = node;
@@ -636,9 +630,26 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           target->IsAncestorOf(thumb));
     }
 
-    mRootScrollbarInfo = std::move(state.mRootScrollbarInfo);
-    mFixedPositionInfo = std::move(state.mFixedPositionInfo);
-    mStickyPositionInfo = std::move(state.mStickyPositionInfo);
+    mRootScrollbarInfo.clear();
+    // For non-webrender, and platforms without a dynamic toolbar,
+    // state.mRootScrollbarsWithAnimationId will be empty so this will be a
+    // no-op.
+    for (const HitTestingTreeNode* scrollbar : state.mRootScrollbars) {
+      MOZ_ASSERT(scrollbar->IsScrollbarContainerNode());
+      mRootScrollbarInfo.emplace_back(*(scrollbar->GetScrollbarAnimationId()),
+                                      scrollbar->GetScrollbarDirection());
+    }
+
+    mFixedPositionInfo.clear();
+    // For non-webrender, state.mFixedPositionNodesWithAnimationId will be empty
+    // so this will be a no-op.
+    for (HitTestingTreeNode* fixedPos :
+         state.mFixedPositionNodesWithAnimationId) {
+      MOZ_ASSERT(fixedPos->GetFixedPositionAnimationId().isSome());
+      mFixedPositionInfo.emplace_back(
+          fixedPos->GetFixedPositionAnimationId().value(),
+          fixedPos->GetFixedPosSides());
+    }
   }
 
   for (size_t i = 0; i < state.mNodesToDestroy.Length(); i++) {
@@ -817,8 +828,7 @@ void APZCTreeManager::SampleForWebRender(
     if (info.mScrollDirection == ScrollDirection::eHorizontal) {
       ScreenPoint translation =
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(), SideBits::eBottom,
-              ScreenMargin());
+              mCompositorFixedLayerMargins, SideBits::eBottom, ScreenMargin());
 
       LayerToParentLayerMatrix4x4 transform =
           LayerToParentLayerMatrix4x4::Translation(ViewAs<ParentLayerPixel>(
@@ -832,7 +842,7 @@ void APZCTreeManager::SampleForWebRender(
   for (const FixedPositionInfo& info : mFixedPositionInfo) {
     ScreenPoint translation =
         AsyncCompositionManager::ComputeFixedMarginsOffset(
-            GetCompositorFixedLayerMargins(), info.mFixedPosSides,
+            mCompositorFixedLayerMargins, info.mFixedPosSides,
             mGeckoFixedLayerMargins);
 
     LayerToParentLayerMatrix4x4 transform =
@@ -841,23 +851,6 @@ void APZCTreeManager::SampleForWebRender(
 
     transforms.AppendElement(
         wr::ToWrTransformProperty(info.mFixedPositionAnimationId, transform));
-  }
-
-  for (const StickyPositionInfo& info : mStickyPositionInfo) {
-    ScreenPoint translation =
-        AsyncCompositionManager::ComputeFixedMarginsOffset(
-            GetCompositorFixedLayerMargins(), info.mFixedPosSides,
-            // For sticky layers, we don't need to factor
-            // mGeckoFixedLayerMargins because Gecko doesn't shift the
-            // position of sticky elements for dynamic toolbar movements.
-            ScreenMargin());
-
-    LayerToParentLayerMatrix4x4 transform =
-        LayerToParentLayerMatrix4x4::Translation(ViewAs<ParentLayerPixel>(
-            translation, PixelCastJustification::ScreenIsParentLayerForRoot));
-
-    transforms.AppendElement(
-        wr::ToWrTransformProperty(info.mStickyPositionAnimationId, transform));
   }
 
   aTxn.AppendTransformProperties(transforms);
@@ -1200,10 +1193,14 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
                           aLayer.GetFixedPositionSides(),
                           aLayer.GetFixedPositionAnimationId());
-    node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
-                           aLayer.GetStickyScrollRangeOuter(),
-                           aLayer.GetStickyScrollRangeInner(),
-                           aLayer.GetStickyPositionAnimationId());
+    if (aLayer.GetIsStickyPosition()) {
+      node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
+                             aLayer.GetStickyScrollRangeOuter(),
+                             aLayer.GetStickyScrollRangeInner());
+    } else {
+      node->SetStickyPosData(ScrollableLayerGuid::NULL_SCROLL_ID,
+                             LayerRectAbsolute(), LayerRectAbsolute());
+    }
     return node;
   }
 
@@ -1430,10 +1427,14 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
                         aLayer.GetFixedPositionSides(),
                         aLayer.GetFixedPositionAnimationId());
-  node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
-                         aLayer.GetStickyScrollRangeOuter(),
-                         aLayer.GetStickyScrollRangeInner(),
-                         aLayer.GetStickyPositionAnimationId());
+  if (aLayer.GetIsStickyPosition()) {
+    node->SetStickyPosData(aLayer.GetStickyScrollContainerId(),
+                           aLayer.GetStickyScrollRangeOuter(),
+                           aLayer.GetStickyScrollRangeInner());
+  } else {
+    node->SetStickyPosData(ScrollableLayerGuid::NULL_SCROLL_ID,
+                           LayerRectAbsolute(), LayerRectAbsolute());
+  }
   return node;
 }
 
@@ -2103,7 +2104,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
           MutexAutoLock lock(mMapLock);
           touchData.mScreenPoint -=
               RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
-                  GetCompositorFixedLayerMargins(), mFixedPosSidesForInputBlock,
+                  mCompositorFixedLayerMargins, mFixedPosSidesForInputBlock,
                   mGeckoFixedLayerMargins));
         }
       }
@@ -3391,7 +3392,7 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
       MutexAutoLock mapLock(mMapLock);
       *geckoPoint -=
           RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(), mFixedPosSidesForInputBlock,
+              mCompositorFixedLayerMargins, mFixedPosSidesForInputBlock,
               mGeckoFixedLayerMargins));
     }
   }
@@ -3465,8 +3466,8 @@ bool APZCTreeManager::IsStuckToRootContentAtBottom(
     return false;
   }
 
-  // We support the dynamic toolbar at top and bottom.
-  if ((aNode->GetFixedPosSides() & SideBits::eTopBottom) == SideBits::eNone) {
+  // Currently we only support the dyanmic toolbar at bottom.
+  if ((aNode->GetFixedPosSides() & SideBits::eBottom) == SideBits::eNone) {
     return false;
   }
 
@@ -3561,7 +3562,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
       MutexAutoLock mapLock(mMapLock);
       translation = ViewAs<ParentLayerPixel>(
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(), aNode->GetFixedPosSides(),
+              mCompositorFixedLayerMargins, aNode->GetFixedPosSides(),
               mGeckoFixedLayerMargins),
           PixelCastJustification::ScreenIsParentLayerForRoot);
     }
@@ -3574,8 +3575,8 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
       MutexAutoLock mapLock(mMapLock);
       translation = ViewAs<ParentLayerPixel>(
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              GetCompositorFixedLayerMargins(),
-              aNode->GetFixedPosSides() & SideBits::eTopBottom,
+              mCompositorFixedLayerMargins,
+              aNode->GetFixedPosSides() & SideBits::eBottom,
               // For sticky layers, we don't need to factor
               // mGeckoFixedLayerMargins because Gecko doesn't shift the
               // position of sticky elements for dynamic toolbar movements.
@@ -3622,16 +3623,6 @@ already_AddRefed<GeckoContentController> APZCTreeManager::GetContentController(
       aLayersId,
       [&](LayerTreeState& aState) -> void { controller = aState.mController; });
   return controller.forget();
-}
-
-ScreenMargin APZCTreeManager::GetCompositorFixedLayerMargins() const {
-  RecursiveMutexAutoLock lock(mTreeLock);
-  ScreenMargin result = mCompositorFixedLayerMargins;
-  if (StaticPrefs::apz_fixed_margin_override_enabled()) {
-    result.top = StaticPrefs::apz_fixed_margin_override_top();
-    result.bottom = StaticPrefs::apz_fixed_margin_override_bottom();
-  }
-  return result;
 }
 
 bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,

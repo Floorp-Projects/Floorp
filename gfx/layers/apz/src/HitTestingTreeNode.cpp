@@ -177,12 +177,10 @@ void HitTestingTreeNode::SetPrevSibling(HitTestingTreeNode* aSibling) {
 void HitTestingTreeNode::SetStickyPosData(
     ScrollableLayerGuid::ViewID aStickyPosTarget,
     const LayerRectAbsolute& aScrollRangeOuter,
-    const LayerRectAbsolute& aScrollRangeInner,
-    const Maybe<uint64_t>& aStickyPositionAnimationId) {
+    const LayerRectAbsolute& aScrollRangeInner) {
   mStickyPosTarget = aStickyPosTarget;
   mStickyScrollRangeOuter = aScrollRangeOuter;
   mStickyScrollRangeInner = aScrollRangeInner;
-  mStickyPositionAnimationId = aStickyPositionAnimationId;
 }
 
 ScrollableLayerGuid::ViewID HitTestingTreeNode::GetStickyPosTarget() const {
@@ -195,10 +193,6 @@ const LayerRectAbsolute& HitTestingTreeNode::GetStickyScrollRangeOuter() const {
 
 const LayerRectAbsolute& HitTestingTreeNode::GetStickyScrollRangeInner() const {
   return mStickyScrollRangeInner;
-}
-
-Maybe<uint64_t> HitTestingTreeNode::GetStickyPositionAnimationId() const {
-  return mStickyPositionAnimationId;
 }
 
 void HitTestingTreeNode::MakeRoot() {
