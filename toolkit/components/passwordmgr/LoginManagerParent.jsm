@@ -671,8 +671,6 @@ class LoginManagerParent extends JSWindowActorParent {
       usernameField ? usernameField.name : "",
       newPasswordField.name
     );
-    // we don't auto-save logins on form submit
-    let notifySaved = false;
 
     if (autoFilledLoginGuid) {
       let loginsForGuid = await Services.logins.searchLoginsAsync({
@@ -793,7 +791,7 @@ class LoginManagerParent extends JSWindowActorParent {
           existingLogin,
           formLogin,
           dismissedPrompt,
-          notifySaved,
+          false, // notifySaved
           autoSavedStorageGUID,
           autoFilledLoginGuid
         );
@@ -805,7 +803,7 @@ class LoginManagerParent extends JSWindowActorParent {
           existingLogin,
           formLogin,
           dismissedPrompt,
-          notifySaved,
+          false, // notifySaved
           autoSavedStorageGUID,
           autoFilledLoginGuid
         );
@@ -821,7 +819,7 @@ class LoginManagerParent extends JSWindowActorParent {
       promptBrowser,
       formLogin,
       dismissedPrompt,
-      notifySaved,
+      false, // notifySaved
       autoFilledLoginGuid
     );
   }
@@ -903,7 +901,6 @@ class LoginManagerParent extends JSWindowActorParent {
     let canMatchExistingLogin = true;
     let shouldAutoSaveLogin = triggeredByFillingGenerated;
     let autoSavedLogin = null;
-    let notifySaved = false;
 
     if (autoFilledLoginGuid) {
       let [matchedLogin] = await Services.logins.searchLoginsAsync({
@@ -1093,12 +1090,10 @@ class LoginManagerParent extends JSWindowActorParent {
     }
 
     if (shouldAutoSaveLogin) {
-      if (
-        existingLogin &&
-        existingLogin == autoSavedLogin &&
-        existingLogin.password !== formLogin.password
-      ) {
-        log("_onPasswordEditedOrGenerated: updating auto-saved login");
+      if (existingLogin && existingLogin == autoSavedLogin) {
+        log(
+          "_onPasswordEditedOrGenerated: updating auto-saved login with changed password"
+        );
 
         Services.logins.modifyLogin(
           existingLogin,
@@ -1106,11 +1101,10 @@ class LoginManagerParent extends JSWindowActorParent {
             password: formLogin.password,
           })
         );
-        notifySaved = true;
         // Update `existingLogin` with the new password if modifyLogin didn't
         // throw so that the prompts later uses the new password.
         existingLogin.password = formLogin.password;
-      } else if (!autoSavedLogin) {
+      } else {
         log(
           "_onPasswordEditedOrGenerated: auto-saving new login with empty username"
         );
@@ -1118,7 +1112,6 @@ class LoginManagerParent extends JSWindowActorParent {
         // Remember the GUID where we saved the generated password so we can update
         // the login if the user later edits the generated password.
         generatedPW.storageGUID = existingLogin.guid;
-        notifySaved = true;
       }
     } else {
       log("_onPasswordEditedOrGenerated: not auto-saving this login");
@@ -1153,7 +1146,7 @@ class LoginManagerParent extends JSWindowActorParent {
           existingLogin,
           formLogin,
           true, // dismissed prompt
-          notifySaved,
+          shouldAutoSaveLogin, // notifySaved
           autoSavedStorageGUID, // autoSavedLoginGuid
           autoFilledLoginGuid
         );
@@ -1164,7 +1157,7 @@ class LoginManagerParent extends JSWindowActorParent {
           existingLogin,
           formLogin,
           true, // dismissed prompt
-          notifySaved,
+          shouldAutoSaveLogin, // notifySaved
           autoSavedStorageGUID, // autoSavedLoginGuid
           autoFilledLoginGuid
         );
@@ -1183,7 +1176,7 @@ class LoginManagerParent extends JSWindowActorParent {
             existingLogin,
             formLogin,
             true, // dismissed prompt
-            notifySaved,
+            false, // notifySaved
             autoSavedStorageGUID, // autoSavedLoginGuid
             autoFilledLoginGuid
           );
@@ -1196,7 +1189,7 @@ class LoginManagerParent extends JSWindowActorParent {
       promptBrowser,
       formLogin,
       true, // dismissed prompt
-      notifySaved,
+      shouldAutoSaveLogin, // notifySaved
       autoFilledLoginGuid
     );
   }
