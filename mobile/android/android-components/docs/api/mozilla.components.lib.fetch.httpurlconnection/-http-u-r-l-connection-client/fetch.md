@@ -2,7 +2,7 @@
 
 # fetch
 
-`fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-httpurlconnection/src/main/java/mozilla/components/lib/fetch/httpurlconnection/HttpURLConnectionClient.kt#L27)
+`fun fetch(request: `[`Request`](../../mozilla.components.concept.fetch/-request/index.md)`): `[`Response`](../../mozilla.components.concept.fetch/-response/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/fetch-httpurlconnection/src/main/java/mozilla/components/lib/fetch/httpurlconnection/HttpURLConnectionClient.kt#L28)
 
 Overrides [Client.fetch](../../mozilla.components.concept.fetch/-client/fetch.md)
 

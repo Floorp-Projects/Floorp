@@ -35,6 +35,7 @@ We expect any implementation of concept-fetch to pass all test cases here.
 | [get302FollowRedirects](get302-follow-redirects.md) | `open fun get302FollowRedirects(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [get302FollowRedirectsDisabled](get302-follow-redirects-disabled.md) | `open fun get302FollowRedirectsDisabled(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [get404WithBody](get404-with-body.md) | `open fun get404WithBody(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [getDataUri](get-data-uri.md) | `open fun getDataUri(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [getThrowsIOExceptionWhenHostNotReachable](get-throws-i-o-exception-when-host-not-reachable.md) | `open fun getThrowsIOExceptionWhenHostNotReachable(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [post200WithBody](post200-with-body.md) | `open fun post200WithBody(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [put201FileUpload](put201-file-upload.md) | `open fun put201FileUpload(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

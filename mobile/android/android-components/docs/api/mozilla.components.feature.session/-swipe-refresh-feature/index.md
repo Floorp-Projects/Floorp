@@ -26,7 +26,7 @@ Feature implementation to add pull to refresh functionality to browsers.
 
 | Name | Summary |
 |---|---|
-| [canChildScrollUp](can-child-scroll-up.md) | `fun canChildScrollUp(parent: SwipeRefreshLayout, child: <ERROR CLASS>?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Callback that checks whether it is possible for the child view to scroll up. If the child view cannot scroll up, attempted to scroll up triggers a refresh gesture. |
+| [canChildScrollUp](can-child-scroll-up.md) | `fun canChildScrollUp(parent: SwipeRefreshLayout, child: <ERROR CLASS>?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Callback that checks whether it is possible for the child view to scroll up. If the child view cannot scroll up and the scroll event is not handled by the webpage it means we need to trigger the pull down to refresh functionality. |
 | [onLoadingStateChanged](on-loading-state-changed.md) | `fun onLoadingStateChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called when the current session starts or stops refreshing. |
 | [onRefresh](on-refresh.md) | `fun onRefresh(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Called when a swipe gesture triggers a refresh. |
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start feature: Starts adding pull to refresh behavior for the active session. |

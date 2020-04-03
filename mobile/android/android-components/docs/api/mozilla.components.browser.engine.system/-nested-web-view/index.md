@@ -2,7 +2,7 @@
 
 # NestedWebView
 
-`class NestedWebView : NestedScrollingChild` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/NestedWebView.kt#L32)
+`class NestedWebView : NestedScrollingChild` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/NestedWebView.kt#L34)
 
 WebView that supports nested scrolls (for using in a CoordinatorLayout).
 

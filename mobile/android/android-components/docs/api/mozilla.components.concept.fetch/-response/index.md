@@ -52,6 +52,9 @@ response.use {
 | Name | Summary |
 |---|---|
 | [CLIENT_ERROR_STATUS_RANGE](-c-l-i-e-n-t_-e-r-r-o-r_-s-t-a-t-u-s_-r-a-n-g-e.md) | `val CLIENT_ERROR_STATUS_RANGE: `[`IntRange`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-int-range/index.html) |
+| [CONTENT_LENGTH_HEADER](-c-o-n-t-e-n-t_-l-e-n-g-t-h_-h-e-a-d-e-r.md) | `const val CONTENT_LENGTH_HEADER: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [CONTENT_TYPE_HEADER](-c-o-n-t-e-n-t_-t-y-p-e_-h-e-a-d-e-r.md) | `const val CONTENT_TYPE_HEADER: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [SUCCESS](-s-u-c-c-e-s-s.md) | `const val SUCCESS: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [SUCCESS_STATUS_RANGE](-s-u-c-c-e-s-s_-s-t-a-t-u-s_-r-a-n-g-e.md) | `val SUCCESS_STATUS_RANGE: `[`IntRange`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-int-range/index.html) |
 
 ### Extension Properties

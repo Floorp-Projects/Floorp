@@ -2,7 +2,7 @@
 
 # Client
 
-`abstract class Client` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L17)
+`abstract class Client` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L21)
 
 A generic [Client](./index.md) for fetching resources via HTTP/s.
 
@@ -28,6 +28,14 @@ https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 | Name | Summary |
 |---|---|
 | [fetch](fetch.md) | `abstract fun fetch(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../-request/index.md) object. This call is synchronous. |
+| [fetchDataUri](fetch-data-uri.md) | `fun fetchDataUri(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md)<br>Generates a [Response](../-response/index.md) by decoding a base64 encoded data URI. |
+
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [DATA_URI_BASE64_EXT](-d-a-t-a_-u-r-i_-b-a-s-e64_-e-x-t.md) | `const val DATA_URI_BASE64_EXT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [DATA_URI_SCHEME](-d-a-t-a_-u-r-i_-s-c-h-e-m-e.md) | `const val DATA_URI_SCHEME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions
 
