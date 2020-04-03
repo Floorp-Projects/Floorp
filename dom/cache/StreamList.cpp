@@ -133,7 +133,15 @@ void StreamList::Close(const nsID& aId) {
 void StreamList::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
   if (mStreamControl) {
-    mStreamControl->CloseAll();
+    auto streamControl = mStreamControl;
+    mStreamControl = nullptr;
+
+    streamControl->CloseAll();
+
+    mStreamControl = streamControl;
+    streamControl = nullptr;
+
+    mStreamControl->Shutdown();
   }
 }
 
