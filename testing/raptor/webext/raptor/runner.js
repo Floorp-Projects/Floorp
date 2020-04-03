@@ -48,7 +48,6 @@ var browserCycle = 0;
 var pageCycles = 0;
 var pageCycle = 0;
 var testURL;
-var testTabID = 0;
 var scenarioTestTime = 60000;
 var getHero = false;
 var getFNBPaint = false;
@@ -227,10 +226,15 @@ async function startScenarioTimer() {
   await postToControlServer("status", `started scenario test timer`);
 }
 
-async function closeTab(tabId) {
-  if (tabId == 0) {
+async function closeTab() {
+  // Don't close the last tab which would close the window or application
+  const tabs = await queryForTabs({ currentWindow: true });
+  if (tabs.length == 1) {
+    await postToControlServer("status", `Not closing last Tab: ${tabId}`);
     return;
   }
+
+  const tabId = await getCurrentTabId();
 
   await postToControlServer("status", `closing Tab: ${tabId}`);
 
@@ -243,6 +247,13 @@ async function closeTab(tabId) {
   }
 
   await postToControlServer("status", `closed tab: ${tabId}`);
+}
+
+async function getCurrentTabId() {
+  const tabs = await queryForTabs({ currentWindow: true, active: true });
+
+  await postToControlServer("status", "found active tab with id " + tabs[0].id);
+  return tabs[0].id;
 }
 
 async function openTab() {
@@ -262,18 +273,34 @@ async function openTab() {
   return tab.id;
 }
 
+async function queryForTabs(options = {}) {
+  let tabs;
+    
+  if (isGecko) {
+    tabs = await ext.tabs.query(options);
+  } else {
+    tabs = await new Promise(resolve => {
+      ext.tabs.query(options, resolve);
+    });
+  }
+    
+  return tabs;
+}
+
 /**
  * Update the given tab by navigating to the test URL
  */
-async function updateTab(tabId, url) {
+async function updateTab(url) {
+  const tabId = await getCurrentTabId();
+
   await postToControlServer("status", `update tab ${tabId} for ${url}`);
 
   // "null" = active tab
   if (isGecko) {
-    await ext.tabs.update(tabId || null, { url });
+    await ext.tabs.update(tabId, { url });
   } else {
     await new Promise(resolve => {
-      ext.tabs.update(tabId || null, { url }, resolve);
+      ext.tabs.update(tabId, { url }, resolve);
     });
   }
 
@@ -466,18 +493,18 @@ async function nextCycle() {
 
     if (newTabPerCycle) {
       // close previous test tab and open a new one
-      await closeTab(testTabID);
-      testTabID = await openTab();
+      await closeTab();
+      await openTab();
     }
 
-    await updateTab(testTabID, testURL);
+    await updateTab(testURL);
 
     if (testType == TEST_SCENARIO) {
       await startScenarioTimer();
     }
 
     // For benchmark or scenario type tests we can proceed directly to
-    // waitForResults. However for page-load tests we must first wait until
+    // waitForResult. However for page-load tests we must first wait until
     // we hear back from pageloaderjs that it has been successfully loaded
     // in the test page and has been invoked; and only then start looking
     // for measurements.
@@ -714,7 +741,7 @@ async function raptorRunner() {
 
   // GeckoView doesn't support tabs
   if (!isGeckoView) {
-    testTabID = await openTab();
+    await openTab();
   }
 
   await nextCycle();
