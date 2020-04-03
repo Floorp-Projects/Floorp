@@ -17,7 +17,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/MemoryOutputStream.h"
-#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -142,7 +141,7 @@ class FileHandleThreadPool::DirectoryInfo {
 };
 
 struct FileHandleThreadPool::StoragesCompleteCallback final {
-  friend class nsAutoPtr<StoragesCompleteCallback>;
+  friend class DefaultDelete<StoragesCompleteCallback>;
 
   nsTArray<nsCString> mDirectoryIds;
   nsCOMPtr<nsIRunnable> mCallback;
@@ -673,11 +672,8 @@ void FileHandleThreadPool::Enqueue(FileHandle* aFileHandle,
 
   DirectoryInfo* directoryInfo;
   if (!mDirectoryInfos.Get(directoryId, &directoryInfo)) {
-    nsAutoPtr<DirectoryInfo> newDirectoryInfo(new DirectoryInfo(this));
-
-    mDirectoryInfos.Put(directoryId, newDirectoryInfo);
-
-    directoryInfo = newDirectoryInfo.forget();
+    directoryInfo = new DirectoryInfo(this);
+    mDirectoryInfos.Put(directoryId, directoryInfo);
   }
 
   FileHandleQueue* existingFileHandleQueue =
@@ -726,11 +722,11 @@ void FileHandleThreadPool::WaitForDirectoriesToComplete(
   MOZ_ASSERT(!aDirectoryIds.IsEmpty());
   MOZ_ASSERT(aCallback);
 
-  nsAutoPtr<StoragesCompleteCallback> callback(
-      new StoragesCompleteCallback(std::move(aDirectoryIds), aCallback));
+  auto callback =
+      MakeUnique<StoragesCompleteCallback>(std::move(aDirectoryIds), aCallback);
 
-  if (!MaybeFireCallback(callback)) {
-    mCompleteCallbacks.AppendElement(callback.forget());
+  if (!MaybeFireCallback(callback.get())) {
+    mCompleteCallbacks.AppendElement(std::move(callback));
   }
 }
 
@@ -800,8 +796,8 @@ void FileHandleThreadPool::Cleanup() {
     // Run all callbacks manually now.
     for (uint32_t count = mCompleteCallbacks.Length(), index = 0; index < count;
          index++) {
-      nsAutoPtr<StoragesCompleteCallback> completeCallback(
-          mCompleteCallbacks[index].forget());
+      UniquePtr<StoragesCompleteCallback> completeCallback =
+          std::move(mCompleteCallbacks[index]);
       MOZ_ASSERT(completeCallback);
       MOZ_ASSERT(completeCallback->mCallback);
 
@@ -841,7 +837,7 @@ void FileHandleThreadPool::FinishFileHandle(FileHandle* aFileHandle) {
     // See if we need to fire any complete callbacks.
     uint32_t index = 0;
     while (index < mCompleteCallbacks.Length()) {
-      if (MaybeFireCallback(mCompleteCallbacks[index])) {
+      if (MaybeFireCallback(mCompleteCallbacks[index].get())) {
         mCompleteCallbacks.RemoveElementAt(index);
       } else {
         index++;
