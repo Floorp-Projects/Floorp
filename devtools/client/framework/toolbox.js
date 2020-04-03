@@ -49,6 +49,12 @@ const L10N = new LocalizationHelper(
 
 loader.lazyRequireGetter(
   this,
+  "registerStoreObserver",
+  "devtools/client/shared/redux/subscriber",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "createToolboxStore",
   "devtools/client/framework/store",
   true
@@ -402,6 +408,7 @@ Toolbox.prototype = {
   get store() {
     if (!this._store) {
       this._store = createToolboxStore();
+      registerStoreObserver(this._store, this._onToolboxStateChange.bind(this));
     }
     return this._store;
   },
@@ -617,7 +624,9 @@ Toolbox.prototype = {
    * @param {String} targetActorID: The actorID of the target we want to select.
    */
   selectTarget(targetActorID) {
-    this.store.dispatch(selectTarget(targetActorID));
+    if (this.getSelectedTargetFront()?.actorID !== targetActorID) {
+      this.store.dispatch(selectTarget(targetActorID));
+    }
   },
 
   /**
@@ -628,7 +637,17 @@ Toolbox.prototype = {
     if (!selectedTarget) {
       return null;
     }
+
     return this.target.client.getFrontByID(selectedTarget.actorID);
+  },
+
+  _onToolboxStateChange(state, oldState) {
+    if (getSelectedTarget(state) !== getSelectedTarget(oldState)) {
+      const dbg = this.getPanel("jsdebugger");
+      dbg?.selectThread(
+        getSelectedTarget(state)?._targetFront.threadFront.actorID
+      );
+    }
   },
 
   _onPausedState: function(packet, threadFront) {
