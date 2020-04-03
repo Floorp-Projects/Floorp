@@ -510,10 +510,11 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
   }
 
   if (aFrame->IsPrimaryFrameOfRootOrBodyElement()) {
-    // Try to invalidate the canvas too, in the probable case the background
-    // was propagated to it.
-    InvalidateImages(aFrame->PresShell()->GetCanvasFrame(), aRequest,
-                     aForcePaint);
+    if (auto* canvas = aFrame->PresShell()->GetCanvasFrame()) {
+      // Try to invalidate the canvas too, in the probable case the background
+      // was propagated to it.
+      InvalidateImages(canvas, aRequest, aForcePaint);
+    }
   }
 
   bool invalidateFrame = aForcePaint;
