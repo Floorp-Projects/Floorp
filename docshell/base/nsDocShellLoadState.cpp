@@ -66,6 +66,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mReferrerInfo = aLoadState.ReferrerInfo();
   mURI = aLoadState.URI();
   mOriginalURI = aLoadState.OriginalURI();
+  mSourceBrowsingContext = aLoadState.SourceBrowsingContext();
   mBaseURI = aLoadState.BaseURI();
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
@@ -647,6 +648,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
       mIsFromProcessingFrameAttributes;
   loadState.URI() = mURI;
   loadState.OriginalURI() = mOriginalURI;
+  loadState.SourceBrowsingContext() = mSourceBrowsingContext;
   loadState.BaseURI() = mBaseURI;
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
