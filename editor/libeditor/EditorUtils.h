@@ -700,7 +700,7 @@ class MOZ_RAII AutoTransactionBatchExternal final {
       EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mEditorBase(aEditorBase) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mEditorBase.BeginTransaction();
+    MOZ_KnownLive(mEditorBase).BeginTransaction();
   }
 
   MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatchExternal() {
