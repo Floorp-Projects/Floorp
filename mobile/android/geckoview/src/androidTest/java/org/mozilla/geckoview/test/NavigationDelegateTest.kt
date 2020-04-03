@@ -4,13 +4,7 @@
 
 package org.mozilla.geckoview.test
 
-import org.mozilla.geckoview.AllowOrDeny
-import org.mozilla.geckoview.ContentBlocking
-import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
-import org.mozilla.geckoview.GeckoSessionSettings
-import org.mozilla.geckoview.WebRequestError
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -23,10 +17,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
+import org.junit.Assert
 import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
@@ -1387,7 +1383,44 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test
-    fun processSwitching() {
+    fun extensionProcessSwitching() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+
+        val controller = sessionRule.runtime.webExtensionController
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtensionController.PromptDelegate::class,
+                controller::setPromptDelegate,
+                { controller.promptDelegate = null },
+                object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        val extension = sessionRule.waitForResult(
+                controller.install("https://example.org/tests/junit/page-history.xpi"))
+
+        assertThat("baseUrl should be a valid extension URL",
+                extension.metaData!!.baseUrl, startsWith("moz-extension://"))
+
+        val url = extension.metaData!!.baseUrl + "page.html"
+        processSwitchingTest(url)
+
+        sessionRule.waitForResult(controller.uninstall(extension))
+    }
+
+    @Test
+    fun mainProcessSwitching() {
+        processSwitchingTest("about:config")
+    }
+
+    fun processSwitchingTest(url: String) {
         val settings = sessionRule.runtime.settings
         val aboutConfigEnabled = settings.aboutConfigEnabled
         settings.aboutConfigEnabled = true
@@ -1405,11 +1438,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
 
         // This loads in the parent process
-        mainSession.loadUri("about:config")
+        mainSession.loadUri(url)
         // Switching processes involves loading about:blank
         sessionRule.waitForPageStops(2)
 
-        assertThat("URL should match", currentUrl!!, equalTo("about:config"))
+        assertThat("URL should match", currentUrl!!, equalTo(url))
 
         // This will load a page in the child
         mainSession.loadTestPath(HELLO_HTML_PATH)
@@ -1417,10 +1450,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
 
-        mainSession.loadUri("about:config")
+        mainSession.loadUri(url)
         sessionRule.waitForPageStops(2)
 
-        assertThat("URL should match", currentUrl!!, equalTo("about:config"))
+        assertThat("URL should match", currentUrl!!, equalTo(url))
 
         sessionRule.session.goBack()
         sessionRule.waitForPageStops(2)
@@ -1430,7 +1463,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.goBack()
         sessionRule.waitForPageStops(2)
 
-        assertThat("URL should match", currentUrl!!, equalTo("about:config"))
+        assertThat("URL should match", currentUrl!!, equalTo(url))
 
         settings.aboutConfigEnabled = aboutConfigEnabled
     }
