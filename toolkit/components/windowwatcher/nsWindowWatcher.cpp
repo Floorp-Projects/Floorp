@@ -1233,7 +1233,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     loadState->SetFirstParty(true);
 
     // Should this pay attention to errors returned by LoadURI?
-    newBC->LoadURI(parentBC, loadState);
+    newBC->LoadURI(loadState);
   }
 
   // Copy the current session storage for the current domain. Don't perform the
