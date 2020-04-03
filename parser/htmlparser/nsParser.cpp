@@ -1299,7 +1299,7 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
     ParserWriteStruct pws;
     pws.mNeedCharsetCheck = true;
     pws.mParser = this;
-    pws.mScanner = theContext->mScanner;
+    pws.mScanner = theContext->mScanner.get();
     pws.mRequest = request;
 
     rv = pIStream->ReadSegments(ParserWriteFunc, &pws, aLength, &totalRead);
