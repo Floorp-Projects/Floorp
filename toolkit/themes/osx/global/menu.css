@@ -28,7 +28,7 @@ menucaption {
   font-weight: bold;
 }
 
-/* ..... internal content .... */
+/* Internal content */
 
 .menu-text,
 .menu-iconic-text,
@@ -39,8 +39,7 @@ menucaption {
 
 .menu-iconic-icon {
   height: 16px;
-  margin-top: -2px;
-  margin-bottom: -2px;
+  margin-block: -2px;
   margin-inline-end: 5px;
   /* Empty icons shouldn't take up room, so we need to compensate
    * the 5px margin-end with a negative margin-start.
@@ -53,8 +52,7 @@ menucaption {
 .menu-iconic,
 menuitem[image] {
   /* 2px higher than those without icons */
-  padding-top: 1px;
-  padding-bottom: 3px;
+  padding-block: 1px 3px;
 }
 
 .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
@@ -64,12 +62,11 @@ menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
 }
 
-/* ..... menu arrow box ..... */
+/* menu arrow box */
 
 .menu-right,
 .menu-accel-container {
-  margin-inline-start: 21px;
-  margin-inline-end: -9px;
+  margin-inline: 21px -9px;
   -moz-box-pack: end;
 }
 
@@ -78,11 +75,12 @@ menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
   -moz-appearance: menuarrow;
 }
 
-/* ::::: menu/menuitems in menubar ::::: */
+/* menu/menuitems in menubar */
 
 menubar > menu {
   -moz-appearance: none;
-  padding: 2px 5px 2px 7px;
+  padding-block: 2px;
+  padding-inline: 7px 5px;
   margin: 1px 0;
 }
 
@@ -97,7 +95,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
   color: -moz-mac-menutextselect;
 }
 
-/* ..... internal content .... */
+/* Internal content  */
 
 .menubar-left {
   margin: 0 2px;
@@ -107,7 +105,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
   margin: 0 1px !important;
 }
 
-/* ::::: menu/menuitems in popups ::::: */
+/* menu/menuitems in popups */
 
 menupopup {
   font: -moz-pull-down-menu;
@@ -128,11 +126,10 @@ menuitem[_moz-menuactive="true"] {
 
 menuitem[customoptionstyling="true"] {
   -moz-appearance: none;
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-block: 0;
 }
 
-/* ::::: menu/menuitems in menulist popups ::::: */
+/* menu/menuitems in menulist popups */
 
 menulist > menupopup {
   font: inherit;
@@ -145,7 +142,7 @@ menulist > menupopup > menu {
   color: -moz-FieldText;
 }
 
-/* ::::: checked menuitems ::::: */
+/* checked menuitems */
 
 :not(menulist) > menupopup > menuitem[checked="true"],
 :not(menulist) > menupopup > menuitem[selected="true"] {
@@ -160,7 +157,7 @@ menulist > menupopup > menuitem[selected="true"]::before {
   margin-inline-start: -15px;
 }
 
-/* ::::: menuseparator ::::: */
+/* menuseparator */
 
 menuseparator {
   -moz-appearance: menuseparator;
@@ -168,7 +165,7 @@ menuseparator {
   padding: 1px 0;
 }
 
-/* ::::: scroll buttons :::::*/
+/* Scroll buttons */
 
 .menupopup-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-up),
 .menupopup-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-down) {

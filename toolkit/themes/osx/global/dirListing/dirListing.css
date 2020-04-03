@@ -6,8 +6,7 @@
   background-color: -moz-dialog;
   color: -moz-dialogtext;
   font: message-box;
-  padding-left: 2em;
-  padding-right: 2em;
+  padding-inline: 2em;
 }
 
 body {
@@ -85,8 +84,7 @@ td:not(:first-child) {
 }
 
 .up::before {
-  margin-inline-end: 4px;
-  margin-inline-start: -20px;
+  margin-inline: -20px 4px;
   vertical-align: middle;
   content: url(chrome://global/skin/dirListing/up.png);
 }

@@ -32,7 +32,7 @@
   font: message-box;
 }
 
-/* ::::: alert icons :::::*/
+/* ::::: Alert icons :::::*/
 
 .message-icon,
 .alert-icon,
@@ -79,7 +79,7 @@ xul|iframe {
   }
 }
 
-/* ::::: miscellaneous formatting ::::: */
+/* ::::: Miscellaneous formatting ::::: */
 
 :root:-moz-lwtheme {
   -moz-appearance: none;
@@ -110,23 +110,19 @@ xul|separator.thin[orient="vertical"] {
 xul|separator.groove:not([orient="vertical"]) {
   border-top: 1px solid #A3A3A3;
   height: 0;
-  margin-top: 0.4em;
-  margin-bottom: 0.4em;
+  margin-block: 0.4em;
 }
 xul|separator.groove[orient="vertical"] {
   border-left: 1px solid #A3A3A3;
   width: 0;
-  margin-left: 0.4em;
-  margin-right: 0.4em;
+  margin-inline: 0.4em;
 }
 
 xul|description,
 xul|label {
   cursor: default;
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-inline-start: 6px;
-  margin-inline-end: 5px;
+  margin-block: 1px 2px;
+  margin-inline: 6px 5px;
 }
 
 xul|description {

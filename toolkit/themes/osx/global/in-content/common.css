@@ -6,8 +6,7 @@
 %include ../../../shared/in-content/common.inc.css
 
 xul|tabs {
-  padding-right: 0;
-  padding-left: 0;
+  padding-inline: 0;
   position: static;
 }
 
@@ -40,10 +39,7 @@ xul|*.help-button > xul|*.button-box > xul|*.button-icon {
   margin-inline-start: 0;
 }
 
-xul|*.checkbox-icon {
-  margin-right: 0;
-}
-
+xul|*.checkbox-icon,
 xul|*.radio-icon {
   margin-inline-end: 0;
 }
@@ -69,8 +65,7 @@ xul|radio[focused="true"] > .radio-check {
 
 xul|search-textbox {
   -moz-appearance: none;
-  padding-inline-start: 8px;
-  padding-inline-end: 8px;
+  padding-inline: 8px;
 }
 
 xul|search-textbox::part(search-sign) {
