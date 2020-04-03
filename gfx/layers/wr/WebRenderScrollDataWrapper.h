@@ -304,24 +304,29 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
 
   Maybe<uint64_t> GetFixedPositionAnimationId() const {
     MOZ_ASSERT(IsValid());
-    return mLayer->GetFixedPositionAnimationId();
+
+    if (AtBottomLayer()) {
+      return mLayer->GetFixedPositionAnimationId();
+    }
+    return Nothing();
   }
 
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
-    return mLayer->GetFixedPositionScrollContainerId();
+
+    if (AtBottomLayer()) {
+      return mLayer->GetFixedPositionScrollContainerId();
+    }
+    return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   SideBits GetFixedPositionSides() const {
     MOZ_ASSERT(IsValid());
-    return mLayer->GetFixedPositionSides();
-  }
 
-  bool GetIsStickyPosition() const {
-    MOZ_ASSERT(IsValid());
-
-    // TODO: Bug 1610731 Implement this for WebRender.
-    return false;
+    if (AtBottomLayer()) {
+      return mLayer->GetFixedPositionSides();
+    }
+    return SideBits::eNone;
   }
 
   ScrollableLayerGuid::ViewID GetStickyScrollContainerId() const {
