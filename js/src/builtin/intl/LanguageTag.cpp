@@ -666,7 +666,7 @@ static bool LanguageTagToString(JSContext* cx, const LanguageTag& tag,
                                 Buffer& sb) {
   auto appendSubtag = [&sb](const auto& subtag) {
     auto span = subtag.span();
-    MOZ_ASSERT(span.size() > 0);
+    MOZ_ASSERT(!span.empty());
     return sb.append(span.data(), span.size());
   };
 
@@ -921,7 +921,7 @@ static bool CreateLocaleForLikelySubtags(const LanguageTag& tag,
 
   auto appendSubtag = [&locale](const auto& subtag) {
     auto span = subtag.span();
-    MOZ_ASSERT(span.size() > 0);
+    MOZ_ASSERT(!span.empty());
     return locale.append(span.data(), span.size());
   };
 
