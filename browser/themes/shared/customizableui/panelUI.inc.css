@@ -346,10 +346,6 @@ panelview {
   opacity: 1;
 }
 
-panelview[id^=PanelUI-webext-] {
-  overflow: hidden;
-}
-
 panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text,
 #overflowMenu-customize-button > .toolbarbutton-text {
