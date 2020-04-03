@@ -1,16 +1,17 @@
 // Make sure the getVariable/setVariable/eval functions work correctly with
 // unaliased locals.
 var g = newGlobal({newCompartment: true});
-g.eval('\
-function g() { debugger; };\
-function f(arg) {\
-    var y = arg - 3;\
-    var a1 = 1;\
-    var a2 = 1;\
-    var b = arg + 9;\
-    var z = function() { return a1 + a2; };\
-    g();\
-};');
+g.eval(`
+function g() { debugger; };
+function f(arg) {
+    var y = arg - 3;
+    var a1 = 1;
+    var a2 = 1;
+    var b = arg + 9;
+    var z = function() { return a1 + a2; };
+    g();
+    return y * b; // To prevent the JIT from optimizing out y and b.
+};`);
 
 var dbg = new Debugger(g);
 
