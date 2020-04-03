@@ -13,10 +13,11 @@ use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
-use crate::prim_store::{BrushSegment, CachedGradientSegment, GradientTileRange, VectorKey};
+use crate::prim_store::{BrushSegment, GradientTileRange, VectorKey};
 use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
 use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
+use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use std::{hash, ops::{Deref, DerefMut}};
 use crate::util::pack_as_float;
 
@@ -151,7 +152,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         // gradient in a smaller task, and drawing as an image.
         // TODO(gw): Aim to reduce the constraints on fast path gradients in future,
         //           although this catches the vast majority of gradients on real pages.
-        let supports_caching =
+        let mut supports_caching =
             // No repeating support in fast path
             item.extend_mode == ExtendMode::Clamp &&
             // Gradient must cover entire primitive
@@ -160,14 +161,27 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             // Must be a vertical or horizontal gradient
             (item.start_point.x.approx_eq(&item.end_point.x) ||
              item.start_point.y.approx_eq(&item.end_point.y)) &&
+            // Fast path supports a limited number of stops
+            item.stops.len() <= GRADIENT_FP_STOPS &&
             // Fast path not supported on segmented (border-image) gradients.
             item.nine_patch.is_none();
 
+        let mut prev_offset = None;
         // Convert the stops to more convenient representation
         // for the current gradient builder.
         let stops: Vec<GradientStop> = item.stops.iter().map(|stop| {
             let color: ColorF = stop.color.into();
             min_alpha = min_alpha.min(color.a);
+
+            // The fast path doesn't support hard color stops, yet.
+            // Since the length of the gradient is a fixed size (512 device pixels), if there
+            // is a hard stop you will see bilinear interpolation with this method, instead
+            // of an abrupt color change.
+            if prev_offset == Some(stop.offset) {
+                supports_caching = false;
+            }
+
+            prev_offset = Some(stop.offset);
 
             GradientStop {
                 offset: stop.offset,
@@ -304,7 +318,7 @@ impl InternablePrimitive for LinearGradient {
         _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
         let gradient_index = prim_store.linear_gradients.push(LinearGradientPrimitive {
-            cache_segments: Vec::new(),
+            cache_handle: None,
             visible_tiles_range: GradientTileRange::empty(),
         });
 
@@ -324,7 +338,7 @@ impl IsVisible for LinearGradient {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct LinearGradientPrimitive {
-    pub cache_segments: Vec<CachedGradientSegment>,
+    pub cache_handle: Option<RenderTaskCacheEntryHandle>,
     pub visible_tiles_range: GradientTileRange,
 }
 
