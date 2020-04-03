@@ -26,10 +26,15 @@ class AboutWelcome extends React.PureComponent {
   }
 
   componentDidMount() {
+    let messageId =
+      this.props.experiment && this.props.branchId
+        ? `SIMPLIFIED_ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase()
+        : "SIMPLIFIED_ABOUT_WELCOME";
+
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
-      message_id: "SIMPLIFIED_ABOUT_WELCOME",
+      message_id: messageId,
     });
     // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true
@@ -48,6 +53,10 @@ class AboutWelcome extends React.PureComponent {
 
   render() {
     const { props } = this;
+    let UTMTerm =
+      this.props.experiment && this.props.branchId
+        ? `${this.props.experiment}-${this.props.branchId}`
+        : "default";
     return (
       <div className="outer-wrapper welcomeContainer">
         <div className="welcomeContainerInner">
@@ -57,6 +66,7 @@ class AboutWelcome extends React.PureComponent {
               cards={props.cards}
               metricsFlowUri={this.state.metricsFlowUri}
               sendTelemetry={window.AWSendEventTelemetry}
+              utm_term={UTMTerm}
             />
             <Localized text={props.startButton.label}>
               <button
@@ -74,9 +84,15 @@ class AboutWelcome extends React.PureComponent {
 AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
 
 async function mount() {
-  const settings = await window.AWGetStartupData();
+  const { slug, branch } = await window.AWGetStartupData();
+  const settings = branch && branch.value ? branch.value : {};
+
   ReactDOM.render(
-    <AboutWelcome {...settings} />,
+    <AboutWelcome
+      experiment={slug}
+      branchId={branch && branch.slug}
+      {...settings}
+    />,
     document.getElementById("root")
   );
 }

@@ -190,6 +190,16 @@ const ExperimentAPI = {
     // Add more recipes below
   ],
 
+  getExperiment() {
+    const recipes = this._RECIPES;
+    const experiment = testSlug && recipes.find(r => r.slug === testSlug);
+    if (experiment) {
+      const branch = experiment.branches.find(b => b.slug === testBranch);
+      return branch ? { slug: experiment.slug, branch } : {};
+    }
+    return {};
+  },
+
   getValue() {
     const recipes = this._RECIPES;
     const experiment = testSlug && recipes.find(r => r.slug === testSlug);

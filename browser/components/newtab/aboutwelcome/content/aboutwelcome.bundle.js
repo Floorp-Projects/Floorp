@@ -104,6 +104,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_FxCards__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 /* harmony import */ var _components_MSLocalized__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(4);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8);
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -131,10 +133,11 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   }
 
   componentDidMount() {
+    let messageId = this.props.experiment && this.props.branchId ? `SIMPLIFIED_ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase() : "SIMPLIFIED_ABOUT_WELCOME";
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
-      message_id: "SIMPLIFIED_ABOUT_WELCOME"
+      message_id: messageId
     }); // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true
 
@@ -155,6 +158,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     const {
       props
     } = this;
+    let UTMTerm = this.props.experiment && this.props.branchId ? `${this.props.experiment}-${this.props.branchId}` : "default";
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "outer-wrapper welcomeContainer"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -165,7 +169,8 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_FxCards__WEBPACK_IMPORTED_MODULE_3__["FxCards"], {
       cards: props.cards,
       metricsFlowUri: this.state.metricsFlowUri,
-      sendTelemetry: window.AWSendEventTelemetry
+      sendTelemetry: window.AWSendEventTelemetry,
+      utm_term: UTMTerm
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MSLocalized__WEBPACK_IMPORTED_MODULE_4__["Localized"], {
       text: props.startButton.label
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
@@ -179,8 +184,15 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
 AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__["DEFAULT_WELCOME_CONTENT"];
 
 async function mount() {
-  const settings = await window.AWGetStartupData();
-  react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, settings), document.getElementById("root"));
+  const {
+    slug,
+    branch
+  } = await window.AWGetStartupData();
+  const settings = branch && branch.value ? branch.value : {};
+  react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render(react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AboutWelcome, _extends({
+    experiment: slug,
+    branchId: branch && branch.slug
+  }, settings)), document.getElementById("root"));
 }
 
 mount();
@@ -360,7 +372,7 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
       type,
       data
     } = action;
-    let UTMTerm = "about_welcome";
+    let UTMTerm = `aboutwelcome-${this.props.utm_term}-card`;
 
     if (action.type === "OPEN_URL") {
       let url = new URL(action.data.args);
