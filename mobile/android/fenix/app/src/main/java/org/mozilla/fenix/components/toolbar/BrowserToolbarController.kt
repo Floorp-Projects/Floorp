@@ -40,7 +40,7 @@ import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
-import org.mozilla.fenix.lib.Do
+import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 /**

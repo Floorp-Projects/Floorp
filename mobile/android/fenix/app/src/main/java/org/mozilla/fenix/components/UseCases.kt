@@ -18,7 +18,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 /**
  * Component group for all use cases. Use cases are provided by feature

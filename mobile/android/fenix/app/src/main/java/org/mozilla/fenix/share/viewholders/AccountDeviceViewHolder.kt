@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.account_share_list_item.view.*
 import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.lib.Do
+import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.listadapters.SyncShareOption
 

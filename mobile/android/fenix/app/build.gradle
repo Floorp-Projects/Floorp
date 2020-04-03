@@ -272,7 +272,7 @@ android.applicationVariants.all { variant ->
     if (hasTest) {
         apply plugin: 'kotlin-allopen'
         allOpen {
-            annotation("org.mozilla.fenix.test.OpenClass")
+            annotation("org.mozilla.fenix.utils.OpenClass")
         }
     }
 

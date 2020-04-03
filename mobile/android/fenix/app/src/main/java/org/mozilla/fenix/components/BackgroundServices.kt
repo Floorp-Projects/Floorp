@@ -35,7 +35,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.RunWhenReadyQueue
 
 /**

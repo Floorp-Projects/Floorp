@@ -17,7 +17,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 @Mockable
 class TabCollectionStorage(

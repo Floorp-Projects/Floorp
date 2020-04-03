@@ -45,7 +45,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 import java.util.concurrent.TimeUnit
 
 /**

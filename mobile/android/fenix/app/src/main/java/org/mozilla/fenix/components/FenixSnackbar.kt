@@ -21,7 +21,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 @Mockable
 class FenixSnackbar private constructor(

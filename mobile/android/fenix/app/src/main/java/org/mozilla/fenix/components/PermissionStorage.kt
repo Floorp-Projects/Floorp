@@ -10,7 +10,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 @Mockable
 class PermissionStorage(private val context: Context) {

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
 import org.mozilla.fenix.components.searchengine.FenixSearchEngineProvider
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 /**
  * Component group for all search engine integration related functionality.

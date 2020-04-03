@@ -17,7 +17,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.advanced.getSelectedLocale
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 @Mockable
 class TopSiteStorage(private val context: Context) {

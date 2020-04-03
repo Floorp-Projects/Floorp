@@ -22,7 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.lib.Do
+import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.about.AboutItemType.LICENSING_INFO
 import org.mozilla.fenix.settings.about.AboutItemType.PRIVACY_NOTICE

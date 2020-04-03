@@ -13,7 +13,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 @Mockable
 class FindInPageIntegration(

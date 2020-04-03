@@ -9,7 +9,7 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.lib.Do
+import org.mozilla.fenix.utils.Do
 
 /**
  * Interactor for the Bookmarks screen.

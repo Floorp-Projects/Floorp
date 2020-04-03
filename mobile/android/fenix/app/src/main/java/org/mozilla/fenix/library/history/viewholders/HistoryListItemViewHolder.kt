@@ -11,7 +11,7 @@ import kotlinx.android.synthetic.main.library_site_item.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
-import org.mozilla.fenix.lib.Do
+import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.history.HistoryFragmentState
 import org.mozilla.fenix.library.history.HistoryInteractor

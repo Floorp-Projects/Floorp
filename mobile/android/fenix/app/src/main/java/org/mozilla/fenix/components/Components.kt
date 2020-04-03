@@ -19,7 +19,7 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit

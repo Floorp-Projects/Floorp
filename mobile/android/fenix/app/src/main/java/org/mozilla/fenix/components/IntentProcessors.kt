@@ -20,7 +20,7 @@ import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
-import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Mockable
 
 /**
  * Component group for miscellaneous components.

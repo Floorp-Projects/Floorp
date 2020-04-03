@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.test
+package org.mozilla.fenix.utils
+
+// Annotations for testing.
 
 /**
  * Annotate a class with [OpenClass] to open a class for mocking purposes while keeping it final in release builds
