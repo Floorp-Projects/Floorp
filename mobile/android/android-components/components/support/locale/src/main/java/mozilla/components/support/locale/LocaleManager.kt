@@ -78,7 +78,8 @@ object LocaleManager {
     }
 
     internal fun updateResources(baseContext: Context): Context {
-        val locale = getCurrentLocale(baseContext)
+        val locale = getCurrentLocale(baseContext) ?: getSystemDefault()
+
         return if (locale != null) {
             updateSystemLocale(locale)
             updateConfiguration(baseContext, locale)
