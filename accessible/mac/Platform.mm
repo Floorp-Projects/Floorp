@@ -131,8 +131,11 @@ void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
   }
 }
 
-void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool) {
-  // mac doesn't care about state change events
+void ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t aState, bool aEnabled) {
+  mozAccessible* wrapper = GetNativeFromProxy(aProxy);
+  if (wrapper) {
+    [wrapper stateChanged:aState isEnabled:aEnabled];
+  }
 }
 
 void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset) {

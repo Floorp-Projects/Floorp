@@ -859,6 +859,11 @@ class LoginManagerParent extends JSWindowActorParent {
       return;
     }
 
+    if (!browser) {
+      log("_onPasswordEditedOrGenerated: The browser is gone");
+      return;
+    }
+
     let browsingContext = this.getBrowsingContextToUse();
     if (!browsingContext) {
       return;
