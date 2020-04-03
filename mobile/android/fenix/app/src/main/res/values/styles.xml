@@ -20,6 +20,10 @@
         <item name="alertDialogTheme">@style/DialogStyleNormal</item>
         <item name="android:windowEnableSplitTouch">false</item>
         <item name="android:splitMotionEvents">false</item>
+        <item name="mozacInputLayoutErrorTextColor"
+            tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
+        <item name="mozacInputLayoutErrorIconColor"
+            tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
 
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
