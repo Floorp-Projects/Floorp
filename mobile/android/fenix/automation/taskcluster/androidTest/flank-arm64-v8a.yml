@@ -19,11 +19,7 @@ gcloud:
   # by default, set to app name
   # declare results-history-name to create a separate dropdown menu in Firebase 
   # see: https://github.com/TestArmada/flank/issues/341
-  #results-history-name: tmp_parallel 
-
-  # The number of times a TestExecution should be re-attempted if one or more\nof its test cases fail for any reason.
-  # The maximum number of reruns allowed is 10.  Default is 0, which implies noi reruns.
-  num-flaky-test-attempts: 2
+  #results-history-name: tmp_parallel
 
   # test and app are the only required args
   app: /APP/PATH
