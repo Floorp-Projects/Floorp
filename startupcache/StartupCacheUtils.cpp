@@ -9,7 +9,6 @@
 #include "nsIJARURI.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIChromeRegistry.h"
-#include "nsAutoPtr.h"
 #include "nsStringStream.h"
 #include "StartupCacheUtils.h"
 #include "mozilla/scache/StartupCache.h"

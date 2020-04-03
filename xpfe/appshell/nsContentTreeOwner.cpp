@@ -9,9 +9,6 @@
 #include "nsContentTreeOwner.h"
 #include "AppWindow.h"
 
-// Helper Classes
-#include "nsAutoPtr.h"
-
 // Interfaces needed to be included
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"

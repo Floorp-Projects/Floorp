@@ -7,7 +7,6 @@
 #ifndef mozilla_storage_Connection_h
 #define mozilla_storage_Connection_h
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"

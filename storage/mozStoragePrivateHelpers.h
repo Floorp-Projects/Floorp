@@ -14,7 +14,6 @@
 #include "sqlite3.h"
 #include "nsIVariant.h"
 #include "nsError.h"
-#include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
 #include "Variant.h"
 
