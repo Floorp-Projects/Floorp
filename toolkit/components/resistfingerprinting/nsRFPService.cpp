@@ -650,7 +650,7 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
 
 static uint32_t GetSpoofedVersion() {
   // If we can't get the current Firefox version, use a hard-coded ESR version.
-  const uint32_t kKnownEsrVersion = 60;
+  const uint32_t kKnownEsrVersion = 78;
 
   nsresult rv;
   nsCOMPtr<nsIXULAppInfo> appInfo =
@@ -672,15 +672,33 @@ static uint32_t GetSpoofedVersion() {
   // version has changed.  Once changed, we must update the formula in this
   // function.
   if (!strcmp(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL), "esr")) {
-    MOZ_ASSERT(((firefoxVersion % 8) == 4),
+    MOZ_ASSERT(((firefoxVersion - kKnownEsrVersion) % 13) == 0,
                "Please update ESR version formula in nsRFPService.cpp");
   }
 #endif  // DEBUG
 
-  // Starting with Firefox 52, a new ESR version will be released every
-  // eight Firefox versions: 52, 60, 68, ...
+  // Starting with Firefox 78, a new ESR version will be released every June.
+  // We can't accurately calculate the next ESR version, but it will be
+  // probably be every ~13 Firefox releases, assuming four-week release
+  // cycles. If this assumption is wrong, we won't need to worry about it
+  // until ESR 104±1 in 2022. :) We have a debug assert above to catch if the
+  // spoofed version doesn't match the actual ESR version then.
   // We infer the last and closest ESR version based on this rule.
-  return firefoxVersion - ((firefoxVersion - 4) % 8);
+
+  if (firefoxVersion < 78) {
+    // 68 is the last ESR version from the old six-week release cadence. After
+    // 78 we can assume the four-week new release cadence.
+    return 68;
+  }
+
+  uint32_t spoofedVersion =
+      firefoxVersion - ((firefoxVersion - kKnownEsrVersion) % 13);
+
+  MOZ_ASSERT(spoofedVersion >= kKnownEsrVersion &&
+             spoofedVersion <= firefoxVersion &&
+             (spoofedVersion - kKnownEsrVersion) % 13 == 0);
+
+  return spoofedVersion;
 }
 
 /* static */

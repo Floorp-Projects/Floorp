@@ -250,7 +250,15 @@ add_task(async function setup() {
   });
 
   let appVersion = parseInt(Services.appinfo.version);
-  let spoofedVersion = appVersion - ((appVersion - 4) % 8);
+  let spoofedVersion;
+  if (appVersion < 78) {
+    // 68 is the last ESR version from the old six-week release cadence. After
+    // 78 we can assume the four-week new release cadence.
+    spoofedVersion = 68;
+  } else {
+    spoofedVersion = appVersion - ((appVersion - 78) % 13);
+  }
+
   spoofedUserAgentNavigator = `Mozilla/5.0 (${
     SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
   }; rv:${spoofedVersion}.0) Gecko/20100101 Firefox/${spoofedVersion}.0`;
