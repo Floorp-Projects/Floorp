@@ -16,6 +16,7 @@
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "mozilla/DebugOnly.h"
 
@@ -138,7 +139,7 @@ class FetchDriver final : public nsIStreamListener,
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
   nsCOMPtr<nsIChannel> mChannel;
-  nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
+  UniquePtr<SRICheckDataVerifier> mSRIDataVerifier;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
