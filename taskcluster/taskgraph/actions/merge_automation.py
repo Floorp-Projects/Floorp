@@ -20,7 +20,7 @@ def is_release_promotion_available(parameters):
 @register_callback_action(
     name="merge-automation",
     title="Merge Day Automation",
-    symbol="${input.merge_flavor}",
+    symbol="${input.behavior}",
     description="Merge repository branches.",
     generic=False,
     order=500,
@@ -39,10 +39,10 @@ def is_release_promotion_available(parameters):
                 "description": "Push changes using to_repo and to_branch",
                 "default": False,
             },
-            "merge_flavor": {
+            "behavior": {
                 "type": "string",
-                "description": "The flavor of release promotion to perform.",
-                "enum": sorted(graph_config["merge-automation"]["flavors"].keys()),
+                "description": "The type of release promotion to perform.",
+                "enum": sorted(graph_config["merge-automation"]["behaviors"].keys()),
             },
             "from-repo": {
                 "type": "string",
@@ -66,7 +66,7 @@ def is_release_promotion_available(parameters):
             },
         },
         "required": [
-            "merge_flavor"
+            "behavior"
         ],
     },
 )
@@ -78,7 +78,7 @@ def merge_automation_action(parameters, graph_config, input, task_group_id, task
     parameters["target_tasks_method"] = "merge_automation"
     parameters["merge_config"] = {
         "force-dry-run": input.get("force-dry-run", False),
-        "merge_flavor": input["merge_flavor"],
+        "behavior": input["behavior"],
     }
 
     for field in ["from-repo", "from-branch", "to-repo", "to-branch", "ssh-user-alias", "push"]:

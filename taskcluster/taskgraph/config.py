@@ -56,18 +56,20 @@ graph_config_schema = Schema({
         }},
     },
     Required('merge-automation'): {
-        Required('flavors'): {text_type: {
+        Required('behaviors'): {text_type: {
             Optional('from-branch'): text_type,
             Required('to-branch'): text_type,
             Optional('from-repo'): text_type,
             Required('to-repo'): text_type,
-            Required('version-files'): [text_type],
-            Required('version-files-suffix'): [text_type],
-            Required('version-suffix'): text_type,
-            Required('copy-files'): [[text_type]],
+            Required('version-files'): [
+                {
+                    Required('filename'): text_type,
+                    Optional('new-suffix'): text_type,
+                    Optional('version-bump'): Any('major', 'minor'),
+                }
+            ],
             Required('replacements'): [[text_type]],
             Required('merge-old-head'): bool,
-            Optional('incr-major-version'): bool,
             Optional('base-tag'): text_type,
             Optional('end-tag'): text_type,
         }},
