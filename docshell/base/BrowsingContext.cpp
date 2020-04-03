@@ -33,7 +33,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPtr.h"
@@ -44,7 +43,6 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsIObserverService.h"
 #include "nsContentUtils.h"
-#include "nsSandboxFlags.h"
 #include "nsScriptError.h"
 #include "nsThreadUtils.h"
 #include "xpcprivate.h"
@@ -868,61 +866,6 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
   return false;
 }
 
-bool BrowsingContext::IsSandboxedFrom(BrowsingContext* aTarget) {
-  // If no target then not sandboxed.
-  if (!aTarget) {
-    return false;
-  }
-
-  // We cannot be sandboxed from ourselves.
-  if (aTarget == this) {
-    return false;
-  }
-
-  // Default the sandbox flags to our flags, so that if we can't retrieve the
-  // active document, we will still enforce our own.
-  uint32_t sandboxFlags = GetSandboxFlags();
-  if (mDocShell) {
-    if (RefPtr<Document> doc = mDocShell->GetExtantDocument()) {
-      sandboxFlags = doc->GetSandboxFlags();
-    }
-  }
-
-  // If no flags, we are not sandboxed at all.
-  if (!sandboxFlags) {
-    return false;
-  }
-
-  // If aTarget has an ancestor, it is not top level.
-  if (RefPtr<BrowsingContext> ancestorOfTarget = aTarget->GetParent()) {
-    do {
-      // We are not sandboxed if we are an ancestor of target.
-      if (ancestorOfTarget == this) {
-        return false;
-      }
-      ancestorOfTarget = ancestorOfTarget->GetParent();
-    } while (ancestorOfTarget);
-
-    // Otherwise, we are sandboxed from aTarget.
-    return true;
-  }
-
-  // aTarget is top level, are we the "one permitted sandboxed
-  // navigator", i.e. did we open aTarget?
-  if (aTarget->GetOnePermittedSandboxedNavigatorId() == Id()) {
-    return false;
-  }
-
-  // If SANDBOXED_TOPLEVEL_NAVIGATION flag is not on, we are not sandboxed
-  // from our top.
-  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) && aTarget == Top()) {
-    return false;
-  }
-
-  // Otherwise, we are sandboxed from aTarget.
-  return true;
-}
-
 RefPtr<SessionStorageManager> BrowsingContext::GetSessionStorageManager() {
   RefPtr<SessionStorageManager>& manager = Top()->mSessionStorageManager;
   if (!manager) {
@@ -1119,21 +1062,14 @@ void BrowsingContext::Location(JSContext* aCx,
   }
 }
 
-nsresult BrowsingContext::CheckSandboxFlags(nsDocShellLoadState* aLoadState) {
-  const auto& sourceBC = aLoadState->SourceBrowsingContext();
-  if (sourceBC.IsDiscarded() || (sourceBC && sourceBC->IsSandboxedFrom(this))) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-  }
-  return NS_OK;
-}
-
-nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
+nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
+                                  nsDocShellLoadState* aLoadState,
                                   bool aSetNavigating) {
   // Per spec, most load attempts are silently ignored when a BrowsingContext is
   // null (which in our code corresponds to discarded), so we simply fail
   // silently in those cases. Regardless, we cannot trigger loads in/from
   // discarded BrowsingContexts via IPC, so we need to abort in any case.
-  if (IsDiscarded()) {
+  if (IsDiscarded() || (aAccessor && aAccessor->IsDiscarded())) {
     return NS_OK;
   }
 
@@ -1141,48 +1077,41 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
     return mDocShell->LoadURI(aLoadState, aSetNavigating);
   }
 
-  // Note: We do this check both here and in `nsDocShell::InternalLoad`, since
-  // document-specific sandbox flags are only available in the process
-  // triggering the load, and we don't want the target process to have to trust
-  // the triggering process to do the appropriate checks for the
-  // BrowsingContext's sandbox flags.
-  MOZ_TRY(CheckSandboxFlags(aLoadState));
-
-  if (const auto& sourceBC = aLoadState->SourceBrowsingContext()) {
-    MOZ_DIAGNOSTIC_ASSERT(sourceBC->Group() == Group());
-
-    if (!sourceBC->CanAccess(this)) {
-      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
-    if (WindowGlobalChild* wgc =
-            win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
-      wgc->SendLoadURI(this, aLoadState, aSetNavigating);
+  if (!aAccessor && XRE_IsParentProcess()) {
+    if (ContentParent* cp = Canonical()->GetContentParent()) {
+      Unused << cp->SendLoadURI(this, aLoadState, aSetNavigating);
     }
   } else {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-    if (!XRE_IsParentProcess()) {
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor);
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
+    if (!aAccessor) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (ContentParent* cp = Canonical()->GetContentParent()) {
-      Unused << cp->SendLoadURI(this, aLoadState, aSetNavigating);
+    if (!aAccessor->CanAccess(this)) {
+      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> win(aAccessor->GetDOMWindow());
+    MOZ_DIAGNOSTIC_ASSERT(win);
+    if (WindowGlobalChild* wgc =
+            win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
+      wgc->SendLoadURI(this, aLoadState, aSetNavigating);
     }
   }
   return NS_OK;
 }
 
-nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState,
+nsresult BrowsingContext::InternalLoad(BrowsingContext* aAccessor,
+                                       nsDocShellLoadState* aLoadState,
                                        nsIDocShell** aDocShell,
                                        nsIRequest** aRequest) {
-  if (IsDiscarded()) {
+  if (IsDiscarded() || (aAccessor && aAccessor->IsDiscarded())) {
     return NS_OK;
   }
 
-  const auto& sourceBC = aLoadState->SourceBrowsingContext();
   bool isActive =
-      sourceBC && sourceBC->GetIsActive() && !GetIsActive() &&
+      aAccessor && aAccessor->GetIsActive() && !GetIsActive() &&
       !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
   if (mDocShell) {
     nsresult rv = nsDocShell::Cast(mDocShell)->InternalLoad(
@@ -1203,26 +1132,20 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState,
     return rv;
   }
 
-  // Note: We do this check both here and in `nsDocShell::InternalLoad`, since
-  // document-specific sandbox flags are only available in the process
-  // triggering the load, and we don't want the target process to have to trust
-  // the triggering process to do the appropriate checks for the
-  // BrowsingContext's sandbox flags.
-  MOZ_TRY(CheckSandboxFlags(aLoadState));
-
   if (XRE_IsParentProcess()) {
     if (ContentParent* cp = Canonical()->GetContentParent()) {
       Unused << cp->SendInternalLoad(this, aLoadState, isActive);
     }
   } else {
-    MOZ_DIAGNOSTIC_ASSERT(sourceBC);
-    MOZ_DIAGNOSTIC_ASSERT(sourceBC->Group() == Group());
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor);
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
 
-    if (!sourceBC->CanAccess(this)) {
+    if (!aAccessor->CanAccess(this)) {
       return NS_ERROR_DOM_PROP_ACCESS_DENIED;
     }
 
-    nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
+    nsCOMPtr<nsPIDOMWindowOuter> win(aAccessor->GetDOMWindow());
+    MOZ_DIAGNOSTIC_ASSERT(win);
     if (WindowGlobalChild* wgc =
             win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
       wgc->SendInternalLoad(this, aLoadState);
