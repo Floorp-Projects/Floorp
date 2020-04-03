@@ -10,7 +10,12 @@ body {
 body {
   --sidebar-width: 320px;
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr;
+  /* In a narrow window, the header may be too wide
+     for a reduced size grid and expand outside of the grid.
+     A minimum width is needed on the flexible column to
+     give it a definite size so it will also expand outside
+     of the grid if necessary, to match the header. */
+  grid-template-columns: var(--sidebar-width) minmax(min-content, 1fr);
   grid-template-rows: 75px 1fr;
   grid-template-areas: "header header"
                        "logins login";
