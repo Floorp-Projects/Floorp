@@ -50,7 +50,7 @@ macosx64-clang-tidy:
     worker-type: b-linux-large
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
         using: toolchain-script
         script: build-clang.sh
