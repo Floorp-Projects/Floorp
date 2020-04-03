@@ -183,8 +183,8 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
   // Append an element to the array.
   // @param aItem The item to append.
   template <class Item>
-  void AppendElement(const Item& aItem) {
-    mArray.AppendElement(aItem);
+  void AppendElement(Item&& aItem) {
+    mArray.AppendElement(std::forward<Item>(aItem));
   }
 
   // Same as above, but without copy-constructing. This is useful to avoid
