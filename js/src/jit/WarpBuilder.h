@@ -93,6 +93,11 @@ class MOZ_STACK_CLASS WarpBuilder {
   LoopStateStack loopStack_;
   PendingEdgesMap pendingEdges_;
 
+  // Loop phis for iterators that need to be kept alive.
+  // TODO: once we support inlining, this needs to be stored once per
+  // compilation instead of builder.
+  PhiVector iterators_;
+
   TempAllocator& alloc() { return alloc_; }
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
@@ -125,6 +130,8 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildTestBackedge(BytecodeLocation loc);
 
   MOZ_MUST_USE bool resumeAfter(MInstruction* ins, BytecodeLocation loc);
+
+  MOZ_MUST_USE bool addIteratorLoopPhis(BytecodeLocation loopHead);
 
   MConstant* constant(const Value& v);
   void pushConstant(const Value& v);
