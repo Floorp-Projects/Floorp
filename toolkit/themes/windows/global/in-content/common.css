@@ -9,8 +9,7 @@
 }
 
 xul|*.menulist-dropmarker {
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-block: 1px;
 }
 
 xul|checkbox,
@@ -53,6 +52,5 @@ html|button {
 }
 
 xul|button > xul|*.button-box {
-  padding-right: 0;
-  padding-left: 0;
+  padding-inline: 0;
 }
