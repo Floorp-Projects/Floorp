@@ -528,6 +528,8 @@ inline void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer) {
   if (ptr) {
     Entry* info = ptr->value();
     MOZ_ASSERT(info->mHolder == aHolder);
+    MOZ_ASSERT(info->mTracer == aTracer,
+               "Don't call HoldJSObjects in superclass ctors");
     info->mTracer = aTracer;
     return;
   }
