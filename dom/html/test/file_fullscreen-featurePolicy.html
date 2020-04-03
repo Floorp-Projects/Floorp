@@ -14,7 +14,6 @@
 <body>
 
 <script type="application/javascript">
-
 function ok(condition, msg) {
   opener.ok(condition, "[featurePolicy] " + msg);
 }
@@ -25,54 +24,65 @@ function is(a, b, msg) {
 
 const INNER_FILE = "file_fullscreen-featurePolicy-inner.html";
 
-function setupForInnerTest(targetName, callback) {
-  window.testTargetName = targetName;
-  window.continueTest = event => {
-    delete window.testTargetName;
-    delete window.continueTest;
-    callback(event);
-  };
-}
-
 function begin() {
   nextTest();
 }
 
 var tests = [
-  [ "fullscreen 'none'", "fullscreenerror"],
-  [ "fullscreen", "fullscreenchange"],
-  [ "fullscreen 'src'", "fullscreenchange"],
-  [ "fullscreen 'self'", "fullscreenchange"],
-  [ "fullscreen *", "fullscreenchange"],
-  [ "fullscreen http://random.net", "fullscreenerror"],
-  [ null, "fullscreenchange"],
+  ["fullscreen 'none'", "fullscreenerror"],
+  ["fullscreen", "fullscreenchange"],
+  ["fullscreen 'src'", "fullscreenchange"],
+  ["fullscreen 'self'", "fullscreenchange"],
+  ["fullscreen *", "fullscreenchange"],
+  ["fullscreen http://random.net", "fullscreenerror"],
+  [null, "fullscreenchange"],
 ];
 
-function nextTest() {
+async function nextTest() {
   if (tests.length == 0) {
     opener.nextTest();
     return;
   }
 
-  let test = tests.shift();
-  opener.info("Running " + test[0]);
+  let [value, expectedEvent] = tests.shift();
 
-  // Create an iframe with an allowfullscreen and with an allow attribute.
-  // The request should be denied or allowed, based on the current test.
-  var iframe = document.createElement("iframe");
-  iframe.setAttribute("allowfullscreen", "true");
-  if (test[0]) {
-    iframe.setAttribute("allow", test[0]);
+  for (const isChrome of [false, true]) {
+    opener.info(`Running ${value} ${isChrome ? "w/" : "wo/"} chrome privileges`);
+
+    // Create an iframe with an allowfullscreen and with an allow attribute.
+    // The request should be denied or allowed, based on the current test.
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("allowfullscreen", "true");
+    if (value) {
+      iframe.setAttribute("allow", value);
+    }
+    iframe.src = INNER_FILE + (isChrome ? "?chrome" : "");
+
+    const setupForInnerTest = targetName => {
+      window.testTargetName = targetName;
+      return new Promise(resolve => {
+        window.continueTest = e => {
+          delete window.testTargetName;
+          delete window.continueTest;
+          resolve(e);
+        };
+        document.body.appendChild(iframe);
+      });
+    };
+
+    const event = await setupForInnerTest(
+      `an iframe+allowfullscreen+allow:${value}+isChrome:${isChrome}`
+    );
+
+    if (isChrome) {
+      is(event, "fullscreenchange", "Expected a fullscreenchange event");
+    } else {
+      is(event, expectedEvent, "Expected a " + expectedEvent + " event");
+    }
+    iframe.remove();
   }
-  iframe.src = INNER_FILE;
-  setupForInnerTest("an iframe+allowfullscreen+allow: " + test[0], event => {
-    is(event, test[1], "Expected a " + test[1] + " event");
-    document.body.removeChild(iframe);
-    SimpleTest.executeSoon(nextTest);
-  });
-  document.body.appendChild(iframe);
+  SimpleTest.executeSoon(nextTest);
 }
-
 </script>
 </body>
 </html>

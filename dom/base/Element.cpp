@@ -3080,15 +3080,27 @@ CORSMode Element::AttrValueToCORSMode(const nsAttrValue* aValue) {
  * Returns nullptr if requests for fullscreen are allowed in the current
  * context. Requests are only allowed if the user initiated them (like with
  * a mouse-click or key press), unless this check has been disabled by
- * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
+ * setting the pref "full-screen-api.allow-trusted-requests-only" to false
+ * or if the caller is privileged. Feature policy may also deny requests.
  * If fullscreen is not allowed, a key for the error message is returned.
  */
 static const char* GetFullscreenError(CallerType aCallerType,
                                       Document* aDocument) {
   MOZ_ASSERT(aDocument);
 
-  if (!StaticPrefs::full_screen_api_allow_trusted_requests_only() ||
-      aCallerType == CallerType::System) {
+  // Privileged callers can always request fullscreen
+  if (aCallerType == CallerType::System) {
+    return nullptr;
+  }
+
+  // Ensure feature policy allows using the fullscreen API
+  if (!FeaturePolicyUtils::IsFeatureAllowed(aDocument,
+                                            NS_LITERAL_STRING("fullscreen"))) {
+    return "FullscreenDeniedFeaturePolicy";
+  }
+
+  // Bypass user interaction checks if preference is set
+  if (!StaticPrefs::full_screen_api_allow_trusted_requests_only()) {
     return nullptr;
   }
 
@@ -3136,12 +3148,6 @@ already_AddRefed<Promise> Element::RequestFullscreen(CallerType aCallerType,
                                                      ErrorResult& aRv) {
   auto request = FullscreenRequest::Create(this, aCallerType, aRv);
   RefPtr<Promise> promise = request->GetPromise();
-
-  if (!FeaturePolicyUtils::IsFeatureAllowed(OwnerDoc(),
-                                            NS_LITERAL_STRING("fullscreen"))) {
-    request->Reject("FullscreenDeniedFeaturePolicy");
-    return promise.forget();
-  }
 
   // Only grant fullscreen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).

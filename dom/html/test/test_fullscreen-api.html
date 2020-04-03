@@ -29,7 +29,8 @@ SimpleTest.requestFlakyTimeout("untriaged");
 // attribute set, so full-screen won't work.
 var gTestWindows = [
   { test: "file_fullscreen-multiple.html",
-    prefs: [["full-screen-api.exit-on.windowRaise", false], ["full-screen-api.exit-on.windowOpen", false]] },
+    prefs: [["full-screen-api.exit-on.windowRaise", false],
+            ["full-screen-api.exit-on.windowOpen", false]] },
   { test: "file_fullscreen-rollback.html" },
   { test: "file_fullscreen-esc-exit.html" },
   { test: "file_fullscreen-denied.html" },
