@@ -147,16 +147,11 @@ struct APZCTreeManager::TreeBuildingState {
   // codepath.
   Maybe<uint64_t> mZoomAnimationId;
 
-  // This is populated with all the HitTestingTreeNodes that have a fixed
-  // position animation id (which indicates that they need to be sampled for
-  // WebRender on the sampler thread).
-  std::vector<HitTestingTreeNode*> mFixedPositionNodesWithAnimationId;
-
-  // This is populated with all the HitTestingTreeNodes that are scrollbar
-  // containers for the root viewport and have a scrollthumb animation id
-  // (which indicates that they need to be sampled for WebRender on the sampler
-  // thread).
-  std::vector<HitTestingTreeNode*> mRootScrollbars;
+  // See corresponding members of APZCTreeManager. These are the same thing, but
+  // on the tree-walking state. They are populated while walking the tree in
+  // a layers update, and then moved into APZCTreeManager.
+  std::vector<FixedPositionInfo> mFixedPositionInfo;
+  std::vector<RootScrollbarInfo> mRootScrollbarInfo;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -477,13 +472,17 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
               state.mScrollThumbs.push_back(node);
             } else if (node->IsScrollbarContainerNode()) {
               // Only scrollbar containers for the root have an animation id.
-              state.mRootScrollbars.push_back(node);
+              state.mRootScrollbarInfo.emplace_back(
+                  *(node->GetScrollbarAnimationId()),
+                  node->GetScrollbarDirection());
             }
           }
 
           // GetFixedPositionAnimationId is only set when webrender is enabled.
           if (node->GetFixedPositionAnimationId().isSome()) {
-            state.mFixedPositionNodesWithAnimationId.push_back(node);
+            state.mFixedPositionInfo.emplace_back(
+                *(node->GetFixedPositionAnimationId()),
+                node->GetFixedPosSides());
           }
           if (apzc && node->IsPrimaryHolder()) {
             state.mScrollTargets[apzc->GetGuid()] = node;
@@ -630,26 +629,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
           target->IsAncestorOf(thumb));
     }
 
-    mRootScrollbarInfo.clear();
-    // For non-webrender, and platforms without a dynamic toolbar,
-    // state.mRootScrollbarsWithAnimationId will be empty so this will be a
-    // no-op.
-    for (const HitTestingTreeNode* scrollbar : state.mRootScrollbars) {
-      MOZ_ASSERT(scrollbar->IsScrollbarContainerNode());
-      mRootScrollbarInfo.emplace_back(*(scrollbar->GetScrollbarAnimationId()),
-                                      scrollbar->GetScrollbarDirection());
-    }
-
-    mFixedPositionInfo.clear();
-    // For non-webrender, state.mFixedPositionNodesWithAnimationId will be empty
-    // so this will be a no-op.
-    for (HitTestingTreeNode* fixedPos :
-         state.mFixedPositionNodesWithAnimationId) {
-      MOZ_ASSERT(fixedPos->GetFixedPositionAnimationId().isSome());
-      mFixedPositionInfo.emplace_back(
-          fixedPos->GetFixedPositionAnimationId().value(),
-          fixedPos->GetFixedPosSides());
-    }
+    mRootScrollbarInfo = std::move(state.mRootScrollbarInfo);
+    mFixedPositionInfo = std::move(state.mFixedPositionInfo);
   }
 
   for (size_t i = 0; i < state.mNodesToDestroy.Length(); i++) {
