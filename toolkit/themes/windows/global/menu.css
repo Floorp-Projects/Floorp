@@ -47,7 +47,7 @@ menucaption {
   font-weight: bold;
 }
 
-/* ..... internal content .... */
+/* ..... Internal content .... */
 
 .menu-accel,
 .menu-iconic-accel,
@@ -70,8 +70,7 @@ menucaption {
 
 .menu-accel,
 .menu-iconic-accel {
-  margin-inline-start: 0.74em !important;
-  margin-inline-end: 1.35em !important;
+  margin-inline: 0.74em 1.35em !important;
 }
 
 .menu-iconic-left {
@@ -150,7 +149,7 @@ menubar > menu:-moz-window-inactive {
 /* ..... internal content .... */
 
 .menubar-text {
-  margin: 1px 6px 2px 6px !important;
+  margin: 1px 6px 2px !important;
 }
 
 /* ::::: menu/menuitems in popups ::::: */
@@ -178,8 +177,7 @@ menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   -moz-appearance: none !important;
   border: 1px solid transparent;
-  padding-inline-start: 5px;
-  padding-inline-end: 5px;
+  padding-inline: 5px;
   max-width: none;
   color: -moz-FieldText;
 }
@@ -254,13 +252,13 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
 
 menuseparator {
   -moz-appearance: menuseparator;
-  padding: 3px 1px 4px 1px;
+  padding: 3px 1px 4px;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 menulist > menupopup > menuseparator {
-  padding: 6px 0 5px 0;
+  padding: 6px 0 5px;
   border-top: 1px solid #000000;
   border-bottom: none;
 }

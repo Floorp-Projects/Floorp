@@ -59,11 +59,9 @@ richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
 }
 
 richlistbox.theme-listbox > richlistitem > label {
-  margin: 0px;
-  padding-top: 0px;
-  padding-bottom: 1px;
-  padding-inline-start: 4px;
-  padding-inline-end: 0px;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 4px 0;
   white-space: nowrap;
 }
 
@@ -85,10 +83,8 @@ richlistbox.theme-listbox > richlistitem > label {
     --listitem-selectedFocusCurrentBackground: var(--listitem-selectedFocusColor);
 
     color: -moz-FieldText;
-    margin-inline-start: 1px;
-    margin-inline-end: 1px;
-    padding-top: 1px;
-    padding-bottom: 1px;
+    margin-inline: 1px;
+    padding-block: 1px;
     border-width: 1px;
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -96,8 +92,7 @@ richlistbox.theme-listbox > richlistitem > label {
 
   richlistbox.theme-listbox > richlistitem[selected="true"] {
     border-top-color: var(--listitem-selectedBorder);
-    border-right-color: var(--listitem-selectedBorder);
-    border-left-color: var(--listitem-selectedBorder);
+    border-inline-color: var(--listitem-selectedBorder);
     border-bottom-color: var(--listitem-selectedBottomBorder);
     background-image: var(--listitem-selectedImage);
     background-color: var(--listitem-selectedBackground);
@@ -106,8 +101,7 @@ richlistbox.theme-listbox > richlistitem > label {
 
   richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
     border-top-color: var(--listitem-selectedFocusBorder);
-    border-right-color: var(--listitem-selectedFocusBorder);
-    border-left-color: var(--listitem-selectedFocusBorder);
+    border-inline-color: var(--listitem-selectedFocusBorder);
     border-bottom-color: var(--listitem-selectedFocusBottomBorder);
     background-image: var(--listitem-selectedFocusImage);
     background-color: var(--listitem-selectedFocusBackground);
@@ -121,8 +115,7 @@ richlistbox.theme-listbox > richlistitem > label {
 
   richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
     border-top-color: var(--listitem-selectedFocusCurrentBorder);
-    border-right-color: var(--listitem-selectedFocusCurrentBorder);
-    border-left-color: var(--listitem-selectedFocusCurrentBorder);
+    border-inline-color: var(--listitem-selectedFocusCurrentBorder);
     border-bottom-color: var(--listitem-selectedFocusCurrentBottomBorder);
     background-color: var(--listitem-selectedFocusCurrentBackground);
     outline: none;

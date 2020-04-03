@@ -37,7 +37,7 @@
   }
 }
 
-/* ::::: alert icons :::::*/
+/* ::::: Alert icons :::::*/
 
 .message-icon,
 .alert-icon,
@@ -89,7 +89,7 @@ xul|toolbar[mode="text"] .toolbarbutton-text {
   margin: 3px 5px !important;
 }
 
-/* ::::: print preview ::::: */
+/* ::::: Print preview ::::: */
 
 .print-preview-navigate-button {
   min-width: 1.9em;
@@ -120,7 +120,7 @@ html|*#print-preview-pageNumber {
   margin: 0 4px;
 }
 
-/* ::::: miscellaneous formatting ::::: */
+/* ::::: Miscellaneous formatting ::::: */
 
 :root[lwtheme-image]:-moz-lwtheme-darktext {
   text-shadow: 0 -0.5px 1.5px white;
@@ -149,24 +149,20 @@ xul|separator.groove:not([orient="vertical"]) {
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
   height: 0;
-  margin-top: 0.4em;
-  margin-bottom: 0.4em;
+  margin-block: 0.4em;
 }
 xul|separator.groove[orient="vertical"] {
   border-left: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
   width: 0;
-  margin-left: 0.4em;
-  margin-right: 0.4em;
+  margin-inline: 0.4em;
 }
 
 xul|description,
 xul|label {
   cursor: default;
-  margin-top: 1px;
-  margin-bottom: 2px;
-  margin-inline-start: 6px;
-  margin-inline-end: 5px;
+  margin-block: 1px;
+  margin-inline: 6px 5px;
 }
 
 xul|description {
