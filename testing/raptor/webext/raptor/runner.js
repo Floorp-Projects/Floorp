@@ -213,7 +213,7 @@ async function getBrowserInfo() {
   raptorLog(`testing on ${results.browser}`);
 }
 
-async function scenarioTimer() {
+async function startScenarioTimer() {
   setTimeout(function() {
     isScenarioPending = false;
     results.measurements.scenario = [1];
@@ -466,6 +466,10 @@ async function nextCycle() {
 
       await postToControlServer("status", `test tab updated: ${testTabID}`);
 
+      if (testType == TEST_SCENARIO) {
+        await startScenarioTimer();
+      }
+
       // For benchmark or scenario type tests we can proceed directly to
       // waitForResult. However for page-load tests we must first wait until
       // we hear back from pageloaderjs that it has been successfully loaded
@@ -473,10 +477,6 @@ async function nextCycle() {
       // for measurements.
       if (testType != TEST_PAGE_LOAD) {
         await collectResults();
-      }
-
-      if (testType == TEST_SCENARIO) {
-        await scenarioTimer();
       }
     }, pageCycleDelay);
   } else {
