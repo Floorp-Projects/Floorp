@@ -192,6 +192,15 @@ already_AddRefed<Path> PathBuilderRecording::Finish() {
                                       currentPoint, beginPoint);
 }
 
+PathRecording::PathRecording(Path* aPath, PathOps&& aOps, FillRule aFillRule,
+                             const Point& aCurrentPoint,
+                             const Point& aBeginPoint)
+    : mPath(aPath),
+      mPathOps(std::move(aOps)),
+      mFillRule(aFillRule),
+      mCurrentPoint(aCurrentPoint),
+      mBeginPoint(aBeginPoint) {}
+
 PathRecording::~PathRecording() {
   for (size_t i = 0; i < mStoredRecorders.size(); i++) {
     mStoredRecorders[i]->RemoveStoredObject(this);

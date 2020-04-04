@@ -183,12 +183,7 @@ class PathRecording final : public Path {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording, override)
 
   PathRecording(Path* aPath, PathOps&& aOps, FillRule aFillRule,
-                const Point& aCurrentPoint, const Point& aBeginPoint)
-      : mPath(aPath),
-        mPathOps(std::move(aOps)),
-        mFillRule(aFillRule),
-        mCurrentPoint(aCurrentPoint),
-        mBeginPoint(aBeginPoint) {}
+                const Point& aCurrentPoint, const Point& aBeginPoint);
 
   ~PathRecording();
 
