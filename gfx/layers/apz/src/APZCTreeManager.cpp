@@ -817,7 +817,8 @@ void APZCTreeManager::SampleForWebRender(
     if (info.mScrollDirection == ScrollDirection::eHorizontal) {
       ScreenPoint translation =
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              mCompositorFixedLayerMargins, SideBits::eBottom, ScreenMargin());
+              GetCompositorFixedLayerMargins(lock), SideBits::eBottom,
+              ScreenMargin());
 
       LayerToParentLayerMatrix4x4 transform =
           LayerToParentLayerMatrix4x4::Translation(ViewAs<ParentLayerPixel>(
@@ -831,7 +832,7 @@ void APZCTreeManager::SampleForWebRender(
   for (const FixedPositionInfo& info : mFixedPositionInfo) {
     ScreenPoint translation =
         AsyncCompositionManager::ComputeFixedMarginsOffset(
-            mCompositorFixedLayerMargins, info.mFixedPosSides,
+            GetCompositorFixedLayerMargins(lock), info.mFixedPosSides,
             mGeckoFixedLayerMargins);
 
     LayerToParentLayerMatrix4x4 transform =
@@ -2085,8 +2086,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
           MutexAutoLock lock(mMapLock);
           touchData.mScreenPoint -=
               RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
-                  mCompositorFixedLayerMargins, mFixedPosSidesForInputBlock,
-                  mGeckoFixedLayerMargins));
+                  GetCompositorFixedLayerMargins(lock),
+                  mFixedPosSidesForInputBlock, mGeckoFixedLayerMargins));
         }
       }
     }
@@ -3373,8 +3374,8 @@ Maybe<ScreenIntPoint> APZCTreeManager::ConvertToGecko(
       MutexAutoLock mapLock(mMapLock);
       *geckoPoint -=
           RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
-              mCompositorFixedLayerMargins, mFixedPosSidesForInputBlock,
-              mGeckoFixedLayerMargins));
+              GetCompositorFixedLayerMargins(mapLock),
+              mFixedPosSidesForInputBlock, mGeckoFixedLayerMargins));
     }
   }
   return geckoPoint;
@@ -3447,8 +3448,8 @@ bool APZCTreeManager::IsStuckToRootContentAtBottom(
     return false;
   }
 
-  // Currently we only support the dyanmic toolbar at bottom.
-  if ((aNode->GetFixedPosSides() & SideBits::eBottom) == SideBits::eNone) {
+  // We support the dynamic toolbar at top and bottom.
+  if ((aNode->GetFixedPosSides() & SideBits::eTopBottom) == SideBits::eNone) {
     return false;
   }
 
@@ -3543,8 +3544,8 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
       MutexAutoLock mapLock(mMapLock);
       translation = ViewAs<ParentLayerPixel>(
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              mCompositorFixedLayerMargins, aNode->GetFixedPosSides(),
-              mGeckoFixedLayerMargins),
+              GetCompositorFixedLayerMargins(mapLock),
+              aNode->GetFixedPosSides(), mGeckoFixedLayerMargins),
           PixelCastJustification::ScreenIsParentLayerForRoot);
     }
     return aNode->GetTransform() *
@@ -3556,8 +3557,8 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
       MutexAutoLock mapLock(mMapLock);
       translation = ViewAs<ParentLayerPixel>(
           AsyncCompositionManager::ComputeFixedMarginsOffset(
-              mCompositorFixedLayerMargins,
-              aNode->GetFixedPosSides() & SideBits::eBottom,
+              GetCompositorFixedLayerMargins(mapLock),
+              aNode->GetFixedPosSides() & SideBits::eTopBottom,
               // For sticky layers, we don't need to factor
               // mGeckoFixedLayerMargins because Gecko doesn't shift the
               // position of sticky elements for dynamic toolbar movements.
@@ -3604,6 +3605,16 @@ already_AddRefed<GeckoContentController> APZCTreeManager::GetContentController(
       aLayersId,
       [&](LayerTreeState& aState) -> void { controller = aState.mController; });
   return controller.forget();
+}
+
+ScreenMargin APZCTreeManager::GetCompositorFixedLayerMargins(
+    const MutexAutoLock& aProofOfMapLock) const {
+  ScreenMargin result = mCompositorFixedLayerMargins;
+  if (StaticPrefs::apz_fixed_margin_override_enabled()) {
+    result.top = StaticPrefs::apz_fixed_margin_override_top();
+    result.bottom = StaticPrefs::apz_fixed_margin_override_bottom();
+  }
+  return result;
 }
 
 bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
