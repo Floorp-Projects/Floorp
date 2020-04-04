@@ -596,10 +596,10 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
                         ePrefixGroup4 = (1 << 3)};
 
   int CountPrefixBytes(const ReadOnlyTargetFunction<MMPolicyT>& aBytes,
-                       const int aBytesIndex, unsigned char* aOutGroupBits) {
+                       unsigned char* aOutGroupBits) {
     unsigned char& groupBits = *aOutGroupBits;
     groupBits = eNoPrefixes;
-    int index = aBytesIndex;
+    int index = 0;
     while (true) {
       switch (aBytes[index]) {
         // Group 1
@@ -645,7 +645,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
           break;
 
         default:
-          return index - aBytesIndex;
+          return index;
       }
     }
   }
@@ -764,8 +764,7 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       // Note!  If we ever need to understand jump instructions, we'll
       // need to rewrite the displacement argument.
       unsigned char prefixGroups;
-      int numPrefixBytes =
-          CountPrefixBytes(origBytes, origBytes.GetOffset(), &prefixGroups);
+      int numPrefixBytes = CountPrefixBytes(origBytes, &prefixGroups);
       if (numPrefixBytes < 0 ||
           (prefixGroups & (ePrefixGroup3 | ePrefixGroup4))) {
         // Either the prefix sequence was bad, or there are prefixes that
