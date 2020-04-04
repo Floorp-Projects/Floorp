@@ -538,6 +538,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // Performs access control to check that 'this' can access 'aTarget'.
   bool CanAccess(BrowsingContext* aTarget, bool aConsiderOpener = true);
 
+  bool IsSandboxedFrom(BrowsingContext* aTarget);
+
   // The runnable will be called once there is idle time, or the top level
   // page has been loaded or if a timeout has fired.
   // Must be called only on the top level BrowsingContext.
