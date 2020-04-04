@@ -43,6 +43,7 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsIObserverService.h"
 #include "nsContentUtils.h"
+#include "nsSandboxFlags.h"
 #include "nsScriptError.h"
 #include "nsThreadUtils.h"
 #include "xpcprivate.h"
@@ -887,6 +888,61 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
   }
 
   return false;
+}
+
+bool BrowsingContext::IsSandboxedFrom(BrowsingContext* aTarget) {
+  // If no target then not sandboxed.
+  if (!aTarget) {
+    return false;
+  }
+
+  // We cannot be sandboxed from ourselves.
+  if (aTarget == this) {
+    return false;
+  }
+
+  // Default the sandbox flags to our flags, so that if we can't retrieve the
+  // active document, we will still enforce our own.
+  uint32_t sandboxFlags = GetSandboxFlags();
+  if (mDocShell) {
+    if (RefPtr<Document> doc = mDocShell->GetExtantDocument()) {
+      sandboxFlags = doc->GetSandboxFlags();
+    }
+  }
+
+  // If no flags, we are not sandboxed at all.
+  if (!sandboxFlags) {
+    return false;
+  }
+
+  // If aTarget has an ancestor, it is not top level.
+  if (RefPtr<BrowsingContext> ancestorOfTarget = aTarget->GetParent()) {
+    do {
+      // We are not sandboxed if we are an ancestor of target.
+      if (ancestorOfTarget == this) {
+        return false;
+      }
+      ancestorOfTarget = ancestorOfTarget->GetParent();
+    } while (ancestorOfTarget);
+
+    // Otherwise, we are sandboxed from aTarget.
+    return true;
+  }
+
+  // aTarget is top level, are we the "one permitted sandboxed
+  // navigator", i.e. did we open aTarget?
+  if (aTarget->GetOnePermittedSandboxedNavigatorId() == Id()) {
+    return false;
+  }
+
+  // If SANDBOXED_TOPLEVEL_NAVIGATION flag is not on, we are not sandboxed
+  // from our top.
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) && aTarget == Top()) {
+    return false;
+  }
+
+  // Otherwise, we are sandboxed from aTarget.
+  return true;
 }
 
 RefPtr<SessionStorageManager> BrowsingContext::GetSessionStorageManager() {
