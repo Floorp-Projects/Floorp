@@ -29,6 +29,7 @@ var postStartupDelay;
 // delay (ms) between pageload cycles
 var pageCycleDelay = 1000;
 
+var newTabDelay = 1000;
 var newTabPerCycle = false;
 
 // delay (ms) for foregrounding app
@@ -48,6 +49,7 @@ var browserCycle = 0;
 var pageCycles = 0;
 var pageCycle = 0;
 var testURL;
+var testTabID = 0;
 var scenarioTestTime = 60000;
 var getHero = false;
 var getFNBPaint = false;
@@ -184,7 +186,6 @@ async function getTestSettings() {
 
   // write options to storage that our content script needs to know
   if (isGecko) {
-    await ext.storage.local.clear();
     await ext.storage.local.set({ settings });
   } else {
     await new Promise(resolve => {
@@ -194,10 +195,6 @@ async function getTestSettings() {
     });
   }
   raptorLog("wrote settings to ext local storage");
-}
-
-async function sleep(delay) {
-  return new Promise(resolve => setTimeout(resolve, delay));
 }
 
 async function getBrowserInfo() {
@@ -217,7 +214,7 @@ async function getBrowserInfo() {
   raptorLog(`testing on ${results.browser}`);
 }
 
-async function startScenarioTimer() {
+async function scenarioTimer() {
   setTimeout(function() {
     isScenarioPending = false;
     results.measurements.scenario = [1];
@@ -226,85 +223,29 @@ async function startScenarioTimer() {
   await postToControlServer("status", `started scenario test timer`);
 }
 
-async function closeTab() {
-  // Don't close the last tab which would close the window or application
-  const tabs = await queryForTabs({ currentWindow: true });
-  if (tabs.length == 1) {
-    await postToControlServer("status", `Not closing last Tab: ${tabId}`);
-    return;
-  }
+async function testTabCreated(tab) {
+  testTabID = tab.id;
+  await postToControlServer("status", `opened new empty tab: ${testTabID}`);
 
-  const tabId = await getCurrentTabId();
-
-  await postToControlServer("status", `closing Tab: ${tabId}`);
-
-  if (isGecko) {
-    await ext.tabs.remove(tabId);
-  } else {
-    await new Promise(resolve => {
-      ext.tabs.remove(tabId, resolve);
-    });
-  }
-
-  await postToControlServer("status", `closed tab: ${tabId}`);
+  // update raptor browser toolbar icon text, for a visual indicator when debugging
+  ext.browserAction.setTitle({ title: "Raptor RUNNING" });
 }
 
-async function getCurrentTabId() {
-  const tabs = await queryForTabs({ currentWindow: true, active: true });
-
-  await postToControlServer("status", "found active tab with id " + tabs[0].id);
-  return tabs[0].id;
+async function testTabRemoved(tab) {
+  await postToControlServer("status", `Removed tab: ${testTabID}`);
+  testTabID = 0;
 }
 
-async function openTab() {
-  await postToControlServer("status", "openinig new tab");
+async function testTabUpdated(tab) {
+  await postToControlServer("status", `test tab updated: ${testTabID}`);
 
-  let tab;
-  if (isGecko) {
-    tab = await ext.tabs.create({ url: "about:blank" });
-  } else {
-    tab = await new Promise(resolve => {
-      ext.tabs.create({ url: "about:blank" }, resolve);
-    });
+  // for benchmark or scenario type tests we can proceed directly to waitForResult;
+  // however for page-load tests we must first wait until we hear back from pageloaderjs
+  // that it has been successfully loaded in the test page and has been invoked; and
+  // only then start looking for measurements
+  if (testType != TEST_PAGE_LOAD) {
+    await collectResults();
   }
-
-  await postToControlServer("status", `opened new empty tab: ${tab.id}`);
-
-  return tab.id;
-}
-
-async function queryForTabs(options = {}) {
-  let tabs;
-
-  if (isGecko) {
-    tabs = await ext.tabs.query(options);
-  } else {
-    tabs = await new Promise(resolve => {
-      ext.tabs.query(options, resolve);
-    });
-  }
-
-  return tabs;
-}
-
-/**
- * Update the given tab by navigating to the test URL
- */
-async function updateTab(url) {
-  const tabId = await getCurrentTabId();
-
-  await postToControlServer("status", `update tab ${tabId} for ${url}`);
-
-  // "null" = active tab
-  if (isGecko) {
-    await ext.tabs.update(tabId, { url });
-  } else {
-    await new Promise(resolve => {
-      ext.tabs.update(tabId, { url }, resolve);
-    });
-  }
-
-  await postToControlServer("status", `tab ${tabId} updated`);
 }
 
 async function collectResults() {
@@ -313,47 +254,56 @@ async function collectResults() {
   setTimeoutAlarm("raptor-page-timeout", pageTimeout);
 
   // wait for pageload test result from content
-  await waitForResults();
+  await waitForResult();
 
   // move on to next cycle (or test complete)
   await nextCycle();
 }
 
-function checkForTestFinished() {
-  let finished = false;
+async function waitForResult() {
+  let results = await new Promise(resolve => {
+    async function checkForResult() {
+      raptorLog("checking results...");
+      switch (testType) {
+        case TEST_BENCHMARK:
+          if (!isBenchmarkPending) {
+            resolve();
+          } else {
+            setTimeout(checkForResult, 250);
+          }
+          break;
 
-  switch (testType) {
-    case TEST_BENCHMARK:
-      finished = !isBenchmarkPending;
-      break;
-    case TEST_PAGE_LOAD:
-      if (
-        !isHeroPending &&
-        !isFNBPaintPending &&
-        !isFCPPending &&
-        !isDCFPending &&
-        !isTTFIPending &&
-        !isLoadTimePending
-      ) {
-        finished = true;
+        case TEST_PAGE_LOAD:
+          if (
+            !isHeroPending &&
+            !isFNBPaintPending &&
+            !isFCPPending &&
+            !isDCFPending &&
+            !isTTFIPending &&
+            !isLoadTimePending
+          ) {
+            raptorLog("no more results pending; resolving checkForResult");
+            resolve();
+          } else {
+            raptorLog("setting timeout to checkForResult again in 250ms");
+            setTimeout(checkForResult, 250);
+          }
+          break;
+
+        case TEST_SCENARIO:
+          if (!isScenarioPending) {
+            await cancelTimeoutAlarm("raptor-page-timeout");
+            await postToControlServer("status", `scenario test ended`);
+            resolve();
+          } else {
+            setTimeout(checkForResult, 5);
+          }
+          break;
       }
-      break;
+    }
 
-    case TEST_SCENARIO:
-      finished = !isScenarioPending;
-      break;
-  }
-
-  return finished;
-}
-
-async function waitForResults() {
-  raptorLog("waiting for results...");
-
-  while (!checkForTestFinished()) {
-    raptorLog("results pending...");
-    await sleep(250);
-  }
+    checkForResult();
+  });
 
   await cancelTimeoutAlarm("raptor-page-timeout");
 
@@ -366,6 +316,8 @@ async function waitForResults() {
   if (screenCapture) {
     await getScreenCapture();
   }
+
+  return results;
 }
 
 async function getScreenCapture() {
@@ -437,7 +389,7 @@ async function nextCycle() {
     );
     // wait a bit to be sure the app is in foreground before starting
     // new test, or finishing test
-    await sleep(foregroundDelay);
+    await new Promise(resolve => setTimeout(resolve, foregroundDelay));
   }
   if (pageCycle == 1) {
     const text = `running ${pageCycles} pagecycles of ${testURL}`;
@@ -454,65 +406,62 @@ async function nextCycle() {
         `bringing app to background`
       );
     }
+    setTimeout(async () => {
+      await postToControlServer("status", `begin pagecycle ${pageCycle}`);
 
-    await sleep(pageCycleDelay);
+      switch (testType) {
+        case TEST_BENCHMARK:
+          isBenchmarkPending = true;
+          break;
 
-    await postToControlServer("status", `begin page cycle ${pageCycle}`);
+        case TEST_PAGE_LOAD:
+          if (getHero) {
+            isHeroPending = true;
+            pendingHeroes = Array.from(settings.measure.hero);
+          }
+          if (getFNBPaint) {
+            isFNBPaintPending = true;
+          }
+          if (getFCP) {
+            isFCPPending = true;
+          }
+          if (getDCF) {
+            isDCFPending = true;
+          }
+          if (getTTFI) {
+            isTTFIPending = true;
+          }
+          if (getLoadTime) {
+            isLoadTimePending = true;
+          }
+          break;
 
-    switch (testType) {
-      case TEST_BENCHMARK:
-        isBenchmarkPending = true;
-        break;
+        case TEST_SCENARIO:
+          isScenarioPending = true;
+          break;
+      }
 
-      case TEST_PAGE_LOAD:
-        if (getHero) {
-          isHeroPending = true;
-          pendingHeroes = Array.from(settings.measure.hero);
+      if (newTabPerCycle && testTabID != 0) {
+        // close previous test tab
+        ext.tabs.remove(testTabID);
+        await postToControlServer("status", `closing Tab: ${testTabID}`);
+
+        // open new tab
+        ext.tabs.create({ url: "about:blank" });
+        await postToControlServer("status", "Open new tab");
+      }
+      setTimeout(async () => {
+        await postToControlServer("status", `update tab: ${testTabID}`);
+
+        // update the test page - browse to our test URL
+        // "null" = active tab
+        ext.tabs.update(testTabID || null, { url: testURL }, testTabUpdated);
+
+        if (testType == TEST_SCENARIO) {
+          await scenarioTimer();
         }
-        if (getFNBPaint) {
-          isFNBPaintPending = true;
-        }
-        if (getFCP) {
-          isFCPPending = true;
-        }
-        if (getDCF) {
-          isDCFPending = true;
-        }
-        if (getTTFI) {
-          isTTFIPending = true;
-        }
-        if (getLoadTime) {
-          isLoadTimePending = true;
-        }
-        break;
-
-      case TEST_SCENARIO:
-        isScenarioPending = true;
-        break;
-    }
-
-    if (newTabPerCycle) {
-      // close previous test tab and open a new one
-      await closeTab();
-      await openTab();
-    }
-
-    await updateTab(testURL);
-
-    if (testType == TEST_SCENARIO) {
-      await startScenarioTimer();
-    }
-
-    // For benchmark or scenario type tests we can proceed directly to
-    // waitForResult. However for page-load tests we must first wait until
-    // we hear back from pageloaderjs that it has been successfully loaded
-    // in the test page and has been invoked; and only then start looking
-    // for measurements.
-    if (testType != TEST_PAGE_LOAD) {
-      await collectResults();
-    }
-
-    await postToControlServer("status", `ended page cycle ${pageCycle}`);
+      }, newTabDelay);
+    }, pageCycleDelay);
   } else {
     await verifyResults();
   }
@@ -555,32 +504,32 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
 }
 
 async function cancelTimeoutAlarm(timeoutName) {
-  let cleared = false;
-
   if (isGecko) {
-    cleared = await ext.alarms.clear(timeoutName);
+    const alarm = await ext.alarms.clear(timeoutName);
+    if (alarm) {
+      raptorLog(`cancelled raptor alarm ${timeoutName}`);
+    } else {
+      raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
+    }
   } else {
-    cleared = await new Promise(resolve => {
-      chrome.alarms.clear(timeoutName, resolve);
+    chrome.alarms.clear(timeoutName, function(wasCleared) {
+      if (wasCleared) {
+        raptorLog(`cancelled raptor alarm ${timeoutName}`);
+      } else {
+        raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
+      }
     });
-  }
-
-  if (cleared) {
-    raptorLog(`cancelled raptor alarm ${timeoutName}`);
-  } else {
-    raptorLog(`failed to clear raptor alarm ${timeoutName}`, "error");
   }
 }
 
-function resultListener(request, sender, sendResponse) {
+async function resultListener(request, sender, sendResponse) {
   raptorLog(`received message from ${sender.tab.url}`);
 
   // check if this is a message from pageloaderjs indicating it is ready to start
   if (request.type == "pageloadjs-ready") {
     raptorLog("received pageloadjs-ready!");
-
     sendResponse({ text: "pageloadjs-ready-response" });
-    collectResults();
+    await collectResults();
     return;
   }
 
@@ -691,16 +640,18 @@ async function postToControlServer(msgType, msgData = "") {
 
 async function cleanUp() {
   // close tab unless raptor debug-mode is enabled
-  if (debugMode == 1) {
-    raptorLog("debug-mode enabled, leaving tab open");
+  if (debugMode != 1) {
+    ext.tabs.remove(testTabID);
+    raptorLog(`closed tab ${testTabID}`);
   } else {
-    await closeTab();
+    raptorLog("debug-mode enabled, leaving tab open");
   }
 
   if (testType == TEST_PAGE_LOAD) {
     // remove listeners
     ext.alarms.onAlarm.removeListener(timeoutAlarmListener);
     ext.runtime.onMessage.removeListener(resultListener);
+    ext.tabs.onCreated.removeListener(testTabCreated);
   }
   raptorLog(`${testType} test finished`);
 
@@ -731,20 +682,26 @@ async function raptorRunner() {
 
   ext.alarms.onAlarm.addListener(timeoutAlarmListener);
   ext.runtime.onMessage.addListener(resultListener);
+  ext.tabs.onCreated.addListener(testTabCreated);
+  ext.tabs.onRemoved.addListener(testTabRemoved);
 
   // create new empty tab, which starts the test; we want to
   // wait some time for the browser to settle before beginning
   const text = `* pausing ${postStartupDelay /
     1000} seconds to let browser settle... *`;
   await postToControlServer("status", text);
-  await sleep(postStartupDelay);
 
-  // GeckoView doesn't support tabs
-  if (!isGeckoView) {
-    await openTab();
+  // GeckoView doesn't support tabs; set existing tab as blank first
+  if (isGeckoView) {
+    setTimeout(function() {
+      nextCycle();
+    }, postStartupDelay);
+  } else {
+    setTimeout(function() {
+      ext.tabs.create({ url: "about:blank" });
+      nextCycle();
+    }, postStartupDelay);
   }
-
-  await nextCycle();
 }
 
 function raptorLog(text, level = "info") {
