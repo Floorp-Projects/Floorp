@@ -132,7 +132,7 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
   RefPtr<BrowsingContext> accessingBC;
   if (sourceWindow) {
     accessingBC = sourceWindow->GetBrowsingContext();
-    loadState->SetSourceDocShell(sourceWindow->GetDocShell());
+    loadState->SetSourceBrowsingContext(sourceWindow->GetBrowsingContext());
   }
 
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
