@@ -185,6 +185,7 @@ async function getTestSettings() {
 
   // write options to storage that our content script needs to know
   if (isGecko) {
+    await ext.storage.local.clear();
     await ext.storage.local.set({ settings });
   } else {
     await new Promise(resolve => {
