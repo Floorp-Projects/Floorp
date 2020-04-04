@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-
 loader.lazyRequireGetter(
   this,
   "openContentLink",
@@ -16,15 +15,18 @@ loader.lazyRequireGetter(
   "devtools/client/debugger/src/utils/prefs",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "registerStoreObserver",
-  "devtools/client/shared/redux/subscriber",
-  true
-);
 
 const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
+
+function registerStoreObserver(store, subscriber) {
+  let oldState = store.getState();
+  store.subscribe(() => {
+    const state = store.getState();
+    subscriber(state, oldState);
+    oldState = state;
+  });
+}
 
 async function getNodeFront(gripOrFront, toolbox) {
   // Given a NodeFront
@@ -90,7 +92,7 @@ class DebuggerPanel {
       const threadFront = this.toolbox.target.client.getFrontByID(
         currentThreadActorID
       );
-      this.toolbox.selectTarget(threadFront?.targetFront.actorID);
+      this.toolbox.selectTarget(threadFront?.targetFront?.actorID);
     }
   }
 
@@ -201,10 +203,10 @@ class DebuggerPanel {
   }
 
   async selectWorker(workerTargetFront) {
-    const threadActorID = workerTargetFront.threadFront.actorID;
+    const threadId = workerTargetFront.threadFront.actorID;
     const isThreadAvailable = this._selectors
       .getThreads(this._getState())
-      .find(x => x.actor === threadActorID);
+      .find(x => x.actor === threadId);
 
     if (!features.windowlessServiceWorkers) {
       console.error(
@@ -214,21 +216,17 @@ class DebuggerPanel {
     }
 
     if (!isThreadAvailable) {
-      console.error(`Worker ${threadActorID} is not available for debugging`);
+      console.error(`Worker ${threadId} is not available for debugging`);
       return;
     }
 
     // select worker's thread
-    this.selectThread(threadActorID);
+    const cx = this._selectors.getContext(this._getState());
+    this._actions.selectThread(cx, threadId);
 
     // select worker's source
     const source = this.getSourceByURL(workerTargetFront._url);
     await this.selectSource(source.id, 1, 1);
-  }
-
-  selectThread(actorID) {
-    const cx = this._selectors.getContext(this._getState());
-    this._actions.selectThread(cx, actorID);
   }
 
   previewPausedLocation(location) {
