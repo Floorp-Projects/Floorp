@@ -25,15 +25,24 @@ function setText(id, value) {
   element.appendChild(document.createTextNode(value));
 }
 
-function viewCertHelper(parent, cert, openingOption = "tab") {
+async function viewCertHelper(parent, cert, openingOption = "tab") {
   if (!cert) {
     return;
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
-    let derb64 = encodeURIComponent(cert.getBase64DERString());
-    let url = `about:certificate?cert=${derb64}`;
+    let results = await asyncDetermineUsages(cert);
+    let chain = getBestChain(results);
+    if (!chain) {
+      chain = [cert];
+    }
+    let certs = chain.map(elem =>
+      encodeURIComponent(elem.getBase64DERString())
+    );
+    let certsStringURL = certs.map(elem => `cert=${elem}`);
+    certsStringURL = certsStringURL.join("&");
+    let url = `about:certificate?${certsStringURL}`;
     let opened = win.switchToTabHavingURI(url, false, {});
     if (!opened) {
       win.openTrustedLinkIn(url, openingOption);
