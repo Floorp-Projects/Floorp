@@ -167,22 +167,7 @@ bool FunctionBox::hasFunction() const {
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
-  if (lazy->isDerivedClassConstructor()) {
-    setDerivedClassConstructor();
-  }
-  if (lazy->needsHomeObject()) {
-    setNeedsHomeObject();
-  }
-  if (lazy->bindingsAccessedDynamically()) {
-    setBindingsAccessedDynamically();
-  }
-  if (lazy->hasDirectEval()) {
-    setHasDirectEval();
-  }
-  if (lazy->hasModuleGoal()) {
-    setHasModuleGoal();
-  }
-
+  immutableFlags_ = lazy->immutableFlags();
   extent = lazy->extent();
 }
 
