@@ -1236,10 +1236,6 @@ ifndef INCLUDED_DEBUGMAKE_MK #{
   endif #}
 endif #}
 
-documentation:
-	@cd $(DEPTH)
-	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
-
 FREEZE_VARIABLES = \
   CSRCS \
   CPPSRCS \
