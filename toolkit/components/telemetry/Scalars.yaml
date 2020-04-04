@@ -3721,6 +3721,7 @@ startup:
     bug_numbers:
       - 1522934
       - 1570652
+      - 1623406
     description: >
       How the profile was selected during startup. One of the following reasons:
         unknown:
@@ -3753,12 +3754,15 @@ startup:
           A first run of the application created a new profile to use.
         default:
           The default profile was selected as normal.
-    expires: "77"
+    expires: "88"
     keyed: false
     kind: string
     notification_emails:
       - dtownsend@mozilla.com
       - rtestard@mozilla.com
+      - gkaberere@mozilla.com
+      - jhollek@mozilla.com
+      - echo@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
