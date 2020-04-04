@@ -105,6 +105,18 @@ sm-smoosh-linux64/opt:
             - linux64-cbindgen
     run-on-projects: ['try', 'central']
 
+sm-warp-linux64/debug:
+    description: "Spidermonkey WarpBuilder"
+    index:
+        job-name: sm-warp-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(warp)
+        tier: 2
+    run:
+        spidermonkey-variant: warpdebug
+    run-on-projects: ['try', 'mozilla-central']
+
 sm-nojit-linux64/opt:
     description: "Spidermonkey no JIT"
     index:
