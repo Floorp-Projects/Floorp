@@ -385,11 +385,12 @@ bool nsXULElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   }
 
   if (aTabIndex) {
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
+    Maybe<int32_t> attrVal = GetTabIndexAttrValue();
+    if (attrVal.isSome()) {
       // The tabindex attribute was specified, so the element becomes
       // focusable.
       shouldFocus = true;
-      *aTabIndex = TabIndex();
+      *aTabIndex = attrVal.value();
     } else {
       // otherwise, if there is no tabindex attribute, just use the value of
       // *aTabIndex to indicate focusability. Reset any supplied tabindex to 0.
