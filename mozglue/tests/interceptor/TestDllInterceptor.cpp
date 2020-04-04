@@ -738,6 +738,8 @@ bool TestAssemblyFunctions() {
     TestCase("PushRet", NoStubAddressCheck),
     TestCase("MovEaxJump", NoStubAddressCheck),
     TestCase("Opcode83", NoStubAddressCheck),
+    TestCase("LockPrefix", NoStubAddressCheck),
+    TestCase("LooksLikeLockPrefix", NoStubAddressCheck),
 #    endif
 #  endif  // MOZ_CODE_COVERAGE
 #endif    // defined(__clang__)
