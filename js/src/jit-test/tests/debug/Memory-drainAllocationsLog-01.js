@@ -7,7 +7,7 @@ dbg.memory.trackingAllocationSites = true;
 
 root.eval("(" + function immediate() {
   this.tests = [
-    ({}),
+    {x: 1},
     [],
     /(two|2)\s*problems/,
     new function Ctor(){},
