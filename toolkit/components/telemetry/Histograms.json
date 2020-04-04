@@ -13218,8 +13218,8 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["dtownsend@mozilla.com"],
-    "expires_in_version": "70",
-    "bug_numbers": [1296606, 1488881, 1490342],
+    "expires_in_version": "81",
+    "bug_numbers": [1296606, 1488881, 1490342, 1621948],
     "kind": "count",
     "description": "Number of named browser profiles for the current user, as reported by the profile service at startup.",
     "releaseChannelCollection": "opt-out"
