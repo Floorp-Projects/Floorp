@@ -197,6 +197,10 @@ async function getTestSettings() {
   raptorLog("wrote settings to ext local storage");
 }
 
+async function sleep(delay) {
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
+
 async function getBrowserInfo() {
   if (isGecko) {
     const info = await ext.runtime.getBrowserInfo();
@@ -417,7 +421,7 @@ async function nextCycle() {
     );
     // wait a bit to be sure the app is in foreground before starting
     // new test, or finishing test
-    await new Promise(resolve => setTimeout(resolve, foregroundDelay));
+    await sleep(foregroundDelay);
   }
   if (pageCycle == 1) {
     const text = `running ${pageCycles} pagecycles of ${testURL}`;
@@ -434,62 +438,65 @@ async function nextCycle() {
         `bringing app to background`
       );
     }
-    setTimeout(async () => {
-      await postToControlServer("status", `begin pagecycle ${pageCycle}`);
 
-      switch (testType) {
-        case TEST_BENCHMARK:
-          isBenchmarkPending = true;
-          break;
+    await sleep(pageCycleDelay);
 
-        case TEST_PAGE_LOAD:
-          if (getHero) {
-            isHeroPending = true;
-            pendingHeroes = Array.from(settings.measure.hero);
-          }
-          if (getFNBPaint) {
-            isFNBPaintPending = true;
-          }
-          if (getFCP) {
-            isFCPPending = true;
-          }
-          if (getDCF) {
-            isDCFPending = true;
-          }
-          if (getTTFI) {
-            isTTFIPending = true;
-          }
-          if (getLoadTime) {
-            isLoadTimePending = true;
-          }
-          break;
+    await postToControlServer("status", `begin page cycle ${pageCycle}`);
 
-        case TEST_SCENARIO:
-          isScenarioPending = true;
-          break;
-      }
+    switch (testType) {
+      case TEST_BENCHMARK:
+        isBenchmarkPending = true;
+        break;
 
-      if (newTabPerCycle) {
-        // close previous test tab and open a new one
-        await closeTab(testTabID);
-        testTabID = await openTab();
-      }
+      case TEST_PAGE_LOAD:
+        if (getHero) {
+          isHeroPending = true;
+          pendingHeroes = Array.from(settings.measure.hero);
+        }
+        if (getFNBPaint) {
+          isFNBPaintPending = true;
+        }
+        if (getFCP) {
+          isFCPPending = true;
+        }
+        if (getDCF) {
+          isDCFPending = true;
+        }
+        if (getTTFI) {
+          isTTFIPending = true;
+        }
+        if (getLoadTime) {
+          isLoadTimePending = true;
+        }
+        break;
 
-      await updateTab(testTabID, testURL);
+      case TEST_SCENARIO:
+        isScenarioPending = true;
+        break;
+    }
 
-      if (testType == TEST_SCENARIO) {
-        await startScenarioTimer();
-      }
+    if (newTabPerCycle) {
+      // close previous test tab and open a new one
+      await closeTab(testTabID);
+      testTabID = await openTab();
+    }
 
-      // For benchmark or scenario type tests we can proceed directly to
-      // waitForResult. However for page-load tests we must first wait until
-      // we hear back from pageloaderjs that it has been successfully loaded
-      // in the test page and has been invoked; and only then start looking
-      // for measurements.
-      if (testType != TEST_PAGE_LOAD) {
-        await collectResults();
-      }
-    }, pageCycleDelay);
+    await updateTab(testTabID, testURL);
+
+    if (testType == TEST_SCENARIO) {
+      await startScenarioTimer();
+    }
+
+    // For benchmark or scenario type tests we can proceed directly to
+    // waitForResult. However for page-load tests we must first wait until
+    // we hear back from pageloaderjs that it has been successfully loaded
+    // in the test page and has been invoked; and only then start looking
+    // for measurements.
+    if (testType != TEST_PAGE_LOAD) {
+      await collectResults();
+    }
+
+    await postToControlServer("status", `ended page cycle ${pageCycle}`);
   } else {
     await verifyResults();
   }
@@ -714,18 +721,14 @@ async function raptorRunner() {
   const text = `* pausing ${postStartupDelay /
     1000} seconds to let browser settle... *`;
   await postToControlServer("status", text);
+  await sleep(postStartupDelay);
 
-  // GeckoView doesn't support tabs; set existing tab as blank first
-  if (isGeckoView) {
-    setTimeout(function() {
-      nextCycle();
-    }, postStartupDelay);
-  } else {
-    setTimeout(async function() {
-      testTabID = await openTab();
-      nextCycle();
-    }, postStartupDelay);
+  // GeckoView doesn't support tabs
+  if (!isGeckoView) {
+    testTabID = await openTab();
   }
+
+  await nextCycle();
 }
 
 function raptorLog(text, level = "info") {
