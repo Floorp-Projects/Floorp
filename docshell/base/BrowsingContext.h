@@ -266,6 +266,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                         nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
 
+  // If the load state includes a source BrowsingContext has been passed, check
+  // to see if we are sandboxed from it as the result of an iframe or CSP
+  // sandbox.
+  nsresult CheckSandboxFlags(nsDocShellLoadState* aLoadState);
+
   void DisplayLoadError(const nsAString& aURI);
 
   // Determine if the current BrowsingContext was 'cached' by the logic in
