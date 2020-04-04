@@ -543,8 +543,7 @@ bool ParseContext::declareFunctionArgumentsObject(
 
   bool tryDeclareArguments;
   if (canSkipLazyClosedOverBindings) {
-    tryDeclareArguments =
-        funbox->function()->baseScript()->shouldDeclareArguments();
+    tryDeclareArguments = funbox->declaredArguments();
   } else {
     tryDeclareArguments = hasUsedFunctionSpecialName(usedNames, argumentsName);
   }
