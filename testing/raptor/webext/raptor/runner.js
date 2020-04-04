@@ -223,6 +223,10 @@ async function startScenarioTimer() {
 }
 
 async function closeTab(tabId) {
+  if (tabId == 0) {
+    return;
+  }
+
   await postToControlServer("status", `closing Tab: ${tabId}`);
 
   if (isGecko) {
@@ -446,7 +450,7 @@ async function nextCycle() {
           break;
       }
 
-      if (newTabPerCycle && testTabID != 0) {
+      if (newTabPerCycle) {
         // close previous test tab and open a new one
         await closeTab(testTabID);
         testTabID = await openTab();
