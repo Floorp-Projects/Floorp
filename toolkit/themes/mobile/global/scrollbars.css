@@ -12,10 +12,7 @@ xul|scrollbar[root="true"] {
 }
 
 xul|scrollbar {
-  -moz-appearance: none !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: 0px solid transparent !important;
+  -moz-appearance: initial;
   pointer-events: none;
   display: block;
 }
@@ -33,9 +30,9 @@ xul|scrollbar[orient="vertical"] {
 }
 
 xul|scrollbar[orient="vertical"] xul|thumb {
-  -moz-appearance: none !important;
-  max-width: 2px !important;
-  min-width: 2px !important;
+  -moz-appearance: initial;
+  max-width: 2px;
+  min-width: 2px;
 }
 
 xul|scrollbar[orient="horizontal"] {
@@ -44,20 +41,22 @@ xul|scrollbar[orient="horizontal"] {
 }
 
 xul|scrollbar[orient="horizontal"] xul|thumb {
-  -moz-appearance: none !important;
-  max-height: 2px !important;
-  min-height: 2px !important;
+  -moz-appearance: initial;
+  max-height: 2px;
+  min-height: 2px;
 }
 
 xul|scrollbar:not([active="true"]),
 xul|scrollbar[disabled] {
+  /* Mac and Windows with overlay scrollbars use visibility: hidden here, but
+   * that breaks the scrollbar style caching, see bug 1620866. */
   opacity: 0;
 }
 
 xul|scrollbarbutton {
-  min-height: 6px !important;
-  min-width: 6px !important;
-  -moz-appearance: none !important;
+  -moz-appearance: initial;
+  min-height: 6px;
+  min-width: 6px;
   visibility: hidden;
 }
 
@@ -66,13 +65,8 @@ xul|scrollbarbutton[sbattr="scrollbar-up-top"] {
 }
 
 xul|scrollbar xul|thumb {
-  background-color: rgba(119, 119, 119, 0.4) !important;
-  border: none;
+  background-color: rgba(119, 119, 119, 0.4);
   border-radius: 4px;
-}
-
-xul|scrollbarbutton {
-  background-image: none !important;
 }
 
 select:not([size]):not([multiple]) > xul|scrollbar,
