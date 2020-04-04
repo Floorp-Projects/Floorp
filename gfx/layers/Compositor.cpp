@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/Compositor.h"
-#include "base/message_loop.h"                      // for MessageLoop
+#include "base/message_loop.h"  // for MessageLoop
+#include "mozilla/gfx/Types.h"
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
 #include "mozilla/layers/Diagnostics.h"
 #include "mozilla/layers/Effects.h"  // for Effect, EffectChain, etc
@@ -69,8 +70,8 @@ Compositor::Compositor(widget::CompositorWidget* aWidget,
       mDefaultClearColor(ToDeviceColor(sRGBColor::OpaqueWhite()))
 #else
       ,
-      mClearColor(DeviceColor()),
-      mDefaultClearColor(DeviceColor())
+      mClearColor(gfx::DeviceColor()),
+      mDefaultClearColor(gfx::DeviceColor())
 #endif
 {
 }

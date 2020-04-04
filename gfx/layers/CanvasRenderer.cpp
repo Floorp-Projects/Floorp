@@ -6,7 +6,10 @@
 
 #include "CanvasRenderer.h"
 
+#include "AsyncCanvasRenderer.h"
+#include "GLContext.h"
 #include "OOPCanvasRenderer.h"
+#include "PersistentBufferProvider.h"
 
 namespace mozilla {
 namespace layers {

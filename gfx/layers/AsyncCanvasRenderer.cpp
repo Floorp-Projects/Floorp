@@ -10,6 +10,7 @@
 #include "GLContext.h"
 #include "GLReadTexImageHelper.h"
 #include "GLScreenBuffer.h"
+#include "Layers.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/layers/BufferTexture.h"
