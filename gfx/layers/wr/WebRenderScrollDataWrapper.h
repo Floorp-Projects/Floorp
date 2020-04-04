@@ -304,69 +304,46 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
 
   Maybe<uint64_t> GetFixedPositionAnimationId() const {
     MOZ_ASSERT(IsValid());
-
-    if (AtBottomLayer()) {
-      return mLayer->GetFixedPositionAnimationId();
-    }
-    return Nothing();
+    return mLayer->GetFixedPositionAnimationId();
   }
 
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
-
-    if (AtBottomLayer()) {
-      return mLayer->GetFixedPositionScrollContainerId();
-    }
-    return ScrollableLayerGuid::NULL_SCROLL_ID;
+    return mLayer->GetFixedPositionScrollContainerId();
   }
 
   SideBits GetFixedPositionSides() const {
     MOZ_ASSERT(IsValid());
+    return mLayer->GetFixedPositionSides();
+  }
 
-    if (AtBottomLayer()) {
-      return mLayer->GetFixedPositionSides();
-    }
-    return SideBits::eNone;
+  bool GetIsStickyPosition() const {
+    MOZ_ASSERT(IsValid());
+
+    // TODO: Bug 1610731 Implement this for WebRender.
+    return false;
   }
 
   ScrollableLayerGuid::ViewID GetStickyScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
-    if (AtBottomLayer()) {
-      return mLayer->GetStickyPositionScrollContainerId();
-    }
+    // TODO: Bug 1610731 Implement this for WebRender.
     return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   const LayerRectAbsolute& GetStickyScrollRangeOuter() const {
     MOZ_ASSERT(IsValid());
+    static const LayerRectAbsolute dummy;
 
-    if (AtBottomLayer()) {
-      return mLayer->GetStickyScrollRangeOuter();
-    }
-
-    static const LayerRectAbsolute empty;
-    return empty;
+    // TODO: Bug 1610731 Implement this for WebRender.
+    return dummy;
   }
-
   const LayerRectAbsolute& GetStickyScrollRangeInner() const {
     MOZ_ASSERT(IsValid());
+    static const LayerRectAbsolute dummy;
 
-    if (AtBottomLayer()) {
-      return mLayer->GetStickyScrollRangeInner();
-    }
-
-    static const LayerRectAbsolute empty;
-    return empty;
-  }
-
-  Maybe<uint64_t> GetStickyPositionAnimationId() const {
-    MOZ_ASSERT(IsValid());
-
-    if (AtBottomLayer()) {
-      return mLayer->GetStickyPositionAnimationId();
-    }
-    return Nothing();
+    // TODO: Bug 1610731 Implement this for WebRender.
+    return dummy;
   }
 
   Maybe<uint64_t> GetZoomAnimationId() const {
