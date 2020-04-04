@@ -213,7 +213,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  targetBC->LoadURI(aLoadState, aSetNavigating);
+  targetBC->LoadURI(nullptr, aLoadState, aSetNavigating);
   return IPC_OK();
 }
 
@@ -238,7 +238,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
   // FIXME: We should really initiate the load in the parent before bouncing
   // back down to the child.
 
-  targetBC->InternalLoad(aLoadState, nullptr, nullptr);
+  targetBC->InternalLoad(BrowsingContext(), aLoadState, nullptr, nullptr);
   return IPC_OK();
 }
 
