@@ -694,18 +694,20 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
     }
   }
 
-  if (!aLocation.isSystem && !aLocation.isBuiltin) {
-    if (addon.type === "extension" && !aLocation.isTemporary) {
-      addon.recommendationState = await readRecommendationStates(
-        aPackage,
-        addon.id
-      );
-    }
-
-    addon.propagateDisabledState(aOldAddon);
-    await addon.updateBlocklistState();
-    addon.appDisabled = !XPIDatabase.isUsableAddon(addon);
+  if (
+    addon.type === "extension" &&
+    !aLocation.isBuiltin &&
+    !aLocation.isTemporary
+  ) {
+    addon.recommendationState = await readRecommendationStates(
+      aPackage,
+      addon.id
+    );
   }
+
+  addon.propagateDisabledState(aOldAddon);
+  await addon.updateBlocklistState();
+  addon.appDisabled = !XPIDatabase.isUsableAddon(addon);
 
   defineSyncGUID(addon);
 

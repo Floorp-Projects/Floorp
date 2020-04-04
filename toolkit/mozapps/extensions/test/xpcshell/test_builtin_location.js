@@ -41,10 +41,6 @@ add_task(async function test_builtin_location() {
   ok(addon.isPrivileged, "Addon is privileged");
   ok(!addon.hidden, "Addon is not hidden");
 
-  // Built-in extensions are not checked against the blocklist,
-  // so we shouldn't have loaded it.
-  ok(!Services.blocklist.isLoaded, "Blocklist hasn't been loaded");
-
   // After a restart, the extension should start up normally.
   await promiseRestartManager();
   await wrapper.awaitStartup();
