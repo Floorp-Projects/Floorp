@@ -1,15 +1,14 @@
 <!DOCTYPE HTML>
 <!--
   Tests that setting a fixed bottom margin in the compositor results
-  in the margin being applied to an element fixed to the bottom.
+  in the margin being applied to an element sticky to the bottom.
 
   The fixed margin is specified as a test-pref in reftest.list.
 
   The purpose of the fixed margin is to compensate for the transform that the
   dynamic toolbar applies to the entire content area. We don't have a way of
   simulating that transform in a reftest, so the fixed margin in isolation will
-  cause the fixed element to be offset from the bottom of the screen, and in
-  the ref page we use a regular CSS "margin-bottom" to match the rendering.
+  cause the sticky element to be offset from the bottom of the screen.
 -->
 <html>
 <meta name="viewport" content="width=device-width">
@@ -18,19 +17,25 @@ html {
     scrollbar-width: none;
 }
 #scrolled {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+
     height: 2000px;
     width: 100%;
 }
-#fixed {
+#sticky {
     width: 100%;
     height: 200px;
-    position: fixed;
-    bottom: 0;
+    position: sticky;
+    bottom: 20px;
     background: red;
+    align-self: flex-end;
 }
 </style>
 <body>
-  <div id="scrolled"></div>
-  <div id="fixed"></div>
+  <div id="scrolled">
+    <div id="sticky"></div>
+  </div>
 </body>
 </html>

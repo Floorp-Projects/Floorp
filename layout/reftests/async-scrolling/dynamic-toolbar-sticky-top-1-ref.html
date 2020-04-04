@@ -1,0 +1,29 @@
+<html>
+<meta name="viewport" content="width=device-width">
+<style>
+html {
+    scrollbar-width: none;
+}
+#scrolled {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+
+    height: 2000px;
+    width: 100%;
+}
+#sticky {
+    width: 100%;
+    height: 200px;
+    position: sticky;
+    top: 70px;
+    background: red;
+    align-self: flex-start;
+}
+</style>
+<body>
+  <div id="scrolled">
+    <div id="sticky"></div>
+  </div>
+</body>
+</html>
