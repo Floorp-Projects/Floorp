@@ -33,6 +33,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPtr.h"
@@ -1374,6 +1375,14 @@ void BrowsingContext::Location(JSContext* aCx,
   }
 }
 
+nsresult BrowsingContext::CheckSandboxFlags(nsDocShellLoadState* aLoadState) {
+  const auto& sourceBC = aLoadState->SourceBrowsingContext();
+  if (sourceBC.IsDiscarded() || (sourceBC && sourceBC->IsSandboxedFrom(this))) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+  return NS_OK;
+}
+
 nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
                                   nsDocShellLoadState* aLoadState,
                                   bool aSetNavigating) {
@@ -1388,6 +1397,13 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
   if (mDocShell) {
     return mDocShell->LoadURI(aLoadState, aSetNavigating);
   }
+
+  // Note: We do this check both here and in `nsDocShell::InternalLoad`, since
+  // document-specific sandbox flags are only available in the process
+  // triggering the load, and we don't want the target process to have to trust
+  // the triggering process to do the appropriate checks for the
+  // BrowsingContext's sandbox flags.
+  MOZ_TRY(CheckSandboxFlags(aLoadState));
 
   if (!aAccessor && XRE_IsParentProcess()) {
     if (ContentParent* cp = Canonical()->GetContentParent()) {
@@ -1443,6 +1459,13 @@ nsresult BrowsingContext::InternalLoad(BrowsingContext* aAccessor,
 
     return rv;
   }
+
+  // Note: We do this check both here and in `nsDocShell::InternalLoad`, since
+  // document-specific sandbox flags are only available in the process
+  // triggering the load, and we don't want the target process to have to trust
+  // the triggering process to do the appropriate checks for the
+  // BrowsingContext's sandbox flags.
+  MOZ_TRY(CheckSandboxFlags(aLoadState));
 
   if (XRE_IsParentProcess()) {
     if (ContentParent* cp = Canonical()->GetContentParent()) {
