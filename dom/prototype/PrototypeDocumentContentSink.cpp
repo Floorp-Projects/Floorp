@@ -115,11 +115,14 @@ nsresult PrototypeDocumentContentSink::Init(Document* aDoc, nsIURI* aURI,
 
   mScriptLoader = mDocument->ScriptLoader();
 
+  mNodeInfoManager = aDoc->NodeInfoManager();
+
   return NS_OK;
 }
 
 NS_IMPL_CYCLE_COLLECTION(PrototypeDocumentContentSink, mParser, mDocumentURI,
-                         mDocument, mScriptLoader, mCurrentPrototype)
+                         mDocument, mNodeInfoManager, mScriptLoader,
+                         mCurrentPrototype)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PrototypeDocumentContentSink)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentSink)
@@ -304,7 +307,7 @@ nsresult PrototypeDocumentContentSink::PrepareToWalk() {
   RefPtr<Element> root;
 
   // Add the root element
-  rv = CreateElementFromPrototype(proto, getter_AddRefs(root), nullptr);
+  rv = CreateElementFromPrototype(proto, getter_AddRefs(root), true);
   if (NS_FAILED(rv)) return rv;
 
   rv = mDocument->AppendChildTo(root, false);
@@ -336,9 +339,8 @@ nsresult PrototypeDocumentContentSink::CreateAndInsertPI(
   MOZ_ASSERT(aProtoPI, "null ptr");
   MOZ_ASSERT(aParent, "null ptr");
 
-  RefPtr<ProcessingInstruction> node =
-      NS_NewXMLProcessingInstruction(aParent->OwnerDoc()->NodeInfoManager(),
-                                     aProtoPI->mTarget, aProtoPI->mData);
+  RefPtr<ProcessingInstruction> node = NS_NewXMLProcessingInstruction(
+      mNodeInfoManager, aProtoPI->mTarget, aProtoPI->mData);
 
   nsresult rv;
   if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
@@ -473,7 +475,9 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
       nodeToPushTo = element;
       // For template elements append the content to the template's document
       // fragment.
-      if (auto* templateElement = HTMLTemplateElement::FromNode(element)) {
+      if (element->IsHTMLElement(nsGkAtoms::_template)) {
+        HTMLTemplateElement* templateElement =
+            static_cast<HTMLTemplateElement*>(element.get());
         nodeToPushTo = templateElement->Content();
       }
 
@@ -482,15 +486,18 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
       nsXULPrototypeNode* childproto = proto->mChildren[indx];
       mContextStack.SetTopIndex(++indx);
 
+      NS_ASSERTION(element, "no element on context stack");
+
       switch (childproto->mType) {
         case nsXULPrototypeNode::eType_Element: {
           // An 'element', which may contain more content.
-          auto* protoele = static_cast<nsXULPrototypeElement*>(childproto);
+          nsXULPrototypeElement* protoele =
+              static_cast<nsXULPrototypeElement*>(childproto);
 
           RefPtr<Element> child;
 
           rv = CreateElementFromPrototype(protoele, getter_AddRefs(child),
-                                          nodeToPushTo);
+                                          false);
           if (NS_FAILED(rv)) return rv;
 
           // ...and append it to the content model.
@@ -517,7 +524,9 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
         case nsXULPrototypeNode::eType_Script: {
           // A script reference. Execute the script immediately;
           // this may have side effects in the content model.
-          auto* scriptproto = static_cast<nsXULPrototypeScript*>(childproto);
+          nsXULPrototypeScript* scriptproto =
+              static_cast<nsXULPrototypeScript*>(childproto);
+
           if (scriptproto->mSrcURI) {
             // A transcluded script reference; this may
             // "block" our prototype walk if the script isn't
@@ -536,11 +545,12 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
         } break;
 
         case nsXULPrototypeNode::eType_Text: {
-          nsNodeInfoManager* nim = nodeToPushTo->NodeInfo()->NodeInfoManager();
           // A simple text node.
-          RefPtr<nsTextNode> text = new (nim) nsTextNode(nim);
+          RefPtr<nsTextNode> text =
+              new (mNodeInfoManager) nsTextNode(mNodeInfoManager);
 
-          auto* textproto = static_cast<nsXULPrototypeText*>(childproto);
+          nsXULPrototypeText* textproto =
+              static_cast<nsXULPrototypeText*>(childproto);
           text->SetText(textproto->mValue, false);
 
           rv = nodeToPushTo->AppendChildTo(text, false);
@@ -548,7 +558,8 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
         } break;
 
         case nsXULPrototypeNode::eType_PI: {
-          auto* piProto = static_cast<nsXULPrototypePI*>(childproto);
+          nsXULPrototypePI* piProto =
+              static_cast<nsXULPrototypePI*>(childproto);
 
           // <?xml-stylesheet?> doesn't have an effect
           // outside the prolog, like it used to. Issue a warning.
@@ -563,6 +574,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
           }
 
           nsIContent* parent = element.get();
+
           if (parent) {
             // an inline script could have removed the root element
             rv = CreateAndInsertPI(piProto, parent, nullptr);
@@ -984,9 +996,9 @@ nsresult PrototypeDocumentContentSink::ExecuteScript(
 }
 
 nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
-    nsXULPrototypeElement* aPrototype, Element** aResult, nsIContent* aParent) {
+    nsXULPrototypeElement* aPrototype, Element** aResult, bool aIsRoot) {
   // Create a content model element from a prototype element.
-  MOZ_ASSERT(aPrototype, "null ptr");
+  MOZ_ASSERT(aPrototype != nullptr, "null ptr");
   if (!aPrototype) return NS_ERROR_NULL_POINTER;
 
   *aResult = nullptr;
@@ -1001,12 +1013,10 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
 
   RefPtr<Element> result;
 
-  Document* doc = aParent ? aParent->OwnerDoc() : mDocument.get();
   if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
-    const bool isRoot = !aParent;
     // If it's a XUL element, it'll be lightweight until somebody
     // monkeys with it.
-    rv = nsXULElement::CreateFromPrototype(aPrototype, doc, true, isRoot,
+    rv = nsXULElement::CreateFromPrototype(aPrototype, mDocument, true, aIsRoot,
                                            getter_AddRefs(result));
     if (NS_FAILED(rv)) return rv;
   } else {
@@ -1014,16 +1024,13 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     // what. So we need to copy everything out of the prototype
     // into the element.  Get a nodeinfo from our nodeinfo manager
     // for this node.
-    RefPtr<NodeInfo> newNodeInfo = doc->NodeInfoManager()->GetNodeInfo(
+    RefPtr<mozilla::dom::NodeInfo> newNodeInfo;
+    newNodeInfo = mNodeInfoManager->GetNodeInfo(
         aPrototype->mNodeInfo->NameAtom(),
         aPrototype->mNodeInfo->GetPrefixAtom(),
         aPrototype->mNodeInfo->NamespaceID(), nsINode::ELEMENT_NODE);
-    if (!newNodeInfo) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    const bool isScript =
-        newNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
-        newNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG);
+    if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
+    RefPtr<mozilla::dom::NodeInfo> xtfNi = newNodeInfo;
     if (aPrototype->mIsAtom &&
         newNodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
       rv = NS_NewHTMLElement(getter_AddRefs(result), newNodeInfo.forget(),
@@ -1037,7 +1044,8 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     rv = AddAttributes(aPrototype, result);
     if (NS_FAILED(rv)) return rv;
 
-    if (isScript) {
+    if (xtfNi->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
+        xtfNi->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(result);
       MOZ_ASSERT(sele, "Node didn't QI to script.");
       // Script loading is handled by the this content sink, so prevent the
@@ -1046,12 +1054,12 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     }
   }
 
-  // FIXME(bug 1627474): Is this right if this is inside an <html:template>?
   if (result->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
     mDocument->mL10nProtoElements.Put(result, RefPtr{aPrototype});
     result->SetElementCreatedFromPrototypeAndHasUnmodifiedL10n();
   }
   result.forget(aResult);
+
   return NS_OK;
 }
 

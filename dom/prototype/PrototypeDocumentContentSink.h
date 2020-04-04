@@ -105,6 +105,7 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
   RefPtr<nsParserBase> mParser;
   nsCOMPtr<nsIURI> mDocumentURI;
   RefPtr<Document> mDocument;
+  RefPtr<nsNodeInfoManager> mNodeInfoManager;
   RefPtr<ScriptLoader> mScriptLoader;
 
   PrototypeDocumentContentSink* mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
@@ -214,7 +215,7 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
    * Note that the resulting content node is not bound to any tree
    */
   nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
-                                      Element** aResult, nsIContent* aParent);
+                                      Element** aResult, bool aIsRoot);
   /**
    * Prepare to walk the current prototype.
    */
