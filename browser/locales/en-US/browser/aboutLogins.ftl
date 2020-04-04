@@ -178,7 +178,7 @@ about-logins-breach-alert-learn-more-link = Learn more
 ## Vulnerable Password notification
 
 about-logins-vulnerable-alert-title = Vulnerable Password
-about-logins-vulnerable-alert-text = This password was leaked or stolen in another company’s data breach. Reusing credentials puts all of your accounts at risk. To improve your online security, change this password.
+about-logins-vulnerable-alert-text2 = This password has been used on another account that was likely in a data breach. Reusing credentials puts all your accounts at risk. Change this password.
 # Variables:
 #   $hostname (String) - The hostname of the website associated with the login, e.g. "example.com"
 about-logins-vulnerable-alert-link = Go to { $hostname }
