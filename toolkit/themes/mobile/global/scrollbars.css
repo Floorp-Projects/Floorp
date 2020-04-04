@@ -20,6 +20,13 @@ xul|scrollbar {
   display: block;
 }
 
+/* We don't show resizers on android, so they may as well have
+ * pointer-events: none to simplify scrollbar caching */
+xul|resizer,
+xul|scrollcorner {
+  pointer-events: none;
+}
+
 xul|scrollbar[orient="vertical"] {
   min-width: 6px;
   max-width: 6px;
