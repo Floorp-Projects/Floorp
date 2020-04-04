@@ -4630,6 +4630,7 @@ impl PicturePrimitive {
                 /// font size, etc. need to be scaled accordingly.
                 fn adjust_scale_for_max_surface_size(
                     raster_config: &RasterConfig,
+                    max_target_size: i32,
                     pic_rect: PictureRect,
                     map_pic_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
                     map_raster_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
@@ -4638,13 +4639,15 @@ impl PicturePrimitive {
                     device_rect: &mut DeviceIntRect,
                     unclipped: &mut DeviceRect) -> Option<f32>
                 {
-                    if raster_config.establishes_raster_root &&
-                        (device_rect.size.width  > (MAX_SURFACE_SIZE as i32) ||
-                        device_rect.size.height > (MAX_SURFACE_SIZE as i32))
-                    {
+                    let limit = if raster_config.establishes_raster_root {
+                        MAX_SURFACE_SIZE as i32
+                    } else {
+                        max_target_size
+                    };
+                    if device_rect.size.width  > limit || device_rect.size.height > limit {
                         // round_out will grow by 1 integer pixel if origin is on a
                         // fractional position, so keep that margin for error with -1:
-                        let scale = (MAX_SURFACE_SIZE as f32 - 1.0) /
+                        let scale = (limit as f32 - 1.0) /
                                     (i32::max(device_rect.size.width, device_rect.size.height) as f32);
                         *device_pixel_scale = *device_pixel_scale * Scale::new(scale);
                         let new_device_rect = device_rect.to_f32() * Scale::new(scale);
@@ -4717,10 +4720,11 @@ impl PicturePrimitive {
                         );
 
                         if let Some(scale) = adjust_scale_for_max_surface_size(
-                                                raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
-                                                clipped_prim_bounding_rect,
-                                                &mut device_pixel_scale, &mut device_rect, &mut unclipped)
-                        {
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut device_rect, &mut unclipped,
+                        ) {
                             blur_std_deviation = blur_std_deviation * scale;
                             original_size = (original_size.to_f32() * scale).try_cast::<i32>().unwrap();
                             raster_config.root_scaling_factor = scale;
@@ -4791,10 +4795,11 @@ impl PicturePrimitive {
                         );
 
                         if let Some(scale) = adjust_scale_for_max_surface_size(
-                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
                             clipped_prim_bounding_rect,
-                            &mut device_pixel_scale, &mut device_rect, &mut unclipped)
-                        {
+                            &mut device_pixel_scale, &mut device_rect, &mut unclipped,
+                        ) {
                             // std_dev adjusts automatically from using device_pixel_scale
                             raster_config.root_scaling_factor = scale;
                         }
@@ -4889,10 +4894,11 @@ impl PicturePrimitive {
                     PictureCompositeMode::Filter(..) => {
 
                         if let Some(scale) = adjust_scale_for_max_surface_size(
-                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
                             clipped_prim_bounding_rect,
-                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
-                        {
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped,
+                        ) {
                             raster_config.root_scaling_factor = scale;
                         }
 
@@ -4922,10 +4928,11 @@ impl PicturePrimitive {
                     }
                     PictureCompositeMode::ComponentTransferFilter(..) => {
                         if let Some(scale) = adjust_scale_for_max_surface_size(
-                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
                             clipped_prim_bounding_rect,
-                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
-                        {
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped,
+                        ) {
                             raster_config.root_scaling_factor = scale;
                         }
 
@@ -5228,10 +5235,11 @@ impl PicturePrimitive {
                     PictureCompositeMode::MixBlend(..) |
                     PictureCompositeMode::Blit(_) => {
                         if let Some(scale) = adjust_scale_for_max_surface_size(
-                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
                             clipped_prim_bounding_rect,
-                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
-                        {
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped,
+                        ) {
                             raster_config.root_scaling_factor = scale;
                         }
 
@@ -5262,10 +5270,11 @@ impl PicturePrimitive {
                     PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
 
                         if let Some(scale) = adjust_scale_for_max_surface_size(
-                            raster_config, pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
                             clipped_prim_bounding_rect,
-                            &mut device_pixel_scale, &mut clipped, &mut unclipped)
-                        {
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped,
+                        ) {
                             raster_config.root_scaling_factor = scale;
                         }
 
