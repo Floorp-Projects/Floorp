@@ -2731,66 +2731,6 @@ nsDocShell::GetSameTypeRootTreeItemIgnoreBrowserBoundaries(
   return NS_OK;
 }
 
-bool nsDocShell::IsSandboxedFrom(BrowsingContext* aTargetBC) {
-  // If no target then not sandboxed.
-  if (!aTargetBC) {
-    return false;
-  }
-
-  // We cannot be sandboxed from ourselves.
-  if (aTargetBC == mBrowsingContext) {
-    return false;
-  }
-
-  // Default the sandbox flags to our flags, so that if we can't retrieve the
-  // active document, we will still enforce our own.
-  uint32_t sandboxFlags = mBrowsingContext->GetSandboxFlags();
-  if (mContentViewer) {
-    RefPtr<Document> doc = mContentViewer->GetDocument();
-    if (doc) {
-      sandboxFlags = doc->GetSandboxFlags();
-    }
-  }
-
-  // If no flags, we are not sandboxed at all.
-  if (!sandboxFlags) {
-    return false;
-  }
-
-  // If aTargetBC has an ancestor, it is not top level.
-  RefPtr<BrowsingContext> ancestorOfTarget(aTargetBC->GetParent());
-  if (ancestorOfTarget) {
-    do {
-      // We are not sandboxed if we are an ancestor of target.
-      if (ancestorOfTarget == mBrowsingContext) {
-        return false;
-      }
-      ancestorOfTarget = ancestorOfTarget->GetParent();
-    } while (ancestorOfTarget);
-
-    // Otherwise, we are sandboxed from aTargetBC.
-    return true;
-  }
-
-  // aTargetBC is top level, are we the "one permitted sandboxed
-  // navigator", i.e. did we open aTargetBC?
-  RefPtr<BrowsingContext> permittedNavigator(
-      aTargetBC->GetOnePermittedSandboxedNavigator());
-  if (permittedNavigator == mBrowsingContext) {
-    return false;
-  }
-
-  // If SANDBOXED_TOPLEVEL_NAVIGATION flag is not on, we are not sandboxed
-  // from our top.
-  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) &&
-      aTargetBC == mBrowsingContext->Top()) {
-    return false;
-  }
-
-  // Otherwise, we are sandboxed from aTargetBC.
-  return true;
-}
-
 NS_IMETHODIMP
 nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner) {
   NS_ENSURE_ARG_POINTER(aTreeOwner);
@@ -3197,6 +3137,10 @@ nsIScriptGlobalObject* nsDocShell::GetScriptGlobalObject() {
 Document* nsDocShell::GetDocument() {
   NS_ENSURE_SUCCESS(EnsureContentViewer(), nullptr);
   return mContentViewer->GetDocument();
+}
+
+Document* nsDocShell::GetExtantDocument() {
+  return mContentViewer ? mContentViewer->GetDocument() : nullptr;
 }
 
 nsPIDOMWindowOuter* nsDocShell::GetWindow() {
@@ -8787,7 +8731,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // If a source docshell has been passed, check to see if we are sandboxed
   // from it as the result of an iframe or CSP sandbox.
   if (aLoadState->SourceDocShell() &&
-      aLoadState->SourceDocShell()->IsSandboxedFrom(mBrowsingContext)) {
+      aLoadState->SourceDocShell()->GetBrowsingContext()->IsSandboxedFrom(
+          mBrowsingContext)) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
