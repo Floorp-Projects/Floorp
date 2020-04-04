@@ -23,6 +23,7 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
       mEventRegionsOverride(EventRegionsOverride::NoOverride),
       mFixedPositionSides(mozilla::SideBits::eNone),
       mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID),
+      mStickyPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID),
       mRenderRoot(wr::RenderRoot::Default) {}
 
 WebRenderLayerScrollData::~WebRenderLayerScrollData() = default;

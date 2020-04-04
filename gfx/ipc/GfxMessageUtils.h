@@ -570,6 +570,31 @@ struct ParamTraits<mozilla::gfx::RectTyped<T>> {
 };
 
 template <class T>
+struct ParamTraits<mozilla::gfx::RectAbsoluteTyped<T>> {
+  typedef mozilla::gfx::RectAbsoluteTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param) {
+    WriteParam(msg, param.Left());
+    WriteParam(msg, param.Right());
+    WriteParam(msg, param.Top());
+    WriteParam(msg, param.Bottom());
+  }
+
+  static bool Read(const Message* msg, PickleIterator* iter,
+                   paramType* result) {
+    auto l = result->Left();
+    auto r = result->Right();
+    auto t = result->Top();
+    auto b = result->Bottom();
+
+    bool retVal = (ReadParam(msg, iter, &l) && ReadParam(msg, iter, &r) &&
+                   ReadParam(msg, iter, &t) && ReadParam(msg, iter, &b));
+    result->SetBox(l, r, t, b);
+    return retVal;
+  }
+};
+
+template <class T>
 struct ParamTraits<mozilla::gfx::IntRectTyped<T>> {
   typedef mozilla::gfx::IntRectTyped<T> paramType;
 
