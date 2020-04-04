@@ -13,6 +13,7 @@
 #include "mozilla/layers/ProfilerScreenshots.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "GeckoProfiler.h"
 #include "SharedBufferMLGPU.h"
 #include "ShaderDefinitionsMLGPU.h"
 #include "nsTArray.h"
@@ -71,6 +72,8 @@ class MLGPUScreenshotGrabberImpl final {
   RefPtr<ProfilerScreenshots> mProfilerScreenshots;
   const IntSize mReadbackTextureSize;
 };
+
+MLGPUScreenshotGrabber::MLGPUScreenshotGrabber() = default;
 
 MLGPUScreenshotGrabber::~MLGPUScreenshotGrabber() = default;
 
