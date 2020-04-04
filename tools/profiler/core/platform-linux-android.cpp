@@ -407,9 +407,17 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   // Start the sampling thread. It repeatedly sends a SIGPROF signal. Sending
   // the signal ourselves instead of relying on itimer provides much better
   // accuracy.
-  if (pthread_create(&mThread, nullptr, ThreadEntry, this) != 0) {
+  //
+  // At least 350 KiB of stack space are needed when built with TSAN. This
+  // includes lul::N_STACK_BYTES plus whatever else is needed for the sampler
+  // thread. Set the stack size to 800 KiB to keep a safe margin above that.
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr) != 0 ||
+      pthread_attr_setstacksize(&attr, 800 * 1024) != 0 ||
+      pthread_create(&mThread, &attr, ThreadEntry, this) != 0) {
     MOZ_CRASH("pthread_create failed");
   }
+  pthread_attr_destroy(&attr);
 }
 
 SamplerThread::~SamplerThread() {
