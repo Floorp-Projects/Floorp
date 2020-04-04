@@ -257,6 +257,24 @@ async function openTab() {
   return tab.id;
 }
 
+/**
+ * Update the given tab by navigating to the test URL
+ */
+async function updateTab(tabId, url) {
+  await postToControlServer("status", `update tab ${tabId} for ${url}`);
+
+  // "null" = active tab
+  if (isGecko) {
+    await ext.tabs.update(tabId || null, { url });
+  } else {
+    await new Promise(resolve => {
+      ext.tabs.update(tabId || null, { url }, resolve);
+    });
+  }
+
+  await postToControlServer("status", `tab ${tabId} updated`);
+}
+
 async function collectResults() {
   // now we can set the page timeout timer and wait for pageload test result from content
   raptorLog("ready to poll for results; turning on page-timeout timer");
@@ -456,19 +474,7 @@ async function nextCycle() {
         testTabID = await openTab();
       }
 
-      await postToControlServer("status", `update tab: ${testTabID}`);
-
-      // update the test page - browse to our test URL
-      // "null" = active tab
-      if (isGecko) {
-        await ext.tabs.update(testTabID || null, { url: testURL });
-      } else {
-        await new Promise(resolve => {
-          ext.tabs.update(testTabID || null, { url: testURL }, resolve);
-        });
-      }
-
-      await postToControlServer("status", `test tab updated: ${testTabID}`);
+      await updateTab(testTabID, testURL);
 
       if (testType == TEST_SCENARIO) {
         await startScenarioTimer();
