@@ -30,16 +30,6 @@ browser/chrome/browser/content/branding/icon128.png
 browser/chrome/icons/default/default128.png
 #endif
 
-# https://github.com/mozilla/pdf.js/issues/11766
-browser/chrome/pdfjs/content/web/images/findbarButton-next-rtl.png
-browser/chrome/pdfjs/content/web/images/findbarButton-next-rtl@2x.png
-browser/chrome/pdfjs/content/web/images/findbarButton-next.png
-browser/chrome/pdfjs/content/web/images/findbarButton-next@2x.png
-browser/chrome/pdfjs/content/web/images/findbarButton-previous-rtl.png
-browser/chrome/pdfjs/content/web/images/findbarButton-previous-rtl@2x.png
-browser/chrome/pdfjs/content/web/images/findbarButton-previous.png
-browser/chrome/pdfjs/content/web/images/findbarButton-previous@2x.png
-
 chrome.manifest
 browser/chrome.manifest
 
