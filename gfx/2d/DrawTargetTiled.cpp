@@ -6,6 +6,7 @@
 
 #include "DrawTargetTiled.h"
 #include "Logging.h"
+#include "nsRegion.h"
 #include "PathHelpers.h"
 
 namespace mozilla {

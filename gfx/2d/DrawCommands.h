@@ -17,6 +17,7 @@
 #include "DrawCommand.h"
 #include "FilterNodeCapture.h"
 #include "Logging.h"
+#include "nsRegion.h"
 
 namespace mozilla {
 namespace gfx {
