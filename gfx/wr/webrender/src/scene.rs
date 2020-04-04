@@ -309,6 +309,7 @@ impl BuiltScene {
                 compositor_kind: CompositorKind::default(),
                 tile_size_override: None,
                 max_depth_ids: 0,
+                max_target_size: 0,
             },
         }
     }
