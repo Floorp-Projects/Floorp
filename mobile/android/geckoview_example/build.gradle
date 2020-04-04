@@ -5,6 +5,7 @@ apply plugin: 'com.android.application'
 apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 
 android {
+    buildToolsVersion project.ext.buildToolsVersion
     compileSdkVersion project.ext.compileSdkVersion
 
     defaultConfig {
