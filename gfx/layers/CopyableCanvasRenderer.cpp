@@ -9,6 +9,7 @@
 #include "BasicLayersImpl.h"       // for FillWithMask, etc
 #include "GLContext.h"             // for GLContext
 #include "GLScreenBuffer.h"        // for GLScreenBuffer
+#include "OOPCanvasRenderer.h"     // for OOPCanvasRenderer
 #include "SharedSurface.h"         // for SharedSurface
 #include "SharedSurfaceGL.h"       // for SharedSurface
 #include "gfxPattern.h"            // for gfxPattern, etc
