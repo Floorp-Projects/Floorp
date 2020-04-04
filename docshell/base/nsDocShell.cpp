@@ -8791,13 +8791,12 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  // If a source docshell has been passed, check to see if we are sandboxed
-  // from it as the result of an iframe or CSP sandbox.
-  const auto& sourceBC = aLoadState->SourceBrowsingContext();
-  if (sourceBC.IsDiscarded() ||
-      (sourceBC && sourceBC->IsSandboxedFrom(mBrowsingContext))) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-  }
+  // Note: We do this check both here and in BrowsingContext::
+  // LoadURI/InternalLoad, since document-specific sandbox flags are only
+  // available in the process triggering the load, and we don't want the target
+  // process to have to trust the triggering process to do the appropriate
+  // checks for the BrowsingContext's sandbox flags.
+  MOZ_TRY(mBrowsingContext->CheckSandboxFlags(aLoadState));
 
   NS_ENSURE_STATE(!HasUnloadedParent());
 
