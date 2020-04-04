@@ -637,7 +637,7 @@ static Maybe<TransformData> CreateAnimationData(
   // lot rarer than transforms on SVG (the frequency of which drives the need
   // for TransformReferenceBox).
   TransformReferenceBox refBox(aFrame);
-  nsRect bounds(0, 0, refBox.Width(), refBox.Height());
+  const nsRect bounds(0, 0, refBox.Width(), refBox.Height());
 
   // all data passed directly to the compositor should be in dev pixels
   int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
@@ -8107,10 +8107,8 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrix(
 Matrix4x4 nsDisplayTransform::GetResultingTransformMatrix(
     const nsIFrame* aFrame, const nsPoint& aOrigin, float aAppUnitsPerPixel,
     uint32_t aFlags) {
-  // mRect before calling FinishAndStoreOverflow so we don't need the override.
   TransformReferenceBox refBox(aFrame);
   FrameTransformProperties props(aFrame, refBox, aAppUnitsPerPixel);
-
   return GetResultingTransformMatrixInternal(props, refBox, aOrigin,
                                              aAppUnitsPerPixel, aFlags);
 }
