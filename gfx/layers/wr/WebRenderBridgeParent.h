@@ -626,6 +626,7 @@ class WebRenderBridgeParent final
   bool mReceivedDisplayList;
   bool mIsFirstPaint;
   bool mSkippedComposite;
+  bool mDisablingNativeCompositor;
   // These payloads are being used for SCROLL_PRESENT_LATENCY telemetry
   DataMutex<nsClassHashtable<PipelineIdAndEpochHashEntry,
                              nsTArray<CompositionPayload>>>
