@@ -649,6 +649,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   RefPtr<BrowsingContext> parentBC(
       parentWindow ? parentWindow->GetBrowsingContext() : nullptr);
+  nsCOMPtr<nsIDocShell> parentDocShell(parentBC ? parentBC->GetDocShell()
+                                                : nullptr);
 
   // Return null for any attempt to trigger a load from a discarded browsing
   // context. The spec is non-normative, and doesn't specify what should happen
@@ -669,14 +671,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // Do sandbox checks here, instead of waiting until nsIDocShell::LoadURI.
   // The state of the window can change before this call and if we are blocked
   // because of sandboxing, we wouldn't want that to happen.
-  nsCOMPtr<nsIDocShell> parentDocShell;
-  if (parentWindow) {
-    parentDocShell = parentWindow->GetDocShell();
-    if (parentDocShell) {
-      if (parentDocShell->IsSandboxedFrom(newBC)) {
-        return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      }
-    }
+  if (parentBC && parentBC->IsSandboxedFrom(newBC)) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   // no extant window? make a new one.
