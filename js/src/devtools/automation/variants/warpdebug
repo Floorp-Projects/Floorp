@@ -1,0 +1,11 @@
+{
+    "configure-args": "--enable-rust-simd",
+    "debug": true,
+    "compiler": "clang",
+    "env": {
+        "JITTEST_EXTRA_ARGS": "--jitflags=warp"
+    },
+    "skip-tests": {
+        "all": ["jstests", "jsapitests"]
+    }
+}
