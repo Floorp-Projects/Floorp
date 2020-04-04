@@ -409,38 +409,50 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
   ScrollableLayerGuid::ViewID GetFixedPositionScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
-    // TODO: Restrict this only for AtBottomLayer.
-    return mLayer->GetFixedPositionScrollContainerId();
+    if (AtBottomLayer()) {
+      return mLayer->GetFixedPositionScrollContainerId();
+    }
+    return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   SideBits GetFixedPositionSides() const {
     MOZ_ASSERT(IsValid());
 
-    return mLayer->GetFixedPositionSides();
-  }
-
-  bool GetIsStickyPosition() const {
-    MOZ_ASSERT(IsValid());
-
-    return mLayer->GetIsStickyPosition();
+    if (AtBottomLayer()) {
+      return mLayer->GetFixedPositionSides();
+    }
+    return SideBits::eNone;
   }
 
   ScrollableLayerGuid::ViewID GetStickyScrollContainerId() const {
     MOZ_ASSERT(IsValid());
 
-    // TODO: Restrict this only for AtBottomLayer.
-    return mLayer->GetStickyScrollContainerId();
+    if (AtBottomLayer() && mLayer->GetIsStickyPosition()) {
+      return mLayer->GetStickyScrollContainerId();
+    }
+    return ScrollableLayerGuid::NULL_SCROLL_ID;
   }
 
   const LayerRectAbsolute& GetStickyScrollRangeOuter() const {
     MOZ_ASSERT(IsValid());
 
-    return mLayer->GetStickyScrollRangeOuter();
+    if (AtBottomLayer() && mLayer->GetIsStickyPosition()) {
+      return mLayer->GetStickyScrollRangeOuter();
+    }
+
+    static const LayerRectAbsolute empty;
+    return empty;
   }
+
   const LayerRectAbsolute& GetStickyScrollRangeInner() const {
     MOZ_ASSERT(IsValid());
 
-    return mLayer->GetStickyScrollRangeInner();
+    if (AtBottomLayer() && mLayer->GetIsStickyPosition()) {
+      return mLayer->GetStickyScrollRangeInner();
+    }
+
+    static const LayerRectAbsolute empty;
+    return empty;
   }
 
   Maybe<uint64_t> GetZoomAnimationId() const {
