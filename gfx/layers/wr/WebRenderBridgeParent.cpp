@@ -75,8 +75,7 @@ void gecko_profiler_end_marker(const char* name) {
 void gecko_profiler_event_marker(const char* name) {
 #ifdef MOZ_GECKO_PROFILER
   profiler_tracing_marker("WebRender", name,
-                          JS::ProfilingCategoryPair::GRAPHICS,
-                          TRACING_EVENT);
+                          JS::ProfilingCategoryPair::GRAPHICS, TRACING_EVENT);
 #endif
 }
 
@@ -351,6 +350,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mReceivedDisplayList(false),
       mIsFirstPaint(true),
       mSkippedComposite(false),
+      mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
@@ -384,6 +384,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
       mReceivedDisplayList(false),
       mIsFirstPaint(false),
       mSkippedComposite(false),
+      mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {}
 
 WebRenderBridgeParent::~WebRenderBridgeParent() {
@@ -1732,6 +1733,8 @@ void WebRenderBridgeParent::DisableNativeCompositor() {
   mApis[wr::RenderRoot::Default]->EnableNativeCompositor(false);
   // Ensure we generate and render a frame immediately.
   ScheduleForcedGenerateFrame();
+
+  mDisablingNativeCompositor = true;
 }
 
 void WebRenderBridgeParent::UpdateQualitySettings() {
@@ -2453,6 +2456,16 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 #endif
 
   mMostRecentComposite = TimeStamp::Now();
+
+  // During disabling native compositor, webrender needs to render twice.
+  // Otherwise, browser flashes black.
+  // XXX better fix?
+  if (mDisablingNativeCompositor) {
+    mDisablingNativeCompositor = false;
+
+    // Ensure we generate and render a frame immediately.
+    ScheduleForcedGenerateFrame();
+  }
 }
 
 void WebRenderBridgeParent::HoldPendingTransactionId(
