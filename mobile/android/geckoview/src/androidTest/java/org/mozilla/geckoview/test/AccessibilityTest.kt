@@ -1006,6 +1006,7 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onWinStateChanged(event: AccessibilityEvent) { }
 
             @AssertCalled(count = 1)
+            @Suppress("deprecation")
             override fun onFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 var node = createNodeInfo(nodeId)
