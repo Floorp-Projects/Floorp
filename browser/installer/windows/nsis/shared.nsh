@@ -506,6 +506,11 @@ ${EndIf}
 !macroend
 !define SetHandlers "!insertmacro SetHandlers"
 
+!macro WriteApplicationsSupportedType RegKey Type
+  WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" "${Type}" ""
+!macroend
+!define WriteApplicationsSupportedType "!insertmacro WriteApplicationsSupportedType"
+
 ; Adds the HKLM\Software\Clients\StartMenuInternet\Firefox-[pathhash] registry
 ; entries (does not use SHCTX).
 ;
@@ -605,20 +610,44 @@ ${EndIf}
     ; If we're going to create this key at all, we also need to list our supported
     ; file types in it, because otherwise we'll be shown as a suggestion for every
     ; single file type, whether we support it in any way or not.
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".htm" ""
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".html" ""
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".shtml" ""
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".xht" ""
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".xhtml" ""
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".svg" ""
-    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
-                ".webp" ""
+    ; We take a more expansive approach to the set of file types registered
+    ; here compared to elsewhere because this key is interpreted by the OS as
+    ; containing every file type that we can possibly open, so if something
+    ; isn't listed it assumes we can't open it and hides us from e.g. the Open
+    ; With context menu, even if the user has tried to add us there manually.
+    ; The list here was derived from the file /layout/build/components.conf,
+    ; filtered down to only those types which make sense to open on their own
+    ; in Firefox, basically meaning that plain text file types were left out,
+    ; but not JSON or XML types because we have specific viewers for those.
+    ${WriteApplicationsSupportedType} ${RegKey} ".apng"
+    ${WriteApplicationsSupportedType} ${RegKey} ".bmp"
+    ${WriteApplicationsSupportedType} ${RegKey} ".flac"
+    ${WriteApplicationsSupportedType} ${RegKey} ".gif"
+    ${WriteApplicationsSupportedType} ${RegKey} ".htm"
+    ${WriteApplicationsSupportedType} ${RegKey} ".html"
+    ${WriteApplicationsSupportedType} ${RegKey} ".ico"
+    ${WriteApplicationsSupportedType} ${RegKey} ".jfif"
+    ${WriteApplicationsSupportedType} ${RegKey} ".jpeg"
+    ${WriteApplicationsSupportedType} ${RegKey} ".jpg"
+    ${WriteApplicationsSupportedType} ${RegKey} ".json"
+    ${WriteApplicationsSupportedType} ${RegKey} ".m4a"
+    ${WriteApplicationsSupportedType} ${RegKey} ".mp3"
+    ${WriteApplicationsSupportedType} ${RegKey} ".oga"
+    ${WriteApplicationsSupportedType} ${RegKey} ".ogg"
+    ${WriteApplicationsSupportedType} ${RegKey} ".ogv"
+    ${WriteApplicationsSupportedType} ${RegKey} ".opus"
+    ${WriteApplicationsSupportedType} ${RegKey} ".pdf"
+    ${WriteApplicationsSupportedType} ${RegKey} ".pjpeg"
+    ${WriteApplicationsSupportedType} ${RegKey} ".pjp"
+    ${WriteApplicationsSupportedType} ${RegKey} ".png"
+    ${WriteApplicationsSupportedType} ${RegKey} ".rdf"
+    ${WriteApplicationsSupportedType} ${RegKey} ".shtml"
+    ${WriteApplicationsSupportedType} ${RegKey} ".svg"
+    ${WriteApplicationsSupportedType} ${RegKey} ".webm"
+    ${WriteApplicationsSupportedType} ${RegKey} ".webp"
+    ${WriteApplicationsSupportedType} ${RegKey} ".xht"
+    ${WriteApplicationsSupportedType} ${RegKey} ".xhtml"
+    ${WriteApplicationsSupportedType} ${RegKey} ".xml"
   ${EndIf}
 !macroend
 !define SetStartMenuInternet "!insertmacro SetStartMenuInternet"
