@@ -60,7 +60,7 @@ richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
 
 richlistbox.theme-listbox > richlistitem > label {
   margin: 0;
-  padding-block: 0;
+  padding-block: 0 1px;
   padding-inline: 4px 0;
   white-space: nowrap;
 }
