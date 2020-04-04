@@ -57,7 +57,7 @@ font-loader = "0.7"
 [package.metadata.android]
 package_name = "org.mozilla.wrench"
 label = "Wrench"
-android_version = 28
+android_version = 29
 target_sdk_version = 18
 min_sdk_version = 18
 fullscreen = true
