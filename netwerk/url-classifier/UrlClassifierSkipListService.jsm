@@ -29,6 +29,20 @@ class Feature {
   }
 
   async addObserver(observer) {
+    // If the remote settings list hasn't been populated yet we have to make sure
+    // to do it before firing the first notification.
+    if (!this.remoteEntries) {
+      let remoteEntries;
+      try {
+        // The data will be initially available from the local DB (via a
+        // resource:// URI).
+        remoteEntries = await RemoteSettings(COLLECTION_NAME).get();
+      } catch (e) {
+        remoteEntries = [];
+      }
+      this.onRemoteSettingsUpdate(remoteEntries);
+    }
+
     this.observers.add(observer);
     this.notifyObservers(observer);
   }
@@ -49,7 +63,6 @@ class Feature {
 
   onRemoteSettingsUpdate(entries) {
     this.remoteEntries = [];
-
     for (let entry of entries) {
       if (entry.feature == this.name) {
         this.remoteEntries.push(entry.pattern.toLowerCase());
@@ -58,11 +71,6 @@ class Feature {
   }
 
   notifyObservers(observer = null) {
-    // Don't notify until we have the initial data.
-    if (!this.remoteEntries) {
-      return;
-    }
-
     let entries = [];
     if (this.prefValue) {
       entries = this.prefValue.split(",");
@@ -90,7 +98,7 @@ UrlClassifierSkipListService.prototype = {
   features: {},
   _initialized: false,
 
-  async lazyInit() {
+  lazyInit() {
     if (this._initialized) {
       return;
     }
@@ -99,38 +107,14 @@ UrlClassifierSkipListService.prototype = {
       let {
         data: { current },
       } = event;
-      this.onUpdateEntries(current);
+      for (let key of Object.keys(this.features)) {
+        let feature = this.features[key];
+        feature.onRemoteSettingsUpdate(current);
+        feature.notifyObservers();
+      }
     });
 
     this._initialized = true;
-
-    // If the remote settings list hasn't been populated yet we have to make sure
-    // to do it before firing the first notification.
-    // This has to be run after _initialized is set because we'll be
-    // blocked while getting entries from RemoteSetting, and we don't want
-    // LazyInit is executed again.
-    let entries;
-    try {
-      // The data will be initially available from the local DB (via a
-      // resource:// URI).
-      entries = await RemoteSettings(COLLECTION_NAME).get();
-    } catch (e) {}
-
-    // RemoteSettings.get() could return null, ensure passing a list to
-    // onUpdateEntries.
-    if (!entries) {
-      entries = [];
-    }
-
-    this.onUpdateEntries(entries);
-  },
-
-  onUpdateEntries(entries) {
-    for (let key of Object.keys(this.features)) {
-      let feature = this.features[key];
-      feature.onRemoteSettingsUpdate(entries);
-      feature.notifyObservers();
-    }
   },
 
   registerAndRunSkipListObserver(feature, prefName, observer) {
