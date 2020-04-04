@@ -479,7 +479,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   );
   resetPrompterHistory();
 
-  info("Add a username in storage");
+  info("Add a username to the auto-saved login in storage");
   let loginWithUsername = login.clone();
   loginWithUsername.username = "added_username";
   LoginManagerPrompter._updateLogin(login, loginWithUsername);
@@ -490,7 +490,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     "passwordmgr-storage-changed",
     (_, data) => data == "modifyLogin"
   );
-  // will update the doorhanger with changed username
+  // will update the doorhanger with changed password
   await LMP._onPasswordEditedOrGenerated(rootBrowser, {
     browsingContextId: 99,
     origin: "https://www.example.com",
@@ -507,6 +507,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   let [dataArray] = await storageChangedPromised;
   login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
   loginWithUsername.password = newPassword;
+  // the password should be updated in storage, but not the username (until the user confirms the doorhanger)
   assertLoginProperties(login, loginWithUsername);
   ok(login.matches(loginWithUsername, false), "Check updated login");
   equal(
@@ -528,9 +529,9 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     fakePromptToChangePassword.getCall(0).args[3],
     "promptToChangePassword had a truthy 'dismissed' argument"
   );
-  // No new password is being saved, so notifySaved should be false
+  // The generated password changed, so we expect notifySaved to be true
   ok(
-    !fakePromptToChangePassword.getCall(0).args[4],
+    fakePromptToChangePassword.getCall(0).args[4],
     "promptToChangePassword should have a falsey 'notifySaved' argument"
   );
   resetPrompterHistory();
