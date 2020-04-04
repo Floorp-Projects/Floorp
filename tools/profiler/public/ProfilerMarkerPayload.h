@@ -578,6 +578,19 @@ class LongTaskMarkerPayload : public ProfilerMarkerPayload {
       : ProfilerMarkerPayload(std::move(aCommonProps)) {}
 };
 
+class TimingMarkerPayload : public ProfilerMarkerPayload {
+ public:
+  TimingMarkerPayload(const mozilla::TimeStamp& aStartTime,
+                      const mozilla::TimeStamp& aEndTime)
+      : ProfilerMarkerPayload(aStartTime, aEndTime) {}
+
+  DECL_STREAM_PAYLOAD
+
+ private:
+  explicit TimingMarkerPayload(CommonProps&& aCommonProps)
+      : ProfilerMarkerPayload(std::move(aCommonProps)) {}
+};
+
 class TextMarkerPayload : public ProfilerMarkerPayload {
  public:
   TextMarkerPayload(const nsACString& aText,

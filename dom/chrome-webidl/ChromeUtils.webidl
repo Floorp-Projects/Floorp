@@ -158,6 +158,22 @@ namespace ChromeUtils {
 #endif // NIGHTLY_BUILD
 
   /**
+   * If the profiler is currently running and recording the current thread,
+   * add a marker for the current thread. No-op otherwise.
+   *
+   * @param name              The name of the marker.
+   * @param startTime         The timestamp to use as the start of the marker.
+   *                          If omitted, the marker will have no duration.
+   *                          In window and ChromeWorker contexts, use a
+   *                          timestamp from `performance.now()`.
+   *                          In JS modules, use `Cu.now()` to get a timestamp.
+   * @param text              Text to associate with the marker.
+   */
+  void addProfilerMarker(UTF8String name,
+                         optional DOMHighResTimeStamp startTime,
+                         optional UTF8String text);
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };

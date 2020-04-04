@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/ErrorResult.h"
+#include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
 #include "nsIContentChild.h"
 
 namespace mozilla {
@@ -77,6 +78,10 @@ class ChromeUtils {
 
   static void ReleaseAssert(GlobalObject& aGlobal, bool aCondition,
                             const nsAString& aMessage);
+
+  static void AddProfilerMarker(GlobalObject& aGlobal, const nsACString& aName,
+                                const Optional<DOMHighResTimeStamp>& aStartTime,
+                                const Optional<nsACString>& text);
 
   static void OriginAttributesToSuffix(
       GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,

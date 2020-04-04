@@ -2293,13 +2293,13 @@ BrowserGlue.prototype = {
       ChromeUtils.idleDispatch(
         () => {
           if (!Services.startup.shuttingDown) {
-            if (Services.profiler) {
-              Services.profiler.AddMarker("startupIdleTask");
-            }
+            let startTime = Cu.now();
             try {
               task.task();
             } catch (ex) {
               Cu.reportError(ex);
+            } finally {
+              ChromeUtils.addProfilerMarker("startupIdleTask", startTime);
             }
           }
         },
@@ -2372,13 +2372,13 @@ BrowserGlue.prototype = {
     for (let task of idleTasks) {
       ChromeUtils.idleDispatch(() => {
         if (!Services.startup.shuttingDown) {
-          if (Services.profiler) {
-            Services.profiler.AddMarker("startupLateIdleTask");
-          }
+          let startTime = Cu.now();
           try {
             task();
           } catch (ex) {
             Cu.reportError(ex);
+          } finally {
+            ChromeUtils.addProfilerMarker("startupLateIdleTask", startTime);
           }
         }
       });
