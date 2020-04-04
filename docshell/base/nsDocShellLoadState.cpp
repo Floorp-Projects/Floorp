@@ -441,12 +441,9 @@ void nsDocShellLoadState::SetSrcdocData(const nsAString& aSrcdocData) {
   mSrcdocData = aSrcdocData;
 }
 
-nsIDocShell* nsDocShellLoadState::SourceDocShell() const {
-  return mSourceDocShell;
-}
-
-void nsDocShellLoadState::SetSourceDocShell(nsIDocShell* aSourceDocShell) {
-  mSourceDocShell = aSourceDocShell;
+void nsDocShellLoadState::SetSourceBrowsingContext(
+    BrowsingContext* aSourceBrowsingContext) {
+  mSourceBrowsingContext = aSourceBrowsingContext;
 }
 
 nsIURI* nsDocShellLoadState::BaseURI() const { return mBaseURI; }
