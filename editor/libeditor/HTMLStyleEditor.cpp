@@ -1411,6 +1411,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
       }
 
       bool isSet = false;
+      bool useTextDecoration =
+          &aProperty == nsGkAtoms::u || &aProperty == nsGkAtoms::strike;
       if (first) {
         if (CSSEditUtils::IsCSSEditableProperty(content, &aProperty,
                                                 aAttribute)) {
@@ -1448,7 +1450,24 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
           isSet = IsTextPropertySetByContent(content, &aProperty, aAttribute,
                                              aValue, &theValue);
         }
-        if (firstValue != theValue) {
+
+        if (firstValue != theValue &&
+            // For text-decoration related HTML properties, i.e. <u> and
+            // <strike>, we have to also check |isSet| because text-decoration
+            // is a shorthand property, and it may contains other unrelated
+            // longhand components, e.g. text-decoration-color, so we have to do
+            // an extra check before setting |*aAll| to false.
+            // e.g.
+            //   firstValue: "underline rgb(0, 0, 0)"
+            //   theValue: "underline rgb(0, 0, 238)" // <a> uses blue color
+            // These two values should be the same if we are checking `<u>`.
+            // That's why we need to check |*aFirst| and |isSet|.
+            //
+            // This is a work-around for text-decoration.
+            // The spec issue: https://github.com/w3c/editing/issues/241.
+            // Once this spec issue is resolved, we could drop this work-around
+            // check.
+            (!useTextDecoration || *aFirst != isSet)) {
           *aAll = false;
         }
       }
