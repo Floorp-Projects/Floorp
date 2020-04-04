@@ -843,6 +843,23 @@ void APZCTreeManager::SampleForWebRender(
         wr::ToWrTransformProperty(info.mFixedPositionAnimationId, transform));
   }
 
+  for (const StickyPositionInfo& info : mStickyPositionInfo) {
+    ScreenPoint translation =
+        AsyncCompositionManager::ComputeFixedMarginsOffset(
+            GetCompositorFixedLayerMargins(), info.mFixedPosSides,
+            // For sticky layers, we don't need to factor
+            // mGeckoFixedLayerMargins because Gecko doesn't shift the
+            // position of sticky elements for dynamic toolbar movements.
+            ScreenMargin());
+
+    LayerToParentLayerMatrix4x4 transform =
+        LayerToParentLayerMatrix4x4::Translation(ViewAs<ParentLayerPixel>(
+            translation, PixelCastJustification::ScreenIsParentLayerForRoot));
+
+    transforms.AppendElement(
+        wr::ToWrTransformProperty(info.mStickyPositionAnimationId, transform));
+  }
+
   aTxn.AppendTransformProperties(transforms);
 
   // Advance animations. It's important that this happens after
