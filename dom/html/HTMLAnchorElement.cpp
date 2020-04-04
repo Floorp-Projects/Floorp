@@ -149,7 +149,7 @@ bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     return true;
   }
 
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
+  if (GetTabIndexAttrValue().isNothing()) {
     // check whether we're actually a link
     if (!Link::HasURI()) {
       // Not tabbable or focusable without href (bug 17605), unless
