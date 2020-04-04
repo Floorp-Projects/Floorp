@@ -2276,6 +2276,7 @@ impl Renderer {
             compositor_kind,
             tile_size_override: None,
             max_depth_ids: device.max_depth_ids(),
+            max_target_size: max_texture_size,
         };
         info!("WR {:?}", config);
 
