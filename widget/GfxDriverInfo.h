@@ -7,6 +7,7 @@
 #define __mozilla_widget_GfxDriverInfo_h__
 
 #include "nsString.h"
+#include "nsTArray.h"
 
 // Macros for adding a blocklist item to the static list. _EXT variants
 // allow one to specify all available parameters, including those available

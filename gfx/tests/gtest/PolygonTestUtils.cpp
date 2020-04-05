@@ -8,7 +8,14 @@
 
 #include <cmath>
 
+#include "Point.h"
+#include "Triangle.h"
+
 typedef mozilla::gfx::Polygon MozPolygon;
+
+using mozilla::gfx::Point;
+using mozilla::gfx::Point4D;
+using mozilla::gfx::Triangle;
 
 namespace mozilla {
 namespace gfx {
