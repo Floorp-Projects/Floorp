@@ -5462,6 +5462,13 @@
   value: true
   mirror: always
 
+# Is the initial value for the image-orientation property 'from-image'?
+- name: layout.css.image-orientation.initial-from-image
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for CSS initial-letter property enabled?
 - name: layout.css.initial-letter.enabled
   type: bool
