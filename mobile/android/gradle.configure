@@ -70,7 +70,6 @@ def gradle_android_build_config():
 
 
 @depends(gradle_android_build_config)
-@imports(_from='itertools', _import='imap')
 def gradle_android_intermediates_folder(build_config):
     '''Path to intermediates classes folder.'''
     def uncapitalize(s):
@@ -86,7 +85,7 @@ def gradle_android_intermediates_folder(build_config):
         else:
             return s
 
-    productFlavor = uncapitalize(''.join(imap(capitalize, build_config.geckoview.variant.productFlavors)))
+    productFlavor = uncapitalize(''.join(capitalize(f) for f in build_config.geckoview.variant.productFlavors))
     buildType = uncapitalize(build_config.geckoview.variant.buildType)
 
     return "gradle/build/mobile/android/geckoview/intermediates/javac/{}{}/compile{}{}JavaWithJavac/classes".format(
@@ -307,9 +306,7 @@ def gradle_android_dependencies():
     gradle_android_checkstyle_tasks,
     gradle_android_dependencies,
 )
-@imports(_from='itertools', _import='imap')
 @imports(_from='itertools', _import='chain')
-@imports(_from='itertools', _import='ifilterfalse')
 def gradle_android_dependencies_tasks(*tasks):
     '''Gradle tasks run by |mach android dependencies|.'''
     # The union, plus a bit more, of all of the Gradle tasks
@@ -317,7 +314,7 @@ def gradle_android_dependencies_tasks(*tasks):
     def withoutGeckoBinaries(task):
         return task.replace('withGeckoBinaries', 'withoutGeckoBinaries')
 
-    return list(imap(withoutGeckoBinaries, chain(*tasks)))
+    return list(withoutGeckoBinaries(t) for t in chain(*tasks))
 
 set_config('GRADLE_ANDROID_DEPENDENCIES_TASKS', gradle_android_dependencies_tasks)
 
