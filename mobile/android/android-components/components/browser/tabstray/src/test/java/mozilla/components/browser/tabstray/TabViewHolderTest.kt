@@ -28,16 +28,18 @@ class TabViewHolderTest {
     @Test
     fun `URL from session is assigned to view`() {
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val titleView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_title)
         val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
-        assertEquals("", urlView.text)
+        assertEquals("", titleView.text)
 
         val session = Tab("a", "https://www.mozilla.org")
 
         holder.bind(session, isSelected = false, observable = mock())
 
+        assertEquals("https://www.mozilla.org", titleView.text)
         assertEquals("https://www.mozilla.org", urlView.text)
     }
 
@@ -88,11 +90,13 @@ class TabViewHolderTest {
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Tab("a", "https://www.mozilla.org")
-        val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
+        val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_title)
+        val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
         holder.bind(session, isSelected = true, observable = registry)
 
         assertEquals(session.url, titleView.text)
+        assertEquals(session.url, urlView.text)
     }
 
     @Test
@@ -106,11 +110,13 @@ class TabViewHolderTest {
         val holder = TabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Tab("a", "https://www.mozilla.org", title = "Mozilla Firefox")
-        val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
+        val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_title)
+        val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
         holder.bind(session, isSelected = true, observable = registry)
 
         assertEquals("Mozilla Firefox", titleView.text)
+        assertEquals("https://www.mozilla.org", urlView.text)
     }
 
     @Test

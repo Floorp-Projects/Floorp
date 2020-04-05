@@ -54,10 +54,6 @@ permalink: /changelog/
   * Will expose a new `InputResult` enum through `getInputResult()` indicating how an EngineView handled user's MotionEvent.
   * See above changes to browser-engine-*.
 
-* **browser-tabstray**
-  * Will expose a new `layout` parameter which allows consumers to change the
-  tab tray layout.
-
 * **browser-toolbar**
   * `BrowserToolbarBottomBehavior` is now solely responsible to decide if the dynamic nav bar should animate or not.
   * See above changes to browser-engine-*, concept-engine.
@@ -74,6 +70,8 @@ permalink: /changelog/
 
 * **browser-tabstray**
  * Added ability to let consumers pass a custom layout of `TabViewHolder` in order to control layout inflation and view binding.
+ * Added an optional URL view to the `TabViewHolder` to display the URL.
+ * Will expose a new `layout` parameter which allows consumers to change the tabs tray layout.
 
 # 37.0.0
 
