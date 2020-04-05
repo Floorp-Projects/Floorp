@@ -375,11 +375,23 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
         if not distutils.sysconfig.get_python_lib():
             die('Could not determine python site packages directory')
 
-    return python
+    str_version = '.'.join(str(v) for v in version)
+
+    return namespace(
+        path=python,
+        version=version,
+        str_version=str_version,
+    )
 
 
-set_config('PYTHON', virtualenv_python2)
-add_old_configure_assignment('PYTHON', virtualenv_python2)
+@depends(virtualenv_python2)
+@checking('for Python 2', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
+def virtualenv_python2(venv):
+    return venv
+
+
+set_config('PYTHON', virtualenv_python2.path)
+add_old_configure_assignment('PYTHON', virtualenv_python2.path)
 
 
 # Inject mozconfig options
@@ -454,8 +466,6 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
 @depends('PYTHON3', check_build_environment, 'MOZILLABUILD')
-@checking('for Python 3',
-          callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='__builtin__', _import='Exception')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
@@ -546,10 +556,14 @@ def virtualenv_python3(env_python, build_env, mozillabuild):
     )
 
 
-set_config('PYTHON3', depends(virtualenv_python3)(lambda p: p.path))
-set_config(
-    'PYTHON3_VERSION',
-    depends(virtualenv_python3)(lambda p: p.str_version))
+@depends(virtualenv_python3)
+@checking('for Python 3', callback=lambda x: '%s (%s)' % (x.path, x.str_version))
+def virtualenv_python3(venv):
+    return venv
+
+
+set_config('PYTHON3', virtualenv_python3.path)
+set_config('PYTHON3_VERSION', virtualenv_python3.str_version)
 
 
 # Source checkout and version control integration.
