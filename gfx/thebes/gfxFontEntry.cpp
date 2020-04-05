@@ -18,6 +18,7 @@
 #include "gfxTypes.h"
 #include "gfxContext.h"
 #include "gfxFontConstants.h"
+#include "gfxGraphiteShaper.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"

@@ -25,7 +25,10 @@
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalError
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "SharedFontList-impl.h"
 #include "TextDrawTarget.h"
+
+#include <unicode/unorm2.h>
 
 #ifdef XP_WIN
 #  include "gfxWindowsPlatform.h"
