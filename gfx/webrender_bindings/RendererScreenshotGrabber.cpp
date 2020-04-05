@@ -6,6 +6,8 @@
 
 #include "RendererScreenshotGrabber.h"
 
+#include "RendererOGL.h"
+
 using mozilla::layers::ProfilerScreenshots;
 
 namespace mozilla {
@@ -76,9 +78,10 @@ void RendererScreenshotGrabber::ProcessQueue(Renderer* aRenderer) {
   for (const auto& item : mQueue) {
     mProfilerScreenshots->SubmitScreenshot(
         item.mWindowIdentifier, item.mWindowSize, item.mScreenshotSize,
-        item.mTimeStamp, [&item, aRenderer](DataSourceSurface* aTargetSurface) {
-          DataSourceSurface::ScopedMap map(aTargetSurface,
-                                           DataSourceSurface::WRITE);
+        item.mTimeStamp,
+        [&item, aRenderer](gfx::DataSourceSurface* aTargetSurface) {
+          gfx::DataSourceSurface::ScopedMap map(aTargetSurface,
+                                                gfx::DataSourceSurface::WRITE);
           int32_t destStride = map.GetStride();
 
           bool success = wr_renderer_map_and_recycle_screenshot(

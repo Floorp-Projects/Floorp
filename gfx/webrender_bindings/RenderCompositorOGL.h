@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_OGL_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_OGL_H
 
+#include "GLTypes.h"
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/TimeStamp.h"
 
@@ -93,7 +94,9 @@ class RenderCompositorOGL : public RenderCompositor {
   struct Surface {
     explicit Surface(wr::DeviceIntSize aTileSize, bool aIsOpaque)
         : mTileSize(aTileSize), mIsOpaque(aIsOpaque) {}
-    IntSize TileSize() { return IntSize(mTileSize.width, mTileSize.height); }
+    gfx::IntSize TileSize() {
+      return gfx::IntSize(mTileSize.width, mTileSize.height);
+    }
 
     wr::DeviceIntSize mTileSize;
     bool mIsOpaque;

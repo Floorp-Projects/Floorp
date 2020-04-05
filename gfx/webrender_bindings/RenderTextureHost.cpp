@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RenderTextureHost.h"
+
+#include "GLContext.h"
 #include "RenderThread.h"
 
 namespace mozilla {
