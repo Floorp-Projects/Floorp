@@ -97,7 +97,6 @@ nsresult HttpConnectionMgrParent::UpdateParam(nsParamName name,
 void HttpConnectionMgrParent::PrintDiagnostics() {
   // Do nothing here. PrintDiagnostics() will be triggered by pref change in
   // socket process.
-  return;
 }
 
 nsresult HttpConnectionMgrParent::UpdateCurrentTopLevelOuterContentWindowId(
