@@ -1059,10 +1059,10 @@ bool gfxPlatformFontList::FindAndAddFamilies(
         }
         mOtherNamesMissed->PutEntry(key);
       }
-      if (family) {
-        aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
-        return true;
-      }
+    }
+    if (family) {
+      aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
+      return true;
     }
     return false;
   }
