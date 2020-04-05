@@ -363,7 +363,7 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
         if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
             log.debug("python2: executing as %s, should be running as %s" % (
                 sys.executable, manager.python_path))
-            log.info('Reexecuting in the virtualenv')
+            log.info('Re-executing in the virtualenv')
             if env_python:
                 del os.environ['PYTHON']
             # One would prefer to use os.execl, but that's completely borked on
@@ -457,32 +457,15 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 @checking('for Python 3',
           callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='__builtin__', _import='Exception')
-@imports('os')
-@imports('sys')
-@imports('subprocess')
-@imports('distutils.sysconfig')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
-@imports(_from='mozbuild.virtualenv', _import='PY3')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
 def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
     if help:
         return
-
-    # NOTE: We cannot assume the Python we are calling this code with is the
-    # Python we want to set up a virtualenv for.
-    #
-    # We also cannot assume that the Python the caller is configuring meets our
-    # build requirements.
-    #
-    # Because of this the code is written to re-execute itself with the correct
-    # interpreter if required.
-
-    log.debug("python3: running with pid %r" % os.getpid())
-    log.debug("python3: sys.executable: %r" % sys.executable)
 
     # Verify that the Python version we executed this code with is the minimum
     # required version to handle all project code.
@@ -570,32 +553,6 @@ def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
         log.debug("python3: venv is up to date")
 
     python = normsep(manager.python_path)
-
-    # The currently running interpreter could be Python 2 or Python 3. We make the
-    # part of the code that re-executes everything with the virtualenv's Python
-    # conditional on running the same major version as the current interpreter. If we
-    # don't do this then the configure code for the Py 2 and Py 3 virtualenvs could
-    # activate each other from inside the other's virtualenv.  We can't guarantee
-    # how the virtualenvs would interact if that happens.
-    if PY3:
-        if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
-            log.debug("python3: executing as %s, should be running as %s" % (
-                sys.executable, manager.python_path))
-            log.info('Re-executing in the virtualenv')
-            if env_python:
-                del os.environ['PYTHON3']
-            # Homebrew on macOS will change Python's sys.executable to a custom
-            # value which messes with mach's virtualenv handling code. Override
-            # Homebrew's changes with the correct sys.executable value.
-            os.environ['PYTHONEXECUTABLE'] = python
-            # One would prefer to use os.execl, but that's completely borked on
-            # Windows.
-            sys.exit(subprocess.call([python] + sys.argv))
-
-        # We are now in the virtualenv
-        if not distutils.sysconfig.get_python_lib():
-            die('Could not determine python site packages directory')
-
     str_version = '.'.join(str(v) for v in version)
 
     return namespace(
