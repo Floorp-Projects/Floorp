@@ -101,9 +101,7 @@ class IpcResourceUpdateQueue {
     return *this;
   }
 
-  bool HasAnySubQueue() {
-    return false;
-  }
+  bool HasAnySubQueue() { return false; }
 
   bool HasSubQueue(wr::RenderRoot aRenderRoot) {
     return aRenderRoot == wr::RenderRoot::Default;

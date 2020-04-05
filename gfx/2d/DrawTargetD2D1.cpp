@@ -193,7 +193,8 @@ void DrawTargetD2D1::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
                                  const Rect& aSource,
                                  const DrawSurfaceOptions& aSurfOptions,
                                  const DrawOptions& aOptions) {
-  if (!PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(DeviceColor()))) {
+  if (!PrepareForDrawing(aOptions.mCompositionOp,
+                         ColorPattern(DeviceColor()))) {
     return;
   }
 
@@ -267,7 +268,8 @@ void DrawTargetD2D1::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
     return;
   }
 
-  if (!PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(DeviceColor()))) {
+  if (!PrepareForDrawing(aOptions.mCompositionOp,
+                         ColorPattern(DeviceColor()))) {
     return;
   }
 

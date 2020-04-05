@@ -127,7 +127,7 @@ ForkServerLauncher::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
   if (strcmp(aTopic, NS_XPCOM_STARTUP_CATEGORY) == 0) {
     nsCOMPtr<nsIObserverService> obsSvc =
-      mozilla::services::GetObserverService();
+        mozilla::services::GetObserverService();
     MOZ_ASSERT(obsSvc != nullptr);
     // preferences are not available until final-ui-startup
     obsSvc->AddObserver(this, "final-ui-startup", false);

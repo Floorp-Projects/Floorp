@@ -351,9 +351,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
       bool isolated, const nsACString& topWindowOrigin,
       const OriginAttributes& originAttributes, bool aHttp3Allowed) {
-    return mAltSvcCache->GetAltServiceMapping(
-        scheme, host, port, pb, isolated, topWindowOrigin, originAttributes,
-        aHttp3Allowed);
+    return mAltSvcCache->GetAltServiceMapping(scheme, host, port, pb, isolated,
+                                              topWindowOrigin, originAttributes,
+                                              aHttp3Allowed);
   }
 
   //

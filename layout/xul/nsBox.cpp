@@ -408,8 +408,8 @@ static nscoord GetScrollbarWidthNoTheme(nsIFrame* aBox) {
   }
 }
 
-bool nsIFrame::AddXULMinSize(nsIFrame* aBox,
-                             nsSize& aSize, bool& aWidthSet, bool& aHeightSet) {
+bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
+                             bool& aHeightSet) {
   aWidthSet = false;
   aHeightSet = false;
 
@@ -423,8 +423,8 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox,
     nsITheme* theme = pc->Theme();
     if (theme->ThemeSupportsWidget(pc, aBox, display->mAppearance)) {
       LayoutDeviceIntSize size;
-      theme->GetMinimumWidgetSize(pc, aBox,
-                                  display->mAppearance, &size, &canOverride);
+      theme->GetMinimumWidgetSize(pc, aBox, display->mAppearance, &size,
+                                  &canOverride);
       if (size.width) {
         aSize.width = pc->DevPixelsToAppUnits(size.width);
         aWidthSet = true;

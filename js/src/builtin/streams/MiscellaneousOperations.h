@@ -11,11 +11,11 @@
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jstypes.h"        // JS_PUBLIC_API
-#include "js/CallArgs.h"    // JS::CallArgs
-#include "js/RootingAPI.h"  // JS::{,Mutable}Handle
-#include "js/Value.h"       // JS::Value
-#include "vm/JSObject.h"    // JSObject
+#include "jstypes.h"           // JS_PUBLIC_API
+#include "js/CallArgs.h"       // JS::CallArgs
+#include "js/RootingAPI.h"     // JS::{,Mutable}Handle
+#include "js/Value.h"          // JS::Value
+#include "vm/JSObject.h"       // JSObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 
 struct JS_PUBLIC_API JSContext;

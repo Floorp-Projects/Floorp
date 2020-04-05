@@ -26,7 +26,8 @@ delimiters inside of a comment, hence comments cannot be nested.
 */
 
 std::string CommentsToSpaces(const std::string& src) {
-  constexpr auto flags = std::regex::ECMAScript | std::regex::nosubs | std::regex::optimize;
+  constexpr auto flags =
+      std::regex::ECMAScript | std::regex::nosubs | std::regex::optimize;
 
   static const auto RE_COMMENT_BEGIN = std::regex("/[*/]", flags);
   static const auto RE_LINE_COMMENT_END = std::regex(R"([^\\]\n)", flags);
@@ -36,7 +37,8 @@ std::string CommentsToSpaces(const std::string& src) {
   ret.reserve(src.size());
 
   // Replace all comments with block comments with the right number of newlines.
-  // Line positions may be off, but line numbers will be accurate, which is more important.
+  // Line positions may be off, but line numbers will be accurate, which is more
+  // important.
 
   auto itr = src.begin();
   const auto end = src.end();

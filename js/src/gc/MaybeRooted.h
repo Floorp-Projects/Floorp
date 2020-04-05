@@ -17,7 +17,7 @@
 
 #include <type_traits>  // std::true_type
 
-#include "gc/Allocator.h"   // js::AllowGC, js::CanGC, js::NoGC
+#include "gc/Allocator.h"            // js::AllowGC, js::CanGC, js::NoGC
 #include "js/ComparisonOperators.h"  // JS::detail::DefineComparisonOps
 #include "js/RootingAPI.h"  // js::{Rooted,MutableHandle}Base, JS::SafelyInitialized, DECLARE_POINTER_{CONSTREF,ASSIGN}_OPS, DECLARE_NONPOINTER_{,MUTABLE_}ACCESSOR_METHODS, JS::Rooted, JS::{,Mutable}Handle
 

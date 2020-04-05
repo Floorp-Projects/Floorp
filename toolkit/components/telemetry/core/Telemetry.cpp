@@ -1166,26 +1166,23 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
 // C functions with the "fog_" prefix.
 // See toolkit/components/glean/*.
 extern "C" {
-nsresult fog_init(
-    const nsACString* dataPath,
-    const nsACString* buildId,
-    const nsACString* appDisplayVersion,
-    const char* channel,
-    const nsACString* osVersion,
-    const nsACString* architecture
-);
+nsresult fog_init(const nsACString* dataPath, const nsACString* buildId,
+                  const nsACString* appDisplayVersion, const char* channel,
+                  const nsACString* osVersion, const nsACString* architecture);
 }
 
 static void internal_initGlean() {
   nsAutoCString dataPath;
-  nsresult rv = Preferences::GetCString("telemetry.fog.temporary_and_just_for_testing.data_path", dataPath);
+  nsresult rv = Preferences::GetCString(
+      "telemetry.fog.temporary_and_just_for_testing.data_path", dataPath);
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't read data path preference. FOG will not be initialized");
     return;
   }
 
-  nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+      do_GetService("@mozilla.org/xre/app-info;1");
   if (!appInfo) {
     NS_WARNING("Can't fetch app info. FOG will not be initialized.");
     return;
@@ -1205,36 +1202,32 @@ static void internal_initGlean() {
     return;
   }
 
-  nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
+  nsCOMPtr<nsIPropertyBag2> infoService =
+      do_GetService("@mozilla.org/system-info;1");
   if (!appInfo) {
     NS_WARNING("Can't fetch info service. FOG will not be initialized.");
     return;
   }
 
   nsAutoCString osVersion;
-  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("version"), osVersion);
+  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("version"),
+                                          osVersion);
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't get OS version. FOG will not be initialized.");
     return;
   }
 
   nsAutoCString architecture;
-  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("arch"), architecture);
+  rv = infoService->GetPropertyAsACString(NS_LITERAL_STRING("arch"),
+                                          architecture);
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't get architecture. FOG will not be initialized.");
     return;
   }
 
-  Unused << NS_WARN_IF(NS_FAILED(
-        fog_init(
-          &dataPath,
-          &buildID,
-          &appVersion,
-          MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL),
-          &osVersion,
-          &architecture
-        )
-  ));
+  Unused << NS_WARN_IF(NS_FAILED(fog_init(&dataPath, &buildID, &appVersion,
+                                          MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL),
+                                          &osVersion, &architecture)));
 }
 #endif  // defined(MOZ_GLEAN)
 

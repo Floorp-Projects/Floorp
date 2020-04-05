@@ -272,7 +272,8 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
   int ro_file = -1;
 #ifdef ANDROID
   if (mozilla::android::ashmem_setProt(mapped_file_, PROT_READ) != 0) {
-    CHROMIUM_LOG(WARNING) << "failed to set ashmem read-only: " << strerror(errno);
+    CHROMIUM_LOG(WARNING) << "failed to set ashmem read-only: "
+                          << strerror(errno);
     return false;
   }
   ro_file = mapped_file_;

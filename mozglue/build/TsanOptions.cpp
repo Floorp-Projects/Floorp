@@ -30,6 +30,7 @@
 // symbolize one of the two traces and this can cause suppressed races to
 // show up intermittently.
 //
+// clang-format off
 extern "C" const char* __tsan_default_suppressions() {
   return "# Add your suppressions below\n"
 
@@ -315,4 +316,5 @@ extern "C" const char* __tsan_default_suppressions() {
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
+// clang-format on
 #endif  // _MSC_VER

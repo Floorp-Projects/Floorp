@@ -141,7 +141,7 @@ class SharedMemory {
   // only if the memory was unmapped, but this is an implementation
   // detail and shouldn't be relied on; for that use case Freeze()
   // should be used instead.)
-  MOZ_MUST_USE bool ReadOnlyCopy(SharedMemory *ro_out);
+  MOZ_MUST_USE bool ReadOnlyCopy(SharedMemory* ro_out);
 
   // Closes the open shared memory segment.
   // It is safe to call Close repeatedly.

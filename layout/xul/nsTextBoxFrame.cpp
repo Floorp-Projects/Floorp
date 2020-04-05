@@ -487,7 +487,8 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
 
   CalculateUnderline(refDrawTarget, *fontMet);
 
-  DeviceColor color = ToDeviceColor(aOverrideColor ? *aOverrideColor : StyleText()->mColor.ToColor());
+  DeviceColor color = ToDeviceColor(
+      aOverrideColor ? *aOverrideColor : StyleText()->mColor.ToColor());
   ColorPattern colorPattern(color);
   aRenderingContext.SetDeviceColor(color);
 

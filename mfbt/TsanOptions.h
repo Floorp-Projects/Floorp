@@ -39,48 +39,47 @@ extern "C" const char* __tsan_default_options() {
 // These are default suppressions for external libraries that probably
 // every application would want to include if it potentially loads external
 // libraries like GTK/X and hence their dependencies.
-#define MOZ_TSAN_DEFAULT_EXTLIB_SUPPRESSIONS     \
-        "called_from_lib:libatk-1\n"             \
-        "called_from_lib:libcairo.so\n"          \
-        "called_from_lib:libcairo-gobject\n"     \
-        "called_from_lib:libgdk-3\n"             \
-        "called_from_lib:libgdk_pixbuf\n"        \
-        "called_from_lib:libgdk-x11\n"           \
-        "called_from_lib:libgio-2\n"             \
-        "called_from_lib:libglib-1\n"            \
-        "called_from_lib:libglib-2\n"            \
-        "called_from_lib:libgobject\n"           \
-        "called_from_lib:libgtk-3\n"             \
-        "called_from_lib:libgtk-x11\n"           \
-        "called_from_lib:libgvfscommon\n"        \
-        "called_from_lib:libgvfsdbus\n"          \
-        "called_from_lib:libibus-1\n"            \
-        "called_from_lib:libogg.so\n"            \
-        "called_from_lib:libpangocairo\n"        \
-        "called_from_lib:libpangoft2\n"          \
-        "called_from_lib:pango-basic-fc\n"       \
-        "called_from_lib:libpixman-1\n"          \
-        "called_from_lib:libpulse.so\n"          \
-        "called_from_lib:libpulsecommon\n"       \
-        "called_from_lib:libsecret-1\n"          \
-        "called_from_lib:libunity-gtk3-parser\n" \
-        "called_from_lib:libvorbis.so\n"         \
-        "called_from_lib:libvorbisfile\n"        \
-        "called_from_lib:libX11.so\n"            \
-        "called_from_lib:libX11-xcb\n"           \
-        "called_from_lib:libXau\n"               \
-        "called_from_lib:libxcb.so\n"            \
-        "called_from_lib:libXcomposite\n"        \
-        "called_from_lib:libXcursor\n"           \
-        "called_from_lib:libXdamage\n"           \
-        "called_from_lib:libXdmcp\n"             \
-        "called_from_lib:libXext\n"              \
-        "called_from_lib:libXfixes\n"            \
-        "called_from_lib:libXi.so\n"             \
-        "called_from_lib:libXrandr\n"            \
-        "called_from_lib:libXrender\n"           \
-        "called_from_lib:libXss\n"
-
+#  define MOZ_TSAN_DEFAULT_EXTLIB_SUPPRESSIONS \
+    "called_from_lib:libatk-1\n"               \
+    "called_from_lib:libcairo.so\n"            \
+    "called_from_lib:libcairo-gobject\n"       \
+    "called_from_lib:libgdk-3\n"               \
+    "called_from_lib:libgdk_pixbuf\n"          \
+    "called_from_lib:libgdk-x11\n"             \
+    "called_from_lib:libgio-2\n"               \
+    "called_from_lib:libglib-1\n"              \
+    "called_from_lib:libglib-2\n"              \
+    "called_from_lib:libgobject\n"             \
+    "called_from_lib:libgtk-3\n"               \
+    "called_from_lib:libgtk-x11\n"             \
+    "called_from_lib:libgvfscommon\n"          \
+    "called_from_lib:libgvfsdbus\n"            \
+    "called_from_lib:libibus-1\n"              \
+    "called_from_lib:libogg.so\n"              \
+    "called_from_lib:libpangocairo\n"          \
+    "called_from_lib:libpangoft2\n"            \
+    "called_from_lib:pango-basic-fc\n"         \
+    "called_from_lib:libpixman-1\n"            \
+    "called_from_lib:libpulse.so\n"            \
+    "called_from_lib:libpulsecommon\n"         \
+    "called_from_lib:libsecret-1\n"            \
+    "called_from_lib:libunity-gtk3-parser\n"   \
+    "called_from_lib:libvorbis.so\n"           \
+    "called_from_lib:libvorbisfile\n"          \
+    "called_from_lib:libX11.so\n"              \
+    "called_from_lib:libX11-xcb\n"             \
+    "called_from_lib:libXau\n"                 \
+    "called_from_lib:libxcb.so\n"              \
+    "called_from_lib:libXcomposite\n"          \
+    "called_from_lib:libXcursor\n"             \
+    "called_from_lib:libXdamage\n"             \
+    "called_from_lib:libXdmcp\n"               \
+    "called_from_lib:libXext\n"                \
+    "called_from_lib:libXfixes\n"              \
+    "called_from_lib:libXi.so\n"               \
+    "called_from_lib:libXrandr\n"              \
+    "called_from_lib:libXrender\n"             \
+    "called_from_lib:libXss\n"
 
 #endif  // _MSC_VER
 

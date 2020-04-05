@@ -755,10 +755,8 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
       // of crashing.
 #if defined(DEBUG) && !defined(ANDROID)
       if (!getenv("MOZ_IGNORE_NSS_SHUTDOWN_LEAKS") &&
-          !getenv("XPCOM_MEM_BLOAT_LOG") &&
-          !getenv("XPCOM_MEM_LEAK_LOG") &&
-          !getenv("XPCOM_MEM_REFCNT_LOG") &&
-          !getenv("XPCOM_MEM_COMPTR_LOG")) {
+          !getenv("XPCOM_MEM_BLOAT_LOG") && !getenv("XPCOM_MEM_LEAK_LOG") &&
+          !getenv("XPCOM_MEM_REFCNT_LOG") && !getenv("XPCOM_MEM_COMPTR_LOG")) {
         MOZ_CRASH("NSS_Shutdown failed");
       } else {
 #  ifdef NS_BUILD_REFCNT_LOGGING

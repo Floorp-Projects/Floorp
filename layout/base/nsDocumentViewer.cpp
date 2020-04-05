@@ -2910,9 +2910,7 @@ void nsDocumentViewer::EmulateMediumInternal(nsAtom* aMedia) {
   auto childFn = [&](nsDocumentViewer* aChild) {
     aChild->EmulateMediumInternal(aMedia);
   };
-  auto presContextFn = [&](nsPresContext* aPc) {
-    aPc->EmulateMedium(aMedia);
-  };
+  auto presContextFn = [&](nsPresContext* aPc) { aPc->EmulateMedium(aMedia); };
   PropagateToPresContextsHelper(childFn, presContextFn);
 }
 

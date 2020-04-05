@@ -310,8 +310,8 @@ class ConicGradientPattern : public Pattern {
 
   PatternType GetType() const override { return PatternType::CONIC_GRADIENT; }
 
-  Point mCenter;  //!< Center of the gradient
-  Float mAngle;   //!< Start angle of gradient
+  Point mCenter;       //!< Center of the gradient
+  Float mAngle;        //!< Start angle of gradient
   Float mStartOffset;  // Offset of first stop
   Float mEndOffset;    // Offset of last stop
   RefPtr<GradientStops>

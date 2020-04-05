@@ -530,10 +530,9 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
       const bool& aCalledFromJS, const bool& aWidthSpecified,
-      nsIURI* aURIToLoad, const nsCString& aFeatures,
-      const float& aFullZoom, const nsString& aName,
-      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-      nsIReferrerInfo* aReferrerInfo);
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      const nsString& aName, nsIPrincipal* aTriggeringPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo);
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,

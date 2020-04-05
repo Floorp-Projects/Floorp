@@ -117,9 +117,7 @@ class nsNodeInfoManager final {
 
   void Free(void* aPtr) { free(aPtr); }
 
-  bool HasAllocated() {
-    return mHasAllocated;
-  }
+  bool HasAllocated() { return mHasAllocated; }
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 

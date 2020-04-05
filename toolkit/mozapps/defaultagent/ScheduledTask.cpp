@@ -180,7 +180,7 @@ HRESULT UpdateTask(const wchar_t* uniqueToken) {
   RefPtr<ITaskService> scheduler;
   HRESULT hr = S_OK;
   ENSURE(CoCreateInstance(CLSID_TaskScheduler, nullptr, CLSCTX_INPROC_SERVER,
-    IID_ITaskService, getter_AddRefs(scheduler)));
+                          IID_ITaskService, getter_AddRefs(scheduler)));
 
   ENSURE(scheduler->Connect(VARIANT{}, VARIANT{}, VARIANT{}, VARIANT{}));
 

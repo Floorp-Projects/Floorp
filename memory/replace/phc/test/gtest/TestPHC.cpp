@@ -95,7 +95,7 @@ TEST(PHC, TestPHCAllocations)
   ASSERT_EQ(moz_malloc_usable_size(p), (a2));                   \
   free(p);                                                      \
   p = (uint8_t*)moz_xmemalign((a1), 8);                         \
-  ASSERT_EQ(moz_malloc_usable_size(p), (a2));                    \
+  ASSERT_EQ(moz_malloc_usable_size(p), (a2));                   \
   free(p);
 
   // On Win64 the smallest possible allocation is 16 bytes. On other platforms

@@ -7,8 +7,7 @@
 #ifndef __DEFAULT_BROWSER_AGENT_COMMON_H__
 #define __DEFAULT_BROWSER_AGENT_COMMON_H__
 
-#define AGENT_REGKEY_NAME      \
-  L"SOFTWARE\\" MOZ_APP_VENDOR \
-  "\\" MOZ_APP_BASENAME "\\Default Browser Agent"
+#define AGENT_REGKEY_NAME \
+  L"SOFTWARE\\" MOZ_APP_VENDOR "\\" MOZ_APP_BASENAME "\\Default Browser Agent"
 
 #endif  // __DEFAULT_BROWSER_AGENT_COMMON_H__

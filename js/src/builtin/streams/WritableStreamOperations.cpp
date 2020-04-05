@@ -25,9 +25,9 @@
 #include "js/Promise.h"     // JS::{Reject,Resolve}Promise
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::Value, JS::ObjecValue, JS::UndefinedHandleValue
-#include "vm/Compartment.h"    // JS::Compartment
-#include "vm/JSContext.h"      // JSContext
-#include "vm/List.h"           // js::ListObject
+#include "vm/Compartment.h"  // JS::Compartment
+#include "vm/JSContext.h"    // JSContext
+#include "vm/List.h"         // js::ListObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 
 #include "builtin/Promise-inl.h"  // js::SetSettledPromiseIsHandled
