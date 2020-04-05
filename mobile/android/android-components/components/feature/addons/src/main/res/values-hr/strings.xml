@@ -76,6 +76,8 @@
     <string name="mozac_feature_addons_recommended_section">Preporučeno</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Još nije podržano</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">Još nije dostupno</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Deaktivirano</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -126,6 +128,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Dodaj ih u %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Tehnologija Firefoxovih dodataka se modernizira. Ovi dodaci koriste okvire koji nisu kompatibilni s Firefoxom 75 i novijim.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">Trenutno razvijamo podršku za početni izbor preporučenih proširenja.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Preuzimanje i provjeravanje dodatka …</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
