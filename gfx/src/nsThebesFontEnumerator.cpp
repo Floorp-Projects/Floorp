@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsThebesFontEnumerator.h"
-#include <stdint.h>               // for uint32_t
-#include "gfxPlatform.h"          // for gfxPlatform
-#include "mozilla/Assertions.h"   // for MOZ_ASSERT_HELPER2
+#include <stdint.h>              // for uint32_t
+#include "gfxPlatform.h"         // for gfxPlatform
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Promise.h"  // for mozilla::dom::Promise
 #include "nsCOMPtr.h"             // for nsCOMPtr
 #include "nsDebug.h"              // for NS_ENSURE_ARG_POINTER
@@ -17,6 +18,10 @@
 #include "nsString.h"  // for nsAutoCString, nsAutoString, etc
 #include "nsTArray.h"  // for nsTArray, nsTArray_Impl, etc
 #include "nscore.h"    // for char16_t, NS_IMETHODIMP
+
+using mozilla::MakeUnique;
+using mozilla::Runnable;
+using mozilla::UniquePtr;
 
 NS_IMPL_ISUPPORTS(nsThebesFontEnumerator, nsIFontEnumerator)
 
@@ -143,8 +148,9 @@ nsThebesFontEnumerator::EnumerateFontsAsync(const char* aLangGroup,
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
   NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-  ErrorResult errv;
-  RefPtr<mozilla::dom::Promise> promise = dom::Promise::Create(global, errv);
+  mozilla::ErrorResult errv;
+  RefPtr<mozilla::dom::Promise> promise =
+      mozilla::dom::Promise::Create(global, errv);
   if (errv.Failed()) {
     return errv.StealNSResult();
   }
