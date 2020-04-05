@@ -90,7 +90,7 @@ def windows_binary_type(path):
     """
     GetBinaryTypeW = ctypes.windll.kernel32.GetBinaryTypeW
     GetBinaryTypeW.argtypes = [wintypes.LPWSTR,
-                               wintypes.POINTER(wintypes.DWORD)]
+                               ctypes.POINTER(wintypes.DWORD)]
     GetBinaryTypeW.restype = wintypes.BOOL
 
     bin_type = wintypes.DWORD()
