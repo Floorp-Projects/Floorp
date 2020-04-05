@@ -1189,7 +1189,8 @@ nsresult ContentChild::ProvideWindowCommon(
       return rv;
     }
 
-    SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS, aWidthSpecified, aURI, features, fullZoom,
+    SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS,
+                     aWidthSpecified, aURI, features, fullZoom,
                      Principal(triggeringPrincipal), csp, referrerInfo,
                      std::move(resolve), std::move(reject));
   }

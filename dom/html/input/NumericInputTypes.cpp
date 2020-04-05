@@ -138,8 +138,8 @@ bool NumberInputType::HasBadInput() const {
   return !value.IsEmpty() && mInputElement->GetValueAsDecimal().isNaN();
 }
 
-bool NumberInputType::ConvertNumberToString(
-    Decimal aValue, nsAString& aResultString) const {
+bool NumberInputType::ConvertNumberToString(Decimal aValue,
+                                            nsAString& aResultString) const {
   MOZ_ASSERT(aValue.isFinite(), "aValue must be a valid non-Infinite number.");
 
   aResultString.Truncate();

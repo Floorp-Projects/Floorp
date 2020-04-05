@@ -177,6 +177,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool NoClientCertAuth() const override;
 
   bool CanAcceptWebsocket() override;
+
  private:
   // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
   enum TCPKeepaliveConfig {

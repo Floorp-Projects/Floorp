@@ -18,7 +18,7 @@
 #include "mozilla/Unused.h"
 #include "Units.h"
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/jni/Utils.h"
+#  include "mozilla/jni/Utils.h"
 #endif
 
 static mozilla::LazyLogModule sApzRemoteLog("apz.cc.remote");

@@ -127,7 +127,8 @@ class EffectSolidColorTrivialBench : public BenchTest {
     float tmp;
     float red = modff(i * 0.03f, &tmp);
     EffectChain effects;
-    return MakeAndAddRef<EffectSolidColor>(gfx::DeviceColor(red, 0.4f, 0.4f, 1.0f));
+    return MakeAndAddRef<EffectSolidColor>(
+        gfx::DeviceColor(red, 0.4f, 0.4f, 1.0f));
   }
 };
 
@@ -149,7 +150,8 @@ class EffectSolidColorStressBench : public BenchTest {
     float tmp;
     float red = modff(i * 0.03f, &tmp);
     EffectChain effects;
-    return MakeAndAddRef<EffectSolidColor>(gfx::DeviceColor(red, 0.4f, 0.4f, 1.0f));
+    return MakeAndAddRef<EffectSolidColor>(
+        gfx::DeviceColor(red, 0.4f, 0.4f, 1.0f));
   }
 };
 

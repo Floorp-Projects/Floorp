@@ -3928,9 +3928,9 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
             cachedStyles[i]->EqualForCachedAnonymousContentStyle(*cs),
             "cached anonymous content styles should be identical to those we "
             "would compute normally");
-#ifdef ANDROID
+#  ifdef ANDROID
         MOZ_ASSERT(cs->StyleUI()->mPointerEvents == StylePointerEvents::None);
-#endif
+#  endif
 #endif
         Servo_SetExplicitStyle(elements[i], cachedStyles[i]);
       }

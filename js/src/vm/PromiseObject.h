@@ -12,9 +12,9 @@
 
 #include <stdint.h>  // int32_t, uint64_t
 
-#include "js/Class.h"         // JSClass
-#include "js/Promise.h"       // JS::PromiseState
-#include "js/RootingAPI.h"    // JS::{,Mutable}Handle
+#include "js/Class.h"       // JSClass
+#include "js/Promise.h"     // JS::PromiseState
+#include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"  // JS::Value, JS::Int32Value, JS::UndefinedHandleValue
 #include "vm/NativeObject.h"  // js::NativeObject
 

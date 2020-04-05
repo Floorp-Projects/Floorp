@@ -233,9 +233,8 @@ nsresult Http3Session::ProcessSingleTransactionRead(Http3Stream* stream,
   *countWritten += countWrittenSingle;
 
   if (ASpdySession::SoftStreamError(rv)) {
-    CloseStream(stream, (rv == NS_BINDING_RETARGETED)
-                            ? NS_BINDING_RETARGETED
-                            : NS_OK);
+    CloseStream(stream,
+                (rv == NS_BINDING_RETARGETED) ? NS_BINDING_RETARGETED : NS_OK);
     return NS_OK;
   }
 
@@ -250,8 +249,10 @@ nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id,
                                               uint32_t* countWritten) {
   RefPtr<Http3Stream> stream = mStreamIdHash.Get(stream_id);
   if (!stream) {
-    LOG(("Http3Session::ProcessTransactionRead - stream not found stream_id=0x%"
-         PRIx64 " [this=%p].", stream_id, this));
+    LOG(
+        ("Http3Session::ProcessTransactionRead - stream not found "
+         "stream_id=0x%" PRIx64 " [this=%p].",
+         stream_id, this));
     return NS_OK;
   }
 
@@ -261,7 +262,6 @@ nsresult Http3Session::ProcessTransactionRead(uint64_t stream_id,
 nsresult Http3Session::ProcessTransactionRead(Http3Stream* stream,
                                               uint32_t count,
                                               uint32_t* countWritten) {
-
   nsresult rv = ProcessSingleTransactionRead(stream, count, countWritten);
 
   if (NS_FAILED(rv)) {
@@ -280,7 +280,8 @@ nsresult Http3Session::ProcessTransactionRead(Http3Stream* stream,
 
   if (stream->Done()) {
     LOG3(("Http3Session::ProcessTransactionRead session=%p stream=%p 0x%" PRIx64
-          " cleanup stream.\n", this, stream, stream->StreamId()));
+          " cleanup stream.\n",
+          this, stream, stream->StreamId()));
     CloseStream(stream, NS_OK);
   }
 
@@ -311,8 +312,8 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         nsresult rv = ProcessTransactionRead(id, count, &read);
 
         if (NS_FAILED(rv)) {
-          LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32,
-               this, static_cast<uint32_t>(rv)));
+          LOG(("Http3Session::ProcessEvents [this=%p] rv=%" PRIx32, this,
+               static_cast<uint32_t>(rv)));
           return rv;
         }
 
@@ -726,9 +727,8 @@ nsresult Http3Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
   // Step 1)
   while (
       (mState ==
-       CONNECTED) && // Do not send transaction data untill we are connected.
+       CONNECTED) &&  // Do not send transaction data untill we are connected.
       (stream = static_cast<Http3Stream*>(mReadyForWrite.PopFront()))) {
-
     LOG(
         ("Http3Session::ReadSegmentsAgain call ReadSegments from stream=%p "
          "[this=%p]",
@@ -808,8 +808,8 @@ nsresult Http3Session::ProcessSlowConsumers() {
   mSlowConsumersReadyForRead.RemoveElementAt(0);
 
   uint32_t countRead = 0;
-  nsresult rv = ProcessTransactionRead(slowConsumer,
-      nsIOService::gDefaultSegmentSize, &countRead);
+  nsresult rv = ProcessTransactionRead(
+      slowConsumer, nsIOService::gDefaultSegmentSize, &countRead);
 
   if (NS_SUCCEEDED(rv) && (countRead > 0) && !slowConsumer->Done()) {
     // There have been buffered bytes successfully fed into the

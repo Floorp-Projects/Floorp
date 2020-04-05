@@ -321,11 +321,13 @@ static void SubtractFromExposedRegion(nsRegion* aExposedRegion,
   }
 }
 
-static nsIFrame* GetClosest(
-    nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
-    const nsRect& aTargetRect, const EventRadiusPrefs* aPrefs,
-    nsIFrame* aRestrictToDescendants, nsIContent* aClickableAncestor,
-    nsTArray<nsIFrame*>& aCandidates) {
+static nsIFrame* GetClosest(nsIFrame* aRoot,
+                            const nsPoint& aPointRelativeToRootFrame,
+                            const nsRect& aTargetRect,
+                            const EventRadiusPrefs* aPrefs,
+                            nsIFrame* aRestrictToDescendants,
+                            nsIContent* aClickableAncestor,
+                            nsTArray<nsIFrame*>& aCandidates) {
   nsIFrame* bestTarget = nullptr;
   // Lower is better; distance is in appunits
   float bestDistance = 1e6f;
@@ -460,9 +462,9 @@ nsIFrame* FindFrameTargetedByInputEvent(
     return target;
   }
 
-  nsIFrame* closestClickable = GetClosest(
-      aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
-      restrictToDescendants, clickableAncestor, candidates);
+  nsIFrame* closestClickable =
+      GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
+                 restrictToDescendants, clickableAncestor, candidates);
   if (closestClickable) {
     target = closestClickable;
   }

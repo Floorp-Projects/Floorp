@@ -890,7 +890,8 @@ gfxUtils::CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
 const uint32_t gfxUtils::sNumFrameColors = 8;
 
 /* static */
-const gfx::DeviceColor& gfxUtils::GetColorForFrameNumber(uint64_t aFrameNumber) {
+const gfx::DeviceColor& gfxUtils::GetColorForFrameNumber(
+    uint64_t aFrameNumber) {
   static bool initialized = false;
   static gfx::DeviceColor colors[sNumFrameColors];
 

@@ -4373,20 +4373,24 @@ void SourceListener::SetEnabledFor(MediaTrack* aTrack, bool aEnable) {
             state.mDevice->GetRawGroupId(inputDeviceGroupId);
 
             return MediaManager::PostTask<DeviceOperationPromise>(
-                __func__, [self, device = state.mDevice, aEnable, inputDeviceGroupId](
-                              MozPromiseHolder<DeviceOperationPromise>& h) {
+                __func__,
+                [self, device = state.mDevice, aEnable, inputDeviceGroupId](
+                    MozPromiseHolder<DeviceOperationPromise>& h) {
                   // Only take this branch when muting, to avoid muting, in case
                   // the default audio output device has changed and we need to
                   // really call `Start` on the source. The AudioInput source
                   // start/stop are idempotent, so this works.
-                  if (device->mKind == dom::MediaDeviceKind::Audioinput && !aEnable) {
-                    // Don't turn off the microphone of a device that is on the same
-                    // physical device as the output.
-                    CubebDeviceEnumerator* enumerator = CubebDeviceEnumerator::GetInstance();
+                  if (device->mKind == dom::MediaDeviceKind::Audioinput &&
+                      !aEnable) {
+                    // Don't turn off the microphone of a device that is on the
+                    // same physical device as the output.
+                    CubebDeviceEnumerator* enumerator =
+                        CubebDeviceEnumerator::GetInstance();
                     // Get the current graph's device info. This is always the
                     // default audio output device for now.
                     RefPtr<AudioDeviceInfo> outputDevice =
-                      enumerator->DefaultDevice(CubebDeviceEnumerator::Side::OUTPUT);
+                        enumerator->DefaultDevice(
+                            CubebDeviceEnumerator::Side::OUTPUT);
                     if (outputDevice->GroupID().Equals(inputDeviceGroupId)) {
                       LOG("Device group id match when %s, "
                           "not turning the input device off (%s)",

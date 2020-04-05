@@ -1303,7 +1303,7 @@ static const nsRoleMapEntry sLandmarkRoleMap = {
 
 nsRoleMapEntry aria::gEmptyRoleMap = {
     nsGkAtoms::_empty, roles::TEXT_CONTAINER, kUseMapRole,     eNoValue,
-    eNoAction,         eNoLiveAttr,    kGenericAccType, kNoReqStates};
+    eNoAction,         eNoLiveAttr,           kGenericAccType, kNoReqStates};
 
 /**
  * Universal (Global) states:

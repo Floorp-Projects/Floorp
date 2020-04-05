@@ -18,7 +18,7 @@
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DeclarationBlock.h"
-#include "mozilla/Maybe.h"       // For Maybe
+#include "mozilla/Maybe.h"  // For Maybe
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsAnimationManager.h"  // For CSSAnimation
 #include "nsComputedDOMStyle.h"

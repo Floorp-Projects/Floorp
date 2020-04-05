@@ -6985,10 +6985,10 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // backplates behind text. When backplating we consider consecutive
   // runs of text as a whole, which requires we iterate through all lines
   // to find our backplate size.
-  nsLineBox* cursor = (hasDescendantPlaceHolders || textOverflow.isSome() ||
-                       backplateColor)
-                          ? nullptr
-                          : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
+  nsLineBox* cursor =
+      (hasDescendantPlaceHolders || textOverflow.isSome() || backplateColor)
+          ? nullptr
+          : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
   LineIterator line_end = LinesEnd();
 
   TextOverflow* textOverflowPtr = textOverflow.ptrOr(nullptr);

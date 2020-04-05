@@ -10,6 +10,7 @@
 
 // See also mozglue/build/TsanOptions.cpp before modifying this
 extern "C" const char* __tsan_default_suppressions() {
+  // clang-format off
   return "# Add your suppressions below\n"
 
          // External uninstrumented libraries
@@ -21,5 +22,6 @@ extern "C" const char* __tsan_default_suppressions() {
 
       // End of suppressions.
       ;  // Please keep this semicolon.
+  // clang-format on
 }
 #endif  // _MSC_VER

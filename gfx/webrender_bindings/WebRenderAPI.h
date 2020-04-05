@@ -236,8 +236,7 @@ class WebRenderAPI final {
   wr::WindowId GetId() const { return mId; }
 
   /// Do a non-blocking hit-testing query on a shared hit-testing information.
-  bool HitTest(const wr::WorldPoint& aPoint,
-               wr::WrPipelineId& aOutPipelineId,
+  bool HitTest(const wr::WorldPoint& aPoint, wr::WrPipelineId& aOutPipelineId,
                layers::ScrollableLayerGuid::ViewID& aOutScrollId,
                gfx::CompositorHitTestInfo& aOutHitInfo, SideBits& aOutSideBits);
 
@@ -429,9 +428,7 @@ class DisplayListBuilder final {
                                        RenderRoot aRenderRoot);
   DisplayListBuilder& SubBuilder(RenderRoot aRenderRoot);
 
-  bool GetSendSubBuilderDisplayList(RenderRoot aRenderRoot) {
-    return true;
-  }
+  bool GetSendSubBuilderDisplayList(RenderRoot aRenderRoot) { return true; }
 
   Maybe<wr::WrSpatialId> PushStackingContext(
       const StackingContextParams& aParams, const wr::LayoutRect& aBounds,
