@@ -7,6 +7,7 @@
 #ifndef GTEST_MOCKWIDGET_H
 #define GTEST_MOCKWIDGET_H
 
+#include "mozilla/gfx/Point.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
 #include "nsBaseWidget.h"
 #include "GLContext.h"
@@ -15,6 +16,8 @@
 using mozilla::gl::CreateContextFlags;
 using mozilla::gl::GLContext;
 using mozilla::gl::GLContextProvider;
+
+using mozilla::gfx::IntSize;
 
 class MockWidget : public nsBaseWidget {
  public:
