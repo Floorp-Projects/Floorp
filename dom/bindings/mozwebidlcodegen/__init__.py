@@ -220,7 +220,7 @@ class WebIDLCodegenManager(LoggingMixin):
         self._state = WebIDLCodegenManagerState()
 
         if os.path.exists(state_path):
-            with open(state_path, 'rb') as fh:
+            with open(state_path, 'r') as fh:
                 try:
                     self._state = WebIDLCodegenManagerState(fh=fh)
                 except Exception as e:
@@ -579,7 +579,7 @@ class WebIDLCodegenManager(LoggingMixin):
         return False, current_hashes
 
     def _save_state(self):
-        with open(self._state_path, 'wb') as fh:
+        with open(self._state_path, 'w') as fh:
             self._state.dump(fh)
 
     def _maybe_write_codegen(self, obj, declare_path, define_path, result=None):
@@ -611,7 +611,7 @@ def create_build_system_manager(topsrcdir, topobjdir, dist_dir):
     obj_dir = os.path.join(topobjdir, 'dom', 'bindings')
     webidl_root = os.path.join(topsrcdir, 'dom', 'webidl')
 
-    with open(os.path.join(obj_dir, 'file-lists.json'), 'rb') as fh:
+    with open(os.path.join(obj_dir, 'file-lists.json'), 'r') as fh:
         files = json.load(fh)
 
     inputs = (files['webidls'], files['exported_stems'],
