@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RendererOGL.h"
+
+#include "base/task.h"
 #include "GLContext.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -107,8 +109,7 @@ static void DoWebRenderDisableNativeCompositor(
 RenderedFrameId RendererOGL::UpdateAndRender(
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
-    const Maybe<Range<uint8_t>>& aReadbackBuffer,
-    RendererStats* aOutStats) {
+    const Maybe<Range<uint8_t>>& aReadbackBuffer, RendererStats* aOutStats) {
   mozilla::widget::WidgetRenderingContext widgetContext;
 
 #if defined(XP_MACOSX)
@@ -151,8 +152,8 @@ RenderedFrameId RendererOGL::UpdateAndRender(
   }
 
   nsTArray<DeviceIntRect> dirtyRects;
-  if (!wr_renderer_render(mRenderer, size.width, size.height,
-                          aOutStats, &dirtyRects)) {
+  if (!wr_renderer_render(mRenderer, size.width, size.height, aOutStats,
+                          &dirtyRects)) {
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return RenderedFrameId();
@@ -279,7 +280,7 @@ void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
   // Assume BGRA8 for the format since it's not exposed anywhere,
   // and all compositor backends should be using that.
   uintptr_t swapChainSize = size.width * size.height *
-                            BytesPerPixel(SurfaceFormat::B8G8R8A8) *
+                            BytesPerPixel(gfx::SurfaceFormat::B8G8R8A8) *
                             (mCompositor->UseTripleBuffering() ? 3 : 2);
   aReport->swap_chain += swapChainSize;
 }

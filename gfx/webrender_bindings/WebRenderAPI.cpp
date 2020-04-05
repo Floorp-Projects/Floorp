@@ -468,7 +468,7 @@ bool WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
                            layers::ScrollableLayerGuid::ViewID& aOutScrollId,
                            gfx::CompositorHitTestInfo& aOutHitInfo,
                            SideBits& aOutSideBits) {
-  static_assert(DoesCompositorHitTestInfoFitIntoBits<12>(),
+  static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
                 "CompositorHitTestFlags MAX value has to be less than number "
                 "of bits in uint16_t minus 4 for SideBitsPacked");
 
@@ -1558,7 +1558,7 @@ uint16_t SideBitsToHitInfoBits(SideBits aSideBits) {
 void DisplayListBuilder::SetHitTestInfo(
     const layers::ScrollableLayerGuid::ViewID& aScrollId,
     gfx::CompositorHitTestInfo aHitInfo, SideBits aSideBits) {
-  static_assert(DoesCompositorHitTestInfoFitIntoBits<12>(),
+  static_assert(gfx::DoesCompositorHitTestInfoFitIntoBits<12>(),
                 "CompositorHitTestFlags MAX value has to be less than number "
                 "of bits in uint16_t minus 4 for SideBitsPacked");
 
@@ -1610,7 +1610,7 @@ already_AddRefed<gfxContext> DisplayListBuilder::GetTextContext(
   } else {
     mCachedTextDT->Reinitialize(aResources, aSc, aManager, aItem, aBounds);
     mCachedContext->SetDeviceOffset(aDeviceOffset);
-    mCachedContext->SetMatrix(Matrix());
+    mCachedContext->SetMatrix(gfx::Matrix());
   }
 
   RefPtr<gfxContext> tmp = mCachedContext;
