@@ -11,6 +11,7 @@
 
 #include "GLLibraryLoader.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "GeckoProfiler.h"
 
@@ -24,6 +25,9 @@
 #endif
 
 class nsIGfxInfo;
+
+template <typename T>
+class nsCOMPtr;
 
 namespace angle {
 class Platform;
