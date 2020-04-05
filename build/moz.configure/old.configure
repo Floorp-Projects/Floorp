@@ -150,7 +150,7 @@ def prepare_configure(old_configure, mozillabuild, mozconfig, autoconf, build_en
 
         # Make old-configure append to config.log, where we put our own log.
         # This could be done with a m4 macro, but it's way easier this way
-        script = script.replace('>./config.log', '>>${CONFIG_LOG=./config.log}')
+        script = script.replace(b'>./config.log', b'>>${CONFIG_LOG=./config.log}')
 
         with NamedTemporaryFile(mode='wb', prefix=os.path.basename(old_configure),
                                 dir=os.path.dirname(old_configure), delete=False) as fh:
@@ -325,6 +325,7 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
 @imports(_from='six', _import='exec_')
+@imports(_from='six', _import='iteritems')
 @imports(_from='six', _import='string_types')
 def old_configure(prepare_configure, prepare_configure_options, altered_path):
     cmd = prepare_configure + prepare_configure_options.options
@@ -338,7 +339,7 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
     log.debug('Running %s', quote(*cmd))
     if extra_env:
         log.debug('with extra environment: %s',
-                  ' '.join('%s=%s' % pair for pair in extra_env.iteritems()))
+                  ' '.join('%s=%s' % pair for pair in iteritems(extra_env)))
 
     # Our logging goes to config.log, the same file old.configure uses.
     # We can't share the handle on the file, so close it.
