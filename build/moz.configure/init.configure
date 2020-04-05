@@ -287,8 +287,16 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
 
     log.debug("python2: executable from configuration: %r" % python)
 
+    # Verify that the Python version we executed this code with is the minimum
+    # required version to handle all project code.
     with LineIO(lambda l: log.error(l)) as out:
         verify_python_version(out)
+
+    # If this is a mozilla-central build, we'll find the virtualenv in the top
+    # source directory. If this is a SpiderMonkey build, we assume we're at
+    # js/src and try to find the virtualenv from the mozilla-central root.
+    # See mozilla-central changeset d2cce982a7c809815d86d5daecefe2e7a563ecca
+    # Bug 784841
     topsrcdir, topobjdir = build_env.topsrcdir, build_env.topobjdir
     if topobjdir.endswith('/js/src'):
         topobjdir = topobjdir[:-7]
@@ -308,6 +316,9 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
         sys.path.insert(
             0, os.path.join(topsrcdir, 'third_party', 'python', 'backports'))
 
+    # If we know the Python executable the caller is asking for then verify its
+    # version. If the caller did not ask for a specific executable then find
+    # a reasonable default.
     if python:
         found_python = find_program(python)
         if not found_python:
@@ -329,7 +340,9 @@ def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
             raise FatalCheckError('could not determine version of '
                                   'MozillaBuild python: %s' % e)
     else:
+        # Fall back to the search routine.
         python, version = find_python2_executable()
+        # The API returns a bytes whereas everything in configure is unicode.
         if python:
             python = ensure_text(python)
 
