@@ -10,10 +10,13 @@
 #include "mozilla/gfx/Point.h"
 #include "Units.h"
 
+class nsIWidget;
+
 namespace mozilla {
 namespace layers {
 
 class CompositorOptions;
+class LayerManager;
 
 // A CompositorSession where both the child and parent CompositorBridge reside
 // in the same process.
