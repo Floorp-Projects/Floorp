@@ -10,6 +10,7 @@
 
 #include "GLDefs.h"
 #include "nscore.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/SharedLibrary.h"
 
 namespace mozilla {

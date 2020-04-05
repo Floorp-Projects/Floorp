@@ -6,6 +6,7 @@
 #include "TextureImageEGL.h"
 #include "GLLibraryEGL.h"
 #include "GLContext.h"
+#include "GLContextEGL.h"
 #include "GLUploadHelpers.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/Types.h"
@@ -103,7 +104,7 @@ bool TextureImageEGL::DirectUpdate(
   size_t uploadSize = 0;
   mTextureFormat = UploadSurfaceToTexture(mGLContext, aSurf, region, mTexture,
                                           mSize, &uploadSize, needInit, aFrom);
-  if (mTextureFormat == SurfaceFormat::UNKNOWN) {
+  if (mTextureFormat == gfx::SurfaceFormat::UNKNOWN) {
     return false;
   }
 
