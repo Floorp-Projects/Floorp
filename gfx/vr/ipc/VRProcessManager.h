@@ -10,6 +10,10 @@
 
 namespace mozilla {
 class MemoryReportingProcess;
+namespace ipc {
+template <typename T>
+class Endpoint;
+}
 namespace gfx {
 
 class VRManagerChild;

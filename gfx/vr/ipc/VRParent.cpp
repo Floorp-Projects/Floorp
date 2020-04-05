@@ -9,8 +9,10 @@
 #include "VRManager.h"
 #include "gfxConfig.h"
 #include "nsDebugImpl.h"
+#include "nsThreadManager.h"
 #include "ProcessUtils.h"
 
+#include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -112,7 +114,7 @@ mozilla::ipc::IPCResult VRParent::RecvRequestMemoryReport(
 void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down VR process early due to a crash!");
-    ProcessChild::QuickExit();
+    ipc::ProcessChild::QuickExit();
   }
   if (mVRGPUParent && !mVRGPUParent->IsClosed()) {
     mVRGPUParent->Close();
@@ -130,7 +132,7 @@ void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
-  CrashReporterClient::DestroySingleton();
+  ipc::CrashReporterClient::DestroySingleton();
   // Only calling XRE_ShutdownChildProcess() at the child process
   // instead of the main process. Otherwise, it will close all child processes
   // that are spawned from the main process.
@@ -159,11 +161,11 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   if (channel && !channel->SendBuildIDsMatchMessage(aParentBuildID)) {
     // We need to quit this process if the buildID doesn't match the parent's.
     // This can occur when an update occurred in the background.
-    ProcessChild::QuickExit();
+    ipc::ProcessChild::QuickExit();
   }
 
   // Init crash reporter support.
-  CrashReporterClient::InitSingleton(this);
+  ipc::CrashReporterClient::InitSingleton(this);
 
   gfxConfig::Init();
   gfxVars::Initialize();
