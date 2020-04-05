@@ -6,6 +6,7 @@
 
 #include "GPUProcessManager.h"
 
+#include "gfxConfig.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessListener.h"
 #include "mozilla/MemoryReportingProcess.h"
@@ -17,9 +18,13 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/GPUChild.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
+#include "mozilla/layers/APZInputBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
@@ -364,8 +369,8 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   mGPUChild = mProcess->GetActor();
   mProcessToken = mProcess->GetProcessToken();
 
-  Endpoint<PVsyncBridgeParent> vsyncParent;
-  Endpoint<PVsyncBridgeChild> vsyncChild;
+  ipc::Endpoint<PVsyncBridgeParent> vsyncParent;
+  ipc::Endpoint<PVsyncBridgeChild> vsyncChild;
   nsresult rv = PVsyncBridge::CreateEndpoints(mGPUChild->OtherPid(),
                                               base::GetCurrentProcId(),
                                               &vsyncParent, &vsyncChild);
@@ -789,7 +794,7 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize) {
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
-  CompositorWidgetInitData initData;
+  widget::CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
   RefPtr<CompositorBridgeChild> child =
@@ -803,11 +808,11 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
 
   RefPtr<CompositorVsyncDispatcher> dispatcher =
       aWidget->GetCompositorVsyncDispatcher();
-  RefPtr<CompositorWidgetVsyncObserver> observer =
-      new CompositorWidgetVsyncObserver(mVsyncBridge, aRootLayerTreeId);
+  RefPtr<widget::CompositorWidgetVsyncObserver> observer =
+      new widget::CompositorWidgetVsyncObserver(mVsyncBridge, aRootLayerTreeId);
 
-  CompositorWidgetChild* widget =
-      new CompositorWidgetChild(dispatcher, observer, initData);
+  widget::CompositorWidgetChild* widget =
+      new widget::CompositorWidgetChild(dispatcher, observer, initData);
   if (!child->SendPCompositorWidgetConstructor(widget, initData)) {
     return nullptr;
   }
@@ -1122,10 +1127,10 @@ class GPUMemoryReporter : public MemoryReportingProcess {
     return false;
   }
 
-  bool SendRequestMemoryReport(const uint32_t& aGeneration,
-                               const bool& aAnonymize,
-                               const bool& aMinimizeMemoryUsage,
-                               const Maybe<FileDescriptor>& aDMDFile) override {
+  bool SendRequestMemoryReport(
+      const uint32_t& aGeneration, const bool& aAnonymize,
+      const bool& aMinimizeMemoryUsage,
+      const Maybe<ipc::FileDescriptor>& aDMDFile) override {
     GPUChild* child = GetChild();
     if (!child) {
       return false;

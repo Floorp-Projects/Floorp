@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
 #include "gfxConfig.h"
+#include "gfxPlatform.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "VRProcessManager.h"

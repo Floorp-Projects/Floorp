@@ -6,7 +6,14 @@
 
 #include "InProcessCompositorSession.h"
 
+#include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorManagerChild.h"
+#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
+#include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsBaseWidget.h"
 
 namespace mozilla {
@@ -19,7 +26,7 @@ InProcessCompositorSession::InProcessCompositorSession(
                         aParent->RootLayerTreeId()),
       mCompositorBridgeParent(aParent),
       mCompositorWidget(aCompositorWidget) {
-  GPUProcessManager::Get()->RegisterInProcessSession(this);
+  gfx::GPUProcessManager::Get()->RegisterInProcessSession(this);
 }
 
 /* static */
@@ -28,7 +35,7 @@ RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
     const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions, bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize, uint32_t aNamespace) {
-  CompositorWidgetInitData initData;
+  widget::CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
   RefPtr<CompositorWidget> widget =
@@ -83,7 +90,7 @@ void InProcessCompositorSession::Shutdown() {
   mCompositorBridgeChild = nullptr;
   mCompositorBridgeParent = nullptr;
   mCompositorWidget = nullptr;
-  GPUProcessManager::Get()->UnregisterInProcessSession(this);
+  gfx::GPUProcessManager::Get()->UnregisterInProcessSession(this);
 }
 
 }  // namespace layers
