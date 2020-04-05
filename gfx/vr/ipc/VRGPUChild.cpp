@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRGPUChild.h"
+
 #include "mozilla/layers/CompositorThread.h"
+#include "VRManager.h"
 
 namespace mozilla {
 namespace gfx {

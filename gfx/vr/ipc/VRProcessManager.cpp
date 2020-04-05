@@ -242,10 +242,10 @@ class VRMemoryReporter : public MemoryReportingProcess {
     return false;
   }
 
-  bool SendRequestMemoryReport(const uint32_t& aGeneration,
-                               const bool& aAnonymize,
-                               const bool& aMinimizeMemoryUsage,
-                               const Maybe<FileDescriptor>& aDMDFile) override {
+  bool SendRequestMemoryReport(
+      const uint32_t& aGeneration, const bool& aAnonymize,
+      const bool& aMinimizeMemoryUsage,
+      const Maybe<ipc::FileDescriptor>& aDMDFile) override {
     VRChild* child = GetChild();
     if (!child) {
       return false;
