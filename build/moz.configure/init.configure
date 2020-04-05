@@ -453,7 +453,7 @@ def mozconfig_options(mozconfig, automation, help):
 option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
-@depends('PYTHON3', check_build_environment, 'MOZILLABUILD', mozconfig)
+@depends('PYTHON3', check_build_environment, 'MOZILLABUILD')
 @checking('for Python 3',
           callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='__builtin__', _import='Exception')
@@ -463,26 +463,13 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
-def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig):
+def virtualenv_python3(env_python, build_env, mozillabuild):
     # Verify that the Python version we executed this code with is the minimum
     # required version to handle all project code.
     with LineIO(lambda l: log.error(l)) as out:
         verify_python_version(out)
 
     python = env_python[0] if env_python else None
-
-    # Ideally we'd rely on the mozconfig injection from mozconfig_options,
-    # but we'd rather avoid the verbosity when we need to reexecute with
-    # a different python.
-    if mozconfig['path']:
-        if 'PYTHON3' in mozconfig['env']['added']:
-            python = mozconfig['env']['added']['PYTHON3']
-        elif 'PYTHON3' in mozconfig['env']['modified']:
-            python = mozconfig['env']['modified']['PYTHON3'][1]
-        elif 'PYTHON3' in mozconfig['vars']['added']:
-            python = mozconfig['vars']['added']['PYTHON3']
-        elif 'PYTHON3' in mozconfig['vars']['modified']:
-            python = mozconfig['vars']['modified']['PYTHON3'][1]
 
     log.debug("python3: executable from configuration: %r" % python)
 
