@@ -10,7 +10,7 @@ A customizable tabs tray for browsers.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserTabsTray(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter())`<br>A customizable tabs tray for browsers. |
+| [&lt;init&gt;](-init-.md) | `BrowserTabsTray(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter(), layout: LayoutManager = GridLayoutManager(context, 2))`<br>A customizable tabs tray for browsers. |
 
 ### Properties
 

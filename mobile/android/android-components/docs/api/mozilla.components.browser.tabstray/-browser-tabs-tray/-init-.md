@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`BrowserTabsTray(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter())`
+`BrowserTabsTray(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter(), layout: LayoutManager = GridLayoutManager(context, 2))`
 
 A customizable tabs tray for browsers.
 
