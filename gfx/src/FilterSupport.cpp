@@ -15,6 +15,7 @@
 #include "gfxContext.h"
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
+#include "gfxUtils.h"
 #include "gfx2DGlue.h"
 
 #include "nsMargin.h"

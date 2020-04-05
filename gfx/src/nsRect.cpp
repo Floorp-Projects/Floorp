@@ -12,8 +12,8 @@
 #include "nsMargin.h"            // for nsMargin
 
 static_assert(
-    (int(eSideTop) == 0) && (int(eSideRight) == 1) && (int(eSideBottom) == 2) &&
-        (int(eSideLeft) == 3),
+    (int(mozilla::eSideTop) == 0) && (int(mozilla::eSideRight) == 1) &&
+        (int(mozilla::eSideBottom) == 2) && (int(mozilla::eSideLeft) == 3),
     "The mozilla::Side sequence must match the nsMargin nscoord sequence");
 
 const mozilla::gfx::IntRect& GetMaxSizedIntRect() {

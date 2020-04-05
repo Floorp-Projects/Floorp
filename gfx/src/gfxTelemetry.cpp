@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "gfxTelemetry.h"
 
+#include "mozilla/Assertions.h"
+
 namespace mozilla {
 namespace gfx {
 
