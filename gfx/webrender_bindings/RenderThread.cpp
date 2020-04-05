@@ -6,10 +6,12 @@
 
 #include "base/task.h"
 #include "GeckoProfiler.h"
+#include "GLContext.h"
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
 #include "mtransport/runnable_utils.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -30,6 +32,14 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GLLibraryEGL.h"
 #  include "GeneratedJNIWrappers.h"
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+#  include <gdk/gdkx.h>
+#endif
+
+#ifdef MOZ_WAYLAND
+#  include "GLLibraryEGL.h"
 #endif
 
 using namespace mozilla;
@@ -473,8 +483,8 @@ void RenderThread::UpdateAndRender(
   wr::RenderedFrameId latestFrameId;
   RendererStats stats = {0};
   if (aRender) {
-    latestFrameId = renderer->UpdateAndRender(
-        aReadbackSize, aReadbackFormat, aReadbackBuffer, &stats);
+    latestFrameId = renderer->UpdateAndRender(aReadbackSize, aReadbackFormat,
+                                              aReadbackBuffer, &stats);
   } else {
     renderer->Update();
   }
@@ -886,11 +896,11 @@ WebRenderProgramCache::WebRenderProgramCache(wr::WrThreadPool* aThreadPool) {
   MOZ_ASSERT(aThreadPool);
 
   nsAutoString path;
-  if (gfxVars::UseWebRenderProgramBinaryDisk()) {
+  if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
     path.Append(gfx::gfxVars::ProfDirectory());
   }
   mProgramCache = wr_program_cache_new(&path, aThreadPool);
-  if (gfxVars::UseWebRenderProgramBinaryDisk()) {
+  if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
     wr_try_load_startup_shaders_from_disk(mProgramCache);
   }
 }

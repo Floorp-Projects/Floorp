@@ -9,10 +9,14 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/ProfilerScreenshots.h"
+#include "mozilla/webrender/webrender_ffi.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace wr {
+
+struct Renderer;
+class RendererOGL;
 
 /**
  * Used by |RendererOGL| to grab screenshots from WebRender and submit them to
