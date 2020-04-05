@@ -253,6 +253,7 @@ option(env='PYTHON', nargs=1, help='Python 2.7 interpreter')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
 def virtualenv_python2(env_python, build_env, mozillabuild, mozconfig, help):
+    # Avoid re-executing python when running configure --help.
     if help:
         return
 
@@ -452,8 +453,7 @@ def mozconfig_options(mozconfig, automation, help):
 option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
-@depends(
-    'PYTHON3', check_build_environment, 'MOZILLABUILD', mozconfig, '--help')
+@depends('PYTHON3', check_build_environment, 'MOZILLABUILD', mozconfig)
 @checking('for Python 3',
           callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='__builtin__', _import='Exception')
@@ -463,10 +463,7 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
-def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
-    if help:
-        return
-
+def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig):
     # Verify that the Python version we executed this code with is the minimum
     # required version to handle all project code.
     with LineIO(lambda l: log.error(l)) as out:
