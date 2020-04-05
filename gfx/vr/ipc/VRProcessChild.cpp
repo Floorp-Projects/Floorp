@@ -65,7 +65,7 @@ bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
     }
   }
 
-  SharedPreferenceDeserializer deserializer;
+  ipc::SharedPreferenceDeserializer deserializer;
   if (!deserializer.DeserializeFromSharedMemory(prefsHandle, prefMapHandle,
                                                 prefsLen, prefMapSize)) {
     return false;

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRManagerChild.h"
+#include "VRLayerChild.h"
 #include "VRManagerParent.h"
 #include "VRThread.h"
 #include "VRDisplayClient.h"
@@ -22,8 +23,8 @@
 using namespace mozilla::dom;
 
 namespace {
-const nsTArray<RefPtr<VRManagerEventObserver>>::index_type kNoIndex =
-    nsTArray<RefPtr<VRManagerEventObserver>>::NoIndex;
+const nsTArray<RefPtr<mozilla::gfx::VRManagerEventObserver>>::index_type
+    kNoIndex = nsTArray<RefPtr<mozilla::gfx::VRManagerEventObserver>>::NoIndex;
 }  // namespace
 
 namespace mozilla {

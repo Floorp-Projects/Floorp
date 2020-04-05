@@ -7,9 +7,16 @@
 #ifndef GFX_VR_SERVICE_HOST_H
 #define GFX_VR_SERVICE_HOST_H
 
+#include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
+#include "nsTArray.h"
+
+#include <cstdint>
+
 namespace mozilla {
 namespace gfx {
 
+struct VRExternalShmem;
 class VRService;
 
 class VRServiceHost {
