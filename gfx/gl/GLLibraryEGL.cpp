@@ -6,6 +6,7 @@
 
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
+#include "gfxEnv.h"
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
@@ -31,6 +32,7 @@
 #include "prsystem.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "GLReadTexImageHelper.h"
 #include "ScopedGLHelpers.h"
 #ifdef MOZ_WIDGET_GTK
 #  include <gdk/gdk.h>
@@ -286,7 +288,8 @@ static EGLDisplay GetAndInitDisplayForAccelANGLE(
     return GetAndInitDisplayForWebRender(egl, EGL_DEFAULT_DISPLAY);
   }
 
-  FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);
+  gfx::FeatureState& d3d11ANGLE =
+      gfx::gfxConfig::GetFeature(gfx::Feature::D3D11_HW_ANGLE);
 
   if (!StaticPrefs::webgl_angle_try_d3d11()) {
     d3d11ANGLE.UserDisable("User disabled D3D11 ANGLE by pref",
@@ -305,7 +308,7 @@ static EGLDisplay GetAndInitDisplayForAccelANGLE(
     //       will live longer than the ANGLE display so we're fine.
   });
 
-  if (gfxConfig::IsForcedOnByUser(Feature::D3D11_HW_ANGLE)) {
+  if (gfx::gfxConfig::IsForcedOnByUser(gfx::Feature::D3D11_HW_ANGLE)) {
     return GetAndInitDisplay(egl, LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
   }
 
@@ -346,8 +349,8 @@ bool GLLibraryEGL::ReadbackEGLImage(EGLImage image,
                               LOCAL_GL_NEAREST);
   mReadbackGL->fEGLImageTargetTexture2D(target, image);
 
-  ShaderConfigOGL config =
-      ShaderConfigFromTargetAndFormat(target, out_surface->GetFormat());
+  layers::ShaderConfigOGL config =
+      layers::ShaderConfigFromTargetAndFormat(target, out_surface->GetFormat());
   int shaderConfig = config.mFeatures;
   mReadbackGL->ReadTexImageHelper()->ReadTexImage(
       out_surface, 0, target, out_surface->GetSize(), shaderConfig);
@@ -811,7 +814,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
     // Some drivers doesn't support EGL_DEFAULT_DISPLAY
     GdkDisplay* gdkDisplay = gdk_display_get_default();
     if (gdkDisplay && !GDK_IS_X11_DISPLAY(gdkDisplay)) {
-      nativeDisplay = WaylandDisplayGetWLDisplay(gdkDisplay);
+      nativeDisplay = widget::WaylandDisplayGetWLDisplay(gdkDisplay);
       if (!nativeDisplay) {
         NS_WARNING("Failed to get wl_display.");
         return nullptr;

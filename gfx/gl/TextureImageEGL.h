@@ -8,6 +8,8 @@
 
 #include "GLTextureImage.h"
 
+#include "mozilla/gfx/Types.h"
+
 namespace mozilla {
 namespace gl {
 
@@ -18,7 +20,7 @@ class TextureImageEGL final : public TextureImage {
       ContentType aContentType, GLContext* aContext,
       Flags aFlags = TextureImage::NoFlags,
       TextureState aTextureState = Created,
-      TextureImage::ImageFormat aImageFormat = SurfaceFormat::UNKNOWN);
+      TextureImage::ImageFormat aImageFormat = gfx::SurfaceFormat::UNKNOWN);
 
   virtual ~TextureImageEGL();
 
