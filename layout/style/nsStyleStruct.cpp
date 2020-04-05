@@ -44,6 +44,7 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include <algorithm>
 #include "ImageLoader.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2699,7 +2700,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(
 //
 
 nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
-    : mImageOrientation(StyleImageOrientation::FromImage),
+    : mImageOrientation(
+          StaticPrefs::layout_css_image_orientation_initial_from_image()
+              ? StyleImageOrientation::FromImage
+              : StyleImageOrientation::None),
       mDirection(aDocument.GetBidiOptions() == IBMBIDI_TEXTDIRECTION_RTL
                      ? StyleDirection::Rtl
                      : StyleDirection::Ltr),
