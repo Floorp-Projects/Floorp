@@ -1217,18 +1217,18 @@ static bool IsFeatureSupported(long aFeature, bool aDefault) {
   return status == nsIGfxInfo::FEATURE_STATUS_OK;
 }
 
-static void ApplyGfxInfoFeature(long aFeature, FeatureState &aFeatureState) {
+static void ApplyGfxInfoFeature(long aFeature, FeatureState& aFeatureState) {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsCString blockId;
   int32_t status;
   if (!NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, blockId, &status))) {
-      aFeatureState.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
-                            NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_GFX_INFO"));
+    aFeatureState.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
+                          NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_GFX_INFO"));
 
   } else {
     if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-      aFeatureState.Disable(FeatureStatus::Blacklisted, "Blacklisted by gfxInfo",
-                            blockId);
+      aFeatureState.Disable(FeatureStatus::Blacklisted,
+                            "Blacklisted by gfxInfo", blockId);
     }
   }
 }

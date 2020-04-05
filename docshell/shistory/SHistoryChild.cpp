@@ -376,9 +376,9 @@ SHistoryChild::CreateEntry(nsISHEntry** aEntry) {
 
 nsresult SHistoryChild::LoadURI(nsTArray<LoadSHEntryData>& aLoadData) {
   for (LoadSHEntryData& l : aLoadData) {
-     if (l.browsingContext().IsNullOrDiscarded()) {
-       continue;
-     }
+    if (l.browsingContext().IsNullOrDiscarded()) {
+      continue;
+    }
 
     nsCOMPtr<nsIDocShell> docShell = l.browsingContext().get()->GetDocShell();
     if (!docShell) {

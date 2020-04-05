@@ -359,9 +359,9 @@ static mozilla::WindowsError SendPing(std::string defaultBrowser,
 
   const wchar_t* pingsenderArgs[] = {pingsenderPath.c_str(), url.c_str(),
                                      pingFilePath.c_str()};
-  mozilla::UniquePtr<wchar_t[]> pingsenderCmdLine(mozilla::MakeCommandLine(
-      mozilla::ArrayLength(pingsenderArgs),
-      const_cast<wchar_t**>(pingsenderArgs)));
+  mozilla::UniquePtr<wchar_t[]> pingsenderCmdLine(
+      mozilla::MakeCommandLine(mozilla::ArrayLength(pingsenderArgs),
+                               const_cast<wchar_t**>(pingsenderArgs)));
 
   PROCESS_INFORMATION pi;
   STARTUPINFOW si = {sizeof(si)};
@@ -407,7 +407,6 @@ HRESULT SendDefaultBrowserPing() {
   }
   std::string osLocale = osLocaleResult.unwrap();
 
-  return
-      SendPing(defaultBrowser, previousDefaultBrowser, osVersion, osLocale)
-          .AsHResult();
+  return SendPing(defaultBrowser, previousDefaultBrowser, osVersion, osLocale)
+      .AsHResult();
 }

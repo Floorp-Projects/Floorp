@@ -316,13 +316,11 @@ nsresult HttpConnectionUDP::OnHeadersAvailable(nsAHttpTransaction* trans,
   return NS_OK;
 }
 
-bool HttpConnectionUDP::IsReused() {
-  return mIsReused;
-}
+bool HttpConnectionUDP::IsReused() { return mIsReused; }
 
-nsresult HttpConnectionUDP::TakeTransport(nsISocketTransport** aTransport,
-                                          nsIAsyncInputStream** aInputStream,
-                                          nsIAsyncOutputStream** aOutputStream) {
+nsresult HttpConnectionUDP::TakeTransport(
+    nsISocketTransport** aTransport, nsIAsyncInputStream** aInputStream,
+    nsIAsyncOutputStream** aOutputStream) {
   return NS_ERROR_FAILURE;
 }
 
@@ -386,8 +384,7 @@ nsresult HttpConnectionUDP::ResumeSend() {
 
   if (mSocketOut) {
     nsresult rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
-    LOG(
-        ("HttpConnectionUDP::ResumeSend [this=%p]\n", this));
+    LOG(("HttpConnectionUDP::ResumeSend [this=%p]\n", this));
     return rv;
   }
 
@@ -438,10 +435,10 @@ nsresult HttpConnectionUDP::MaybeForceSendIO() {
   }
   MOZ_ASSERT(!mForceSendTimer);
   mForceSendPending = true;
-  return NS_NewTimerWithFuncCallback(getter_AddRefs(mForceSendTimer),
-                                     HttpConnectionUDP::ForceSendIO, this,
-                                     kForceDelay, nsITimer::TYPE_ONE_SHOT,
-                                     "net::HttpConnectionUDP::MaybeForceSendIO");
+  return NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mForceSendTimer), HttpConnectionUDP::ForceSendIO, this,
+      kForceDelay, nsITimer::TYPE_ONE_SHOT,
+      "net::HttpConnectionUDP::MaybeForceSendIO");
 }
 
 // trigger an asynchronous read
@@ -449,8 +446,7 @@ nsresult HttpConnectionUDP::ForceRecv() {
   LOG(("HttpConnectionUDP::ForceRecv [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  return NS_DispatchToCurrentThread(
-      new HttpConnectionUDPForceIO(this, true));
+  return NS_DispatchToCurrentThread(new HttpConnectionUDPForceIO(this, true));
 }
 
 // trigger an asynchronous write
@@ -461,9 +457,7 @@ nsresult HttpConnectionUDP::ForceSend() {
   return MaybeForceSendIO();
 }
 
-HttpVersion HttpConnectionUDP::Version() {
-  return HttpVersion::v3_0;
-}
+HttpVersion HttpConnectionUDP::Version() { return HttpVersion::v3_0; }
 
 //-----------------------------------------------------------------------------
 // HttpConnectionUDP <private>
@@ -487,7 +481,7 @@ void HttpConnectionUDP::CloseTransaction(nsAHttpTransaction* trans,
   // in case any previously validated ones are now invalid
   if (((reason == NS_ERROR_NET_RESET) ||
        (NS_ERROR_GET_MODULE(reason) == NS_ERROR_MODULE_SECURITY)) &&
-       mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
+      mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
     gHttpHandler->ClearHostMapping(mConnInfo);
   }
 
@@ -582,7 +576,7 @@ nsresult HttpConnectionUDP::OnWriteSegment(char* buf, uint32_t count,
   }
 
   if (*countWritten == 0) {
-    return  NS_BASE_STREAM_CLOSED;
+    return NS_BASE_STREAM_CLOSED;
   }
 
   return NS_OK;
@@ -768,9 +762,7 @@ void HttpConnectionUDP::SetEvent(nsresult aStatus) {
   }
 }
 
-bool HttpConnectionUDP::IsProxyConnectInProgress() {
-  return false;
-}
+bool HttpConnectionUDP::IsProxyConnectInProgress() { return false; }
 
 bool HttpConnectionUDP::LastTransactionExpectedNoContent() {
   return mLastTransactionExpectedNoContent;
@@ -780,9 +772,7 @@ void HttpConnectionUDP::SetLastTransactionExpectedNoContent(bool val) {
   mLastTransactionExpectedNoContent = val;
 }
 
-bool HttpConnectionUDP::IsPersistent() {
-  return !mDontReuse;
-}
+bool HttpConnectionUDP::IsPersistent() { return !mDontReuse; }
 
 nsAHttpTransaction* HttpConnectionUDP::Transaction() { return mHttp3Session; }
 

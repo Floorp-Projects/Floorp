@@ -257,8 +257,7 @@ IpcResourceUpdateQueue::IpcResourceUpdateQueue(
     IpcResourceUpdateQueue&& aOther) noexcept
     : mWriter(std::move(aOther.mWriter)),
       mUpdates(std::move(aOther.mUpdates)),
-      mRenderRoot(aOther.mRenderRoot) {
-}
+      mRenderRoot(aOther.mRenderRoot) {}
 
 IpcResourceUpdateQueue& IpcResourceUpdateQueue::operator=(
     IpcResourceUpdateQueue&& aOther) noexcept {

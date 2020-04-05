@@ -16,9 +16,9 @@
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
 #include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
-#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
+#include "builtin/streams/ReadableStream.h"        // js::ReadableStream
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStreamDefaultReader
-#include "builtin/streams/WritableStream.h"  // js::WritableStream
+#include "builtin/streams/WritableStream.h"        // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter, js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
 #include "js/CallArgs.h"       // JS::CallArgsFromVp, JS::CallArgs

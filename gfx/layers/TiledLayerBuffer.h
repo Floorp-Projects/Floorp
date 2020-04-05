@@ -12,8 +12,8 @@
 //#define GFX_TILEDLAYER_PREF_WARNINGS
 //#define GFX_TILEDLAYER_RETAINING_LOG
 
-#include <stdint.h>         // for uint16_t, uint32_t
-#include <sys/types.h>      // for int32_t
+#include <stdint.h>     // for uint16_t, uint32_t
+#include <sys/types.h>  // for int32_t
 #include <type_traits>
 #include "LayersLogging.h"  // for print_stderr
 #include "mozilla/gfx/gfxVars.h"

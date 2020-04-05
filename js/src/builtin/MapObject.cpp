@@ -538,7 +538,8 @@ inline static MOZ_MUST_USE bool WriteBarrierPostImpl(ObjectT* obj,
       return false;
     }
 
-    keyValue.toGCThing()->storeBuffer()->putGeneric(OrderedHashTableRef<ObjectT>(obj));
+    keyValue.toGCThing()->storeBuffer()->putGeneric(
+        OrderedHashTableRef<ObjectT>(obj));
   }
 
   return keys->append(keyValue);

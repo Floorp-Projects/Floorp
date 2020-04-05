@@ -22,10 +22,10 @@
 #include "js/Promise.h"     // JS::AddPromiseReactions
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue, JS_WRITABLESTREAM_CLOSE_RECORD
-#include "vm/Compartment.h"    // JS::Compartment
-#include "vm/JSContext.h"      // JSContext
-#include "vm/JSObject.h"       // JSObject
-#include "vm/List.h"           // js::ListObject
+#include "vm/Compartment.h"  // JS::Compartment
+#include "vm/JSContext.h"    // JSContext
+#include "vm/JSObject.h"     // JSObject
+#include "vm/List.h"         // js::ListObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/Runtime.h"        // JSAtomState
 

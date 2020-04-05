@@ -830,7 +830,8 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
   MOZ_ASSERT(ent);
   MOZ_ASSERT(mCT.GetWeak(newConn->ConnectionInfo()->HashKey()) == ent);
 
-  HttpConnectionBase* existingConn = FindCoalescableConnection(ent, true, false);
+  HttpConnectionBase* existingConn =
+      FindCoalescableConnection(ent, true, false);
   if (existingConn) {
     LOG(
         ("UpdateCoalescingForNewConn() found existing active conn that could "
@@ -1576,7 +1577,8 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
   // essentially pipelining without head of line blocking
 
   if (!(caps & NS_HTTP_DISALLOW_SPDY) && gHttpHandler->IsSpdyEnabled()) {
-    RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(ent,
+    RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(
+        ent,
         (!gHttpHandler->IsHttp3Enabled() || (caps & NS_HTTP_DISALLOW_HTTP3)));
     if (conn) {
       if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
@@ -1966,9 +1968,8 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
   nsHttpConnectionInfo* ci = trans->ConnectionInfo();
   MOZ_ASSERT(ci);
 
-  nsConnectionEntry* ent =
-      GetOrCreateConnectionEntry(ci, !!trans->TunnelProvider(),
-                                 trans->Caps() & NS_HTTP_DISALLOW_HTTP3);
+  nsConnectionEntry* ent = GetOrCreateConnectionEntry(
+      ci, !!trans->TunnelProvider(), trans->Caps() & NS_HTTP_DISALLOW_HTTP3);
   MOZ_ASSERT(ent);
 
   ReportProxyTelemetry(ent);
@@ -2274,8 +2275,8 @@ HttpConnectionBase* nsHttpConnectionMgr::GetH2orH3ActiveConn(
 
   // there was no active spdy connection in the connection entry, but
   // there might be one in the hash table for coalescing
-  HttpConnectionBase* existingConn = FindCoalescableConnection(ent, false,
-      aNoHttp3);
+  HttpConnectionBase* existingConn =
+      FindCoalescableConnection(ent, false, aNoHttp3);
   if (existingConn) {
     LOG(
         ("GetH2orH3ActiveConn() request for ent %p %s "
@@ -2693,7 +2694,7 @@ void nsHttpConnectionMgr::OnMsgPruneDeadConnections(int32_t, ARefBase*) {
       if (ent->mUsingSpdy) {
         for (uint32_t i = 0; i < ent->mActiveConns.Length(); ++i) {
           RefPtr<nsHttpConnection> connTCP =
-              do_QueryObject( ent->mActiveConns[i]);
+              do_QueryObject(ent->mActiveConns[i]);
           // Http3 has its own timers, it is not using this one.
           if (connTCP && connTCP->UsingSpdy()) {
             if (!connTCP->CanReuse()) {
@@ -5675,7 +5676,8 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
     return;
   }
 
-  nsConnectionEntry* wcEnt = GetOrCreateConnectionEntry(wildCardCI, true, false);
+  nsConnectionEntry* wcEnt =
+      GetOrCreateConnectionEntry(wildCardCI, true, false);
   if (wcEnt == ent) {
     // nothing to do!
     return;
