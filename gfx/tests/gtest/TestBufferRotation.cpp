@@ -8,6 +8,8 @@
 
 #include "BufferUnrotate.h"
 
+using mozilla::gfx::BufferUnrotate;
+
 static unsigned char* GenerateBuffer(int bytesPerPixel, int width, int height,
                                      int stride, int xBoundary, int yBoundary) {
   unsigned char* buffer = new unsigned char[stride * height];
