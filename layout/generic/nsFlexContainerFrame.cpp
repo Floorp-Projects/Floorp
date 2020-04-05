@@ -1768,7 +1768,9 @@ class nsFlexContainerFrame::CachedFlexItemData {
 
 void nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(
     nsIFrame* aItemFrame) {
-  aItemFrame->RemoveProperty(CachedFlexItemData::Prop());
+  if (auto* cache = aItemFrame->GetProperty(CachedFlexItemData::Prop())) {
+    cache->mBAxisMeasurement.reset();
+  }
 }
 
 const CachedBAxisMeasurement&
