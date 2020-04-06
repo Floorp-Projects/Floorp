@@ -928,17 +928,6 @@ class nsDisplayListBuilder {
   void SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
                                  const nsRegion& aRegion);
 
-  void ExpandRenderRootRect(LayoutDeviceRect aRect,
-                            mozilla::wr::RenderRoot aRenderRoot) {
-    mRenderRootRects[aRenderRoot] = mRenderRootRects[aRenderRoot].Union(aRect);
-  }
-
-  void ComputeDefaultRenderRootRect(LayoutDeviceIntSize aClientSize);
-
-  LayoutDeviceRect GetRenderRootRect(mozilla::wr::RenderRoot aRenderRoot) {
-    return mRenderRootRects[aRenderRoot];
-  }
-
   /**
    * Mark the frames in aFrames to be displayed if they intersect aDirtyRect
    * (which is relative to aDirtyFrame). If the frames have placeholders
@@ -1918,8 +1907,6 @@ class nsDisplayListBuilder {
   const nsIFrame* mCurrentReferenceFrame;
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint mCurrentOffsetToReferenceFrame;
-
-  mozilla::wr::RenderRootArray<LayoutDeviceRect> mRenderRootRects;
 
   RefPtr<AnimatedGeometryRoot> mRootAGR;
   RefPtr<AnimatedGeometryRoot> mCurrentAGR;
