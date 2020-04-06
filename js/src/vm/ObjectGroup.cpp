@@ -357,7 +357,7 @@ ObjectGroup* JSObject::makeLazyGroup(JSContext* cx, HandleObject obj) {
     group->setInterpretedFunction(&obj->as<JSFunction>());
   }
 
-  obj->group_ = group;
+  obj->setGroupRaw(group);
 
   return group;
 }
