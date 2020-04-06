@@ -283,6 +283,7 @@ interface mixin WebGL2RenderingContextBase
     const GLenum ALREADY_SIGNALED                              = 0x911A;
     const GLenum TIMEOUT_EXPIRED                               = 0x911B;
     const GLenum CONDITION_SATISFIED                           = 0x911C;
+    [NeedsWindowsUndef]
     const GLenum WAIT_FAILED                                   = 0x911D;
     const GLenum SYNC_FLUSH_COMMANDS_BIT                       = 0x00000001;
     const GLenum VERTEX_ATTRIB_ARRAY_DIVISOR                   = 0x88FE;
