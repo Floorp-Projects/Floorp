@@ -124,7 +124,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   if (NS_WARN_IF(!docShell)) {
     return nullptr;
   }
-  MOZ_ASSERT(aBrowsingContext->OriginAttributesRef() == aOriginAttributes);
+  docShell->SetOriginAttributes(aOriginAttributes);
   browser->SetDocShell(docShell);
 
   // get the system default window background colour
@@ -525,6 +525,13 @@ nsWebBrowser::LoadURIFromScript(const nsAString& aURI,
     return NS_ERROR_INVALID_ARG;
   }
   return LoadURI(aURI, loadURIOptions);
+}
+
+NS_IMETHODIMP
+nsWebBrowser::SetOriginAttributesBeforeLoading(
+    JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx) {
+  return mDocShellAsNav->SetOriginAttributesBeforeLoading(aOriginAttributes,
+                                                          aCx);
 }
 
 NS_IMETHODIMP

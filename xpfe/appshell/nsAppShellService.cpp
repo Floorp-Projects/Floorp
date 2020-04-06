@@ -42,8 +42,6 @@
 #include "gfxPlatform.h"
 
 #include "nsWebBrowser.h"
-#include "nsDocShell.h"
-#include "nsDocShellLoadState.h"
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
 #  include "EventTracer.h"
@@ -129,8 +127,9 @@ nsAppShellService::CreateHiddenWindow() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<AppWindow> newWindow;
-  rv = JustCreateTopWindow(nullptr, url, chromeMask, initialWidth,
-                           initialHeight, true, getter_AddRefs(newWindow));
+  rv =
+      JustCreateTopWindow(nullptr, url, chromeMask, initialWidth, initialHeight,
+                          true, nullptr, nullptr, getter_AddRefs(newWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShell> docShell;
@@ -159,18 +158,20 @@ nsAppShellService::DestroyHiddenWindow() {
  * Create a new top level window and display the given URL within it...
  */
 NS_IMETHODIMP
-nsAppShellService::CreateTopLevelWindow(nsIAppWindow* aParent, nsIURI* aUrl,
-                                        uint32_t aChromeMask,
-                                        int32_t aInitialWidth,
-                                        int32_t aInitialHeight,
-                                        nsIAppWindow** aResult) {
+nsAppShellService::CreateTopLevelWindow(
+    nsIAppWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
+    int32_t aInitialWidth, int32_t aInitialHeight, nsIRemoteTab* aOpeningTab,
+    mozIDOMWindowProxy* aOpenerWindow, nsIAppWindow** aResult)
+
+{
   nsresult rv;
 
   StartupTimeline::RecordOnce(StartupTimeline::CREATE_TOP_LEVEL_WINDOW);
 
   RefPtr<AppWindow> newWindow;
   rv = JustCreateTopWindow(aParent, aUrl, aChromeMask, aInitialWidth,
-                           aInitialHeight, false, getter_AddRefs(newWindow));
+                           aInitialHeight, false, aOpeningTab, aOpenerWindow,
+                           getter_AddRefs(newWindow));
   newWindow.forget(aResult);
 
   if (NS_SUCCEEDED(rv)) {
@@ -550,6 +551,7 @@ static bool CheckForFullscreenWindow() {
 nsresult nsAppShellService::JustCreateTopWindow(
     nsIAppWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
     int32_t aInitialWidth, int32_t aInitialHeight, bool aIsHiddenWindow,
+    nsIRemoteTab* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow,
     AppWindow** aResult) {
   *aResult = nullptr;
   NS_ENSURE_STATE(!mXPCOMWillShutDown);
@@ -674,20 +676,29 @@ nsresult nsAppShellService::JustCreateTopWindow(
 
   widgetInitData.mRTL = LocaleService::GetInstance()->IsAppLocaleRTL();
 
-  nsresult rv =
-      window->Initialize(parent, center ? aParent : nullptr, aInitialWidth,
-                         aInitialHeight, aIsHiddenWindow, widgetInitData);
+  nsresult rv = window->Initialize(
+      parent, center ? aParent : nullptr, aUrl, aInitialWidth, aInitialHeight,
+      aIsHiddenWindow, aOpeningTab, aOpenerWindow, widgetInitData);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Enforce the Private Browsing autoStart pref first.
   bool isPrivateBrowsingWindow =
       Preferences::GetBool("browser.privatebrowsing.autostart");
+  bool isUsingRemoteTabs = mozilla::BrowserTabsRemoteAutostart();
+  bool isUsingRemoteSubframes = StaticPrefs::fission_autostart();
 
   if (aChromeMask & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) {
     // Caller requested a private window
     isPrivateBrowsingWindow = true;
   }
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) {
+    isUsingRemoteTabs = true;
+  }
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_FISSION_WINDOW) {
+    isUsingRemoteSubframes = true;
+  }
+
   nsCOMPtr<mozIDOMWindowProxy> domWin = do_GetInterface(aParent);
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(domWin);
   nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(webNav);
@@ -699,48 +710,19 @@ nsresult nsAppShellService::JustCreateTopWindow(
     isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
   }
 
-  if (nsDocShell* docShell = nsDocShell::Cast(window->GetDocShell())) {
-    MOZ_ASSERT(docShell->ItemType() == nsIDocShellTreeItem::typeChrome);
+  if (parentContext) {
+    isUsingRemoteTabs = parentContext->UseRemoteTabs();
+    isUsingRemoteSubframes = parentContext->UseRemoteSubframes();
+  }
 
-    docShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
-    docShell->SetRemoteTabs(aChromeMask &
-                            nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
-    docShell->SetRemoteSubframes(aChromeMask &
-                                 nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
-
-    // Eagerly create an about:blank content viewer with the right principal
-    // here, rather than letting it happening in the upcoming call to
-    // SetInitialPrincipalToSubject. This avoids creating the about:blank
-    // document and then blowing it away with a second one, which can cause
-    // problems for the top-level chrome window case. See bug 789773. Note that
-    // we don't accept expanded principals here, similar to
-    // SetInitialPrincipalToSubject.
-    if (nsContentUtils::IsInitialized()) {  // Sometimes this happens really
-                                            // early. See bug 793370.
-      nsCOMPtr<nsIPrincipal> principal =
-          nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
-      if (nsContentUtils::IsExpandedPrincipal(principal)) {
-        principal = nullptr;
-      }
-      // Use the subject (or system) principal as the storage principal too
-      // until the new window finishes navigating and gets a real storage
-      // principal.
-      rv = docShell->CreateAboutBlankContentViewer(principal, principal,
-                                                   /* aCsp = */ nullptr);
-      NS_ENSURE_SUCCESS(rv, rv);
-      RefPtr<Document> doc = docShell->GetDocument();
-      NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
-      doc->SetIsInitialDocument(true);
-    }
-
-    // Begin loading the URL provided.
-    if (aUrl) {
-      RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aUrl);
-      loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
-      loadState->SetFirstParty(true);
-      rv = docShell->LoadURI(loadState, /* aSetNavigating */ true);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  nsCOMPtr<mozIDOMWindowProxy> newDomWin =
+      do_GetInterface(NS_ISUPPORTS_CAST(nsIBaseWindow*, window));
+  nsCOMPtr<nsIWebNavigation> newWebNav = do_GetInterface(newDomWin);
+  nsCOMPtr<nsILoadContext> thisContext = do_GetInterface(newWebNav);
+  if (thisContext) {
+    thisContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
+    thisContext->SetRemoteTabs(isUsingRemoteTabs);
+    thisContext->SetRemoteSubframes(isUsingRemoteSubframes);
   }
 
   window.forget(aResult);

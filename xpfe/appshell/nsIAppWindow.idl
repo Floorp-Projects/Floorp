@@ -23,7 +23,6 @@ interface nsIDocShellTreeItem;
 interface nsIXULBrowserWindow;
 interface nsIRemoteTab;
 interface mozIDOMWindowProxy;
-interface nsIOpenWindowInfo;
 
 native LiveResizeListenerArray(nsTArray<RefPtr<mozilla::LiveResizeListener>>);
 
@@ -127,12 +126,17 @@ interface nsIAppWindow : nsISupports
   /**
    * Create a new window.
    * @param aChromeFlags see nsIWebBrowserChrome
-   * @param aOpenWindowInfo information about the request for a content window
-   *                        to be opened. Will be null for non-content loads.
+   * @param aOpeningTab the RemoteTab that requested this new window be opened.
+   *                    Can be left null.
+   * @param aOpener The window which is requesting that this new window be opened.
+   * @param aNextRemoteTabId The integer ID of the next remote tab actor to use.
+   *        0 means there is no next remote tab actor to use.
    * @return the newly minted window
    */
   nsIAppWindow createNewWindow(in int32_t aChromeFlags,
-                               in nsIOpenWindowInfo aOpenWindowInfo);
+                               in nsIRemoteTab aOpeningTab,
+                               in mozIDOMWindowProxy aOpener,
+                               in unsigned long long aNextRemoteTabId);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
 
@@ -175,8 +179,9 @@ interface nsIAppWindow : nsISupports
                                                  in int32_t shellItemHeight);
 
   /**
-   * If the window was opened as a content window, this will return the initial
-   * nsIOpenWindowInfo to use.
+   * If the window was opened as a content window by script, this will return the
+   * integer ID of the next RemoteTab actor to use.
    */
-  readonly attribute nsIOpenWindowInfo initialOpenWindowInfo;
+  [noscript]
+  readonly attribute unsigned long long nextRemoteTabId;
 };

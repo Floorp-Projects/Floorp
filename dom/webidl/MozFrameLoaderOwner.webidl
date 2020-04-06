@@ -40,6 +40,9 @@ interface mixin MozFrameLoaderOwner {
   readonly attribute BrowsingContext? browsingContext;
 
   [ChromeOnly, Throws]
+  void presetOpenerWindow(WindowProxy? window);
+
+  [ChromeOnly, Throws]
   void swapFrameLoaders(XULFrameElement aOtherLoaderOwner);
 
   [ChromeOnly, Throws]

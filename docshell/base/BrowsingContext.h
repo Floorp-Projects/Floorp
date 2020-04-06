@@ -29,7 +29,6 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "nsILoadInfo.h"
-#include "nsILoadContext.h"
 
 class nsDocShellLoadState;
 class nsGlobalWindowOuter;
@@ -105,7 +104,6 @@ class WindowProxyHolder;
   FIELD(AllowPlugins, bool)                                                  \
   FIELD(AllowContentRetargeting, bool)                                       \
   FIELD(AllowContentRetargetingOnChildren, bool)                             \
-  FIELD(ForceEnableTrackingProtection, bool)                                 \
   /* These field are used to store the states of autoplay media request on   \
    * GeckoView only, and it would only be modified on the top level browsing \
    * context. */                                                             \
@@ -134,7 +132,7 @@ class WindowProxyHolder;
 // Trees of BrowsingContexts should only ever contain nodes of the
 // same BrowsingContext::Type. This is enforced by asserts in the
 // BrowsingContext::Create* methods.
-class BrowsingContext : public nsILoadContext, public nsWrapperCache {
+class BrowsingContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(BrowsingContext, MOZ_EACH_BC_FIELD)
 
  public:
@@ -434,7 +432,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BrowsingContext)
-  NS_DECL_NSILOADCONTEXT
 
   const Children& GetChildren() { return mChildren; }
   const nsTArray<RefPtr<WindowContext>>& GetWindowContexts() {
@@ -511,22 +508,19 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
    * This object may be serialized over IPC.
    */
   struct IPCInitializer {
-    uint64_t mId = 0;
+    uint64_t mId;
 
     // IDs are used for Parent and Opener to allow for this object to be
     // deserialized before other BrowsingContext in the BrowsingContextGroup
     // have been initialized.
-    uint64_t mParentId = 0;
+    uint64_t mParentId;
     already_AddRefed<BrowsingContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
     uint64_t GetOpenerId() const { return mozilla::Get<IDX_OpenerId>(mFields); }
 
-    bool mCached = false;
-    bool mWindowless = false;
-    bool mUseRemoteTabs = false;
-    bool mUseRemoteSubframes = false;
-    OriginAttributes mOriginAttributes;
+    bool mCached;
+    bool mWindowless;
 
     FieldTuple mFields;
   };
@@ -552,9 +546,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool PendingInitialization() const { return mPendingInitialization; };
   void SetPendingInitialization(bool aVal) { mPendingInitialization = aVal; };
 
-  const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
-  nsresult SetOriginAttributes(const OriginAttributes& aAttrs);
-
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(BrowsingContext* aParent, BrowsingContextGroup* aGroup,
@@ -566,12 +557,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // '_top', but not '_blank'. The latter is handled in FindWithName
   BrowsingContext* FindWithSpecialName(const nsAString& aName,
                                        BrowsingContext& aRequestingContext);
-
-  // Is it early enough in the BrowsingContext's lifecycle that it is still
-  // OK to set OriginAttributes?
-  bool CanSetOriginAttributes();
-
-  void AssertOriginAttributesMatchPrivateBrowsing();
 
   friend class ::nsOuterWindowProxy;
   friend class ::nsGlobalWindowOuter;
@@ -718,16 +703,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   JS::Heap<JSObject*> mWindowProxy;
   LocationProxy mLocation;
 
-  // OriginAttributes for this BrowsingContext. May not be changed after this
-  // BrowsingContext is attached.
-  OriginAttributes mOriginAttributes;
-
-  // Determines if private browsing should be used. May not be changed after
-  // this BrowsingContext is attached. This field matches mOriginAttributes in
-  // content Browsing Contexts. Currently treated as a binary value: 1 - in
-  // private mode, 0 - not private mode.
-  uint32_t mPrivateBrowsingId;
-
   // True if Attach() has been called on this BrowsingContext already.
   bool mEverAttached : 1;
 
@@ -755,14 +730,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // True if this BrowsingContext has been embedded in a element in this
   // process.
   bool mEmbeddedByThisProcess : 1;
-
-  // Determines if remote (out-of-process) tabs should be used. May not be
-  // changed after this BrowsingContext is attached.
-  bool mUseRemoteTabs : 1;
-
-  // Determines if out-of-process iframes should be used. May not be changed
-  // after this BrowsingContext is attached.
-  bool mUseRemoteSubframes : 1;
 
   // The start time of user gesture, this is only available if the browsing
   // context is in process.

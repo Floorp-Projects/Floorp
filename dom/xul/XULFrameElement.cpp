@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
-#include "nsIBrowser.h"
 #include "nsIContent.h"
-#include "nsIOpenWindowInfo.h"
 #include "nsFrameLoader.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
@@ -22,12 +20,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(XULFrameElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULFrameElement, nsXULElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpener);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULFrameElement, nsXULElement)
   if (tmp->mFrameLoader) {
     tmp->mFrameLoader->Destroy();
   }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader, mOpener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULFrameElement, nsXULElement,
@@ -75,20 +75,24 @@ void XULFrameElement::LoadSrc() {
   }
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
-    // We may have had a nsIOpenWindowInfo set on our nsIBrowser by browser
-    // chrome, due to being used as the target for a `window.open` call. Fetch
-    // that information if it's available, and clear it out so we don't read it
-    // again.
-    nsCOMPtr<nsIOpenWindowInfo> openWindowInfo;
-    if (nsCOMPtr<nsIBrowser> browser = AsBrowser()) {
-      browser->GetOpenWindowInfo(getter_AddRefs(openWindowInfo));
-      browser->SetOpenWindowInfo(nullptr);
+    // Check if we have an opener we need to be setting
+    RefPtr<BrowsingContext> opener = mOpener;
+    if (!opener) {
+      // If we are a primary xul-browser, we want to take the opener property!
+      nsCOMPtr<nsPIDOMWindowOuter> window = OwnerDoc()->GetWindow();
+      if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true,
+                      eIgnoreCase) &&
+          window) {
+        opener = window->TakeOpenerForInitialContentBrowser();
+      }
     }
+    mOpener = nullptr;
 
-    // false as the networkCreated parameter so that xul:iframe/browser/editor
-    // session history handling works like dynamic html:iframes. Usually xul
-    // elements are used in chrome, which doesn't have session history at all.
-    mFrameLoader = nsFrameLoader::Create(this, false, openWindowInfo);
+    // false as the last parameter so that xul:iframe/browser/editor
+    // session history handling works like dynamic html:iframes.
+    // Usually xul elements are used in chrome, which doesn't have
+    // session history at all.
+    mFrameLoader = nsFrameLoader::Create(this, opener, false);
     if (NS_WARN_IF(!mFrameLoader)) {
       return;
     }

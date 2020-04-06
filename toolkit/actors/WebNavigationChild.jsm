@@ -22,6 +22,9 @@ class WebNavigationChild extends JSWindowActorChild {
       case "WebNavigation:GotoIndex":
         this.gotoIndex(message.data);
         break;
+      case "WebNavigation:SetOriginAttributes":
+        this.setOriginAttributes(message.data.originAttributes);
+        break;
       case "WebNavigation:Reload":
         this.reload(message.data.loadFlags);
         break;
@@ -73,6 +76,12 @@ class WebNavigationChild extends JSWindowActorChild {
         line
       );
       debug.abort("WebNavigationChild.jsm", line);
+    }
+  }
+
+  setOriginAttributes(originAttributes) {
+    if (originAttributes) {
+      this.webNavigation.setOriginAttributesBeforeLoading(originAttributes);
     }
   }
 

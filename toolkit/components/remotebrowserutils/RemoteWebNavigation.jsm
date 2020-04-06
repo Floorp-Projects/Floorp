@@ -111,6 +111,11 @@ class RemoteWebNavigation {
       cancelContentJSEpoch,
     });
   }
+  setOriginAttributesBeforeLoading(aOriginAttributes) {
+    this._sendMessage("WebNavigation:SetOriginAttributes", {
+      originAttributes: aOriginAttributes,
+    });
+  }
   reload(aReloadFlags) {
     this._sendMessage("WebNavigation:Reload", { loadFlags: aReloadFlags });
   }

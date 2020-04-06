@@ -20,7 +20,6 @@
 #include "mozilla/Maybe.h"
 #include "nsIWindowCreator.h"  // for stupid compilers
 #include "nsIWindowWatcher.h"
-#include "nsIOpenWindowInfo.h"
 #include "nsIPromptFactory.h"
 #include "nsIRemoteTab.h"
 #include "nsPIWindowWatcher.h"
@@ -116,7 +115,9 @@ class nsWindowWatcher : public nsIWindowWatcher,
   nsresult CreateChromeWindow(const nsACString& aFeatures,
                               nsIWebBrowserChrome* aParentChrome,
                               uint32_t aChromeFlags,
-                              nsIOpenWindowInfo* aOpenWindowInfo,
+                              nsIRemoteTab* aOpeningBrowserParent,
+                              mozIDOMWindowProxy* aOpener,
+                              uint64_t aNextRemoteTabId,
                               nsIWebBrowserChrome** aResult);
 
   void MaybeDisablePersistence(const nsACString& aFeatures,
