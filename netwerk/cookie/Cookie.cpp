@@ -9,7 +9,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "nsIURLParser.h"
 #include "nsURLHelper.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace mozilla {
 namespace net {
@@ -187,7 +187,8 @@ const nsCString& Cookie::GetFilePath() {
   nsIURLParser* parser = net_GetStdURLParser();
   NS_ENSURE_TRUE(parser, mFilePathCache);
 
-  int32_t pathLen = Path().Length(), filepathLen = 0;
+  int32_t pathLen = Path().Length();
+  int32_t filepathLen = 0;
   uint32_t filepathPos = 0;
 
   nsresult rv = parser->ParsePath(PromiseFlatCString(Path()).get(), pathLen,

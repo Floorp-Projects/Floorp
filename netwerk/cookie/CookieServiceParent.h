@@ -52,8 +52,7 @@ class CookieServiceParent : public PCookieServiceParent {
       const bool& aIsThirdPartySocialTrackingResource,
       const bool& aFirstPartyStorageAccessGranted,
       const uint32_t& aRejectedReason, const OriginAttributes& aAttrs,
-      const nsCString& aCookieString, const nsCString& aServerTime,
-      const bool& aFromHttp);
+      const nsCString& aCookieString, const bool& aFromHttp);
 
   mozilla::ipc::IPCResult RecvPrepareCookieList(
       const URIParams& aHost, const bool& aIsForeign,
@@ -63,9 +62,8 @@ class CookieServiceParent : public PCookieServiceParent {
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
       const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs);
 
-  void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
-                              nsTArray<CookieStruct>& aCookiesList,
-                              nsIURI* aHostURI);
+  static void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
+                                     nsTArray<CookieStruct>& aCookiesList);
 
   RefPtr<CookieService> mCookieService;
   bool mProcessingCookie;

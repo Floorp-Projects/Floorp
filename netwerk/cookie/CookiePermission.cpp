@@ -34,7 +34,7 @@ static const bool kDefaultPolicy = true;
 
 namespace {
 StaticRefPtr<CookiePermission> gSingleton;
-}
+}  // namespace
 
 NS_IMPL_ISUPPORTS(CookiePermission, nsICookiePermission)
 
@@ -57,7 +57,7 @@ bool CookiePermission::Init() {
 }
 
 NS_IMETHODIMP
-CookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
+CookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* /*aChannel*/,
                                nsICookie* aCookie, bool* aIsSession,
                                int64_t* aExpiry, bool* aResult) {
   NS_ASSERTION(aURI, "null uri");
@@ -65,9 +65,11 @@ CookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
   *aResult = kDefaultPolicy;
 
   // Lazily initialize ourselves
-  if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
+  if (!EnsureInitialized()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  Cookie* cookie = static_cast<Cookie*>(aCookie);
+  auto* cookie = static_cast<Cookie*>(aCookie);
   uint32_t perm;
   mPermMgr->LegacyTestPermissionFromURI(aURI, &cookie->OriginAttributesRef(),
                                         NS_LITERAL_CSTRING("cookie"), &perm);

@@ -82,8 +82,8 @@ class CookieService final : public nsICookieService,
   static bool CanSetCookie(nsIURI* aHostURI, const nsACString& aBaseDomain,
                            CookieStruct& aCookieData, bool aRequireHostMatch,
                            CookieStatus aStatus, nsCString& aCookieHeader,
-                           int64_t aServerTime, bool aFromHttp,
-                           nsIChannel* aChannel, bool& aSetCookie,
+                           bool aFromHttp, nsIChannel* aChannel,
+                           bool& aSetCookie,
                            mozIThirdPartyUtil* aThirdPartyUtil);
   static CookieStatus CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
                                  nsIURI* aHostURI, bool aIsForeign,
@@ -94,7 +94,6 @@ class CookieService final : public nsICookieService,
                                  const int aNumOfCookies,
                                  const OriginAttributes& aOriginAttrs,
                                  uint32_t* aRejectedReason);
-  static int64_t ParseServerTime(const nsACString& aServerTime);
 
   static already_AddRefed<nsICookieJarSettings> GetCookieJarSettings(
       nsIChannel* aChannel);
@@ -136,20 +135,21 @@ class CookieService final : public nsICookieService,
       const OriginAttributes& aOriginAttrs, nsACString& aCookie);
   nsresult SetCookieStringCommon(nsIURI* aHostURI,
                                  const nsACString& aCookieHeader,
-                                 const nsACString& aServerTime,
                                  nsIChannel* aChannel, bool aFromHttp);
-  void SetCookieStringInternal(
-      nsIURI* aHostURI, bool aIsForeign, bool aIsThirdPartyTrackingResource,
-      bool aIsThirdPartySocialTrackingResource,
-      bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
-      nsCString& aCookieHeader, const nsACString& aServerTime, bool aFromHttp,
-      const OriginAttributes& aOriginAttrs, nsIChannel* aChannel);
+  void SetCookieStringInternal(nsIURI* aHostURI, bool aIsForeign,
+                               bool aIsThirdPartyTrackingResource,
+                               bool aIsThirdPartySocialTrackingResource,
+                               bool aFirstPartyStorageAccessGranted,
+                               uint32_t aRejectedReason,
+                               nsCString& aCookieHeader, bool aFromHttp,
+                               const OriginAttributes& aOriginAttrs,
+                               nsIChannel* aChannel);
   bool SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
                          const nsACString& aBaseDomain,
                          const OriginAttributes& aOriginAttributes,
                          bool aRequireHostMatch, CookieStatus aStatus,
-                         nsCString& aCookieHeader, int64_t aServerTime,
-                         bool aFromHttp, nsIChannel* aChannel);
+                         nsCString& aCookieHeader, bool aFromHttp,
+                         nsIChannel* aChannel);
   static bool GetTokenValue(nsACString::const_char_iterator& aIter,
                             nsACString::const_char_iterator& aEndIter,
                             nsDependentCSubstring& aTokenString,
@@ -167,8 +167,8 @@ class CookieService final : public nsICookieService,
                         nsIURI* aHostURI);
   static bool CheckPrefixes(CookieStruct& aCookieData, bool aSecureRequest);
   static bool GetExpiry(CookieStruct& aCookieData, const nsACString& aExpires,
-                        const nsACString& aMaxage, int64_t aServerTime,
-                        int64_t aCurrentTime, bool aFromHttp);
+                        const nsACString& aMaxage, int64_t aCurrentTime,
+                        bool aFromHttp);
   void NotifyAccepted(nsIChannel* aChannel);
   void NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
                       uint32_t aRejectedReason, CookieOperation aOperation);

@@ -58,10 +58,6 @@ parent:
    *        tracking resource, or if it's not a 3rd party context.
    * @param cookieString
    *        Same as the 'aCookie' argument to nsICookieService.setCookieString.
-   * @param serverTime
-   *        Same as the 'aServerTime' argument to
-   *        nsICookieService.setCookieStringFromHttp. If the string is empty or
-   *        null (e.g. for non-HTTP requests), the current local time is used.
    * @param fromHttp
    *        Whether the result is for an HTTP request header. This should be
    *        true for nsICookieService.setCookieStringFromHttp calls, false
@@ -81,7 +77,6 @@ parent:
                                             uint32_t rejectedReason,
                                             OriginAttributes aStoragePrincipalAttrs,
                                             nsCString cookieString,
-                                            nsCString serverTime,
                                             bool aFromHttp);
 
   async PrepareCookieList(URIParams host,

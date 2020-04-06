@@ -88,8 +88,8 @@ class CookiePersistentStorage final : public CookieStorage {
  private:
   CookiePersistentStorage();
 
-  void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
-                          mozIStorageBindingParamsArray* aParamsArray);
+  static void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
+                                 mozIStorageBindingParamsArray* aParamsArray);
 
   void PrepareCookieRemoval(const CookieListIter& aIter,
                             mozIStorageBindingParamsArray* aParamsArray);
@@ -97,7 +97,7 @@ class CookiePersistentStorage final : public CookieStorage {
   void InitDBConn();
   nsresult InitDBConnInternal();
 
-  OpenDBResult TryInitDB(bool aDeleteExistingDB);
+  OpenDBResult TryInitDB(bool aRecreateDB);
   OpenDBResult Read();
 
   nsresult CreateTableWorker(const char* aName);
@@ -105,7 +105,7 @@ class CookiePersistentStorage final : public CookieStorage {
   nsresult CreateTableForSchemaVersion6();
   nsresult CreateTableForSchemaVersion5();
 
-  UniquePtr<CookieStruct> GetCookieFromRow(mozIStorageStatement* aRow);
+  static UniquePtr<CookieStruct> GetCookieFromRow(mozIStorageStatement* aRow);
 
   already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
                                           uint16_t aMaxNumberOfCookies,
