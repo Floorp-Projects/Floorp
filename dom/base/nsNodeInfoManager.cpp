@@ -384,7 +384,7 @@ bool nsNodeInfoManager::InternalSVGEnabled() {
              nsIContentPolicy::TYPE_IMAGE ||
          loadInfo->GetExternalContentPolicyType() ==
              nsIContentPolicy::TYPE_OTHER) &&
-        (IsSystemOrAddonPrincipal(loadInfo->GetLoadingPrincipal()) ||
+        (IsSystemOrAddonPrincipal(loadInfo->LoadingPrincipal()) ||
          IsSystemOrAddonPrincipal(loadInfo->TriggeringPrincipal()))));
   mSVGEnabled = Some(conclusion);
   return conclusion;

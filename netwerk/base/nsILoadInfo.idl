@@ -253,12 +253,11 @@ interface nsILoadInfo : nsISupports
    */
   readonly attribute nsIPrincipal loadingPrincipal;
 
-%{C++
   /**
    * A C++-friendly version of loadingPrincipal.
    */
-  virtual nsIPrincipal* GetLoadingPrincipal() = 0;
-%}
+  [noscript, notxpcom, nostdcall, binaryname(LoadingPrincipal)]
+  nsIPrincipal binaryLoadingPrincipal();
 
   /**
    * This is the principal which caused the network load to start. I.e.

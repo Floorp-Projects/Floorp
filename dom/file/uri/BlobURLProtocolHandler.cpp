@@ -811,8 +811,8 @@ BlobURLProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   // principal and which is never mutated to have a non-zero mPrivateBrowsingId
   // or container.
   if (aLoadInfo &&
-      (!aLoadInfo->GetLoadingPrincipal() ||
-       !aLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) &&
+      (!aLoadInfo->LoadingPrincipal() ||
+       !aLoadInfo->LoadingPrincipal()->IsSystemPrincipal()) &&
       !ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
           aLoadInfo->GetOriginAttributes(),
           BasePrincipal::Cast(info->mPrincipal)->OriginAttributesRef())) {

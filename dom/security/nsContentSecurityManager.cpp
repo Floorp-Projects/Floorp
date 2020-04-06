@@ -711,7 +711,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 
     // Log Principals
     nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
-    LogPrincipal(aLoadInfo->GetLoadingPrincipal(),
+    LogPrincipal(aLoadInfo->LoadingPrincipal(),
                  NS_LITERAL_STRING("loadingPrincipal"));
     LogPrincipal(requestPrincipal, NS_LITERAL_STRING("triggeringPrincipal"));
     LogPrincipal(aLoadInfo->PrincipalToInherit(),
@@ -769,8 +769,8 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
 
   // nothing to do here if we are not loading a resource into a
   // system prvileged context.
-  if (!loadInfo->GetLoadingPrincipal() ||
-      !loadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) {
+  if (!loadInfo->LoadingPrincipal() ||
+      !loadInfo->LoadingPrincipal()->IsSystemPrincipal()) {
     return NS_OK;
   }
 
@@ -1033,7 +1033,7 @@ nsresult nsContentSecurityManager::CheckChannel(nsIChannel* aChannel) {
     // We shouldn't have the SEC_COOKIES_SAME_ORIGIN flag for top level loads
     MOZ_ASSERT(loadInfo->GetExternalContentPolicyType() !=
                nsIContentPolicy::TYPE_DOCUMENT);
-    nsIPrincipal* loadingPrincipal = loadInfo->GetLoadingPrincipal();
+    nsIPrincipal* loadingPrincipal = loadInfo->LoadingPrincipal();
 
     // It doesn't matter what we pass for the second, data-inherits, argument.
     // Any protocol which inherits won't pay attention to cookies anyway.
