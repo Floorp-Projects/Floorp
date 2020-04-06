@@ -5820,16 +5820,8 @@ void PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly) {
 }
 
 bool PresShell::AssumeAllFramesVisible() {
-  static bool sFrameVisibilityEnabled = true;
-  static bool sFrameVisibilityPrefCached = false;
-
-  if (!sFrameVisibilityPrefCached) {
-    Preferences::AddBoolVarCache(&sFrameVisibilityEnabled,
-                                 "layout.framevisibility.enabled", true);
-    sFrameVisibilityPrefCached = true;
-  }
-
-  if (!sFrameVisibilityEnabled || !mPresContext || !mDocument) {
+  if (!StaticPrefs::layout_framevisibility_enabled() || !mPresContext ||
+      !mDocument) {
     return true;
   }
 

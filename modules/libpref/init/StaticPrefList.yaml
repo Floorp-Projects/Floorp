@@ -6016,6 +6016,12 @@
   value: true
   mirror: always
 
+# Whether frame visibility tracking is enabled globally.
+- name: layout.framevisibility.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # The fraction of the scrollport we allow to horizontally scroll by before we
 # schedule an update of frame visibility.
 - name: layout.framevisibility.amountscrollbeforeupdatehorizontal
