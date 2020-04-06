@@ -6058,6 +6058,22 @@
   value: 2
   mirror: always
 
+# The number of scrollports wide to expand when tracking frame visibility.
+- name: layout.framevisibility.numscrollportwidths
+  type: uint32_t
+#ifdef ANDROID
+  value: 1
+#else
+  value: 0
+#endif
+  mirror: always
+
+# The number of scrollports high to expand when tracking frame visibility.
+- name: layout.framevisibility.numscrollportheights
+  type: uint32_t
+  value: 1
+  mirror: always
+
 # Whether we expand the layout viewport even if the expanded viewport doesn't
 # contain any contents in the area.
 - name: layout.viewport_contains_no_contents_area

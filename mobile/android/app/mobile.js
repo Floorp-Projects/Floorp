@@ -592,9 +592,6 @@ pref("media.stagefright.omxcodec.flags", 0);
 // Coalesce touch events to prevent them from flooding the event queue
 pref("dom.event.touch.coalescing.enabled", false);
 
-pref("layout.framevisibility.numscrollportwidths", 1);
-pref("layout.framevisibility.numscrollportheights", 1);
-
 pref("layers.enable-tiles", true);
 
 // Enable the dynamic toolbar
