@@ -35,9 +35,7 @@ PerformancePanel.prototype = {
     // in the case of the front still being in the process of opening.
     const front = await this.target.getFront("performance");
 
-    // Keep references on window for toolbox, target and front for tests.
-    this.panelWin.gToolbox = this.toolbox;
-    this.panelWin.gTarget = this.target;
+    // Keep references on window for front for tests.
     this.panelWin.gFront = front;
 
     // This should only happen if this is completely unsupported (when profiler
