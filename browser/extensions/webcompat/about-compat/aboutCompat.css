@@ -28,8 +28,7 @@
   .wide-button {
     display: block;
     min-height: 32px;
-    padding-left: 30px;
-    padding-right: 30px;
+    padding-inline: 30px;
   }
 
   .submitting {
@@ -69,12 +68,8 @@
     font-weight: lighter;
   }
 
-  html[dir="ltr"] th {
-    text-align: left;
-  }
-
-  html[dir="rtl"] th {
-    text-align: right;
+  th {
+    text-align: start;
   }
 }
 
@@ -152,12 +147,7 @@
   td {
     display: block;
     position: relative;
-  }
-  td:dir(ltr) {
-    padding-right: 6.5em;
-  }
-  td:dir(rtl) {
-    padding-left: 6.5em;
+    padding-inline-end: 6.5em;
   }
 
   td[colspan="4"] {
@@ -183,17 +173,12 @@
     position: absolute;
     top: 0;
     bottom: 0;
+    inset-inline-end: 0;
     width: 6em;
     border: 0;
-    border-left: 1px solid #d7d9db;
+    border-inline-start: 1px solid #d7d9db;
     -moz-appearance: none;
     color: #000;
-  }
-  button:dir(ltr) {
-    right: 0;
-  }
-  button:dir(rtl) {
-    left: 0;
   }
 
   button::-moz-focus-inner {
