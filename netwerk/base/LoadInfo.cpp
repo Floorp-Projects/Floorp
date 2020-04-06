@@ -727,7 +727,9 @@ LoadInfo::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal) {
   return NS_OK;
 }
 
-nsIPrincipal* LoadInfo::LoadingPrincipal() { return mLoadingPrincipal; }
+nsIPrincipal* LoadInfo::VirtualGetLoadingPrincipal() {
+  return mLoadingPrincipal;
+}
 
 NS_IMETHODIMP
 LoadInfo::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal) {

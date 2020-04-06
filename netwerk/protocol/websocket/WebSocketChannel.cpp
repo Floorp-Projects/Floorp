@@ -3367,7 +3367,7 @@ WebSocketChannel::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
       nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY |
           nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
           nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
-      mLoadInfo->LoadingNode(), mLoadInfo->LoadingPrincipal(),
+      mLoadInfo->LoadingNode(), mLoadInfo->GetLoadingPrincipal(),
       mLoadInfo->TriggeringPrincipal(), mLoadInfo->GetSecurityFlags(),
       mLoadInfo->InternalContentPolicyType(), getter_AddRefs(localChannel));
   NS_ENSURE_SUCCESS(rv, rv);

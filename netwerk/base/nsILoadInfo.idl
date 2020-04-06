@@ -254,10 +254,19 @@ interface nsILoadInfo : nsISupports
   readonly attribute nsIPrincipal loadingPrincipal;
 
   /**
-   * A C++-friendly version of loadingPrincipal.
+   * A C++-friendly version of triggeringPrincipal.
+   *
+   * This is a bit awkward because we can't use
+   * binaryname(GetLoadingPrincipal).
    */
-  [noscript, notxpcom, nostdcall, binaryname(LoadingPrincipal)]
-  nsIPrincipal binaryLoadingPrincipal();
+  [noscript, notxpcom, nostdcall]
+  nsIPrincipal virtualGetLoadingPrincipal();
+
+%{C++
+  nsIPrincipal* GetLoadingPrincipal() {
+    return VirtualGetLoadingPrincipal();
+  }
+%}
 
   /**
    * This is the principal which caused the network load to start. I.e.
