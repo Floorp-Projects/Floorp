@@ -5,7 +5,7 @@ const { PlacesTestUtils } = ChromeUtils.import(
   "resource://testing-common/PlacesTestUtils.jsm"
 );
 
-function promisePageActionPanelOpen() {
+function promisePageActionPanelOpen(eventDict = {}) {
   let dwu = window.windowUtils;
   return BrowserTestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
@@ -24,7 +24,10 @@ function promisePageActionPanelOpen() {
         return Promise.resolve();
       }
       let shownPromise = promisePageActionPanelShown();
-      EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+      EventUtils.synthesizeMouseAtCenter(
+        BrowserPageActions.mainButtonNode,
+        eventDict
+      );
       return shownPromise;
     })
     .then(() => {
