@@ -218,7 +218,8 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
  public:
   WindowsProcessLauncher(GeckoChildProcessHost* aHost,
                          std::vector<std::string>&& aExtraOpts)
-      : BaseProcessLauncher(aHost, std::move(aExtraOpts)) {}
+      : BaseProcessLauncher(aHost, std::move(aExtraOpts)),
+        mProfileDir(aHost->mProfileDir) {}
 
  protected:
   virtual bool DoSetup() override;
@@ -227,6 +228,8 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
 
   mozilla::Maybe<CommandLine> mCmdLine;
   bool mUseSandbox = false;
+
+  nsCOMPtr<nsIFile> mProfileDir;
 };
 typedef WindowsProcessLauncher ProcessLauncher;
 #endif  // XP_WIN
@@ -575,6 +578,11 @@ void GeckoChildProcessHost::PrepareLaunch() {
   // them to turn on logging via an environment variable.
   mEnableSandboxLogging =
       mEnableSandboxLogging || !!PR_GetEnv("MOZ_SANDBOX_LOGGING");
+
+  if (ShouldHaveDirectoryService() && mProcessType == GeckoProcessType_GPU) {
+    mozilla::Unused << NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                              getter_AddRefs(mProfileDir));
+  }
 #  endif
 #elif defined(XP_MACOSX)
 #  if defined(MOZ_SANDBOX)
@@ -1415,7 +1423,8 @@ bool WindowsProcessLauncher::DoSetup() {
         // For now we treat every failure as fatal in
         // SetSecurityLevelForGPUProcess and just crash there right away. Should
         // this change in the future then we should also handle the error here.
-        mResults.mSandboxBroker->SetSecurityLevelForGPUProcess(mSandboxLevel);
+        mResults.mSandboxBroker->SetSecurityLevelForGPUProcess(mSandboxLevel,
+                                                               mProfileDir);
         mUseSandbox = true;
       }
       break;

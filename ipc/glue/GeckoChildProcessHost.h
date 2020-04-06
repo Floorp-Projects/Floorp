@@ -181,6 +181,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
 
   friend class BaseProcessLauncher;
   friend class PosixProcessLauncher;
+  friend class WindowsProcessLauncher;
 
  protected:
   ~GeckoChildProcessHost();
@@ -269,7 +270,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
 
   // Linux-Only. Set this up before we're called from a different thread.
   nsCString mTmpDirName;
-  // Mac-Only. Set this up before we're called from a different thread.
+  // Mac and Windows. Set this up before we're called from a different thread.
   nsCOMPtr<nsIFile> mProfileDir;
 
   mozilla::Atomic<bool> mDestroying;

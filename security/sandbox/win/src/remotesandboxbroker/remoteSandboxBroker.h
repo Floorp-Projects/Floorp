@@ -35,7 +35,8 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   // Security levels for different types of processes
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                          bool aIsFileProcess) override;
-  void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) override;
+  void SetSecurityLevelForGPUProcess(
+      int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) override;
   bool SetSecurityLevelForRDDProcess() override;
   bool SetSecurityLevelForSocketProcess() override;
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) override;
