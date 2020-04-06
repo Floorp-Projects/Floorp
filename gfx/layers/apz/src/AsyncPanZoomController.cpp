@@ -3264,12 +3264,14 @@ bool AsyncPanZoomController::AttemptScroll(
     // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
     // is what's left of "displacement", and "displacement" is "start - end".
     ++aOverscrollHandoffState.mChainIndex;
-    CallDispatchScroll(aStartPoint, aEndPoint, aOverscrollHandoffState);
-
-    overscroll = aStartPoint - aEndPoint;
-    if (IsZero(overscroll)) {
+    bool consumed =
+        CallDispatchScroll(aStartPoint, aEndPoint, aOverscrollHandoffState);
+    if (consumed) {
       return true;
     }
+
+    overscroll = aStartPoint - aEndPoint;
+    MOZ_ASSERT(!IsZero(overscroll));
   }
 
   // If there is no APZC later in the handoff chain that accepted the
@@ -3501,7 +3503,7 @@ void AsyncPanZoomController::StartOverscrollAnimation(
   StartAnimation(new OverscrollAnimation(*this, aVelocity));
 }
 
-void AsyncPanZoomController::CallDispatchScroll(
+bool AsyncPanZoomController::CallDispatchScroll(
     ParentLayerPoint& aStartPoint, ParentLayerPoint& aEndPoint,
     OverscrollHandoffState& aOverscrollHandoffState) {
   // Make a local copy of the tree manager pointer and check if it's not
@@ -3509,7 +3511,7 @@ void AsyncPanZoomController::CallDispatchScroll(
   // Destroy(), which nulls out mTreeManager, could be called concurrently.
   APZCTreeManager* treeManagerLocal = GetApzcTreeManager();
   if (!treeManagerLocal) {
-    return;
+    return false;
   }
 
   // Obey overscroll-behavior.
@@ -3524,12 +3526,12 @@ void AsyncPanZoomController::CallDispatchScroll(
     }
     if (aStartPoint == endPoint) {
       // Handoff not allowed in either direction - don't even bother.
-      return;
+      return false;
     }
   }
 
-  treeManagerLocal->DispatchScroll(this, aStartPoint, endPoint,
-                                   aOverscrollHandoffState);
+  return treeManagerLocal->DispatchScroll(this, aStartPoint, endPoint,
+                                          aOverscrollHandoffState);
 }
 
 void AsyncPanZoomController::RecordScrollPayload(const TimeStamp& aTimeStamp) {
