@@ -30,7 +30,7 @@ namespace {
 
 class PermissionComparator {
  public:
-  bool Equals(nsIPermission* aA, nsIPermission* aB) const {
+  static bool Equals(nsIPermission* aA, nsIPermission* aB) {
     nsCOMPtr<nsIPrincipal> principalA;
     nsresult rv = aA->GetPrincipal(getter_AddRefs(principalA));
     if (NS_WARN_IF(NS_FAILED(rv))) {

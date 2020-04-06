@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Cookie.h"
 #include "CookieCommons.h"
 #include "CookieLogging.h"
 #include "CookiePersistentStorage.h"
@@ -15,6 +16,7 @@
 #include "mozIStorageService.h"
 #include "mozStorageHelper.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsICookieService.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsILineInputStream.h"
 #include "nsNetUtil.h"
@@ -25,21 +27,21 @@
 // This is a hack to hide HttpOnly cookies from older browsers
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
 
-#define COOKIES_SCHEMA_VERSION 11
+constexpr auto COOKIES_SCHEMA_VERSION = 11;
 
 // parameter indexes; see |Read|
-#define IDX_NAME 0
-#define IDX_VALUE 1
-#define IDX_HOST 2
-#define IDX_PATH 3
-#define IDX_EXPIRY 4
-#define IDX_LAST_ACCESSED 5
-#define IDX_CREATION_TIME 6
-#define IDX_SECURE 7
-#define IDX_HTTPONLY 8
-#define IDX_ORIGIN_ATTRIBUTES 9
-#define IDX_SAME_SITE 10
-#define IDX_RAW_SAME_SITE 11
+constexpr auto IDX_NAME = 0;
+constexpr auto IDX_VALUE = 1;
+constexpr auto IDX_HOST = 2;
+constexpr auto IDX_PATH = 3;
+constexpr auto IDX_EXPIRY = 4;
+constexpr auto IDX_LAST_ACCESSED = 5;
+constexpr auto IDX_CREATION_TIME = 6;
+constexpr auto IDX_SECURE = 7;
+constexpr auto IDX_HTTPONLY = 8;
+constexpr auto IDX_ORIGIN_ATTRIBUTES = 9;
+constexpr auto IDX_SAME_SITE = 10;
+constexpr auto IDX_RAW_SAME_SITE = 11;
 
 #define COOKIES_FILE "cookies.sqlite"
 #define OLD_COOKIE_FILE_NAME "cookies.txt"
@@ -258,7 +260,7 @@ class InsertCookieDBListener final : public DBListenerErrorHandler {
 
   explicit InsertCookieDBListener(CookiePersistentStorage* dbState)
       : DBListenerErrorHandler(dbState) {}
-  NS_IMETHOD HandleResult(mozIStorageResultSet*) override {
+  NS_IMETHOD HandleResult(mozIStorageResultSet* /*aResultSet*/) override {
     MOZ_ASSERT_UNREACHABLE(
         "Unexpected call to "
         "InsertCookieDBListener::HandleResult");
@@ -302,13 +304,13 @@ class UpdateCookieDBListener final : public DBListenerErrorHandler {
 
   explicit UpdateCookieDBListener(CookiePersistentStorage* dbState)
       : DBListenerErrorHandler(dbState) {}
-  NS_IMETHOD HandleResult(mozIStorageResultSet*) override {
+  NS_IMETHOD HandleResult(mozIStorageResultSet* /*aResultSet*/) override {
     MOZ_ASSERT_UNREACHABLE(
         "Unexpected call to "
         "UpdateCookieDBListener::HandleResult");
     return NS_OK;
   }
-  NS_IMETHOD HandleCompletion(uint16_t aReason) override { return NS_OK; }
+  NS_IMETHOD HandleCompletion(uint16_t /*aReason*/) override { return NS_OK; }
 };
 
 NS_IMPL_ISUPPORTS(UpdateCookieDBListener, mozIStorageStatementCallback)
@@ -328,13 +330,13 @@ class RemoveCookieDBListener final : public DBListenerErrorHandler {
 
   explicit RemoveCookieDBListener(CookiePersistentStorage* dbState)
       : DBListenerErrorHandler(dbState) {}
-  NS_IMETHOD HandleResult(mozIStorageResultSet*) override {
+  NS_IMETHOD HandleResult(mozIStorageResultSet* /*aResultSet*/) override {
     MOZ_ASSERT_UNREACHABLE(
         "Unexpected call to "
         "RemoveCookieDBListener::HandleResult");
     return NS_OK;
   }
-  NS_IMETHOD HandleCompletion(uint16_t aReason) override { return NS_OK; }
+  NS_IMETHOD HandleCompletion(uint16_t /*aReason*/) override { return NS_OK; }
 };
 
 NS_IMPL_ISUPPORTS(RemoveCookieDBListener, mozIStorageStatementCallback)
@@ -353,7 +355,7 @@ class CloseCookieDBListener final : public mozIStorageCompletionCallback {
   RefPtr<CookiePersistentStorage> mStorage;
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Complete(nsresult, nsISupports*) override {
+  NS_IMETHOD Complete(nsresult /*status*/, nsISupports* /*value*/) override {
     mStorage->HandleDBClosed();
     return NS_OK;
   }
@@ -585,21 +587,32 @@ nsresult CookiePersistentStorage::ImportCookies(nsIFile* aCookieFile) {
   nsresult rv;
   nsCOMPtr<nsIInputStream> fileInputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), aCookieFile);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsILineInputStream> lineInputStream =
       do_QueryInterface(fileInputStream, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   static const char kTrue[] = "TRUE";
 
-  nsAutoCString buffer, baseDomain;
+  nsAutoCString buffer;
+  nsAutoCString baseDomain;
   bool isMore = true;
-  int32_t hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex,
-      nameIndex, cookieIndex;
+  int32_t hostIndex;
+  int32_t isDomainIndex;
+  int32_t pathIndex;
+  int32_t secureIndex;
+  int32_t expiresIndex;
+  int32_t nameIndex;
+  int32_t cookieIndex;
   int32_t numInts;
   int64_t expires;
-  bool isDomain, isHttpOnly = false;
+  bool isDomain;
+  bool isHttpOnly = false;
   uint32_t originalCookieCount = mCookieCount;
 
   int64_t currentTimeInUsec = PR_Now();
@@ -684,7 +697,9 @@ nsresult CookiePersistentStorage::ImportCookies(nsIFile* aCookieFile) {
 
     // compute the baseDomain from the host
     rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
-    if (NS_FAILED(rv)) continue;
+    if (NS_FAILED(rv)) {
+      continue;
+    }
 
     // pre-existing cookies have inIsolatedMozBrowser=false set by default
     // constructor of OriginAttributes().
@@ -1037,13 +1052,16 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
             getter_AddRefs(update));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-        nsCString baseDomain, host;
+        nsCString baseDomain;
+        nsCString host;
         bool hasResult;
         while (true) {
           rv = select->ExecuteStep(&hasResult);
           NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-          if (!hasResult) break;
+          if (!hasResult) {
+            break;
+          }
 
           int64_t id = select->AsInt64(SCHEMA2_IDX_ID);
           select->GetUTF8String(SCHEMA2_IDX_HOST, host);
@@ -1108,19 +1126,25 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         if (hasResult) {
-          nsCString name1, host1, path1;
+          nsCString name1;
+          nsCString host1;
+          nsCString path1;
           int64_t id1 = select->AsInt64(SCHEMA3_IDX_ID);
           select->GetUTF8String(SCHEMA3_IDX_NAME, name1);
           select->GetUTF8String(SCHEMA3_IDX_HOST, host1);
           select->GetUTF8String(SCHEMA3_IDX_PATH, path1);
 
-          nsCString name2, host2, path2;
+          nsCString name2;
+          nsCString host2;
+          nsCString path2;
           while (true) {
             // Read the second row.
             rv = select->ExecuteStep(&hasResult);
             NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
-            if (!hasResult) break;
+            if (!hasResult) {
+              break;
+            }
 
             int64_t id2 = select->AsInt64(SCHEMA3_IDX_ID);
             select->GetUTF8String(SCHEMA3_IDX_NAME, name2);
@@ -1575,7 +1599,9 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
                                                            "rawSameSite "
                                                            "FROM moz_cookies"),
                                         getter_AddRefs(stmt));
-        if (NS_SUCCEEDED(rv)) break;
+        if (NS_SUCCEEDED(rv)) {
+          break;
+        }
 
         // our columns aren't there - drop the table!
         rv = mSyncConn->ExecuteSimpleSQL(
@@ -1776,7 +1802,11 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
   }
   mReadArray.SetCapacity(kMaxNumberOfCookies);
 
-  nsCString baseDomain, name, value, host, path;
+  nsCString baseDomain;
+  nsCString name;
+  nsCString value;
+  nsCString host;
+  nsCString path;
   bool hasResult;
   while (true) {
     rv = stmt->ExecuteStep(&hasResult);
@@ -1785,7 +1815,9 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
       return RESULT_RETRY;
     }
 
-    if (!hasResult) break;
+    if (!hasResult) {
+      break;
+    }
 
     stmt->GetUTF8String(IDX_HOST, host);
 
@@ -1819,7 +1851,10 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
 // Extract data from a single result row and create an Cookie.
 UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
     mozIStorageStatement* aRow) {
-  nsCString name, value, host, path;
+  nsCString name;
+  nsCString value;
+  nsCString host;
+  nsCString path;
   DebugOnly<nsresult> rv = aRow->GetUTF8String(IDX_NAME, name);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   rv = aRow->GetUTF8String(IDX_VALUE, value);
@@ -2048,10 +2083,14 @@ nsresult CookiePersistentStorage::CreateTableWorker(const char* aName) {
 nsresult CookiePersistentStorage::CreateTable() {
   // Set the schema version, before creating the table.
   nsresult rv = mSyncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   rv = CreateTableWorker("moz_cookies");
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -2060,7 +2099,9 @@ nsresult CookiePersistentStorage::CreateTable() {
 nsresult CookiePersistentStorage::CreateTableForSchemaVersion6() {
   // Set the schema version, before creating the table.
   nsresult rv = mSyncConn->SetSchemaVersion(6);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Create the table.
   // We default originAttributes to empty string: this is so if users revert to
@@ -2082,7 +2123,9 @@ nsresult CookiePersistentStorage::CreateTableForSchemaVersion6() {
       "isHttpOnly INTEGER, "
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)"
       ")"));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Create an index on baseDomain.
   return mSyncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -2094,7 +2137,9 @@ nsresult CookiePersistentStorage::CreateTableForSchemaVersion6() {
 nsresult CookiePersistentStorage::CreateTableForSchemaVersion5() {
   // Set the schema version, before creating the table.
   nsresult rv = mSyncConn->SetSchemaVersion(5);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Create the table. We default appId/inBrowserElement to 0: this is so if
   // users revert to an older Firefox version that doesn't know about these
@@ -2117,7 +2162,9 @@ nsresult CookiePersistentStorage::CreateTableForSchemaVersion5() {
                          "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, "
                          "appId, inBrowserElement)"
                          ")"));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Create an index on baseDomain.
   return mSyncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(

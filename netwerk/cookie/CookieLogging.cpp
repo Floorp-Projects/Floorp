@@ -6,6 +6,8 @@
 #include "CookieLogging.h"
 #include "Cookie.h"
 
+constexpr auto TIME_STRING_LENGTH = 40;
+
 namespace mozilla {
 namespace net {
 
@@ -35,16 +37,19 @@ void CookieLogging::LogSuccess(bool aSetCookie, nsIURI* aHostURI,
   }
 
   nsAutoCString spec;
-  if (aHostURI) aHostURI->GetAsciiSpec(spec);
+  if (aHostURI) {
+    aHostURI->GetAsciiSpec(spec);
+  }
 
   MOZ_LOG(gCookieLog, LogLevel::Debug,
           ("===== %s =====\n", aSetCookie ? "COOKIE ACCEPTED" : "COOKIE SENT"));
   MOZ_LOG(gCookieLog, LogLevel::Debug, ("request URL: %s\n", spec.get()));
   MOZ_LOG(gCookieLog, LogLevel::Debug,
           ("cookie string: %s\n", aCookieString.BeginReading()));
-  if (aSetCookie)
+  if (aSetCookie) {
     MOZ_LOG(gCookieLog, LogLevel::Debug,
             ("replaces existing cookie: %s\n", aReplacing ? "true" : "false"));
+  }
 
   LogCookie(aCookie);
 
@@ -56,23 +61,29 @@ void CookieLogging::LogFailure(bool aSetCookie, nsIURI* aHostURI,
                                const nsACString& aCookieString,
                                const char* aReason) {
   // if logging isn't enabled, return now to save cycles
-  if (!MOZ_LOG_TEST(gCookieLog, LogLevel::Warning)) return;
+  if (!MOZ_LOG_TEST(gCookieLog, LogLevel::Warning)) {
+    return;
+  }
 
   nsAutoCString spec;
-  if (aHostURI) aHostURI->GetAsciiSpec(spec);
+  if (aHostURI) {
+    aHostURI->GetAsciiSpec(spec);
+  }
 
   MOZ_LOG(gCookieLog, LogLevel::Warning,
           ("===== %s =====\n",
            aSetCookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT"));
   MOZ_LOG(gCookieLog, LogLevel::Warning, ("request URL: %s\n", spec.get()));
-  if (aSetCookie)
+  if (aSetCookie) {
     MOZ_LOG(gCookieLog, LogLevel::Warning,
             ("cookie string: %s\n", aCookieString.BeginReading()));
+  }
 
   PRExplodedTime explodedTime;
   PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
-  char timeString[40];
-  PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+  char timeString[TIME_STRING_LENGTH];
+  PR_FormatTimeUSEnglish(timeString, TIME_STRING_LENGTH, "%c GMT",
+                         &explodedTime);
 
   MOZ_LOG(gCookieLog, LogLevel::Warning, ("current time: %s", timeString));
   MOZ_LOG(gCookieLog, LogLevel::Warning, ("rejected because %s\n", aReason));
@@ -83,8 +94,9 @@ void CookieLogging::LogFailure(bool aSetCookie, nsIURI* aHostURI,
 void CookieLogging::LogCookie(Cookie* aCookie) {
   PRExplodedTime explodedTime;
   PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
-  char timeString[40];
-  PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+  char timeString[TIME_STRING_LENGTH];
+  PR_FormatTimeUSEnglish(timeString, TIME_STRING_LENGTH, "%c GMT",
+                         &explodedTime);
 
   MOZ_LOG(gCookieLog, LogLevel::Debug, ("current time: %s", timeString));
 
@@ -100,13 +112,15 @@ void CookieLogging::LogCookie(Cookie* aCookie) {
 
     PR_ExplodeTime(aCookie->Expiry() * int64_t(PR_USEC_PER_SEC),
                    PR_GMTParameters, &explodedTime);
-    PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+    PR_FormatTimeUSEnglish(timeString, TIME_STRING_LENGTH, "%c GMT",
+                           &explodedTime);
     MOZ_LOG(gCookieLog, LogLevel::Debug,
             ("expires: %s%s", timeString,
              aCookie->IsSession() ? " (at end of session)" : ""));
 
     PR_ExplodeTime(aCookie->CreationTime(), PR_GMTParameters, &explodedTime);
-    PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
+    PR_FormatTimeUSEnglish(timeString, TIME_STRING_LENGTH, "%c GMT",
+                           &explodedTime);
     MOZ_LOG(gCookieLog, LogLevel::Debug, ("created: %s", timeString));
 
     MOZ_LOG(gCookieLog, LogLevel::Debug,

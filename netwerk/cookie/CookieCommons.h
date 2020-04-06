@@ -10,6 +10,7 @@
 #include "prtime.h"
 #include "nsString.h"
 
+class nsIChannel;
 class nsIEffectiveTLDService;
 class nsIURI;
 
