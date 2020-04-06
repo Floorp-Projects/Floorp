@@ -5,6 +5,7 @@
 
 #include "Cookie.h"
 #include "CookieCommons.h"
+#include "mozilla/ContentBlockingNotifier.h"
 #include "nsIEffectiveTLDService.h"
 
 namespace mozilla {
@@ -124,6 +125,58 @@ nsresult CookieCommons::GetBaseDomainFromHost(
     return NS_OK;
   }
   return rv;
+}
+
+// Notify observers that a cookie was rejected due to the users' prefs.
+void CookieCommons::NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
+                                   uint32_t aRejectedReason,
+                                   CookieOperation aOperation) {
+  if (aOperation == OPERATION_WRITE) {
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
+    }
+  } else {
+    MOZ_ASSERT(aOperation == OPERATION_READ);
+  }
+
+  ContentBlockingNotifier::OnDecision(
+      aChannel, ContentBlockingNotifier::BlockingDecision::eBlock,
+      aRejectedReason);
+}
+
+bool CookieCommons::CheckPathSize(const CookieStruct& aCookieData) {
+  return aCookieData.path().Length() <= kMaxBytesPerPath;
+}
+
+bool CookieCommons::CheckNameAndValueSize(const CookieStruct& aCookieData) {
+  // reject cookie if it's over the size limit, per RFC2109
+  return (aCookieData.name().Length() + aCookieData.value().Length()) <=
+         kMaxBytesPerCookie;
+}
+
+bool CookieCommons::CheckName(const CookieStruct& aCookieData) {
+  const char illegalNameCharacters[] = {
+      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
+      0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+      0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x00};
+
+  return aCookieData.name().FindCharInSet(illegalNameCharacters, 0) == -1;
+}
+
+bool CookieCommons::CheckHttpValue(const CookieStruct& aCookieData) {
+  // reject cookie if value contains an RFC 6265 disallowed character - see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1191423
+  // NOTE: this is not the full set of characters disallowed by 6265 - notably
+  // 0x09, 0x20, 0x22, 0x2C, 0x5C, and 0x7F are missing from this list. This is
+  // for parity with Chrome. This only applies to cookies set via the Set-Cookie
+  // header, as document.cookie is defined to be UTF-8. Hooray for
+  // symmetry!</sarcasm>
+  const char illegalCharacters[] = {
+      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0A, 0x0B, 0x0C,
+      0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+      0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x3B, 0x00};
+  return aCookieData.value().FindCharInSet(illegalCharacters, 0) == -1;
 }
 
 }  // namespace net

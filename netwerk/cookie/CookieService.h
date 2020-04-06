@@ -31,10 +31,6 @@ namespace net {
 class CookiePersistentStorage;
 class CookiePrivateStorage;
 class CookieStorage;
-class CookieServiceParent;
-
-// these constants represent an operation being performed on cookies
-enum CookieOperation { OPERATION_READ, OPERATION_WRITE };
 
 // these constants represent a decision about a cookie based on user prefs.
 enum CookieStatus {
@@ -67,6 +63,8 @@ class CookieService final : public nsICookieService,
   NS_DECL_NSICOOKIESERVICE
   NS_DECL_NSICOOKIEMANAGER
   NS_DECL_NSIMEMORYREPORTER
+
+  static already_AddRefed<CookieService> GetSingleton();
 
   CookieService();
   static already_AddRefed<nsICookieService> GetXPCOMSingleton();
@@ -113,6 +111,11 @@ class CookieService final : public nsICookieService,
    */
   nsresult Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
                   const nsACString& aName, const nsACString& aPath);
+
+  bool SetCookiesFromIPC(const nsACString& aBaseDomain,
+                         const OriginAttributes& aAttrs, nsIURI* aHostURI,
+                         bool aFromHttp,
+                         const nsTArray<CookieStruct>& aCookies);
 
  protected:
   virtual ~CookieService();
@@ -170,8 +173,6 @@ class CookieService final : public nsICookieService,
                         const nsACString& aMaxage, int64_t aCurrentTime,
                         bool aFromHttp);
   void NotifyAccepted(nsIChannel* aChannel);
-  void NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
-                      uint32_t aRejectedReason, CookieOperation aOperation);
 
   nsresult GetCookiesWithOriginAttributes(
       const OriginAttributesPattern& aPattern, const nsCString& aBaseDomain,
@@ -202,13 +203,6 @@ class CookieService final : public nsICookieService,
   // private browsing.
   RefPtr<CookiePersistentStorage> mPersistentStorage;
   RefPtr<CookiePrivateStorage> mPrivateStorage;
-
-  // friends!
-  friend class DBListenerErrorHandler;
-  friend class CloseCookieDBListener;
-
-  static already_AddRefed<CookieService> GetSingleton();
-  friend class CookieServiceParent;
 };
 
 }  // namespace net

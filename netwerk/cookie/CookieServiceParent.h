@@ -45,14 +45,10 @@ class CookieServiceParent : public PCookieServiceParent {
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvSetCookieString(
-      const URIParams& aHost, const Maybe<URIParams>& aChannelURI,
-      const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
-      const bool& aIsThirdPartyTrackingResource,
-      const bool& aIsThirdPartySocialTrackingResource,
-      const bool& aFirstPartyStorageAccessGranted,
-      const uint32_t& aRejectedReason, const OriginAttributes& aAttrs,
-      const nsCString& aCookieString, const bool& aFromHttp);
+  mozilla::ipc::IPCResult RecvSetCookies(
+      const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+      const URIParams& aHost, bool aFromHttp,
+      const nsTArray<CookieStruct>& aCookies);
 
   mozilla::ipc::IPCResult RecvPrepareCookieList(
       const URIParams& aHost, const bool& aIsForeign,

@@ -17,6 +17,9 @@ class nsIURI;
 namespace mozilla {
 namespace net {
 
+// these constants represent an operation being performed on cookies
+enum CookieOperation { OPERATION_READ, OPERATION_WRITE };
+
 class Cookie;
 
 // pref string constants
@@ -49,6 +52,18 @@ class CookieCommons final {
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService* aTLDService,
                                         const nsACString& aHost,
                                         nsCString& aBaseDomain);
+
+  static void NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
+                             uint32_t aRejectedReason,
+                             CookieOperation aOperation);
+
+  static bool CheckPathSize(const CookieStruct& aCookieData);
+
+  static bool CheckNameAndValueSize(const CookieStruct& aCookieData);
+
+  static bool CheckName(const CookieStruct& aCookieData);
+
+  static bool CheckHttpValue(const CookieStruct& aCookieData);
 };
 
 }  // namespace net
