@@ -171,8 +171,8 @@ class nsCookieService final : public nsICookieService,
   nsresult CreateTableForSchemaVersion6();
   nsresult CreateTableForSchemaVersion5();
   void CloseCookieStorages();
-  void HandleDBClosed(mozilla::net::CookieStorage* aCookieStorage);
-  void RebuildCorruptDB(mozilla::net::CookieStorage* aCookieStorage);
+  void HandleDBClosed(mozilla::net::CookieDefaultStorage* aCookieStorage);
+  void RebuildCorruptDB(mozilla::net::CookieDefaultStorage* aCookieStorage);
   OpenDBResult Read();
   mozilla::UniquePtr<mozilla::net::CookieStruct> GetCookieFromRow(
       mozIStorageStatement* aRow);
@@ -237,6 +237,11 @@ class nsCookieService final : public nsICookieService,
       const nsCString& aBaseDomain);
 
  protected:
+  mozilla::net::CookieStorage* PickStorage(
+      const mozilla::OriginAttributes& aAttrs);
+  mozilla::net::CookieStorage* PickStorage(
+      const mozilla::OriginAttributesPattern& aAttrs);
+
   nsresult RemoveCookiesFromExactHost(
       const nsACString& aHost,
       const mozilla::OriginAttributesPattern& aPattern);
@@ -256,8 +261,8 @@ class nsCookieService final : public nsICookieService,
 
   // we have two separate Cookie Storages: one for normal browsing and one for
   // private browsing.
-  RefPtr<mozilla::net::CookieStorage> mDefaultStorage;
-  RefPtr<mozilla::net::CookieStorage> mPrivateStorage;
+  RefPtr<mozilla::net::CookieDefaultStorage> mDefaultStorage;
+  RefPtr<mozilla::net::CookiePrivateStorage> mPrivateStorage;
 
   uint16_t mMaxNumberOfCookies;
   uint16_t mMaxCookiesPerHost;
