@@ -12,7 +12,11 @@
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageStatementCallback.h"
+#include "nsIObserver.h"
 #include "nsTHashtable.h"
+#include "nsWeakReference.h"
+
+class nsIPrefBranch;
 
 namespace mozilla {
 namespace net {
@@ -62,9 +66,10 @@ struct CookieListIter {
   CookieEntry::IndexType index;
 };
 
-class CookieStorage {
+class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
  public:
-  NS_INLINE_DECL_REFCOUNTING(CookieStorage)
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -110,9 +115,7 @@ class CookieStorage {
   void AddCookie(const nsACString& aBaseDomain,
                  const OriginAttributes& aOriginAttributes, Cookie* aCookie,
                  int64_t aCurrentTimeInUsec, nsIURI* aHostURI,
-                 const nsACString& aCookieHeader, bool aFromHttp,
-                 uint16_t aMaxNumberOfCookies, uint16_t aMaxCookiesPerHost,
-                 uint16_t aCookieQuotaPerHost, int64_t aCookiePurgeAge);
+                 const nsACString& aCookieHeader, bool aFromHttp);
 
   void AddCookieToList(const nsACString& aBaseDomain,
                        const OriginAttributes& aOriginAttributes,
@@ -121,10 +124,6 @@ class CookieStorage {
                        bool aWriteToDB = true);
 
   void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
-
-  already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
-                                          uint16_t aMaxNumberOfCookies,
-                                          int64_t aCookiePurgeAge);
 
   virtual void StaleCookies(const nsTArray<Cookie*>& aCookieList,
                             int64_t aCurrentTimeInUsec) = 0;
@@ -140,6 +139,8 @@ class CookieStorage {
  protected:
   CookieStorage();
   virtual ~CookieStorage();
+
+  void Init();
 
   virtual const char* NotificationTopic() const = 0;
 
@@ -168,6 +169,8 @@ class CookieStorage {
   virtual void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) = 0;
 
  private:
+  void PrefChanged(nsIPrefBranch* aPrefBranch);
+
   bool FindSecureCookie(const nsACString& aBaseDomain,
                         const OriginAttributes& aOriginAttributes,
                         Cookie* aCookie);
@@ -179,6 +182,15 @@ class CookieStorage {
   void UpdateCookieOldestTime(Cookie* aCookie);
 
   already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
+
+  already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
+                                          uint16_t aMaxNumberOfCookies,
+                                          int64_t aCookiePurgeAge);
+
+  uint16_t mMaxNumberOfCookies;
+  uint16_t mMaxCookiesPerHost;
+  uint16_t mCookieQuotaPerHost;
+  int64_t mCookiePurgeAge;
 };
 
 class CookiePrivateStorage final : public CookieStorage {
@@ -238,10 +250,7 @@ class CookieDefaultStorage final : public CookieStorage {
   void CleanupDefaultDBConnection();
 
   nsresult ImportCookies(nsIFile* aCookieFile,
-                         nsIEffectiveTLDService* aTLDService,
-                         uint16_t aMaxNumberOfCookies,
-                         uint16_t aMaxCookiesPerHost,
-                         uint16_t aCookieQuotaPerHost, int64_t aCookiePurgeAge);
+                         nsIEffectiveTLDService* aTLDService);
 
  protected:
   const char* NotificationTopic() const override { return "cookie-changed"; }

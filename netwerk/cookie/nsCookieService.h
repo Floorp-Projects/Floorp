@@ -36,7 +36,6 @@ class nsICookiePermission;
 class nsICookieJarSettings;
 class nsIEffectiveTLDService;
 class nsIIDNService;
-class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
 class nsIChannel;
@@ -161,7 +160,6 @@ class nsCookieService final : public nsICookieService,
 
   bool IsInitialized() const;
 
-  void PrefChanged(nsIPrefBranch* aPrefBranch);
   void InitCookieStorages();
   OpenDBResult TryInitDB(bool aDeleteExistingDB);
   void InitDBConn();
@@ -263,11 +261,6 @@ class nsCookieService final : public nsICookieService,
   // private browsing.
   RefPtr<mozilla::net::CookieDefaultStorage> mDefaultStorage;
   RefPtr<mozilla::net::CookiePrivateStorage> mPrivateStorage;
-
-  uint16_t mMaxNumberOfCookies;
-  uint16_t mMaxCookiesPerHost;
-  uint16_t mCookieQuotaPerHost;
-  int64_t mCookiePurgeAge;
 
   // thread
   nsCOMPtr<nsIThread> mThread;

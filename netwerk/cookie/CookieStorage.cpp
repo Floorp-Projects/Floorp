@@ -16,6 +16,10 @@
 #undef ADD_TEN_PERCENT
 #define ADD_TEN_PERCENT(i) static_cast<uint32_t>((i) + (i) / 10)
 
+#undef LIMIT
+#define LIMIT(x, low, high, default) \
+  ((x) >= (low) && (x) <= (high) ? (x) : (default))
+
 // XXX_hack. See bug 178993.
 // This is a hack to hide HttpOnly cookies from older browsers
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
@@ -171,9 +175,28 @@ size_t CookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
 // ---------------------------------------------------------------------------
 // CookieStorage
 
-CookieStorage::CookieStorage() : cookieCount(0), cookieOldestTime(INT64_MAX) {}
+NS_IMPL_ISUPPORTS(CookieStorage, nsIObserver, nsISupportsWeakReference)
+
+CookieStorage::CookieStorage()
+    : cookieCount(0),
+      cookieOldestTime(INT64_MAX),
+      mMaxNumberOfCookies(kMaxNumberOfCookies),
+      mMaxCookiesPerHost(kMaxCookiesPerHost),
+      mCookieQuotaPerHost(kCookieQuotaPerHost),
+      mCookiePurgeAge(kCookiePurgeAge) {}
 
 CookieStorage::~CookieStorage() = default;
+
+void CookieStorage::Init() {
+  // init our pref and observer
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    prefBranch->AddObserver(kPrefMaxNumberOfCookies, this, true);
+    prefBranch->AddObserver(kPrefMaxCookiesPerHost, this, true);
+    prefBranch->AddObserver(kPrefCookiePurgeAge, this, true);
+    PrefChanged(prefBranch);
+  }
+}
 
 size_t CookieStorage::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t amount = 0;
@@ -442,10 +465,7 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
                               const OriginAttributes& aOriginAttributes,
                               Cookie* aCookie, int64_t aCurrentTimeInUsec,
                               nsIURI* aHostURI, const nsACString& aCookieHeader,
-                              bool aFromHttp, uint16_t aMaxNumberOfCookies,
-                              uint16_t aMaxCookiesPerHost,
-                              uint16_t aCookieQuotaPerHost,
-                              int64_t aCookiePurgeAge) {
+                              bool aFromHttp) {
   int64_t currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
 
   CookieListIter exactIter;
@@ -563,11 +583,11 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
     // check if we have to delete an old cookie.
     CookieEntry* entry =
         hostTable.GetEntry(CookieKey(aBaseDomain, aOriginAttributes));
-    if (entry && entry->GetCookies().Length() >= aMaxCookiesPerHost) {
+    if (entry && entry->GetCookies().Length() >= mMaxCookiesPerHost) {
       nsTArray<CookieListIter> removedIterList;
       // Prioritize evicting insecure cookies.
       // (draft-ietf-httpbis-cookie-alone section 3.3)
-      uint32_t limit = aMaxCookiesPerHost - aCookieQuotaPerHost;
+      uint32_t limit = mMaxCookiesPerHost - mCookieQuotaPerHost;
       FindStaleCookies(entry, currentTime, false, removedIterList, limit);
       if (removedIterList.Length() == 0) {
         if (aCookie->IsSecure()) {
@@ -594,9 +614,9 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
         MOZ_ASSERT((*it).entry);
       }
 
-    } else if (cookieCount >= ADD_TEN_PERCENT(aMaxNumberOfCookies)) {
+    } else if (cookieCount >= ADD_TEN_PERCENT(mMaxNumberOfCookies)) {
       int64_t maxAge = aCurrentTimeInUsec - cookieOldestTime;
-      int64_t purgeAge = ADD_TEN_PERCENT(aCookiePurgeAge);
+      int64_t purgeAge = ADD_TEN_PERCENT(mCookiePurgeAge);
       if (maxAge >= purgeAge) {
         // we're over both size and age limits by 10%; time to purge the table!
         // do this by:
@@ -604,8 +624,8 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
         // 2) evicting the balance of old cookies until we reach the size limit.
         // note that the cookieOldestTime indicator can be pessimistic - if it's
         // older than the actual oldest cookie, we'll just purge more eagerly.
-        purgedList = PurgeCookies(aCurrentTimeInUsec, aMaxNumberOfCookies,
-                                  aCookiePurgeAge);
+        purgedList = PurgeCookies(aCurrentTimeInUsec, mMaxNumberOfCookies,
+                                  mCookiePurgeAge);
       }
     }
   }
@@ -849,12 +869,49 @@ void CookieStorage::RemoveCookieFromList(
 
   --cookieCount;
 }
+
+void CookieStorage::PrefChanged(nsIPrefBranch* aPrefBranch) {
+  int32_t val;
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
+    mMaxNumberOfCookies = (uint16_t)LIMIT(val, 1, 0xFFFF, kMaxNumberOfCookies);
+
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieQuotaPerHost, &val))) {
+    mCookieQuotaPerHost =
+        (uint16_t)LIMIT(val, 1, mMaxCookiesPerHost - 1, kCookieQuotaPerHost);
+  }
+
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxCookiesPerHost, &val))) {
+    mMaxCookiesPerHost = (uint16_t)LIMIT(val, mCookieQuotaPerHost + 1, 0xFFFF,
+                                         kMaxCookiesPerHost);
+  }
+
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val))) {
+    mCookiePurgeAge =
+        int64_t(LIMIT(val, 0, INT32_MAX, INT32_MAX)) * PR_USEC_PER_SEC;
+  }
+}
+
+NS_IMETHODIMP
+CookieStorage::Observe(nsISupports* aSubject, const char* aTopic,
+                       const char16_t* aData) {
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+    if (prefBranch) {
+      PrefChanged(prefBranch);
+    }
+  }
+
+  return NS_OK;
+}
+
 // ---------------------------------------------------------------------------
 // CookiePrivateStorage
 
 // static
 already_AddRefed<CookiePrivateStorage> CookiePrivateStorage::Create() {
   RefPtr<CookiePrivateStorage> storage = new CookiePrivateStorage();
+  storage->Init();
+
   return storage.forget();
 }
 
@@ -876,6 +933,8 @@ void CookiePrivateStorage::StaleCookies(const nsTArray<Cookie*>& aCookieList,
 // static
 already_AddRefed<CookieDefaultStorage> CookieDefaultStorage::Create() {
   RefPtr<CookieDefaultStorage> storage = new CookieDefaultStorage();
+  storage->Init();
+
   return storage.forget();
 }
 
@@ -1101,9 +1160,7 @@ void CookieDefaultStorage::Close() {
 }
 
 nsresult CookieDefaultStorage::ImportCookies(
-    nsIFile* aCookieFile, nsIEffectiveTLDService* aTLDService,
-    uint16_t aMaxNumberOfCookies, uint16_t aMaxCookiesPerHost,
-    uint16_t aCookieQuotaPerHost, int64_t aCookiePurgeAge) {
+    nsIFile* aCookieFile, nsIEffectiveTLDService* aTLDService) {
   MOZ_ASSERT(aCookieFile);
   MOZ_ASSERT(aTLDService);
 
@@ -1238,8 +1295,7 @@ nsresult CookieDefaultStorage::ImportCookies(
       AddCookieToList(baseDomain, OriginAttributes(), newCookie, paramsArray);
     } else {
       AddCookie(baseDomain, OriginAttributes(), newCookie, currentTimeInUsec,
-                nullptr, VoidCString(), true, aMaxNumberOfCookies,
-                aMaxCookiesPerHost, aCookieQuotaPerHost, aCookiePurgeAge);
+                nullptr, VoidCString(), true);
     }
   }
 
