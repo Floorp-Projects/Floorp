@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCookieService_h__
-#define nsCookieService_h__
+#ifndef mozilla_net_CookieService_h
+#define mozilla_net_CookieService_h
 
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
@@ -13,41 +13,23 @@
 #include "nsWeakReference.h"
 
 #include "Cookie.h"
-#include "CookieKey.h"
 #include "CookieStorage.h"
 
 #include "nsString.h"
-#include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
-#include "mozIStorageStatement.h"
-#include "mozIStorageAsyncStatement.h"
-#include "mozIStorageConnection.h"
-#include "nsIFile.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
 
-using mozilla::OriginAttributes;
-
-class nsICookiePermission;
 class nsICookieJarSettings;
 class nsIEffectiveTLDService;
 class nsIIDNService;
-class nsIObserverService;
 class nsIURI;
 class nsIChannel;
-class nsIArray;
-class nsIThread;
 class mozIThirdPartyUtil;
 
 namespace mozilla {
 namespace net {
-class CookieServiceParent;
-}  // namespace net
-}  // namespace mozilla
 
-using mozilla::net::CookieKey;
+class CookieServiceParent;
 
 // these constants represent an operation being performed on cookies
 enum CookieOperation { OPERATION_READ, OPERATION_WRITE };
@@ -65,17 +47,17 @@ enum CookieStatus {
 };
 
 /******************************************************************************
- * nsCookieService:
+ * CookieService:
  * class declaration
  ******************************************************************************/
 
-class nsCookieService final : public nsICookieService,
-                              public nsICookieManager,
-                              public nsIObserver,
-                              public nsSupportsWeakReference,
-                              public nsIMemoryReporter {
+class CookieService final : public nsICookieService,
+                            public nsICookieManager,
+                            public nsIObserver,
+                            public nsSupportsWeakReference,
+                            public nsIMemoryReporter {
  private:
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
  public:
   NS_DECL_ISUPPORTS
@@ -84,7 +66,7 @@ class nsCookieService final : public nsICookieService,
   NS_DECL_NSICOOKIEMANAGER
   NS_DECL_NSIMEMORYREPORTER
 
-  nsCookieService();
+  CookieService();
   static already_AddRefed<nsICookieService> GetXPCOMSingleton();
   nsresult Init();
 
@@ -101,16 +83,13 @@ class nsCookieService final : public nsICookieService,
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService* aTLDService,
                                         const nsACString& aHost,
                                         nsCString& aBaseDomain);
-  static bool DomainMatches(mozilla::net::Cookie* aCookie,
-                            const nsACString& aHost);
-  static bool PathMatches(mozilla::net::Cookie* aCookie,
-                          const nsACString& aPath);
+  static bool DomainMatches(Cookie* aCookie, const nsACString& aHost);
+  static bool PathMatches(Cookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI* aHostURI, const nsACString& aBaseDomain,
-                           mozilla::net::CookieStruct& aCookieData,
-                           bool aRequireHostMatch, CookieStatus aStatus,
-                           nsCString& aCookieHeader, int64_t aServerTime,
-                           bool aFromHttp, nsIChannel* aChannel,
-                           bool& aSetCookie,
+                           CookieStruct& aCookieData, bool aRequireHostMatch,
+                           CookieStatus aStatus, nsCString& aCookieHeader,
+                           int64_t aServerTime, bool aFromHttp,
+                           nsIChannel* aChannel, bool& aSetCookie,
                            mozIThirdPartyUtil* aThirdPartyUtil);
   static CookieStatus CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
                                  nsIURI* aHostURI, bool aIsForeign,
@@ -133,7 +112,7 @@ class nsCookieService final : public nsICookieService,
                         uint32_t aRejectedReason, bool aIsSafeTopLevelNav,
                         bool aIsSameSiteForeign, bool aHttpBound,
                         const OriginAttributes& aOriginAttrs,
-                        nsTArray<mozilla::net::Cookie*>& aCookieList);
+                        nsTArray<Cookie*>& aCookieList);
 
   /**
    * This method is a helper that allows calling nsICookieManager::Remove()
@@ -143,7 +122,7 @@ class nsCookieService final : public nsICookieService,
                   const nsACString& aName, const nsACString& aPath);
 
  protected:
-  virtual ~nsCookieService();
+  virtual ~CookieService();
 
   bool IsInitialized() const;
 
@@ -171,8 +150,8 @@ class nsCookieService final : public nsICookieService,
       bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
       nsCString& aCookieHeader, const nsACString& aServerTime, bool aFromHttp,
       const OriginAttributes& aOriginAttrs, nsIChannel* aChannel);
-  bool SetCookieInternal(mozilla::net::CookieStorage* aStorage,
-                         nsIURI* aHostURI, const nsACString& aBaseDomain,
+  bool SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
+                         const nsACString& aBaseDomain,
                          const OriginAttributes& aOriginAttributes,
                          bool aRequireHostMatch, CookieStatus aStatus,
                          nsCString& aCookieHeader, int64_t aServerTime,
@@ -184,41 +163,34 @@ class nsCookieService final : public nsICookieService,
                             bool& aEqualsFound);
   static bool ParseAttributes(nsIChannel* aChannel, nsIURI* aHostURI,
                               nsCString& aCookieHeader,
-                              mozilla::net::CookieStruct& aCookieData,
-                              nsACString& aExpires, nsACString& aMaxage,
-                              bool& aAcceptedByParser);
+                              CookieStruct& aCookieData, nsACString& aExpires,
+                              nsACString& aMaxage, bool& aAcceptedByParser);
   bool RequireThirdPartyCheck();
-  static bool CheckDomain(mozilla::net::CookieStruct& aCookieData,
-                          nsIURI* aHostURI, const nsACString& aBaseDomain,
+  static bool CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
+                          const nsACString& aBaseDomain,
                           bool aRequireHostMatch);
-  static bool CheckPath(mozilla::net::CookieStruct& aCookieData,
-                        nsIChannel* aChannel, nsIURI* aHostURI);
-  static bool CheckPrefixes(mozilla::net::CookieStruct& aCookieData,
-                            bool aSecureRequest);
-  static bool GetExpiry(mozilla::net::CookieStruct& aCookieData,
-                        const nsACString& aExpires, const nsACString& aMaxage,
-                        int64_t aServerTime, int64_t aCurrentTime,
-                        bool aFromHttp);
+  static bool CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
+                        nsIURI* aHostURI);
+  static bool CheckPrefixes(CookieStruct& aCookieData, bool aSecureRequest);
+  static bool GetExpiry(CookieStruct& aCookieData, const nsACString& aExpires,
+                        const nsACString& aMaxage, int64_t aServerTime,
+                        int64_t aCurrentTime, bool aFromHttp);
   void NotifyAccepted(nsIChannel* aChannel);
   void NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
                       uint32_t aRejectedReason, CookieOperation aOperation);
 
   nsresult GetCookiesWithOriginAttributes(
-      const mozilla::OriginAttributesPattern& aPattern,
-      const nsCString& aBaseDomain, nsTArray<RefPtr<nsICookie>>& aResult);
+      const OriginAttributesPattern& aPattern, const nsCString& aBaseDomain,
+      nsTArray<RefPtr<nsICookie>>& aResult);
   nsresult RemoveCookiesWithOriginAttributes(
-      const mozilla::OriginAttributesPattern& aPattern,
-      const nsCString& aBaseDomain);
+      const OriginAttributesPattern& aPattern, const nsCString& aBaseDomain);
 
  protected:
-  mozilla::net::CookieStorage* PickStorage(
-      const mozilla::OriginAttributes& aAttrs);
-  mozilla::net::CookieStorage* PickStorage(
-      const mozilla::OriginAttributesPattern& aAttrs);
+  CookieStorage* PickStorage(const OriginAttributes& aAttrs);
+  CookieStorage* PickStorage(const OriginAttributesPattern& aAttrs);
 
-  nsresult RemoveCookiesFromExactHost(
-      const nsACString& aHost,
-      const mozilla::OriginAttributesPattern& aPattern);
+  nsresult RemoveCookiesFromExactHost(const nsACString& aHost,
+                                      const OriginAttributesPattern& aPattern);
 
   static void LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
                                   uint32_t aErrorFlags,
@@ -234,15 +206,18 @@ class nsCookieService final : public nsICookieService,
 
   // we have two separate Cookie Storages: one for normal browsing and one for
   // private browsing.
-  RefPtr<mozilla::net::CookieDefaultStorage> mDefaultStorage;
-  RefPtr<mozilla::net::CookiePrivateStorage> mPrivateStorage;
+  RefPtr<CookieDefaultStorage> mDefaultStorage;
+  RefPtr<CookiePrivateStorage> mPrivateStorage;
 
   // friends!
   friend class DBListenerErrorHandler;
   friend class CloseCookieDBListener;
 
-  static already_AddRefed<nsCookieService> GetSingleton();
-  friend class mozilla::net::CookieServiceParent;
+  static already_AddRefed<CookieService> GetSingleton();
+  friend class CookieServiceParent;
 };
 
-#endif  // nsCookieService_h__
+}  // namespace net
+}  // namespace mozilla
+
+#endif  // mozilla_net_CookieService_h

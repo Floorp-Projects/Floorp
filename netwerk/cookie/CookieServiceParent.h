@@ -9,7 +9,6 @@
 #include "mozilla/net/PCookieServiceParent.h"
 
 class nsICookie;
-class nsCookieService;
 namespace mozilla {
 class OriginAttributes;
 }
@@ -18,6 +17,7 @@ namespace mozilla {
 namespace net {
 
 class Cookie;
+class CookieService;
 
 class CookieServiceParent : public PCookieServiceParent {
   friend class PCookieServiceParent;
@@ -67,7 +67,7 @@ class CookieServiceParent : public PCookieServiceParent {
                               nsTArray<CookieStruct>& aCookiesList,
                               nsIURI* aHostURI);
 
-  RefPtr<nsCookieService> mCookieService;
+  RefPtr<CookieService> mCookieService;
   bool mProcessingCookie;
 };
 

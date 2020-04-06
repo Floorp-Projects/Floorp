@@ -23,6 +23,7 @@ EXPORTS.mozilla.net = [
     'CookieJarSettings.h',
     'CookieKey.h',
     'CookiePermission.h',
+    'CookieService.h',
     'CookieServiceChild.h',
     'CookieServiceParent.h',
     'CookieStorage.h',
@@ -32,13 +33,10 @@ UNIFIED_SOURCES += [
     'CookieJarSettings.cpp',
     'CookieLogging.cpp',
     'CookiePermission.cpp',
+    'CookieService.cpp',
     'CookieServiceChild.cpp',
     'CookieServiceParent.cpp',
     'CookieStorage.cpp',
-]
-# nsCookieService.cpp can't be unified because of symbol conflicts
-SOURCES += [
-    'nsCookieService.cpp',
 ]
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell.ini',

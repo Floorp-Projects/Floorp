@@ -20,6 +20,7 @@
 
 class mozIStorageService;
 class nsICookieTransactionCallback;
+class nsIEffectiveTLDService;
 class nsIPrefBranch;
 
 namespace mozilla {

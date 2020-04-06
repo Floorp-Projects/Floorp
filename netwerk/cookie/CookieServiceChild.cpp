@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookiePermission.h"
+#include "mozilla/net/CookieService.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
@@ -17,7 +18,6 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "Cookie.h"
-#include "nsCookieService.h"
 #include "nsContentUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -42,16 +42,16 @@ namespace net {
 static const char kCookieMoveIntervalSecs[] =
     "network.cookie.move.interval_sec";
 
-static StaticRefPtr<CookieServiceChild> gCookieService;
+static StaticRefPtr<CookieServiceChild> gCookieChildService;
 static uint32_t gMoveCookiesIntervalSeconds = 10;
 
 already_AddRefed<CookieServiceChild> CookieServiceChild::GetSingleton() {
-  if (!gCookieService) {
-    gCookieService = new CookieServiceChild();
-    ClearOnShutdown(&gCookieService);
+  if (!gCookieChildService) {
+    gCookieChildService = new CookieServiceChild();
+    ClearOnShutdown(&gCookieChildService);
   }
 
-  return do_AddRef(gCookieService);
+  return do_AddRef(gCookieChildService);
 }
 
 NS_IMPL_ISUPPORTS(CookieServiceChild, nsICookieService, nsIObserver,
@@ -126,7 +126,7 @@ CookieServiceChild::Notify(nsITimer* aTimer) {
   return NS_OK;
 }
 
-CookieServiceChild::~CookieServiceChild() { gCookieService = nullptr; }
+CookieServiceChild::~CookieServiceChild() { gCookieChildService = nullptr; }
 
 void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   if (!CanSend()) {
@@ -163,8 +163,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveAll() {
 mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
     const CookieStruct& aCookie, const OriginAttributes& aAttrs) {
   nsCString baseDomain;
-  nsCookieService::GetBaseDomainFromHost(mTLDService, aCookie.host(),
-                                         baseDomain);
+  CookieService::GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
   CookieKey key(baseDomain, aAttrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
@@ -262,8 +261,8 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
     StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
   }
 
-  nsCookieService::GetBaseDomain(TLDService, aHostURI, baseDomain,
-                                 requireHostMatch);
+  CookieService::GetBaseDomain(TLDService, aHostURI, baseDomain,
+                               requireHostMatch);
   CookieKey key(baseDomain, attrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
@@ -280,9 +279,9 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      nsCookieService::GetCookieJarSettings(aChannel);
+      CookieService::GetCookieJarSettings(aChannel);
 
-  CookieStatus cookieStatus = nsCookieService::CheckPrefs(
+  CookieStatus cookieStatus = CookieService::CheckPrefs(
       cookieJarSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
       VoidCString(), CountCookiesFromHashTable(baseDomain, attrs), attrs,
@@ -297,7 +296,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
     Cookie* cookie = cookiesList->ElementAt(i);
     // check the host, since the base domain lookup is conservative.
-    if (!nsCookieService::DomainMatches(cookie, hostFromURI)) continue;
+    if (!CookieService::DomainMatches(cookie, hostFromURI)) continue;
 
     // We don't show HttpOnly cookies in content processes.
     if (cookie->IsHttpOnly()) {
@@ -323,7 +322,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
     }
 
     // if the nsIURI path doesn't match the cookie path, don't send it back
-    if (!nsCookieService::PathMatches(cookie, pathFromURI)) continue;
+    if (!CookieService::PathMatches(cookie, pathFromURI)) continue;
 
     // check if the cookie has expired
     if (cookie->Expiry() <= currentTime) {
@@ -397,8 +396,8 @@ void CookieServiceChild::SetCookieInternal(
 void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
                                               const OriginAttributes& aAttrs) {
   nsAutoCString baseDomain;
-  nsCookieService::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
-                                         baseDomain);
+  CookieService::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
+                                       baseDomain);
 
   CookieKey key(baseDomain, aAttrs);
   CookiesList* cookiesList = nullptr;
@@ -516,13 +515,13 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
   bool requireHostMatch;
   nsCString baseDomain;
-  nsCookieService::GetBaseDomain(mTLDService, aHostURI, baseDomain,
-                                 requireHostMatch);
+  CookieService::GetBaseDomain(mTLDService, aHostURI, baseDomain,
+                               requireHostMatch);
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      nsCookieService::GetCookieJarSettings(aChannel);
+      CookieService::GetCookieJarSettings(aChannel);
 
-  CookieStatus cookieStatus = nsCookieService::CheckPrefs(
+  CookieStatus cookieStatus = CookieService::CheckPrefs(
       cookieJarSettings, aHostURI,
       result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
@@ -540,12 +539,12 @@ nsresult CookieServiceChild::SetCookieStringInternal(
   CookiesList* cookies = mCookiesMap.Get(key);
 
   nsCString serverTimeString(aServerTime);
-  int64_t serverTime = nsCookieService::ParseServerTime(serverTimeString);
+  int64_t serverTime = CookieService::ParseServerTime(serverTimeString);
   bool moreCookies;
   do {
     CookieStruct cookieData;
     bool canSetCookie = false;
-    moreCookies = nsCookieService::CanSetCookie(
+    moreCookies = CookieService::CanSetCookie(
         aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
         cookieString, serverTime, aFromHttp, aChannel, canSetCookie,
         mThirdPartyUtil);
