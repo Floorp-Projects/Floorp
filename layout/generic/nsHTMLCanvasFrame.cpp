@@ -12,11 +12,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/layers/RenderRootStateManager.h"
-#include "mozilla/webgpu/CanvasContext.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleUtil.h"
@@ -133,7 +131,9 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
                                                     canvasData)) {
           return true;
         }
-        WebRenderCanvasRendererAsync* data = canvasData->GetCanvasRenderer();
+        WebRenderCanvasRendererAsync* data =
+            static_cast<WebRenderCanvasRendererAsync*>(
+                canvasData->GetCanvasRenderer());
         MOZ_ASSERT(data);
         data->UpdateCompositableClient(aBuilder.GetRenderRoot());
 
@@ -181,65 +181,6 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
                                        scTransform, scaleToSize, filter,
                                        mixBlendMode),
             aBuilder.GetRenderRoot());
-        break;
-      }
-      case CanvasContextType::WebGPU: {
-        nsHTMLCanvasFrame* canvasFrame =
-            static_cast<nsHTMLCanvasFrame*>(mFrame);
-        HTMLCanvasElement* canvasElement =
-            static_cast<HTMLCanvasElement*>(canvasFrame->GetContent());
-        webgpu::CanvasContext* canvasContext =
-            canvasElement->GetWebGPUContext();
-
-        if (!canvasContext) {
-          return true;
-        }
-
-        bool isRecycled;
-        RefPtr<WebRenderLocalCanvasData> canvasData =
-            aManager->CommandBuilder()
-                .CreateOrRecycleWebRenderUserData<WebRenderLocalCanvasData>(
-                    this, aBuilder.GetRenderRoot(), &isRecycled);
-        if (!canvasContext->UpdateWebRenderLocalCanvasData(canvasData)) {
-          return true;
-        }
-        canvasData->Present();
-
-        nsIntSize canvasSizeInPx = canvasFrame->GetCanvasSize();
-        IntrinsicSize intrinsicSize =
-            IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-        AspectRatio intrinsicRatio =
-            IntrinsicRatioFromCanvasSize(canvasSizeInPx);
-        nsRect area =
-            mFrame->GetContentRectRelativeToSelf() + ToReferenceFrame();
-        nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
-            area, intrinsicSize, intrinsicRatio, mFrame->StylePosition());
-        LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-            dest, mFrame->PresContext()->AppUnitsPerDevPixel());
-
-        wr::ImageKey imageKey;
-        auto imageKeyMaybe = canvasContext->GetImageKey();
-        // Check that the key exists, and its namespace matches the active
-        // bridge. It will mismatch if there was a GPU reset.
-        if (imageKeyMaybe &&
-            aManager->WrBridge()->GetNamespace() == imageKey.mNamespace) {
-          imageKey = imageKeyMaybe.value();
-        } else {
-          imageKey = canvasContext->CreateImageKey(aManager);
-          const RGBDescriptor rgbDesc(canvasSizeInPx, canvasData->mFormat,
-                                      false);
-          const auto targetStride = ImageDataSerializer::GetRGBStride(rgbDesc);
-          const wr::ImageDescriptor imageDesc(canvasSizeInPx, targetStride,
-                                              canvasData->mFormat,
-                                              wr::OpacityType::Opaque, true);
-          aResources.AddPrivateExternalImage(canvasContext->mExternalImageId,
-                                             imageKey, imageDesc);
-        }
-
-        mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
-            nsLayoutUtils::GetSamplingFilterForFrame(mFrame));
-        aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
-                           !BackfaceIsHidden(), rendering, imageKey);
         break;
       }
       case CanvasContextType::ImageBitmap: {

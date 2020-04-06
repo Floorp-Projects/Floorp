@@ -43,9 +43,6 @@ namespace gfx {
 class SourceSurface;
 class VRLayerChild;
 }  // namespace gfx
-namespace webgpu {
-class CanvasContext;
-}  // namespace webgpu
 
 namespace dom {
 class BlobCallback;
@@ -377,7 +374,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
  public:
   ClientWebGLContext* GetWebGLContext();
-  webgpu::CanvasContext* GetWebGPUContext();
 
  protected:
   bool mResetLayer;

@@ -387,9 +387,10 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
   }
   desc.mPrimitiveTopology =
       ffi::WGPUPrimitiveTopology(aDesc.mPrimitiveTopology);
-  // TODO: expect it to be optional to begin with
-  desc.mRasterizationState =
-      Some(ConvertRasterizationDescriptor(aDesc.mRasterizationState));
+  if (aDesc.mRasterizationState.WasPassed()) {
+    desc.mRasterizationState =
+        Some(ConvertRasterizationDescriptor(aDesc.mRasterizationState.Value()));
+  }
   for (const auto& color_state : aDesc.mColorStates) {
     desc.mColorStates.AppendElement(ConvertColorDescriptor(color_state));
   }
@@ -471,27 +472,6 @@ ipc::IPCResult WebGPUChild::RecvFreeTextureView(RawId id) {
 ipc::IPCResult WebGPUChild::RecvFreeSampler(RawId id) {
   ffi::wgpu_client_kill_sampler_id(mClient, id);
   return IPC_OK();
-}
-
-void WebGPUChild::DeviceCreateSwapChain(RawId aSelfId,
-                                        const RGBDescriptor& aRgbDesc,
-                                        size_t maxBufferCount,
-                                        wr::ExternalImageId aExternalImageId) {
-  RawId queueId = aSelfId;  // TODO: multiple queues
-  nsTArray<RawId> bufferIds(maxBufferCount);
-  for (size_t i = 0; i < maxBufferCount; ++i) {
-    bufferIds.AppendElement(ffi::wgpu_client_make_buffer_id(mClient, aSelfId));
-  }
-  SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds,
-                            aExternalImageId);
-}
-
-void WebGPUChild::SwapChainPresent(wr::ExternalImageId aExternalImageId,
-                                   RawId aTextureId) {
-  // Hack: the function expects `DeviceId`, but it only uses it for `backend()`
-  // selection.
-  RawId encoderId = ffi::wgpu_client_make_encoder_id(mClient, aTextureId);
-  SendSwapChainPresent(aExternalImageId, aTextureId, encoderId);
 }
 
 }  // namespace webgpu
