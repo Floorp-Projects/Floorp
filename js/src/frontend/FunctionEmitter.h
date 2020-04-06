@@ -69,9 +69,6 @@ class MOZ_STACK_CLASS FunctionEmitter {
 
   FunctionBox* funbox_;
 
-  // Function linked from funbox_.
-  JS::Rooted<JSFunction*> fun_;
-
   // Function's explicit name.
   JS::Rooted<JSAtom*> name_;
 

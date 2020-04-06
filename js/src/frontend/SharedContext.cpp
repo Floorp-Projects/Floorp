@@ -8,6 +8,7 @@
 
 #include "frontend/AbstractScopePtr.h"
 #include "frontend/ModuleSharedContext.h"
+#include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -145,6 +146,7 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       usesThis(false),
       usesReturn(false),
       hasExprBody_(false),
+      isAsmJSModule_(false),
       nargs_(0),
       explicitName_(explicitName),
       flags_(flags) {
@@ -269,6 +271,12 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(
   // in FunctionBox::finish.
   MOZ_ASSERT(!enclosingScope_);
   enclosingScope_ = enclosingScope;
+}
+
+void FunctionBox::setAsmJSModule(JSFunction* function) {
+  MOZ_ASSERT(IsAsmJSModule(function));
+  isAsmJSModule_ = true;
+  clobberFunction(function);
 }
 
 void FunctionBox::finish() {
