@@ -28,10 +28,8 @@ let loadChromiumResources = Promise.resolve().then(() => {
     `${prefix}/barcodedetection_provider.mojom.js`,
     `${prefix}/facedetection.mojom.js`,
     `${prefix}/facedetection_provider.mojom.js`,
-    `${prefix}/textdetection.mojom.js`,
     '/resources/chromium/mock-barcodedetection.js',
     '/resources/chromium/mock-facedetection.js',
-    '/resources/chromium/mock-textdetection.js',
   ].forEach(path => {
     // Use importScripts for workers.
     if (typeof document === 'undefined') {
@@ -53,8 +51,7 @@ let loadChromiumResources = Promise.resolve().then(() => {
 /**
  * @param {String} detectionTestName
  * name of mock shape detection test interface,
- * must be the item of ["FaceDetectionTest", "BarcodeDetectionTest",
- * "TextDetectionTest"]
+ * must be the item of ["FaceDetectionTest", "BarcodeDetectionTest"]
 */
 async function initialize_detection_tests(detectionTestName) {
   let detectionTest;

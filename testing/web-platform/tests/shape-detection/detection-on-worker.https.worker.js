@@ -18,12 +18,6 @@ const imageBitmapTests =
         mockTestName: "BarcodeDetectionTest",
         resultSize: 2, // Number of barcodes
         detectorType: "Barcode"
-      },
-      {
-        createDetector: () => { return new TextDetector(); },
-        mockTestName: "TextDetectionTest",
-        resultSize: 2, // Number of text blocks
-        detectorType: "Text"
       }
     ];
 
