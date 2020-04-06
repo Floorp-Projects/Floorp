@@ -1114,6 +1114,8 @@ extern JS_PUBLIC_API void SetHostCleanupFinalizationRegistryCallback(
  */
 extern JS_PUBLIC_API void ClearKeptObjects(JSContext* cx);
 
+extern JS_PUBLIC_API bool ZoneIsCollecting(Zone* zone);
+
 }  // namespace JS
 
 namespace js {
