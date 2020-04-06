@@ -110,7 +110,7 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
 /* static */
 void DOMSecurityMonitor::AuditUseOfJavaScriptURI(nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->LoadingPrincipal();
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->GetLoadingPrincipal();
 
   // We only ever have no loadingPrincipal in case of a new top-level load.
   // The purpose of this assertion is to make sure we do not allow loading
