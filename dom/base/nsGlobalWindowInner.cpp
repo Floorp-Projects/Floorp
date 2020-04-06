@@ -6571,16 +6571,17 @@ void nsGlobalWindowInner::Restore() {
   }
 }
 
-void nsGlobalWindowInner::GetWorkspaceID(nsAString& workspaceID) {
+int32_t nsGlobalWindowInner::GetWorkspaceID() {
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
-  workspaceID.Truncate();
   if (widget) {
-    return widget->GetWorkspaceID(workspaceID);
+    return widget->GetWorkspaceID();
   }
+
+  return 0;
 }
 
-void nsGlobalWindowInner::MoveToWorkspace(const nsAString& workspaceID) {
+void nsGlobalWindowInner::MoveToWorkspace(int32_t workspaceID) {
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
   if (widget) {
