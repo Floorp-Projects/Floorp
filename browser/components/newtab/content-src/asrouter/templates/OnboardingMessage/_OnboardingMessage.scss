@@ -1,5 +1,8 @@
 @import '../../../styles/OnboardingImages';
 
+// consistent width to prevent card image overlap
+$onboarding-card-image-width: 140px;
+
 .onboardingMessage {
   height: 340px;
   text-align: center;
@@ -117,8 +120,8 @@
 // Also used for Trailhead
 .onboardingMessageImage {
   height: 112px;
-  width: 120px;
-  background-size: auto 140px;
+  width: $onboarding-card-image-width;
+  background-size: auto $onboarding-card-image-width;
   background-position: center center;
   background-repeat: no-repeat;
   display: inline-block;
@@ -131,7 +134,7 @@
   }
 
   @media (min-width: $break-point-widest) {
-    width: 230px;
-    background-size: auto 140px;
+    width: $onboarding-card-image-width;
+    background-size: auto $onboarding-card-image-width;
   }
 }
