@@ -100,6 +100,11 @@ void nsWrapperCache::CheckCCWrapperTraversal(void* aScriptObjectHolder,
     return;
   }
 
+  // Temporarily make this a preserving wrapper so that TraceWrapper() traces
+  // it.
+  bool wasPreservingWrapper = PreservingWrapper();
+  SetPreservingWrapper(true);
+
   DebugWrapperTraversalCallback callback(wrapper);
 
   // The CC traversal machinery cannot trigger GC; however, the analysis cannot
@@ -117,6 +122,8 @@ void nsWrapperCache::CheckCCWrapperTraversal(void* aScriptObjectHolder,
   MOZ_ASSERT(callback.mFound,
              "Cycle collection participant didn't trace preserved wrapper! "
              "This will probably crash.");
+
+  SetPreservingWrapper(wasPreservingWrapper);
 }
 
 #endif  // DEBUG
