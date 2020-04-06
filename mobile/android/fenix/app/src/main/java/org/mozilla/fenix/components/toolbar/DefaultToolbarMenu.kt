@@ -21,6 +21,8 @@ import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.Config
@@ -47,6 +49,7 @@ import org.mozilla.fenix.utils.Settings
 class DefaultToolbarMenu(
     private val context: Context,
     private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     hasAccountProblem: Boolean = false,
     shouldReverseItems: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
@@ -64,7 +67,7 @@ class DefaultToolbarMenu(
         WebExtensionBrowserMenuBuilder(
             menuItems,
             endOfMenuAlwaysVisible = !shouldReverseItems,
-            store = context.components.core.store,
+            store = store,
             appendExtensionActionAtStart = !shouldReverseItems
         )
     }
@@ -150,14 +153,18 @@ class DefaultToolbarMenu(
     private fun shouldShowAddToHomescreen(): Boolean =
         session != null && context.components.useCases.webAppUseCases.isPinningSupported()
 
-    private fun shouldShowReaderMode(): Boolean = session?.readerable ?: false
+    private fun shouldShowReaderMode(): Boolean = session?.let {
+        store.state.findTab(it.id)?.readerState?.readerable
+    } ?: false
 
     private fun shouldShowOpenInApp(): Boolean = session?.let { session ->
         val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
         appLink(session.url).hasExternalApp()
     } ?: false
 
-    private fun shouldShowReaderAppearance(): Boolean = session?.readerMode ?: false
+    private fun shouldShowReaderAppearance(): Boolean = session?.let {
+        store.state.findTab(it.id)?.readerState?.active
+    } ?: false
     // End of predicates //
 
     private val menuItems by lazy {
@@ -300,7 +307,9 @@ class DefaultToolbarMenu(
         label = context.getString(R.string.browser_menu_read),
         startImageResource = R.drawable.ic_readermode,
         initialState = {
-            session?.readerMode ?: false
+            session?.let {
+                store.state.findTab(it.id)?.readerState?.active
+            } ?: false
         },
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_read),

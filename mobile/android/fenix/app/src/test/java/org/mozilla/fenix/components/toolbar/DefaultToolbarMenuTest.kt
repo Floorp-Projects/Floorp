@@ -8,6 +8,10 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.app.links.AppLinkRedirect
 import mozilla.components.feature.app.links.AppLinksUseCases
@@ -28,12 +32,19 @@ class DefaultToolbarMenuTest {
     private val lifecycleOwner: LifecycleOwner = mockk(relaxed = true)
     private val bookmarksStorage: BookmarksStorage = mockk(relaxed = true)
 
+    private val store: BrowserStore = BrowserStore(initialState = BrowserState(
+        listOf(
+            createTab("https://www.mozilla.org", id = "readerable-tab", readerState = ReaderState(readerable = true))
+        )
+    ))
+
     @Before
     fun setUp() {
         defaultToolbarMenu = spyk(
             DefaultToolbarMenu(
                 context,
                 sessionManager,
+                store,
                 hasAccountProblem = false,
                 shouldReverseItems = false,
                 onItemTapped = onItemTapped,
@@ -59,7 +70,7 @@ class DefaultToolbarMenuTest {
         every { getAppLinkRedirect(any()) } returns appLinkRedirect
 
         val session: Session = mockk(relaxed = true)
-        every { session.readerable } returns true
+        every { session.id } returns "readerable-tab"
         every { sessionManager.selectedSession } returns session
 
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
@@ -84,7 +95,7 @@ class DefaultToolbarMenuTest {
         every { getAppLinkRedirect(any()) } returns appLinkRedirect
 
         val session: Session = mockk(relaxed = true)
-        every { session.readerable } returns true
+        every { session.id } returns "readerable-tab"
         every { sessionManager.selectedSession } returns session
 
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
@@ -114,7 +125,7 @@ class DefaultToolbarMenuTest {
         every { context.components.useCases.webAppUseCases.isInstallable() } returns true
 
         val session: Session = mockk(relaxed = true)
-        every { session.readerable } returns true
+        every { session.id } returns "readerable-tab"
         every { sessionManager.selectedSession } returns session
 
         val getAppLinkRedirect: AppLinksUseCases.GetAppLinkRedirect = mockk(relaxed = true)

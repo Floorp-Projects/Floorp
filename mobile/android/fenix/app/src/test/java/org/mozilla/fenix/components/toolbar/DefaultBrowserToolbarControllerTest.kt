@@ -27,6 +27,10 @@ import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
@@ -43,6 +47,7 @@ import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.FenixSnackbar
@@ -82,6 +87,13 @@ class DefaultBrowserToolbarControllerTest {
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
     private val tabCollectionStorage = mockk<TabCollectionStorage>(relaxed = true)
     private val topSiteStorage = mockk<TopSiteStorage>(relaxed = true)
+    private val readerModeController = mockk<ReaderModeController>(relaxed = true)
+    private val store: BrowserStore = BrowserStore(initialState = BrowserState(
+        listOf(
+            createTab("https://www.mozilla.org", id = "reader-inactive-tab"),
+            createTab("https://www.mozilla.org", id = "reader-active-tab", readerState = ReaderState(active = true))
+        ))
+    )
 
     private lateinit var controller: DefaultBrowserToolbarController
 
@@ -104,7 +116,7 @@ class DefaultBrowserToolbarControllerTest {
             tabCollectionStorage = tabCollectionStorage,
             topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
-            readerModeController = mockk(),
+            readerModeController = readerModeController,
             sessionManager = mockk(),
             store = mockk(),
             sharedViewModel = mockk()
@@ -125,6 +137,7 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.searchUseCases } returns searchUseCases
         every { activity.components.core.sessionManager.selectedSession } returns currentSession
+        every { activity.components.core.store } returns store
 
         val onComplete = slot<() -> Unit>()
         every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
@@ -558,5 +571,18 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarItemInteraction(item)
 
         verify { deleteAndQuit(activity, testScope, null) }
+    }
+
+    @Test
+    fun handleToolbarReaderModePress() {
+        val item = ToolbarMenu.Item.ReaderMode(false)
+
+        every { currentSession.id } returns "reader-inactive-tab"
+        controller.handleToolbarItemInteraction(item)
+        verify { readerModeController.showReaderView() }
+
+        every { currentSession.id } returns "reader-active-tab"
+        controller.handleToolbarItemInteraction(item)
+        verify { readerModeController.hideReaderView() }
     }
 }

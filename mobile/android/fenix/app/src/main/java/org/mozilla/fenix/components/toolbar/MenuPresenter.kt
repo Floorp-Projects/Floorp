@@ -22,20 +22,20 @@ class MenuPresenter(
 
     /** Redraw the refresh/stop button */
     override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-        menuToolbar.invalidateActions()
+        invalidateActions()
     }
 
     /** Redraw the back and forward buttons */
     override fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) {
-        menuToolbar.invalidateActions()
+        invalidateActions()
     }
 
     /** Redraw the install web app button */
     override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
-        menuToolbar.invalidateActions()
+        invalidateActions()
     }
 
-    override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
+    fun invalidateActions() {
         menuToolbar.invalidateActions()
     }
 }

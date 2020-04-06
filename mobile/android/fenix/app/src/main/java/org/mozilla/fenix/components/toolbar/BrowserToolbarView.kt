@@ -207,6 +207,7 @@ class BrowserToolbarView(
                     onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) },
                     lifecycleOwner = lifecycleOwner,
                     sessionManager = sessionManager,
+                    store = components.core.store,
                     bookmarksStorage = bookmarkStorage
                 )
                 view.display.setMenuDismissAction {

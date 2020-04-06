@@ -45,7 +45,7 @@ abstract class ToolbarIntegration(
         )
     )
 
-    private var menuPresenter =
+    private val menuPresenter =
         MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
 
     init {
@@ -61,6 +61,10 @@ abstract class ToolbarIntegration(
     override fun stop() {
         menuPresenter.stop()
         toolbarPresenter.stop()
+    }
+
+    fun invalidateMenu() {
+        menuPresenter.invalidateActions()
     }
 }
 

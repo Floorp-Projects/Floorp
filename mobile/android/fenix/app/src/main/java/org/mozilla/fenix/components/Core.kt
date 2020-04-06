@@ -31,6 +31,7 @@ import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
+import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
@@ -99,7 +100,8 @@ class Core(private val context: Context) {
     val store by lazy {
         BrowserStore(
             middleware = listOf(
-                MediaMiddleware(context, MediaService::class.java)
+                MediaMiddleware(context, MediaService::class.java),
+                ReaderViewMiddleware()
             )
         )
     }

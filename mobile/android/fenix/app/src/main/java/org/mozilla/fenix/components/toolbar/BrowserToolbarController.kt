@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -275,9 +276,9 @@ class DefaultBrowserToolbarController(
             is ToolbarMenu.Item.ReaderMode -> {
                 activity.settings().readerModeOpened = true
 
-                val enabled = currentSession?.readerMode
-                    ?: activity.components.core.sessionManager.selectedSession?.readerMode
-                    ?: false
+                val enabled = currentSession?.let {
+                    activity.components.core.store.state.findTab(it.id)?.readerState?.active
+                } ?: false
 
                 if (enabled) {
                     readerModeController.hideReaderView()

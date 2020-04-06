@@ -29,6 +29,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
@@ -62,7 +63,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     override fun initializeUI(view: View): Session? {
         val context = requireContext()
-        val sessionManager = context.components.core.sessionManager
         val components = context.components
 
         return super.initializeUI(view)?.also {
@@ -70,11 +70,14 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 feature = ReaderViewFeature(
                     context,
                     components.core.engine,
-                    sessionManager,
+                    components.core.store,
                     view.readerViewControlsBar
-                ) { available ->
+                ) { available, _ ->
                     if (available) {
                         components.analytics.metrics.track(Event.ReaderModeAvailable)
+                    }
+                    runIfFragmentIsAttached {
+                        browserToolbarView.toolbarIntegration.invalidateMenu()
                     }
                 },
                 owner = this,
