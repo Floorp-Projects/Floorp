@@ -89,10 +89,10 @@ struct CookieDomainTuple {
   mozilla::UniquePtr<mozilla::net::CookieStruct> cookie;
 };
 
-// encapsulates in-memory and on-disk DB states, so we can
-// conveniently switch state when entering or exiting private browsing.
-struct DBState final {
-  DBState()
+// encapsulates in-memory and on-disk CookieStorages, so we can
+// conveniently switch storage when entering or exiting private browsing.
+struct CookieStorage final {
+  CookieStorage()
       : cookieCount(0),
         cookieOldestTime(INT64_MAX),
         corruptFlag(OK),
@@ -100,10 +100,10 @@ struct DBState final {
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  ~DBState() = default;
+  ~CookieStorage() = default;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(DBState)
+  NS_INLINE_DECL_REFCOUNTING(CookieStorage)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -129,7 +129,7 @@ struct DBState final {
   nsCOMPtr<mozIStorageConnection> syncConn;
   nsCOMPtr<mozIStorageStatement> stmtReadDomain;
   // The asynchronous read listener. This is a weak ref (storage has ownership)
-  // since it may need to outlive the DBState's database connection.
+  // since it may need to outlive the CookieStorage's database connection.
   ReadCookieDBListener* readListener;
 
   // DB completion handlers.
@@ -239,7 +239,7 @@ class nsCookieService final : public nsICookieService,
   virtual ~nsCookieService();
 
   void PrefChanged(nsIPrefBranch* aPrefBranch);
-  void InitDBStates();
+  void InitCookieStorages();
   OpenDBResult TryInitDB(bool aDeleteExistingDB);
   void InitDBConn();
   nsresult InitDBConnInternal();
@@ -247,12 +247,12 @@ class nsCookieService final : public nsICookieService,
   nsresult CreateTable();
   nsresult CreateTableForSchemaVersion6();
   nsresult CreateTableForSchemaVersion5();
-  void CloseDBStates();
+  void CloseCookieStorages();
   void CleanupCachedStatements();
   void CleanupDefaultDBConnection();
-  void HandleDBClosed(DBState* aDBState);
-  void HandleCorruptDB(DBState* aDBState);
-  void RebuildCorruptDB(DBState* aDBState);
+  void HandleDBClosed(CookieStorage* aCookieStorage);
+  void HandleCorruptDB(CookieStorage* aCookieStorage);
+  void RebuildCorruptDB(CookieStorage* aCookieStorage);
   OpenDBResult Read();
   mozilla::UniquePtr<mozilla::net::CookieStruct> GetCookieFromRow(
       mozIStorageStatement* aRow);
@@ -288,7 +288,7 @@ class nsCookieService final : public nsICookieService,
       const nsListIter& aIter,
       mozIStorageBindingParamsArray* aParamsArray = nullptr);
   void AddCookieToList(const CookieKey& aKey, mozilla::net::Cookie* aCookie,
-                       DBState* aDBState,
+                       CookieStorage* aCookieStorage,
                        mozIStorageBindingParamsArray* aParamsArray,
                        bool aWriteToDB = true);
   void UpdateCookieInList(mozilla::net::Cookie* aCookie, int64_t aLastAccessed,
@@ -332,7 +332,8 @@ class nsCookieService final : public nsICookieService,
   void NotifyPurged(nsICookie* aCookie);
   already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
   void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
-  void UpdateCookieOldestTime(DBState* aDBState, mozilla::net::Cookie* aCookie);
+  void UpdateCookieOldestTime(CookieStorage* aCookieStorage,
+                              mozilla::net::Cookie* aCookie);
 
   nsresult GetCookiesWithOriginAttributes(
       const mozilla::OriginAttributesPattern& aPattern,
@@ -363,14 +364,14 @@ class nsCookieService final : public nsICookieService,
   nsCOMPtr<nsIIDNService> mIDNService;
   nsCOMPtr<mozIStorageService> mStorageService;
 
-  // we have two separate DB states: one for normal browsing and one for
+  // we have two separate Cookie Storages: one for normal browsing and one for
   // private browsing, switching between them on a per-cookie-request basis.
-  // this state encapsulates both the in-memory table and the on-disk DB.
-  // note that the private states' dbConn should always be null - we never
+  // this storage encapsulates both the in-memory table and the on-disk DB.
+  // note that the private storages' dbConn should always be null - we never
   // want to be dealing with the on-disk DB when in private browsing.
-  DBState* mDBState;
-  RefPtr<DBState> mDefaultDBState;
-  RefPtr<DBState> mPrivateDBState;
+  CookieStorage* mStorage;
+  RefPtr<CookieStorage> mDefaultStorage;
+  RefPtr<CookieStorage> mPrivateStorage;
 
   uint16_t mMaxNumberOfCookies;
   uint16_t mMaxCookiesPerHost;
@@ -380,7 +381,7 @@ class nsCookieService final : public nsICookieService,
   // thread
   nsCOMPtr<nsIThread> mThread;
   mozilla::Monitor mMonitor;
-  mozilla::Atomic<bool> mInitializedDBStates;
+  mozilla::Atomic<bool> mInitializedCookieStorages;
   mozilla::Atomic<bool> mInitializedDBConn;
   mozilla::TimeStamp mEndInitDBConn;
   nsTArray<CookieDomainTuple> mReadArray;
