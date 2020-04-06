@@ -99,6 +99,12 @@ internal object ContentStateReducer {
             is ContentAction.ConsumeSearchRequestAction -> updateContentState(state, action.sessionId) {
                 it.copy(searchRequest = null)
             }
+            is ContentAction.FullScreenChangedAction -> updateContentState(state, action.sessionId) {
+                it.copy(fullScreen = action.fullScreenEnabled)
+            }
+            is ContentAction.ViewportFitChangedAction -> updateContentState(state, action.sessionId) {
+                it.copy(layoutInDisplayCutoutMode = action.layoutInDisplayCutoutMode)
+            }
         }
     }
 }

@@ -94,7 +94,7 @@ class FullScreenFeatureTest {
         sessionUseCases: SessionUseCases,
         sessionId: String? = null,
         fullScreenChanged: (Boolean) -> Unit
-    ) : FullScreenFeature(sessionManager, sessionUseCases, sessionId, fullScreenChanged) {
+    ) : FullScreenFeature(sessionManager, sessionUseCases, sessionId, fullScreenChanged = fullScreenChanged) {
         public override var activeSession: Session? = null
     }
 }

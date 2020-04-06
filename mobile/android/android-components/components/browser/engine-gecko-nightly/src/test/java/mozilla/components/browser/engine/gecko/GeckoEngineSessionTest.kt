@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.content.Intent
 import android.os.Handler
 import android.os.Message
+import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
@@ -52,6 +53,7 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -1746,6 +1748,33 @@ class GeckoEngineSessionTest {
 
         engineSession.exitFullScreenMode()
         verify(geckoSession).exitFullScreen()
+    }
+
+    @Test
+    fun viewportFitChangeTranslateValuesCorrectly() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+        val observer: EngineSession.Observer = mock()
+
+        // Verify the call to the observer.
+        engineSession.register(observer)
+        captureDelegates()
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "test")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
+        reset(observer)
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "auto")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
+        reset(observer)
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "cover")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES)
+        reset(observer)
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "contain")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER)
+        reset(observer)
     }
 
     @Test

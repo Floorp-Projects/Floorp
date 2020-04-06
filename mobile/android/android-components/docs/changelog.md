@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-media**
   * Muted media will not start the media service anymore, causing no media notification to be shown and no audio focus getting requested.
 
+* **feature-fullscreen**
+  * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
+
 # 38.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...v38.0.0)

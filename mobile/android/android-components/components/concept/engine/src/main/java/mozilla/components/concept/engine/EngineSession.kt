@@ -54,6 +54,11 @@ abstract class EngineSession(
         fun onFind(text: String) = Unit
         fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean) = Unit
         fun onFullScreenChange(enabled: Boolean) = Unit
+
+        /**
+         * @param layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
+         */
+        fun onMetaViewportFitChanged(layoutInDisplayCutoutMode: Int) = Unit
         fun onThumbnailChange(bitmap: Bitmap?) = Unit
         fun onAppPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()
         fun onContentPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()

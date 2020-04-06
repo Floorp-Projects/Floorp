@@ -58,6 +58,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(1) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
@@ -84,6 +85,7 @@ class EngineSessionTest {
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
+        verify(observer).onMetaViewportFitChanged(1)
         verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
@@ -123,6 +125,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(1) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
@@ -147,6 +150,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search2") }
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(2) }
         session.notifyInternalObservers { onThumbnailChange(null) }
         session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
@@ -169,6 +173,7 @@ class EngineSessionTest {
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
+        verify(observer).onMetaViewportFitChanged(1)
         verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
@@ -188,6 +193,7 @@ class EngineSessionTest {
         verify(observer, never()).onFind("search2")
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
+        verify(observer, never()).onMetaViewportFitChanged(2)
         verify(observer, never()).onThumbnailChange(null)
         verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
@@ -227,6 +233,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(1) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
@@ -246,6 +253,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search2") }
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(2) }
         session.notifyInternalObservers { onThumbnailChange(null) }
         session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
@@ -263,6 +271,7 @@ class EngineSessionTest {
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
+        verify(observer).onMetaViewportFitChanged(1)
         verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
@@ -279,6 +288,7 @@ class EngineSessionTest {
         verify(observer, never()).onFind("search2")
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
+        verify(observer, never()).onMetaViewportFitChanged(2)
         verify(observer, never()).onThumbnailChange(null)
         verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
@@ -295,6 +305,7 @@ class EngineSessionTest {
         verify(otherObserver, never()).onFind("search2")
         verify(otherObserver, never()).onFindResult(0, 1, false)
         verify(otherObserver, never()).onFullScreenChange(false)
+        verify(otherObserver, never()).onMetaViewportFitChanged(2)
         verify(otherObserver, never()).onThumbnailChange(null)
         verify(otherObserver, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(otherObserver, never()).onContentPermissionRequest(otherPermissionRequest)
@@ -327,6 +338,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(1) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
@@ -346,6 +358,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search2") }
         session.notifyInternalObservers { onFindResult(0, 1, false) }
         session.notifyInternalObservers { onFullScreenChange(false) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(2) }
         session.notifyInternalObservers { onThumbnailChange(null) }
         session.notifyInternalObservers { onContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
@@ -363,6 +376,7 @@ class EngineSessionTest {
         verify(observer).onFind("search")
         verify(observer).onFindResult(0, 1, true)
         verify(observer).onFullScreenChange(true)
+        verify(observer).onMetaViewportFitChanged(1)
         verify(observer).onThumbnailChange(emptyBitmap)
         verify(observer).onAppPermissionRequest(permissionRequest)
         verify(observer).onContentPermissionRequest(permissionRequest)
@@ -379,6 +393,7 @@ class EngineSessionTest {
         verify(observer, never()).onFind("search2")
         verify(observer, never()).onFindResult(0, 1, false)
         verify(observer, never()).onFullScreenChange(false)
+        verify(observer, never()).onMetaViewportFitChanged(2)
         verify(observer, never()).onThumbnailChange(null)
         verify(observer, never()).onAppPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
@@ -410,6 +425,7 @@ class EngineSessionTest {
         otherSession.notifyInternalObservers { onFind("search") }
         otherSession.notifyInternalObservers { onFindResult(0, 1, true) }
         otherSession.notifyInternalObservers { onFullScreenChange(true) }
+        otherSession.notifyInternalObservers { onMetaViewportFitChanged(1) }
         otherSession.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         otherSession.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         otherSession.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
@@ -426,6 +442,7 @@ class EngineSessionTest {
         verify(observer, never()).onFind("search")
         verify(observer, never()).onFindResult(0, 1, true)
         verify(observer, never()).onFullScreenChange(true)
+        verify(observer, never()).onMetaViewportFitChanged(1)
         verify(observer, never()).onThumbnailChange(emptyBitmap)
         verify(observer, never()).onAppPermissionRequest(permissionRequest)
         verify(observer, never()).onContentPermissionRequest(permissionRequest)
@@ -443,6 +460,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onFind("search") }
         session.notifyInternalObservers { onFindResult(0, 1, true) }
         session.notifyInternalObservers { onFullScreenChange(true) }
+        session.notifyInternalObservers { onMetaViewportFitChanged(1) }
         session.notifyInternalObservers { onThumbnailChange(emptyBitmap) }
         session.notifyInternalObservers { onContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
@@ -459,6 +477,7 @@ class EngineSessionTest {
         verify(observer, times(1)).onFind("search")
         verify(observer, times(1)).onFindResult(0, 1, true)
         verify(observer, times(1)).onFullScreenChange(true)
+        verify(observer, times(1)).onMetaViewportFitChanged(1)
         verify(observer, times(1)).onThumbnailChange(emptyBitmap)
         verify(observer, times(1)).onAppPermissionRequest(permissionRequest)
         verify(observer, times(1)).onContentPermissionRequest(permissionRequest)
@@ -649,6 +668,7 @@ class EngineSessionTest {
         defaultObserver.onLoadingStateChange(true)
         defaultObserver.onThumbnailChange(spy(Bitmap::class.java))
         defaultObserver.onFullScreenChange(true)
+        defaultObserver.onMetaViewportFitChanged(1)
         defaultObserver.onAppPermissionRequest(mock(PermissionRequest::class.java))
         defaultObserver.onContentPermissionRequest(mock(PermissionRequest::class.java))
         defaultObserver.onCancelContentPermissionRequest(mock(PermissionRequest::class.java))
