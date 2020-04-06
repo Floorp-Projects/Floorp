@@ -125,6 +125,8 @@ class CellHeader {
   static constexpr uintptr_t BIGINT_BIT = Bit(2);
 
  protected:
+  uintptr_t flags() const { return header_ & RESERVED_MASK; }
+
   // NOTE: This word can also be used for temporary storage, see
   // setTemporaryGCUnsafeData.
   uintptr_t header_;
@@ -632,6 +634,49 @@ class CellHeaderWithLengthAndFlags : public CellHeader {
     return offsetof(CellHeaderWithLengthAndFlags, header_);
   }
 #endif
+};
+
+// Cell header for GC things that allows storing a non-GC thing pointer in the
+// first word.
+//
+// The low bits of the word (see CellFlagBitsReservedForGC) are reserved for GC.
+template <class PtrT>
+class CellHeaderWithNonGCPointer : public CellHeader {
+  static_assert(!std::is_pointer<PtrT>::value,
+                "PtrT should be the type of the referent, not of the pointer");
+  static_assert(
+      !std::is_base_of<Cell, PtrT>::value,
+      "Don't use CellHeaderWithNonGCPointer for pointers to GC things");
+
+ public:
+  CellHeaderWithNonGCPointer() = default;
+  explicit CellHeaderWithNonGCPointer(PtrT* initial) : CellHeader() {
+    uintptr_t data = uintptr_t(initial);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    header_ = data;
+  }
+
+  PtrT* ptr() const {
+    // Currently we never observe any flags set here because this base class is
+    // only used for JSObject (for which the nursery kind flags are always
+    // clear) or GC things that are always tenured (for which the nursery kind
+    // flags are also always clear). This means we don't need to use masking to
+    // get and set the pointer.
+    MOZ_ASSERT(flags() == 0);
+    return reinterpret_cast<PtrT*>(header_);
+  }
+
+  void setPtr(PtrT* newValue) {
+    // As above, no flags are expected to be set here.
+    uintptr_t data = uintptr_t(newValue);
+    MOZ_ASSERT(flags() == 0);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    header_ = data;
+  }
+
+  static constexpr size_t offsetOfPtr() {
+    return offsetof(CellHeaderWithNonGCPointer, header_);
+  }
 };
 
 } /* namespace gc */
