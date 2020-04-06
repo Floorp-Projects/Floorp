@@ -19,7 +19,7 @@ class CookieKey : public PLDHashEntryHdr {
 
   CookieKey() = default;
 
-  CookieKey(const nsCString& baseDomain, const OriginAttributes& attrs)
+  CookieKey(const nsACString& baseDomain, const OriginAttributes& attrs)
       : mBaseDomain(baseDomain), mOriginAttributes(attrs) {}
 
   explicit CookieKey(KeyTypePointer other)

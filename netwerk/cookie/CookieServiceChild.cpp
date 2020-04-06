@@ -546,8 +546,9 @@ nsresult CookieServiceChild::SetCookieStringInternal(
     CookieStruct cookieData;
     bool canSetCookie = false;
     moreCookies = nsCookieService::CanSetCookie(
-        aHostURI, key, cookieData, requireHostMatch, cookieStatus, cookieString,
-        serverTime, aFromHttp, aChannel, canSetCookie, mThirdPartyUtil);
+        aHostURI, baseDomain, cookieData, requireHostMatch, cookieStatus,
+        cookieString, serverTime, aFromHttp, aChannel, canSetCookie,
+        mThirdPartyUtil);
 
     // We need to see if the cookie we're setting would overwrite an httponly
     // one. This would not affect anything we send over the net (those come from
