@@ -80,6 +80,8 @@ CookieServiceChild::CookieServiceChild() {
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   NS_ASSERTION(mTLDService, "couldn't get TLDService");
 
+  mPermissionService = CookiePermission::GetOrCreate();
+
   // Init our prefs and observer.
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_WARNING_ASSERTION(prefBranch, "no prefservice");
@@ -363,19 +365,6 @@ uint32_t CookieServiceChild::CountCookiesFromHashTable(
   return cookiesList ? cookiesList->Length() : 0;
 }
 
-void CookieServiceChild::SetCookieInternal(const CookieStruct& aCookieData,
-                                           const OriginAttributes& aAttrs) {
-  int64_t currentTimeInUsec = PR_Now();
-  RefPtr<Cookie> cookie = Cookie::Create(
-      aCookieData.name(), aCookieData.value(), aCookieData.host(),
-      aCookieData.path(), aCookieData.expiry(), currentTimeInUsec,
-      Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
-      aCookieData.isSession(), aCookieData.isSecure(), aCookieData.isHttpOnly(),
-      aAttrs, aCookieData.sameSite(), aCookieData.rawSameSite());
-
-  RecordDocumentCookie(cookie, aAttrs);
-}
-
 /* static */ bool CookieServiceChild::RequireThirdPartyCheck(
     nsILoadInfo* aLoadInfo) {
   if (!aLoadInfo) {
@@ -512,17 +501,6 @@ nsresult CookieServiceChild::SetCookieStringInternal(
   Maybe<LoadInfoArgs> optionalLoadInfoArgs;
   LoadInfoToLoadInfoArgs(loadInfo, &optionalLoadInfoArgs);
 
-  // Asynchronously call the parent.
-  if (CanSend()) {
-    SendSetCookieString(
-        hostURIParams, channelURIParams, optionalLoadInfoArgs,
-        result.contains(ThirdPartyAnalysis::IsForeign),
-        result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
-        result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
-        result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
-        rejectedReason, attrs, cookieString, aFromHttp);
-  }
-
   bool requireHostMatch;
   nsCString baseDomain;
   CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
@@ -548,6 +526,10 @@ nsresult CookieServiceChild::SetCookieStringInternal(
   CookieKey key(baseDomain, attrs);
   CookiesList* cookies = mCookiesMap.Get(key);
 
+  nsTArray<CookieStruct> cookiesToSend;
+
+  int64_t currentTimeInUsec = PR_Now();
+
   bool moreCookies;
   do {
     CookieStruct cookieData;
@@ -572,16 +554,53 @@ nsresult CookieServiceChild::SetCookieStringInternal(
       }
     }
 
-    if (canSetCookie) {
-      SetCookieInternal(cookieData, attrs);
+    if (!canSetCookie) {
+      continue;
     }
+
+    RefPtr<Cookie> cookie = Cookie::Create(
+        cookieData.name(), cookieData.value(), cookieData.host(),
+        cookieData.path(), cookieData.expiry(), currentTimeInUsec,
+        Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
+        cookieData.isSession(), cookieData.isSecure(), cookieData.isHttpOnly(),
+        attrs, cookieData.sameSite(), cookieData.rawSameSite());
+
+    // check permissions from site permission list, or ask the user,
+    // to determine if we can set the cookie
+    if (mPermissionService) {
+      bool permission;
+      mPermissionService->CanSetCookie(aHostURI, aChannel, cookie,
+                                       &cookieData.isSession(),
+                                       &cookieData.expiry(), &permission);
+      if (!permission) {
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieString,
+                          "cookie rejected by permission manager");
+        CookieCommons::NotifyRejected(
+            aHostURI, aChannel,
+            nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
+            OPERATION_WRITE);
+        continue;
+      }
+
+      // update isSession and expiry attributes, in case they changed
+      cookie->SetIsSession(cookieData.isSession());
+      cookie->SetExpiry(cookieData.expiry());
+    }
+
+    RecordDocumentCookie(cookie, attrs);
+    cookiesToSend.AppendElement(cookieData);
 
     // document.cookie can only set one cookie at a time.
-    if (!aFromHttp) {
-      break;
-    }
+  } while (moreCookies && aFromHttp);
 
-  } while (moreCookies);
+  // Asynchronously call the parent.
+  if (CanSend() && !cookiesToSend.IsEmpty()) {
+    URIParams host;
+    SerializeURI(aHostURI, host);
+
+    SendSetCookies(baseDomain, attrs, host, aFromHttp, cookiesToSend);
+  }
+
   return NS_OK;
 }
 

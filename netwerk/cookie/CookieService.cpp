@@ -7,7 +7,6 @@
 #include "CookieCommons.h"
 #include "CookieLogging.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -386,10 +385,12 @@ void CookieService::SetCookieStringInternal(
   // (but not if there was an error)
   switch (cookieStatus) {
     case STATUS_REJECTED:
-      NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_WRITE);
+      CookieCommons::NotifyRejected(aHostURI, aChannel, rejectedReason,
+                                    OPERATION_WRITE);
       return;  // Stop here
     case STATUS_REJECTED_WITH_ERROR:
-      NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_WRITE);
+      CookieCommons::NotifyRejected(aHostURI, aChannel, rejectedReason,
+                                    OPERATION_WRITE);
       return;
     case STATUS_ACCEPTED:  // Fallthrough
     case STATUS_ACCEPT_SESSION:
@@ -413,24 +414,6 @@ void CookieService::SetCookieStringInternal(
 void CookieService::NotifyAccepted(nsIChannel* aChannel) {
   ContentBlockingNotifier::OnDecision(
       aChannel, ContentBlockingNotifier::BlockingDecision::eAllow, 0);
-}
-
-// notify observers that a cookie was rejected due to the users' prefs.
-void CookieService::NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
-                                   uint32_t aRejectedReason,
-                                   CookieOperation aOperation) {
-  if (aOperation == OPERATION_WRITE) {
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (os) {
-      os->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
-    }
-  } else {
-    MOZ_ASSERT(aOperation == OPERATION_READ);
-  }
-
-  ContentBlockingNotifier::OnDecision(
-      aChannel, ContentBlockingNotifier::BlockingDecision::eBlock,
-      aRejectedReason);
 }
 
 /******************************************************************************
@@ -686,7 +669,8 @@ void CookieService::GetCookiesForURI(
     case STATUS_REJECTED:
       // If we don't have any cookies from this host, fail silently.
       if (priorCookieCount) {
-        NotifyRejected(aHostURI, aChannel, rejectedReason, OPERATION_READ);
+        CookieCommons::NotifyRejected(aHostURI, aChannel, rejectedReason,
+                                      OPERATION_READ);
       }
       return;
     default:
@@ -878,8 +862,7 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
   }
 
   // reject cookie if it's over the size limit, per RFC2109
-  if ((aCookieData.name().Length() + aCookieData.value().Length()) >
-      kMaxBytesPerCookie) {
+  if (!CookieCommons::CheckNameAndValueSize(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "cookie too big (> 4kb)");
 
@@ -896,12 +879,7 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
     return newCookie;
   }
 
-  const char illegalNameCharacters[] = {
-      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
-      0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-      0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x00};
-
-  if (aCookieData.name().FindCharInSet(illegalNameCharacters, 0) != -1) {
+  if (!CookieCommons::CheckName(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "invalid name character");
     return newCookie;
@@ -927,19 +905,7 @@ bool CookieService::CanSetCookie(nsIURI* aHostURI,
     return newCookie;
   }
 
-  // reject cookie if value contains an RFC 6265 disallowed character - see
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1191423
-  // NOTE: this is not the full set of characters disallowed by 6265 - notably
-  // 0x09, 0x20, 0x22, 0x2C, 0x5C, and 0x7F are missing from this list. This is
-  // for parity with Chrome. This only applies to cookies set via the Set-Cookie
-  // header, as document.cookie is defined to be UTF-8. Hooray for
-  // symmetry!</sarcasm>
-  const char illegalCharacters[] = {
-      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0A, 0x0B, 0x0C,
-      0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-      0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x3B, 0x00};
-  if (aFromHttp &&
-      (aCookieData.value().FindCharInSet(illegalCharacters, 0) != -1)) {
+  if (aFromHttp && !CookieCommons::CheckHttpValue(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                       "invalid value character");
     return newCookie;
@@ -1034,7 +1000,7 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                         "cookie rejected by permission manager");
-      NotifyRejected(
+      CookieCommons::NotifyRejected(
           aHostURI, aChannel,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
           OPERATION_WRITE);
@@ -1049,7 +1015,7 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
   // add the cookie to the list. AddCookie() takes care of logging.
   // we get the current time again here, since it may have changed during
   // prompting
-  aStorage->AddCookie(aBaseDomain, aOriginAttributes, cookie, PR_Now(),
+  aStorage->AddCookie(aBaseDomain, aOriginAttributes, cookie, currentTimeInUsec,
                       aHostURI, savedCookieHeader, aFromHttp);
   return newCookie;
 }
@@ -1675,7 +1641,7 @@ bool CookieService::CheckPath(CookieStruct& aCookieData, nsIChannel* aChannel,
 #endif
   }
 
-  if (aCookieData.path().Length() > kMaxBytesPerPath) {
+  if (!CookieCommons::CheckPathSize(aCookieData)) {
     AutoTArray<nsString, 2> params = {
         NS_ConvertUTF8toUTF16(aCookieData.name())};
 
@@ -2151,6 +2117,51 @@ CookieStorage* CookieService::PickStorage(
 
   mPersistentStorage->EnsureReadComplete();
   return mPersistentStorage;
+}
+
+bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
+                                      const OriginAttributes& aAttrs,
+                                      nsIURI* aHostURI, bool aFromHttp,
+                                      const nsTArray<CookieStruct>& aCookies) {
+  MOZ_ASSERT(IsInitialized());
+
+  CookieStorage* storage = PickStorage(aAttrs);
+  int64_t currentTimeInUsec = PR_Now();
+
+  for (const CookieStruct& cookieData : aCookies) {
+    if (!CookieCommons::CheckPathSize(cookieData)) {
+      return false;
+    }
+
+    // reject cookie if it's over the size limit, per RFC2109
+    if (!CookieCommons::CheckNameAndValueSize(cookieData)) {
+      return false;
+    }
+
+    if (!CookieCommons::CheckName(cookieData)) {
+      return false;
+    }
+
+    if (aFromHttp && !CookieCommons::CheckHttpValue(cookieData)) {
+      return false;
+    }
+
+    // create a new Cookie and copy attributes
+    RefPtr<Cookie> cookie = Cookie::Create(
+        cookieData.name(), cookieData.value(), cookieData.host(),
+        cookieData.path(), cookieData.expiry(), currentTimeInUsec,
+        Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
+        cookieData.isSession(), cookieData.isSecure(), cookieData.isHttpOnly(),
+        aAttrs, cookieData.sameSite(), cookieData.rawSameSite());
+    if (!cookie) {
+      continue;
+    }
+
+    storage->AddCookie(aBaseDomain, aAttrs, cookie, currentTimeInUsec, aHostURI,
+                       EmptyCString(), aFromHttp);
+  }
+
+  return true;
 }
 
 }  // namespace net
