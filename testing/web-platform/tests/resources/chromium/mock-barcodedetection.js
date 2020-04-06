@@ -10,14 +10,9 @@ var BarcodeDetectionTest = (() => {
 
       this.interceptor_ = new MojoInterfaceInterceptor(
           shapeDetection.mojom.BarcodeDetectionProvider.name);
-      this.interceptor_.oninterfacerequest = e => {
-        if (this.should_close_pipe_on_request_)
-          e.handle.close();
-        else
-          this.bindingSet_.addBinding(this, e.handle);
-      }
+      this.interceptor_.oninterfacerequest =
+         e => this.bindingSet_.addBinding(this, e.handle);
       this.interceptor_.start();
-      this.should_close_pipe_on_request_ = false;
     }
 
     createBarcodeDetection(request, options) {
@@ -44,14 +39,8 @@ var BarcodeDetectionTest = (() => {
 
     reset() {
       this.mockService_ = null;
-      this.should_close_pipe_on_request_ = false;
       this.bindingSet_.closeAllBindings();
       this.interceptor_.stop();
-    }
-
-    // simulate a 'no implementation available' case
-    simulateNoImplementation() {
-      this.should_close_pipe_on_request_ = true;
     }
   }
 

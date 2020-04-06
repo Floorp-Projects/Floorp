@@ -7,13 +7,12 @@
 'use strict';
 
 idl_test(
-  ['shape-detection-api', 'text-detection-api.tentative'],
+  ['shape-detection-api'],
   ['dom', 'geometry'],
   async idl_array => {
     idl_array.add_objects({
       FaceDetector: ['new FaceDetector()'],
       BarcodeDetector: ['new BarcodeDetector()'],
-      TextDetector: ['new TextDetector()'],
     });
   }
 );
