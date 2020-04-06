@@ -9,7 +9,6 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.Tab
@@ -23,9 +22,6 @@ class TabViewHolder(
     itemView: View,
     private val tabsTray: BrowserTabsTray
 ) : RecyclerView.ViewHolder(itemView) {
-    private val cardView: CardView = (itemView as CardView).apply {
-        elevation = tabsTray.styling.itemElevation
-    }
     private val iconView: ImageView = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
@@ -59,11 +55,11 @@ class TabViewHolder(
 
         if (isSelected) {
             titleView.setTextColor(tabsTray.styling.selectedItemTextColor)
-            cardView.setCardBackgroundColor(tabsTray.styling.selectedItemBackgroundColor)
+            itemView.setBackgroundColor(tabsTray.styling.selectedItemBackgroundColor)
             closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.selectedItemTextColor)
         } else {
             titleView.setTextColor(tabsTray.styling.itemTextColor)
-            cardView.setCardBackgroundColor(tabsTray.styling.itemBackgroundColor)
+            itemView.setBackgroundColor(tabsTray.styling.itemBackgroundColor)
             closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.itemTextColor)
         }
 
