@@ -478,9 +478,8 @@ class NativeObject : public JSObject {
     static_assert(sizeof(NativeObject) % sizeof(Value) == 0,
                   "fixed slots after an object must be aligned");
 
-    static_assert(
-        offsetof(NativeObject, group_) == offsetof(shadow::Object, group),
-        "shadow type must match actual type");
+    static_assert(offsetOfGroup() == offsetof(shadow::Object, group),
+                  "shadow type must match actual type");
     static_assert(
         offsetof(NativeObject, slots_) == offsetof(shadow::Object, slots),
         "shadow slots must match actual slots");

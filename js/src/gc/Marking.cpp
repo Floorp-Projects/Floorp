@@ -1955,8 +1955,7 @@ scan_obj : {
   }
 
   markImplicitEdges(obj);
-  ObjectGroup* group = obj->groupFromGC();
-  traverseEdge(obj, group);
+  traverseEdge(obj, obj->groupRaw());
 
   NativeObject* nobj = CallTraceHook(
       [this, obj](auto thingp) { this->traverseEdge(obj, *thingp); }, this, obj,
