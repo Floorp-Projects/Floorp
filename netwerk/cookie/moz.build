@@ -29,10 +29,10 @@ EXPORTS.mozilla.net = [
     'nsCookieKey.h',
 ]
 UNIFIED_SOURCES += [
+    'Cookie.cpp',
     'CookieJarSettings.cpp',
     'CookieServiceChild.cpp',
     'CookieServiceParent.cpp',
-    'nsCookie.cpp',
     'nsCookiePermission.cpp',
 ]
 # nsCookieService.cpp can't be unified because of symbol conflicts
