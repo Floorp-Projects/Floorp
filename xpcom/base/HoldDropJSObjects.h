@@ -53,10 +53,6 @@ void DropJSObjects(T* aHolder) {
   HoldDropJSObjectsHelper<T>::Drop(aHolder);
 }
 
-#ifdef DEBUG
-bool IsJSHolder(void* aHolder);
-#endif
-
 }  // namespace mozilla
 
 #endif  // mozilla_HoldDropJSObjects_h
