@@ -6,8 +6,8 @@
 #ifndef mozilla_net_CookieKey_h
 #define mozilla_net_CookieKey_h
 
+#include "mozilla/OriginAttributes.h"
 #include "nsHashKeys.h"
-#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace net {
