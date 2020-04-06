@@ -1356,14 +1356,14 @@ void WasmFunctionScope::Data::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
 void Scope::traceChildren(JSTracer* trc) {
-  TraceNullableEdge(trc, &enclosing_, "scope enclosing");
+  TraceNullableEdge(trc, &headerAndEnclosingScope_, "scope enclosing");
   TraceNullableEdge(trc, &environmentShape_, "scope env shape");
   applyScopeDataTyped([trc](auto data) { data->trace(trc); });
 }
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   do {
-    if (scope->environmentShape_) {
-      traverseEdge(scope, scope->environmentShape_.get());
+    if (scope->environmentShape()) {
+      traverseEdge(scope, scope->environmentShape());
     }
     TrailingNamesArray* names = nullptr;
     uint32_t length = 0;
@@ -1448,7 +1448,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
         traverseStringEdge(scope, names->get(i).name());
       }
     }
-    scope = scope->enclosing_;
+    scope = scope->enclosing();
   } while (scope && mark(scope));
 }
 
