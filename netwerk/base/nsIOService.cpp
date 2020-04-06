@@ -1853,7 +1853,7 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable* request,
   if (!speculativeHandler) return NS_OK;
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  nsCOMPtr<nsIPrincipal> principal = loadInfo->LoadingPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = loadInfo->GetLoadingPrincipal();
 
   nsLoadFlags loadFlags = 0;
   channel->GetLoadFlags(&loadFlags);

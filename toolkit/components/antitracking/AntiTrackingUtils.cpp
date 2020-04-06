@@ -274,7 +274,7 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
     }
 
     // We try to use the loading principal if there is no TopLevelPrincipal.
-    targetPrincipal = loadInfo->LoadingPrincipal();
+    targetPrincipal = loadInfo->GetLoadingPrincipal();
   }
 
   if (!targetPrincipal) {

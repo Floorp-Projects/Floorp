@@ -931,10 +931,11 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
   if (!topDoc && !xhr) {
     nsCOMPtr<nsIURI> topURI;
     Unused << chanInternal->GetTopWindowURI(getter_AddRefs(topURI));
-    nsCOMPtr<nsIPrincipal> loadingPrinc = loadInfo->LoadingPrincipal();
     if (topURI) {
       mCrossOrigin = !NS_SecurityCompareURIs(topURI, mURI, true);
     } else {
+      nsIPrincipal* loadingPrinc = loadInfo->GetLoadingPrincipal();
+      MOZ_ASSERT(loadingPrinc);
       bool sameOrigin = false;
       loadingPrinc->IsSameOrigin(mURI, false, &sameOrigin);
       mCrossOrigin = !sameOrigin;
