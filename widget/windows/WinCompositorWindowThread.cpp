@@ -159,7 +159,7 @@ WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
                              nullptr, 0, GetModuleHandle(nullptr), 0);
 
         compositorWnd = ::CreateWindowEx(
-            WS_EX_NOPARENTNOTIFY | WS_EX_NOREDIRECTIONBITMAP,
+            WS_EX_LAYERED | WS_EX_NOPARENTNOTIFY | WS_EX_NOREDIRECTIONBITMAP,
             kClassNameCompositor, nullptr,
             WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1,
             initialParentWnd, 0, GetModuleHandle(nullptr), 0);
