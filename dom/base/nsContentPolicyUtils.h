@@ -172,40 +172,37 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
  * purpose */
 #define CHECK_PRINCIPAL_CSP_AND_DATA(action)                                  \
   PR_BEGIN_MACRO                                                              \
-  if (loadingPrincipal) {                                                     \
+  if (loadingPrincipal && loadingPrincipal->IsSystemPrincipal()) {            \
     /* We exempt most loads into any document with the system principal       \
-     * from content policy (escept CSP) checks, mostly as an optimization.    \
+     * from content policy (except CSP) checks, mostly as an optimization.    \
      * Which means that we need to apply this check to the loading principal, \
      * not the principal that triggered the load. */                          \
-    bool isSystem = loadingPrincipal->IsSystemPrincipal();                    \
-    if (isSystem) {                                                           \
-      /* Check CSP for System Privileged pages */                             \
-      CSPService::ConsultCSP(contentLocation, loadInfo, mimeType, decision);  \
-      if (NS_CP_REJECTED(*decision)) {                                        \
-        return NS_OK;                                                         \
+    /* Check CSP for System Privileged pages */                               \
+    CSPService::ConsultCSP(contentLocation, loadInfo, mimeType, decision);    \
+    if (NS_CP_REJECTED(*decision)) {                                          \
+      return NS_OK;                                                           \
+    }                                                                         \
+    if (contentType != nsIContentPolicy::TYPE_DOCUMENT) {                     \
+      *decision = nsIContentPolicy::ACCEPT;                                   \
+      nsCOMPtr<nsINode> n = do_QueryInterface(context);                       \
+      if (!n) {                                                               \
+        nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(context);        \
+        n = win ? win->GetExtantDoc() : nullptr;                              \
       }                                                                       \
-      if (contentType != nsIContentPolicy::TYPE_DOCUMENT) {                   \
-        *decision = nsIContentPolicy::ACCEPT;                                 \
-        nsCOMPtr<nsINode> n = do_QueryInterface(context);                     \
-        if (!n) {                                                             \
-          nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(context);      \
-          n = win ? win->GetExtantDoc() : nullptr;                            \
-        }                                                                     \
-        if (n) {                                                              \
-          mozilla::dom::Document* d = n->OwnerDoc();                          \
-          if (d->IsLoadedAsData() || d->IsBeingUsedAsImage() ||               \
-              d->IsResourceDoc()) {                                           \
-            nsCOMPtr<nsIContentPolicy> dataPolicy =                           \
-                do_GetService("@mozilla.org/data-document-content-policy;1"); \
-            if (dataPolicy) {                                                 \
-              dataPolicy->action(contentLocation, loadInfo, mimeType,         \
-                                 decision);                                   \
-            }                                                                 \
+      if (n) {                                                                \
+        mozilla::dom::Document* d = n->OwnerDoc();                            \
+        if (d->IsLoadedAsData() || d->IsBeingUsedAsImage() ||                 \
+            d->IsResourceDoc()) {                                             \
+          nsCOMPtr<nsIContentPolicy> dataPolicy =                             \
+              do_GetService("@mozilla.org/data-document-content-policy;1");   \
+          if (dataPolicy) {                                                   \
+            dataPolicy->action(contentLocation, loadInfo, mimeType,           \
+                               decision);                                     \
           }                                                                   \
         }                                                                     \
       }                                                                       \
-      return NS_OK;                                                           \
     }                                                                         \
+    return NS_OK;                                                             \
   }                                                                           \
   PR_END_MACRO
 
