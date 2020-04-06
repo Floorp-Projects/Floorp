@@ -1534,7 +1534,7 @@ class AsyncPanZoomController {
    * Guards against the case where the APZC is being concurrently destroyed
    * (and thus mTreeManager is being nulled out).
    */
-  void CallDispatchScroll(ParentLayerPoint& aStartPoint,
+  bool CallDispatchScroll(ParentLayerPoint& aStartPoint,
                           ParentLayerPoint& aEndPoint,
                           OverscrollHandoffState& aOverscrollHandoffState);
 
