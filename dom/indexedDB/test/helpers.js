@@ -415,6 +415,7 @@ function expectingError(request, errorName) {
   return new Promise(function(resolve, reject) {
     request.onerror = function(event) {
       is(errorName, event.target.error.name, "Correct exception type");
+      event.stopPropagation();
       resolve(event);
     };
     request.onsuccess = function(event) {
