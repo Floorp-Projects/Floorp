@@ -13,7 +13,7 @@
 #include "nsWeakReference.h"
 
 #include "Cookie.h"
-#include "nsCookieKey.h"
+#include "CookieKey.h"
 #include "nsString.h"
 #include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
@@ -51,21 +51,20 @@ struct nsListIter;
 
 namespace mozilla {
 namespace net {
-class nsCookieKey;
 class CookieServiceParent;
 }  // namespace net
 }  // namespace mozilla
 
-using mozilla::net::nsCookieKey;
-// Inherit from nsCookieKey so this can be stored in nsTHashTable
-// TODO: why aren't we using nsClassHashTable<nsCookieKey, ArrayType>?
-class nsCookieEntry : public nsCookieKey {
+using mozilla::net::CookieKey;
+// Inherit from CookieKey so this can be stored in nsTHashTable
+// TODO: why aren't we using nsClassHashTable<CookieKey, ArrayType>?
+class nsCookieEntry : public CookieKey {
  public:
   // Hash methods
   typedef nsTArray<RefPtr<mozilla::net::Cookie>> ArrayType;
   typedef ArrayType::index_type IndexType;
 
-  explicit nsCookieEntry(KeyTypePointer aKey) : nsCookieKey(aKey) {}
+  explicit nsCookieEntry(KeyTypePointer aKey) : CookieKey(aKey) {}
 
   nsCookieEntry(const nsCookieEntry& toCopy) {
     // if we end up here, things will break. nsTHashtable shouldn't
@@ -85,7 +84,7 @@ class nsCookieEntry : public nsCookieKey {
 
 // encapsulates a (key, Cookie) tuple for temporary storage purposes.
 struct CookieDomainTuple {
-  nsCookieKey key;
+  CookieKey key;
   OriginAttributes originAttributes;
   mozilla::UniquePtr<mozilla::net::CookieStruct> cookie;
 };
@@ -199,7 +198,7 @@ class nsCookieService final : public nsICookieService,
                             const nsACString& aHost);
   static bool PathMatches(mozilla::net::Cookie* aCookie,
                           const nsACString& aPath);
-  static bool CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
+  static bool CanSetCookie(nsIURI* aHostURI, const CookieKey& aKey,
                            mozilla::net::CookieStruct& aCookieData,
                            bool aRequireHostMatch, CookieStatus aStatus,
                            nsCString& aCookieHeader, int64_t aServerTime,
@@ -278,17 +277,17 @@ class nsCookieService final : public nsICookieService,
       bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
       nsCString& aCookieHeader, const nsACString& aServerTime, bool aFromHttp,
       const OriginAttributes& aOriginAttrs, nsIChannel* aChannel);
-  bool SetCookieInternal(nsIURI* aHostURI, const nsCookieKey& aKey,
+  bool SetCookieInternal(nsIURI* aHostURI, const CookieKey& aKey,
                          bool aRequireHostMatch, CookieStatus aStatus,
                          nsCString& aCookieHeader, int64_t aServerTime,
                          bool aFromHttp, nsIChannel* aChannel);
-  void AddInternal(const nsCookieKey& aKey, mozilla::net::Cookie* aCookie,
+  void AddInternal(const CookieKey& aKey, mozilla::net::Cookie* aCookie,
                    int64_t aCurrentTimeInUsec, nsIURI* aHostURI,
                    const nsACString& aCookieHeader, bool aFromHttp);
   void RemoveCookieFromList(
       const nsListIter& aIter,
       mozIStorageBindingParamsArray* aParamsArray = nullptr);
-  void AddCookieToList(const nsCookieKey& aKey, mozilla::net::Cookie* aCookie,
+  void AddCookieToList(const CookieKey& aKey, mozilla::net::Cookie* aCookie,
                        DBState* aDBState,
                        mozIStorageBindingParamsArray* aParamsArray,
                        bool aWriteToDB = true);
@@ -318,10 +317,10 @@ class nsCookieService final : public nsICookieService,
                         bool aFromHttp);
   void RemoveAllFromMemory();
   already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec);
-  bool FindCookie(const nsCookieKey& aKey, const nsCString& aHost,
+  bool FindCookie(const CookieKey& aKey, const nsCString& aHost,
                   const nsCString& aName, const nsCString& aPath,
                   nsListIter& aIter);
-  bool FindSecureCookie(const nsCookieKey& aKey, mozilla::net::Cookie* aCookie);
+  bool FindSecureCookie(const CookieKey& aKey, mozilla::net::Cookie* aCookie);
   void FindStaleCookies(nsCookieEntry* aEntry, int64_t aCurrentTime,
                         bool aIsSecure, nsTArray<nsListIter>& aOutput,
                         uint32_t aLimit);

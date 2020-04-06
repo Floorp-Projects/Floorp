@@ -9,6 +9,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -164,7 +165,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
   nsCString baseDomain;
   nsCookieService::GetBaseDomainFromHost(mTLDService, aCookie.host(),
                                          baseDomain);
-  nsCookieKey key(baseDomain, aAttrs);
+  CookieKey key(baseDomain, aAttrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
 
@@ -263,7 +264,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
 
   nsCookieService::GetBaseDomain(TLDService, aHostURI, baseDomain,
                                  requireHostMatch);
-  nsCookieKey key(baseDomain, attrs);
+  CookieKey key(baseDomain, attrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
 
@@ -349,7 +350,7 @@ uint32_t CookieServiceChild::CountCookiesFromHashTable(
   CookiesList* cookiesList = nullptr;
 
   nsCString baseDomain;
-  nsCookieKey key(aBaseDomain, aOriginAttrs);
+  CookieKey key(aBaseDomain, aOriginAttrs);
   mCookiesMap.Get(key, &cookiesList);
 
   return cookiesList ? cookiesList->Length() : 0;
@@ -399,7 +400,7 @@ void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
   nsCookieService::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
                                          baseDomain);
 
-  nsCookieKey key(baseDomain, aAttrs);
+  CookieKey key(baseDomain, aAttrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
 
@@ -535,7 +536,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(
     return NS_OK;
   }
 
-  nsCookieKey key(baseDomain, attrs);
+  CookieKey key(baseDomain, attrs);
   CookiesList* cookies = mCookiesMap.Get(key);
 
   nsCString serverTimeString(aServerTime);

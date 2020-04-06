@@ -24,9 +24,9 @@ EXPORTS += [
 
 EXPORTS.mozilla.net = [
     'CookieJarSettings.h',
+    'CookieKey.h',
     'CookieServiceChild.h',
     'CookieServiceParent.h',
-    'nsCookieKey.h',
 ]
 UNIFIED_SOURCES += [
     'Cookie.cpp',

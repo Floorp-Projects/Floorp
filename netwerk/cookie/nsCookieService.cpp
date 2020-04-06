@@ -132,8 +132,7 @@ static const char kPrefCookieQuotaPerHost[] = "network.cookie.quotaPerHost";
 static const char kPrefCookiePurgeAge[] = "network.cookie.purgeAge";
 
 static void bindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
-                                 const nsCookieKey& aKey,
-                                 const Cookie* aCookie);
+                                 const CookieKey& aKey, const Cookie* aCookie);
 
 // stores the nsCookieEntry entryclass and an index into the cookie array
 // within that entryclass, for purposes of storing an iteration state that
@@ -530,7 +529,7 @@ bool ProcessSameSiteCookieForForeignRequest(nsIChannel* aChannel,
 }  // namespace
 
 size_t nsCookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-  size_t amount = nsCookieKey::SizeOfExcludingThis(aMallocSizeOf);
+  size_t amount = CookieKey::SizeOfExcludingThis(aMallocSizeOf);
 
   amount += mCookies.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < mCookies.Length(); ++i) {
@@ -1987,8 +1986,7 @@ void nsCookieService::RebuildCorruptDB(DBState* aDBState) {
                   Cookie* cookie = cookies[i];
 
                   if (!cookie->IsSession()) {
-                    bindCookieParameters(paramsArray, nsCookieKey(entry),
-                                         cookie);
+                    bindCookieParameters(paramsArray, CookieKey(entry), cookie);
                   }
                 }
               }
@@ -2223,7 +2221,7 @@ void nsCookieService::SetCookieStringInternal(
     return;
   }
 
-  nsCookieKey key(baseDomain, aOriginAttrs);
+  CookieKey key(baseDomain, aOriginAttrs);
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       GetCookieJarSettings(aChannel);
 
@@ -2544,7 +2542,7 @@ nsCookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t currentTimeInUsec = PR_Now();
-  nsCookieKey key = nsCookieKey(baseDomain, *aOriginAttributes);
+  CookieKey key = CookieKey(baseDomain, *aOriginAttributes);
 
   RefPtr<Cookie> cookie = Cookie::Create(
       aName, aValue, host, aPath, aExpiry, currentTimeInUsec,
@@ -2586,9 +2584,8 @@ nsresult nsCookieService::Remove(const nsACString& aHost,
 
   nsListIter matchIter;
   RefPtr<Cookie> cookie;
-  if (FindCookie(nsCookieKey(baseDomain, aAttrs), host,
-                 PromiseFlatCString(aName), PromiseFlatCString(aPath),
-                 matchIter)) {
+  if (FindCookie(CookieKey(baseDomain, aAttrs), host, PromiseFlatCString(aName),
+                 PromiseFlatCString(aPath), matchIter)) {
     cookie = matchIter.Cookie();
     RemoveCookieFromList(matchIter);
   }
@@ -2764,7 +2761,7 @@ OpenDBResult nsCookieService::Read() {
     // that we don't support
     Unused << attrs.PopulateFromSuffix(suffix);
 
-    nsCookieKey key(baseDomain, attrs);
+    CookieKey key(baseDomain, attrs);
     CookieDomainTuple* tuple = mReadArray.AppendElement();
     tuple->key = std::move(key);
     tuple->originAttributes = attrs;
@@ -2900,7 +2897,7 @@ nsCookieService::ImportCookies(nsIFile* aCookieFile) {
 
     // pre-existing cookies have inIsolatedMozBrowser=false set by default
     // constructor of OriginAttributes().
-    nsCookieKey key(baseDomain, OriginAttributes());
+    CookieKey key(baseDomain, OriginAttributes());
 
     // Create a new Cookie and assign the data. We don't know the cookie
     // creation time, so just use the current time to generate a unique one.
@@ -3070,7 +3067,7 @@ void nsCookieService::GetCookiesForURI(
   int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
   bool stale = false;
 
-  nsCookieKey key(baseDomain, aOriginAttrs);
+  CookieKey key(baseDomain, aOriginAttrs);
 
   // perform the hash lookup
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(key);
@@ -3207,7 +3204,7 @@ void nsCookieService::GetCookieStringInternal(
 
 // processes a single cookie, and returns true if there are more cookies
 // to be processed
-bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
+bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const CookieKey& aKey,
                                    CookieStruct& aCookieData,
                                    bool aRequireHostMatch, CookieStatus aStatus,
                                    nsCString& aCookieHeader,
@@ -3376,7 +3373,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
 // processes a single cookie, and returns true if there are more cookies
 // to be processed
 bool nsCookieService::SetCookieInternal(
-    nsIURI* aHostURI, const mozilla::net::nsCookieKey& aKey,
+    nsIURI* aHostURI, const mozilla::net::CookieKey& aKey,
     bool aRequireHostMatch, CookieStatus aStatus, nsCString& aCookieHeader,
     int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel) {
   NS_ASSERTION(aHostURI, "null host!");
@@ -3436,7 +3433,7 @@ bool nsCookieService::SetCookieInternal(
 // it either replaces an existing cookie; or adds the cookie to the hashtable,
 // and deletes a cookie (if maximum number of cookies has been
 // reached). also performs list maintenance by removing expired cookies.
-void nsCookieService::AddInternal(const nsCookieKey& aKey, Cookie* aCookie,
+void nsCookieService::AddInternal(const CookieKey& aKey, Cookie* aCookie,
                                   int64_t aCurrentTimeInUsec, nsIURI* aHostURI,
                                   const nsACString& aCookieHeader,
                                   bool aFromHttp) {
@@ -4617,7 +4614,7 @@ nsCookieService::CookieExistsNative(const nsACString& aHost,
 
   nsListIter iter;
   *aFoundCookie = FindCookie(
-      nsCookieKey(baseDomain, *aOriginAttributes), PromiseFlatCString(aHost),
+      CookieKey(baseDomain, *aOriginAttributes), PromiseFlatCString(aHost),
       PromiseFlatCString(aName), PromiseFlatCString(aPath), iter);
   return NS_OK;
 }
@@ -4720,7 +4717,7 @@ nsresult nsCookieService::CountCookiesFromHostInternal(
 
   OriginAttributes attrs;
   attrs.mPrivateBrowsingId = aPrivateBrowsingId;
-  nsCookieKey key(baseDomain, attrs);
+  CookieKey key(baseDomain, attrs);
 
   // Return a count of all cookies, including expired.
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(key);
@@ -4761,7 +4758,7 @@ nsCookieService::GetCookiesFromHost(const nsACString& aHost,
   AutoRestore<DBState*> savePrevDBState(mDBState);
   mDBState = (attrs.mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
 
-  nsCookieKey key = nsCookieKey(baseDomain, attrs);
+  CookieKey key = CookieKey(baseDomain, attrs);
 
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(key);
   if (!entry) return NS_OK;
@@ -5058,8 +5055,7 @@ nsCookieService::RemoveAllSince(int64_t aSinceWhen, JSContext* aCx,
 }
 
 // find an secure cookie specified by host and name
-bool nsCookieService::FindSecureCookie(const nsCookieKey& aKey,
-                                       Cookie* aCookie) {
+bool nsCookieService::FindSecureCookie(const CookieKey& aKey, Cookie* aCookie) {
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(aKey);
   if (!entry) return false;
 
@@ -5087,9 +5083,9 @@ bool nsCookieService::FindSecureCookie(const nsCookieKey& aKey,
 }
 
 // find an exact cookie specified by host, name, and path that hasn't expired.
-bool nsCookieService::FindCookie(const nsCookieKey& aKey,
-                                 const nsCString& aHost, const nsCString& aName,
-                                 const nsCString& aPath, nsListIter& aIter) {
+bool nsCookieService::FindCookie(const CookieKey& aKey, const nsCString& aHost,
+                                 const nsCString& aName, const nsCString& aPath,
+                                 nsListIter& aIter) {
   // Should |EnsureReadComplete| before.
   MOZ_ASSERT(mInitializedDBStates);
   MOZ_ASSERT(mInitializedDBConn);
@@ -5173,7 +5169,7 @@ void nsCookieService::RemoveCookieFromList(
 }
 
 void bindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
-                          const nsCookieKey& aKey, const Cookie* aCookie) {
+                          const CookieKey& aKey, const Cookie* aCookie) {
   NS_ASSERTION(aParamsArray,
                "Null params array passed to bindCookieParameters!");
   NS_ASSERTION(aCookie, "Null cookie passed to bindCookieParameters!");
@@ -5247,7 +5243,7 @@ void nsCookieService::UpdateCookieOldestTime(DBState* aDBState,
 }
 
 void nsCookieService::AddCookieToList(
-    const nsCookieKey& aKey, Cookie* aCookie, DBState* aDBState,
+    const CookieKey& aKey, Cookie* aCookie, DBState* aDBState,
     mozIStorageBindingParamsArray* aParamsArray, bool aWriteToDB) {
   NS_ASSERTION(!(aDBState->dbConn && !aWriteToDB && aParamsArray),
                "Not writing to the DB but have a params array?");
