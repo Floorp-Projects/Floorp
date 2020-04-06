@@ -32,15 +32,15 @@ PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/selectors/previe
 # Some tasks show up in the target task set, but are either special cases
 # or uncommon enough that they should only be selectable with --full.
 TARGET_TASK_FILTERS = (
-    '.*-ccov\/.*',
-    'windows10-aarch64/opt.*',
-    '.*win64-aarch64-laptop.*',
-    '.*windows10-64-ref-hw-2017.*',
-    'android-hw.*',
-    '.*android-geckoview-docs.*',
-    'linux1804-32.*',   # hide linux32 tests - bug 1599197
-    r'linux-.*',  # hide all linux32 tasks by default - bug 1599197
-    r'linux.*web-platform-tests.*-fis-.*',  # hide wpt linux fission tests - bug 1610879
+    '-ccov/',
+    'windows10-aarch64/opt',
+    'win64-aarch64-laptop',
+    'windows10-64-ref-hw-2017',
+    'android-hw',
+    'android-geckoview-docs',
+    'linux1804-32',   # hide linux32 tests - bug 1599197
+    r'linux-',  # hide all linux32 tasks by default - bug 1599197
+    r'linux.*web-platform-tests.*-fis-',  # hide wpt linux fission tests - bug 1610879
 )
 
 
