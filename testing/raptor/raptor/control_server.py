@@ -32,6 +32,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 def MakeCustomHandlerClass(
     results_handler,
     error_handler,
+    startup_handler,
     shutdown_browser,
     handle_gecko_profile,
     background_app,
@@ -118,6 +119,7 @@ def MakeCustomHandlerClass(
         def __init__(self, *args, **kwargs):
             self.results_handler = results_handler
             self.error_handler = error_handler
+            self.startup_handler = startup_handler
             self.shutdown_browser = shutdown_browser
             self.handle_gecko_profile = handle_gecko_profile
             self.background_app = background_app
@@ -234,6 +236,9 @@ def MakeCustomHandlerClass(
                 )
             elif data["type"] == "webext_status":
                 LOG.info("received " + data["type"] + ": " + str(data["data"]))
+            elif data["type"] == "webext_loaded":
+                LOG.info("received " + data["type"] + ": raptor runner.js is loaded!")
+                self.startup_handler(True)
             elif data["type"] == "wait-set":
                 LOG.info("received " + data["type"] + ": " + str(data["data"]))
                 MyHandler.wait_after_messages[str(data["data"])] = True
@@ -316,6 +321,7 @@ class RaptorControlServer:
         self.gecko_profile_dir = None
         self.debug_mode = debug_mode
         self.user_profile = None
+        self.is_webextension_loaded = False
 
     def start(self):
         config_dir = os.path.join(here, "tests")
@@ -332,10 +338,11 @@ class RaptorControlServer:
         handler_class = MakeCustomHandlerClass(
             self.results_handler,
             self.error_handler,
+            self.startup_handler,
             self.shutdown_browser,
             self.handle_gecko_profile,
             self.background_app,
-            self.foreground_app,
+            self.foreground_app
         )
 
         httpd = server_class(server_address, handler_class)
@@ -348,6 +355,9 @@ class RaptorControlServer:
 
     def error_handler(self, error, stack):
         self._runtime_error = {"error": error, "stack": stack}
+
+    def startup_handler(self, value):
+        self.is_webextension_loaded = value
 
     def shutdown_browser(self):
         # if debug-mode enabled, leave the browser running - require manual shutdown
