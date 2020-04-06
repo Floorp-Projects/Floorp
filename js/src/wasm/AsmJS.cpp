@@ -7116,7 +7116,7 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   // generating bytecode for asm.js functions, allowing this asm.js module
   // function to be the finished result.
   MOZ_ASSERT(funbox->isInterpreted());
-  funbox->clobberFunction(moduleFun);
+  funbox->setAsmJSModule(moduleFun);
 
   // Success! Write to the console with a "warning" message indicating
   // total compilation time.

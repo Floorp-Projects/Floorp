@@ -34,7 +34,6 @@ FunctionEmitter::FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
                                  IsHoisted isHoisted)
     : bce_(bce),
       funbox_(funbox),
-      fun_(bce_->cx, funbox_->function()),
       name_(bce_->cx, funbox_->explicitName()),
       syntaxKind_(syntaxKind),
       isHoisted_(isHoisted) {}
@@ -192,7 +191,7 @@ bool FunctionEmitter::emitAsmJSModule() {
   MOZ_ASSERT(state_ == State::Start);
 
   MOZ_ASSERT(!funbox_->wasEmitted);
-  MOZ_ASSERT(IsAsmJSModule(fun_));
+  MOZ_ASSERT(funbox_->isAsmJSModule());
 
   //                [stack]
 
