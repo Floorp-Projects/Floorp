@@ -216,14 +216,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
 
   if (aFlags & EndTransactionFlags::END_NO_COMPOSITE &&
       !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
-    bool haveScrollUpdates = false;
-    for (auto renderRoot : wr::kRenderRoots) {
-      if (!mPendingScrollUpdates[renderRoot].IsEmpty()) {
-        haveScrollUpdates = true;
-        break;
-      }
-    }
-    if (!haveScrollUpdates) {
+    if (mPendingScrollUpdates.IsEmpty()) {
       MOZ_ASSERT(!mTarget);
       WrBridge()->SendSetFocusTarget(mFocusTarget);
       // Revoke TransactionId to trigger next paint.
@@ -259,8 +252,9 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   AutoTArray<RenderRootUpdates, wr::kRenderRootCount> renderRootUpdates;
   for (auto& stateManager : mStateManagers) {
     auto renderRoot = stateManager.GetRenderRoot();
+    MOZ_ASSERT(renderRoot == wr::RenderRoot::Default);
     if (stateManager.mAsyncResourceUpdates ||
-        !mPendingScrollUpdates[renderRoot].IsEmpty() ||
+        !mPendingScrollUpdates.IsEmpty() ||
         WrBridge()->HasWebRenderParentCommands(renderRoot)) {
       auto updates = renderRootUpdates.AppendElement();
       updates->mRenderRoot = renderRoot;
@@ -270,7 +264,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
                                                   updates->mSmallShmems,
                                                   updates->mLargeShmems);
       }
-      updates->mScrollUpdates = std::move(mPendingScrollUpdates[renderRoot]);
+      updates->mScrollUpdates = std::move(mPendingScrollUpdates);
       for (auto it = updates->mScrollUpdates.Iter(); !it.Done(); it.Next()) {
         nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/it.Key());
       }
