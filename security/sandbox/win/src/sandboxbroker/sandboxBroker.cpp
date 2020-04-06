@@ -688,7 +688,8 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       "With these static arguments AddRule should never fail, what happened?");
 }
 
-void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
+void SandboxBroker::SetSecurityLevelForGPUProcess(
+    int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) {
   MOZ_RELEASE_ASSERT(mPolicy, "mPolicy must be set before this call.");
 
   sandbox::JobLevel jobLevel;
@@ -776,6 +777,54 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   MOZ_RELEASE_ASSERT(
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
+
+  // The GPU process needs to write to a shader cache for performance reasons
+  // Note that we can't use the sProfileDir variable stored above because
+  // the GPU process is created very early in Gecko initialization before
+  // SandboxBroker::GeckoDependentInitialize() is called
+  if (aProfileDir) {
+    if (![&aProfileDir, this] {
+          nsString shaderCacheRulePath;
+          nsresult rv = aProfileDir->GetPath(shaderCacheRulePath);
+          if (NS_FAILED(rv)) {
+            return false;
+          }
+          if (shaderCacheRulePath.IsEmpty()) {
+            return false;
+          }
+
+          if (Substring(shaderCacheRulePath, 0, 2).Equals(u"\\\\")) {
+            shaderCacheRulePath.InsertLiteral(u"??\\UNC", 1);
+          }
+
+          shaderCacheRulePath.Append(u"\\shader-cache");
+
+          sandbox::ResultCode result =
+              mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                               sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                               shaderCacheRulePath.get());
+
+          if (result != sandbox::SBOX_ALL_OK) {
+            return false;
+          }
+
+          shaderCacheRulePath.Append(u"\\*");
+
+          result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                                    sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                                    shaderCacheRulePath.get());
+
+          if (result != sandbox::SBOX_ALL_OK) {
+            return false;
+          }
+
+          return true;
+        }()) {
+      NS_WARNING(
+          "Failed to add rule enabling GPU shader cache. Performance will be "
+          "negatively affected");
+    }
+  }
 
   // The process needs to be able to duplicate shared memory handles,
   // which are Section handles, to the broker process and other child processes.
