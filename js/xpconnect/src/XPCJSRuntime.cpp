@@ -2660,7 +2660,6 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
       Telemetry::Accumulate(Telemetry::GC_MINOR_US, sample);
       break;
     case JS_TELEMETRY_GC_NURSERY_BYTES:
-      Telemetry::Accumulate(Telemetry::GC_NURSERY_BYTES, sample);
       Telemetry::Accumulate(Telemetry::GC_NURSERY_BYTES_2, sample);
       break;
     case JS_TELEMETRY_GC_PRETENURE_COUNT:
