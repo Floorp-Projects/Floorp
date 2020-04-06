@@ -84,13 +84,6 @@ BrowserElementWebNavigation.prototype = {
     });
   },
 
-  setOriginAttributesBeforeLoading(originAttributes) {
-    // No equivalent in the current BrowserElement API
-    this._sendMessage("WebNavigation:SetOriginAttributes", {
-      originAttributes,
-    });
-  },
-
   reload(flags) {
     let hardReload = false;
     if (
