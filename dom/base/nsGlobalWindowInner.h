@@ -937,6 +937,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   nsIDOMWindowUtils* GetWindowUtils(mozilla::ErrorResult& aRv);
 
+  bool HasOpenerForInitialContentBrowser();
+
   void UpdateTopInnerWindow();
 
   virtual bool IsInSyncOperation() override {

@@ -12,7 +12,7 @@ var observer = {
 };
 
 function run_test() {
-  let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
+  let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
   windowlessBrowser.docShell.addWeakPrivacyTransitionObserver(observer);
   windowlessBrowser.docShell.setOriginAttributes({ privateBrowsingId: 1 });
   windowlessBrowser.docShell.setOriginAttributes({ privateBrowsingId: 0 });

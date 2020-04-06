@@ -538,6 +538,9 @@ partial interface Window {
   [Constant, Throws, ChromeOnly]
   readonly attribute nsIDOMWindowUtils windowUtils;
 
+  [ChromeOnly]
+  readonly attribute boolean hasOpenerForInitialContentBrowser;
+
   [Pure, ChromeOnly]
   readonly attribute WindowGlobalChild? windowGlobalChild;
 };

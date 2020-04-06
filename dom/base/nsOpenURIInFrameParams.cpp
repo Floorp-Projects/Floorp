@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsOpenURIInFrameParams.h"
-#include "nsIOpenWindowInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -21,16 +20,11 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsOpenURIInFrameParams)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsOpenURIInFrameParams)
 
 nsOpenURIInFrameParams::nsOpenURIInFrameParams(
-    nsIOpenWindowInfo* aOpenWindowInfo, mozilla::dom::Element* aOpener)
-    : mOpenWindowInfo(aOpenWindowInfo), mOpenerBrowser(aOpener) {}
+    const mozilla::OriginAttributes& aOriginAttributes,
+    mozilla::dom::Element* aOpener)
+    : mOpenerOriginAttributes(aOriginAttributes), mOpenerBrowser(aOpener) {}
 
 nsOpenURIInFrameParams::~nsOpenURIInFrameParams() = default;
-
-NS_IMETHODIMP
-nsOpenURIInFrameParams::GetOpenWindowInfo(nsIOpenWindowInfo** aOpenWindowInfo) {
-  NS_IF_ADDREF(*aOpenWindowInfo = mOpenWindowInfo);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsOpenURIInFrameParams::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
@@ -47,7 +41,7 @@ nsOpenURIInFrameParams::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
 NS_IMETHODIMP
 nsOpenURIInFrameParams::GetIsPrivate(bool* aIsPrivate) {
   NS_ENSURE_ARG_POINTER(aIsPrivate);
-  *aIsPrivate = mOpenWindowInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  *aIsPrivate = mOpenerOriginAttributes.mPrivateBrowsingId > 0;
   return NS_OK;
 }
 
@@ -89,5 +83,7 @@ nsresult nsOpenURIInFrameParams::GetOpenerBrowser(
 NS_IMETHODIMP
 nsOpenURIInFrameParams::GetOpenerOriginAttributes(
     JSContext* aCx, JS::MutableHandle<JS::Value> aValue) {
-  return mOpenWindowInfo->GetScriptableOriginAttributes(aCx, aValue);
+  bool ok = ToJSValue(aCx, mOpenerOriginAttributes, aValue);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+  return NS_OK;
 }
