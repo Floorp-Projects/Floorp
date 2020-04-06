@@ -1,6 +1,0 @@
-<script>
-  function testSucceeded() { alert("success"); }
-  // eslint-disable-next-line no-useless-concat
-  function callback() { return "<script>opener.testSucceeded()</" + "script>"; }
-  var w = window.open("javascript:opener.callback();");
-</script>
