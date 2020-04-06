@@ -18,6 +18,7 @@ ChromeUtils.import(
   "resource://normandy/actions/PreferenceExperimentAction.jsm",
   this
 );
+ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
 
 function branchFactory(opts = {}) {
   const defaultPreferences = {
@@ -43,7 +44,7 @@ function branchFactory(opts = {}) {
 }
 
 function argumentsFactory(args) {
-  const defaultBranches = (args && args.branches) || [{}];
+  const defaultBranches = (args && args.branches) || [{ preferences: [] }];
   const branches = defaultBranches.map(branchFactory);
   return {
     slug: "test",
@@ -474,5 +475,276 @@ decorate_task(
 
     // Experiment should be unenrolled
     Assert.deepEqual(await PreferenceExperiments.getAllActive(), []);
+  }
+);
+
+// Check that the appropriate set of suitabilities are considered temporary errors
+decorate_task(
+  withStudiesEnabled,
+  PreferenceExperiments.withMockExperiments([]),
+  async function test_temporary_errors_set_deadline() {
+    let suitabilities = [
+      {
+        suitability: BaseAction.suitability.SIGNATURE_ERROR,
+        isTemporaryError: true,
+      },
+      {
+        suitability: BaseAction.suitability.CAPABILITES_MISMATCH,
+        isTemporaryError: false,
+      },
+      {
+        suitability: BaseAction.suitability.FILTER_MATCH,
+        isTemporaryError: false,
+      },
+      {
+        suitability: BaseAction.suitability.FILTER_MISMATCH,
+        isTemporaryError: false,
+      },
+      {
+        suitability: BaseAction.suitability.FILTER_ERROR,
+        isTemporaryError: true,
+      },
+      {
+        suitability: BaseAction.suitability.ARGUMENTS_INVALID,
+        isTemporaryError: false,
+      },
+    ];
+
+    Assert.deepEqual(
+      suitabilities.map(({ suitability }) => suitability).sort(),
+      Array.from(Object.values(BaseAction.suitability)).sort(),
+      "This test covers all suitabilities"
+    );
+
+    // The action should set a deadline 1 week from now. To avoid intermittent
+    // failures, give this a generous bound of 1 hour on either side.
+    let now = Date.now();
+    let hour = 60 * 60 * 1000;
+    let expectedDeadline = now + 7 * 24 * hour;
+    let minDeadline = new Date(expectedDeadline - hour);
+    let maxDeadline = new Date(expectedDeadline + hour);
+
+    // For each suitability, build a decorator that sets up a suitabilty
+    // environment, and then call that decorator with a sub-test that asserts
+    // the suitability is handled correctly.
+    for (const { suitability, isTemporaryError } of suitabilities) {
+      const decorator = PreferenceExperiments.withMockExperiments([
+        { slug: `test-for-suitability-${suitability}` },
+      ]);
+      await decorator(async ([experiment]) => {
+        let action = new PreferenceExperimentAction();
+        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        await action.processRecipe(recipe, suitability);
+        let modifiedExperiment = await PreferenceExperiments.get(
+          experiment.slug
+        );
+        if (isTemporaryError) {
+          is(
+            typeof modifiedExperiment.temporaryErrorDeadline,
+            "string",
+            `A temporary failure deadline should be set as a string for suitability ${suitability}`
+          );
+          let deadline = new Date(modifiedExperiment.temporaryErrorDeadline);
+          ok(
+            deadline >= minDeadline && deadline <= maxDeadline,
+            `The temporary failure deadline should be in the expected range for ` +
+              `suitability ${suitability} (got ${deadline})`
+          );
+        } else {
+          ok(
+            !modifiedExperiment.temporaryErrorDeadline,
+            `No temporary failure deadline should be set for suitability ${suitability}`
+          );
+        }
+      })();
+    }
+  }
+);
+
+// Check that if there is an existing deadline, temporary errors don't overwrite it
+decorate_task(
+  withStudiesEnabled,
+  withMockPreferences,
+  PreferenceExperiments.withMockExperiments([]),
+  async function test_temporary_errors_dont_overwrite_deadline() {
+    let temporaryFailureSuitabilities = [
+      BaseAction.suitability.SIGNATURE_ERROR,
+      BaseAction.suitability.FILTER_ERROR,
+    ];
+
+    // A deadline one hour in the future won't be hit during the test.
+    let now = Date.now();
+    let hour = 60 * 60 * 1000;
+    let unhitDeadline = new Date(now + hour).toJSON();
+
+    // For each suitability, build a decorator that sets up a suitabilty
+    // environment, and then call that decorator with a sub-test that asserts
+    // the suitability is handled correctly.
+    for (const suitability of temporaryFailureSuitabilities) {
+      const decorator = PreferenceExperiments.withMockExperiments([
+        {
+          slug: `test-for-suitability-${suitability}`,
+          expired: false,
+          temporaryErrorDeadline: unhitDeadline,
+        },
+      ]);
+      await decorator(async ([experiment]) => {
+        let action = new PreferenceExperimentAction();
+        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        await action.processRecipe(recipe, suitability);
+        let modifiedExperiment = await PreferenceExperiments.get(
+          experiment.slug
+        );
+        is(
+          modifiedExperiment.temporaryErrorDeadline,
+          unhitDeadline,
+          `The temporary failure deadline should not be cleared for suitability ${suitability}`
+        );
+      })();
+    }
+  }
+);
+
+// Check that if the deadline is past, temporary errors end the experiment.
+decorate_task(
+  withStudiesEnabled,
+  withMockPreferences,
+  PreferenceExperiments.withMockExperiments([]),
+  async function test_temporary_errors_hit_deadline() {
+    let temporaryFailureSuitabilities = [
+      BaseAction.suitability.SIGNATURE_ERROR,
+      BaseAction.suitability.FILTER_ERROR,
+    ];
+
+    // Set a deadline of an hour in the past, so that the experiment expires.
+    let now = Date.now();
+    let hour = 60 * 60 * 1000;
+    let hitDeadline = new Date(now - hour).toJSON();
+
+    // For each suitability, build a decorator that sets up a suitabilty
+    // environment, and then call that decorator with a sub-test that asserts
+    // the suitability is handled correctly.
+    for (const suitability of temporaryFailureSuitabilities) {
+      const decorator = PreferenceExperiments.withMockExperiments([
+        {
+          slug: `test-for-suitability-${suitability}`,
+          expired: false,
+          temporaryErrorDeadline: hitDeadline,
+          preferences: [],
+          branch: "test-branch",
+        },
+      ]);
+      await decorator(async ([experiment]) => {
+        let action = new PreferenceExperimentAction();
+        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        await action.processRecipe(recipe, suitability);
+        let modifiedExperiment = await PreferenceExperiments.get(
+          experiment.slug
+        );
+        ok(
+          modifiedExperiment.expired,
+          `The experiment should be expired for suitability ${suitability}`
+        );
+      })();
+    }
+  }
+);
+
+// Check that non-error suitabilities clear the temporary deadline
+decorate_task(
+  withStudiesEnabled,
+  withMockPreferences,
+  PreferenceExperiments.withMockExperiments([]),
+  async function test_non_temporary_error_clears_temporary_error_deadline() {
+    let suitabilitiesThatShouldClearDeadline = [
+      BaseAction.suitability.CAPABILITES_MISMATCH,
+      BaseAction.suitability.FILTER_MATCH,
+      BaseAction.suitability.FILTER_MISMATCH,
+      BaseAction.suitability.ARGUMENTS_INVALID,
+    ];
+
+    // Use a deadline in the past to demonstrate that even if the deadline has
+    // passed, only a temporary error suitability ends the experiment.
+    let now = Date.now();
+    let hour = 60 * 60 * 1000;
+    let hitDeadline = new Date(now - hour).toJSON();
+
+    // For each suitability, build a decorator that sets up a suitabilty
+    // environment, and then call that decorator with a sub-test that asserts
+    // the suitability is handled correctly.
+    for (const suitability of suitabilitiesThatShouldClearDeadline) {
+      const decorator = PreferenceExperiments.withMockExperiments([
+        NormandyTestUtils.factories.preferenceStudyFactory({
+          slug: `test-for-suitability-${suitability}`.toLocaleLowerCase(),
+          expired: false,
+          temporaryErrorDeadline: hitDeadline,
+        }),
+      ]);
+      await decorator(async ([experiment]) => {
+        let action = new PreferenceExperimentAction();
+        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        await action.processRecipe(recipe, suitability);
+        let modifiedExperiment = await PreferenceExperiments.get(
+          experiment.slug
+        );
+        ok(
+          !modifiedExperiment.temporaryErrorDeadline,
+          `The temporary failure deadline should be cleared for suitabilitiy ${suitability}`
+        );
+      })();
+    }
+  }
+);
+
+// Check that invalid deadlines are reset
+decorate_task(
+  withStudiesEnabled,
+  withMockPreferences,
+  PreferenceExperiments.withMockExperiments([]),
+  async function test_non_temporary_error_clears_temporary_error_deadline() {
+    let temporaryFailureSuitabilities = [
+      BaseAction.suitability.SIGNATURE_ERROR,
+      BaseAction.suitability.FILTER_ERROR,
+    ];
+
+    // The action should set a deadline 1 week from now. To avoid intermittent
+    // failures, give this a generous bound of 2 hours on either side.
+    let invalidDeadline = "not a valid date";
+    let now = Date.now();
+    let hour = 60 * 60 * 1000;
+    let expectedDeadline = now + 7 * 24 * hour;
+    let minDeadline = new Date(expectedDeadline - 2 * hour);
+    let maxDeadline = new Date(expectedDeadline + 2 * hour);
+
+    // For each suitability, build a decorator that sets up a suitabilty
+    // environment, and then call that decorator with a sub-test that asserts
+    // the suitability is handled correctly.
+    for (const suitability of temporaryFailureSuitabilities) {
+      const decorator = PreferenceExperiments.withMockExperiments([
+        NormandyTestUtils.factories.preferenceStudyFactory({
+          slug: `test-for-suitability-${suitability}`.toLocaleLowerCase(),
+          expired: false,
+          temporaryErrorDeadline: invalidDeadline,
+        }),
+      ]);
+      await decorator(async ([experiment]) => {
+        let action = new PreferenceExperimentAction();
+        let recipe = preferenceExperimentFactory({ slug: experiment.slug });
+        await action.processRecipe(recipe, suitability);
+        is(action.lastError, null, "No errors should be reported");
+        let modifiedExperiment = await PreferenceExperiments.get(
+          experiment.slug
+        );
+        ok(
+          modifiedExperiment.temporaryErrorDeadline != invalidDeadline,
+          `The temporary failure deadline should be reset for suitabilitiy ${suitability}`
+        );
+        let deadline = new Date(modifiedExperiment.temporaryErrorDeadline);
+        ok(
+          deadline >= minDeadline && deadline <= maxDeadline,
+          `The temporary failure deadline should be reset to a valid deadline for ${suitability}`
+        );
+      })();
+    }
   }
 );
