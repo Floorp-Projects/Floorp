@@ -7,6 +7,7 @@
 import gdb
 import mozilla.prettyprinters
 from mozilla.prettyprinters import ptr_pretty_printer
+from mozilla.CellHeader import get_header_length_and_flags
 
 try:
     chr(10000)  # UPPER RIGHT PENCIL
@@ -43,14 +44,7 @@ class JSStringPtr(Common):
 
     def chars(self):
         d = self.value['d']
-        flags = self.value['flags_']
-        try:
-            length = self.value['length_']
-        except gdb.error:
-            # If we couldn't fetch the length directly, it must be stored
-            # within `flags`.
-            length = flags >> 32
-            flags = flags % 2**32
+        length, flags = get_header_length_and_flags(self.value['header_'])
 
         corrupt = {
             0x2f2f2f2f: 'JS_FRESH_NURSERY_PATTERN',
