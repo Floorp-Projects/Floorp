@@ -5923,6 +5923,12 @@
   value: false
   mirror: always
 
+# Pref to stop overlay scrollbars from fading out, for testing purposes.
+- name: layout.testing.overlay-scrollbars.always-visible
+  type: bool
+  value: false
+  mirror: always
+
 - name: layout.lower_priority_refresh_driver_during_load
   type: bool
   value: true

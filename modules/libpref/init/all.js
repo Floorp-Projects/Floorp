@@ -2572,9 +2572,6 @@ pref("layout.css.dpi", -1);
 // 3 = left
 pref("layout.scrollbar.side", 0);
 
-// pref to stop overlay scrollbars from fading out, for testing purposes
-pref("layout.testing.overlay-scrollbars.always-visible", false);
-
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
