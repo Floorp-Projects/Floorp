@@ -14,8 +14,6 @@
 namespace mozilla {
 namespace net {
 
-class ExtensionStreamGetter;
-
 class ExtensionProtocolHandler final
     : public nsISubstitutingProtocolHandler,
       public nsIProtocolHandlerWithDynamicFlags,
@@ -157,18 +155,6 @@ class ExtensionProtocolHandler final
    */
   Result<bool, nsresult> AllowExternalResource(nsIFile* aExtensionDir,
                                                nsIFile* aRequestedFile);
-
-  // Set the channel's content type using the provided URI's type
-  static void SetContentType(nsIURI* aURI, nsIChannel* aChannel);
-
-  // Gets a SimpleChannel that wraps the provided ExtensionStreamGetter
-  static void NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadinfo,
-                               ExtensionStreamGetter* aStreamGetter,
-                               nsIChannel** aRetVal);
-
-  // Gets a SimpleChannel that wraps the provided channel
-  static void NewSimpleChannel(nsIURI* aURI, nsILoadInfo* aLoadinfo,
-                               nsIChannel* aChannel, nsIChannel** aRetVal);
 
 #if defined(XP_MACOSX)
   /**
