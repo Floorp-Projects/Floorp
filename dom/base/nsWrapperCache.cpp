@@ -24,8 +24,9 @@ bool nsWrapperCache::HasJSObjectMovedOp(JSObject* aWrapper) {
 #endif
 
 void nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
-                                   nsScriptObjectTracer* aTracer) {
-  cyclecollector::HoldJSObjectsImpl(aScriptObjectHolder, aTracer);
+                                   nsScriptObjectTracer* aTracer,
+                                   JS::Zone* aWrapperZone) {
+  cyclecollector::HoldJSObjectsImpl(aScriptObjectHolder, aTracer, aWrapperZone);
   if (mWrapper && !JS::ObjectIsTenured(mWrapper)) {
     CycleCollectedJSRuntime::Get()->NurseryWrapperPreserved(mWrapper);
   }

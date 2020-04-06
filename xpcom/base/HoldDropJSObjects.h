@@ -17,7 +17,8 @@ class nsScriptObjectTracer;
 namespace mozilla {
 namespace cyclecollector {
 
-void HoldJSObjectsImpl(void* aHolder, nsScriptObjectTracer* aTracer);
+void HoldJSObjectsImpl(void* aHolder, nsScriptObjectTracer* aTracer,
+                       JS::Zone* aZone = nullptr);
 void HoldJSObjectsImpl(nsISupports* aHolder);
 void DropJSObjectsImpl(void* aHolder);
 void DropJSObjectsImpl(nsISupports* aHolder);
