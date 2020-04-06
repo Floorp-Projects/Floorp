@@ -47,6 +47,7 @@ def tasks(generate_tasks):
         {'attributes': {'test_manifests': ['bar/test.ini'], 'build_type': 'debug'}},
         {'attributes': {'build_type': 'debug'}},
         {'attributes': {'test_manifests': []}},
+        {'attributes': {'build_type': 'opt'}},
     ))
 
 
@@ -59,43 +60,49 @@ def idfn(param):
 @pytest.mark.parametrize("args,data,expected", [
     # empty
     pytest.param(
-        (platform.all,),
+        (platform.all, 0.1),
         {},
         [],
     ),
 
     # only tasks without test manifests selected
     pytest.param(
-        (platform.all,),
+        (platform.all, 0.1),
         {'tasks': {'task-1': 0.9, 'task-2': 0.1, 'task-3': 0.5}},
         ['task-2'],
     ),
 
     # tasks containing groups selected
     pytest.param(
-        (platform.all,),
+        (platform.all, 0.1),
         {'groups': {'foo/test.ini': 0.4}},
         ['task-0'],
     ),
 
     # tasks matching "tasks" or "groups" selected
     pytest.param(
-        (platform.all,),
+        (platform.all, 0.1),
         {'tasks': {'task-2': 0.2}, 'groups': {'foo/test.ini': 0.25, 'bar/test.ini': 0.75}},
         ['task-0', 'task-1', 'task-2'],
     ),
 
-    # old format
+    # tasks matching "tasks" or "groups" selected, when they exceed the confidence threshold
     pytest.param(
-        (platform.all,),
-        {'tasks': ['task-2'], 'groups': ['foo/test.ini', 'bar/test.ini']},
-        ['task-0', 'task-1', 'task-2'],
+        (platform.all, 0.5),
+        {
+            'tasks': {'task-2': 0.2, 'task-4': 0.5},
+            'groups': {'foo/test.ini': 0.65, 'bar/test.ini': 0.25}
+        },
+        ['task-0', 'task-4'],
     ),
 
     # debug platform filter
     pytest.param(
-        (platform.debug,),
-        {'tasks': ['task-2', 'task-3'], 'groups': ['foo/test.ini', 'bar/test.ini']},
+        (platform.debug, 0.5),
+        {
+            'tasks': {'task-2': 0.6, 'task-3': 0.6},
+            'groups': {'foo/test.ini': 0.6, 'bar/test.ini': 0.6}
+        },
         ['task-1', 'task-2'],
     ),
 ], ids=idfn)
@@ -128,7 +135,7 @@ def test_bugbug_timeout(monkeypatch, responses, params, tasks):
     # Make sure the test runs fast.
     monkeypatch.setattr(time, 'sleep', lambda i: None)
 
-    opt = BugBugPushSchedules(platform.all)
+    opt = BugBugPushSchedules(platform.all, 0.5)
     with pytest.raises(BugbugTimeoutException):
         opt.should_remove_task(tasks[0], params, None)
 

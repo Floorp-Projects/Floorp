@@ -340,7 +340,17 @@ class experimental(object):
         all = {
             'test': Either('skip-unless-schedules', 'bugbug-all'),
         }
-        """Doesn't limit platforms."""
+        """Doesn't limit platforms, medium confidence threshold."""
+
+        all_low = {
+            'test': Either('skip-unless-schedules', 'bugbug-all-low'),
+        }
+        """Doesn't limit platforms, low confidence threshold."""
+
+        all_high = {
+            'test': Either('skip-unless-schedules', 'bugbug-all-high'),
+        }
+        """Doesn't limit platforms, high confidence threshold."""
 
         debug = {
             'test': Either('skip-unless-schedules', 'bugbug-debug'),
