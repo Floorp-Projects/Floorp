@@ -1262,6 +1262,137 @@ fn test_get_device_presentation_latency() {
     }
 }
 
+// get_device_group_id
+// ------------------------------------
+#[test]
+fn test_get_device_group_id() {
+    if let Some(device) = test_get_default_device(Scope::Input) {
+        match get_device_group_id(device, DeviceType::INPUT) {
+            Ok(id) => println!("input group id: {:?}", id),
+            Err(e) => println!("No input group id. Error: {}", e),
+        }
+    } else {
+        println!("No input device.");
+    }
+
+    if let Some(device) = test_get_default_device(Scope::Output) {
+        match get_device_group_id(device, DeviceType::OUTPUT) {
+            Ok(id) => println!("output group id: {:?}", id),
+            Err(e) => println!("No output group id. Error: {}", e),
+        }
+    } else {
+        println!("No output device.");
+    }
+}
+
+#[test]
+fn test_get_same_group_id_for_builtin_device_pairs() {
+    use std::collections::HashMap;
+
+    const IMIC: u32 = 0x696D_6963; // "imic"
+    const ISPK: u32 = 0x6973_706B; // "ispk"
+    const EMIC: u32 = 0x656D_6963; // "emic"
+    const HDPN: u32 = 0x6864_706E; // "hdpn"
+    let pairs = [(IMIC, ISPK), (EMIC, HDPN)];
+
+    // TODO: group_ids will have collision if one input device and one output device
+    //       has same source value.
+    let mut group_ids = HashMap::<u32, String>::new();
+    let input_devices = test_get_devices_in_scope(Scope::Input);
+    for device in input_devices.iter() {
+        match get_device_source(*device, DeviceType::INPUT) {
+            Ok(source) => match get_device_group_id(*device, DeviceType::INPUT) {
+                Ok(id) => assert!(group_ids
+                    .insert(source, id.into_string().unwrap())
+                    .is_none()),
+                Err(e) => assert!(group_ids.insert(source, format!("Error {}", e)).is_none()),
+            },
+            _ => {} // do nothing when failing to get source.
+        }
+    }
+    let output_devices = test_get_devices_in_scope(Scope::Output);
+    for device in output_devices.iter() {
+        match get_device_source(*device, DeviceType::OUTPUT) {
+            Ok(source) => match get_device_group_id(*device, DeviceType::OUTPUT) {
+                Ok(id) => assert!(group_ids
+                    .insert(source, id.into_string().unwrap())
+                    .is_none()),
+                Err(e) => assert!(group_ids.insert(source, format!("Error {}", e)).is_none()),
+            },
+            _ => {} // do nothing when failing to get source.
+        }
+    }
+
+    for (dev1, dev2) in pairs.iter() {
+        let id1 = group_ids.get(dev1);
+        let id2 = group_ids.get(dev2);
+
+        if id1.is_some() && id2.is_some() {
+            assert_eq!(id1, id2);
+        }
+
+        group_ids.remove(dev1);
+        group_ids.remove(dev2);
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_device_group_id_by_unknown_device() {
+    assert!(get_device_group_id(kAudioObjectUnknown, DeviceType::INPUT).is_err());
+}
+
+// get_device_label
+// ------------------------------------
+#[test]
+fn test_get_device_label() {
+    if let Some(device) = test_get_default_device(Scope::Input) {
+        let name = get_device_label(device, DeviceType::INPUT).unwrap();
+        println!("input device label: {}", name.into_string());
+    } else {
+        println!("No input device.");
+    }
+
+    if let Some(device) = test_get_default_device(Scope::Output) {
+        let name = get_device_label(device, DeviceType::OUTPUT).unwrap();
+        println!("output device label: {}", name.into_string());
+    } else {
+        println!("No output device.");
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_device_label_by_unknown_device() {
+    assert!(get_device_label(kAudioObjectUnknown, DeviceType::INPUT).is_err());
+}
+
+// get_device_global_uid
+// ------------------------------------
+#[test]
+fn test_get_device_global_uid() {
+    // Input device.
+    if let Some(input) = test_get_default_device(Scope::Input) {
+        let uid = get_device_global_uid(input).unwrap();
+        let uid = uid.into_string();
+        assert!(!uid.is_empty());
+    }
+
+    // Output device.
+    if let Some(output) = test_get_default_device(Scope::Output) {
+        let uid = get_device_global_uid(output).unwrap();
+        let uid = uid.into_string();
+        assert!(!uid.is_empty());
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_device_global_uid_by_unknwon_device() {
+    // Unknown device.
+    assert!(get_device_global_uid(kAudioObjectUnknown).is_err());
+}
+
 // create_cubeb_device_info
 // destroy_cubeb_device_info
 // ------------------------------------

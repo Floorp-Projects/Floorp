@@ -1,31 +1,33 @@
+set -e
+
 echo "\n\nTest suite for cubeb-coreaudio\n========================================"
 
 if [[ -z "${RUST_BACKTRACE}" ]]; then
-  # Display backtrace for debugging
-  export RUST_BACKTRACE=1
+    # Display backtrace for debugging
+    export RUST_BACKTRACE=1
 fi
 echo "RUST_BACKTRACE is set to ${RUST_BACKTRACE}\n"
 
 format_check() {
-  cargo fmt --all -- --check
-  local result=$?
-  if [[ $result -ne 0 ]]; then
-    echo "Please format the code with 'cargo fmt' (version $(cargo fmt -- --version))"
-  fi
-  return $result
+    cargo fmt --all -- --check
+    local result=$?
+    if [[ $result -ne 0 ]]; then
+        echo "Please format the code with 'cargo fmt' (version $(cargo fmt -- --version))"
+    fi
+    return $result
 }
 
 lints_check() {
-  if [[ -n "$1" ]]; then
-    cargo clippy -p $1 -- -D warnings
-  else
-    cargo clippy -- -D warnings
-  fi
-  local result=$?
-  if [[ $result -ne 0 ]]; then
-    echo "Please fix errors with 'cargo clippy' (version $(cargo clippy -- --version))"
-  fi
-  return $result
+    if [[ -n "$1" ]]; then
+        cargo clippy -p $1 -- -D warnings
+    else
+        cargo clippy -- -D warnings
+    fi
+    local result=$?
+    if [[ $result -ne 0 ]]; then
+        echo "Please fix errors with 'cargo clippy' (version $(cargo clippy -- --version))"
+    fi
+    return $result
 }
 
 # Run tests in the sub crate
