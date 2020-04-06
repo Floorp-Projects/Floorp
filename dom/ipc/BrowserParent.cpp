@@ -14,7 +14,6 @@
 #  include "mozilla/a11y/ProxyAccessibleBase.h"
 #  include "nsAccessibilityService.h"
 #endif
-#include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/ContentParent.h"
@@ -3396,35 +3395,6 @@ void BrowserParent::ApzAwareEventRoutingToChild(
       *aOutApzResponse = nsEventStatus_eIgnore;
     }
   }
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvBrowserFrameOpenWindow(
-    PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
-    bool aForceNoReferrer, const nsString& aFeatures,
-    BrowserFrameOpenWindowResolver&& aResolve) {
-  CreatedWindowInfo cwi;
-  cwi.rv() = NS_OK;
-  cwi.maxTouchPoints() = 0;
-
-  BrowserElementParent::OpenWindowResult opened =
-      BrowserElementParent::OpenWindowOOP(BrowserParent::GetFrom(aOpener), this,
-                                          aURL, aName, aForceNoReferrer,
-                                          aFeatures);
-  cwi.windowOpened() = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
-  cwi.maxTouchPoints() = GetMaxTouchPoints();
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
-    cwi.dimensions() = GetDimensionInfo();
-  }
-
-  // Resolve the request with the information we collected.
-  aResolve(cwi);
-
-  if (!cwi.windowOpened()) {
-    Destroy();
-  }
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvRespondStartSwipeEvent(
