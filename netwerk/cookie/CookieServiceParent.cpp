@@ -202,7 +202,7 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
   // this information through to nsICookiePermission, which indirectly
   // computes the information from the channel. We only care about the
   // aIsPrivate argument as nsCookieService::SetCookieStringInternal deals
-  // with aIsForeign before we have to worry about nsCookiePermission trying
+  // with aIsForeign before we have to worry about CookiePermission trying
   // to use the channel to inspect it.
   nsCOMPtr<nsIChannel> dummyChannel;
   nsresult rv =

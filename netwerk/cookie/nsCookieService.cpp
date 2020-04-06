@@ -14,6 +14,7 @@
 #include "mozilla/Unused.h"
 
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/net/CookiePermission.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -25,7 +26,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIScriptError.h"
 
-#include "nsCookiePermission.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
@@ -637,7 +637,7 @@ nsresult nsCookieService::Init() {
   os->AddObserver(this, "profile-do-change", true);
   os->AddObserver(this, "last-pb-context-exited", true);
 
-  mPermissionService = nsCookiePermission::GetOrCreate();
+  mPermissionService = CookiePermission::GetOrCreate();
 
   return NS_OK;
 }
