@@ -1575,10 +1575,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
   for (auto renderRoot : wr::kRenderRoots) {
     aScrollDatas[renderRoot] = WebRenderScrollData(mManager);
-    if (aBuilder.HasSubBuilder(renderRoot)) {
-      mClipManagers[renderRoot].BeginBuild(mManager,
-                                           aBuilder.SubBuilder(renderRoot));
-    }
+    mClipManagers[renderRoot].BeginBuild(mManager, aBuilder);
     mBuilderDumpIndex[renderRoot] = 0;
   }
   MOZ_ASSERT(mLayerScrollDatas.IsEmpty());
@@ -1596,21 +1593,18 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 
     wr::RenderRootArray<Maybe<StackingContextHelper>> pageRootScs;
     for (auto renderRoot : wr::kRenderRoots) {
-      if (aBuilder.HasSubBuilder(renderRoot)) {
-        wr::StackingContextParams params;
-        // Just making this explicit - we assume that we do not want any
-        // filters traversing a RenderRoot boundary
-        if (renderRoot == wr::RenderRoot::Default) {
-          params.mFilters = std::move(aFilters.filters);
-          params.mFilterDatas = std::move(aFilters.filter_datas);
-        }
-        params.cache_tiles = isTopLevelContent;
-        params.clip = wr::WrStackingContextClip::ClipChain(
-            aBuilder.SubBuilder(renderRoot).CurrentClipChainId());
-        pageRootScs[renderRoot].emplace(
-            rootScs[renderRoot], nullptr, nullptr, nullptr,
-            aBuilder.SubBuilder(renderRoot), params);
+      wr::StackingContextParams params;
+      // Just making this explicit - we assume that we do not want any
+      // filters traversing a RenderRoot boundary
+      if (renderRoot == wr::RenderRoot::Default) {
+        params.mFilters = std::move(aFilters.filters);
+        params.mFilterDatas = std::move(aFilters.filter_datas);
       }
+      params.cache_tiles = isTopLevelContent;
+      params.clip =
+          wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
+      pageRootScs[renderRoot].emplace(rootScs[renderRoot], nullptr, nullptr,
+                                      nullptr, aBuilder, params);
     }
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex[aBuilder.GetRenderRoot()] = aBuilder.Dump(
@@ -1648,9 +1642,7 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
          it != mLayerScrollDatas[renderRoot].crend(); it++) {
       aScrollDatas[renderRoot].AddLayerData(*it);
     }
-    if (aBuilder.HasSubBuilder(renderRoot)) {
-      mClipManagers[renderRoot].EndBuild();
-    }
+    mClipManagers[renderRoot].EndBuild();
   }
   mLayerScrollDatas.Clear();
 
