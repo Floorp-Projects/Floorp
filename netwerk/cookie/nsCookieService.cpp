@@ -149,8 +149,9 @@ static void bindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
  ******************************************************************************/
 class DBListenerErrorHandler : public mozIStorageStatementCallback {
  protected:
-  explicit DBListenerErrorHandler(CookieStorage* dbState) : mStorage(dbState) {}
-  RefPtr<CookieStorage> mStorage;
+  explicit DBListenerErrorHandler(CookieDefaultStorage* dbState)
+      : mStorage(dbState) {}
+  RefPtr<CookieDefaultStorage> mStorage;
   virtual const char* GetOpType() = 0;
 
  public:
@@ -188,7 +189,7 @@ class InsertCookieDBListener final : public DBListenerErrorHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit InsertCookieDBListener(CookieStorage* dbState)
+  explicit InsertCookieDBListener(CookieDefaultStorage* dbState)
       : DBListenerErrorHandler(dbState) {}
   NS_IMETHOD HandleResult(mozIStorageResultSet*) override {
     MOZ_ASSERT_UNREACHABLE(
@@ -199,12 +200,12 @@ class InsertCookieDBListener final : public DBListenerErrorHandler {
   NS_IMETHOD HandleCompletion(uint16_t aReason) override {
     // If we were rebuilding the db and we succeeded, make our corruptFlag say
     // so.
-    if (mStorage->corruptFlag == CookieStorage::REBUILDING &&
+    if (mStorage->corruptFlag == CookieDefaultStorage::REBUILDING &&
         aReason == mozIStorageStatementCallback::REASON_FINISHED) {
       COOKIE_LOGSTRING(
           LogLevel::Debug,
           ("InsertCookieDBListener::HandleCompletion(): rebuild complete"));
-      mStorage->corruptFlag = CookieStorage::OK;
+      mStorage->corruptFlag = CookieDefaultStorage::OK;
     }
 
     // This notification is just for testing.
@@ -232,7 +233,7 @@ class UpdateCookieDBListener final : public DBListenerErrorHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit UpdateCookieDBListener(CookieStorage* dbState)
+  explicit UpdateCookieDBListener(CookieDefaultStorage* dbState)
       : DBListenerErrorHandler(dbState) {}
   NS_IMETHOD HandleResult(mozIStorageResultSet*) override {
     MOZ_ASSERT_UNREACHABLE(
@@ -258,7 +259,7 @@ class RemoveCookieDBListener final : public DBListenerErrorHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit RemoveCookieDBListener(CookieStorage* dbState)
+  explicit RemoveCookieDBListener(CookieDefaultStorage* dbState)
       : DBListenerErrorHandler(dbState) {}
   NS_IMETHOD HandleResult(mozIStorageResultSet*) override {
     MOZ_ASSERT_UNREACHABLE(
@@ -280,8 +281,9 @@ class CloseCookieDBListener final : public mozIStorageCompletionCallback {
   ~CloseCookieDBListener() = default;
 
  public:
-  explicit CloseCookieDBListener(CookieStorage* dbState) : mStorage(dbState) {}
-  RefPtr<CookieStorage> mStorage;
+  explicit CloseCookieDBListener(CookieDefaultStorage* dbState)
+      : mStorage(dbState) {}
+  RefPtr<CookieDefaultStorage> mStorage;
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Complete(nsresult, nsISupports*) override {
@@ -428,9 +430,9 @@ void nsCookieService::InitCookieStorages() {
   NS_ASSERTION(!mInitializedCookieStorages, "already initialized");
   NS_ASSERTION(!mThread, "already have a cookie thread");
 
-  // Create a new default CookieStorage and set our current one.
-  mDefaultStorage = new CookieStorage(false);
-  mPrivateStorage = new CookieStorage(true);
+  // Create two new CookieStorages.
+  mDefaultStorage = CookieDefaultStorage::Create();
+  mPrivateStorage = CookiePrivateStorage::Create();
 
   // Get our cookie file.
   nsresult rv = NS_GetSpecialDirectory(
@@ -1555,7 +1557,7 @@ void nsCookieService::CloseCookieStorages() {
   mInitializedCookieStorages = false;
 }
 
-void nsCookieService::HandleDBClosed(CookieStorage* aCookieStorage) {
+void nsCookieService::HandleDBClosed(CookieDefaultStorage* aCookieStorage) {
   COOKIE_LOGSTRING(
       LogLevel::Debug,
       ("HandleDBClosed(): CookieStorage %p closed", aCookieStorage));
@@ -1563,19 +1565,19 @@ void nsCookieService::HandleDBClosed(CookieStorage* aCookieStorage) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
 
   switch (aCookieStorage->corruptFlag) {
-    case CookieStorage::OK: {
+    case CookieDefaultStorage::OK: {
       // Database is healthy. Notify of closure.
       if (os) {
         os->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
       }
       break;
     }
-    case CookieStorage::CLOSING_FOR_REBUILD: {
+    case CookieDefaultStorage::CLOSING_FOR_REBUILD: {
       // Our close finished. Start the rebuild, and notify of db closure later.
       RebuildCorruptDB(aCookieStorage);
       break;
     }
-    case CookieStorage::REBUILDING: {
+    case CookieDefaultStorage::REBUILDING: {
       // We encountered an error during rebuild, closed the database, and now
       // here we are. We already have a 'cookies.sqlite.bak' from the original
       // dead database; we don't want to overwrite it, so let's move this one to
@@ -1598,15 +1600,15 @@ void nsCookieService::HandleDBClosed(CookieStorage* aCookieStorage) {
   }
 }
 
-void nsCookieService::RebuildCorruptDB(CookieStorage* aCookieStorage) {
+void nsCookieService::RebuildCorruptDB(CookieDefaultStorage* aCookieStorage) {
   NS_ASSERTION(!aCookieStorage->dbConn, "shouldn't have an open db connection");
   NS_ASSERTION(
-      aCookieStorage->corruptFlag == CookieStorage::CLOSING_FOR_REBUILD,
+      aCookieStorage->corruptFlag == CookieDefaultStorage::CLOSING_FOR_REBUILD,
       "should be in CLOSING_FOR_REBUILD state");
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
 
-  aCookieStorage->corruptFlag = CookieStorage::REBUILDING;
+  aCookieStorage->corruptFlag = CookieDefaultStorage::REBUILDING;
 
   if (mDefaultStorage != aCookieStorage) {
     // We've either closed the state or we've switched profiles. It's getting
@@ -1650,7 +1652,7 @@ void nsCookieService::RebuildCorruptDB(CookieStorage* aCookieStorage) {
                 gCookieService->mDefaultStorage->CleanupCachedStatements();
                 gCookieService->mDefaultStorage->CleanupDefaultDBConnection();
                 gCookieService->mDefaultStorage->corruptFlag =
-                    CookieStorage::OK;
+                    CookieDefaultStorage::OK;
                 if (os) {
                   os->NotifyObservers(nullptr, "cookie-db-closed", nullptr);
                 }
@@ -1693,7 +1695,7 @@ void nsCookieService::RebuildCorruptDB(CookieStorage* aCookieStorage) {
                     LogLevel::Debug,
                     ("RebuildCorruptDB(): nothing to write, rebuild complete"));
                 gCookieService->mDefaultStorage->corruptFlag =
-                    CookieStorage::OK;
+                    CookieDefaultStorage::OK;
                 return;
               }
 
@@ -1751,7 +1753,7 @@ nsCookieService::Observe(nsISupports* aSubject, const char* aTopic,
     mozilla::OriginAttributesPattern pattern;
     pattern.mPrivateBrowsingId.Construct(1);
     RemoveCookiesWithOriginAttributes(pattern, EmptyCString());
-    mPrivateStorage = new CookieStorage(true);
+    mPrivateStorage = CookiePrivateStorage::Create();
   }
 
   return NS_OK;
@@ -1893,10 +1895,7 @@ void nsCookieService::SetCookieStringInternal(
     return;
   }
 
-  EnsureReadComplete(true);
-
-  CookieStorage* storage =
-      (aOriginAttrs.mPrivateBrowsingId > 0) ? mPrivateStorage : mDefaultStorage;
+  CookieStorage* storage = PickStorage(aOriginAttrs);
 
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
@@ -2116,12 +2115,6 @@ nsCookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  EnsureReadComplete(true);
-
-  CookieStorage* storage = (aOriginAttributes->mPrivateBrowsingId > 0)
-                               ? mPrivateStorage
-                               : mDefaultStorage;
-
   // first, normalize the hostname, and fail if it contains illegal characters.
   nsAutoCString host(aHost);
   nsresult rv = NormalizeHost(host);
@@ -2144,6 +2137,7 @@ nsCookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  CookieStorage* storage = PickStorage(*aOriginAttributes);
   storage->AddCookie(baseDomain, *aOriginAttributes, cookie, currentTimeInUsec,
                      nullptr, VoidCString(), true, mMaxNumberOfCookies,
                      mMaxCookiesPerHost, mCookieQuotaPerHost, mCookiePurgeAge);
@@ -2169,10 +2163,7 @@ nsresult nsCookieService::Remove(const nsACString& aHost,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  EnsureReadComplete(true);
-
-  CookieStorage* storage =
-      (aAttrs.mPrivateBrowsingId > 0) ? mPrivateStorage : mDefaultStorage;
+  CookieStorage* storage = PickStorage(aAttrs);
   storage->RemoveCookie(baseDomain, aAttrs, host, PromiseFlatCString(aName),
                         PromiseFlatCString(aPath));
 
@@ -2419,10 +2410,7 @@ void nsCookieService::GetCookiesForURI(
     return;
   }
 
-  EnsureReadComplete(true);
-
-  CookieStorage* storage =
-      (aOriginAttrs.mPrivateBrowsingId > 0) ? mPrivateStorage : mDefaultStorage;
+  CookieStorage* storage = PickStorage(aOriginAttrs);
 
   // get the base domain, host, and path from the URI.
   // e.g. for "www.bbc.co.uk", the base domain would be "bbc.co.uk".
@@ -3664,17 +3652,12 @@ nsCookieService::CookieExistsNative(const nsACString& aHost,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  EnsureReadComplete(true);
-
   nsAutoCString baseDomain;
   nsresult rv = GetBaseDomainFromHost(mTLDService, aHost, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CookieStorage* storage = (aOriginAttributes->mPrivateBrowsingId > 0)
-                               ? mPrivateStorage
-                               : mDefaultStorage;
-
   CookieListIter iter;
+  CookieStorage* storage = PickStorage(*aOriginAttributes);
   *aFoundCookie = storage->FindCookie(baseDomain, *aOriginAttributes, aHost,
                                       aName, aPath, iter);
   return NS_OK;
@@ -3730,10 +3713,8 @@ nsCookieService::GetCookiesFromHost(const nsACString& aHost,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  EnsureReadComplete(true);
+  CookieStorage* storage = PickStorage(attrs);
 
-  CookieStorage* storage =
-      (attrs.mPrivateBrowsingId > 0) ? mPrivateStorage : mDefaultStorage;
   const nsTArray<RefPtr<Cookie>>* cookies =
       storage->GetCookiesFromHost(baseDomain, attrs);
 
@@ -3770,18 +3751,9 @@ nsCookieService::GetCookiesWithOriginAttributes(
 nsresult nsCookieService::GetCookiesWithOriginAttributes(
     const mozilla::OriginAttributesPattern& aPattern,
     const nsCString& aBaseDomain, nsTArray<RefPtr<nsICookie>>& aResult) {
-  if (!IsInitialized()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  EnsureReadComplete(true);
-
-  CookieStorage* storage = (aPattern.mPrivateBrowsingId.WasPassed() &&
-                            aPattern.mPrivateBrowsingId.Value() > 0)
-                               ? mPrivateStorage
-                               : mDefaultStorage;
-
+  CookieStorage* storage = PickStorage(aPattern);
   storage->GetCookiesWithOriginAttributes(aPattern, aBaseDomain, aResult);
+
   return NS_OK;
 }
 
@@ -3813,14 +3785,9 @@ nsresult nsCookieService::RemoveCookiesWithOriginAttributes(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  EnsureReadComplete(true);
-
-  CookieStorage* storage = (aPattern.mPrivateBrowsingId.WasPassed() &&
-                            aPattern.mPrivateBrowsingId.Value() > 0)
-                               ? mPrivateStorage
-                               : mDefaultStorage;
-
+  CookieStorage* storage = PickStorage(aPattern);
   storage->RemoveCookiesWithOriginAttributes(aPattern, aBaseDomain);
+
   return NS_OK;
 }
 
@@ -3851,14 +3818,9 @@ nsresult nsCookieService::RemoveCookiesFromExactHost(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  EnsureReadComplete(true);
-
-  CookieStorage* storage = (aPattern.mPrivateBrowsingId.WasPassed() &&
-                            aPattern.mPrivateBrowsingId.Value() > 0)
-                               ? mPrivateStorage
-                               : mDefaultStorage;
-
+  CookieStorage* storage = PickStorage(aPattern);
   storage->RemoveCookiesFromExactHost(aHost, baseDomain, aPattern);
+
   return NS_OK;
 }
 
@@ -4032,4 +3994,38 @@ nsCookieService::CollectReports(nsIHandleReportCallback* aHandleReport,
                      "Memory used by the cookie service.");
 
   return NS_OK;
+}
+
+bool nsCookieService::IsInitialized() const {
+  if (!mDefaultStorage) {
+    NS_WARNING("No CookieStorage! Profile already close?");
+    return false;
+  }
+
+  MOZ_ASSERT(mPrivateStorage);
+  return true;
+}
+
+CookieStorage* nsCookieService::PickStorage(const OriginAttributes& aAttrs) {
+  MOZ_ASSERT(IsInitialized());
+  EnsureReadComplete(true);
+
+  if (aAttrs.mPrivateBrowsingId > 0) {
+    return mPrivateStorage;
+  }
+
+  return mDefaultStorage;
+}
+
+CookieStorage* nsCookieService::PickStorage(
+    const OriginAttributesPattern& aAttrs) {
+  MOZ_ASSERT(IsInitialized());
+  EnsureReadComplete(true);
+
+  if (aAttrs.mPrivateBrowsingId.WasPassed() &&
+      aAttrs.mPrivateBrowsingId.Value() > 0) {
+    return mPrivateStorage;
+  }
+
+  return mDefaultStorage;
 }
