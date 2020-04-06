@@ -12,7 +12,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
-#include "nsCookie.h"
+#include "Cookie.h"
 #include "nsCookieKey.h"
 #include "nsString.h"
 #include "nsHashKeys.h"
@@ -62,7 +62,7 @@ using mozilla::net::nsCookieKey;
 class nsCookieEntry : public nsCookieKey {
  public:
   // Hash methods
-  typedef nsTArray<RefPtr<nsCookie>> ArrayType;
+  typedef nsTArray<RefPtr<mozilla::net::Cookie>> ArrayType;
   typedef ArrayType::index_type IndexType;
 
   explicit nsCookieEntry(KeyTypePointer aKey) : nsCookieKey(aKey) {}
@@ -83,7 +83,7 @@ class nsCookieEntry : public nsCookieKey {
   ArrayType mCookies;
 };
 
-// encapsulates a (key, nsCookie) tuple for temporary storage purposes.
+// encapsulates a (key, Cookie) tuple for temporary storage purposes.
 struct CookieDomainTuple {
   nsCookieKey key;
   OriginAttributes originAttributes;
@@ -195,8 +195,10 @@ class nsCookieService final : public nsICookieService,
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService* aTLDService,
                                         const nsACString& aHost,
                                         nsCString& aBaseDomain);
-  static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
-  static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
+  static bool DomainMatches(mozilla::net::Cookie* aCookie,
+                            const nsACString& aHost);
+  static bool PathMatches(mozilla::net::Cookie* aCookie,
+                          const nsACString& aPath);
   static bool CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
                            mozilla::net::CookieStruct& aCookieData,
                            bool aRequireHostMatch, CookieStatus aStatus,
@@ -225,7 +227,7 @@ class nsCookieService final : public nsICookieService,
                         uint32_t aRejectedReason, bool aIsSafeTopLevelNav,
                         bool aIsSameSiteForeign, bool aHttpBound,
                         const OriginAttributes& aOriginAttrs,
-                        nsTArray<nsCookie*>& aCookieList);
+                        nsTArray<mozilla::net::Cookie*>& aCookieList);
 
   /**
    * This method is a helper that allows calling nsICookieManager::Remove()
@@ -280,17 +282,17 @@ class nsCookieService final : public nsICookieService,
                          bool aRequireHostMatch, CookieStatus aStatus,
                          nsCString& aCookieHeader, int64_t aServerTime,
                          bool aFromHttp, nsIChannel* aChannel);
-  void AddInternal(const nsCookieKey& aKey, nsCookie* aCookie,
+  void AddInternal(const nsCookieKey& aKey, mozilla::net::Cookie* aCookie,
                    int64_t aCurrentTimeInUsec, nsIURI* aHostURI,
                    const nsACString& aCookieHeader, bool aFromHttp);
   void RemoveCookieFromList(
       const nsListIter& aIter,
       mozIStorageBindingParamsArray* aParamsArray = nullptr);
-  void AddCookieToList(const nsCookieKey& aKey, nsCookie* aCookie,
+  void AddCookieToList(const nsCookieKey& aKey, mozilla::net::Cookie* aCookie,
                        DBState* aDBState,
                        mozIStorageBindingParamsArray* aParamsArray,
                        bool aWriteToDB = true);
-  void UpdateCookieInList(nsCookie* aCookie, int64_t aLastAccessed,
+  void UpdateCookieInList(mozilla::net::Cookie* aCookie, int64_t aLastAccessed,
                           mozIStorageBindingParamsArray* aParamsArray);
   static bool GetTokenValue(nsACString::const_char_iterator& aIter,
                             nsACString::const_char_iterator& aEndIter,
@@ -319,7 +321,7 @@ class nsCookieService final : public nsICookieService,
   bool FindCookie(const nsCookieKey& aKey, const nsCString& aHost,
                   const nsCString& aName, const nsCString& aPath,
                   nsListIter& aIter);
-  bool FindSecureCookie(const nsCookieKey& aKey, nsCookie* aCookie);
+  bool FindSecureCookie(const nsCookieKey& aKey, mozilla::net::Cookie* aCookie);
   void FindStaleCookies(nsCookieEntry* aEntry, int64_t aCurrentTime,
                         bool aIsSecure, nsTArray<nsListIter>& aOutput,
                         uint32_t aLimit);
@@ -331,7 +333,7 @@ class nsCookieService final : public nsICookieService,
   void NotifyPurged(nsICookie* aCookie);
   already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
   void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
-  void UpdateCookieOldestTime(DBState* aDBState, nsCookie* aCookie);
+  void UpdateCookieOldestTime(DBState* aDBState, mozilla::net::Cookie* aCookie);
 
   nsresult GetCookiesWithOriginAttributes(
       const mozilla::OriginAttributesPattern& aPattern,

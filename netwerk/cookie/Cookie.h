@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCookie_h__
-#define nsCookie_h__
+#ifndef mozilla_net_Cookie_h
+#define mozilla_net_Cookie_h
 
 #include "nsICookie.h"
 #include "nsIMemoryReporter.h"
@@ -17,17 +17,20 @@
 
 using mozilla::OriginAttributes;
 
+namespace mozilla {
+namespace net {
+
 /**
- * The nsCookie class is the main cookie storage medium for use within cookie
+ * The Cookie class is the main cookie storage medium for use within cookie
  * code.
  */
 
 /******************************************************************************
- * nsCookie:
+ * Cookie:
  * implementation
  ******************************************************************************/
 
-class nsCookie final : public nsICookie {
+class Cookie final : public nsICookie {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
  public:
@@ -36,9 +39,9 @@ class nsCookie final : public nsICookie {
   NS_DECL_NSICOOKIE
 
  private:
-  // for internal use only. see nsCookie::Create().
-  nsCookie(const mozilla::net::CookieStruct& aCookieData,
-           const OriginAttributes& aOriginAttributes)
+  // for internal use only. see Cookie::Create().
+  Cookie(const mozilla::net::CookieStruct& aCookieData,
+         const OriginAttributes& aOriginAttributes)
       : mData(aCookieData), mOriginAttributes(aOriginAttributes) {}
 
  public:
@@ -46,11 +49,11 @@ class nsCookie final : public nsICookie {
   static bool ValidateRawSame(const mozilla::net::CookieStruct& aCookieData);
 
   // Generate a unique and monotonically increasing creation time. See comment
-  // in nsCookie.cpp.
+  // in Cookie.cpp.
   static int64_t GenerateUniqueCreationTime(int64_t aCreationTime);
 
-  // public helper to create an nsCookie object.
-  static already_AddRefed<nsCookie> Create(
+  // public helper to create an Cookie object.
+  static already_AddRefed<Cookie> Create(
       const nsACString& aName, const nsACString& aValue,
       const nsACString& aHost, const nsACString& aPath, int64_t aExpiry,
       int64_t aLastAccessed, int64_t aCreationTime, bool aIsSession,
@@ -58,7 +61,7 @@ class nsCookie final : public nsICookie {
       const OriginAttributes& aOriginAttributes, int32_t aSameSite,
       int32_t aRawSameSite);
 
-  static already_AddRefed<nsCookie> Create(
+  static already_AddRefed<Cookie> Create(
       const mozilla::net::CookieStruct& aCookieData,
       const OriginAttributes& aOriginAttributes);
 
@@ -103,7 +106,7 @@ class nsCookie final : public nsICookie {
   const mozilla::net::CookieStruct& ToIPC() const { return mData; }
 
  protected:
-  virtual ~nsCookie() = default;
+  virtual ~Cookie() = default;
 
  private:
   // member variables
@@ -117,12 +120,12 @@ class nsCookie final : public nsICookie {
 // Comparator class for sorting cookies before sending to a server.
 class CompareCookiesForSending {
  public:
-  bool Equals(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
+  bool Equals(const Cookie* aCookie1, const Cookie* aCookie2) const {
     return aCookie1->CreationTime() == aCookie2->CreationTime() &&
            aCookie2->Path().Length() == aCookie1->Path().Length();
   }
 
-  bool LessThan(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
+  bool LessThan(const Cookie* aCookie1, const Cookie* aCookie2) const {
     // compare by cookie path length in accordance with RFC2109
     int32_t result = aCookie2->Path().Length() - aCookie1->Path().Length();
     if (result != 0) return result < 0;
@@ -134,4 +137,8 @@ class CompareCookiesForSending {
     return aCookie1->CreationTime() < aCookie2->CreationTime();
   }
 };
-#endif  // nsCookie_h__
+
+}  // namespace net
+}  // namespace mozilla
+
+#endif  // mozilla_net_Cookie_h

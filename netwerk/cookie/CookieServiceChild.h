@@ -16,13 +16,14 @@
 #include "nsWeakReference.h"
 #include "nsThreadUtils.h"
 
-class nsCookie;
 class nsICookiePermission;
 class nsIEffectiveTLDService;
 class nsILoadInfo;
 
 namespace mozilla {
 namespace net {
+
+class Cookie;
 class CookieStruct;
 
 class CookieServiceChild : public PCookieServiceChild,
@@ -38,7 +39,7 @@ class CookieServiceChild : public PCookieServiceChild,
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
-  typedef nsTArray<RefPtr<nsCookie>> CookiesList;
+  typedef nsTArray<RefPtr<Cookie>> CookiesList;
   typedef nsClassHashtable<nsCookieKey, CookiesList> CookiesMap;
 
   CookieServiceChild();
@@ -71,7 +72,7 @@ class CookieServiceChild : public PCookieServiceChild,
                                    const nsACString& aServerTime,
                                    bool aFromHttp);
 
-  void RecordDocumentCookie(nsCookie* aCookie, const OriginAttributes& aAttrs);
+  void RecordDocumentCookie(Cookie* aCookie, const OriginAttributes& aAttrs);
 
   void SetCookieInternal(const CookieStruct& aCookieData,
                          const mozilla::OriginAttributes& aAttrs,
