@@ -88,10 +88,17 @@ class RC {
  public:
   explicit RC(T aCount) : mValue(aCount) {}
 
+  RC(const RC&) = delete;
+  RC& operator=(const RC&) = delete;
+  RC(RC&&) = delete;
+  RC& operator=(RC&&) = delete;
+
   T operator++() { return ++mValue; }
   T operator--() { return --mValue; }
 
+#ifdef DEBUG
   void operator=(const T& aValue) { mValue = aValue; }
+#endif
 
   operator T() const { return mValue; }
 
@@ -103,6 +110,11 @@ template <typename T>
 class RC<T, AtomicRefCount> {
  public:
   explicit RC(T aCount) : mValue(aCount) {}
+
+  RC(const RC&) = delete;
+  RC& operator=(const RC&) = delete;
+  RC(RC&&) = delete;
+  RC& operator=(RC&&) = delete;
 
   T operator++() {
     // Memory synchronization is not required when incrementing a
@@ -139,11 +151,13 @@ class RC<T, AtomicRefCount> {
     return result;
   }
 
+#ifdef DEBUG
   // This method is only called in debug builds, so we're not too concerned
   // about its performance.
   void operator=(const T& aValue) {
     mValue.store(aValue, std::memory_order_seq_cst);
   }
+#endif
 
   operator T() const {
     // Use acquire semantics since we're not sure what the caller is
@@ -159,7 +173,9 @@ template <typename T, RefCountAtomicity Atomicity>
 class RefCounted {
  protected:
   RefCounted() : mRefCnt(0) {}
+#ifdef DEBUG
   ~RefCounted() { MOZ_ASSERT(mRefCnt == detail::DEAD); }
+#endif
 
  public:
   // Compatibility with nsRefPtr.
