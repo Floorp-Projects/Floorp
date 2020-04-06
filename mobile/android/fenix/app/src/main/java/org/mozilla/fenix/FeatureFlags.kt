@@ -36,9 +36,9 @@ object FeatureFlags {
     val dynamicBottomToolbar = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the new language picker
+     * Enables deleting individual tracking protection exceptions.
      */
-    val fenixLanguagePicker = Config.channel.isNightlyOrDebug
+    val deleteIndividualTrackingProtectionExceptions = Config.channel.isNightlyOrDebug
 
     /**
      * Integration of push support provided by `feature-push` component into the Gecko engine.

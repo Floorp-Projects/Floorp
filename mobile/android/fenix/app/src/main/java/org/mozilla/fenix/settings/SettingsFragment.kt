@@ -31,7 +31,6 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -116,7 +115,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
-        updatePreferenceVisibilityForFeatureFlags()
     }
 
     override fun onResume() {
@@ -174,12 +172,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 context!!,
                 requireComponents.backgroundServices.accountManager.accountProfile()
             )
-        }
-    }
-
-    private fun updatePreferenceVisibilityForFeatureFlags() {
-        findPreference<Preference>(getPreferenceKey(R.string.pref_key_language))?.apply {
-            isVisible = FeatureFlags.fenixLanguagePicker
         }
     }
 

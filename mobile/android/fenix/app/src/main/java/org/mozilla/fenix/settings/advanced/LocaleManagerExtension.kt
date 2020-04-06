@@ -15,7 +15,7 @@ import java.util.Locale
  */
 fun LocaleManager.getSupportedLocales(): List<Locale> {
     val resultLocaleList: MutableList<Locale> = ArrayList()
-    resultLocaleList.add(0, getSystemDefault() ?: Locale.getDefault())
+    resultLocaleList.add(0, getSystemDefault())
 
     resultLocaleList.addAll(BuildConfig.SUPPORTED_LOCALE_ARRAY
         .toList()
@@ -37,7 +37,7 @@ fun LocaleManager.getSelectedLocale(
     localeList: List<Locale> = getSupportedLocales()
 ): Locale {
     val selectedLocale = getCurrentLocale(context)?.toLanguageTag()
-    val defaultLocale = getSystemDefault() ?: Locale.getDefault()
+    val defaultLocale = getSystemDefault()
 
     return if (selectedLocale == null) {
         defaultLocale
