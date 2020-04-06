@@ -26,6 +26,7 @@
  ****************************************************************/
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 static const bool kDefaultPolicy = true;
 
@@ -64,7 +65,7 @@ nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
   // Lazily initialize ourselves
   if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
 
-  nsCookie* cookie = static_cast<nsCookie*>(aCookie);
+  Cookie* cookie = static_cast<Cookie*>(aCookie);
   uint32_t perm;
   mPermMgr->LegacyTestPermissionFromURI(aURI, &cookie->OriginAttributesRef(),
                                         NS_LITERAL_CSTRING("cookie"), &perm);

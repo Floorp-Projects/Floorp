@@ -19,7 +19,7 @@
 #include "nsIPrefBranch.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "nsCookie.h"
+#include "Cookie.h"
 #include "nsIURI.h"
 
 using mozilla::Unused;
@@ -1110,7 +1110,7 @@ TEST(TestCookie, SameSiteLax)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
   EXPECT_EQ(cookies.Length(), (uint64_t)1);
 
-  nsCookie* cookie = static_cast<nsCookie*>(cookies[0].get());
+  Cookie* cookie = static_cast<Cookie*>(cookies[0].get());
   EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
   EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_LAX);
 
@@ -1130,7 +1130,7 @@ TEST(TestCookie, SameSiteLax)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
   EXPECT_EQ(cookies.Length(), (uint64_t)1);
 
-  cookie = static_cast<nsCookie*>(cookies[0].get());
+  cookie = static_cast<Cookie*>(cookies[0].get());
   EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
   EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_NONE);
 }

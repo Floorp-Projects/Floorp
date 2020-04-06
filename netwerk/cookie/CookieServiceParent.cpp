@@ -64,7 +64,7 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
   nsTArray<OriginAttributes> attrsList;
   for (uint32_t i = 0; i < len; i++) {
     nsCOMPtr<nsICookie> xpcCookie = do_QueryElementAt(aCookieList, i);
-    auto cookie = static_cast<nsCookie*>(xpcCookie.get());
+    auto cookie = static_cast<Cookie*>(xpcCookie.get());
     attrs = cookie->OriginAttributesRef();
     cookieStruct = cookie->ToIPC();
     if (cookie->IsHttpOnly()) {
@@ -80,7 +80,7 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
 void CookieServiceParent::RemoveAll() { Unused << SendRemoveAll(); }
 
 void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
-  auto cookie = static_cast<nsCookie*>(aCookie);
+  auto cookie = static_cast<Cookie*>(aCookie);
   OriginAttributes attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct = cookie->ToIPC();
   if (cookie->IsHttpOnly()) {
@@ -90,7 +90,7 @@ void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
 }
 
 void CookieServiceParent::AddCookie(nsICookie* aCookie) {
-  auto cookie = static_cast<nsCookie*>(aCookie);
+  auto cookie = static_cast<Cookie*>(aCookie);
   OriginAttributes attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct = cookie->ToIPC();
   if (cookie->IsHttpOnly()) {
@@ -118,7 +118,7 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   ThirdPartyAnalysisResult result = thirdPartyUtil->AnalyzeChannel(
       aChannel, false, nullptr, nullptr, &rejectedReason);
 
-  nsTArray<nsCookie*> foundCookieList;
+  nsTArray<Cookie*> foundCookieList;
   mCookieService->GetCookiesForURI(
       uri, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
@@ -132,10 +132,10 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
 }
 
 void CookieServiceParent::SerialializeCookieList(
-    const nsTArray<nsCookie*>& aFoundCookieList,
+    const nsTArray<Cookie*>& aFoundCookieList,
     nsTArray<CookieStruct>& aCookiesList, nsIURI* aHostURI) {
   for (uint32_t i = 0; i < aFoundCookieList.Length(); i++) {
-    nsCookie* cookie = aFoundCookieList.ElementAt(i);
+    Cookie* cookie = aFoundCookieList.ElementAt(i);
     CookieStruct* cookieStruct = aCookiesList.AppendElement();
     *cookieStruct = cookie->ToIPC();
     if (cookie->IsHttpOnly()) {
@@ -155,7 +155,7 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvPrepareCookieList(
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
 
   // Send matching cookies to Child.
-  nsTArray<nsCookie*> foundCookieList;
+  nsTArray<Cookie*> foundCookieList;
   // Note: passing nullptr as aChannel to GetCookiesForURI() here is fine since
   // this argument is only used for proper reporting of cookie loads, but the
   // child process already does the necessary reporting in this case for us.

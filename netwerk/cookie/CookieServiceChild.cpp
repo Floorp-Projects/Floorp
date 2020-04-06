@@ -14,7 +14,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "nsCookie.h"
+#include "Cookie.h"
 #include "nsCookieService.h"
 #include "nsContentUtils.h"
 #include "nsNetCID.h"
@@ -100,8 +100,8 @@ void CookieServiceChild::MoveCookies() {
     CookiesList* cookiesList = iter.UserData();
     CookiesList newCookiesList;
     for (uint32_t i = 0; i < cookiesList->Length(); ++i) {
-      nsCookie* cookie = cookiesList->ElementAt(i);
-      RefPtr<nsCookie> newCookie = nsCookie::Create(
+      Cookie* cookie = cookiesList->ElementAt(i);
+      RefPtr<Cookie> newCookie = Cookie::Create(
           cookie->Name(), cookie->Value(), cookie->Host(), cookie->Path(),
           cookie->Expiry(), cookie->LastAccessed(), cookie->CreationTime(),
           cookie->IsSession(), cookie->IsSecure(), cookie->IsHttpOnly(),
@@ -173,7 +173,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
   }
 
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
-    nsCookie* cookie = cookiesList->ElementAt(i);
+    Cookie* cookie = cookiesList->ElementAt(i);
     if (cookie->Name().Equals(aCookie.name()) &&
         cookie->Host().Equals(aCookie.host()) &&
         cookie->Path().Equals(aCookie.path())) {
@@ -187,7 +187,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
 
 mozilla::ipc::IPCResult CookieServiceChild::RecvAddCookie(
     const CookieStruct& aCookie, const OriginAttributes& aAttrs) {
-  RefPtr<nsCookie> cookie = nsCookie::Create(
+  RefPtr<Cookie> cookie = Cookie::Create(
       aCookie.name(), aCookie.value(), aCookie.host(), aCookie.path(),
       aCookie.expiry(), aCookie.lastAccessed(), aCookie.creationTime(),
       aCookie.isSession(), aCookie.isSecure(), aCookie.isHttpOnly(), aAttrs,
@@ -210,7 +210,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveBatchDeletedCookies(
 mozilla::ipc::IPCResult CookieServiceChild::RecvTrackCookiesLoad(
     nsTArray<CookieStruct>&& aCookiesList, const OriginAttributes& aAttrs) {
   for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
-    RefPtr<nsCookie> cookie = nsCookie::Create(
+    RefPtr<Cookie> cookie = Cookie::Create(
         aCookiesList[i].name(), aCookiesList[i].value(), aCookiesList[i].host(),
         aCookiesList[i].path(), aCookiesList[i].expiry(),
         aCookiesList[i].lastAccessed(), aCookiesList[i].creationTime(),
@@ -294,7 +294,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
 
   cookiesList->Sort(CompareCookiesForSending());
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
-    nsCookie* cookie = cookiesList->ElementAt(i);
+    Cookie* cookie = cookiesList->ElementAt(i);
     // check the host, since the base domain lookup is conservative.
     if (!nsCookieService::DomainMatches(cookie, hostFromURI)) continue;
 
@@ -360,10 +360,10 @@ void CookieServiceChild::SetCookieInternal(
     nsIChannel* aChannel, bool aFromHttp,
     nsICookiePermission* aPermissionService) {
   int64_t currentTimeInUsec = PR_Now();
-  RefPtr<nsCookie> cookie = nsCookie::Create(
+  RefPtr<Cookie> cookie = Cookie::Create(
       aCookieData.name(), aCookieData.value(), aCookieData.host(),
       aCookieData.path(), aCookieData.expiry(), currentTimeInUsec,
-      nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
+      Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
       aCookieData.isSession(), aCookieData.isSecure(), aCookieData.isHttpOnly(),
       aAttrs, aCookieData.sameSite(), aCookieData.rawSameSite());
 
@@ -393,7 +393,7 @@ void CookieServiceChild::SetCookieInternal(
          StaticPrefs::network_cookie_thirdparty_nonsecureSessionOnly();
 }
 
-void CookieServiceChild::RecordDocumentCookie(nsCookie* aCookie,
+void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
                                               const OriginAttributes& aAttrs) {
   nsAutoCString baseDomain;
   nsCookieService::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
@@ -407,7 +407,7 @@ void CookieServiceChild::RecordDocumentCookie(nsCookie* aCookie,
     cookiesList = mCookiesMap.LookupOrAdd(key);
   }
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
-    nsCookie* cookie = cookiesList->ElementAt(i);
+    Cookie* cookie = cookiesList->ElementAt(i);
     if (cookie->Name().Equals(aCookie->Name()) &&
         cookie->Host().Equals(aCookie->Host()) &&
         cookie->Path().Equals(aCookie->Path())) {
@@ -554,7 +554,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(
     // inconsistent view of things.
     if (cookies && canSetCookie && !aFromHttp) {
       for (uint32_t i = 0; i < cookies->Length(); ++i) {
-        RefPtr<nsCookie> cookie = cookies->ElementAt(i);
+        RefPtr<Cookie> cookie = cookies->ElementAt(i);
         if (cookie->Name().Equals(cookieData.name()) &&
             cookie->Host().Equals(cookieData.host()) &&
             cookie->Path().Equals(cookieData.path()) && cookie->IsHttpOnly()) {

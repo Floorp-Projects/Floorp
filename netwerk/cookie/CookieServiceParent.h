@@ -8,7 +8,6 @@
 
 #include "mozilla/net/PCookieServiceParent.h"
 
-class nsCookie;
 class nsICookie;
 class nsCookieService;
 namespace mozilla {
@@ -17,6 +16,8 @@ class OriginAttributes;
 
 namespace mozilla {
 namespace net {
+
+class Cookie;
 
 class CookieServiceParent : public PCookieServiceParent {
   friend class PCookieServiceParent;
@@ -62,7 +63,7 @@ class CookieServiceParent : public PCookieServiceParent {
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
       const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs);
 
-  void SerialializeCookieList(const nsTArray<nsCookie*>& aFoundCookieList,
+  void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
                               nsTArray<CookieStruct>& aCookiesList,
                               nsIURI* aHostURI);
 
