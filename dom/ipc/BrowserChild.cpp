@@ -32,6 +32,7 @@
 #include "ipc/nsGUIEventIPC.h"
 #include "js/JSON.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/BrowserElementParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/EventListenerManager.h"
@@ -115,7 +116,6 @@
 #include "nsIWebProgress.h"
 #include "nsLayoutUtils.h"
 #include "nsNetUtil.h"
-#include "nsIOpenWindowInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsPointerHashKeys.h"
@@ -506,7 +506,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
 
   // Set the tab context attributes then pass to docShell
-  NotifyTabContextUpdated();
+  NotifyTabContextUpdated(false);
 
   // IPC uses a WebBrowser object for which DNS prefetching is turned off
   // by default. But here we really want it, so enable it explicitly
@@ -534,17 +534,13 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
 
   docShell->SetAffectPrivateSessionLifetime(
       mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
-
-#ifdef DEBUG
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(WebNavigation());
   MOZ_ASSERT(loadContext);
-  MOZ_ASSERT(loadContext->UsePrivateBrowsing() ==
-             (OriginAttributesRef().mPrivateBrowsingId > 0));
-  MOZ_ASSERT(loadContext->UseRemoteTabs() ==
-             !!(mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
-  MOZ_ASSERT(loadContext->UseRemoteSubframes() ==
-             !!(mChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW));
-#endif  // defined(DEBUG)
+  loadContext->SetPrivateBrowsing(OriginAttributesRef().mPrivateBrowsingId > 0);
+  loadContext->SetRemoteTabs(mChromeFlags &
+                             nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+  loadContext->SetRemoteSubframes(mChromeFlags &
+                                  nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
 
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
@@ -597,7 +593,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   return NS_OK;
 }
 
-void BrowserChild::NotifyTabContextUpdated() {
+void BrowserChild::NotifyTabContextUpdated(bool aIsPreallocated) {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
@@ -606,6 +602,10 @@ void BrowserChild::NotifyTabContextUpdated() {
   }
 
   UpdateFrameType();
+
+  if (aIsPreallocated) {
+    nsDocShell::Cast(docShell)->SetOriginAttributes(OriginAttributesRef());
+  }
 
   // Set SANDBOXED_AUXILIARY_NAVIGATION flag if this is a receiver page.
   if (!PresentationURL().IsEmpty()) {
@@ -877,40 +877,51 @@ BrowserChild::GetInterface(const nsIID& aIID, void** aSink) {
 }
 
 NS_IMETHODIMP
-BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
-                            uint32_t aChromeFlags, bool aCalledFromJS,
-                            bool aWidthSpecified, nsIURI* aURI,
-                            const nsAString& aName, const nsACString& aFeatures,
-                            bool aForceNoOpener, bool aForceNoReferrer,
+BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
+                            bool aCalledFromJS, bool aWidthSpecified,
+                            nsIURI* aURI, const nsAString& aName,
+                            const nsACString& aFeatures, bool aForceNoOpener,
+                            bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
   *aReturn = nullptr;
 
-  RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
+  // If aParent is inside an <iframe mozbrowser> and this isn't a request to
+  // open a modal-type window, we're going to create a new <iframe mozbrowser>
+  // and return its window here.
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
+  bool iframeMoz =
+      (docshell && docshell->GetIsInMozBrowser() &&
+       !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
+                         nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                         nsIWebBrowserChrome::CHROME_OPENAS_CHROME)));
 
-  int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified);
+  if (!iframeMoz) {
+    int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
+        nsPIDOMWindowOuter::From(aParent), aChromeFlags, aCalledFromJS,
+        aWidthSpecified);
 
-  // If it turns out we're opening in the current browser, just hand over the
-  // current browser's docshell.
-  if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
-    nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
-    *aWindowIsNew = false;
+    // If it turns out we're opening in the current browser, just hand over the
+    // current browser's docshell.
+    if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+      nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
+      *aWindowIsNew = false;
 
-    nsCOMPtr<mozIDOMWindowProxy> win;
-    MOZ_TRY(browser->GetContentDOMWindow(getter_AddRefs(win)));
+      nsCOMPtr<mozIDOMWindowProxy> win;
+      MOZ_TRY(browser->GetContentDOMWindow(getter_AddRefs(win)));
 
-    RefPtr<BrowsingContext> bc(
-        nsPIDOMWindowOuter::From(win)->GetBrowsingContext());
-    bc.forget(aReturn);
-    return NS_OK;
+      RefPtr<BrowsingContext> bc(
+          nsPIDOMWindowOuter::From(win)->GetBrowsingContext());
+      bc.forget(aReturn);
+      return NS_OK;
+    }
   }
 
   // Note that ProvideWindowCommon may return NS_ERROR_ABORT if the
   // open window call was canceled.  It's important that we pass this error
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
-  return cc->ProvideWindowCommon(this, aOpenWindowInfo, aChromeFlags,
+  return cc->ProvideWindowCommon(this, aParent, iframeMoz, aChromeFlags,
                                  aCalledFromJS, aWidthSpecified, aURI, aName,
                                  aFeatures, aForceNoOpener, aForceNoReferrer,
                                  aLoadState, aWindowIsNew, aReturn);
@@ -1112,8 +1123,27 @@ void BrowserChild::ApplyParentShowInfo(const ParentShowInfo& aInfo) {
     mDidSetRealShowInfo = true;
   }
 
-  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (docShell) {
     docShell->SetFullscreenAllowed(aInfo.fullscreenAllowed());
+    if (aInfo.isPrivate()) {
+      nsCOMPtr<nsILoadContext> context = do_GetInterface(docShell);
+      // No need to re-set private browsing mode.
+      if (!context->UsePrivateBrowsing()) {
+        if (docShell->GetHasLoadedNonBlankURI()) {
+          nsContentUtils::ReportToConsoleNonLocalized(
+              NS_LITERAL_STRING("We should not switch to Private Browsing "
+                                "after loading a document."),
+              nsIScriptError::warningFlag,
+              NS_LITERAL_CSTRING("mozprivatebrowsing"), nullptr);
+        } else {
+          OriginAttributes attrs(
+              nsDocShell::Cast(docShell)->GetOriginAttributes());
+          attrs.SyncAttributesWithPrivateBrowsing(true);
+          nsDocShell::Cast(docShell)->SetOriginAttributes(attrs);
+        }
+      }
+    }
   }
   mIsTransparent = aInfo.isTransparent();
 }
@@ -3306,6 +3336,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvAllowScriptsToClose() {
   if (window) {
     nsGlobalWindowOuter::Cast(window)->AllowScriptsToClose();
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvSetOriginAttributes(
+    const OriginAttributes& aOriginAttributes) {
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  nsDocShell::Cast(docShell)->SetOriginAttributes(aOriginAttributes);
+
   return IPC_OK();
 }
 

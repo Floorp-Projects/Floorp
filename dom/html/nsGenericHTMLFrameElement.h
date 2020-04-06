@@ -84,6 +84,10 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   void SwapFrameLoaders(nsFrameLoaderOwner* aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
 
+  void PresetOpenerWindow(const mozilla::dom::Nullable<
+                              mozilla::dom::WindowProxyHolder>& aOpenerWindow,
+                          mozilla::ErrorResult& aRv);
+
   /**
    * Normally, a frame tries to create its frame loader when its src is
    * modified, or its contentWindow is accessed.
@@ -143,6 +147,8 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
+
+  RefPtr<mozilla::dom::BrowsingContext> mOpenerWindow;
 
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 

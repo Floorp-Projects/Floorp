@@ -230,7 +230,8 @@ class ContentParent final
   static already_AddRefed<RemoteBrowser> CreateBrowser(
       const TabContext& aContext, Element* aFrameElement,
       const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
-      ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs);
+      ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs,
+      uint64_t aNextRemoteTabId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -518,24 +519,20 @@ class ContentParent final
   void ForkNewProcess(bool aBlocking);
 
   mozilla::ipc::IPCResult RecvCreateWindow(
-      PBrowserParent* aThisBrowserParent,
-      const MaybeDiscarded<BrowsingContext>& aParent, PBrowserParent* aNewTab,
+      PBrowserParent* aThisBrowserParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aWidthSpecified, nsIURI* aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom,
       const IPC::Principal& aTriggeringPrincipal,
       nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
-      const OriginAttributes& aOriginAttributes,
       CreateWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
-      PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
-      const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      const bool& aWidthSpecified, nsIURI* aURIToLoad,
-      const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
-      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-      nsIReferrerInfo* aReferrerInfo,
-      const OriginAttributes& aOriginAttributes);
+      PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
+      const bool& aCalledFromJS, const bool& aWidthSpecified,
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      const nsString& aName, nsIPrincipal* aTriggeringPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo);
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
@@ -727,16 +724,14 @@ class ContentParent final
   // window. aURIToLoad should always be provided, if available, to ensure
   // compatibility with GeckoView.
   mozilla::ipc::IPCResult CommonCreateWindow(
-      PBrowserParent* aThisTab, BrowsingContext* aParent, bool aSetOpener,
-      const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      const bool& aWidthSpecified, nsIURI* aURIToLoad,
-      const nsCString& aFeatures, const float& aFullZoom,
-      BrowserParent* aNextRemoteBrowser, const nsString& aName,
-      nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
-      bool* aWindowIsNew, int32_t& aOpenLocation,
-      nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
-      bool aLoadUri, nsIContentSecurityPolicy* aCsp,
-      const OriginAttributes& aOriginAttributes);
+      PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
+      const bool& aCalledFromJS, const bool& aWidthSpecified,
+      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
+      nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
+      int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
+      nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
+      nsIContentSecurityPolicy* aCsp);
 
   explicit ContentParent(int32_t aPluginID)
       : ContentParent(nullptr, EmptyString(), aPluginID) {}
@@ -1450,6 +1445,9 @@ class ContentParent final
   nsTArray<Pref> mQueuedPrefs;
 
   RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
+
+  static uint64_t sNextRemoteTabId;
+  static nsDataHashtable<nsUint64HashKey, BrowserParent*> sNextBrowserParents;
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // When set to true, indicates that content processes should

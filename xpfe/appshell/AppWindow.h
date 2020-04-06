@@ -138,10 +138,11 @@ class AppWindow final : public nsIBaseWindow,
 
   // AppWindow methods...
   nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
-                      int32_t aInitialWidth, int32_t aInitialHeight,
-                      bool aIsHiddenWindow, nsWidgetInitData& widgetInitData);
-
-  nsIDocShell* GetDocShell() { return mDocShell; }
+                      nsIURI* aUrl, int32_t aInitialWidth,
+                      int32_t aInitialHeight, bool aIsHiddenWindow,
+                      nsIRemoteTab* aOpeningTab,
+                      mozIDOMWindowProxy* aOpenerWIndow,
+                      nsWidgetInitData& widgetInitData);
 
   nsresult Toolbar();
 
@@ -226,9 +227,13 @@ class AppWindow final : public nsIBaseWindow,
                          int32_t aCY);
   NS_IMETHOD ExitModalLoop(nsresult aStatus);
   NS_IMETHOD CreateNewChromeWindow(int32_t aChromeFlags,
+                                   nsIRemoteTab* aOpeningTab,
+                                   mozIDOMWindowProxy* aOpenerWindow,
                                    nsIAppWindow** _retval);
   NS_IMETHOD CreateNewContentWindow(int32_t aChromeFlags,
-                                    nsIOpenWindowInfo* aOpenWindowInfo,
+                                    nsIRemoteTab* aOpeningTab,
+                                    mozIDOMWindowProxy* aOpenerWindow,
+                                    uint64_t aNextRemoteTabId,
                                     nsIAppWindow** _retval);
   NS_IMETHOD GetHasPrimaryContent(bool* aResult);
 
@@ -277,7 +282,7 @@ class AppWindow final : public nsIBaseWindow,
   uint32_t mPersistentAttributesDirty;  // persistentAttributes
   uint32_t mPersistentAttributesMask;
   uint32_t mChromeFlags;
-  nsCOMPtr<nsIOpenWindowInfo> mInitialOpenWindowInfo;
+  uint64_t mNextRemoteTabId;
   nsString mTitle;
   nsIntRect mOpenerScreenRect;  // the screen rect of the opener
 

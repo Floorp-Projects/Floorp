@@ -747,6 +747,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvAllowScriptsToClose();
 
+  mozilla::ipc::IPCResult RecvSetOriginAttributes(
+      const OriginAttributes& aOriginAttributes);
+
   mozilla::ipc::IPCResult RecvSetWidgetNativeData(
       const WindowsHandle& aWidgetNativeData);
 
@@ -770,7 +773,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   //
   // You should call this after calling TabContext::SetTabContext().  We also
   // call this during Init().
-  void NotifyTabContextUpdated();
+  //
+  // @param aIsPreallocated  true if this is called for Preallocated Tab.
+  void NotifyTabContextUpdated(bool aIsPreallocated);
 
   // Update the frameType on our docshell.
   void UpdateFrameType();

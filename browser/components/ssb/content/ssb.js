@@ -101,21 +101,14 @@ class BrowserDOMWindow {
    * page in.
    *
    * @param {nsIURI?} uri
-   * @param {nsIOpenWindowInfo} openWindowInfo
+   * @param {Window} opener
    * @param {Number} where
    * @param {Number} flags
    * @param {nsIPrincipal} triggeringPrincipal
    * @param {nsIContentSecurityPolicy?} csp
    * @return {BrowsingContext} the BrowsingContext the URI should be loaded in.
    */
-  createContentWindow(
-    uri,
-    openWindowInfo,
-    where,
-    flags,
-    triggeringPrincipal,
-    csp
-  ) {
+  createContentWindow(uri, opener, where, flags, triggeringPrincipal, csp) {
     console.error(
       "createContentWindow should never be called from a remote browser"
     );
@@ -126,14 +119,14 @@ class BrowserDOMWindow {
    * Called from a page in the main process to open a new URI.
    *
    * @param {nsIURI} uri
-   * @param {nsIOpenWindowInfo} openWindowInfo
+   * @param {Window} opener
    * @param {Number} where
    * @param {Number} flags
    * @param {nsIPrincipal} triggeringPrincipal
    * @param {nsIContentSecurityPolicy?} csp
    * @return {BrowsingContext} the BrowsingContext the URI should be loaded in.
    */
-  openURI(uri, openWindowInfo, where, flags, triggeringPrincipal, csp) {
+  openURI(uri, opener, where, flags, triggeringPrincipal, csp) {
     console.error("openURI should never be called from a remote browser");
     throw Cr.NS_ERROR_FAILURE;
   }
@@ -145,6 +138,7 @@ class BrowserDOMWindow {
    * @param {nsIOpenURIInFrameParams} params
    * @param {Number} where
    * @param {Number} flags
+   * @param {Number} nextRemoteTabId
    * @param {string} name
    * @param {boolean} shouldOpen should the load start or not.
    * @return {Element} the frame element the URI should be loaded in.
@@ -154,6 +148,7 @@ class BrowserDOMWindow {
     params,
     where,
     flags,
+    nextRemoteTabId,
     name,
     shouldOpen
   ) {
@@ -180,6 +175,7 @@ class BrowserDOMWindow {
         params,
         where,
         flags,
+        nextRemoteTabId,
         name
       );
     }
@@ -197,15 +193,17 @@ class BrowserDOMWindow {
    * @param {nsIOpenURIInFrameParams} params
    * @param {Number} where
    * @param {Number} flags
+   * @param {Number} nextRemoteTabId
    * @param {string} name
    * @return {Element} the frame element the URI should be loaded in.
    */
-  createContentWindowInFrame(uri, params, where, flags, name) {
+  createContentWindowInFrame(uri, params, where, flags, nextRemoteTabId, name) {
     return this.getContentWindowOrOpenURIInFrame(
       uri,
       params,
       where,
       flags,
+      nextRemoteTabId,
       name,
       false
     );
@@ -218,15 +216,17 @@ class BrowserDOMWindow {
    * @param {nsIOpenURIInFrameParams} params
    * @param {Number} where
    * @param {Number} flags
+   * @param {Number} nextRemoteTabId
    * @param {string} name
    * @return {Element} the frame element the URI is loading in.
    */
-  openURIInFrame(uri, params, where, flags, name) {
+  openURIInFrame(uri, params, where, flags, nextRemoteTabId, name) {
     return this.getContentWindowOrOpenURIInFrame(
       uri,
       params,
       where,
       flags,
+      nextRemoteTabId,
       name,
       true
     );

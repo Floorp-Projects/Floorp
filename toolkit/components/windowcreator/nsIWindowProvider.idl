@@ -20,7 +20,6 @@ class nsDocShellLoadState;
 webidl BrowsingContext;
 interface mozIDOMWindowProxy;
 interface nsIURI;
-interface nsIOpenWindowInfo;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 
 /**
@@ -40,8 +39,11 @@ interface nsIWindowProvider : nsISupports
    * those is the caller's responsibility.  The provider can always return null
    * to have the caller create a brand-new window.
    *
-   * @param aOpenWindowInfo  Must not be null.  This is the information the
-   *                         caller wants to be used to construct the new window.
+   * @param aParent Must not be null.  This is the window that the caller wants
+   *        to use as the parent for the new window.  Generally,
+   *        nsIWindowProvider implementors can expect to be somehow related to
+   *        aParent; the relationship may depend on the nsIWindowProvider
+   *        implementation.
    *
    * @param aChromeFlags The chrome flags the caller will use to create a new
    *        window if this provider returns null.  See nsIWebBrowserChrome for
@@ -81,7 +83,7 @@ interface nsIWindowProvider : nsISupports
    *        false if the window being returned existed before the
    *        provideWindow() call.  The value of this out parameter is
    *        meaningless if provideWindow() returns null.
-   *
+
    * @return A window the caller should use or null if the caller should just
    *         create a new window.  The returned window may be newly opened by
    *         the nsIWindowProvider implementation or may be a window that
@@ -93,7 +95,7 @@ interface nsIWindowProvider : nsISupports
    * @see nsIWindowWatcher for more information on aFeatures.
    * @see nsIWebBrowserChrome for more information on aChromeFlags.
    */
-  BrowsingContext provideWindow(in nsIOpenWindowInfo aOpenWindowInfo,
+  BrowsingContext provideWindow(in mozIDOMWindowProxy aParent,
                                 in unsigned long aChromeFlags,
                                 in boolean aCalledFromJS,
                                 in boolean aWidthSpecified,
