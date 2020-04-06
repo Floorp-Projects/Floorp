@@ -161,29 +161,9 @@ struct FunctionCreationData {
 
   bool isSelfHosting = false;
 
-  // If Some(), calls JSFunction::setTypeForScriptedFunction when
-  // this Function is created.
-  mozilla::Maybe<bool> typeForScriptedFunction;
-
   mozilla::Maybe<LazyScriptCreationData> lazyScriptData;
 
   HandleAtom getAtom(JSContext* cx) const;
-
-  void setInferredName(JSAtom* name) {
-    MOZ_ASSERT(!atom);
-    MOZ_ASSERT(name);
-    MOZ_ASSERT(!flags.hasGuessedAtom());
-    atom = name;
-    flags.setInferredName();
-  }
-
-  JSAtom* inferredName() const {
-    MOZ_ASSERT(flags.hasInferredName());
-    MOZ_ASSERT(atom);
-    return atom;
-  }
-
-  bool hasInferredName() const { return flags.hasInferredName(); }
 
   void trace(JSTracer* trc) {
     TraceNullableRoot(trc, &atom, "FunctionCreationData atom");

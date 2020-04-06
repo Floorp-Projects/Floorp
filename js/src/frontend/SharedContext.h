@@ -626,47 +626,23 @@ class FunctionBox : public SharedContext {
   }
 
   void setFieldInitializers(FieldInitializers fi) {
-    if (hasFunction()) {
-      MOZ_ASSERT(function()->baseScript());
-      function()->baseScript()->setFieldInitializers(fi);
-      return;
-    }
-    MOZ_ASSERT(functionCreationData().get().lazyScriptData);
-    functionCreationData().get().lazyScriptData->fieldInitializers.emplace(fi);
+    MOZ_ASSERT(function()->baseScript());
+    function()->baseScript()->setFieldInitializers(fi);
+    return;
   }
 
   bool setTypeForScriptedFunction(JSContext* cx, bool singleton) {
-    if (hasFunction()) {
-      RootedFunction fun(cx, function());
-      return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
-    }
-    functionCreationData().get().typeForScriptedFunction.emplace(singleton);
-    return true;
+    RootedFunction fun(cx, function());
+    return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
   }
 
   void setTreatAsRunOnce() { function()->baseScript()->setTreatAsRunOnce(); }
 
-  void setInferredName(JSAtom* atom) {
-    if (hasFunction()) {
-      function()->setInferredName(atom);
-      return;
-    }
-    functionCreationData().get().setInferredName(atom);
-  }
+  void setInferredName(JSAtom* atom) { function()->setInferredName(atom); }
 
-  JSAtom* inferredName() const {
-    if (hasFunction()) {
-      return function()->inferredName();
-    }
-    return functionCreationData().get().inferredName();
-  }
+  JSAtom* inferredName() const { return function()->inferredName(); }
 
-  bool hasInferredName() const {
-    if (hasFunction()) {
-      return function()->hasInferredName();
-    }
-    return functionCreationData().get().hasInferredName();
-  }
+  bool hasInferredName() const { return function()->hasInferredName(); }
 
   size_t index() { return funcDataIndex_; }
 
