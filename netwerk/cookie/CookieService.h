@@ -79,14 +79,6 @@ class CookieService final : public nsICookieService,
    * app.
    */
   static nsAutoCString GetPathFromURI(nsIURI* aHostURI);
-  static nsresult GetBaseDomain(nsIEffectiveTLDService* aTLDService,
-                                nsIURI* aHostURI, nsCString& aBaseDomain,
-                                bool& aRequireHostMatch);
-  static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService* aTLDService,
-                                        const nsACString& aHost,
-                                        nsCString& aBaseDomain);
-  static bool DomainMatches(Cookie* aCookie, const nsACString& aHost);
-  static bool PathMatches(Cookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI* aHostURI, const nsACString& aBaseDomain,
                            CookieStruct& aCookieData, bool aRequireHostMatch,
                            CookieStatus aStatus, nsCString& aCookieHeader,

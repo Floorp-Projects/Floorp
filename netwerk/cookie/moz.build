@@ -32,6 +32,7 @@ EXPORTS.mozilla.net = [
 ]
 UNIFIED_SOURCES += [
     'Cookie.cpp',
+    'CookieCommons.cpp',
     'CookieJarSettings.cpp',
     'CookieLogging.cpp',
     'CookiePermission.cpp',

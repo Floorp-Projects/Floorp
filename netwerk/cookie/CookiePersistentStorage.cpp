@@ -6,7 +6,6 @@
 #include "CookieCommons.h"
 #include "CookieLogging.h"
 #include "CookiePersistentStorage.h"
-#include "CookieService.h"
 
 #include "mozilla/FileUtils.h"
 #include "mozilla/Telemetry.h"
@@ -708,7 +707,7 @@ nsresult CookiePersistentStorage::ImportCookies(nsIFile* aCookieFile) {
     }
 
     // compute the baseDomain from the host
-    rv = CookieService::GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
     if (NS_FAILED(rv)) continue;
 
     // pre-existing cookies have inIsolatedMozBrowser=false set by default
@@ -1049,7 +1048,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
           int64_t id = select->AsInt64(SCHEMA2_IDX_ID);
           select->GetUTF8String(SCHEMA2_IDX_HOST, host);
 
-          rv = CookieService::GetBaseDomainFromHost(mTLDService, host,
+          rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host,
                                                     baseDomain);
           NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
@@ -1798,7 +1797,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
 
     stmt->GetUTF8String(IDX_HOST, host);
 
-    rv = CookieService::GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
     if (NS_FAILED(rv)) {
       COOKIE_LOGSTRING(LogLevel::Debug,
                        ("Read(): Ignoring invalid host '%s'", host.get()));
