@@ -890,17 +890,6 @@
     "n_buckets": 100,
     "description": "Time spent running JS minor GC (us)"
   },
-  "GC_NURSERY_BYTES": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "72",
-    "kind": "linear",
-    "high": 16777216,
-    "n_buckets": 16,
-    "bug_numbers": [1259347],
-    "description": "Size of the GC nursery (bytes)"
-  },
   "GC_NURSERY_BYTES_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
