@@ -207,13 +207,6 @@ bool GetCanvasContextType(const nsAString& str,
     }
   }
 
-  if (StaticPrefs::dom_webgpu_enabled()) {
-    if (str.EqualsLiteral("gpupresent")) {
-      *out_type = dom::CanvasContextType::WebGPU;
-      return true;
-    }
-  }
-
   if (str.EqualsLiteral("bitmaprenderer")) {
     *out_type = dom::CanvasContextType::ImageBitmap;
     return true;

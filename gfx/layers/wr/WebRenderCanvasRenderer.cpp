@@ -30,7 +30,10 @@ void WebRenderCanvasRendererAsync::Initialize(
     const CanvasInitializeData& aData) {
   WebRenderCanvasRenderer::Initialize(aData);
 
-  ClearCachedResources();
+  if (mPipelineId.isSome()) {
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mPipelineId.reset();
+  }
 }
 
 bool WebRenderCanvasRendererAsync::CreateCompositable() {

@@ -38,13 +38,7 @@ struct RefCountedShmem {
   Shmem buffer;
 };
 
-struct OpAddPrivateExternalImage {
-  ExternalImageId externalImageId;
-  ImageKey key;
-  ImageDescriptor descriptor;
-};
-
-struct OpAddSharedExternalImage {
+struct OpAddExternalImage {
   ExternalImageId externalImageId;
   ImageKey key;
 };
@@ -137,7 +131,7 @@ struct OpSetBlobImageVisibleArea {
   BlobImageKey key;
 };
 
-struct OpUpdateSharedExternalImage {
+struct OpUpdateExternalImage {
   ExternalImageId externalImageId;
   ImageKey key;
   ImageIntRect dirtyRect;
@@ -193,10 +187,9 @@ union OpUpdateResource {
   OpDeleteFont;
   OpAddFontInstance;
   OpDeleteFontInstance;
-  OpAddPrivateExternalImage;
-  OpAddSharedExternalImage;
+  OpAddExternalImage;
   OpPushExternalImageForTexture;
-  OpUpdateSharedExternalImage;
+  OpUpdateExternalImage;
 };
 
 } // namespace

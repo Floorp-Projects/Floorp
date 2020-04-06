@@ -789,8 +789,6 @@ class BufferTextureHost : public TextureHost {
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
-  static void DestroyRenderTexture(const wr::ExternalImageId& aExternalImageId);
-
   uint32_t NumSubTextures() override;
 
   void PushResourceUpdates(wr::TransactionBuilder& aResources,

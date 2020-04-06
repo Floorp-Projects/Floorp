@@ -9,7 +9,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
-#include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 namespace mozilla {
@@ -17,7 +16,6 @@ namespace dom {
 struct GPUExtensions;
 struct GPUFeatures;
 struct GPULimits;
-struct GPUExtent3DDict;
 
 struct GPUBufferDescriptor;
 struct GPUTextureDescriptor;
@@ -34,7 +32,6 @@ struct GPUComputePipelineDescriptor;
 struct GPURenderBundleEncoderDescriptor;
 struct GPURenderPipelineDescriptor;
 struct GPUCommandEncoderDescriptor;
-struct GPUSwapChainDescriptor;
 
 class EventHandlerNonNull;
 class Promise;
@@ -77,26 +74,22 @@ class Device final : public DOMEventTargetHelper {
 
   explicit Device(Adapter* const aParent, RawId aId);
 
-  RefPtr<WebGPUChild> GetBridge();
   static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
                                              ipc::Shmem& aShmem);
   RefPtr<MappingPromise> MapBufferForReadAsync(RawId aId, size_t aSize,
                                                ErrorResult& aRv);
   void UnmapBuffer(RawId aId, UniquePtr<ipc::Shmem> aShmem);
-  already_AddRefed<Texture> InitSwapChain(
-      const dom::GPUSwapChainDescriptor& aDesc,
-      const dom::GPUExtent3DDict& aExtent3D,
-      wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat);
+
+  const RefPtr<WebGPUChild> mBridge;
 
  private:
   ~Device();
   void Cleanup();
 
-  RefPtr<WebGPUChild> mBridge;
   const RawId mId;
   bool mValid = true;
   nsString mLabel;
-  RefPtr<Queue> mQueue;
+  const RefPtr<Queue> mQueue;
 
  public:
   void GetLabel(nsAString& aValue) const;

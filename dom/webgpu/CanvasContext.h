@@ -10,52 +10,36 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 #include "SwapChain.h"
-#include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
 namespace dom {
 class Promise;
-}  // namespace dom
-namespace layers {
-class WebRenderLocalCanvasData;
-};
+}
 namespace webgpu {
 class Device;
 class SwapChain;
-class Texture;
 
 class CanvasContext final : public nsICanvasRenderingContextInternal,
                             public nsWrapperCache {
  private:
   virtual ~CanvasContext();
-  void Cleanup();
 
  public:
-  // nsISupports interface + CC
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CanvasContext)
-
-  CanvasContext();
+  CanvasContext() = delete;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  void RemoveSwapChain();
+  // nsISupports interface + CC
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CanvasContext)
 
-  Maybe<wr::ImageKey> GetImageKey() const;
-  wr::ImageKey CreateImageKey(layers::RenderRootStateManager* aManager);
-  bool UpdateWebRenderLocalCanvasData(
-      layers::WebRenderLocalCanvasData* aCanvasData);
-
-  const wr::ExternalImageId mExternalImageId;
-
- public:  // nsICanvasRenderingContextInternal
-  int32_t GetWidth() override { return mWidth; }
-  int32_t GetHeight() override { return mHeight; }
+ public:
+  // nsICanvasRenderingContextInternal
+  int32_t GetWidth() override { return 0; }
+  int32_t GetHeight() override { return 0; }
 
   NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override {
-    mWidth = aWidth;
-    mHeight = aHeight;
     return NS_OK;
   }
   NS_IMETHOD InitializeWithDrawTarget(
@@ -83,9 +67,9 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   NS_IMETHOD Reset() override { return NS_OK; }
   already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                          Layer* aOldLayer,
-                                         LayerManager* aManager) override;
-  bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
-                                 WebRenderCanvasData* aCanvasData) override;
+                                         LayerManager* aManager) override {
+    return nullptr;
+  }
   void MarkContextClean() override {}
 
   NS_IMETHOD Redraw(const gfxRect& aDirty) override { return NS_OK; }
@@ -95,17 +79,6 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
 
   void MarkContextCleanForFrameCapture() override {}
   bool IsContextCleanForFrameCapture() override { return false; }
-
- public:
-  RefPtr<SwapChain> ConfigureSwapChain(const dom::GPUSwapChainDescriptor& aDesc,
-                                       ErrorResult& aRv);
-
- private:
-  uint32_t mWidth = 0, mHeight = 0;
-
-  RefPtr<SwapChain> mSwapChain;
-  RefPtr<layers::RenderRootStateManager> mRenderRootStateManager;
-  Maybe<wr::ImageKey> mImageKey;
 };
 
 }  // namespace webgpu

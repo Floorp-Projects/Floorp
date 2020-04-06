@@ -45,7 +45,7 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   ~CommandEncoder();
   void Cleanup();
 
-  RefPtr<WebGPUChild> mBridge;
+  const RefPtr<WebGPUChild> mBridge;
 
  public:
   void EndComputePass(Span<const uint8_t> aData, ErrorResult& aRv);
