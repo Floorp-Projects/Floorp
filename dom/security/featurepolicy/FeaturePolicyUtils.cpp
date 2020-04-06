@@ -51,6 +51,8 @@ static FeatureMap sExperimentalFeatures[] = {
     // TODO: not supported yet!!!
     {"speaker", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"vr", FeaturePolicyUtils::FeaturePolicyValue::eAll},
+    // https://immersive-web.github.io/webxr/#feature-policy
+    {"xr-spatial-tracking", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
 };
 
 /* static */

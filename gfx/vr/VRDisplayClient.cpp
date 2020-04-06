@@ -14,8 +14,10 @@
 #include "nsString.h"
 #include "mozilla/dom/GamepadManager.h"
 #include "mozilla/dom/Gamepad.h"
+#include "mozilla/dom/XRSession.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/WebXRBinding.h"
 #include "nsServiceManagerUtils.h"
 
 #ifdef XP_WIN
@@ -50,13 +52,35 @@ void VRDisplayClient::UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
 
 already_AddRefed<VRDisplayPresentation> VRDisplayClient::BeginPresentation(
     const nsTArray<mozilla::dom::VRLayer>& aLayers, uint32_t aGroup) {
-  ++mPresentationCount;
+  PresentationCreated();
   RefPtr<VRDisplayPresentation> presentation =
       new VRDisplayPresentation(this, aLayers, aGroup);
   return presentation.forget();
 }
 
+void VRDisplayClient::PresentationCreated() { ++mPresentationCount; }
+
 void VRDisplayClient::PresentationDestroyed() { --mPresentationCount; }
+
+void VRDisplayClient::SessionStarted(dom::XRSession* aSession) {
+  PresentationCreated();
+  mSessions.AppendElement(aSession);
+}
+void VRDisplayClient::SessionEnded(dom::XRSession* aSession) {
+  mSessions.RemoveElement(aSession);
+  PresentationDestroyed();
+}
+
+void VRDisplayClient::StartFrame() {
+  RefPtr<VRManagerChild> vm = VRManagerChild::Get();
+  vm->RunFrameRequestCallbacks();
+
+  nsTArray<RefPtr<dom::XRSession>> sessions;
+  sessions.AppendElements(mSessions);
+  for (auto session : sessions) {
+    session->StartFrame();
+  }
+}
 
 void VRDisplayClient::SetGroupMask(uint32_t aGroupMask) {
   VRManagerChild* vm = VRManagerChild::Get();
@@ -112,7 +136,7 @@ void VRDisplayClient::FireEvents() {
   // Check if we need to trigger VRDisplay.requestAnimationFrame
   if (mLastEventFrameId != mDisplayInfo.mFrameId) {
     mLastEventFrameId = mDisplayInfo.mFrameId;
-    vm->RunFrameRequestCallbacks();
+    StartFrame();
   }
 
   // We only call FireGamepadEvents() in WebVR instead of WebXR
@@ -489,4 +513,36 @@ void VRDisplayClient::StopVRNavigation(const TimeDuration& aTimeout) {
    */
   VRManagerChild* vm = VRManagerChild::Get();
   vm->SendStopVRNavigation(mDisplayInfo.mDisplayID, aTimeout);
+}
+
+bool VRDisplayClient::IsReferenceSpaceTypeSupported(
+    dom::XRReferenceSpaceType aType) const {
+  /**
+   * https://immersive-web.github.io/webxr/#reference-space-is-supported
+   *
+   * We do not yet support local or local-floor for inline sessions.
+   * This could be expanded if we later support WebXR for inline-ar
+   * sessions on Firefox Fenix.
+   *
+   * We do not yet support unbounded reference spaces.
+   */
+  switch (aType) {
+    case dom::XRReferenceSpaceType::Viewer:
+      // Viewer is always supported, for both inline and immersive sessions
+      return true;
+    case dom::XRReferenceSpaceType::Local:
+    case dom::XRReferenceSpaceType::Local_floor:
+      // Local and Local_Floor are always supported for immersive sessions
+      return bool(mDisplayInfo.GetCapabilities() &
+                  (VRDisplayCapabilityFlags::Cap_ImmersiveVR |
+                   VRDisplayCapabilityFlags::Cap_ImmersiveAR));
+    case dom::XRReferenceSpaceType::Bounded_floor:
+      return bool(mDisplayInfo.GetCapabilities() &
+                  VRDisplayCapabilityFlags::Cap_StageParameters);
+    default:
+      NS_WARNING(
+          "Unknown XRReferenceSpaceType passed to "
+          "VRDisplayClient::IsReferenceSpaceTypeSupported");
+      return false;
+  }
 }
