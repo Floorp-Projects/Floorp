@@ -39,8 +39,6 @@ class nsAppShellService final : public nsIAppShellService, public nsIObserver {
   nsresult JustCreateTopWindow(nsIAppWindow* aParent, nsIURI* aUrl,
                                uint32_t aChromeMask, int32_t aInitialWidth,
                                int32_t aInitialHeight, bool aIsHiddenWindow,
-                               nsIRemoteTab* aOpeningTab,
-                               mozIDOMWindowProxy* aOpenerWindow,
                                mozilla::AppWindow** aResult);
   uint32_t CalculateWindowZLevel(nsIAppWindow* aParent, uint32_t aChromeMask);
 
