@@ -255,13 +255,6 @@ pref("dom.indexedDB.logging.profiler-marks", false);
 // Whether or not File Handle is enabled.
 pref("dom.fileHandle.enabled", true);
 
-// Whether or not selection events on text controls are enabled
-#ifdef NIGHTLY_BUILD
-  pref("dom.select_events.textcontrols.enabled", true);
-#else
-  pref("dom.select_events.textcontrols.enabled", false);
-#endif
-
 // The number of workers per domain allowed to run concurrently.
 // We're going for effectively infinite, while preventing abuse.
 pref("dom.workers.maxPerDomain", 512);
