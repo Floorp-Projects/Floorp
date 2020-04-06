@@ -4,6 +4,8 @@ import { Screenshots } from "lib/Screenshots.jsm";
 
 const URL = "foo.com";
 const FAKE_THUMBNAIL_PATH = "fake/path/thumb.jpg";
+const FAKE_THUMBNAIL_THUMB =
+  "moz-page-thumb://thumbnail?url=http%3A%2F%2Ffoo.com%2F";
 
 describe("Screenshots", () => {
   let globals;
@@ -27,6 +29,7 @@ describe("Screenshots", () => {
     globals.set("PageThumbs", {
       _store: sandbox.stub(),
       getThumbnailPath: sandbox.spy(() => FAKE_THUMBNAIL_PATH),
+      getThumbnailURL: sandbox.spy(() => FAKE_THUMBNAIL_THUMB),
     });
     globals.set("PrivateBrowsingUtils", {
       isWindowPrivate: sandbox.spy(() => false),
@@ -50,6 +53,7 @@ describe("Screenshots", () => {
       assert.calledWith(global.BackgroundPageThumbs.captureIfMissing, URL);
     });
     it("should call PageThumbs.getThumbnailPath with the correct url", async () => {
+      globals.set("gPrivilegedAboutProcessEnabled", false);
       await Screenshots.getScreenshotForURL(URL);
       assert.calledWith(global.PageThumbs.getThumbnailPath, URL);
     });
@@ -73,6 +77,11 @@ describe("Screenshots", () => {
 
       assert.calledOnce(global.PageThumbs._store);
       assert.equal(screenshot, null);
+    });
+    it("should get direct thumbnail url for privileged process", async () => {
+      globals.set("gPrivilegedAboutProcessEnabled", true);
+      await Screenshots.getScreenshotForURL(URL);
+      assert.calledWith(global.PageThumbs.getThumbnailURL, URL);
     });
     it("should get null without storing if existing thumbnail is empty", async () => {
       testFile.size = 0;
