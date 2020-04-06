@@ -19,7 +19,7 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
 
   bool mForceNoOpener = false;
   bool mIsRemote = false;
-  uint64_t mNextRemoteBrowserId = 0;
+  RefPtr<BrowserParent> mNextRemoteBrowser;
   OriginAttributes mOriginAttributes;
   RefPtr<BrowsingContext> mParent;
 
