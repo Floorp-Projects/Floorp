@@ -17,6 +17,10 @@
 #include "nsThreadUtils.h"
 #include "nsVariant.h"
 
+using mozilla::MakeRefPtr;
+using mozilla::SimpleEnumerator;
+using mozilla::Unused;
+
 extern "C" {
 
 // This function uses C linkage because it's exposed to Rust to support the
