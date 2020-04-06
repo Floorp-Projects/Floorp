@@ -54,6 +54,7 @@
     <string name="key_autoplay">autoplay</string>
     <string name="key_remote_debugging">remote_debugging</string>
     <string name="key_preferred_color_scheme">preferred_color_scheme</string>
+    <string name="key_user_agent_override">user_agent_override</string>
 
     <string-array name="pref_preferred_color_scheme_display_names">
         <item>Follow System Preference</item>
@@ -64,6 +65,17 @@
         <item>-1</item>
         <item>0</item>
         <item>1</item>
+    </string-array>
+
+    <string-array name="user_agent_override_display_names">
+        <item>Default</item>
+        <item>Chrome 80 on Android</item>
+        <item>Safari 12 on iPhone</item>
+    </string-array>
+    <string-array name="user_agent_override_values">
+        <item></item>
+        <item>Mozilla/5.0 (Linux; Android 10; Z832 Build/MMB29M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36</item>
+        <item>Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15</item>
     </string-array>
 
 </resources>
