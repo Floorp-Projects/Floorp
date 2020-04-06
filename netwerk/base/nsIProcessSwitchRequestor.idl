@@ -1,0 +1,52 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIChannel.idl"
+
+/**
+ * The nsIProcessSwitchRequestor interface allows clients to instruct
+ * SessionStore.jsm that a channel setup has completed and a process switch
+ * may be required. This works alongside the on-may-change-process observer
+ * notification.
+ * This interface must be used only from the XPCOM main thread.
+ */
+[scriptable, uuid(fce8497b-c57c-4557-b360-3efefc83eff5)]
+interface nsIProcessSwitchRequestor : nsISupports
+{
+  /**
+   * The underlying channel object that was intercepted and that could trigger
+   * a process.
+   */
+  readonly attribute nsIChannel channel;
+
+  /**
+   * Instructs the callee to be loaded in a new process. Like 'redirectTo'
+   * this can only be used on channels that have not yet called their
+   * listener's OnStartRequest(). Can only be called during the
+   * channel-on-may-change-process observer notification.
+   *
+   * @param aTabPromise   a promise which resolves to a nsIRemotTab object
+   *                      which the load will proceed in.
+   * @param aIdentifier   a 64-bit ID which will be provided to the
+   *                      ChildProcessChannelListener.
+   */
+  [must_use] void switchProcessTo(in Promise aTabPromise,
+                                  in unsigned long long aIdentifier);
+
+  /**
+   * Used to determine if there is a Cross-Origin-Opener-Policy mismatch
+   * that would require switching the channel to another process.
+   * @throws NS_ERROR_NOT_AVAILABLE if we don't have a responseHead
+   */
+  [must_use] boolean hasCrossOriginOpenerPolicyMismatch();
+
+  /**
+   * Returns a cached CrossOriginOpenerPolicy that is computed just before we
+   * determine if there is a policy mismatch.
+   * @throws NS_ERROR_NOT_AVAILABLE if called before onStartRequest
+   */
+  [must_use, binaryname(CachedCrossOriginOpenerPolicy)] readonly attribute nsILoadInfo_CrossOriginOpenerPolicy crossOriginOpenerPolicy;
+};

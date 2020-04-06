@@ -2034,41 +2034,6 @@
       }
       return origins;
     }
-
-    get canPerformProcessSwitch() {
-      return this.getTabBrowser() != null;
-    }
-
-    performProcessSwitch(
-      remoteType,
-      redirectLoadSwitchId,
-      replaceBrowsingContext
-    ) {
-      return this.getTabBrowser().performProcessSwitch(
-        this,
-        remoteType,
-        redirectLoadSwitchId,
-        replaceBrowsingContext
-      );
-    }
-
-    getRemoteTypeForPrincipal(
-      principal,
-      remoteTabs,
-      remoteSubframes,
-      preferredRemoteType,
-      currentPrincipal,
-      isSubframe
-    ) {
-      return E10SUtils.getRemoteTypeForPrincipal(
-        principal,
-        remoteTabs,
-        remoteSubframes,
-        preferredRemoteType,
-        currentPrincipal,
-        isSubframe
-      );
-    }
   }
 
   MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);
