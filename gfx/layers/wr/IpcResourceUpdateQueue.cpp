@@ -302,9 +302,15 @@ bool IpcResourceUpdateQueue::AddBlobImage(BlobImageKey key,
   return true;
 }
 
-void IpcResourceUpdateQueue::AddExternalImage(wr::ExternalImageId aExtId,
-                                              wr::ImageKey aKey) {
-  mUpdates.AppendElement(layers::OpAddExternalImage(aExtId, aKey));
+void IpcResourceUpdateQueue::AddPrivateExternalImage(
+    wr::ExternalImageId aExtId, wr::ImageKey aKey, wr::ImageDescriptor aDesc) {
+  mUpdates.AppendElement(
+      layers::OpAddPrivateExternalImage(aExtId, aKey, aDesc));
+}
+
+void IpcResourceUpdateQueue::AddSharedExternalImage(wr::ExternalImageId aExtId,
+                                                    wr::ImageKey aKey) {
+  mUpdates.AppendElement(layers::OpAddSharedExternalImage(aExtId, aKey));
 }
 
 void IpcResourceUpdateQueue::PushExternalImageForTexture(
@@ -344,11 +350,10 @@ bool IpcResourceUpdateQueue::UpdateBlobImage(BlobImageKey aKey,
   return true;
 }
 
-void IpcResourceUpdateQueue::UpdateExternalImage(wr::ExternalImageId aExtId,
-                                                 wr::ImageKey aKey,
-                                                 ImageIntRect aDirtyRect) {
+void IpcResourceUpdateQueue::UpdateSharedExternalImage(
+    wr::ExternalImageId aExtId, wr::ImageKey aKey, ImageIntRect aDirtyRect) {
   mUpdates.AppendElement(
-      layers::OpUpdateExternalImage(aExtId, aKey, aDirtyRect));
+      layers::OpUpdateSharedExternalImage(aExtId, aKey, aDirtyRect));
 }
 
 void IpcResourceUpdateQueue::SetBlobImageVisibleArea(

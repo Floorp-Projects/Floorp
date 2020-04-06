@@ -34,7 +34,7 @@ class Instance final : public nsWrapperCache {
   already_AddRefed<dom::Promise> RequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions, ErrorResult& aRv);
 
-  const RefPtr<WebGPUChild> mBridge;
+  RefPtr<WebGPUChild> mBridge;
 
  private:
   explicit Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge);
