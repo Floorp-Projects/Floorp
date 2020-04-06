@@ -926,17 +926,6 @@ void DisplayListBuilder::Save() { wr_dp_save(mWrState); }
 void DisplayListBuilder::Restore() { wr_dp_restore(mWrState); }
 void DisplayListBuilder::ClearSave() { wr_dp_clear_save(mWrState); }
 
-DisplayListBuilder& DisplayListBuilder::SubBuilder(RenderRoot aRenderRoot) {
-  MOZ_ASSERT(aRenderRoot == mRenderRoot);
-  return *this;
-}
-
-bool DisplayListBuilder::HasSubBuilder(RenderRoot aRenderRoot) {
-  MOZ_ASSERT(aRenderRoot == RenderRoot::Default);
-  MOZ_ASSERT(mRenderRoot == RenderRoot::Default);
-  return true;
-}
-
 usize DisplayListBuilder::Dump(usize aIndent, const Maybe<usize>& aStart,
                                const Maybe<usize>& aEnd) {
   return wr_dump_display_list(mWrState, aIndent, aStart.ptrOr(nullptr),
@@ -962,13 +951,11 @@ void DisplayListBuilder::Finalize(
   }
 
   wr::VecU8 dl;
-  wr_api_finalize_builder(SubBuilder(aOutTransaction.mRenderRoot).mWrState,
-                          &aOutTransaction.mContentSize,
+  wr_api_finalize_builder(mWrState, &aOutTransaction.mContentSize,
                           &aOutTransaction.mDLDesc, &dl.inner);
   aOutTransaction.mDL.emplace(dl.inner.data, dl.inner.length,
                               dl.inner.capacity);
-  aOutTransaction.mRemotePipelineIds =
-      std::move(SubBuilder(aOutTransaction.mRenderRoot).mRemotePipelineIds);
+  aOutTransaction.mRemotePipelineIds = std::move(mRemotePipelineIds);
   dl.inner.capacity = 0;
   dl.inner.data = nullptr;
 }
