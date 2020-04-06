@@ -506,7 +506,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
 
   // Set the tab context attributes then pass to docShell
-  NotifyTabContextUpdated(false);
+  NotifyTabContextUpdated();
 
   // IPC uses a WebBrowser object for which DNS prefetching is turned off
   // by default. But here we really want it, so enable it explicitly
@@ -593,7 +593,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   return NS_OK;
 }
 
-void BrowserChild::NotifyTabContextUpdated(bool aIsPreallocated) {
+void BrowserChild::NotifyTabContextUpdated() {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
   MOZ_ASSERT(docShell);
 
@@ -602,10 +602,6 @@ void BrowserChild::NotifyTabContextUpdated(bool aIsPreallocated) {
   }
 
   UpdateFrameType();
-
-  if (aIsPreallocated) {
-    nsDocShell::Cast(docShell)->SetOriginAttributes(OriginAttributesRef());
-  }
 
   // Set SANDBOXED_AUXILIARY_NAVIGATION flag if this is a receiver page.
   if (!PresentationURL().IsEmpty()) {
