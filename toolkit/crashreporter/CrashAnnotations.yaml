@@ -796,6 +796,13 @@ StorageConnectionNotClosed:
     associated with the connection.
   type: string
 
+SubmittedFromInfobar:
+  description: >
+    This annotation is set to 1 when the crash report has been manually
+    submitted from Firefox info-bar or has been automatically submitted after
+    the user opted-in to auto-submission.
+  type: boolean
+
 SystemMemoryUsePercentage:
   description: >
     Windows-only, percentage of physical memory in use. This annotation is
