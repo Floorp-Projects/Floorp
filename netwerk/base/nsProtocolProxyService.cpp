@@ -2251,12 +2251,12 @@ bool nsProtocolProxyService::ApplyFilter(
       return false;
     }
 
-    rv = filterLink->filter->ApplyFilter(this, uri, list, callback);
+    rv = filterLink->filter->ApplyFilter(uri, list, callback);
     return NS_SUCCEEDED(rv);
   }
 
   if (filterLink->channelFilter) {
-    rv = filterLink->channelFilter->ApplyFilter(this, channel, list, callback);
+    rv = filterLink->channelFilter->ApplyFilter(channel, list, callback);
     return NS_SUCCEEDED(rv);
   }
 

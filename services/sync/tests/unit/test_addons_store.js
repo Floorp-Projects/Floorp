@@ -164,7 +164,7 @@ const proxyFilter = {
     null
   ),
 
-  applyFilter(service, channel, defaultProxyInfo, callback) {
+  applyFilter(channel, defaultProxyInfo, callback) {
     if (channel.URI.host === "example.com") {
       callback.onProxyFilterResult(this.proxyInfo);
     } else {

@@ -40,7 +40,7 @@ class ProxyFilter {
     this._flags = flags;
     this.QueryInterface = ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]);
   }
-  applyFilter(pps, uri, pi, cb) {
+  applyFilter(uri, pi, cb) {
     if (
       uri.pathQueryRef.startsWith("/execute") ||
       uri.pathQueryRef.startsWith("/fork") ||

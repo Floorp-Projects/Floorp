@@ -98,7 +98,7 @@ TestFilter.prototype = {
   _flags: 0,
   _timeout: 0,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
-  applyFilter(pps, uri, pi, cb) {
+  applyFilter(uri, pi, cb) {
     var pi_tail = pps.newProxyInfo(
       this._type,
       this._host,
@@ -121,7 +121,7 @@ TestFilter.prototype = {
 function BasicFilter() {}
 BasicFilter.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
-  applyFilter(pps, uri, pi, cb) {
+  applyFilter(uri, pi, cb) {
     cb.onProxyFilterResult(
       pps.newProxyInfo(
         "http",
@@ -140,7 +140,7 @@ BasicFilter.prototype = {
 function BasicChannelFilter() {}
 BasicChannelFilter.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyChannelFilter]),
-  applyFilter(pps, channel, pi, cb) {
+  applyFilter(channel, pi, cb) {
     cb.onProxyFilterResult(
       pps.newProxyInfo(
         "http",
