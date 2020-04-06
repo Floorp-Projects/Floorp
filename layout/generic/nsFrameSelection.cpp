@@ -647,7 +647,7 @@ bool nsFrameSelection::sSelectionEventsOnTextControlsEnabled = false;
 
 nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
                                      bool aContinueSelection,
-                                     nsSelectionAmount aAmount,
+                                     const nsSelectionAmount aAmount,
                                      CaretMovementStyle aMovementStyle) {
   bool visualMovement = aMovementStyle == eVisual ||
                         (aMovementStyle == eUsePrefStyle &&
@@ -748,43 +748,42 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   const auto forceEditableRegion =
       isEditorSelection ? nsPeekOffsetStruct::ForceEditableRegion::Yes
                         : nsPeekOffsetStruct::ForceEditableRegion::No;
-  // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
-  // limiter then we stop peeking when we hit scrollable views.  If no limiter
-  // then just let it go ahead
-  nsPeekOffsetStruct pos(aAmount, eDirPrevious, offsetused, desiredPos, true,
-                         mLimiters.mLimiter != nullptr, true, visualMovement,
-                         aContinueSelection, forceEditableRegion);
-
-  nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
+  const nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
   CaretAssociateHint tHint(mCaret.mHint);  // temporary variable so we dont set
                                            // mCaret.mHint until it is necessary
+
+  nsDirection direction{eDirPrevious};
   switch (aAmount) {
     case eSelectCharacter:
     case eSelectCluster:
     case eSelectWord:
     case eSelectWordNoSpace:
       InvalidateDesiredPos();
-      pos.mAmount = aAmount;
-      pos.mDirection = (visualMovement && paraDir == NSBIDI_RTL)
-                           ? nsDirection(1 - aDirection)
-                           : aDirection;
+      direction = (visualMovement && paraDir == NSBIDI_RTL)
+                      ? nsDirection(1 - aDirection)
+                      : aDirection;
       break;
     case eSelectLine:
-      pos.mAmount = aAmount;
-      pos.mDirection = aDirection;
+      direction = aDirection;
       break;
     case eSelectBeginLine:
     case eSelectEndLine:
       InvalidateDesiredPos();
-      pos.mAmount = aAmount;
-      pos.mDirection = (visualMovement && paraDir == NSBIDI_RTL)
-                           ? nsDirection(1 - aDirection)
-                           : aDirection;
+      direction = (visualMovement && paraDir == NSBIDI_RTL)
+                      ? nsDirection(1 - aDirection)
+                      : aDirection;
       break;
     default:
       return NS_ERROR_FAILURE;
   }
+
+  // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
+  // limiter then we stop peeking when we hit scrollable views.  If no limiter
+  // then just let it go ahead
+  nsPeekOffsetStruct pos(aAmount, direction, offsetused, desiredPos, true,
+                         mLimiters.mLimiter != nullptr, true, visualMovement,
+                         aContinueSelection, forceEditableRegion);
 
   if (NS_SUCCEEDED(result = frame->PeekOffset(&pos)) && pos.mResultContent) {
     nsIFrame* theFrame;

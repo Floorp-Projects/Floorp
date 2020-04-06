@@ -99,7 +99,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
   //     beginning of the next paragraph".
   //
   // Used with: eSelectCharacter, eSelectWord, eSelectLine, eSelectParagraph.
-  nsDirection mDirection;
+  const nsDirection mDirection;
 
   // Offset into the content of the current frame where the peek starts.
   //
