@@ -434,14 +434,12 @@
   /* Show the separator between the page actions and other elements when at
      least one of the latter is shown. */
   visibility: visible;
-  margin-left: 6px;
-  margin-right: 6px;
+  margin-inline: 6px;
 }
 
 #userContext-icons,
 #urlbar-zoom-button {
-  margin-left: 6px;
-  margin-right: 6px;
+  margin-inline: 6px;
 }
 
 .urlbar-icon {
@@ -908,8 +906,7 @@
   list-style-image: url(chrome://browser/skin/search-glass.svg);
   -moz-context-properties: fill, fill-opacity;
   pointer-events: none;
-  margin-inline-start: 8px;
-  margin-inline-end: 6px;
+  margin-inline: 8px 6px;
   width: 16px;
   fill-opacity: .4;
 }
@@ -928,28 +925,24 @@
 
 .searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay {
   list-style-image: url(chrome://browser/skin/search-indicator-badge-add.svg);
-  margin-inline-start: -15px;
-  margin-inline-end: 4px;
+  margin-inline: -15px 4px;
   margin-top: -10px;
   width: 11px;
   height: 11px;
 }
 
 .searchbar-search-button[addengines=true] > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
-  margin-inline-start: -25px;
-  margin-inline-end: 14px;
+  margin-inline: -25px 14px;
 }
 
 .searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay {
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   -moz-context-properties: fill;
-  margin-inline-start: -8px;
-  margin-inline-end: 2px;
+  margin-inline: -8px 2px;
   width: 6px;
   height: 6px;
 }
 
 .searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay:-moz-locale-dir(rtl) {
-  margin-inline-start: -26px;
-  margin-inline-end: 20px;
+  margin-inline: -26px 20px;
 }

@@ -142,8 +142,7 @@ body {
   max-width: 16px;
   min-height: 16px;
   max-height: 16px;
-  margin-right: 5px;
-  margin-left: 5px;
+  margin-inline: 5px;
   background-size: 16px 16px;
   background-size: contain;
   background-repeat: no-repeat;
@@ -163,7 +162,7 @@ body {
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0px;
+  margin: 0;
   line-height: 1.3;
   cursor: default;
 }
@@ -183,8 +182,7 @@ body {
 }
 
 .sync-state > p {
-  padding-inline-end: 10px;
-  padding-inline-start: 10px;
+  padding-inline: 10px;
 }
 
 .text-link {
@@ -198,9 +196,9 @@ body {
 
 .text-link,
 .text-link:focus {
-  margin: 0px;
-  padding: 0px;
-  border: 0px;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .deck .sync-state {
@@ -211,7 +209,7 @@ body {
 }
 
 .deck .sync-state.tabs-container {
-  border-top: 0px;
+  border-top: 0;
 }
 
 .deck .sync-state.selected {

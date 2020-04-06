@@ -126,8 +126,7 @@
 }
 
 .identity-popup-security-connection > description {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
 }
 
 #identity-popup-permissions-header,
@@ -135,8 +134,7 @@
 #identity-popup-security-description {
   /* icon indent + 16px icon width + 6px description margin
      (total of 12px margin with the native 6px description margin) */
-  padding-inline-start: calc(2em + 22px);
-  padding-inline-end: 1em;
+  padding-inline: calc(2em + 22px) 1em;
 }
 
 #identity-popup-security-description > description {
@@ -144,14 +142,12 @@
 }
 
 #identity-popup-permissions-content {
-  padding-inline-start: 2em;
-  padding-inline-end: 1em;
+  padding-inline: 2em 1em;
 }
 
 .identity-popup-security-content,
 #identity-popup-permissions-content {
-  padding-top: 1em;
-  padding-bottom: 1em;
+  padding-block: 1em;
 }
 
 #identity-popup-permissions-header {
@@ -177,8 +173,7 @@
   background-size: 24px auto;
   -moz-context-properties: fill;
   padding: 0.5em 0 1em;
-  padding-inline-start: calc(2em + 24px);
-  padding-inline-end: 1em;
+  padding-inline: calc(2em + 24px) 1em;
 }
 
 #protections-popup-content:-moz-locale-dir(rtl) {
@@ -417,8 +412,7 @@
 #identity-popup-securityView-body {
   /* icon indent + 16px icon width + 6px description margin
     (total of 12px margin with the native 6px description margin) */
-  margin-inline-start: calc(2em + 22px);
-  margin-inline-end: 1em;
+  margin-inline: calc(2em + 22px) 1em;
   padding-inline-end: 1em;
   padding-top: 0.5em;
 }
@@ -435,7 +429,7 @@
 description#identity-popup-content-owner-label,
 description#identity-popup-content-owner,
 description#identity-popup-content-verifier,
-#identity-popup-securityView-body > button  {
+#identity-popup-securityView-body > button {
   margin-top: 0.5em;
 }
 
@@ -542,8 +536,7 @@ description#identity-popup-content-verifier,
 
 #protections-popup-cookiesView .protections-popup-empty-label {
   margin-inline-start: 24px;
-  margin-top: 2px;
-  margin-bottom: 4px;
+  margin-block: 2px 4px;
 }
 
 .protections-popup-cookiesView-list-header {
@@ -570,17 +563,13 @@ description#identity-popup-content-verifier,
 .protections-popup-list-host-label {
   -moz-box-flex: 1;
   direction: ltr;
-}
-
-.protections-popup-list-host-label:-moz-locale-dir(rtl) {
-  text-align: right;
+  text-align: match-parent;
 }
 
 .protections-popup-list-state-label {
   -moz-box-flex: 1;
   text-align: end;
-  margin-inline-start: 5px;
-  margin-inline-end: 2px;
+  margin-inline: 5px 2px;
 }
 
 .protections-popup-socialblockView-icon,
@@ -672,7 +661,7 @@ description#identity-popup-content-verifier,
 
 #protections-popup-content {
   padding: 0;
-  margin: 0 0 var(--vertical-section-padding) 0;
+  margin: 0 0 var(--vertical-section-padding);
 }
 
 #protections-popup-blocking-section-header,
@@ -758,14 +747,14 @@ description#identity-popup-content-verifier,
 .tracking-protection-button {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
   -moz-appearance: none;
-  margin: 1em 0 0;
+  margin-block: 1em 0;
+  margin-inline: 0 8px;
   display: none;
   height: 32px;
   background-color: var(--arrowpanel-dimmed);
   /* !important to override -moz-mac-buttonactivetext from applying on :active on mac
    and -moz-buttonhovertext from applying on :hover on linux. */
   color: inherit !important;
-  margin-inline-end: 8px;
 }
 
 .tracking-protection-button:hover {
@@ -861,6 +850,7 @@ description#identity-popup-content-verifier,
 .identity-popup-permission-remove-button {
   -moz-appearance: none;
   margin: 0;
+  margin-inline-start: 2px;
   border-width: 0;
   border-radius: 50%;
   min-width: 0;
@@ -869,7 +859,6 @@ description#identity-popup-content-verifier,
   /* !important overrides :hover and :active colors from button.css */
   color: inherit !important;
   opacity: 0.6;
-  margin-inline-start: 2px;
 }
 
 .identity-popup-permission-remove-button > .button-box {
@@ -957,7 +946,7 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-siteNotWorkingView-body {
-    padding: var(--vertical-section-padding) var(--horizontal-padding);
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
 #protections-popup-siteNotWorkingView-body,
@@ -989,8 +978,7 @@ description#identity-popup-content-verifier,
   border-radius: 10px;
   background-color: var(--protections-popup-switch-off-background);
   border: 1px solid hsla(210,4%,10%,.14);
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-block: 4px;
   margin-inline-start: 1px;
   padding: 2px;
   padding-inline-end: 0;
