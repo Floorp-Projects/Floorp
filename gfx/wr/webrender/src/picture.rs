@@ -4972,37 +4972,56 @@ impl PicturePrimitive {
                         let device_clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
 
                         for tile in tile_cache.tiles.values_mut() {
-                            if !tile.is_visible {
-                                continue;
-                            }
 
-                            // Get the world space rect that this tile will actually occupy on screem
-                            let device_draw_rect = match device_clip_rect.intersection(&tile.device_valid_rect) {
-                                Some(rect) => rect,
-                                None => {
-                                    tile.is_visible = false;
-                                    continue;
-                                }
-                            };
+                            // Only check for occlusion on visible tiles that are fixed position.
+                            if tile.is_visible && tile_cache.spatial_node_index == ROOT_SPATIAL_NODE_INDEX {
+                                // Get the world space rect that this tile will actually occupy on screem
+                                let device_draw_rect = device_clip_rect.intersection(&tile.device_valid_rect);
 
-                            // If that draw rect is occluded by some set of tiles in front of it,
-                            // then mark it as not visible and skip drawing. When it's not occluded
-                            // it will fail this test, and get rasterized by the render task setup
-                            // code below.
-                            if frame_state.composite_state.is_tile_occluded(tile.z_id, device_draw_rect) {
-                                // If this tile has an allocated native surface, free it, since it's completely
-                                // occluded. We will need to re-allocate this surface if it becomes visible,
-                                // but that's likely to be rare (e.g. when there is no content display list
-                                // for a frame or two during a tab switch).
-                                let surface = tile.surface.as_mut().expect("no tile surface set!");
+                                // If that draw rect is occluded by some set of tiles in front of it,
+                                // then mark it as not visible and skip drawing. When it's not occluded
+                                // it will fail this test, and get rasterized by the render task setup
+                                // code below.
+                                match device_draw_rect {
+                                    Some(device_draw_rect) => {
+                                        if frame_state.composite_state.is_tile_occluded(tile.z_id, device_draw_rect) {
+                                            // If this tile has an allocated native surface, free it, since it's completely
+                                            // occluded. We will need to re-allocate this surface if it becomes visible,
+                                            // but that's likely to be rare (e.g. when there is no content display list
+                                            // for a frame or two during a tab switch).
+                                            let surface = tile.surface.as_mut().expect("no tile surface set!");
 
-                                if let TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { id, .. }, .. } = surface {
-                                    if let Some(id) = id.take() {
-                                        frame_state.resource_cache.destroy_compositor_tile(id);
+                                            if let TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { id, .. }, .. } = surface {
+                                                if let Some(id) = id.take() {
+                                                    frame_state.resource_cache.destroy_compositor_tile(id);
+                                                }
+                                            }
+
+                                            tile.is_visible = false;
+                                            continue;
+                                        }
+                                    }
+                                    None => {
+                                        tile.is_visible = false;
                                     }
                                 }
+                            }
 
-                                tile.is_visible = false;
+                            // If we get here, we want to ensure that the surface remains valid in the texture
+                            // cache, _even if_ it's not visible due to clipping or being scrolled off-screen.
+                            // This ensures that we retain valid tiles that are off-screen, but still in the
+                            // display port of this tile cache instance.
+                            if let Some(TileSurface::Texture { descriptor, .. }) = tile.surface.as_ref() {
+                                if let SurfaceTextureDescriptor::TextureCache { ref handle, .. } = descriptor {
+                                    frame_state.resource_cache.texture_cache.request(
+                                        handle,
+                                        frame_state.gpu_cache,
+                                    );
+                                }
+                            }
+
+                            // If the tile has been found to be off-screen / clipped, skip any further processing.
+                            if !tile.is_visible {
                                 continue;
                             }
 
