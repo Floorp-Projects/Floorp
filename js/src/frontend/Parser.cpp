@@ -2078,12 +2078,6 @@ JSFunction* AllocNewFunction(JSContext* cx,
     fun->setIsSelfHostedBuiltin();
   }
 
-  if (data.typeForScriptedFunction) {
-    if (!JSFunction::setTypeForScriptedFunction(
-            cx, fun, *data.typeForScriptedFunction)) {
-      return nullptr;
-    }
-  }
   return fun;
 }
 
