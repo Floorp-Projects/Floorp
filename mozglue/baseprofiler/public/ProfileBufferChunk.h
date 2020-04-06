@@ -78,14 +78,14 @@ class ProfileBufferChunk {
   // Hint about the size of the metadata (public and private headers).
   // `Create()` below takes the minimum *buffer* size, so the minimum total
   // Chunk size is at least `SizeofChunkMetadata() + aMinBufferBytes`.
-  static constexpr MOZ_MUST_USE Length SizeofChunkMetadata() {
+  [[nodiscard]] static constexpr Length SizeofChunkMetadata() {
     return static_cast<Length>(sizeof(InternalHeader));
   }
 
   // Allocate space for a chunk with a given minimum size, and construct it.
   // The actual size may be higher, to match the actual space taken in the
   // memory pool.
-  static MOZ_MUST_USE UniquePtr<ProfileBufferChunk> Create(
+  [[nodiscard]] static UniquePtr<ProfileBufferChunk> Create(
       Length aMinBufferBytes) {
     // We need at least one byte, to cover the always-present `mBuffer` byte.
     aMinBufferBytes = std::max(aMinBufferBytes, Length(1));
@@ -148,7 +148,7 @@ class ProfileBufferChunk {
 
   // Must be called with the first block tail (may be empty), which will be
   // skipped if the reader starts with this ProfileBufferChunk.
-  MOZ_MUST_USE SpanOfBytes ReserveInitialBlockAsTail(Length aTailSize) {
+  [[nodiscard]] SpanOfBytes ReserveInitialBlockAsTail(Length aTailSize) {
 #ifdef DEBUG
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::Created ||
                mInternalHeader.mState == InternalHeader::State::Recycled);
@@ -167,7 +167,7 @@ class ProfileBufferChunk {
   // Reserve a block of up to `aBlockSize` bytes, and return a Span to it, and
   // its starting index. The actual size may be smaller, if the block cannot fit
   // in the remaining space.
-  MOZ_MUST_USE ReserveReturn ReserveBlock(Length aBlockSize) {
+  [[nodiscard]] ReserveReturn ReserveBlock(Length aBlockSize) {
     MOZ_ASSERT(mInternalHeader.mState == InternalHeader::State::InUse);
     MOZ_ASSERT(RangeStart() != 0,
                "Expected valid range start before first Reserve()");
@@ -265,53 +265,55 @@ class ProfileBufferChunk {
     const int mPADDING = 0;
   };
 
-  MOZ_MUST_USE const Header& ChunkHeader() const {
+  [[nodiscard]] const Header& ChunkHeader() const {
     return mInternalHeader.mHeader;
   }
 
-  MOZ_MUST_USE Length BufferBytes() const { return ChunkHeader().mBufferBytes; }
+  [[nodiscard]] Length BufferBytes() const {
+    return ChunkHeader().mBufferBytes;
+  }
 
   // Total size of the chunk (buffer + header).
-  MOZ_MUST_USE Length ChunkBytes() const {
+  [[nodiscard]] Length ChunkBytes() const {
     return static_cast<Length>(sizeof(InternalHeader)) + BufferBytes();
   }
 
   // Size of external resources, in this case all the following chunks.
-  MOZ_MUST_USE size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+  [[nodiscard]] size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     const ProfileBufferChunk* const next = GetNext();
     return next ? next->SizeOfIncludingThis(aMallocSizeOf) : 0;
   }
 
   // Size of this chunk and all following ones.
-  MOZ_MUST_USE size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+  [[nodiscard]] size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     // Just in case `aMallocSizeOf` falls back on just `sizeof`, make sure we
     // account for at least the actual Chunk requested allocation size.
     return std::max<size_t>(aMallocSizeOf(this), ChunkBytes()) +
            SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  MOZ_MUST_USE Length RemainingBytes() const {
+  [[nodiscard]] Length RemainingBytes() const {
     return BufferBytes() - OffsetPastLastBlock();
   }
 
-  MOZ_MUST_USE Length OffsetFirstBlock() const {
+  [[nodiscard]] Length OffsetFirstBlock() const {
     return ChunkHeader().mOffsetFirstBlock;
   }
 
-  MOZ_MUST_USE Length OffsetPastLastBlock() const {
+  [[nodiscard]] Length OffsetPastLastBlock() const {
     return ChunkHeader().mOffsetPastLastBlock;
   }
 
-  MOZ_MUST_USE Length BlockCount() const { return ChunkHeader().mBlockCount; }
+  [[nodiscard]] Length BlockCount() const { return ChunkHeader().mBlockCount; }
 
-  MOZ_MUST_USE int ProcessId() const { return ChunkHeader().mProcessId; }
+  [[nodiscard]] int ProcessId() const { return ChunkHeader().mProcessId; }
 
   void SetProcessId(int aProcessId) {
     mInternalHeader.mHeader.mProcessId = aProcessId;
   }
 
   // Global range index at the start of this Chunk.
-  MOZ_MUST_USE ProfileBufferIndex RangeStart() const {
+  [[nodiscard]] ProfileBufferIndex RangeStart() const {
     return ChunkHeader().mRangeStart;
   }
 
@@ -321,23 +323,23 @@ class ProfileBufferChunk {
 
   // Get a read-only Span to the buffer. It is up to the caller to decypher the
   // contents, based on known offsets and the internal block structure.
-  MOZ_MUST_USE Span<const Byte> BufferSpan() const {
+  [[nodiscard]] Span<const Byte> BufferSpan() const {
     return Span<const Byte>(&mBuffer, BufferBytes());
   }
 
-  MOZ_MUST_USE Byte ByteAt(Length aOffset) const {
+  [[nodiscard]] Byte ByteAt(Length aOffset) const {
     MOZ_ASSERT(aOffset < OffsetPastLastBlock());
     return *(&mBuffer + aOffset);
   }
 
-  MOZ_MUST_USE ProfileBufferChunk* GetNext() {
+  [[nodiscard]] ProfileBufferChunk* GetNext() {
     return mInternalHeader.mNext.get();
   }
-  MOZ_MUST_USE const ProfileBufferChunk* GetNext() const {
+  [[nodiscard]] const ProfileBufferChunk* GetNext() const {
     return mInternalHeader.mNext.get();
   }
 
-  MOZ_MUST_USE UniquePtr<ProfileBufferChunk> ReleaseNext() {
+  [[nodiscard]] UniquePtr<ProfileBufferChunk> ReleaseNext() {
     return std::move(mInternalHeader.mNext);
   }
 
@@ -350,7 +352,7 @@ class ProfileBufferChunk {
   }
 
   // Find the last chunk in this chain (it may be `this`).
-  MOZ_MUST_USE ProfileBufferChunk* Last() {
+  [[nodiscard]] ProfileBufferChunk* Last() {
     ProfileBufferChunk* chunk = this;
     for (;;) {
       ProfileBufferChunk* next = chunk->GetNext();
@@ -360,7 +362,7 @@ class ProfileBufferChunk {
       chunk = next;
     }
   }
-  MOZ_MUST_USE const ProfileBufferChunk* Last() const {
+  [[nodiscard]] const ProfileBufferChunk* Last() const {
     const ProfileBufferChunk* chunk = this;
     for (;;) {
       const ProfileBufferChunk* next = chunk->GetNext();
@@ -379,7 +381,7 @@ class ProfileBufferChunk {
   }
 
   // Join two possibly-null chunk lists.
-  static MOZ_MUST_USE UniquePtr<ProfileBufferChunk> Join(
+  [[nodiscard]] static UniquePtr<ProfileBufferChunk> Join(
       UniquePtr<ProfileBufferChunk>&& aFirst,
       UniquePtr<ProfileBufferChunk>&& aLast) {
     if (aFirst) {

@@ -39,7 +39,7 @@ button {
 }
 
 button:dir(rtl) {
-  background-position: right 16px center;
+  background-position-x: right 16px;
 }
 
 :host([badged]) button::after {

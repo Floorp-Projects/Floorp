@@ -1491,7 +1491,7 @@ var gPrivacyPane = {
    *     1   means reject all third party cookies
    *     2   means disable all cookies
    *     3   means reject third party cookies unless at least one is already set for the eTLD
-   *         see netwerk/cookie/src/nsCookieService.cpp for details
+   *         see netwerk/cookie/src/CookieService.cpp for details
    * network.cookie.lifetimePolicy
    * - determines how long cookies are stored:
    *     0   means keep cookies until they expire

@@ -862,7 +862,7 @@ bool MathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
   nsCOMPtr<nsIURI> uri;
   if (!IsLink(getter_AddRefs(uri))) {
     // If a tabindex is specified at all we're focusable
-    return HasAttr(nsGkAtoms::tabindex);
+    return GetTabIndexAttrValue().isSome();
   }
 
   if (!OwnerDoc()->LinkHandlingEnabled()) {

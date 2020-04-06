@@ -7091,7 +7091,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-03-29T18:18:21Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-04-02T18:20:31Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -10432,9 +10432,6 @@ xin
 // xn--efvy88h : 2014-08-22 Guangzhou YU Wei Information Technology Co., Ltd.
 新闻
 
-// xn--estv75g : 2015-02-19 Industrial and Commercial Bank of China Limited
-工行
-
 // xn--fct429k : 2015-04-09 Amazon Registry Services, Inc.
 家電
 
@@ -11716,6 +11713,10 @@ global.ssl.fastly.net
 // Submitted by Likhachev Vasiliy <lihachev@fastvps.ru>
 fastpanel.direct
 fastvps-server.com
+myfast.space
+myfast.host
+fastvps.site
+fastvps.host
 
 // Featherhead : https://featherhead.xyz/
 // Submitted by Simon Menke <simon@featherhead.xyz>
@@ -11728,6 +11729,13 @@ fedorapeople.org
 cloud.fedoraproject.org
 app.os.fedoraproject.org
 app.os.stg.fedoraproject.org
+
+// FearWorks Media Ltd. : https://fearworksmedia.co.uk
+// submitted by Keith Fairley <domains@fearworksmedia.co.uk>
+conn.uk
+copro.uk
+couk.me
+ukco.me
 
 // Fermax : https://fermax.com/
 // submitted by Koen Van Isterdael <k.vanisterdael@fermax.be>
@@ -11749,7 +11757,6 @@ firebaseapp.com
 
 // Flynn : https://flynn.io
 // Submitted by Jonathan Rudenberg <jonathan@flynn.io>
-flynnhub.com
 flynnhosting.net
 
 // Frederik Braun https://frederik-braun.com
@@ -11920,6 +11927,10 @@ pagespeedmobilizer.com
 publishproxy.com
 withgoogle.com
 withyoutube.com
+
+// Aaron Marais' Gitlab pages: https://lab.aaronleem.co.za
+// Submitted by Aaron Marais <its_me@aaronleem.co.za>
+graphox.us
 
 // Group 53, LLC : https://www.group53.com
 // Submitted by Tyler Todd <noc@nova53.net>
@@ -12578,6 +12589,12 @@ on-web.fr
 *.platform.sh
 *.platformsh.site
 
+// Platter: https://platter.dev
+// Submitted by Patrick Flor <patrick@platter.dev>
+platter-app.com
+platter-app.dev
+platterp.us
+
 // Port53 : https://port53.io/
 // Submitted by Maximilian Schieder <maxi@zeug.co>
 dyn53.io
@@ -12790,6 +12807,10 @@ stackhero-network.com
 static.land
 dev.static.land
 sites.static.land
+
+// Sony Interactive Entertainment LLC : https://sie.com/
+// Submitted by David Coles <david.coles@sony.com>
+playstation-cloud.com
 
 // SourceLair PC : https://www.sourcelair.com
 // Submitted by Antonis Kalipetis <akalipetis@sourcelair.com>

@@ -151,8 +151,8 @@ class nsWindow final : public nsBaseWidget {
 
   void SetZIndex(int32_t aZIndex) override;
   virtual void SetSizeMode(nsSizeMode aMode) override;
-  virtual int32_t GetWorkspaceID() override;
-  virtual void MoveToWorkspace(int32_t workspaceID) override;
+  virtual void GetWorkspaceID(nsAString& workspaceID) override;
+  virtual void MoveToWorkspace(const nsAString& workspaceID) override;
   virtual void Enable(bool aState) override;
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;

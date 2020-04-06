@@ -99,20 +99,10 @@ class CellColor {
   Color color;
 };
 
-// [SMDOC] GC Cell
-//
-// A GC cell is the base class for all GC things. All types allocated on the GC
-// heap extend either gc::Cell or gc::TenuredCell. If a type is always tenured,
-// prefer the TenuredCell class as base.
-//
-// The first word (a pointer or uintptr_t) of each Cell must reserve the low
-// three bits for GC purposes. The remaining bits are available to sub-classes
-// and typically store a pointer to another gc::Cell.
-//
-// During moving GC operation a Cell may be marked as forwarded. This indicates
-// that a gc::RelocationOverlay is currently stored in the Cell's memory and
-// should be used to find the new location of the Cell.
-struct alignas(gc::CellAlignBytes) Cell {
+// The cell header contains flags used by the GC. All GC cells must start with a
+// CellHeader, or one of its derived classes that allows use of spare bits to
+// store data.
+class CellHeader {
  public:
   static_assert(gc::CellFlagBitsReservedForGC >= 3,
                 "Not enough flag bits reserved for GC");
@@ -134,6 +124,29 @@ struct alignas(gc::CellAlignBytes) Cell {
   // or JSObject/JSString (0).
   static constexpr uintptr_t BIGINT_BIT = Bit(2);
 
+ protected:
+  uintptr_t flags() const { return header_ & RESERVED_MASK; }
+
+  // NOTE: This word can also be used for temporary storage, see
+  // setTemporaryGCUnsafeData.
+  uintptr_t header_;
+};
+
+// [SMDOC] GC Cell
+//
+// A GC cell is the base class for all GC things. All types allocated on the GC
+// heap extend either gc::Cell or gc::TenuredCell. If a type is always tenured,
+// prefer the TenuredCell class as base.
+//
+// The first word (a pointer or uintptr_t) of each Cell must reserve the low
+// three bits for GC purposes. The remaining bits are available to sub-classes
+// and typically store a pointer to another gc::Cell.
+//
+// During moving GC operation a Cell may be marked as forwarded. This indicates
+// that a gc::RelocationOverlay is currently stored in the Cell's memory and
+// should be used to find the new location of the Cell.
+struct alignas(gc::CellAlignBytes) Cell {
+ public:
   MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
   MOZ_ALWAYS_INLINE const TenuredCell& asTenured() const;
   MOZ_ALWAYS_INLINE TenuredCell& asTenured();
@@ -169,19 +182,19 @@ struct alignas(gc::CellAlignBytes) Cell {
 
   inline bool isForwarded() const {
     uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
-    return firstWord & FORWARD_BIT;
+    return firstWord & CellHeader::FORWARD_BIT;
   }
 
   inline bool nurseryCellIsString() const {
     MOZ_ASSERT(!isTenured());
     uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
-    return firstWord & JSSTRING_BIT;
+    return firstWord & CellHeader::JSSTRING_BIT;
   }
 
   inline bool nurseryCellIsBigInt() const {
     MOZ_ASSERT(!isTenured());
     uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
-    return firstWord & BIGINT_BIT;
+    return firstWord & CellHeader::BIGINT_BIT;
   }
 
   template <class T>
@@ -534,12 +547,11 @@ bool TenuredCell::isAligned() const {
 
 #endif
 
-// Base class for GC things that have 32-bit length and 32-bit flags fields
-// stored at the beginning (currently JSString and BigInt).
+// Cell header for GC things that have 32-bit length and 32-bit flags (currently
+// JSString and BigInt).
 //
-// First word of a Cell has additional requirements from GC and normally
-// would store a pointer. If a single word isn't large enough, the length
-// is stored separately.
+// This tries to store both in CellHeader::header_, but if that isn't large
+// enough the length is stored separately.
 //
 //          32       0
 //  ------------------
@@ -549,87 +561,184 @@ bool TenuredCell::isAligned() const {
 // The low bits of the flags word (see CellFlagBitsReservedForGC) are reserved
 // for GC. Derived classes must ensure they don't use these flags for non-GC
 // purposes.
-template <class BaseCell>
-class CellWithLengthAndFlags : public BaseCell {
-  static_assert(std::is_same<BaseCell, Cell>::value ||
-                    std::is_same<BaseCell, TenuredCell>::value,
-                "BaseCell must be either Cell or TenuredCell");
-
-  // NOTE: This word can also be used for temporary storage, see
-  // setTemporaryGCUnsafeData.
-  uintptr_t flags_;
-
+class CellHeaderWithLengthAndFlags : public CellHeader {
 #if JS_BITS_PER_WORD == 32
-  // Additional storage for length if |flags_| is too small to fit both.
+  // Additional storage for length if |header_| is too small to fit both.
   uint32_t length_;
 #endif
 
- protected:
+ public:
   uint32_t lengthField() const {
 #if JS_BITS_PER_WORD == 32
     return length_;
 #else
-    return uint32_t(flags_ >> 32);
+    return uint32_t(header_ >> 32);
 #endif
   }
 
-  uint32_t flagsField() const { return uint32_t(flags_); }
+  uint32_t flagsField() const { return uint32_t(header_); }
 
-  void setFlagBit(uint32_t flag) { flags_ |= uintptr_t(flag); }
-  void clearFlagBit(uint32_t flag) { flags_ &= ~uintptr_t(flag); }
-  void toggleFlagBit(uint32_t flag) { flags_ ^= uintptr_t(flag); }
+  void setFlagBit(uint32_t flag) { header_ |= uintptr_t(flag); }
+  void clearFlagBit(uint32_t flag) { header_ &= ~uintptr_t(flag); }
+  void toggleFlagBit(uint32_t flag) { header_ ^= uintptr_t(flag); }
 
   void setLengthAndFlags(uint32_t len, uint32_t flags) {
 #if JS_BITS_PER_WORD == 32
-    flags_ = flags;
+    header_ = flags;
     length_ = len;
 #else
-    flags_ = (uint64_t(len) << 32) | uint64_t(flags);
+    header_ = (uint64_t(len) << 32) | uint64_t(flags);
 #endif
   }
 
   // Sub classes can store temporary data in the flags word. This is not GC safe
   // and users must ensure flags/length are never checked (including by asserts)
   // while this data is stored. Use of this method is strongly discouraged!
-  void setTemporaryGCUnsafeData(uintptr_t data) { flags_ = data; }
+  void setTemporaryGCUnsafeData(uintptr_t data) { header_ = data; }
 
   // To get back the data, values to safely re-initialize clobbered flags
   // must be provided.
   uintptr_t unsetTemporaryGCUnsafeData(uint32_t len, uint32_t flags) {
-    uintptr_t data = flags_;
+    uintptr_t data = header_;
     setLengthAndFlags(len, flags);
     return data;
   }
 
-  // Returns the offset of flags_. JIT code should use offsetOfFlags below.
+  // Returns the offset of header_. JIT code should use offsetOfFlags
+  // below.
   static constexpr size_t offsetOfRawFlagsField() {
-    return offsetof(CellWithLengthAndFlags, flags_);
+    return offsetof(CellHeaderWithLengthAndFlags, header_);
   }
 
   // Offsets for direct field from jit code. A number of places directly
   // access 32-bit length and flags fields so do endian trickery here.
 #if JS_BITS_PER_WORD == 32
   static constexpr size_t offsetOfFlags() {
-    return offsetof(CellWithLengthAndFlags, flags_);
+    return offsetof(CellHeaderWithLengthAndFlags, header_);
   }
   static constexpr size_t offsetOfLength() {
-    return offsetof(CellWithLengthAndFlags, length_);
+    return offsetof(CellHeaderWithLengthAndFlags, length_);
   }
 #elif MOZ_LITTLE_ENDIAN()
   static constexpr size_t offsetOfFlags() {
-    return offsetof(CellWithLengthAndFlags, flags_);
+    return offsetof(CellHeaderWithLengthAndFlags, header_);
   }
   static constexpr size_t offsetOfLength() {
-    return offsetof(CellWithLengthAndFlags, flags_) + sizeof(uint32_t);
+    return offsetof(CellHeaderWithLengthAndFlags, header_) + sizeof(uint32_t);
   }
 #else
   static constexpr size_t offsetOfFlags() {
-    return offsetof(CellWithLengthAndFlags, flags_) + sizeof(uint32_t);
+    return offsetof(CellHeaderWithLengthAndFlags, header_) + sizeof(uint32_t);
   }
   static constexpr size_t offsetOfLength() {
-    return offsetof(CellWithLengthAndFlags, flags_);
+    return offsetof(CellHeaderWithLengthAndFlags, header_);
   }
 #endif
+};
+
+// Cell header for GC things that allows storing a non-GC thing pointer in the
+// first word.
+//
+// The low bits of the word (see CellFlagBitsReservedForGC) are reserved for GC.
+template <class PtrT>
+class CellHeaderWithNonGCPointer : public CellHeader {
+  static_assert(!std::is_pointer<PtrT>::value,
+                "PtrT should be the type of the referent, not of the pointer");
+  static_assert(
+      !std::is_base_of<Cell, PtrT>::value,
+      "Don't use CellHeaderWithNonGCPointer for pointers to GC things");
+
+ public:
+  CellHeaderWithNonGCPointer() = default;
+  explicit CellHeaderWithNonGCPointer(PtrT* initial) : CellHeader() {
+    uintptr_t data = uintptr_t(initial);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    header_ = data;
+  }
+
+  PtrT* ptr() const {
+    // Currently we never observe any flags set here because this base class is
+    // only used for JSObject (for which the nursery kind flags are always
+    // clear) or GC things that are always tenured (for which the nursery kind
+    // flags are also always clear). This means we don't need to use masking to
+    // get and set the pointer.
+    MOZ_ASSERT(flags() == 0);
+    return reinterpret_cast<PtrT*>(header_);
+  }
+
+  void setPtr(PtrT* newValue) {
+    // As above, no flags are expected to be set here.
+    uintptr_t data = uintptr_t(newValue);
+    MOZ_ASSERT(flags() == 0);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    header_ = data;
+  }
+
+  static constexpr size_t offsetOfPtr() {
+    return offsetof(CellHeaderWithNonGCPointer, header_);
+  }
+};
+
+// Base class for GC things that have a tenured GC pointer as their first word.
+//
+// The low bits of the first word (see CellFlagBitsReservedForGC) are reserved
+// for GC.
+//
+// This includes a pre write barrier when the pointer is update. No post barrier
+// is necessary as the pointer is always tenured.
+template <class PtrT>
+class CellHeaderWithTenuredGCPointer : public CellHeader {
+  static void staticAsserts() {
+    // These static asserts are not in class scope because the PtrT may not be
+    // defined when this class template is instantiated.
+    static_assert(
+        !std::is_pointer<PtrT>::value,
+        "PtrT should be the type of the referent, not of the pointer");
+    static_assert(
+        std::is_base_of<Cell, PtrT>::value,
+        "Only use CellHeaderWithTenuredGCPointer for pointers to GC things");
+  }
+
+ public:
+  CellHeaderWithTenuredGCPointer() = default;
+  explicit CellHeaderWithTenuredGCPointer(PtrT* initial) : CellHeader() {
+    initPtr(initial);
+  }
+
+  void initPtr(PtrT* initial) {
+    MOZ_ASSERT(!IsInsideNursery(initial));
+    uintptr_t data = uintptr_t(initial);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    this->header_ = data;
+  }
+
+  PtrT* ptr() const {
+    // Currently we never observe any flags set here because this base class is
+    // only used for GC things that are always tenured (for which the nursery
+    // kind flags are also always clear). This means we don't need to use
+    // masking to get and set the pointer.
+    staticAsserts();
+    MOZ_ASSERT(flags() == 0);
+    return reinterpret_cast<PtrT*>(this->header_);
+  }
+
+  void setPtr(PtrT* newValue) {
+    // As above, no flags are expected to be set here.
+    MOZ_ASSERT(!IsInsideNursery(newValue));
+    PtrT::writeBarrierPre(ptr());
+    unsafeSetPtr(newValue);
+  }
+
+  void unsafeSetPtr(PtrT* newValue) {
+    uintptr_t data = uintptr_t(newValue);
+    MOZ_ASSERT(flags() == 0);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    this->header_ = data;
+  }
+
+  static constexpr size_t offsetOfPtr() {
+    return offsetof(CellHeaderWithTenuredGCPointer, header_);
+  }
 };
 
 } /* namespace gc */

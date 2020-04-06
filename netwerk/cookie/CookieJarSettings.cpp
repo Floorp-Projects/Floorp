@@ -30,7 +30,7 @@ namespace {
 
 class PermissionComparator {
  public:
-  bool Equals(nsIPermission* aA, nsIPermission* aB) const {
+  static bool Equals(nsIPermission* aA, nsIPermission* aB) {
     nsCOMPtr<nsIPrincipal> principalA;
     nsresult rv = aA->GetPrincipal(getter_AddRefs(principalA));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -117,7 +117,7 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior, State aState)
 CookieJarSettings::~CookieJarSettings() {
   if (!NS_IsMainThread() && !mCookiePermissions.IsEmpty()) {
     nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
-        mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+        SystemGroup::EventTargetFor(TaskCategory::Other);
     MOZ_ASSERT(systemGroupEventTarget);
 
     RefPtr<Runnable> r = new ReleaseCookiePermissions(mCookiePermissions);

@@ -84,7 +84,9 @@ bool SetImmutablePrototype(JSContext* cx, JS::HandleObject obj,
  */
 class JSObject : public js::gc::Cell {
  protected:
-  js::GCPtrObjectGroup group_;
+  using HeaderWithObjectGroup =
+      js::gc::CellHeaderWithTenuredGCPointer<js::ObjectGroup>;
+  HeaderWithObjectGroup headerAndGroup_;
   js::GCPtrShape shape_;
 
  private:
@@ -101,10 +103,12 @@ class JSObject : public js::gc::Cell {
   // Make a new group to use for a singleton object.
   static js::ObjectGroup* makeLazyGroup(JSContext* cx, js::HandleObject obj);
 
+  void setGroupRaw(js::ObjectGroup* group) { headerAndGroup_.setPtr(group); }
+
  public:
   bool isNative() const { return getClass()->isNative(); }
 
-  const JSClass* getClass() const { return group_->clasp(); }
+  const JSClass* getClass() const { return groupRaw()->clasp(); }
   bool hasClass(const JSClass* c) const { return getClass() == c; }
 
   js::LookupPropertyOp getOpsLookupProperty() const {
@@ -140,23 +144,23 @@ class JSObject : public js::gc::Cell {
     return groupRaw();
   }
 
-  js::ObjectGroup* groupRaw() const { return group_; }
+  js::ObjectGroup* groupRaw() const { return headerAndGroup_.ptr(); }
 
-  void initGroup(js::ObjectGroup* group) { group_.init(group); }
+  void initGroup(js::ObjectGroup* group) { headerAndGroup_.initPtr(group); }
 
   /*
    * Whether this is the only object which has its specified group. This
    * object will have its group constructed lazily as needed by analysis.
    */
-  bool isSingleton() const { return group_->singleton(); }
+  bool isSingleton() const { return groupRaw()->singleton(); }
 
   /*
    * Whether the object's group has not been constructed yet. If an object
    * might have a lazy group, use getGroup() below, otherwise group().
    */
-  bool hasLazyGroup() const { return group_->lazy(); }
+  bool hasLazyGroup() const { return groupRaw()->lazy(); }
 
-  JS::Compartment* compartment() const { return group_->compartment(); }
+  JS::Compartment* compartment() const { return groupRaw()->compartment(); }
   JS::Compartment* maybeCompartment() const { return compartment(); }
 
   void initShape(js::Shape* shape) {
@@ -266,14 +270,14 @@ class JSObject : public js::gc::Cell {
   void fixupAfterMovingGC();
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Object;
-  static const size_t MaxTagBits = 3;
+  const js::gc::CellHeader& cellHeader() const { return headerAndGroup_; }
 
-  MOZ_ALWAYS_INLINE JS::Zone* zone() const { return group_->zone(); }
+  MOZ_ALWAYS_INLINE JS::Zone* zone() const { return groupRaw()->zone(); }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
     return JS::shadow::Zone::from(zone());
   }
   MOZ_ALWAYS_INLINE JS::Zone* zoneFromAnyThread() const {
-    return group_->zoneFromAnyThread();
+    return groupRaw()->zoneFromAnyThread();
   }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
     return JS::shadow::Zone::from(zoneFromAnyThread());
@@ -310,11 +314,6 @@ class JSObject : public js::gc::Cell {
 
   static inline js::ObjectGroup* getGroup(JSContext* cx, js::HandleObject obj);
 
-  const js::GCPtrObjectGroup& groupFromGC() const {
-    /* Direct field access for use by GC. */
-    return group_;
-  }
-
 #ifdef DEBUG
   static void debugCheckNewObject(js::ObjectGroup* group, js::Shape* shape,
                                   js::gc::AllocKind allocKind,
@@ -345,7 +344,7 @@ class JSObject : public js::gc::Cell {
    *    the proto.
    */
 
-  js::TaggedProto taggedProto() const { return group_->proto(); }
+  js::TaggedProto taggedProto() const { return groupRaw()->proto(); }
 
   bool uninlinedIsProxy() const;
 
@@ -358,7 +357,7 @@ class JSObject : public js::gc::Cell {
   // (albeit perhaps mutable) [[Prototype]].  For such objects the
   // [[Prototype]] is just a value returned when needed for accesses, or
   // modified in response to requests.  These objects store the
-  // [[Prototype]] directly within |obj->group_|.
+  // [[Prototype]] directly within |obj->groupRaw()|.
   bool hasStaticPrototype() const { return !hasDynamicPrototype(); }
 
   // The remaining proxies have a [[Prototype]] requiring dynamic computation
@@ -432,14 +431,14 @@ class JSObject : public js::gc::Cell {
 
   JS::Realm* nonCCWRealm() const {
     MOZ_ASSERT(!js::UninlinedIsCrossCompartmentWrapper(this));
-    return group_->realm();
+    return groupRaw()->realm();
   }
   bool hasSameRealmAs(JSContext* cx) const;
 
   // Returns the object's realm even if the object is a CCW (be careful, in
   // this case the realm is not very meaningful because wrappers are shared by
   // all realms in the compartment).
-  JS::Realm* maybeCCWRealm() const { return group_->realm(); }
+  JS::Realm* maybeCCWRealm() const { return groupRaw()->realm(); }
 
   /*
    * ES5 meta-object properties and operations.
@@ -577,7 +576,10 @@ class JSObject : public js::gc::Cell {
   friend class js::jit::MacroAssembler;
   friend class js::jit::CacheIRCompiler;
 
-  static constexpr size_t offsetOfGroup() { return offsetof(JSObject, group_); }
+  static constexpr size_t offsetOfGroup() {
+    return offsetof(JSObject, headerAndGroup_) +
+           HeaderWithObjectGroup::offsetOfPtr();
+  }
   static constexpr size_t offsetOfShape() { return offsetof(JSObject, shape_); }
 
  private:

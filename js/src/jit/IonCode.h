@@ -50,7 +50,8 @@ struct JitCodeHeader {
 
 class JitCode : public gc::TenuredCell {
  protected:
-  uint8_t* code_;
+  using CellHeaderWithCodePtr = gc::CellHeaderWithNonGCPointer<uint8_t>;
+  CellHeaderWithCodePtr cellHeaderAndCode_;
   ExecutablePool* pool_;
   uint32_t bufferSize_;  // Total buffer size. Does not include headerSize_.
   uint32_t insnSize_;    // Instruction stream size.
@@ -67,7 +68,7 @@ class JitCode : public gc::TenuredCell {
   JitCode() = delete;
   JitCode(uint8_t* code, uint32_t bufferSize, uint32_t headerSize,
           ExecutablePool* pool, CodeKind kind)
-      : code_(code),
+      : cellHeaderAndCode_(code),
         pool_(pool),
         bufferSize_(bufferSize),
         insnSize_(0),
@@ -89,8 +90,8 @@ class JitCode : public gc::TenuredCell {
   }
 
  public:
-  uint8_t* raw() const { return code_; }
-  uint8_t* rawEnd() const { return code_ + insnSize_; }
+  uint8_t* raw() const { return cellHeaderAndCode_.ptr(); }
+  uint8_t* rawEnd() const { return raw() + insnSize_; }
   bool containsNativePC(const void* addr) const {
     const uint8_t* addr_u8 = (const uint8_t*)addr;
     return raw() <= addr_u8 && addr_u8 < rawEnd();
@@ -123,9 +124,12 @@ class JitCode : public gc::TenuredCell {
     return code;
   }
 
-  static size_t offsetOfCode() { return offsetof(JitCode, code_); }
+  static size_t offsetOfCode() {
+    return offsetof(JitCode, cellHeaderAndCode_) +
+           CellHeaderWithCodePtr::offsetOfPtr();
+  }
 
-  uint8_t* jumpRelocTable() { return code_ + jumpRelocTableOffset(); }
+  uint8_t* jumpRelocTable() { return raw() + jumpRelocTableOffset(); }
 
   // Allocates a new JitCode object which will be managed by the GC. If no
   // object can be allocated, nullptr is returned. On failure, |pool| is
@@ -136,6 +140,7 @@ class JitCode : public gc::TenuredCell {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::JitCode;
+  const gc::CellHeader& cellHeader() const { return cellHeaderAndCode_; }
 };
 
 class SnapshotWriter;

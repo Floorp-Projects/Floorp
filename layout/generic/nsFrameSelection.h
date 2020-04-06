@@ -99,7 +99,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
   //     beginning of the next paragraph".
   //
   // Used with: eSelectCharacter, eSelectWord, eSelectLine, eSelectParagraph.
-  nsDirection mDirection;
+  const nsDirection mDirection;
 
   // Offset into the content of the current frame where the peek starts.
   //
@@ -110,7 +110,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
   // depending on line's writing mode)
   //
   // Used with: eSelectLine.
-  nsPoint mDesiredPos;
+  const nsPoint mDesiredPos;
 
   // An enum that determines whether to prefer the start or end of a word or to
   // use the default beahvior, which is a combination of direction and the
@@ -120,28 +120,28 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
   // Whether to allow jumping across line boundaries.
   //
   // Used with: eSelectCharacter, eSelectWord.
-  bool mJumpLines;
+  const bool mJumpLines;
 
   // mTrimSpaces: Whether we should trim spaces at begin/end of content
-  bool mTrimSpaces;
+  const bool mTrimSpaces;
 
   // Whether to stop when reaching a scroll view boundary.
   //
   // Used with: eSelectCharacter, eSelectWord, eSelectLine.
-  bool mScrollViewStop;
+  const bool mScrollViewStop;
 
   // Whether the peeking is done in response to a keyboard action.
   //
   // Used with: eSelectWord.
-  bool mIsKeyboardSelect;
+  const bool mIsKeyboardSelect;
 
   // Whether bidi caret behavior is visual (true) or logical (false).
   //
   // Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
-  bool mVisual;
+  const bool mVisual;
 
   // Whether the selection is being extended or moved.
-  bool mExtend;
+  const bool mExtend;
 
   // If true, the offset has to end up in an editable node, otherwise we'll keep
   // searching.

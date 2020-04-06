@@ -2262,7 +2262,7 @@ bool JSObject::changeToSingleton(JSContext* cx, HandleObject obj) {
     return false;
   }
 
-  obj->group_ = group;
+  obj->setGroupRaw(group);
   return true;
 }
 
@@ -4094,11 +4094,11 @@ JS::ubi::Node::Size JS::ubi::Concrete<JSObject>::size(
 const char16_t JS::ubi::Concrete<JSObject>::concreteTypeName[] = u"JSObject";
 
 void JSObject::traceChildren(JSTracer* trc) {
-  TraceEdge(trc, &group_, "group");
+  TraceEdge(trc, &headerAndGroup_, "group");
 
   traceShape(trc);
 
-  const JSClass* clasp = group_->clasp();
+  const JSClass* clasp = groupRaw()->clasp();
   if (clasp->isNative()) {
     NativeObject* nobj = &as<NativeObject>();
 

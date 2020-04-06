@@ -11,8 +11,6 @@
 <?xml-stylesheet href="chrome://browser/skin/downloads/allDownloadsView.css"?>
 
 <!DOCTYPE window [
-<!ENTITY % downloadsDTD SYSTEM "chrome://browser/locale/downloads/downloads.dtd">
-%downloadsDTD;
 <!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuDTD;
 ]>
@@ -22,13 +20,14 @@
    -    sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==
    -->
 <window id="contentAreaDownloadsView"
+        data-l10n-id="downloads-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        title="&downloads.title;"
         csp="default-src chrome:; script-src chrome: 'sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA=='; img-src chrome: moz-icon:; object-src 'none'">
 
   <linkset>
     <html:link rel="localization" href="toolkit/global/textActions.ftl"/>
+    <html:link rel="localization" href="browser/downloads.ftl" />
   </linkset>
 
   <script src="chrome://global/content/globalOverlay.js"/>
@@ -49,8 +48,7 @@
                id="downloadsRichListBox"
                context="downloadsContextMenu"/>
   <description id="downloadsListEmptyDescription"
-               value="&downloadsListEmpty.label;"/>
+               data-l10n-id="downloads-list-empty"/>
 #include downloadsCommands.inc.xhtml
-#include downloadsStrings.inc.xhtml
 #include downloadsContextMenu.inc.xhtml
 </window>

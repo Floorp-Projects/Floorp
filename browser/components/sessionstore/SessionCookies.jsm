@@ -62,7 +62,7 @@ var SessionCookiesInternal = {
         );
       } catch (ex) {
         Cu.reportError(
-          `nsCookieService::CookieExists failed with error '${ex}' for '${JSON.stringify(
+          `CookieService::CookieExists failed with error '${ex}' for '${JSON.stringify(
             cookie
           )}'.`
         );
@@ -83,7 +83,7 @@ var SessionCookiesInternal = {
           );
         } catch (ex) {
           Cu.reportError(
-            `nsCookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(
+            `CookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(
               cookie
             )}.`
           );

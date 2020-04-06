@@ -774,7 +774,7 @@ async function init() {
 
   ext = isGecko ? browser : chrome;
 
-  await postToControlServer("status", "raptor runner.js is loaded!");
+  await postToControlServer("loaded");
   await postToControlServer("status", `test name is: ${testName}`);
   await postToControlServer("status", `test settings url is: ${settingsURL}`);
 

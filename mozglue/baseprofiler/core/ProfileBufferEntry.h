@@ -270,14 +270,14 @@ class UniqueStacks {
   UniqueStacks();
 
   // Return a StackKey for aFrame as the stack's root frame (no prefix).
-  MOZ_MUST_USE StackKey BeginStack(const FrameKey& aFrame);
+  [[nodiscard]] StackKey BeginStack(const FrameKey& aFrame);
 
   // Return a new StackKey that is obtained by appending aFrame to aStack.
-  MOZ_MUST_USE StackKey AppendFrame(const StackKey& aStack,
-                                    const FrameKey& aFrame);
+  [[nodiscard]] StackKey AppendFrame(const StackKey& aStack,
+                                     const FrameKey& aFrame);
 
-  MOZ_MUST_USE uint32_t GetOrAddFrameIndex(const FrameKey& aFrame);
-  MOZ_MUST_USE uint32_t GetOrAddStackIndex(const StackKey& aStack);
+  [[nodiscard]] uint32_t GetOrAddFrameIndex(const FrameKey& aFrame);
+  [[nodiscard]] uint32_t GetOrAddStackIndex(const StackKey& aStack);
 
   void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);

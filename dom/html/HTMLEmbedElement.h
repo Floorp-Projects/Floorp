@@ -26,7 +26,6 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLEmbedElement, embed)
-  virtual int32_t TabIndexDefault() override;
 
 #ifdef XP_MACOSX
   // EventTarget
@@ -61,6 +60,10 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   nsresult CopyInnerTo(HTMLEmbedElement* aDest);
 
   void StartObjectLoad() { StartObjectLoad(true, false); }
+
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override {
+    return true;
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLEmbedElement,
                                                      nsGenericHTMLElement)

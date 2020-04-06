@@ -1211,7 +1211,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   }
 
   handleBlock(msg) {
-    if (msg.bundled) {
+    if (msg.bundled && msg.template !== "onboarding") {
       // If we are blocking a message that belongs to a bundle, block all other messages that are bundled of that same template
       let bundle = this.findOtherBundledMessagesOfSameTemplate(msg.template);
       return () => _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].blockBundle(bundle);
@@ -1221,7 +1221,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   }
 
   handleUnblock(msg) {
-    if (msg.bundled) {
+    if (msg.bundled && msg.template !== "onboarding") {
       // If we are unblocking a message that belongs to a bundle, unblock all other messages that are bundled of that same template
       let bundle = this.findOtherBundledMessagesOfSameTemplate(msg.template);
       return () => _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].unblockBundle(bundle);
@@ -2161,6 +2161,15 @@ const ASRouterUtils = {
       type: "UNBLOCK_MESSAGE_BY_ID",
       data: {
         id
+      }
+    });
+  },
+
+  blockBundle(bundle) {
+    ASRouterUtils.sendMessage({
+      type: "BLOCK_BUNDLE",
+      data: {
+        bundle
       }
     });
   },

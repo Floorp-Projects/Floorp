@@ -246,7 +246,8 @@ class Scope : public js::gc::TenuredCell {
   friend class frontend::ScopeCreationData;
 
   // The enclosing scope or nullptr.
-  const GCPtrScope enclosing_;
+  using HeaderWithScope = gc::CellHeaderWithTenuredGCPointer<Scope>;
+  HeaderWithScope headerAndEnclosingScope_;
 
   // The kind determines data_.
   const ScopeKind kind_;
@@ -259,7 +260,7 @@ class Scope : public js::gc::TenuredCell {
   BaseScopeData* data_;
 
   Scope(ScopeKind kind, Scope* enclosing, Shape* environmentShape)
-      : enclosing_(enclosing),
+      : headerAndEnclosingScope_(enclosing),
         kind_(kind),
         environmentShape_(environmentShape),
         data_(nullptr) {}
@@ -288,6 +289,7 @@ class Scope : public js::gc::TenuredCell {
       MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Scope;
+  const gc::CellHeader& cellHeader() const { return headerAndEnclosingScope_; }
 
   template <typename T>
   bool is() const {
@@ -308,7 +310,7 @@ class Scope : public js::gc::TenuredCell {
 
   ScopeKind kind() const { return kind_; }
 
-  Scope* enclosing() const { return enclosing_; }
+  Scope* enclosing() const { return headerAndEnclosingScope_.ptr(); }
 
   Shape* environmentShape() const { return environmentShape_; }
 
@@ -325,7 +327,7 @@ class Scope : public js::gc::TenuredCell {
   }
 
   bool hasEnvironment() const {
-    return hasEnvironment(kind_, environmentShape_);
+    return hasEnvironment(kind_, environmentShape());
   }
 
   uint32_t chainLength() const;
