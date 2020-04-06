@@ -3,29 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_nsCookieKey_h
-#define mozilla_net_nsCookieKey_h
+#ifndef mozilla_net_CookieKey_h
+#define mozilla_net_CookieKey_h
+
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 
 namespace mozilla {
 namespace net {
-class nsCookieKey : public PLDHashEntryHdr {
+
+class CookieKey : public PLDHashEntryHdr {
  public:
-  typedef const nsCookieKey& KeyType;
-  typedef const nsCookieKey* KeyTypePointer;
+  typedef const CookieKey& KeyType;
+  typedef const CookieKey* KeyTypePointer;
 
-  nsCookieKey() = default;
+  CookieKey() = default;
 
-  nsCookieKey(const nsCString& baseDomain, const OriginAttributes& attrs)
+  CookieKey(const nsCString& baseDomain, const OriginAttributes& attrs)
       : mBaseDomain(baseDomain), mOriginAttributes(attrs) {}
 
-  explicit nsCookieKey(KeyTypePointer other)
+  explicit CookieKey(KeyTypePointer other)
       : mBaseDomain(other->mBaseDomain),
         mOriginAttributes(other->mOriginAttributes) {}
 
-  nsCookieKey(nsCookieKey&& other) = default;
-  nsCookieKey& operator=(nsCookieKey&&) = default;
+  CookieKey(CookieKey&& other) = default;
+  CookieKey& operator=(CookieKey&&) = default;
 
   bool KeyEquals(KeyTypePointer other) const {
     return mBaseDomain == other->mBaseDomain &&
@@ -55,4 +57,5 @@ class nsCookieKey : public PLDHashEntryHdr {
 
 }  // namespace net
 }  // namespace mozilla
-#endif  // mozilla_net_nsCookieKey_h
+
+#endif  // mozilla_net_CookieKey_h

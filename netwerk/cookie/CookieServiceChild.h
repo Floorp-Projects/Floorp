@@ -6,9 +6,9 @@
 #ifndef mozilla_net_CookieServiceChild_h__
 #define mozilla_net_CookieServiceChild_h__
 
+#include "CookieKey.h"
 #include "mozilla/net/PCookieServiceChild.h"
 #include "nsClassHashtable.h"
-#include "nsCookieKey.h"
 #include "nsICookieService.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
@@ -40,7 +40,7 @@ class CookieServiceChild : public PCookieServiceChild,
   NS_DECL_NSITIMERCALLBACK
 
   typedef nsTArray<RefPtr<Cookie>> CookiesList;
-  typedef nsClassHashtable<nsCookieKey, CookiesList> CookiesMap;
+  typedef nsClassHashtable<CookieKey, CookiesList> CookiesMap;
 
   CookieServiceChild();
 
