@@ -2254,6 +2254,19 @@
   value: false
   mirror: always
 
+#ifdef XP_WIN
+  # Preference that is used to set nsILocalFileWin::useDOSDevicePathSyntax
+  # attribute for all local file instances created by QuotaManager and its
+  # clients. The value of this preference is cached so changing the preference
+  # during runtime has no effect.
+  # See bug 1626846 for setting this to false by default.
+-   name: dom.quotaManager.useDOSDevicePathSyntax
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+    do_not_use_directly: true
+#endif
+
 # Reporting API.
 - name: dom.reporting.enabled
   type: RelaxedAtomicBool
