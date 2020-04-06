@@ -222,7 +222,7 @@ inline const char* NS_CP_ContentTypeName(uint32_t contentType) {
 inline nsresult NS_CheckContentLoadPolicy(
     nsIURI* contentLocation, nsILoadInfo* loadInfo, const nsACString& mimeType,
     int16_t* decision, nsIContentPolicy* policyService = nullptr) {
-  nsIPrincipal* loadingPrincipal = loadInfo->LoadingPrincipal();
+  nsIPrincipal* loadingPrincipal = loadInfo->GetLoadingPrincipal();
   nsCOMPtr<nsISupports> context = loadInfo->GetLoadingContext();
   nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();
   CHECK_PRINCIPAL_CSP_AND_DATA(ShouldLoad);
@@ -238,7 +238,7 @@ inline nsresult NS_CheckContentLoadPolicy(
 inline nsresult NS_CheckContentProcessPolicy(
     nsIURI* contentLocation, nsILoadInfo* loadInfo, const nsACString& mimeType,
     int16_t* decision, nsIContentPolicy* policyService = nullptr) {
-  nsIPrincipal* loadingPrincipal = loadInfo->LoadingPrincipal();
+  nsIPrincipal* loadingPrincipal = loadInfo->GetLoadingPrincipal();
   nsCOMPtr<nsISupports> context = loadInfo->GetLoadingContext();
   nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();
   CHECK_PRINCIPAL_CSP_AND_DATA(ShouldProcess);

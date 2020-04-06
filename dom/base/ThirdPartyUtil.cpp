@@ -326,8 +326,8 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
         // Check if the channel itself is third-party to its own requestor.
         // Unforunately, we have to go through the loading principal.
 
-        rv = loadInfo->LoadingPrincipal()->IsThirdPartyURI(channelURI,
-                                                           &parentIsThird);
+        rv = loadInfo->GetLoadingPrincipal()->IsThirdPartyURI(channelURI,
+                                                              &parentIsThird);
         if (NS_FAILED(rv)) {
           return rv;
         }
