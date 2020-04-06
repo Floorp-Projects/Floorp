@@ -43,6 +43,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ახალი პირადი ჩანართი</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">რჩეული საიტები</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">გახსნილი ჩანართები</string>
@@ -105,6 +108,10 @@
     <string name="browser_menu_open_app_link">გახსნა პროგრამით</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">იერსახე</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">ვერ დაუკავშირდა. გაურკვეველი URL-სქემა.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -1107,8 +1114,13 @@
     <string name="add_to_homescreen_cancel">გაუქმება</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">დამატება</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ვებგვერდზე გადასვლა</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">მალსახმობის სახელი</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">მარტივად შეგიძლიათ დაამატოთ ეს საიტი ტელეფონის მთავარ ეკრანზე, სწრაფად წვდომისა და გახნისთვის, პროგრამის მსგავსად.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ანგარიშები და პაროლები</string>

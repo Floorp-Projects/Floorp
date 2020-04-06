@@ -44,6 +44,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">แท็บส่วนตัวใหม่</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">ไซต์เด่น</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">แท็บที่เปิดอยู่</string>
@@ -148,6 +151,9 @@
     <string name="search_widget_text_short">ค้นหา</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">ค้นหาเว็บ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">ค้นหาด้วยเสียง</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -454,6 +460,14 @@
     <string name="history_delete_all_dialog">คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติของคุณ?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">ล้าง</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">คัดลอก</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">แบ่งปัน</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">เปิดในแท็บใหม่</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">เปิดในแท็บส่วนตัว</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">ลบ</string>
     <!-- History multi select title in app bar
@@ -894,6 +908,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">อ่านประกาศความเป็นส่วนตัวของเรา</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">ปิด</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">เริ่มการเรียกดู</string>
 
@@ -1057,6 +1074,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">ไลบรารีที่เราใช้</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">เมนูดีบั๊ก: คลิกซ้าย %1$d ทีเพื่อเปิดใช้งาน</string>
+    <string name="about_debug_menu_toast_done">เปิดใช้งานเมนูดีบั๊ก</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 แท็บ</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1078,6 +1100,8 @@
     <string name="add_to_homescreen_cancel">ยกเลิก</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">เพิ่ม</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ดำเนินการต่อไปยังเว็บไซต์</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ชื่อทางลัด</string>
 

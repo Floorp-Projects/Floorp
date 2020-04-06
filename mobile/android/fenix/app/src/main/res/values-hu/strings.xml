@@ -49,6 +49,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Új privát lap</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Kedvenc oldalak</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Nyitott lapok</string>
@@ -113,6 +116,10 @@
     <string name="browser_menu_open_app_link">Megnyitás alkalmazásban</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Megjelenés</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Nem tud csatlakozni. Felismerhetetlen URL-séma.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -1119,8 +1126,13 @@
     <string name="add_to_homescreen_cancel">Mégse</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Hozzáadás</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Tovább a weblapra</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Parancsikon neve</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Könnyedén hozzáadhatja ezt a weboldalt a telefonja Kezdőképernyőhöz, és azonnal elérheti azt, így gyorsabban böngészve, miközben alkalmazásszerű élményt kap.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Bejelentkezések és jelszavak</string>

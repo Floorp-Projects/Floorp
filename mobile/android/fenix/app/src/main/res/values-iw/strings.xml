@@ -42,6 +42,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">לשונית פרטית חדשה</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">אתרים מובילים</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">לשוניות פתוחות</string>
@@ -1015,8 +1018,13 @@
     <string name="add_to_homescreen_cancel">ביטול</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">הוספה</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">המשך לאתר</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">שם קיצור הדרך</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">באפשרותך להוסיף בקלות אתר זה למסך הבית של הטלפון שלך כדי לקבל גישה מיידית ולגלוש מהר יותר עם חוויה שמדמה שימוש ביישומון.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">כניסות וססמאות</string>

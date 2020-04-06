@@ -881,7 +881,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header">Découvrez %s</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Découvrez les nouveautés</string>
+    <string name="onboarding_whats_new_header1">Nouveautés</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
     <string name="onboarding_whats_new_description">Vous avez des questions sur le nouveau %s ? Vous voulez savoir ce qui a changé ?</string>

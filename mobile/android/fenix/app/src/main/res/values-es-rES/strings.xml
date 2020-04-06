@@ -49,6 +49,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nueva pestaña privada</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Sitios favoritos</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Pestañas abiertas</string>
@@ -114,6 +117,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Apariencia</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">No se puede conectar. Esquema de URL irreconocible.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Idioma seleccionado</string>
@@ -155,6 +162,9 @@
 
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Buscar en la web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Búsqueda por voz</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -205,6 +215,12 @@
     <string name="preferences_add_private_browsing_shortcut">Agregar acceso directo a navegación privada</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accesibilidad</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Servidor personalizado de cuenta de Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Servidor personalizado de Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Servidores de cuenta de Firefox y Sync modificados. Cerrando la aplicación para aplicar los cambios…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Cuenta</string>
     <!-- Preference shown on banner to sign into account -->
@@ -468,6 +484,14 @@
     <string name="history_delete_all_dialog">¿Seguro que quieres limpiar el historial?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Limpiar</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Copiar</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Compartir</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Abrir en una nueva pestaña</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Abrir en una pestaña privada</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Eliminar</string>
     <!-- History multi select title in app bar
@@ -933,6 +957,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lee nuestro aviso de privacidad</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Cerrar</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Comienza a navegar</string>
 
@@ -1096,6 +1123,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Bibliotecas que usamos</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menú de depuración: quedan %1$d clic(s) para activarlo</string>
+    <string name="about_debug_menu_toast_done">Menú de depuración activado</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 pestaña</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1118,8 +1150,13 @@
     <string name="add_to_homescreen_cancel">Cancelar</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Añadir</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Continuar al sitio web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nombre de acceso directo</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Puedes añadir fácilmente este sitio web a tu página de inicio para tener acceso instantáneo y navegar rápidamente como si fuera una aplicación.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inicios de sesión y contraseñas</string>

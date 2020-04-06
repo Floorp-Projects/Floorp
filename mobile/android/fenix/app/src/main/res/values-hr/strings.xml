@@ -43,6 +43,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova privatna kartica</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Najpopularnije stranice</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Otvorene kartice</string>
@@ -106,6 +109,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Izgled</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Nije se moguće povezati. Neprepoznatljiva URL shema.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Odabrani jezik</string>
@@ -146,6 +153,9 @@
     <string name="search_widget_text_short">Traži</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Pretraži internet</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Glasovno pretraživanje</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -195,6 +205,12 @@
     <string name="preferences_add_private_browsing_shortcut">Dodaj prečac za privatno pregledavanje</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Pristupačnost</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Prilagođeni Firefox Account poslužitelj</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Prilagođeni Sync poslužitelj</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync poslužitelj je izmijenjen. Izlaskom iz aplikacije će se primijeniti izmjene…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
     <!-- Preference shown on banner to sign into account -->
@@ -456,6 +472,14 @@
     <string name="history_delete_all_dialog">Sigurno želiš izbrisati povijest?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Izbriši</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopiraj</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Dijeli</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Otvori u novoj kartici</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Otvori u privatnoj kartici</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Izbriši</string>
 
@@ -904,6 +928,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Pročitaj naša pravila privatnosti</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Zatvori</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Započni surfati</string>
 
@@ -1044,6 +1071,9 @@
     <string name="etp_panel_off">Za ovu web-stranicu zaštite su ISKLJUČENE</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Pojačana zaštita od praćenja je ISKLJUČENA za ove web-stranice</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Navigiraj nazad</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Tvoja prava</string>
 
@@ -1066,6 +1096,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Biblioteke koje koristimo</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Izbornik za uklanjanje pogrešaka: %1$d klikova za omogućavanje</string>
+    <string name="about_debug_menu_toast_done">Izbornik za uklanjanje pogrešaka je omogućen</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 kartica</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1087,8 +1122,13 @@
     <string name="add_to_homescreen_cancel">Odustani</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Dodaj</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Nastavi na web stranicu</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Ime prečaca</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Možete jednostavno dodati ovu web stranicu na početni zaslon uređaja kako biste imali brz pristup i pretraživali brže, kao da ste u aplikaciji.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave i lozinke</string>

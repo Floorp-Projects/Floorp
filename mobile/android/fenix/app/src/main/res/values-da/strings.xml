@@ -43,6 +43,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nyt privat faneblad</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Foretrukne websteder</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Åbne faneblade</string>
@@ -59,7 +62,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Rediger bogmærke</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">Håndtering af tilføjelser</string>
+    <string name="browser_menu_add_ons">Tilføjelser</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Her er ingen tilføjelser</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -69,7 +72,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Indstillinger</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Dit bibliotek</string>
+    <string name="browser_menu_library">Arkiv</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop-version</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -83,7 +86,7 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">Nyt faneblad</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">Gem til samling</string>
+    <string name="browser_menu_save_to_collection_2">Gem til samling</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Anmeld problem med webstedet</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -105,6 +108,10 @@
     <string name="browser_menu_open_app_link">Åbn i app</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Udseende</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Ude af stand til at oprette forbindelse. Ikke-genkendelig URL-skema.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -145,6 +152,9 @@
     <string name="search_widget_text_short">Søg</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Søg på nettet</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Stemme-søgning</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -194,6 +204,12 @@
     <string name="preferences_add_private_browsing_shortcut">Tilføj genvej til privat browsing</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Tilgængelighed</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Selvvalgt Firefox-kontoserver</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Selvvalgt synkroniseringsserver</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox-konto/Sync-server ændret. Afslutter applikationen for at anvende ændringerne…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference shown on banner to sign into account -->
@@ -388,7 +404,7 @@
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Søg</string>
     <!-- Library Page Title -->
-    <string name="library_title">Bibliotek</string>
+    <string name="library_title">Arkiv</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Indstillinger</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -447,6 +463,14 @@
     <string name="history_delete_all_dialog">Er du sikker på, at du vil slette din historik?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Ryd</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopier</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Del</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Åbn i nyt faneblad</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Åbn i privat faneblad</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Slet</string>
     <!-- History multi select title in app bar
@@ -591,18 +615,16 @@
     <string name="tracking_protection_on">Til</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Fra</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video og lyd blokeret</string>
-    <!-- DEPRECATED: Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video og lyd tilladt</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Tillad lyd og video</string>
-    <!-- Label that indicates that video and audio autoplay is only allowed over WIFI -->
-    <string name="preference_option_autoplay_allowed_wifi_only">Tillad kun lyd og video via wi-fi</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Bloker kun lyd og video via mobildata</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Lyd og video afspilles kun via wi-fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio">Bloker lyd</string>
+    <string name="preference_option_autoplay_block_audio2">Bloker kun lyd</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked2">Bloker video og lyd</string>
+    <string name="preference_option_autoplay_blocked3">Bloker lyd og video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Til</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -888,6 +910,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Læs vores privatlivspolitik</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Luk</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Afslut rundvisningen</string>
 
@@ -1025,6 +1050,9 @@
     <string name="etp_panel_off">Beskyttelse er slået FRA for dette websted</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Udvidet beskyttelse mod sporing er slået fra for disse websteder</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Gå tilbage</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Dine rettigheder</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1045,6 +1073,11 @@
     <string name="about_licensing_information">Licensinformation</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Biblioteker, som vi bruger</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Debug-menu: %1$d klik tilbage for at aktivere</string>
+    <string name="about_debug_menu_toast_done">Debug-menu aktiveret</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 faneblad</string>
@@ -1067,8 +1100,13 @@
     <string name="add_to_homescreen_cancel">Annuller</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Tilføj</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Fortsæt til websted</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Genvejsnavn</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Du kan nemt føje dette websted til din telefons startskærm for at have hurtig adgang til det og browse hurtigere med en app-lignende oplevelse.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Logins og adgangskoder</string>

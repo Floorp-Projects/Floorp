@@ -48,6 +48,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Yeni gizli sekme</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Sık kullanılanlar</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Açık sekmeler</string>
@@ -111,6 +114,10 @@
     <string name="browser_menu_open_app_link">Uygulamada aç</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Görünüm</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Bağlanılamıyor. Tanınmayan URL şeması.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -204,6 +211,10 @@
     <string name="preferences_add_private_browsing_shortcut">Gizli gezinti kısayolu ekle</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Erişilebilirlik</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Özel Firefox Hesabı sunucusu</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Özel Sync sunucusu</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Hesap</string>
     <!-- Preference shown on banner to sign into account -->
@@ -1097,8 +1108,13 @@
     <string name="add_to_homescreen_cancel">İptal</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Ekle</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Siteye devam et</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Kısayol adı</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Bu siteyi telefonunuzun ana ekranına ekleyerek ona hızlıca erişebilir, site bir uygulamaymış gibi daha hızlı gezinti yapabilirsiniz.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Hesaplar ve parolalar</string>

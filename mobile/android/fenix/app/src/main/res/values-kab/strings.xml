@@ -48,6 +48,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Iccer uslig amaynut</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Ismal ufrinen</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Ldi icarren</string>
@@ -110,6 +113,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_open_app_link">Ldi deg usnas</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Arwes</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Ur izmir ara ad yeqqen. Azenziɣ n tensa URL ur yettwassen ara.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -1116,8 +1123,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="add_to_homescreen_cancel">Sefsex</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Rnu</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Kemmel ɣer usmel web</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Isem n unegzum</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Adtizmireḍ s tifses ad ternuḍ asmel-a web ɣer ugdil agejdan n tiliɣri-ik akken ad tesɛuḍ anekcum askudan daɣen ad tinigeḍ s zreb s termit icuban asnas.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Inekcam d wawalen uffiren</string>
