@@ -302,26 +302,11 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   WrBridge()->BeginTransaction();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  if (aDisplayListBuilder) {
-    aDisplayListBuilder->ComputeDefaultRenderRootRect(size);
-  }
+  wr::LayoutSize contentSize{(float)size.width, (float)size.height};
 
-  wr::RenderRootArray<LayoutDeviceRect> rects;
-  wr::RenderRootArray<wr::LayoutRect> wrRects;
-  for (auto renderRoot : wr::kRenderRoots) {
-    rects[renderRoot] =
-        aDisplayListBuilder
-            ? aDisplayListBuilder->GetRenderRootRect(renderRoot)
-            : LayoutDeviceRect(LayoutDevicePoint(),
-                               renderRoot == wr::RenderRoot::Default
-                                   ? LayoutDeviceSize(size)
-                                   : LayoutDeviceSize());
-    wrRects[renderRoot] = wr::ToLayoutRect(rects[renderRoot]);
-  }
-
-  wr::DisplayListBuilder builder(
-      WrBridge()->GetPipeline(), wrRects[wr::RenderRoot::Default].size,
-      mLastDisplayListSizes[wr::RenderRoot::Default], &mDisplayItemCache);
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize,
+                                 mLastDisplayListSizes[wr::RenderRoot::Default],
+                                 &mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
   wr::usize builderDumpIndex = 0;
@@ -450,7 +435,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
         resourceUpdates.SubQueue(renderRoot)
             .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
                    renderRootDL->mLargeShmems);
-        renderRootDL->mRect = rects[renderRoot];
+        renderRootDL->mRect =
+            LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
         renderRootDL->mScrollData.emplace(std::move(mScrollDatas[renderRoot]));
       } else if (WrBridge()->HasWebRenderParentCommands(renderRoot)) {
         auto renderRootDL = renderRootDLs.AppendElement();

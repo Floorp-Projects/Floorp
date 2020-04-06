@@ -1266,10 +1266,6 @@ void nsDisplayListBuilder::BeginFrame() {
   mInFilter = false;
   mSyncDecodeImages = false;
 
-  for (auto& renderRootRect : mRenderRootRects) {
-    renderRootRect = LayoutDeviceRect();
-  }
-
   if (!mBuildCaret) {
     return;
   }
@@ -1574,16 +1570,6 @@ uint32_t nsDisplayListBuilder::GetImageDecodeFlags() const {
     flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   return flags;
-}
-
-void nsDisplayListBuilder::ComputeDefaultRenderRootRect(
-    LayoutDeviceIntSize aClientSize) {
-  LayoutDeviceIntRegion cutout;
-  LayoutDeviceIntRect clientRect(LayoutDeviceIntPoint(), aClientSize);
-  cutout.OrWith(clientRect);
-
-  mRenderRootRects[mozilla::wr::RenderRoot::Default] =
-      LayoutDeviceRect(cutout.GetBounds());
 }
 
 void nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
@@ -3793,27 +3779,9 @@ bool nsDisplaySolidColor::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
       mBounds, mFrame->PresContext()->AppUnitsPerDevPixel());
-
-  // There is one big solid color behind everything - just split it out if it
-  // intersects multiple render roots
-  if (aBuilder.GetRenderRoot() == wr::RenderRoot::Default) {
-    for (auto renderRoot : wr::kRenderRoots) {
-      if (aBuilder.HasSubBuilder(renderRoot)) {
-        LayoutDeviceRect renderRootRect =
-            aDisplayListBuilder->GetRenderRootRect(renderRoot);
-        wr::LayoutRect intersection =
-            wr::ToLayoutRect(bounds.Intersect(renderRootRect));
-        aBuilder.SubBuilder(renderRoot)
-            .PushRect(intersection, intersection, !BackfaceIsHidden(),
-                      wr::ToColorF(ToDeviceColor(mColor)));
-      }
-    }
-  } else {
-    wr::LayoutRect r = wr::ToLayoutRect(bounds);
-
-    aBuilder.PushRect(r, r, !BackfaceIsHidden(),
-                      wr::ToColorF(ToDeviceColor(mColor)));
-  }
+  wr::LayoutRect r = wr::ToLayoutRect(bounds);
+  aBuilder.PushRect(r, r, !BackfaceIsHidden(),
+                    wr::ToColorF(ToDeviceColor(mColor)));
 
   return true;
 }
