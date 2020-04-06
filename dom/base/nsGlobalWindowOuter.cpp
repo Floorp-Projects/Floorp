@@ -7617,8 +7617,6 @@ mozilla::dom::TabGroup* nsGlobalWindowOuter::MaybeTabGroupOuter() {
     RefPtr<BrowsingContext> openerBC = GetBrowsingContext()->GetOpener();
     nsPIDOMWindowOuter* opener = openerBC ? openerBC->GetDOMWindow() : nullptr;
     nsPIDOMWindowOuter* parent = GetInProcessScriptableParentOrNull();
-    MOZ_ASSERT(!parent || !opener,
-               "Only one of parent and opener may be provided");
 
     mozilla::dom::TabGroup* toJoin = nullptr;
     if (!GetDocShell()) {
