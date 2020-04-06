@@ -41,7 +41,7 @@ def android_sdk_root(value):
 
 @depends('--help')
 def android_sdk_version(_):
-    return namespace(build_tools_versions=['28.0.3'], target_sdk_version='29')
+    return namespace(build_tools_version='29.0.3', target_sdk_version='29')
 
 
 @depends(android_sdk_root, android_sdk_version)
@@ -50,17 +50,16 @@ def android_sdk_version(_):
 @imports(_from='os.path', _import='isdir')
 def android_build_tools(sdk_root, sdk_version):
     android_build_tools_base = os.path.join(sdk_root, 'build-tools')
-    versions = sdk_version.build_tools_versions
-    for version in versions:
-        if isdir(os.path.join(android_build_tools_base, version)):
-            tools = os.path.join(android_build_tools_base, version)
-            for zipalign in ('zipalign', 'zipalign.exe'):
-                if exists(os.path.join(tools, zipalign)):
-                    return [tools]
+    version = sdk_version.build_tools_version
+    if isdir(os.path.join(android_build_tools_base, version)):
+        tools = os.path.join(android_build_tools_base, version)
+        for zipalign in ('zipalign', 'zipalign.exe'):
+            if exists(os.path.join(tools, zipalign)):
+                return [tools]
 
     die("You must install the Android build-tools version %s.  "
         "Try |mach bootstrap|.  (Looked for %s/%s)" %
-        (versions[0], android_build_tools_base, versions[0]))
+        (version, android_build_tools_base, version))
 
 
 @depends(android_sdk_root)
@@ -114,5 +113,6 @@ check_android_tools('emulator', android_emulator_path)
 set_config('ANDROID_SDK_ROOT', android_sdk_root)
 set_config('ANDROID_TOOLS', android_tools)
 
+set_config('ANDROID_BUILD_TOOLS_VERSION', android_sdk_version.build_tools_version)
 set_config('ANDROID_TARGET_SDK', android_sdk_version.target_sdk_version)
 add_old_configure_assignment('ANDROID_TARGET_SDK', android_sdk_version.target_sdk_version)
