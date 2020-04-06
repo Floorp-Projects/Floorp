@@ -55,6 +55,28 @@ bugbug_debug:
         env:
             TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.debug
 
+bugbug_all_low:
+    description: Runs the bugbug.all optimization strategy (with a low confidence threshold) instead of the default.
+    treeherder:
+        symbol: SS(bugbug_all_low)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_all_low
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.all_low
+
+bugbug_all_high:
+    description: Runs the bugbug.all optimization strategy (with a high confidence threshold) instead of the default.
+    treeherder:
+        symbol: SS(bugbug_all_high)
+    index:
+        product: source
+        job-name: shadow-scheduler-bugbug_all_high
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:experimental.bugbug.all_high
+
 seta:
     description: Runs the SETA optimization strategy instead of the default.
     treeherder:
