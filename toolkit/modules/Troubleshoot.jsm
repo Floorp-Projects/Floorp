@@ -388,6 +388,10 @@ var dataProviders = {
       }
     } catch (e) {}
 
+    if (Services.io.socketProcessLaunched) {
+      remoteTypes.socket = 1;
+    }
+
     let data = {
       remoteTypes,
       maxWebContentProcesses: Services.appinfo.maxWebProcessCount,
