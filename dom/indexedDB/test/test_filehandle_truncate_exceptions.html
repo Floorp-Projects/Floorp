@@ -27,6 +27,14 @@
     info("Expecting TypeError on truncating to a negative length that converts to UINT64_MAX implicitly");
     let message = assertThrowsInstanceOf(() => { fileHandle.truncate(-1); }, TypeError);
     is(message, "IDBFileHandle.truncate: UINT64_MAX is not a valid size", "Correct message");
+
+    info ("Attempt to truncate to a size larger than the current size should fail.");
+    // XXX Expect a more specific error here?
+    await expectingError(fileHandle.truncate(10000000), "UnknownError");
+
+    info("Still the state should be consistent and we should be able to truncate to a valid size after this.");
+    // This wasn't always the case, see Bug 1626973
+    await expectingSuccess(fileHandle.truncate(0));
   }
   </script>
   <script type="text/javascript" src="file.js"></script>
