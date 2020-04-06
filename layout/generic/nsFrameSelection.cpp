@@ -339,14 +339,6 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
 
   // This should only ever be initialized on the main thread, so we are OK here.
   MOZ_ASSERT(NS_IsMainThread());
-  static bool prefCachesInitialized = false;
-  if (!prefCachesInitialized) {
-    prefCachesInitialized = true;
-
-    Preferences::AddBoolVarCache(&sSelectionEventsOnTextControlsEnabled,
-                                 "dom.select_events.textcontrols.enabled",
-                                 false);
-  }
 
   mAccessibleCaretEnabled = aAccessibleCaretEnabled;
   if (mAccessibleCaretEnabled) {
@@ -355,9 +347,9 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
   }
 
   bool plaintextControl = (aLimiter != nullptr);
-  bool initSelectEvents = plaintextControl
-                              ? sSelectionEventsOnTextControlsEnabled
-                              : StaticPrefs::dom_select_events_enabled();
+  bool initSelectEvents =
+      plaintextControl ? StaticPrefs::dom_select_events_textcontrols_enabled()
+                       : StaticPrefs::dom_select_events_enabled();
 
   Document* doc = aPresShell->GetDocument();
   if (initSelectEvents || (doc && doc->NodePrincipal()->IsSystemPrincipal())) {
@@ -642,8 +634,6 @@ static nsINode* GetCellParent(nsINode* aDomNode) {
   }
   return nullptr;
 }
-
-bool nsFrameSelection::sSelectionEventsOnTextControlsEnabled = false;
 
 nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
                                      bool aContinueSelection,
