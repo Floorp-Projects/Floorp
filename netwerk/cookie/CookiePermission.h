@@ -2,13 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCookiePermission_h__
-#define nsCookiePermission_h__
+#ifndef mozilla_net_CookiePermission_h
+#define mozilla_net_CookiePermission_h
 
 #include "nsICookiePermission.h"
 #include "nsPermissionManager.h"
 
-class nsCookiePermission final : public nsICookiePermission {
+namespace mozilla {
+namespace net {
+
+class CookiePermission final : public nsICookiePermission {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIEPERMISSION
@@ -19,11 +22,14 @@ class nsCookiePermission final : public nsICookiePermission {
   bool Init();
 
  private:
-  ~nsCookiePermission() = default;
+  ~CookiePermission() = default;
 
   bool EnsureInitialized() { return (mPermMgr != nullptr) || Init(); };
 
   RefPtr<nsPermissionManager> mPermMgr;
 };
+
+}  // namespace net
+}  // namespace mozilla
 
 #endif

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCookiePermission.h"
+#include "mozilla/net/CookiePermission.h"
 
 #include "nsICookie.h"
 #include "nsICookieService.h"
@@ -22,30 +22,30 @@
 #include "nsContentUtils.h"
 
 /****************************************************************
- ************************ nsCookiePermission ********************
+ ************************ CookiePermission **********************
  ****************************************************************/
 
-using namespace mozilla;
-using namespace mozilla::net;
+namespace mozilla {
+namespace net {
 
 static const bool kDefaultPolicy = true;
 
 namespace {
-mozilla::StaticRefPtr<nsCookiePermission> gSingleton;
+mozilla::StaticRefPtr<CookiePermission> gSingleton;
 }
 
-NS_IMPL_ISUPPORTS(nsCookiePermission, nsICookiePermission)
+NS_IMPL_ISUPPORTS(CookiePermission, nsICookiePermission)
 
 // static
-already_AddRefed<nsICookiePermission> nsCookiePermission::GetOrCreate() {
+already_AddRefed<nsICookiePermission> CookiePermission::GetOrCreate() {
   if (!gSingleton) {
-    gSingleton = new nsCookiePermission();
+    gSingleton = new CookiePermission();
     ClearOnShutdown(&gSingleton);
   }
   return do_AddRef(gSingleton);
 }
 
-bool nsCookiePermission::Init() {
+bool CookiePermission::Init() {
   // Initialize nsPermissionManager and fetch relevant prefs. This is only
   // required for some methods on nsICookiePermission, so it should be done
   // lazily.
@@ -55,9 +55,9 @@ bool nsCookiePermission::Init() {
 }
 
 NS_IMETHODIMP
-nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
-                                 nsICookie* aCookie, bool* aIsSession,
-                                 int64_t* aExpiry, bool* aResult) {
+CookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
+                               nsICookie* aCookie, bool* aIsSession,
+                               int64_t* aExpiry, bool* aResult) {
   NS_ASSERTION(aURI, "null uri");
 
   *aResult = kDefaultPolicy;
@@ -110,3 +110,6 @@ nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
 
   return NS_OK;
 }
+
+}  // namespace net
+}  // namespace mozilla
