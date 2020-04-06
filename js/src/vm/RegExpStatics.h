@@ -243,7 +243,7 @@ inline void RegExpStatics::updateLazily(JSContext* cx, JSLinearString* input,
   BarrieredSetPair<JSString, JSLinearString>(cx->zone(), pendingInput, input,
                                              matchesInput, input);
 
-  lazySource = shared->source;
+  lazySource = shared->getSource();
   lazyFlags = shared->flags;
   lazyIndex = lastIndex;
   pendingLazyEvaluation = 1;
