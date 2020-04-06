@@ -14,7 +14,6 @@
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/WindowContext.h"
 #include "nsRefPtrHashtable.h"
@@ -77,13 +76,9 @@ class WindowGlobalParent final : public WindowContext,
   already_AddRefed<JSWindowActorParent> GetActor(const nsAString& aName,
                                                  ErrorResult& aRv);
 
-  // Get the ContentParent which hosts this actor. Returns |nullptr| if the
-  // actor has been torn down, or is in-process.
-  ContentParent* GetContentParent();
-
-  // Get the BrowserParent which hosts this actor. Returns |nullptr| if the
-  // actor hasn't been fully initialized, or is in-process.
-  BrowserParent* GetBrowserParent() const { return mBrowserParent; }
+  // Get this actor's manager if it is not an in-process actor. Returns
+  // |nullptr| if the actor has been torn down, or is in-process.
+  already_AddRefed<BrowserParent> GetBrowserParent();
 
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData,
@@ -148,8 +143,9 @@ class WindowGlobalParent final : public WindowContext,
   // from outside of the IPC constructors.
   WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);
 
-  // Initialize the mFrameLoader fields for a created WindowGlobalParent.
-  void Init(const WindowGlobalInit& aInit, BrowserParent* aBrowserParent);
+  // Initialize the mFrameLoader fields for a created WindowGlobalParent. Must
+  // be called after setting the Manager actor.
+  void Init(const WindowGlobalInit& aInit);
 
   nsIGlobalObject* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
@@ -163,6 +159,8 @@ class WindowGlobalParent final : public WindowContext,
           aReason = Nothing());
 
   ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }
+
+  nsIContentParent* GetContentParent();
 
  protected:
   const nsAString& GetRemoteType() override;
@@ -204,8 +202,6 @@ class WindowGlobalParent final : public WindowContext,
 
  private:
   ~WindowGlobalParent();
-
-  RefPtr<BrowserParent> mBrowserParent;
 
   // NOTE: This document principal doesn't reflect possible |document.domain|
   // mutations which may have been made in the actual document.

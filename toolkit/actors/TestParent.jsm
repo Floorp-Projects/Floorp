@@ -43,20 +43,4 @@ class TestParent extends JSWindowActorParent {
   show() {
     return "TestParent";
   }
-
-  willDestroy() {
-    Services.obs.notifyObservers(
-      this,
-      "test-js-window-actor-parent-willdestroy",
-      true
-    );
-  }
-
-  didDestroy() {
-    Services.obs.notifyObservers(
-      this,
-      "test-js-window-actor-parent-diddestroy",
-      true
-    );
-  }
 }
