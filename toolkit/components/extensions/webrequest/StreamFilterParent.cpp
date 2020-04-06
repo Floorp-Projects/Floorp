@@ -203,14 +203,17 @@ void StreamFilterParent::Broken() {
   switch (mState) {
     case State::Initialized:
     case State::TransferringData:
-    case State::Suspended:
+    case State::Suspended: {
       mState = State::Disconnecting;
-      if (mChannel) {
-        mChannel->Cancel(NS_ERROR_FAILURE);
-      }
+      RefPtr<StreamFilterParent> self(this);
+      RunOnMainThread(FUNC, [=] {
+        if (self->mChannel) {
+          self->mChannel->Cancel(NS_ERROR_FAILURE);
+        }
+      });
 
       FinishDisconnect();
-      break;
+    } break;
 
     default:
       break;
@@ -381,12 +384,14 @@ nsresult StreamFilterParent::Write(Data& aData) {
 
 NS_IMETHODIMP
 StreamFilterParent::GetName(nsACString& aName) {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   return mChannel->GetName(aName);
 }
 
 NS_IMETHODIMP
 StreamFilterParent::GetStatus(nsresult* aStatus) {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   return mChannel->GetStatus(aStatus);
 }
@@ -407,18 +412,21 @@ StreamFilterParent::IsPending(bool* aIsPending) {
 
 NS_IMETHODIMP
 StreamFilterParent::Cancel(nsresult aResult) {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   return mChannel->Cancel(aResult);
 }
 
 NS_IMETHODIMP
 StreamFilterParent::Suspend() {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   return mChannel->Suspend();
 }
 
 NS_IMETHODIMP
 StreamFilterParent::Resume() {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   return mChannel->Resume();
 }
@@ -436,6 +444,7 @@ StreamFilterParent::SetLoadGroup(nsILoadGroup* aLoadGroup) {
 
 NS_IMETHODIMP
 StreamFilterParent::GetLoadFlags(nsLoadFlags* aLoadFlags) {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   MOZ_TRY(mChannel->GetLoadFlags(aLoadFlags));
   *aLoadFlags &= ~nsIChannel::LOAD_DOCUMENT_URI;
@@ -444,6 +453,7 @@ StreamFilterParent::GetLoadFlags(nsLoadFlags* aLoadFlags) {
 
 NS_IMETHODIMP
 StreamFilterParent::SetLoadFlags(nsLoadFlags aLoadFlags) {
+  AssertIsMainThread();
   MOZ_ASSERT(mChannel);
   return mChannel->SetLoadFlags(aLoadFlags);
 }
