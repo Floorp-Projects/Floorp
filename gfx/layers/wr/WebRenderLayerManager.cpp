@@ -427,21 +427,16 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     nsTArray<RenderRootDisplayListData> renderRootDLs;
     for (auto renderRoot : wr::kRenderRoots) {
-      if (builder.GetSendSubBuilderDisplayList(renderRoot)) {
-        auto renderRootDL = renderRootDLs.AppendElement();
-        renderRootDL->mRenderRoot = renderRoot;
-        builder.Finalize(*renderRootDL);
-        mLastDisplayListSizes[renderRoot] = renderRootDL->mDL->mCapacity;
-        resourceUpdates.SubQueue(renderRoot)
-            .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
-                   renderRootDL->mLargeShmems);
-        renderRootDL->mRect =
-            LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
-        renderRootDL->mScrollData.emplace(std::move(mScrollDatas[renderRoot]));
-      } else if (WrBridge()->HasWebRenderParentCommands(renderRoot)) {
-        auto renderRootDL = renderRootDLs.AppendElement();
-        renderRootDL->mRenderRoot = renderRoot;
-      }
+      auto renderRootDL = renderRootDLs.AppendElement();
+      renderRootDL->mRenderRoot = renderRoot;
+      builder.Finalize(*renderRootDL);
+      mLastDisplayListSizes[renderRoot] = renderRootDL->mDL->mCapacity;
+      resourceUpdates.SubQueue(renderRoot)
+          .Flush(renderRootDL->mResourceUpdates, renderRootDL->mSmallShmems,
+                 renderRootDL->mLargeShmems);
+      renderRootDL->mRect =
+          LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
+      renderRootDL->mScrollData.emplace(std::move(mScrollDatas[renderRoot]));
     }
 
     WrBridge()->EndTransaction(renderRootDLs, mLatestTransactionId,
