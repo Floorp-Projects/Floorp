@@ -1266,7 +1266,7 @@ add_task(async function test_label_not_text() {
   is(
     selectPopup.children[1].label,
     "Element Text",
-    "Uses the text if the label is empty, like HTMLOptionElement::GetRenderedLabel.",
+    "Uses the text if the label is empty, like HTMLOptionElement::GetRenderedLabel."
   );
 
   BrowserTestUtils.removeTab(tab);
