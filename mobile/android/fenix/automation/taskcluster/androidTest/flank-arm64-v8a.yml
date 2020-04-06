@@ -34,9 +34,7 @@ gcloud:
   performance-metrics: true
 
   device:
-   - model: walleye 
-     version: 26
-   - model: walleye 
+   - model: Pixel2
      version: 28
 
 flank:

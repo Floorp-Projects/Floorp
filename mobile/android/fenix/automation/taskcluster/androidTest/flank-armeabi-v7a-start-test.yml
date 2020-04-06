@@ -37,9 +37,7 @@ gcloud:
    - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
 
   device:
-   - model: sailfish
-     version: 25
-   - model: sailfish
+   - model: Pixel2
      version: 28
 
 flank:
