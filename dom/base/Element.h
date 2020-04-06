@@ -217,6 +217,11 @@ class Element : public FragmentOrElement {
   int32_t TabIndex();
 
   /**
+   * Get the parsed value of tabindex attribute.
+   */
+  Maybe<int32_t> GetTabIndexAttrValue();
+
+  /**
    * Set tabIndex value to this element.
    */
   void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError);

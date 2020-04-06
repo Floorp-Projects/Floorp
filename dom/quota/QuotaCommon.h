@@ -163,6 +163,10 @@ void StringifyTableKeys(const T& aTable, nsACString& aResult) {
   }
 }
 
+#ifdef XP_WIN
+void CacheUseDOSDevicePathSyntaxPrefValue();
+#endif
+
 Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath);
 
 class IntString : public nsAutoString {

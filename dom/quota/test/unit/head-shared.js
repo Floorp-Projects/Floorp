@@ -97,12 +97,18 @@ function continueToNextStepSync() {
 
 function enableTesting() {
   SpecialPowers.setBoolPref("dom.quotaManager.testing", true);
+  if (Services.appinfo.OS === "WINNT") {
+    SpecialPowers.setBoolPref("dom.quotaManager.useDOSDevicePathSyntax", true);
+  }
   SpecialPowers.setBoolPref("dom.simpleDB.enabled", true);
   SpecialPowers.setBoolPref("dom.storage.next_gen", true);
 }
 
 function resetTesting() {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
+  if (Services.appinfo.OS === "WINNT") {
+    SpecialPowers.clearUserPref("dom.quotaManager.useDOSDevicePathSyntax");
+  }
   SpecialPowers.clearUserPref("dom.simpleDB.enabled");
   SpecialPowers.clearUserPref("dom.storage.next_gen");
 }

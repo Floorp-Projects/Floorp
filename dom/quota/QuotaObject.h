@@ -32,7 +32,7 @@ class QuotaObject {
 
   const nsAString& Path() const { return mPath; }
 
-  bool MaybeUpdateSize(int64_t aSize, bool aTruncate);
+  [[nodiscard]] bool MaybeUpdateSize(int64_t aSize, bool aTruncate);
 
   bool IncreaseSize(int64_t aDelta);
 

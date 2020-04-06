@@ -2,7 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-#include downloadsStrings.inc.xhtml
 
 <commandset>
   <command id="downloadsCmd_doDefault"
@@ -38,7 +37,7 @@
      readers, we use a label on the panel instead of the anchor because the
      panel can also be displayed without an anchor. -->
 <panel id="downloadsPanel"
-       aria-label="&downloads.title;"
+       data-l10n-id="downloads-panel"
        class="panel-no-padding"
        role="group"
        type="arrow"
@@ -47,6 +46,11 @@
        onpopupshown="DownloadsPanel.onPopupShown(event);"
        onpopuphidden="DownloadsPanel.onPopupHidden(event);"
        hidden="true">
+
+  <linkset>
+    <html:link rel="localization" href="browser/downloads.ftl" />
+  </linkset>
+
   <!-- The following popup menu should be a child of the panel element,
        otherwise flickering may occur when the cursor is moved over the area
        of a disabled menu item that overlaps the panel.  See bug 492960. -->
@@ -56,48 +60,39 @@
              class="download-state">
     <menuitem command="downloadsCmd_pauseResume"
               class="downloadPauseMenuItem"
-              label="&cmd.pause.label;"
-              accesskey="&cmd.pause.accesskey;"/>
+              data-l10n-id="downloads-cmd-pause"/>
     <menuitem command="downloadsCmd_pauseResume"
               class="downloadResumeMenuItem"
-              label="&cmd.resume.label;"
-              accesskey="&cmd.resume.accesskey;"/>
+              data-l10n-id="downloads-cmd-resume"/>
     <menuitem command="downloadsCmd_unblock"
               class="downloadUnblockMenuItem"
-              label="&cmd.unblock2.label;"
-              accesskey="&cmd.unblock2.accesskey;"/>
+              data-l10n-id="downloads-cmd-unblock"/>
     <menuitem command="downloadsCmd_show"
               class="downloadShowMenuItem"
-#ifdef XP_MACOSX
-              label="&cmd.showMac.label;"
-              accesskey="&cmd.showMac.accesskey;"
-#else
-              label="&cmd.show.label;"
-              accesskey="&cmd.show.accesskey;"
-#endif
+  #ifdef XP_MACOSX
+              data-l10n-id="downloads-cmd-show-mac"
+  #else
+              data-l10n-id="downloads-cmd-show"
+  #endif
               />
 
     <menuseparator class="downloadCommandsSeparator"/>
 
     <menuitem command="downloadsCmd_openReferrer"
-              label="&cmd.goToDownloadPage.label;"
-              accesskey="&cmd.goToDownloadPage.accesskey;"/>
+              data-l10n-id="downloads-cmd-go-to-download-page"/>
     <menuitem command="downloadsCmd_copyLocation"
-              label="&cmd.copyDownloadLink.label;"
-              accesskey="&cmd.copyDownloadLink.accesskey;"/>
+              data-l10n-id="downloads-cmd-copy-download-link"/>
 
     <menuseparator/>
 
     <menuitem command="cmd_delete"
               class="downloadRemoveFromHistoryMenuItem"
-              label="&cmd.removeFromHistory.label;"
-              accesskey="&cmd.removeFromHistory.accesskey;"/>
+              data-l10n-id="downloads-cmd-remove-from-history"/>
     <menuitem command="downloadsCmd_clearList"
-              label="&cmd.clearList2.label;"
-              accesskey="&cmd.clearList2.accesskey;"/>
+              data-l10n-id="downloads-cmd-clear-list"/>
     <menuitem command="downloadsCmd_clearDownloads"
               hidden="true"
-              label="&cmd.clearDownloads.label;"/>
+              data-l10n-id="downloads-cmd-clear-downloads"/>
   </menupopup>
 
   <panelmultiview id="downloadsPanel-multiView"
@@ -106,14 +101,15 @@
     <panelview id="downloadsPanel-mainView">
       <vbox class="panel-view-body-unscrollable">
         <richlistbox id="downloadsListBox"
-                     style="width: &downloads.width;"
+                     data-l10n-id="downloads-panel-list"
+                     data-l10n-attrs="style"
                      context="downloadsContextMenu"
                      onmouseover="DownloadsView.onDownloadMouseOver(event);"
                      onmouseout="DownloadsView.onDownloadMouseOut(event);"
                      oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
                      ondragstart="DownloadsView.onDownloadDragStart(event);"/>
         <description id="emptyDownloads"
-                     value="&downloadsPanelEmpty.label;"/>
+                     data-l10n-id="downloads-panel-empty"/>
       </vbox>
       <vbox id="downloadsFooter">
         <stack>
@@ -137,9 +133,8 @@
           <hbox id="downloadsFooterButtons"
                 class="panel-footer">
             <button id="downloadsHistory"
+                    data-l10n-id="downloads-history"
                     class="downloadsPanelFooterButton"
-                    label="&downloadsHistory.label;"
-                    accesskey="&downloadsHistory.accesskey;"
                     flex="1"
                     oncommand="DownloadsPanel.showDownloadsHistory();"
                     pack="start"/>
@@ -149,9 +144,9 @@
     </panelview>
 
     <panelview id="downloadsPanel-blockedSubview"
+               data-l10n-id="downloads-details"
                descriptionheightworkaround="true"
-               class="PanelUI-subView"
-               title="&downloadDetails.label;">
+               class="PanelUI-subView">
       <vbox class="panel-view-body-unscrollable">
         <description id="downloadsPanel-blockedSubview-title"/>
         <description id="downloadsPanel-blockedSubview-details1"/>
@@ -175,8 +170,8 @@
     <panelview id="PanelUI-downloads" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-library-downloads-show-button"
+                       data-l10n-id="downloads-cmd-show-downloads"
                        class="subviewbutton subviewbutton-iconic"
-                       label="&cmd.showDownloads.label;"
                        closemenu="none"
                        oncommand="DownloadsSubview.onShowDownloads(this);"/>
         <toolbarseparator/>
@@ -189,8 +184,8 @@
         </toolbaritem>
       </vbox>
       <toolbarbutton id="PanelUI-downloadsMore"
+                     data-l10n-id="downloads-history"
                      class="panel-subview-footer subviewbutton"
-                     label="&downloadsHistory.label;"
                      oncommand="BrowserDownloadsUI(); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 

@@ -166,7 +166,7 @@ class gfxSkipCharsIterator {
   /**
    * Return true if this iterator is properly initialized and usable.
    */
-  bool IsInitialized() { return mSkipChars != nullptr; }
+  bool IsInitialized() const { return mSkipChars != nullptr; }
 
   /**
    * Set the iterator to aOriginalStringOffset in the original string.

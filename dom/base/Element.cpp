@@ -341,10 +341,19 @@ void Element::UpdateEditableState(bool aNotify) {
   }
 }
 
-int32_t Element::TabIndex() {
-  const nsAttrValue* attrVal = mAttrs.GetAttr(nsGkAtoms::tabindex);
+Maybe<int32_t> Element::GetTabIndexAttrValue() {
+  const nsAttrValue* attrVal = GetParsedAttr(nsGkAtoms::tabindex);
   if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
-    return attrVal->GetIntegerValue();
+    return Some(attrVal->GetIntegerValue());
+  }
+
+  return Nothing();
+}
+
+int32_t Element::TabIndex() {
+  Maybe<int32_t> attrVal = GetTabIndexAttrValue();
+  if (attrVal.isSome()) {
+    return attrVal.value();
   }
 
   return TabIndexDefault();

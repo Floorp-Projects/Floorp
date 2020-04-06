@@ -14,7 +14,6 @@
 #endif
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/RefPtr.h"

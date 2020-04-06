@@ -164,7 +164,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   warmUpData_.initJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
-  // We have a JitScript so we can set the script's jitCodeRaw_ pointer to the
+  // We have a JitScript so we can set the script's jitCodeRaw pointer to the
   // Baseline Interpreter code.
   updateJitCodeRaw(cx->runtime());
 

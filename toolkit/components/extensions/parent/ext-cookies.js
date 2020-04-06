@@ -95,7 +95,7 @@ const checkSetCookiePermissions = (extension, uri, cookie) => {
   // follows. So instead, we follow the rules used by the cookie
   // service.
   //
-  // See source/netwerk/cookie/nsCookieService.cpp, in particular
+  // See source/netwerk/cookie/CookieService.cpp, in particular
   // CheckDomain() and SetCookieInternal().
 
   if (uri.scheme != "http" && uri.scheme != "https") {
@@ -257,7 +257,7 @@ const query = function*(detailsIn, props, context) {
     );
   }
 
-  // Based on nsCookieService::GetCookieStringInternal
+  // Based on CookieService::GetCookieStringInternal
   function matches(cookie) {
     function domainMatches(host) {
       return (

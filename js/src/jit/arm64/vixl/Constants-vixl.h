@@ -2665,6 +2665,30 @@ enum UnallocatedOp {
   UnallocatedFMask = 0x00000000
 };
 
+// Instruction bit pattern for an undefined instruction, that will trigger a
+// SIGILL at runtime.
+//
+// A couple of strategies we can use here. There are no unencoded
+// instructions in the instruction set that are guaranteed to remain that
+// way.  However there are some currently (as of 2018) unencoded
+// instructions that are good candidates.
+//
+// Ideally, unencoded instructions should be non-destructive to the register
+// state, and should be unencoded at all exception levels.
+//
+// At the trap the pc will hold the address of the offending instruction.
+//
+// Some candidates for unencoded instructions:
+//
+// 0xd4a00000 (essentially dcps0, a good one since it is nonsensical and may
+//             remain unencoded in the future for that reason)
+// 0x33000000 (bfm variant)
+// 0xd67f0000 (br variant)
+// 0x5ac00c00 (rbit variant)
+//
+// This instruction is "dcps0", also has 16-bit payload if needed.
+static constexpr uint32_t UNDEFINED_INST_PATTERN = 0xd4a00000;
+
 }  // namespace vixl
 
 #endif  // VIXL_A64_CONSTANTS_A64_H_

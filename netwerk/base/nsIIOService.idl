@@ -252,6 +252,11 @@ interface nsIIOService : nsISupports
                                                in nsIPrincipal aTriggeringPrincipal,
                                                in unsigned long aSecurityFlags,
                                                in unsigned long aContentPolicyType);
+
+    /**
+     * Return true if socket process is launched.
+     */
+    readonly attribute boolean socketProcessLaunched;
 };
 
 %{C++

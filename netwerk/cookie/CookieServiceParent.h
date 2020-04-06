@@ -8,15 +8,16 @@
 
 #include "mozilla/net/PCookieServiceParent.h"
 
-class nsCookie;
 class nsICookie;
-class nsCookieService;
 namespace mozilla {
 class OriginAttributes;
 }
 
 namespace mozilla {
 namespace net {
+
+class Cookie;
+class CookieService;
 
 class CookieServiceParent : public PCookieServiceParent {
   friend class PCookieServiceParent;
@@ -44,15 +45,10 @@ class CookieServiceParent : public PCookieServiceParent {
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvSetCookieString(
-      const URIParams& aHost, const Maybe<URIParams>& aChannelURI,
-      const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
-      const bool& aIsThirdPartyTrackingResource,
-      const bool& aIsThirdPartySocialTrackingResource,
-      const bool& aFirstPartyStorageAccessGranted,
-      const uint32_t& aRejectedReason, const OriginAttributes& aAttrs,
-      const nsCString& aCookieString, const nsCString& aServerTime,
-      const bool& aFromHttp);
+  mozilla::ipc::IPCResult RecvSetCookies(
+      const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+      const URIParams& aHost, bool aFromHttp,
+      const nsTArray<CookieStruct>& aCookies);
 
   mozilla::ipc::IPCResult RecvPrepareCookieList(
       const URIParams& aHost, const bool& aIsForeign,
@@ -62,11 +58,10 @@ class CookieServiceParent : public PCookieServiceParent {
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
       const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs);
 
-  void SerialializeCookieList(const nsTArray<nsCookie*>& aFoundCookieList,
-                              nsTArray<CookieStruct>& aCookiesList,
-                              nsIURI* aHostURI);
+  static void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
+                                     nsTArray<CookieStruct>& aCookiesList);
 
-  RefPtr<nsCookieService> mCookieService;
+  RefPtr<CookieService> mCookieService;
   bool mProcessingCookie;
 };
 

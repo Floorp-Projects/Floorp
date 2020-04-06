@@ -18,26 +18,30 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_cookie'
 
-EXPORTS += [
-    'nsCookiePermission.h',
-]
 
 EXPORTS.mozilla.net = [
     'CookieJarSettings.h',
+    'CookieKey.h',
+    'CookiePermission.h',
+    'CookiePersistentStorage.h',
+    'CookiePrivateStorage.h',
+    'CookieService.h',
     'CookieServiceChild.h',
     'CookieServiceParent.h',
-    'nsCookieKey.h',
+    'CookieStorage.h',
 ]
 UNIFIED_SOURCES += [
+    'Cookie.cpp',
+    'CookieCommons.cpp',
     'CookieJarSettings.cpp',
+    'CookieLogging.cpp',
+    'CookiePermission.cpp',
+    'CookiePersistentStorage.cpp',
+    'CookiePrivateStorage.cpp',
+    'CookieService.cpp',
     'CookieServiceChild.cpp',
     'CookieServiceParent.cpp',
-    'nsCookie.cpp',
-    'nsCookiePermission.cpp',
-]
-# nsCookieService.cpp can't be unified because of symbol conflicts
-SOURCES += [
-    'nsCookieService.cpp',
+    'CookieStorage.cpp',
 ]
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell.ini',
