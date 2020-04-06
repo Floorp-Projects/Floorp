@@ -7,12 +7,14 @@
 
 #include <stddef.h>
 
-#include "nsError.h"
+#include "HTMLEditUtils.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"
+#include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsINode.h"
 #include "nsISupportsBase.h"
@@ -76,7 +78,7 @@ nsresult TypeInState::UpdateSelState(Selection* aSelection) {
   return NS_OK;
 }
 
-void TypeInState::OnSelectionChange(Selection& aSelection) {
+void TypeInState::OnSelectionChange(Selection& aSelection, int16_t aReason) {
   // XXX: Selection currently generates bogus selection changed notifications
   // XXX: (bug 140303). It can notify us when the selection hasn't actually
   // XXX: changed, and it notifies us more than once for the same change.
@@ -87,6 +89,7 @@ void TypeInState::OnSelectionChange(Selection& aSelection) {
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
 
+  bool unlink = false;
   if (aSelection.IsCollapsed() && aSelection.RangeCount()) {
     EditorRawDOMPoint selectionStartPoint(
         EditorBase::GetStartPoint(aSelection));
@@ -99,6 +102,33 @@ void TypeInState::OnSelectionChange(Selection& aSelection) {
       return;
     }
 
+    // If caret comes from outside of <a href> element, we should clear "link"
+    // style after reset.
+    if (aReason == nsISelectionListener::KEYPRESS_REASON &&
+        mLastSelectionPoint.IsSet() && selectionStartPoint.IsInTextNode() &&
+        (selectionStartPoint.IsStartOfContainer() ||
+         selectionStartPoint.IsEndOfContainer()) &&
+        // If we're moving in same text node, we can assume that we should
+        // stay in the <a href>.
+        mLastSelectionPoint.GetContainer() !=
+            selectionStartPoint.GetContainer()) {
+      // XXX Assuming it's not empty text node because it's unrealistic edge
+      //     case.
+      bool maybeStartOfAnchor = selectionStartPoint.IsStartOfContainer();
+      for (EditorRawDOMPoint point(selectionStartPoint.GetContainer());
+           point.IsSet() && (maybeStartOfAnchor ? point.IsStartOfContainer()
+                                                : point.IsAtLastContent());
+           point.Set(point.GetContainer())) {
+        // TODO: We should check editing host boundary here.
+        if (HTMLEditUtils::IsLink(point.GetContainer())) {
+          // Now, we're at start or end of <a href>.
+          unlink = !mLastSelectionPoint.GetContainer()->IsInclusiveDescendantOf(
+              point.GetContainer());
+          break;
+        }
+      }
+    }
+
     mLastSelectionPoint = selectionStartPoint;
     // We need to store only offset because referring child may be removed by
     // we'll check the point later.
@@ -108,6 +138,10 @@ void TypeInState::OnSelectionChange(Selection& aSelection) {
   }
 
   Reset();
+
+  if (unlink) {
+    ClearProp(nsGkAtoms::a, nullptr);
+  }
 }
 
 void TypeInState::Reset() {

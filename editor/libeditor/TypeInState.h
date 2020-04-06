@@ -88,7 +88,7 @@ class TypeInState final {
 
   nsresult UpdateSelState(dom::Selection* aSelection);
 
-  void OnSelectionChange(dom::Selection& aSelection);
+  void OnSelectionChange(dom::Selection& aSelection, int16_t aReason);
 
   void SetProp(nsAtom* aProp, nsAtom* aAttr, const nsAString& aValue);
 
