@@ -759,7 +759,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     LOG(
         ("Our loadInfo lacks a top-level principal, use the loadInfo's loading "
          "principal instead"));
-    toplevelPrincipal = loadInfo->GetLoadingPrincipal();
+    toplevelPrincipal = loadInfo->LoadingPrincipal();
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);

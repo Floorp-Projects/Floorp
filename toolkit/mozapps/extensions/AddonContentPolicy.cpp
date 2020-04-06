@@ -94,7 +94,8 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
 
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsIURI> requestOrigin;
-  if (nsIPrincipal* loadingPrincipal = aLoadInfo->GetLoadingPrincipal()) {
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
+  if (loadingPrincipal) {
     loadingPrincipal->GetURI(getter_AddRefs(requestOrigin));
   }
 

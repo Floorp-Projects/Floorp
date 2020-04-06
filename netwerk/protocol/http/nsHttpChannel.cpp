@@ -1475,9 +1475,8 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
     }
   }
 
-  bool isSystemPrincipal =
-      mLoadInfo->GetLoadingPrincipal() &&
-      mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal();
+  bool isSystemPrincipal = mLoadInfo->LoadingPrincipal() &&
+                           mLoadInfo->LoadingPrincipal()->IsSystemPrincipal();
   return HttpTrafficAnalyzer::CreateTrafficCategory(
       NS_UsePrivateBrowsing(this), isSystemPrincipal, isThirdParty, cos, tc);
 }
@@ -1631,8 +1630,8 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
 
   bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
   bool isSameOrigin = false;
-  aLoadInfo->GetLoadingPrincipal()->IsSameOrigin(aURI, isPrivateWin,
-                                                 &isSameOrigin);
+  aLoadInfo->LoadingPrincipal()->IsSameOrigin(aURI, isPrivateWin,
+                                              &isSameOrigin);
   if (isSameOrigin) {
     // same origin
     AccumulateCategorical(
@@ -1652,7 +1651,7 @@ nsresult EnsureMIMEOfScript(nsHttpChannel* aChannel, nsIURI* aURI,
           bool isPrivateWin =
               aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
           bool isSameOrigin = false;
-          aLoadInfo->GetLoadingPrincipal()->IsSameOrigin(
+          aLoadInfo->LoadingPrincipal()->IsSameOrigin(
               corsOriginURI, isPrivateWin, &isSameOrigin);
           if (isSameOrigin) {
             cors = true;
@@ -6427,8 +6426,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
           mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() ==
                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
-           mLoadInfo->GetLoadingPrincipal() &&
-           mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()),
+           mLoadInfo->LoadingPrincipal() &&
+           mLoadInfo->LoadingPrincipal()->IsSystemPrincipal()),
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
@@ -7594,7 +7593,7 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
     return NS_OK;
   }
 
-  MOZ_ASSERT(mLoadInfo->GetLoadingPrincipal(),
+  MOZ_ASSERT(mLoadInfo->LoadingPrincipal(),
              "Resources should always have a LoadingPrincipal");
   if (!mResponseHead) {
     return NS_OK;
@@ -7629,7 +7628,7 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
   // Cross-Origin-Resource-Policy = %s"same-origin" / %s"same-site" /
   // %s"cross-origin"
   if (content.EqualsLiteral("same-origin")) {
-    if (!channelOrigin->Equals(mLoadInfo->GetLoadingPrincipal())) {
+    if (!channelOrigin->Equals(mLoadInfo->LoadingPrincipal())) {
       return NS_ERROR_DOM_CORP_FAILED;
     }
     return NS_OK;
@@ -7637,14 +7636,14 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
   if (content.EqualsLiteral("same-site")) {
     nsAutoCString documentBaseDomain;
     nsAutoCString resourceBaseDomain;
-    mLoadInfo->GetLoadingPrincipal()->GetBaseDomain(documentBaseDomain);
+    mLoadInfo->LoadingPrincipal()->GetBaseDomain(documentBaseDomain);
     channelOrigin->GetBaseDomain(resourceBaseDomain);
     if (documentBaseDomain != resourceBaseDomain) {
       return NS_ERROR_DOM_CORP_FAILED;
     }
 
     nsCOMPtr<nsIURI> resourceURI = channelOrigin->GetURI();
-    if (!mLoadInfo->GetLoadingPrincipal()->SchemeIs("https") &&
+    if (!mLoadInfo->LoadingPrincipal()->SchemeIs("https") &&
         resourceURI->SchemeIs("https")) {
       return NS_ERROR_DOM_CORP_FAILED;
     }

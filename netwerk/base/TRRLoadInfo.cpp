@@ -32,7 +32,7 @@ TRRLoadInfo::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIPrincipal* TRRLoadInfo::GetLoadingPrincipal() { return nullptr; }
+nsIPrincipal* TRRLoadInfo::LoadingPrincipal() { return nullptr; }
 
 NS_IMETHODIMP
 TRRLoadInfo::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal) {
