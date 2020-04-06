@@ -707,8 +707,7 @@
 </%def>
 
 <%def name="single_keyword(name, values, vector=False,
-            extra_specified=None, needs_conversion=False,
-            gecko_pref_controlled_initial_value=None, **kwargs)">
+            extra_specified=None, needs_conversion=False, **kwargs)">
     <%
         keyword_kwargs = {a: kwargs.pop(a, None) for a in [
             'gecko_constant_prefix',
@@ -725,8 +724,7 @@
         ]}
     %>
 
-    <%def name="inner_body(keyword, extra_specified=None, needs_conversion=False,
-                           gecko_pref_controlled_initial_value=None)">
+    <%def name="inner_body(keyword, extra_specified=None, needs_conversion=False)">
         <%def name="variants(variants, include_aliases)">
             % for variant in variants:
             % if include_aliases:
@@ -775,20 +773,10 @@
         }
         #[inline]
         pub fn get_initial_value() -> computed_value::T {
-            % if engine == "gecko" and gecko_pref_controlled_initial_value:
-            if static_prefs::pref!("${gecko_pref_controlled_initial_value.split('=')[0]}") {
-                return computed_value::T::${to_camel_case(gecko_pref_controlled_initial_value.split('=')[1])};
-            }
-            % endif
             computed_value::T::${to_camel_case(values.split()[0])}
         }
         #[inline]
         pub fn get_initial_specified_value() -> SpecifiedValue {
-            % if engine == "gecko" and gecko_pref_controlled_initial_value:
-            if static_prefs::pref!("${gecko_pref_controlled_initial_value.split('=')[0]}") {
-                return SpecifiedValue::${to_camel_case(gecko_pref_controlled_initial_value.split('=')[1])};
-            }
-            % endif
             SpecifiedValue::${to_camel_case(values.split()[0])}
         }
         #[inline]
@@ -817,8 +805,7 @@
     % else:
         <%call expr="longhand(name, keyword=Keyword(name, values, **keyword_kwargs), **kwargs)">
             ${inner_body(Keyword(name, values, **keyword_kwargs),
-                         extra_specified=extra_specified, needs_conversion=needs_conversion,
-                         gecko_pref_controlled_initial_value=gecko_pref_controlled_initial_value)}
+                         extra_specified=extra_specified, needs_conversion=needs_conversion)}
             % if caller:
             ${caller.body()}
             % endif
