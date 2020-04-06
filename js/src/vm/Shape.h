@@ -708,7 +708,8 @@ class BaseShape : public gc::TenuredCell {
   };
 
  private:
-  const JSClass* clasp_; /* Class of referring object. */
+  using HeaderWithJSClass = gc::CellHeaderWithNonGCPointer<const JSClass>;
+  HeaderWithJSClass headerAndClasp_; /* Class of referring object. */
   uint32_t flags;        /* Vector of above flags. */
   uint32_t slotSpan_;    /* Object slot span for BaseShapes at
                           * dictionary last properties. */
@@ -730,7 +731,7 @@ class BaseShape : public gc::TenuredCell {
   /* Not defined: BaseShapes must not be stack allocated. */
   ~BaseShape();
 
-  const JSClass* clasp() const { return clasp_; }
+  const JSClass* clasp() const { return headerAndClasp_.ptr(); }
 
   bool isOwned() const { return !!(flags & OWNED_SHAPE); }
 
@@ -827,6 +828,7 @@ class BaseShape : public gc::TenuredCell {
   static inline size_t offsetOfFlags() { return offsetof(BaseShape, flags); }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::BaseShape;
+  const gc::CellHeader& cellHeader() const { return headerAndClasp_; }
 
   void traceChildren(JSTracer* trc);
   void traceChildrenSkipShapeCache(JSTracer* trc);
@@ -837,7 +839,7 @@ class BaseShape : public gc::TenuredCell {
 
  private:
   static void staticAsserts() {
-    static_assert(offsetof(BaseShape, clasp_) ==
+    static_assert(offsetof(BaseShape, headerAndClasp_) ==
                   offsetof(js::shadow::BaseShape, clasp_));
     static_assert(sizeof(BaseShape) % gc::CellAlignBytes == 0,
                   "Things inheriting from gc::Cell must have a size that's "
@@ -869,7 +871,8 @@ struct StackBaseShape : public DefaultHasher<WeakHeapPtr<UnownedBaseShape*>> {
   const JSClass* clasp;
 
   explicit StackBaseShape(BaseShape* base)
-      : flags(base->flags & BaseShape::OBJECT_FLAG_MASK), clasp(base->clasp_) {}
+      : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
+        clasp(base->clasp()) {}
 
   inline StackBaseShape(const JSClass* clasp, uint32_t objectFlags);
   explicit inline StackBaseShape(Shape* shape);
@@ -899,7 +902,7 @@ struct StackBaseShape : public DefaultHasher<WeakHeapPtr<UnownedBaseShape*>> {
   static inline bool match(const WeakHeapPtr<UnownedBaseShape*>& key,
                            const Lookup& lookup) {
     return key.unbarrieredGet()->flags == lookup.flags &&
-           key.unbarrieredGet()->clasp_ == lookup.clasp;
+           key.unbarrieredGet()->clasp() == lookup.clasp;
   }
 };
 
@@ -1172,7 +1175,7 @@ class Shape : public gc::TenuredCell {
     }
   };
 
-  const JSClass* getObjectClass() const { return base()->clasp_; }
+  const JSClass* getObjectClass() const { return base()->clasp(); }
 
   static Shape* setObjectFlags(JSContext* cx, BaseShape::Flag flag,
                                TaggedProto proto, Shape* last);
