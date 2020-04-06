@@ -25,6 +25,7 @@ EXPORTS.mozilla.net = [
     'CookiePermission.h',
     'CookieServiceChild.h',
     'CookieServiceParent.h',
+    'CookieStorage.h',
 ]
 UNIFIED_SOURCES += [
     'Cookie.cpp',
@@ -32,6 +33,7 @@ UNIFIED_SOURCES += [
     'CookiePermission.cpp',
     'CookieServiceChild.cpp',
     'CookieServiceParent.cpp',
+    'CookieStorage.cpp',
 ]
 # nsCookieService.cpp can't be unified because of symbol conflicts
 SOURCES += [
