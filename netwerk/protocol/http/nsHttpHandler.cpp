@@ -18,7 +18,6 @@
 #include "nsStandardURL.h"
 #include "LoadContextInfo.h"
 #include "nsCategoryManagerUtils.h"
-#include "nsIProcessSwitchRequestor.h"
 #include "nsSocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsPrintfCString.h"
