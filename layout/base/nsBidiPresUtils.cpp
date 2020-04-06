@@ -589,7 +589,7 @@ static bool IsBidiSplittable(nsIFrame* aFrame) {
 }
 
 // Should this frame be treated as a leaf (e.g. when building mLogicalFrames)?
-static bool IsBidiLeaf(nsIFrame* aFrame) {
+static bool IsBidiLeaf(const nsIFrame* aFrame) {
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
   if (kid) {
     if (aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer) ||
@@ -1510,8 +1510,8 @@ nsBidiLevel nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame) {
   return GetFirstLeaf(aFrame)->GetEmbeddingLevel();
 }
 
-nsBidiLevel nsBidiPresUtils::GetFrameBaseLevel(nsIFrame* aFrame) {
-  nsIFrame* firstLeaf = aFrame;
+nsBidiLevel nsBidiPresUtils::GetFrameBaseLevel(const nsIFrame* aFrame) {
+  const nsIFrame* firstLeaf = aFrame;
   while (!IsBidiLeaf(firstLeaf)) {
     firstLeaf = firstLeaf->PrincipalChildList().FirstChild();
   }
