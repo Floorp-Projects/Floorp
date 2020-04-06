@@ -420,32 +420,6 @@ void CookiePersistentStorage::RemoveAllInternal() {
   }
 }
 
-void CookiePersistentStorage::WriteCookieToDB(
-    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
-    Cookie* aCookie, mozIStorageBindingParamsArray* aParamsArray) {
-  if (mDBConn) {
-    mozIStorageAsyncStatement* stmt = mStmtInsert;
-    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
-    if (!paramsArray) {
-      stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
-    }
-
-    CookieKey key(aBaseDomain, aOriginAttributes);
-    BindCookieParameters(paramsArray, key, aCookie);
-
-    // If we were supplied an array to store parameters, we shouldn't call
-    // executeAsync - someone up the stack will do this for us.
-    if (!aParamsArray) {
-      DebugOnly<nsresult> rv = stmt->BindParameters(paramsArray);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-      nsCOMPtr<mozIStoragePendingStatement> handle;
-      rv = stmt->ExecuteAsync(mInsertListener, getter_AddRefs(handle));
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
-}
-
 void CookiePersistentStorage::HandleCorruptDB() {
   COOKIE_LOGSTRING(LogLevel::Debug,
                    ("HandleCorruptDB(): CookieStorage %p has mCorruptFlag %u",
@@ -503,51 +477,55 @@ void CookiePersistentStorage::RemoveCookiesFromExactHost(
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-void CookiePersistentStorage::RemoveCookieFromListInternal(
+void CookiePersistentStorage::RemoveCookieFromDB(const CookieListIter& aIter) {
+  // if it's a non-session cookie, remove it from the db
+  if (aIter.Cookie()->IsSession() || !mDBConn) {
+    return;
+  }
+
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  mStmtDelete->NewBindingParamsArray(getter_AddRefs(paramsArray));
+
+  PrepareCookieRemoval(aIter, paramsArray);
+
+  DebugOnly<nsresult> rv = mStmtDelete->BindParameters(paramsArray);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<mozIStoragePendingStatement> handle;
+  rv = mStmtDelete->ExecuteAsync(mRemoveListener, getter_AddRefs(handle));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+}
+
+void CookiePersistentStorage::PrepareCookieRemoval(
     const CookieListIter& aIter, mozIStorageBindingParamsArray* aParamsArray) {
   // if it's a non-session cookie, remove it from the db
-  if (!aIter.Cookie()->IsSession() && mDBConn) {
-    // Use the asynchronous binding methods to ensure that we do not acquire
-    // the database lock.
-    mozIStorageAsyncStatement* stmt = mStmtDelete;
-    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
-    if (!paramsArray) {
-      stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
-    }
-
-    nsCOMPtr<mozIStorageBindingParams> params;
-    paramsArray->NewBindingParams(getter_AddRefs(params));
-
-    DebugOnly<nsresult> rv = params->BindUTF8StringByName(
-        NS_LITERAL_CSTRING("name"), aIter.Cookie()->Name());
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("host"),
-                                      aIter.Cookie()->Host());
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
-                                      aIter.Cookie()->Path());
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsAutoCString suffix;
-    aIter.Cookie()->OriginAttributesRef().CreateSuffix(suffix);
-    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("originAttributes"),
-                                      suffix);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    rv = paramsArray->AddParams(params);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    // If we weren't given a params array, we'll need to remove it ourselves.
-    if (!aParamsArray) {
-      rv = stmt->BindParameters(paramsArray);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      nsCOMPtr<mozIStoragePendingStatement> handle;
-      rv = stmt->ExecuteAsync(mRemoveListener, getter_AddRefs(handle));
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+  if (aIter.Cookie()->IsSession() || !mDBConn) {
+    return;
   }
+
+  nsCOMPtr<mozIStorageBindingParams> params;
+  aParamsArray->NewBindingParams(getter_AddRefs(params));
+
+  DebugOnly<nsresult> rv = params->BindUTF8StringByName(
+      NS_LITERAL_CSTRING("name"), aIter.Cookie()->Name());
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("host"),
+                                    aIter.Cookie()->Host());
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("path"),
+                                    aIter.Cookie()->Path());
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsAutoCString suffix;
+  aIter.Cookie()->OriginAttributesRef().CreateSuffix(suffix);
+  rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("originAttributes"),
+                                    suffix);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = aParamsArray->AddParams(params);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 // Null out the statements.
@@ -732,7 +710,11 @@ nsresult CookiePersistentStorage::ImportCookies(nsIFile* aCookieFile) {
     lastAccessedCounter--;
 
     if (originalCookieCount == 0) {
-      AddCookieToList(baseDomain, OriginAttributes(), newCookie, paramsArray);
+      AddCookieToList(baseDomain, OriginAttributes(), newCookie);
+      if (!newCookie->IsSession() && mDBConn) {
+        CookieKey key(baseDomain, OriginAttributes());
+        BindCookieParameters(paramsArray, key, newCookie);
+      }
     } else {
       AddCookie(baseDomain, OriginAttributes(), newCookie, currentTimeInUsec,
                 nullptr, VoidCString(), true);
@@ -740,24 +722,51 @@ nsresult CookiePersistentStorage::ImportCookies(nsIFile* aCookieFile) {
   }
 
   // If we need to write to disk, do so now.
-  if (paramsArray) {
-    uint32_t length;
-    paramsArray->GetLength(&length);
-    if (length) {
-      rv = mStmtInsert->BindParameters(paramsArray);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-      nsCOMPtr<mozIStoragePendingStatement> handle;
-      rv = mStmtInsert->ExecuteAsync(mInsertListener, getter_AddRefs(handle));
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-  }
+  MaybeStoreCookiesToDB(paramsArray);
 
   COOKIE_LOGSTRING(
       LogLevel::Debug,
       ("ImportCookies(): %" PRIu32 " cookies imported", mCookieCount));
 
   return NS_OK;
+}
+
+void CookiePersistentStorage::StoreCookie(
+    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+    Cookie* aCookie) {
+  // if it's a non-session cookie and hasn't just been read from the db, write
+  // it out.
+  if (aCookie->IsSession() || !mDBConn) {
+    return;
+  }
+
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  mStmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
+
+  CookieKey key(aBaseDomain, aOriginAttributes);
+  BindCookieParameters(paramsArray, key, aCookie);
+
+  MaybeStoreCookiesToDB(paramsArray);
+}
+
+void CookiePersistentStorage::MaybeStoreCookiesToDB(
+    mozIStorageBindingParamsArray* aParamsArray) {
+  if (!aParamsArray) {
+    return;
+  }
+
+  uint32_t length;
+  aParamsArray->GetLength(&length);
+  if (!length) {
+    return;
+  }
+
+  DebugOnly<nsresult> rv = mStmtInsert->BindParameters(aParamsArray);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<mozIStoragePendingStatement> handle;
+  rv = mStmtInsert->ExecuteAsync(mInsertListener, getter_AddRefs(handle));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void CookiePersistentStorage::StaleCookies(const nsTArray<Cookie*>& aCookieList,
@@ -833,13 +842,6 @@ void CookiePersistentStorage::UpdateCookieInList(
     // Add our bound parameters to the array.
     rv = aParamsArray->AddParams(params);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-}
-
-void CookiePersistentStorage::MaybeCreateDeleteBindingParamsArray(
-    mozIStorageBindingParamsArray** aParamsArray) {
-  if (mDBConn) {
-    mStmtDelete->NewBindingParamsArray(aParamsArray);
   }
 }
 
@@ -1695,14 +1697,7 @@ void CookiePersistentStorage::RebuildCorruptDB() {
                 return;
               }
 
-              // Execute the statement. If any errors crop up, we won't try
-              // again.
-              DebugOnly<nsresult> rv = stmt->BindParameters(paramsArray);
-              MOZ_ASSERT(NS_SUCCEEDED(rv));
-              nsCOMPtr<mozIStoragePendingStatement> handle;
-              rv = stmt->ExecuteAsync(self->mInsertListener,
-                                      getter_AddRefs(handle));
-              MOZ_ASSERT(NS_SUCCEEDED(rv));
+              self->MaybeStoreCookiesToDB(paramsArray);
             });
         NS_DispatchToMainThread(innerRunnable);
       });
@@ -1916,8 +1911,7 @@ void CookiePersistentStorage::InitDBConn() {
         tuple.cookie->isHttpOnly(), tuple.originAttributes,
         tuple.cookie->sameSite(), tuple.cookie->rawSameSite());
 
-    AddCookieToList(tuple.key.mBaseDomain, tuple.key.mOriginAttributes, cookie,
-                    nullptr, false);
+    AddCookieToList(tuple.key.mBaseDomain, tuple.key.mOriginAttributes, cookie);
   }
 
   if (NS_FAILED(InitDBConnInternal())) {
@@ -2146,6 +2140,32 @@ nsresult CookiePersistentStorage::RunInTransaction(
   }
 
   return NS_OK;
+}
+
+// purges expired and old cookies in a batch operation.
+already_AddRefed<nsIArray> CookiePersistentStorage::PurgeCookies(
+    int64_t aCurrentTimeInUsec, uint16_t aMaxNumberOfCookies,
+    int64_t aCookiePurgeAge) {
+  // Create a params array to batch the removals. This is OK here because
+  // all the removals are in order, and there are no interleaved additions.
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  if (mDBConn) {
+    mStmtDelete->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  }
+
+  RefPtr<CookiePersistentStorage> self = this;
+
+  return PurgeCookiesWithCallbacks(
+      aCurrentTimeInUsec, aMaxNumberOfCookies, aCookiePurgeAge,
+      [paramsArray, self](const CookieListIter& aIter) {
+        self->PrepareCookieRemoval(aIter, paramsArray);
+        self->RemoveCookieFromListInternal(aIter);
+      },
+      [paramsArray, self]() {
+        if (paramsArray) {
+          self->DeleteFromDB(paramsArray);
+        }
+      });
 }
 
 }  // namespace net
