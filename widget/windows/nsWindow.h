@@ -66,28 +66,6 @@ struct MSGResult;
 }  // namespace mozilla
 
 /**
- * Forward Windows-internal definitions of otherwise incomplete ones provided by
- * the SDK.
- */
-const CLSID CLSID_ImmersiveShell = {
-    0xC2F03A33,
-    0x21F5,
-    0x47FA,
-    {0xB4, 0xBB, 0x15, 0x63, 0x62, 0xA2, 0xF2, 0x39}};
-
-// Virtual Desktop.
-
-EXTERN_C const IID IID_IVirtualDesktopManager;
-MIDL_INTERFACE("a5cd92ff-29be-454c-8d04-d82879fb3f1b")
-IVirtualDesktopManager : public IUnknown {
- public:
-  virtual HRESULT STDMETHODCALLTYPE GetWindowDesktopId(
-      __RPC__in HWND topLevelWindow, __RPC__out GUID * desktopId) = 0;
-  virtual HRESULT STDMETHODCALLTYPE MoveWindowToDesktop(
-      __RPC__in HWND topLevelWindow, __RPC__in REFGUID desktopId) = 0;
-};
-
-/**
  * Native WIN32 window wrapper.
  */
 
@@ -163,8 +141,6 @@ class nsWindow final : public nsWindowBase {
   virtual void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                            nsIWidget* aWidget, bool aActivate) override;
   virtual void SetSizeMode(nsSizeMode aMode) override;
-  virtual void GetWorkspaceID(nsAString& workspaceID) override;
-  virtual void MoveToWorkspace(const nsAString& workspaceID) override;
   virtual void SuppressAnimation(bool aSuppress) override;
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;

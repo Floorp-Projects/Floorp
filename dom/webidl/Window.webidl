@@ -611,9 +611,9 @@ partial interface Window {
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      restore();
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  DOMString                 getWorkspaceID();
+  long                      getWorkspaceID();
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      moveToWorkspace(DOMString workspaceID);
+  void                      moveToWorkspace(long workspaceID);
 
   /**
    * Notify a default button is loaded on a dialog or a wizard.
