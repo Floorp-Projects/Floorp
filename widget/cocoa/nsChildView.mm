@@ -3159,6 +3159,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     return;
   }
 
+  NSUInteger modifierFlags = [theEvent modifierFlags];
+
   WidgetMouseEvent geckoEvent(true, eMouseDown, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
@@ -3170,12 +3172,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   }
   geckoEvent.mClickCount = clickCount;
 
-  if (!StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
-      ([theEvent modifierFlags] & NSControlKeyMask)) {
+  if (modifierFlags & NSControlKeyMask)
     geckoEvent.mButton = MouseButton::eRight;
-  } else {
+  else
     geckoEvent.mButton = MouseButton::eLeft;
-  }
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   mBlockedLastMouseDown = NO;
@@ -3199,13 +3199,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-
-  if (!StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
-      ([theEvent modifierFlags] & NSControlKeyMask)) {
+  if ([theEvent modifierFlags] & NSControlKeyMask)
     geckoEvent.mButton = MouseButton::eRight;
-  } else {
+  else
     geckoEvent.mButton = MouseButton::eLeft;
-  }
 
   // Remember the event's position before calling DispatchInputEvent, because
   // that call can mutate it and convert it into a different coordinate space.

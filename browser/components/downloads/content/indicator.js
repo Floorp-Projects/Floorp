@@ -568,11 +568,7 @@ const DownloadsIndicatorView = {
 
   onCommand(aEvent) {
     if (
-      // On Mac, ctrl-click will send a context menu event from the widget, so
-      // we don't want to bring up the panel when ctrl key is pressed.
-      (aEvent.type == "mousedown" &&
-        (aEvent.button != 0 ||
-          (AppConstants.platform == "macosx" && aEvent.ctrlKey))) ||
+      (aEvent.type == "mousedown" && aEvent.button != 0) ||
       (aEvent.type == "keypress" && aEvent.key != " " && aEvent.key != "Enter")
     ) {
       return;
