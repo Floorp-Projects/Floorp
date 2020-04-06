@@ -38,6 +38,24 @@ const mockTargets = [
   { id: "3", name: "no client record device", type: "phone" },
 ];
 
+add_task(async function openPanel() {
+  if (AppConstants.platform == "macosx") {
+    // Ignore this test on Mac.
+    return;
+  }
+
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Should still open the panel when Ctrl key is pressed.
+    await promisePageActionPanelOpen({ ctrlKey: true });
+
+    // Done.
+    let hiddenPromise = promisePageActionPanelHidden();
+    BrowserPageActions.panelNode.hidePopup();
+    await hiddenPromise;
+  });
+});
+
 add_task(async function bookmark() {
   // Open a unique page.
   let url = "http://example.com/browser_page_action_menu";
