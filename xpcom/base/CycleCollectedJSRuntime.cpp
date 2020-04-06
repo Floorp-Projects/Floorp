@@ -1225,7 +1225,8 @@ void CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer) {
 }
 
 void CycleCollectedJSRuntime::AddJSHolder(void* aHolder,
-                                          nsScriptObjectTracer* aTracer) {
+                                          nsScriptObjectTracer* aTracer,
+                                          JS::Zone* aZone) {
   mJSHolders.Put(aHolder, aTracer);
 }
 
