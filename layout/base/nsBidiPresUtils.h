@@ -322,7 +322,7 @@ class nsBidiPresUtils {
   /**
    * Get the bidi base level of the given (inline) frame.
    */
-  static nsBidiLevel GetFrameBaseLevel(nsIFrame* aFrame);
+  static nsBidiLevel GetFrameBaseLevel(const nsIFrame* aFrame);
 
   /**
    * Get an nsBidiDirection representing the direction implied by the
@@ -330,7 +330,7 @@ class nsBidiPresUtils {
    * @return NSBIDI_LTR (left-to-right) or NSBIDI_RTL (right-to-left)
    *  NSBIDI_MIXED will never be returned.
    */
-  static nsBidiDirection ParagraphDirection(nsIFrame* aFrame) {
+  static nsBidiDirection ParagraphDirection(const nsIFrame* aFrame) {
     return DIRECTION_FROM_LEVEL(GetFrameBaseLevel(aFrame));
   }
 

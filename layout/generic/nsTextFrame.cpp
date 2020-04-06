@@ -10172,7 +10172,7 @@ uint32_t nsTextFrame::CountGraphemeClusters() const {
   return unicode::CountGraphemeClusters(content.Data(), content.Length());
 }
 
-bool nsTextFrame::HasNonSuppressedText() {
+bool nsTextFrame::HasNonSuppressedText() const {
   if (HasAnyStateBits(TEXT_ISNOT_ONLY_WHITESPACE |
                       // If we haven't reflowed yet, or are currently doing so,
                       // just return true because we can't be sure.
