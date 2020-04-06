@@ -2623,7 +2623,7 @@ static bool TransformDisplacement(APZCTreeManager* aTreeManager,
   return true;
 }
 
-void APZCTreeManager::DispatchScroll(
+bool APZCTreeManager::DispatchScroll(
     AsyncPanZoomController* aPrev, ParentLayerPoint& aStartPoint,
     ParentLayerPoint& aEndPoint,
     OverscrollHandoffState& aOverscrollHandoffState) {
@@ -2635,19 +2635,19 @@ void APZCTreeManager::DispatchScroll(
   // nothing more to scroll, so we ignore the rest of the pan gesture.
   if (overscrollHandoffChainIndex >= overscrollHandoffChain.Length()) {
     // Nothing more to scroll - ignore the rest of the pan gesture.
-    return;
+    return false;
   }
 
   next = overscrollHandoffChain.GetApzcAtIndex(overscrollHandoffChainIndex);
 
   if (next == nullptr || next->IsDestroyed()) {
-    return;
+    return false;
   }
 
   // Convert the start and end points from |aPrev|'s coordinate space to
   // |next|'s coordinate space.
   if (!TransformDisplacement(this, aPrev, next, aStartPoint, aEndPoint)) {
-    return;
+    return false;
   }
 
   // Scroll |next|. If this causes overscroll, it will call DispatchScroll()
@@ -2662,7 +2662,11 @@ void APZCTreeManager::DispatchScroll(
     if (!TransformDisplacement(this, next, aPrev, aStartPoint, aEndPoint)) {
       NS_WARNING("Failed to untransform scroll points during dispatch");
     }
+    return false;
   }
+
+  // Return true to indicate the scroll was consumed entirely.
+  return true;
 }
 
 ParentLayerPoint APZCTreeManager::DispatchFling(
