@@ -10,7 +10,6 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/webgpu/CanvasContext.h"
 #include "MozFramebuffer.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
@@ -140,15 +139,6 @@ CanvasRenderingContextHelper::CreateContextHelper(
 
       break;
 
-    case CanvasContextType::WebGPU:
-      // TODO
-      // Telemetry::Accumulate(Telemetry::CANVAS_WEBGPU_USED, 1);
-
-      ret = new webgpu::CanvasContext();
-      if (!ret) return nullptr;
-
-      break;
-
     case CanvasContextType::ImageBitmap:
       ret = new ImageBitmapRenderingContext();
 
@@ -195,16 +185,12 @@ already_AddRefed<nsISupports> CanvasRenderingContextHelper::GetContext(
         Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 0);
       else if (contextType == CanvasContextType::WebGL2)
         Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 0);
-      else if (contextType == CanvasContextType::WebGPU)
-        ;  // Telemetry::Accumulate(Telemetry::CANVAS_WEBGPU_SUCCESS, 0);
       return nullptr;
     }
     if (contextType == CanvasContextType::WebGL1)
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_SUCCESS, 1);
     else if (contextType == CanvasContextType::WebGL2)
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL2_SUCCESS, 1);
-    else if (contextType == CanvasContextType::WebGPU)
-      ;  // Telemetry::Accumulate(Telemetry::CANVAS_WEBGPU_SUCCESS, 1);
   } else {
     // We already have a context of some type.
     if (contextType != mCurrentContextType) return nullptr;

@@ -30,7 +30,7 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
 
   Texture(Device* const aParent, RawId aId,
           const dom::GPUTextureDescriptor& aDesc);
-  Device* GetParentDevice() { return mParent; }
+
   const RawId mId;
 
  private:

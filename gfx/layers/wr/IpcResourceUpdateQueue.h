@@ -125,10 +125,7 @@ class IpcResourceUpdateQueue {
   bool AddBlobImage(wr::BlobImageKey aKey, const ImageDescriptor& aDescriptor,
                     Range<uint8_t> aBytes, ImageIntRect aVisibleRect);
 
-  void AddPrivateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
-                               wr::ImageDescriptor aDesc);
-
-  void AddSharedExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey);
+  void AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey);
 
   void PushExternalImageForTexture(wr::ExternalImageId aExtId,
                                    wr::ImageKey aKey,
@@ -143,8 +140,8 @@ class IpcResourceUpdateQueue {
                        Range<uint8_t> aBytes, ImageIntRect aVisibleRect,
                        ImageIntRect aDirtyRect);
 
-  void UpdateSharedExternalImage(ExternalImageId aExtID, ImageKey aKey,
-                                 ImageIntRect aDirtyRect);
+  void UpdateExternalImage(ExternalImageId aExtID, ImageKey aKey,
+                           ImageIntRect aDirtyRect);
 
   void SetBlobImageVisibleArea(BlobImageKey aKey, const ImageIntRect& aArea);
 

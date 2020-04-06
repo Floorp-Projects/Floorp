@@ -1540,7 +1540,6 @@ WebRenderCommandBuilder::WebRenderCommandBuilder(
 
 void WebRenderCommandBuilder::Destroy() {
   mLastCanvasDatas.Clear();
-  mLastLocalCanvasDatas.Clear();
   ClearCachedResources();
 }
 
@@ -1553,14 +1552,10 @@ void WebRenderCommandBuilder::EmptyTransaction() {
       canvas->UpdateCompositableClientForEmptyTransaction();
     }
   }
-  for (auto iter = mLastLocalCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<WebRenderLocalCanvasData> canvasData = iter.Get()->GetKey();
-    canvasData->Present();
-  }
 }
 
 bool WebRenderCommandBuilder::NeedsEmptyTransaction() {
-  return !mLastCanvasDatas.IsEmpty() || !mLastLocalCanvasDatas.IsEmpty();
+  return !mLastCanvasDatas.IsEmpty();
 }
 
 void WebRenderCommandBuilder::BuildWebRenderCommands(
@@ -1583,7 +1578,6 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   }
   MOZ_ASSERT(mLayerScrollDatas.IsEmpty());
   mLastCanvasDatas.Clear();
-  mLastLocalCanvasDatas.Clear();
   mLastAsr = nullptr;
   mContainsSVGGroup = false;
   MOZ_ASSERT(mDumpIndent == 0);
@@ -2641,15 +2635,8 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
         userDataTable = nullptr;
       }
 
-      switch (data->GetType()) {
-        case WebRenderUserData::UserDataType::eCanvas:
-          mLastCanvasDatas.RemoveEntry(data->AsCanvasData());
-          break;
-        case WebRenderUserData::UserDataType::eLocalCanvas:
-          mLastLocalCanvasDatas.RemoveEntry(data->AsLocalCanvasData());
-          break;
-        default:
-          break;
+      if (data->GetType() == WebRenderUserData::UserDataType::eCanvas) {
+        mLastCanvasDatas.RemoveEntry(data->AsCanvasData());
       }
 
       iter.Remove();
