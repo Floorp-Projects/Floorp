@@ -649,13 +649,14 @@ WindowBackBuffer* WindowSurfaceWayland::SetNewWaylandBuffer(
   LOGWAYLAND(
       ("WindowSurfaceWayland::NewWaylandBuffer [%p] Requested buffer [%d "
        "x %d] DMABuf %d\n",
-       (void*)this, mWidgetRect.width, mWidgetRect.height, aUseDMABufBackend));
+       (void*)this, mWLBufferRect.width, mWLBufferRect.height,
+       aUseDMABufBackend));
 
   mWaylandBuffer = WaylandBufferFindAvailable(
-      mWidgetRect.width, mWidgetRect.height, aUseDMABufBackend);
+      mWLBufferRect.width, mWLBufferRect.height, aUseDMABufBackend);
   if (!mWaylandBuffer) {
-    mWaylandBuffer = CreateWaylandBuffer(mWidgetRect.width, mWidgetRect.height,
-                                         aUseDMABufBackend);
+    mWaylandBuffer = CreateWaylandBuffer(
+        mWLBufferRect.width, mWLBufferRect.height, aUseDMABufBackend);
   }
 
   return mWaylandBuffer;
@@ -665,7 +666,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::GetWaylandBufferRecent [%p] Requested buffer [%d "
        "x %d]\n",
-       (void*)this, mWidgetRect.width, mWidgetRect.height));
+       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
 
   // There's no buffer created yet, create a new one for partial screen updates.
   if (!mWaylandBuffer) {
@@ -677,9 +678,10 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferRecent() {
     return nullptr;
   }
 
-  if (mWaylandBuffer->IsMatchingSize(mWidgetRect.width, mWidgetRect.height)) {
-    LOGWAYLAND(("    Size is ok, use the buffer [%d x %d]\n", mWidgetRect.width,
-                mWidgetRect.height));
+  if (mWaylandBuffer->IsMatchingSize(mWLBufferRect.width,
+                                     mWLBufferRect.height)) {
+    LOGWAYLAND(("    Size is ok, use the buffer [%d x %d]\n",
+                mWLBufferRect.width, mWLBufferRect.height));
     return mWaylandBuffer;
   }
 
@@ -694,7 +696,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferWithSwitch() {
   LOGWAYLAND(
       ("WindowSurfaceWayland::GetWaylandBufferWithSwitch [%p] Requested buffer "
        "[%d x %d]\n",
-       (void*)this, mWidgetRect.width, mWidgetRect.height));
+       (void*)this, mWLBufferRect.width, mWLBufferRect.height));
 
   // There's no buffer created yet or actual buffer is attached, get a new one.
   // Use DMABuf for fullscreen updates only.
@@ -703,20 +705,21 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferWithSwitch() {
   }
 
   // Reuse existing buffer
-  LOGWAYLAND(("    Reuse buffer with resize [%d x %d]\n", mWidgetRect.width,
-              mWidgetRect.height));
+  LOGWAYLAND(("    Reuse buffer with resize [%d x %d]\n", mWLBufferRect.width,
+              mWLBufferRect.height));
 
   // OOM here, just return null to skip this frame.
-  if (!mWaylandBuffer->Resize(mWidgetRect.width, mWidgetRect.height)) {
+  if (!mWaylandBuffer->Resize(mWLBufferRect.width, mWLBufferRect.height)) {
     return nullptr;
   }
   return mWaylandBuffer;
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
-  // Allocated wayland buffer must match widget size, otherwise wayland
-  // compositor is confused and may produce various rendering artifacts.
-  mWidgetRect = mWindow->GetMozContainerSize();
+  // Allocated wayland buffer can't be bigger than mozilla widget size.
+  LayoutDeviceIntRegion region;
+  region.And(mLockedScreenRect, mWindow->GetMozContainerSize());
+  mWLBufferRect = LayoutDeviceIntRect(region.GetBounds());
 
   // mCanSwitchWaylandBuffer set means we're getting buffer for fullscreen
   // update. We can use DMABuf and we can get a new buffer for drawing.
@@ -883,8 +886,8 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
 
   // We can draw directly only when widget has the same size as wl_buffer
   LayoutDeviceIntRect size = mWindow->GetMozContainerSize();
-  mDrawToWaylandBufferDirectly = (size.width == mLockedScreenRect.width &&
-                                  size.height == mLockedScreenRect.height);
+  mDrawToWaylandBufferDirectly = (size.width >= mLockedScreenRect.width &&
+                                  size.height >= mLockedScreenRect.height);
 
   // We can draw directly only when we redraw significant part of the window
   // to avoid flickering or do only fullscreen updates in smooth mode.
