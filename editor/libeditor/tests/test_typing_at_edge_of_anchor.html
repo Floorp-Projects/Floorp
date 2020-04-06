@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for typing after a link</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <div contenteditable></div>
+</div>
+
+<pre id="test">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let editor = document.querySelector("[contenteditable]");
+  let selection = document.getSelection();
+
+  editor.focus();
+
+  // At start
+  editor.innerHTML = "<p>abc<a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abc<a href=\"about:blank\">Xdef</a></p>",
+     "Typing X at start of the <a> element should insert to the start of it when caret is moved from middle of it");
+
+  editor.innerHTML = "<p>abc<a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").previousSibling, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abcX<a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element should insert to the end of the preceding text node when caret is moved from middle of the preceding text node");
+
+  editor.innerHTML = "<p><b>abc</b><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><b>abc</b><a href=\"about:blank\">Xdef</a></p>",
+     "Typing X at start of the <a> element should insert to the start of it when caret is moved from middle of it (following <b>)");
+
+  editor.innerHTML = "<p><b>abc</b><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><b>abcX</b><a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element should insert to end of the following <b> when caret is moved from middle of the <b>");
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abc</p><p><a href=\"about:blank\">Xdef</a></p>",
+     "Typing X at start of the <a> element should insert to start of it when caret is moved from middle of it (following <p>)");
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  todo_is(editor.innerHTML, "<p>abc</p><p>X<a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element should insert to start of new text node when caret is moved from the previous paragraph");
+
+  editor.innerHTML = "<p>abc</p><p><b><a href=\"about:blank\">def</a></b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abc</p><p><b><a href=\"about:blank\">Xdef</a></b></p>",
+     "Typing X at start of the <a> element should insert to start of it when caret is moved from middle of it (following <p> and wrapped by <b>)");
+
+  editor.innerHTML = "<p>abc</p><p><b><a href=\"about:blank\">def</a></b></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  todo_is(editor.innerHTML, "<p>abc</p><p><b>X<a href=\"about:blank\">def</a></b></p>",
+     "Typing X at start of the <a> element should insert to start of wrapper <b> when caret is moved from the previous paragraph");
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abc<a href=\"about:blank\">Xdef</a></p>",
+     "Typing X at start of the <a> element after joining paragraphs with Backspace should insert to start of it");
+
+  editor.innerHTML = "<p><b>abc</b></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><b>abc</b><a href=\"about:blank\">Xdef</a></p>",
+     "Typing X at start of the <a> element after joining paragraphs with Backspace should insert to start of it (following <b>)");
+
+  editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abcX<a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element after joining paragraphs with Delete should insert to end of the preceding text node");
+
+  editor.innerHTML = "<p><b>abc</b></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><b>abcX</b><a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element after joining paragraphs with Delete should insert to end of the preceding <b>");
+
+  editor.innerHTML = "<p>abc<br></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("p").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p>abcX<a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element after joining paragraphs with Delete should insert to end of the preceding text node (invisible <br>)");
+
+  editor.innerHTML = "<p><b>abc</b><br></p><p><a href=\"about:blank\">def</a></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><b>abcX</b><a href=\"about:blank\">def</a></p>",
+     "Typing X at start of the <a> element after joining paragraphs with Delete should insert to start of the preceding <b> (invisible <br>)");
+
+  // At end
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a>def</p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abcX</a>def</p>",
+     "Typing X at end of the <a> element should insert to the end of it when caret is moved from middle of it");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a>def</p>";
+  selection.collapse(editor.querySelector("a[href]").nextSibling, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>Xdef</p>",
+     "Typing X at end of the <a> element should insert to the start of the following text node when caret is moved from middle of the following text node");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><b>def</b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abcX</a><b>def</b></p>",
+     "Typing X at end of the <a> element should insert to the end of it when caret is moved from middle of it (followed by <b>)");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><b>def</b></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 1);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>Xdef</b></p>",
+     "Typing X at end of the <a> element should insert to start of the following <b> when caret is moved from middle of the following <b> element");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 2);
+  synthesizeKey("KEY_ArrowRight");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abcX</a></p><p>def</p>",
+     "Typing X at end of the <a> element should insert to end of it when caret is moved from middle of it (followed by <p>)");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  todo_is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>X</p><p>def</p>",
+     "Typing X at end of the <a> element should insert to start of new text node when caret is moved from the following paragraph");
+
+  editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  todo_is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a>X</b></p><p>def</p>",
+     "Typing X at end of the <a> element should insert to end of wrapper <b> when caret is moved from the following paragraph");
+
+  editor.innerHTML = "<p><a href=\"about:blank\"><b>abc</b></a></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_ArrowLeft");
+  synthesizeKey("X");
+  todo_is(editor.innerHTML, "<p><a href=\"about:blank\"><b>abc</b></a><b>X</b></p><p>def</p>",
+     "Typing X at end of the <a> element should insert to start of new <b> when caret is moved from the following paragraph");
+
+  // I'm not sure whether this behavior should be changed or not, but inconsistent with the case of Backspace from start of <a href>.
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>Xdef</p>",
+     "Typing X at end of the <a> element after joining paragraphs with Delete should insert to end of it");
+  todo_is(editor.innerHTML, "<p><a href=\"about:blank\">abcX</a>def</p>",
+     "Typing X at end of the <a> element after joining paragraphs with Delete should insert to end of it");
+
+  // I'm not sure whether this behavior should be changed or not, but inconsistent with the case of Backspace from start of <a href>.
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p><b>def</b></p>";
+  selection.collapse(editor.querySelector("a[href]").firstChild, 3);
+  synthesizeKey("KEY_Delete");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>X<b>def</b></p>",
+     "Typing X at end of the <a> element after joining paragraphs with Delete should insert to end of it (following <p> has <b>)");
+  todo_is(editor.innerHTML, "<p><a href=\"about:blank\">abcX</a><b>def</b></p>",
+     "Typing X at end of the <a> element after joining paragraphs with Delete should insert to end of it (following <p> has <b>)");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>Xdef</p>",
+     "Typing X at end of the <a> element after joining paragraphs with Backspace should insert to start of next text node");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a></p><p><b>def</b></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>Xdef</b></p>",
+     "Typing X at end of the <a> element after joining paragraphs with Backspace should insert to start of next <b>");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><br></p><p>def</p>";
+  selection.collapse(editor.querySelector("p + p").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>Xdef</p>",
+     "Typing X at end of the <a> element after joining paragraphs with Backspace should insert to start of next text node (invisible <br>)");
+
+  editor.innerHTML = "<p><a href=\"about:blank\">abc</a><br></p><p><b>def</b></p>";
+  selection.collapse(editor.querySelector("b").firstChild, 0);
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("X");
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a><b>Xdef</b></p>",
+     "Typing X at end of the <a> element after joining paragraphs with Backspace should insert to start of next <b> (invisible <br>)");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
