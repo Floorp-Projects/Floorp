@@ -1058,9 +1058,6 @@ void Statistics::sendGCTelemetry() {
                           uint32_t(lastSlice.resetReason));
   }
 
-  runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED,
-                        !gc->isIncrementalGCAllowed());
-
   TimeDuration sccTotal, sccLongest;
   sccDurations(&sccTotal, &sccLongest);
   runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));

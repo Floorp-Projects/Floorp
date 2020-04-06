@@ -816,14 +816,6 @@
     "description": "Reason for cancelling an ongoing GC (see js::gc::AbortReason)",
     "bug_numbers": [1308116]
   },
-  "GC_INCREMENTAL_DISABLED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Is incremental GC permanently disabled?"
-  },
   "GC_NON_INCREMENTAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
