@@ -3829,8 +3829,7 @@ void Simulator::VisitNEONPerm(const Instruction* instr) {
 
 
 void Simulator::DoUnreachable(const Instruction* instr) {
-  VIXL_ASSERT((instr->Mask(ExceptionMask) == HLT) &&
-              (instr->ImmException() == kUnreachableOpcode));
+  VIXL_ASSERT(instr->InstructionBits() == UNDEFINED_INST_PATTERN);
 
   fprintf(stream_, "Hit UNREACHABLE marker at pc=%p.\n",
           reinterpret_cast<const void*>(instr));
