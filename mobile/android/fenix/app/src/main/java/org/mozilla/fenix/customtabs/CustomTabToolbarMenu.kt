@@ -18,6 +18,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
+import org.mozilla.fenix.ext.getStringWithArgSafe
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -133,7 +134,7 @@ class CustomTabToolbarMenu(
     }
 
     private val poweredBy = BrowserMenuCategory(
-        label = context.getString(R.string.browser_menu_powered_by, appName).toUpperCase(),
+        label = context.getStringWithArgSafe(R.string.browser_menu_powered_by, appName).toUpperCase(),
         textSize = CAPTION_TEXT_SIZE,
         textColorResource = primaryTextColor(),
         textStyle = Typeface.NORMAL
