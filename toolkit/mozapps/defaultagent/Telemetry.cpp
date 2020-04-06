@@ -31,8 +31,8 @@
 
 // This is almost the complete URL, just needs a UUID appended.
 #define TELEMETRY_PING_URL                                              \
-  TELEMETRY_BASE_URL "/" TELEMETRY_NAMESPACE "/" TELEMETRY_PING_VERSION \
-                     "/" TELEMETRY_PING_DOCTYPE "/"
+  TELEMETRY_BASE_URL "/" TELEMETRY_NAMESPACE "/" TELEMETRY_PING_DOCTYPE \
+                     "/" TELEMETRY_PING_VERSION "/"
 
 #if !defined(RRF_SUBKEY_WOW6464KEY)
 #  define RRF_SUBKEY_WOW6464KEY 0x00010000
