@@ -679,6 +679,68 @@ class CellHeaderWithNonGCPointer : public CellHeader {
   }
 };
 
+// Base class for GC things that have a tenured GC pointer as their first word.
+//
+// The low bits of the first word (see CellFlagBitsReservedForGC) are reserved
+// for GC.
+//
+// This includes a pre write barrier when the pointer is update. No post barrier
+// is necessary as the pointer is always tenured.
+template <class PtrT>
+class CellHeaderWithTenuredGCPointer : public CellHeader {
+  static void staticAsserts() {
+    // These static asserts are not in class scope because the PtrT may not be
+    // defined when this class template is instantiated.
+    static_assert(
+        !std::is_pointer<PtrT>::value,
+        "PtrT should be the type of the referent, not of the pointer");
+    static_assert(
+        std::is_base_of<Cell, PtrT>::value,
+        "Only use CellHeaderWithTenuredGCPointer for pointers to GC things");
+  }
+
+ public:
+  CellHeaderWithTenuredGCPointer() = default;
+  explicit CellHeaderWithTenuredGCPointer(PtrT* initial) : CellHeader() {
+    initPtr(initial);
+  }
+
+  void initPtr(PtrT* initial) {
+    MOZ_ASSERT(!IsInsideNursery(initial));
+    uintptr_t data = uintptr_t(initial);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    this->header_ = data;
+  }
+
+  PtrT* ptr() const {
+    // Currently we never observe any flags set here because this base class is
+    // only used for GC things that are always tenured (for which the nursery
+    // kind flags are also always clear). This means we don't need to use
+    // masking to get and set the pointer.
+    staticAsserts();
+    MOZ_ASSERT(flags() == 0);
+    return reinterpret_cast<PtrT*>(this->header_);
+  }
+
+  void setPtr(PtrT* newValue) {
+    // As above, no flags are expected to be set here.
+    MOZ_ASSERT(!IsInsideNursery(newValue));
+    PtrT::writeBarrierPre(ptr());
+    unsafeSetPtr(newValue);
+  }
+
+  void unsafeSetPtr(PtrT* newValue) {
+    uintptr_t data = uintptr_t(newValue);
+    MOZ_ASSERT(flags() == 0);
+    MOZ_ASSERT((data & RESERVED_MASK) == 0);
+    this->header_ = data;
+  }
+
+  static constexpr size_t offsetOfPtr() {
+    return offsetof(CellHeaderWithTenuredGCPointer, header_);
+  }
+};
+
 } /* namespace gc */
 } /* namespace js */
 
