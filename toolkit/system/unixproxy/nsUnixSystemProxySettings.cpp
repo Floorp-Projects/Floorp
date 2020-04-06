@@ -136,13 +136,17 @@ static bool IsInNoProxyList(const nsACString& aHost, int32_t aPort,
 
 static void SetProxyResult(const char* aType, const nsACString& aHost,
                            int32_t aPort, nsACString& aResult) {
-  aResult.AppendASCII(aType);
+  aResult.AssignASCII(aType);
   aResult.Append(' ');
   aResult.Append(aHost);
   if (aPort > 0) {
     aResult.Append(':');
     aResult.AppendInt(aPort);
   }
+}
+
+static void SetProxyResultDirect(nsACString& aResult) {
+  aResult.AssignLiteral("DIRECT");
 }
 
 static nsresult GetProxyFromEnvironment(const nsACString& aScheme,
@@ -163,7 +167,7 @@ static nsresult GetProxyFromEnvironment(const nsACString& aScheme,
 
   const char* noProxyVal = PR_GetEnv("no_proxy");
   if (noProxyVal && IsInNoProxyList(aHost, aPort, noProxyVal)) {
-    aResult.AppendLiteral("DIRECT");
+    SetProxyResultDirect(aResult);
     return NS_OK;
   }
 
@@ -340,7 +344,7 @@ nsresult nsUnixSystemProxySettings::GetProxyFromGSettings(
         nsCString s;
         if (NS_SUCCEEDED(str->GetData(s)) && !s.IsEmpty()) {
           if (HostIgnoredByProxy(s, aHost)) {
-            aResult.AppendLiteral("DIRECT");
+            SetProxyResultDirect(aResult);
             return NS_OK;
           }
         }
@@ -371,7 +375,7 @@ nsresult nsUnixSystemProxySettings::GetProxyFromGSettings(
   }
 
   if (NS_FAILED(rv)) {
-    aResult.AppendLiteral("DIRECT");
+    SetProxyResultDirect(aResult);
   }
 
   return NS_OK;
