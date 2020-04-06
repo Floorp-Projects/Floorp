@@ -6,7 +6,6 @@
 #include "Cookie.h"
 #include "CookieCommons.h"
 #include "CookieLogging.h"
-#include "CookieService.h"
 #include "CookieStorage.h"
 
 #include "nsIMutableArray.h"
@@ -202,13 +201,13 @@ bool CookieStorage::FindSecureCookie(const nsACString& aBaseDomain,
       continue;
 
     // The host must "domain-match" an existing cookie or vice-versa
-    if (CookieService::DomainMatches(cookie, aCookie->Host()) ||
-        CookieService::DomainMatches(aCookie, cookie->Host())) {
+    if (CookieCommons::DomainMatches(cookie, aCookie->Host()) ||
+        CookieCommons::DomainMatches(aCookie, cookie->Host())) {
       // If the path of new cookie and the path of existing cookie
       // aren't "/", then this situation needs to compare paths to
       // ensure only that a newly-created non-secure cookie does not
       // overlay an existing secure cookie.
-      if (CookieService::PathMatches(cookie, aCookie->GetFilePath())) {
+      if (CookieCommons::PathMatches(cookie, aCookie->GetFilePath())) {
         return true;
       }
     }

@@ -175,10 +175,8 @@ void CookieService::CloseCookieStorages() {
     return;
   }
 
-  if (mPrivateStorage) {
-    mPrivateStorage->Close();
-    mPrivateStorage = nullptr;
-  }
+  mPrivateStorage->Close();
+  mPrivateStorage = nullptr;
 
   mPersistentStorage->Close();
   mPersistentStorage = nullptr;
@@ -370,8 +368,8 @@ void CookieService::SetCookieStringInternal(
   // is acceptable.
   bool requireHostMatch;
   nsAutoCString baseDomain;
-  nsresult rv =
-      GetBaseDomain(mTLDService, aHostURI, baseDomain, requireHostMatch);
+  nsresult rv = CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
+                                             requireHostMatch);
   if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "couldn't get base domain from URI");
@@ -387,7 +385,8 @@ void CookieService::SetCookieStringInternal(
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsAutoCString baseDomainFromURI;
-  rv = GetBaseDomainFromHost(mTLDService, hostFromURI, baseDomainFromURI);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, hostFromURI,
+                                            baseDomainFromURI);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // check default prefs
@@ -552,7 +551,7 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t currentTimeInUsec = PR_Now();
@@ -583,7 +582,7 @@ nsresult CookieService::Remove(const nsACString& aHost,
 
   nsAutoCString baseDomain;
   if (!host.IsEmpty()) {
-    rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -638,44 +637,6 @@ CookieService::ImportCookies(nsIFile* aCookieFile) {
   return mPersistentStorage->ImportCookies(aCookieFile);
 }
 
-/******************************************************************************
- * CookieService impl:
- * private GetCookie/SetCookie helpers
- ******************************************************************************/
-
-bool CookieService::DomainMatches(Cookie* aCookie, const nsACString& aHost) {
-  // first, check for an exact host or domain cookie match, e.g. "google.com"
-  // or ".google.com"; second a subdomain match, e.g.
-  // host = "mail.google.com", cookie domain = ".google.com".
-  return aCookie->RawHost() == aHost ||
-         (aCookie->IsDomain() && StringEndsWith(aHost, aCookie->Host()));
-}
-
-bool CookieService::PathMatches(Cookie* aCookie, const nsACString& aPath) {
-  nsCString cookiePath(aCookie->GetFilePath());
-
-  // if our cookie path is empty we can't really perform our prefix check, and
-  // also we can't check the last character of the cookie path, so we would
-  // never return a successful match.
-  if (cookiePath.IsEmpty()) return false;
-
-  // if the cookie path and the request path are identical, they match.
-  if (cookiePath.Equals(aPath)) return true;
-
-  // if the cookie path is a prefix of the request path, and the last character
-  // of the cookie path is %x2F ("/"), they match.
-  bool isPrefix = StringBeginsWith(aPath, cookiePath);
-  if (isPrefix && cookiePath.Last() == '/') return true;
-
-  // if the cookie path is a prefix of the request path, and the first character
-  // of the request path that is not included in the cookie path is a %x2F ("/")
-  // character, they match.
-  uint32_t cookiePathLen = cookiePath.Length();
-  if (isPrefix && aPath[cookiePathLen] == '/') return true;
-
-  return false;
-}
-
 void CookieService::GetCookiesForURI(
     nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
     bool aIsThirdPartyTrackingResource,
@@ -698,8 +659,8 @@ void CookieService::GetCookiesForURI(
   // is acceptable.
   bool requireHostMatch;
   nsAutoCString baseDomain, hostFromURI, pathFromURI;
-  nsresult rv =
-      GetBaseDomain(mTLDService, aHostURI, baseDomain, requireHostMatch);
+  nsresult rv = CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
+                                             requireHostMatch);
   if (NS_SUCCEEDED(rv)) rv = aHostURI->GetAsciiHost(hostFromURI);
   if (NS_SUCCEEDED(rv)) rv = aHostURI->GetFilePath(pathFromURI);
   if (NS_FAILED(rv)) {
@@ -716,8 +677,8 @@ void CookieService::GetCookiesForURI(
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsAutoCString baseDomainFromURI;
-  rv = GetBaseDomainFromHost(mTLDService, normalizedHostFromURI,
-                             baseDomainFromURI);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, normalizedHostFromURI,
+                                            baseDomainFromURI);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // check default prefs
@@ -772,7 +733,7 @@ void CookieService::GetCookiesForURI(
   // iterate the cookies!
   for (Cookie* cookie : *cookies) {
     // check the host, since the base domain lookup is conservative.
-    if (!DomainMatches(cookie, hostFromURI)) continue;
+    if (!CookieCommons::DomainMatches(cookie, hostFromURI)) continue;
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) continue;
@@ -788,7 +749,7 @@ void CookieService::GetCookiesForURI(
     if (cookie->IsHttpOnly() && !aHttpBound) continue;
 
     // if the nsIURI path doesn't match the cookie path, don't send it back
-    if (!PathMatches(cookie, pathFromURI)) continue;
+    if (!CookieCommons::PathMatches(cookie, pathFromURI)) continue;
 
     // check if the cookie has expired
     if (cookie->Expiry() <= currentTime) {
@@ -1429,74 +1390,6 @@ void CookieService::LogMessageToConsole(nsIChannel* aChannel, nsIURI* aURI,
  * private domain & permission compliance enforcement functions
  ******************************************************************************/
 
-// Get the base domain for aHostURI; e.g. for "www.bbc.co.uk", this would be
-// "bbc.co.uk". Only properly-formed URI's are tolerated, though a trailing
-// dot may be present. If aHostURI is an IP address, an alias such as
-// 'localhost', an eTLD such as 'co.uk', or the empty string, aBaseDomain will
-// be the exact host, and aRequireHostMatch will be true to indicate that
-// substring matches should not be performed.
-nsresult CookieService::GetBaseDomain(nsIEffectiveTLDService* aTLDService,
-                                      nsIURI* aHostURI, nsCString& aBaseDomain,
-                                      bool& aRequireHostMatch) {
-  // get the base domain. this will fail if the host contains a leading dot,
-  // more than one trailing dot, or is otherwise malformed.
-  nsresult rv = aTLDService->GetBaseDomain(aHostURI, 0, aBaseDomain);
-  aRequireHostMatch = rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
-                      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
-  if (aRequireHostMatch) {
-    // aHostURI is either an IP address, an alias such as 'localhost', an eTLD
-    // such as 'co.uk', or the empty string. use the host as a key in such
-    // cases.
-    rv = aHostURI->GetAsciiHost(aBaseDomain);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // aHost (and thus aBaseDomain) may be the string '.'. If so, fail.
-  if (aBaseDomain.Length() == 1 && aBaseDomain.Last() == '.')
-    return NS_ERROR_INVALID_ARG;
-
-  // block any URIs without a host that aren't file:// URIs.
-  if (aBaseDomain.IsEmpty() && !aHostURI->SchemeIs("file")) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return NS_OK;
-}
-
-// Get the base domain for aHost; e.g. for "www.bbc.co.uk", this would be
-// "bbc.co.uk". This is done differently than GetBaseDomain(mTLDService, ): it
-// is assumed that aHost is already normalized, and it may contain a leading dot
-// (indicating that it represents a domain). A trailing dot may be present.
-// If aHost is an IP address, an alias such as 'localhost', an eTLD such as
-// 'co.uk', or the empty string, aBaseDomain will be the exact host, and a
-// leading dot will be treated as an error.
-nsresult CookieService::GetBaseDomainFromHost(
-    nsIEffectiveTLDService* aTLDService, const nsACString& aHost,
-    nsCString& aBaseDomain) {
-  // aHost must not be the string '.'.
-  if (aHost.Length() == 1 && aHost.Last() == '.') return NS_ERROR_INVALID_ARG;
-
-  // aHost may contain a leading dot; if so, strip it now.
-  bool domain = !aHost.IsEmpty() && aHost.First() == '.';
-
-  // get the base domain. this will fail if the host contains a leading dot,
-  // more than one trailing dot, or is otherwise malformed.
-  nsresult rv = aTLDService->GetBaseDomainFromHost(Substring(aHost, domain), 0,
-                                                   aBaseDomain);
-  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
-      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-    // aHost is either an IP address, an alias such as 'localhost', an eTLD
-    // such as 'co.uk', or the empty string. use the host as a key in such
-    // cases; however, we reject any such hosts with a leading dot, since it
-    // doesn't make sense for them to be domain cookies.
-    if (domain) return NS_ERROR_INVALID_ARG;
-
-    aBaseDomain = aHost;
-    return NS_OK;
-  }
-  return rv;
-}
-
 // Normalizes the given hostname, component by component. ASCII/ACE
 // components are lower-cased, and UTF-8 components are normalized per
 // RFC 3454 and converted to ACE.
@@ -1931,7 +1824,8 @@ CookieService::CookieExistsNative(const nsACString& aHost,
   }
 
   nsAutoCString baseDomain;
-  nsresult rv = GetBaseDomainFromHost(mTLDService, aHost, baseDomain);
+  nsresult rv =
+      CookieCommons::GetBaseDomainFromHost(mTLDService, aHost, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   CookieListIter iter;
@@ -1952,7 +1846,7 @@ CookieService::CountCookiesFromHost(const nsACString& aHost,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsInitialized()) {
@@ -1979,7 +1873,7 @@ CookieService::GetCookiesFromHost(const nsACString& aHost,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   OriginAttributes attrs;
@@ -2020,7 +1914,7 @@ CookieService::GetCookiesWithOriginAttributes(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return GetCookiesWithOriginAttributes(pattern, baseDomain, aResult);
@@ -2050,7 +1944,7 @@ CookieService::RemoveCookiesWithOriginAttributes(const nsAString& aPattern,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RemoveCookiesWithOriginAttributes(pattern, baseDomain);
@@ -2088,7 +1982,7 @@ nsresult CookieService::RemoveCookiesFromExactHost(
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsInitialized()) {
