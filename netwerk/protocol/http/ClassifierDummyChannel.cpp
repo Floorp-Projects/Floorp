@@ -733,5 +733,7 @@ NS_IMETHODIMP ClassifierDummyChannel::IsThirdPartySocialTrackingResource(
   return NS_OK;
 }
 
+void ClassifierDummyChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
+
 }  // namespace net
 }  // namespace mozilla
