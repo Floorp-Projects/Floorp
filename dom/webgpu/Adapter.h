@@ -29,7 +29,7 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   GPU_DECL_CYCLE_COLLECTION(Adapter)
   GPU_DECL_JS_WRAP(Adapter)
 
-  const RefPtr<WebGPUChild> mBridge;
+  RefPtr<WebGPUChild> mBridge;
 
  private:
   Adapter() = delete;

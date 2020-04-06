@@ -7,14 +7,13 @@
 #define WEBGPU_PARENT_H_
 
 #include "mozilla/webgpu/PWebGPUParent.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "WebGPUTypes.h"
 #include "base/timer.h"
 
 namespace mozilla {
 namespace webgpu {
-namespace ffi {
-struct WGPUGlobal_IdentityRecyclerFactory;
-}  // namespace ffi
+class PresentationData;
 
 class WebGPUParent final : public PWebGPUParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent)
@@ -85,6 +84,14 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDeviceCreateRenderPipeline(
       RawId aSelfId, const SerialRenderPipelineDescriptor& aDesc, RawId aNewId);
   ipc::IPCResult RecvRenderPipelineDestroy(RawId aSelfId);
+  ipc::IPCResult RecvDeviceCreateSwapChain(RawId aSelfId, RawId aQueueId,
+                                           const layers::RGBDescriptor& aDesc,
+                                           const nsTArray<RawId>& aBufferIds,
+                                           ExternalImageId aExternalId);
+  ipc::IPCResult RecvSwapChainPresent(wr::ExternalImageId aExternalId,
+                                      RawId aTextureId,
+                                      RawId aCommandEncoderId);
+  ipc::IPCResult RecvSwapChainDestroy(wr::ExternalImageId aExternalId);
   ipc::IPCResult RecvShutdown();
 
  private:
@@ -93,6 +100,7 @@ class WebGPUParent final : public PWebGPUParent {
 
   const ffi::WGPUGlobal_IdentityRecyclerFactory* const mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
+  std::unordered_map<uint64_t, RefPtr<PresentationData>> mCanvasMap;
 };
 
 }  // namespace webgpu
