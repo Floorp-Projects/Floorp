@@ -144,6 +144,10 @@ class IdlePeriodState {
   TimeStamp GetIdleDeadlineInternal(bool aIsPeek,
                                     const MutexAutoUnlock& aProofOfUnlock);
 
+  // Whether we should be getting an idle token (i.e. are a content process
+  // and are using cross process idle scheduling).
+  bool ShouldGetIdleToken();
+
   // Set to true if we have claimed we have a ready-to-run idle task when asked.
   // In that case, we will ensure that we allow at least one task to run when
   // someone tries to run a task, even if we have run out of idle period at that

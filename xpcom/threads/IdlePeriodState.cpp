@@ -148,9 +148,10 @@ TimeStamp IdlePeriodState::GetIdleToken(TimeStamp aLocalIdlePeriodHint,
   MOZ_ASSERT(NS_IsMainThread(),
              "Why are we touching idle state off the main thread?");
 
-  if (XRE_IsParentProcess()) {
+  if (!ShouldGetIdleToken()) {
     return aLocalIdlePeriodHint;
   }
+
   if (mIdleToken) {
     TimeStamp now = TimeStamp::Now();
     if (mIdleToken < now) {
@@ -170,8 +171,7 @@ void IdlePeriodState::RequestIdleToken(TimeStamp aLocalIdlePeriodHint) {
 
   if (!mIdleSchedulerInitialized) {
     mIdleSchedulerInitialized = true;
-    if (StaticPrefs::idle_period_cross_process_scheduling() &&
-        XRE_IsContentProcess()) {
+    if (ShouldGetIdleToken()) {
       // For now cross-process idle scheduler is supported only on the main
       // threads of the child processes.
       mIdleScheduler = ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
@@ -244,4 +244,8 @@ void IdlePeriodState::ClearIdleToken() {
   }
 }
 
+bool IdlePeriodState::ShouldGetIdleToken() {
+  return StaticPrefs::idle_period_cross_process_scheduling() &&
+         XRE_IsContentProcess();
+}
 }  // namespace mozilla
