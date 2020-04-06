@@ -689,7 +689,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=432259ab53295ca98a2df0c0e6c73d132b273e97#432259ab53295ca98a2df0c0e6c73d132b273e97"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=ea9e5aa3e6014f219cf5fa0690bc4b06916f0b09#ea9e5aa3e6014f219cf5fa0690bc4b06916f0b09"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -926,7 +926,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=432259ab53295ca98a2df0c0e6c73d132b273e97#432259ab53295ca98a2df0c0e6c73d132b273e97"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=ea9e5aa3e6014f219cf5fa0690bc4b06916f0b09#ea9e5aa3e6014f219cf5fa0690bc4b06916f0b09"
 dependencies = [
  "atomic",
  "audio-mixer",

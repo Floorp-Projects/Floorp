@@ -7,8 +7,8 @@ toolchain=$(rustup default)
 echo "\nUse Rust toolchain: $toolchain"
 
 if [[ $toolchain != nightly* ]]; then
-   echo "The sanitizer is only available on Rust Nightly only. Skip."
-   exit
+    echo "The sanitizer is only available on Rust Nightly only. Skip."
+    exit
 fi
 
 sanitizers=("address" "leak" "memory" "thread")
