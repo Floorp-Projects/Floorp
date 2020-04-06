@@ -599,7 +599,7 @@ static bool IsPrologueBailout(const SnapshotIterator& iter,
 static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
                             HandleScript script, SnapshotIterator& iter,
                             bool invalidate, BaselineStackBuilder& builder,
-                            MutableHandle<GCVector<Value>> startFrameFormals,
+                            MutableHandleValueVector startFrameFormals,
                             MutableHandleFunction nextCallee,
                             const ExceptionBailoutInfo* excInfo) {
   // The Baseline frames we will reconstruct on the heap are not rooted, so GC
@@ -1571,7 +1571,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
 
   // Reconstruct baseline frames using the builder.
   RootedFunction fun(cx, callee);
-  Rooted<GCVector<Value>> startFrameFormals(cx, GCVector<Value>(cx));
+  RootedValueVector startFrameFormals(cx);
 
   gc::AutoSuppressGC suppress(cx);
 
