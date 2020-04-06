@@ -23,8 +23,7 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
       mEventRegionsOverride(EventRegionsOverride::NoOverride),
       mFixedPositionSides(mozilla::SideBits::eNone),
       mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID),
-      mStickyPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID),
-      mRenderRoot(wr::RenderRoot::Default) {}
+      mStickyPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID) {}
 
 WebRenderLayerScrollData::~WebRenderLayerScrollData() = default;
 
@@ -35,13 +34,11 @@ void WebRenderLayerScrollData::InitializeRoot(int32_t aDescendantCount) {
 void WebRenderLayerScrollData::Initialize(
     WebRenderScrollData& aOwner, nsDisplayItem* aItem, int32_t aDescendantCount,
     const ActiveScrolledRoot* aStopAtAsr,
-    const Maybe<gfx::Matrix4x4>& aAncestorTransform,
-    wr::RenderRoot aRenderRoot) {
+    const Maybe<gfx::Matrix4x4>& aAncestorTransform) {
   MOZ_ASSERT(aDescendantCount >= 0);  // Ensure value is valid
   MOZ_ASSERT(mDescendantCount ==
              -1);  // Don't allow re-setting an already set value
   mDescendantCount = aDescendantCount;
-  mRenderRoot = aRenderRoot;
 
   MOZ_ASSERT(aItem);
   aItem->UpdateScrollData(&aOwner, this);

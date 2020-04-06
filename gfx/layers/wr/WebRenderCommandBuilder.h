@@ -89,12 +89,12 @@ class WebRenderCommandBuilder final {
 
   bool NeedsEmptyTransaction();
 
-  void BuildWebRenderCommands(
-      wr::DisplayListBuilder& aBuilder,
-      wr::IpcResourceUpdateQueue& aResourceUpdates, nsDisplayList* aDisplayList,
-      nsDisplayListBuilder* aDisplayListBuilder,
-      wr::RenderRootArray<WebRenderScrollData>& aScrollDatas,
-      WrFiltersHolder&& aFilters);
+  void BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                              wr::IpcResourceUpdateQueue& aResourceUpdates,
+                              nsDisplayList* aDisplayList,
+                              nsDisplayListBuilder* aDisplayListBuilder,
+                              WebRenderScrollData& aScrollData,
+                              WrFiltersHolder&& aFilters);
 
   void PushOverrideForASR(const ActiveScrolledRoot* aASR,
                           const wr::WrSpatialId& aSpatialId);
@@ -232,7 +232,7 @@ class WebRenderCommandBuilder final {
 
   // We use this as a temporary data structure while building the mScrollData
   // inside a layers-free transaction.
-  WebRenderScrollDataCollection mLayerScrollDatas;
+  std::vector<WebRenderLayerScrollData> mLayerScrollData;
   // We use this as a temporary data structure to track the current display
   // item's ASR as we recurse in CreateWebRenderCommandsFromDisplayList. We
   // need this so that WebRenderLayerScrollData items that deeper in the

@@ -332,7 +332,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
     mWebRenderCommandBuilder.BuildWebRenderCommands(
         builder, resourceUpdates, aDisplayList, aDisplayListBuilder,
-        mScrollDatas, std::move(aFilters));
+        mScrollData, std::move(aFilters));
 
     builderDumpIndex =
         mWebRenderCommandBuilder.GetBuilderDumpIndex(builder.GetRenderRoot());
@@ -355,20 +355,13 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     Unused << builder.Dump(/*indent*/ 1, Some(builderDumpIndex), Nothing());
   }
 
-  for (auto& stateManager : mStateManagers) {
-    if (AsyncPanZoomEnabled()) {
-      auto& scrollData = mScrollDatas[stateManager.GetRenderRoot()];
-
-      if (mIsFirstPaint) {
-        // Set the same flag on each scrollData instance (one per render root).
-        // We need to duplicate this because they will get processed by APZ at
-        // separate times and the flag state is relevant each time.
-        scrollData.SetIsFirstPaint();
-      }
-      scrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
+  if (AsyncPanZoomEnabled()) {
+    if (mIsFirstPaint) {
+      mScrollData.SetIsFirstPaint();
+      mIsFirstPaint = false;
     }
+    mScrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
   }
-  mIsFirstPaint = false;
 
   // Since we're sending a full mScrollData that will include the new scroll
   // offsets, and we can throw away the pending scroll updates we had kept for
@@ -436,7 +429,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
                  renderRootDL->mLargeShmems);
       renderRootDL->mRect =
           LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
-      renderRootDL->mScrollData.emplace(std::move(mScrollDatas[renderRoot]));
+      renderRootDL->mScrollData.emplace(std::move(mScrollData));
     }
 
     WrBridge()->EndTransaction(renderRootDLs, mLatestTransactionId,
