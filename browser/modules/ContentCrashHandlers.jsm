@@ -1043,8 +1043,8 @@ var UnsubmittedCrashHandler = {
 
   /**
    * Attempt to submit reports to the crash report server. Each
-   * report will have the "SubmittedFromInfobar" extra key set
-   * to true.
+   * report will have the "SubmittedFromInfobar" annotation set
+   * to "1".
    *
    * @param reportIDs (Array<string>)
    *        The array of reportIDs to submit.
@@ -1053,7 +1053,7 @@ var UnsubmittedCrashHandler = {
     for (let reportID of reportIDs) {
       CrashSubmit.submit(reportID, {
         extraExtraKeyVals: {
-          SubmittedFromInfobar: true,
+          SubmittedFromInfobar: "1",
         },
       }).catch(Cu.reportError);
     }
