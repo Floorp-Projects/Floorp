@@ -69,12 +69,12 @@ menu.subviewbutton > .menu-right {
 }
 
 .PanelUI-remotetabs-notabsforclient-label {
-  margin-left: 19px;
+  margin-inline-start: 19px;
   font-size: 13px;
 }
 
 #PanelUI-remotetabs[mainview] .PanelUI-remotetabs-notabsforclient-label {
-  margin-left: 23px;
+  margin-inline-start: 23px;
 }
 
 #PanelUI-remotetabs-tabslist {
