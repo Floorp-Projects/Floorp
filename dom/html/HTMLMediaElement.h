@@ -1625,10 +1625,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek = false;
 
-  // True if this element is suspended because the document is inactive.
-  bool mSuspendedForInactiveDocument = false;
+  // True if this element is suspended because the document is inactive or the
+  // inactive docshell is not allowing media to play.
+  bool mSuspendedByInactiveDocOrDocshell = false;
 
-  // True if event delivery is suspended (mSuspendedForInactiveDocument
+  // True if event delivery is suspended (mSuspendedByInactiveDocOrDocshell
   // must also be true).
   bool mEventDeliveryPaused = false;
 
@@ -1897,6 +1898,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // resolved/rejected at AsyncResolveSeekDOMPromiseIfExists()/
   // AsyncRejectSeekDOMPromiseIfExists() methods.
   RefPtr<dom::Promise> mSeekDOMPromise;
+
+  // Return true if the docshell is inactive and explicitly wants to stop media
+  // playing in that shell.
+  bool ShouldBeSuspendedByInactiveDocShell() const;
 
   // For debugging bug 1407148.
   void AssertReadyStateIsNothing();
