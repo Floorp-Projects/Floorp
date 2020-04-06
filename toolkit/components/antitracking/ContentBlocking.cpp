@@ -378,8 +378,7 @@ ContentBlocking::AllowAccessFor(
         topOuterWindow->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
     ContentBlockingNotifier::OnEvent(
-        topOuterWindow, channel,
-        parentInnerWindow->GetExtantDoc()->GetChannel(), false,
+        channel, parentInnerWindow->GetExtantDoc()->GetChannel(), false,
         CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior)
             ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
             : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
