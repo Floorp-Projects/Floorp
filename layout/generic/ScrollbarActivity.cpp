@@ -17,7 +17,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 namespace mozilla {
 namespace layout {
@@ -25,18 +25,6 @@ namespace layout {
 using mozilla::dom::Element;
 
 NS_IMPL_ISUPPORTS(ScrollbarActivity, nsIDOMEventListener)
-
-static bool GetForceAlwaysVisiblePref() {
-  static bool sForceAlwaysVisible;
-  static bool sForceAlwaysVisiblePrefCached = false;
-  if (!sForceAlwaysVisiblePrefCached) {
-    Preferences::AddBoolVarCache(
-        &sForceAlwaysVisible,
-        "layout.testing.overlay-scrollbars.always-visible");
-    sForceAlwaysVisiblePrefCached = true;
-  }
-  return sForceAlwaysVisible;
-}
 
 void ScrollbarActivity::QueryLookAndFeelVals() {
   // Fade animation constants
@@ -368,7 +356,7 @@ bool ScrollbarActivity::SetIsFading(bool aNewFading) {
 }
 
 void ScrollbarActivity::StartFadeBeginTimer() {
-  if (GetForceAlwaysVisiblePref()) {
+  if (StaticPrefs::layout_testing_overlay_scrollbars_always_visible()) {
     return;
   }
   if (!mFadeBeginTimer) {
