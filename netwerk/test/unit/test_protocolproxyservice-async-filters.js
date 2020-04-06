@@ -96,7 +96,7 @@ TestFilter.prototype = {
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
 
-  applyFilter(pps, uri, pi, cb) {
+  applyFilter(uri, pi, cb) {
     if (this._result == THROW) {
       throw Cr.NS_ERROR_FAILURE;
     }
