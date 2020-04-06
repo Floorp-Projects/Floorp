@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Cookie.h"
 #include "CookieCommons.h"
 #include "nsIEffectiveTLDService.h"
 
@@ -25,21 +26,29 @@ bool CookieCommons::PathMatches(Cookie* aCookie, const nsACString& aPath) {
   // if our cookie path is empty we can't really perform our prefix check, and
   // also we can't check the last character of the cookie path, so we would
   // never return a successful match.
-  if (cookiePath.IsEmpty()) return false;
+  if (cookiePath.IsEmpty()) {
+    return false;
+  }
 
   // if the cookie path and the request path are identical, they match.
-  if (cookiePath.Equals(aPath)) return true;
+  if (cookiePath.Equals(aPath)) {
+    return true;
+  }
 
   // if the cookie path is a prefix of the request path, and the last character
   // of the cookie path is %x2F ("/"), they match.
   bool isPrefix = StringBeginsWith(aPath, cookiePath);
-  if (isPrefix && cookiePath.Last() == '/') return true;
+  if (isPrefix && cookiePath.Last() == '/') {
+    return true;
+  }
 
   // if the cookie path is a prefix of the request path, and the first character
   // of the request path that is not included in the cookie path is a %x2F ("/")
   // character, they match.
   uint32_t cookiePathLen = cookiePath.Length();
-  if (isPrefix && aPath[cookiePathLen] == '/') return true;
+  if (isPrefix && aPath[cookiePathLen] == '/') {
+    return true;
+  }
 
   return false;
 }
@@ -67,8 +76,9 @@ nsresult CookieCommons::GetBaseDomain(nsIEffectiveTLDService* aTLDService,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // aHost (and thus aBaseDomain) may be the string '.'. If so, fail.
-  if (aBaseDomain.Length() == 1 && aBaseDomain.Last() == '.')
+  if (aBaseDomain.Length() == 1 && aBaseDomain.Last() == '.') {
     return NS_ERROR_INVALID_ARG;
+  }
 
   // block any URIs without a host that aren't file:// URIs.
   if (aBaseDomain.IsEmpty() && !aHostURI->SchemeIs("file")) {
@@ -89,7 +99,9 @@ nsresult CookieCommons::GetBaseDomainFromHost(
     nsIEffectiveTLDService* aTLDService, const nsACString& aHost,
     nsCString& aBaseDomain) {
   // aHost must not be the string '.'.
-  if (aHost.Length() == 1 && aHost.Last() == '.') return NS_ERROR_INVALID_ARG;
+  if (aHost.Length() == 1 && aHost.Last() == '.') {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   // aHost may contain a leading dot; if so, strip it now.
   bool domain = !aHost.IsEmpty() && aHost.First() == '.';
@@ -104,7 +116,9 @@ nsresult CookieCommons::GetBaseDomainFromHost(
     // such as 'co.uk', or the empty string. use the host as a key in such
     // cases; however, we reject any such hosts with a leading dot, since it
     // doesn't make sense for them to be domain cookies.
-    if (domain) return NS_ERROR_INVALID_ARG;
+    if (domain) {
+      return NS_ERROR_INVALID_ARG;
+    }
 
     aBaseDomain = aHost;
     return NS_OK;

@@ -69,15 +69,12 @@ class CookieServiceChild : public PCookieServiceChild,
 
   nsresult SetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
                                    const nsACString& aCookieString,
-                                   const nsACString& aServerTime,
                                    bool aFromHttp);
 
   void RecordDocumentCookie(Cookie* aCookie, const OriginAttributes& aAttrs);
 
   void SetCookieInternal(const CookieStruct& aCookieData,
-                         const OriginAttributes& aAttrs, nsIChannel* aChannel,
-                         bool aFromHttp,
-                         nsICookiePermission* aPermissionService);
+                         const OriginAttributes& aAttrs);
 
   uint32_t CountCookiesFromHashTable(const nsCString& aBaseDomain,
                                      const OriginAttributes& aOriginAttrs);

@@ -110,14 +110,15 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
   void RemoveAll();
 
   void NotifyChanged(nsISupports* aSubject, const char16_t* aData,
-                     bool aOldCookieIsSession = false, bool aFromHttp = false);
+                     bool aOldCookieIsSession = false);
 
   void AddCookie(const nsACString& aBaseDomain,
                  const OriginAttributes& aOriginAttributes, Cookie* aCookie,
                  int64_t aCurrentTimeInUsec, nsIURI* aHostURI,
                  const nsACString& aCookieHeader, bool aFromHttp);
 
-  void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
+  static void CreateOrUpdatePurgeList(nsIArray** aPurgedList,
+                                      nsICookie* aCookie);
 
   virtual void StaleCookies(const nsTArray<Cookie*>& aCookieList,
                             int64_t aCurrentTimeInUsec) = 0;
@@ -170,13 +171,14 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
                         const OriginAttributes& aOriginAttributes,
                         Cookie* aCookie);
 
-  void FindStaleCookies(CookieEntry* aEntry, int64_t aCurrentTime,
-                        bool aIsSecure, nsTArray<CookieListIter>& aOutput,
-                        uint32_t aLimit);
+  static void FindStaleCookies(CookieEntry* aEntry, int64_t aCurrentTime,
+                               bool aIsSecure,
+                               nsTArray<CookieListIter>& aOutput,
+                               uint32_t aLimit);
 
   void UpdateCookieOldestTime(Cookie* aCookie);
 
-  already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
+  static already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
 
   virtual already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
                                                   uint16_t aMaxNumberOfCookies,
