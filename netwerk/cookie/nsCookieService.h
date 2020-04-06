@@ -14,15 +14,14 @@
 
 #include "Cookie.h"
 #include "CookieKey.h"
+#include "CookieStorage.h"
+
 #include "nsString.h"
 #include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
-#include "nsTHashtable.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageAsyncStatement.h"
 #include "mozIStorageConnection.h"
-#include "mozIStorageCompletionCallback.h"
-#include "mozIStorageStatementCallback.h"
 #include "nsIFile.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/BasePrincipal.h"
@@ -45,7 +44,6 @@ class nsIArray;
 class nsIThread;
 class mozIStorageService;
 class mozIThirdPartyUtil;
-class ReadCookieDBListener;
 
 struct nsListIter;
 
@@ -56,87 +54,12 @@ class CookieServiceParent;
 }  // namespace mozilla
 
 using mozilla::net::CookieKey;
-// Inherit from CookieKey so this can be stored in nsTHashTable
-// TODO: why aren't we using nsClassHashTable<CookieKey, ArrayType>?
-class nsCookieEntry : public CookieKey {
- public:
-  // Hash methods
-  typedef nsTArray<RefPtr<mozilla::net::Cookie>> ArrayType;
-  typedef ArrayType::index_type IndexType;
-
-  explicit nsCookieEntry(KeyTypePointer aKey) : CookieKey(aKey) {}
-
-  nsCookieEntry(const nsCookieEntry& toCopy) {
-    // if we end up here, things will break. nsTHashtable shouldn't
-    // allow this, since we set ALLOW_MEMMOVE to true.
-    MOZ_ASSERT_UNREACHABLE("nsCookieEntry copy constructor is forbidden!");
-  }
-
-  ~nsCookieEntry() = default;
-
-  inline ArrayType& GetCookies() { return mCookies; }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
- private:
-  ArrayType mCookies;
-};
 
 // encapsulates a (key, Cookie) tuple for temporary storage purposes.
 struct CookieDomainTuple {
   CookieKey key;
   OriginAttributes originAttributes;
   mozilla::UniquePtr<mozilla::net::CookieStruct> cookie;
-};
-
-// encapsulates in-memory and on-disk CookieStorages, so we can
-// conveniently switch storage when entering or exiting private browsing.
-struct CookieStorage final {
-  CookieStorage()
-      : cookieCount(0),
-        cookieOldestTime(INT64_MAX),
-        corruptFlag(OK),
-        readListener(nullptr) {}
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~CookieStorage() = default;
-
- public:
-  NS_INLINE_DECL_REFCOUNTING(CookieStorage)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  // State of the database connection.
-  enum CorruptFlag {
-    OK,                   // normal
-    CLOSING_FOR_REBUILD,  // corruption detected, connection closing
-    REBUILDING            // close complete, rebuilding database from memory
-  };
-
-  nsTHashtable<nsCookieEntry> hostTable;
-  uint32_t cookieCount;
-  int64_t cookieOldestTime;
-  nsCOMPtr<nsIFile> cookieFile;
-  nsCOMPtr<mozIStorageConnection> dbConn;
-  nsCOMPtr<mozIStorageAsyncStatement> stmtInsert;
-  nsCOMPtr<mozIStorageAsyncStatement> stmtDelete;
-  nsCOMPtr<mozIStorageAsyncStatement> stmtUpdate;
-  CorruptFlag corruptFlag;
-
-  // Various parts representing asynchronous read state. These are useful
-  // while the background read is taking place.
-  nsCOMPtr<mozIStorageConnection> syncConn;
-  nsCOMPtr<mozIStorageStatement> stmtReadDomain;
-  // The asynchronous read listener. This is a weak ref (storage has ownership)
-  // since it may need to outlive the CookieStorage's database connection.
-  ReadCookieDBListener* readListener;
-
-  // DB completion handlers.
-  nsCOMPtr<mozIStorageStatementCallback> insertListener;
-  nsCOMPtr<mozIStorageStatementCallback> updateListener;
-  nsCOMPtr<mozIStorageStatementCallback> removeListener;
-  nsCOMPtr<mozIStorageCompletionCallback> closeListener;
 };
 
 // these constants represent an operation being performed on cookies
@@ -250,9 +173,9 @@ class nsCookieService final : public nsICookieService,
   void CloseCookieStorages();
   void CleanupCachedStatements();
   void CleanupDefaultDBConnection();
-  void HandleDBClosed(CookieStorage* aCookieStorage);
-  void HandleCorruptDB(CookieStorage* aCookieStorage);
-  void RebuildCorruptDB(CookieStorage* aCookieStorage);
+  void HandleDBClosed(mozilla::net::CookieStorage* aCookieStorage);
+  void HandleCorruptDB(mozilla::net::CookieStorage* aCookieStorage);
+  void RebuildCorruptDB(mozilla::net::CookieStorage* aCookieStorage);
   OpenDBResult Read();
   mozilla::UniquePtr<mozilla::net::CookieStruct> GetCookieFromRow(
       mozIStorageStatement* aRow);
@@ -288,7 +211,7 @@ class nsCookieService final : public nsICookieService,
       const nsListIter& aIter,
       mozIStorageBindingParamsArray* aParamsArray = nullptr);
   void AddCookieToList(const CookieKey& aKey, mozilla::net::Cookie* aCookie,
-                       CookieStorage* aCookieStorage,
+                       mozilla::net::CookieStorage* aCookieStorage,
                        mozIStorageBindingParamsArray* aParamsArray,
                        bool aWriteToDB = true);
   void UpdateCookieInList(mozilla::net::Cookie* aCookie, int64_t aLastAccessed,
@@ -321,7 +244,7 @@ class nsCookieService final : public nsICookieService,
                   const nsCString& aName, const nsCString& aPath,
                   nsListIter& aIter);
   bool FindSecureCookie(const CookieKey& aKey, mozilla::net::Cookie* aCookie);
-  void FindStaleCookies(nsCookieEntry* aEntry, int64_t aCurrentTime,
+  void FindStaleCookies(mozilla::net::CookieEntry* aEntry, int64_t aCurrentTime,
                         bool aIsSecure, nsTArray<nsListIter>& aOutput,
                         uint32_t aLimit);
   void NotifyAccepted(nsIChannel* aChannel);
@@ -332,7 +255,7 @@ class nsCookieService final : public nsICookieService,
   void NotifyPurged(nsICookie* aCookie);
   already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
   void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
-  void UpdateCookieOldestTime(CookieStorage* aCookieStorage,
+  void UpdateCookieOldestTime(mozilla::net::CookieStorage* aCookieStorage,
                               mozilla::net::Cookie* aCookie);
 
   nsresult GetCookiesWithOriginAttributes(
@@ -369,9 +292,9 @@ class nsCookieService final : public nsICookieService,
   // this storage encapsulates both the in-memory table and the on-disk DB.
   // note that the private storages' dbConn should always be null - we never
   // want to be dealing with the on-disk DB when in private browsing.
-  CookieStorage* mStorage;
-  RefPtr<CookieStorage> mDefaultStorage;
-  RefPtr<CookieStorage> mPrivateStorage;
+  mozilla::net::CookieStorage* mStorage;
+  RefPtr<mozilla::net::CookieStorage> mDefaultStorage;
+  RefPtr<mozilla::net::CookieStorage> mPrivateStorage;
 
   uint16_t mMaxNumberOfCookies;
   uint16_t mMaxCookiesPerHost;
@@ -388,7 +311,6 @@ class nsCookieService final : public nsICookieService,
 
   // friends!
   friend class DBListenerErrorHandler;
-  friend class ReadCookieDBListener;
   friend class CloseCookieDBListener;
 
   static already_AddRefed<nsCookieService> GetSingleton();
