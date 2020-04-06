@@ -331,6 +331,7 @@ touch-enabled = touch input enabled
 drag-enabled = scrollbar drag enabled
 keyboard-enabled = keyboard enabled
 autoscroll-enabled = autoscroll enabled
+zooming-enabled = smooth pinch-zoom enabled
 
 ## Variables
 ## $preferenceKey (string) - String ID of preference
