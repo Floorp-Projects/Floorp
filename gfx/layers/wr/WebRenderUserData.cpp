@@ -14,7 +14,6 @@
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
-#include "mozilla/webgpu/WebGPUChild.h"
 #include "nsDisplayListInvalidation.h"
 #include "nsIFrame.h"
 #include "WebRenderCanvasRenderer.h"
@@ -391,18 +390,6 @@ ImageContainer* WebRenderCanvasData::GetImageContainer() {
 }
 
 void WebRenderCanvasData::ClearImageContainer() { mContainer = nullptr; }
-
-WebRenderLocalCanvasData::WebRenderLocalCanvasData(
-    RenderRootStateManager* aManager, nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem) {}
-
-WebRenderLocalCanvasData::~WebRenderLocalCanvasData() = default;
-
-void WebRenderLocalCanvasData::Present() {
-  if (mGpuBridge) {
-    mGpuBridge->SwapChainPresent(mExternalImageId, mGpuTextureId);
-  }
-}
 
 WebRenderRemoteData::WebRenderRemoteData(RenderRootStateManager* aManager,
                                          nsDisplayItem* aItem)

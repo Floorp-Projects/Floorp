@@ -25,8 +25,7 @@ struct WGPUTextureViewDescriptor;
 struct TextureInfo;
 typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
 
-class WebGPUChild final : public PWebGPUChild,
-                          public SupportsWeakPtr<WebGPUChild> {
+class WebGPUChild final : public PWebGPUChild {
  public:
   friend class layers::CompositorBridgeChild;
 
@@ -71,11 +70,6 @@ class WebGPUChild final : public PWebGPUChild,
       RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc);
 
   void QueueSubmit(RawId aSelfId, const nsTArray<RawId>& aCommandBufferIds);
-
-  void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
-                             size_t maxBufferCount,
-                             wr::ExternalImageId aExternalImageId);
-  void SwapChainPresent(wr::ExternalImageId aExternalImageId, RawId aTextureId);
 
  private:
   virtual ~WebGPUChild();
