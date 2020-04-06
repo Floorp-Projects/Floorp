@@ -740,11 +740,11 @@ TextPropertyEditor.prototype = {
   updatePropertyState: function() {
     if (this.prop.enabled) {
       this.enable.style.removeProperty("visibility");
-      this.enable.setAttribute("checked", "");
     } else {
       this.enable.style.visibility = "visible";
-      this.enable.removeAttribute("checked");
     }
+
+    this.enable.checked = this.prop.enabled;
 
     this.warning.title = !this.isNameValid()
       ? l10n("rule.warningName.title")
@@ -926,13 +926,7 @@ TextPropertyEditor.prototype = {
    * Handles clicks on the disabled property.
    */
   _onEnableChanged: function(event) {
-    const checked = this.enable.hasAttribute("checked");
-    if (checked) {
-      this.enable.removeAttribute("checked");
-    } else {
-      this.enable.setAttribute("checked", "");
-    }
-    this.prop.setEnabled(!checked);
+    this.prop.setEnabled(this.enable.checked);
     event.stopPropagation();
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
       session_id: this.toolbox.sessionId,
