@@ -198,7 +198,7 @@ nsresult PageIconProtocolHandler::NewChannelInternal(nsIURI* aURI,
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannel(
       getter_AddRefs(channel), aURI, pipeIn.forget(),
-      aLoadInfo->LoadingPrincipal(),
+      aLoadInfo->GetLoadingPrincipal(),
       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
       nsIContentPolicy::TYPE_INTERNAL_IMAGE);
   NS_ENSURE_SUCCESS(rv, rv);

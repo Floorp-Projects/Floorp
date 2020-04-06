@@ -55,6 +55,7 @@ class LoadInfo final : public nsILoadInfo {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSILOADINFO
+  nsIPrincipal* GetLoadingPrincipal() final;
 
   // aLoadingPrincipal MUST NOT BE NULL.
   LoadInfo(nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,

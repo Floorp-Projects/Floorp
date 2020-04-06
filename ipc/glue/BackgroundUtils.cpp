@@ -411,10 +411,9 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
                                 Maybe<LoadInfoArgs>* aOptionalLoadInfoArgs) {
   nsresult rv = NS_OK;
   Maybe<PrincipalInfo> loadingPrincipalInfo;
-  if (aLoadInfo->LoadingPrincipal()) {
+  if (nsIPrincipal* loadingPrin = aLoadInfo->GetLoadingPrincipal()) {
     PrincipalInfo loadingPrincipalInfoTemp;
-    rv = PrincipalToPrincipalInfo(aLoadInfo->LoadingPrincipal(),
-                                  &loadingPrincipalInfoTemp);
+    rv = PrincipalToPrincipalInfo(loadingPrin, &loadingPrincipalInfoTemp);
     NS_ENSURE_SUCCESS(rv, rv);
     loadingPrincipalInfo = Some(loadingPrincipalInfoTemp);
   }
