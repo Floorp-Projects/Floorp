@@ -37,6 +37,10 @@
  * @property {string} lastSeen
  *   ISO-formatted date string of when the experiment was last seen from the
  *   recipe server.
+ * @property {string|null} temporaryErrorDeadline
+ *   ISO-formatted date string of when temporary errors with this experiment
+ *   should not longer be considered temporary. After this point, further errors
+ *   will result in unenrollment.
  * @property {Object} preferences
  *   An object consisting of all the preferences that are set by this experiment.
  *   Keys are the name of each preference affected by this experiment. Values are
@@ -772,7 +776,10 @@ var PreferenceExperiments = {
     }
 
     experiment.expired = true;
-    store.saveSoon();
+    if (experiment.temporaryErrorDeadline) {
+      experiment.temporaryErrorDeadline = null;
+    }
+    await store.saveSoon();
 
     TelemetryEnvironment.setExperimentInactive(experimentSlug);
     TelemetryEvents.sendEvent("unenroll", "preference_study", experimentSlug, {
@@ -783,6 +790,11 @@ var PreferenceExperiments = {
         experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
     await this.saveStartupPrefs();
+    Services.obs.notifyObservers(
+      null,
+      "normandy:preference-experiment:stopped",
+      experimentSlug
+    );
   },
 
   /**
@@ -812,7 +824,7 @@ var PreferenceExperiments = {
     log.debug(`PreferenceExperiments.get(${experimentSlug})`);
     const store = await ensureStorage();
     if (!(experimentSlug in store.data.experiments)) {
-      throw new Error(
+      throw new PreferenceExperiments.NotFoundError(
         `Could not find a preference experiment with the slug "${experimentSlug}"`
       );
     }
@@ -852,6 +864,28 @@ var PreferenceExperiments = {
     const store = await ensureStorage();
     return experimentSlug in store.data.experiments;
   },
+
+  /**
+   * Update an experiment in the data store. If an experiment with the given
+   * slug is not already in the store, an error will be thrown.
+   *
+   * @param experiment {Experiment} The experiment to update
+   * @param experiment.slug {String} The experiment must have a slug
+   */
+  async update(experiment) {
+    const store = await ensureStorage();
+
+    if (!(experiment.slug in store.data.experiments)) {
+      throw new Error(
+        `Could not update a preference experiment with the slug "${experiment.slug}"`
+      );
+    }
+
+    store.data.experiments[experiment.slug] = experiment;
+    store.saveSoon();
+  },
+
+  NotFoundError: class extends Error {},
 
   /**
    * These migrations should only be called from `NormandyMigrations.jsm` and tests.

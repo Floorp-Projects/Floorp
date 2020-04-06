@@ -1878,8 +1878,13 @@ decorate_task(
     // setting the preference on the user branch should trigger the observer to stop the experiment
     mockPreferences.set("fake.preference", "uservalue", "user");
 
-    // let the event loop tick to run the observer
-    await Promise.resolve();
+    // Wait until the change is processed
+    await TestUtils.topicObserved(
+      "normandy:preference-experiment:stopped",
+      (subject, message) => {
+        return message == "test";
+      }
+    );
 
     sendEventStub.assertEvents([
       [
