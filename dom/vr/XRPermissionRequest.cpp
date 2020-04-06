@@ -59,6 +59,9 @@ XRPermissionRequest::Allow(JS::HandleValue aChoices) {
 
 nsresult XRPermissionRequest::Start() {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!CheckPermissionDelegate()) {
+    return Cancel();
+  }
   PromptResult pr = CheckPromptPrefs();
   if (pr == PromptResult::Granted) {
     return Allow(JS::UndefinedHandleValue);

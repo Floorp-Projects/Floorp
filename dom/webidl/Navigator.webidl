@@ -227,6 +227,12 @@ partial interface Navigator {
   VRServiceTest requestVRServiceTest();
 };
 
+// https://immersive-web.github.io/webxr/#dom-navigator-xr
+partial interface Navigator {
+  [SecureContext, SameObject, Throws, Pref="dom.vr.webxr.enabled"]
+  readonly attribute XRSystem xr;
+};
+
 // http://webaudio.github.io/web-midi-api/#requestmidiaccess
 partial interface Navigator {
   [Throws, Pref="dom.webmidi.enabled"]
