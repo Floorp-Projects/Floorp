@@ -116,6 +116,10 @@ class WebExtension(Perftest):
                 elapsed_time += 1
                 if elapsed_time > (timeout) - 5:  # stop 5 seconds early
                     self.control_server.wait_for_quit()
+
+                    if not self.control_server.is_webextension_loaded:
+                        raise RuntimeError("Connection to Raptor webextension failed!")
+
                     raise RuntimeError(
                         "Test failed to finish. "
                         "Application timed out after {} seconds".format(timeout)
@@ -192,6 +196,8 @@ class WebExtension(Perftest):
             self.webext_id = self.profile.addons.addon_details(self.raptor_webext)["id"]
         except AttributeError:
             self.webext_id = None
+
+        self.control_server.startup_handler(False)
 
     def remove_raptor_webext(self):
         # remove the raptor webext; as it must be reloaded with each subtest anyway
