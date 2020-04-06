@@ -7174,6 +7174,13 @@
   value: false
   mirror: always
 
+# If line-height is lower than this value (in device pixels), 1 line scroll
+# scrolls this height.
+- name: mousewheel.min_line_scroll_amount
+  type: int32_t
+  value: 5
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "network."
 #---------------------------------------------------------------------------
