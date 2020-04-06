@@ -13,7 +13,6 @@
 #include "nsWeakReference.h"
 
 #include "Cookie.h"
-#include "CookieStorage.h"
 
 #include "nsString.h"
 #include "nsIMemoryReporter.h"
@@ -29,6 +28,9 @@ class mozIThirdPartyUtil;
 namespace mozilla {
 namespace net {
 
+class CookiePersistentStorage;
+class CookiePrivateStorage;
+class CookieStorage;
 class CookieServiceParent;
 
 // these constants represent an operation being performed on cookies
@@ -206,7 +208,7 @@ class CookieService final : public nsICookieService,
 
   // we have two separate Cookie Storages: one for normal browsing and one for
   // private browsing.
-  RefPtr<CookieDefaultStorage> mDefaultStorage;
+  RefPtr<CookiePersistentStorage> mPersistentStorage;
   RefPtr<CookiePrivateStorage> mPrivateStorage;
 
   // friends!

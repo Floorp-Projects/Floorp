@@ -18,6 +18,8 @@
 
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/CookiePermission.h"
+#include "mozilla/net/CookiePersistentStorage.h"
+#include "mozilla/net/CookiePrivateStorage.h"
 #include "mozilla/net/CookieService.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/HttpBaseChannel.h"
@@ -54,14 +56,12 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/storage.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/FileUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextUtils.h"
 #include "nsIConsoleService.h"
-#include "nsVariant.h"
 
 using namespace mozilla::dom;
 
@@ -193,19 +193,19 @@ nsresult CookieService::Init() {
 }
 
 void CookieService::InitCookieStorages() {
-  NS_ASSERTION(!mDefaultStorage, "already have a default CookieStorage");
+  NS_ASSERTION(!mPersistentStorage, "already have a default CookieStorage");
   NS_ASSERTION(!mPrivateStorage, "already have a private CookieStorage");
 
   // Create two new CookieStorages.
-  mDefaultStorage = CookieDefaultStorage::Create();
+  mPersistentStorage = CookiePersistentStorage::Create();
   mPrivateStorage = CookiePrivateStorage::Create();
 
-  mDefaultStorage->Activate();
+  mPersistentStorage->Activate();
 }
 
 void CookieService::CloseCookieStorages() {
   // return if we already closed
-  if (!mDefaultStorage) {
+  if (!mPersistentStorage) {
     return;
   }
 
@@ -214,8 +214,8 @@ void CookieService::CloseCookieStorages() {
     mPrivateStorage = nullptr;
   }
 
-  mDefaultStorage->Close();
-  mDefaultStorage = nullptr;
+  mPersistentStorage->Close();
+  mPersistentStorage = nullptr;
 }
 
 CookieService::~CookieService() {
@@ -239,7 +239,7 @@ CookieService::Observe(nsISupports* aSubject, const char* aTopic,
     CloseCookieStorages();
 
   } else if (!strcmp(aTopic, "profile-do-change")) {
-    NS_ASSERTION(!mDefaultStorage, "shouldn't have a default CookieStorage");
+    NS_ASSERTION(!mPersistentStorage, "shouldn't have a default CookieStorage");
     NS_ASSERTION(!mPrivateStorage, "shouldn't have a private CookieStorage");
 
     // the profile has already changed; init the db from the new location.
@@ -500,8 +500,8 @@ CookieService::RunInTransaction(nsICookieTransactionCallback* aCallback) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mDefaultStorage->EnsureReadComplete();
-  return mDefaultStorage->RunInTransaction(aCallback);
+  mPersistentStorage->EnsureReadComplete();
+  return mPersistentStorage->RunInTransaction(aCallback);
 }
 
 /******************************************************************************
@@ -515,8 +515,8 @@ CookieService::RemoveAll() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mDefaultStorage->EnsureReadComplete();
-  mDefaultStorage->RemoveAll();
+  mPersistentStorage->EnsureReadComplete();
+  mPersistentStorage->RemoveAll();
   return NS_OK;
 }
 
@@ -526,10 +526,10 @@ CookieService::GetCookies(nsTArray<RefPtr<nsICookie>>& aCookies) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mDefaultStorage->EnsureReadComplete();
+  mPersistentStorage->EnsureReadComplete();
 
   // We expose only non-private cookies.
-  mDefaultStorage->GetCookies(aCookies);
+  mPersistentStorage->GetCookies(aCookies);
 
   return NS_OK;
 }
@@ -540,10 +540,10 @@ CookieService::GetSessionCookies(nsTArray<RefPtr<nsICookie>>& aCookies) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mDefaultStorage->EnsureReadComplete();
+  mPersistentStorage->EnsureReadComplete();
 
   // We expose only non-private cookies.
-  mDefaultStorage->GetCookies(aCookies);
+  mPersistentStorage->GetCookies(aCookies);
 
   return NS_OK;
 }
@@ -667,9 +667,9 @@ CookieService::ImportCookies(nsIFile* aCookieFile) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mDefaultStorage->EnsureReadComplete();
+  mPersistentStorage->EnsureReadComplete();
 
-  return mDefaultStorage->ImportCookies(aCookieFile);
+  return mPersistentStorage->ImportCookies(aCookieFile);
 }
 
 /******************************************************************************
@@ -1993,9 +1993,9 @@ CookieService::CountCookiesFromHost(const nsACString& aHost,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mDefaultStorage->EnsureReadComplete();
+  mPersistentStorage->EnsureReadComplete();
 
-  *aCountFromHost = mDefaultStorage->CountCookiesFromHost(baseDomain, 0);
+  *aCountFromHost = mPersistentStorage->CountCookiesFromHost(baseDomain, 0);
 
   return NS_OK;
 }
@@ -2198,12 +2198,12 @@ CookieService::RemoveAllSince(int64_t aSinceWhen, JSContext* aCx,
     return result.StealNSResult();
   }
 
-  mDefaultStorage->EnsureReadComplete();
+  mPersistentStorage->EnsureReadComplete();
 
   nsTArray<RefPtr<nsICookie>> cookieList;
 
   // We delete only non-private cookies.
-  mDefaultStorage->GetAll(cookieList);
+  mPersistentStorage->GetAll(cookieList);
 
   RefPtr<RemoveAllSinceRunnable> runMe = new RemoveAllSinceRunnable(
       promise, this, std::move(cookieList), aSinceWhen);
@@ -2216,8 +2216,8 @@ CookieService::RemoveAllSince(int64_t aSinceWhen, JSContext* aCx,
 size_t CookieService::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
-  if (mDefaultStorage) {
-    n += mDefaultStorage->SizeOfIncludingThis(aMallocSizeOf);
+  if (mPersistentStorage) {
+    n += mPersistentStorage->SizeOfIncludingThis(aMallocSizeOf);
   }
   if (mPrivateStorage) {
     n += mPrivateStorage->SizeOfIncludingThis(aMallocSizeOf);
@@ -2239,7 +2239,7 @@ CookieService::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 bool CookieService::IsInitialized() const {
-  if (!mDefaultStorage) {
+  if (!mPersistentStorage) {
     NS_WARNING("No CookieStorage! Profile already close?");
     return false;
   }
@@ -2255,8 +2255,8 @@ CookieStorage* CookieService::PickStorage(const OriginAttributes& aAttrs) {
     return mPrivateStorage;
   }
 
-  mDefaultStorage->EnsureReadComplete();
-  return mDefaultStorage;
+  mPersistentStorage->EnsureReadComplete();
+  return mPersistentStorage;
 }
 
 CookieStorage* CookieService::PickStorage(
@@ -2268,8 +2268,8 @@ CookieStorage* CookieService::PickStorage(
     return mPrivateStorage;
   }
 
-  mDefaultStorage->EnsureReadComplete();
-  return mDefaultStorage;
+  mPersistentStorage->EnsureReadComplete();
+  return mPersistentStorage;
 }
 
 }  // namespace net
