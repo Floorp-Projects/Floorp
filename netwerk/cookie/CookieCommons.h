@@ -8,6 +8,15 @@
 
 #include <cstdint>
 #include "prtime.h"
+#include "nsString.h"
+
+class nsIEffectiveTLDService;
+class nsIURI;
+
+namespace mozilla {
+namespace net {
+
+class Cookie;
 
 // pref string constants
 static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
@@ -25,5 +34,23 @@ static const uint32_t kMaxBytesPerPath = 1024;
 
 static const int64_t kCookiePurgeAge =
     int64_t(30 * 24 * 60 * 60) * PR_USEC_PER_SEC;  // 30 days in microseconds
+
+class CookieCommons final {
+ public:
+  static bool DomainMatches(Cookie* aCookie, const nsACString& aHost);
+
+  static bool PathMatches(Cookie* aCookie, const nsACString& aPath);
+
+  static nsresult GetBaseDomain(nsIEffectiveTLDService* aTLDService,
+                                nsIURI* aHostURI, nsCString& aBaseDomain,
+                                bool& aRequireHostMatch);
+
+  static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService* aTLDService,
+                                        const nsACString& aHost,
+                                        nsCString& aBaseDomain);
+};
+
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // mozilla_net_CookieCommons_h

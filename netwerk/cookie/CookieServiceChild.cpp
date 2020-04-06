@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookiePermission.h"
-#include "mozilla/net/CookieService.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
@@ -18,6 +17,7 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "Cookie.h"
+#include "CookieCommons.h"
 #include "nsContentUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -163,7 +163,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveAll() {
 mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
     const CookieStruct& aCookie, const OriginAttributes& aAttrs) {
   nsCString baseDomain;
-  CookieService::GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
+  CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
   CookieKey key(baseDomain, aAttrs);
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
@@ -261,7 +261,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
     StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
   }
 
-  CookieService::GetBaseDomain(TLDService, aHostURI, baseDomain,
+  CookieCommons::GetBaseDomain(TLDService, aHostURI, baseDomain,
                                requireHostMatch);
   CookieKey key(baseDomain, attrs);
   CookiesList* cookiesList = nullptr;
@@ -296,7 +296,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   for (uint32_t i = 0; i < cookiesList->Length(); i++) {
     Cookie* cookie = cookiesList->ElementAt(i);
     // check the host, since the base domain lookup is conservative.
-    if (!CookieService::DomainMatches(cookie, hostFromURI)) continue;
+    if (!CookieCommons::DomainMatches(cookie, hostFromURI)) continue;
 
     // We don't show HttpOnly cookies in content processes.
     if (cookie->IsHttpOnly()) {
@@ -322,7 +322,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
     }
 
     // if the nsIURI path doesn't match the cookie path, don't send it back
-    if (!CookieService::PathMatches(cookie, pathFromURI)) continue;
+    if (!CookieCommons::PathMatches(cookie, pathFromURI)) continue;
 
     // check if the cookie has expired
     if (cookie->Expiry() <= currentTime) {
@@ -396,7 +396,7 @@ void CookieServiceChild::SetCookieInternal(
 void CookieServiceChild::RecordDocumentCookie(Cookie* aCookie,
                                               const OriginAttributes& aAttrs) {
   nsAutoCString baseDomain;
-  CookieService::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
+  CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie->Host(),
                                        baseDomain);
 
   CookieKey key(baseDomain, aAttrs);
@@ -515,7 +515,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
   bool requireHostMatch;
   nsCString baseDomain;
-  CookieService::GetBaseDomain(mTLDService, aHostURI, baseDomain,
+  CookieCommons::GetBaseDomain(mTLDService, aHostURI, baseDomain,
                                requireHostMatch);
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
