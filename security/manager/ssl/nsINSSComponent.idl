@@ -58,14 +58,6 @@ interface nsINSSComponent : nsISupports {
   Array<Array<octet> > getEnterpriseIntermediates();
 
   /**
-   * Test utility for adding an intermediate certificate to the current set of
-   * imported enterprise intermediates, if any. Additions to the set made using
-   * this function will be cleared when the value of the preference
-   * "security.enterprise_roots.enabled" changes.
-   */
-  void addEnterpriseIntermediate(in Array<octet> intermediateBytes);
-
-  /**
    * For performance reasons, the builtin roots module is loaded on a background
    * thread. When any code that depends on the builtin roots module runs, it
    * must first wait for the module to be loaded.
