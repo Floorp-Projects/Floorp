@@ -164,8 +164,7 @@
       /* 175% dpi should result in the same device pixel sizes as 150% dpi. */
       @media (min-resolution: 1.70dppx) and (max-resolution: 1.95dppx) {
         .titlebar-button {
-          padding-left: 14.1px;
-          padding-right: 14.1px;
+          padding-inline: 14.1px;
         }
 
         .titlebar-button > .toolbarbutton-icon {
@@ -177,8 +176,7 @@
       /* 225% dpi should result in the same device pixel sizes as 200% dpi. */
       @media (min-resolution: 2.20dppx) and (max-resolution: 2.45dppx) {
         .titlebar-button {
-          padding-left: 15.3333px;
-          padding-right: 15.3333px;
+          padding-inline: 15.3333px;
         }
 
         .titlebar-button > .toolbarbutton-icon {
@@ -303,8 +301,7 @@
     /* Vertical toolbar border */
     #main-window[sizemode=normal] .browser-toolbar:not(.titlebar-color):not(:-moz-lwtheme),
     #main-window[sizemode=normal] .browser-toolbar:-moz-lwtheme {
-      border-left: 1px solid @glassShadowColor@;
-      border-right: 1px solid @glassShadowColor@;
+      border-inline: 1px solid @glassShadowColor@;
       background-clip: padding-box;
     }
 
@@ -321,8 +318,7 @@
 
     :root[sizemode=normal] #navigator-toolbox::after {
       box-shadow: 1px 0 0 @glassShadowColor@, -1px 0 0 @glassShadowColor@;
-      margin-left: 1px;
-      margin-right: 1px;
+      margin-inline: 1px;
     }
 
     #main-window[sizemode=normal] #browser-border-start,
