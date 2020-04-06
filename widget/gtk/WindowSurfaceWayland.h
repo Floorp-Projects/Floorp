@@ -264,11 +264,11 @@ class WindowSurfaceWayland : public WindowSurface {
   // mLockedScreenRect is window size when our wayland buffer was allocated.
   LayoutDeviceIntRect mLockedScreenRect;
 
-  // WidgetRect is an actual size of mozcontainer widget. It can be
-  // different than mLockedScreenRect during resize when mBounds are updated
-  // immediately but actual GtkWidget size is updated asynchronously
-  // (see Bug 1489463).
-  LayoutDeviceIntRect mWidgetRect;
+  // mWLBufferRect is an intersection of mozcontainer widgetsize and
+  // mLockedScreenRect size. It can be different than mLockedScreenRect
+  // during resize when mBounds are updated immediately but actual
+  // GtkWidget size is updated asynchronously (see Bug 1489463).
+  LayoutDeviceIntRect mWLBufferRect;
   nsWaylandDisplay* mWaylandDisplay;
 
   // Actual buffer (backed by wl_buffer) where all drawings go into.
