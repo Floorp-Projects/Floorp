@@ -3384,6 +3384,10 @@ void gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj) {
   if (SupportsApzAutoscrolling()) {
     aObj.DefineProperty("ApzAutoscrollInput", 1);
   }
+
+  if (SupportsApzZooming()) {
+    aObj.DefineProperty("ApzZoomingInput", 1);
+  }
 }
 
 void gfxPlatform::GetTilesSupportInfo(mozilla::widget::InfoObject& aObj) {
@@ -3657,6 +3661,10 @@ bool gfxPlatform::SupportsApzKeyboardInput() const {
 
 bool gfxPlatform::SupportsApzAutoscrolling() const {
   return StaticPrefs::apz_autoscroll_enabled();
+}
+
+bool gfxPlatform::SupportsApzZooming() const {
+  return StaticPrefs::apz_allow_zooming();
 }
 
 void gfxPlatform::InitOpenGLConfig() {

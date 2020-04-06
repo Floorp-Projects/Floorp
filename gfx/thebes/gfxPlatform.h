@@ -679,6 +679,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   bool SupportsApzDragInput() const;
   bool SupportsApzKeyboardInput() const;
   bool SupportsApzAutoscrolling() const;
+  bool SupportsApzZooming() const;
 
   virtual void FlushContentDrawing() {}
 
