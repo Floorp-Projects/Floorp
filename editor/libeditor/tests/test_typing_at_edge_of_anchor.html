@@ -62,7 +62,7 @@ SimpleTest.waitForFocus(() => {
   selection.collapse(editor.querySelector("p").firstChild, 3);
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("X");
-  todo_is(editor.innerHTML, "<p>abc</p><p>X<a href=\"about:blank\">def</a></p>",
+  is(editor.innerHTML, "<p>abc</p><p>X<a href=\"about:blank\">def</a></p>",
      "Typing X at start of the <a> element should insert to start of new text node when caret is moved from the previous paragraph");
 
   editor.innerHTML = "<p>abc</p><p><b><a href=\"about:blank\">def</a></b></p>";
@@ -76,7 +76,7 @@ SimpleTest.waitForFocus(() => {
   selection.collapse(editor.querySelector("p").firstChild, 3);
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("X");
-  todo_is(editor.innerHTML, "<p>abc</p><p><b>X<a href=\"about:blank\">def</a></b></p>",
+  is(editor.innerHTML, "<p>abc</p><p><b>X<a href=\"about:blank\">def</a></b></p>",
      "Typing X at start of the <a> element should insert to start of wrapper <b> when caret is moved from the previous paragraph");
 
   editor.innerHTML = "<p>abc</p><p><a href=\"about:blank\">def</a></p>";
@@ -161,21 +161,21 @@ SimpleTest.waitForFocus(() => {
   selection.collapse(editor.querySelector("p + p").firstChild, 0);
   synthesizeKey("KEY_ArrowLeft");
   synthesizeKey("X");
-  todo_is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>X</p><p>def</p>",
+  is(editor.innerHTML, "<p><a href=\"about:blank\">abc</a>X</p><p>def</p>",
      "Typing X at end of the <a> element should insert to start of new text node when caret is moved from the following paragraph");
 
   editor.innerHTML = "<p><b><a href=\"about:blank\">abc</a></b></p><p>def</p>";
   selection.collapse(editor.querySelector("p + p").firstChild, 0);
   synthesizeKey("KEY_ArrowLeft");
   synthesizeKey("X");
-  todo_is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a>X</b></p><p>def</p>",
+  is(editor.innerHTML, "<p><b><a href=\"about:blank\">abc</a>X</b></p><p>def</p>",
      "Typing X at end of the <a> element should insert to end of wrapper <b> when caret is moved from the following paragraph");
 
   editor.innerHTML = "<p><a href=\"about:blank\"><b>abc</b></a></p><p>def</p>";
   selection.collapse(editor.querySelector("p + p").firstChild, 0);
   synthesizeKey("KEY_ArrowLeft");
   synthesizeKey("X");
-  todo_is(editor.innerHTML, "<p><a href=\"about:blank\"><b>abc</b></a><b>X</b></p><p>def</p>",
+  is(editor.innerHTML, "<p><a href=\"about:blank\"><b>abc</b></a><b>X</b></p><p>def</p>",
      "Typing X at end of the <a> element should insert to start of new <b> when caret is moved from the following paragraph");
 
   // I'm not sure whether this behavior should be changed or not, but inconsistent with the case of Backspace from start of <a href>.

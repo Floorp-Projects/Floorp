@@ -719,7 +719,7 @@ class EditorDOMPointBase final {
     if (NS_WARN_IF(!mParent)) {
       return false;
     }
-    if (mParent->IsContainerNode()) {
+    if (mParent->IsContainerNode() && mOffset.isSome()) {
       return mOffset.value() == mParent->Length() - 1;
     }
     if (mIsChildInitialized) {
