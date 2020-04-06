@@ -66,11 +66,11 @@ class ProfileBufferChunkManagerSingle final : public ProfileBufferChunkManager {
     }
   }
 
-  MOZ_MUST_USE size_t MaxTotalSize() const final { return mBufferBytes; }
+  [[nodiscard]] size_t MaxTotalSize() const final { return mBufferBytes; }
 
   // One of `GetChunk` and `RequestChunk` will only work the very first time (if
   // there's even a chunk).
-  MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetChunk() final {
+  [[nodiscard]] UniquePtr<ProfileBufferChunk> GetChunk() final {
     MOZ_ASSERT(mUser, "Not registered yet");
     return std::move(mInitialChunk);
   }
@@ -103,7 +103,7 @@ class ProfileBufferChunkManagerSingle final : public ProfileBufferChunkManager {
     mChunkDestroyedCallback = std::move(aChunkDestroyedCallback);
   }
 
-  MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetExtantReleasedChunks() final {
+  [[nodiscard]] UniquePtr<ProfileBufferChunk> GetExtantReleasedChunks() final {
     MOZ_ASSERT(mUser, "Not registered yet");
     return std::move(mReleasedChunk);
   }
@@ -112,8 +112,8 @@ class ProfileBufferChunkManagerSingle final : public ProfileBufferChunkManager {
     MOZ_ASSERT(mUser, "Not registered yet");
   }
 
-  MOZ_MUST_USE size_t
-  SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const final {
+  [[nodiscard]] size_t SizeOfExcludingThis(
+      MallocSizeOf aMallocSizeOf) const final {
     MOZ_ASSERT(mUser, "Not registered yet");
     size_t size = 0;
     if (mInitialChunk) {
@@ -126,8 +126,8 @@ class ProfileBufferChunkManagerSingle final : public ProfileBufferChunkManager {
     return size;
   }
 
-  MOZ_MUST_USE size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final {
+  [[nodiscard]] size_t SizeOfIncludingThis(
+      MallocSizeOf aMallocSizeOf) const final {
     MOZ_ASSERT(mUser, "Not registered yet");
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

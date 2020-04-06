@@ -39,12 +39,12 @@ class ProfileBufferChunkManagerWithLocalLimit final
       : mMaxTotalBytes(aMaxTotalBytes),
         mChunkMinBufferBytes(aChunkMinBufferBytes) {}
 
-  MOZ_MUST_USE size_t MaxTotalSize() const final {
+  [[nodiscard]] size_t MaxTotalSize() const final {
     // `mMaxTotalBytes` is `const` so there is no need to lock the mutex.
     return mMaxTotalBytes;
   }
 
-  MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetChunk() final {
+  [[nodiscard]] UniquePtr<ProfileBufferChunk> GetChunk() final {
     AUTO_PROFILER_STATS(Local_GetChunk);
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     return GetChunk(lock);
@@ -123,7 +123,7 @@ class ProfileBufferChunkManagerWithLocalLimit final
     mChunkDestroyedCallback = std::move(aChunkDestroyedCallback);
   }
 
-  MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetExtantReleasedChunks() final {
+  [[nodiscard]] UniquePtr<ProfileBufferChunk> GetExtantReleasedChunks() final {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
     mReleasedBytes = 0;
@@ -136,14 +136,14 @@ class ProfileBufferChunkManagerWithLocalLimit final
     mUnreleasedBytes = 0;
   }
 
-  MOZ_MUST_USE size_t
-  SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const final {
+  [[nodiscard]] size_t SizeOfExcludingThis(
+      MallocSizeOf aMallocSizeOf) const final {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     return SizeOfExcludingThis(aMallocSizeOf, lock);
   }
 
-  MOZ_MUST_USE size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final {
+  [[nodiscard]] size_t SizeOfIncludingThis(
+      MallocSizeOf aMallocSizeOf) const final {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf, lock);
@@ -158,7 +158,7 @@ class ProfileBufferChunkManagerWithLocalLimit final
   void UnlockAfterPeekExtantReleasedChunks() final { mMutex.Unlock(); }
 
  private:
-  MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetChunk(
+  [[nodiscard]] UniquePtr<ProfileBufferChunk> GetChunk(
       const baseprofiler::detail::BaseProfilerAutoLock&) {
     MOZ_ASSERT(mUser, "Not registered yet");
     UniquePtr<ProfileBufferChunk> chunk;
@@ -209,9 +209,9 @@ class ProfileBufferChunkManagerWithLocalLimit final
     return chunk;
   }
 
-  MOZ_MUST_USE size_t
-  SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                      const baseprofiler::detail::BaseProfilerAutoLock&) const {
+  [[nodiscard]] size_t SizeOfExcludingThis(
+      MallocSizeOf aMallocSizeOf,
+      const baseprofiler::detail::BaseProfilerAutoLock&) const {
     MOZ_ASSERT(mUser, "Not registered yet");
     // Note: Missing size of std::function external resources (if any).
     return mReleasedChunks ? mReleasedChunks->SizeOfIncludingThis(aMallocSizeOf)
