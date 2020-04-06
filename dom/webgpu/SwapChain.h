@@ -8,8 +8,13 @@
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
+namespace dom {
+struct GPUExtent3DDict;
+struct GPUSwapChainDescriptor;
+}  // namespace dom
 namespace webgpu {
 
 class Device;
@@ -20,12 +25,23 @@ class SwapChain final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(SwapChain)
   GPU_DECL_JS_WRAP(SwapChain)
 
+  SwapChain(const dom::GPUSwapChainDescriptor& aDesc,
+            const dom::GPUExtent3DDict& aExtent3D,
+            wr::ExternalImageId aExternalImageId, gfx::SurfaceFormat aFormat);
+
+  WebGPUChild* GetGpuBridge() const;
+  void Destroy(wr::ExternalImageId aExternalImageId);
+
+  const gfx::SurfaceFormat mFormat;
+
  private:
-  SwapChain() = delete;
   virtual ~SwapChain();
-  void Cleanup() {}
+  void Cleanup();
+
+  RefPtr<Texture> mTexture;
 
  public:
+  RefPtr<Texture> GetCurrentTexture();
 };
 
 }  // namespace webgpu
