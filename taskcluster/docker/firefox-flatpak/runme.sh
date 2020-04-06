@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -xe
 
 # Future products supporting Flatpaks will set this accordingly
@@ -108,11 +107,14 @@ appdir=build/files
 install -d "${appdir}/lib/"
 (cd "${appdir}/lib/" && tar jxf "${WORKSPACE}/firefox.tar.bz2")
 install -D -m644 -t "${appdir}/share/appdata" org.mozilla.firefox.appdata.xml
-appstream-compose --prefix="${appdir}" --origin=flatpak --basename=org.mozilla.firefox org.mozilla.firefox
 install -D -m644 -t "${appdir}/share/applications" org.mozilla.firefox.desktop
 for size in 16 32 48 64 128; do
     install -D -m644 "${appdir}/lib/firefox/browser/chrome/icons/default/default${size}.png" "${appdir}/share/icons/hicolor/${size}x${size}/apps/org.mozilla.firefox.png"
 done
+
+appstream-compose --prefix="${appdir}" --origin=flatpak --basename=org.mozilla.firefox org.mozilla.firefox
+appstream-util mirror-screenshots "${appdir}"/share/app-info/xmls/org.mozilla.firefox.xml.gz "https://dl.flathub.org/repo/screenshots/org.mozilla.firefox-${FLATPAK_BRANCH}" /tmp "build/screenshots/org.mozilla.firefox-${FLATPAK_BRANCH}"
+
 # XXX: we used to `install -D` before which automatically created the components
 # of target, now we need to manually do this since we're symlinking
 mkdir -p "${appdir}/lib/firefox/distribution/extensions"
