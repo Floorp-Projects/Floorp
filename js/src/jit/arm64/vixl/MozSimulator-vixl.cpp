@@ -376,6 +376,15 @@ void* Simulator::RedirectNativeFunction(void* nativeFunction, ABIFunctionType ty
 }
 
 void Simulator::VisitException(const Instruction* instr) {
+  if (instr->InstructionBits() == UNDEFINED_INST_PATTERN) {
+    uint8_t* newPC;
+    if (js::wasm::HandleIllegalInstruction(registerState(), &newPC)) {
+      set_pc((Instruction*)newPC);
+      return;
+    }
+    DoUnreachable(instr);
+  }
+
   switch (instr->Mask(ExceptionMask)) {
     case BRK: {
       int lowbit  = ImmException_offset;
@@ -385,15 +394,6 @@ void Simulator::VisitException(const Instruction* instr) {
     }
     case HLT:
       switch (instr->ImmException()) {
-        case kUnreachableOpcode: {
-          uint8_t* newPC;
-          if (js::wasm::HandleIllegalInstruction(registerState(), &newPC)) {
-            set_pc((Instruction*)newPC);
-            return;
-          }
-          DoUnreachable(instr);
-          return;
-        }
         case kTraceOpcode:
           DoTrace(instr);
           return;
