@@ -191,8 +191,7 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
   MOZ_ASSERT(
       mLoadInfo->GetSecurityMode() == 0 || mLoadInfo->GetInitialSecurityCheckDone() ||
           (mLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
-           mLoadInfo->GetLoadingPrincipal() &&
-           mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()),
+           mLoadInfo->LoadingPrincipal() && mLoadInfo->LoadingPrincipal()->IsSystemPrincipal()),
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
   nsCOMPtr<nsIInputStream> inStream;
