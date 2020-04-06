@@ -226,6 +226,7 @@ interface mixin WebGLRenderingContextBase {
     const GLenum SAMPLE_COVERAGE                = 0x80A0;
 
     /* ErrorCode */
+    [NeedsWindowsUndef]
     const GLenum NO_ERROR                       = 0;
     const GLenum INVALID_ENUM                   = 0x0500;
     const GLenum INVALID_VALUE                  = 0x0501;
