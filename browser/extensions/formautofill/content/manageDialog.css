@@ -12,8 +12,7 @@ div {
 }
 
 button {
-  padding-right: 10px;
-  padding-left: 10px;
+  padding-inline: 10px;
 }
 
 fieldset {
@@ -61,8 +60,7 @@ option:nth-child(even) {
 }
 
 #remove {
-  margin-inline-start: 0;
-  margin-inline-end: auto;
+  margin-inline: 0 auto;
 }
 
 #edit {
