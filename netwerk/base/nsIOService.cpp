@@ -1952,5 +1952,13 @@ bool nsIOService::BlockToplevelDataUriNavigations() {
 NS_IMETHODIMP
 nsIOService::NotImplemented() { return NS_ERROR_NOT_IMPLEMENTED; }
 
+NS_IMETHODIMP
+nsIOService::GetSocketProcessLaunched(bool* aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = SocketProcessReady();
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
