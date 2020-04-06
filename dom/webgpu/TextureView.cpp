@@ -19,9 +19,9 @@ TextureView::TextureView(Texture* const aParent, RawId aId)
 TextureView::~TextureView() { Cleanup(); }
 
 void TextureView::Cleanup() {
-  if (mValid && mParent && mParent->GetParentDevice()) {
+  if (mValid && mParent && mParent->mParent) {
     mValid = false;
-    auto bridge = mParent->GetParentDevice()->GetBridge();
+    WebGPUChild* bridge = mParent->mParent->mBridge;
     if (bridge && bridge->IsOpen()) {
       bridge->SendTextureViewDestroy(mId);
     }

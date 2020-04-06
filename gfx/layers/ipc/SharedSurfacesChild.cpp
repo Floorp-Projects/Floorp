@@ -121,14 +121,14 @@ wr::ImageKey SharedSurfacesChild::SharedUserData::UpdateKey(
       if (!ownsKey) {
         entry.mImageKey = wrBridge->GetNextImageKey();
         entry.TakeDirtyRect();
-        aResources.AddSharedExternalImage(mId, entry.mImageKey);
+        aResources.AddExternalImage(mId, entry.mImageKey);
       } else {
         entry.MergeDirtyRect(aDirtyRect);
         Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();
         if (dirtyRect) {
           MOZ_ASSERT(mShared);
-          aResources.UpdateSharedExternalImage(
-              mId, entry.mImageKey, ViewAs<ImagePixel>(dirtyRect.ref()));
+          aResources.UpdateExternalImage(mId, entry.mImageKey,
+                                         ViewAs<ImagePixel>(dirtyRect.ref()));
         }
       }
 
@@ -145,7 +145,7 @@ wr::ImageKey SharedSurfacesChild::SharedUserData::UpdateKey(
     key = aManager->WrBridge()->GetNextImageKey();
     ImageKeyData data(aManager, key);
     mKeys.AppendElement(std::move(data));
-    aResources.AddSharedExternalImage(mId, key);
+    aResources.AddExternalImage(mId, key);
   }
 
   return key;
@@ -557,8 +557,8 @@ nsresult SharedSurfacesAnimation::SetCurrentFrame(
     if (dirtyRect) {
       HoldSurfaceForRecycling(entry, aParentSurface, aSurface);
       auto& resourceUpdates = entry.mManager->AsyncResourceUpdates();
-      resourceUpdates.UpdateSharedExternalImage(
-          mId, entry.mImageKey, ViewAs<ImagePixel>(dirtyRect.ref()));
+      resourceUpdates.UpdateExternalImage(mId, entry.mImageKey,
+                                          ViewAs<ImagePixel>(dirtyRect.ref()));
     }
   }
 
@@ -604,7 +604,7 @@ nsresult SharedSurfacesAnimation::UpdateKey(
       if (!ownsKey) {
         entry.mImageKey = wrBridge->GetNextImageKey();
         HoldSurfaceForRecycling(entry, aParentSurface, aSurface);
-        aResources.AddSharedExternalImage(mId, entry.mImageKey);
+        aResources.AddExternalImage(mId, entry.mImageKey);
       } else {
         MOZ_ASSERT(entry.mDirtyRect.isNothing());
       }
@@ -624,7 +624,7 @@ nsresult SharedSurfacesAnimation::UpdateKey(
     AnimationImageKeyData data(aManager, aKey);
     HoldSurfaceForRecycling(data, aParentSurface, aSurface);
     mKeys.AppendElement(std::move(data));
-    aResources.AddSharedExternalImage(mId, aKey);
+    aResources.AddExternalImage(mId, aKey);
   }
 
   return NS_OK;

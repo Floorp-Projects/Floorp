@@ -605,12 +605,6 @@ void BufferTextureHost::CreateRenderTexture(
                                                  texture.forget());
 }
 
-void BufferTextureHost::DestroyRenderTexture(
-    const wr::ExternalImageId& aExternalImageId) {
-  wr::RenderThread::Get()->UnregisterExternalImage(
-      wr::AsUint64(aExternalImageId));
-}
-
 uint32_t BufferTextureHost::NumSubTextures() {
   if (GetFormat() == gfx::SurfaceFormat::YUV) {
     return 3;

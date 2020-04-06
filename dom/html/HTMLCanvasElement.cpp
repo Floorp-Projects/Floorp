@@ -33,7 +33,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/webgpu/CanvasContext.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
@@ -1512,14 +1511,6 @@ ClientWebGLContext* HTMLCanvasElement::GetWebGLContext() {
   }
 
   return static_cast<ClientWebGLContext*>(GetContextAtIndex(0));
-}
-
-webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
-  if (GetCurrentContextType() != CanvasContextType::WebGPU) {
-    return nullptr;
-  }
-
-  return static_cast<webgpu::CanvasContext*>(GetContextAtIndex(0));
 }
 
 }  // namespace dom
