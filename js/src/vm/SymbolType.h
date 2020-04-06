@@ -34,7 +34,8 @@ namespace JS {
 class Symbol : public js::gc::TenuredCell {
  private:
   // User description of symbol. Also meets gc::Cell requirements.
-  js::GCPtrAtom description_;
+  using HeaderWithAtom = js::gc::CellHeaderWithTenuredGCPointer<JSAtom>;
+  HeaderWithAtom headerAndDescription_;
 
   SymbolCode code_;
 
@@ -43,7 +44,7 @@ class Symbol : public js::gc::TenuredCell {
   js::HashNumber hash_;
 
   Symbol(SymbolCode code, js::HashNumber hash, JSAtom* desc)
-      : description_(desc), code_(code), hash_(hash) {}
+      : headerAndDescription_(desc), code_(code), hash_(hash) {}
 
   Symbol(const Symbol&) = delete;
   void operator=(const Symbol&) = delete;
@@ -66,7 +67,7 @@ class Symbol : public js::gc::TenuredCell {
                       js::HandleString description);
   static Symbol* for_(JSContext* cx, js::HandleString description);
 
-  JSAtom* description() const { return description_; }
+  JSAtom* description() const { return headerAndDescription_.ptr(); }
   SymbolCode code() const { return code_; }
   js::HashNumber hash() const { return hash_; }
 
@@ -84,8 +85,10 @@ class Symbol : public js::gc::TenuredCell {
   }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Symbol;
+  const js::gc::CellHeader& cellHeader() const { return headerAndDescription_; }
+
   inline void traceChildren(JSTracer* trc) {
-    TraceNullableEdge(trc, &description_, "symbol description");
+    js::TraceNullableEdge(trc, &headerAndDescription_, "symbol description");
   }
   inline void finalize(JSFreeOp*) {}
 

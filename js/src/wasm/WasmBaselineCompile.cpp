@@ -13032,11 +13032,7 @@ bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
           (debugEnabled && insn[-1] == 0xe320f000));  // "as_nop"
 
 #  elif defined(JS_CODEGEN_ARM64)
-#    ifdef JS_SIMULATOR_ARM64
-  const uint32_t hltInsn = 0xd45bd600;
-#    else
   const uint32_t hltInsn = 0xd4a00000;
-#    endif
   const uint32_t* insn = (const uint32_t*)nextPC;
   return ((uintptr_t(insn) & 3) == 0) &&
          (insn[-1] == hltInsn ||                      // hlt

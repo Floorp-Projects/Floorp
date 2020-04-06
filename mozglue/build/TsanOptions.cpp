@@ -122,7 +122,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsThread::SizeOfEventQueues\n"
 
          // Bug 1600895
-         "race:js::gc::MovingTracer::onBaseShapeEdge\n"
+         "race:UpdateCellPointers<js::Shape>\n"
          "race:js::gc::MovingTracer::onScopeEdge\n"
          "race:js::gc::MovingTracer::onShapeEdge\n"
          "race:fixupShapeTreeAfterMovingGC\n"
@@ -253,8 +253,8 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:GCHeapThreshold::updateAfterGC\n"
 
          // Bug 1614646
-         "race:nsCookieService::CountCookiesFromHostInternal\n"
-         "race:nsCookieService::InitDBStates\n"
+         "race:CookieService::CountCookiesFromHostInternal\n"
+         "race:CookieService::InitDBStates\n"
 
          // Bug 1614706
          "race:CacheFileInputStream::Release\n"

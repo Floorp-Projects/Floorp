@@ -151,7 +151,7 @@ bool NeckoChild::DeallocPFTPChannelChild(PFTPChannelChild* channel) {
 }
 
 PCookieServiceChild* NeckoChild::AllocPCookieServiceChild() {
-  // We don't allocate here: see nsCookieService::GetSingleton()
+  // We don't allocate here: see CookieService::GetSingleton()
   MOZ_ASSERT_UNREACHABLE("AllocPCookieServiceChild should not be called");
   return nullptr;
 }

@@ -131,6 +131,17 @@ inline void TraceEdge(JSTracer* trc, WeakHeapPtr<T>* thingp, const char* name) {
   gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp->unsafeGet()), name);
 }
 
+template <class T>
+inline void TraceEdge(JSTracer* trc,
+                      gc::CellHeaderWithTenuredGCPointer<T>* thingp,
+                      const char* name) {
+  T* thing = thingp->ptr();
+  gc::TraceEdgeInternal(trc, gc::ConvertToBase(&thing), name);
+  if (thing != thingp->ptr()) {
+    thingp->unsafeSetPtr(thing);
+  }
+}
+
 // Trace through a possibly-null edge in the live object graph on behalf of
 // tracing.
 
@@ -147,6 +158,19 @@ inline void TraceNullableEdge(JSTracer* trc, WeakHeapPtr<T>* thingp,
                               const char* name) {
   if (InternalBarrierMethods<T>::isMarkable(thingp->unbarrieredGet())) {
     TraceEdge(trc, thingp, name);
+  }
+}
+
+template <class T>
+inline void TraceNullableEdge(JSTracer* trc,
+                              gc::CellHeaderWithTenuredGCPointer<T>* thingp,
+                              const char* name) {
+  T* thing = thingp->ptr();
+  if (thing) {
+    gc::TraceEdgeInternal(trc, gc::ConvertToBase(&thing), name);
+    if (thing != thingp->ptr()) {
+      thingp->unsafeSetPtr(thing);
+    }
   }
 }
 

@@ -9,6 +9,7 @@ import gdb
 import mozilla.prettyprinters as prettyprinters
 from mozilla.prettyprinters import ptr_pretty_printer, ref_pretty_printer
 from mozilla.Root import deref
+from mozilla.CellHeader import get_header_ptr
 
 prettyprinters.clear_module_printers(__name__)
 
@@ -20,7 +21,10 @@ class JSObjectTypeCache(object):
         self.func_ptr_type = gdb.lookup_type('JSFunction').pointer()
         self.class_NON_NATIVE = gdb.parse_and_eval('JSClass::NON_NATIVE')
         self.NativeObject_ptr_t = gdb.lookup_type('js::NativeObject').pointer()
+        self.BaseShape_ptr_t = gdb.lookup_type('js::BaseShape').pointer()
         self.Shape_ptr_t = gdb.lookup_type('js::Shape').pointer()
+        self.ObjectGroup_ptr_t = gdb.lookup_type('js::ObjectGroup').pointer()
+        self.JSClass_ptr_t = gdb.lookup_type('JSClass').pointer()
 
 # There should be no need to register this for JSFunction as well, since we
 # search for pretty-printers under the names of base classes, and
@@ -39,8 +43,10 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
         self.otc = cache.mod_JSObject
 
     def summary(self):
-        group = deref(self.value['group_'])
-        classp = group['clasp_']
+        group = get_header_ptr(self.value['headerAndGroup_'],
+                               self.otc.ObjectGroup_ptr_t)
+        classp = get_header_ptr(group['headerAndClasp_'],
+                                self.otc.JSClass_ptr_t)
         non_native = classp['flags'] & self.otc.class_NON_NATIVE
 
         # Use GDB to format the class name, but then strip off the address
@@ -54,8 +60,9 @@ class JSObjectPtrOrRef(prettyprinters.Pointer):
             return '[object {}]'.format(class_name)
         else:
             native = self.value.cast(self.otc.NativeObject_ptr_t)
-            shape = native['shape_'].cast(self.otc.Shape_ptr_t)
-            baseshape = deref(shape['base_'])
+            shape = deref(native['shape_'])
+            baseshape = get_header_ptr(shape['headerAndBase_'],
+                                       self.otc.BaseShape_ptr_t)
             flags = baseshape['flags']
             is_delegate = bool(flags & self.otc.flag_DELEGATE)
             name = None

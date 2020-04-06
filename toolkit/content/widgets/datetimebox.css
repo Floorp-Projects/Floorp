@@ -41,7 +41,7 @@
 }
 
 .datetime-edit-field[disabled="true"],
-.datetime-edit-field[readonly="true"]  {
+.datetime-edit-field[readonly="true"] {
   user-select: none;
 }
 
@@ -52,8 +52,7 @@
   border: none;
   align-self: center;
   flex: none;
-  padding-left: 2px;
-  padding-right: 2px;
+  padding-inline: 2px;
 }
 
 svg|svg.datetime-reset-button-svg {

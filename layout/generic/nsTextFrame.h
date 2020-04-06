@@ -490,7 +490,7 @@ class nsTextFrame : public nsFrame {
    * b. GetContentLength() == 0
    * c. it contains only non-significant white-space
    */
-  bool HasNonSuppressedText();
+  bool HasNonSuppressedText() const;
 
   /**
    * Object with various callbacks for PaintText() to invoke for different parts

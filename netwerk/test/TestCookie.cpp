@@ -19,7 +19,7 @@
 #include "nsIPrefBranch.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "nsCookie.h"
+#include "Cookie.h"
 #include "nsIURI.h"
 
 using mozilla::Unused;
@@ -359,7 +359,7 @@ TEST(TestCookie, TestCookieMain)
 
   // note that a site can set a cookie for a path it's not on.
   // this is an intentional deviation from spec (see comments in
-  // nsCookieService::CheckPath()), so we test this functionality too
+  // CookieService::CheckPath()), so we test this functionality too
   SetACookie(cookieService, "http://path.net/path/file", nullptr,
              "test=path; path=/foo/", nullptr);
   GetACookie(cookieService, "http://path.net/path", nullptr, cookie);
@@ -1110,7 +1110,7 @@ TEST(TestCookie, SameSiteLax)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
   EXPECT_EQ(cookies.Length(), (uint64_t)1);
 
-  nsCookie* cookie = static_cast<nsCookie*>(cookies[0].get());
+  Cookie* cookie = static_cast<Cookie*>(cookies[0].get());
   EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
   EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_LAX);
 
@@ -1130,7 +1130,7 @@ TEST(TestCookie, SameSiteLax)
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetCookies(cookies)));
   EXPECT_EQ(cookies.Length(), (uint64_t)1);
 
-  cookie = static_cast<nsCookie*>(cookies[0].get());
+  cookie = static_cast<Cookie*>(cookies[0].get());
   EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
   EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_NONE);
 }

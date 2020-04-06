@@ -375,10 +375,12 @@ inline void RefCounted<Zip, AtomicRefCount>::Release() const {
   }
 }
 
+#ifdef DEBUG
 template <>
 inline RefCounted<Zip, AtomicRefCount>::~RefCounted() {
   MOZ_ASSERT(mRefCnt == detail::DEAD);
 }
+#endif
 
 }  // namespace detail
 }  // namespace mozilla

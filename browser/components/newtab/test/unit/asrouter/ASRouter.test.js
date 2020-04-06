@@ -2005,6 +2005,36 @@ describe("ASRouter", () => {
       });
     });
 
+    describe("#onMessage: BLOCK_BUNDLE", () => {
+      it("should add all the ids in the bundle to the messageBlockList", async () => {
+        await Router.onMessage(
+          fakeAsyncMessage({
+            type: "BLOCK_BUNDLE",
+            data: { bundle: FAKE_BUNDLE },
+          })
+        );
+        assert.isTrue(
+          Router.state.messageBlockList.includes(FAKE_BUNDLE[0].id)
+        );
+        assert.isTrue(
+          Router.state.messageBlockList.includes(FAKE_BUNDLE[1].id)
+        );
+      });
+      it("should save the messageBlockList", async () => {
+        await Router.onMessage(
+          fakeAsyncMessage({
+            type: "BLOCK_BUNDLE",
+            data: { bundle: FAKE_BUNDLE },
+          })
+        );
+
+        assert.calledWithExactly(Router._storage.set, "messageBlockList", [
+          FAKE_BUNDLE[0].id,
+          FAKE_BUNDLE[1].id,
+        ]);
+      });
+    });
+
     describe("#onMessage: UNBLOCK_BUNDLE", () => {
       it("should remove all the ids in the bundle from the messageBlockList", async () => {
         await Router.onMessage(

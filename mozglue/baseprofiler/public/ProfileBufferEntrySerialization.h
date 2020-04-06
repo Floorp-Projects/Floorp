@@ -96,7 +96,7 @@ class ProfileBufferEntryReader {
 
   // Don't =default moving, as it doesn't bring any benefit in this class.
 
-  MOZ_MUST_USE Length RemainingBytes() const {
+  [[nodiscard]] Length RemainingBytes() const {
     return mCurrentSpan.LengthBytes() + mNextSpanOrEmpty.LengthBytes();
   }
 
@@ -111,18 +111,18 @@ class ProfileBufferEntryReader {
     }
   }
 
-  MOZ_MUST_USE ProfileBufferBlockIndex CurrentBlockIndex() const {
+  [[nodiscard]] ProfileBufferBlockIndex CurrentBlockIndex() const {
     return mCurrentBlockIndex;
   }
 
-  MOZ_MUST_USE ProfileBufferBlockIndex NextBlockIndex() const {
+  [[nodiscard]] ProfileBufferBlockIndex NextBlockIndex() const {
     return mNextBlockIndex;
   }
 
   // Create a reader of size zero, pointing at aOffset past the current position
   // of this Reader, so it can be used as end iterator.
-  MOZ_MUST_USE ProfileBufferEntryReader
-  EmptyIteratorAtOffset(Length aOffset) const {
+  [[nodiscard]] ProfileBufferEntryReader EmptyIteratorAtOffset(
+      Length aOffset) const {
     MOZ_RELEASE_ASSERT(aOffset <= RemainingBytes());
     if (MOZ_LIKELY(aOffset < mCurrentSpan.LengthBytes())) {
       // aOffset is before the end of mCurrentSpan.
@@ -144,7 +144,7 @@ class ProfileBufferEntryReader {
   using reference = const Byte&;
   using iterator_category = std::input_iterator_tag;
 
-  MOZ_MUST_USE const Byte& operator*() {
+  [[nodiscard]] const Byte& operator*() {
     // Assume the caller will read from the returned reference (and not just
     // take the address).
     MOZ_RELEASE_ASSERT(mCurrentSpan.LengthBytes() >= 1);
@@ -192,16 +192,16 @@ class ProfileBufferEntryReader {
     return *this;
   }
 
-  MOZ_MUST_USE bool operator==(const ProfileBufferEntryReader& aOther) const {
+  [[nodiscard]] bool operator==(const ProfileBufferEntryReader& aOther) const {
     return mCurrentSpan.Elements() == aOther.mCurrentSpan.Elements();
   }
-  MOZ_MUST_USE bool operator!=(const ProfileBufferEntryReader& aOther) const {
+  [[nodiscard]] bool operator!=(const ProfileBufferEntryReader& aOther) const {
     return mCurrentSpan.Elements() != aOther.mCurrentSpan.Elements();
   }
 
   // Read an unsigned LEB128 number and move iterator ahead.
   template <typename T>
-  MOZ_MUST_USE T ReadULEB128() {
+  [[nodiscard]] T ReadULEB128() {
     return ::mozilla::ReadULEB128<T>(*this);
   }
 
@@ -253,7 +253,7 @@ class ProfileBufferEntryReader {
 
   // Read data as an object and move iterator ahead.
   template <typename T>
-  MOZ_MUST_USE T ReadObject() {
+  [[nodiscard]] T ReadObject() {
     T ob = Deserializer<T>::Read(*this);
     return ob;
   }
@@ -361,15 +361,15 @@ class ProfileBufferEntryWriter {
     MOZ_RELEASE_ASSERT(!mCurrentSpan.IsEmpty() || mNextSpanOrEmpty.IsEmpty());
   }
 
-  MOZ_MUST_USE Length RemainingBytes() const {
+  [[nodiscard]] Length RemainingBytes() const {
     return mCurrentSpan.LengthBytes() + mNextSpanOrEmpty.LengthBytes();
   }
 
-  MOZ_MUST_USE ProfileBufferBlockIndex CurrentBlockIndex() const {
+  [[nodiscard]] ProfileBufferBlockIndex CurrentBlockIndex() const {
     return mCurrentBlockIndex;
   }
 
-  MOZ_MUST_USE ProfileBufferBlockIndex NextBlockIndex() const {
+  [[nodiscard]] ProfileBufferBlockIndex NextBlockIndex() const {
     return mNextBlockIndex;
   }
 
@@ -381,7 +381,7 @@ class ProfileBufferEntryWriter {
   using reference = Byte&;
   using iterator_category = std::output_iterator_tag;
 
-  MOZ_MUST_USE Byte& operator*() {
+  [[nodiscard]] Byte& operator*() {
     MOZ_RELEASE_ASSERT(RemainingBytes() >= 1);
     return *(
         (MOZ_LIKELY(!mCurrentSpan.IsEmpty()) ? mCurrentSpan : mNextSpanOrEmpty)
@@ -427,7 +427,7 @@ class ProfileBufferEntryWriter {
 
   // Number of bytes needed to represent `aValue` in unsigned LEB128.
   template <typename T>
-  static MOZ_MUST_USE unsigned ULEB128Size(T aValue) {
+  [[nodiscard]] static unsigned ULEB128Size(T aValue) {
     return ::mozilla::ULEB128Size(aValue);
   }
 
@@ -439,7 +439,7 @@ class ProfileBufferEntryWriter {
 
   // Number of bytes needed to serialize objects.
   template <typename... Ts>
-  static MOZ_MUST_USE Length SumBytes(const Ts&... aTs) {
+  [[nodiscard]] static Length SumBytes(const Ts&... aTs) {
     return (0 + ... + Serializer<Ts>::Bytes(aTs));
   }
 

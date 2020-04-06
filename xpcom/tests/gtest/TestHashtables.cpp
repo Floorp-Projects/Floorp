@@ -139,6 +139,19 @@ static void testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash,
 
   uint32_t count = nsTIterPrint(hash);
   EXPECT_EQ(count, numEntries);
+
+  for (const auto& entry :
+       const_cast<const nsTHashtable<EntityToUnicodeEntry>&>(hash)) {
+    static_assert(std::is_same_v<decltype(entry), const EntityToUnicodeEntry&>);
+  }
+  for (auto& entry : hash) {
+    static_assert(std::is_same_v<decltype(entry), EntityToUnicodeEntry&>);
+  }
+
+  EXPECT_EQ(numEntries == ENTITY_COUNT ? 6 : 0,
+            std::count_if(hash.cbegin(), hash.cend(), [](const auto& entry) {
+              return entry.mNode->mUnicode >= 170;
+            }));
 }
 
 //
@@ -266,6 +279,19 @@ TEST(Hashtable, THashtable)
 
   count = nsTIterPrint(EntityToUnicode);
   ASSERT_EQ(count, uint32_t(0));
+}
+
+TEST(Hashtable, PtrHashtable)
+{
+  nsTHashtable<nsPtrHashKey<int>> hash;
+
+  for (const auto& entry :
+       const_cast<const nsTHashtable<nsPtrHashKey<int>>&>(hash)) {
+    static_assert(std::is_same_v<decltype(entry), const nsPtrHashKey<int>&>);
+  }
+  for (auto& entry : hash) {
+    static_assert(std::is_same_v<decltype(entry), nsPtrHashKey<int>&>);
+  }
 }
 
 TEST(Hashtable, Move)

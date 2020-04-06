@@ -161,7 +161,7 @@ class ULEB128Reader {
 
   // Feed a byte into the parser.
   // Returns true if this was the last byte.
-  constexpr MOZ_MUST_USE bool FeedByteIsComplete(unsigned aByte) {
+  [[nodiscard]] constexpr bool FeedByteIsComplete(unsigned aByte) {
     MOZ_ASSERT(!IsComplete());
     // Extract the 7 bits of value, and shift them in place into the value.
     mValue |= static_cast<T>(aByte & 0x7fu) << mShift;
@@ -185,11 +185,11 @@ class ULEB128Reader {
     mShift = 0;
   }
 
-  constexpr MOZ_MUST_USE bool IsComplete() const {
+  [[nodiscard]] constexpr bool IsComplete() const {
     return mShift == mCompleteShift;
   }
 
-  constexpr MOZ_MUST_USE T Value() const {
+  [[nodiscard]] constexpr T Value() const {
     MOZ_ASSERT(IsComplete());
     return mValue;
   }

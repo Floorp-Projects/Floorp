@@ -3307,7 +3307,7 @@ nsresult ScriptLoader::OnStreamComplete(
   // Process our request and/or any pending ones
   ProcessPendingRequests();
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,

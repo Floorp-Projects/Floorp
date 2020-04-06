@@ -47,7 +47,7 @@ class RelocationOverlay : public Cell {
 
   Cell* forwardingAddress() const {
     MOZ_ASSERT(isForwarded());
-    uintptr_t newLocation = dataWithTag_ & ~Cell::RESERVED_MASK;
+    uintptr_t newLocation = dataWithTag_ & ~CellHeader::RESERVED_MASK;
     return reinterpret_cast<Cell*>(newLocation);
   }
 

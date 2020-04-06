@@ -43,35 +43,35 @@ class ProfileBufferBlockIndex {
 
   // Comparison operators. Default `ProfileBufferBlockIndex{}` value is always
   // the lowest.
-  MOZ_MUST_USE bool operator==(const ProfileBufferBlockIndex& aRhs) const {
+  [[nodiscard]] bool operator==(const ProfileBufferBlockIndex& aRhs) const {
     return mBlockIndex == aRhs.mBlockIndex;
   }
-  MOZ_MUST_USE bool operator!=(const ProfileBufferBlockIndex& aRhs) const {
+  [[nodiscard]] bool operator!=(const ProfileBufferBlockIndex& aRhs) const {
     return mBlockIndex != aRhs.mBlockIndex;
   }
-  MOZ_MUST_USE bool operator<(const ProfileBufferBlockIndex& aRhs) const {
+  [[nodiscard]] bool operator<(const ProfileBufferBlockIndex& aRhs) const {
     return mBlockIndex < aRhs.mBlockIndex;
   }
-  MOZ_MUST_USE bool operator<=(const ProfileBufferBlockIndex& aRhs) const {
+  [[nodiscard]] bool operator<=(const ProfileBufferBlockIndex& aRhs) const {
     return mBlockIndex <= aRhs.mBlockIndex;
   }
-  MOZ_MUST_USE bool operator>(const ProfileBufferBlockIndex& aRhs) const {
+  [[nodiscard]] bool operator>(const ProfileBufferBlockIndex& aRhs) const {
     return mBlockIndex > aRhs.mBlockIndex;
   }
-  MOZ_MUST_USE bool operator>=(const ProfileBufferBlockIndex& aRhs) const {
+  [[nodiscard]] bool operator>=(const ProfileBufferBlockIndex& aRhs) const {
     return mBlockIndex >= aRhs.mBlockIndex;
   }
 
   // Explicit conversion to ProfileBufferIndex, mostly used by internal Profile
   // buffer code.
-  MOZ_MUST_USE ProfileBufferIndex ConvertToProfileBufferIndex() const {
+  [[nodiscard]] ProfileBufferIndex ConvertToProfileBufferIndex() const {
     return mBlockIndex;
   }
 
   // Explicit creation from ProfileBufferIndex, mostly used by internal
   // Profile buffer code.
-  static MOZ_MUST_USE ProfileBufferBlockIndex
-  CreateFromProfileBufferIndex(ProfileBufferIndex aIndex) {
+  [[nodiscard]] static ProfileBufferBlockIndex CreateFromProfileBufferIndex(
+      ProfileBufferIndex aIndex) {
     return ProfileBufferBlockIndex(aIndex);
   }
 

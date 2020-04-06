@@ -32,7 +32,6 @@
 #  include "platform.h"
 
 #  include "mozilla/Atomics.h"
-#  include "mozilla/Attributes.h"
 #  include "mozilla/DebugOnly.h"
 #  include "mozilla/EndianUtils.h"
 

@@ -22,3 +22,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
+
+MOCHITEST_MANIFESTS += [
+    'tests/mochitest/mochitest.ini'
+]
