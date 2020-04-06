@@ -13,10 +13,14 @@
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"
 
+class nsIArray;
+class nsICookie;
 class nsIPrefBranch;
 
 namespace mozilla {
 namespace net {
+
+class Cookie;
 
 // Inherit from CookieKey so this can be stored in nsTHashTable
 // TODO: why aren't we using nsClassHashTable<CookieKey, ArrayType>?
