@@ -150,6 +150,23 @@ declTest("destroy actor by tab being closed", {
       );
     });
 
+    let willDestroyParentPromise = new Promise(resolve => {
+      const TOPIC = "test-js-window-actor-parent-willdestroy";
+      Services.obs.addObserver(function obs(subject, topic) {
+        is(subject, parent, "Should have this value");
+        Services.obs.removeObserver(obs, TOPIC);
+        resolve();
+      }, TOPIC);
+    });
+    let didDestroyParentPromise = new Promise(resolve => {
+      const TOPIC = "test-js-window-actor-parent-diddestroy";
+      Services.obs.addObserver(function obs(subject, topic) {
+        is(subject, parent, "Should have this value");
+        Services.obs.removeObserver(obs, TOPIC);
+        resolve();
+      }, TOPIC);
+    });
+
     info("setting up destroy listeners");
     await SpecialPowers.spawn(newTabBrowser, [], () => {
       let child = content.windowGlobalChild;
@@ -178,6 +195,10 @@ declTest("destroy actor by tab being closed", {
     info("removing new tab");
     await BrowserTestUtils.removeTab(newTab);
     info("waiting for destroy callbacks to fire");
+    await willDestroyParentPromise;
+    info("got willDestroy parent callback");
+    await didDestroyParentPromise;
+    info("got didDestroy parent callback");
     await willDestroyPromise;
     info("got willDestroy callback");
     await didDestroyPromise;
