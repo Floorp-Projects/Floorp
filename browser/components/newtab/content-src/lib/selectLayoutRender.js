@@ -57,6 +57,7 @@ export const selectLayoutRender = ({
     "SectionTitle",
     "Navigation",
     "CardGrid",
+    "CollectionCardGrid",
     "Hero",
     "HorizontalRule",
     "List",
