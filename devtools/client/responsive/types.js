@@ -47,7 +47,7 @@ const device = {
   touch: PropTypes.bool,
 
   // The operating system of the device
-  os: PropTypes.String,
+  os: PropTypes.string,
 
   // Whether or not the device is displayed in the device selector
   displayed: PropTypes.bool,
