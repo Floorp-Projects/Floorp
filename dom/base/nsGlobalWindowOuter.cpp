@@ -1611,7 +1611,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOpenerForInitialContentBrowser)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
@@ -1643,7 +1642,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParentTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOpenerForInitialContentBrowser)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   if (tmp->mBrowsingContext) {
@@ -7528,19 +7526,6 @@ ChromeMessageBroadcaster* nsGlobalWindowOuter::GetGroupMessageManager(
     return nullptr;
   }
   return GetCurrentInnerWindowInternal()->GetGroupMessageManager(aGroup);
-}
-
-void nsPIDOMWindowOuter::SetOpenerForInitialContentBrowser(
-    BrowsingContext* aOpenerWindow) {
-  MOZ_ASSERT(!mOpenerForInitialContentBrowser,
-             "Don't set OpenerForInitialContentBrowser twice!");
-  mOpenerForInitialContentBrowser = aOpenerWindow;
-}
-
-already_AddRefed<BrowsingContext>
-nsPIDOMWindowOuter::TakeOpenerForInitialContentBrowser() {
-  // Intentionally forget our own member
-  return mOpenerForInitialContentBrowser.forget();
 }
 
 void nsGlobalWindowOuter::InitWasOffline() { mWasOffline = NS_IsOffline(); }
