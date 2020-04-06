@@ -213,40 +213,36 @@ void NotifyAllowDecision(nsIChannel* aReportingChannel,
 void NotifyBlockingDecision(nsIChannel* aReportingChannel,
                             nsIChannel* aTrackingChannel,
                             ContentBlockingNotifier::BlockingDecision aDecision,
-                            uint32_t aRejectedReason, nsIURI* aURI,
-                            nsPIDOMWindowOuter* aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  // When this is called with system priviledged, the decision should always be
-  // ALLOW, and we can also stop processing this event.
-  if (nsGlobalWindowOuter::Cast(aWindow)->GetPrincipal() ==
-      nsContentUtils::GetSystemPrincipal()) {
-    MOZ_DIAGNOSTIC_ASSERT(aDecision ==
-                          ContentBlockingNotifier::BlockingDecision::eAllow);
-    return;
-  }
-
-  nsAutoCString trackingOrigin;
-  if (aURI) {
-    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
-  }
-
-  if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
-    ContentBlockingNotifier::OnEvent(aReportingChannel, aTrackingChannel, true,
-                                     aRejectedReason, trackingOrigin);
-
-    ReportBlockingToConsole(aReportingChannel, aURI, aRejectedReason);
-  }
-
-  NotifyAllowDecision(aReportingChannel, aTrackingChannel, aURI);
-}
-
-void NotifyBlockingDecision(nsIChannel* aReportingChannel,
-                            nsIChannel* aTrackingChannel,
-                            ContentBlockingNotifier::BlockingDecision aDecision,
                             uint32_t aRejectedReason, nsIURI* aURI) {
-  // Can be called only in the parent process when there is no window.
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aReportingChannel);
+
+  // When this is called in the content process with system privileges,
+  // the decision should always be ALLOW, and we can also stop processing this
+  // event.
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(aReportingChannel, loadContext);
+    if (!loadContext) {
+      return;
+    }
+
+    nsCOMPtr<mozIDOMWindowProxy> window;
+    loadContext->GetAssociatedWindow(getter_AddRefs(window));
+    if (!window) {
+      return;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> outer = nsPIDOMWindowOuter::From(window);
+    if (!outer) {
+      return;
+    }
+
+    if (nsGlobalWindowOuter::Cast(outer)->GetPrincipal() ==
+        nsContentUtils::GetSystemPrincipal()) {
+      MOZ_DIAGNOSTIC_ASSERT(aDecision ==
+                            ContentBlockingNotifier::BlockingDecision::eAllow);
+    }
+  }
 
   nsAutoCString trackingOrigin;
   if (aURI) {
@@ -423,33 +419,7 @@ void ContentBlockingNotifier::OnDecision(nsIChannel* aChannel,
   aChannel->GetURI(getter_AddRefs(uri));
 
   // Can be called in EITHER the parent or child process.
-  // Window is only needed while in child processes.
-  if (XRE_IsParentProcess()) {
-    NotifyBlockingDecision(aChannel, aChannel, aDecision, aRejectedReason, uri);
-    return;
-  }
-
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
-  if (!thirdPartyUtil) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(aChannel);
-  nsCOMPtr<mozIDOMWindowProxy> win;
-  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, uriBeingLoaded,
-                                                       getter_AddRefs(win));
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(win);
-  if (!pwin) {
-    return;
-  }
-
-  NotifyBlockingDecision(aChannel, aChannel, aDecision, aRejectedReason, uri,
-                         pwin);
+  NotifyBlockingDecision(aChannel, aChannel, aDecision, aRejectedReason, uri);
 }
 
 /* static */
@@ -498,7 +468,7 @@ void ContentBlockingNotifier::OnDecision(nsPIDOMWindowInner* aWindow,
   nsIChannel* trackingChannel = document->GetChannel();
 
   NotifyBlockingDecision(channel, trackingChannel, aDecision, aRejectedReason,
-                         uri, pwin);
+                         uri);
 }
 
 /* static */
