@@ -309,7 +309,7 @@ static mozilla::WindowsError SendPing(std::string defaultBrowser,
   // Fill in the ping JSON object.
   Json::Value ping;
   ping["build_channel"] = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
-  ping["version"] = MOZILLA_VERSION;
+  ping["build_version"] = MOZILLA_VERSION;
   ping["default_browser"] = defaultBrowser;
   ping["previous_default_browser"] = previousDefaultBrowser;
   ping["os_version"] = osVersion;
