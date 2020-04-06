@@ -42,11 +42,10 @@ class LocaleManagerTest {
 
     @Test
     @Config(qualifiers = "en-rUS")
-    fun `when calling updateResources with none current language must not change the system locale neither change configurations`() {
+    fun `when calling updateResources without a stored language we must not change the system locale`() {
         val previousSystemLocale = Locale.getDefault()
-        val context = LocaleManager.updateResources(testContext)
+        LocaleManager.updateResources(testContext)
 
-        assertEquals(testContext, context)
         assertEquals(previousSystemLocale, Locale.getDefault())
     }
 

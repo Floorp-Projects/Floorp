@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **support-locale**
+  * Updates `updateResources` to always update the context configuration
+
 * **feature-toolbar**
   * Added `forceExpand` to [BrowserToolbarBottomBehavior] so consumers can expand the BrowserToolbar on demand.
 
