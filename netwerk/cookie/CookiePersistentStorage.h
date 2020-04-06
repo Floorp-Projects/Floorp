@@ -10,10 +10,12 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageStatementCallback.h"
 
+class mozIStorageAsyncStatement;
 class mozIStorageService;
 class nsICookieTransactionCallback;
 class nsIEffectiveTLDService;

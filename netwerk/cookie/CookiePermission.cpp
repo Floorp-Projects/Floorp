@@ -6,6 +6,8 @@
 
 #include "mozilla/net/CookiePermission.h"
 
+#include "Cookie.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsICookie.h"
 #include "nsICookieService.h"
 #include "nsNetUtil.h"

@@ -6,6 +6,7 @@
 #ifndef mozilla_net_CookieCommons_h
 #define mozilla_net_CookieCommons_h
 
+#include <cstdint>
 #include "prtime.h"
 
 // pref string constants
