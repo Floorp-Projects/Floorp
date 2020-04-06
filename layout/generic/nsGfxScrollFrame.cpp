@@ -67,6 +67,7 @@
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
 #include "ScrollAnimationPhysics.h"
 #include "ScrollAnimationBezierPhysics.h"
 #include "ScrollAnimationMSDPhysics.h"
@@ -4410,14 +4411,10 @@ nsSize ScrollFrameHelper::GetLineScrollAmount() const {
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(mOuter);
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
-  static nscoord sMinLineScrollAmountInPixels = -1;
-  if (sMinLineScrollAmountInPixels < 0) {
-    Preferences::AddIntVarCache(&sMinLineScrollAmountInPixels,
-                                "mousewheel.min_line_scroll_amount", 1);
-  }
   int32_t appUnitsPerDevPixel = mOuter->PresContext()->AppUnitsPerDevPixel();
   nscoord minScrollAmountInAppUnits =
-      std::max(1, sMinLineScrollAmountInPixels) * appUnitsPerDevPixel;
+      std::max(1, StaticPrefs::mousewheel_min_line_scroll_amount()) *
+      appUnitsPerDevPixel;
   nscoord horizontalAmount = fm ? fm->AveCharWidth() : 0;
   nscoord verticalAmount = fm ? fm->MaxHeight() : 0;
   return nsSize(std::max(horizontalAmount, minScrollAmountInAppUnits),
