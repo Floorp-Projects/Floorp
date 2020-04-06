@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 h1 {
-  margin: 0 0 40px 0;
+  margin: 0 0 40px;
 }
 
 h3 {
@@ -12,12 +12,12 @@ h3 {
 }
 
 p {
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
 }
 
 #main {
   max-width: 830px;
-  margin: 40px auto 0 auto;
+  margin: 40px auto 0;
   padding: 0 5px;
 }
 
@@ -100,6 +100,6 @@ p {
   font-size: 87%;
   color: var(--in-content-deemphasized-text);
   margin-bottom: 0;
-  text-align: start;
   margin-inline: 4px; /* Align with input and button */
+  text-align: start;
 }

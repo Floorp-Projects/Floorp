@@ -148,13 +148,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-text {
 }
 
 toolbar .toolbaritem-combined-buttons {
-  margin-left: 2px;
-  margin-right: 2px;
+  margin-inline: 2px;
 }
 
 toolbar .toolbaritem-combined-buttons > .toolbarbutton-1 {
-  padding-left: 0;
-  padding-right: 0;
+  padding-inline: 0;
 }
 
 toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
@@ -234,10 +232,8 @@ toolbar .toolbarbutton-1:-moz-focusring {
 }
 
 :root:not([uidensity=compact]) #back-button {
-  padding-top: 3px;
-  padding-bottom: 3px;
-  padding-inline-start: 3px;
-  padding-inline-end: 0;
+  padding-block: 3px;
+  padding-inline: 3px 0;
   position: relative !important;
   z-index: 1 !important;
   border-radius: 0 10000px 10000px 0;
@@ -273,8 +269,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
 }
 
 :root[uidensity=touch] #back-button {
-  padding-top: 1px;
-  padding-bottom: 1px;
+  padding-block: 1px;
   padding-inline-start: 1px;
 }
 
@@ -300,14 +295,12 @@ toolbar .toolbarbutton-1:-moz-focusring {
 
 #BMB_bookmarksPopup[side="top"],
 #BMB_bookmarksPopup[side="bottom"] {
-  margin-left: -20px;
-  margin-right: -20px;
+  margin-inline: -20px;
 }
 
 #BMB_bookmarksPopup[side="left"],
 #BMB_bookmarksPopup[side="right"] {
-  margin-top: -20px;
-  margin-bottom: -20px;
+  margin-block: -20px;
 }
 
 /* ::::: bookmark buttons ::::: */
