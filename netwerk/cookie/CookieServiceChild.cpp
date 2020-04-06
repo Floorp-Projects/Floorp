@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/net/CookiePermission.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
@@ -23,7 +24,6 @@
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIHttpChannel.h"
-#include "nsCookiePermission.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIPrefBranch.h"
@@ -567,7 +567,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
     if (canSetCookie) {
       nsCOMPtr<nsICookiePermission> permissionService =
-          nsCookiePermission::GetOrCreate();
+          CookiePermission::GetOrCreate();
       SetCookieInternal(cookieData, attrs, aChannel, aFromHttp,
                         permissionService);
     }

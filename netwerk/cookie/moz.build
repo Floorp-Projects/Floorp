@@ -18,22 +18,20 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_cookie'
 
-EXPORTS += [
-    'nsCookiePermission.h',
-]
 
 EXPORTS.mozilla.net = [
     'CookieJarSettings.h',
     'CookieKey.h',
+    'CookiePermission.h',
     'CookieServiceChild.h',
     'CookieServiceParent.h',
 ]
 UNIFIED_SOURCES += [
     'Cookie.cpp',
     'CookieJarSettings.cpp',
+    'CookiePermission.cpp',
     'CookieServiceChild.cpp',
     'CookieServiceParent.cpp',
-    'nsCookiePermission.cpp',
 ]
 # nsCookieService.cpp can't be unified because of symbol conflicts
 SOURCES += [
