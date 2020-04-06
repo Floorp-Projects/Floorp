@@ -20,9 +20,7 @@ const DialogState = {
   RETURN_CERT_NOT_SELECTED: "RETURN_CERT_NOT_SELECTED",
 };
 
-var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
-
-var gExpectedClientCertificateChoices;
+let sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
 
 // Mock implementation of nsIClientAuthDialogs.
 const gClientAuthDialogs = {
@@ -95,11 +93,7 @@ const gClientAuthDialogs = {
     // selectable as well as one of the PGO certs we loaded in `setup`, so we do
     // some brief checks to confirm this.
     Assert.notEqual(certList, null, "Cert list should not be null");
-    Assert.equal(
-      certList.length,
-      gExpectedClientCertificateChoices,
-      `${gExpectedClientCertificateChoices} certificates should be available`
-    );
+    Assert.equal(certList.length, 2, "2 certificate should be available");
 
     for (let cert of certList.enumerate(Ci.nsIX509Cert)) {
       Assert.notEqual(cert, null, "Cert list should contain nsIX509Certs");
@@ -135,16 +129,6 @@ add_task(async function setup() {
   // This CA has all keyUsages. For compatibility with preexisting behavior, it
   // will be presented for use as a client certificate.
   await readCertificate("pgo-ca-all-usages.pem", "CTu,CTu,CTu");
-  // This client certificate was issued by an intermediate that was issued by
-  // the test CA. The server only lists the test CA's subject distinguished name
-  // as an acceptible issuer name for client certificates. If the implementation
-  // can determine that the test CA is a root CA for the client certificate and
-  // thus is acceptible to use, it should be included in the chooseCertificate
-  // callback. At the beginning of this test (speaking of this file as a whole),
-  // the client is not aware of the intermediate, and so it is not available in
-  // the callback.
-  await readCertificate("client-cert-via-intermediate.pem", ",,");
-  gExpectedClientCertificateChoices = 2;
 });
 
 /**
@@ -181,7 +165,7 @@ async function testHelper(prefValue, expectedURL, options = undefined) {
   let loadedURL = win.gBrowser.selectedBrowser.documentURI.spec;
   Assert.ok(
     loadedURL.startsWith(expectedURL),
-    `Expected and actual URLs should match (got '${loadedURL}', expected '${expectedURL}')`
+    "Expected and actual URLs should match"
   );
   Assert.equal(
     gClientAuthDialogs.chooseCertificateCalled,
@@ -251,37 +235,4 @@ add_task(async function testClearPrivateBrowsingState() {
   // obscure what we're testing (that Firefox properly clears the relevant state
   // when the last private window closes).
   sdr.logoutAndTeardown();
-});
-
-// Test that 3rd party certificates are taken into account when filtering client
-// certificates based on the acceptible CA list sent by the server.
-add_task(async function testCertFilteringWithIntermediate() {
-  let intermediateBytes = await OS.File.read(
-    getTestFilePath("intermediate.pem")
-  ).then(
-    data => {
-      let decoder = new TextDecoder();
-      let pem = decoder.decode(data);
-      let base64 = pemToBase64(pem);
-      let bin = atob(base64);
-      let bytes = [];
-      for (let i = 0; i < bin.length; i++) {
-        bytes.push(bin.charCodeAt(i));
-      }
-      return bytes;
-    },
-    error => {
-      throw error;
-    }
-  );
-  let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
-  nssComponent.addEnterpriseIntermediate(intermediateBytes);
-  gExpectedClientCertificateChoices = 3;
-  gClientAuthDialogs.state = DialogState.RETURN_CERT_SELECTED;
-  await testHelper("Ask Every Time", "https://requireclientcert.example.com/");
-  sdr.logoutAndTeardown();
-  // This will reset the added intermediate.
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.enterprise_roots.enabled", true]],
-  });
 });
