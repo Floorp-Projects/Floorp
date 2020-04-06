@@ -577,7 +577,7 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
 }
 
 bool js::BaseScript::isUsingInterpreterTrampoline(JSRuntime* rt) const {
-  return jitCodeRaw_ == rt->jitRuntime()->interpreterStub().value;
+  return jitCodeRaw() == rt->jitRuntime()->interpreterStub().value;
 }
 
 js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
@@ -5435,23 +5435,23 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   uint8_t* jitCodeSkipArgCheck;
   if (hasBaselineScript() && baselineScript()->hasPendingIonCompileTask()) {
     MOZ_ASSERT(!isIonCompilingOffThread());
-    jitCodeRaw_ = rt->jitRuntime()->lazyLinkStub().value;
-    jitCodeSkipArgCheck = jitCodeRaw_;
+    setJitCodeRaw(rt->jitRuntime()->lazyLinkStub().value);
+    jitCodeSkipArgCheck = jitCodeRaw();
   } else if (hasIonScript()) {
     jit::IonScript* ion = ionScript();
-    jitCodeRaw_ = ion->method()->raw();
-    jitCodeSkipArgCheck = jitCodeRaw_ + ion->getSkipArgCheckEntryOffset();
+    setJitCodeRaw(ion->method()->raw());
+    jitCodeSkipArgCheck = jitCodeRaw() + ion->getSkipArgCheckEntryOffset();
   } else if (hasBaselineScript()) {
-    jitCodeRaw_ = baselineScript()->method()->raw();
-    jitCodeSkipArgCheck = jitCodeRaw_;
+    setJitCodeRaw(baselineScript()->method()->raw());
+    jitCodeSkipArgCheck = jitCodeRaw();
   } else if (hasJitScript() && js::jit::IsBaselineInterpreterEnabled()) {
-    jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();
-    jitCodeSkipArgCheck = jitCodeRaw_;
+    setJitCodeRaw(rt->jitRuntime()->baselineInterpreter().codeRaw());
+    jitCodeSkipArgCheck = jitCodeRaw();
   } else {
-    jitCodeRaw_ = rt->jitRuntime()->interpreterStub().value;
-    jitCodeSkipArgCheck = jitCodeRaw_;
+    setJitCodeRaw(rt->jitRuntime()->interpreterStub().value);
+    jitCodeSkipArgCheck = jitCodeRaw();
   }
-  MOZ_ASSERT(jitCodeRaw_);
+  MOZ_ASSERT(jitCodeRaw());
   MOZ_ASSERT(jitCodeSkipArgCheck);
 
   if (hasJitScript()) {
