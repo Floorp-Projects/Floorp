@@ -61,7 +61,7 @@ struct CookieListIter {
       : entry(aEntry), index(aIndex) {}
 
   // get the Cookie * the iterator currently points to.
-  Cookie* Cookie() const { return entry->GetCookies()[index]; }
+  mozilla::net::Cookie* Cookie() const { return entry->GetCookies()[index]; }
 
   CookieEntry* entry;
   CookieEntry::IndexType index;
@@ -91,9 +91,9 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
   const nsTArray<RefPtr<Cookie>>* GetCookiesFromHost(
       const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes);
 
-  void GetCookiesWithOriginAttributes(
-      const mozilla::OriginAttributesPattern& aPattern,
-      const nsACString& aBaseDomain, nsTArray<RefPtr<nsICookie>>& aResult);
+  void GetCookiesWithOriginAttributes(const OriginAttributesPattern& aPattern,
+                                      const nsACString& aBaseDomain,
+                                      nsTArray<RefPtr<nsICookie>>& aResult);
 
   void RemoveCookie(const nsACString& aBaseDomain,
                     const OriginAttributes& aOriginAttributes,
@@ -101,12 +101,11 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
                     const nsACString& aPath);
 
   virtual void RemoveCookiesWithOriginAttributes(
-      const mozilla::OriginAttributesPattern& aPattern,
-      const nsACString& aBaseDomain);
+      const OriginAttributesPattern& aPattern, const nsACString& aBaseDomain);
 
   virtual void RemoveCookiesFromExactHost(
       const nsACString& aHost, const nsACString& aBaseDomain,
-      const mozilla::OriginAttributesPattern& aPattern);
+      const OriginAttributesPattern& aPattern);
 
   void RemoveAll();
 
@@ -133,7 +132,7 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   void AddCookieToList(const nsACString& aBaseDomain,
                        const OriginAttributes& aOriginAttributes,
-                       mozilla::net::Cookie* aCookie,
+                       Cookie* aCookie,
                        mozIStorageBindingParamsArray* aParamsArray,
                        bool aWriteToDB = true);
 
@@ -145,7 +144,7 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   virtual void WriteCookieToDB(const nsACString& aBaseDomain,
                                const OriginAttributes& aOriginAttributes,
-                               mozilla::net::Cookie* aCookie,
+                               Cookie* aCookie,
                                mozIStorageBindingParamsArray* aParamsArray) = 0;
 
   virtual void RemoveAllInternal() = 0;

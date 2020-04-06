@@ -40,13 +40,13 @@ class Cookie final : public nsICookie {
 
  private:
   // for internal use only. see Cookie::Create().
-  Cookie(const mozilla::net::CookieStruct& aCookieData,
+  Cookie(const CookieStruct& aCookieData,
          const OriginAttributes& aOriginAttributes)
       : mData(aCookieData), mOriginAttributes(aOriginAttributes) {}
 
  public:
   // Returns false if rawSameSite has an invalid value, compared to sameSite.
-  static bool ValidateRawSame(const mozilla::net::CookieStruct& aCookieData);
+  static bool ValidateRawSame(const CookieStruct& aCookieData);
 
   // Generate a unique and monotonically increasing creation time. See comment
   // in Cookie.cpp.
@@ -62,7 +62,7 @@ class Cookie final : public nsICookie {
       int32_t aRawSameSite);
 
   static already_AddRefed<Cookie> Create(
-      const mozilla::net::CookieStruct& aCookieData,
+      const CookieStruct& aCookieData,
       const OriginAttributes& aOriginAttributes);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -103,7 +103,7 @@ class Cookie final : public nsICookie {
 
   bool IsStale() const;
 
-  const mozilla::net::CookieStruct& ToIPC() const { return mData; }
+  const CookieStruct& ToIPC() const { return mData; }
 
  protected:
   virtual ~Cookie() = default;
@@ -112,8 +112,8 @@ class Cookie final : public nsICookie {
   // member variables
   //
   // Please update SizeOfIncludingThis if this strategy changes.
-  mozilla::net::CookieStruct mData;
-  mozilla::OriginAttributes mOriginAttributes;
+  CookieStruct mData;
+  OriginAttributes mOriginAttributes;
   nsCString mFilePathCache;
 };
 

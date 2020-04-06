@@ -21,7 +21,6 @@ using namespace mozilla::ipc;
 using mozilla::BasePrincipal;
 using mozilla::OriginAttributes;
 using mozilla::dom::PContentParent;
-using mozilla::net::NeckoParent;
 
 namespace {
 
@@ -105,7 +104,7 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   aChannel->GetURI(getter_AddRefs(uri));
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  mozilla::OriginAttributes attrs = loadInfo->GetOriginAttributes();
+  OriginAttributes attrs = loadInfo->GetOriginAttributes();
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool aIsSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
 
@@ -146,7 +145,7 @@ void CookieServiceParent::SerialializeCookieList(
   }
 }
 
-mozilla::ipc::IPCResult CookieServiceParent::RecvPrepareCookieList(
+IPCResult CookieServiceParent::RecvPrepareCookieList(
     const URIParams& aHost, const bool& aIsForeign,
     const bool& aIsThirdPartyTrackingResource,
     const bool& aIsThirdPartySocialTrackingResource,
@@ -176,7 +175,7 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
   // non-refcounted class.
 }
 
-mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
+IPCResult CookieServiceParent::RecvSetCookieString(
     const URIParams& aHost, const Maybe<URIParams>& aChannelURI,
     const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
     const bool& aIsThirdPartyTrackingResource,
