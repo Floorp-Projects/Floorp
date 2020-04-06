@@ -4504,5 +4504,7 @@ void HttpBaseChannel::MaybeFlushConsoleReports() {
   }
 }
 
+void HttpBaseChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
+
 }  // namespace net
 }  // namespace mozilla
