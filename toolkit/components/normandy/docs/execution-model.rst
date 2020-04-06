@@ -23,6 +23,8 @@ their suitability for this client. Recipes contain information about which
 clients should execute the recipe. All recipes are processed by all clients,
 and all filtering happens in the client.
 
+For more information, see `the suitabilities docs <./suitabilities.html>`_.
+
 Signature
 ~~~~~~~~~
 

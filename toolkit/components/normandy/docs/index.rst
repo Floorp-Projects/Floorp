@@ -26,3 +26,5 @@ and then executes them.
 
    data-collection
    execution-model
+   suitabilities
+   services
