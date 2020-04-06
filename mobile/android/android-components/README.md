@@ -48,9 +48,9 @@ dependencies {
 }
 ```
 
-## Snapshot builds
+## Nightly builds
 
-Snapshots are build daily from the `master` branch and published on [snapshots.maven.mozilla.org](https://snapshots.maven.mozilla.org).
+Nightly builds are created every day from the `master` branch and published on [nightly.maven.mozilla.org](https://nightly.maven.mozilla.org).
 
 # API Reference
 
