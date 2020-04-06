@@ -6,6 +6,23 @@
 #ifndef mozilla_net_CookieCommons_h
 #define mozilla_net_CookieCommons_h
 
+#include "prtime.h"
+
+// pref string constants
+static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
+static const char kPrefMaxCookiesPerHost[] = "network.cookie.maxPerHost";
+static const char kPrefCookieQuotaPerHost[] = "network.cookie.quotaPerHost";
+static const char kPrefCookiePurgeAge[] = "network.cookie.purgeAge";
+
+// default limits for the cookie list. these can be tuned by the
+// network.cookie.maxNumber and network.cookie.maxPerHost prefs respectively.
+static const uint32_t kMaxCookiesPerHost = 180;
+static const uint32_t kCookieQuotaPerHost = 150;
 static const uint32_t kMaxNumberOfCookies = 3000;
+static const uint32_t kMaxBytesPerCookie = 4096;
+static const uint32_t kMaxBytesPerPath = 1024;
+
+static const int64_t kCookiePurgeAge =
+    int64_t(30 * 24 * 60 * 60) * PR_USEC_PER_SEC;  // 30 days in microseconds
 
 #endif  // mozilla_net_CookieCommons_h
