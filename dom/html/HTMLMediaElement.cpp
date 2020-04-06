@@ -6435,9 +6435,10 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
         !AutoplayPolicy::IsAllowedToPlay(*this)) {
       MaybeNotifyAutoplayBlocked();
     }
-    if (mMediaControlEventListener) {
-      MOZ_ASSERT(!mMediaControlEventListener->IsStarted(),
-                 "We didn't stop listening event when we were in bfcache?");
+    // If we stopped listening to the event when we suspended media element,
+    // then we should restart to listen to the event if we haven't done so yet.
+    if (mMediaControlEventListener &&
+        !mMediaControlEventListener->IsStarted()) {
       StartListeningMediaControlEventIfNeeded();
     }
   }
