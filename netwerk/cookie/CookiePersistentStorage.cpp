@@ -276,7 +276,7 @@ class InsertCookieDBListener final : public DBListenerErrorHandler {
     }
 
     // This notification is just for testing.
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       os->NotifyObservers(nullptr, "cookie-saved-on-disk", nullptr);
     }
@@ -394,7 +394,7 @@ void CookiePersistentStorage::NotifyChangedInternal(nsISupports* aSubject,
     }
   }
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->NotifyObservers(aSubject, "session-cookie-changed", aData);
   }
@@ -422,8 +422,7 @@ void CookiePersistentStorage::RemoveAllInternal() {
 
 void CookiePersistentStorage::WriteCookieToDB(
     const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
-    mozilla::net::Cookie* aCookie,
-    mozIStorageBindingParamsArray* aParamsArray) {
+    Cookie* aCookie, mozIStorageBindingParamsArray* aParamsArray) {
   if (mDBConn) {
     mozIStorageAsyncStatement* stmt = mStmtInsert;
     nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
@@ -484,8 +483,7 @@ void CookiePersistentStorage::HandleCorruptDB() {
 }
 
 void CookiePersistentStorage::RemoveCookiesWithOriginAttributes(
-    const mozilla::OriginAttributesPattern& aPattern,
-    const nsACString& aBaseDomain) {
+    const OriginAttributesPattern& aPattern, const nsACString& aBaseDomain) {
   mozStorageTransaction transaction(mDBConn, false);
 
   CookieStorage::RemoveCookiesWithOriginAttributes(aPattern, aBaseDomain);
@@ -496,7 +494,7 @@ void CookiePersistentStorage::RemoveCookiesWithOriginAttributes(
 
 void CookiePersistentStorage::RemoveCookiesFromExactHost(
     const nsACString& aHost, const nsACString& aBaseDomain,
-    const mozilla::OriginAttributesPattern& aPattern) {
+    const OriginAttributesPattern& aPattern) {
   mozStorageTransaction transaction(mDBConn, false);
 
   CookieStorage::RemoveCookiesFromExactHost(aHost, aBaseDomain, aPattern);
@@ -1627,7 +1625,7 @@ void CookiePersistentStorage::RebuildCorruptDB() {
   NS_ASSERTION(mCorruptFlag == CookiePersistentStorage::CLOSING_FOR_REBUILD,
                "should be in CLOSING_FOR_REBUILD state");
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
 
   mCorruptFlag = CookiePersistentStorage::REBUILDING;
 
@@ -1643,8 +1641,7 @@ void CookiePersistentStorage::RebuildCorruptDB() {
 
         nsCOMPtr<nsIRunnable> innerRunnable = NS_NewRunnableFunction(
             "RebuildCorruptDB.TryInitDBComplete", [self, result] {
-              nsCOMPtr<nsIObserverService> os =
-                  mozilla::services::GetObserverService();
+              nsCOMPtr<nsIObserverService> os = services::GetObserverService();
               if (result != RESULT_OK) {
                 // We're done. Reset our DB connection and statements, and
                 // notify of closure.
@@ -1716,7 +1713,7 @@ void CookiePersistentStorage::HandleDBClosed() {
   COOKIE_LOGSTRING(LogLevel::Debug,
                    ("HandleDBClosed(): CookieStorage %p closed", this));
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
 
   switch (mCorruptFlag) {
     case CookiePersistentStorage::OK: {
@@ -1825,7 +1822,7 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
 }
 
 // Extract data from a single result row and create an Cookie.
-mozilla::UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
+UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
     mozIStorageStatement* aRow) {
   nsCString name, value, host, path;
   DebugOnly<nsresult> rv = aRow->GetUTF8String(IDX_NAME, name);
@@ -1846,9 +1843,9 @@ mozilla::UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   int32_t rawSameSite = aRow->AsInt32(IDX_RAW_SAME_SITE);
 
   // Create a new constCookie and assign the data.
-  return mozilla::MakeUnique<CookieStruct>(
-      name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
-      false, isSecure, sameSite, rawSameSite);
+  return MakeUnique<CookieStruct>(name, value, host, path, expiry, lastAccessed,
+                                  creationTime, isHttpOnly, false, isSecure,
+                                  sameSite, rawSameSite);
 }
 
 void CookiePersistentStorage::EnsureReadComplete() {
@@ -1942,9 +1939,9 @@ void CookiePersistentStorage::InitDBConn() {
 
   COOKIE_LOGSTRING(LogLevel::Debug,
                    ("InitDBConn(): mInitializedDBConn = true"));
-  mEndInitDBConn = mozilla::TimeStamp::Now();
+  mEndInitDBConn = TimeStamp::Now();
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->NotifyObservers(nullptr, "cookie-db-read", nullptr);
     mReadArray.Clear();

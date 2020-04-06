@@ -33,7 +33,6 @@
 #include "ThirdPartyUtil.h"
 
 using namespace mozilla::ipc;
-using mozilla::OriginAttributes;
 
 namespace mozilla {
 namespace net {
@@ -88,8 +87,7 @@ CookieServiceChild::CookieServiceChild() {
     PrefChanged(prefBranch);
   }
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   }
@@ -141,7 +139,7 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   aChannel->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  mozilla::OriginAttributes attrs = loadInfo->GetOriginAttributes();
+  OriginAttributes attrs = loadInfo->GetOriginAttributes();
   StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
   URIParams uriParams;
   SerializeURI(uri, uriParams);
@@ -155,13 +153,13 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign, attrs);
 }
 
-mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveAll() {
+IPCResult CookieServiceChild::RecvRemoveAll() {
   mCookiesMap.Clear();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
-    const CookieStruct& aCookie, const OriginAttributes& aAttrs) {
+IPCResult CookieServiceChild::RecvRemoveCookie(const CookieStruct& aCookie,
+                                               const OriginAttributes& aAttrs) {
   nsCString baseDomain;
   CookieCommons::GetBaseDomainFromHost(mTLDService, aCookie.host(), baseDomain);
   CookieKey key(baseDomain, aAttrs);
@@ -185,8 +183,8 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveCookie(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CookieServiceChild::RecvAddCookie(
-    const CookieStruct& aCookie, const OriginAttributes& aAttrs) {
+IPCResult CookieServiceChild::RecvAddCookie(const CookieStruct& aCookie,
+                                            const OriginAttributes& aAttrs) {
   RefPtr<Cookie> cookie = Cookie::Create(
       aCookie.name(), aCookie.value(), aCookie.host(), aCookie.path(),
       aCookie.expiry(), aCookie.lastAccessed(), aCookie.creationTime(),
@@ -196,7 +194,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvAddCookie(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveBatchDeletedCookies(
+IPCResult CookieServiceChild::RecvRemoveBatchDeletedCookies(
     nsTArray<CookieStruct>&& aCookiesList,
     nsTArray<OriginAttributes>&& aAttrsList) {
   MOZ_ASSERT(aCookiesList.Length() == aAttrsList.Length());
@@ -207,7 +205,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveBatchDeletedCookies(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CookieServiceChild::RecvTrackCookiesLoad(
+IPCResult CookieServiceChild::RecvTrackCookiesLoad(
     nsTArray<CookieStruct>&& aCookiesList, const OriginAttributes& aAttrs) {
   for (uint32_t i = 0; i < aCookiesList.Length(); i++) {
     RefPtr<Cookie> cookie = Cookie::Create(
@@ -254,7 +252,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   nsAutoCString baseDomain;
 
   nsCOMPtr<nsILoadInfo> loadInfo;
-  mozilla::OriginAttributes attrs;
+  OriginAttributes attrs;
   if (aChannel) {
     loadInfo = aChannel->LoadInfo();
     attrs = loadInfo->GetOriginAttributes();
@@ -356,7 +354,7 @@ uint32_t CookieServiceChild::CountCookiesFromHashTable(
 }
 
 void CookieServiceChild::SetCookieInternal(
-    const CookieStruct& aCookieData, const mozilla::OriginAttributes& aAttrs,
+    const CookieStruct& aCookieData, const OriginAttributes& aAttrs,
     nsIChannel* aChannel, bool aFromHttp,
     nsICookiePermission* aPermissionService) {
   int64_t currentTimeInUsec = PR_Now();
@@ -486,7 +484,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(
   SerializeURI(aHostURI, hostURIParams);
 
   Maybe<URIParams> channelURIParams;
-  mozilla::OriginAttributes attrs;
+  OriginAttributes attrs;
   if (aChannel) {
     nsCOMPtr<nsIURI> channelURI;
     aChannel->GetURI(getter_AddRefs(channelURI));
@@ -590,7 +588,7 @@ CookieServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
       mCookieTimer = nullptr;
     }
     nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
+        services::GetObserverService();
     if (observerService) {
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }

@@ -33,12 +33,12 @@ class CookiePersistentStorage final : public CookieStorage {
   void HandleCorruptDB();
 
   void RemoveCookiesWithOriginAttributes(
-      const mozilla::OriginAttributesPattern& aPattern,
+      const OriginAttributesPattern& aPattern,
       const nsACString& aBaseDomain) override;
 
   void RemoveCookiesFromExactHost(
       const nsACString& aHost, const nsACString& aBaseDomain,
-      const mozilla::OriginAttributesPattern& aPattern) override;
+      const OriginAttributesPattern& aPattern) override;
 
   void StaleCookies(const nsTArray<Cookie*>& aCookieList,
                     int64_t aCurrentTimeInUsec) override;
@@ -78,7 +78,7 @@ class CookiePersistentStorage final : public CookieStorage {
 
   void WriteCookieToDB(const nsACString& aBaseDomain,
                        const OriginAttributes& aOriginAttributes,
-                       mozilla::net::Cookie* aCookie,
+                       Cookie* aCookie,
                        mozIStorageBindingParamsArray* aParamsArray) override;
 
   void RemoveAllInternal() override;
@@ -109,7 +109,7 @@ class CookiePersistentStorage final : public CookieStorage {
   nsresult CreateTableForSchemaVersion6();
   nsresult CreateTableForSchemaVersion5();
 
-  mozilla::UniquePtr<CookieStruct> GetCookieFromRow(mozIStorageStatement* aRow);
+  UniquePtr<CookieStruct> GetCookieFromRow(mozIStorageStatement* aRow);
 
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<mozIStorageService> mStorageService;
@@ -119,17 +119,17 @@ class CookiePersistentStorage final : public CookieStorage {
   struct CookieDomainTuple {
     CookieKey key;
     OriginAttributes originAttributes;
-    mozilla::UniquePtr<mozilla::net::CookieStruct> cookie;
+    UniquePtr<CookieStruct> cookie;
   };
 
   // thread
-  mozilla::TimeStamp mEndInitDBConn;
+  TimeStamp mEndInitDBConn;
   nsTArray<CookieDomainTuple> mReadArray;
 
-  mozilla::Monitor mMonitor;
+  Monitor mMonitor;
 
-  mozilla::Atomic<bool> mInitialized;
-  mozilla::Atomic<bool> mInitializedDBConn;
+  Atomic<bool> mInitialized;
+  Atomic<bool> mInitializedDBConn;
 
   nsCOMPtr<nsIFile> mCookieFile;
   nsCOMPtr<mozIStorageConnection> mDBConn;

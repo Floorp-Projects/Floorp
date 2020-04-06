@@ -47,16 +47,16 @@ already_AddRefed<Cookie> Cookie::Create(
     int64_t aCreationTime, bool aIsSession, bool aIsSecure, bool aIsHttpOnly,
     const OriginAttributes& aOriginAttributes, int32_t aSameSite,
     int32_t aRawSameSite) {
-  mozilla::net::CookieStruct cookieData(
-      nsCString(aName), nsCString(aValue), nsCString(aHost), nsCString(aPath),
-      aExpiry, aLastAccessed, aCreationTime, aIsHttpOnly, aIsSession, aIsSecure,
-      aSameSite, aRawSameSite);
+  CookieStruct cookieData(nsCString(aName), nsCString(aValue), nsCString(aHost),
+                          nsCString(aPath), aExpiry, aLastAccessed,
+                          aCreationTime, aIsHttpOnly, aIsSession, aIsSecure,
+                          aSameSite, aRawSameSite);
 
   return Create(cookieData, aOriginAttributes);
 }
 
 already_AddRefed<Cookie> Cookie::Create(
-    const mozilla::net::CookieStruct& aCookieData,
+    const CookieStruct& aCookieData,
     const OriginAttributes& aOriginAttributes) {
   RefPtr<Cookie> cookie = new Cookie(aCookieData, aOriginAttributes);
 
@@ -98,8 +98,7 @@ bool Cookie::IsStale() const {
   int64_t currentTimeInUsec = PR_Now();
 
   return currentTimeInUsec - LastAccessed() >
-         mozilla::StaticPrefs::network_cookie_staleThreshold() *
-             PR_USEC_PER_SEC;
+         StaticPrefs::network_cookie_staleThreshold() * PR_USEC_PER_SEC;
 }
 
 /******************************************************************************
@@ -157,7 +156,7 @@ NS_IMETHODIMP Cookie::GetLastAccessed(int64_t* aTime) {
   return NS_OK;
 }
 NS_IMETHODIMP Cookie::GetSameSite(int32_t* aSameSite) {
-  if (mozilla::StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+  if (StaticPrefs::network_cookie_sameSite_laxByDefault()) {
     *aSameSite = SameSite();
   } else {
     *aSameSite = RawSameSite();
@@ -215,7 +214,7 @@ Cookie::GetExpires(uint64_t* aExpires) {
 }
 
 // static
-bool Cookie::ValidateRawSame(const mozilla::net::CookieStruct& aCookieData) {
+bool Cookie::ValidateRawSame(const CookieStruct& aCookieData) {
   return aCookieData.rawSameSite() == aCookieData.sameSite() ||
          aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE;
 }

@@ -30,7 +30,7 @@ class CookiePrivateStorage final : public CookieStorage {
 
   void WriteCookieToDB(const nsACString& aBaseDomain,
                        const OriginAttributes& aOriginAttributes,
-                       mozilla::net::Cookie* aCookie,
+                       Cookie* aCookie,
                        mozIStorageBindingParamsArray* aParamsArray) override{};
 
   void RemoveAllInternal() override {}

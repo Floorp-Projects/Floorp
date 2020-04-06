@@ -42,10 +42,10 @@ class CookieKey : public PLDHashEntryHdr {
     nsAutoCString suffix;
     aKey->mOriginAttributes.CreateSuffix(suffix);
     temp.Append(suffix);
-    return mozilla::HashString(temp);
+    return HashString(temp);
   }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     return mBaseDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
