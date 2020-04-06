@@ -1390,7 +1390,7 @@ var BrowserTestUtils = {
               null
             ),
 
-            applyFilter(service, channel, defaultProxyInfo, callback) {
+            applyFilter(channel, defaultProxyInfo, callback) {
               callback.onProxyFilterResult(
                 isHttp(channel.URI.spec) ? defaultProxyInfo : this.proxyInfo
               );

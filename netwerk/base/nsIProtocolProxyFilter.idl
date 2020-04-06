@@ -44,9 +44,6 @@ interface nsIProtocolProxyFilter : nsISupports
    * This method is called to apply proxy filter rules for the given URI
    * and proxy object (or list of proxy objects).
    *
-   * @param aProxyService
-   *        A reference to the Protocol Proxy Service.  This is passed so that
-   *        implementations may easily access methods such as newProxyInfo.
    * @param aURI
    *        The URI for which these proxy settings apply.
    * @param aProxy
@@ -63,8 +60,7 @@ interface nsIProtocolProxyFilter : nsISupports
    *        connection should be used.  Use aProxyService.newProxyInfo to
    *        construct nsIProxyInfo objects.
    */
-  void applyFilter(in nsIProtocolProxyService aProxyService,
-                   in nsIURI aURI, in nsIProxyInfo aProxy,
+  void applyFilter(in nsIURI aURI, in nsIProxyInfo aProxy,
                    in nsIProxyProtocolFilterResult aCallback);
 };
 
@@ -80,9 +76,6 @@ interface nsIProtocolProxyChannelFilter : nsISupports
    * This method is called to apply proxy filter rules for the given channel
    * and proxy object (or list of proxy objects).
    *
-   * @param aProxyService
-   *        A reference to the Protocol Proxy Service.  This is passed so that
-   *        implementations may easily access methods such as newProxyInfo.
    * @param aChannel
    *        The channel for which these proxy settings apply.
    * @param aProxy
@@ -99,7 +92,6 @@ interface nsIProtocolProxyChannelFilter : nsISupports
    *        connection should be used.  Use aProxyService.newProxyInfo to
    *        construct nsIProxyInfo objects.
    */
-  void applyFilter(in nsIProtocolProxyService aProxyService,
-                   in nsIChannel aChannel, in nsIProxyInfo aProxy,
+  void applyFilter(in nsIChannel aChannel, in nsIProxyInfo aProxy,
                    in nsIProxyProtocolFilterResult aCallback);
 };

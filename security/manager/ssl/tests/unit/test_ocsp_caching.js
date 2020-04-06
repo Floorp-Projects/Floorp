@@ -282,7 +282,7 @@ function add_tests() {
     // We use a dummy proxy filter to catch all channels, even those that do not
     // generate an "http-on-modify-request" notification.
     let proxyFilter = {
-      applyFilter(aProxyService, aChannel, aProxy, aCallback) {
+      applyFilter(aChannel, aProxy, aCallback) {
         // We have the channel; provide it to the callback.
         if (aChannel.originalURI.spec == "http://localhost:8888/") {
           gObservedCnt++;
