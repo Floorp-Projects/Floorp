@@ -35,8 +35,6 @@ static void mapFreeCallback(void* aContents, void* aUserData) {
   Unused << aUserData;
 }
 
-RefPtr<WebGPUChild> Device::GetBridge() { return mBridge; }
-
 JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aSize,
                                             ipc::Shmem& aShmem) {
   MOZ_ASSERT(aShmem.Size<uint8_t>() == aSize);
@@ -194,30 +192,6 @@ already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
   RawId id = mBridge->DeviceCreateRenderPipeline(mId, aDesc);
   RefPtr<RenderPipeline> object = new RenderPipeline(this, id);
   return object.forget();
-}
-
-already_AddRefed<Texture> Device::InitSwapChain(
-    const dom::GPUSwapChainDescriptor& aDesc,
-    const dom::GPUExtent3DDict& aExtent3D, wr::ExternalImageId aExternalImageId,
-    gfx::SurfaceFormat aFormat) {
-  const layers::RGBDescriptor rgbDesc(
-      gfx::IntSize(AssertedCast<int>(aExtent3D.mWidth),
-                   AssertedCast<int>(aExtent3D.mHeight)),
-      aFormat, false);
-  // buffer count doesn't matter much, will be created on demand
-  const size_t maxBufferCount = 10;
-  mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount,
-                                 aExternalImageId);
-
-  dom::GPUTextureDescriptor desc;
-  desc.mDimension = dom::GPUTextureDimension::_2d;
-  desc.mSize.SetAsGPUExtent3DDict() = aExtent3D;
-  desc.mFormat = aDesc.mFormat;
-  desc.mArrayLayerCount = 1;
-  desc.mMipLevelCount = 1;
-  desc.mSampleCount = 1;
-  desc.mUsage = aDesc.mUsage | dom::GPUTextureUsage_Binding::COPY_SRC;
-  return CreateTexture(desc);
 }
 
 }  // namespace webgpu
