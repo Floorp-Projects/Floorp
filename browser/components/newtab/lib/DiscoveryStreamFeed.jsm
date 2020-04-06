@@ -1924,7 +1924,7 @@ getHardcodedLayout = isBasicLayout => ({
               },
               {
                 name: "More Recommendations ›",
-                url: "https://getpocket.com/explore/trending?src=fx_new_tab",
+                url: "https://getpocket.com/explore?src=fx_new_tab&cdn=0",
               },
             ],
           },
