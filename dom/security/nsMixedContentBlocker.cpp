@@ -280,7 +280,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(
 
   // Get the loading Info from the old channel
   nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
-  nsCOMPtr<nsIPrincipal> requestingPrincipal = loadInfo->LoadingPrincipal();
+  nsCOMPtr<nsIPrincipal> requestingPrincipal = loadInfo->GetLoadingPrincipal();
 
   // Since we are calling shouldLoad() directly on redirects, we don't go
   // through the code in nsContentPolicyUtils::NS_CheckContentLoadPolicy().
@@ -326,7 +326,7 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
   nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
   nsCOMPtr<nsIURI> requestingLocation;
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->GetLoadingPrincipal();
 
   // We need to get a Requesting Location if possible
   // so we're casting to BasePrincipal to acess GetURI

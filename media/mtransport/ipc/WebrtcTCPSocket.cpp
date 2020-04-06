@@ -378,7 +378,7 @@ nsresult WebrtcTCPSocket::OpenWithHttpProxy() {
   rv = ioService->NewChannelFromURIWithProxyFlags(
       mURI, nullptr,
       // Proxy flags are overridden by SetConnectOnly()
-      0, loadInfo->LoadingNode(), loadInfo->LoadingPrincipal(),
+      0, loadInfo->LoadingNode(), loadInfo->GetLoadingPrincipal(),
       loadInfo->TriggeringPrincipal(),
       nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS | nsILoadInfo::SEC_COOKIES_OMIT |
           // We need this flag to allow loads from any origin since this channel

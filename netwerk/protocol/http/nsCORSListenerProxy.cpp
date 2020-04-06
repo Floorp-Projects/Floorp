@@ -1384,7 +1384,7 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
                  nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
              "how did we end up here?");
 
-  nsCOMPtr<nsIPrincipal> principal = originalLoadInfo->LoadingPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = originalLoadInfo->GetLoadingPrincipal();
   MOZ_ASSERT(principal && originalLoadInfo->GetExternalContentPolicyType() !=
                               nsIContentPolicy::TYPE_DOCUMENT,
              "Should not do CORS loads for top-level loads, so a "

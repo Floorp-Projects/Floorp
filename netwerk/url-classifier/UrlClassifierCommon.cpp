@@ -46,7 +46,7 @@ bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI) {
   // loadingPrincipal is used here to ensure we are loading into an
   // addon principal.  This allows an addon, with explicit permission, to
   // call out to API endpoints that may otherwise get blocked.
-  nsIPrincipal* loadingPrincipal = channelLoadInfo->LoadingPrincipal();
+  nsIPrincipal* loadingPrincipal = channelLoadInfo->GetLoadingPrincipal();
   if (!loadingPrincipal) {
     return false;
   }
