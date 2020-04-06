@@ -117,7 +117,7 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior, State aState)
 CookieJarSettings::~CookieJarSettings() {
   if (!NS_IsMainThread() && !mCookiePermissions.IsEmpty()) {
     nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
-        mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+        SystemGroup::EventTargetFor(TaskCategory::Other);
     MOZ_ASSERT(systemGroupEventTarget);
 
     RefPtr<Runnable> r = new ReleaseCookiePermissions(mCookiePermissions);

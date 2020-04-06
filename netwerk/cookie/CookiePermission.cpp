@@ -33,7 +33,7 @@ namespace net {
 static const bool kDefaultPolicy = true;
 
 namespace {
-mozilla::StaticRefPtr<CookiePermission> gSingleton;
+StaticRefPtr<CookiePermission> gSingleton;
 }
 
 NS_IMPL_ISUPPORTS(CookiePermission, nsICookiePermission)

@@ -245,8 +245,8 @@ const nsTArray<RefPtr<Cookie>>* CookieStorage::GetCookiesFromHost(
 }
 
 void CookieStorage::GetCookiesWithOriginAttributes(
-    const mozilla::OriginAttributesPattern& aPattern,
-    const nsACString& aBaseDomain, nsTArray<RefPtr<nsICookie>>& aResult) {
+    const OriginAttributesPattern& aPattern, const nsACString& aBaseDomain,
+    nsTArray<RefPtr<nsICookie>>& aResult) {
   for (auto iter = mHostTable.Iter(); !iter.Done(); iter.Next()) {
     CookieEntry* entry = iter.Get();
 
@@ -286,8 +286,7 @@ void CookieStorage::RemoveCookie(const nsACString& aBaseDomain,
 }
 
 void CookieStorage::RemoveCookiesWithOriginAttributes(
-    const mozilla::OriginAttributesPattern& aPattern,
-    const nsACString& aBaseDomain) {
+    const OriginAttributesPattern& aPattern, const nsACString& aBaseDomain) {
   // Iterate the hash table of CookieEntry.
   for (auto iter = mHostTable.Iter(); !iter.Done(); iter.Next()) {
     CookieEntry* entry = iter.Get();
@@ -320,7 +319,7 @@ void CookieStorage::RemoveCookiesWithOriginAttributes(
 
 void CookieStorage::RemoveCookiesFromExactHost(
     const nsACString& aHost, const nsACString& aBaseDomain,
-    const mozilla::OriginAttributesPattern& aPattern) {
+    const OriginAttributesPattern& aPattern) {
   // Iterate the hash table of CookieEntry.
   for (auto iter = mHostTable.Iter(); !iter.Done(); iter.Next()) {
     CookieEntry* entry = iter.Get();
@@ -374,7 +373,7 @@ void CookieStorage::RemoveAll() {
 // cookies.
 void CookieStorage::NotifyChanged(nsISupports* aSubject, const char16_t* aData,
                                   bool aOldCookieIsSession, bool aFromHttp) {
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (!os) {
     return;
   }

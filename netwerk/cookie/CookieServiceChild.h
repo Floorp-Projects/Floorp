@@ -75,8 +75,8 @@ class CookieServiceChild : public PCookieServiceChild,
   void RecordDocumentCookie(Cookie* aCookie, const OriginAttributes& aAttrs);
 
   void SetCookieInternal(const CookieStruct& aCookieData,
-                         const mozilla::OriginAttributes& aAttrs,
-                         nsIChannel* aChannel, bool aFromHttp,
+                         const OriginAttributes& aAttrs, nsIChannel* aChannel,
+                         bool aFromHttp,
                          nsICookiePermission* aPermissionService);
 
   uint32_t CountCookiesFromHashTable(const nsCString& aBaseDomain,
