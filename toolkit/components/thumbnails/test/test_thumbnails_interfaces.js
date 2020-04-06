@@ -37,7 +37,7 @@ function run_test() {
   );
   Assert.throws(
     () => handler.newChannel(badQuery, dummyLoadInfo),
-    /NS_ERROR_MALFORMED_URI/i,
+    /NS_ERROR_NOT_AVAILABLE/i,
     "moz-page-thumb object with malformed query parameters must not resolve to a file path"
   );
 
