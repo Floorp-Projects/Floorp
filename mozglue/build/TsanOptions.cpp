@@ -122,7 +122,7 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsThread::SizeOfEventQueues\n"
 
          // Bug 1600895
-         "race:js::gc::MovingTracer::onBaseShapeEdge\n"
+         "race:UpdateCellPointers<js::Shape>\n"
          "race:js::gc::MovingTracer::onScopeEdge\n"
          "race:js::gc::MovingTracer::onShapeEdge\n"
          "race:fixupShapeTreeAfterMovingGC\n"
