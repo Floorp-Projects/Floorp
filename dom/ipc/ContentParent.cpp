@@ -586,9 +586,6 @@ StaticAutoPtr<LinkedList<ContentParent>> ContentParent::sContentParents;
 UniquePtr<SandboxBrokerPolicyFactory>
     ContentParent::sSandboxBrokerPolicyFactory;
 #endif
-uint64_t ContentParent::sNextRemoteTabId = 0;
-nsDataHashtable<nsUint64HashKey, BrowserParent*>
-    ContentParent::sNextBrowserParents;
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 StaticAutoPtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
@@ -1188,8 +1185,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
 already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     const TabContext& aContext, Element* aFrameElement,
     const nsAString& aRemoteType, BrowsingContext* aBrowsingContext,
-    ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs,
-    uint64_t aNextRemoteTabId) {
+    ContentParent* aOpenerContentParent, BrowserParent* aSameTabGroupAs) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
   if (!sCanLaunchSubprocesses) {
@@ -1199,18 +1195,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   nsAutoString remoteType(aRemoteType);
   if (remoteType.IsEmpty()) {
     remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
-  }
-
-  if (aNextRemoteTabId) {
-    if (BrowserParent* parent =
-            sNextBrowserParents.GetAndRemove(aNextRemoteTabId)
-                .valueOr(nullptr)) {
-      RefPtr<BrowserHost> browserHost = new BrowserHost(parent);
-      MOZ_ASSERT(!parent->GetOwnerElement(),
-                 "Shouldn't have an owner elemnt before");
-      parent->SetOwnerElement(aFrameElement);
-      return browserHost.forget();
-    }
   }
 
   ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
@@ -4607,12 +4591,12 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     PBrowserParent* aThisTab, BrowsingContext* aParent, bool aSetOpener,
     const uint32_t& aChromeFlags, const bool& aCalledFromJS,
     const bool& aWidthSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
-    const float& aFullZoom, uint64_t aNextRemoteTabId, const nsString& aName,
-    nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
-    bool* aWindowIsNew, int32_t& aOpenLocation,
-    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
-    bool aLoadURI, nsIContentSecurityPolicy* aCsp,
-    const OriginAttributes& aOriginAttributes) {
+    const float& aFullZoom, BrowserParent* aNextRemoteBrowser,
+    const nsString& aName, nsresult& aResult,
+    nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
+    int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
+    nsIReferrerInfo* aReferrerInfo, bool aLoadURI,
+    nsIContentSecurityPolicy* aCsp, const OriginAttributes& aOriginAttributes) {
   // The content process should never be in charge of computing whether or
   // not a window should be private - the parent will do that.
   const uint32_t badFlags = nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
@@ -4626,7 +4610,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   openInfo->mForceNoOpener = !aSetOpener;
   openInfo->mParent = aParent;
   openInfo->mIsRemote = true;
-  openInfo->mNextRemoteBrowserId = aNextRemoteTabId;
+  openInfo->mNextRemoteBrowser = aNextRemoteBrowser;
   openInfo->mOriginAttributes = aOriginAttributes;
 
   RefPtr<BrowserParent> topParent = BrowserParent::GetFrom(aThisTab);
@@ -4895,17 +4879,14 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   }
 
   BrowserParent::AutoUseNewTab aunt(newTab, &cwi.urlToLoad());
-  const uint64_t nextRemoteTabId = ++sNextRemoteTabId;
-  sNextBrowserParents.Put(nextRemoteTabId, newTab);
 
   nsCOMPtr<nsIRemoteTab> newRemoteTab;
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, aParent.get(), !!newBCOpener, aChromeFlags, aCalledFromJS,
-      aWidthSpecified, aURIToLoad, aFeatures, aFullZoom, nextRemoteTabId,
-      VoidString(), rv, newRemoteTab, &cwi.windowOpened(), openLocation,
-      aTriggeringPrincipal, aReferrerInfo,
-      /* aLoadUri = */ false, aCsp, aOriginAttributes);
+      aWidthSpecified, aURIToLoad, aFeatures, aFullZoom, newTab, VoidString(),
+      rv, newRemoteTab, &cwi.windowOpened(), openLocation, aTriggeringPrincipal,
+      aReferrerInfo, /* aLoadUri = */ false, aCsp, aOriginAttributes);
   if (!ipcResult) {
     return ipcResult;
   }
@@ -4914,9 +4895,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     return IPC_OK();
   }
 
-  if (sNextBrowserParents.GetAndRemove(nextRemoteTabId).valueOr(nullptr)) {
-    cwi.windowOpened() = false;
-  }
   MOZ_ASSERT(BrowserHost::GetFrom(newRemoteTab.get()) ==
              newTab->GetBrowserHost());
 
@@ -4981,7 +4959,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, aParent.get(), /* aSetOpener = */ false, aChromeFlags,
       aCalledFromJS, aWidthSpecified, aURIToLoad, aFeatures, aFullZoom,
-      /* aNextRemoteTabId = */ 0, aName, rv, newRemoteTab, &windowIsNew,
+      /* aNextRemoteBrowser = */ nullptr, aName, rv, newRemoteTab, &windowIsNew,
       openLocation, aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ true, aCsp, aOriginAttributes);
   if (!ipcResult) {
