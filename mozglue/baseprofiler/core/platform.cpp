@@ -598,7 +598,7 @@ class ActivePS {
                              aFilterCount, aDuration);
   }
 
-  static MOZ_MUST_USE SamplerThread* Destroy(PSLockRef aLock) {
+  [[nodiscard]] static SamplerThread* Destroy(PSLockRef aLock) {
     MOZ_ASSERT(sInstance);
     auto samplerThread = sInstance->mSamplerThread;
     delete sInstance;
@@ -2947,7 +2947,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   }
 }
 
-static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
+[[nodiscard]] static SamplerThread* locked_profiler_stop(PSLockRef aLock) {
   LOG("locked_profiler_stop");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));

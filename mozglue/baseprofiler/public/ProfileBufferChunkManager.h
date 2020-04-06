@@ -36,13 +36,13 @@ class ProfileBufferChunkManager {
 #endif
 
   // Estimated maximum buffer size.
-  virtual MOZ_MUST_USE size_t MaxTotalSize() const = 0;
+  [[nodiscard]] virtual size_t MaxTotalSize() const = 0;
 
   // Create or recycle a chunk right now. May return null in case of allocation
   // failure.
   // Note that the chunk-destroyed callback may be invoked during this call;
   // user should be careful with reentrancy issues.
-  virtual MOZ_MUST_USE UniquePtr<ProfileBufferChunk> GetChunk() = 0;
+  [[nodiscard]] virtual UniquePtr<ProfileBufferChunk> GetChunk() = 0;
 
   // `aChunkReceiver` may be called with a new or recycled chunk, or nullptr.
   // (See `FulfillChunkRequests()` regarding when the callback may happen.)
@@ -76,13 +76,13 @@ class ProfileBufferChunkManager {
           aChunkDestroyedCallback) = 0;
 
   // Give away all released chunks that have not yet been destroyed.
-  virtual MOZ_MUST_USE UniquePtr<ProfileBufferChunk>
+  [[nodiscard]] virtual UniquePtr<ProfileBufferChunk>
   GetExtantReleasedChunks() = 0;
 
   // Let a callback see all released chunks that have not yet been destroyed, if
   // any. Return whatever the callback returns.
   template <typename Callback>
-  MOZ_MUST_USE auto PeekExtantReleasedChunks(Callback&& aCallback) {
+  [[nodiscard]] auto PeekExtantReleasedChunks(Callback&& aCallback) {
     const ProfileBufferChunk* chunks = PeekExtantReleasedChunksAndLock();
     auto unlock =
         MakeScopeExit([&]() { UnlockAfterPeekExtantReleasedChunks(); });
@@ -92,10 +92,10 @@ class ProfileBufferChunkManager {
   // Chunks that were still unreleased will never be released.
   virtual void ForgetUnreleasedChunks() = 0;
 
-  virtual MOZ_MUST_USE size_t
-  SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const = 0;
-  virtual MOZ_MUST_USE size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const = 0;
+  [[nodiscard]] virtual size_t SizeOfExcludingThis(
+      MallocSizeOf aMallocSizeOf) const = 0;
+  [[nodiscard]] virtual size_t SizeOfIncludingThis(
+      MallocSizeOf aMallocSizeOf) const = 0;
 
  protected:
   // Derived classes to implement `PeekExtantReleasedChunks` through these:
