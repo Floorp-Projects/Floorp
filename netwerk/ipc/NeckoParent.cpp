@@ -10,6 +10,7 @@
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
+#include "mozilla/net/PageThumbProtocolHandler.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/CookieServiceParent.h"
@@ -998,6 +999,52 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
   RefPtr<HSTSDataCallbackWrapper> wrapper =
       new HSTSDataCallbackWrapper(std::move(callback));
   gHttpHandler->EnsureHSTSDataReadyNative(wrapper);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvGetPageThumbStream(
+    nsIURI* aURI, GetPageThumbStreamResolver&& aResolver) {
+  // Only the privileged about content process is allowed to access
+  // things over the moz-page-thumb protocol. Any other content process
+  // that tries to send this should have been blocked via the
+  // ScriptSecurityManager, but if somehow the process has been tricked into
+  // sending this message, we send IPC_FAIL in order to crash that
+  // likely-compromised content process.
+  if (!static_cast<ContentParent*>(Manager())->GetRemoteType().EqualsLiteral(
+          PRIVILEGEDABOUT_REMOTE_TYPE)) {
+    return IPC_FAIL(this, "Wrong process type");
+  }
+
+  RefPtr<PageThumbProtocolHandler> ph(PageThumbProtocolHandler::GetSingleton());
+  MOZ_ASSERT(ph);
+
+  // Ask the PageThumbProtocolHandler to give us a new input stream for
+  // this URI. The request comes from a PageThumbProtocolHandler in the
+  // child process, but is not guaranteed to be a valid moz-page-thumb URI,
+  // and not guaranteed to represent a resource that the child should be
+  // allowed to access. The PageThumbProtocolHandler is responsible for
+  // validating the request.
+  nsCOMPtr<nsIInputStream> inputStream;
+  bool terminateSender = true;
+  auto inputStreamPromise = ph->NewStream(aURI, &terminateSender);
+
+  if (terminateSender) {
+    return IPC_FAIL(this, "Malformed moz-page-thumb request");
+  }
+
+  inputStreamPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aResolver](const nsCOMPtr<nsIInputStream>& aStream) {
+        aResolver(aStream);
+      },
+      [aResolver](nsresult aRv) {
+        // If NewStream failed, we send back an invalid stream to the child so
+        // it can handle the error. MozPromise rejection is reserved for channel
+        // errors/disconnects.
+        Unused << NS_WARN_IF(NS_FAILED(aRv));
+        aResolver(nullptr);
+      });
+
   return IPC_OK();
 }
 
