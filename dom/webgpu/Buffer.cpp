@@ -51,7 +51,7 @@ Buffer::~Buffer() {
 
 void Buffer::Cleanup() {
   if (mParent) {
-    WebGPUChild* bridge = mParent->mBridge;
+    auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
       bridge->SendBufferDestroy(mId);
     }

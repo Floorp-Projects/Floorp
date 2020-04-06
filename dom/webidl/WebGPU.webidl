@@ -617,7 +617,7 @@ dictionary GPUVertexBufferLayoutDescriptor {
 
 dictionary GPUVertexStateDescriptor {
     GPUIndexFormat indexFormat = "uint32";
-    required sequence<GPUVertexBufferLayoutDescriptor?> vertexBuffers;
+    sequence<GPUVertexBufferLayoutDescriptor?> vertexBuffers = [];
 };
 
 // ShaderModule
@@ -688,7 +688,7 @@ dictionary GPURenderPipelineDescriptor : GPUPipelineDescriptorBase {
     GPUProgrammableStageDescriptor fragmentStage;
 
     required GPUPrimitiveTopology primitiveTopology;
-    GPURasterizationStateDescriptor rasterizationState;
+    GPURasterizationStateDescriptor rasterizationState = {};
     required sequence<GPUColorStateDescriptor> colorStates;
     GPUDepthStencilStateDescriptor depthStencilState;
     GPUVertexStateDescriptor vertexState = {};
@@ -722,7 +722,7 @@ dictionary GPURenderPassColorAttachmentDescriptor {
     GPUTextureView resolveTarget;
 
     required (GPULoadOp or GPUColor) loadValue;
-    required GPUStoreOp storeOp;
+    GPUStoreOp storeOp = "store";
 };
 
 dictionary GPURenderPassDepthStencilAttachmentDescriptor {
@@ -744,7 +744,7 @@ dictionary GPUBufferCopyView {
     required GPUBuffer buffer;
     u64 offset = 0;
     required u32 bytesPerRow;
-    required u32 rowsPerImage;
+    u32 rowsPerImage = 0;
 };
 
 dictionary GPUTextureCopyView {
@@ -935,14 +935,14 @@ GPUQueue includes GPUObjectBase;
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUSwapChain {
-    //GPUTexture getCurrentTexture();
+    GPUTexture getCurrentTexture();
 };
 GPUSwapChain includes GPUObjectBase;
 
 dictionary GPUSwapChainDescriptor : GPUObjectDescriptorBase {
     required GPUDevice device;
     required GPUTextureFormat format;
-    GPUTextureUsageFlags usage = 0x10;  // GPUTextureUsage.OUTPUT_ATTACHMENT
+    GPUTextureUsageFlags usage = 0x10; //GPUTextureUsage.OUTPUT_ATTACHMENT
 };
 
 [Pref="dom.webgpu.enabled",
@@ -950,7 +950,8 @@ dictionary GPUSwapChainDescriptor : GPUObjectDescriptorBase {
 interface GPUCanvasContext {
     // Calling configureSwapChain a second time invalidates the previous one,
     // and all of the textures it's produced.
-    //GPUSwapChain configureSwapChain(GPUSwapChainDescriptor descriptor);
+    [Throws]
+    GPUSwapChain configureSwapChain(GPUSwapChainDescriptor descriptor);
 
     //Promise<GPUTextureFormat> getSwapChainPreferredFormat(GPUDevice device);
 };
