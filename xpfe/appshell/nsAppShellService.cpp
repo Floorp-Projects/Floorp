@@ -42,6 +42,8 @@
 #include "gfxPlatform.h"
 
 #include "nsWebBrowser.h"
+#include "nsDocShell.h"
+#include "nsDocShellLoadState.h"
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
 #  include "EventTracer.h"
@@ -677,7 +679,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
   widgetInitData.mRTL = LocaleService::GetInstance()->IsAppLocaleRTL();
 
   nsresult rv = window->Initialize(
-      parent, center ? aParent : nullptr, aUrl, aInitialWidth, aInitialHeight,
+      parent, center ? aParent : nullptr, aInitialWidth, aInitialHeight,
       aIsHiddenWindow, aOpeningTab, aOpenerWindow, widgetInitData);
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -701,17 +703,48 @@ nsresult nsAppShellService::JustCreateTopWindow(
     isPrivateBrowsingWindow = parentContext->UsePrivateBrowsing();
   }
 
+  if (nsDocShell* docShell = nsDocShell::Cast(window->GetDocShell())) {
+    MOZ_ASSERT(docShell->ItemType() == nsIDocShellTreeItem::typeChrome);
 
-  nsCOMPtr<mozIDOMWindowProxy> newDomWin =
-      do_GetInterface(NS_ISUPPORTS_CAST(nsIBaseWindow*, window));
-  nsCOMPtr<nsIWebNavigation> newWebNav = do_GetInterface(newDomWin);
-  nsCOMPtr<nsILoadContext> thisContext = do_GetInterface(newWebNav);
-  if (thisContext) {
-    thisContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
-    thisContext->SetRemoteTabs(aChromeMask &
-                               nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
-    thisContext->SetRemoteSubframes(aChromeMask &
-                                    nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
+    docShell->SetPrivateBrowsing(isPrivateBrowsingWindow);
+    docShell->SetRemoteTabs(aChromeMask &
+                            nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+    docShell->SetRemoteSubframes(aChromeMask &
+                                 nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
+
+    // Eagerly create an about:blank content viewer with the right principal
+    // here, rather than letting it happening in the upcoming call to
+    // SetInitialPrincipalToSubject. This avoids creating the about:blank
+    // document and then blowing it away with a second one, which can cause
+    // problems for the top-level chrome window case. See bug 789773. Note that
+    // we don't accept expanded principals here, similar to
+    // SetInitialPrincipalToSubject.
+    if (nsContentUtils::IsInitialized()) {  // Sometimes this happens really
+                                            // early. See bug 793370.
+      nsCOMPtr<nsIPrincipal> principal =
+          nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
+      if (nsContentUtils::IsExpandedPrincipal(principal)) {
+        principal = nullptr;
+      }
+      // Use the subject (or system) principal as the storage principal too
+      // until the new window finishes navigating and gets a real storage
+      // principal.
+      rv = docShell->CreateAboutBlankContentViewer(principal, principal,
+                                                   /* aCsp = */ nullptr);
+      NS_ENSURE_SUCCESS(rv, rv);
+      RefPtr<Document> doc = docShell->GetDocument();
+      NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
+      doc->SetIsInitialDocument(true);
+    }
+
+    // Begin loading the URL provided.
+    if (aUrl) {
+      RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aUrl);
+      loadState->SetTriggeringPrincipal(nsContentUtils::GetSystemPrincipal());
+      loadState->SetFirstParty(true);
+      rv = docShell->LoadURI(loadState, /* aSetNavigating */ true);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   window.forget(aResult);
