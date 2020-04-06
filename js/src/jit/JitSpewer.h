@@ -185,6 +185,13 @@ void DisableChannel(JitSpewChannel channel);
 void EnableIonDebugSyncLogging();
 void EnableIonDebugAsyncLogging();
 
+#  define JitSpewIfEnabled(channel, fmt, ...) \
+    do {                                      \
+      if (JitSpewEnabled(channel)) {          \
+        JitSpew(channel, fmt, __VA_ARGS__);   \
+      }                                       \
+    } while (false);
+
 #else
 
 class GraphSpewer {
@@ -235,6 +242,9 @@ static inline void JitSpewCheckArguments(JitSpewChannel channel,
 #  define JitSpew(...) JitSpewCheckExpandedArgs_((__VA_ARGS__))
 #  define JitSpewStart(...) JitSpewCheckExpandedArgs_((__VA_ARGS__))
 #  define JitSpewCont(...) JitSpewCheckExpandedArgs_((__VA_ARGS__))
+
+#  define JitSpewIfEnabled(channel, fmt, ...) \
+    JitSpewCheckArguments(channel, fmt)
 
 static inline void JitSpewFin(JitSpewChannel channel) {}
 
