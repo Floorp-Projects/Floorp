@@ -62,11 +62,9 @@ struct CookieListIter {
   CookieEntry::IndexType index;
 };
 
-class CookieStorage final {
+class CookieStorage {
  public:
   NS_INLINE_DECL_REFCOUNTING(CookieStorage)
-
-  explicit CookieStorage(bool aPrivateStorage);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -96,11 +94,11 @@ class CookieStorage final {
                     const nsACString& aHost, const nsACString& aName,
                     const nsACString& aPath);
 
-  void RemoveCookiesWithOriginAttributes(
+  virtual void RemoveCookiesWithOriginAttributes(
       const mozilla::OriginAttributesPattern& aPattern,
       const nsACString& aBaseDomain);
 
-  void RemoveCookiesFromExactHost(
+  virtual void RemoveCookiesFromExactHost(
       const nsACString& aHost, const nsACString& aBaseDomain,
       const mozilla::OriginAttributesPattern& aPattern);
 
@@ -108,10 +106,6 @@ class CookieStorage final {
 
   void NotifyChanged(nsISupports* aSubject, const char16_t* aData,
                      bool aOldCookieIsSession = false, bool aFromHttp = false);
-
-  void HandleCorruptDB();
-  void CleanupCachedStatements();
-  void CleanupDefaultDBConnection();
 
   void AddCookie(const nsACString& aBaseDomain,
                  const OriginAttributes& aOriginAttributes, Cookie* aCookie,
@@ -126,19 +120,122 @@ class CookieStorage final {
                        mozIStorageBindingParamsArray* aParamsArray,
                        bool aWriteToDB = true);
 
-  void RemoveCookieFromList(
-      const CookieListIter& aIter,
-      mozIStorageBindingParamsArray* aParamsArray = nullptr);
-
-  void FindStaleCookies(CookieEntry* aEntry, int64_t aCurrentTime,
-                        bool aIsSecure, nsTArray<CookieListIter>& aOutput,
-                        uint32_t aLimit);
-
   void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
 
   already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
                                           uint16_t aMaxNumberOfCookies,
                                           int64_t aCookiePurgeAge);
+
+  virtual void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+                            int64_t aCurrentTimeInUsec) = 0;
+
+  virtual void Close() = 0;
+
+  // TODO: private:
+  nsTHashtable<CookieEntry> hostTable;
+
+  uint32_t cookieCount;
+  int64_t cookieOldestTime;
+
+ protected:
+  CookieStorage();
+  virtual ~CookieStorage();
+
+  virtual const char* NotificationTopic() const = 0;
+
+  virtual void NotifyChangedInternal(nsISupports* aSubject,
+                                     const char16_t* aData,
+                                     bool aOldCookieIsSession) = 0;
+
+  virtual void WriteCookieToDB(const nsACString& aBaseDomain,
+                               const OriginAttributes& aOriginAttributes,
+                               mozilla::net::Cookie* aCookie,
+                               mozIStorageBindingParamsArray* aParamsArray) = 0;
+
+  virtual void RemoveAllInternal() = 0;
+
+  void RemoveCookieFromList(
+      const CookieListIter& aIter,
+      mozIStorageBindingParamsArray* aParamsArray = nullptr);
+
+  virtual void RemoveCookieFromListInternal(
+      const CookieListIter& aIter,
+      mozIStorageBindingParamsArray* aParamsArray = nullptr) = 0;
+
+  virtual void MaybeCreateDeleteBindingParamsArray(
+      mozIStorageBindingParamsArray** aParamsArray) = 0;
+
+  virtual void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) = 0;
+
+ private:
+  bool FindSecureCookie(const nsACString& aBaseDomain,
+                        const OriginAttributes& aOriginAttributes,
+                        Cookie* aCookie);
+
+  void FindStaleCookies(CookieEntry* aEntry, int64_t aCurrentTime,
+                        bool aIsSecure, nsTArray<CookieListIter>& aOutput,
+                        uint32_t aLimit);
+
+  void UpdateCookieOldestTime(Cookie* aCookie);
+
+  already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
+};
+
+class CookiePrivateStorage final : public CookieStorage {
+ public:
+  static already_AddRefed<CookiePrivateStorage> Create();
+
+  void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+                    int64_t aCurrentTimeInUsec) override;
+
+  void Close() override{};
+
+ protected:
+  const char* NotificationTopic() const override {
+    return "private-cookie-changed";
+  }
+
+  void NotifyChangedInternal(nsISupports* aSubject, const char16_t* aData,
+                             bool aOldCookieIsSession) override {}
+
+  void WriteCookieToDB(const nsACString& aBaseDomain,
+                       const OriginAttributes& aOriginAttributes,
+                       mozilla::net::Cookie* aCookie,
+                       mozIStorageBindingParamsArray* aParamsArray) override{};
+
+  void RemoveAllInternal() override {}
+
+  void RemoveCookieFromListInternal(
+      const CookieListIter& aIter,
+      mozIStorageBindingParamsArray* aParamsArray = nullptr) override {}
+
+  void MaybeCreateDeleteBindingParamsArray(
+      mozIStorageBindingParamsArray** aParamsArray) override {}
+
+  void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) override {}
+};
+
+class CookieDefaultStorage final : public CookieStorage {
+ public:
+  static already_AddRefed<CookieDefaultStorage> Create();
+
+  void HandleCorruptDB();
+
+  void RemoveCookiesWithOriginAttributes(
+      const mozilla::OriginAttributesPattern& aPattern,
+      const nsACString& aBaseDomain) override;
+
+  void RemoveCookiesFromExactHost(
+      const nsACString& aHost, const nsACString& aBaseDomain,
+      const mozilla::OriginAttributesPattern& aPattern) override;
+
+  void StaleCookies(const nsTArray<Cookie*>& aCookieList,
+                    int64_t aCurrentTimeInUsec) override;
+
+  void Close() override;
+
+  void CleanupCachedStatements();
+  void CleanupDefaultDBConnection();
 
   nsresult ImportCookies(nsIFile* aCookieFile,
                          nsIEffectiveTLDService* aTLDService,
@@ -146,12 +243,41 @@ class CookieStorage final {
                          uint16_t aMaxCookiesPerHost,
                          uint16_t aCookieQuotaPerHost, int64_t aCookiePurgeAge);
 
-  void StaleCookies(const nsTArray<Cookie*>& aCookieList,
-                    int64_t aCurrentTimeInUsec);
+ protected:
+  const char* NotificationTopic() const override { return "cookie-changed"; }
 
-  void Close();
+  void NotifyChangedInternal(nsISupports* aSubject, const char16_t* aData,
+                             bool aOldCOokieIsSession) override;
+
+  void WriteCookieToDB(const nsACString& aBaseDomain,
+                       const OriginAttributes& aOriginAttributes,
+                       mozilla::net::Cookie* aCookie,
+                       mozIStorageBindingParamsArray* aParamsArray) override;
+
+  void RemoveAllInternal() override;
+
+  void RemoveCookieFromListInternal(
+      const CookieListIter& aIter,
+      mozIStorageBindingParamsArray* aParamsArray = nullptr) override;
+
+  void MaybeCreateDeleteBindingParamsArray(
+      mozIStorageBindingParamsArray** aParamsArray) override;
+
+  void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) override;
+
+ private:
+  CookieDefaultStorage();
+
+  void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
+                          mozIStorageBindingParamsArray* aParamsArray);
 
   // TODO: private:
+ public:
+  nsCOMPtr<nsIFile> cookieFile;
+  nsCOMPtr<mozIStorageConnection> dbConn;
+  nsCOMPtr<mozIStorageAsyncStatement> stmtInsert;
+  nsCOMPtr<mozIStorageAsyncStatement> stmtDelete;
+  nsCOMPtr<mozIStorageAsyncStatement> stmtUpdate;
 
   // State of the database connection.
   enum CorruptFlag {
@@ -159,17 +285,6 @@ class CookieStorage final {
     CLOSING_FOR_REBUILD,  // corruption detected, connection closing
     REBUILDING            // close complete, rebuilding database from memory
   };
-
-  nsTHashtable<CookieEntry> hostTable;
-
-  uint32_t cookieCount;
-  int64_t cookieOldestTime;
-
-  nsCOMPtr<nsIFile> cookieFile;
-  nsCOMPtr<mozIStorageConnection> dbConn;
-  nsCOMPtr<mozIStorageAsyncStatement> stmtInsert;
-  nsCOMPtr<mozIStorageAsyncStatement> stmtDelete;
-  nsCOMPtr<mozIStorageAsyncStatement> stmtUpdate;
 
   CorruptFlag corruptFlag;
 
@@ -183,22 +298,6 @@ class CookieStorage final {
   nsCOMPtr<mozIStorageStatementCallback> updateListener;
   nsCOMPtr<mozIStorageStatementCallback> removeListener;
   nsCOMPtr<mozIStorageCompletionCallback> closeListener;
-
- private:
-  ~CookieStorage();
-
-  bool FindSecureCookie(const nsACString& aBaseDomain,
-                        const OriginAttributes& aOriginAttributes,
-                        Cookie* aCookie);
-
-  void UpdateCookieOldestTime(Cookie* aCookie);
-
-  already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
-
-  void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
-                          mozIStorageBindingParamsArray* aParamsArray);
-
-  bool mPrivateStorage;
 };
 
 }  // namespace net
