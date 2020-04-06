@@ -1,8 +1,10 @@
+set -e
+
 echo "\n\nRun device-changed tests\n===================="
 
 if [[ -z "${RUST_BACKTRACE}" ]]; then
-  # Display backtrace for debugging
-  export RUST_BACKTRACE=1
+    # Display backtrace for debugging
+    export RUST_BACKTRACE=1
 fi
 echo "RUST_BACKTRACE is set to ${RUST_BACKTRACE}\n"
 

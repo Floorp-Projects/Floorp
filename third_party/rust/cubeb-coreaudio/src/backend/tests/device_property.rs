@@ -1,32 +1,6 @@
 use super::utils::{test_get_default_device, Scope};
 use super::*;
 
-// get_device_global_uid
-// ------------------------------------
-#[test]
-fn test_get_device_global_uid() {
-    // Input device.
-    if let Some(input) = test_get_default_device(Scope::Input) {
-        let uid = get_device_global_uid(input).unwrap();
-        let uid = uid.into_string();
-        assert!(!uid.is_empty());
-    }
-
-    // Output device.
-    if let Some(output) = test_get_default_device(Scope::Output) {
-        let uid = get_device_global_uid(output).unwrap();
-        let uid = uid.into_string();
-        assert!(!uid.is_empty());
-    }
-}
-
-#[test]
-#[should_panic]
-fn test_get_device_global_uid_by_unknwon_device() {
-    // Unknown device.
-    assert!(get_device_global_uid(kAudioObjectUnknown).is_err());
-}
-
 // get_device_uid
 // ------------------------------------
 #[test]
@@ -53,34 +27,99 @@ fn test_get_device_uid_by_unknwon_device() {
     assert!(get_device_uid(kAudioObjectUnknown, DeviceType::INPUT).is_err());
 }
 
-// get_device_source
+// get_device_model_uid
 // ------------------------------------
-// Some USB headsets (e.g., Plantronic .Audio 628) fails to get data source.
+// Some devices (e.g., AirPods) fail to get model uid.
 #[test]
-fn test_get_device_source() {
+fn test_get_device_model_uid() {
     if let Some(device) = test_get_default_device(Scope::Input) {
-        if let Ok(source) = get_device_source(device, DeviceType::INPUT) {
-            println!(
-                "input: {:X}, {:?}",
-                source,
-                convert_uint32_into_string(source)
-            );
-        } else {
-            println!("No input data source.");
+        match get_device_model_uid(device, DeviceType::INPUT) {
+            Ok(uid) => println!("input model uid: {}", uid.into_string()),
+            Err(e) => println!("No input model uid. Error: {}", e),
         }
     } else {
         println!("No input device.");
     }
 
     if let Some(device) = test_get_default_device(Scope::Output) {
-        if let Ok(source) = get_device_source(device, DeviceType::OUTPUT) {
-            println!(
-                "output: {:X}, {:?}",
+        match get_device_model_uid(device, DeviceType::OUTPUT) {
+            Ok(uid) => println!("output model uid: {}", uid.into_string()),
+            Err(e) => println!("No output model uid. Error: {}", e),
+        }
+    } else {
+        println!("No output device.");
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_device_model_uid_by_unknown_device() {
+    assert!(get_device_model_uid(kAudioObjectUnknown, DeviceType::INPUT).is_err());
+}
+
+// get_device_transport_type
+// ------------------------------------
+#[test]
+fn test_get_device_transport_type() {
+    if let Some(device) = test_get_default_device(Scope::Input) {
+        match get_device_transport_type(device, DeviceType::INPUT) {
+            Ok(trans_type) => println!(
+                "input transport type: {:X}, {:?}",
+                trans_type,
+                convert_uint32_into_string(trans_type)
+            ),
+            Err(e) => println!("No input transport type. Error: {}", e),
+        }
+    } else {
+        println!("No input device.");
+    }
+
+    if let Some(device) = test_get_default_device(Scope::Output) {
+        match get_device_transport_type(device, DeviceType::OUTPUT) {
+            Ok(trans_type) => println!(
+                "output transport type: {:X}, {:?}",
+                trans_type,
+                convert_uint32_into_string(trans_type)
+            ),
+            Err(e) => println!("No output transport type. Error: {}", e),
+        }
+    } else {
+        println!("No output device.");
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_device_transport_type_by_unknown_device() {
+    assert!(get_device_transport_type(kAudioObjectUnknown, DeviceType::INPUT).is_err());
+}
+
+// get_device_source
+// ------------------------------------
+// Some USB headsets (e.g., Plantronic .Audio 628) fails to get data source.
+#[test]
+fn test_get_device_source() {
+    if let Some(device) = test_get_default_device(Scope::Input) {
+        match get_device_source(device, DeviceType::INPUT) {
+            Ok(source) => println!(
+                "input source: {:X}, {:?}",
                 source,
                 convert_uint32_into_string(source)
-            );
-        } else {
-            println!("No output data source.");
+            ),
+            Err(e) => println!("No input data source. Error: {}", e),
+        }
+    } else {
+        println!("No input device.");
+    }
+
+    if let Some(device) = test_get_default_device(Scope::Output) {
+        match get_device_source(device, DeviceType::OUTPUT) {
+            Ok(source) => println!(
+                "output source: {:X}, {:?}",
+                source,
+                convert_uint32_into_string(source)
+            ),
+            Err(e) => println!("No output data source. Error: {}", e),
         }
     } else {
         println!("No output device.");
@@ -98,20 +137,18 @@ fn test_get_device_source_by_unknown_device() {
 #[test]
 fn test_get_device_source_name() {
     if let Some(device) = test_get_default_device(Scope::Input) {
-        if let Ok(name) = get_device_source_name(device, DeviceType::INPUT) {
-            println!("input: {}", name.into_string());
-        } else {
-            println!("No input data source name.");
+        match get_device_source_name(device, DeviceType::INPUT) {
+            Ok(name) => println!("input: {}", name.into_string()),
+            Err(e) => println!("No input data source name. Error: {}", e),
         }
     } else {
         println!("No input device.");
     }
 
     if let Some(device) = test_get_default_device(Scope::Output) {
-        if let Ok(name) = get_device_source_name(device, DeviceType::OUTPUT) {
-            println!("output: {}", name.into_string());
-        } else {
-            println!("No output data source name.");
+        match get_device_source_name(device, DeviceType::OUTPUT) {
+            Ok(name) => println!("output: {}", name.into_string()),
+            Err(e) => println!("No output data source name. Error: {}", e),
         }
     } else {
         println!("No output device.");
@@ -147,31 +184,6 @@ fn test_get_device_name() {
 #[should_panic]
 fn test_get_device_name_by_unknown_device() {
     assert!(get_device_name(kAudioObjectUnknown, DeviceType::INPUT).is_err());
-}
-
-// get_device_label
-// ------------------------------------
-#[test]
-fn test_get_device_label() {
-    if let Some(device) = test_get_default_device(Scope::Input) {
-        let name = get_device_label(device, DeviceType::INPUT).unwrap();
-        println!("input device label: {}", name.into_string());
-    } else {
-        println!("No input device.");
-    }
-
-    if let Some(device) = test_get_default_device(Scope::Output) {
-        let name = get_device_label(device, DeviceType::OUTPUT).unwrap();
-        println!("output device label: {}", name.into_string());
-    } else {
-        println!("No output device.");
-    }
-}
-
-#[test]
-#[should_panic]
-fn test_get_device_label_by_unknown_device() {
-    assert!(get_device_label(kAudioObjectUnknown, DeviceType::INPUT).is_err());
 }
 
 // get_device_manufacturer
@@ -370,7 +382,6 @@ fn test_get_device_stream_configuration() {
     if let Some(device) = test_get_default_device(Scope::Input) {
         let buffers = get_device_stream_configuration(device, DeviceType::INPUT).unwrap();
         println!("input stream config: {:?}", buffers);
-        dbg!(buffers);
     } else {
         println!("No input device.");
     }
@@ -378,7 +389,6 @@ fn test_get_device_stream_configuration() {
     if let Some(device) = test_get_default_device(Scope::Output) {
         let buffers = get_device_stream_configuration(device, DeviceType::OUTPUT).unwrap();
         println!("output stream config: {:?}", buffers);
-        dbg!(buffers);
     } else {
         println!("No output device.");
     }
