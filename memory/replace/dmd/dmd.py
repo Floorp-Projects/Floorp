@@ -217,15 +217,14 @@ def fixStackTraces(inputFilename, isZipped, opener):
     bpsyms = os.environ.get('BREAKPAD_SYMBOLS_PATH', None)
     sysname = platform.system()
     if bpsyms and os.path.exists(bpsyms):
-        import fix_stacks as fixModule
+        import fix_stacks
 
-        def fix(line):
-            return fixModule.fixSymbols(line, jsonMode=True, breakpadSymsDir=bpsyms)
+        fix_stacks.init(json_mode=True, breakpad_syms_dir=bpsyms)
 
     elif sysname in ('Linux', 'Darwin', 'Windows'):
-        import fix_stacks as fixModule
+        import fix_stacks
 
-        def fix(line): return fixModule.fixSymbols(line, jsonMode=True)
+        fix_stacks.init(json_mode=True)
 
     else:
         return
@@ -250,7 +249,7 @@ def fixStackTraces(inputFilename, isZipped, opener):
 
     with opener(inputFilename, 'rb') as inputFile:
         for line in inputFile:
-            tmpFile.write(fix(line))
+            tmpFile.write(fix_stacks.fix(line))
 
     tmpFile.close()
 
