@@ -17,10 +17,6 @@ function runTest() {
   iframe.setAttribute("mozbrowser", "true");
   iframe.setAttribute("name", "foo");
 
-  iframe.addEventListener("mozbrowseropenwindow", function(e) {
-    ok(false, "Got mozbrowseropenwindow, but should not have.");
-  });
-
   iframe.addEventListener("mozbrowserlocationchange", function(e) {
     ok(true, "Got locationchange to " + e.detail.url);
     if (e.detail.url.endsWith("ForwardName.html#finish")) {
