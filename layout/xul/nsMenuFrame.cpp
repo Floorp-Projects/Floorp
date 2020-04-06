@@ -383,6 +383,11 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
   } else if (aEvent->mMessage == eMouseDown &&
              aEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
+#ifdef XP_MACOSX
+             // On mac, ctrl-click will send a context menu event from the
+             // widget, so we don't want to bring up the menu.
+             !aEvent->AsMouseEvent()->IsControl() &&
+#endif
              !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
     // We have children.
