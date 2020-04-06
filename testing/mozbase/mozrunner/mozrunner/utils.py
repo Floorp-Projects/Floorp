@@ -257,15 +257,16 @@ def get_stack_fixer_function(utilityPath, symbolsPath):
         def stack_fixer_function(line):
             return stack_fixer_module.fixSymbols(line, symbolsPath)
 
+        return stack_fixer_function
+
     elif mozinfo.isLinux or mozinfo.isMac or mozinfo.isWin:
         # Run each line through fix_stacks.py. This method is preferred for
         # developer machines, so we don't have to run "mach buildsymbols".
-        stack_fixer_module = import_stack_fixer_module('fix_stacks')
+        fix_stacks = import_stack_fixer_module('fix_stacks')
 
-        def stack_fixer_function(line):
-            return stack_fixer_module.fixSymbols(line, slowWarning=True)
+        fix_stacks.init(slow_warning=True)
+
+        return fix_stacks.fix
 
     else:
         return None
-
-    return stack_fixer_function
