@@ -359,7 +359,7 @@ TEST(TestCookie, TestCookieMain)
 
   // note that a site can set a cookie for a path it's not on.
   // this is an intentional deviation from spec (see comments in
-  // nsCookieService::CheckPath()), so we test this functionality too
+  // CookieService::CheckPath()), so we test this functionality too
   SetACookie(cookieService, "http://path.net/path/file", nullptr,
              "test=path; path=/foo/", nullptr);
   GetACookie(cookieService, "http://path.net/path", nullptr, cookie);
