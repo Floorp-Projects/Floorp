@@ -20,9 +20,10 @@ fuzzy-if(winWidget,0-1,0-37800) fuzzy-if(skiaContent,0-1,0-45000) == linear-size
 == linear-stops-1a.html linear-stops-1-ref.html
 == linear-stops-1b.html linear-stops-1-ref.html
 == linear-stops-1c.html linear-stops-1-ref.html
-== linear-stops-1d.html linear-stops-1-ref.html
-== linear-stops-1e.html linear-stops-1-ref.html
-== linear-stops-1f.html linear-stops-1-ref.html
+# these gradients will be cached (in WebRender) and thus exhibit off-by-1 texture interpolation differences:
+fuzzy(0-1,0-35100) == linear-stops-1d.html linear-stops-1-ref.html
+fuzzy(0-1,0-35100) == linear-stops-1e.html linear-stops-1-ref.html
+fuzzy(0-1,0-35100) == linear-stops-1f.html linear-stops-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1a.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1b.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-88500) fuzzy-if(azureSkiaGL||skiaContent,0-3,0-89700) == linear-vertical-1c.html linear-vertical-1-ref.html

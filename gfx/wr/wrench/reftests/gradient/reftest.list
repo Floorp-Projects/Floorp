@@ -16,7 +16,7 @@ platform(linux,mac) fuzzy(1,35000) == linear-stops.yaml linear-stops-ref.png
 == linear-clamp-1b.yaml linear-clamp-1-ref.yaml
 == linear-clamp-2.yaml linear-clamp-2-ref.yaml
 
-== linear-hard-stop.yaml linear-hard-stop-ref.png
+fuzzy-range(<=1,*4800) == linear-hard-stop.yaml linear-hard-stop-ref.png
 
 # dithering requires us to fuzz here
 fuzzy(1,20000) == linear.yaml linear-ref.yaml
@@ -85,3 +85,12 @@ fuzzy(255,166) == conic-angle.yaml conic-angle.png
 fuzzy(1,1) == conic-angle-wraparound.yaml conic-angle.yaml
 fuzzy(1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml
 fuzzy(1,115) == conic-color-wheel.yaml conic-color-wheel.png
+
+# gradient caching tests
+# replaces a computed gradient by a sampled texture, so a lot of off-by-one
+# variation from interpolation, which is fine:
+fuzzy-range(<=1,*195000) == gradient_cache_5stops.yaml gradient_cache_5stops_ref.yaml
+fuzzy-range(<=1,*169000) == gradient_cache_5stops_vertical.yaml gradient_cache_5stops_vertical_ref.yaml
+== gradient_cache_hardstop.yaml gradient_cache_hardstop_ref.yaml
+== gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_clip_ref.yaml
+== gradient_cache_clamp.yaml gradient_cache_clamp_ref.yaml
