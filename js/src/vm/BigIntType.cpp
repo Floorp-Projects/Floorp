@@ -261,7 +261,7 @@ BigInt* BigInt::neg(JSContext* cx, HandleBigInt x) {
   if (!result) {
     return nullptr;
   }
-  result->toggleFlagBit(SignBit);
+  result->header_.toggleFlagBit(SignBit);
   return result;
 }
 
@@ -1788,7 +1788,7 @@ BigInt* BigInt::createFromInt64(JSContext* cx, int64_t n) {
   }
 
   if (n < 0) {
-    res->setFlagBit(SignBit);
+    res->header_.setFlagBit(SignBit);
   }
   MOZ_ASSERT(res->isNegative() == (n < 0));
 
