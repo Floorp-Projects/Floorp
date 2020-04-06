@@ -1033,10 +1033,6 @@ interface TestInterface {
   [NonEnumerable]
   void nonEnumerableMethod();
 
-  // [NeedsWindowsUndef] test generation
-  [NeedsWindowsUndef]
-  const unsigned long NO_ERROR = 0xffffffff;
-
   // [AllowShared] tests
   attribute [AllowShared] ArrayBufferViewTypedef allowSharedArrayBufferViewTypedef;
   attribute [AllowShared] ArrayBufferView allowSharedArrayBufferView;
