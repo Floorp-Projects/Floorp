@@ -15,7 +15,16 @@
         app:title="Preferred Color Scheme"
         app:summary="%s"
         app:entries="@array/pref_preferred_color_scheme_display_names"
-        app:entryValues="@array/pref_preferred_color_scheme_values">
+        app:entryValues="@array/pref_preferred_color_scheme_values"
+        app:defaultValue="-1">
+    </ListPreference>
+    <ListPreference
+        app:key="@string/key_user_agent_override"
+        app:title="User Agent String Override"
+        app:summary="%s"
+        app:entries="@array/user_agent_override_display_names"
+        app:entryValues="@array/user_agent_override_values"
+        app:defaultValue="">
     </ListPreference>
 
 </PreferenceScreen>
