@@ -73,9 +73,6 @@ class CookieServiceChild : public PCookieServiceChild,
 
   void RecordDocumentCookie(Cookie* aCookie, const OriginAttributes& aAttrs);
 
-  void SetCookieInternal(const CookieStruct& aCookieData,
-                         const OriginAttributes& aAttrs);
-
   uint32_t CountCookiesFromHashTable(const nsCString& aBaseDomain,
                                      const OriginAttributes& aOriginAttrs);
 
@@ -100,6 +97,7 @@ class CookieServiceChild : public PCookieServiceChild,
 
   CookiesMap mCookiesMap;
   nsCOMPtr<nsITimer> mCookieTimer;
+  nsCOMPtr<nsICookiePermission> mPermissionService;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
 };
