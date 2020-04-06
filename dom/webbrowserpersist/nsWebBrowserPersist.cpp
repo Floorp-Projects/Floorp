@@ -1547,7 +1547,7 @@ NS_IMETHODIMP
 nsWebBrowserPersist::OnWalk::VisitResource(
     nsIWebBrowserPersistDocument* aDoc, const nsACString& aURI,
     nsContentPolicyType aContentPolicyType) {
-  return mParent->StoreURI(nsAutoCString(aURI).get(), aDoc, aContentPolicyType);
+  return mParent->StoreURI(aURI, aDoc, aContentPolicyType);
 }
 
 NS_IMETHODIMP
@@ -1557,8 +1557,8 @@ nsWebBrowserPersist::OnWalk::VisitDocument(
   nsAutoCString uriSpec;
   nsresult rv = aSubDoc->GetDocumentURI(uriSpec);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mParent->StoreURI(uriSpec.get(), aDoc,
-                         nsIContentPolicy::TYPE_SUBDOCUMENT, false, &data);
+  rv = mParent->StoreURI(uriSpec, aDoc, nsIContentPolicy::TYPE_SUBDOCUMENT,
+                         false, &data);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!data) {
     // If the URI scheme isn't persistable, then don't persist.
@@ -2217,15 +2217,13 @@ void nsWebBrowserPersist::CalcTotalProgress() {
   }
 }
 
-nsresult nsWebBrowserPersist::StoreURI(const char* aURI,
+nsresult nsWebBrowserPersist::StoreURI(const nsACString& aURI,
                                        nsIWebBrowserPersistDocument* aDoc,
                                        nsContentPolicyType aContentPolicyType,
                                        bool aNeedsPersisting, URIData** aData) {
-  NS_ENSURE_ARG_POINTER(aURI);
-
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI),
-                          mCurrentCharset.get(), mCurrentBaseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI, mCurrentCharset.get(),
+                          mCurrentBaseURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return StoreURI(uri, aDoc, aContentPolicyType, aNeedsPersisting, aData);
@@ -2419,7 +2417,7 @@ nsresult nsWebBrowserPersist::SaveSubframeContent(
                StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
       policyType = nsIContentPolicy::TYPE_MEDIA;
     }
-    rv = StoreURI(aURISpec.get(), aParentDocument, policyType);
+    rv = StoreURI(aURISpec, aParentDocument, policyType);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
