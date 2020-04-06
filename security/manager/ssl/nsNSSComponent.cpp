@@ -601,6 +601,31 @@ nsNSSComponent::GetEnterpriseIntermediates(
   return CommonGetEnterpriseCerts(enterpriseIntermediates, false);
 }
 
+NS_IMETHODIMP
+nsNSSComponent::AddEnterpriseIntermediate(
+    const nsTArray<uint8_t>& intermediateBytes) {
+  nsresult rv = BlockUntilLoadableCertsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  EnterpriseCert intermediate;
+  rv = intermediate.Init(intermediateBytes.Elements(),
+                         intermediateBytes.Length(), false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  {
+    MutexAutoLock nsNSSComponentLock(mMutex);
+    if (!mEnterpriseCerts.append(std::move(intermediate))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  UpdateCertVerifierWithEnterpriseRoots();
+  return NS_OK;
+}
+
 class LoadLoadableCertsTask final : public Runnable {
  public:
   LoadLoadableCertsTask(nsNSSComponent* nssComponent,
