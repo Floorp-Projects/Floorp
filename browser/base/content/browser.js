@@ -4994,13 +4994,6 @@ var XULBrowserWindow = {
     ]);
   },
 
-  forceInitialBrowserNonRemote(aOpener) {
-    gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
-      opener: aOpener,
-      remoteType: E10SUtils.NOT_REMOTE,
-    });
-  },
-
   setDefaultStatus(status) {
     this.defaultStatus = status;
     StatusPanel.update();
