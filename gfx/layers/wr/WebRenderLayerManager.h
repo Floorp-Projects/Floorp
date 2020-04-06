@@ -171,9 +171,7 @@ class WebRenderLayerManager final : public LayerManager {
   WebRenderUserDataRefTable* GetWebRenderUserDataTable() {
     return mWebRenderCommandBuilder.GetWebRenderUserDataTable();
   }
-  WebRenderScrollData& GetScrollData(wr::RenderRoot aRenderRoot) {
-    return mScrollDatas[aRenderRoot];
-  }
+  WebRenderScrollData& GetScrollData() { return mScrollData; }
 
   void WrUpdated();
   nsIWidget* GetWidget() { return mWidget; }
@@ -212,7 +210,7 @@ class WebRenderLayerManager final : public LayerManager {
 
   // This holds the scroll data that we need to send to the compositor for
   // APZ to do it's job
-  wr::RenderRootArray<WebRenderScrollData> mScrollDatas;
+  WebRenderScrollData mScrollData;
 
   bool mNeedsComposite;
   bool mIsFirstPaint;

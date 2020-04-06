@@ -49,8 +49,7 @@ class WebRenderLayerScrollData final {
   void Initialize(WebRenderScrollData& aOwner, nsDisplayItem* aItem,
                   int32_t aDescendantCount,
                   const ActiveScrolledRoot* aStopAtAsr,
-                  const Maybe<gfx::Matrix4x4>& aAncestorTransform,
-                  wr::RenderRoot aRenderRoot);
+                  const Maybe<gfx::Matrix4x4>& aAncestorTransform);
 
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;
@@ -152,8 +151,6 @@ class WebRenderLayerScrollData final {
     return mStickyPositionAnimationId;
   }
 
-  wr::RenderRoot GetRenderRoot() { return mRenderRoot; }
-
   void SetZoomAnimationId(const uint64_t& aId) { mZoomAnimationId = Some(aId); }
   Maybe<uint64_t> GetZoomAnimationId() const { return mZoomAnimationId; }
 
@@ -203,7 +200,6 @@ class WebRenderLayerScrollData final {
   LayerRectAbsolute mStickyScrollRangeOuter;
   LayerRectAbsolute mStickyScrollRangeInner;
   Maybe<uint64_t> mStickyPositionAnimationId;
-  wr::RenderRoot mRenderRoot;
   Maybe<uint64_t> mZoomAnimationId;
   Maybe<ScrollableLayerGuid::ViewID> mAsyncZoomContainerId;
 };
@@ -310,7 +306,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
     WriteParam(aMsg, aParam.mStickyScrollRangeOuter);
     WriteParam(aMsg, aParam.mStickyScrollRangeInner);
     WriteParam(aMsg, aParam.mStickyPositionAnimationId);
-    WriteParam(aMsg, aParam.mRenderRoot);
     WriteParam(aMsg, aParam.mZoomAnimationId);
     WriteParam(aMsg, aParam.mAsyncZoomContainerId);
   }
@@ -335,7 +330,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData> {
            ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeOuter) &&
            ReadParam(aMsg, aIter, &aResult->mStickyScrollRangeInner) &&
            ReadParam(aMsg, aIter, &aResult->mStickyPositionAnimationId) &&
-           ReadParam(aMsg, aIter, &aResult->mRenderRoot) &&
            ReadParam(aMsg, aIter, &aResult->mZoomAnimationId) &&
            ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId);
   }
