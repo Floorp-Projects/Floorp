@@ -129,9 +129,8 @@ nsAppShellService::CreateHiddenWindow() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<AppWindow> newWindow;
-  rv =
-      JustCreateTopWindow(nullptr, url, chromeMask, initialWidth, initialHeight,
-                          true, nullptr, nullptr, getter_AddRefs(newWindow));
+  rv = JustCreateTopWindow(nullptr, url, chromeMask, initialWidth,
+                           initialHeight, true, getter_AddRefs(newWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShell> docShell;
@@ -160,20 +159,18 @@ nsAppShellService::DestroyHiddenWindow() {
  * Create a new top level window and display the given URL within it...
  */
 NS_IMETHODIMP
-nsAppShellService::CreateTopLevelWindow(
-    nsIAppWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
-    int32_t aInitialWidth, int32_t aInitialHeight, nsIRemoteTab* aOpeningTab,
-    mozIDOMWindowProxy* aOpenerWindow, nsIAppWindow** aResult)
-
-{
+nsAppShellService::CreateTopLevelWindow(nsIAppWindow* aParent, nsIURI* aUrl,
+                                        uint32_t aChromeMask,
+                                        int32_t aInitialWidth,
+                                        int32_t aInitialHeight,
+                                        nsIAppWindow** aResult) {
   nsresult rv;
 
   StartupTimeline::RecordOnce(StartupTimeline::CREATE_TOP_LEVEL_WINDOW);
 
   RefPtr<AppWindow> newWindow;
   rv = JustCreateTopWindow(aParent, aUrl, aChromeMask, aInitialWidth,
-                           aInitialHeight, false, aOpeningTab, aOpenerWindow,
-                           getter_AddRefs(newWindow));
+                           aInitialHeight, false, getter_AddRefs(newWindow));
   newWindow.forget(aResult);
 
   if (NS_SUCCEEDED(rv)) {
@@ -553,7 +550,6 @@ static bool CheckForFullscreenWindow() {
 nsresult nsAppShellService::JustCreateTopWindow(
     nsIAppWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
     int32_t aInitialWidth, int32_t aInitialHeight, bool aIsHiddenWindow,
-    nsIRemoteTab* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow,
     AppWindow** aResult) {
   *aResult = nullptr;
   NS_ENSURE_STATE(!mXPCOMWillShutDown);
@@ -678,9 +674,9 @@ nsresult nsAppShellService::JustCreateTopWindow(
 
   widgetInitData.mRTL = LocaleService::GetInstance()->IsAppLocaleRTL();
 
-  nsresult rv = window->Initialize(
-      parent, center ? aParent : nullptr, aInitialWidth, aInitialHeight,
-      aIsHiddenWindow, aOpeningTab, aOpenerWindow, widgetInitData);
+  nsresult rv =
+      window->Initialize(parent, center ? aParent : nullptr, aInitialWidth,
+                         aInitialHeight, aIsHiddenWindow, widgetInitData);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
