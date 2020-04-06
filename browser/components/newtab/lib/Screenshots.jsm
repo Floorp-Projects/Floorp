@@ -5,11 +5,7 @@
 
 const EXPORTED_SYMBOLS = ["Screenshots"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+Cu.importGlobalProperties(["fetch"]);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -34,13 +30,6 @@ ChromeUtils.defineModuleGetter(
 
 const GREY_10 = "#F9F9FA";
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gPrivilegedAboutProcessEnabled",
-  "browser.tabs.remote.separatePrivilegedContentProcess",
-  false
-);
-
 this.Screenshots = {
   /**
    * Get a screenshot / thumbnail for a url. Either returns the disk cached
@@ -54,15 +43,6 @@ this.Screenshots = {
       await BackgroundPageThumbs.captureIfMissing(url, {
         backgroundColor: GREY_10,
       });
-
-      // The privileged about content process is able to use the moz-page-thumb
-      // protocol, so if it's enabled, send that down.
-      if (gPrivilegedAboutProcessEnabled) {
-        return PageThumbs.getThumbnailURL(url);
-      }
-
-      // Otherwise, for normal content processes, we fallback to using
-      // Blob URIs for the screenshots.
       const imgPath = PageThumbs.getThumbnailPath(url);
 
       const filePathResponse = await fetch(`file://${imgPath}`);

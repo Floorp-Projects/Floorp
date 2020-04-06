@@ -234,10 +234,6 @@ class NeckoParent : public PNeckoParent {
   mozilla::ipc::IPCResult RecvGetExtensionFD(nsIURI* aURI,
                                              GetExtensionFDResolver&& aResolve);
 
-  /* Page thumbnails remote resource loading */
-  mozilla::ipc::IPCResult RecvGetPageThumbStream(
-      nsIURI* aURI, GetPageThumbStreamResolver&& aResolve);
-
   PClassifierDummyChannelParent* AllocPClassifierDummyChannelParent(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
       const Maybe<LoadInfoArgs>& aLoadInfo);
