@@ -2175,7 +2175,7 @@ NS_IMETHODIMP AppWindow::CreateNewContentWindow(
   NS_ENSURE_STATE(appWin->mPrimaryContentShell ||
                   appWin->mPrimaryBrowserParent);
   MOZ_ASSERT_IF(appWin->mPrimaryContentShell,
-                aOpenWindowInfo->GetNextRemoteBrowserId() == 0);
+                !aOpenWindowInfo->GetNextRemoteBrowser());
 
   newWindow.forget(_retval);
 
