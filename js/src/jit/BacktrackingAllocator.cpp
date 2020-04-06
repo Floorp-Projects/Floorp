@@ -1151,9 +1151,9 @@ bool BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def,
   inputRange->distributeUses(postRange);
   MOZ_ASSERT(!inputRange->hasUses());
 
-  JitSpew(JitSpew_RegAlloc,
-          "  splitting reused input at %u to try to help grouping",
-          inputOf(def.ins()).bits());
+  JitSpewIfEnabled(JitSpew_RegAlloc,
+                   "  splitting reused input at %u to try to help grouping",
+                   inputOf(def.ins()).bits());
 
   LiveBundle* firstBundle = inputRange->bundle();
   input.removeRange(inputRange);
@@ -1392,11 +1392,10 @@ bool BacktrackingAllocator::tryAllocateNonFixed(LiveBundle* bundle,
 
 bool BacktrackingAllocator::processBundle(MIRGenerator* mir,
                                           LiveBundle* bundle) {
-  if (JitSpewEnabled(JitSpew_RegAlloc)) {
-    JitSpew(JitSpew_RegAlloc, "Allocating %s [priority %zu] [weight %zu]",
-            bundle->toString().get(), computePriority(bundle),
-            computeSpillWeight(bundle));
-  }
+  JitSpewIfEnabled(JitSpew_RegAlloc,
+                   "Allocating %s [priority %zu] [weight %zu]",
+                   bundle->toString().get(), computePriority(bundle),
+                   computeSpillWeight(bundle));
 
   // A bundle can be processed by doing any of the following:
   //
@@ -1497,8 +1496,9 @@ bool BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
         // Fixed and stack policies get a FIXED requirement.  (In the stack
         // case, the allocation should have been performed already by
         // mergeAndQueueRegisters.)
-        JitSpew(JitSpew_RegAlloc, "  Requirement %s, fixed by definition",
-                reg.def()->output()->toString().get());
+        JitSpewIfEnabled(JitSpew_RegAlloc,
+                         "  Requirement %s, fixed by definition",
+                         reg.def()->output()->toString().get());
         if (!requirement->merge(Requirement(*reg.def()->output()))) {
           return false;
         }
@@ -1519,8 +1519,8 @@ bool BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
       if (policy == LUse::FIXED) {
         AnyRegister required = GetFixedRegister(reg.def(), iter->use());
 
-        JitSpew(JitSpew_RegAlloc, "  Requirement %s, due to use at %u",
-                required.name(), iter->pos.bits());
+        JitSpewIfEnabled(JitSpew_RegAlloc, "  Requirement %s, due to use at %u",
+                         required.name(), iter->pos.bits());
 
         // If there are multiple fixed registers which the bundle is
         // required to use, fail. The bundle will need to be split before
@@ -1592,8 +1592,8 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
           return false;
         }
       } else {
-        JitSpew(JitSpew_RegAlloc, "  %s collides with fixed use %s",
-                rAlias.reg.name(), existing->toString().get());
+        JitSpewIfEnabled(JitSpew_RegAlloc, "  %s collides with fixed use %s",
+                         rAlias.reg.name(), existing->toString().get());
         *pfixed = true;
         return true;
       }
@@ -1642,7 +1642,7 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
     return true;
   }
 
-  JitSpew(JitSpew_RegAlloc, "  allocated to %s", r.reg.name());
+  JitSpewIfEnabled(JitSpew_RegAlloc, "  allocated to %s", r.reg.name());
 
   for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
        iter++) {
@@ -1661,11 +1661,10 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
 }
 
 bool BacktrackingAllocator::evictBundle(LiveBundle* bundle) {
-  if (JitSpewEnabled(JitSpew_RegAlloc)) {
-    JitSpew(JitSpew_RegAlloc, "  Evicting %s [priority %zu] [weight %zu]",
-            bundle->toString().get(), computePriority(bundle),
-            computeSpillWeight(bundle));
-  }
+  JitSpewIfEnabled(JitSpew_RegAlloc,
+                   "  Evicting %s [priority %zu] [weight %zu]",
+                   bundle->toString().get(), computePriority(bundle),
+                   computeSpillWeight(bundle));
 
   AnyRegister reg(bundle->allocation().toRegister());
   PhysicalRegister& physical = registers[reg.code()];
@@ -1755,10 +1754,8 @@ bool BacktrackingAllocator::tryAllocatingRegistersForSpillBundles() {
       return false;
     }
 
-    if (JitSpewEnabled(JitSpew_RegAlloc)) {
-      JitSpew(JitSpew_RegAlloc, "Spill or allocate %s",
-              bundle->toString().get());
-    }
+    JitSpewIfEnabled(JitSpew_RegAlloc, "Spill or allocate %s",
+                     bundle->toString().get());
 
     // Search for any available register which the bundle can be
     // allocated to.
@@ -2891,8 +2888,8 @@ bool BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle,
     return true;
   }
 
-  JitSpew(JitSpew_RegAlloc, "  split across hot range %s",
-          hotRange->toString().get());
+  JitSpewIfEnabled(JitSpew_RegAlloc, "  split across hot range %s",
+                   hotRange->toString().get());
 
   // Tweak the splitting method when compiling wasm code to look at actual
   // uses within the hot/cold code. This heuristic is in place as the below
@@ -3059,8 +3056,8 @@ bool BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveBundle* bundle,
     return true;
   }
 
-  JitSpew(JitSpew_RegAlloc, "  split after last register use at %u",
-          lastRegisterTo.bits());
+  JitSpewIfEnabled(JitSpew_RegAlloc, "  split after last register use at %u",
+                   lastRegisterTo.bits());
 
   SplitPositionVector splitPositions;
   if (!splitPositions.append(lastRegisterTo)) {
@@ -3131,8 +3128,8 @@ bool BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveBundle* bundle,
     return true;
   }
 
-  JitSpew(JitSpew_RegAlloc, "  split before first register use at %u",
-          firstRegisterFrom.bits());
+  JitSpewIfEnabled(JitSpew_RegAlloc, "  split before first register use at %u",
+                   firstRegisterFrom.bits());
 
   SplitPositionVector splitPositions;
   if (!splitPositions.append(firstRegisterFrom)) {
