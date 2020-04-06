@@ -41,7 +41,7 @@
  974 |nsCategoryObserver                    |       72       72|       8        1|
  976 |nsChannelClassifier                   |       28       28|     918        1|
 1004 |CookiePermission                      |       40       40|       1        1|
-1005 |nsCookieService                       |       80       80|       1        1|
+1005 |CookieService                         |       80       80|       1        1|
 1010 |nsDNSService                          |      140      140|       1        1|
 1066 |nsEffectiveTLDService                 |       20       20|       1        1|
 1134 |nsHttpAuthCache::OriginClearObserver  |       16       32|       2        2|

@@ -7,6 +7,7 @@
 #include "CookieLogging.h"
 #include "CookieStorage.h"
 
+#include "mozIStorageAsyncStatement.h"
 #include "mozIStorageError.h"
 #include "mozIStorageFunction.h"
 #include "mozIStorageService.h"
@@ -541,13 +542,13 @@ bool CookieStorage::FindSecureCookie(const nsACString& aBaseDomain,
       continue;
 
     // The host must "domain-match" an existing cookie or vice-versa
-    if (nsCookieService::DomainMatches(cookie, aCookie->Host()) ||
-        nsCookieService::DomainMatches(aCookie, cookie->Host())) {
+    if (CookieService::DomainMatches(cookie, aCookie->Host()) ||
+        CookieService::DomainMatches(aCookie, cookie->Host())) {
       // If the path of new cookie and the path of existing cookie
       // aren't "/", then this situation needs to compare paths to
       // ensure only that a newly-created non-secure cookie does not
       // overlay an existing secure cookie.
-      if (nsCookieService::PathMatches(cookie, aCookie->GetFilePath())) {
+      if (CookieService::PathMatches(cookie, aCookie->GetFilePath())) {
         return true;
       }
     }
@@ -1542,7 +1543,7 @@ nsresult CookieDefaultStorage::ImportCookies(nsIFile* aCookieFile) {
     }
 
     // compute the baseDomain from the host
-    rv = nsCookieService::GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    rv = CookieService::GetBaseDomainFromHost(mTLDService, host, baseDomain);
     if (NS_FAILED(rv)) continue;
 
     // pre-existing cookies have inIsolatedMozBrowser=false set by default
@@ -1883,8 +1884,8 @@ CookieDefaultStorage::OpenDBResult CookieDefaultStorage::TryInitDB(
           int64_t id = select->AsInt64(SCHEMA2_IDX_ID);
           select->GetUTF8String(SCHEMA2_IDX_HOST, host);
 
-          rv = nsCookieService::GetBaseDomainFromHost(mTLDService, host,
-                                                      baseDomain);
+          rv = CookieService::GetBaseDomainFromHost(mTLDService, host,
+                                                    baseDomain);
           NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
           mozStorageStatementScoper scoper(update);
@@ -2632,7 +2633,7 @@ CookieDefaultStorage::OpenDBResult CookieDefaultStorage::Read() {
 
     stmt->GetUTF8String(IDX_HOST, host);
 
-    rv = nsCookieService::GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    rv = CookieService::GetBaseDomainFromHost(mTLDService, host, baseDomain);
     if (NS_FAILED(rv)) {
       COOKIE_LOGSTRING(LogLevel::Debug,
                        ("Read(): Ignoring invalid host '%s'", host.get()));

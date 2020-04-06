@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/net/CookieService.h"
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/net/NeckoParent.h"
@@ -11,7 +12,6 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsArrayUtils.h"
-#include "nsCookieService.h"
 #include "nsIChannel.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
@@ -49,8 +49,8 @@ CookieServiceParent::CookieServiceParent() {
   // until shutdown.
   nsCOMPtr<nsICookieService> cs = do_GetService(NS_COOKIESERVICE_CONTRACTID);
 
-  // Get the nsCookieService instance directly, so we can call internal methods.
-  mCookieService = nsCookieService::GetSingleton();
+  // Get the CookieService instance directly, so we can call internal methods.
+  mCookieService = CookieService::GetSingleton();
   NS_ASSERTION(mCookieService, "couldn't get nsICookieService");
   mProcessingCookie = false;
 }
@@ -201,7 +201,7 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
   // for whether to set this cookie or not, but we need to communicate all of
   // this information through to nsICookiePermission, which indirectly
   // computes the information from the channel. We only care about the
-  // aIsPrivate argument as nsCookieService::SetCookieStringInternal deals
+  // aIsPrivate argument as CookieService::SetCookieStringInternal deals
   // with aIsForeign before we have to worry about CookiePermission trying
   // to use the channel to inspect it.
   nsCOMPtr<nsIChannel> dummyChannel;
