@@ -28,21 +28,17 @@ class CookiePrivateStorage final : public CookieStorage {
   void NotifyChangedInternal(nsISupports* aSubject, const char16_t* aData,
                              bool aOldCookieIsSession) override {}
 
-  void WriteCookieToDB(const nsACString& aBaseDomain,
-                       const OriginAttributes& aOriginAttributes,
-                       Cookie* aCookie,
-                       mozIStorageBindingParamsArray* aParamsArray) override{};
-
   void RemoveAllInternal() override {}
 
-  void RemoveCookieFromListInternal(
-      const CookieListIter& aIter,
-      mozIStorageBindingParamsArray* aParamsArray = nullptr) override {}
+  void RemoveCookieFromDB(const CookieListIter& aIter) override {}
 
-  void MaybeCreateDeleteBindingParamsArray(
-      mozIStorageBindingParamsArray** aParamsArray) override {}
+  already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
+                                          uint16_t aMaxNumberOfCookies,
+                                          int64_t aCookiePurgeAge) override;
 
-  void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) override {}
+  void StoreCookie(const nsACString& aBaseDomain,
+                   const OriginAttributes& aOriginAttributes,
+                   Cookie* aCookie) override {}
 };
 
 }  // namespace net
