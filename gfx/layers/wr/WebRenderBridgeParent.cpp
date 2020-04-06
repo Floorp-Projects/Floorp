@@ -668,9 +668,17 @@ bool WebRenderBridgeParent::UpdateResources(
                                          wr::ToDeviceIntRect(op.area()));
         break;
       }
-      case OpUpdateResource::TOpAddExternalImage: {
-        const auto& op = cmd.get_OpAddExternalImage();
-        if (!AddExternalImage(op.externalImageId(), op.key(), aUpdates)) {
+      case OpUpdateResource::TOpAddPrivateExternalImage: {
+        const auto& op = cmd.get_OpAddPrivateExternalImage();
+        if (!AddPrivateExternalImage(op.externalImageId(), op.key(),
+                                     op.descriptor(), aUpdates)) {
+          return false;
+        }
+        break;
+      }
+      case OpUpdateResource::TOpAddSharedExternalImage: {
+        const auto& op = cmd.get_OpAddSharedExternalImage();
+        if (!AddSharedExternalImage(op.externalImageId(), op.key(), aUpdates)) {
           return false;
         }
         break;
@@ -685,10 +693,11 @@ bool WebRenderBridgeParent::UpdateResources(
         }
         break;
       }
-      case OpUpdateResource::TOpUpdateExternalImage: {
-        const auto& op = cmd.get_OpUpdateExternalImage();
-        if (!UpdateExternalImage(op.externalImageId(), op.key(), op.dirtyRect(),
-                                 aUpdates, scheduleRelease)) {
+      case OpUpdateResource::TOpUpdateSharedExternalImage: {
+        const auto& op = cmd.get_OpUpdateSharedExternalImage();
+        if (!UpdateSharedExternalImage(op.externalImageId(), op.key(),
+                                       op.dirtyRect(), aUpdates,
+                                       scheduleRelease)) {
           return false;
         }
         break;
@@ -755,7 +764,22 @@ bool WebRenderBridgeParent::UpdateResources(
   return true;
 }
 
-bool WebRenderBridgeParent::AddExternalImage(
+bool WebRenderBridgeParent::AddPrivateExternalImage(
+    wr::ExternalImageId aExtId, wr::ImageKey aKey, wr::ImageDescriptor aDesc,
+    wr::TransactionBuilder& aResources) {
+  Range<wr::ImageKey> keys(&aKey, 1);
+  // Check if key is obsoleted.
+  if (keys[0].mNamespace != mIdNamespace) {
+    return true;
+  }
+
+  aResources.AddExternalImage(aKey, aDesc, aExtId,
+                              wr::ExternalImageType::Buffer(), 0);
+
+  return true;
+}
+
+bool WebRenderBridgeParent::AddSharedExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey,
     wr::TransactionBuilder& aResources) {
   Range<wr::ImageKey> keys(&aKey, 1);
@@ -870,7 +894,7 @@ bool WebRenderBridgeParent::PushExternalImageForTexture(
   return true;
 }
 
-bool WebRenderBridgeParent::UpdateExternalImage(
+bool WebRenderBridgeParent::UpdateSharedExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey,
     const ImageIntRect& aDirtyRect, wr::TransactionBuilder& aResources,
     UniquePtr<ScheduleSharedSurfaceRelease>& aScheduleRelease) {

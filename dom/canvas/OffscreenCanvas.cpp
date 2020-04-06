@@ -101,6 +101,7 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
 
   if (!(contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2 ||
+        contextType == CanvasContextType::WebGPU ||
         contextType == CanvasContextType::ImageBitmap)) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return nullptr;
@@ -118,6 +119,10 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
     if (contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2) {
       MOZ_ASSERT_UNREACHABLE("WebGL OffscreenCanvas not yet supported.");
+      return nullptr;
+    }
+    if (contextType == CanvasContextType::WebGPU) {
+      MOZ_ASSERT_UNREACHABLE("WebGPU OffscreenCanvas not yet supported.");
       return nullptr;
     }
   }
@@ -163,6 +168,10 @@ void OffscreenCanvas::CommitFrameToCompositor() {
   if (mCurrentContext && (contentType == CanvasContextType::WebGL1 ||
                           contentType == CanvasContextType::WebGL2)) {
     MOZ_ASSERT_UNREACHABLE("WebGL OffscreenCanvas not yet supported.");
+    return;
+  }
+  if (mCurrentContext && (contentType == CanvasContextType::WebGPU)) {
+    MOZ_ASSERT_UNREACHABLE("WebGPU OffscreenCanvas not yet supported.");
     return;
   }
 
