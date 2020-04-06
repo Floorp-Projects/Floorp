@@ -20,13 +20,17 @@ import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.utils.Settings
+import java.lang.String.format
+import java.util.Locale
 
 /**
  * Get the BrowserApplication object from a context.
@@ -100,3 +104,26 @@ fun Context.getRootView(): View? =
 
 fun Context.settings(isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased) =
     Settings.getInstance(this, isCrashReportEnabledInBuild)
+
+/**
+ * Used to catch IllegalArgumentException that is thrown when
+ * a string's placeholder is incorrectly formatted in a translation
+ *
+ * @return the formatted string in locale language or English as a fallback
+ */
+fun Context.getStringWithArgSafe(@StringRes resId: Int, formatArg: String): String {
+    return try {
+        format(getString(resId), formatArg)
+    } catch (e: IllegalArgumentException) {
+        // fallback to <en> string
+        logDebug(
+            "L10n",
+            "String: " + resources.getResourceEntryName(resId) +
+                " not properly formatted in: " + LocaleManager.getSelectedLocale(this).language
+        )
+        val config = resources.configuration
+        config.setLocale(Locale("en"))
+        val localizedContext: Context = this.createConfigurationContext(config)
+        return format(localizedContext.getString(resId), formatArg)
+    }
+}
