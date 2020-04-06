@@ -3940,6 +3940,10 @@ void QuotaManager::CollectPendingOriginsForListing(P aPredicate) {
 nsresult QuotaManager::Init(const nsAString& aBasePath) {
   mBasePath = aBasePath;
 
+#ifdef XP_WIN
+  CacheUseDOSDevicePathSyntaxPrefValue();
+#endif
+
   auto baseDirOrErr = QM_NewLocalFile(aBasePath);
   if (NS_WARN_IF(baseDirOrErr.isErr())) {
     return baseDirOrErr.unwrapErr();
