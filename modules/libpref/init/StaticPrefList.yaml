@@ -1494,6 +1494,16 @@
   value: false
   mirror: always
 
+- name: dom.disable_beforeunload
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.require_user_interaction_for_beforeunload
+  type: bool
+  value: true
+  mirror: always
+
 # If set this to true, `Document.execCommand` may be performed nestedly.
 # Otherwise, nested calls just return false.
 - name: dom.document.exec_command.nested_calls_allowed
