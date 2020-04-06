@@ -2640,7 +2640,16 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
   ParentLayerPoint endPoint =
       aEvent.mLocalPanStartPoint - logicalPanDisplacement;
   RecordScrollPayload(aEvent.mTimeStamp);
-  CallDispatchScroll(startPoint, endPoint, handoffState);
+  bool consumed = CallDispatchScroll(startPoint, endPoint, handoffState);
+
+  if (!consumed && !aFingersOnTouchpad) {
+    // If there is unconsumed scroll and we're in the momentum part of the
+    // pan gesture, terminate the momentum scroll. This prevents momentum
+    // scroll events from unexpectedly causing scrolling later if somehow
+    // the APZC becomes scrollable again in this direction (e.g. if the user
+    // uses some other input method to scroll in the opposite direction).
+    mState = NOTHING;
+  }
 
   return nsEventStatus_eConsumeNoDefault;
 }
