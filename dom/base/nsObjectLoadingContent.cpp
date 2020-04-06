@@ -521,8 +521,7 @@ void nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId) {
   NS_ASSERTION(thisContent, "must be a content");
 
   mFrameLoader =
-      nsFrameLoader::Create(thisContent->AsElement(),
-                            /* aOpener = */ nullptr, mNetworkCreated);
+      nsFrameLoader::Create(thisContent->AsElement(), mNetworkCreated);
   MOZ_ASSERT(mFrameLoader, "nsFrameLoader::Create failed");
 }
 
@@ -2546,7 +2545,7 @@ void nsObjectLoadingContent::CreateStaticClone(
     nsCOMPtr<nsIContent> content =
         do_QueryInterface(static_cast<nsIImageLoadingContent*>(aDest));
     RefPtr<nsFrameLoader> fl =
-        nsFrameLoader::Create(content->AsElement(), nullptr, false);
+        nsFrameLoader::Create(content->AsElement(), false);
     if (fl) {
       aDest->mFrameLoader = fl;
       mFrameLoader->CreateStaticClone(fl);
