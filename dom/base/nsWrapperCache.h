@@ -179,6 +179,12 @@ class nsWrapperCache {
   }
 
   /**
+   * Update the wrapper when the object moves between globals.
+   */
+  template <typename T>
+  void UpdateWrapperForNewGlobal(T* aScriptObjectHolder, JSObject* aNewWrapper);
+
+  /**
    * Update the wrapper if the object it contains is moved.
    *
    * This method must be called from the objectMovedOp class extension hook for
