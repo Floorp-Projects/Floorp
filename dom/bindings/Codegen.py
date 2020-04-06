@@ -2903,16 +2903,6 @@ class CGConstDefinition(CGThing):
         self.const = "static const %s %s = %s;" % (builtinNames[tag],
                                                    name,
                                                    value)
-        if member.getExtendedAttribute("NeedsWindowsUndef"):
-            self.const = fill(
-                """
-                #ifdef XP_WIN
-                #undef ${name}
-                #endif // XP_WIN
-                ${constDecl}
-                """,
-                name=name,
-                constDecl=self.const)
 
     def declare(self):
         return self.const

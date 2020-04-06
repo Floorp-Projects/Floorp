@@ -9,8 +9,8 @@
  * windows.h using #define. Adding a new constant should be a simple as adding
  * its name (and optionally type) to this file.
  *
- * This file is processed by generate-windows-h-wrapper.py to generate a wrapper
- * for the header which removes the defines usually implementing these constants.
+ * This file is processed by make-windows-h-wrapper.py to generate a wrapper for
+ * the header which removes the defines usually implementing these constants.
  *
  * Wrappers defined in this file will be declared as `constexpr` values,
  * and will have their value derived from the windows.h define.
@@ -57,3 +57,8 @@ auto GENERIC_READ;
 auto GENERIC_WRITE;
 auto GENERIC_EXECUTE;
 auto GENERIC_ALL;
+
+auto NO_ERROR;
+auto WAIT_FAILED;
+auto WAIT_ABANDONED;
+auto WAIT_TIMEOUT;
