@@ -466,6 +466,8 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
     elements->PutEntry(elem);
   }
 
+  void TraceDefinitions(JSTracer* aTrc);
+
  private:
   ~CustomElementRegistry();
 

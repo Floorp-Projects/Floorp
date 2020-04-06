@@ -31,6 +31,7 @@
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -466,6 +467,10 @@ void mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC) {
             EventListenerManager* elm = inner->GetExistingListenerManager();
             if (elm) {
               elm->TraceListeners(aTrc);
+            }
+            CustomElementRegistry* cer = inner->GetExistingCustomElements();
+            if (cer) {
+              cer->TraceDefinitions(aTrc);
             }
           }
         }
