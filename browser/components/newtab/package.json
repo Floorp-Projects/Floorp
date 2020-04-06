@@ -9,8 +9,8 @@
   "dependencies": {
     "fluent": "0.13.0",
     "fluent-react": "0.9.0",
-    "react": "16.12.0",
-    "react-dom": "16.12.0",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
     "react-redux": "7.2.0",
     "react-transition-group": "4.3.0",
     "redux": "4.0.5",
