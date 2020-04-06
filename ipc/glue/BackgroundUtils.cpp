@@ -412,10 +412,9 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
   nsresult rv = NS_OK;
   Maybe<PrincipalInfo> loadingPrincipalInfo;
   if (nsIPrincipal* loadingPrin = aLoadInfo->GetLoadingPrincipal()) {
-    PrincipalInfo loadingPrincipalInfoTemp;
-    rv = PrincipalToPrincipalInfo(loadingPrin, &loadingPrincipalInfoTemp);
+    loadingPrincipalInfo.emplace();
+    rv = PrincipalToPrincipalInfo(loadingPrin, loadingPrincipalInfo.ptr());
     NS_ENSURE_SUCCESS(rv, rv);
-    loadingPrincipalInfo = Some(loadingPrincipalInfoTemp);
   }
 
   PrincipalInfo triggeringPrincipalInfo;
@@ -424,40 +423,33 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   Maybe<PrincipalInfo> principalToInheritInfo;
-  if (aLoadInfo->PrincipalToInherit()) {
-    PrincipalInfo principalToInheritInfoTemp;
-    rv = PrincipalToPrincipalInfo(aLoadInfo->PrincipalToInherit(),
-                                  &principalToInheritInfoTemp);
+  if (nsIPrincipal* principalToInherit = aLoadInfo->PrincipalToInherit()) {
+    principalToInheritInfo.emplace();
+    rv = PrincipalToPrincipalInfo(principalToInherit,
+                                  principalToInheritInfo.ptr());
     NS_ENSURE_SUCCESS(rv, rv);
-    principalToInheritInfo = Some(principalToInheritInfoTemp);
   }
 
   Maybe<PrincipalInfo> sandboxedLoadingPrincipalInfo;
   if (aLoadInfo->GetLoadingSandboxed()) {
-    PrincipalInfo sandboxedLoadingPrincipalInfoTemp;
+    sandboxedLoadingPrincipalInfo.emplace();
     rv = PrincipalToPrincipalInfo(aLoadInfo->GetSandboxedLoadingPrincipal(),
-                                  &sandboxedLoadingPrincipalInfoTemp);
+                                  sandboxedLoadingPrincipalInfo.ptr());
     NS_ENSURE_SUCCESS(rv, rv);
-    sandboxedLoadingPrincipalInfo = Some(sandboxedLoadingPrincipalInfoTemp);
   }
 
   Maybe<PrincipalInfo> topLevelPrincipalInfo;
-  if (aLoadInfo->GetTopLevelPrincipal()) {
-    PrincipalInfo topLevelPrincipalInfoTemp;
-    rv = PrincipalToPrincipalInfo(aLoadInfo->GetTopLevelPrincipal(),
-                                  &topLevelPrincipalInfoTemp);
+  if (nsIPrincipal* topLevenPrin = aLoadInfo->GetTopLevelPrincipal()) {
+    topLevelPrincipalInfo.emplace();
+    rv = PrincipalToPrincipalInfo(topLevenPrin, topLevelPrincipalInfo.ptr());
     NS_ENSURE_SUCCESS(rv, rv);
-    topLevelPrincipalInfo = Some(topLevelPrincipalInfoTemp);
   }
 
   Maybe<PrincipalInfo> topLevelStorageAreaPrincipalInfo;
-  if (aLoadInfo->GetTopLevelStorageAreaPrincipal()) {
-    PrincipalInfo topLevelStorageAreaPrincipalInfoTemp;
-    rv = PrincipalToPrincipalInfo(aLoadInfo->GetTopLevelStorageAreaPrincipal(),
-                                  &topLevelStorageAreaPrincipalInfoTemp);
+  if (nsIPrincipal* prin = aLoadInfo->GetTopLevelStorageAreaPrincipal()) {
+    topLevelStorageAreaPrincipalInfo.emplace();
+    rv = PrincipalToPrincipalInfo(prin, topLevelStorageAreaPrincipalInfo.ptr());
     NS_ENSURE_SUCCESS(rv, rv);
-    topLevelStorageAreaPrincipalInfo =
-        Some(topLevelStorageAreaPrincipalInfoTemp);
   }
 
   Maybe<URIParams> optionalResultPrincipalURI;
