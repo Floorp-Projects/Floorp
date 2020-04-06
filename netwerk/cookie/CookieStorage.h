@@ -8,10 +8,10 @@
 
 #include "CookieKey.h"
 
-#include "mozIStorageBindingParamsArray.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
 #include "nsWeakReference.h"
+#include <functional>
 
 class nsIArray;
 class nsICookie;
@@ -132,9 +132,11 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   void AddCookieToList(const nsACString& aBaseDomain,
                        const OriginAttributes& aOriginAttributes,
-                       Cookie* aCookie,
-                       mozIStorageBindingParamsArray* aParamsArray,
-                       bool aWriteToDB = true);
+                       Cookie* aCookie);
+
+  virtual void StoreCookie(const nsACString& aBaseDomain,
+                           const OriginAttributes& aOriginAttributes,
+                           Cookie* aCookie) = 0;
 
   virtual const char* NotificationTopic() const = 0;
 
@@ -142,25 +144,20 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
                                      const char16_t* aData,
                                      bool aOldCookieIsSession) = 0;
 
-  virtual void WriteCookieToDB(const nsACString& aBaseDomain,
-                               const OriginAttributes& aOriginAttributes,
-                               Cookie* aCookie,
-                               mozIStorageBindingParamsArray* aParamsArray) = 0;
-
   virtual void RemoveAllInternal() = 0;
 
-  void RemoveCookieFromList(
-      const CookieListIter& aIter,
-      mozIStorageBindingParamsArray* aParamsArray = nullptr);
+  // This method calls RemoveCookieFromDB + RemoveCookieFromListInternal.
+  void RemoveCookieFromList(const CookieListIter& aIter);
 
-  virtual void RemoveCookieFromListInternal(
-      const CookieListIter& aIter,
-      mozIStorageBindingParamsArray* aParamsArray = nullptr) = 0;
+  void RemoveCookieFromListInternal(const CookieListIter& aIter);
 
-  virtual void MaybeCreateDeleteBindingParamsArray(
-      mozIStorageBindingParamsArray** aParamsArray) = 0;
+  virtual void RemoveCookieFromDB(const CookieListIter& aIter) = 0;
 
-  virtual void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) = 0;
+  already_AddRefed<nsIArray> PurgeCookiesWithCallbacks(
+      int64_t aCurrentTimeInUsec, uint16_t aMaxNumberOfCookies,
+      int64_t aCookiePurgeAge,
+      std::function<void(const CookieListIter&)>&& aRemoveCookieCallback,
+      std::function<void()>&& aFinalizeCallback);
 
   nsTHashtable<CookieEntry> mHostTable;
 
@@ -181,9 +178,9 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
 
-  already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
-                                          uint16_t aMaxNumberOfCookies,
-                                          int64_t aCookiePurgeAge);
+  virtual already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
+                                                  uint16_t aMaxNumberOfCookies,
+                                                  int64_t aCookiePurgeAge) = 0;
 
   int64_t mCookieOldestTime;
 

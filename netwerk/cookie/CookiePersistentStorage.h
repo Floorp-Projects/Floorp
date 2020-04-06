@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozIStorageBindingParamsArray.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageStatementCallback.h"
@@ -76,27 +77,22 @@ class CookiePersistentStorage final : public CookieStorage {
   void NotifyChangedInternal(nsISupports* aSubject, const char16_t* aData,
                              bool aOldCOokieIsSession) override;
 
-  void WriteCookieToDB(const nsACString& aBaseDomain,
-                       const OriginAttributes& aOriginAttributes,
-                       Cookie* aCookie,
-                       mozIStorageBindingParamsArray* aParamsArray) override;
-
   void RemoveAllInternal() override;
 
-  void RemoveCookieFromListInternal(
-      const CookieListIter& aIter,
-      mozIStorageBindingParamsArray* aParamsArray = nullptr) override;
+  void RemoveCookieFromDB(const CookieListIter& aIter) override;
 
-  void MaybeCreateDeleteBindingParamsArray(
-      mozIStorageBindingParamsArray** aParamsArray) override;
-
-  void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray) override;
+  void StoreCookie(const nsACString& aBaseDomain,
+                   const OriginAttributes& aOriginAttributes,
+                   Cookie* aCookie) override;
 
  private:
   CookiePersistentStorage();
 
   void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
                           mozIStorageBindingParamsArray* aParamsArray);
+
+  void PrepareCookieRemoval(const CookieListIter& aIter,
+                            mozIStorageBindingParamsArray* aParamsArray);
 
   void InitDBConn();
   nsresult InitDBConnInternal();
@@ -110,6 +106,14 @@ class CookiePersistentStorage final : public CookieStorage {
   nsresult CreateTableForSchemaVersion5();
 
   UniquePtr<CookieStruct> GetCookieFromRow(mozIStorageStatement* aRow);
+
+  already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
+                                          uint16_t aMaxNumberOfCookies,
+                                          int64_t aCookiePurgeAge) override;
+
+  void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray);
+
+  void MaybeStoreCookiesToDB(mozIStorageBindingParamsArray* aParamsArray);
 
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<mozIStorageService> mStorageService;

@@ -560,7 +560,9 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
 
   // Add the cookie to the db. We do not supply a params array for batching
   // because this might result in removals and additions being out of order.
-  AddCookieToList(aBaseDomain, aOriginAttributes, aCookie, nullptr);
+  AddCookieToList(aBaseDomain, aOriginAttributes, aCookie);
+  StoreCookie(aBaseDomain, aOriginAttributes, aCookie);
+
   COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, aCookieHeader, aCookie, foundCookie);
 
   // Now that list mutations are complete, notify observers. We do it here
@@ -581,9 +583,7 @@ void CookieStorage::UpdateCookieOldestTime(Cookie* aCookie) {
 
 void CookieStorage::AddCookieToList(const nsACString& aBaseDomain,
                                     const OriginAttributes& aOriginAttributes,
-                                    Cookie* aCookie,
-                                    mozIStorageBindingParamsArray* aParamsArray,
-                                    bool aWriteToDB) {
+                                    Cookie* aCookie) {
   if (!aCookie) {
     NS_WARNING("Attempting to AddCookieToList with null cookie");
     return;
@@ -599,12 +599,6 @@ void CookieStorage::AddCookieToList(const nsACString& aBaseDomain,
 
   // keep track of the oldest cookie, for when it comes time to purge
   UpdateCookieOldestTime(aCookie);
-
-  // if it's a non-session cookie and hasn't just been read from the db, write
-  // it out.
-  if (aWriteToDB && !aCookie->IsSession()) {
-    WriteCookieToDB(aBaseDomain, aOriginAttributes, aCookie, aParamsArray);
-  }
 }
 
 already_AddRefed<nsIArray> CookieStorage::CreatePurgeList(nsICookie* aCookie) {
@@ -673,9 +667,11 @@ void CookieStorage::CreateOrUpdatePurgeList(nsIArray** aPurgedList,
 }
 
 // purges expired and old cookies in a batch operation.
-already_AddRefed<nsIArray> CookieStorage::PurgeCookies(
+already_AddRefed<nsIArray> CookieStorage::PurgeCookiesWithCallbacks(
     int64_t aCurrentTimeInUsec, uint16_t aMaxNumberOfCookies,
-    int64_t aCookiePurgeAge) {
+    int64_t aCookiePurgeAge,
+    std::function<void(const CookieListIter&)>&& aRemoveCookieCallback,
+    std::function<void()>&& aFinalizeCallback) {
   NS_ASSERTION(mHostTable.Count() > 0, "table is empty");
 
   uint32_t initialCookieCount = mCookieCount;
@@ -689,11 +685,6 @@ already_AddRefed<nsIArray> CookieStorage::PurgeCookies(
 
   nsCOMPtr<nsIMutableArray> removedList =
       do_CreateInstance(NS_ARRAY_CONTRACTID);
-
-  // Create a params array to batch the removals. This is OK here because
-  // all the removals are in order, and there are no interleaved additions.
-  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  MaybeCreateDeleteBindingParamsArray(getter_AddRefs(paramsArray));
 
   int64_t currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
   int64_t purgeTime = aCurrentTimeInUsec - aCookiePurgeAge;
@@ -715,7 +706,7 @@ already_AddRefed<nsIArray> CookieStorage::PurgeCookies(
 
         // remove from list; do not increment our iterator, but stop if we're
         // done already.
-        RemoveCookieFromList(iter, paramsArray);
+        aRemoveCookieCallback(iter);
         if (i == --length) {
           break;
         }
@@ -761,11 +752,13 @@ already_AddRefed<nsIArray> CookieStorage::PurgeCookies(
     removedList->AppendElement(cookie);
     COOKIE_LOGEVICTED(cookie, "Cookie too old");
 
-    RemoveCookieFromList(purgeList[i], paramsArray);
+    aRemoveCookieCallback(purgeList[i]);
   }
 
   // Update the database if we have entries to purge.
-  DeleteFromDB(paramsArray);
+  if (aFinalizeCallback) {
+    aFinalizeCallback();
+  }
 
   // reset the oldest time indicator
   mCookieOldestTime = oldestTime;
@@ -781,10 +774,12 @@ already_AddRefed<nsIArray> CookieStorage::PurgeCookies(
 }
 
 // remove a cookie from the hashtable, and update the iterator state.
-void CookieStorage::RemoveCookieFromList(
-    const CookieListIter& aIter, mozIStorageBindingParamsArray* aParamsArray) {
-  RemoveCookieFromListInternal(aIter, aParamsArray);
+void CookieStorage::RemoveCookieFromList(const CookieListIter& aIter) {
+  RemoveCookieFromDB(aIter);
+  RemoveCookieFromListInternal(aIter);
+}
 
+void CookieStorage::RemoveCookieFromListInternal(const CookieListIter& aIter) {
   if (aIter.entry->GetCookies().Length() == 1) {
     // we're removing the last element in the array - so just remove the entry
     // from the hash. note that the entryclass' dtor will take care of

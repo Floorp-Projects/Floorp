@@ -29,5 +29,16 @@ void CookiePrivateStorage::StaleCookies(const nsTArray<Cookie*>& aCookieList,
   }
 }
 
+// purges expired and old cookies in a batch operation.
+already_AddRefed<nsIArray> CookiePrivateStorage::PurgeCookies(
+    int64_t aCurrentTimeInUsec, uint16_t aMaxNumberOfCookies,
+    int64_t aCookiePurgeAge) {
+  RefPtr<CookiePrivateStorage> self = this;
+  return PurgeCookiesWithCallbacks(
+      aCurrentTimeInUsec, aMaxNumberOfCookies, aCookiePurgeAge,
+      [self](const CookieListIter& iter) { self->RemoveCookieFromList(iter); },
+      nullptr);
+}
+
 }  // namespace net
 }  // namespace mozilla
