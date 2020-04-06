@@ -302,12 +302,7 @@ const PanelUI = {
         }
         break;
       case "mousedown":
-        // On Mac, ctrl-click will send a context menu event from the widget, so
-        // we don't want to bring up the panel when ctrl key is pressed.
-        if (
-          aEvent.button == 0 &&
-          (AppConstants.platform != "macosx" || !aEvent.ctrlKey)
-        ) {
+        if (aEvent.button == 0) {
           this.toggle(aEvent);
         }
         break;
@@ -385,13 +380,7 @@ const PanelUI = {
   async showSubView(aViewId, aAnchor, aEvent) {
     let domEvent = null;
     if (aEvent) {
-      // On Mac, ctrl-click will send a context menu event from the widget, so
-      // we don't want to bring up the panel when ctrl key is pressed.
-      if (
-        aEvent.type == "mousedown" &&
-        (aEvent.button != 0 ||
-          (AppConstants.platform == "macosx" && aEvent.ctrlKey))
-      ) {
+      if (aEvent.type == "mousedown" && aEvent.button != 0) {
         return;
       }
       if (

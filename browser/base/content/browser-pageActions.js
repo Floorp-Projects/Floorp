@@ -701,14 +701,7 @@ var BrowserPageActions = {
   },
 
   doCommandForAction(action, event, buttonNode) {
-    // On mac, ctrl-click will send a context menu event from the widget, so we
-    // don't want to handle the click event when ctrl key is pressed.
-    if (
-      event &&
-      event.type == "click" &&
-      (event.button != 0 ||
-        (AppConstants.platform == "macosx" && event.ctrlKey))
-    ) {
+    if (event && event.type == "click" && event.button != 0) {
       return;
     }
     if (event && event.type == "keypress") {
@@ -860,11 +853,7 @@ var BrowserPageActions = {
   mainButtonClicked(event) {
     event.stopPropagation();
     if (
-      // On mac, ctrl-click will send a context menu event from the widget, so
-      // we don't want to bring up the panel when ctrl key is pressed.
-      (event.type == "mousedown" &&
-        (event.button != 0 ||
-          (AppConstants.platform == "macosx" && event.ctrlKey))) ||
+      (event.type == "mousedown" && event.button != 0) ||
       (event.type == "keypress" &&
         event.charCode != KeyEvent.DOM_VK_SPACE &&
         event.keyCode != KeyEvent.DOM_VK_RETURN)

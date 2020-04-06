@@ -1562,14 +1562,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-#if defined(XP_MACOSX)
-# Whether to disable treating ctrl click as right click
-- name: dom.event.treat_ctrl_click_as_right_click.disabled
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-#endif
-
 # Enable clipboard readText() and writeText() by default
 - name: dom.events.asyncClipboard
   type: bool

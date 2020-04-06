@@ -59,16 +59,6 @@ add_task(async function test_clickData() {
 
     for (let modifier of Object.keys(map)) {
       for (let i = 0; i < 2; i++) {
-        // On Mac, ctrl-click will send a context menu event from the widget,
-        // we won't send xul command event and won't have onClick message, either.
-        if (
-          AppConstants.platform == "macosx" &&
-          i == 0 &&
-          modifier == "ctrlKey"
-        ) {
-          continue;
-        }
-
         let clickEventData = { button: i };
         clickEventData[modifier] = true;
         await clickBrowserAction(extension, window, clickEventData);

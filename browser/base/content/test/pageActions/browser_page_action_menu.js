@@ -38,51 +38,6 @@ const mockTargets = [
   { id: "3", name: "no client record device", type: "phone" },
 ];
 
-add_task(async function openPanel() {
-  if (AppConstants.platform == "macosx") {
-    // Ignore this test on Mac.
-    return;
-  }
-
-  let url = "http://example.com/";
-  await BrowserTestUtils.withNewTab(url, async () => {
-    // Should still open the panel when Ctrl key is pressed.
-    await promisePageActionPanelOpen({ ctrlKey: true });
-
-    // Done.
-    let hiddenPromise = promisePageActionPanelHidden();
-    BrowserPageActions.panelNode.hidePopup();
-    await hiddenPromise;
-  });
-});
-
-add_task(async function starButtonCtrlClick() {
-  // On macOS, ctrl-click shouldn't open the panel because this normally opens
-  // the context menu. This happens via the `contextmenu` event which is created
-  // by widget code, so our simulated clicks do not do so, so we can't test
-  // anything on macOS.
-  if (AppConstants.platform == "macosx") {
-    return;
-  }
-
-  // Open a unique page.
-  let url = "http://example.com/browser_page_action_star_button";
-  await BrowserTestUtils.withNewTab(url, async () => {
-    StarUI._createPanelIfNeeded();
-    const popup = document.getElementById("editBookmarkPanel");
-    const starButtonBox = document.getElementById("star-button-box");
-
-    let shownPromise = promisePanelShown(popup);
-    EventUtils.synthesizeMouseAtCenter(starButtonBox, { ctrlKey: true });
-    await shownPromise;
-    ok(true, "Panel shown after button pressed");
-
-    let hiddenPromise = promisePanelHidden(popup);
-    document.getElementById("editBookmarkPanelRemoveButton").click();
-    await hiddenPromise;
-  });
-});
-
 add_task(async function bookmark() {
   // Open a unique page.
   let url = "http://example.com/browser_page_action_menu";
