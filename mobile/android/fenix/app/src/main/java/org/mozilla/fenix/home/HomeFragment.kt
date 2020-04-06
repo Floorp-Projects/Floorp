@@ -217,7 +217,9 @@ class HomeFragment : Fragment() {
                 scrollToTheTop = ::scrollToTheTop,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
                 openSettingsScreen = ::openSettingsScreen,
-                openSearchScreen = ::navigateToSearch
+                openSearchScreen = ::navigateToSearch,
+                openWhatsNewLink = { openCustomTab(SupportUtils.getWhatsNewUrl(view.context)) },
+                openPrivacyNotice = { openCustomTab(SupportUtils.getPrivacyNoticeUrl()) }
             )
         )
         updateLayout(view)
@@ -590,6 +592,13 @@ class HomeFragment : Fragment() {
     private fun openSettingsScreen() {
         val directions = HomeFragmentDirections.actionHomeFragmentToPrivateBrowsingFragment()
         nav(R.id.homeFragment, directions)
+    }
+
+    private fun openCustomTab(url: String) {
+        context?.let { context ->
+            val intent = SupportUtils.createCustomTabIntent(context, url)
+            startActivity(intent)
+        }
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")

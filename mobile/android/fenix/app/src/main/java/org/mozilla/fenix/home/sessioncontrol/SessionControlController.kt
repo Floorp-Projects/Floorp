@@ -145,6 +145,16 @@ interface SessionControlController {
     fun handleOpenSettingsClicked()
 
     /**
+     * @see [OnboardingInteractor.onWhatsNewGetAnswersClicked]
+     */
+    fun handleWhatsNewGetAnswersClicked()
+
+    /**
+     * @see [OnboardingInteractor.onReadPrivacyNoticeClicked]
+     */
+    fun handleReadPrivacyNoticeClicked()
+
+    /**
      * @see [CollectionInteractor.onToggleCollectionExpanded]
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
@@ -172,7 +182,9 @@ class DefaultSessionControlController(
     private val scrollToTheTop: () -> Unit,
     private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit,
     private val openSettingsScreen: () -> Unit,
-    private val openSearchScreen: () -> Unit
+    private val openSearchScreen: () -> Unit,
+    private val openWhatsNewLink: () -> Unit,
+    private val openPrivacyNotice: () -> Unit
 ) : SessionControlController {
     private val metrics: MetricController
         get() = activity.components.analytics.metrics
@@ -356,6 +368,14 @@ class DefaultSessionControlController(
 
     override fun handleOpenSettingsClicked() {
         openSettingsScreen()
+    }
+
+    override fun handleWhatsNewGetAnswersClicked() {
+        openWhatsNewLink()
+    }
+
+    override fun handleReadPrivacyNoticeClicked() {
+        openPrivacyNotice()
     }
 
     override fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {

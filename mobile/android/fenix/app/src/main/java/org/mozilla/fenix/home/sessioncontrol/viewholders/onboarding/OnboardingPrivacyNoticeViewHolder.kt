@@ -8,9 +8,12 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
-class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingPrivacyNoticeViewHolder(
+    view: View,
+    private val interactor: OnboardingInteractor
+) : RecyclerView.ViewHolder(view) {
 
     init {
         view.header_text.setOnboardingIcon(R.drawable.ic_onboarding_privacy_notice)
@@ -19,8 +22,7 @@ class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(vi
         view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)
 
         view.read_button.setOnClickListener {
-            val intent = SupportUtils.createCustomTabIntent(view.context, SupportUtils.getPrivacyNoticeUrl())
-            view.context.startActivity(intent)
+            interactor.onReadPrivacyNoticeClicked()
         }
     }
 

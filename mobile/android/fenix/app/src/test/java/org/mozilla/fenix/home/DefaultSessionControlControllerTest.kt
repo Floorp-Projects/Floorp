@@ -50,6 +50,8 @@ class DefaultSessionControlControllerTest {
     private val hideOnboarding: () -> Unit = mockk(relaxed = true)
     private val openSettingsScreen: () -> Unit = mockk(relaxed = true)
     private val openSearchScreen: () -> Unit = mockk(relaxed = true)
+    private val openWhatsNewLink: () -> Unit = mockk(relaxed = true)
+    private val openPrivacyNotice: () -> Unit = mockk(relaxed = true)
     private val invokePendingDeleteJobs: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val scrollToTheTop: () -> Unit = mockk(relaxed = true)
@@ -96,7 +98,9 @@ class DefaultSessionControlControllerTest {
             scrollToTheTop = scrollToTheTop,
             showDeleteCollectionPrompt = showDeleteCollectionPrompt,
             openSettingsScreen = openSettingsScreen,
-            openSearchScreen = openSearchScreen
+            openSearchScreen = openSearchScreen,
+            openWhatsNewLink = openWhatsNewLink,
+            openPrivacyNotice = openPrivacyNotice
         )
     }
 
