@@ -387,6 +387,7 @@ public class GeckoViewActivity
     private boolean mEnableRemoteDebugging;
     private boolean mKillProcessOnDestroy;
     private boolean mDesktopMode;
+    private String mUserAgentOverride;
     private TabSession mPopupSession;
     private View mPopupView;
     private int mPreferredColorScheme;
@@ -440,6 +441,8 @@ public class GeckoViewActivity
         int colorScheme = Integer.parseInt(preferences.getString(
                 getString(R.string.key_preferred_color_scheme),
                 Integer.toString(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)));
+        String userAgentOverride = preferences.getString(
+                getString(R.string.key_user_agent_override), "");
 
         if (mEnableRemoteDebugging != remoteDebugging) {
             if (sGeckoRuntime != null) {
@@ -473,6 +476,16 @@ public class GeckoViewActivity
                 sGeckoRuntime.getSettings().setPreferredColorScheme(colorScheme);
             }
             mPreferredColorScheme = colorScheme;
+            if (currentSession != null) {
+                currentSession.reload();
+            }
+        }
+
+        if (!userAgentOverride.equals(mUserAgentOverride)) {
+            mUserAgentOverride = !userAgentOverride.isEmpty() ? userAgentOverride : null;
+            for (final TabSession session : mTabSessionManager.getSessions()) {
+                session.getSettings().setUserAgentOverride(mUserAgentOverride);
+            }
             if (currentSession != null) {
                 currentSession.reload();
             }
@@ -752,6 +765,7 @@ public class GeckoViewActivity
         TabSession session = mTabSessionManager.newSession(new GeckoSessionSettings.Builder()
                 .usePrivateMode(mUsePrivateBrowsing)
                 .fullAccessibilityTree(mFullAccessibilityTree)
+                .userAgentOverride(mUserAgentOverride)
                 .viewportMode(mDesktopMode
                         ? GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
                         : GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
