@@ -28,7 +28,7 @@ class Builder:
 
         # see Bug 1608604 & see Bug 1619107 - we have stability issues @ bitbar
         if self.mobile:
-            self.max_urls = min(self.max_urls, 30)
+            self.max_urls = min(self.max_urls, 20)
 
         logger.info("platform: %s" % self.platform)
         logger.info("max_urls: %s" % self.max_urls)
@@ -93,7 +93,7 @@ class Builder:
 
     async def _visit_url(self, current, session, url, word):
         await asyncio.wait_for(session.get(url), 5)
-        if current % self.bookmark_frequency == 0:
+        if current % self.bookmark_frequency == 0 and not self.mobile:
             await asyncio.wait_for(self.add_bookmark(session, url, word), 5)
 
     async def __call__(self, session):
