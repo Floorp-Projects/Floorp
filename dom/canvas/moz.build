@@ -67,7 +67,9 @@ EXPORTS.mozilla.dom += [
     'WebGLIpdl.h',
     'WebGLParent.h',
     'WebGLTypes.h',
+    'XRWebGLLayer.h',
 ]
+# XRWebGLLayer.h must be exported for use by the generated WebXRBinding.h
 
 # Canvas 2D and common sources
 UNIFIED_SOURCES += [
@@ -79,6 +81,7 @@ UNIFIED_SOURCES += [
     'ImageBitmapRenderingContext.cpp',
     'ImageData.cpp',
     'OffscreenCanvas.cpp',
+    'XRWebGLLayer.cpp',
 ]
 
 SOURCES += [

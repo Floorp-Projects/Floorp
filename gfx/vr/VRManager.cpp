@@ -818,7 +818,8 @@ void VRManager::ProcessManagerState_DetectRuntimes() {
     mState = VRManagerState::Stopping;
     mRuntimeSupportFlags = mDisplayInfo.mDisplayState.capabilityFlags &
                            (VRDisplayCapabilityFlags::Cap_ImmersiveVR |
-                            VRDisplayCapabilityFlags::Cap_ImmersiveAR);
+                            VRDisplayCapabilityFlags::Cap_ImmersiveAR |
+                            VRDisplayCapabilityFlags::Cap_Inline);
     mRuntimeDetectionCompleted = true;
     DispatchRuntimeCapabilitiesUpdate();
   }

@@ -15,6 +15,10 @@
 #include "gfxVR.h"
 
 namespace mozilla {
+namespace dom {
+enum class XRReferenceSpaceType : uint8_t;
+class XRSession;
+}  // namespace dom
 namespace gfx {
 class VRDisplayPresentation;
 class VRManagerChild;
@@ -34,7 +38,11 @@ class VRDisplayClient {
 
   already_AddRefed<VRDisplayPresentation> BeginPresentation(
       const nsTArray<dom::VRLayer>& aLayers, uint32_t aGroup);
+  void PresentationCreated();
   void PresentationDestroyed();
+
+  void SessionStarted(dom::XRSession* aSession);
+  void SessionEnded(dom::XRSession* aSession);
 
   bool GetIsConnected() const;
 
@@ -48,12 +56,14 @@ class VRDisplayClient {
   void StopVRNavigation(const TimeDuration& aTimeout);
 
   bool IsPresenting();
+  bool IsReferenceSpaceTypeSupported(dom::XRReferenceSpaceType aType) const;
 
  protected:
   virtual ~VRDisplayClient();
 
   MOZ_CAN_RUN_SCRIPT void FireEvents();
   void FireGamepadEvents();
+  MOZ_CAN_RUN_SCRIPT void StartFrame();
 
   VRDisplayInfo mDisplayInfo;
 
@@ -68,6 +78,15 @@ class VRDisplayClient {
   // mLastEventControllerState determines what gamepad events to fire when
   // updated.
   VRControllerState mLastEventControllerState[kVRControllerMaxCount];
+
+  /**
+   * mSessions is cleared in VRDisplayClient::SessionEnded.
+   * SessionEnded is guaranteed to be called by every XRSession
+   * when it is shutdown explicitly with the WebXR XRSession.end
+   * call, when all JS references on the XRSession are released, or
+   * when the window is closed.
+   */
+  nsTArray<RefPtr<dom::XRSession>> mSessions;
 
  private:
   void GamepadMappingForWebVR(VRControllerState& aControllerState);
