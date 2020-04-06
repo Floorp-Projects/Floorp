@@ -1244,6 +1244,15 @@ already_AddRefed<nsISupports> CustomElementRegistry::CallGetCustomInterface(
   return wrapper.forget();
 }
 
+void CustomElementRegistry::TraceDefinitions(JSTracer* aTrc) {
+  for (auto iter = mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<CustomElementDefinition>& definition = iter.Data();
+    if (definition && definition->mConstructor) {
+      mozilla::TraceScriptHolder(definition->mConstructor, aTrc);
+    }
+  }
+}
+
 //-----------------------------------------------------
 // CustomElementReactionsStack
 

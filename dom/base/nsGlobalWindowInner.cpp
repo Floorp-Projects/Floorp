@@ -2163,6 +2163,10 @@ CustomElementRegistry* nsGlobalWindowInner::CustomElements() {
   return mCustomElements;
 }
 
+CustomElementRegistry* nsGlobalWindowInner::GetExistingCustomElements() {
+  return mCustomElements;
+}
+
 Performance* nsPIDOMWindowInner::GetPerformance() {
   CreatePerformanceObjectIfNeeded();
   return mPerformance;
