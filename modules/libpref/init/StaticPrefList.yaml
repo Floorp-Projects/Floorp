@@ -2475,6 +2475,12 @@
   value: true
   mirror: always
 
+# Whether or not selection events on text controls are enabled.
+- name: dom.select_events.textcontrols.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 - name: dom.separate_event_queue_for_post_message.enabled
   type: bool
   value: true
