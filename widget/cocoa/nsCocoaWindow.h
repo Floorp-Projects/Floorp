@@ -244,8 +244,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   virtual void Move(double aX, double aY) override;
   virtual void SetSizeMode(nsSizeMode aMode) override;
-  virtual int32_t GetWorkspaceID() override;
-  virtual void MoveToWorkspace(int32_t workspaceID) override;
+  virtual void GetWorkspaceID(nsAString& workspaceID) override;
+  virtual void MoveToWorkspace(const nsAString& workspaceID) override;
   virtual void SuppressAnimation(bool aSuppress) override;
   virtual void HideWindowChrome(bool aShouldHide) override;
 
@@ -348,6 +348,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void AdjustWindowShadow();
   void SetWindowBackgroundBlur();
   void UpdateBounds();
+  int32_t GetWorkspaceID();
 
   void DoResize(double aX, double aY, double aWidth, double aHeight, bool aRepaint,
                 bool aConstrainToCurrentScreen);
