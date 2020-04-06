@@ -58,7 +58,7 @@ class PendingPACQuery final : public Runnable,
                               public LinkedListElement<PendingPACQuery> {
  public:
   PendingPACQuery(nsPACMan* pacMan, nsIURI* uri, nsPACManCallback* callback,
-                  bool mainThreadResponse);
+                  uint32_t flags, bool mainThreadResponse);
 
   // can be called from either thread
   void Complete(nsresult status, const nsACString& pacString);
@@ -68,6 +68,7 @@ class PendingPACQuery final : public Runnable,
   nsCString mScheme;
   nsCString mHost;
   int32_t mPort;
+  uint32_t mFlags;
 
   NS_IMETHOD Run(void) override; /* Runnable */
 
@@ -110,11 +111,14 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    *        The URI to query.
    * @param callback
    *        The callback to run once the PAC result is available.
+   * @param flags
+   *        A bit-wise combination of the RESOLVE_ flags defined above.  Pass
+   *        0 to specify the default behavior.
    * @param mustCallbackOnMainThread
    *        If set to false the callback can be made from the PAC thread
    */
   nsresult AsyncGetProxyForURI(nsIURI* uri, nsPACManCallback* callback,
-                               bool mustCallbackOnMainThread);
+                               uint32_t flags, bool mustCallbackOnMainThread);
 
   /**
    * This method may be called to reload the PAC file.  While we are loading

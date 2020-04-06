@@ -387,7 +387,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
         // now that the load is triggered, we can resubmit the query
         RefPtr<nsAsyncResolveRequest> newRequest =
             new nsAsyncResolveRequest(mPPS, mChannel, mResolveFlags, mCallback);
-        rv = mPPS->mPACMan->AsyncGetProxyForURI(proxyURI, newRequest, true);
+        rv = mPPS->mPACMan->AsyncGetProxyForURI(proxyURI, newRequest,
+                                                mResolveFlags, true);
       }
 
       if (NS_FAILED(rv))
@@ -1556,8 +1557,7 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
   }
 
   // else kick off a PAC thread query
-
-  rv = mPACMan->AsyncGetProxyForURI(uri, ctx, true);
+  rv = mPACMan->AsyncGetProxyForURI(uri, ctx, flags, true);
   if (NS_SUCCEEDED(rv)) ctx.forget(result);
   return rv;
 }
