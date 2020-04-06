@@ -553,8 +553,11 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             adjustAdGroup.set(context.settings().adjustAdGroup)
             adjustCreative.set(context.settings().adjustCreative)
             adjustNetwork.set(context.settings().adjustNetwork)
-            hasTopSites.set(context.settings().topSitesSize > 0)
-            topSitesCount.add(context.settings().topSitesSize)
+            val topSitesSize = context.settings().topSitesSize
+            hasTopSites.set(topSitesSize > 0)
+            if (topSitesSize > 0) {
+                topSitesCount.add(topSitesSize)
+            }
 
             toolbarPosition.set(
                 if (context.settings().shouldUseBottomToolbar) {
