@@ -162,14 +162,15 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  */
 // clang-format on
 
-class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
-  using Base = js::gc::CellWithLengthAndFlags<js::gc::Cell>;
-
+class JSString : public js::gc::Cell {
  protected:
   static const size_t NUM_INLINE_CHARS_LATIN1 =
       2 * sizeof(void*) / sizeof(JS::Latin1Char);
   static const size_t NUM_INLINE_CHARS_TWO_BYTE =
       2 * sizeof(void*) / sizeof(char16_t);
+
+  using Header = js::gc::CellHeaderWithLengthAndFlags;
+  Header header_;
 
   /* Fields only apply to string types commented on the right. */
   struct Data {
@@ -262,7 +263,7 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
   static_assert(js::gc::CellFlagBitsReservedForGC <= 3,
                 "JSString::flags must reserve enough bits for Cell");
 
-  static const uint32_t NON_ATOM_BIT = js::gc::Cell::JSSTRING_BIT;
+  static const uint32_t NON_ATOM_BIT = js::gc::CellHeader::JSSTRING_BIT;
   static const uint32_t LINEAR_BIT = js::Bit(4);
   static const uint32_t DEPENDENT_BIT = js::Bit(5);
   static const uint32_t INLINE_CHARS_BIT = js::Bit(6);
@@ -286,9 +287,9 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
       NON_ATOM_BIT | LINEAR_BIT | DEPENDENT_BIT;
 
   static const uint32_t TYPE_FLAGS_MASK =
-      js::BitMask(9) - js::BitMask(3) + js::gc::Cell::JSSTRING_BIT;
+      js::BitMask(9) - js::BitMask(3) + js::gc::CellHeader::JSSTRING_BIT;
 
-  static_assert((TYPE_FLAGS_MASK & js::gc::Cell::BIGINT_BIT) == 0,
+  static_assert((TYPE_FLAGS_MASK & js::gc::CellHeader::BIGINT_BIT) == 0,
                 "BigInt bit must not be used for Strings");
 
   static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
@@ -308,6 +309,17 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
    * is returned.
    */
   static inline bool validateLength(JSContext* maybecx, size_t length);
+
+  static constexpr size_t offsetOfRawFlagsField() {
+    return offsetof(JSString, header_) + Header::offsetOfRawFlagsField();
+  }
+
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(JSString, header_) + Header::offsetOfFlags();
+  }
+  static constexpr size_t offsetOfLength() {
+    return offsetof(JSString, header_) + Header::offsetOfLength();
+  }
 
   static void staticAsserts() {
     static_assert(JSString::MAX_LENGTH < UINT32_MAX,
@@ -374,7 +386,7 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
   MOZ_ALWAYS_INLINE void setNonInlineChars(const CharT* chars);
 
   MOZ_ALWAYS_INLINE
-  uint32_t flags() const { return flagsField(); }
+  uint32_t flags() const { return header_.flagsField(); }
 
   template <typename CharT>
   static MOZ_ALWAYS_INLINE void checkStringCharsArena(const CharT* chars) {
@@ -385,13 +397,15 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
 
  public:
   MOZ_ALWAYS_INLINE
-  size_t length() const { return lengthField(); }
+  size_t length() const { return header_.lengthField(); }
 
  protected:
-  void setFlattenData(uintptr_t data) { setTemporaryGCUnsafeData(data); }
+  void setFlattenData(uintptr_t data) {
+    header_.setTemporaryGCUnsafeData(data);
+  }
 
   uintptr_t unsetFlattenData(uint32_t len, uint32_t flags) {
-    return unsetTemporaryGCUnsafeData(len, flags);
+    return header_.unsetTemporaryGCUnsafeData(len, flags);
   }
 
   // Get correct non-inline chars enum arm for given type
@@ -548,10 +562,6 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
   mozilla::Maybe<mozilla::Tuple<size_t, size_t> > encodeUTF8Partial(
       const JS::AutoRequireNoGC& nogc, mozilla::Span<char> buffer) const;
 
-  // Make offset accessors public.
-  using Base::offsetOfFlags;
-  using Base::offsetOfLength;
-
  private:
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
   // to call the method below.
@@ -566,6 +576,7 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::String;
+  const js::gc::CellHeader& cellHeader() const { return header_; }
 
   JS::Zone* zone() const {
     if (isTenured()) {
@@ -586,6 +597,12 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
     }
     return js::Nursery::getStringZone(this);
   }
+
+  void setLengthAndFlags(uint32_t len, uint32_t flags) {
+    header_.setLengthAndFlags(len, flags);
+  }
+  void setFlagBit(uint32_t flag) { header_.setFlagBit(flag); }
+  void clearFlagBit(uint32_t flag) { header_.clearFlagBit(flag); }
 
   void fixupAfterMovingGC() {}
 
