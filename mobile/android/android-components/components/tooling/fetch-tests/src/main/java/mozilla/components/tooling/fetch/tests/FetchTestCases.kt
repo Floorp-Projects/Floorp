@@ -511,6 +511,11 @@ abstract class FetchTestCases {
         assertEquals("13", responseNoContentType.headers["Content-Length"])
         assertNull(responseNoContentType.headers["Content-Type"])
         assertEquals("Hello, World!", responseNoContentType.body.string())
+
+        val responseNoBase64 = client.fetch(Request(url = "data:text/plain;charset=utf-8,Hello%2C%20World%21"))
+        assertEquals("13", responseNoBase64.headers["Content-Length"])
+        assertEquals("text/plain;charset=utf-8", responseNoBase64.headers["Content-Type"])
+        assertEquals("Hello, World!", responseNoBase64.body.string())
     }
 
     private inline fun withServerResponding(
