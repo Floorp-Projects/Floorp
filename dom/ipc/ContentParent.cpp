@@ -4795,14 +4795,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     newBrowserHost->GetBrowsingContext()->SetName(aName);
   }
 
-  // Don't send down the OriginAttributes if the content process is handling
-  // setting up the window for us. We only want to send them in the async case.
-  //
-  // If we send it down in the non-async case, then we might set the
-  // OriginAttributes after the document has already navigated.
-  if (!aSetOpener) {
-    Unused << newBrowserParent->SendSetOriginAttributes(openerOriginAttributes);
-  }
+  MOZ_ASSERT(newBrowserHost->GetBrowsingContext()->OriginAttributesRef() ==
+             openerOriginAttributes);
 
   if (aURIToLoad && aLoadURI) {
     nsCOMPtr<mozIDOMWindowProxy> openerWindow;

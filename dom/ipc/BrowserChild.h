@@ -749,9 +749,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvAllowScriptsToClose();
 
-  mozilla::ipc::IPCResult RecvSetOriginAttributes(
-      const OriginAttributes& aOriginAttributes);
-
   mozilla::ipc::IPCResult RecvSetWidgetNativeData(
       const WindowsHandle& aWidgetNativeData);
 
