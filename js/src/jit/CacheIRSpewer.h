@@ -51,11 +51,10 @@ class CacheIRSpewer {
   void valueProperty(const char* name, const Value& v);
   void opcodeProperty(const char* name, const JSOp op);
   void cacheIRSequence(CacheIRReader& reader);
-  void CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
-                   CacheIROpFormat::ArgType arg);
+  void CacheIRArg(JSONPrinter& j, CacheIRReader& r,
+                  CacheIROpFormat::ArgType arg);
   template <typename... Args>
-  void CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
-                   CacheIROpFormat::ArgType arg, Args... args);
+  void CacheIRArgs(JSONPrinter& j, CacheIRReader& r, Args... args);
   void attached(const char* name);
   void endCache();
 
