@@ -7,8 +7,6 @@
 #ifndef jit_TypePolicy_h
 #define jit_TypePolicy_h
 
-#include <type_traits>
-
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
 
@@ -412,25 +410,12 @@ class CacheIdPolicy final : public TypePolicy {
 // Combine multiple policies.
 template <class... Policies>
 class MixPolicy final : public TypePolicy {
-  template <class P>
-  static bool staticAdjustInputsHelper(TempAllocator& alloc,
-                                       MInstruction* ins) {
-    return P::staticAdjustInputs(alloc, ins);
-  }
-
-  template <class P, class... Rest>
-  static std::enable_if_t<(sizeof...(Rest) > 0), bool> staticAdjustInputsHelper(
-      TempAllocator& alloc, MInstruction* ins) {
-    return P::staticAdjustInputs(alloc, ins) &&
-           MixPolicy::staticAdjustInputsHelper<Rest...>(alloc, ins);
-  }
-
  public:
   constexpr MixPolicy() = default;
   EMPTY_DATA_;
   static MOZ_MUST_USE bool staticAdjustInputs(TempAllocator& alloc,
                                               MInstruction* ins) {
-    return MixPolicy::staticAdjustInputsHelper<Policies...>(alloc, ins);
+    return (Policies::staticAdjustInputs(alloc, ins) && ...);
   }
   MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
                                  MInstruction* ins) const override {
