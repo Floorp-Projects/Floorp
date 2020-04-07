@@ -12,7 +12,11 @@ const {
   testTeardown,
   COMPLICATED_URL,
 } = require("../head");
-const { exportHar, waitForNetworkRequests } = require("./netmonitor-helpers");
+const {
+  exportHar,
+  waitForNetworkRequests,
+  openResponseDetailsPanel,
+} = require("./netmonitor-helpers");
 
 const EXPECTED_REQUESTS = 280;
 
@@ -32,6 +36,8 @@ module.exports = async function() {
   await requestsDone;
 
   await exportHar("complicated.netmonitor", toolbox);
+
+  await openResponseDetailsPanel("complicated.netmonitor", toolbox);
 
   await closeToolboxAndLog("complicated.netmonitor", toolbox);
 
