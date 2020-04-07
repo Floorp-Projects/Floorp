@@ -107,7 +107,7 @@ struct CraneliftFuncCompileInput {
   uint32_t index;
   uint32_t offset_in_module;
 
-  // The stackmaps sink to use when compiling this function
+  // The stackmaps sink to use when compiling this function.
   BD_Stackmaps* stackmaps;
 
   // Not bindgen'd because it's inlined.
@@ -122,13 +122,7 @@ struct CraneliftFuncCompileInput {
 // handle them, with a lot of unsafe'ing.
 
 struct CraneliftMetadataEntry {
-  enum Which {
-    DirectCall,
-    IndirectCall,
-    Trap,
-    MemoryAccess,
-    SymbolicAccess
-  } which;
+  enum Which { DirectCall, IndirectCall, Trap, SymbolicAccess } which;
   uint32_t codeOffset;
   uint32_t moduleBytecodeOffset;
   size_t extra;
