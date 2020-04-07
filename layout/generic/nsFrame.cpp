@@ -8243,7 +8243,14 @@ void nsIFrame::DumpFrameTree() const {
   PresShell()->GetRootFrame()->List(stderr);
 }
 
+void nsIFrame::DumpFrameTreeInCSSPixels() const {
+  PresShell()->GetRootFrame()->List(stderr, "", ListFlag::DisplayInCSSPixels);
+}
+
 void nsIFrame::DumpFrameTreeLimited() const { List(stderr); }
+void nsIFrame::DumpFrameTreeLimitedInCSSPixels() const {
+  List(stderr, "", ListFlag::DisplayInCSSPixels);
+}
 
 #endif
 
