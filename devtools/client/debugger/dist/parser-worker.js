@@ -9231,7 +9231,7 @@ function getVariables(dec) {
     // e.g. const [{a, b }] = 2
 
 
-    return dec.id.elements.filter(element => element).map(element => {
+    return dec.id.elements.filter(Boolean).map(element => {
       var _element$argument;
 
       return {
