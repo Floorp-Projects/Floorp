@@ -7,8 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import inspect
 import re
 import types
+from dis import Bytecode
 from functools import wraps
-from StringIO import StringIO
+from io import StringIO
 from . import (
     CombinedDependsFunction,
     ConfigureError,
@@ -19,7 +20,6 @@ from . import (
     SandboxDependsFunction,
 )
 from .help import HelpFormatter
-from .lint_util import disassemble_as_iter
 from mozbuild.util import memoize
 
 
@@ -42,7 +42,7 @@ class LintSandbox(ConfigureSandbox):
         if path:
             self.include_file(path)
 
-        for dep in self._depends.itervalues():
+        for dep in self._depends.values():
             self._check_dependencies(dep)
 
     def _raise_from(self, exception, obj, line=0):
@@ -64,8 +64,8 @@ class LintSandbox(ConfigureSandbox):
 
         if inspect.isfunction(obj):
             funcname = obj.__name__
-            filename = obj.func_code.co_filename
-            firstline = obj.func_code.co_firstlineno
+            filename = obj.__code__.co_filename
+            firstline = obj.__code__.co_firstlineno
             line += firstline
         elif inspect.isframe(obj):
             funcname = obj.f_code.co_name
@@ -86,10 +86,11 @@ class LintSandbox(ConfigureSandbox):
         # (chr(byte_increment), chr(line_increment)), mapping bytes in co_code
         # to line numbers relative to co_firstlineno.
         # If the offset we need to encode is larger than 255, we need to split it.
-        co_lnotab = (chr(0) + chr(255)) * (offset / 255) + chr(0) + chr(offset % 255)
+        co_lnotab = bytes([0, 255] * (offset // 255) + [0, offset % 255])
         code = thrower.__code__
         code = types.CodeType(
             code.co_argcount,
+            code.co_kwonlyargcount,
             code.co_nlocals,
             code.co_stacksize,
             code.co_flags,
@@ -127,10 +128,10 @@ class LintSandbox(ConfigureSandbox):
             all_args.append(func_args.varargs)
         used_args = set()
 
-        for op, arg, _ in disassemble_as_iter(func):
-            if op in ('LOAD_FAST', 'LOAD_CLOSURE'):
-                if arg in all_args:
-                    used_args.add(arg)
+        for instr in Bytecode(func):
+            if instr.opname in ('LOAD_FAST', 'LOAD_CLOSURE'):
+                if instr.argval in all_args:
+                    used_args.add(instr.argval)
 
         for num, arg in enumerate(all_args):
             if arg not in used_args:
@@ -156,14 +157,14 @@ class LintSandbox(ConfigureSandbox):
             # - don't use global variables
             if func in self._has_imports or func.__closure__:
                 return True
-            for op, arg, _ in disassemble_as_iter(func):
-                if op in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
+            for instr in Bytecode(func):
+                if instr.opname in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
                     # There is a fake os module when one is not imported,
                     # and it's allowed for functions without a --help
                     # dependency.
-                    if arg == 'os' and glob.get('os') is self.OS:
+                    if instr.argval == 'os' and glob.get('os') is self.OS:
                         continue
-                    if arg in self.BUILTINS:
+                    if instr.argval in self.BUILTINS:
                         continue
                     return True
         return False
@@ -225,7 +226,7 @@ class LintSandbox(ConfigureSandbox):
                 'without': 'with',
             }
         }
-        for prefix, replacement in table[default].iteritems():
+        for prefix, replacement in table[default].items():
             if name.startswith('--{}-'.format(prefix)):
                 frame = inspect.currentframe()
                 while frame and frame.f_code.co_name != self.option_impl.__name__:
@@ -247,7 +248,7 @@ class LintSandbox(ConfigureSandbox):
             return
 
         default = self._resolve(default)
-        if type(default) in (str, unicode):
+        if type(default) is str:
             return
 
         help = kwargs['help']
@@ -300,16 +301,16 @@ class LintSandbox(ConfigureSandbox):
             else:
                 what = _import.split('.')[0]
                 imports.add(what)
-        for op, arg, line in disassemble_as_iter(func):
+        for instr in Bytecode(func):
             code = func.__code__
-            if op == 'LOAD_GLOBAL' and \
-                    arg not in glob and \
-                    arg not in imports and \
-                    arg not in glob['__builtins__'] and \
-                    arg not in code.co_varnames[:code.co_argcount]:
+            if instr.opname == 'LOAD_GLOBAL' and \
+                    instr.argval not in glob and \
+                    instr.argval not in imports and \
+                    instr.argval not in glob['__builtins__'] and \
+                    instr.argval not in code.co_varnames[:code.co_argcount]:
                 # Raise the same kind of error as what would happen during
                 # execution.
-                e = NameError("global name '{}' is not defined".format(arg))
-                self._raise_from(e, func, line)
+                e = NameError("global name '{}' is not defined".format(instr.argval))
+                self._raise_from(e, func, instr.starts_line - func.__code__.co_firstlineno)
 
         return wrapped
