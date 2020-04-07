@@ -47,6 +47,10 @@ class nsHttpResponseHead {
         mCacheControlNoStore(false),
         mCacheControlNoCache(false),
         mCacheControlImmutable(false),
+        mCacheControlStaleWhileRevalidateSet(false),
+        mCacheControlStaleWhileRevalidate(0),
+        mCacheControlMaxAgeSet(false),
+        mCacheControlMaxAge(0),
         mPragmaNoCache(false),
         mRecursiveMutex("nsHttpResponseHead.mRecursiveMutex"),
         mInVisitHeaders(false) {}
@@ -139,7 +143,6 @@ class nsHttpResponseHead {
 
   MOZ_MUST_USE nsresult GetAgeValue(uint32_t* result);
   MOZ_MUST_USE nsresult GetMaxAgeValue(uint32_t* result);
-  MOZ_MUST_USE nsresult GetStaleWhileRevalidateValue(uint32_t* result);
   MOZ_MUST_USE nsresult GetDateValue(uint32_t* result);
   MOZ_MUST_USE nsresult GetExpiresValue(uint32_t* result);
   MOZ_MUST_USE nsresult GetLastModifiedValue(uint32_t* result);
@@ -177,9 +180,6 @@ class nsHttpResponseHead {
   MOZ_MUST_USE nsresult GetAgeValue_locked(uint32_t* result) const;
   MOZ_MUST_USE nsresult GetExpiresValue_locked(uint32_t* result) const;
   MOZ_MUST_USE nsresult GetMaxAgeValue_locked(uint32_t* result) const;
-  MOZ_MUST_USE nsresult
-  GetStaleWhileRevalidateValue_locked(uint32_t* result) const;
-
   MOZ_MUST_USE nsresult GetDateValue_locked(uint32_t* result) const {
     return ParseDateHeader(nsHttp::Date, result);
   }
@@ -202,6 +202,10 @@ class nsHttpResponseHead {
   bool mCacheControlNoStore;
   bool mCacheControlNoCache;
   bool mCacheControlImmutable;
+  bool mCacheControlStaleWhileRevalidateSet;
+  uint32_t mCacheControlStaleWhileRevalidate;
+  bool mCacheControlMaxAgeSet;
+  uint32_t mCacheControlMaxAge;
   bool mPragmaNoCache;
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader
