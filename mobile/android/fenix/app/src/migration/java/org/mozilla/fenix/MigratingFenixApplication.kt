@@ -13,8 +13,9 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
  * An application class which knows how to migrate Fennec data.
  */
 class MigratingFenixApplication : FenixApplication() {
-
     init {
+        recordOnInit() // DO NOT MOVE ANYTHING ABOVE HERE: the timing of this measurement is critical.
+
         PerformanceActivityLifecycleCallbacks.isTransientActivityInMigrationVariant = {
             if (it is MigrationDecisionActivity) true else false
         }

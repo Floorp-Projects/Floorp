@@ -38,6 +38,7 @@ import org.mozilla.fenix.FeatureFlags.webPushIntegration
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.NotificationSessionObserver
@@ -49,6 +50,10 @@ import org.mozilla.fenix.utils.Settings
 @SuppressLint("Registered")
 @Suppress("TooManyFunctions", "LargeClass")
 open class FenixApplication : LocaleAwareApplication() {
+    init {
+        recordOnInit() // DO NOT MOVE ANYTHING ABOVE HERE: the timing of this measurement is critical.
+    }
+
     private val logger = Logger("FenixApplication")
 
     open val components by lazy { Components(this) }
@@ -364,5 +369,11 @@ open class FenixApplication : LocaleAwareApplication() {
         } catch (e: UnsupportedOperationException) {
             Logger.error("Failed to initialize web extension support", e)
         }
+    }
+
+    protected fun recordOnInit() {
+        // This gets called by more than one process. Ideally we'd only run this in the main process
+        // but the code to check which process we're in crashes because the Context isn't valid yet.
+        StartupTimeline.onApplicationInit()
     }
 }

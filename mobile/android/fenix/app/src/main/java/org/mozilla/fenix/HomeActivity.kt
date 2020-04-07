@@ -33,6 +33,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
@@ -146,7 +147,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         }
         supportActionBar?.hide()
 
-        lifecycle.addObserver(webExtensionPopupFeature)
+        lifecycle.addObservers(
+            webExtensionPopupFeature,
+            StartupTimeline.homeActivityLifecycleObserver
+        )
         StartupTimeline.onActivityCreateEndHome(this)
     }
 
