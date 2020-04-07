@@ -179,8 +179,8 @@ WorkerDebugger::~WorkerDebugger() {
 
   if (!NS_IsMainThread()) {
     for (size_t index = 0; index < mListeners.Length(); ++index) {
-      NS_ReleaseOnMainThreadSystemGroup("WorkerDebugger::mListeners",
-                                        mListeners[index].forget());
+      NS_ReleaseOnMainThread("WorkerDebugger::mListeners",
+                             mListeners[index].forget());
     }
   }
 }

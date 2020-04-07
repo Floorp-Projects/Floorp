@@ -141,23 +141,23 @@ class nsAsyncResolveRequest final : public nsIRunnable,
       // callbacks called normally they will all be null and this is a nop
 
       if (mChannel) {
-        NS_ReleaseOnMainThreadSystemGroup("nsAsyncResolveRequest::mChannel",
-                                          mChannel.forget());
+        NS_ReleaseOnMainThread("nsAsyncResolveRequest::mChannel",
+                               mChannel.forget());
       }
 
       if (mCallback) {
-        NS_ReleaseOnMainThreadSystemGroup("nsAsyncResolveRequest::mCallback",
-                                          mCallback.forget());
+        NS_ReleaseOnMainThread("nsAsyncResolveRequest::mCallback",
+                               mCallback.forget());
       }
 
       if (mProxyInfo) {
-        NS_ReleaseOnMainThreadSystemGroup("nsAsyncResolveRequest::mProxyInfo",
-                                          mProxyInfo.forget());
+        NS_ReleaseOnMainThread("nsAsyncResolveRequest::mProxyInfo",
+                               mProxyInfo.forget());
       }
 
       if (mXPComPPS) {
-        NS_ReleaseOnMainThreadSystemGroup("nsAsyncResolveRequest::mXPComPPS",
-                                          mXPComPPS.forget());
+        NS_ReleaseOnMainThread("nsAsyncResolveRequest::mXPComPPS",
+                               mXPComPPS.forget());
       }
     }
   }
@@ -655,8 +655,8 @@ class AsyncGetPACURIRequest final : public nsIRunnable {
 
  private:
   ~AsyncGetPACURIRequest() {
-    NS_ReleaseOnMainThreadSystemGroup("AsyncGetPACURIRequest::mServiceHolder",
-                                      mServiceHolder.forget());
+    NS_ReleaseOnMainThread("AsyncGetPACURIRequest::mServiceHolder",
+                           mServiceHolder.forget());
   }
 
   bool mIsMainThreadOnly;

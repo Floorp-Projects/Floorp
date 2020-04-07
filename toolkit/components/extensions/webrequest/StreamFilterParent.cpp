@@ -101,14 +101,11 @@ StreamFilterParent::StreamFilterParent()
       mState(State::Uninitialized) {}
 
 StreamFilterParent::~StreamFilterParent() {
-  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mChannel",
-                                    mChannel.forget());
-  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mLoadGroup",
-                                    mLoadGroup.forget());
-  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mOrigListener",
-                                    mOrigListener.forget());
-  NS_ReleaseOnMainThreadSystemGroup("StreamFilterParent::mContext",
-                                    mContext.forget());
+  NS_ReleaseOnMainThread("StreamFilterParent::mChannel", mChannel.forget());
+  NS_ReleaseOnMainThread("StreamFilterParent::mLoadGroup", mLoadGroup.forget());
+  NS_ReleaseOnMainThread("StreamFilterParent::mOrigListener",
+                         mOrigListener.forget());
+  NS_ReleaseOnMainThread("StreamFilterParent::mContext", mContext.forget());
 }
 
 bool StreamFilterParent::Create(dom::ContentParent* aContentParent,

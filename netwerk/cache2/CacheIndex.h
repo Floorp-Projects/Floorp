@@ -1231,8 +1231,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
           mSize(0) {}
     virtual ~DiskConsumptionObserver() {
       if (mObserver && !NS_IsMainThread()) {
-        NS_ReleaseOnMainThreadSystemGroup("DiskConsumptionObserver::mObserver",
-                                          mObserver.forget());
+        NS_ReleaseOnMainThread("DiskConsumptionObserver::mObserver",
+                               mObserver.forget());
       }
     }
 

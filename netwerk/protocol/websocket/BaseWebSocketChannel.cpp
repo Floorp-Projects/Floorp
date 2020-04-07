@@ -355,10 +355,10 @@ BaseWebSocketChannel::ListenerAndContextContainer::
     ~ListenerAndContextContainer() {
   MOZ_ASSERT(mListener);
 
-  NS_ReleaseOnMainThreadSystemGroup(
+  NS_ReleaseOnMainThread(
       "BaseWebSocketChannel::ListenerAndContextContainer::mListener",
       mListener.forget());
-  NS_ReleaseOnMainThreadSystemGroup(
+  NS_ReleaseOnMainThread(
       "BaseWebSocketChannel::ListenerAndContextContainer::mContext",
       mContext.forget());
 }
