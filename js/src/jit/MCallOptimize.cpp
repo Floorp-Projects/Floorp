@@ -2820,7 +2820,8 @@ IonBuilder::InliningResult IonBuilder::inlineHasClass(CallInfo& callInfo,
             MHasClass::New(alloc(), callInfo.getArg(0), remaining[i]);
         current->add(hasClass);
         MBitOr* either = MBitOr::New(alloc(), last, hasClass);
-        either->infer(inspector, pc);
+        either->setInt32Specialization();
+        either->setCommutative();
         current->add(either);
         last = either;
       }

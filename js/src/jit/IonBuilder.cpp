@@ -3464,26 +3464,39 @@ AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
   switch (op) {
     case JSOp::BitAnd:
       ins = MBitAnd::New(alloc(), left, right);
+      ins->setInt32Specialization();
+      ins->setCommutative();
       break;
 
     case JSOp::BitOr:
       ins = MBitOr::New(alloc(), left, right);
+      ins->setInt32Specialization();
+      ins->setCommutative();
       break;
 
     case JSOp::BitXor:
       ins = MBitXor::New(alloc(), left, right);
+      ins->setInt32Specialization();
+      ins->setCommutative();
       break;
 
     case JSOp::Lsh:
       ins = MLsh::New(alloc(), left, right);
+      ins->setInt32Specialization();
       break;
 
     case JSOp::Rsh:
       ins = MRsh::New(alloc(), left, right);
+      ins->setInt32Specialization();
       break;
 
     case JSOp::Ursh:
       ins = MUrsh::New(alloc(), left, right);
+      if (inspector->hasSeenDoubleResult(pc)) {
+        ins->toUrsh()->setDoubleSpecialization();
+      } else {
+        ins->setInt32Specialization();
+      }
       break;
 
     default:
@@ -3491,12 +3504,6 @@ AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
   }
 
   current->add(ins);
-  ins->infer(inspector, pc);
-
-  // The expected specialization should match the inferred specialization.
-  MOZ_ASSERT(ins->specialization() == MIRType::Int32 ||
-             (op == JSOp::Ursh && ins->specialization() == MIRType::Double));
-
   current->push(ins);
   if (ins->isEffectful()) {
     MOZ_TRY(resumeAfter(ins));
