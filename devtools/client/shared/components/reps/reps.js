@@ -2857,7 +2857,7 @@ function FunctionRep(props) {
     // appearing in the wrong direction
     dir: "ltr"
   };
-  const parameterNames = (grip.parameterNames || []).filter(param => param);
+  const parameterNames = (grip.parameterNames || []).filter(Boolean);
 
   if (grip.isClassConstructor) {
     return span(elProps, getClassTitle(grip, props), getFunctionName(grip, props), ...getClassBody(parameterNames, props), jumpToDefinitionButton);
