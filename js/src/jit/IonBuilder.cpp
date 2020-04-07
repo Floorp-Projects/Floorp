@@ -3406,6 +3406,11 @@ AbortReasonOr<Ok> IonBuilder::visitTableSwitch() {
 
 void IonBuilder::pushConstant(const Value& v) { current->push(constant(v)); }
 
+static inline bool SimpleBitOpOperand(MDefinition* op) {
+  return !op->mightBeType(MIRType::Object) &&
+         !op->mightBeType(MIRType::Symbol) && !op->mightBeType(MIRType::BigInt);
+}
+
 AbortReasonOr<Ok> IonBuilder::bitnotTrySpecialized(bool* emitted,
                                                    MDefinition* input) {
   MOZ_ASSERT(*emitted == false);
@@ -3413,9 +3418,7 @@ AbortReasonOr<Ok> IonBuilder::bitnotTrySpecialized(bool* emitted,
   // Try to emit a specialized bitnot instruction based on the input type
   // of the operand.
 
-  if (input->mightBeType(MIRType::Object) ||
-      input->mightBeType(MIRType::Symbol) ||
-      input->mightBeType(MIRType::BigInt)) {
+  if (!SimpleBitOpOperand(input)) {
     return Ok();
   }
 
@@ -3496,11 +3499,6 @@ AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
   }
 
   return ins;
-}
-
-static inline bool SimpleBitOpOperand(MDefinition* op) {
-  return !op->mightBeType(MIRType::Object) &&
-         !op->mightBeType(MIRType::Symbol) && !op->mightBeType(MIRType::BigInt);
 }
 
 AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
