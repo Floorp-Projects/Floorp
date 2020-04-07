@@ -3423,7 +3423,6 @@ AbortReasonOr<Ok> IonBuilder::bitnotTrySpecialized(bool* emitted,
   }
 
   MBitNot* ins = MBitNot::New(alloc(), input);
-  ins->setSpecialization(MIRType::Int32);
 
   current->add(ins);
   current->push(ins);

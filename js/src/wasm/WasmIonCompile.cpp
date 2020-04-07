@@ -470,7 +470,7 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return nullptr;
     }
-    auto* ins = MBitNot::NewInt32(alloc(), op);
+    auto* ins = MBitNot::New(alloc(), op);
     curBlock_->add(ins);
     return ins;
   }

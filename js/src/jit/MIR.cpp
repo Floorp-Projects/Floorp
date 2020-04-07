@@ -3500,17 +3500,8 @@ void MCompare::cacheOperandMightEmulateUndefined(
   markNoOperandEmulatesUndefined();
 }
 
-MBitNot* MBitNot::NewInt32(TempAllocator& alloc, MDefinition* input) {
-  MBitNot* ins = new (alloc) MBitNot(input);
-  ins->specialization_ = MIRType::Int32;
-  ins->setResultType(MIRType::Int32);
-  return ins;
-}
-
 MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
-  if (specialization_ != MIRType::Int32) {
-    return this;
-  }
+  MOZ_ASSERT(specialization_ == MIRType::Int32);
 
   MDefinition* input = getOperand(0);
 
@@ -3519,8 +3510,8 @@ MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
     return MConstant::New(alloc, v);
   }
 
-  if (input->isBitNot() &&
-      input->toBitNot()->specialization_ == MIRType::Int32) {
+  if (input->isBitNot()) {
+    MOZ_ASSERT(input->toBitNot()->specialization_ == MIRType::Int32);
     MOZ_ASSERT(input->toBitNot()->getOperand(0)->type() == MIRType::Int32);
     return MTruncateToInt32::New(alloc,
                                  input->toBitNot()->input());  // ~~x => x | 0

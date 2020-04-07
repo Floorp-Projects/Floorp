@@ -1358,9 +1358,7 @@ void MBitXor::computeRange(TempAllocator& alloc) {
 }
 
 void MBitNot::computeRange(TempAllocator& alloc) {
-  if (specialization_ != MIRType::Int32) {
-    return;
-  }
+  MOZ_ASSERT(specialization_ == MIRType::Int32);
 
   Range op(getOperand(0));
   op.wrapAroundToInt32();
