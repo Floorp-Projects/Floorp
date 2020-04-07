@@ -34,7 +34,8 @@ add_task(async function() {
   );
 
   info("Force to select about:debugging page");
-  gBrowser.selectedTab = tab;
+  await updateSelectedTab(gBrowser, tab, window.AboutDebugging.store);
+
   info("Check whether the menu item which opens devtools is enabled");
   await assertContextMenu(rootDocument, devtoolsBrowser, "#mount", true);
 
