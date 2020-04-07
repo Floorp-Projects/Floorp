@@ -28,7 +28,7 @@ Config file format
 
 build-clang.py accepts a JSON config format with the following fields:
 
-* stages: Use 1, 2, or 3 to select different compiler stages.  The default is 3.
+* stages: Use 1, 2, 3 or 4 to select different compiler stages.  The default is 3.
 * python_path: Path to the Python 2.7 installation on the machine building clang.
 * gcc_dir: Path to the gcc toolchain installation, only required on Linux.
 * cc: Path to the bootsraping C Compiler.
