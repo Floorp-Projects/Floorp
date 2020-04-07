@@ -78,7 +78,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The dependency on `--help` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 3) as e:
@@ -97,7 +97,7 @@ class TestLint(unittest.TestCase):
                 self.lint_test()
 
         self.assertEquals(
-            e.exception.message,
+            str(e.exception),
             "Missing '--help' dependency because `bar` depends on '--help' and `foo`")
 
         with self.assertRaisesFromLine(ConfigureError, 7) as e:
@@ -121,7 +121,7 @@ class TestLint(unittest.TestCase):
                 self.lint_test()
 
         self.assertEquals(
-            e.exception.message,
+            str(e.exception),
             "Missing '--help' dependency because `bar` depends on '--help' and `foo`")
 
         with self.moz_configure('''
@@ -146,7 +146,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "Missing '--help' dependency")
 
         with self.assertRaisesFromLine(ConfigureError, 3) as e:
@@ -165,7 +165,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "Missing '--help' dependency")
 
         with self.assertRaisesFromLine(ConfigureError, 3) as e:
@@ -180,7 +180,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "Missing '--help' dependency")
 
         # This would have failed with "Missing '--help' dependency"
@@ -201,19 +201,19 @@ class TestLint(unittest.TestCase):
             with self.moz_configure('''
                 @template
                 def tmpl():
-                    False = 42
+                    sorted = 42
 
                     option('--foo', help='foo')
                     @depends('--foo')
                     def foo(value):
-                        return False
+                        return sorted
 
                     option('--bar', help='bar', when=foo)
                 tmpl()
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "Missing '--help' dependency")
 
         # There is a default restricted `os` module when there is no explicit
@@ -240,7 +240,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The dependency on `--foo` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 5) as e:
@@ -256,7 +256,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The dependency on `bar` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 2) as e:
@@ -269,7 +269,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The dependency on `<lambda>` is unused")
 
         with self.assertRaisesFromLine(ConfigureError, 9) as e:
@@ -289,7 +289,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The dependency on `qux` is unused")
 
     def test_default_enable(self):
@@ -303,7 +303,7 @@ class TestLint(unittest.TestCase):
                 option('--enable-foo', default=True, help='foo')
             '''):
                 self.lint_test()
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           '--disable-foo should be used instead of '
                           '--enable-foo with default=True')
 
@@ -318,7 +318,7 @@ class TestLint(unittest.TestCase):
                 option('--disable-foo', default=False, help='foo')
             '''):
                 self.lint_test()
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           '--enable-foo should be used instead of '
                           '--disable-foo with default=False')
 
@@ -333,7 +333,7 @@ class TestLint(unittest.TestCase):
                 option('--with-foo', default=True, help='foo')
             '''):
                 self.lint_test()
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           '--without-foo should be used instead of '
                           '--with-foo with default=True')
 
@@ -348,7 +348,7 @@ class TestLint(unittest.TestCase):
                 option('--without-foo', default=False, help='foo')
             '''):
                 self.lint_test()
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           '--with-foo should be used instead of '
                           '--without-foo with default=False')
 
@@ -368,7 +368,7 @@ class TestLint(unittest.TestCase):
                        help='Enable bar')
             '''):
                 self.lint_test()
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           '`help` should contain "{Enable|Disable}" because of '
                           'non-constant default')
 
@@ -384,7 +384,7 @@ class TestLint(unittest.TestCase):
             '''):
                 self.lint_test()
 
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "global name 'unknown' is not defined")
 
 
