@@ -34,7 +34,6 @@ namespace jit {
 // function to be called. This list must be sorted on the name field.
 #define VMFUNCTION_LIST(_)                                                     \
   _(AddOrUpdateSparseElementHelper, js::AddOrUpdateSparseElementHelper)        \
-  _(AddValues, js::AddValues)                                                  \
   _(ArgumentsObjectCreateForIon, js::ArgumentsObject::createForIon)            \
   _(ArrayConstructorOneArg, js::ArrayConstructorOneArg)                        \
   _(ArrayJoin, js::jit::ArrayJoin)                                             \
@@ -119,7 +118,6 @@ namespace jit {
   _(DelPropOperationStrict, js::DelPropOperation<true>)                        \
   _(DeleteNameOperation, js::DeleteNameOperation)                              \
   _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
-  _(DivValues, js::DivValues)                                                  \
   _(DoCallFallback, js::jit::DoCallFallback)                                   \
   _(DoConcatStringObject, js::jit::DoConcatStringObject)                       \
   _(DoSpreadCallFallback, js::jit::DoSpreadCallFallback)                       \
@@ -191,8 +189,6 @@ namespace jit {
   _(LooselyEqual, js::jit::LooselyEqual<js::jit::EqualityKind::Equal>)         \
   _(LooselyNotEqual, js::jit::LooselyEqual<js::jit::EqualityKind::NotEqual>)   \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
-  _(ModValues, js::ModValues)                                                  \
-  _(MulValues, js::MulValues)                                                  \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
     js::NamedLambdaObject::createTemplateObject)                               \
@@ -266,7 +262,6 @@ namespace jit {
   _(StringsCompareLessThan, js::jit::StringsCompare<ComparisonKind::LessThan>) \
   _(StringsEqual, js::jit::StringsEqual<js::jit::EqualityKind::Equal>)         \
   _(StringsNotEqual, js::jit::StringsEqual<js::jit::EqualityKind::NotEqual>)   \
-  _(SubValues, js::SubValues)                                                  \
   _(SubstringKernel, js::SubstringKernel)                                      \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
   _(ThrowBadDerivedReturnOrUninitializedThis,                                  \

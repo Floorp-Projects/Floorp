@@ -1622,6 +1622,7 @@ void LIRGenerator::visitAdd(MAdd* ins) {
   MDefinition* rhs = ins->getOperand(1);
 
   MOZ_ASSERT(lhs->type() == rhs->type());
+  MOZ_ASSERT(IsNumberType(ins->specialization()));
 
   if (ins->specialization() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
@@ -1659,7 +1660,7 @@ void LIRGenerator::visitAdd(MAdd* ins) {
     return;
   }
 
-  lowerBinaryV(JSOp::Add, ins);
+  MOZ_CRASH("Unhandled number specialization");
 }
 
 void LIRGenerator::visitSub(MSub* ins) {
@@ -1667,6 +1668,7 @@ void LIRGenerator::visitSub(MSub* ins) {
   MDefinition* rhs = ins->rhs();
 
   MOZ_ASSERT(lhs->type() == rhs->type());
+  MOZ_ASSERT(IsNumberType(ins->specialization()));
 
   if (ins->specialization() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
@@ -1700,13 +1702,14 @@ void LIRGenerator::visitSub(MSub* ins) {
     return;
   }
 
-  lowerBinaryV(JSOp::Sub, ins);
+  MOZ_CRASH("Unhandled number specialization");
 }
 
 void LIRGenerator::visitMul(MMul* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
   MOZ_ASSERT(lhs->type() == rhs->type());
+  MOZ_ASSERT(IsNumberType(ins->specialization()));
 
   if (ins->specialization() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
@@ -1759,13 +1762,14 @@ void LIRGenerator::visitMul(MMul* ins) {
     return;
   }
 
-  lowerBinaryV(JSOp::Mul, ins);
+  MOZ_CRASH("Unhandled number specialization");
 }
 
 void LIRGenerator::visitDiv(MDiv* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();
   MOZ_ASSERT(lhs->type() == rhs->type());
+  MOZ_ASSERT(IsNumberType(ins->specialization()));
 
   if (ins->specialization() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
@@ -1791,11 +1795,12 @@ void LIRGenerator::visitDiv(MDiv* ins) {
     return;
   }
 
-  lowerBinaryV(JSOp::Div, ins);
+  MOZ_CRASH("Unhandled number specialization");
 }
 
 void LIRGenerator::visitMod(MMod* ins) {
   MOZ_ASSERT(ins->lhs()->type() == ins->rhs()->type());
+  MOZ_ASSERT(IsNumberType(ins->specialization()));
 
   if (ins->specialization() == MIRType::Int32) {
     MOZ_ASSERT(ins->type() == MIRType::Int32);
@@ -1828,7 +1833,7 @@ void LIRGenerator::visitMod(MMod* ins) {
     return;
   }
 
-  lowerBinaryV(JSOp::Mod, ins);
+  MOZ_CRASH("Unhandled number specialization");
 }
 
 void LIRGenerator::lowerBinaryV(JSOp op, MBinaryInstruction* ins) {
