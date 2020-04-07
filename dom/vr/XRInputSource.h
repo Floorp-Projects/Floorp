@@ -49,7 +49,7 @@ class XRInputSource final : public nsWrapperCache {
   int32_t GetIndex();
 
  protected:
-  virtual ~XRInputSource();
+  virtual ~XRInputSource() = default;
 
   nsCOMPtr<nsISupports> mParent;
 
@@ -60,7 +60,6 @@ class XRInputSource final : public nsWrapperCache {
 
   RefPtr<XRSpace> mTargetRaySpace;
   RefPtr<XRSpace> mGripSpace;
-  RefPtr<Gamepad> mGamepad;
   int32_t mIndex;
 };
 

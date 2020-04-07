@@ -35,11 +35,6 @@ class GamepadManager final : public nsIObserver {
   // Get the singleton service
   static already_AddRefed<GamepadManager> GetService();
 
-  // Our gamepad index has VR_GAMEPAD_IDX_OFFSET while GamepadChannelType
-  // is from VRManager.
-  static uint32_t GetGamepadIndexWithServiceType(
-      uint32_t aIndex, GamepadServiceType aServiceType);
-
   void BeginShutdown();
   void StopMonitoring();
 
@@ -144,6 +139,10 @@ class GamepadManager final : public nsIObserver {
   // Indicate that a window has received data from a gamepad.
   void SetWindowHasSeenGamepad(nsGlobalWindowInner* aWindow, uint32_t aIndex,
                                bool aHasSeen = true);
+  // Our gamepad index has VR_GAMEPAD_IDX_OFFSET while GamepadChannelType
+  // is from VRManager.
+  uint32_t GetGamepadIndexWithServiceType(
+      uint32_t aIndex, GamepadServiceType aServiceType) const;
 
   // Gamepads connected to the system. Copies of these are handed out
   // to each window.
