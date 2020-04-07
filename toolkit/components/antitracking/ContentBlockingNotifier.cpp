@@ -241,6 +241,7 @@ void NotifyBlockingDecision(nsIChannel* aReportingChannel,
         nsContentUtils::GetSystemPrincipal()) {
       MOZ_DIAGNOSTIC_ASSERT(aDecision ==
                             ContentBlockingNotifier::BlockingDecision::eAllow);
+      return;
     }
   }
 
