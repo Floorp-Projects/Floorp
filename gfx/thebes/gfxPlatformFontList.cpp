@@ -2267,16 +2267,17 @@ void gfxPlatformFontList::CancelInitOtherFamilyNamesTask() {
 }
 
 void gfxPlatformFontList::ShareFontListShmBlockToProcess(
-    uint32_t aGeneration, uint32_t aIndex, base::ProcessId aPid,
-    base::SharedMemoryHandle* aOut) {
+    uint32_t aGeneration, uint32_t aIndex, /*base::ProcessId*/ uint32_t aPid,
+    /*mozilla::ipc::SharedMemoryBasic::Handle*/ void* aOut) {
   auto list = SharedFontList();
   if (!list) {
     return;
   }
+  auto out = static_cast<mozilla::ipc::SharedMemoryBasic::Handle*>(aOut);
   if (!aGeneration || list->GetGeneration() == aGeneration) {
-    list->ShareShmBlockToProcess(aIndex, aPid, aOut);
+    list->ShareShmBlockToProcess(aIndex, aPid, out);
   } else {
-    *aOut = base::SharedMemory::NULLHandle();
+    *out = mozilla::ipc::SharedMemoryBasic::NULLHandle();
   }
 }
 
