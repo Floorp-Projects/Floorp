@@ -11,6 +11,9 @@
 #include "mozilla/dom/VRDisplayBinding.h"
 
 namespace mozilla {
+namespace dom {
+class XRWebGLLayer;
+}
 namespace gfx {
 class VRDisplayClient;
 class VRLayerChild;
@@ -22,6 +25,7 @@ class VRDisplayPresentation final {
   VRDisplayPresentation(VRDisplayClient* aDisplayClient,
                         const nsTArray<dom::VRLayer>& aLayers, uint32_t aGroup);
   void UpdateLayers(const nsTArray<mozilla::dom::VRLayer>& aLayers);
+  void UpdateXRWebGLLayer(dom::XRWebGLLayer* aLayer);
   void SubmitFrame();
   void GetDOMLayers(nsTArray<dom::VRLayer>& result);
   uint32_t GetGroup() const;

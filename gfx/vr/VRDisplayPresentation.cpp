@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRDisplayPresentation.h"
-
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/XRWebGLLayer.h"
 #include "mozilla/Unused.h"
 #include "VRDisplayClient.h"
 #include "VRLayerChild.h"
@@ -25,6 +25,32 @@ void VRDisplayPresentation::UpdateLayers(
     const nsTArray<mozilla::dom::VRLayer>& aLayers) {
   mDOMLayers = aLayers;
   CreateLayers();
+}
+
+void VRDisplayPresentation::UpdateXRWebGLLayer(dom::XRWebGLLayer* aLayer) {
+  DestroyLayers();
+  VRManagerChild* manager = VRManagerChild::Get();
+  if (!manager) {
+    // This should not happen, but let's log it and avoid a crash in case
+    // of regression.
+    NS_WARNING("VRManagerChild::Get returned null!");
+    return;
+  }
+
+  dom::HTMLCanvasElement* canvasElement = aLayer->GetCanvas();
+  nsCOMPtr<nsIEventTarget> target =
+      canvasElement->OwnerDoc()->EventTargetFor(TaskCategory::Other);
+
+  RefPtr<VRLayerChild> vrLayer =
+      static_cast<VRLayerChild*>(manager->CreateVRLayer(
+          mDisplayClient->GetDisplayInfo().GetDisplayID(), target, mGroup));
+
+  Rect leftBounds(0.0, 0.0, 0.5, 1.0);
+  Rect rightBounds(0.5, 0.0, 0.5, 1.0);
+
+  vrLayer->Initialize(canvasElement, leftBounds, rightBounds);
+  vrLayer->SetXRFramebuffer(aLayer->GetFramebuffer());
+  mLayers.AppendElement(vrLayer);
 }
 
 uint32_t VRDisplayPresentation::GetGroup() const { return mGroup; }

@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/XRWebGLLayer.h"
 #include "mozilla/dom/XRSession.h"
 #include "mozilla/dom/XRView.h"
 #include "mozilla/dom/XRViewport.h"
-#include "mozilla/dom/XRWebGLLayer.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "WebGLFramebuffer.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "GLContext.h"
@@ -15,49 +17,51 @@
 #include "MozFramebuffer.h"
 #include "VRDisplayClient.h"
 #include "ClientWebGLContext.h"
-#include "nsICanvasRenderingContextInternal.h"
+#include "nsIScriptError.h"
 
 using namespace mozilla::gl;
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRWebGLLayer, mParent, mSession, mContext)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRWebGLLayer, mParent, mSession, mWebGL,
+                                      mFramebuffer)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRWebGLLayer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRWebGLLayer, Release)
 
 XRWebGLLayer::XRWebGLLayer(
-    nsISupports* aParent, XRSession& aSession, bool aAntialias,
-    const XRWebGLLayerInit& aXRWebGLLayerInitDict,
-    const WebGLRenderingContextOrWebGL2RenderingContext& aXRWebGLContext)
-    : mSession(&aSession),
-      mParent(aParent),
+    nsISupports* aParent, XRSession& aSession, bool aIgnoreDepthValues,
+    double aFramebufferScaleFactor,
+    RefPtr<mozilla::ClientWebGLContext> aWebGLContext,
+    RefPtr<WebGLFramebufferJS> aFramebuffer,
+    const Maybe<const webgl::OpaqueFramebufferOptions>& aOptions)
+    : mParent(aParent),
+      mSession(&aSession),
+      mWebGL(std::move(aWebGLContext)),
+      mFramebufferScaleFactor(aFramebufferScaleFactor),
       mCompositionDisabled(!aSession.IsImmersive()),
-      mIgnoreDepthValues(aXRWebGLLayerInitDict.mIgnoreDepthValues),
-      mAntialias(aAntialias) {
-  gfx::VRDisplayClient* display = aSession.GetDisplayClient();
-
-  if (aXRWebGLContext.IsWebGLRenderingContext()) {
-    mContext = &aXRWebGLContext.GetAsWebGLRenderingContext();
-  } else {
-    mContext = &aXRWebGLContext.GetAsWebGL2RenderingContext();
-  }
-
-  mIgnoreDepthValues = true;
-  if (!aXRWebGLLayerInitDict.mIgnoreDepthValues && display != nullptr) {
-    const gfx::VRDisplayInfo& displayInfo = display->GetDisplayInfo();
-    if (displayInfo.mDisplayState.capabilityFlags &
-        gfx::VRDisplayCapabilityFlags::Cap_UseDepthValues) {
-      mIgnoreDepthValues = false;
-    }
-  }
+      mIgnoreDepthValues(aIgnoreDepthValues),
+      mFramebuffer(std::move(aFramebuffer)),
+      mFramebufferOptions(aOptions) {
+  mozilla::HoldJSObjects(this);
 }
 
-/* static */ already_AddRefed<XRWebGLLayer> XRWebGLLayer::Constructor(
+XRWebGLLayer::~XRWebGLLayer() {
+  if (mFramebuffer) {
+    mWebGL->DeleteFramebuffer(mFramebuffer.get(), true);
+  }
+  mozilla::DropJSObjects(this);
+}
+
+/* static */
+already_AddRefed<XRWebGLLayer> XRWebGLLayer::Constructor(
     const GlobalObject& aGlobal, XRSession& aSession,
     const WebGLRenderingContextOrWebGL2RenderingContext& aXRWebGLContext,
     const XRWebGLLayerInit& aXRWebGLLayerInitDict, ErrorResult& aRv) {
   // https://immersive-web.github.io/webxr/#dom-xrwebgllayer-xrwebgllayer
+
+  // Depth not supported in XR Compositor yet.
+  const bool ignoreDepthValues = true;
 
   // If session’s ended value is true, throw an InvalidStateError and abort
   // these steps.
@@ -66,8 +70,11 @@ XRWebGLLayer::XRWebGLLayer(
         "Can not create an XRWebGLLayer with an XRSession that has ended.");
     return nullptr;
   }
+  gfx::VRDisplayClient* display = aSession.GetDisplayClient();
+  const gfx::VRDisplayInfo& displayInfo = display->GetDisplayInfo();
+  const gfx::VRDisplayState& displayState = displayInfo.mDisplayState;
 
-  ClientWebGLContext* gl = nullptr;
+  RefPtr<ClientWebGLContext> gl;
   if (aXRWebGLContext.IsWebGLRenderingContext()) {
     gl = &aXRWebGLContext.GetAsWebGLRenderingContext();
   } else {
@@ -81,28 +88,68 @@ XRWebGLLayer::XRWebGLLayer(
     return nullptr;
   }
 
-  // If session is an immersive session and context’s XR compatible boolean
-  // is false, throw an InvalidStateError and abort these steps.
-  if (!gl->IsXRCompatible() && aSession.IsImmersive()) {
-    aRv.ThrowInvalidStateError(
-        "Can not create an XRWebGLLayer without first calling makeXRCompatible "
-        "on the WebGLRenderingContext or WebGL2RenderingContext.");
-    return nullptr;
-  }
-
-  bool antialias = false;
-
+  RefPtr<mozilla::WebGLFramebufferJS> framebuffer;
+  Maybe<const webgl::OpaqueFramebufferOptions> framebufferOptions;
   if (aSession.IsImmersive()) {
-    antialias = aXRWebGLLayerInitDict.mAntialias;
-  } else {
-    const WebGLContextOptions& options = gl->ActualContextParameters();
+    // If session is an immersive session and context’s XR compatible boolean
+    // is false, throw an InvalidStateError and abort these steps.
+    if (!gl->IsXRCompatible()) {
+      aRv.ThrowInvalidStateError(
+          "Can not create an XRWebGLLayer without first calling "
+          "makeXRCompatible "
+          "on the WebGLRenderingContext or WebGL2RenderingContext.");
+      return nullptr;
+    }
 
-    // Inline Session
-    antialias = options.antialias;
+    const auto document = gl->GetParentObject()->OwnerDoc();
+    if (aXRWebGLLayerInitDict.mAlpha) {
+      nsContentUtils::ReportToConsoleNonLocalized(
+          NS_LITERAL_STRING("XRWebGLLayer doesn't support no alpha value. "
+                            "Alpha will be enabled."),
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
+    }
+    if (aXRWebGLLayerInitDict.mDepth != aXRWebGLLayerInitDict.mStencil) {
+      nsContentUtils::ReportToConsoleNonLocalized(
+          NS_LITERAL_STRING(
+              "XRWebGLLayer doesn't support separate "
+              "depth or stencil buffers. They will be enabled together."),
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
+    }
+
+    bool antialias = aXRWebGLLayerInitDict.mAntialias;
+    if (antialias && aXRWebGLContext.IsWebGLRenderingContext()) {
+      antialias = false;
+      nsContentUtils::ReportToConsoleNonLocalized(
+          NS_LITERAL_STRING("XRWebGLLayer antialiasing is only supported "
+                            "in WebGL2. Antialiasing will be disabled."),
+          nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
+    }
+
+    webgl::OpaqueFramebufferOptions options;
+    options.antialias = antialias;
+    options.depthStencil =
+        aXRWebGLLayerInitDict.mDepth || aXRWebGLLayerInitDict.mStencil;
+
+    const float scaleFactor =
+        fmin(aXRWebGLLayerInitDict.mFramebufferScaleFactor, 1.0f);
+
+    options.width =
+        (int32_t)(2.0f * displayState.eyeResolution.width * scaleFactor);
+    options.height = (int32_t)(displayState.eyeResolution.height * scaleFactor);
+    framebuffer = gl->CreateOpaqueFramebuffer(options);
+
+    if (!framebuffer) {
+      aRv.ThrowOperationError(
+          "Could not create an XRWebGLLayer. XRFramebuffer creation failed.");
+      return nullptr;
+    }
+    framebufferOptions.emplace(options);
   }
+
   RefPtr<XRWebGLLayer> obj =
-      new XRWebGLLayer(aGlobal.GetAsSupports(), aSession, antialias,
-                       aXRWebGLLayerInitDict, aXRWebGLContext);
+      new XRWebGLLayer(aGlobal.GetAsSupports(), aSession, ignoreDepthValues,
+                       aXRWebGLLayerInitDict.mFramebufferScaleFactor, gl,
+                       framebuffer, framebufferOptions);
   return obj.forget();
 }
 
@@ -113,24 +160,61 @@ JSObject* XRWebGLLayer::WrapObject(JSContext* aCx,
 
 nsISupports* XRWebGLLayer::GetParentObject() const { return mParent; }
 
-bool XRWebGLLayer::Antialias() { return mAntialias; }
+bool XRWebGLLayer::Antialias() {
+  if (mFramebufferOptions) {
+    return mFramebufferOptions->antialias;
+  }
+  return mWebGL->ActualContextParameters().antialias;
+}
+
+bool XRWebGLLayer::Depth() {
+  if (mFramebufferOptions) {
+    return mFramebufferOptions->depthStencil;
+  }
+  return mWebGL->ActualContextParameters().depth;
+}
+
+bool XRWebGLLayer::Stencil() {
+  if (mFramebufferOptions) {
+    return mFramebufferOptions->depthStencil;
+  }
+  return mWebGL->ActualContextParameters().stencil;
+}
+
+bool XRWebGLLayer::Alpha() {
+  if (mFramebufferOptions) {
+    // Alpha is always true when using Opaque Framebuffers.
+    return true;
+  }
+  return mWebGL->ActualContextParameters().alpha;
+}
 
 bool XRWebGLLayer::IgnoreDepthValues() { return mIgnoreDepthValues; }
 
 WebGLFramebufferJS* XRWebGLLayer::GetFramebuffer() {
-  // TODO (Bug 1614499) - Implement XRWebGLLayer
-  return nullptr;
+  return mFramebuffer.get();
 }
 
-uint32_t XRWebGLLayer::FramebufferWidth() { return mContext->GetWidth(); }
+uint32_t XRWebGLLayer::FramebufferWidth() {
+  if (mFramebufferOptions) {
+    return mFramebufferOptions->width;
+  }
+  return mWebGL->GetWidth();
+}
 
-uint32_t XRWebGLLayer::FramebufferHeight() { return mContext->GetHeight(); }
+uint32_t XRWebGLLayer::FramebufferHeight() {
+  if (mFramebufferOptions) {
+    return mFramebufferOptions->height;
+  }
+  return mWebGL->GetHeight();
+}
 
 already_AddRefed<XRViewport> XRWebGLLayer::GetViewport(const XRView& aView) {
-  gfx::IntRect viewportRect(0, 0, mContext->GetWidth() / 2,
-                            mContext->GetHeight());
+  const int32_t width = (aView.Eye() == XREye::None) ? FramebufferWidth()
+                                                     : (FramebufferWidth() / 2);
+  gfx::IntRect viewportRect(0, 0, width, FramebufferHeight());
   if (aView.Eye() == XREye::Right) {
-    viewportRect.x = viewportRect.width;
+    viewportRect.x = width;
   }
   RefPtr<XRViewport> viewport = new XRViewport(mParent, viewportRect);
   return viewport.forget();
@@ -138,14 +222,28 @@ already_AddRefed<XRViewport> XRWebGLLayer::GetViewport(const XRView& aView) {
 
 /* static */ double XRWebGLLayer::GetNativeFramebufferScaleFactor(
     const GlobalObject& aGlobal, const XRSession& aSession) {
-  // https://immersive-web.github.io/webxr/#dom-xrwebgllayer-getnativeframebufferscalefactor
   if (aSession.IsEnded()) {
-    // WebXR Spec: If session’s ended value is true, return 0.0 and
-    //             abort these steps.
     return 0.0f;
   }
-  // TODO (Bug 1614499) - Implement XRWebGLLayer
+  // TODO: Get the maximum framebuffer size from each display.
+  // Right now we assume that the recommended size is the maximum one.
   return 1.0f;
+}
+
+void XRWebGLLayer::StartAnimationFrame() {
+  if (mFramebuffer) {
+    mWebGL->SetFramebufferIsInOpaqueRAF(mFramebuffer.get(), true);
+  }
+}
+
+void XRWebGLLayer::EndAnimationFrame() {
+  if (mFramebuffer) {
+    mWebGL->SetFramebufferIsInOpaqueRAF(mFramebuffer.get(), false);
+  }
+}
+
+HTMLCanvasElement* XRWebGLLayer::GetCanvas() {
+  return mWebGL->GetParentObject();
 }
 
 }  // namespace dom

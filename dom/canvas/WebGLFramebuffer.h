@@ -27,6 +27,7 @@ class PlacementArray;
 
 namespace gl {
 class GLContext;
+class MozFramebuffer;
 }  // namespace gl
 
 namespace webgl {
@@ -138,6 +139,8 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
 
   const GLuint mGLName;
   bool mHasBeenBound = false;
+  const UniquePtr<gl::MozFramebuffer> mOpaque;
+  bool mInOpaqueRAF = false;
 
  private:
   mutable uint64_t mNumFBStatusInvals = 0;
@@ -188,6 +191,7 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
 
  public:
   WebGLFramebuffer(WebGLContext* webgl, GLuint fbo);
+  WebGLFramebuffer(WebGLContext* webgl, UniquePtr<gl::MozFramebuffer> fbo);
   ~WebGLFramebuffer() override;
 
   ////

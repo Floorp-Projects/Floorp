@@ -32,6 +32,7 @@
 
 #include "CanvasUtils.h"
 #include "gfxUtils.h"
+#include "MozFramebuffer.h"
 
 #include "jsfriendapi.h"
 
@@ -1375,6 +1376,23 @@ RefPtr<WebGLFramebuffer> WebGLContext::CreateFramebuffer() {
   gl->fGenFramebuffers(1, &fbo);
 
   return new WebGLFramebuffer(this, fbo);
+}
+
+RefPtr<WebGLFramebuffer> WebGLContext::CreateOpaqueFramebuffer(
+    const webgl::OpaqueFramebufferOptions& options) {
+  const FuncScope funcScope(*this, "createOpaqueFramebuffer");
+  if (IsContextLost()) return nullptr;
+
+  const uint32_t samples = options.antialias ? gl->MaxSamples() : 0;
+  const gfx::IntSize size = {options.width, options.height};
+
+  auto fbo =
+      gl::MozFramebuffer::Create(gl, size, samples, options.depthStencil);
+  if (!fbo) {
+    return nullptr;
+  }
+
+  return new WebGLFramebuffer(this, std::move(fbo));
 }
 
 RefPtr<WebGLRenderbuffer> WebGLContext::CreateRenderbuffer() {

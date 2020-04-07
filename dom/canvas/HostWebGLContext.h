@@ -216,6 +216,8 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 
   void CreateBuffer(ObjectId);
   void CreateFramebuffer(ObjectId);
+  bool CreateOpaqueFramebuffer(ObjectId,
+                               const webgl::OpaqueFramebufferOptions& options);
   void CreateProgram(ObjectId);
   void CreateQuery(ObjectId);
   void CreateRenderbuffer(ObjectId);
@@ -716,6 +718,14 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     GetWebGL2Context()->TransformFeedbackVaryings(*obj, varyings, bufferMode);
   }
 
+  // -------------------------- Opaque Framebuffers ---------------------------
+  void SetFramebufferIsInOpaqueRAF(ObjectId id, bool value) {
+    WebGLFramebuffer* fb = AutoResolve(id);
+    if (fb) {
+      fb->mInOpaqueRAF = value;
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Host-side extension methods.  Calls in the client are forwarded to the
   // host. Some extension methods are also available in WebGL2 Contexts.  For
@@ -774,7 +784,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 
   // Etc
  public:
-  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame() const;
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(ObjectId id) const;
 
  protected:
   WebGL2Context* GetWebGL2Context() const {

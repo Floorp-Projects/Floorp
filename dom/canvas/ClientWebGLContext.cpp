@@ -459,9 +459,9 @@ void ClientWebGLContext::Present() { Run<RPROC(Present)>(); }
 
 void ClientWebGLContext::ClearVRFrame() const { Run<RPROC(ClearVRFrame)>(); }
 
-RefPtr<layers::SharedSurfaceTextureClient> ClientWebGLContext::GetVRFrame()
-    const {
-  return Run<RPROC(GetVRFrame)>();
+RefPtr<layers::SharedSurfaceTextureClient> ClientWebGLContext::GetVRFrame(
+    const WebGLFramebufferJS* fb) const {
+  return Run<RPROC(GetVRFrame)>(fb ? fb->mId : 0);
 }
 
 already_AddRefed<layers::Layer> ClientWebGLContext::GetCanvasLayer(
@@ -1052,6 +1052,19 @@ already_AddRefed<WebGLFramebufferJS> ClientWebGLContext::CreateFramebuffer()
   return ret.forget();
 }
 
+already_AddRefed<WebGLFramebufferJS>
+ClientWebGLContext::CreateOpaqueFramebuffer(
+    const webgl::OpaqueFramebufferOptions& options) const {
+  const FuncScope funcScope(*this, "createOpaqueFramebuffer");
+  if (IsContextLost()) return nullptr;
+
+  auto ret = AsRefPtr(new WebGLFramebufferJS(*this, true));
+  if (!Run<RPROC(CreateOpaqueFramebuffer)>(ret->mId, options)) {
+    return nullptr;
+  }
+  return ret.forget();
+}
+
 already_AddRefed<WebGLProgramJS> ClientWebGLContext::CreateProgram() const {
   const FuncScope funcScope(*this, "createProgram");
   if (IsContextLost()) return nullptr;
@@ -1228,10 +1241,17 @@ void ClientWebGLContext::DeleteBuffer(WebGLBufferJS* const obj) {
   Run<RPROC(DeleteBuffer)>(obj->mId);
 }
 
-void ClientWebGLContext::DeleteFramebuffer(WebGLFramebufferJS* const obj) {
+void ClientWebGLContext::DeleteFramebuffer(WebGLFramebufferJS* const obj,
+                                           bool canDeleteOpaque) {
   const FuncScope funcScope(*this, "deleteFramebuffer");
   if (IsContextLost()) return;
   if (!ValidateOrSkipForDelete(*this, obj)) return;
+  if (!canDeleteOpaque && obj->mOpaque) {
+    EnqueueError(
+        LOCAL_GL_INVALID_OPERATION,
+        "An opaque framebuffer's attachments cannot be inspected or changed.");
+    return;
+  }
   const auto& state = State();
 
   // Unbind
@@ -2033,6 +2053,12 @@ void ClientWebGLContext::GetFramebufferAttachmentParameter(
   }
 
   if (fb) {
+    if (fb->mOpaque) {
+      EnqueueError(LOCAL_GL_INVALID_OPERATION,
+                   "An opaque framebuffer's attachments cannot be inspected or "
+                   "changed.");
+      return;
+    }
     auto attachmentSlotEnum = attachment;
     if (mIsWebGL2 && attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
       // In webgl2, DEPTH_STENCIL is valid iff the DEPTH and STENCIL images
@@ -3019,6 +3045,13 @@ void ClientWebGLContext::FramebufferAttach(
   }
   if (!fb) {
     EnqueueError(LOCAL_GL_INVALID_OPERATION, "No framebuffer bound.");
+    return;
+  }
+
+  if (fb->mOpaque) {
+    EnqueueError(
+        LOCAL_GL_INVALID_OPERATION,
+        "An opaque framebuffer's attachments cannot be inspected or changed.");
     return;
   }
 
@@ -4467,6 +4500,12 @@ void ClientWebGLContext::ResumeTransformFeedback() {
   Run<RPROC(ResumeTransformFeedback)>();
 }
 
+void ClientWebGLContext::SetFramebufferIsInOpaqueRAF(WebGLFramebufferJS* fb,
+                                                     bool value) {
+  fb->mInOpaqueRAF = value;
+  Run<RPROC(SetFramebufferIsInOpaqueRAF)>(fb->mId, value);
+}
+
 // ---------------------------- Misc Extensions ----------------------------
 void ClientWebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers) {
   const auto range = MakeRange(buffers);
@@ -5325,8 +5364,9 @@ webgl::ObjectJS::ObjectJS(const ClientWebGLContext& webgl)
 
 // -
 
-WebGLFramebufferJS::WebGLFramebufferJS(const ClientWebGLContext& webgl)
-    : webgl::ObjectJS(webgl) {
+WebGLFramebufferJS::WebGLFramebufferJS(const ClientWebGLContext& webgl,
+                                       bool opaque)
+    : webgl::ObjectJS(webgl), mOpaque(opaque) {
   (void)mAttachments[LOCAL_GL_DEPTH_ATTACHMENT];
   (void)mAttachments[LOCAL_GL_STENCIL_ATTACHMENT];
   if (!webgl.mIsWebGL2) {

@@ -16,6 +16,7 @@
 namespace mozilla {
 namespace gfx {
 class VRDisplayClient;
+class VRDisplayPresentation;
 }  // namespace gfx
 namespace dom {
 
@@ -89,6 +90,7 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
   bool IsImmersive() const;
   MOZ_CAN_RUN_SCRIPT
   void StartFrame();
+  void ExitPresent();
 
   // nsARefreshObserver
   MOZ_CAN_RUN_SCRIPT
@@ -106,6 +108,7 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
   bool mEnded;
   RefPtr<nsRefreshDriver> mRefreshDriver;
   RefPtr<gfx::VRDisplayClient> mDisplayClient;
+  RefPtr<gfx::VRDisplayPresentation> mDisplayPresentation;
   RefPtr<XRRenderState> mActiveRenderState;
   RefPtr<XRRenderState> mPendingRenderState;
   RefPtr<XRInputSourceArray> mInputSources;

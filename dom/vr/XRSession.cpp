@@ -22,6 +22,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "VRDisplayClient.h"
+#include "VRDisplayPresentation.h"
 
 namespace mozilla {
 namespace dom {
@@ -110,6 +111,10 @@ XRSession::XRSession(
   // TODO (Bug 1611310): Implement XRInputSource and populate mInputSources
   mInputSources = new XRInputSourceArray(aWindow);
   mStartTimeStamp = TimeStamp::Now();
+  if (IsImmersive()) {
+    mDisplayPresentation =
+        mDisplayClient->BeginPresentation({}, gfx::kVRGroupContent);
+  }
 }
 
 XRSession::~XRSession() { MOZ_ASSERT(mShutdown); }
@@ -240,10 +245,11 @@ void XRSession::ApplyPendingRenderState() {
     if (!IsImmersive() && baseLayer->mCompositionDisabled) {
       mActiveRenderState->SetCompositionDisabled(true);
       mActiveRenderState->SetOutputCanvas(
-          baseLayer->mContext->GetParentObject());
+          baseLayer->GetCanvas());
     } else {
       mActiveRenderState->SetCompositionDisabled(false);
       mActiveRenderState->SetOutputCanvas(nullptr);
+      mDisplayPresentation->UpdateXRWebGLLayer(baseLayer);
     }
   }  // if (baseLayer)
 }
@@ -251,8 +257,7 @@ void XRSession::ApplyPendingRenderState() {
 void XRSession::WillRefresh(mozilla::TimeStamp aTime) {
   // Inline sessions are driven by nsRefreshDriver directly,
   // unlike immersive sessions, which are driven VRDisplayClient.
-
-  if (!IsImmersive()) {
+  if (!IsImmersive() && !mXRSystem->HasActiveImmersiveSession()) {
     nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(GetOwner());
     if (win) {
       if (JSObject* obj = win->AsGlobal()->GetGlobalJSObject()) {
@@ -284,6 +289,7 @@ void XRSession::StartFrame() {
 
   frame->StartAnimationFrame();
 
+  mActiveRenderState->GetBaseLayer()->StartAnimationFrame();
   nsTArray<XRFrameRequest> callbacks;
   callbacks.AppendElements(mFrameRequestCallbacks);
   mFrameRequestCallbacks.Clear();
@@ -291,8 +297,14 @@ void XRSession::StartFrame() {
     callback.Call(timeStamp, *frame);
   }
 
+  mActiveRenderState->GetBaseLayer()->EndAnimationFrame();
   frame->EndAnimationFrame();
+  if (mDisplayPresentation) {
+    mDisplayPresentation->SubmitFrame();
+  }
 }
+
+void XRSession::ExitPresent() { ExitPresentInternal(); }
 
 already_AddRefed<Promise> XRSession::RequestReferenceSpace(
     const XRReferenceSpaceType& aReferenceSpaceType, ErrorResult& aRv) {
@@ -385,9 +397,12 @@ void XRSession::ExitPresentInternal() {
   if (mDisplayClient) {
     mDisplayClient->SessionEnded(this);
   }
+
   if (mXRSystem) {
     mXRSystem->SessionEnded(this);
   }
+
+  mDisplayPresentation = nullptr;
   if (!mEnded) {
     mEnded = true;
     DispatchTrustedEvent(NS_LITERAL_STRING("end"));
