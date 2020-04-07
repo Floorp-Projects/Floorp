@@ -458,6 +458,12 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute unsigned long httpsOnlyStatus;
 
   /**
+   * We disallow the SystemPrincipal to initiate requests to
+   * the public web. This flag is to allow exceptions.
+   */
+  [infallible] attribute boolean allowDeprecatedSystemRequests;
+
+  /**
    * True if this request is embedded in a context that can't be third-party
    * (i.e. an iframe embedded in a cross-origin parent window). If this is
    * false, then this request may be third-party if it's a third-party to
