@@ -7,9 +7,15 @@ package mozilla.components.feature.readerview
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.action.ReaderAction
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
@@ -18,15 +24,17 @@ import mozilla.components.feature.readerview.internal.ReaderViewControlsPresente
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme.LIGHT
 import mozilla.components.feature.readerview.ReaderViewFeature.FontType.SERIF
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Locale
 import kotlin.properties.Delegates.observable
 
-typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
+typealias onReaderViewStatusChange = (available: Boolean, active: Boolean) -> Unit
 
 /**
  * Feature implementation that provides a reader view for the selected
@@ -34,22 +42,24 @@ typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
  *
  * @property context a reference to the context.
  * @property engine a reference to the application's browser engine.
- * @property sessionManager a reference to the application's [SessionManager].
+ * @property store a reference to the application's [BrowserStore].
  * @param controlsView the view to use to display reader mode controls.
- * @property onReaderViewAvailableChange a callback invoked to indicate whether
- * or not reader view is available for the page loaded by the currently selected
- * session. The callback will be invoked when a page is loaded or refreshed,
- * on any navigation (back or forward), and when the selected session
- * changes.
+ * @property onReaderViewStatusChange a callback invoked to indicate whether
+ * or not reader view is available and active for the page loaded by the
+ * currently selected session. The callback will be invoked when a page is
+ * loaded or refreshed, on any navigation (back or forward), and when the
+ * selected session changes.
  */
 @Suppress("TooManyFunctions")
 class ReaderViewFeature(
     private val context: Context,
     private val engine: Engine,
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     controlsView: ReaderViewControlsView,
-    private val onReaderViewAvailableChange: OnReaderViewAvailableChange = { }
-) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, UserInteractionHandler {
+    private val onReaderViewStatusChange: onReaderViewStatusChange = { _, _ -> Unit }
+) : LifecycleAwareFeature, UserInteractionHandler {
+
+    private var scope: CoroutineScope? = null
 
     @VisibleForTesting
     // This is an internal var to make it mutable for unit testing purposes only
@@ -90,35 +100,46 @@ class ReaderViewFeature(
             }
         }
 
-        private fun sendConfigMessage(message: JSONObject, session: Session? = activeSession) {
-            session?.let {
-                extensionController.sendContentMessage(message, sessionManager.getEngineSession(it))
-            }
+        private fun sendConfigMessage(message: JSONObject) {
+            val engineSession = store.state.selectedTab?.engineState?.engineSession
+            extensionController.sendContentMessage(message, engineSession)
         }
     }
 
     override fun start() {
-        observeSelected()
-        registerReaderViewContentMessageHandler()
-
         extensionController.install(engine)
-        activeSession?.let {
-            if (extensionController.portConnected(sessionManager.getEngineSession(it))) {
-                updateReaderViewState(it)
-            }
+        connectReaderViewContentScript()
+
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.tabs }
+                .filterChanged {
+                    it.readerState
+                }
+                .collect { tab ->
+                    if (tab.readerState.connectRequired) {
+                        connectReaderViewContentScript(tab)
+                    }
+                    if (tab.readerState.checkRequired) {
+                        checkReaderable(tab)
+                    }
+
+                    if (tab.id == store.state.selectedTabId) {
+                        maybeNotifyReaderStatusChange(tab.readerState.readerable, tab.readerState.active)
+                    }
+                }
         }
 
         controlsInteractor.start()
     }
 
     override fun stop() {
+        scope?.cancel()
         controlsInteractor.stop()
-        super.stop()
     }
 
     override fun onBackPressed(): Boolean {
-        activeSession?.let {
-            if (it.readerMode) {
+        store.state.selectedTab?.let {
+            if (it.readerState.active) {
                 if (controlsPresenter.areControlsVisible()) {
                     hideControls()
                 } else {
@@ -130,48 +151,24 @@ class ReaderViewFeature(
         return false
     }
 
-    override fun onSessionSelected(session: Session) {
-        super.onSessionSelected(session)
-        updateReaderViewState(session)
-    }
-
-    override fun onSessionAdded(session: Session) {
-        registerReaderViewContentMessageHandler(session)
-    }
-
-    override fun onSessionRemoved(session: Session) {
-        extensionController.disconnectPort(sessionManager.getEngineSession(session))
-    }
-
-    override fun onUrlChanged(session: Session, url: String) {
-        session.readerable = false
-        session.readerMode = false
-        checkReaderable(session)
-    }
-
-    override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
-        onReaderViewAvailableChange(readerable)
-    }
-
     /**
      * Shows the reader view UI.
      */
-    fun showReaderView(session: Session? = activeSession) {
+    fun showReaderView(session: TabSessionState? = store.state.selectedTab) {
         session?.let { it ->
-            extensionController.sendContentMessage(createShowReaderMessage(config), sessionManager.getEngineSession(it))
-            it.readerMode = true
+            extensionController.sendContentMessage(createShowReaderMessage(config), it.engineState.engineSession)
+            store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, true))
         }
     }
 
     /**
      * Hides the reader view UI.
      */
-    fun hideReaderView(session: Session? = activeSession) {
+    fun hideReaderView(session: TabSessionState? = store.state.selectedTab) {
         session?.let { it ->
-            it.readerMode = false
-            // We will re-determine if the original page is readerable when it's loaded.
-            it.readerable = false
-            extensionController.sendContentMessage(createHideReaderMessage(), sessionManager.getEngineSession(it))
+            store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, false))
+            store.dispatch(ReaderAction.UpdateReaderableAction(it.id, false))
+            extensionController.sendContentMessage(createHideReaderMessage(), it.engineState.engineSession)
         }
     }
 
@@ -190,40 +187,38 @@ class ReaderViewFeature(
     }
 
     @VisibleForTesting
-    internal fun checkReaderable(session: Session? = activeSession) {
-        session?.let {
-            val engineSession = sessionManager.getEngineSession(session)
+    internal fun checkReaderable(session: TabSessionState? = store.state.selectedTab) {
+        session?.engineState?.engineSession?.let { engineSession ->
             if (extensionController.portConnected(engineSession)) {
                 extensionController.sendContentMessage(createCheckReaderableMessage(), engineSession)
             }
+            store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(session.id, false))
         }
     }
 
     @VisibleForTesting
-    internal fun registerReaderViewContentMessageHandler(session: Session? = activeSession) {
-        if (session == null) {
-            return
+    internal fun connectReaderViewContentScript(session: TabSessionState? = store.state.selectedTab) {
+        session?.engineState?.engineSession?.let { engineSession ->
+            val messageHandler = ReaderViewContentMessageHandler(store, session.id, WeakReference(config))
+            extensionController.registerContentMessageHandler(engineSession, messageHandler)
+            store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(session.id, false))
         }
-
-        val engineSession = sessionManager.getOrCreateEngineSession(session)
-        val messageHandler = ReaderViewContentMessageHandler(session, WeakReference(config))
-        extensionController.registerContentMessageHandler(engineSession, messageHandler)
     }
 
+    private var lastNotified: Pair<Boolean, Boolean>? = null
     @VisibleForTesting
-    internal fun updateReaderViewState(session: Session? = activeSession) {
-        if (session == null) {
-            return
-        }
-
-        checkReaderable(session)
-        if (session.readerMode) {
-            showReaderView(session)
+    internal fun maybeNotifyReaderStatusChange(readerable: Boolean = false, active: Boolean = false) {
+        // Make sure we only notify the UI if needed (an actual change happened) to prevent
+        // it from unnecessarily invalidating toolbar/menu items.
+        if (lastNotified == null || lastNotified != Pair(readerable, active)) {
+            onReaderViewStatusChange(readerable, active)
+            lastNotified = Pair(readerable, active)
         }
     }
 
     private class ReaderViewContentMessageHandler(
-        private val session: Session,
+        private val store: BrowserStore,
+        private val sessionId: String,
         // This needs to be a weak reference because the engine session this message handler will be
         // attached to has a longer lifespan than the feature instance i.e. a tab can remain open,
         // but we don't want to prevent the feature (and therefore its context/fragment) from
@@ -234,14 +229,15 @@ class ReaderViewFeature(
             val config = config.get() ?: return
 
             port.postMessage(createCheckReaderableMessage())
-            if (session.readerMode) {
+            if (store.state.findTab(sessionId)?.readerState?.active == true) {
                 port.postMessage(createShowReaderMessage(config))
             }
         }
 
         override fun onPortMessage(message: Any, port: Port) {
             if (message is JSONObject) {
-                session.readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
+                val readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
+                store.dispatch(ReaderAction.UpdateReaderableAction(sessionId, readerable))
             }
         }
     }
@@ -280,13 +276,13 @@ class ReaderViewFeature(
 
         private fun createShowReaderMessage(config: Config): JSONObject {
             val configJson = JSONObject()
-                    .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
-                    .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase(Locale.ROOT))
-                    .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase(Locale.ROOT))
+                .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
+                .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase(Locale.ROOT))
+                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase(Locale.ROOT))
 
             return JSONObject()
-                    .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
-                    .put(ACTION_VALUE, configJson)
+                .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
+                .put(ACTION_VALUE, configJson)
         }
 
         private fun createHideReaderMessage(): JSONObject {

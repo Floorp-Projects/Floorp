@@ -7,6 +7,7 @@ package mozilla.components.browser.session.storage
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
@@ -46,17 +47,19 @@ class SnapshotSerializer(
     }
 
     fun itemToJSON(item: SessionManager.Snapshot.Item): JSONObject {
-        val sessionJson = JSONObject()
-        sessionJson.put(Keys.SESSION_KEY, serializeSession(item.session))
+        val itemJson = JSONObject()
+
+        val sessionJson = serializeSession(item.session)
+        sessionJson.put(Keys.SESSION_READER_MODE_KEY, item.readerState?.active ?: false)
+        itemJson.put(Keys.SESSION_KEY, sessionJson)
 
         val engineSessionState = if (item.engineSessionState != null) {
             item.engineSessionState.toJSON()
         } else {
             item.engineSession?.saveState()?.toJSON() ?: JSONObject()
         }
-        sessionJson.put(Keys.ENGINE_SESSION_KEY, engineSessionState)
-
-        return sessionJson
+        itemJson.put(Keys.ENGINE_SESSION_KEY, engineSessionState)
+        return itemJson
     }
 
     fun fromJSON(engine: Engine, json: String): SessionManager.Snapshot {
@@ -78,10 +81,16 @@ class SnapshotSerializer(
     }
 
     fun itemFromJSON(engine: Engine, json: JSONObject): SessionManager.Snapshot.Item {
-        val session = deserializeSession(json.getJSONObject(Keys.SESSION_KEY), restoreSessionIds, restoreParentIds)
-        val state = engine.createSessionState(json.getJSONObject(Keys.ENGINE_SESSION_KEY))
+        val sessionJson = json.getJSONObject(Keys.SESSION_KEY)
+        val session = deserializeSession(sessionJson, restoreSessionIds, restoreParentIds)
+        val readerState = ReaderState(active = sessionJson.optBoolean(Keys.SESSION_READER_MODE_KEY, false))
+        val engineState = engine.createSessionState(sessionJson)
 
-        return SessionManager.Snapshot.Item(session, engineSession = null, engineSessionState = state)
+        return SessionManager.Snapshot.Item(session,
+            engineSession = null,
+            engineSessionState = engineState,
+            readerState = readerState
+        )
     }
 }
 
@@ -94,7 +103,6 @@ internal fun serializeSession(session: Session): JSONObject {
         put(Keys.SESSION_UUID_KEY, session.id)
         put(Keys.SESSION_PARENT_UUID_KEY, session.parentId ?: "")
         put(Keys.SESSION_TITLE, session.title)
-        put(Keys.SESSION_READER_MODE_KEY, session.readerMode)
         put(Keys.SESSION_CONTEXT_ID_KEY, session.contextId)
     }
 }
@@ -123,7 +131,6 @@ internal fun deserializeSession(json: JSONObject, restoreId: Boolean, restorePar
         session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
     }
     session.title = if (json.has(Keys.SESSION_TITLE)) json.getString(Keys.SESSION_TITLE) else ""
-    session.readerMode = json.optBoolean(Keys.SESSION_READER_MODE_KEY, false)
     return session
 }
 

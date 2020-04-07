@@ -28,7 +28,6 @@ import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
 import mozilla.components.browser.state.action.ContentAction.UpdateUrlAction
 import mozilla.components.browser.state.action.CustomTabListAction.RemoveCustomTabAction
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -103,8 +102,6 @@ class Session(
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
-        fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
-        fun onReaderModeChanged(session: Session, enabled: Boolean) = Unit
         fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
         fun onLaunchIntentRequest(session: Session, url: String, appIntent: Intent?) = Unit
     }
@@ -454,22 +451,6 @@ class Session(
      */
     var crashed: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onCrashStateChanged(this@Session, new) }
-    }
-
-    /**
-     * Readerable state, whether or not the current page can be shown in a reader view.
-     */
-    var readerable: Boolean by Delegates.observable(false) { _, _, new ->
-        notifyObservers { onReaderableStateUpdated(this@Session, new) }
-        store?.syncDispatch(ReaderAction.UpdateReaderableAction(id, new))
-    }
-
-    /**
-     * Reader mode state, whether or not reader view is enabled, otherwise false.
-     */
-    var readerMode: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onReaderModeChanged(this@Session, new) }
-        store?.syncDispatch(ReaderAction.UpdateReaderActiveAction(id, new))
     }
 
     /**

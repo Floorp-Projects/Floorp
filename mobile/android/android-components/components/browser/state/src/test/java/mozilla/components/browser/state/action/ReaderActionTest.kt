@@ -62,4 +62,34 @@ class ReaderActionTest {
 
         assertFalse(readerState().active)
     }
+
+    @Test
+    fun `UpdateReaderableCheckRequiredAction - Updates check required flag of ReaderState`() {
+        assertFalse(readerState().active)
+
+        store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(tabId = tab.id, checkRequired = true))
+            .joinBlocking()
+
+        assertTrue(readerState().checkRequired)
+
+        store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(tabId = tab.id, checkRequired = false))
+            .joinBlocking()
+
+        assertFalse(readerState().checkRequired)
+    }
+
+    @Test
+    fun `UpdateReaderConnectRequiredAction - Updates connect required flag of ReaderState`() {
+        assertFalse(readerState().active)
+
+        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tabId = tab.id, connectRequired = true))
+            .joinBlocking()
+
+        assertTrue(readerState().connectRequired)
+
+        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tabId = tab.id, connectRequired = false))
+            .joinBlocking()
+
+        assertFalse(readerState().connectRequired)
+    }
 }

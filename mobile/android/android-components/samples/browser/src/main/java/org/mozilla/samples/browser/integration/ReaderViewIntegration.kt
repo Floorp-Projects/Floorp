@@ -7,7 +7,8 @@ package org.mozilla.samples.browser.integration
 import android.content.Context
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -20,7 +21,7 @@ import org.mozilla.samples.browser.R
 class ReaderViewIntegration(
     context: Context,
     engine: Engine,
-    sessionManager: SessionManager,
+    store: BrowserStore,
     toolbar: BrowserToolbar,
     view: ReaderViewControlsView,
     readerViewAppearanceButton: FloatingActionButton
@@ -35,7 +36,7 @@ class ReaderViewIntegration(
         },
         contentDescription = context.getString(R.string.mozac_reader_view_description),
         contentDescriptionSelected = context.getString(R.string.mozac_reader_view_description_selected),
-        selected = sessionManager.selectedSession?.readerMode ?: false,
+        selected = store.state.selectedTab?.readerState?.active ?: false,
         visible = { readerViewButtonVisible }
     ) { enabled ->
         if (enabled) {
@@ -53,18 +54,11 @@ class ReaderViewIntegration(
         readerViewAppearanceButton.setOnClickListener { feature.showControls() }
     }
 
-    private val feature = ReaderViewFeature(context, engine, sessionManager, view) { available ->
+    private val feature = ReaderViewFeature(context, engine, store, view) { available, active ->
         readerViewButtonVisible = available
+        readerViewButton.setSelected(active)
 
-        // We've got an update on reader view availability e.g. because the page
-        // was refreshed or a new session selected. Let's make sure to also update
-        // the selected state of the reader mode toolbar button and show the
-        // appearance controls button if needed.
-        val readerModeActive = sessionManager.selectedSession?.readerMode ?: false
-        readerViewButton.setSelected(readerModeActive)
-
-        if (readerModeActive) readerViewAppearanceButton.show() else readerViewAppearanceButton.hide()
-
+        if (active) readerViewAppearanceButton.show() else readerViewAppearanceButton.hide()
         toolbar.invalidateActions()
     }
 

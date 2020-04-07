@@ -6,8 +6,10 @@ package mozilla.components.browser.session
 
 import android.content.ComponentCallbacks2
 import mozilla.components.browser.session.ext.toFindResultState
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -15,6 +17,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -394,6 +397,49 @@ class SessionManagerMigrationTest {
 
         assertEquals("https://www.firefox.com", manager.sessions[2].url)
         assertEquals("https://www.firefox.com", store.state.tabs[2].content.url)
+    }
+
+    @Test
+    fun `Restoring snapshot with reader state`() {
+        val session1 = Session(id = "1", initialUrl = "https://www.mozilla.org")
+        val session2 = Session(id = "2", initialUrl = "https://www.firefox.com")
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store).apply {
+            add(session1)
+            add(session2)
+        }
+
+        store.dispatch(ReaderAction.UpdateReaderActiveAction(session2.id, true)).joinBlocking()
+        assertEquals(ReaderState(active = true), store.state.findTab(session2.id)?.readerState)
+
+        val snapshot = manager.createSnapshot()
+        manager.removeAll()
+        assertEquals(0, manager.size)
+        assertEquals(0, store.state.tabs.size)
+
+        manager.restore(snapshot)
+        assertEquals(ReaderState(active = false), store.state.findTab(session1.id)?.readerState)
+        assertEquals(ReaderState(active = true), store.state.findTab(session2.id)?.readerState)
+    }
+
+    @Test
+    fun `Restoring individual snapshot with reader state`() {
+        val session = Session(id = "1", initialUrl = "https://www.mozilla.org")
+        val store = BrowserStore()
+        val manager = SessionManager(engine = mock(), store = store).apply {
+            add(session)
+        }
+
+        store.dispatch(ReaderAction.UpdateReaderActiveAction(session.id, true)).joinBlocking()
+        assertEquals(ReaderState(active = true), store.state.findTab(session.id)?.readerState)
+
+        val item = manager.createSessionSnapshot(session)
+        manager.remove(session)
+        assertEquals(0, manager.size)
+        assertEquals(0, store.state.tabs.size)
+
+        manager.restore(SessionManager.Snapshot.singleItem(item))
+        assertEquals(ReaderState(active = true), store.state.findTab(session.id)?.readerState)
     }
 
     @Test
@@ -888,33 +934,6 @@ class SessionManagerMigrationTest {
         session.findResults = emptyList()
         assertTrue(session.findResults.isEmpty())
         assertTrue(store.state.findTab("session")!!.content.findResults.isEmpty())
-    }
-
-    @Test
-    fun `Updating reader state`() {
-        val store = BrowserStore()
-        val manager = SessionManager(engine = mock(), store = store)
-
-        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
-        manager.add(session)
-
-        assertFalse(session.readerable)
-        assertFalse(session.readerMode)
-        assertFalse(store.state.findTab("session")!!.readerState.active)
-        assertFalse(store.state.findTab("session")!!.readerState.readerable)
-
-        session.readerable = true
-        assertTrue(store.state.findTab("session")!!.readerState.readerable)
-        assertFalse(store.state.findTab("session")!!.readerState.active)
-
-        session.readerMode = true
-        assertTrue(store.state.findTab("session")!!.readerState.active)
-        assertTrue(store.state.findTab("session")!!.readerState.readerable)
-
-        session.readerable = false
-        session.readerMode = false
-        assertFalse(store.state.findTab("session")!!.readerState.active)
-        assertFalse(store.state.findTab("session")!!.readerState.readerable)
     }
 
     @Test

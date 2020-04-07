@@ -30,20 +30,6 @@ class SessionExtensionsTest {
     }
 
     @Test
-    fun `toTabSessionState - Can convert tab session with reader state`() {
-        val session = Session("https://mozilla.org")
-        session.readerable = true
-        session.readerMode = true
-
-        val tabState = session.toTabSessionState()
-        assertEquals(tabState.id, session.id)
-        assertEquals(tabState.content.url, session.url)
-        assertEquals(tabState.readerState.readerable, true)
-        assertEquals(tabState.readerState.active, true)
-        assertNull(tabState.contextId)
-    }
-
-    @Test
     fun `toTabSessionState - Can convert tab session with contextId`() {
         val session = Session("https://mozilla.org", contextId = "1")
         val tabState = session.toTabSessionState()

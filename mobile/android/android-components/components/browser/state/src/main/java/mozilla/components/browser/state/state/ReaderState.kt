@@ -10,8 +10,14 @@ package mozilla.components.browser.state.state
  * @property readerable whether or not the current page can be transformed to
  * be displayed in a reader view.
  * @property active whether or not reader view is active.
+ * @property checkRequired whether or not a readerable check is required for the
+ * current page.
+ * @property connectRequired whether or not a new connection to the reader view
+ * content script is required.
  */
 data class ReaderState(
     val readerable: Boolean = false,
-    val active: Boolean = false
+    val active: Boolean = false,
+    val checkRequired: Boolean = false,
+    val connectRequired: Boolean = false
 )
