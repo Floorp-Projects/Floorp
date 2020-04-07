@@ -305,17 +305,11 @@ ContentRestoreInternal.prototype = {
           csp,
         };
         webNavigation.loadURI(loadArguments.uri, loadURIOptions);
-      } else if (
-        tabData.userTypedValue &&
-        tabData.userTypedClear &&
-        !isRemotenessUpdate
-      ) {
+      } else if (tabData.userTypedValue && tabData.userTypedClear) {
         // If the user typed a URL into the URL bar and hit enter right before
         // we crashed, we want to start loading that page again. A non-zero
         // userTypedClear value means that the load had started.
         // Load userTypedValue and fix up the URL if it's partial/broken.
-        // Remoteness updates are not crashes, so we use the provided URL, not
-        // the user typed one.
         let loadURIOptions = {
           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
