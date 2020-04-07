@@ -47,10 +47,6 @@ var flagInputs = [
 */
 var testcases = [
   {
-    input: "about:home",
-    fixedURI: "about:home",
-  },
-  {
     input: "http://www.mozilla.org",
     fixedURI: "http://www.mozilla.org/",
   },
@@ -192,11 +188,13 @@ var testcases = [
   {
     input: "[::1]",
     fixedURI: "http://[::1]/",
+    alternateURI: "http://[::1]/",
     protocolChange: true,
   },
   {
     input: "[::1]/",
     fixedURI: "http://[::1]/",
+    alternateURI: "http://[::1]/",
     protocolChange: true,
   },
   {
@@ -217,16 +215,19 @@ var testcases = [
   {
     input: "[fe80:cd00:0:cde:1257:0:211e:729c]",
     fixedURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",
+    alternateURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",
     protocolChange: true,
   },
   {
     input: "[64:ff9b::8.8.8.8]",
     fixedURI: "http://[64:ff9b::808:808]/",
+    alternateURI: "http://[64:ff9b::808:808]/",
     protocolChange: true,
   },
   {
     input: "[64:ff9b::8.8.8.8]/~moz",
     fixedURI: "http://[64:ff9b::808:808]/~moz",
+    alternateURI: "http://[64:ff9b::808:808]/~moz",
     protocolChange: true,
   },
   {

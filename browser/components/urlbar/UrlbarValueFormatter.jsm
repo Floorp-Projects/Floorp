@@ -104,15 +104,6 @@ class UrlbarValueFormatter {
     }
 
     let url = this.inputField.value;
-    let browser = this.window.gBrowser.selectedBrowser;
-
-    // Since doing a full URIFixup and offset calculations is expensive, we
-    // keep the metadata cached in the browser itself, so when switching tabs
-    // we can skip most of this.
-    if (browser._urlMetaData && browser._urlMetaData.url == url) {
-      return browser._urlMetaData.data;
-    }
-    browser._urlMetaData = { url, data: null };
 
     // Get the URL from the fixup service:
     let flags =
@@ -184,14 +175,7 @@ class UrlbarValueFormatter {
       }
     }
 
-    return (browser._urlMetaData.data = {
-      domain,
-      origin: uriInfo.fixedURI.host,
-      preDomain,
-      schemeWSlashes,
-      trimmedLength,
-      url,
-    });
+    return { preDomain, schemeWSlashes, domain, url, uriInfo, trimmedLength };
   }
 
   _removeURLFormat() {
@@ -225,12 +209,12 @@ class UrlbarValueFormatter {
     }
 
     let {
-      domain,
-      origin,
+      url,
+      uriInfo,
       preDomain,
       schemeWSlashes,
+      domain,
       trimmedLength,
-      url,
     } = urlMetaData;
     // We strip http, so we should not show the scheme box for it.
     if (!UrlbarPrefs.get("trimURLs") || schemeWSlashes != "http://") {
@@ -274,7 +258,7 @@ class UrlbarValueFormatter {
     let baseDomain = domain;
     let subDomain = "";
     try {
-      baseDomain = Services.eTLD.getBaseDomainFromHost(origin);
+      baseDomain = Services.eTLD.getBaseDomainFromHost(uriInfo.fixedURI.host);
       if (!domain.endsWith(baseDomain)) {
         // getBaseDomainFromHost converts its resultant to ACE.
         let IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(
