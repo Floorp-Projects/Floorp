@@ -496,6 +496,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
 
   if (mAlwaysOnTop) {
     [mWindow setLevel:NSFloatingWindowLevel];
+    NSWindowCollectionBehavior newBehavior = [mWindow collectionBehavior];
+    newBehavior |= NSWindowCollectionBehaviorCanJoinAllSpaces;
+    [mWindow setCollectionBehavior:newBehavior];
   }
 
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
