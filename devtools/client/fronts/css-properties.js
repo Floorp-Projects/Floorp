@@ -235,23 +235,6 @@ const initCssProperties = async function(toolbox) {
 };
 
 /**
- * Synchronously get a cached and initialized CssProperties.
- *
- * @param {Toolbox} The current toolbox.
- * @returns {CssProperties}
- */
-function getCssProperties(toolbox) {
-  if (!cachedCssProperties.has(toolbox.target.client)) {
-    throw new Error(
-      "The CSS database has not been initialized, please make " +
-        "sure initCssDatabase was called once before for this " +
-        "toolbox."
-    );
-  }
-  return cachedCssProperties.get(toolbox.target.client).cssProperties;
-}
-
-/**
  * Get a client-side CssProperties. This is useful for dependencies in tests, or parts
  * of the codebase that don't particularly need to match every known CSS property on
  * the target.
@@ -353,7 +336,6 @@ function reattachCssColorValues(db) {
 module.exports = {
   CssPropertiesFront,
   CssProperties,
-  getCssProperties,
   getClientCssProperties,
   initCssProperties,
   isCssVariable,
