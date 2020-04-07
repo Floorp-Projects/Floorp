@@ -1103,27 +1103,8 @@ void BrowserChild::ApplyParentShowInfo(const ParentShowInfo& aInfo) {
     mDidSetRealShowInfo = true;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (docShell) {
+  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
     docShell->SetFullscreenAllowed(aInfo.fullscreenAllowed());
-    if (aInfo.isPrivate()) {
-      nsCOMPtr<nsILoadContext> context = do_GetInterface(docShell);
-      // No need to re-set private browsing mode.
-      if (!context->UsePrivateBrowsing()) {
-        if (docShell->GetHasLoadedNonBlankURI()) {
-          nsContentUtils::ReportToConsoleNonLocalized(
-              NS_LITERAL_STRING("We should not switch to Private Browsing "
-                                "after loading a document."),
-              nsIScriptError::warningFlag,
-              NS_LITERAL_CSTRING("mozprivatebrowsing"), nullptr);
-        } else {
-          OriginAttributes attrs(
-              nsDocShell::Cast(docShell)->GetOriginAttributes());
-          attrs.SyncAttributesWithPrivateBrowsing(true);
-          nsDocShell::Cast(docShell)->SetOriginAttributes(attrs);
-        }
-      }
-    }
   }
   mIsTransparent = aInfo.isTransparent();
 }

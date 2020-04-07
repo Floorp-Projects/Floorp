@@ -356,7 +356,6 @@ struct ParentShowInfo
 {
   nsString name;
   bool fullscreenAllowed;
-  bool isPrivate;
   bool fakeShowInfo;
   bool isTransparent;
   float dpi;

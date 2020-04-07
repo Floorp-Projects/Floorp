@@ -1079,16 +1079,14 @@ nsresult ContentChild::ProvideWindowCommon(
       return;
     }
 
-    ParentShowInfo showInfo(EmptyString(), false, false, true, false, 0, 0, 0);
+    ParentShowInfo showInfo(EmptyString(), false, true, false, 0, 0, 0);
     auto* opener = nsPIDOMWindowOuter::From(aParent);
     nsIDocShell* openerShell;
     if (opener && (openerShell = opener->GetDocShell())) {
-      nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
-      showInfo =
-          ParentShowInfo(EmptyString(), false, context->UsePrivateBrowsing(),
-                         true, false, aTabOpener->WebWidget()->GetDPI(),
-                         aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
-                         aTabOpener->WebWidget()->GetDefaultScale().scale);
+      showInfo = ParentShowInfo(
+          EmptyString(), false, true, false, aTabOpener->WebWidget()->GetDPI(),
+          aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
+          aTabOpener->WebWidget()->GetDefaultScale().scale);
     }
 
     newChild->SetMaxTouchPoints(maxTouchPoints);
