@@ -348,17 +348,8 @@
   });
 
   MozElements.Notification = class Notification extends MozXULElement {
-    constructor() {
-      super();
-      this.persistence = 0;
-      this.priority = 0;
-      this.timeout = 0;
-    }
-
-    connectedCallback() {
-      this.appendChild(
-        MozXULElement.parseXULToFragment(
-          `
+    static get markup() {
+      return `
       <hbox class="messageDetails" align="center" flex="1"
             oncommand="this.parentNode._doButtonCommand(event);">
         <image class="messageImage"/>
@@ -369,10 +360,22 @@
                      class="messageCloseButton close-icon tabbable"
                      tooltiptext="&closeNotification.tooltip;"
                      oncommand="this.parentNode.dismiss();"/>
-    `,
-          ["chrome://global/locale/notification.dtd"]
-        )
-      );
+      `;
+    }
+
+    static get entities() {
+      return ["chrome://global/locale/notification.dtd"];
+    }
+
+    constructor() {
+      super();
+      this.persistence = 0;
+      this.priority = 0;
+      this.timeout = 0;
+    }
+
+    connectedCallback() {
+      this.appendChild(this.constructor.fragment);
 
       for (let [propertyName, selector] of [
         ["messageDetails", ".messageDetails"],

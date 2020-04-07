@@ -64,14 +64,8 @@
       this.hidden = false;
     }
 
-    slotContents() {
-      if (this._hasSlotted) {
-        return;
-      }
-      this._hasSlotted = true;
-      this.appendChild(
-        MozXULElement.parseXULToFragment(
-          `
+    static get markup() {
+      return `
       <hbox class="popup-notification-header-container"></hbox>
       <hbox align="start" class="popup-notification-body-container">
         <image class="popup-notification-icon"/>
@@ -101,10 +95,19 @@
         </button>
         <button class="popup-notification-button popup-notification-primary-button" label="&defaultButton.label;" accesskey="&defaultButton.accesskey;"></button>
       </hbox>
-    `,
-          ["chrome://global/locale/notification.dtd"]
-        )
-      );
+      `;
+    }
+
+    static get entities() {
+      return ["chrome://global/locale/notification.dtd"];
+    }
+
+    slotContents() {
+      if (this._hasSlotted) {
+        return;
+      }
+      this._hasSlotted = true;
+      this.appendChild(this.constructor.fragment);
 
       this.button = this.querySelector(".popup-notification-primary-button");
       this.secondaryButton = this.querySelector(
