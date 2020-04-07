@@ -222,7 +222,7 @@ class IMEHandler final {
   static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }
   static bool IsIMMActive();
 
-  static void MaybeShowOnScreenKeyboard();
+  static void MaybeShowOnScreenKeyboard(nsWindow* aWindow);
   static void MaybeDismissOnScreenKeyboard(nsWindow* aWindow);
   static bool WStringStartsWithCaseInsensitive(const std::wstring& aHaystack,
                                                const std::wstring& aNeedle);
@@ -236,13 +236,13 @@ class IMEHandler final {
    * Show the Windows on-screen keyboard. Only allowed for
    * chrome documents and Windows 8 and higher.
    */
-  static void ShowOnScreenKeyboard();
+  static void ShowOnScreenKeyboard(nsWindow* aWindow);
 
   /**
    * Dismiss the Windows on-screen keyboard. Only allowed for
    * Windows 8 and higher.
    */
-  static void DismissOnScreenKeyboard();
+  static void DismissOnScreenKeyboard(nsWindow* aWindow);
 
   /**
    * Get the HWND for the on-screen keyboard, if it's up. Only
