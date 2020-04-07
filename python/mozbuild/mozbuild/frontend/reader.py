@@ -34,6 +34,7 @@ from collections import (
 )
 from io import StringIO
 from itertools import chain
+from multiprocessing import cpu_count
 import six
 from six import string_types
 
@@ -854,9 +855,17 @@ class BuildReader(object):
         for path, f in self._relevant_mozbuild_finder.find('*/config.status'):
             self._relevant_mozbuild_finder.ignore.add(os.path.dirname(path))
 
-        # ProcessPoolExecutor will naturally default to the number of CPUs
-        # on the machine and will also handle edge cases on Windows.
-        self._gyp_worker_pool = ProcessPoolExecutor()
+        max_workers = cpu_count()
+        if sys.platform.startswith('win'):
+            # In python 3, on Windows, ProcessPoolExecutor uses
+            # _winapi.WaitForMultipleObjects, which doesn't work on large
+            # number of objects. It also has some automatic capping to avoid
+            # _winapi.WaitForMultipleObjects being unhappy as a consequence,
+            # but that capping is actually insufficient in python 3.7 and 3.8
+            # (as well as inexistent in older versions). So we cap ourselves
+            # to 60, see https://bugs.python.org/issue26903#msg365886.
+            max_workers = min(max_workers, 60)
+        self._gyp_worker_pool = ProcessPoolExecutor(max_workers=max_workers)
         self._gyp_processors = []
         self._execution_time = 0.0
         self._file_count = 0
