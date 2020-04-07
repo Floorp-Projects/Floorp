@@ -962,6 +962,19 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     newBC->SetOnePermittedSandboxedNavigator(parentBC);
   }
 
+  if (!aForceNoOpener && parentBC) {
+    // If we've created a new content window, its opener should have been set
+    // when its BrowsingContext was created, in order to ensure that the context
+    // is loaded within the correct BrowsingContextGroup.
+    if (windowIsNew && newBC->IsContent()) {
+      MOZ_RELEASE_ASSERT(newBC->GetOpenerId() == parentBC->Id());
+      MOZ_RELEASE_ASSERT(!!parentBC == newBC->HadOriginalOpener());
+    } else {
+      // Update the opener for an existing or chrome BC.
+      newBC->SetOpener(parentBC);
+    }
+  }
+
   RefPtr<nsDocShell> newDocShell(nsDocShell::Cast(newBC->GetDocShell()));
 
   // As required by spec, new windows always start out same-process, even if the
@@ -983,22 +996,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   RefPtr<nsGlobalWindowOuter> win(
       nsGlobalWindowOuter::Cast(newBC->GetDOMWindow()));
   if (win) {
-    if (!aForceNoOpener) {
-      if (windowIsNew) {
-        // If this is a new window, its opener should have been set when its
-        // BrowsingContext was created. If not, we need to set it ourselves.
-        MOZ_DIAGNOSTIC_ASSERT(newBC->GetOpenerId() ==
-                              (parentBC ? parentBC->Id() : 0));
-        MOZ_DIAGNOSTIC_ASSERT(!!parentBC == newBC->HadOriginalOpener());
-      } else {
-        newBC->SetOpener(parentBC);
-      }
-    } else if (parentBC && parentBC != newBC && !newBC->IsChrome()) {
-      MOZ_ASSERT(newBC->Group() != parentBC->Group(),
-                 "If we're forcing no opener, they should be in different "
-                 "browsing context groups");
-    }
-
     if (windowIsNew) {
 #ifdef DEBUG
       // Assert that we're not loading things right now.  If we are, when
@@ -1013,15 +1010,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         doc->SetIsInitialDocument(true);
       }
     }
-  } else {
-    MOZ_ASSERT(!windowIsNew, "New windows are always created in-process");
-    if (!aForceNoOpener) {
-      // FIXME: We need to change the opener of this window, but
-      // BrowsingContext::SetOpener can only be called by the process which
-      // currently owns the BrowsingContext, and that isn't us.
-      // newBC->SetOpener(parentBC);
-    }
   }
+
+  MOZ_ASSERT(win || !windowIsNew, "New windows are always created in-process");
 
   *aResult = do_AddRef(newBC).take();
 
