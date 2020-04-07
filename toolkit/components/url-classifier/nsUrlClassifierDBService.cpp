@@ -1038,15 +1038,16 @@ nsresult nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(
 
     if (result->miss) {
       return tuV2->NewMissPrefix(result->prefix);
-    }
-    LOG(("CacheCompletion hash %X, Addchunk %d", result->completion.ToUint32(),
-         result->addChunk));
+    } else {
+      LOG(("CacheCompletion hash %X, Addchunk %d",
+           result->completion.ToUint32(), result->addChunk));
 
-    nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
-    if (NS_FAILED(rv)) {
-      return rv;
+      nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      return tuV2->NewAddChunk(result->addChunk);
     }
-    return tuV2->NewAddChunk(result->addChunk);
   }
 
   RefPtr<TableUpdateV4> tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
@@ -1719,14 +1720,8 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
     if (aEventTarget) {
       content->SetEventTargetForActor(actor, aEventTarget);
-    } else {
-      // In the case null event target we should use systemgroup event target
-      NS_WARNING(
-          ("Null event target, we should use SystemGroup to do labelling"));
-      nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
-          mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
-      content->SetEventTargetForActor(actor, systemGroupEventTarget);
     }
+
     if (!content->SendPURLClassifierConstructor(
             actor, IPC::Principal(aPrincipal), aResult)) {
       *aResult = false;
@@ -2439,11 +2434,6 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures(
     }
 
     auto actor = new URLClassifierLocalChild();
-
-    // TODO: Bug 1353701 - Supports custom event target for labelling.
-    nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
-        mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
-    content->SetEventTargetForActor(actor, systemGroupEventTarget);
 
     nsTArray<IPCURLClassifierFeature> ipcFeatures;
     for (nsIUrlClassifierFeature* feature : aFeatures) {

@@ -12,7 +12,6 @@
 #include "base/message_loop.h"   // for MessageLoop
 #include "base/task.h"           // for NewRunnableMethod, etc
 #include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/WebGLChild.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -322,16 +321,6 @@ PLayerTransactionChild* CompositorBridgeChild::AllocPLayerTransactionChild(
     const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId) {
   LayerTransactionChild* c = new LayerTransactionChild(aId);
   c->AddIPDLReference();
-
-  BrowserChild* browserChild = BrowserChild::GetFrom(c->GetId());
-
-  // Do the DOM Labeling.
-  if (browserChild) {
-    nsCOMPtr<nsIEventTarget> target =
-        browserChild->TabGroup()->EventTargetFor(TaskCategory::Other);
-    SetEventTargetForActor(c, target);
-    MOZ_ASSERT(c->GetActorEventTarget());
-  }
 
   return c;
 }
@@ -1042,14 +1031,6 @@ PAPZCTreeManagerChild* CompositorBridgeChild::AllocPAPZCTreeManagerChild(
     const LayersId& aLayersId) {
   APZCTreeManagerChild* child = new APZCTreeManagerChild();
   child->AddIPDLReference();
-  if (aLayersId.IsValid()) {
-    BrowserChild* browserChild = BrowserChild::GetFrom(aLayersId);
-    if (browserChild) {
-      SetEventTargetForActor(
-          child, browserChild->TabGroup()->EventTargetFor(TaskCategory::Other));
-      MOZ_ASSERT(child->GetActorEventTarget());
-    }
-  }
 
   return child;
 }
