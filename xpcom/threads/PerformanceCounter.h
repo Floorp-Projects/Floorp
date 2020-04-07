@@ -7,6 +7,12 @@
 #ifndef mozilla_PerformanceCounter_h
 #define mozilla_PerformanceCounter_h
 
+#include "mozilla/Array.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/TaskCategory.h"
+#include "nsISupportsImpl.h"
+#include "nsString.h"
+
 namespace mozilla {
 
 /*
