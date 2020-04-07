@@ -619,8 +619,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
     flags->setResultType(MIRType::Int32);
     MConstant* maskConst = MConstant::New(alloc(), Int32Value(mask.value()));
     current->add(maskConst);
-    MBitAnd* maskedFlag = MBitAnd::New(alloc(), flags, maskConst);
-    maskedFlag->setInt32Specialization();
+    auto* maskedFlag = MBitAnd::New(alloc(), flags, maskConst, MIRType::Int32);
     current->add(maskedFlag);
 
     MDefinition* result = convertToBoolean(maskedFlag);
@@ -2819,9 +2818,7 @@ IonBuilder::InliningResult IonBuilder::inlineHasClass(CallInfo& callInfo,
         MHasClass* hasClass =
             MHasClass::New(alloc(), callInfo.getArg(0), remaining[i]);
         current->add(hasClass);
-        MBitOr* either = MBitOr::New(alloc(), last, hasClass);
-        either->setInt32Specialization();
-        either->setCommutative();
+        MBitOr* either = MBitOr::New(alloc(), last, hasClass, MIRType::Int32);
         current->add(either);
         last = either;
       }
