@@ -90,6 +90,13 @@ Performance::~Performance() = default;
 
 DOMHighResTimeStamp Performance::Now() {
   DOMHighResTimeStamp rawTime = NowUnclamped();
+
+  // XXX: Remove this would cause functions in pkcs11f.h to fail.
+  // Bug 1628021 will find out the root cause.
+  if (mSystemPrincipal) {
+    return rawTime;
+  }
+
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawTime, GetRandomTimelineSeed(), mSystemPrincipal,
       CrossOriginIsolated());
