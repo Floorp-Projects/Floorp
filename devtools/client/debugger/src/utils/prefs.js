@@ -162,11 +162,11 @@ export const asyncStore = asyncStoreHelper("debugger", {
   eventListenerBreakpoints: ["event-listener-breakpoints", undefined],
 });
 
-export function resetSchemaVersion() {
+export function resetSchemaVersion(): void {
   prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
 }
 
-export function verifyPrefSchema() {
+export function verifyPrefSchema(): void {
   if (prefs.debuggerPrefsSchemaVersion < prefsSchemaVersion) {
     asyncStore.pendingBreakpoints = {};
     asyncStore.tabs = [];

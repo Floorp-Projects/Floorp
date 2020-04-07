@@ -10,7 +10,7 @@ import { positionCmp } from "./positionCmp";
 export function mappingContains(
   mapped: { +start: PartialPosition, +end: PartialPosition },
   item: { +start: PartialPosition, +end: PartialPosition }
-) {
+): boolean {
   return (
     positionCmp(item.start, mapped.start) >= 0 &&
     positionCmp(item.end, mapped.end) <= 0

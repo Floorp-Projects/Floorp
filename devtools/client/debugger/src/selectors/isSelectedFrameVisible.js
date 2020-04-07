@@ -7,8 +7,9 @@
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
 import { getSelectedFrame, getSelectedLocation, getCurrentThread } from ".";
 import type { State } from "../reducers/types";
+import type { SourceId } from "../types";
 
-function getGeneratedId(sourceId) {
+function getGeneratedId(sourceId): SourceId {
   if (isOriginalId(sourceId)) {
     return originalToGeneratedId(sourceId);
   }
@@ -20,7 +21,7 @@ function getGeneratedId(sourceId) {
  * Checks to if the selected frame's source is currently
  * selected.
  */
-export function isSelectedFrameVisible(state: State) {
+export function isSelectedFrameVisible(state: State): boolean {
   const thread = getCurrentThread(state);
   const selectedLocation = getSelectedLocation(state);
   const selectedFrame = getSelectedFrame(state, thread);

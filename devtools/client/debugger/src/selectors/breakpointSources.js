@@ -29,7 +29,7 @@ function getBreakpointsForSource(
   source: Source,
   selectedSource: ?Source,
   breakpoints: Breakpoint[]
-) {
+): Breakpoint[] {
   return sortSelectedBreakpoints(breakpoints, selectedSource)
     .filter(
       bp =>

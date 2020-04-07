@@ -34,7 +34,7 @@ let isInterrupted: boolean;
 let threadFrontListeners: WeakMap<ThreadFront, Array<Function>>;
 let workersListener: Object;
 
-function addThreadEventListeners(thread: ThreadFront) {
+function addThreadEventListeners(thread: ThreadFront): void {
   const removeListeners = [];
   Object.keys(clientEvents).forEach(eventName => {
     // EventEmitter.on returns a function that removes the event listener.
@@ -45,18 +45,18 @@ function addThreadEventListeners(thread: ThreadFront) {
   threadFrontListeners.set(thread, removeListeners);
 }
 
-function removeThreadEventListeners(thread: ThreadFront) {
+function removeThreadEventListeners(thread: ThreadFront): void {
   const removeListeners = threadFrontListeners.get(thread) || [];
   for (const removeListener of removeListeners) {
     removeListener();
   }
 }
 
-function attachAllTargets(currentTarget: Target) {
+function attachAllTargets(currentTarget: Target): boolean {
   return prefs.fission && currentTarget.isParentProcess;
 }
 
-function setupEvents(dependencies: Dependencies) {
+function setupEvents(dependencies: Dependencies): void {
   const { devToolsClient } = dependencies;
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
@@ -68,7 +68,7 @@ function setupEvents(dependencies: Dependencies) {
   threadFrontListeners = new WeakMap();
 }
 
-function setupEventsTopTarget(targetFront: Target) {
+function setupEventsTopTarget(targetFront: Target): void {
   targetFront.on("workerListChanged", threadListChanged);
   addThreadEventListeners(targetFront.threadFront);
 
@@ -77,13 +77,16 @@ function setupEventsTopTarget(targetFront: Target) {
   }
 }
 
-function removeEventsTopTarget(targetFront: Target) {
+function removeEventsTopTarget(targetFront: Target): void {
   targetFront.off("workerListChanged", threadListChanged);
   removeThreadEventListeners(targetFront.threadFront);
   workersListener.removeListener();
 }
 
-async function paused(threadFront: ThreadFront, packet: PausedPacket) {
+async function paused(
+  threadFront: ThreadFront,
+  packet: PausedPacket
+): Promise<*> {
   // When reloading we might get pauses from threads before they have been
   // added to the store. Ensure the pause won't be processed until we've
   // finished adding the thread.
@@ -117,7 +120,7 @@ async function paused(threadFront: ThreadFront, packet: PausedPacket) {
   recordEvent("pause", { reason: why.type });
 }
 
-function resumed(threadFront: ThreadFront) {
+function resumed(threadFront: ThreadFront): void {
   // NOTE: the client suppresses resumed events while interrupted
   // to prevent unintentional behavior.
   // see [client docs](../README.md#interrupted) for more information.
@@ -129,14 +132,14 @@ function resumed(threadFront: ThreadFront) {
   actions.resumed(threadFront.actorID);
 }
 
-function newSource(threadFront: ThreadFront, { source }: SourcePacket) {
+function newSource(threadFront: ThreadFront, { source }: SourcePacket): void {
   sourceQueue.queue({
     type: "generated",
     data: prepareSourcePayload(threadFront, source),
   });
 }
 
-function threadListChanged() {
+function threadListChanged(): void {
   actions.updateThreads();
 }
 

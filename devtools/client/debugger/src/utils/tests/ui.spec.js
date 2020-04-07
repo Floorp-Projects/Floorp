@@ -12,6 +12,6 @@ describe("ui", () => {
       throw new Error("no document body");
     }
     document.body.innerHTML = "<div id='mount'></div>";
-    expect(isVisible()).toBeGreaterThanOrEqual(0);
+    expect(isVisible()).toBe(false);
   });
 });

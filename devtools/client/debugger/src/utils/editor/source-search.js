@@ -21,7 +21,7 @@ function getSearchCursor(cm, query: string, pos, modifiers: SearchModifiers) {
  * @memberof utils/source-search
  * @static
  */
-function SearchState() {
+function SearchState(): void {
   this.posFrom = this.posTo = this.query = null;
   this.overlay = null;
   this.results = [];
@@ -31,12 +31,12 @@ function SearchState() {
  * @memberof utils/source-search
  * @static
  */
-function getSearchState(cm: any, query) {
+function getSearchState(cm: any, query: string) {
   const state = cm.state.search || (cm.state.search = new SearchState());
   return state;
 }
 
-function isWhitespace(query) {
+function isWhitespace(query): boolean {
   return !query.match(/\S/);
 }
 
@@ -88,13 +88,13 @@ function searchOverlay(query, modifiers) {
  * @memberof utils/source-search
  * @static
  */
-function updateOverlay(cm, state, query, modifiers) {
+function updateOverlay(cm, state, query, modifiers): void {
   cm.removeOverlay(state.overlay);
   state.overlay = searchOverlay(query, modifiers);
   cm.addOverlay(state.overlay, { opaque: false });
 }
 
-function updateCursor(cm, state, keepSelection) {
+function updateCursor(cm, state, keepSelection): void {
   state.posTo = cm.getCursor("anchor");
   state.posFrom = cm.getCursor("head");
 
@@ -108,7 +108,7 @@ export function getMatchIndex(
   count: number,
   currentIndex: number,
   rev: boolean
-) {
+): number {
   if (!rev) {
     if (currentIndex == count - 1) {
       return 0;
@@ -240,7 +240,7 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
   return nextMatch;
 }
 
-function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch) {
+function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch): void {
   const { cm, ed } = ctx;
   cm.operation(function() {
     const pos = { line: line - 1, ch };
@@ -268,7 +268,7 @@ function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch) {
  * @memberof utils/source-search
  * @static
  */
-export function removeOverlay(ctx: any, query: string) {
+export function removeOverlay(ctx: any, query: string): void {
   const state = getSearchState(ctx.cm, query);
   ctx.cm.removeOverlay(state.overlay);
   const { line, ch } = ctx.cm.getCursor();
@@ -281,7 +281,7 @@ export function removeOverlay(ctx: any, query: string) {
  * @memberof utils/source-search
  * @static
  */
-export function clearSearch(cm: any, query: string) {
+export function clearSearch(cm: any, query: string): void {
   const state = getSearchState(cm, query);
 
   state.results = [];

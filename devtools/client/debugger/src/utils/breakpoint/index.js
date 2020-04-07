@@ -32,7 +32,7 @@ import type { State } from "../../reducers/types";
 
 // Return the first argument that is a string, or null if nothing is a
 // string.
-export function firstString(...args: string[]) {
+export function firstString(...args: string[]): ?string {
   for (const arg of args) {
     if (typeof arg === "string") {
       return arg;
@@ -42,20 +42,20 @@ export function firstString(...args: string[]) {
 }
 
 // The ID for a Breakpoint is derived from its location in its Source.
-export function makeBreakpointId(location: SourceLocation) {
+export function makeBreakpointId(location: SourceLocation): string {
   const { sourceId, line, column } = location;
   const columnString = column || "";
   return `${sourceId}:${line}:${columnString}`;
 }
 
-export function getLocationWithoutColumn(location: SourceLocation) {
+export function getLocationWithoutColumn(location: SourceLocation): string {
   const { sourceId, line } = location;
   return `${sourceId}:${line}`;
 }
 
 type AnySourceLocation = SourceLocation | PendingLocation;
 
-export function makePendingLocationId(location: AnySourceLocation) {
+export function makePendingLocationId(location: AnySourceLocation): string {
   assertPendingLocation(location);
   const { sourceUrl, line, column } = location;
   const sourceUrlString = sourceUrl || "";
@@ -99,29 +99,30 @@ export function makeSourceActorLocation(
 }
 
 // The ID for a BreakpointActor is derived from its location in its SourceActor.
-export function makeBreakpointActorId(location: SourceActorLocation) {
+export function makeBreakpointActorId(location: SourceActorLocation): string {
   const { sourceActor, line, column } = location;
-  const columnString = column || "";
-  return `${(sourceActor: any)}:${line}:${columnString}`;
+  return `${sourceActor}:${line}:${column || ""}`;
 }
 
-export function assertBreakpoint(breakpoint: Breakpoint) {
+export function assertBreakpoint(breakpoint: Breakpoint): void {
   assertLocation(breakpoint.location);
   assertLocation(breakpoint.generatedLocation);
 }
 
-export function assertPendingBreakpoint(pendingBreakpoint: PendingBreakpoint) {
+export function assertPendingBreakpoint(
+  pendingBreakpoint: PendingBreakpoint
+): void {
   assertPendingLocation(pendingBreakpoint.location);
   assertPendingLocation(pendingBreakpoint.generatedLocation);
 }
 
-export function assertLocation(location: SourceLocation) {
+export function assertLocation(location: SourceLocation): void {
   assertPendingLocation(location);
   const { sourceId } = location;
   assert(!!sourceId, "location must have a source id");
 }
 
-export function assertPendingLocation(location: PendingLocation) {
+export function assertPendingLocation(location: PendingLocation): void {
   assert(!!location, "location must exist");
 
   const { sourceUrl } = location;
@@ -139,7 +140,7 @@ export function assertPendingLocation(location: PendingLocation) {
 export function breakpointAtLocation(
   breakpoints: Breakpoint[],
   { line, column }: SourceLocation
-) {
+): ?Breakpoint {
   return breakpoints.find(breakpoint => {
     const sameLine = breakpoint.location.line === line;
     if (!sameLine) {
@@ -156,9 +157,12 @@ export function breakpointAtLocation(
   });
 }
 
-export function breakpointExists(state: State, location: SourceLocation) {
+export function breakpointExists(
+  state: State,
+  location: SourceLocation
+): boolean {
   const currentBp = getBreakpoint(state, location);
-  return currentBp && !currentBp.disabled;
+  return !!currentBp && !currentBp.disabled;
 }
 
 export function createXHRBreakpoint(
@@ -200,8 +204,8 @@ export function createPendingBreakpoint(bp: Breakpoint) {
 export function getSelectedText(
   breakpoint: Breakpoint,
   selectedSource: ?Source
-) {
-  return selectedSource && isGenerated(selectedSource)
+): string {
+  return !!selectedSource && isGenerated(selectedSource)
     ? breakpoint.text
     : breakpoint.originalText;
 }

@@ -204,9 +204,9 @@ export type Target = {
   isContentProcess: boolean,
   isWorkerTarget: boolean,
   traits: Object,
-  chrome: Boolean,
+  chrome: boolean,
   url: URL,
-  isParentProcess: Boolean,
+  isParentProcess: boolean,
   isServiceWorker: boolean,
   targetForm: Object,
 
@@ -419,6 +419,7 @@ export type ThreadFront = {
   detach: () => Promise<void>,
   fetchAncestorFramePositions: Function => Promise<*>,
   get: string => FrameFront,
+  dumpThread: Function => void,
 };
 
 export type Panel = {|

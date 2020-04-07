@@ -30,7 +30,7 @@ export const getSelectedFrames: Selector<{ [string]: ?Frame }> = createSelector(
   }
 );
 
-export function getSelectedFrame(state: State, thread: ThreadId) {
+export function getSelectedFrame(state: State, thread: ThreadId): ?Frame {
   const selectedFrames = getSelectedFrames(state);
   return selectedFrames[thread];
 }

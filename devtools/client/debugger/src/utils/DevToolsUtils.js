@@ -6,12 +6,12 @@
 
 import assert from "./assert";
 
-export function reportException(who: string, exception: any[]) {
+export function reportException(who: string, exception: any[]): void {
   const msg = `${who} threw an exception: `;
   console.error(msg, exception);
 }
 
-export function executeSoon(fn: Function) {
+export function executeSoon(fn: Function): void {
   setTimeout(fn, 0);
 }
 

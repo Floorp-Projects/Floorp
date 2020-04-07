@@ -11,7 +11,7 @@ let newQueuedSources;
 let queuedSources;
 let currentWork;
 
-async function dispatchNewSources() {
+async function dispatchNewSources(): Promise<void> {
   const sources = queuedSources;
   queuedSources = [];
   currentWork = await newQueuedSources(sources);

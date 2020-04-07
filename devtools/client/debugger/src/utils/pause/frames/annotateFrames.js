@@ -31,7 +31,7 @@ function annotateFrame(frame: Frame, frames: Frame[]): AnnotatedFrame {
   return frame;
 }
 
-function annotateBabelAsyncFrames(frames: Frame[]) {
+function annotateBabelAsyncFrames(frames: Frame[]): Frame[] {
   const babelFrameIndexes = getBabelFrameIndexes(frames);
   const isBabelFrame = frameIndex => babelFrameIndexes.includes(frameIndex);
 

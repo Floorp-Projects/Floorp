@@ -101,14 +101,14 @@ describe("getLibraryFromUrl", () => {
   describe("When zone.js is on the frame", () => {
     it("should not return Angular when no callstack", () => {
       const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
-      expect(getLibraryFromUrl(frame)).toEqual(null);
+      expect(getLibraryFromUrl(frame)).toBeNull();
     });
 
     it("should not return Angular when stack without Angular frames", () => {
       const frame = makeMockFrameWithURL("/node_modules/zone/zone.js");
       const callstack = [frame];
 
-      expect(getLibraryFromUrl(frame, callstack)).toEqual(null);
+      expect(getLibraryFromUrl(frame, callstack)).toBeNull();
     });
 
     it("should return Angular when stack with AngularJS (1.x) frames", () => {

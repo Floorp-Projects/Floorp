@@ -16,7 +16,7 @@ export function nodeHasChildren(item: TreeNode): boolean {
   return item.type == "directory" && Array.isArray(item.contents);
 }
 
-export function isExactUrlMatch(pathPart: string, debuggeeUrl: URL) {
+export function isExactUrlMatch(pathPart: string, debuggeeUrl: URL): boolean {
   // compare to hostname with an optional 'www.' prefix
   const { host } = parse(debuggeeUrl);
   if (!host) {
@@ -28,7 +28,7 @@ export function isExactUrlMatch(pathPart: string, debuggeeUrl: URL) {
   );
 }
 
-export function isPathDirectory(path: string) {
+export function isPathDirectory(path: string): boolean {
   // Assume that all urls point to files except when they end with '/'
   // Or directory node has children
 
@@ -60,7 +60,7 @@ export function isPathDirectory(path: string) {
   }
 }
 
-export function isDirectory(item: TreeNode) {
+export function isDirectory(item: TreeNode): boolean {
   return (
     (item.type === "directory" || isPathDirectory(item.path)) &&
     item.name != "(index)"
@@ -74,7 +74,7 @@ export function getSourceFromNode(item: TreeNode): ?Source {
   }
 }
 
-export function isSource(item: TreeNode) {
+export function isSource(item: TreeNode): boolean {
   return item.type === "source";
 }
 
@@ -92,7 +92,7 @@ export function isNotJavaScript(source: Source): boolean {
   return ["css", "svg", "png"].includes(getFileExtension(source));
 }
 
-export function isInvalidUrl(url: Object, source: Source) {
+export function isInvalidUrl(url: Object, source: Source): boolean {
   return (
     !source.url ||
     !url.group ||
@@ -102,7 +102,11 @@ export function isInvalidUrl(url: Object, source: Source) {
   );
 }
 
-export function partIsFile(index: number, parts: Array<string>, url: Object) {
+export function partIsFile(
+  index: number,
+  parts: Array<string>,
+  url: Object
+): boolean {
   const isLastPart = index === parts.length - 1;
   return isLastPart && !isDirectory(url);
 }
@@ -154,7 +158,7 @@ export function createParentMap(tree: TreeNode): ParentMap {
   return map;
 }
 
-export function getRelativePath(url: URL) {
+export function getRelativePath(url: URL): string {
   const { pathname } = parse(url);
   if (!pathname) {
     return url;
@@ -164,7 +168,7 @@ export function getRelativePath(url: URL) {
   return index !== -1 ? pathname.slice(index + 1) : "";
 }
 
-export function getPathWithoutThread(path: string) {
+export function getPathWithoutThread(path: string): string {
   const pathParts = path.split(/(context\d+?\/)/).splice(2);
   if (pathParts && pathParts.length > 0) {
     return pathParts.join("");
@@ -176,7 +180,7 @@ export function findSource(
   { threads, sources }: { threads: Thread[], sources: SourcesMapByThread },
   itemPath: string,
   source: ?Source
-) {
+): ?Source {
   const targetThread = threads.find(thread => itemPath.includes(thread.actor));
   if (targetThread && source) {
     const { actor } = targetThread;

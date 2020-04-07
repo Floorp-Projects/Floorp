@@ -5,7 +5,7 @@
 // @flow
 import { isDevelopment } from "devtools-environment";
 
-export default function assert(condition: boolean, message: string) {
+export default function assert(condition: boolean, message: string): void {
   if (isDevelopment() && !condition) {
     throw new Error(`Assertion failure: ${message}`);
   }

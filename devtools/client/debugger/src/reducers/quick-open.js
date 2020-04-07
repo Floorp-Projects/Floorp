@@ -62,7 +62,7 @@ export function getQuickOpenEnabled(state: OuterState): boolean {
   return state.quickOpen.enabled;
 }
 
-export function getQuickOpenQuery(state: OuterState) {
+export function getQuickOpenQuery(state: OuterState): string {
   return state.quickOpen.query;
 }
 

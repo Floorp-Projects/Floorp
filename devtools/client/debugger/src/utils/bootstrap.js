@@ -66,7 +66,7 @@ export function bootstrapStore(
   workers: Workers,
   panel: Panel,
   initialState: Object
-) {
+): any {
   const debugJsModules = AppConstants.AppConstants.DEBUG_JS_MODULES == "1";
   const createStore = configureStore({
     log: prefs.logging || isTesting(),
@@ -87,7 +87,7 @@ export function bootstrapStore(
   return { store, actions, selectors };
 }
 
-export function bootstrapWorkers(panelWorkers: Workers) {
+export function bootstrapWorkers(panelWorkers: Workers): Object {
   const workerPath = isDevelopment()
     ? "assets/build"
     : "resource://devtools/client/debugger/dist";
@@ -109,7 +109,7 @@ export function bootstrapWorkers(panelWorkers: Workers) {
   return { ...panelWorkers, prettyPrint, parser, search };
 }
 
-export function teardownWorkers() {
+export function teardownWorkers(): void {
   if (!isFirefoxPanel()) {
     // When used in Firefox, the toolbox manages the source map worker.
     stopSourceMapWorker();
@@ -119,7 +119,7 @@ export function teardownWorkers() {
   search.stop();
 }
 
-export function bootstrapApp(store: any, panel: Panel) {
+export function bootstrapApp(store: any, panel: Panel): void {
   if (isFirefoxPanel()) {
     renderPanel(App, store, panel);
   } else {
@@ -133,7 +133,7 @@ let currentXHRBreakpoints;
 let currentEventBreakpoints;
 let currentTabs;
 
-function updatePrefs(state: any) {
+function updatePrefs(state: any): void {
   const previousPendingBreakpoints = currentPendingBreakpoints;
   const previousXHRBreakpoints = currentXHRBreakpoints;
   const previousEventBreakpoints = currentEventBreakpoints;

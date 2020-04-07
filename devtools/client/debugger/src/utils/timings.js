@@ -13,13 +13,15 @@ export function getAsyncTimes(name: string): number[] {
   ).map(([start, end]) => +(end.startTime - start.startTime).toPrecision(2));
 }
 
-function getTimes(name) {
+function getTimes(name): number[] {
   return window.performance
     .getEntriesByName(name)
     .map(time => +time.duration.toPrecision(2));
 }
 
-function getStats(times) {
+function getStats(
+  times: number[]
+): {| times: number[], avg: ?number, median: ?number |} {
   if (times.length == 0) {
     return { times: [], avg: null, median: null };
   }
@@ -33,7 +35,7 @@ function getStats(times) {
   };
 }
 
-export function steppingTimings() {
+export function steppingTimings(): any {
   const commandTimings = getAsyncTimes("COMMAND");
   const pausedTimings = getTimes("PAUSED");
 

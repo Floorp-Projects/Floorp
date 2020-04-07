@@ -110,7 +110,7 @@ export function getFileSearchModifiers(state: OuterState): Modifiers {
   return state.fileSearch.modifiers;
 }
 
-export function getFileSearchResults(state: OuterState) {
+export function getFileSearchResults(state: OuterState): SearchResults {
   return state.fileSearch.searchResults;
 }
 
