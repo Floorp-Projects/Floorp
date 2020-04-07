@@ -491,7 +491,7 @@ AudioCallbackDriver::AudioCallbackDriver(
     uint32_t aInputChannelCount, CubebUtils::AudioDeviceID aOutputDeviceID,
     CubebUtils::AudioDeviceID aInputDeviceID, AudioInputType aAudioInputType)
     : GraphDriver(aGraphInterface, aPreviousDriver, aSampleRate),
-      mOutputChannels(aOutputChannelCount),
+      mOutputChannelCount(aOutputChannelCount),
       mInputChannelCount(aInputChannelCount),
       mOutputDeviceID(aOutputDeviceID),
       mInputDeviceID(aInputDeviceID),
@@ -505,8 +505,9 @@ AudioCallbackDriver::AudioCallbackDriver(
       mFallback("AudioCallbackDriver::mFallback") {
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver ctor", Graph()));
 
-  NS_WARNING_ASSERTION(mOutputChannels != 0, "Invalid output channel count");
-  MOZ_ASSERT(mOutputChannels <= 8);
+  NS_WARNING_ASSERTION(mOutputChannelCount != 0,
+                       "Invalid output channel count");
+  MOZ_ASSERT(mOutputChannelCount <= 8);
 
   const uint32_t kIdleThreadTimeoutMs = 2000;
   mInitShutdownThread->SetIdleThreadTimeout(
@@ -605,7 +606,7 @@ void AudioCallbackDriver::Init() {
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  if (!mOutputChannels) {
+  if (!mOutputChannelCount) {
     LOG(LogLevel::Warning, ("Output number of channels is 0."));
     mAudioStreamState = AudioStreamState::None;
     if (!fromFallback) {
@@ -627,13 +628,13 @@ void AudioCallbackDriver::Init() {
     }
   }
 
-  mBuffer = AudioCallbackBufferWrapper<AudioDataValue>(mOutputChannels);
+  mBuffer = AudioCallbackBufferWrapper<AudioDataValue>(mOutputChannelCount);
   mScratchBuffer =
-      SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2>(mOutputChannels);
+      SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2>(mOutputChannelCount);
 
-  output.channels = mOutputChannels;
+  output.channels = mOutputChannelCount;
   AudioConfig::ChannelLayout::ChannelMap channelMap =
-      AudioConfig::ChannelLayout(mOutputChannels).Map();
+      AudioConfig::ChannelLayout(mOutputChannelCount).Map();
 
   output.layout = static_cast<uint32_t>(channelMap);
   output.prefs = CubebUtils::GetDefaultStreamPrefs();
@@ -849,13 +850,13 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // Wait for the fallback driver to stop. Wake it up so it can stop if it's
     // sleeping.
     EnsureNextIteration();
-    PodZero(aOutputBuffer, aFrames * mOutputChannels);
+    PodZero(aOutputBuffer, aFrames * mOutputChannelCount);
     return aFrames;
   }
 
   if (MOZ_UNLIKELY(fallbackState == FallbackDriverState::Stopped)) {
     // We're supposed to stop.
-    PodZero(aOutputBuffer, aFrames * mOutputChannels);
+    PodZero(aOutputBuffer, aFrames * mOutputChannelCount);
     return aFrames - 1;
   }
 
@@ -953,12 +954,12 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
   Graph()->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                            mSampleRate, mOutputChannels);
+                            mSampleRate, mOutputChannelCount);
 
 #ifdef XP_MACOSX
   // This only happens when the output is on a macbookpro's external speaker,
   // that are stereo, but let's just be safe.
-  if (mNeedsPanning && mOutputChannels == 2) {
+  if (mNeedsPanning && mOutputChannelCount == 2) {
     // hard pan to the right
     for (uint32_t i = 0; i < aFrames * 2; i += 2) {
       aOutputBuffer[i + 1] += aOutputBuffer[i];
