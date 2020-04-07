@@ -50,13 +50,16 @@ sealed class TrackingProtectionAction : Action {
  * @property isTrackingProtectionEnabled Current status of tracking protection for this session (ie is an exception)
  * @property listTrackers Current Tracker Log list of blocked and loaded tracker categories
  * @property mode Current Mode of TrackingProtection
+ * @property lastAccessedCategory Remembers the last accessed details category, used to move
+ *           accessibly focus after returning from details_moode
  */
 data class TrackingProtectionState(
     val session: Session?,
     val url: String,
     val isTrackingProtectionEnabled: Boolean,
     val listTrackers: List<TrackerLog>,
-    val mode: Mode
+    val mode: Mode,
+    val lastAccessedCategory: String
 ) : State {
     sealed class Mode {
         object Normal : Mode()
@@ -112,7 +115,8 @@ fun trackingProtectionStateReducer(
             mode = TrackingProtectionState.Mode.Details(
                 action.category,
                 action.categoryBlocked
-            )
+            ),
+            lastAccessedCategory = action.category.name
         )
         is TrackingProtectionAction.TrackerBlockingChanged ->
             state.copy(isTrackingProtectionEnabled = action.isTrackingProtectionEnabled)

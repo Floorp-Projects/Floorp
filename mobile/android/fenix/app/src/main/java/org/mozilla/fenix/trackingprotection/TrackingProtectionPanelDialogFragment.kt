@@ -73,7 +73,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
                     args.url,
                     args.trackingProtectionEnabled,
                     listTrackers = listOf(),
-                    mode = TrackingProtectionState.Mode.Normal
+                    mode = TrackingProtectionState.Mode.Normal,
+                    lastAccessedCategory = ""
                 )
             )
         }

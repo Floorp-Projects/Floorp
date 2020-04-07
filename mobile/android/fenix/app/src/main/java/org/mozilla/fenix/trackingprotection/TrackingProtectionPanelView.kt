@@ -7,11 +7,17 @@ package org.mozilla.fenix.trackingprotection
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
+import kotlinx.android.synthetic.main.component_tracking_protection_panel.details_blocking_header
 import kotlinx.android.synthetic.main.switch_with_description.view.*
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
@@ -55,6 +61,7 @@ interface TrackingProtectionPanelViewInteractor {
 /**
  * View that contains and configures the Tracking Protection Panel
  */
+@SuppressWarnings("TooManyFunctions")
 class TrackingProtectionPanelView(
     override val containerView: ViewGroup,
     val interactor: TrackingProtectionPanelInteractor
@@ -67,6 +74,8 @@ class TrackingProtectionPanelView(
     private var mode: TrackingProtectionState.Mode = TrackingProtectionState.Mode.Normal
 
     private var bucketedTrackers = TrackerBuckets()
+
+    private var shouldFocusAccessibilityView: Boolean = true
 
     fun update(state: TrackingProtectionState) {
         if (state.mode != mode) {
@@ -82,6 +91,8 @@ class TrackingProtectionPanelView(
                 mode.categoryBlocked
             )
         }
+
+        setAccessibilityViewHierarchy(details_back, category_title)
     }
 
     private fun setUIForNormalMode(state: TrackingProtectionState) {
@@ -99,6 +110,40 @@ class TrackingProtectionPanelView(
         blocking_header.isGone = bucketedTrackers.blockedIsEmpty()
         updateCategoryVisibility()
         setCategoryClickListeners()
+        focusAccessibilityLastUsedCategory(state.lastAccessedCategory)
+    }
+
+    /**
+     * Will force accessibility focus to last entered details category.
+     * Called when user returns from details_mode.
+     * */
+    private fun focusAccessibilityLastUsedCategory(categoryTitle: String) {
+        if (categoryTitle.isNotEmpty()) {
+            val viewToFocus = getLastUsedCategoryView(categoryTitle)
+            if (viewToFocus != null && viewToFocus.isVisible && shouldFocusAccessibilityView) {
+                viewToFocus.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
+                shouldFocusAccessibilityView = false
+            }
+        }
+    }
+
+    private fun getLastUsedCategoryView(categoryTitle: String) = when (categoryTitle) {
+        CROSS_SITE_TRACKING_COOKIES.name -> {
+            cross_site_tracking
+        }
+        SOCIAL_MEDIA_TRACKERS.name -> {
+            if (social_media_trackers.isGone) social_media_trackers_loaded else social_media_trackers
+        }
+        FINGERPRINTERS.name -> {
+            if (fingerprinters.isGone) fingerprinters_loaded else fingerprinters
+        }
+        TRACKING_CONTENT.name -> {
+            if (tracking_content.isGone) tracking_content_loaded else tracking_content
+        }
+        CRYPTOMINERS.name -> {
+            if (cryptominers.isGone) cryptominers_loaded else cryptominers
+        }
+        else -> null
     }
 
     private fun updateCategoryVisibility() {
@@ -131,6 +176,7 @@ class TrackingProtectionPanelView(
     override fun onClick(v: View) {
         val category = getCategory(v) ?: return
         v.context.metrics.track(Event.TrackingProtectionTrackerList)
+        shouldFocusAccessibilityView = true
         interactor.openDetails(category, categoryBlocked = !isLoaded(v))
     }
 
@@ -155,6 +201,9 @@ class TrackingProtectionPanelView(
         details_back.setOnClickListener {
             interactor.onBackPressed()
         }
+
+        details_back.requestFocus()
+        details_back.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
     }
 
     private fun bindUrl(url: String) {
@@ -181,6 +230,21 @@ class TrackingProtectionPanelView(
             }
             else -> false
         }
+    }
+
+    /**
+     * Makes sure [view1] is followed by [view2] when navigating in accessibility mode.
+     * */
+    private fun setAccessibilityViewHierarchy(view1: View, view2: View) {
+        ViewCompat.setAccessibilityDelegate(view2, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View?,
+                info: AccessibilityNodeInfoCompat?
+            ) {
+                info?.setTraversalAfter(view1)
+                super.onInitializeAccessibilityNodeInfo(host, info)
+            }
+        })
     }
 
     companion object {

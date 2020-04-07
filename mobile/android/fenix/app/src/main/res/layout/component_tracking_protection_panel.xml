@@ -43,6 +43,7 @@
         <TextView
             android:id="@+id/blocking_header"
             style="@style/QuickSettingsText"
+            android:accessibilityHeading="true"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/enhanced_tracking_protection_blocked"
@@ -50,7 +51,8 @@
             android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/trackingProtectionSwitch" />
+            app:layout_constraintTop_toBottomOf="@id/trackingProtectionSwitch"
+            tools:targetApi="p" />
 
         <TextView
             android:id="@+id/cross_site_tracking"
@@ -106,12 +108,14 @@
             android:id="@+id/not_blocking_header"
             style="@style/QuickSettingsText"
             android:layout_width="wrap_content"
+            android:accessibilityHeading="true"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/enhanced_tracking_protection_allowed"
             android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tracking_content" />
+            app:layout_constraintTop_toBottomOf="@id/tracking_content"
+            tools:targetApi="p" />
 
         <TextView
             android:id="@+id/fingerprinters_loaded"
@@ -227,6 +231,7 @@
 
         <TextView
             android:id="@+id/details_blocking_header"
+            android:accessibilityHeading="true"
             style="@style/QuickSettingsText"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/tracking_protection_item_height"
@@ -237,7 +242,8 @@
             android:text="@string/enhanced_tracking_protection_blocked"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/line_divider_details" />
+            app:layout_constraintTop_toBottomOf="@id/line_divider_details"
+            tools:targetApi="p" />
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/blocking_scrollview"

@@ -33,6 +33,7 @@ class TrackingProtectionStoreTest {
             store.state.mode,
             TrackingProtectionState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true)
         )
+        assertEquals(store.state.lastAccessedCategory, TrackingProtectionCategory.FINGERPRINTERS.name)
     }
 
     @Test
@@ -46,6 +47,7 @@ class TrackingProtectionStoreTest {
             store.state.mode,
             TrackingProtectionState.Mode.Normal
         )
+        assertEquals(store.state.lastAccessedCategory, initialState.lastAccessedCategory)
     }
 
     @Test
@@ -133,7 +135,8 @@ class TrackingProtectionStoreTest {
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
         listTrackers = listOf(),
-        mode = TrackingProtectionState.Mode.Normal
+        mode = TrackingProtectionState.Mode.Normal,
+        lastAccessedCategory = ""
     )
 
     private fun detailsState(): TrackingProtectionState = TrackingProtectionState(
@@ -141,6 +144,7 @@ class TrackingProtectionStoreTest {
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
         listTrackers = listOf(),
-        mode = TrackingProtectionState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true)
+        mode = TrackingProtectionState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true),
+        lastAccessedCategory = TrackingProtectionCategory.CRYPTOMINERS.name
     )
 }
