@@ -1928,13 +1928,11 @@ static Address RegExpPairCountAddress(MacroAssembler& masm,
 // allocated for on the stack, and try to execute a RegExp on a string input.
 // If the RegExp was successfully executed and matched the input, fallthrough,
 // otherwise jump to notFound or failure.
-static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
-                                    Register regexp, Register input,
-                                    Register lastIndex, Register temp1,
-                                    Register temp2, Register temp3,
-                                    size_t inputOutputDataStartOffset,
-                                    bool stringsCanBeInNursery, Label* notFound,
-                                    Label* failure) {
+static bool PrepareAndExecuteRegExp(
+    JSContext* cx, MacroAssembler& masm, Register regexp, Register input,
+    Register lastIndex, Register temp1, Register temp2, Register temp3,
+    size_t inputOutputDataStartOffset, RegExpShared::CompilationMode mode,
+    bool stringsCanBeInNursery, Label* notFound, Label* failure) {
   MOZ_CRASH("TODO");
 }
 
@@ -1944,13 +1942,11 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
 // allocated for on the stack, and try to execute a RegExp on a string input.
 // If the RegExp was successfully executed and matched the input, fallthrough,
 // otherwise jump to notFound or failure.
-static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
-                                    Register regexp, Register input,
-                                    Register lastIndex, Register temp1,
-                                    Register temp2, Register temp3,
-                                    size_t inputOutputDataStartOffset,
-                                    bool stringsCanBeInNursery, Label* notFound,
-                                    Label* failure) {
+static bool PrepareAndExecuteRegExp(
+    JSContext* cx, MacroAssembler& masm, Register regexp, Register input,
+    Register lastIndex, Register temp1, Register temp2, Register temp3,
+    size_t inputOutputDataStartOffset, RegExpShared::CompilationMode mode,
+    bool stringsCanBeInNursery, Label* notFound, Label* failure) {
   JitSpew(JitSpew_Codegen, "# Emitting PrepareAndExecuteRegExp");
 
   // clang-format off
@@ -2024,26 +2020,32 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   if (!res) {
     return false;
   }
+#  ifdef JS_USE_LINK_REGISTER
+  if (mode != RegExpShared::MatchOnly) {
+    masm.pushReturnAddress();
+  }
+#  endif
+  if (mode == RegExpShared::Normal) {
+    // First, fill in a skeletal MatchPairs instance on the stack. This will be
+    // passed to the OOL stub in the caller if we aren't able to execute the
+    // RegExp inline, and that stub needs to be able to determine whether the
+    // execution finished successfully.
 
-  // First, fill in a skeletal MatchPairs instance on the stack. This will be
-  // passed to the OOL stub in the caller if we aren't able to execute the
-  // RegExp inline, and that stub needs to be able to determine whether the
-  // execution finished successfully.
+    // Initialize MatchPairs::pairCount to 1, the correct value can only
+    // be determined after loading the RegExpShared.
+    masm.store32(Imm32(1), pairCountAddress);
 
-  // Initialize MatchPairs::pairCount to 1, the correct value can only
-  // be determined after loading the RegExpShared.
-  masm.store32(Imm32(1), pairCountAddress);
+    // Initialize MatchPairs::pairs[0]::start to MatchPair::NoMatch.
+    Address firstMatchPairStartAddress(
+        masm.getStackPointer(),
+        pairsVectorStartOffset + offsetof(MatchPair, start));
+    masm.store32(Imm32(MatchPair::NoMatch), firstMatchPairStartAddress);
 
-  // Initialize MatchPairs::pairs[0]::start to MatchPair::NoMatch.
-  Address firstMatchPairStartAddress(
-      masm.getStackPointer(),
-      pairsVectorStartOffset + offsetof(MatchPair, start));
-  masm.store32(Imm32(MatchPair::NoMatch), firstMatchPairStartAddress);
-
-  // Assign the MatchPairs::pairs pointer to the first MatchPair object.
-  Address pairsVectorAddress(masm.getStackPointer(), pairsVectorStartOffset);
-  masm.computeEffectiveAddress(pairsVectorAddress, temp1);
-  masm.storePtr(temp1, pairsPointerAddress);
+    // Assign the MatchPairs::pairs pointer to the first MatchPair object.
+    Address pairsVectorAddress(masm.getStackPointer(), pairsVectorStartOffset);
+    masm.computeEffectiveAddress(pairsVectorAddress, temp1);
+    masm.storePtr(temp1, pairsPointerAddress);
+  }
 
   // Check for a linear input string.
   masm.branchIfRope(input, failure);
@@ -2113,14 +2115,16 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
     masm.bind(&done);
   }
 
-  // Don't handle RegExps with excessive parens.
-  masm.load32(Address(temp1, RegExpShared::offsetOfParenCount()), temp2);
-  masm.branch32(Assembler::AboveOrEqual, temp2,
-                Imm32(RegExpObject::MaxPairCount), failure);
+  if (mode == RegExpShared::Normal) {
+    // Don't handle RegExps with excessive parens.
+    masm.load32(Address(temp1, RegExpShared::offsetOfParenCount()), temp2);
+    masm.branch32(Assembler::AboveOrEqual, temp2,
+                  Imm32(RegExpObject::MaxPairCount), failure);
 
-  // Fill in the paren count in the MatchPairs on the stack.
-  masm.add32(Imm32(1), temp2);
-  masm.store32(temp2, pairCountAddress);
+    // Fill in the paren count in the MatchPairs on the stack.
+    masm.add32(Imm32(1), temp2);
+    masm.store32(temp2, pairCountAddress);
+  }
 
   // Load the code pointer for the type of input string we have, and compute
   // the input start/end pointers in the InputOutputData.
@@ -2134,18 +2138,16 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
       masm.loadStringChars(input, temp2, CharEncoding::TwoByte);
       masm.storePtr(temp2, inputStartAddress);
       masm.lshiftPtr(Imm32(1), temp3);
-      masm.loadPtr(
-          Address(temp1, RegExpShared::offsetOfJitCode(/*latin1 =*/false)),
-          codePointer);
+      masm.loadPtr(Address(temp1, RegExpShared::offsetOfTwoByteJitCode(mode)),
+                   codePointer);
       masm.jump(&done);
     }
     masm.bind(&isLatin1);
     {
       masm.loadStringChars(input, temp2, CharEncoding::Latin1);
       masm.storePtr(temp2, inputStartAddress);
-      masm.loadPtr(
-          Address(temp1, RegExpShared::offsetOfJitCode(/*latin1 = */ true)),
-          codePointer);
+      masm.loadPtr(Address(temp1, RegExpShared::offsetOfLatin1JitCode(mode)),
+                   codePointer);
     }
     masm.bind(&done);
 
@@ -2158,10 +2160,15 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   masm.loadPtr(Address(codePointer, JitCode::offsetOfCode()), codePointer);
 
   // Finish filling in the InputOutputData instance on the stack.
-  masm.computeEffectiveAddress(
-      Address(masm.getStackPointer(), matchPairsStartOffset), temp2);
-  masm.storePtr(temp2, matchesPointerAddress);
-
+  if (mode == RegExpShared::Normal) {
+    masm.computeEffectiveAddress(
+        Address(masm.getStackPointer(), matchPairsStartOffset), temp2);
+    masm.storePtr(temp2, matchesPointerAddress);
+  } else {
+    // Use InputOutputData.endIndex itself for output.
+    masm.computeEffectiveAddress(endIndexAddress, temp2);
+    masm.storePtr(temp2, endIndexAddress);
+  }
   masm.storePtr(lastIndex, startIndexAddress);
   masm.store32(Imm32(RegExpRunStatus_Error), matchResultAddress);
 
@@ -2253,6 +2260,11 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   masm.storePtr(temp3, lazySourceAddress);
   masm.load32(Address(temp2, RegExpShared::offsetOfFlags()), temp3);
   masm.store32(temp3, Address(temp1, RegExpStatics::offsetOfLazyFlags()));
+
+  if (mode == RegExpShared::MatchOnly) {
+    // endIndex is passed via temp3.
+    masm.load32(endIndexAddress, temp3);
+  }
 
   return true;
 }
@@ -2603,17 +2615,14 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 
   StackMacroAssembler masm(cx);
 
-#ifdef JS_USE_LINK_REGISTER
-  masm.pushReturnAddress();
-#endif
-
   // The InputOutputData is placed above the return address on the stack.
   size_t inputOutputDataStartOffset = sizeof(void*);
 
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
                                temp3, inputOutputDataStartOffset,
-                               stringsCanBeInNursery, &notFound, &oolEntry)) {
+                               RegExpShared::Normal, stringsCanBeInNursery,
+                               &notFound, &oolEntry)) {
     return nullptr;
   }
 
@@ -2920,17 +2929,14 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
 
   StackMacroAssembler masm(cx);
 
-#ifdef JS_USE_LINK_REGISTER
-  masm.pushReturnAddress();
-#endif
-
   // The InputOutputData is placed above the return address on the stack.
   size_t inputOutputDataStartOffset = sizeof(void*);
 
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
                                temp3, inputOutputDataStartOffset,
-                               stringsCanBeInNursery, &notFound, &oolEntry)) {
+                               RegExpShared::Normal, stringsCanBeInNursery,
+                               &notFound, &oolEntry)) {
     return nullptr;
   }
 
@@ -3099,29 +3105,19 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   Register temp2 = regs.takeAny();
   Register temp3 = regs.takeAny();
 
-  masm.reserveStack(RegExpReservedStack);
+  masm.reserveStack(InputOutputDataSize);
 
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
-                               temp3, 0, stringsCanBeInNursery, &notFound,
-                               &oolEntry)) {
+                               temp3, 0, RegExpShared::MatchOnly,
+                               stringsCanBeInNursery, &notFound, &oolEntry)) {
     return nullptr;
   }
 
   Label done;
 
-  // In visitRegExpMatcher and visitRegExpSearcher, we reserve stack space
-  // before calling the stub. For RegExpTester we call the stub before reserving
-  // stack space, so the offset of the InputOutputData is 0.
-  size_t inputOutputDataStartOffset = 0;
-
-  size_t pairsVectorStartOffset =
-      RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
-  Address matchPairLimit(masm.getStackPointer(),
-                         pairsVectorStartOffset + offsetof(MatchPair, limit));
-
-  // RegExpTester returns the end index of the match to update lastIndex.
-  masm.load32(matchPairLimit, result);
+  // temp3 contains endIndex.
+  masm.move32(temp3, result);
   masm.jump(&done);
 
   masm.bind(&notFound);
@@ -3132,7 +3128,7 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   masm.move32(Imm32(RegExpTesterResultFailed), result);
 
   masm.bind(&done);
-  masm.freeStack(RegExpReservedStack);
+  masm.freeStack(InputOutputDataSize);
   masm.ret();
 
   Linker linker(masm);

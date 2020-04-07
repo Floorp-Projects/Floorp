@@ -143,14 +143,19 @@ static RegExpRunStatus ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res,
                                          MutableHandleRegExpShared re,
                                          HandleLinearString input,
                                          size_t searchIndex,
-                                         VectorMatchPairs* matches) {
+                                         VectorMatchPairs* matches,
+                                         size_t* endIndex) {
   RegExpRunStatus status =
-      RegExpShared::execute(cx, re, input, searchIndex, matches);
+      RegExpShared::execute(cx, re, input, searchIndex, matches, endIndex);
 
   /* Out of spec: Update RegExpStatics. */
   if (status == RegExpRunStatus_Success && res) {
-    if (!res->updateFromMatchPairs(cx, input, *matches)) {
-      return RegExpRunStatus_Error;
+    if (matches) {
+      if (!res->updateFromMatchPairs(cx, input, *matches)) {
+        return RegExpRunStatus_Error;
+      }
+    } else {
+      res->updateLazily(cx, input, re, searchIndex);
     }
   }
   return status;
@@ -169,7 +174,7 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
   VectorMatchPairs matches;
 
   RegExpRunStatus status =
-      ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex, &matches);
+      ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex, &matches, nullptr);
   if (status == RegExpRunStatus_Error) {
     return false;
   }
@@ -951,7 +956,8 @@ static bool IsTrailSurrogateWithLeadSurrogate(HandleLinearString input,
  */
 static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
                                      HandleString string, int32_t lastIndex,
-                                     VectorMatchPairs* matches) {
+                                     VectorMatchPairs* matches,
+                                     size_t* endIndex) {
   /*
    * WARNING: Despite the presence of spec step comment numbers, this
    *          algorithm isn't consistent with any ES6 version, draft or
@@ -1012,7 +1018,7 @@ static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
 
   /* Steps 3, 11-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
-      ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches);
+      ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches, endIndex);
   if (status == RegExpRunStatus_Error) {
     return RegExpRunStatus_Error;
   }
@@ -1034,7 +1040,7 @@ static bool RegExpMatcherImpl(JSContext* cx, HandleObject regexp,
 
   /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
+      ExecuteRegExp(cx, regexp, string, lastIndex, &matches, nullptr);
   if (status == RegExpRunStatus_Error) {
     return false;
   }
@@ -1103,7 +1109,7 @@ static bool RegExpSearcherImpl(JSContext* cx, HandleObject regexp,
 
   /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
+      ExecuteRegExp(cx, regexp, string, lastIndex, &matches, nullptr);
   if (status == RegExpRunStatus_Error) {
     return false;
   }
@@ -1182,17 +1188,17 @@ bool js::RegExpTester(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ALWAYS_TRUE(ToInt32(cx, args[2], &lastIndex));
 
   /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
-  VectorMatchPairs matches;
+  size_t endIndex = 0;
   RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
+      ExecuteRegExp(cx, regexp, string, lastIndex, nullptr, &endIndex);
 
   if (status == RegExpRunStatus_Error) {
     return false;
   }
 
   if (status == RegExpRunStatus_Success) {
-    int32_t endIndex = matches[0].limit;
-    args.rval().setInt32(endIndex);
+    MOZ_ASSERT(endIndex <= INT32_MAX);
+    args.rval().setInt32(int32_t(endIndex));
   } else {
     args.rval().setInt32(-1);
   }
@@ -1207,12 +1213,13 @@ bool js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
                          int32_t lastIndex, int32_t* endIndex) {
   MOZ_ASSERT(lastIndex >= 0);
 
-  VectorMatchPairs matches;
+  size_t endIndexTmp = 0;
   RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, input, lastIndex, &matches);
+      ExecuteRegExp(cx, regexp, input, lastIndex, nullptr, &endIndexTmp);
 
   if (status == RegExpRunStatus_Success) {
-    *endIndex = matches[0].limit;
+    MOZ_ASSERT(endIndexTmp <= INT32_MAX);
+    *endIndex = int32_t(endIndexTmp);
     return true;
   }
   if (status == RegExpRunStatus_Success_NotFound) {
