@@ -247,6 +247,8 @@ void CanonicalBrowsingContext::UpdateMediaControlKeysEvent(
 void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
                                        const LoadURIOptions& aOptions,
                                        ErrorResult& aError) {
+  nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+
   nsCOMPtr<nsISupports> consumer = GetDocShell();
   if (!consumer) {
     consumer = GetEmbedderElement();
@@ -258,7 +260,7 @@ void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
 
   RefPtr<nsDocShellLoadState> loadState;
   nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      consumer, aURI, aOptions, getter_AddRefs(loadState));
+      consumer, uriFixup, aURI, aOptions, getter_AddRefs(loadState));
 
   if (rv == NS_ERROR_MALFORMED_URI) {
     DisplayLoadError(aURI);
