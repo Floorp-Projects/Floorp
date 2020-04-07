@@ -197,7 +197,7 @@ function isReliableScope(scope: OriginalScope): boolean {
   return totalBindings === 0 || unknownBindings / totalBindings < 0.25;
 }
 
-function hasLineMappings(ranges) {
+function hasLineMappings(ranges): boolean {
   return ranges.every(
     range => range.columnStart === 0 && range.columnEnd === Infinity
   );
@@ -333,7 +333,10 @@ function generateClientScope(
   return result;
 }
 
-function hasValidIdent(range: MappedOriginalRange, pos: BindingLocation) {
+function hasValidIdent(
+  range: MappedOriginalRange,
+  pos: BindingLocation
+): boolean {
   return (
     range.type === "match" ||
     // For declarations, we allow the range on the identifier to be a

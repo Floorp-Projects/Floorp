@@ -7,7 +7,7 @@
 import { getTokenLocation } from ".";
 import { isEqual } from "lodash";
 
-function isInvalidTarget(target: HTMLElement) {
+function isInvalidTarget(target: HTMLElement): boolean {
   if (!target || !target.innerText) {
     return true;
   }
@@ -37,7 +37,7 @@ function isInvalidTarget(target: HTMLElement) {
     return true;
   }
 
-  return invalidTarget || invalidToken || invalidType;
+  return !!(invalidTarget || invalidToken || invalidType);
 }
 
 function dispatch(codeMirror, eventName, data) {
@@ -52,7 +52,7 @@ function invalidLeaveTarget(target: ?HTMLElement) {
   return false;
 }
 
-export function onMouseOver(codeMirror: any) {
+export function onMouseOver(codeMirror: any): any {
   let prevTokenPos = null;
 
   function onMouseLeave(event) {

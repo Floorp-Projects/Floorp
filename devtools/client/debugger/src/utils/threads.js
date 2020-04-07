@@ -6,6 +6,6 @@
 
 import type { Thread } from "../types";
 
-export function isWorker(thread: Thread) {
+export function isWorker(thread: Thread): boolean {
   return thread.type == "worker";
 }

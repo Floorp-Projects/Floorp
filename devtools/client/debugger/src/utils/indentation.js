@@ -4,7 +4,7 @@
 
 // @flow
 
-export function getIndentation(line: ?string) {
+export function getIndentation(line: ?string): number {
   if (!line) {
     return 0;
   }
@@ -17,7 +17,7 @@ export function getIndentation(line: ?string) {
   return lineMatch[0].length;
 }
 
-function getMaxIndentation(lines) {
+function getMaxIndentation(lines: string[]): number {
   const firstLine = lines[0];
   const secondLine = lines[1];
   const lastLine = lines[lines.length - 1];
@@ -31,7 +31,7 @@ function getMaxIndentation(lines) {
   return Math.max(...indentations);
 }
 
-export function correctIndentation(text: string) {
+export function correctIndentation(text: string): string {
   const lines = text.trim().split("\n");
   const indentation = getMaxIndentation(lines);
   const formattedLines = lines.map(_line =>

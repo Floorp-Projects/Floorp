@@ -26,7 +26,7 @@ function getSourceForFrame(
   sources: SourceResourceState,
   frame: Frame,
   isGeneratedSource
-) {
+): ?Source {
   const sourceId = getLocation(frame, isGeneratedSource).sourceId;
   return getSourceInSources(sources, sourceId);
 }
@@ -48,7 +48,7 @@ export function formatCallStackFrames(
   frames: Frame[],
   sources: SourceResourceState,
   selectedSource: Source
-) {
+): ?(Frame[]) {
   if (!frames) {
     return null;
   }

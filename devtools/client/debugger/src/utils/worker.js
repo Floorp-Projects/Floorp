@@ -17,7 +17,7 @@ let msgId = 1;
  * @memberof utils/utils
  * @static
  */
-function workerTask(worker: any, method: string) {
+function workerTask(worker: any, method: string): Function {
   return function(...args: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = msgId++;
@@ -41,7 +41,7 @@ function workerTask(worker: any, method: string) {
   };
 }
 
-function workerHandler(publicInterface: any) {
+function workerHandler(publicInterface: any): Function {
   return function onTask(msg: Message) {
     const { id, method, args } = msg.data;
     const response = publicInterface[method].apply(null, args);

@@ -92,8 +92,7 @@ export default function update(
       break;
     }
     case "REMOVE_SOURCE_ACTORS": {
-      const { items } = action;
-      state = removeResources(state, items);
+      state = removeResources(state, action.items);
       break;
     }
 

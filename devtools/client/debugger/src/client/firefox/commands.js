@@ -56,7 +56,7 @@ type Dependencies = {
   targetList: TargetList,
 };
 
-function setupCommands(dependencies: Dependencies) {
+function setupCommands(dependencies: Dependencies): void {
   devToolsClient = dependencies.devToolsClient;
   targetList = dependencies.targetList;
   targets = {};

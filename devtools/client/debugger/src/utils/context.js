@@ -54,7 +54,7 @@ export type Context = NavigateContext | ThreadContext;
 
 export class ContextError extends Error {}
 
-export function validateNavigateContext(state: State, cx: Context) {
+export function validateNavigateContext(state: State, cx: Context): void {
   const newcx = getThreadContext(state);
 
   if (newcx.navigateCounter != cx.navigateCounter) {
@@ -62,7 +62,7 @@ export function validateNavigateContext(state: State, cx: Context) {
   }
 }
 
-export function validateThreadContext(state: State, cx: ThreadContext) {
+export function validateThreadContext(state: State, cx: ThreadContext): void {
   const newcx = getThreadContext(state);
 
   if (cx.thread != newcx.thread) {
@@ -74,7 +74,7 @@ export function validateThreadContext(state: State, cx: ThreadContext) {
   }
 }
 
-export function validateContext(state: State, cx: Context) {
+export function validateContext(state: State, cx: Context): void {
   validateNavigateContext(state, cx);
 
   if ("thread" in cx) {
@@ -82,7 +82,7 @@ export function validateContext(state: State, cx: Context) {
   }
 }
 
-export function isValidThreadContext(state: State, cx: ThreadContext) {
+export function isValidThreadContext(state: State, cx: ThreadContext): boolean {
   const newcx = getThreadContext(state);
   return cx.thread == newcx.thread && cx.pauseCounter == newcx.pauseCounter;
 }

@@ -107,7 +107,7 @@ function update(
   return state;
 }
 
-function restoreExpressions() {
+function restoreExpressions(): Expression[] {
   const exprs = prefs.expressions;
   if (exprs.length == 0) {
     return [];
@@ -116,11 +116,14 @@ function restoreExpressions() {
   return exprs;
 }
 
-function storeExpressions({ expressions }) {
+function storeExpressions({ expressions }): void {
   prefs.expressions = expressions.map(expression => omit(expression, "value"));
 }
 
-function appendExpressionToList(state: ExpressionState, value: any) {
+function appendExpressionToList(
+  state: ExpressionState,
+  value: any
+): ExpressionState {
   const newState = { ...state, expressions: [...state.expressions, value] };
 
   storeExpressions(newState);
@@ -131,7 +134,7 @@ function updateExpressionInList(
   state: ExpressionState,
   key: string,
   value: any
-) {
+): ExpressionState {
   const list = [...state.expressions];
   const index = list.findIndex(e => e.input == key);
   list[index] = value;
@@ -141,7 +144,10 @@ function updateExpressionInList(
   return newState;
 }
 
-function deleteExpression(state: ExpressionState, input: string) {
+function deleteExpression(
+  state: ExpressionState,
+  input: string
+): ExpressionState {
   const list = [...state.expressions];
   const index = list.findIndex(e => e.input == input);
   list.splice(index, 1);
@@ -162,7 +168,7 @@ export const getAutocompleteMatches: Selector<AutocompleteMatches> = createSelec
   expressions => expressions.autocompleteMatches
 );
 
-export function getExpression(state: State, input: string) {
+export function getExpression(state: State, input: string): ?Expression {
   return getExpressions(state).find(exp => exp.input == input);
 }
 

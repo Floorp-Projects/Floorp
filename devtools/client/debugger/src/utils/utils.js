@@ -16,7 +16,7 @@ import { DevToolsUtils } from "devtools-modules";
  * @memberof utils/utils
  * @static
  */
-export function handleError(err: any) {
+export function handleError(err: any): void {
   console.log("ERROR: ", err);
 }
 
@@ -45,7 +45,7 @@ export function promisify(
  * @memberof utils/utils
  * @static
  */
-export function endTruncateStr(str: any, size: number) {
+export function endTruncateStr(str: any, size: number): string {
   if (str.length > size) {
     return `…${str.slice(str.length - size)}`;
   }
@@ -56,7 +56,7 @@ export function waitForMs(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function downloadFile(content: SourceContent, fileName: string) {
+export function downloadFile(content: SourceContent, fileName: string): void {
   if (content.type !== "text") {
     return;
   }

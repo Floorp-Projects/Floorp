@@ -57,11 +57,11 @@ function update(
 // https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
 type OuterState = { preview: PreviewState };
 
-export function getPreview(state: OuterState) {
+export function getPreview(state: OuterState): ?Preview {
   return state.preview.preview;
 }
 
-export function getPreviewCount(state: OuterState) {
+export function getPreviewCount(state: OuterState): number {
   return state.preview.previewCount;
 }
 

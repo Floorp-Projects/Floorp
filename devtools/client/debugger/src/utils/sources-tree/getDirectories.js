@@ -26,7 +26,10 @@ function findSourceItem(sourceTree: TreeDirectory, source: Source): ?TreeNode {
   return _traverse(sourceTree);
 }
 
-export function findSourceTreeNodes(sourceTree: TreeDirectory, path: string) {
+export function findSourceTreeNodes(
+  sourceTree: TreeDirectory,
+  path: string
+): TreeNode[] {
   function _traverse(subtree: TreeNode) {
     if (subtree.path.endsWith(path)) {
       return subtree;

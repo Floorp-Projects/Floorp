@@ -11,7 +11,7 @@ import type { State } from "../reducers/types";
 
 // Checks if a line is considered in scope
 // We consider all lines in scope, if we do not have lines in scope.
-export function isLineInScope(state: State, line: number) {
+export function isLineInScope(state: State, line: number): boolean {
   const frame = getVisibleSelectedFrame(state);
   if (!frame) {
     return false;

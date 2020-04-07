@@ -39,14 +39,14 @@ export function findBestMatchExpression(symbols: Symbols, tokenPos: Position) {
 }
 
 // Check whether location A starts after location B
-export function positionAfter(a: AstLocation, b: AstLocation) {
+export function positionAfter(a: AstLocation, b: AstLocation): boolean {
   return (
     a.start.line > b.start.line ||
     (a.start.line === b.start.line && a.start.column > b.start.column)
   );
 }
 
-export function containsPosition(a: AstLocation, b: PartialPosition) {
+export function containsPosition(a: AstLocation, b: PartialPosition): boolean {
   const bColumn = b.column || 0;
   const startsBefore =
     a.start.line < b.line ||

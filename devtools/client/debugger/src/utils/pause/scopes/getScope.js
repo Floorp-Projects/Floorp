@@ -34,7 +34,7 @@ const {
   },
 } = objectInspector;
 
-function getScopeTitle(type, scope: RenderableScope) {
+function getScopeTitle(type, scope: RenderableScope): string | void {
   if (type === "block" && scope.block && scope.block.displayName) {
     return scope.block.displayName;
   }
@@ -116,7 +116,7 @@ export function mergeScopes(
   parentScope: RenderableScope,
   item: NamedValue,
   parentItem: NamedValue
-) {
+): NamedValue | void {
   if (scope.scopeKind == "function lexical" && parentScope.type == "function") {
     const contents = (item.contents: any).concat(parentItem.contents);
     contents.sort((a, b) => a.name.localeCompare(b.name));

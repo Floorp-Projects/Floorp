@@ -176,7 +176,7 @@ export function addToTree(
   source: Source,
   debuggeeHost: ?string,
   thread: string
-) {
+): void {
   const url = getURL(source, debuggeeHost);
 
   if (isInvalidUrl(url, source)) {
