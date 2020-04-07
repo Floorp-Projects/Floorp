@@ -86,11 +86,16 @@ class DNSListener {
       this.resolve = resolve;
     });
   }
-  onLookupByTypeComplete(inRequest, inRecord, inStatus) {
-    this.resolve([inRequest, inRecord, inStatus, "onLookupByTypeComplete"]);
-  }
   onLookupComplete(inRequest, inRecord, inStatus) {
-    this.resolve([inRequest, inRecord, inStatus, "onLookupComplete"]);
+    let txtRec;
+    try {
+      txtRec = inRecord.QueryInterface(Ci.nsIDNSByTypeRecord);
+    } catch (e) {}
+    if (txtRec) {
+      this.resolve([inRequest, txtRec, inStatus, "onLookupByTypeComplete"]);
+    } else {
+      this.resolve([inRequest, inRecord, inStatus, "onLookupComplete"]);
+    }
   }
   // So we can await this as a promise.
   then() {

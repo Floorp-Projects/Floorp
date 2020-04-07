@@ -439,13 +439,6 @@ class DNSListener final : public nsIDNSListener {
     mResult->CompleteExceptionally(error.Cast<jni::Throwable>());
   }
 
-  NS_IMETHOD
-  OnLookupByTypeComplete(nsICancelable* aRequest, nsIDNSByTypeRecord* aRecord,
-                         nsresult aStatus) override {
-    MOZ_ASSERT_UNREACHABLE("unxpected nsIDNSListener callback");
-    return NS_ERROR_UNEXPECTED;
-  }
-
  private:
   nsresult CompleteWithRecord(nsIDNSRecord* aRecord) {
     nsTArray<NetAddr> addrs;

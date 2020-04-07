@@ -327,12 +327,6 @@ class PACResolver final : public nsIDNSListener,
     return NS_OK;
   }
 
-  NS_IMETHOD OnLookupByTypeComplete(nsICancelable* request,
-                                    nsIDNSByTypeRecord* res,
-                                    nsresult status) override {
-    return NS_OK;
-  }
-
   // nsITimerCallback
   NS_IMETHOD Notify(nsITimer* timer) override {
     nsCOMPtr<nsICancelable> request;
