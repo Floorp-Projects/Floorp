@@ -96,7 +96,6 @@ linux64-fuzzing/debug:
         env:
             MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: fuzzing
-            FORCE_GCC: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -111,8 +110,8 @@ linux64-fuzzing/debug:
         need-xvfb: true
     fetches:
         toolchain:
+            - linux64-binutils
             - linux64-clang
-            - linux64-gcc-8
             - linux64-cbindgen
             - linux64-sccache
             - linux64-rust
