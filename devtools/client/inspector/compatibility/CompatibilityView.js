@@ -16,6 +16,7 @@ loader.lazyRequireGetter(
   "devtools/client/inspector/compatibility/lib/dataset/browsers.json"
 );
 
+const compatibilityReducer = require("devtools/client/inspector/compatibility/reducers/compatibility");
 const {
   updateNodes,
   updateSelectedNode,
@@ -29,11 +30,14 @@ const CompatibilityApp = createFactory(
 
 class CompatibilityView {
   constructor(inspector, window) {
+    this.inspector = inspector;
+
+    this.inspector.store.injectReducer("compatibility", compatibilityReducer);
+
     this._onChangeAdded = this._onChangeAdded.bind(this);
     this._onPanelSelected = this._onPanelSelected.bind(this);
     this._onSelectedNodeChanged = this._onSelectedNodeChanged.bind(this);
     this._onTopLevelTargetChanged = this._onTopLevelTargetChanged.bind(this);
-    this.inspector = inspector;
 
     this._init();
   }
