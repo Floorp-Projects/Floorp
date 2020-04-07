@@ -168,6 +168,39 @@ var PlacesTestUtils = Object.freeze({
   },
 
   /**
+   * Adds a bookmark to the database.
+   * @param {string} aBookmarkObj.uri
+   * @param {string} [aBookmarkObj.title]
+   * @param {string} [aBookmarkObj.keyword]
+   */
+  async addBookmarkWithDetails(aBookmarkObj) {
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: aBookmarkObj.title || "A bookmark",
+      url: aBookmarkObj.uri,
+    });
+
+    if (aBookmarkObj.keyword) {
+      await PlacesUtils.keywords.insert({
+        keyword: aBookmarkObj.keyword,
+        url:
+          aBookmarkObj.uri instanceof Ci.nsIURI
+            ? aBookmarkObj.uri.spec
+            : aBookmarkObj.uri,
+        postData: aBookmarkObj.postData,
+      });
+    }
+
+    if (aBookmarkObj.tags) {
+      let uri =
+        aBookmarkObj.uri instanceof Ci.nsIURI
+          ? aBookmarkObj.uri
+          : Services.io.newURI(aBookmarkObj.uri);
+      PlacesUtils.tagging.tagURI(uri, aBookmarkObj.tags);
+    }
+  },
+
+  /**
    * Waits for all pending async statements on the default connection.
    *
    * @return {Promise}

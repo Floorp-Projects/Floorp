@@ -15,7 +15,10 @@ add_task(async function test_javascript_match() {
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "Title with javascript:" },
   ]);
-  await addBookmark({ uri: uri2, title: "Title with javascript:" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: uri2,
+    title: "Title with javascript:",
+  });
 
   info("Match non-javascript: with plain search");
   await check_autocomplete({

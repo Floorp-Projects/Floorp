@@ -80,7 +80,10 @@ add_task(async function test_it_works() {
 
 add_task(async function test_sorting_against_bookmark() {
   let boookmarkURI = NetUtil.newURI("https://boookmark.com");
-  await addBookmark({ uri: boookmarkURI, title: "Boookmark" });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: boookmarkURI,
+    title: "Boookmark",
+  });
 
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
