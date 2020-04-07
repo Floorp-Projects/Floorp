@@ -2859,6 +2859,8 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
   AttachDecision tryAttachInt32();
   AttachDecision tryAttachNumber();
   AttachDecision tryAttachBigInt();
+  AttachDecision tryAttachStringInt32();
+  AttachDecision tryAttachStringNumber();
 
   void trackAttached(const char* name);
 
