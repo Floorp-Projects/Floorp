@@ -146,6 +146,7 @@ struct LoadInfoArgs
   nsString                    cspNonce;
   bool                        skipContentSniffing;
   uint32_t                    httpsOnlyStatus;
+  bool                        allowDeprecatedSystemRequests;
   bool                        isFromProcessingFrameAttributes;
   CookieJarSettingsArgs       cookieJarSettings;
   uint32_t                    requestBlockingReason;
@@ -185,8 +186,12 @@ struct ParentLoadInfoForwarderArgs
   // that flag is set to true so we skip content sniffing for that browsing
   bool skipContentSniffing;
 
-  // Upgrade state of HTTPS-Only Mode
   uint32_t httpsOnlyStatus;
+
+  // The SystemPrincipal is disallowed to make requests to the public web
+  // and all requests will be cancelled. Setting this flag to true prevents
+  // the request from being cancelled.
+  bool allowDeprecatedSystemRequests;
 
   // We must also note that the tainting value was explicitly set
   // by the service worker.

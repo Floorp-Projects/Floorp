@@ -566,6 +566,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
       cspNonce, aLoadInfo->GetSkipContentSniffing(),
       aLoadInfo->GetHttpsOnlyStatus(),
+      aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieJarSettingsArgs,
       aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
       aLoadInfo->GetHasStoragePermission()));
@@ -764,8 +765,10 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.documentHasLoaded(),
       loadInfoArgs.allowListFutureDocumentsCreatedFromThisRedirectChain(),
       loadInfoArgs.cspNonce(), loadInfoArgs.skipContentSniffing(),
-      loadInfoArgs.httpsOnlyStatus(), loadInfoArgs.hasStoragePermission(),
-      loadInfoArgs.requestBlockingReason(), loadingContext);
+      loadInfoArgs.httpsOnlyStatus(),
+      loadInfoArgs.allowDeprecatedSystemRequests(),
+      loadInfoArgs.hasStoragePermission(), loadInfoArgs.requestBlockingReason(),
+      loadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -803,6 +806,7 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(),
       aLoadInfo->GetBypassCORSChecks(), ipcController, tainting,
       aLoadInfo->GetSkipContentSniffing(), aLoadInfo->GetHttpsOnlyStatus(),
+      aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -839,6 +843,10 @@ nsresult MergeParentLoadInfoForwarder(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetHttpsOnlyStatus(aForwarderArgs.httpsOnlyStatus());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetAllowDeprecatedSystemRequests(
+      aForwarderArgs.allowDeprecatedSystemRequests());
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(
