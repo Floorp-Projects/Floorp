@@ -13,9 +13,14 @@
 #include "gfxVR.h"
 
 namespace mozilla {
+namespace gfx {
+class VRDisplayClient;
+}  // namespace gfx
 namespace dom {
 class Gamepad;
 class XRSpace;
+class XRSession;
+class XRNativeOrigin;
 enum class XRHandedness : uint8_t;
 enum class XRTargetRayMode : uint8_t;
 
@@ -38,11 +43,24 @@ class XRInputSource final : public nsWrapperCache {
   XRSpace* GetGripSpace();
   void GetProfiles(nsTArray<nsString>& aResult);
   Gamepad* GetGamepad();
+  void Setup(XRSession* aSession, uint32_t aIndex);
+  void SetGamepadIsConnected(bool aConnected);
+  void Update(XRSession* aSession);
+  int32_t GetIndex();
 
  protected:
   virtual ~XRInputSource() = default;
 
   nsCOMPtr<nsISupports> mParent;
+
+ private:
+  nsTArray<nsString> mProfiles;
+  XRHandedness mHandedness;
+  XRTargetRayMode mTargetRayMode;
+
+  RefPtr<XRSpace> mTargetRaySpace;
+  RefPtr<XRSpace> mGripSpace;
+  int32_t mIndex;
 };
 
 }  // namespace dom

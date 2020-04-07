@@ -32,9 +32,9 @@ enum class GamepadCapabilityFlags : uint16_t {
    */
   Cap_LinearAcceleration = 1 << 4,
   /**
-   * Cap_GripSpacePosition is set if the Gamepad has a grip space position.
+   * Cap_TargetRaySpacePosition is set if the Gamepad has a target ray space position.
    */
-  Cap_GripSpacePosition = 1 << 5,
+  Cap_TargetRaySpacePosition = 1 << 5,
   /**
    * Cap_All used for validity checking during IPC serialization
    */
