@@ -3730,6 +3730,7 @@ AbortReasonOr<Ok> IonBuilder::arithUnaryBinaryCache(JSOp op, MDefinition* left,
     case JSOp::Mul:
     case JSOp::Div:
     case JSOp::Mod:
+    case JSOp::Pow:
     case JSOp::BitAnd:
     case JSOp::BitOr:
     case JSOp::BitXor:
@@ -3816,12 +3817,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_pow() {
     }
   }
 
-  // For now, use MIRType::None as a safe cover-all. See bug 1188079.
-  MPow* pow = MPow::New(alloc(), base, exponent, MIRType::None);
-  current->add(pow);
-  current->push(pow);
-  MOZ_ASSERT(pow->isEffectful());
-  return resumeAfter(pow);
+  return arithUnaryBinaryCache(JSOp::Pow, base, exponent);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_pos() {
