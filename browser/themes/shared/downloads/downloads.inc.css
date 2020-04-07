@@ -30,7 +30,7 @@
   margin: 0;
   border: 0;
   min-width: 0;
-  border-inline-start: 1px solid var(--panel-separator-color);
+  border-left: 1px solid var(--panel-separator-color);
   -moz-appearance: none;
 }
 
@@ -55,7 +55,8 @@
 }
 
 #downloadsHistory {
-  padding-inline: 14px;
+  padding-inline-start: 14px;
+  padding-inline-end: 14px;
 }
 
 @item@ > toolbarseparator {
@@ -243,7 +244,8 @@
 }
 
 #downloadsPanel-blockedSubview-title {
-  margin-block: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
   font-size: calc(100% / var(--downloads-item-font-size-factor));
 }
 
@@ -257,7 +259,8 @@
 #downloadsPanel-blockedSubview-title,
 #downloadsPanel-blockedSubview-details1,
 #downloadsPanel-blockedSubview-details2 {
-  margin-inline: 64px 16px;
+  -moz-margin-start: 64px;
+  -moz-margin-end: 16px;
 }
 
 /*** Progressmeter ***/

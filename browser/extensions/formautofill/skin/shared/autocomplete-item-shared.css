@@ -62,7 +62,8 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   margin: 0;
   border-bottom: 1px solid rgba(38,38,38,.15);
   padding: var(--item-padding-vertical) 0;
-  padding-inline: var(--item-padding-horizontal);
+  padding-inline-start: var(--item-padding-horizontal);
+  padding-inline-end: var(--item-padding-horizontal);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -88,7 +89,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 }
 
 .autofill-item-box:not([ac-image=""]) > .profile-label-col::before {
-  margin-inline-end: 5px;
+  margin-right: 5px;
   float: inline-start;
   content: "";
   width: 16px;
@@ -174,7 +175,8 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 
 .autofill-insecure-item::before {
   display: block;
-  margin-inline: 4px 8px;
+  margin-inline-start: 4px;
+  margin-inline-end: 8px;
   content: "";
   width: 16px;
   height: 16px;

@@ -10,13 +10,15 @@
 }
 
 dialog:not([subdialog]) .editAddressForm {
-  margin-inline: calc(var(--grid-column-row-gap) / -2);
+  margin-inline-start: calc(var(--grid-column-row-gap) / -2);
+  margin-inline-end: calc(var(--grid-column-row-gap) / -2);
 }
 
 .editAddressForm .container {
   /* !important is needed to override preferences.css's generic label rule. */
   margin-top: var(--grid-column-row-gap) !important;
-  margin-inline: calc(var(--grid-column-row-gap) / 2);
+  margin-inline-start: calc(var(--grid-column-row-gap) / 2);
+  margin-inline-end: calc(var(--grid-column-row-gap) / 2);
   flex-grow: 1;
 }
 
@@ -61,7 +63,8 @@ dialog:not([subdialog]) .editAddressForm {
   /* Remove the bottom margin from the name containers so that the outer
      #name-container provides the margin on the outside */
   margin-bottom: 0 !important;
-  margin-inline: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* The name fields are placed adjacent to each other.
@@ -84,7 +87,8 @@ dialog:not([subdialog]) .editAddressForm {
   border-radius: 0;
   /* This provides the inner separators between the fields and should never
    * change to the focused color. */
-  border-inline-color: var(--in-content-box-border-color) !important;
+  border-left-color: var(--in-content-box-border-color) !important;
+  border-right-color: var(--in-content-box-border-color) !important;
 }
 
 /* Since the name fields are adjacent, there isn't room for the -moz-ui-invalid
