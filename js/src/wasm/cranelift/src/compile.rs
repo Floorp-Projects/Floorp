@@ -35,9 +35,9 @@ use cranelift_codegen::Context;
 use cranelift_wasm::{FuncIndex, FuncTranslator, ModuleTranslationState, WasmResult};
 
 use crate::bindings;
-use crate::isa::make_isa;
+use crate::isa::{make_isa, POINTER_SIZE};
 use crate::utils::DashResult;
-use crate::wasm2clif::{init_sig, TransEnv, POINTER_SIZE, TRAP_THROW_REPORTED};
+use crate::wasm2clif::{init_sig, TransEnv, TRAP_THROW_REPORTED};
 
 // Namespace for user-defined functions.
 const USER_FUNCTION_NAMESPACE: u32 = 0;
