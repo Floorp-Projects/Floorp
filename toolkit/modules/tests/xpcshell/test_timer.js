@@ -42,7 +42,7 @@ add_task(async function test_setTimeout() {
 });
 
 add_task(async function test_setTimeoutWithTarget() {
-  let target = Services.systemGroupEventTarget;
+  let target = Services.mainThreadEventTarget;
   let timeout1 = imported.setTimeoutWithTarget(
     () => do_throw("Should not be called"),
     100,
@@ -110,7 +110,7 @@ add_task(async function test_setInterval() {
 });
 
 add_task(async function test_setIntervalWithTarget() {
-  let target = Services.systemGroupEventTarget;
+  let target = Services.mainThreadEventTarget;
   let interval1 = imported.setIntervalWithTarget(
     () => do_throw("Should not be called!"),
     100,

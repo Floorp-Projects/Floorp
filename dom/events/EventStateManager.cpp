@@ -252,8 +252,7 @@ nsresult EventStateManager::UpdateUserActivityTimer() {
   if (!gUserInteractionTimerCallback) return NS_OK;
 
   if (!gUserInteractionTimer) {
-    gUserInteractionTimer =
-        NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other)).take();
+    gUserInteractionTimer = NS_NewTimer().take();
   }
 
   if (gUserInteractionTimer) {
@@ -1474,8 +1473,7 @@ void EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
       Preferences::GetInt("ui.click_hold_context_menus.delay", 500);
   NS_NewTimerWithFuncCallback(
       getter_AddRefs(mClickHoldTimer), sClickHoldCallback, this, clickHoldDelay,
-      nsITimer::TYPE_ONE_SHOT, "EventStateManager::CreateClickHoldTimer",
-      SystemGroup::EventTargetFor(TaskCategory::Other));
+      nsITimer::TYPE_ONE_SHOT, "EventStateManager::CreateClickHoldTimer");
 }  // CreateClickHoldTimer
 
 //

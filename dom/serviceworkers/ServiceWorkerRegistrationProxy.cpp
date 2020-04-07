@@ -276,8 +276,7 @@ ServiceWorkerRegistrationProxy::DelayedUpdate::DelayedUpdate(
   MOZ_ASSERT(!mNewestWorkerScriptUrl.IsEmpty());
   mProxy->mDelayedUpdate = this;
   Result<nsCOMPtr<nsITimer>, nsresult> result =
-      NS_NewTimerWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT,
-                              SystemGroup::EventTargetFor(TaskCategory::Other));
+      NS_NewTimerWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT);
   mTimer = result.unwrapOr(nullptr);
   MOZ_DIAGNOSTIC_ASSERT(mTimer);
 }

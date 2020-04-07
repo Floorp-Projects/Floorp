@@ -17,7 +17,6 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/ThreadEventQueue.h"
@@ -729,9 +728,8 @@ nsThreadManager::SpinEventLoopUntilEmpty() {
 }
 
 NS_IMETHODIMP
-nsThreadManager::GetSystemGroupEventTarget(nsIEventTarget** aTarget) {
-  nsCOMPtr<nsIEventTarget> target =
-      SystemGroup::EventTargetFor(TaskCategory::Other);
+nsThreadManager::GetMainThreadEventTarget(nsIEventTarget** aTarget) {
+  nsCOMPtr<nsIEventTarget> target = GetMainThreadSerialEventTarget();
   target.forget(aTarget);
   return NS_OK;
 }

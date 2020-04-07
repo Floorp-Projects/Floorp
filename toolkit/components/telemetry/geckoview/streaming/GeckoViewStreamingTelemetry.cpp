@@ -10,7 +10,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_toolkit.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/TimeStamp.h"
 #include "nsDataHashtable.h"
 #include "nsIObserverService.h"
@@ -22,7 +21,6 @@ using mozilla::Runnable;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::StaticRefPtr;
-using mozilla::SystemGroup;
 using mozilla::TaskCategory;
 using mozilla::TimeStamp;
 
@@ -213,9 +211,7 @@ void BatchCheck(const StaticMutexAutoLock& aLock) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "GeckoviewStreamingTelemetry::ArmTimer", []() -> void {
           if (!gJICTimer) {
-            gJICTimer =
-                NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other))
-                    .take();
+            gJICTimer = NS_NewTimer().take();
           }
           if (gJICTimer) {
             gJICTimer->InitWithNamedFuncCallback(
