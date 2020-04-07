@@ -3245,7 +3245,8 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
                   CanNurseryAllocateFinalizedClass(src->getClass()));
   }
 
-  RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
+  RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+  overlay->forwardTo(dst);
   insertIntoObjectFixupList(overlay);
 
   gcTracer.tracePromoteToTenured(src, dst);
@@ -3276,7 +3277,8 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
 
   MOZ_ASSERT(!dst->getClass()->extObjectMovedOp());
 
-  RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
+  RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+  overlay->forwardTo(dst);
   insertIntoObjectFixupList(overlay);
 
   gcTracer.tracePromoteToTenured(src, dst);
@@ -3394,7 +3396,8 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   tenuredSize += moveStringToTenured(dst, src, dstKind);
   tenuredCells++;
 
-  RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
+  RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+  overlay->forwardTo(dst);
   insertIntoStringFixupList(overlay);
 
   gcTracer.tracePromoteToTenured(src, dst);
@@ -3420,7 +3423,8 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   tenuredSize += moveBigIntToTenured(dst, src, dstKind);
   tenuredCells++;
 
-  RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
+  RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+  overlay->forwardTo(dst);
   insertIntoBigIntFixupList(overlay);
 
   gcTracer.tracePromoteToTenured(src, dst);
