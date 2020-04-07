@@ -47,8 +47,8 @@ namespace gfx {
 // and mapped files if we have both release and nightlies
 // running at the same time? Or...what if we have multiple
 // release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.10"
-static const int32_t kVRExternalVersion = 17;
+#define SHMEM_VERSION "0.0.9"
+static const int32_t kVRExternalVersion = 16;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -63,6 +63,7 @@ static const uint32_t kVRGroupAll = 0xffffffff;
 
 static const int kVRDisplayNameMaxLen = 256;
 static const int kVRControllerNameMaxLen = 256;
+static const int kProfileNameListMaxLen = 256;
 static const int kVRControllerMaxCount = 16;
 static const int kVRControllerMaxButtons = 64;
 static const int kVRControllerMaxAxis = 16;
@@ -119,9 +120,9 @@ enum class ControllerCapabilityFlags : uint16_t {
    */
   Cap_LinearAcceleration = 1 << 4,
   /**
-   * Cap_TargetRaySpacePosition is set if the Gamepad has a target ray space position.
+   * Cap_GripSpacePosition is set if the Gamepad has a grip space position.
    */
-  Cap_TargetRaySpacePosition = 1 << 5,
+  Cap_GripSpacePosition = 1 << 5,
   /**
    * Cap_All used for validity checking during IPC serialization
    */
@@ -370,6 +371,11 @@ struct VRControllerState {
   // https://immersive-web.github.io/webxr/#enumdef-xrtargetraymode
   TargetRayMode targetRayMode;
 
+  // Space-delimited list of input profile names, in decending order
+  // of specificity.
+  // https://immersive-web.github.io/webxr/#dom-xrinputsource-profiles
+  char profiles[kProfileNameListMaxLen];
+
   // https://immersive-web.github.io/webxr-gamepads-module/#enumdef-gamepadmappingtype
   GamepadMappingType mappingType;
 
@@ -410,14 +416,14 @@ struct VRControllerState {
 #endif
 
   // When Cap_Position is set in flags, pose corresponds
-  // to the controllers' pose in grip space:
-  // https://immersive-web.github.io/webxr/#dom-xrinputsource-gripspace
-  VRPose pose;
-
-  // When Cap_TargetRaySpacePosition is set in flags, targetRayPose corresponds
   // to the controllers' pose in target ray space:
   // https://immersive-web.github.io/webxr/#dom-xrinputsource-targetrayspace
-  VRPose targetRayPose;
+  VRPose pose;
+
+  // When Cap_GripSpacePosition is set in flags, gripPose corresponds
+  // to the controllers' pose in grip space:
+  // https://immersive-web.github.io/webxr/#dom-xrinputsource-gripspace
+  VRPose gripPose;
 
   bool isPositionValid;
   bool isOrientationValid;

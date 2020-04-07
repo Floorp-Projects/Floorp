@@ -1113,24 +1113,6 @@ void OpenVRSession::UpdateControllerPoses(VRSystemState& aState) {
         controllerState.pose.linearAcceleration[1] = 0.0f;
         controllerState.pose.linearAcceleration[2] = 0.0f;
         controllerState.isPositionValid = true;
-
-        // Calculate its target ray space by shifting degrees in x-axis
-        // for ergonomic.
-        const float kPointerAngleDegrees = -0.698; // 40 degrees.
-        gfx::Matrix4x4 rayMtx(m);
-        rayMtx.RotateX(kPointerAngleDegrees);
-        gfx::Quaternion rayRot;
-        rayRot.SetFromRotationMatrix(rayMtx);
-        rayRot.Invert();
-
-        controllerState.targetRayPose = controllerState.pose;
-        controllerState.targetRayPose.orientation[0] = rayRot.x;
-        controllerState.targetRayPose.orientation[1] = rayRot.y;
-        controllerState.targetRayPose.orientation[2] = rayRot.z;
-        controllerState.targetRayPose.orientation[3] = rayRot.w;
-        controllerState.targetRayPose.position[0] = rayMtx._41;
-        controllerState.targetRayPose.position[1] = rayMtx._42;
-        controllerState.targetRayPose.position[2] = rayMtx._43;
       }
     }
   }

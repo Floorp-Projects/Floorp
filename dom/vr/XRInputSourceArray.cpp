@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XRInputSourceArray.h"
-#include "mozilla/dom/XRSession.h"
+#include "mozilla/dom/XRSpace.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,41 +25,6 @@ XRInputSourceArray::XRInputSourceArray(nsISupports* aParent)
 JSObject* XRInputSourceArray::WrapObject(JSContext* aCx,
                                          JS::Handle<JSObject*> aGivenProto) {
   return XRInputSourceArray_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void XRInputSourceArray::Update(XRSession* aSession) {
-  MOZ_ASSERT(aSession);
-
-  gfx::VRDisplayClient* displayClient = aSession->GetDisplayClient();
-  if (!displayClient) {
-    return;
-  }
-
-  XRInputSourcesChangeEventInit addInit;
-  nsTArray<RefPtr<XRInputSource>> removedInputs;
-  for (int32_t i = 0; i < gfx::kVRControllerMaxCount; ++i) {
-    const gfx::VRControllerState& controllerState = displayClient->GetDisplayInfo().mControllerState[i];
-    if (controllerState.controllerName[0] == '\0') {
-      break; // We would not have an empty slot before others.
-    }
-    bool found = false;
-    RefPtr<XRInputSource> inputSource = nullptr;
-    for (auto& input : mInputSources) {
-      if (input->GetIndex() == i) {
-        found = true;
-        inputSource = input;
-        break;
-      }
-    }
-    // Checking if it is added before.
-    if (!found) {
-      inputSource = new XRInputSource(mParent);
-      inputSource->Setup(aSession, i);
-      mInputSources.AppendElement(inputSource);
-    }
-    // If added, updating the current controller states.
-    inputSource->Update(aSession);
-  }
 }
 
 uint32_t XRInputSourceArray::Length() { return mInputSources.Length(); }
