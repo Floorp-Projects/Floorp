@@ -1305,6 +1305,7 @@ void OculusSession::UpdateControllerPose(VRSystemState& aState,
       } else {
         controllerState.isPositionValid = false;
       }
+      controllerState.targetRayPose = controllerState.pose;
     }
   }
 }

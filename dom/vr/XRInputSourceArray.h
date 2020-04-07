@@ -13,6 +13,9 @@
 #include "gfxVR.h"
 
 namespace mozilla {
+namespace gfx {
+struct VRControllerState;
+}
 namespace dom {
 class XRInputSource;
 
@@ -28,9 +31,12 @@ class XRInputSourceArray final : public nsISupports, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  // WebIDL Memberss
+  // WebIDL Members
   XRInputSource* IndexedGetter(uint32_t aIndex, bool& aFound);
   uint32_t Length();
+  void Setup(XRSession* aSession, RefPtr<gfx::VRDisplayClient> aDisplayClient);
+  void Update(XRSession* aSession);
+  void Clear();
 
  protected:
   virtual ~XRInputSourceArray() = default;
