@@ -1049,21 +1049,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual nsISerialEventTarget* EventTargetFor(
       mozilla::TaskCategory aCategory) const = 0;
 
-  /**
-   * These methods provide a way to specify the opener value for the content in
-   * the window before the content itself is created. This is important in order
-   * to set the DocGroup of a document, as the opener must be set before the
-   * document is created.
-   *
-   * SetOpenerForInitialContentBrowser is used to set which opener will be used,
-   * and TakeOpenerForInitialContentBrowser is used by nsXULElement in order to
-   * take the value set earlier, and null out the value in the window.
-   */
-  void SetOpenerForInitialContentBrowser(
-      mozilla::dom::BrowsingContext* aOpener);
-  already_AddRefed<mozilla::dom::BrowsingContext>
-  TakeOpenerForInitialContentBrowser();
-
   already_AddRefed<nsIDocShellTreeOwner> GetTreeOwner();
   already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
   already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
@@ -1140,8 +1125,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   bool mServiceWorkersTestingEnabled;
 
   mozilla::dom::LargeAllocStatus mLargeAllocStatus;
-
-  RefPtr<mozilla::dom::BrowsingContext> mOpenerForInitialContentBrowser;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)

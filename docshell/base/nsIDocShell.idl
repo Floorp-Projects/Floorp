@@ -894,15 +894,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] attribute boolean deviceSizeIsPageSize;
 
   /**
-   * Regarding setOpener / getOpener - We can't use XPIDL's "attribute"
-   * for notxpcom, so we're relegated to using explicit gets / sets. This
-   * should be fine, considering that these methods should only ever be
-   * called from native code.
-   */
-  [noscript,notxpcom,nostdcall] void setOpener(in nsIRemoteTab aOpener);
-  [noscript,notxpcom,nostdcall] nsIRemoteTab getOpener();
-
-  /**
    * Notify DocShell when the browser is about to start executing JS, and after
    * that execution has stopped.  This only occurs when the Timeline devtool
    * is collecting information.
