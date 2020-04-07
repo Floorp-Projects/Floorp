@@ -26,9 +26,8 @@ class DOMLocalization : public intl::Localization {
   explicit DOMLocalization(nsIGlobalObject* aGlobal);
 
   static already_AddRefed<DOMLocalization> Constructor(
-      const GlobalObject& aGlobal,
-      const Optional<Sequence<nsString>>& aResourceIds,
-      const Optional<OwningNonNull<GenerateMessages>>& aGenerateMessages,
+      const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
+      const bool aSync, const BundleGenerator& aBundleGenerator,
       ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -87,7 +86,7 @@ class DOMLocalization : public intl::Localization {
    * the localized elements.
    */
   void ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
-                         nsTArray<L10nMessage>& aTranslations,
+                         nsTArray<Nullable<L10nMessage>>& aTranslations,
                          nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 
   bool SubtreeRootInRoots(nsINode* aSubtreeRoot) {
