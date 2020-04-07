@@ -14028,7 +14028,7 @@ void Document::RequestPointerLock(Element* aElement, CallerType aCallerType) {
     return;
   }
 
-  bool userInputOrSystemCaller = UserActivation::IsHandlingUserInput() ||
+  bool userInputOrSystemCaller = HasValidTransientUserGestureActivation() ||
                                  aCallerType == CallerType::System;
   nsCOMPtr<nsIRunnable> request =
       new PointerLockRequest(aElement, userInputOrSystemCaller);
