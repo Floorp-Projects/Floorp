@@ -293,16 +293,16 @@ var PlacesUIUtils = {
   /**
    * Shows the bookmark dialog corresponding to the specified info.
    *
-   * @param aInfo
+   * @param {object} aInfo
    *        Describes the item to be edited/added in the dialog.
    *        See documentation at the top of bookmarkProperties.js
-   * @param aWindow
+   * @param {DOMWindow} [aParentWindow]
    *        Owner window for the new dialog.
    *
    * @see documentation at the top of bookmarkProperties.js
    * @return The guid of the item that was created or edited, undefined otherwise.
    */
-  showBookmarkDialog(aInfo, aParentWindow) {
+  showBookmarkDialog(aInfo, aParentWindow = null) {
     // Preserve size attributes differently based on the fact the dialog has
     // a folder picker or not, since it needs more horizontal space than the
     // other controls.
@@ -325,6 +325,10 @@ var PlacesUIUtils = {
       await batchBlockingDeferred.promise;
     });
 
+    if (!aParentWindow) {
+      aParentWindow = Services.wm.getMostRecentWindow(null);
+    }
+
     aParentWindow.openDialog(dialogURL, "", features, aInfo);
 
     let bookmarkGuid =
@@ -337,6 +341,35 @@ var PlacesUIUtils = {
     }
 
     return bookmarkGuid;
+  },
+
+  /**
+   * Bookmarks one or more pages. If there is more than one, this will create
+   * the bookmarks in a new folder.
+   *
+   * @param {array.<nsIURI>} URIList
+   *   The list of URIs to bookmark.
+   * @param {array.<string>} [hiddenRows]
+   *   An array of rows to be hidden.
+   * @param {DOMWindow} [window]
+   *   The window to use as the parent to display the bookmark dialog.
+   */
+  showBookmarkPagesDialog(URIList, hiddenRows = [], win = null) {
+    if (!URIList.length) {
+      return;
+    }
+
+    const bookmarkDialogInfo = { action: "add", hiddenRows };
+    if (URIList.length > 1) {
+      bookmarkDialogInfo.type = "folder";
+      bookmarkDialogInfo.URIList = URIList;
+    } else {
+      bookmarkDialogInfo.type = "bookmark";
+      bookmarkDialogInfo.title = URIList[0].title;
+      bookmarkDialogInfo.uri = URIList[0].uri;
+    }
+
+    PlacesUIUtils.showBookmarkDialog(bookmarkDialogInfo, win);
   },
 
   /**
