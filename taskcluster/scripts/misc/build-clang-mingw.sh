@@ -22,7 +22,7 @@ else
 fi
 
 TOOLCHAIN_DIR=$MOZ_FETCHES_DIR/llvm-project
-INSTALL_DIR=$TOOLCHAIN_DIR/build/stage4/clang
+INSTALL_DIR=$TOOLCHAIN_DIR/build/stage3/clang
 CROSS_PREFIX_DIR=$INSTALL_DIR/$machine-w64-mingw32
 
 make_flags="-j$(nproc)"
