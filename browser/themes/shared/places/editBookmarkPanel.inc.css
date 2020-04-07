@@ -10,7 +10,7 @@
 
 .panel-info-button {
   border-radius: var(--toolbarbutton-border-radius);
-  margin-inline-end: 4px;
+  margin-right: 4px;
 }
 
 .panel-info-button[disabled=true] {
@@ -41,7 +41,7 @@
 #editBookmarkPanelInfoArea {
   overflow: hidden;
   position: relative;
-  margin: 6px 8px 0;
+  margin: 6px 8px 0 8px;
 }
 
 #editBookmarkPanelRecommendation {
@@ -107,7 +107,8 @@
   display: flex;
   justify-content: space-between;
   align-items: start;
-  margin-block: 10px 6px;
+  margin-bottom: 6px;
+  margin-top: 10px;
   padding-top: 2px;
 }
 

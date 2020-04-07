@@ -14,7 +14,8 @@
   fill: currentColor;
   width: 30px;
   min-width: 30px;
-  margin-inline: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 .menu {
@@ -53,7 +54,7 @@
 }
 
 .menuitem-button:dir(rtl) {
-  background-position-x: right 8px;
+  background-position: right 8px center;
 }
 
 .menuitem-separator {

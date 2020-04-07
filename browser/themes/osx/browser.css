@@ -311,12 +311,14 @@
 
 #BMB_bookmarksPopup[side="top"],
 #BMB_bookmarksPopup[side="bottom"] {
-  margin-inline: -26px;
+  margin-left: -26px;
+  margin-right: -26px;
 }
 
 #BMB_bookmarksPopup[side="left"],
 #BMB_bookmarksPopup[side="right"] {
-  margin-block: -26px;
+  margin-top: -26px;
+  margin-bottom: -26px;
 }
 
 /* Bookmarking panel */
@@ -529,7 +531,8 @@
 %include ../shared/tabs.inc.css
 
 .tab-label {
-  margin-block: 1px 0;
+  margin-top: 1px;
+  margin-bottom: 0;
 }
 
 .tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]):not([multiselected]) {
@@ -594,7 +597,8 @@
 
 #tabbrowser-tabs {
   -moz-box-align: stretch;
-  padding-inline: 0;
+  padding-left: 0;
+  padding-right: 0;
   margin-bottom: 0;
   position: static;
 }
@@ -618,12 +622,14 @@ notification[value="translation"] {
   background-image: none;
   border-top: none;
   border-bottom: 1px solid #c4c4c4;
-  padding-block: 1px;
+  padding-top: 1px;
+  padding-bottom: 1px;
   min-height: 35px;
 }
 
 .translate-infobar-element {
-  margin-block: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 button.translate-infobar-element {
@@ -637,11 +643,13 @@ button.translate-infobar-element {
   min-height: 22px;
   min-width: 0;
   padding: 0 0.8em;
-  margin-inline: 0.25em;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
 }
 
 button.translate-infobar-element .button-text {
-  margin-inline: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 label.translate-infobar-element {
@@ -672,7 +680,8 @@ button.translate-infobar-element[anonid="translate"]:hover {
 }
 
 button.translate-infobar-element.options-menu-button {
-  padding-inline: 0.5em 0;
+  padding-inline-start: 0.5em;
+  padding-inline-end: 0;
 }
 
 button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
@@ -785,7 +794,8 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 %include ../shared/contextmenu.inc.css
 
 #context-navigation > .menuitem-iconic {
-  padding-inline: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .cui-widget-panelview[id^=PanelUI-webext-] {

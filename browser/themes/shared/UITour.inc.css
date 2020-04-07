@@ -55,7 +55,8 @@
 }
 
 #UITourTooltipDescription {
-  margin-inline: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
   font-size: 1.15rem;
   line-height: 1.8rem;
   margin-bottom: 0; /* Override global.css */
@@ -134,14 +135,16 @@
   border: none;
   box-shadow: none;
   color: var(--panel-disabled-color);
-  padding-inline: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 /* The primary button gets the same color as the customize button. */
 #UITourTooltipButtons > button.button-primary {
   background-color: rgb(116,191,67);
   color: white;
-  padding-inline: 30px;
+  padding-left: 30px;
+  padding-right: 30px;
 }
 
 #UITourTooltipButtons > button.button-primary:not(:active):hover {

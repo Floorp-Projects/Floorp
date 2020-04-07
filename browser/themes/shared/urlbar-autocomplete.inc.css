@@ -71,7 +71,8 @@
 .urlbarView:not(.megabar) {
   position: fixed;
   z-index: 3;
-  inset-inline: 0;
+  left: 0;
+  right: 0;
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border-block: 1px solid var(--chrome-content-separator-color);
@@ -501,7 +502,8 @@
 #urlbar .search-panel-one-offs-header-label {
   white-space: nowrap;
   margin: 0;
-  padding-inline: 8px 16px;
+  padding-inline-start: 8px;
+  padding-inline-end: 16px;
 }
 
 #urlbar .searchbar-engine-one-off-item {

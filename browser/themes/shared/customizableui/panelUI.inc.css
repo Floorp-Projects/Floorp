@@ -191,7 +191,7 @@ panelview {
   margin-top: -7px;
 }
 
-#PersonalToolbar #BMB_bookmarksPopup {
+#PersonalToolbar #BMB_bookmarksPopup  {
   margin-top: -2px
 }
 
@@ -239,7 +239,7 @@ panelview {
 
 /* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
 #BMB_bookmarksPopup menupopup::part(arrowscrollbox) {
-  padding-bottom: 0;
+  padding-bottom: 0px;
 }
 
 #BMB_bookmarksPopup menupopup[nofooterpopup=true]::part(arrowscrollbox) {
@@ -281,7 +281,7 @@ panelview {
 }
 
 /* Don't show the checkmark if there is a description */
-#confirmation-hint.with-description #confirmation-hint-checkmark-animation-container {
+#confirmation-hint.with-description #confirmation-hint-checkmark-animation-container  {
   display: none;
 }
 
@@ -325,7 +325,8 @@ panelview {
 }
 
 #confirmation-hint-message {
-  margin-inline: 7px 0;
+  margin-inline-start: 7px;
+  margin-inline-end: 0;
 }
 
 #confirmation-hint.with-description #confirmation-hint-message {
@@ -450,7 +451,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   content: "";
   width: 16px;
   height: 16px;
-  margin-inline: 10px 12px;
+  margin-inline-start: 10px;
+  margin-inline-end: 12px;
   display: -moz-box;
 }
 
@@ -510,7 +512,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .panel-banner-item {
-  border-block: 1px solid var(--panel-separator-color);
+  border-top: 1px solid var(--panel-separator-color);
+  border-bottom: 1px solid var(--panel-separator-color);
   padding-inline-start: 12px;
 }
 
@@ -605,7 +608,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 :root[fxastatus="unverified"] .fxa-menu-header {
   background-color: @appmenuWarningBackgroundColor@;
   color: @appmenuWarningColor@;
-  border-block: 1px solid @appmenuWarningBorderColor@;
+  border-top: 1px solid @appmenuWarningBorderColor@;
+  border-bottom: 1px solid @appmenuWarningBorderColor@;
 }
 
 #appMenu-fxa-status[fxastatus="login-failed"]:hover,
@@ -750,7 +754,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .fxa-menu-header {
-  padding-block: 8px 4px;
+  padding-top: 8px;
+  padding-bottom: 4px;
   /* Important is here to ensure that the proper header height is fixed
      regardless if opened from browser icon or under app menu.
   */
@@ -859,7 +864,8 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   /* If you change the margin or padding below, the min-height of the synced tabs
      panel (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
      etc) may need adjusting (see bug 1248506) */
-  margin-block: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px;
   padding: 8px;
   text-shadow: none;
   min-width: 200px;
@@ -887,11 +893,11 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 .PanelUI-remotetabs-notabsforclient-label {
   color: var(--panel-disabled-color);
   /* This margin is to line this label up with the labels in toolbarbuttons. */
-  margin-inline-start: 28px;
+  margin-left: 28px;
 }
 
 #PanelUI-remotetabs[mainview] .PanelUI-remotetabs-notabsforclient-label {
-  margin-inline-start: 32px;
+  margin-left: 32px;
 }
 
 .fxaSyncIllustration,
@@ -1060,7 +1066,8 @@ panelview .toolbarbutton-1,
 .subviewbutton > .menu-accel-container > .menu-iconic-accel,
 .subviewbutton > .menu-iconic-left,
 .subviewbutton > .menu-iconic-text {
-  padding-block: 0;
+  padding-bottom: 0;
+  padding-top: 0;
 }
 
 .addon-banner-item > .toolbarbutton-text,
@@ -1095,8 +1102,8 @@ panelview .toolbarbutton-1,
 
 .subviewbutton.panel-subview-footer > .menu-text {
   -moz-appearance: none;
-  padding-inline-start: 0 !important; /* to override menu.css on Windows */
   padding-inline-end: 6px;
+  padding-inline-start: 0 !important; /* to override menu.css on Windows */
   -moz-box-flex: 0;
 }
 
@@ -1213,7 +1220,7 @@ panelview .toolbarbutton-1,
 panelmultiview .toolbaritem-combined-buttons > label {
   -moz-box-flex: 1;
   margin: 0;
-  padding: 4px 0;
+  padding: 4px 0px;
 }
 
 panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
@@ -1353,20 +1360,24 @@ menuitem.panel-subview-footer@menuStateActive@,
 }
 
 .PanelUI-subView menuseparator {
-  margin-inline: -5px -4px;
+  margin-inline-start: -5px;
+  margin-inline-end: -4px;
 }
 
 .PanelUI-subView toolbarseparator {
-  margin-inline: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 .PanelUI-subView menuseparator.small-separator,
 .PanelUI-subView toolbarseparator.small-separator {
-  margin-inline: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 .cui-widget-panelview menuseparator.small-separator {
-  margin-inline: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .PanelUI-subView toolbarseparator[orient="vertical"] {
@@ -1374,12 +1385,14 @@ menuitem.panel-subview-footer@menuStateActive@,
   border-inline-start: 1px solid var(--panel-separator-color);
   border-top: none;
   margin: 0;
-  margin-inline: 6px 7px;
+  margin-inline-start: 6px;
+  margin-inline-end: 7px;
 }
 
 .subviewbutton > .menu-accel-container {
   -moz-box-pack: end;
-  margin-inline: 10px auto;
+  margin-inline-start: 10px;
+  margin-inline-end: auto;
 }
 
 .PanelUI-remotetabs-clientcontainer > toolbarbutton[itemtype="tab"],
@@ -1413,7 +1426,8 @@ toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menu-dro
 }
 
 #search-container[cui-areatype="menu-panel"] {
-  padding-block: 6px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 toolbarpaletteitem[place="palette"] > #search-container {
@@ -1427,7 +1441,8 @@ toolbarpaletteitem[place="palette"] > #search-container {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
-  padding-block: 4px;
+  padding-top: 4px;
+  padding-bottom: 4px;
   -moz-box-orient: horizontal;
 }
 
@@ -1607,16 +1622,17 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .PanelUI-panic-actionlist {
-  padding-block: 2px;
   padding-inline-start: 20px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   background-size: 16px 16px;
   background-repeat: no-repeat;
   background-color: transparent;
-  background-position: left center;
+  background-position: center left;
 }
 
 .PanelUI-panic-actionlist:-moz-locale-dir(rtl) {
-  background-position-x: right;
+  background-position: center right;
 }
 
 #PanelUI-panic-actionlist-cookies {
@@ -2059,11 +2075,13 @@ panelview[mainview] #PanelUI-whatsNew-content {
 #PanelUI-profiler-info label {
   font-size: 16px;
   font-weight: bold;
-  margin: 6px 15px;
+  margin-block: 6px;
+  margin-inline: 15px;
 }
 
 #PanelUI-profiler-info description {
-  margin: 4px 15px;
+  margin-block: 4px;
+  margin-inline: 15px;
 }
 
 #PanelUI-profiler-info button {
@@ -2097,7 +2115,8 @@ panelview[mainview] #PanelUI-whatsNew-content {
   padding-inline: 4px;
   text-decoration: none;
   font-size: 12px;
-  margin: 8px 15px;
+  margin-inline: 15px;
+  margin-block: 8px;
 }
 
 /* This is dark-mode specific styling. */
@@ -2178,7 +2197,8 @@ panelview[mainview] #PanelUI-whatsNew-content {
 }
 
 #PanelUI-profiler-content-description {
-  margin: 4px 15px;
+  margin-inline: 15px;
+  margin-block: 4px;
   font-size: 12px;
   opacity: 0.75;
 }
@@ -2189,7 +2209,8 @@ panelview[mainview] #PanelUI-whatsNew-content {
   border-radius: 2px;
   color: #000;
   padding: 8px;
-  margin: 0 5px;
+  margin-block: 0;
+  margin-inline: 5px;
   font-size: 13px;
 }
 

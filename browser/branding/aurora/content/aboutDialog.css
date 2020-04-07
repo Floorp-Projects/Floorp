@@ -39,7 +39,8 @@
 }
 
 #rightBox {
-  margin-inline: 30px;
+  margin-left: 30px;
+  margin-right: 30px;
   padding-top: 48px;
 }
 

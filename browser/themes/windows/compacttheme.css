@@ -73,7 +73,8 @@
     /* Remove lwtheme borders from toolbars in non-maximized windows. */
     #toolbar-menubar,
     #TabsToolbar {
-      border-inline-style: none !important;
+      border-left-style: none !important;
+      border-right-style: none !important;
     }
   }
 

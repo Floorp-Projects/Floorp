@@ -23,6 +23,7 @@
   margin-inline-start: 30px;
 }
 
+
 @media (min-resolution: 2dppx) {
   #leftBox {
     background-image: url("chrome://branding/content/about-logo@2x.png");
@@ -39,7 +40,8 @@
 }
 
 #rightBox {
-  margin-inline: 30px;
+  margin-left: 30px;
+  margin-right: 30px;
 }
 
 #bottomBox {
@@ -51,5 +53,6 @@
   font-size: xx-small;
   text-align: center;
   color: #999999;
-  margin-block: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }

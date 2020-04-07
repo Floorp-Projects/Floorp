@@ -30,12 +30,10 @@ body {
   display: flex;
   flex-direction: column;
   background-position: left center;
-  background-repeat: no-repeat;
-  background-size: 38%;
 }
 
-.illustrated #errorPageContainer:dir(rtl) {
-  background-position-x: right;
+.illustrated[dir="rtl"] #errorPageContainer {
+  background-position: right center;
 }
 
 .illustrated .title {
@@ -47,6 +45,11 @@ body {
 .illustrated #text-container {
   margin: auto;
   padding-inline-start: 38%;
+}
+
+.illustrated #errorPageContainer {
+  background-repeat: no-repeat;
+  background-size: 38%;
 }
 
 @media only screen and (max-width: 959px) {
