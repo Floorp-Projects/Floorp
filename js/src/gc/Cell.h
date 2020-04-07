@@ -124,13 +124,9 @@ class CellHeader {
   // or JSObject/JSString (0).
   static constexpr uintptr_t BIGINT_BIT = Bit(2);
 
-  bool isForwarded() const { return header_ & FORWARD_BIT; }
-  bool isString() const { return header_ & JSSTRING_BIT; }
-  bool isBigInt() const { return header_ & BIGINT_BIT; }
-
+ protected:
   uintptr_t flags() const { return header_ & RESERVED_MASK; }
 
- protected:
   // NOTE: This word can also be used for temporary storage, see
   // setTemporaryGCUnsafeData.
   uintptr_t header_;
@@ -185,17 +181,20 @@ struct alignas(gc::CellAlignBytes) Cell {
   static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone* zone);
 
   inline bool isForwarded() const {
-    return reinterpret_cast<const CellHeader*>(this)->isForwarded();
+    uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
+    return firstWord & CellHeader::FORWARD_BIT;
   }
 
   inline bool nurseryCellIsString() const {
     MOZ_ASSERT(!isTenured());
-    return reinterpret_cast<const CellHeader*>(this)->isString();
+    uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
+    return firstWord & CellHeader::JSSTRING_BIT;
   }
 
   inline bool nurseryCellIsBigInt() const {
     MOZ_ASSERT(!isTenured());
-    return reinterpret_cast<const CellHeader*>(this)->isBigInt();
+    uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
+    return firstWord & CellHeader::BIGINT_BIT;
   }
 
   template <class T>
