@@ -612,5 +612,17 @@ TRRLoadInfo::GetInternalContentPolicyType(nsContentPolicyType* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TRRLoadInfo::GetAllowDeprecatedSystemRequests(
+    bool* aAllowDeprecatedSystemRequests) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetAllowDeprecatedSystemRequests(
+    bool aAllowDeprecatedSystemRequests) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla

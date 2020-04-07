@@ -103,6 +103,7 @@ LoadInfo::LoadInfo(
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
+      mAllowDeprecatedSystemRequests(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
   MOZ_ASSERT(mLoadingPrincipal);
@@ -367,6 +368,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
+      mAllowDeprecatedSystemRequests(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
@@ -469,6 +471,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mAllowListFutureDocumentsCreatedFromThisRedirectChain(false),
       mSkipContentSniffing(false),
       mHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_UNINITIALIZED),
+      mAllowDeprecatedSystemRequests(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
@@ -571,6 +574,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mCspNonce(rhs.mCspNonce),
       mSkipContentSniffing(rhs.mSkipContentSniffing),
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
+      mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mHasStoragePermission(rhs.mHasStoragePermission),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes) {}
 
@@ -609,8 +613,9 @@ LoadInfo::LoadInfo(
     bool aDocumentHasLoaded,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     const nsAString& aCspNonce, bool aSkipContentSniffing,
-    uint32_t aHttpsOnlyStatus, bool aHasStoragePermission,
-    uint32_t aRequestBlockingReason, nsINode* aLoadingContext)
+    uint32_t aHttpsOnlyStatus, bool aAllowDeprecatedSystemRequests,
+    bool aHasStoragePermission, uint32_t aRequestBlockingReason,
+    nsINode* aLoadingContext)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -667,6 +672,7 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mSkipContentSniffing(aSkipContentSniffing),
       mHttpsOnlyStatus(aHttpsOnlyStatus),
+      mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mHasStoragePermission(aHasStoragePermission),
       mIsFromProcessingFrameAttributes(false) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
@@ -1496,6 +1502,20 @@ LoadInfo::GetHttpsOnlyStatus(uint32_t* aHttpsOnlyStatus) {
 NS_IMETHODIMP
 LoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
   mHttpsOnlyStatus = aHttpsOnlyStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetAllowDeprecatedSystemRequests(
+    bool* aAllowDeprecatedSystemRequests) {
+  *aAllowDeprecatedSystemRequests = mAllowDeprecatedSystemRequests;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetAllowDeprecatedSystemRequests(
+    bool aAllowDeprecatedSystemRequests) {
+  mAllowDeprecatedSystemRequests = aAllowDeprecatedSystemRequests;
   return NS_OK;
 }
 
