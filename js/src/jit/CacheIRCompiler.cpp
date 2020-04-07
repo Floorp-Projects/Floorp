@@ -2146,8 +2146,11 @@ bool CacheIRCompiler::emitGuardAndGetNumberFromString() {
     }
     masm.bind(&ok);
 
-    masm.loadDouble(Address(output.payloadOrValueReg(), 0), FloatReg0);
-    masm.boxDouble(FloatReg0, output, FloatReg0);
+    {
+      ScratchDoubleScope fpscratch(masm);
+      masm.loadDouble(Address(output.payloadOrValueReg(), 0), fpscratch);
+      masm.boxDouble(fpscratch, output, fpscratch);
+    }
     masm.freeStack(sizeof(double));
   }
   masm.bind(&done);
