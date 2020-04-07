@@ -15,7 +15,7 @@ import org.mozilla.fenix.utils.Mockable
 @Mockable
 class PermissionStorage(private val context: Context) {
 
-    private val permissionsStorage by lazy {
+    val permissionsStorage by lazy {
         SitePermissionsStorage(context, context.components.core.engine)
     }
 

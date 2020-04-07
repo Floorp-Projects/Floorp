@@ -399,6 +399,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             sitePermissionsFeature.set(
                 feature = SitePermissionsFeature(
                     context = context,
+                    storage = context.components.core.permissionStorage.permissionsStorage,
                     sessionManager = sessionManager,
                     fragmentManager = parentFragmentManager,
                     promptsStyling = SitePermissionsFeature.PromptsStyling(
@@ -407,10 +408,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         positiveButtonBackgroundColor = accentHighContrastColor,
                         positiveButtonTextColor = R.color.photonWhite
                     ),
-                    sessionId = customTabSessionId
-                ) { permissions ->
-                    requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
-                },
+                    sessionId = customTabSessionId,
+                    onNeedToRequestPermissions = { permissions ->
+                        requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
+                    },
+                    onShouldShowRequestPermissionRationale = { shouldShowRequestPermissionRationale(it) }),
                 owner = this,
                 view = view
             )

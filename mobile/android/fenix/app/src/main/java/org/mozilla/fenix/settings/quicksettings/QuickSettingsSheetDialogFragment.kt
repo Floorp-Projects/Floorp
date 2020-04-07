@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity.BOTTOM
 import android.view.LayoutInflater
@@ -28,6 +29,7 @@ import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
@@ -49,6 +51,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private lateinit var websiteInfoView: WebsiteInfoView
     private lateinit var websitePermissionsView: WebsitePermissionsView
     private lateinit var interactor: QuickSettingsInteractor
+    private var tryToRequestPermissions: Boolean = false
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
     override fun onCreateView(
@@ -82,6 +85,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             addNewTab = context.components.useCases.tabsUseCases.addTab,
             requestRuntimePermissions = { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS)
+                tryToRequestPermissions = true
             },
             reportSiteIssue = ::launchIntentReceiver,
             displayPermissions = ::showPermissionsView,
@@ -143,7 +147,18 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             PhoneFeature.findFeatureBy(permissions)?.let {
                 quickSettingsController.handleAndroidPermissionGranted(it)
             }
+        } else {
+            val shouldShowRequestPermissionRationale = permissions.all { shouldShowRequestPermissionRationale(it) }
+
+            if (!shouldShowRequestPermissionRationale && tryToRequestPermissions) {
+                // The user has permanently blocked these permissions and he/she is trying to enabling them.
+                // at this point, we are not able to request these permissions, the only way to allow
+                // them, it is to take the user to the system app setting page, and there the user
+                // can allow the permissions.
+                openSystemSettings()
+            }
         }
+        tryToRequestPermissions = false
     }
 
     private fun Dialog.applyCustomizationsForTopDialog(rootView: View): Dialog {
@@ -177,6 +192,13 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             intent.action = Intent.ACTION_VIEW
             context.startActivity(intent)
         }
+    }
+
+    private fun openSystemSettings() {
+        startActivity(Intent().apply {
+            action = android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+        })
     }
 
     private companion object {
