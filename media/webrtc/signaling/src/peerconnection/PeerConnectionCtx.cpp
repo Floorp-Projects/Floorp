@@ -304,8 +304,7 @@ nsresult PeerConnectionCtx::Initialize() {
   nsresult rv = NS_NewTimerWithFuncCallback(
       getter_AddRefs(mTelemetryTimer), EverySecondTelemetryCallback_m, this,
       1000, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
-      "EverySecondTelemetryCallback_m",
-      SystemGroup::EventTargetFor(TaskCategory::Other));
+      "EverySecondTelemetryCallback_m");
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (XRE_IsContentProcess()) {

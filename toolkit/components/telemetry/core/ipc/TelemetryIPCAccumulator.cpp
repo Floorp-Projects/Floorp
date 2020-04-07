@@ -16,7 +16,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
@@ -25,7 +24,6 @@
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::SystemGroup;
 using mozilla::TaskCategory;
 using mozilla::Telemetry::ChildEventData;
 using mozilla::Telemetry::DiscardedData;
@@ -85,8 +83,7 @@ void DoArmIPCTimerMainThread(const StaticMutexAutoLock& lock) {
     return;
   }
   if (!gIPCTimer) {
-    gIPCTimer =
-        NS_NewTimer(SystemGroup::EventTargetFor(TaskCategory::Other)).take();
+    gIPCTimer = NS_NewTimer().take();
   }
   if (gIPCTimer) {
     gIPCTimer->InitWithNamedFuncCallback(

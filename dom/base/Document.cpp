@@ -15194,8 +15194,7 @@ class UserIntractionTimer final : public Runnable,
         MakeScopeExit([self] { self->CancelTimerAndStoreUserInteraction(); });
 
     nsresult rv = NS_NewTimerWithCallback(
-        getter_AddRefs(mTimer), this, interval * 1000, nsITimer::TYPE_ONE_SHOT,
-        SystemGroup::EventTargetFor(TaskCategory::Other));
+        getter_AddRefs(mTimer), this, interval * 1000, nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     nsCOMPtr<nsIAsyncShutdownClient> phase = GetShutdownPhase();

@@ -21,7 +21,6 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/SystemGroup.h"
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -407,8 +406,7 @@ class ReleasingTimerHolder final : public Runnable,
     auto raii = MakeScopeExit([self] { self->CancelTimerAndRevokeURI(); });
 
     nsresult rv = NS_NewTimerWithCallback(
-        getter_AddRefs(mTimer), this, RELEASING_TIMER, nsITimer::TYPE_ONE_SHOT,
-        SystemGroup::EventTargetFor(TaskCategory::Other));
+        getter_AddRefs(mTimer), this, RELEASING_TIMER, nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     nsCOMPtr<nsIAsyncShutdownClient> phase = GetShutdownPhase();

@@ -327,9 +327,8 @@ void ReportDeliver::AppendReportData(const ReportData& aReportData) {
 
   if (!mTimer) {
     uint32_t timeout = StaticPrefs::dom_reporting_delivering_timeout() * 1000;
-    nsresult rv = NS_NewTimerWithCallback(
-        getter_AddRefs(mTimer), this, timeout, nsITimer::TYPE_ONE_SHOT,
-        SystemGroup::EventTargetFor(TaskCategory::Other));
+    nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, timeout,
+                                          nsITimer::TYPE_ONE_SHOT);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }

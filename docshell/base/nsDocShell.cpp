@@ -5232,10 +5232,8 @@ nsDocShell::RefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal, int32_t aDelay,
     NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsITimer> timer;
-    MOZ_TRY_VAR(timer,
-                NS_NewTimerWithCallback(
-                    refreshTimer, aDelay, nsITimer::TYPE_ONE_SHOT,
-                    win->TabGroup()->EventTargetFor(TaskCategory::Network)));
+    MOZ_TRY_VAR(timer, NS_NewTimerWithCallback(refreshTimer, aDelay,
+                                               nsITimer::TYPE_ONE_SHOT));
 
     mRefreshURIList->AppendElement(timer);  // owning timer ref
   }
@@ -5724,9 +5722,8 @@ nsresult nsDocShell::RefreshURIFromQueue() {
       nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
       if (win) {
         nsCOMPtr<nsITimer> timer;
-        NS_NewTimerWithCallback(
-            getter_AddRefs(timer), refreshInfo, delay, nsITimer::TYPE_ONE_SHOT,
-            win->TabGroup()->EventTargetFor(TaskCategory::Network));
+        NS_NewTimerWithCallback(getter_AddRefs(timer), refreshInfo, delay,
+                                nsITimer::TYPE_ONE_SHOT);
 
         if (timer) {
           // Replace the nsRefreshTimer element in the queue with

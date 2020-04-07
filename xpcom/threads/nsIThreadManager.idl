@@ -150,7 +150,7 @@ interface nsIThreadManager : nsISupports
   void spinEventLoopUntilEmpty();
 
   /**
-   * Return the SchedulerEventTarget for the SystemGroup.
+   * Return the EventTarget for the main thread.
    */
-  readonly attribute nsIEventTarget systemGroupEventTarget;
+  readonly attribute nsIEventTarget mainThreadEventTarget;
 };
