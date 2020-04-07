@@ -54,7 +54,6 @@ pref_groups = [
     'image',
     'intl',
     'javascript',
-    'keyword',
     'layers',
     'layout',
     'mathml',

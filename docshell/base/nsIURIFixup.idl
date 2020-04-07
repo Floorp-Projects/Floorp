@@ -26,31 +26,31 @@ interface nsIURIFixupInfo : nsISupports
    * the input was invalid as a URI and FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
    * was not passed)
    */
-  readonly attribute nsIURI preferredURI;
+  attribute nsIURI preferredURI;
 
   /**
    * The fixed-up original input, *never* using a keyword search.
    * (might be null if the original input was not recoverable as
    * a URL, e.g. "foo bar"!)
    */
-  readonly attribute nsIURI fixedURI;
+  attribute nsIURI fixedURI;
 
   /**
    * The name of the keyword search provider used to provide a keyword search;
    * empty string if no keyword search was done.
    */
-  readonly attribute AString keywordProviderName;
+  attribute AString keywordProviderName;
 
   /**
    * The keyword as used for the search (post trimming etc.)
    * empty string if no keyword search was done.
    */
-  readonly attribute AString keywordAsSent;
+  attribute AString keywordAsSent;
 
   /**
    * Whether we changed the protocol instead of using one from the input as-is.
    */
-  readonly attribute boolean fixupChangedProtocol;
+  attribute boolean fixupChangedProtocol;
 
   /**
    * Whether we created an alternative URI. We might have added a prefix and/or
@@ -58,12 +58,12 @@ interface nsIURIFixupInfo : nsISupports
    * browser.fixup.alternate.prefix and .suffix prefs, with the defaults being
    * "www." and ".com", respectively.
    */
-  readonly attribute boolean fixupCreatedAlternateURI;
+  attribute boolean fixupCreatedAlternateURI;
 
   /**
    * The original input
    */
-  readonly attribute AUTF8String originalInput;
+  attribute AUTF8String originalInput;
 };
 
 
