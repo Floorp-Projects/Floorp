@@ -267,9 +267,9 @@ BEGIN_TEST(testJitGVN_PinnedPhis) {
 
   innerBackedge->end(MGoto::New(func.alloc, innerHeader));
 
-  MInstruction* z4 = MAdd::New(func.alloc, phi0, phi1);
+  MInstruction* z4 = MAdd::New(func.alloc, phi0, phi1, MIRType::Int32);
   MConstant* z5 = MConstant::New(func.alloc, Int32Value(4));
-  MInstruction* z6 = MAdd::New(func.alloc, phi2, phi3);
+  MInstruction* z6 = MAdd::New(func.alloc, phi2, phi3, MIRType::Int32);
   MConstant* z7 = MConstant::New(func.alloc, Int32Value(6));
   MOZ_RELEASE_ASSERT(phi0->addInputSlow(z4));
   MOZ_RELEASE_ASSERT(phi1->addInputSlow(z5));

@@ -2787,18 +2787,20 @@ void MBinaryArithInstruction::printOpcode(GenericPrinter& out) const {
 MBinaryArithInstruction* MBinaryArithInstruction::New(TempAllocator& alloc,
                                                       Opcode op,
                                                       MDefinition* left,
-                                                      MDefinition* right) {
+                                                      MDefinition* right,
+                                                      MIRType specialization) {
+  MOZ_ASSERT(IsNumberType(specialization));
   switch (op) {
     case Opcode::Add:
-      return MAdd::New(alloc, left, right);
+      return MAdd::New(alloc, left, right, specialization);
     case Opcode::Sub:
-      return MSub::New(alloc, left, right);
+      return MSub::New(alloc, left, right, specialization);
     case Opcode::Mul:
-      return MMul::New(alloc, left, right);
+      return MMul::New(alloc, left, right, specialization);
     case Opcode::Div:
-      return MDiv::New(alloc, left, right);
+      return MDiv::New(alloc, left, right, specialization);
     case Opcode::Mod:
-      return MMod::New(alloc, left, right);
+      return MMod::New(alloc, left, right, specialization);
     default:
       MOZ_CRASH("unexpected binary opcode");
   }
