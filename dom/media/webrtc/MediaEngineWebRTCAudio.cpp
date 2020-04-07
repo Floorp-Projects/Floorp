@@ -731,7 +731,7 @@ void AudioInputProcessing::Stop() { mEnabled = false; }
 
 void AudioInputProcessing::Pull(TrackTime aEndOfAppendedData,
                                 TrackTime aDesiredTime) {
-  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaTrack %p", mTrack.get());
+  TRACE_COMMENT("SourceMediaTrack %p", mTrack.get());
 
   if (mEnded) {
     return;
@@ -1051,7 +1051,7 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                            size_t aFrames, TrackRate aRate,
                                            uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
 
   MOZ_ASSERT(mEnabled);
 

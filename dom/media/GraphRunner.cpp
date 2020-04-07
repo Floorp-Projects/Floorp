@@ -58,7 +58,7 @@ void GraphRunner::Shutdown() {
 
 auto GraphRunner::OneIteration(GraphTime aStateEnd, GraphTime aIterationEnd,
                                AudioMixer* aMixer) -> IterationResult {
-  TRACE_AUDIO_CALLBACK();
+  TRACE();
 
   MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mThreadState == ThreadState::Wait);
