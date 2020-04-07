@@ -1,5 +1,6 @@
 {
-    "stages": "3",
+    "stages": "4",
+    "pgo" : true,
     "build_libcxx": true,
     "build_wasm": true,
     "build_type": "Release",
