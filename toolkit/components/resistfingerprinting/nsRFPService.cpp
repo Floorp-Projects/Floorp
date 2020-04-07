@@ -422,15 +422,16 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
  * nearest multiple of that precision.
  *
  * It will check if it is appropriate to clamp the input time according to the
- * values of the privacy.resistFingerprinting and privacy.reduceTimerPrecision
- * preferences.  Note that while it will check these prefs, it will use
- * whatever precision is given to it, so if one desires a minimum precision for
- * Resist Fingerprinting, it is the caller's responsibility to provide the
- * correct value. This means you should pass TimerResolution(), which enforces
- * a minimum vale on the precision based on preferences.
+ * values of the given TimerPrecisionType.  Note that if one desires a minimum
+ * precision for Resist Fingerprinting, it is the caller's responsibility to
+ * provide the correct value. This means you should pass TimerResolution(),
+ * which enforces a minimum value on the precision based on preferences.
  *
  * It ensures the given precision value is greater than zero, if it is not it
  * returns the input time.
+ *
+ * While the correct thing to pass is TimerResolution() we expose it as an
+ * argument for testing purposes only.
  *
  * @param aTime           [in] The input time to be clamped.
  * @param aTimeScale      [in] The units the input time is in (Seconds,
@@ -455,15 +456,11 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
   // still want to apply 20us clamping to al timestamps to avoid leaking
   // nano-second precision.
   bool unconditionalClamping = false;
-  if (aType == UnconditionalAKAHighRes || TimerResolution() <= 0) {
+  if (aType == UnconditionalAKAHighRes || aResolutionUSec <= 0) {
     unconditionalClamping = true;
     aResolutionUSec = RFP_TIMER_UNCONDITIONAL_VALUE;  // 20 microseconds
     aContextMixin = 0;  // Just clarifies our logging statement at the end,
                         // otherwise unused
-  }
-
-  if (aResolutionUSec <= 0) {
-    return aTime;
   }
 
   // Increase the time as needed until it is in microseconds.
@@ -569,11 +566,11 @@ double nsRFPService::ReduceTimePrecisionAsMSecs(double aTime,
 }
 
 /* static */
-double nsRFPService::ReduceTimePrecisionAsMSecsRFP(double aTime,
-                                                   int64_t aContextMixin) {
+double nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(double aTime,
+                                                       int64_t aContextMixin) {
   return nsRFPService::ReduceTimePrecisionImpl(aTime, MilliSeconds,
                                                TimerResolution(), aContextMixin,
-                                               TimerPrecisionType::RFP);
+                                               GetTimerPrecisionTypeRFPOnly());
 }
 
 /* static */
@@ -588,11 +585,11 @@ double nsRFPService::ReduceTimePrecisionAsSecs(double aTime,
 }
 
 /* static */
-double nsRFPService::ReduceTimePrecisionAsSecsRFP(double aTime,
-                                                  int64_t aContextMixin) {
+double nsRFPService::ReduceTimePrecisionAsSecsRFPOnly(double aTime,
+                                                      int64_t aContextMixin) {
   return nsRFPService::ReduceTimePrecisionImpl(aTime, Seconds,
                                                TimerResolution(), aContextMixin,
-                                               TimerPrecisionType::RFP);
+                                               GetTimerPrecisionTypeRFPOnly());
 }
 
 /* static */
@@ -1099,6 +1096,19 @@ TimerPrecisionType nsRFPService::GetTimerPrecisionType(
 
   if (StaticPrefs::privacy_reduceTimerPrecision()) {
     return Normal;
+  }
+
+  if (StaticPrefs::privacy_reduceTimerPrecision_unconditional()) {
+    return UnconditionalAKAHighRes;
+  }
+
+  return DangerouslyNone;
+}
+
+/* static */
+TimerPrecisionType nsRFPService::GetTimerPrecisionTypeRFPOnly() {
+  if (StaticPrefs::privacy_resistFingerprinting()) {
+    return RFP;
   }
 
   if (StaticPrefs::privacy_reduceTimerPrecision_unconditional()) {
