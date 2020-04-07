@@ -359,7 +359,7 @@ class FunctionCompiler {
     }
 
     // wasm can't fold x - 0.0 because of NaN with custom payloads.
-    MSub* ins = MSub::New(alloc(), lhs, rhs, type, mustPreserveNaN(type));
+    MSub* ins = MSub::NewWasm(alloc(), lhs, rhs, type, mustPreserveNaN(type));
     curBlock_->add(ins);
     return ins;
   }
