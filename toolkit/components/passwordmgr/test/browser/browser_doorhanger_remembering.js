@@ -508,7 +508,12 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
     is(notif.message, "Would you like to update this login?", "Check message");
 
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
+    let promiseLoginUpdateSaved = TestUtils.topicObserved(
+      "LoginStats:LoginUpdateSaved",
+      (subject, data) => subject == gBrowser.selectedBrowser
+    );
     clickDoorhangerButton(notif, CHANGE_BUTTON);
+    await promiseLoginUpdateSaved;
 
     ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
   });
