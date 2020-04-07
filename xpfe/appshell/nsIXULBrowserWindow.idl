@@ -43,13 +43,6 @@ interface nsIXULBrowserWindow : nsISupports
                                 in boolean isAppTab);
 
   /**
-   * Find the initial browser of the window and set its remote attributes.
-   * This can be used to ensure that there is a browser in a new window of the
-   * correct type when it first spawns.
-   */
-  void forceInitialBrowserNonRemote(in mozIDOMWindowProxy openerWindow);
-
-  /**
    * Determines whether a load should continue.
    *
    * @param aDocShell

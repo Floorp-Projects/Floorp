@@ -948,16 +948,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       }
 
       if (newChrome) {
-        nsCOMPtr<nsIAppWindow> appWin = do_GetInterface(newChrome);
-        if (appWin) {
-          nsCOMPtr<nsIXULBrowserWindow> xulBrowserWin;
-          appWin->GetXULBrowserWindow(getter_AddRefs(xulBrowserWin));
-          if (xulBrowserWin) {
-            nsPIDOMWindowOuter* openerWindow =
-                aForceNoOpener ? nullptr : parentWindow.get();
-            xulBrowserWin->ForceInitialBrowserNonRemote(openerWindow);
-          }
-        }
         /* It might be a chrome AppWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
             be able to hand over an nsIDocShellTreeItem directly. */
