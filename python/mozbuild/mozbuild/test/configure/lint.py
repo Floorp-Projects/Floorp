@@ -13,6 +13,7 @@ from buildconfig import (
 )
 
 from mozbuild.configure.lint import LintSandbox
+import six
 
 
 test_path = os.path.abspath(__file__)
@@ -38,9 +39,9 @@ class LintMeta(type):
         return type.__new__(mcs, name, bases, attrs)
 
 
+# We don't actually need python2 compat, but this makes flake8 happy.
+@six.add_metaclass(LintMeta)
 class Lint(unittest.TestCase):
-    __metaclass__ = LintMeta
-
     def setUp(self):
         self._curdir = os.getcwd()
         os.chdir(topobjdir)
