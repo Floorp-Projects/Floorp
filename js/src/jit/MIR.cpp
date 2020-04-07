@@ -2849,9 +2849,7 @@ MDefinition* MRsh::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MBinaryArithInstruction::foldsTo(TempAllocator& alloc) {
-  if (specialization_ == MIRType::None) {
-    return this;
-  }
+  MOZ_ASSERT(IsNumberType(specialization_));
 
   if (specialization_ == MIRType::Int64) {
     return this;
@@ -2933,11 +2931,10 @@ bool MFilterTypeSet::canConsumeFloat32(MUse* operand) const {
 }
 
 void MBinaryArithInstruction::trySpecializeFloat32(TempAllocator& alloc) {
+  MOZ_ASSERT(IsNumberType(specialization_));
+
   // Do not use Float32 if we can use int32.
   if (specialization_ == MIRType::Int32) {
-    return;
-  }
-  if (specialization_ == MIRType::None) {
     return;
   }
 
@@ -3156,9 +3153,7 @@ void MAbs::trySpecializeFloat32(TempAllocator& alloc) {
 }
 
 MDefinition* MDiv::foldsTo(TempAllocator& alloc) {
-  if (specialization_ == MIRType::None) {
-    return this;
-  }
+  MOZ_ASSERT(IsNumberType(specialization_));
 
   if (specialization_ == MIRType::Int64) {
     return this;
@@ -3222,9 +3217,7 @@ void MDiv::analyzeEdgeCasesBackward() {
 bool MDiv::fallible() const { return !isTruncated(); }
 
 MDefinition* MMod::foldsTo(TempAllocator& alloc) {
-  if (specialization_ == MIRType::None) {
-    return this;
-  }
+  MOZ_ASSERT(IsNumberType(specialization_));
 
   if (specialization_ == MIRType::Int64) {
     return this;

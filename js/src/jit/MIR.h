@@ -4821,12 +4821,7 @@ class MBinaryArithInstruction : public MBinaryInstruction,
     const auto* other = static_cast<const MBinaryArithInstruction*>(ins);
     return other->mustPreserveNaN_ == mustPreserveNaN_;
   }
-  AliasSet getAliasSet() const override {
-    if (specialization_ >= MIRType::Object) {
-      return AliasSet::Store(AliasSet::Any);
-    }
-    return AliasSet::None();
-  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   bool isTruncated() const { return implicitTruncate_ == Truncate; }
   TruncateKind truncateKind() const { return implicitTruncate_; }
@@ -5387,9 +5382,7 @@ class MAdd : public MBinaryArithInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MAdd)
 };
@@ -5424,9 +5417,7 @@ class MSub : public MBinaryArithInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MSub)
 };
@@ -5510,8 +5501,6 @@ class MMul : public MBinaryArithInstruction {
 
   bool fallible() const { return canBeNegativeZero_ || canOverflow(); }
 
-  void setSpecialization(MIRType type) { specialization_ = type; }
-
   bool isFloat32Commutative() const override { return true; }
 
   void computeRange(TempAllocator& alloc) override;
@@ -5523,9 +5512,7 @@ class MMul : public MBinaryArithInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MMul)
 };
@@ -5635,9 +5622,7 @@ class MDiv : public MBinaryArithInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!MBinaryArithInstruction::congruentTo(ins)) {
@@ -5726,9 +5711,7 @@ class MMod : public MBinaryArithInstruction {
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ < MIRType::Object;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   bool fallible() const;
 
