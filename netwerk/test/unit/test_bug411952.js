@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   try {
     var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);

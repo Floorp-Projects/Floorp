@@ -5,6 +5,8 @@
 // This test makes sure the HTTP authenticated sessions are correctly cleared
 // when entering and leaving the private browsing mode.
 
+"use strict";
+
 function run_test() {
   var am = Cc["@mozilla.org/network/http-auth-manager;1"].getService(
     Ci.nsIHttpAuthManager
@@ -60,9 +62,9 @@ function run_test() {
     Assert.equal(pass.value, kPassword);
 
     // make sure the added auth entry is no longer accessible in private
-    (domain = { value: kEmpty }),
-      (user = { value: kEmpty }),
-      (pass = { value: kEmpty });
+    domain = { value: kEmpty };
+    user = { value: kEmpty };
+    pass = { value: kEmpty };
     try {
       // should throw
       am.getAuthIdentity(
@@ -100,9 +102,9 @@ function run_test() {
       PRIVATE
     );
     // make sure the recently added auth entry is available inside the private browsing mode
-    (domain = { value: kEmpty }),
-      (user = { value: kEmpty }),
-      (pass = { value: kEmpty });
+    domain = { value: kEmpty };
+    user = { value: kEmpty };
+    pass = { value: kEmpty };
     am.getAuthIdentity(
       kHTTP,
       kHost2,
@@ -121,9 +123,9 @@ function run_test() {
 
     try {
       // make sure the recently added auth entry is not available outside the private browsing mode
-      (domain = { value: kEmpty }),
-        (user = { value: kEmpty }),
-        (pass = { value: kEmpty });
+      domain = { value: kEmpty };
+      user = { value: kEmpty };
+      pass = { value: kEmpty };
       am.getAuthIdentity(
         kHTTP,
         kHost2,
@@ -149,9 +151,9 @@ function run_test() {
     Services.obs.notifyObservers(null, "last-pb-context-exited");
 
     // make sure the added auth entry is no longer accessible in any privacy state
-    (domain = { value: kEmpty }),
-      (user = { value: kEmpty }),
-      (pass = { value: kEmpty });
+    domain = { value: kEmpty };
+    user = { value: kEmpty };
+    pass = { value: kEmpty };
     try {
       // should throw (not available in public mode)
       am.getAuthIdentity(

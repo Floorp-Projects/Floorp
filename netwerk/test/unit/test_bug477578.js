@@ -1,5 +1,7 @@
 // test that methods are not normalized
 
+"use strict";
+
 const testMethods = [
   ["GET"],
   ["get"],

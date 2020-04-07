@@ -1,4 +1,4 @@
-//
+/* import-globals-from ../unit/head_channels.js */
 // Load standard base class for network tests into child process
 //
 

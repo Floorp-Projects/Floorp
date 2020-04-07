@@ -18,6 +18,16 @@
 //    c) Schema 3: the 'creationTime' column already exists; or the
 //       'moz_uniqueid' index already exists.
 
+"use strict";
+
+let profile;
+let cookieFile;
+let backupFile;
+let sub_generator;
+let now;
+let futureExpiry;
+let cookie;
+
 var COOKIE_DATABASE_SCHEMA_CURRENT = 11;
 
 var test_generator = do_run_test();
@@ -36,63 +46,60 @@ function finish_test() {
 
 function* do_run_test() {
   // Set up a profile.
-  this.profile = do_get_profile();
+  profile = do_get_profile();
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 
   // Get the cookie file and the backup file.
-  this.cookieFile = profile.clone();
+  cookieFile = profile.clone();
   cookieFile.append("cookies.sqlite");
-  this.backupFile = profile.clone();
+  backupFile = profile.clone();
   backupFile.append("cookies.sqlite.bak");
   Assert.ok(!cookieFile.exists());
   Assert.ok(!backupFile.exists());
 
   // Create a cookie object for testing.
-  this.now = Date.now() * 1000;
-  this.futureExpiry = Math.round(this.now / 1e6 + 1000);
-  this.cookie = new Cookie(
+  now = Date.now() * 1000;
+  futureExpiry = Math.round(now / 1e6 + 1000);
+  cookie = new Cookie(
     "oh",
     "hai",
     "bar.com",
     "/",
-    this.futureExpiry,
-    this.now,
-    this.now,
+    futureExpiry,
+    now,
+    now,
     false,
     false,
     false
   );
 
-  this.sub_generator = run_test_1(test_generator);
+  sub_generator = run_test_1(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_2(test_generator);
+  sub_generator = run_test_2(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_3(test_generator, 99);
+  sub_generator = run_test_3(test_generator, 99);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_3(
-    test_generator,
-    COOKIE_DATABASE_SCHEMA_CURRENT
-  );
+  sub_generator = run_test_3(test_generator, COOKIE_DATABASE_SCHEMA_CURRENT);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_3(test_generator, 4);
+  sub_generator = run_test_3(test_generator, 4);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_3(test_generator, 3);
+  sub_generator = run_test_3(test_generator, 3);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(
+  sub_generator = run_test_4_exists(
     test_generator,
     1,
     "ALTER TABLE moz_cookies ADD lastAccessed INTEGER"
@@ -100,7 +107,7 @@ function* do_run_test() {
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(
+  sub_generator = run_test_4_exists(
     test_generator,
     2,
     "ALTER TABLE moz_cookies ADD baseDomain TEXT"
@@ -108,11 +115,11 @@ function* do_run_test() {
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_baseDomain(test_generator);
+  sub_generator = run_test_4_baseDomain(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(
+  sub_generator = run_test_4_exists(
     test_generator,
     3,
     "ALTER TABLE moz_cookies ADD creationTime INTEGER"
@@ -120,7 +127,7 @@ function* do_run_test() {
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4_exists(
+  sub_generator = run_test_4_exists(
     test_generator,
     3,
     "CREATE UNIQUE INDEX moz_uniqueid ON moz_cookies (name, host, path)"
@@ -281,9 +288,9 @@ function* run_test_4_baseDomain(generator) {
     "hai",
     ".",
     "/",
-    this.futureExpiry,
-    this.now,
-    this.now,
+    futureExpiry,
+    now,
+    now,
     false,
     false,
     false

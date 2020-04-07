@@ -9,6 +9,8 @@
  *    data must be kept
  */
 
+"use strict";
+
 var data = "data    ";
 var altData = "alt-data";
 
@@ -16,7 +18,7 @@ function run_test() {
   do_get_profile();
 
   // Expand both data to 1MB
-  for (i = 0; i < 17; i++) {
+  for (let i = 0; i < 17; i++) {
     data += data;
     altData += altData;
   }

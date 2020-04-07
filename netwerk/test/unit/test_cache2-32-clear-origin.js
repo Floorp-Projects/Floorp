@@ -1,3 +1,5 @@
+"use strict";
+
 const URL = "http://example.net";
 const URL2 = "http://foo.bar";
 

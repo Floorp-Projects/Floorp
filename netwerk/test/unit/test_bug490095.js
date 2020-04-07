@@ -3,6 +3,8 @@
 // heuristic query freshness as defined in RFC 2616 section 13.9
 //
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();

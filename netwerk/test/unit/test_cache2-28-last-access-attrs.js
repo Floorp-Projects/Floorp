@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   do_get_profile();
   function NowSeconds() {

@@ -1,3 +1,5 @@
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const ReferrerInfo = Components.Constructor(
@@ -286,7 +288,7 @@ function test_pageload() {
 const redirect_inituri = newURI("http://localhost:4443/redirect");
 const redirect_targeturi = newURI("http://localhost:4444/index.html");
 
-function continue_test_redrect() {
+function continue_test_redirect() {
   var subresources = [
     "http://localhost:4444/style.css",
     "http://localhost:4443/jquery.js",
@@ -313,7 +315,7 @@ function continue_test_redrect() {
         predictor.LEARN_LOAD_REDIRECT,
         origin_attributes
       );
-      do_tiemout(0, () => {
+      do_timeout(0, () => {
         var preconns = [];
         preconns.push(extract_origin(redirect_targeturi));
 
@@ -329,7 +331,7 @@ function continue_test_redrect() {
 
           sruri = newURI(subresources[1]);
           predictor.learn(
-            sruris[1],
+            sruri[1],
             redirect_targeturi,
             predictor.LEARN_LOAD_SUBRESOURCE,
             origin_attributes
@@ -339,7 +341,7 @@ function continue_test_redrect() {
 
             sruri = newURI(subresources[2]);
             predictor.learn(
-              sruris[2],
+              sruri[2],
               redirect_targeturi,
               predictor.LEARN_LOAD_SUBRESOURCE,
               origin_attributes

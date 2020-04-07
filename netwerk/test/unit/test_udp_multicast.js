@@ -1,4 +1,5 @@
 // Bug 960397: UDP multicast options
+"use strict";
 
 var { Constructor: CC } = Components;
 

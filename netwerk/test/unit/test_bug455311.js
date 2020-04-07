@@ -1,3 +1,5 @@
+"use strict";
+
 function getLinkFile() {
   if (mozinfo.os == "win") {
     return do_get_file("test_link.url");

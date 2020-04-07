@@ -1,3 +1,5 @@
+"use strict";
+
 function run_test() {
   var storage = getCacheStorage("disk");
   var lcis = [

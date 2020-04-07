@@ -1,6 +1,8 @@
 // This file ensures that suspending a channel directly after opening it
 // suspends future notifications correctly.
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {

@@ -13,6 +13,8 @@ This test is using a resumable response.
 
 */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpProtocolHandler = Cc[

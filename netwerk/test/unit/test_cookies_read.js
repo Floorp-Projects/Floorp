@@ -3,6 +3,8 @@
 
 // test cookie database asynchronous read operation.
 
+"use strict";
+
 var test_generator = do_run_test();
 
 var CMAX = 1000; // # of cookies to create

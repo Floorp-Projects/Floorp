@@ -22,6 +22,8 @@
 // but with most of the test running on the child (calls to the predictor api,
 // verification, etc).
 //
+/* import-globals-from ../unit/test_predictor.js */
+
 function run_test() {
   var test_path = do_get_file("../unit/test_predictor.js").path.replace(
     /\\/g,

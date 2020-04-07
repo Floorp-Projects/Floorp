@@ -1,3 +1,5 @@
+"use strict";
+
 const PR_RDONLY = 0x1;
 
 var etld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(

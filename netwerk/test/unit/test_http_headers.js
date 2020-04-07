@@ -1,3 +1,5 @@
+"use strict";
+
 function check_request_header(chan, name, value) {
   var chanValue;
   try {

@@ -1,3 +1,5 @@
+"use strict";
+
 CookiePolicyHelper.runTest("document.cookies", {
   cookieJarAccessAllowed: async _ => {
     let hasCookie = !!content.document.cookie.length;

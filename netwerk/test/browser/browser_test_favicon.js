@@ -1,6 +1,6 @@
 // Tests third party cookie blocking using a favicon loaded from a different
 // domain. The cookie should be considered third party.
-
+"use strict";
 add_task(async function() {
   const iconUrl =
     "http://example.org/browser/netwerk/test/browser/damonbowling.jpg";

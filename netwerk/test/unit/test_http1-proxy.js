@@ -15,6 +15,8 @@
  *   response header sent
  */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();

@@ -1,3 +1,5 @@
+"use strict";
+
 var CC = Components.Constructor;
 
 const ServerSocket = CC(
@@ -82,7 +84,7 @@ var listener = {
 // not try to connect at all until it is resumed. In this case we are going to
 // wait for some time and cancel the channel before resuming it.
 add_test(function testNoConnectChannelCanceledEarly() {
-  serv = new TestServer();
+  let serv = new TestServer();
 
   obs.addObserver(requestListenerObserver, "http-on-modify-request");
   var chan = NetUtil.newChannel({

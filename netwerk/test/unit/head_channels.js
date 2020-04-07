@@ -1,6 +1,10 @@
 /**
  * Read count bytes from stream and return as a String object
  */
+
+/* import-globals-from head_cache.js */
+/* import-globals-from head_cookies.js */
+
 function read_stream(stream, count) {
   /* assume stream has non-ASCII data */
   var wrapper = Cc["@mozilla.org/binaryinputstream;1"].createInstance(

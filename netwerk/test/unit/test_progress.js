@@ -1,3 +1,5 @@
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
@@ -72,7 +74,7 @@ var progressCallback = {
     Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     this._last_callback_handled = TYPE_ONPROGRESS;
 
-    Assert.equal(mStatus, STATUS_RECEIVING_FROM);
+    Assert.equal(this.mStatus, STATUS_RECEIVING_FROM);
     last = progress;
     max = progressMax;
   },
@@ -91,7 +93,7 @@ var progressCallback = {
     this._last_callback_handled = TYPE_ONSTATUS;
 
     Assert.equal(statusArg, "localhost");
-    mStatus = status;
+    this.mStatus = status;
   },
 
   mStatus: 0,

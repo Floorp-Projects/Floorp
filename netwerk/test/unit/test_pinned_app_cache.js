@@ -29,6 +29,8 @@
  *       by discarding app1 (non-pinned)
  *
  */
+/* global _XPCSHELL_PROCESS */
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { PermissionTestUtils } = ChromeUtils.import(
@@ -123,7 +125,7 @@ function init_http_server() {
   httpServer.registerPathHandler("/app2", app_handler);
   httpServer.registerPathHandler("/app1.appcache", manifest1_handler);
   httpServer.registerPathHandler("/app2.appcache", manifest2_handler);
-  for (i = 1; i <= 8; i++) {
+  for (let i = 1; i <= 8; i++) {
     httpServer.registerPathHandler("/pages/foo" + i, datafile_handler);
   }
   httpServer.start(-1);
@@ -220,7 +222,7 @@ function start_cache_nonpinned_app() {
           break;
       }
     },
-    function(appcahe) {
+    function(appcache) {
       info("app1 avail " + appcache + "\n");
     }
   );
@@ -283,7 +285,7 @@ function start_cache_pinned_app2_for_success() {
           break;
       }
     },
-    function(appcahe) {
+    function(appcache) {
       info("app2 avail " + appcache + "\n");
     }
   );

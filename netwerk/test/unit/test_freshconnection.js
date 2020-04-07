@@ -2,6 +2,8 @@
 // involved in a reload runs on the right thread. It relies on the
 // assertions in necko.
 
+"use strict";
+
 var listener = {
   onStartRequest: function test_onStartR(request) {},
 

@@ -5,6 +5,8 @@
 // 1) network.cookie.thirdparty.sessionOnly = false
 // 2) network.cookie.thirdparty.sessionOnly = true
 
+"use strict";
+
 var test_generator = do_run_test();
 
 function run_test() {

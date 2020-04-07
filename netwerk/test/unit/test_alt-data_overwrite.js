@@ -12,6 +12,8 @@
  * - readAltContent3 checks that it gets back the newly saved alt-data
  */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {

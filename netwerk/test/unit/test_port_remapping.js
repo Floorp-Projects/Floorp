@@ -1,6 +1,8 @@
 // This test is checking the `network.socket.forcePort` preference has an effect.
 // We remap an ilusional port `8765` to go to the port the server actually binds to.
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 function make_channel(url, callback, ctx) {

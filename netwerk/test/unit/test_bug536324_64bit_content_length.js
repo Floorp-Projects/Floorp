@@ -1,6 +1,8 @@
 /* Test to ensure our 64-bit content length implementation works, at least for
    a simple HTTP case */
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 // This C-L is significantly larger than (U)INT32_MAX, to make sure we do
@@ -16,7 +18,7 @@ var listener = {
     Assert.equal(req.getResponseHeader("Content-Length"), CONTENT_LENGTH);
 
     // We're done here, cancel the channel
-    req.cancel(NS_BINDING_ABORT);
+    req.cancel(Cr.NS_BINDING_ABORTED);
   },
 
   onStopRequest(req, stat) {

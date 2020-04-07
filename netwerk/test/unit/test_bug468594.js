@@ -13,6 +13,8 @@
 // Please see RFC 2616 section 13.2.1 6th paragraph for the
 // definition of "explicit expiration time" being used here.
 
+"use strict";
+
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();

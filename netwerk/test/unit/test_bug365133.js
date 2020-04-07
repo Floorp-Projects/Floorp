@@ -1,3 +1,5 @@
+"use strict";
+
 const URL = "ftp://localhost/bug365133/";
 
 const tests = [

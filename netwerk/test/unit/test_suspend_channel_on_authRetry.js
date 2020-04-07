@@ -1,5 +1,6 @@
 // This file tests async handling of a channel suspended in DoAuthRetry
 // notifying http-on-modify-request and http-on-before-connect observers.
+"use strict";
 
 var CC = Components.Constructor;
 

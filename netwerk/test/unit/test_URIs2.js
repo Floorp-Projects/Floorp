@@ -1,4 +1,5 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+"use strict";
 
 var gIoService = Cc["@mozilla.org/network/io-service;1"].getService(
   Ci.nsIIOService

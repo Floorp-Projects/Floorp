@@ -1,4 +1,5 @@
 /* Tests various aspects of nsIResumableChannel in combination with HTTP */
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 

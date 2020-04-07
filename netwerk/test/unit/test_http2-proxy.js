@@ -21,12 +21,17 @@
  *   response header sent
  */
 
+/* eslint-env node */
+/* global serverPort */
+
+"use strict";
+
 const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let proxy_port;
-let server_port;
 let filter;
+let proxy;
 
 // See moz-http2
 const proxy_auth = "authorization-token";
@@ -282,7 +287,7 @@ add_task(async function setup() {
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
-  server_port = env.get("MOZHTTP2_PORT");
+  let server_port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(server_port, null);
   processId = await NodeServer.fork();
   await NodeServer.execute(processId, `serverPort = ${server_port}`);

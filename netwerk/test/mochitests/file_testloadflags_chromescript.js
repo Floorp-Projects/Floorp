@@ -1,3 +1,7 @@
+/* eslint-env mozilla/frame-script */
+
+"use strict";
+
 var gObs;
 
 function info(s) {

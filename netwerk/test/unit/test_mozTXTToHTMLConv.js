@@ -6,6 +6,8 @@
  * Test that mozITXTToHTMLConv works properly.
  */
 
+"use strict";
+
 function run_test() {
   let converter = Cc["@mozilla.org/txttohtmlconv;1"].getService(
     Ci.mozITXTToHTMLConv

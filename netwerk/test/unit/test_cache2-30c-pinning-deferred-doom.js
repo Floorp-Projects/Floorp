@@ -19,6 +19,8 @@ This is a complex test checking the internal "deferred doom" functionality in bo
 
 */
 
+"use strict";
+
 const kENTRYCOUNT = 10;
 
 function log_(msg) {

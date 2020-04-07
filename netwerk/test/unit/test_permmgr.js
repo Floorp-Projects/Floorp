@@ -1,5 +1,7 @@
 // tests nsIPermissionManager
 
+"use strict";
+
 var hosts = [
   // format: [host, type, permission]
   ["http://mozilla.org", "cookie", 1],

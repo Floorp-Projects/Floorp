@@ -3,13 +3,12 @@
 // prompting for redirects of other unsafe methods (such as PUTs, DELETEs,
 // etc--see HttpBaseChannel::IsSafeMethod).  Since no prompting is possible
 // in xpcshell, we get an error for prompts, and the request fails.
+"use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-
-Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 var sSame;
 var sOther;

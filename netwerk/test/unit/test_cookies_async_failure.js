@@ -18,6 +18,12 @@
 //    This should result in an abort of the database rebuild; the partially-
 //    built database should be moved to 'cookies.sqlite.bak-rebuild'.
 
+"use strict";
+
+let profile;
+let sub_generator;
+let cookie;
+
 var test_generator = do_run_test();
 
 function run_test() {
@@ -34,7 +40,7 @@ function finish_test() {
 
 function* do_run_test() {
   // Set up a profile.
-  this.profile = do_get_profile();
+  profile = do_get_profile();
 
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
@@ -44,38 +50,38 @@ function* do_run_test() {
   Assert.ok(!do_get_backup_file(profile).exists());
 
   // Create a cookie object for testing.
-  this.now = Date.now() * 1000;
-  this.futureExpiry = Math.round(this.now / 1e6 + 1000);
-  this.cookie = new Cookie(
+  let now = Date.now() * 1000;
+  let futureExpiry = Math.round(now / 1e6 + 1000);
+  cookie = new Cookie(
     "oh",
     "hai",
     "bar.com",
     "/",
-    this.futureExpiry,
-    this.now,
-    this.now,
+    futureExpiry,
+    now,
+    now,
     false,
     false,
     false
   );
 
-  this.sub_generator = run_test_1(test_generator);
+  sub_generator = run_test_1(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_2(test_generator);
+  sub_generator = run_test_2(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_3(test_generator);
+  sub_generator = run_test_3(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_4(test_generator);
+  sub_generator = run_test_4(test_generator);
   sub_generator.next();
   yield;
 
-  this.sub_generator = run_test_5(test_generator);
+  sub_generator = run_test_5(test_generator);
   sub_generator.next();
   yield;
 

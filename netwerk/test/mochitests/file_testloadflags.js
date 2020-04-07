@@ -1,7 +1,12 @@
+/* eslint-env mozilla/frame-script */
+
+"use strict";
+
 const SCRIPT_URL = SimpleTest.getTestFileURL(
   "file_testloadflags_chromescript.js"
 );
 
+let gScript;
 var gExpectedCookies;
 var gExpectedHeaders;
 var gExpectedLoads;

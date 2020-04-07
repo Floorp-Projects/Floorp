@@ -100,8 +100,8 @@ var cancelDuringOnDataListener = {
     Assert.ok(!string.includes("b"));
     this.data += string;
     this.channel.cancel(Cr.NS_BINDING_ABORTED);
-    if (receivedSomeData) {
-      receivedSomeData();
+    if (this.receivedSomeData) {
+      this.receivedSomeData();
     }
   },
 
@@ -248,7 +248,7 @@ function cancel_middle(metadata, response) {
   });
   p.then(() => {
     let str1 = "b".repeat(128 * 1024);
-    response.write(str2, str2.length);
+    response.write(str1, str1.length);
     response.finish();
   });
 }

@@ -1,3 +1,5 @@
+"use strict";
+
 CookiePolicyHelper.runTest("SharedWorker", {
   cookieJarAccessAllowed: async w => {
     new w.SharedWorker("a.js", "foo");

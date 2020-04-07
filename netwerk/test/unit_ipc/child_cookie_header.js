@@ -1,3 +1,5 @@
+/* global NetUtil, ChannelListener */
+
 "use strict";
 
 function inChildProcess() {

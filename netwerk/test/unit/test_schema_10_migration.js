@@ -3,6 +3,7 @@
 
 // Test cookie database migration from version 10 (prerelease Gecko 2.0) to the
 // current version, presently 11.
+"use strict";
 
 var test_generator = do_run_test();
 

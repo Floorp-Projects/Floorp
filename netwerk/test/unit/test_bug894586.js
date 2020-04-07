@@ -65,7 +65,7 @@ ProtocolHandler.prototype = {
   set contentLength(val) {
     throw Components.Exception(
       "Setting content length",
-      NS_ERROR_NOT_IMPLEMENTED
+      Cr.NS_ERROR_NOT_IMPLEMENTED
     );
   },
   open() {

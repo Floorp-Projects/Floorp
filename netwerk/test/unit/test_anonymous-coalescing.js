@@ -5,6 +5,8 @@
 - close all and do it in the opposite way (do an anonymous req first)
 */
 
+"use strict";
+
 var h2Port;
 var prefs;
 var spdypref;
