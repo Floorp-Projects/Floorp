@@ -812,7 +812,7 @@ class nsDisplayListBuilder {
    * aPointerEventsNoneDoc should be set to true if the frame generating this
    * document is pointer-events:none.
    */
-  void EnterPresShell(nsIFrame* aReferenceFrame,
+  void EnterPresShell(const nsIFrame* aReferenceFrame,
                       bool aPointerEventsNoneDoc = false);
   /**
    * For print-preview documents, we sometimes need to build display items for
@@ -821,11 +821,11 @@ class nsDisplayListBuilder {
    * ResetMarkedFramesForDisplayList to make sure that the results of
    * MarkFramesForDisplayList do not carry over between batches.
    */
-  void ResetMarkedFramesForDisplayList(nsIFrame* aReferenceFrame);
+  void ResetMarkedFramesForDisplayList(const nsIFrame* aReferenceFrame);
   /**
    * Notify the display list builder that we're leaving a presshell.
    */
-  void LeavePresShell(nsIFrame* aReferenceFrame,
+  void LeavePresShell(const nsIFrame* aReferenceFrame,
                       nsDisplayList* aPaintedContents);
 
   void IncrementPresShellPaintCount(mozilla::PresShell* aPresShell);
@@ -938,8 +938,9 @@ class nsDisplayListBuilder {
    */
   void MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                 const nsFrameList& aFrames);
-  void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame);
-  void MarkFrameForDisplayIfVisible(nsIFrame* aFrame, nsIFrame* aStopAtFrame);
+  void MarkFrameForDisplay(nsIFrame* aFrame, const nsIFrame* aStopAtFrame);
+  void MarkFrameForDisplayIfVisible(nsIFrame* aFrame,
+                                    const nsIFrame* aStopAtFrame);
   void AddFrameMarkedForDisplayIfVisible(nsIFrame* aFrame);
 
   void ClearFixedBackgroundDisplayData();
