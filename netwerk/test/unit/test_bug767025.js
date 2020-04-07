@@ -9,8 +9,8 @@ const { PermissionTestUtils } = ChromeUtils.import(
 );
 
 /**
- * This is testcase do following steps to make sure bug767025 removing
- * files as expection.
+ * This testcase does the following steps to make sure that bug767025 removes
+ * files as expected.
  *
  * STEPS:
  *  - Schedule a offline cache update for app.manifest.

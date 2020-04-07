@@ -607,7 +607,7 @@ nsresult nsXPCWrappedJS::CheckForException(XPCCallContext& ccx,
   RootedValue js_exception(cx);
   bool is_js_exception = JS_GetPendingException(cx, &js_exception);
 
-  /* JS might throw an expection whether the reporter was called or not */
+  /* JS might throw an exception whether the reporter was called or not */
   if (is_js_exception) {
     if (!xpc_exception) {
       XPCConvert::JSValToXPCException(cx, &js_exception, anInterfaceName,

@@ -339,7 +339,7 @@ class ResultsSink:
         if self.wptreport is not None:
             self.wptreport.suite_end()
 
-    # Conceptually, this maps (test result x test expection) to text labels.
+    # Conceptually, this maps (test result x test expectation) to text labels.
     #      key   is (result, expect, random)
     #      value is (automation label, dev test category)
     LABELS = {
