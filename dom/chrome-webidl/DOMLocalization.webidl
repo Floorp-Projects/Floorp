@@ -31,19 +31,13 @@ interface DOMLocalization : Localization {
    *    - aResourceids       - a list of localization resource URIs
    *                           which will provide messages for this
    *                           Localization instance.
-   *    - aSync              - Specifies if the initial state of the DOMLocalization
-   *                           and the underlying Localization API is synchronous.
-   *                           This enables a number of synchronous methods on the
-   *                           Localization API and uses it for `TranslateElements`
-   *                           making the method return a synchronusly resolved promise.
-   *    - aBundleGenerator   - an object with two methods - `generateBundles` and
-   *                           `generateBundlesSync` allowing consumers to overload the
-   *                           default generators provided by Gecko.
+   *    - aGenerateMessages  - a callback function which will be
+   *                           used to generate an iterator
+   *                           over FluentBundle instances.
    */
   [Throws]
-  constructor(sequence<DOMString> aResourceIds,
-              optional boolean aSync = false,
-              optional BundleGenerator aBundleGenerator = {});
+  constructor(optional sequence<DOMString> aResourceIds,
+              optional GenerateMessages aGenerateMessages);
 
   /**
    * Adds a node to nodes observed for localization

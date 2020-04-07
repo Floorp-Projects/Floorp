@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { L10nRegistry, FileSource } =
   ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
@@ -45,11 +46,12 @@ function getAttributeByName(attributes, name) {
 add_task(async function test_accented_works() {
   Services.prefs.setStringPref("intl.l10n.pseudo", "");
 
-  let generateBundles = addMockFileSource();
+  let generateMessages = addMockFileSource();
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], false, { generateBundles });
+  ], false, generateMessages);
+  l10n.registerObservers();
 
   {
     // 1. Start with no pseudo
@@ -114,11 +116,12 @@ add_task(async function test_accented_works() {
 add_task(async function test_unavailable_strategy_works() {
   Services.prefs.setStringPref("intl.l10n.pseudo", "");
 
-  let generateBundles = addMockFileSource();
+  let generateMessages = addMockFileSource();
 
   const l10n = new Localization([
     "/browser/menu.ftl",
-  ], false, { generateBundles });
+  ], false, generateMessages);
+  l10n.registerObservers();
 
   {
     // 1. Set unavailable pseudo strategy

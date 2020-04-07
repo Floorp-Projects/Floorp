@@ -212,29 +212,19 @@ function maybeReportErrorToGecko(error) {
 class Localization {
   /**
    * @param {Array<String>} resourceIds         - List of resource IDs
+   * @param {Function}      generateBundles     - Function that returns an async
+   *                                              generator over FluentBundles
+   * @param {Function}      generateBundlesSync - Function that returns a sync
+   *                                              generator over FluentBundles
    *
    * @returns {Localization}
    */
-  constructor(resourceIds = []) {
+  constructor(resourceIds = [], sync = false, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
+    this.isSync = sync;
     this.resourceIds = resourceIds;
-    this.generateBundles = defaultGenerateBundles;
-    this.generateBundlesSync = defaultGenerateBundlesSync;
-  }
-
-  setGenerateBundles(generateBundles) {
     this.generateBundles = generateBundles;
-  }
-
-  setGenerateBundlesSync(generateBundlesSync) {
     this.generateBundlesSync = generateBundlesSync;
-  }
-
-  setIsSync(isSync) {
-    this.isSync = isSync;
-  }
-
-  init(eager = false) {
-    this.onChange(eager);
+    this.onChange(true);
   }
 
   cached(iterable) {
@@ -510,6 +500,11 @@ class Localization {
       this.bundles.touchNext(prefetchCount);
     }
   }
+
+  setIsSync(isSync) {
+    this.isSync = isSync;
+    this.onChange();
+  }
 }
 
 Localization.prototype.QueryInterface = ChromeUtils.generateQI([
@@ -639,9 +634,13 @@ function keysFromBundle(method, bundle, keys, translations) {
  * Helper function which allows us to construct a new
  * Localization from Localization.
  */
-var getLocalization = (resourceIds) => {
-  return new Localization(resourceIds);
+var getLocalization = (resourceIds, sync = false) => {
+  return new Localization(resourceIds, sync);
+};
+
+var getLocalizationWithCustomGenerateMessages = (resourceIds, generateMessages) => {
+  return new Localization(resourceIds, false, generateMessages);
 };
 
 this.Localization = Localization;
-var EXPORTED_SYMBOLS = ["Localization", "getLocalization"];
+var EXPORTED_SYMBOLS = ["Localization", "getLocalization", "getLocalizationWithCustomGenerateMessages"];
