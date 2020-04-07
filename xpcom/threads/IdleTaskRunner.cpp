@@ -6,7 +6,6 @@
 
 #include "IdleTaskRunner.h"
 #include "nsRefreshDriver.h"
-#include "mozilla/SystemGroup.h"
 #include "nsComponentManagerUtils.h"
 
 namespace mozilla {
@@ -14,15 +13,14 @@ namespace mozilla {
 already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
     const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
     int64_t aBudget, bool aRepeating,
-    const MayStopProcessingCallbackType& aMayStopProcessing,
-    TaskCategory aTaskCategory) {
+    const MayStopProcessingCallbackType& aMayStopProcessing) {
   if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
 
   RefPtr<IdleTaskRunner> runner =
       new IdleTaskRunner(aCallback, aRunnableName, aDelay, aBudget, aRepeating,
-                         aMayStopProcessing, aTaskCategory);
+                         aMayStopProcessing);
   runner->Schedule(false);  // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
@@ -30,8 +28,7 @@ already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
 IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
     int64_t aBudget, bool aRepeating,
-    const MayStopProcessingCallbackType& aMayStopProcessing,
-    TaskCategory aTaskCategory)
+    const MayStopProcessingCallbackType& aMayStopProcessing)
     : IdleRunnable(aRunnableName),
       mCallback(aCallback),
       mDelay(aDelay),
@@ -39,7 +36,6 @@ IdleTaskRunner::IdleTaskRunner(
       mRepeating(aRepeating),
       mTimerActive(false),
       mMayStopProcessing(aMayStopProcessing),
-      mTaskCategory(aTaskCategory),
       mName(aRunnableName) {}
 
 NS_IMETHODIMP
@@ -86,8 +82,7 @@ void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   // aTarget is always the main thread event target provided from
   // NS_DispatchToCurrentThreadQueue(). We ignore aTarget here to ensure that
-  // CollectorRunner always run specifically on SystemGroup::EventTargetFor(
-  // TaskCategory::GarbageCollection) of the main thread.
+  // CollectorRunner always run specifically the main thread.
   SetTimerInternal(aDelay);
 }
 
@@ -131,11 +126,7 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
                                       EventQueuePriority::Idle);
     } else {
       if (!mScheduleTimer) {
-        nsIEventTarget* target = nullptr;
-        if (TaskCategory::Count != mTaskCategory) {
-          target = SystemGroup::EventTargetFor(mTaskCategory);
-        }
-        mScheduleTimer = NS_NewTimer(target);
+        mScheduleTimer = NS_NewTimer();
         if (!mScheduleTimer) {
           return;
         }
@@ -170,11 +161,7 @@ void IdleTaskRunner::SetTimerInternal(uint32_t aDelay) {
   }
 
   if (!mTimer) {
-    nsIEventTarget* target = nullptr;
-    if (TaskCategory::Count != mTaskCategory) {
-      target = SystemGroup::EventTargetFor(mTaskCategory);
-    }
-    mTimer = NS_NewTimer(target);
+    mTimer = NS_NewTimer();
   } else {
     mTimer->Cancel();
   }

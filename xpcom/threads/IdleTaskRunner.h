@@ -33,8 +33,7 @@ class IdleTaskRunner final : public IdleRunnable {
   static already_AddRefed<IdleTaskRunner> Create(
       const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
       int64_t aBudget, bool aRepeating,
-      const MayStopProcessingCallbackType& aMayStopProcessing,
-      TaskCategory aTaskCategory = TaskCategory::Count);
+      const MayStopProcessingCallbackType& aMayStopProcessing);
 
   NS_IMETHOD Run() override;
 
@@ -48,8 +47,7 @@ class IdleTaskRunner final : public IdleRunnable {
   explicit IdleTaskRunner(
       const CallbackType& aCallback, const char* aRunnableName, uint32_t aDelay,
       int64_t aBudget, bool aRepeating,
-      const MayStopProcessingCallbackType& aMayStopProcessing,
-      TaskCategory aTaskCategory);
+      const MayStopProcessingCallbackType& aMayStopProcessing);
   ~IdleTaskRunner();
   void CancelTimer();
   void SetTimerInternal(uint32_t aDelay);
@@ -63,7 +61,6 @@ class IdleTaskRunner final : public IdleRunnable {
   bool mRepeating;
   bool mTimerActive;
   MayStopProcessingCallbackType mMayStopProcessing;
-  const TaskCategory mTaskCategory;
   const char* mName;
 };
 

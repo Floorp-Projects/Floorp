@@ -317,9 +317,8 @@ class SWRUpdateRunnable final : public Runnable {
     if (delay && !mDelayed) {
       nsCOMPtr<nsITimerCallback> cb =
           new TimerCallback(worker->WorkerPrivate(), this);
-      Result<nsCOMPtr<nsITimer>, nsresult> result = NS_NewTimerWithCallback(
-          cb, delay, nsITimer::TYPE_ONE_SHOT,
-          SystemGroup::EventTargetFor(TaskCategory::Other));
+      Result<nsCOMPtr<nsITimer>, nsresult> result =
+          NS_NewTimerWithCallback(cb, delay, nsITimer::TYPE_ONE_SHOT);
 
       nsCOMPtr<nsITimer> timer = result.unwrapOr(nullptr);
       if (NS_WARN_IF(!timer)) {

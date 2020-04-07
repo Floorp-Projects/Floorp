@@ -752,8 +752,7 @@ void ReportingHeader::MaybeCreateCleanupTimer() {
   uint32_t timeout = StaticPrefs::dom_reporting_cleanup_timeout() * 1000;
   nsresult rv =
       NS_NewTimerWithCallback(getter_AddRefs(mCleanupTimer), this, timeout,
-                              nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-                              SystemGroup::EventTargetFor(TaskCategory::Other));
+                              nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
