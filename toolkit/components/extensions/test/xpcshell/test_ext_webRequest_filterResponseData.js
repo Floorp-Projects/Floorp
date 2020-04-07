@@ -298,23 +298,71 @@ add_task(async function test_alternate_cached_data() {
 
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.webRequest.onHeadersReceived.addListener(
+      browser.webRequest.onBeforeRequest.addListener(
         details => {
           let filter = browser.webRequest.filterResponseData(details.requestId);
+          let decoder = new TextDecoder("utf-8");
+          let encoder = new TextEncoder();
+
           filter.ondata = event => {
-            browser.test.fail(`ondata received when alt-data should be used`);
+            let str = decoder.decode(event.data, { stream: true });
+            filter.write(encoder.encode(str));
+            filter.disconnect();
+            browser.test.assertTrue(
+              str.startsWith(`"use strict";`),
+              "ondata received decoded data"
+            );
+            browser.test.sendMessage("onBeforeRequest");
           };
 
           filter.onerror = () => {
+            // onBeforeRequest will always beat the cache race, so we should always
+            // get valid data in ondata.
+            browser.test.fail("error-received", filter.error);
+          };
+        },
+        {
+          urls: ["http://example.com/data/file_script_good.js"],
+        },
+        ["blocking"]
+      );
+      browser.webRequest.onHeadersReceived.addListener(
+        details => {
+          let filter = browser.webRequest.filterResponseData(details.requestId);
+          let decoder = new TextDecoder("utf-8");
+          let encoder = new TextEncoder();
+
+          // Because cache is always a race, intermittently we will succesfully
+          // beat the cache, in which case we pass in ondata.  If cache wins,
+          // we pass in onerror.
+          // Running the test with --verify hits this cache race issue, as well
+          // it seems that the cache primarily looses on linux1804.
+          let gotone = false;
+          filter.ondata = event => {
+            browser.test.assertFalse(gotone, "cache lost the race");
+            gotone = true;
+            let str = decoder.decode(event.data, { stream: true });
+            filter.write(encoder.encode(str));
+            filter.disconnect();
+            browser.test.assertTrue(
+              str.startsWith(`"use strict";`),
+              "ondata received decoded data"
+            );
+            browser.test.sendMessage("onHeadersReceived");
+          };
+
+          filter.onerror = () => {
+            browser.test.assertFalse(gotone, "cache won the race");
+            gotone = true;
             browser.test.assertEq(
               filter.error,
               "Channel is delivering cached alt-data"
             );
-            browser.test.sendMessage("error-received");
+            browser.test.sendMessage("onHeadersReceived");
           };
         },
         {
-          urls: ["http://example.com/*/file_script_good.js"],
+          urls: ["http://example.com/data/file_script_bad.js"],
         },
         ["blocking"]
       );
@@ -330,12 +378,16 @@ add_task(async function test_alternate_cached_data() {
     "http://example.com/data/file_script.html"
   );
   await contentPage.close();
+
   await extension.startup();
 
   let page_cached = await await ExtensionTestUtils.loadContentPage(
     "http://example.com/data/file_script.html"
   );
-  await extension.awaitMessage("error-received");
+  await Promise.all([
+    extension.awaitMessage("onBeforeRequest"),
+    extension.awaitMessage("onHeadersReceived"),
+  ]);
   await page_cached.close();
   await extension.unload();
 
