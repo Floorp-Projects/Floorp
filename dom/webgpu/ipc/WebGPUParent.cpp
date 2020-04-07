@@ -557,7 +557,9 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   for (const RawId id : bufferIds) {
     data->mUnassignedBufferIds.push_back(id);
   }
-  MOZ_ASSERT(mCanvasMap.insert({AsUint64(aExternalId), data}).second);
+  if (!mCanvasMap.insert({AsUint64(aExternalId), data}).second) {
+    NS_ERROR("External image is already registered as WebGPU canvas!");
+  }
   return IPC_OK();
 }
 
