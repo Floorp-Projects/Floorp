@@ -1181,13 +1181,6 @@ TRRServiceChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                          nsIDNSByTypeRecord* aRes,
-                                          nsresult aStatus) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TRRServiceChannel::LogBlockedCORSRequest(const nsAString& aMessage,
                                          const nsACString& aCategory) {
   return NS_ERROR_NOT_IMPLEMENTED;

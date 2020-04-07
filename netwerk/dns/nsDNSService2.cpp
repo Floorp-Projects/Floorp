@@ -321,6 +321,7 @@ nsDNSRecord::ReportUnusable(uint16_t aPort) {
 class nsDNSByTypeRecord : public nsIDNSByTypeRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_SAFE_NSIDNSRECORD(((nsIDNSRecord*)nullptr))
   NS_DECL_NSIDNSBYTYPERECORD
 
   explicit nsDNSByTypeRecord(nsHostRecord* hostRecord) {
@@ -332,7 +333,7 @@ class nsDNSByTypeRecord : public nsIDNSByTypeRecord {
   RefPtr<TypeHostRecord> mHostRecord;
 };
 
-NS_IMPL_ISUPPORTS(nsDNSByTypeRecord, nsIDNSByTypeRecord)
+NS_IMPL_ISUPPORTS(nsDNSByTypeRecord, nsIDNSRecord, nsIDNSByTypeRecord)
 
 NS_IMETHODIMP
 nsDNSByTypeRecord::GetRecords(nsTArray<nsCString>& aRecords) {
@@ -396,25 +397,21 @@ NS_IMPL_ISUPPORTS(nsDNSAsyncRequest, nsICancelable)
 void nsDNSAsyncRequest::OnResolveHostComplete(nsHostResolver* resolver,
                                               nsHostRecord* hostRecord,
                                               nsresult status) {
-  if (hostRecord->type != nsDNSService::RESOLVE_TYPE_DEFAULT) {
-    nsCOMPtr<nsIDNSByTypeRecord> rec;
-    if (NS_SUCCEEDED(status)) {
-      MOZ_ASSERT(hostRecord, "no host record");
+  // need to have an owning ref when we issue the callback to enable
+  // the caller to be able to addref/release multiple times without
+  // destroying the record prematurely.
+  nsCOMPtr<nsIDNSRecord> rec;
+  if (NS_SUCCEEDED(status)) {
+    MOZ_ASSERT(hostRecord, "no host record");
+    printf("hostRecordType: %d\n", hostRecord->type);
+    if (hostRecord->type != nsDNSService::RESOLVE_TYPE_DEFAULT) {
       rec = new nsDNSByTypeRecord(hostRecord);
-    }
-    mListener->OnLookupByTypeComplete(this, rec, status);
-  } else {
-    // need to have an owning ref when we issue the callback to enable
-    // the caller to be able to addref/release multiple times without
-    // destroying the record prematurely.
-    nsCOMPtr<nsIDNSRecord> rec;
-    if (NS_SUCCEEDED(status)) {
-      NS_ASSERTION(hostRecord, "no host record");
+    } else {
       rec = new nsDNSRecord(hostRecord);
     }
-
-    mListener->OnLookupComplete(this, rec, status);
   }
+
+  mListener->OnLookupComplete(this, rec, status);
   mListener = nullptr;
 }
 

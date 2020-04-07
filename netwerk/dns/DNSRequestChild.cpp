@@ -160,6 +160,7 @@ ChildDNSRecord::ReportUnusable(uint16_t aPort) {
 class ChildDNSByTypeRecord : public nsIDNSByTypeRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_SAFE_NSIDNSRECORD(((nsIDNSRecord*)nullptr))
   NS_DECL_NSIDNSBYTYPERECORD
 
   explicit ChildDNSByTypeRecord(const nsTArray<nsCString>& reply);
@@ -170,7 +171,7 @@ class ChildDNSByTypeRecord : public nsIDNSByTypeRecord {
   nsTArray<nsCString> mRecords;
 };
 
-NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord)
+NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord)
 
 ChildDNSByTypeRecord::ChildDNSByTypeRecord(const nsTArray<nsCString>& reply) {
   mRecords = reply;
@@ -278,12 +279,6 @@ void DNSRequestChild::CallOnLookupComplete() {
   mListener->OnLookupComplete(this, mResultRecord, mResultStatus);
 }
 
-void DNSRequestChild::CallOnLookupByTypeComplete() {
-  MOZ_ASSERT(mListener);
-  MOZ_ASSERT(mType != nsIDNSService::RESOLVE_TYPE_DEFAULT);
-  mListener->OnLookupByTypeComplete(this, mResultByTypeRecords, mResultStatus);
-}
-
 mozilla::ipc::IPCResult DNSRequestChild::RecvLookupCompleted(
     const DNSRequestResponse& reply) {
   MOZ_ASSERT(mListener);
@@ -299,8 +294,7 @@ mozilla::ipc::IPCResult DNSRequestChild::RecvLookupCompleted(
     }
     case DNSRequestResponse::TArrayOfnsCString: {
       MOZ_ASSERT(mType != nsIDNSService::RESOLVE_TYPE_DEFAULT);
-      mResultByTypeRecords =
-          new ChildDNSByTypeRecord(reply.get_ArrayOfnsCString());
+      mResultRecord = new ChildDNSByTypeRecord(reply.get_ArrayOfnsCString());
       break;
     }
     default:
@@ -318,23 +312,12 @@ mozilla::ipc::IPCResult DNSRequestChild::RecvLookupCompleted(
   }
 
   if (targetIsMain) {
-    if (mType == nsIDNSService::RESOLVE_TYPE_DEFAULT) {
-      CallOnLookupComplete();
-    } else {
-      CallOnLookupByTypeComplete();
-    }
+    CallOnLookupComplete();
   } else {
-    if (mType == nsIDNSService::RESOLVE_TYPE_DEFAULT) {
-      nsCOMPtr<nsIRunnable> event =
-          NewRunnableMethod("net::DNSRequestChild::CallOnLookupComplete", this,
-                            &DNSRequestChild::CallOnLookupComplete);
-      mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
-    } else {
-      nsCOMPtr<nsIRunnable> event =
-          NewRunnableMethod("net::DNSRequestChild::CallOnLookupByTypeComplete",
-                            this, &DNSRequestChild::CallOnLookupByTypeComplete);
-      mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
-    }
+    nsCOMPtr<nsIRunnable> event =
+        NewRunnableMethod("net::DNSRequestChild::CallOnLookupComplete", this,
+                          &DNSRequestChild::CallOnLookupComplete);
+    mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
   Unused << Send__delete__(this);

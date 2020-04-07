@@ -284,13 +284,6 @@ nsHTMLDNSPrefetch::nsListener::OnLookupComplete(nsICancelable* request,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDNSPrefetch::nsListener::OnLookupByTypeComplete(nsICancelable* request,
-                                                      nsIDNSByTypeRecord* res,
-                                                      nsresult status) {
-  return NS_OK;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLDNSPrefetch::nsDeferrals::nsDeferrals()

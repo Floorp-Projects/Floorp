@@ -28,20 +28,6 @@ interface nsIDNSListener : nsISupports
     void onLookupComplete(in nsICancelable aRequest,
                           in nsIDNSRecord  aRecord,
                           in nsresult      aStatus);
-    /**
-     * called when an asynchronous dns lookup by type completes.
-     *
-     * @param aRequest
-     *        the value returned from asyncResolve.
-     * @param aRecord
-     *        a string returned by the dns server.
-     * @param aStatus
-     *        if the lookup failed, this parameter gives the reason.
-     */
-    void onLookupByTypeComplete(in nsICancelable      aRequest,
-                                in nsIDNSByTypeRecord aResult,
-                                in nsresult           aStatus);
-
 };
 
 /**
