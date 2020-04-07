@@ -519,7 +519,7 @@ FontList::~FontList() { DetachShmBlocks(); }
 
 bool FontList::AppendShmBlock() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  ipc::SharedMemoryBasic* newShm = new ipc::SharedMemoryBasic();
+  base::SharedMemory* newShm = new base::SharedMemory();
   if (!newShm->Create(SHM_BLOCK_SIZE)) {
     MOZ_CRASH("failed to create shared memory");
     return false;
@@ -556,17 +556,16 @@ FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
   // If we have no existing blocks, we don't want a generation check yet;
   // the header in the first block will define the generation of this list
   uint32_t generation = aIndex == 0 ? 0 : GetGeneration();
-  ipc::SharedMemoryBasic::Handle handle = ipc::SharedMemoryBasic::NULLHandle();
+  base::SharedMemoryHandle handle = base::SharedMemory::NULLHandle();
   if (!dom::ContentChild::GetSingleton()->SendGetFontListShmBlock(
           generation, aIndex, &handle)) {
     return nullptr;
   }
-  RefPtr<ipc::SharedMemoryBasic> newShm = new ipc::SharedMemoryBasic();
+  base::SharedMemory* newShm = new base::SharedMemory();
   if (!newShm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!newShm->SetHandle(handle,
-                         mozilla::ipc::SharedMemoryBasic::RightsReadOnly)) {
+  if (!newShm->SetHandle(handle, true)) {
     MOZ_CRASH("failed to set shm handle");
   }
   if (!newShm->Map(SHM_BLOCK_SIZE)) {
