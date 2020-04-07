@@ -6,7 +6,10 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["AboutNewTabStubService"];
+const EXPORTED_SYMBOLS = [
+  "AboutNewTabStubService",
+  "AboutHomeStartupCacheChild",
+];
 
 /**
  * The nsIAboutNewTabService is accessed by the AboutRedirector anytime
@@ -47,6 +50,8 @@ const { E10SUtils } = ChromeUtils.import(
  * Constants are fine in the global scope.
  */
 
+const PREF_ABOUT_HOME_CACHE_ENABLED =
+  "browser.startup.homepage.abouthome_cache.enabled";
 const PREF_SEPARATE_ABOUT_WELCOME = "browser.aboutwelcome.enabled";
 const SEPARATE_ABOUT_WELCOME_URL =
   "resource://activity-stream/aboutwelcome/aboutwelcome.html";
@@ -63,6 +68,145 @@ const IS_PRIVILEGED_PROCESS =
 const PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS =
   "browser.tabs.remote.separatePrivilegedContentProcess";
 const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
+
+/**
+ * The AboutHomeStartupCacheChild is responsible for connecting the
+ * nsIAboutNewTabService with a cached document and script for about:home
+ * if one happens to exist. The AboutHomeStartupCacheChild is only ever
+ * handed the streams for those caches when the "privileged about content
+ * process" first launches, so subsequent loads of about:home do not read
+ * from this cache.
+ *
+ * See https://firefox-source-docs.mozilla.org/browser/components/newtab/docs/v2-system-addon/about_home_startup_cache.html
+ * for further details.
+ */
+const AboutHomeStartupCacheChild = {
+  _initted: false,
+
+  /**
+   * Called via a process script very early on in the process lifetime. This
+   * prepares the AboutHomeStartupCacheChild to pass an nsIChannel back to
+   * the nsIAboutNewTabService when the initial about:home document is
+   * eventually requested.
+   *
+   * @param pageInputStream (nsIInputStream)
+   *   The stream for the cached page markup.
+   * @param scriptInputStream (nsIInputStream)
+   *   The stream for the cached script to run on the page.
+   */
+  init(pageInputStream, scriptInputStream) {
+    if (!IS_PRIVILEGED_PROCESS) {
+      throw new Error(
+        "Can only instantiate in the privileged about content processes."
+      );
+    }
+
+    if (!Services.prefs.getBoolPref(PREF_ABOUT_HOME_CACHE_ENABLED, false)) {
+      return;
+    }
+
+    if (this._initted) {
+      throw new Error("AboutHomeStartupCacheChild already initted.");
+    }
+
+    this._pageInputStream = pageInputStream;
+    this._scriptInputStream = scriptInputStream;
+    this._initted = true;
+  },
+
+  /**
+   * A public method called from nsIAboutNewTabService that attempts
+   * return an nsIChannel for a cached about:home document that we
+   * were initialized with. If we failed to be initted with the
+   * cache, or the input streams that we were sent have no data
+   * yet available, this function returns null. The caller should =
+   * fall back to generating the page dynamically.
+   *
+   * This function will be called when loading about:home, or
+   * about:home?jscache - the latter returns the cached script.
+   *
+   * @param uri (nsIURI)
+   *   The URI for the requested page, as passed by nsIAboutNewTabService.
+   * @param loadInfo (nsILoadInfo)
+   *   The nsILoadInfo for the requested load, as passed by
+   *   nsIAboutNewWTabService.
+   * @return nsIChannel or null.
+   */
+  maybeGetCachedPageChannel(uri, loadInfo) {
+    if (!this._initted) {
+      return null;
+    }
+
+    let isScriptRequest = uri.query === "jscache";
+
+    // If by this point, we don't have anything in the streams,
+    // then either the cache was too slow to give us data, or the cache
+    // doesn't exist. The caller should fall back to generating the
+    // page dynamically.
+    //
+    // We only do this on the page request, because by the time
+    // we get to the script request, we should have already drained
+    // the page input stream.
+    if (!isScriptRequest) {
+      try {
+        if (
+          !this._scriptInputStream.available() ||
+          !this._pageInputStream.available()
+        ) {
+          return null;
+        }
+      } catch (e) {
+        if (e.result === Cr.NS_BASE_STREAM_CLOSED) {
+          return null;
+        }
+        throw e;
+      }
+    }
+
+    let channel = Cc[
+      "@mozilla.org/network/input-stream-channel;1"
+    ].createInstance(Ci.nsIInputStreamChannel);
+    channel.QueryInterface(Ci.nsIChannel);
+    channel.setURI(uri);
+    channel.loadInfo = loadInfo;
+    channel.contentStream = isScriptRequest
+      ? this._scriptInputStream
+      : this._pageInputStream;
+
+    return channel;
+  },
+
+  /**
+   * This is a manual testing function that is currently not called from
+   * anywhere, and will be removed once bug 1614502 lands. The function
+   * writes a document and script to the cache.
+   */
+  populateCache() {
+    let pageInputStream = Cc[
+      "@mozilla.org/io/string-input-stream;1"
+    ].createInstance(Ci.nsIStringInputStream);
+
+    let cacheDate = new Date().toISOString();
+    pageInputStream.data = `<html>
+  <body>
+    <p>Cached at: ${cacheDate}</p>
+    <p>Seen at: <span id="seen"></span></p>
+  </body>
+  <script src='about:home?jscache'></script>
+</html>`;
+
+    let scriptInputStream = Cc[
+      "@mozilla.org/io/string-input-stream;1"
+    ].createInstance(Ci.nsIStringInputStream);
+
+    scriptInputStream.data = `document.getElementById("seen").textContent = new Date().toISOString();`;
+
+    Services.cpmm.sendAsyncMessage("AboutHomeStartupCache:PopulateCache", {
+      pageInputStream,
+      scriptInputStream,
+    });
+  },
+};
 
 /**
  * This is an abstract base class for the nsIAboutNewTabService
@@ -135,6 +279,13 @@ class BaseAboutNewTabService {
       return SEPARATE_ABOUT_WELCOME_URL;
     }
     return this.defaultURL;
+  }
+
+  aboutHomeChannel(uri, loadInfo) {
+    throw Components.Exception(
+      "AboutHomeChannel not implemented for this process.",
+      Cr.NS_ERROR_NOT_IMPLEMENTED
+    );
   }
 }
 
@@ -218,6 +369,26 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
         break;
       }
     }
+  }
+
+  aboutHomeChannel(uri, loadInfo) {
+    if (IS_PRIVILEGED_PROCESS) {
+      let cacheChannel = AboutHomeStartupCacheChild.maybeGetCachedPageChannel(
+        uri,
+        loadInfo
+      );
+      if (cacheChannel) {
+        return cacheChannel;
+      }
+    }
+
+    let pageURI = Services.io.newURI(this.defaultURL);
+    let fileChannel = Services.io.newChannelFromURIWithLoadInfo(
+      pageURI,
+      loadInfo
+    );
+    fileChannel.originalURI = uri;
+    return fileChannel;
   }
 }
 

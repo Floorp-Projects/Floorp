@@ -9,6 +9,10 @@
  * than the one specified within AboutRedirector.cpp
  */
 
+interface nsIChannel;
+interface nsIURI;
+interface nsILoadInfo;
+
 [scriptable, uuid(dfcd2adc-7867-4d3a-ba70-17501f208142)]
 interface nsIAboutNewTabService : nsISupports
 {
@@ -16,6 +20,17 @@ interface nsIAboutNewTabService : nsISupports
    * Returns the default URL (local or activity stream depending on pref)
    */
   readonly attribute ACString defaultURL;
+
+  /**
+   * In the "privileged about content process", if about:home is being
+   * retrieved, the AboutRedirector will call this function to get the
+   * nsIChannel for the document. This gives the nsIAboutNewTabService
+   * the opportunity to provide a cached document for about:home. If
+   * no cache exists, the nsIChannel will be for the normal dynamically
+   * generated about:home document.
+   */
+  nsIChannel aboutHomeChannel(in nsIURI aURI,
+                              in nsILoadInfo aLoadInfo);
 
   /**
    * Returns the about:welcome URL.

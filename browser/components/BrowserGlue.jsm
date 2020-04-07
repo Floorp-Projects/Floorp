@@ -36,6 +36,20 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTab.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "PushService",
@@ -1222,6 +1236,8 @@ BrowserGlue.prototype = {
 
     SaveToPocket.init();
 
+    AboutHomeStartupCache.init();
+
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
 
@@ -1907,6 +1923,7 @@ BrowserGlue.prototype = {
       }
     }
 
+    AboutHomeStartupCache.uninit();
     BrowserUsageTelemetry.uninit();
     SearchTelemetry.uninit();
     PageThumbs.uninit();
@@ -4705,5 +4722,402 @@ var JawsScreenReaderVersionCheck = {
       null,
       options
     );
+  },
+};
+
+/**
+ * AboutHomeStartupCache is responsible for reading and writing the
+ * initial about:home document from the HTTP cache as a startup
+ * performance optimization. It only works when the "privileged about
+ * content process" is enabled and when ENABLED_PREF is set to true.
+ *
+ * See https://firefox-source-docs.mozilla.org/browser/components/newtab/docs/v2-system-addon/about_home_startup_cache.html
+ * for further details.
+ */
+var AboutHomeStartupCache = {
+  ABOUT_HOME_URI_STRING: "about:home",
+  SCRIPT_EXTENSION: "script",
+  ENABLED_PREF: "browser.startup.homepage.abouthome_cache.enabled",
+  LOG_LEVEL_PREF: "browser.startup.homepage.abouthome_cache.loglevel",
+
+  // It's possible that the layout of about:home will change such that
+  // we want to invalidate any pre-existing caches. We do this by setting
+  // this meta key in the nsICacheEntry for the page.
+  //
+  // If you want to invalidate the cache, simply bump the CACHE_VERSION,
+  // and the existing cache will be ignored and discarded, and a new one
+  // eventually created.
+  CACHE_VERSION_META_KEY: "version",
+  CACHE_VERSION: 1,
+
+  LOG_NAME: "AboutHomeStartupCache",
+
+  // The "privileged about content process" will send up a POPULATE_MESSAGE
+  // message through to the parent process message manager when it has something
+  // new to be written to the cache.
+  POPULATE_MESSAGE: "AboutHomeStartupCache:PopulateCache",
+  // When a "privileged about content process" is launched, this message is
+  // sent to give it some nsIInputStream's for the about:home document they
+  // should load.
+  SEND_STREAMS_MESSAGE: "AboutHomeStartupCache:InputStreams",
+
+  // A reference to the nsICacheEntry to read from and write to.
+  _cacheEntry: null,
+
+  // These nsIPipe's are sent down to the "privileged about content process"
+  // immediately after the process launches. This allows us to race the loading
+  // of the cache entry in the parent process with the load of the about:home
+  // page in the content process, since we'll connect the InputStream's to
+  // the pipes as soon as the nsICacheEntry is available.
+  //
+  // The page pipe is for the HTML markup for the page.
+  _pagePipe: null,
+  // The script pipe is for the JavaScript that the HTML markup loads
+  // to set its internal state.
+  _scriptPipe: null,
+
+  _enabled: false,
+  _initted: false,
+
+  init() {
+    if (this._initted) {
+      throw new Error("AboutHomeStartupCache already initted.");
+    }
+
+    this._enabled = Services.prefs.getBoolPref(this.ENABLED_PREF, false);
+
+    if (!this._enabled) {
+      return;
+    }
+
+    // If the user is not configured to load about:home at startup, then
+    // let's not bother with the cache - loading it needlessly is more likely
+    // to hinder what we're actually trying to load.
+    let willLoadAboutHome =
+      !HomePage.overridden &&
+      Services.prefs.getIntPref("browser.startup.page") === 1;
+
+    if (!willLoadAboutHome) {
+      return;
+    }
+
+    Services.obs.addObserver(this, "ipc:content-created");
+    Services.ppmm.addMessageListener(this.POPULATE_MESSAGE, this);
+
+    this.log = Log.repository.getLogger(this.LOG_NAME);
+    this.log.manageLevelFromPref(this.LOG_LEVEL_PREF);
+    this.log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+
+    let lci = Services.loadContextInfo.default;
+    let storage = Services.cache2.diskCacheStorage(lci, false);
+    try {
+      storage.asyncOpenURI(
+        this.aboutHomeURI,
+        "",
+        Ci.nsICacheStorage.OPEN_PRIORITY,
+        this
+      );
+    } catch (e) {
+      this.log.error("Failed to open about:home cache entry", e);
+    }
+
+    this._initted = true;
+    this.log.trace("Initialized.");
+  },
+
+  uninit() {
+    if (!this._enabled || !this._initted) {
+      return;
+    }
+
+    Services.obs.removeObserver(this, "ipc:content-created");
+    Services.ppmm.removeMessageListener(this.POPULATE_MESSAGE, this);
+    this._pagePipe = null;
+    this._scriptPipe = null;
+    this._initted = false;
+    this._cacheEntry = null;
+
+    this.log.trace("Uninitialized.");
+  },
+
+  _aboutHomeURI: null,
+
+  get aboutHomeURI() {
+    if (this._aboutHomeURI) {
+      return this._aboutHomeURI;
+    }
+
+    this._aboutHomeURI = Services.io.newURI(this.ABOUT_HOME_URI_STRING);
+    return this._aboutHomeURI;
+  },
+
+  /**
+   * Helper function that returns a newly constructed nsIPipe instance.
+   *
+   * @return nsIPipe
+   */
+  makePipe() {
+    let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+    pipe.init(
+      true /* non-blocking input */,
+      true /* non-blocking output */,
+      0 /* segment size */,
+      0 /* max segments */
+    );
+    return pipe;
+  },
+
+  /**
+   * Constructs and caches two nsIPipe instances - one for the about:home
+   * page, and one for its hydration script. If these nsIPipe instances
+   * already exist, this function does nothing.
+   */
+  makePipes() {
+    if (this._pagePipe && this._scriptPipe) {
+      return;
+    }
+    this.log.trace("Constructing pipes.");
+    this._pagePipe = this.makePipe();
+    this._scriptPipe = this.makePipe();
+  },
+
+  get pagePipe() {
+    return this._pagePipe;
+  },
+
+  get scriptPipe() {
+    return this._scriptPipe;
+  },
+
+  /**
+   * Called when the nsICacheEntry has been accessed. If the nsICacheEntry
+   * has content that we want to send down to the "privileged about content
+   * process", then we connect that content to the nsIPipe's that may or
+   * may not have already been sent down to the process.
+   *
+   * In the event that the nsICacheEntry doesn't contain anything usable,
+   * the nsInputStreams on the nsIPipe's are closed.
+   */
+  maybeConnectToPipes() {
+    if (!this._cacheEntry) {
+      this.log.trace(
+        "Not connecting to pipes yet - the cache entry isn't available yet"
+      );
+      return;
+    }
+
+    // If the cache doesn't yet exist, we'll know because the version metadata
+    // won't exist yet.
+    let version;
+    try {
+      this.log.trace("");
+      version = this._cacheEntry.getMetaDataElement(
+        this.CACHE_VERSION_META_KEY
+      );
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+        this.log.debug("Cache meta data does not exist. Closing streams.");
+        this.pagePipe.outputStream.close();
+        this.scriptPipe.outputStream.close();
+        return;
+      }
+
+      throw e;
+    }
+
+    this.log.info("Version retrieved is", version);
+
+    if (parseInt(version, 10) != this.CACHE_VERSION) {
+      this.log.info("Version does not match! Dooming and closing streams.\n");
+      // This cache is no good - doom it, and prepare for a new one.
+      this._cacheEntry = this._cacheEntry.recreate();
+      this.pagePipe.outputStream.close();
+      this.scriptPipe.outputStream.close();
+      return;
+    }
+
+    let cachePageInputStream;
+
+    try {
+      cachePageInputStream = this._cacheEntry.openInputStream(0);
+    } catch (e) {
+      this.log.error("Failed to open main input stream for cache entry", e);
+      this.pagePipe.outputStream.close();
+      this.scriptPipe.outputStream.close();
+      return;
+    }
+
+    this.log.trace("Connecting page stream to pipe.");
+    NetUtil.asyncCopy(cachePageInputStream, this.pagePipe.outputStream, () => {
+      this.log.info("Page stream connected to pipe.");
+    });
+
+    let cacheScriptInputStream;
+    try {
+      this.log.trace("Connecting script stream to pipe.");
+      cacheScriptInputStream = this._cacheEntry.openAlternativeInputStream(
+        "script"
+      );
+      NetUtil.asyncCopy(
+        cacheScriptInputStream,
+        this.scriptPipe.outputStream,
+        () => {
+          this.log.info("Script stream connected to pipe.");
+        }
+      );
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+        // For some reason, the script was not available. We'll close the pipe
+        // without sending anything into it. The privileged about content process
+        // will notice that there's nothing available in the pipe, and fall back
+        // to dynamically generating the page.
+        this.log.error("Script stream not available! Closing pipe.");
+        this.scriptPipe.outputStream.close();
+      } else {
+        throw e;
+      }
+    }
+
+    this.log.trace("Streams connected to pipes. Dropping references to pipes.");
+    this._pagePipe = null;
+    this._scriptPipe = null;
+  },
+
+  /**
+   * Sends down the nsIPipe's to a recently created "privileged about
+   * content process".
+   *
+   * @param aProcManager (ContentProcessMessageManager)
+   *   The message manager for the newly created "privileged about
+   *   content process".
+   */
+  sendCacheInputStreams(aProcManager) {
+    if (aProcManager.remoteType != E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE) {
+      throw new Error(
+        "Cannot send about:home cache to a non-privileged content process."
+      );
+    }
+    // Construct the nsIPipe's if they haven't been made already, which
+    // can occur if the nsICacheEntry hasn't been retrieved yet.
+    this.makePipes();
+    this.log.info("Sending input streams down to content process.");
+    aProcManager.sendAsyncMessage(this.SEND_STREAMS_MESSAGE, {
+      pageInputStream: this.pagePipe.inputStream,
+      scriptInputStream: this.scriptPipe.inputStream,
+    });
+
+    // We might have the nsICacheEntry already, so we can connect it
+    // to the pipes immediately. Otherwise, we'll wait until the cache
+    // entry has been retrieved.
+    if (this._cacheEntry) {
+      this.log.trace(
+        "The cache entry is already available. Connecting to pipes " +
+          "immediately."
+      );
+      this.maybeConnectToPipes();
+    }
+  },
+
+  /**
+   * Called when we have received a POPULATE_MESSAGE from the "privileged
+   * about content process". The page and script streams are written to
+   * the nsICacheEntry.
+   *
+   * This writing is asynchronous, and if a write happens to already be
+   * underway when this function is called, that latter call will be
+   * ignored.
+   *
+   * @param pageInputStream (nsIInputStream)
+   *   A stream containing the HTML markup to be saved to the cache.
+   * @param scriptInputStream (nsIInputStream)
+   *   A stream containing the JS hydration script to be saved to the cache.
+   */
+  populateCache(pageInputStream, scriptInputStream) {
+    // Doom the old cache entry, so we can start writing to a new one.
+    this.log.trace("Populating the cache. Dooming old entry.");
+    this._cacheEntry = this._cacheEntry.recreate();
+
+    this.log.trace("Opening the page output stream.");
+    let pageOutputStream = this._cacheEntry.openOutputStream(0, -1);
+
+    this.log.info("Writing the page cache.");
+    NetUtil.asyncCopy(pageInputStream, pageOutputStream, () => {
+      this.log.trace(
+        "Writing the page data is complete. Now opening the " +
+          "script output stream."
+      );
+
+      let scriptOutputStream = this._cacheEntry.openAlternativeOutputStream(
+        "script",
+        -1
+      );
+
+      this.log.info("Writing the script cache.");
+      NetUtil.asyncCopy(scriptInputStream, scriptOutputStream, () => {
+        this.log.trace("Writing the script cache is done. Setting version.");
+        this._cacheEntry.setMetaDataElement(
+          "version",
+          String(this.CACHE_VERSION)
+        );
+        this.log.trace(`Version is set to ${this.CACHE_VERSION}.`);
+        this.log.info("Caching of page and script is done.");
+      });
+    });
+  },
+
+  /** MessageListener **/
+
+  receiveMessage(message) {
+    // Only the privileged about content process can write to the cache.
+    if (message.target.remoteType != E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE) {
+      this.log.error(
+        "Received a message from a non-privileged content process!"
+      );
+      return;
+    }
+
+    if (message.name == this.POPULATE_MESSAGE) {
+      let { pageInputStream, scriptInputStream } = message.data;
+      this.populateCache(pageInputStream, scriptInputStream);
+    }
+  },
+
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsICacheEntryOpenallback,
+    Ci.nsIObserver,
+  ]),
+
+  /** nsIObserver **/
+
+  observe(aSubject, aTopic, aData) {
+    if (aTopic != "ipc:content-created") {
+      return;
+    }
+
+    let procManager = aSubject
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIMessageSender);
+
+    if (procManager.remoteType == E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE) {
+      this.log.trace(
+        "A privileged about content process is launching. Sending it " +
+          "the cache input streams."
+      );
+      this.sendCacheInputStreams(procManager);
+    }
+  },
+
+  /** nsICacheEntryOpenCallback **/
+
+  onCacheEntryCheck(aEntry, aApplicationCache) {
+    return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
+  },
+
+  onCacheEntryAvailable(aEntry, aNew, aApplicationCache, aResult) {
+    this.log.trace("Cache entry is available.");
+
+    this._cacheEntry = aEntry;
+    this.makePipes();
+    this.maybeConnectToPipes();
   },
 };
