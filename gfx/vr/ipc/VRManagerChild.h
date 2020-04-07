@@ -73,6 +73,7 @@ class VRManagerChild : public PVRManagerChild {
   bool EnumerateVRDisplays();
   void DetectRuntimes();
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
+  gfx::VRAPIMode GetVRAPIMode(uint32_t aDisplayID) const;
 
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
