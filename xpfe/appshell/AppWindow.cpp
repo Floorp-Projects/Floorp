@@ -156,9 +156,8 @@ NS_INTERFACE_MAP_BEGIN(AppWindow)
 NS_INTERFACE_MAP_END
 
 nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
-                               nsIURI* aUrl, int32_t aInitialWidth,
-                               int32_t aInitialHeight, bool aIsHiddenWindow,
-                               nsIRemoteTab* aOpeningTab,
+                               int32_t aInitialWidth, int32_t aInitialHeight,
+                               bool aIsHiddenWindow, nsIRemoteTab* aOpeningTab,
                                mozIDOMWindowProxy* aOpenerWindow,
                                nsWidgetInitData& widgetInitData) {
   nsresult rv;
@@ -278,47 +277,6 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
     MOZ_DIAGNOSTIC_ASSERT(bc->HadOriginalOpener());
   }
 #endif
-
-  // Eagerly create an about:blank content viewer with the right principal here,
-  // rather than letting it happening in the upcoming call to
-  // SetInitialPrincipalToSubject. This avoids creating the about:blank document
-  // and then blowing it away with a second one, which can cause problems for
-  // the top-level chrome window case. See bug 789773. Note that we don't accept
-  // expanded principals here, similar to SetInitialPrincipalToSubject.
-  if (nsContentUtils::IsInitialized()) {  // Sometimes this happens really early
-                                          // See bug 793370.
-    MOZ_ASSERT(mDocShell->ItemType() == nsIDocShellTreeItem::typeChrome);
-    nsCOMPtr<nsIPrincipal> principal =
-        nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
-    if (nsContentUtils::IsExpandedPrincipal(principal)) {
-      principal = nullptr;
-    }
-    // Use the subject (or system) principal as the storage principal too until
-    // the new window finishes navigating and gets a real storage principal.
-    rv = mDocShell->CreateAboutBlankContentViewer(principal, principal,
-                                                  /* aCsp = */ nullptr);
-    NS_ENSURE_SUCCESS(rv, rv);
-    RefPtr<Document> doc = mDocShell->GetDocument();
-    NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
-    doc->SetIsInitialDocument(true);
-  }
-
-  if (nullptr != aUrl) {
-    nsCString tmpStr;
-
-    rv = aUrl->GetSpec(tmpStr);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ConvertUTF8toUTF16 urlString(tmpStr);
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-    NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-
-    LoadURIOptions loadURIOptions;
-    loadURIOptions.mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
-
-    rv = webNav->LoadURI(urlString, loadURIOptions);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return rv;
 }
