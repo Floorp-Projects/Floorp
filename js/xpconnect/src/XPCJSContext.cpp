@@ -1330,6 +1330,11 @@ void XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth) {
   nsJSContext::MaybePokeCC();
   CycleCollectedJSContext::AfterProcessTask(aNewRecursionDepth);
   mozilla::jsipc::AfterProcessTask();
+
+  // This exception might have been set if we called an XPCWrappedJS that threw,
+  // but now we're returning to the event loop, so nothing is going to look at
+  // this value again. Clear it to prevent leaks.
+  SetPendingException(nullptr);
 }
 
 bool XPCJSContext::IsSystemCaller() const {
