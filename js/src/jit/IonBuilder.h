@@ -396,9 +396,6 @@ class MOZ_STACK_CLASS IonBuilder {
   MDefinition* maybeConvertToNumber(MDefinition* def);
 
   // jsop_bitop helpers.
-  AbortReasonOr<MBinaryBitwiseInstruction*> binaryBitOpEmit(JSOp op,
-                                                            MDefinition* left,
-                                                            MDefinition* right);
   AbortReasonOr<Ok> binaryBitOpTrySpecialized(bool* emitted, JSOp op,
                                               MDefinition* left,
                                               MDefinition* right);
