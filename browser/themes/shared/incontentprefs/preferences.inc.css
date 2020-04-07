@@ -545,6 +545,7 @@ button > hbox > label {
   display: -moz-box;
   margin: 0;
   padding: 0;
+  overflow-x: auto;
 }
 
 .dialogBox[resizable="true"] {
@@ -582,6 +583,7 @@ button > hbox > label {
   -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 66ch;
+  min-width: inherit;
 }
 
 /**
