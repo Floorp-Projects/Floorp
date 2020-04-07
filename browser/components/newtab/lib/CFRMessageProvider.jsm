@@ -547,9 +547,9 @@ const CFR_MESSAGES = [
     frequency: {
       lifetime: 3,
     },
-    targeting: "usesFirefoxSync == false",
+    targeting:
+      "(!type || type == 'save') && isFxAEnabled == true && usesFirefoxSync == false",
     template: "cfr_doorhanger",
-    last_modified: 1565907636313,
     content: {
       layout: "icon_and_message",
       text: {
@@ -598,6 +598,80 @@ const CFR_MESSAGES = [
         },
       },
       bucket_id: "CFR_SAVE_LOGIN",
+      heading_text: {
+        string_id: "cfr-doorhanger-sync-logins-header",
+      },
+      info_icon: {
+        label: {
+          string_id: "cfr-doorhanger-extension-sumo-link",
+        },
+        sumo_path: "extensionrecommendations",
+      },
+      notification_text: {
+        string_id: "cfr-doorhanger-feature-notification",
+      },
+      category: "cfrFeatures",
+    },
+    trigger: {
+      id: "newSavedLogin",
+    },
+  },
+  {
+    id: "UPDATE_LOGIN",
+    frequency: {
+      lifetime: 3,
+    },
+    targeting:
+      "type == 'update' && isFxAEnabled == true && usesFirefoxSync == false",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      text: {
+        string_id: "cfr-doorhanger-sync-logins-body",
+      },
+      icon: "chrome://browser/content/aboutlogins/icons/intro-illustration.svg",
+      icon_class: "cfr-doorhanger-large-icon",
+      buttons: {
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-cancel-button",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-never-show-recommendation",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-manage-settings-button",
+            },
+            action: {
+              type: "OPEN_PREFERENCES_PAGE",
+              data: {
+                category: "general-cfrfeatures",
+              },
+            },
+          },
+        ],
+        primary: {
+          label: {
+            string_id: "cfr-doorhanger-sync-logins-ok-button",
+          },
+          action: {
+            type: "OPEN_PREFERENCES_PAGE",
+            data: {
+              category: "sync",
+              entrypoint: "cfr-update-login",
+            },
+          },
+        },
+      },
+      bucket_id: "CFR_UPDATE_LOGIN",
       heading_text: {
         string_id: "cfr-doorhanger-sync-logins-header",
       },
