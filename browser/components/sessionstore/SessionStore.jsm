@@ -4944,6 +4944,17 @@ var SessionStoreInternal = {
     // the ignored set anymore.
     this._crashedBrowsers.delete(browser.permanentKey);
 
+    // If we're in the midst of performing a process flip, then we must
+    // have initiated a navigation. This means that these userTyped*
+    // values are now out of date.
+    if (
+      options.restoreContentReason ==
+      RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE
+    ) {
+      delete tabData.userTypedValue;
+      delete tabData.userTypedClear;
+    }
+
     // Update the persistent tab state cache with |tabData| information.
     TabStateCache.update(browser, {
       // NOTE: Copy the entries array shallowly, so as to not screw with the
