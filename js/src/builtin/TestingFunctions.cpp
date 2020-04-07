@@ -5402,31 +5402,21 @@ static bool DisRegExp(JSContext* cx, unsigned argc, Value* vp) {
 
   Rooted<RegExpObject*> reobj(cx, &args[0].toObject().as<RegExpObject>());
 
-  bool match_only = false;
-  if (!args.get(1).isUndefined()) {
-    if (!args.get(1).isBoolean()) {
-      ReportUsageErrorASCII(cx, callee,
-                            "Second argument, if present, must be a Boolean");
-      return false;
-    }
-    match_only = args[1].toBoolean();
-  }
-
   RootedLinearString input(cx, cx->runtime()->emptyString);
-  if (!args.get(2).isUndefined()) {
-    if (!args.get(2).isString()) {
+  if (!args.get(1).isUndefined()) {
+    if (!args.get(1).isString()) {
       ReportUsageErrorASCII(cx, callee,
-                            "Third argument, if present, must be a String");
+                            "Second argument, if present, must be a String");
       return false;
     }
-    RootedString inputStr(cx, args[2].toString());
+    RootedString inputStr(cx, args[1].toString());
     input = inputStr->ensureLinear(cx);
     if (!input) {
       return false;
     }
   }
 
-  if (!RegExpObject::dumpBytecode(cx, reobj, match_only, input)) {
+  if (!RegExpObject::dumpBytecode(cx, reobj, input)) {
     return false;
   }
 
@@ -7161,7 +7151,7 @@ static const JSFunctionSpecWithHelp FuzzingUnsafeTestingFunctions[] = {
 "  Parses a RegExp pattern and returns a tree, potentially throwing."),
 
     JS_FN_HELP("disRegExp", DisRegExp, 3, 0,
-"disRegExp(regexp[, match_only[, input]])",
+"disRegExp(regexp[, input])",
 "  Dumps RegExp bytecode."),
 #endif
 
