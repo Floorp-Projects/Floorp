@@ -1611,9 +1611,6 @@ nsresult nsCocoaWindow::DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransi
     // where mInFullScreenMode will be set and a sizemode event will be dispatched.
     [mWindow toggleFullScreen:nil];
   } else {
-    if (mWidgetListener) {
-      mWidgetListener->FullscreenWillChange(aFullScreen);
-    }
     NSDisableScreenUpdates();
     // The order here matters. When we exit full screen mode, we need to show the
     // Dock first, otherwise the newly-created window won't have its minimize
