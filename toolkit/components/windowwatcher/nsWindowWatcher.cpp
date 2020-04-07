@@ -526,6 +526,10 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
 
   uint32_t chromeFlags = CalculateChromeFlagsForChild(aFeatures, sizeSpec);
 
+  if (isPrivateBrowsingWindow) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+  }
+
   // A content process has asked for a new window, which implies
   // that the new window will need to be remote.
   chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
@@ -721,6 +725,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       if (docShell->UseRemoteSubframes()) {
         chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
       }
+    } else if (XRE_IsContentProcess()) {
+      // If we don't have a parent window, but we're loaded in the content
+      // process, force ourselves into a remote window.
+      chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
     }
   }
 
