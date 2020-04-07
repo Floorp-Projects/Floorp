@@ -41,12 +41,7 @@ add_task(async function() {
     "Check the tab state after clicking inspect button " +
       "when another tab was selected"
   );
-  const onTabsSuccess1 = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
-  gBrowser.selectedTab = tab;
-
-  info("Wait for the tablist update after updating the selected tab");
-  await onTabsSuccess1;
-
+  await updateSelectedTab(gBrowser, tab, store);
   clickInspectButton(inspectionTarget, document);
   const devtoolsURL = devtoolsWindow.location.href;
   assertDevtoolsToolboxTabState(devtoolsURL);
@@ -75,11 +70,7 @@ add_task(async function() {
   );
   await waitUntil(() => findDebugTargetByText("TEST_TAB", document));
 
-  const onTabsSuccess2 = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
-  newNavigator.gBrowser.selectedTab = newTestTab;
-
-  info("Wait for the tablist update after updating the selected tab");
-  await onTabsSuccess2;
+  await updateSelectedTab(newNavigator.gBrowser, newTestTab, store);
 
   clickInspectButton(inspectionTarget, document);
   assertDevtoolsToolboxTabState(devtoolsURL);

@@ -41,7 +41,8 @@ add_task(async function() {
   await onConsoleLoaded;
 
   info("Force to select about:debugging page");
-  gBrowser.selectedTab = tab;
+  await updateSelectedTab(gBrowser, tab, window.AboutDebugging.store);
+
   info("Check whether the menu items are enabled");
   await assertMenusItems(rootDocument, true);
 

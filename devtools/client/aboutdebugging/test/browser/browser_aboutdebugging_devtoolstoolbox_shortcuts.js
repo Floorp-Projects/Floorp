@@ -47,7 +47,8 @@ add_task(async function() {
   await onToolReady;
 
   info("Force to select about:debugging page");
-  gBrowser.selectedTab = tab;
+  await updateSelectedTab(gBrowser, tab, window.AboutDebugging.store);
+
   info("Check whether the shortcut keys which opens devtools is enabled");
   await assertShortcutKeys(tab.linkedBrowser, true);
 
