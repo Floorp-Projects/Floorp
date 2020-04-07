@@ -148,7 +148,8 @@ void CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime) {
       // That is to say, whenever elapsedTime goes negative (because an
       // animation restarts, something rewinds the animation, or otherwise)
       // a new random value for the mix-in must be generated.
-      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecsRFP(elapsedTime, 0);
+      elapsedTime =
+          nsRFPService::ReduceTimePrecisionAsSecsRFPOnly(elapsedTime, 0);
     }
     events.AppendElement(AnimationEventInfo(
         TransitionProperty(), mOwningElement.Target(), aMessage, elapsedTime,

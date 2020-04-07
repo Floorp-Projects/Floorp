@@ -40,7 +40,7 @@ class AnimationUtils {
       // needs to have it's Time Reduction Logic refactored, so it's currently
       // only clamping for RFP mode. RFP mode gives a much lower time precision,
       // so we accept the security leak here for now
-      result.SetValue(nsRFPService::ReduceTimePrecisionAsMSecsRFP(
+      result.SetValue(nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(
           aTime.Value().ToMilliseconds(), 0));
     }
 

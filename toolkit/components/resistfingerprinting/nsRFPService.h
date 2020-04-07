@@ -158,13 +158,13 @@ class nsRFPService final : public nsIObserver {
   static double ReduceTimePrecisionAsMSecs(double aTime, int64_t aContextMixin,
                                            bool aIsSystemPrincipal,
                                            bool aCrossOriginIsolated);
-  static double ReduceTimePrecisionAsMSecsRFP(double aTime,
-                                              int64_t aContextMixin);
+  static double ReduceTimePrecisionAsMSecsRFPOnly(double aTime,
+                                                  int64_t aContextMixin);
   static double ReduceTimePrecisionAsSecs(double aTime, int64_t aContextMixin,
                                           bool aIsSystemPrincipal,
                                           bool aCrossOriginIsolated);
-  static double ReduceTimePrecisionAsSecsRFP(double aTime,
-                                             int64_t aContextMixin);
+  static double ReduceTimePrecisionAsSecsRFPOnly(double aTime,
+                                                 int64_t aContextMixin);
 
   // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
   static double ReduceTimePrecisionAsUSecsWrapper(double aTime, JSContext* aCx);
@@ -268,6 +268,8 @@ class nsRFPService final : public nsIObserver {
 
   static TimerPrecisionType GetTimerPrecisionType(bool aIsSystemPrincipal,
                                                   bool aCrossOriginIsolated);
+
+  static TimerPrecisionType GetTimerPrecisionTypeRFPOnly();
 
   static void TypeToText(TimerPrecisionType aType, nsACString& aText);
 
