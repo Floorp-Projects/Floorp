@@ -393,7 +393,7 @@ bool NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
     partLen = aPartLen;
   }
 
-  return NS_EscapeURLSpan(MakeSpan(aPart, partLen), aFlags, aResult);
+  return NS_EscapeURLSpan(mozilla::MakeSpan(aPart, partLen), aFlags, aResult);
 }
 
 bool NS_EscapeURLSpan(mozilla::Span<const char> aStr, uint32_t aFlags,
@@ -438,7 +438,7 @@ nsresult NS_EscapeAndFilterURL(const nsACString& aStr, uint32_t aFlags,
   }
 
   if (!appended) {
-    if (!aResult.Assign(aStr, fallible)) {
+    if (!aResult.Assign(aStr, mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
