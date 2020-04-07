@@ -780,7 +780,8 @@ if __name__ == "__main__":
         [ld] + extra_ldflags,
         ar, ranlib, libtool,
         llvm_source_dir, stage1_dir, package_name, build_libcxx, osx_cross_compile,
-        build_type, assertions, python_path, gcc_dir, libcxx_include_dir, build_wasm)
+        build_type, assertions, python_path, gcc_dir, libcxx_include_dir, build_wasm,
+        is_final_stage=(stages == 1))
 
     runtimes_source_link = llvm_source_dir + "/runtimes/compiler-rt"
 
