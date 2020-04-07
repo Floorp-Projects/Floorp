@@ -11,7 +11,6 @@
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
-#include "mozilla/SystemGroup.h"
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
 #include "nsCRT.h"
@@ -3373,7 +3372,7 @@ void nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
     return;
   }
 
-  auto* thread = SystemGroup::AbstractMainThreadFor(TaskCategory::Other);
+  auto* thread = AbstractThread::MainThread();
 
   RefPtr<nsIRunnable> runnable = aRunnable;
   GenericNonExclusivePromise::All(thread, promises)

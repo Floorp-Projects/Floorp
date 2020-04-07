@@ -529,8 +529,7 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
   // We need to keep a ref on workerPrivate, passed to the promise,
   // to make sure it's still aloive when collecting the info.
   RefPtr<WorkerPrivate> workerRef = mWorkerPrivate;
-  RefPtr<AbstractThread> mainThread =
-      SystemGroup::AbstractMainThreadFor(TaskCategory::Performance);
+  RefPtr<AbstractThread> mainThread = AbstractThread::MainThread();
 
   return CollectMemoryInfo(top, mainThread)
       ->Then(

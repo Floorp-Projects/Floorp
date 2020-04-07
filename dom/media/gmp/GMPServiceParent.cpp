@@ -24,7 +24,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
@@ -82,7 +81,7 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
       mInitPromiseMonitor("GeckoMediaPluginServiceParent::mInitPromiseMonitor"),
       mInitPromise(&mInitPromiseMonitor),
       mLoadPluginsFromDiskComplete(false),
-      mMainThread(SystemGroup::AbstractMainThreadFor(TaskCategory::Other)) {
+      mMainThread(AbstractThread::MainThread()) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 

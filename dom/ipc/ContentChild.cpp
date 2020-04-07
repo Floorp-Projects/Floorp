@@ -1510,8 +1510,7 @@ mozilla::ipc::IPCResult ContentChild::GetResultForRenderingInitFailure(
 mozilla::ipc::IPCResult ContentChild::RecvRequestPerformanceMetrics(
     const nsID& aID) {
   RefPtr<ContentChild> self = this;
-  RefPtr<AbstractThread> mainThread =
-      SystemGroup::AbstractMainThreadFor(TaskCategory::Performance);
+  RefPtr<AbstractThread> mainThread = AbstractThread::MainThread();
   nsTArray<RefPtr<PerformanceInfoPromise>> promises = CollectPerformanceInfo();
 
   PerformanceInfoPromise::All(mainThread, promises)
