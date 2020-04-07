@@ -22,6 +22,12 @@ ChromeUtils.defineModuleGetter(
   "resource:///actors/WebRTCChild.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutHomeStartupCacheChild",
+  "resource:///modules/AboutNewTabService.jsm"
+);
+
 var gEMEUIObserver = function(subject, topic, data) {
   let win = subject.top;
   let mm = getMessageManagerForWindow(win);
@@ -73,3 +79,11 @@ function processShutdown() {
   }
   Services.obs.removeObserver(processShutdown, "content-child-shutdown");
 }
+
+Services.cpmm.addMessageListener(
+  "AboutHomeStartupCache:InputStreams",
+  message => {
+    let { pageInputStream, scriptInputStream } = message.data;
+    AboutHomeStartupCacheChild.init(pageInputStream, scriptInputStream);
+  }
+);

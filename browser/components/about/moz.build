@@ -30,4 +30,8 @@ FINAL_LIBRARY = 'browsercomps'
 
 LOCAL_INCLUDES += [
     '../build',
+    '/dom/base',
+    '/ipc/chromium/src',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
