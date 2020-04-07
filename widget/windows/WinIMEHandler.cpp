@@ -16,6 +16,7 @@
 #  include "TSFTextStore.h"
 #endif  // #ifdef NS_ENABLE_TSF
 
+#include "OSKInputPaneManager.h"
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
@@ -167,7 +168,7 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                                 MSGResult& aResult) {
   if (aMessage == MOZ_WM_DISMISS_ONSCREEN_KEYBOARD) {
     if (!sFocusedWindow) {
-      DismissOnScreenKeyboard();
+      DismissOnScreenKeyboard(aWindow);
     }
     return true;
   }
@@ -307,7 +308,7 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
         nsresult rv = TSFTextStore::OnFocusChange(true, aWindow,
                                                   aWindow->GetInputContext());
         MaybeCreateNativeCaret(aWindow);
-        IMEHandler::MaybeShowOnScreenKeyboard();
+        IMEHandler::MaybeShowOnScreenKeyboard(aWindow);
         return rv;
       }
       case NOTIFY_IME_OF_BLUR:
@@ -367,7 +368,7 @@ nsresult IMEHandler::NotifyIME(nsWindow* aWindow,
     case NOTIFY_IME_OF_FOCUS:
       sFocusedWindow = aWindow;
       IMMHandler::OnFocusChange(true, aWindow);
-      IMEHandler::MaybeShowOnScreenKeyboard();
+      IMEHandler::MaybeShowOnScreenKeyboard(aWindow);
       MaybeCreateNativeCaret(aWindow);
       return NS_OK;
     case NOTIFY_IME_OF_BLUR:
@@ -483,7 +484,7 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
   }
 
   if (aAction.UserMightRequestOpenVKB()) {
-    IMEHandler::MaybeShowOnScreenKeyboard();
+    IMEHandler::MaybeShowOnScreenKeyboard(aWindow);
   }
 
   bool enable = WinUtils::IsIMEEnabled(aInputContext);
@@ -781,7 +782,7 @@ void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
 }
 
 // static
-void IMEHandler::MaybeShowOnScreenKeyboard() {
+void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow) {
 #ifdef NIGHTLY_BUILD
   if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
     mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
@@ -807,7 +808,7 @@ void IMEHandler::MaybeShowOnScreenKeyboard() {
     return;
   }
 
-  IMEHandler::ShowOnScreenKeyboard();
+  IMEHandler::ShowOnScreenKeyboard(aWindow);
 }
 
 // static
@@ -1034,7 +1035,12 @@ bool IMEHandler::AutoInvokeOnScreenKeyboardInDesktopMode() {
 
 // Based on DisplayVirtualKeyboard() in Chromium's base/win/win_util.cc.
 // static
-void IMEHandler::ShowOnScreenKeyboard() {
+void IMEHandler::ShowOnScreenKeyboard(nsWindow* aWindow) {
+  if (IsWin10AnniversaryUpdateOrLater()) {
+    OSKInputPaneManager::ShowOnScreenKeyboard(aWindow->GetWindowHandle());
+    return;
+  }
+
   nsAutoString cachedPath;
   nsresult result = Preferences::GetString(kOskPathPrefName, cachedPath);
   if (NS_FAILED(result) || cachedPath.IsEmpty()) {
@@ -1102,8 +1108,13 @@ void IMEHandler::ShowOnScreenKeyboard() {
 
 // Based on DismissVirtualKeyboard() in Chromium's base/win/win_util.cc.
 // static
-void IMEHandler::DismissOnScreenKeyboard() {
+void IMEHandler::DismissOnScreenKeyboard(nsWindow* aWindow) {
   // Dismiss the virtual keyboard if it's open
+  if (IsWin10AnniversaryUpdateOrLater()) {
+    OSKInputPaneManager::DismissOnScreenKeyboard(aWindow->GetWindowHandle());
+    return;
+  }
+
   HWND osk = GetOnScreenKeyboardWindow();
   if (osk) {
     ::PostMessage(osk, WM_SYSCOMMAND, SC_CLOSE, 0);
