@@ -121,13 +121,13 @@ struct SizeComputationInput {
   nsMargin& ComputedPhysicalBorderPadding() { return mComputedBorderPadding; }
   nsMargin& ComputedPhysicalPadding() { return mComputedPadding; }
 
-  const LogicalMargin ComputedLogicalMargin() const {
+  LogicalMargin ComputedLogicalMargin() const {
     return LogicalMargin(mWritingMode, mComputedMargin);
   }
-  const LogicalMargin ComputedLogicalBorderPadding() const {
+  LogicalMargin ComputedLogicalBorderPadding() const {
     return LogicalMargin(mWritingMode, mComputedBorderPadding);
   }
-  const LogicalMargin ComputedLogicalPadding() const {
+  LogicalMargin ComputedLogicalPadding() const {
     return LogicalMargin(mWritingMode, mComputedPadding);
   }
 
