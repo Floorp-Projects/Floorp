@@ -3453,12 +3453,13 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
     default:
       MOZ_CRASH("Unexpected op");
   }
+  MOZ_ASSERT(res.isNumeric());
 
   if (res.isDouble()) {
     stub->setSawDoubleResult();
   }
 
-  TryAttachStub<UnaryArithIRGenerator>("UniryArith", cx, frame, stub,
+  TryAttachStub<UnaryArithIRGenerator>("UnaryArith", cx, frame, stub,
                                        BaselineCacheIRStubKind::Regular, op,
                                        val, res);
   return true;
