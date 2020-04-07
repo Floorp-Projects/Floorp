@@ -578,3 +578,12 @@ menupopup::part(drop-indicator) {
 #content-mask {
   background: rgba(0, 0, 0, 0.5);
 }
+
+/* nhnt11: Workaround to insert a linebreak after the DoH doorhanger's title.
+ * The title uses the inline html|b that usually contains the hostname for
+ * permission prompts to achieve bold formatting. This is always the 2nd child.
+ */
+.popup-notification-description[popupid="doh-first-time"] > html|b:first-of-type {
+  display: block;
+  margin-bottom: 4px; /* matches the margin-bottom on description elements */
+}
