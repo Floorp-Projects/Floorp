@@ -1,6 +1,6 @@
 [package]
 name = "audioipc"
-version = "0.2.4"
+version = "0.2.5"
 authors = [
         "Matthew Gregan <kinetik@flim.org>",
         "Dan Glastonbury <dan.glastonbury@gmail.com>"
@@ -31,7 +31,7 @@ tokio-reactor = "0.1"
 [target.'cfg(windows)'.dependencies]
 mio = "0.6.19"
 miow = "0.3.3"
-mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
+mio-named-pipes = "0.1.6"
 winapi = { version = "0.3.6", features = ["combaseapi", "objbase"] }
 
 [dependencies.error-chain]
