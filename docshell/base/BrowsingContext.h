@@ -71,9 +71,13 @@ class WindowProxyHolder;
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
-// This defines the default do-nothing implementations for DidSetXxxx()
-// and MaySetXxxxx() for all the fields. See below for descriptions
-// of what these do if overridden.
+// This defines the default do-nothing implementations for DidSet()
+// and CanSet() for all the fields. They may be overloaded to provide
+// different behavior for a specific field.
+// DidSet() is used to run code in any process that sees the
+// the value updated (note: even if the value itself didn't change).
+// CanSet() is used to verify that the setting is allowed, and will
+// assert if it fails in Debug builds.
 #define MOZ_EACH_BC_FIELD(FIELD)                                             \
   FIELD(Name, nsString)                                                      \
   FIELD(Closed, bool)                                                        \
@@ -496,14 +500,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   void ResetGVAutoplayRequestStatus();
 
   /**
-  // Every BrowsingContext has a set of GetXxxx() and SetXxxxx() methods for
-  // all the fields defined in mozilla/dom/BrowsingContextFieldList.h.
-  // They all have optional DidSetXxxx() and MaySetXxxx() methods, which
-  // have default inherited do-nothing implementations, but we can override
-  // here.  DidSetXxxx() is used to run code in any process that sees the
-  // the value updated (note: even if the value itself didn't change).
-  // MaySetXxxx() is used to verify that the setting is allowed, and will
-  // assert if it fails in Debug builds.
    * Information required to initialize a BrowsingContext in another process.
    * This object may be serialized over IPC.
    */
