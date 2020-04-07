@@ -4337,8 +4337,8 @@ class MToObjectOrNull : public MUnaryInstruction, public BoxInputsPolicy::Data {
 class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
  protected:
   explicit MBitNot(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
-    specialization_ = MIRType::None;
-    setResultType(MIRType::Value);
+    specialization_ = MIRType::Int32;
+    setResultType(MIRType::Int32);
     setMovable();
   }
 
@@ -4346,30 +4346,17 @@ class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
   INSTRUCTION_HEADER(BitNot)
   TRIVIAL_NEW_WRAPPERS
 
-  static MBitNot* NewInt32(TempAllocator& alloc, MDefinition* input);
-
   MDefinition* foldsTo(TempAllocator& alloc) override;
-  void setSpecialization(MIRType type) {
-    specialization_ = type;
-    setResultType(type);
-  }
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
-  AliasSet getAliasSet() const override {
-    if (specialization_ == MIRType::None) {
-      return AliasSet::Store(AliasSet::Any);
-    }
-    return AliasSet::None();
-  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
   void computeRange(TempAllocator& alloc) override;
 
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override {
-    return specialization_ != MIRType::None;
-  }
+  bool canRecoverOnBailout() const override { return true; }
 
   ALLOW_CLONE(MBitNot)
 };

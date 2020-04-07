@@ -71,7 +71,6 @@ namespace jit {
     js::jit::BigIntStringEqual<js::jit::EqualityKind::NotEqual>)               \
   _(BigIntSub, JS::BigInt::sub)                                                \
   _(BindVarOperation, js::BindVarOperation)                                    \
-  _(BitNot, js::BitNot)                                                        \
   _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(CallNativeGetter, js::jit::CallNativeGetter)                               \

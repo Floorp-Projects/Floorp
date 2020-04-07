@@ -400,14 +400,9 @@ bool TestPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
 
 bool BitwisePolicy::adjustInputs(TempAllocator& alloc,
                                  MInstruction* ins) const {
-  MIRType specialization = ins->typePolicySpecialization();
-  if (specialization == MIRType::None) {
-    return BoxInputsPolicy::staticAdjustInputs(alloc, ins);
-  }
-
-  MOZ_ASSERT(ins->type() == MIRType::Value || ins->type() == specialization);
-  MOZ_ASSERT(specialization == MIRType::Int32 ||
-             specialization == MIRType::Double);
+  MOZ_ASSERT(ins->type() == ins->typePolicySpecialization());
+  MOZ_ASSERT(ins->typePolicySpecialization() == MIRType::Int32 ||
+             ins->typePolicySpecialization() == MIRType::Double);
 
   // This policy works for both unary and binary bitwise operations.
   for (size_t i = 0, e = ins->numOperands(); i < e; i++) {

@@ -1166,14 +1166,13 @@ void LIRGenerator::visitToId(MToId* ins) {
 void LIRGenerator::visitBitNot(MBitNot* ins) {
   MDefinition* input = ins->getOperand(0);
 
-  if (input->type() == MIRType::Int32) {
+  if (ins->type() == MIRType::Int32) {
+    MOZ_ASSERT(input->type() == MIRType::Int32);
     lowerForALU(new (alloc()) LBitNotI(), ins, input);
     return;
   }
 
-  LBitNotV* lir = new (alloc()) LBitNotV(useBoxAtStart(input));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
+  MOZ_CRASH("Unhandled integer specialization");
 }
 
 static bool CanEmitBitAndAtUses(MInstruction* ins) {
