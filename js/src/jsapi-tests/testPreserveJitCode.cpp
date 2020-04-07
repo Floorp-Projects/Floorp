@@ -41,7 +41,7 @@ bool testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts) {
   CHECK(global);
   JSAutoRealm ar(cx, global);
 
-  // The Ion JIT may be unavailable due to --disable-ion or lack of support
+  // The Ion JIT may be unavailable due to --disable-jit or lack of support
   // for this platform.
   if (!js::jit::IsIonEnabled(cx)) {
     knownFail = true;
