@@ -1754,7 +1754,7 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
           // lower time precision, so we accept the security leak here for now
           if (!perf->IsSystemPrincipal()) {
             timeStamp =
-                nsRFPService::ReduceTimePrecisionAsMSecsRFP(timeStamp, 0);
+                nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(timeStamp, 0);
           }
         }
         // else window is partially torn down already
