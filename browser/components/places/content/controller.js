@@ -203,9 +203,11 @@ PlacesController.prototype = {
             Ci.nsINavHistoryQueryOptions.SORT_BY_NONE
         );
       }
-      case "placesCmd_createBookmark":
-        var node = this._view.selectedNode;
-        return node && PlacesUtils.nodeIsURI(node) && node.itemId == -1;
+      case "placesCmd_createBookmark": {
+        return this._view.selectedNodes.every(
+          node => PlacesUtils.nodeIsURI(node) && node.itemId == -1
+        );
+      }
       default:
         return false;
     }
@@ -286,19 +288,20 @@ PlacesController.prototype = {
       case "placesCmd_sortBy:name":
         this.sortFolderByName().catch(Cu.reportError);
         break;
-      case "placesCmd_createBookmark":
-        let node = this._view.selectedNode;
-        PlacesUIUtils.showBookmarkDialog(
-          {
-            action: "add",
-            type: "bookmark",
-            hiddenRows: ["keyword", "location"],
+      case "placesCmd_createBookmark": {
+        const nodes = this._view.selectedNodes.map(node => {
+          return {
             uri: Services.io.newURI(node.uri),
             title: node.title,
-          },
+          };
+        });
+        PlacesUIUtils.showBookmarkPagesDialog(
+          nodes,
+          ["keyword", "location"],
           window.top
         );
         break;
+      }
     }
   },
 
