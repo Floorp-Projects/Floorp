@@ -6,6 +6,7 @@
 
 #include "FilePreferences.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
@@ -37,8 +38,11 @@ typedef char16_t char_path_t;
 typedef char char_path_t;
 #endif
 
-// Initially false to make concurrent consumers acquire the lock and sync
+// Initially false to make concurrent consumers acquire the lock and sync.
+// The plain bool is synchronized with sMutex, the atomic one is for a quick
+// check w/o the need to acquire the lock on the hot path.
 static bool sBlacklistEmpty = false;
+static Atomic<bool, Relaxed> sBlacklistEmptyQuickCheck{false};
 
 typedef nsTArray<nsTString<char_path_t>> Paths;
 static StaticAutoPtr<Paths> sBlacklist;
@@ -92,7 +96,7 @@ void InitPrefs() {
   StaticMutexAutoLock lock(sMutex);
 
   if (blacklist.IsEmpty()) {
-    sBlacklistEmpty = true;
+    sBlacklistEmptyQuickCheck = (sBlacklistEmpty = true);
     return;
   }
 
@@ -108,7 +112,7 @@ void InitPrefs() {
     Unused << p.CheckChar(',');
   }
 
-  sBlacklistEmpty = PathBlacklist().Length() == 0;
+  sBlacklistEmptyQuickCheck = (sBlacklistEmpty = PathBlacklist().Length() == 0);
 }
 
 void InitDirectoriesWhitelist() {
@@ -268,14 +272,13 @@ const char kPathSeparator = '/';
 bool IsAllowedPath(const nsTSubstring<char_path_t>& aFilePath) {
   typedef TNormalizer<char_path_t> Normalizer;
 
-  // A quick check out of the lock.
-  if (sBlacklistEmpty) {
+  // An atomic quick check out of the lock, because this is mostly `true`.
+  if (sBlacklistEmptyQuickCheck) {
     return true;
   }
 
   StaticMutexAutoLock lock(sMutex);
 
-  // Recheck the flag under the lock to reload it.
   if (sBlacklistEmpty) {
     return true;
   }
