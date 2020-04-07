@@ -250,6 +250,11 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         extras.putString("Android_ProcessName", getProcessName());
         extras.putString("Android_PackageName", pkgName);
 
+        final String notes = GeckoAppShell.getAppNotes();
+        if (notes != null) {
+            extras.putString("Notes", notes);
+        }
+
         if (context != null) {
             final PackageManager pkgMgr = context.getPackageManager();
             try {
