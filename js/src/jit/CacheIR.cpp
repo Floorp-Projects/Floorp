@@ -6908,8 +6908,7 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
 
     MOZ_ASSERT(v.isString());
     StringOperandId strId = writer.guardToString(id);
-    NumberOperandId numId = writer.guardAndGetNumberFromString(strId);
-    return writer.guardAndGetInt32FromNumber(numId);
+    return writer.guardAndGetInt32FromString(strId);
   };
 
   Int32OperandId lhsIntId = guardToInt32(lhsId, lhs_);

@@ -6,6 +6,8 @@
 
 #include "jit/VMFunctions.h"
 
+#include "mozilla/FloatingPoint.h"
+
 #include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
@@ -837,6 +839,18 @@ void PostGlobalWriteBarrier(JSRuntime* rt, GlobalObject* obj) {
     PostWriteBarrier(rt, obj);
     obj->realm()->globalWriteBarriered = 1;
   }
+}
+
+bool GetInt32FromStringPure(JSContext* cx, JSString* str, int32_t* result) {
+  // We shouldn't GC here as this is called directly from IC code.
+  AutoUnsafeCallWithABI unsafe;
+
+  double d;
+  if (!StringToNumberPure(cx, str, &d)) {
+    return false;
+  }
+
+  return mozilla::NumberIsInt32(d, result);
 }
 
 int32_t GetIndexFromString(JSString* str) {
