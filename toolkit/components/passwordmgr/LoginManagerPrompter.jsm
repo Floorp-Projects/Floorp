@@ -383,6 +383,10 @@ class LoginManagerPrompter {
         histogram.add(PROMPT_ADD_OR_UPDATE);
         if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
           Services.obs.notifyObservers(browser, "LoginStats:NewSavedPassword");
+        } else if (histogramName == "PWMGR_PROMPT_UPDATE_ACTION") {
+          Services.obs.notifyObservers(browser, "LoginStats:LoginUpdateSaved");
+        } else {
+          throw new Error("Unknown histogram");
         }
         readDataFromUI();
         persistData();
