@@ -14,6 +14,7 @@
 #include "prtime.h"
 #include "plstr.h"
 #include "nsURLHelper.h"
+#include "CacheControlParser.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -41,6 +42,11 @@ nsHttpResponseHead::nsHttpResponseHead(const nsHttpResponseHead& aOther)
   mCacheControlNoStore = other.mCacheControlNoStore;
   mCacheControlNoCache = other.mCacheControlNoCache;
   mCacheControlImmutable = other.mCacheControlImmutable;
+  mCacheControlStaleWhileRevalidateSet =
+      other.mCacheControlStaleWhileRevalidateSet;
+  mCacheControlStaleWhileRevalidate = other.mCacheControlStaleWhileRevalidate;
+  mCacheControlMaxAgeSet = other.mCacheControlMaxAgeSet;
+  mCacheControlMaxAge = other.mCacheControlMaxAge;
   mPragmaNoCache = other.mPragmaNoCache;
 }
 
@@ -62,6 +68,11 @@ nsHttpResponseHead& nsHttpResponseHead::operator=(
   mCacheControlNoStore = other.mCacheControlNoStore;
   mCacheControlNoCache = other.mCacheControlNoCache;
   mCacheControlImmutable = other.mCacheControlImmutable;
+  mCacheControlStaleWhileRevalidateSet =
+      other.mCacheControlStaleWhileRevalidateSet;
+  mCacheControlStaleWhileRevalidate = other.mCacheControlStaleWhileRevalidate;
+  mCacheControlMaxAgeSet = other.mCacheControlMaxAgeSet;
+  mCacheControlMaxAge = other.mCacheControlMaxAge;
   mPragmaNoCache = other.mPragmaNoCache;
 
   return *this;
@@ -782,22 +793,16 @@ bool nsHttpResponseHead::MustValidateIfExpired() {
 
 bool nsHttpResponseHead::StaleWhileRevalidate(uint32_t now,
                                               uint32_t expiration) {
-  nsresult rv;
+  RecursiveMutexAutoLock monitor(mRecursiveMutex);
 
-  if (expiration <= 0) {
-    return false;
-  }
-
-  uint32_t revalidateWindow;
-  rv = GetStaleWhileRevalidateValue(&revalidateWindow);
-  if (NS_FAILED(rv)) {
+  if (expiration <= 0 || !mCacheControlStaleWhileRevalidateSet) {
     return false;
   }
 
   // 'expiration' is the expiration time (an absolute unit), the swr window
   // extends the expiration time.
   CheckedInt<uint32_t> stallValidUntil = expiration;
-  stallValidUntil += revalidateWindow;
+  stallValidUntil += mCacheControlStaleWhileRevalidate;
   if (!stallValidUntil.isValid()) {
     // overflow means an indefinite stale window
     return true;
@@ -901,6 +906,10 @@ void nsHttpResponseHead::Reset() {
   mCacheControlNoStore = false;
   mCacheControlNoCache = false;
   mCacheControlImmutable = false;
+  mCacheControlStaleWhileRevalidateSet = false;
+  mCacheControlStaleWhileRevalidate = 0;
+  mCacheControlMaxAgeSet = false;
+  mCacheControlMaxAge = 0;
   mPragmaNoCache = false;
   mStatusText.Truncate();
   mContentType.Truncate();
@@ -941,59 +950,11 @@ nsresult nsHttpResponseHead::GetMaxAgeValue(uint32_t* result) {
 }
 
 nsresult nsHttpResponseHead::GetMaxAgeValue_locked(uint32_t* result) const {
-  const char* val = mHeaders.PeekHeader(nsHttp::Cache_Control);
-  if (!val) return NS_ERROR_NOT_AVAILABLE;
-
-  const char* p = nsHttp::FindToken(val, "max-age", HTTP_HEADER_VALUE_SEPS "=");
-  if (!p) return NS_ERROR_NOT_AVAILABLE;
-  p += 7;
-  while (*p == ' ' || *p == '\t') ++p;
-  if (*p != '=') return NS_ERROR_NOT_AVAILABLE;
-  ++p;
-  while (*p == ' ' || *p == '\t') ++p;
-
-  int maxAgeValue = atoi(p);
-  if (maxAgeValue < 0) maxAgeValue = 0;
-  *result = static_cast<uint32_t>(maxAgeValue);
-  return NS_OK;
-}
-
-// Get the stale-while-revalidate directive value, if present
-nsresult nsHttpResponseHead::GetStaleWhileRevalidateValue(uint32_t* result) {
-  RecursiveMutexAutoLock monitor(mRecursiveMutex);
-  return GetStaleWhileRevalidateValue_locked(result);
-}
-
-nsresult nsHttpResponseHead::GetStaleWhileRevalidateValue_locked(
-    uint32_t* result) const {
-  const char* val = mHeaders.PeekHeader(nsHttp::Cache_Control);
-  if (!val) {
+  if (!mCacheControlMaxAgeSet) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Rewrite (best all FindToken users) to mozilla::Tokenizer, bug 1542293.
-  const char* p = nsHttp::FindToken(val, "stale-while-revalidate",
-                                    HTTP_HEADER_VALUE_SEPS "=");
-  if (!p) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  p += 22;
-  while (*p == ' ' || *p == '\t') {
-    ++p;
-  }
-  if (*p != '=') {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  ++p;
-  while (*p == ' ' || *p == '\t') {
-    ++p;
-  }
-
-  int revalidateWindow = atoi(p);
-  if (revalidateWindow < 0) {
-    revalidateWindow = 0;
-  }
-  *result = static_cast<uint32_t>(revalidateWindow);
+  *result = mCacheControlMaxAge;
   return NS_OK;
 }
 
@@ -1048,6 +1009,12 @@ bool nsHttpResponseHead::operator==(const nsHttpResponseHead& aOther) const {
          mCacheControlNoCache == aOther.mCacheControlNoCache &&
          mCacheControlNoStore == aOther.mCacheControlNoStore &&
          mCacheControlImmutable == aOther.mCacheControlImmutable &&
+         mCacheControlStaleWhileRevalidateSet ==
+             aOther.mCacheControlStaleWhileRevalidateSet &&
+         mCacheControlStaleWhileRevalidate ==
+             aOther.mCacheControlStaleWhileRevalidate &&
+         mCacheControlMaxAgeSet == aOther.mCacheControlMaxAgeSet &&
+         mCacheControlMaxAge == aOther.mCacheControlMaxAge &&
          mPragmaNoCache == aOther.mPragmaNoCache;
 }
 
@@ -1153,31 +1120,25 @@ void nsHttpResponseHead::ParseCacheControl(const char* val) {
     mCacheControlNoCache = false;
     mCacheControlNoStore = false;
     mCacheControlImmutable = false;
+    mCacheControlStaleWhileRevalidateSet = false;
+    mCacheControlStaleWhileRevalidate = 0;
+    mCacheControlMaxAgeSet = false;
+    mCacheControlMaxAge = 0;
     return;
   }
 
-  // search header value for occurrence of "public"
-  if (nsHttp::FindToken(val, "public", HTTP_HEADER_VALUE_SEPS)) {
-    mCacheControlPublic = true;
-  }
+  nsDependentCString cacheControlRequestHeader(val);
+  CacheControlParser cacheControlRequest(cacheControlRequestHeader);
 
-  // search header value for occurrence of "private"
-  if (nsHttp::FindToken(val, "private", HTTP_HEADER_VALUE_SEPS))
-    mCacheControlPrivate = true;
-
-  // search header value for occurrence(s) of "no-cache" but ignore
-  // occurrence(s) of "no-cache=blah"
-  if (nsHttp::FindToken(val, "no-cache", HTTP_HEADER_VALUE_SEPS))
-    mCacheControlNoCache = true;
-
-  // search header value for occurrence of "no-store"
-  if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
-    mCacheControlNoStore = true;
-
-  // search header value for occurrence of "immutable"
-  if (nsHttp::FindToken(val, "immutable", HTTP_HEADER_VALUE_SEPS)) {
-    mCacheControlImmutable = true;
-  }
+  mCacheControlPublic = cacheControlRequest.Public();
+  mCacheControlPrivate = cacheControlRequest.Private();
+  mCacheControlNoCache = cacheControlRequest.NoCache();
+  mCacheControlNoStore = cacheControlRequest.NoStore();
+  mCacheControlImmutable = cacheControlRequest.Immutable();
+  mCacheControlStaleWhileRevalidateSet =
+      cacheControlRequest.StaleWhileRevalidate(
+          &mCacheControlStaleWhileRevalidate);
+  mCacheControlMaxAgeSet = cacheControlRequest.MaxAge(&mCacheControlMaxAge);
 }
 
 void nsHttpResponseHead::ParsePragma(const char* val) {
