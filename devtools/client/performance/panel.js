@@ -142,9 +142,6 @@ PerformancePanel.prototype = {
           await PerformanceController.startRecording();
         }
       }
-
-      // Keep references on window for front for tests.
-      this.panelWin.gFront = performanceFront;
     }
   },
 
