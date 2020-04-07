@@ -2069,19 +2069,6 @@ class LBitNotI : public LInstructionHelper<1, 1, 0> {
   LBitNotI() : LInstructionHelper(classOpcode) {}
 };
 
-// Call a VM function to perform a BitNot operation.
-class LBitNotV : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(BitNotV)
-
-  static const size_t Input = 0;
-
-  explicit LBitNotV(const LBoxAllocation& input)
-      : LCallInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-};
-
 // Binary bitwise operation, taking two 32-bit integers as inputs and returning
 // a 32-bit integer result as an output.
 class LBitOpI : public LInstructionHelper<1, 2, 0> {

@@ -11343,13 +11343,6 @@ void CodeGenerator::visitThrow(LThrow* lir) {
   callVM<Fn, js::ThrowOperation>(lir);
 }
 
-void CodeGenerator::visitBitNotV(LBitNotV* lir) {
-  pushArg(ToValue(lir, LBitNotV::Input));
-
-  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue);
-  callVM<Fn, BitNot>(lir);
-}
-
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator> {
   LTypeOfV* ins_;
 
