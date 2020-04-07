@@ -55,36 +55,30 @@ describe("RemoteL10n", () => {
 
       assert.calledOnce(domL10nStub);
       const { args } = domL10nStub.firstCall;
-      // The first arg is the resource array,
-      // the second one is false (use async),
-      // and the third one is the bundle generator.
-      assert.equal(args.length, 3);
+      // The first arg is the resource array, and the second one is the bundle generator.
+      assert.equal(args.length, 2);
       assert.deepEqual(args[0], [
         "browser/newtab/asrouter.ftl",
         "browser/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
       ]);
-      assert.isFalse(args[1]);
-      assert.isFunction(args[2].generateBundles);
+      assert.isFunction(args[1]);
     });
     it("should load the local Fluent file if USE_REMOTE_L10N_PREF is false", () => {
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
       RemoteL10n._createDOML10n();
 
       const { args } = domL10nStub.firstCall;
-      // The first arg is the resource array,
-      // the second one is false (use async),
-      // and the third one is null.
-      assert.equal(args.length, 3);
+      // The first arg is the resource array, and the second one should be null.
+      assert.equal(args.length, 2);
       assert.deepEqual(args[0], [
         "browser/newtab/asrouter.ftl",
         "browser/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
       ]);
-      assert.isFalse(args[1]);
-      assert.isEmpty(args[2]);
+      assert.isUndefined(args[1]);
     });
   });
 });

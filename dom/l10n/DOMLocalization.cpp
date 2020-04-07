@@ -38,8 +38,9 @@ DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal)
 }
 
 already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
-    const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
-    const bool aSync, const BundleGenerator& aBundleGenerator,
+    const GlobalObject& aGlobal,
+    const Optional<Sequence<nsString>>& aResourceIds,
+    const Optional<OwningNonNull<GenerateMessages>>& aGenerateMessages,
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
@@ -48,7 +49,20 @@ already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
   }
 
   RefPtr<DOMLocalization> domLoc = new DOMLocalization(global);
-  domLoc->Init(aResourceIds, aSync, aBundleGenerator, aRv);
+  nsTArray<nsString> resourceIds;
+
+  if (aResourceIds.WasPassed()) {
+    resourceIds = aResourceIds.Value();
+  }
+
+  if (aGenerateMessages.WasPassed()) {
+    GenerateMessages& generateMessages = aGenerateMessages.Value();
+    JS::Rooted<JS::Value> generateMessagesJS(
+        aGlobal.Context(), JS::ObjectValue(*generateMessages.CallbackOrNull()));
+    domLoc->Init(resourceIds, generateMessagesJS, aRv);
+  } else {
+    domLoc->Init(resourceIds, aRv);
+  }
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -177,7 +191,7 @@ class ElementTranslationHandler : public PromiseNativeHandler {
                                 JS::Handle<JS::Value> aValue) override {
     ErrorResult rv;
 
-    nsTArray<Nullable<L10nMessage>> l10nData;
+    nsTArray<L10nMessage> l10nData;
     if (aValue.isObject()) {
       JS::ForOfIterator iter(aCx);
       if (!iter.init(aValue, JS::ForOfIterator::AllowNonIterable)) {
@@ -201,18 +215,15 @@ class ElementTranslationHandler : public PromiseNativeHandler {
           break;
         }
 
-        Nullable<L10nMessage>* slotPtr =
-            l10nData.AppendElement(mozilla::fallible);
+        L10nMessage* slotPtr = l10nData.AppendElement(mozilla::fallible);
         if (!slotPtr) {
           mReturnValuePromise->MaybeRejectWithUndefined();
           return;
         }
 
-        if (!temp.isNull()) {
-          if (!slotPtr->SetValue().Init(aCx, temp)) {
-            mReturnValuePromise->MaybeRejectWithUndefined();
-            return;
-          }
+        if (!slotPtr->Init(aCx, temp)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
         }
       }
     }
@@ -314,11 +325,39 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
   }
 
   if (mIsSync) {
-    nsTArray<Nullable<L10nMessage>> l10nMessages;
+    nsTArray<JS::Value> jsKeys;
+    SequenceRooter<JS::Value> keysRooter(cx, &jsKeys);
+    for (auto& key : l10nKeys) {
+      JS::RootedValue jsKey(cx);
+      if (!ToJSValue(cx, key, &jsKey)) {
+        aRv.NoteJSContextException(cx);
+        return nullptr;
+      }
+      jsKeys.AppendElement(jsKey);
+    }
 
-    FormatMessagesSync(cx, l10nKeys, l10nMessages, aRv);
+    nsTArray<JS::Value> messages;
+    SequenceRooter<JS::Value> messagesRooter(cx, &messages);
+    mLocalization->FormatMessagesSync(jsKeys, messages);
+    nsTArray<L10nMessage> l10nData;
+    SequenceRooter<L10nMessage> l10nDataRooter(cx, &l10nData);
 
-    ApplyTranslations(domElements, l10nMessages, aProto, aRv);
+    for (auto& msg : messages) {
+      JS::Rooted<JS::Value> rootedMsg(cx);
+      rootedMsg.set(msg);
+      L10nMessage* slotPtr = l10nData.AppendElement(mozilla::fallible);
+      if (!slotPtr) {
+        promise->MaybeRejectWithUndefined();
+        return MaybeWrapPromise(promise);
+      }
+
+      if (!slotPtr->Init(cx, rootedMsg)) {
+        promise->MaybeRejectWithUndefined();
+        return MaybeWrapPromise(promise);
+      }
+    }
+
+    ApplyTranslations(domElements, l10nData, aProto, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       promise->MaybeRejectWithUndefined();
       return MaybeWrapPromise(promise);
@@ -442,10 +481,10 @@ void DOMLocalization::SetRootInfo(Element* aElement) {
   aElement->SetAttr(kNameSpaceID_None, dirAtom, dir, true);
 }
 
-void DOMLocalization::ApplyTranslations(
-    nsTArray<nsCOMPtr<Element>>& aElements,
-    nsTArray<Nullable<L10nMessage>>& aTranslations,
-    nsXULPrototypeDocument* aProto, ErrorResult& aRv) {
+void DOMLocalization::ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
+                                        nsTArray<L10nMessage>& aTranslations,
+                                        nsXULPrototypeDocument* aProto,
+                                        ErrorResult& aRv) {
   if (aElements.Length() != aTranslations.Length()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -460,11 +499,7 @@ void DOMLocalization::ApplyTranslations(
   nsTArray<L10nOverlaysError> errors;
   for (size_t i = 0; i < aTranslations.Length(); ++i) {
     Element* elem = aElements[i];
-    if (aTranslations[i].IsNull()) {
-      continue;
-    }
-    L10nOverlays::TranslateElement(*elem, aTranslations[i].Value(), errors,
-                                   aRv);
+    L10nOverlays::TranslateElement(*elem, aTranslations[i], errors, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
@@ -472,8 +507,7 @@ void DOMLocalization::ApplyTranslations(
     if (aProto) {
       // We only need to rebuild deep if the translation has a value.
       // Otherwise we'll only rebuild the attributes.
-      aProto->RebuildL10nPrototype(elem,
-                                   !aTranslations[i].Value().mValue.IsVoid());
+      aProto->RebuildL10nPrototype(elem, !aTranslations[i].mValue.IsVoid());
     }
   }
 

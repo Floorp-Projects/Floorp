@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  async function* generateBundles(resourceIds) {
+  async function* mockGenerateMessages(resourceIds) {
     const bundle = new FluentBundle("en-US", {
       useIsolating: false,
     });
@@ -24,8 +24,7 @@ key3 = Value { $count }
 
     const loc = new Localization(
       ['mock.ftl'],
-      false,
-      { generateBundles },
+      mockGenerateMessages,
     );
 
     {

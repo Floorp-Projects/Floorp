@@ -44,7 +44,7 @@
   </script>
   <script type="application/javascript">
   "use strict";
-  async function* generateBundles(resourceIds) {
+  async function* mockGenerateMessages(resourceIds) {
     const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`
 key1 = Value for Key 1
@@ -54,8 +54,7 @@ key1 = Value for Key 1
 
   document.domLoc = new DOMLocalization(
     [],
-    false,
-    { generateBundles }
+    mockGenerateMessages
   );
   </script>
 </head>
