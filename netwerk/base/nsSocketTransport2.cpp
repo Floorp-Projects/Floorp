@@ -3017,10 +3017,43 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   SOCKET_LOG(("nsSocketTransport::OnLookupComplete: this=%p status %" PRIx32
               ".",
               this, static_cast<uint32_t>(status)));
+
+  if (request == mDNSTxtRequest) {
+    if (NS_SUCCEEDED(status)) {
+      nsCOMPtr<nsIDNSByTypeRecord> txtResponse = do_QueryInterface(rec);
+      txtResponse->GetRecordsAsOneString(mDNSRecordTxt);
+      mDNSRecordTxt.Trim(" ");
+    }
+    Telemetry::Accumulate(Telemetry::ESNI_KEYS_RECORDS_FOUND,
+                          NS_SUCCEEDED(status));
+    // flag host lookup complete for the benefit of the ResolveHost method.
+    if (!mDNSRequest) {
+      mResolving = false;
+      MOZ_ASSERT(mDNSARequestFinished);
+      Telemetry::Accumulate(
+          Telemetry::ESNI_KEYS_RECORD_FETCH_DELAYS,
+          PR_IntervalToMilliseconds(PR_IntervalNow() - mDNSARequestFinished));
+
+      nsresult rv =
+          PostEvent(MSG_DNS_LOOKUP_COMPLETE, mDNSLookupStatus, nullptr);
+
+      // if posting a message fails, then we should assume that the socket
+      // transport has been shutdown.  this should never happen!  if it does
+      // it means that the socket transport service was shutdown before the
+      // DNS service.
+      if (NS_FAILED(rv)) {
+        NS_WARNING("unable to post DNS lookup complete message");
+      }
+    } else {
+      mDNSTxtRequest = nullptr;
+    }
+    return NS_OK;
+  }
+
   if (NS_FAILED(status) && mDNSTxtRequest) {
     mDNSTxtRequest->Cancel(NS_ERROR_ABORT);
   } else if (NS_SUCCEEDED(status)) {
-    mDNSRecord = static_cast<nsIDNSRecord*>(rec);
+    mDNSRecord = rec;
   }
 
   // flag host lookup complete for the benefit of the ResolveHost method.
@@ -3043,46 +3076,6 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
         status;  // remember the status to send it when esni lookup is ready.
     mDNSRequest = nullptr;
     mDNSARequestFinished = PR_IntervalNow();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransport::OnLookupByTypeComplete(nsICancelable* request,
-                                          nsIDNSByTypeRecord* txtResponse,
-                                          nsresult status) {
-  SOCKET_LOG(
-      ("nsSocketTransport::OnLookupByTypeComplete: "
-       "this=%p status %" PRIx32 ".",
-       this, static_cast<uint32_t>(status)));
-  MOZ_ASSERT(mDNSTxtRequest == request);
-
-  if (NS_SUCCEEDED(status)) {
-    txtResponse->GetRecordsAsOneString(mDNSRecordTxt);
-    mDNSRecordTxt.Trim(" ");
-  }
-  Telemetry::Accumulate(Telemetry::ESNI_KEYS_RECORDS_FOUND,
-                        NS_SUCCEEDED(status));
-  // flag host lookup complete for the benefit of the ResolveHost method.
-  if (!mDNSRequest) {
-    mResolving = false;
-    MOZ_ASSERT(mDNSARequestFinished);
-    Telemetry::Accumulate(
-        Telemetry::ESNI_KEYS_RECORD_FETCH_DELAYS,
-        PR_IntervalToMilliseconds(PR_IntervalNow() - mDNSARequestFinished));
-
-    nsresult rv = PostEvent(MSG_DNS_LOOKUP_COMPLETE, mDNSLookupStatus, nullptr);
-
-    // if posting a message fails, then we should assume that the socket
-    // transport has been shutdown.  this should never happen!  if it does
-    // it means that the socket transport service was shutdown before the
-    // DNS service.
-    if (NS_FAILED(rv)) {
-      NS_WARNING("unable to post DNS lookup complete message");
-    }
-  } else {
-    mDNSTxtRequest = nullptr;
   }
 
   return NS_OK;

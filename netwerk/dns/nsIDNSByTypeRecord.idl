@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsIDNSRecord.idl"
 
 %{ C++
 #include "nsTArrayForwardDeclare.h"
@@ -11,7 +11,7 @@
 [ref] native CStringArrayRef(nsTArray<nsCString>);
 
 [scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
-interface nsIDNSByTypeRecord : nsISupports
+interface nsIDNSByTypeRecord : nsIDNSRecord
 {
   CStringArrayRef getRecords();
 

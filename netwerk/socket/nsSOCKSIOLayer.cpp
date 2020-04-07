@@ -496,13 +496,6 @@ nsSOCKSSocketInfo::OnLookupComplete(nsICancelable* aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSOCKSSocketInfo::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                          nsIDNSByTypeRecord* res,
-                                          nsresult aStatus) {
-  return NS_OK;
-}
-
 PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc* fd) {
   PRStatus status;
   nsresult rv;

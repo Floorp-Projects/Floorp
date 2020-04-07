@@ -112,13 +112,6 @@ NetworkConnectivityService::OnLookupComplete(nsICancelable* aRequest,
 }
 
 NS_IMETHODIMP
-NetworkConnectivityService::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                                   nsIDNSByTypeRecord* aRes,
-                                                   nsresult aStatus) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 NetworkConnectivityService::RecheckDNS() {
   bool enabled =
       Preferences::GetBool("network.connectivity-service.enabled", false);

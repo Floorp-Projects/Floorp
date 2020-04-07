@@ -127,13 +127,6 @@ Predictor::DNSListener::OnLookupComplete(nsICancelable* request,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Predictor::DNSListener::OnLookupByTypeComplete(nsICancelable* request,
-                                               nsIDNSByTypeRecord* res,
-                                               nsresult status) {
-  return NS_OK;
-}
-
 // Class to proxy important information from the initial predictor call through
 // the cache API and back into the internals of the predictor. We can't use the
 // predictor itself, as it may have multiple actions in-flight, and each action

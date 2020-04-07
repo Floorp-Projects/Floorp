@@ -21,23 +21,8 @@ DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
 }
 
 NS_IMETHODIMP
-DNSListenerProxy::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                         nsIDNSByTypeRecord* aRes,
-                                         nsresult aStatus) {
-  RefPtr<OnLookupByTypeCompleteRunnable> r =
-      new OnLookupByTypeCompleteRunnable(mListener, aRequest, aRes, aStatus);
-  return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
-}
-
-NS_IMETHODIMP
 DNSListenerProxy::OnLookupCompleteRunnable::Run() {
   mListener->OnLookupComplete(mRequest, mRecord, mStatus);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DNSListenerProxy::OnLookupByTypeCompleteRunnable::Run() {
-  mListener->OnLookupByTypeComplete(mRequest, mResult, mStatus);
   return NS_OK;
 }
 

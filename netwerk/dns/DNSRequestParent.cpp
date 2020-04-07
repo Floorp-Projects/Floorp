@@ -92,6 +92,14 @@ DNSRequestParent::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   if (NS_SUCCEEDED(status)) {
     MOZ_ASSERT(rec);
 
+    nsCOMPtr<nsIDNSByTypeRecord> txtRec = do_QueryInterface(rec);
+    if (txtRec) {
+      nsTArray<nsCString> rec;
+      txtRec->GetRecords(rec);
+      Unused << SendLookupCompleted(DNSRequestResponse(rec));
+      return NS_OK;
+    }
+
     nsAutoCString cname;
     if (mFlags & nsHostResolver::RES_CANON_NAME) {
       rec->GetCanonicalName(cname);
@@ -109,25 +117,6 @@ DNSRequestParent::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
     Unused << SendLookupCompleted(DNSRequestResponse(status));
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DNSRequestParent::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                         nsIDNSByTypeRecord* aRes,
-                                         nsresult aStatus) {
-  if (!CanSend()) {
-    // nothing to do: child probably crashed
-    return NS_OK;
-  }
-
-  if (NS_SUCCEEDED(aStatus)) {
-    nsTArray<nsCString> rec;
-    aRes->GetRecords(rec);
-    Unused << SendLookupCompleted(DNSRequestResponse(rec));
-  } else {
-    Unused << SendLookupCompleted(DNSRequestResponse(aStatus));
-  }
   return NS_OK;
 }
 

@@ -267,13 +267,6 @@ LookupHelper::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRecord,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-LookupHelper::OnLookupByTypeComplete(nsICancelable* aRequest,
-                                     nsIDNSByTypeRecord* aRes,
-                                     nsresult aStatus) {
-  return NS_OK;
-}
-
 nsresult LookupHelper::ConstructAnswer(LookupArgument* aArgument) {
   nsIDNSRecord* aRecord = aArgument->mRecord;
   AutoSafeJSContext cx;

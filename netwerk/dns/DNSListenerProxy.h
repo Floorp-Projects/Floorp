@@ -55,26 +55,6 @@ class DNSListenerProxy final : public nsIDNSListener,
     nsresult mStatus;
   };
 
-  class OnLookupByTypeCompleteRunnable : public Runnable {
-   public:
-    OnLookupByTypeCompleteRunnable(
-        const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
-        nsICancelable* aRequest, nsIDNSByTypeRecord* aRes, nsresult aStatus)
-        : Runnable("DNSListenerProxy::OnLookupByTypeCompleteRunnable"),
-          mListener(aListener),
-          mRequest(aRequest),
-          mResult(aRes),
-          mStatus(aStatus) {}
-
-    NS_DECL_NSIRUNNABLE
-
-   private:
-    nsMainThreadPtrHandle<nsIDNSListener> mListener;
-    nsCOMPtr<nsICancelable> mRequest;
-    nsCOMPtr<nsIDNSByTypeRecord> mResult;
-    nsresult mStatus;
-  };
-
  private:
   ~DNSListenerProxy() {}
 
