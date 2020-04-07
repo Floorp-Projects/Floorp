@@ -10,12 +10,16 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/WindowContext.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nsIChannel.h"
 #include "nsIPermission.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPermissionManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
 
 #define ANTITRACKING_PERM_KEY "3rdPartyStorage"
@@ -324,4 +328,53 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
   return AntiTrackingUtils::CheckStoragePermission(
       targetPrincipal, type, NS_UsePrivateBrowsing(aChannel), &unusedReason,
       unusedReason);
+}
+
+uint64_t AntiTrackingUtils::GetTopLevelAntiTrackingWindowId(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  RefPtr<WindowContext> winContext =
+      aBrowsingContext->GetCurrentWindowContext();
+  if (!winContext) {
+    return 0;
+  }
+
+  Maybe<net::CookieJarSettingsArgs> cookieJarSettings =
+      winContext->GetCookieJarSettings();
+  if (cookieJarSettings.isNothing()) {
+    return 0;
+  }
+
+  // Do not check BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN her because when
+  // a third-party subresource is inside the main frame, we need to return the
+  // top-level window id to partition its cookies correctly.
+  uint32_t behavior = cookieJarSettings->cookieBehavior();
+  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      aBrowsingContext->IsTop()) {
+    return 0;
+  }
+
+  return aBrowsingContext->Top()->GetCurrentInnerWindowId();
+}
+
+uint64_t AntiTrackingUtils::GetTopLevelStorageAreaWindowId(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  if (Document::StorageAccessSandboxed(aBrowsingContext->GetSandboxFlags())) {
+    return 0;
+  }
+
+  BrowsingContext* parentBC = aBrowsingContext->GetParent();
+  if (!parentBC) {
+    // No parent browsing context available!
+    return 0;
+  }
+
+  if (!parentBC->IsTop()) {
+    return 0;
+  }
+
+  return parentBC->GetCurrentInnerWindowId();
 }
