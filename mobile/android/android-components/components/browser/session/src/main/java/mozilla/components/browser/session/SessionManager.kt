@@ -484,7 +484,7 @@ class SessionManager(
 /**
  * Tries to find a session with the provided session ID and runs the block if found.
  *
- * @return True if the session was found and run successfully.
+ * @return The result of the [block] executed.
  */
 fun SessionManager.runWithSession(
     sessionId: String?,
@@ -501,21 +501,20 @@ fun SessionManager.runWithSession(
 /**
  * Tries to find a session with the provided session ID or uses the selected session and runs the block if found.
  *
- * @return True if the session was found and run successfully.
+ * @return The result of the [block] executed.
  */
 fun SessionManager.runWithSessionIdOrSelected(
     sessionId: String?,
-    block: SessionManager.(Session) -> Unit
+    block: SessionManager.(Session) -> Boolean
 ): Boolean {
     sessionId?.let {
         findSessionById(sessionId)?.let { session ->
-            block(session)
-            return true
+            return block(session)
         }
     }
     selectedSession?.let {
-        block(it)
-        return true
+        return block(it)
     }
+
     return false
 }

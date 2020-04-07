@@ -70,6 +70,7 @@ class FxaWebChannelFeature(
 
         sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
             registerFxaContentMessageHandler(session)
+            true
         }
 
         extensionController.install(engine)
