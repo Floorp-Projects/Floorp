@@ -1321,6 +1321,11 @@ class UrlbarInput {
     return false;
   }
 
+  /**
+   * Invoked on overflow/underflow/scrollend events, to update attributes
+   * related to the input text directionality. Fading masks use these attributes
+   * to appear on the proper side of the urlbar.
+   */
   _updateTextOverflow() {
     if (!this._overflowing) {
       this.removeAttribute("textoverflow");
@@ -1333,6 +1338,8 @@ class UrlbarInput {
       // Check overflow again to ensure it didn't change in the meantime.
       let input = this.inputField;
       if (input && this._overflowing) {
+        // Calculate the side where text is normally expected to overflow.
+        // Note that RTL domains may change things.
         let side = isRTL ? "left" : "right";
         if (input.scrollLeft == input.scrollLeftMax) {
           side = isRTL == !input.scrollLeft ? "left" : "right";
