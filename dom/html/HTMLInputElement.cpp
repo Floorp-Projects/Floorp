@@ -169,26 +169,6 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 static const nsAttrValue::EnumTable* kInputDefaultType =
     &kInputTypeTable[ArrayLength(kInputTypeTable) - 2];
 
-static const uint8_t NS_INPUT_INPUTMODE_NONE = 1;
-static const uint8_t NS_INPUT_INPUTMODE_TEXT = 2;
-static const uint8_t NS_INPUT_INPUTMODE_TEL = 3;
-static const uint8_t NS_INPUT_INPUTMODE_URL = 4;
-static const uint8_t NS_INPUT_INPUTMODE_EMAIL = 5;
-static const uint8_t NS_INPUT_INPUTMODE_NUMERIC = 6;
-static const uint8_t NS_INPUT_INPUTMODE_DECIMAL = 7;
-static const uint8_t NS_INPUT_INPUTMODE_SEARCH = 8;
-
-static const nsAttrValue::EnumTable kInputInputmodeTable[] = {
-    {"none", NS_INPUT_INPUTMODE_NONE},
-    {"text", NS_INPUT_INPUTMODE_TEXT},
-    {"tel", NS_INPUT_INPUTMODE_TEL},
-    {"url", NS_INPUT_INPUTMODE_URL},
-    {"email", NS_INPUT_INPUTMODE_EMAIL},
-    {"numeric", NS_INPUT_INPUTMODE_NUMERIC},
-    {"decimal", NS_INPUT_INPUTMODE_DECIMAL},
-    {"search", NS_INPUT_INPUTMODE_SEARCH},
-    {nullptr, 0}};
-
 static const nsAttrValue::EnumTable kCaptureTable[] = {
     {"user", static_cast<int16_t>(nsIFilePicker::captureUser)},
     {"environment", static_cast<int16_t>(nsIFilePicker::captureEnv)},
@@ -1385,10 +1365,6 @@ void HTMLInputElement::GetFormEnctype(nsAString& aValue) {
 
 void HTMLInputElement::GetFormMethod(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::formmethod, "", kFormDefaultMethod->tag, aValue);
-}
-
-void HTMLInputElement::GetInputMode(nsAString& aValue) {
-  GetEnumAttr(nsGkAtoms::inputmode, nullptr, aValue);
 }
 
 void HTMLInputElement::GetType(nsAString& aValue) {
@@ -5149,9 +5125,6 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (aAttribute == nsGkAtoms::autocomplete) {
       aResult.ParseAtomArray(aValue);
       return true;
-    }
-    if (aAttribute == nsGkAtoms::inputmode) {
-      return aResult.ParseEnumValue(aValue, kInputInputmodeTable, false);
     }
     if (aAttribute == nsGkAtoms::capture) {
       return aResult.ParseEnumValue(aValue, kCaptureTable, false,
