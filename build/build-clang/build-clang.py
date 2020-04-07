@@ -428,8 +428,9 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             ]
             build_package(compiler_rt_build_dir, cmake_args)
             os.environ['LIB'] = old_lib
-        install_import_library(build_dir, inst_dir)
-        install_asan_symbols(build_dir, inst_dir)
+        if is_final_stage:
+            install_import_library(build_dir, inst_dir)
+            install_asan_symbols(build_dir, inst_dir)
 
 
 # Return the absolute path of a build tool.  We first look to see if the
