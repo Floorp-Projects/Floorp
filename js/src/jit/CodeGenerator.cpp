@@ -8224,26 +8224,6 @@ void CodeGenerator::visitBinaryV(LBinaryV* lir) {
   using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue,
                       MutableHandleValue);
   switch (lir->jsop()) {
-    case JSOp::Add:
-      callVM<Fn, js::AddValues>(lir);
-      break;
-
-    case JSOp::Sub:
-      callVM<Fn, js::SubValues>(lir);
-      break;
-
-    case JSOp::Mul:
-      callVM<Fn, js::MulValues>(lir);
-      break;
-
-    case JSOp::Div:
-      callVM<Fn, js::DivValues>(lir);
-      break;
-
-    case JSOp::Mod:
-      callVM<Fn, js::ModValues>(lir);
-      break;
-
     case JSOp::BitAnd:
       callVM<Fn, js::BitAnd>(lir);
       break;
