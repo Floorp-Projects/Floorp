@@ -85,7 +85,10 @@ bool GetParentPrincipalAndTrackingOrigin(
     return false;
   }
 
-  topLevelStoragePrincipal.forget(aTopLevelStoragePrincipal);
+  if (aTopLevelStoragePrincipal) {
+    topLevelStoragePrincipal.forget(aTopLevelStoragePrincipal);
+  }
+
   if (aTrackingPrincipal) {
     trackingPrincipal.forget(aTrackingPrincipal);
   }
@@ -272,7 +275,6 @@ ContentBlocking::AllowAccessFor(
   }
 
   uint64_t topLevelWindowId;
-  nsCOMPtr<nsIPrincipal> topLevelStoragePrincipal;
   nsAutoCString trackingOrigin;
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
 
@@ -290,13 +292,6 @@ ContentBlocking::AllowAccessFor(
 
     trackingOrigin = origin;
     trackingPrincipal = aPrincipal;
-    topLevelStoragePrincipal =
-        nsGlobalWindowInner::Cast(parentInnerWindow)->GetPrincipal();
-    if (NS_WARN_IF(!topLevelStoragePrincipal)) {
-      LOG(("Top-level storage area principal not found, bailing out early"));
-      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-    }
-
     topLevelWindowId = aParentContext->GetCurrentInnerWindowId();
     if (NS_WARN_IF(!topLevelWindowId)) {
       LOG(("Top-level storage area window id not found, bailing out early"));
@@ -333,8 +328,7 @@ ContentBlocking::AllowAccessFor(
             // Don't request the ETP specific behaviour of allowing only
             // singly-nested iframes here, because we are recording an allow
             // permission.
-            nsICookieService::BEHAVIOR_ACCEPT,
-            getter_AddRefs(topLevelStoragePrincipal), trackingOrigin,
+            nsICookieService::BEHAVIOR_ACCEPT, nullptr, trackingOrigin,
             getter_AddRefs(trackingPrincipal))) {
       LOG(
           ("Error while computing the parent principal and tracking origin, "
@@ -388,7 +382,7 @@ ContentBlocking::AllowAccessFor(
 
   auto storePermission =
       [parentInnerWindow, topOuterWindow, topInnerWindow, trackingOrigin,
-       trackingPrincipal, topLevelStoragePrincipal, aReason, behavior,
+       trackingPrincipal, aReason, behavior,
        topLevelWindowId](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     nsAutoCString permissionKey;
     AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin,
