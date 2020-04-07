@@ -7469,7 +7469,7 @@
   type: uint32_t
   value: 500
   mirror: always
-  
+
 # A testing flag.
 - name: network.predictor.doing-tests
   type: bool
@@ -8444,6 +8444,19 @@
   value: 5
 #endif
   mirror: always
+
+# Does the access key by itself focus the menu bar?
+- name: ui.key.menuAccessKeyFocuses
+  type: bool
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  # On Windows and Linux, we now default to showing the menu bar only when alt
+  # is pressed.
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 
 # If true, all popups won't hide automatically on blur
 - name: ui.popup.disable_autohide

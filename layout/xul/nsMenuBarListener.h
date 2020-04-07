@@ -46,8 +46,6 @@ class nsMenuBarListener final : public nsIDOMEventListener {
    */
   void OnDestroyMenuBarFrame();
 
-  static void InitializeStatics();
-
   /**
    * GetMenuAccessKey() returns keyCode value of a modifier key which is
    * used for accesskey.  Returns 0 if the platform doesn't support access key.
@@ -109,8 +107,6 @@ class nsMenuBarListener final : public nsIDOMEventListener {
   bool mAccessKeyDown;
   // Whether or not the ALT key down is canceled by other action.
   bool mAccessKeyDownCanceled;
-  // Does the access key by itself focus the menubar?
-  static bool mAccessKeyFocuses;
   // See KeyboardEvent for sample values (DOM_VK_* constants).
   static int32_t mAccessKey;
   // Modifier mask for the access key.
