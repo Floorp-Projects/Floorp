@@ -6319,6 +6319,8 @@ AttachDecision UnaryArithIRGenerator::tryAttachStub() {
   TRY_ATTACH(tryAttachInt32());
   TRY_ATTACH(tryAttachNumber());
   TRY_ATTACH(tryAttachBigInt());
+  TRY_ATTACH(tryAttachStringInt32());
+  TRY_ATTACH(tryAttachStringNumber());
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
@@ -6427,6 +6429,90 @@ AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
     case JSOp::Dec:
       writer.bigIntDecResult(bigIntId);
       trackAttached("UnaryArith.BigIntDec");
+      break;
+    default:
+      MOZ_CRASH("Unexpected OP");
+  }
+
+  writer.returnFromIC();
+  return AttachDecision::Attach;
+}
+
+AttachDecision UnaryArithIRGenerator::tryAttachStringInt32() {
+  if (!val_.isString()) {
+    return AttachDecision::NoAction;
+  }
+  MOZ_ASSERT(res_.isNumber());
+
+  if (!res_.isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  StringOperandId stringId = writer.guardToString(valId);
+  Int32OperandId intId = writer.guardAndGetInt32FromString(stringId);
+
+  switch (op_) {
+    case JSOp::BitNot:
+      writer.int32NotResult(intId);
+      trackAttached("UnaryArith.StringInt32Not");
+      break;
+    case JSOp::Pos:
+      writer.loadInt32Result(intId);
+      trackAttached("UnaryArith.StringInt32Pos");
+      break;
+    case JSOp::Neg:
+      writer.int32NegationResult(intId);
+      trackAttached("UnaryArith.StringInt32Neg");
+      break;
+    case JSOp::Inc:
+      writer.int32IncResult(intId);
+      trackAttached("UnaryArith.StringInt32Inc");
+      break;
+    case JSOp::Dec:
+      writer.int32DecResult(intId);
+      trackAttached("UnaryArith.StringInt32Dec");
+      break;
+    default:
+      MOZ_CRASH("Unexpected OP");
+  }
+
+  writer.returnFromIC();
+  return AttachDecision::Attach;
+}
+
+AttachDecision UnaryArithIRGenerator::tryAttachStringNumber() {
+  if (!val_.isString()) {
+    return AttachDecision::NoAction;
+  }
+  MOZ_ASSERT(res_.isNumber());
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  StringOperandId stringId = writer.guardToString(valId);
+  NumberOperandId numId = writer.guardAndGetNumberFromString(stringId);
+
+  Int32OperandId truncatedId;
+  switch (op_) {
+    case JSOp::BitNot:
+      truncatedId = writer.truncateDoubleToUInt32(numId);
+      writer.int32NotResult(truncatedId);
+      trackAttached("UnaryArith.StringNumberNot");
+      break;
+    case JSOp::Pos:
+      writer.loadDoubleResult(numId);
+      trackAttached("UnaryArith.StringNumberPos");
+      break;
+    case JSOp::Neg:
+      writer.doubleNegationResult(numId);
+      trackAttached("UnaryArith.StringNumberNeg");
+      break;
+    case JSOp::Inc:
+      writer.doubleIncResult(numId);
+      trackAttached("UnaryArith.StringNumberInc");
+      break;
+    case JSOp::Dec:
+      writer.doubleDecResult(numId);
+      trackAttached("UnaryArith.StringNumberDec");
       break;
     default:
       MOZ_CRASH("Unexpected OP");
