@@ -79,7 +79,6 @@ struct FragmentShaderImpl : ShaderImpl {
                                const void* step, float step_width);
   typedef void (*RunFunc)(FragmentShaderImpl*);
   typedef void (*SkipFunc)(FragmentShaderImpl*, int chunks);
-  typedef bool (*UseDiscardFunc)(FragmentShaderImpl*);
   typedef void (*DrawSpanRGBA8Func)(FragmentShaderImpl*, uint32_t* buf,
                                     int len);
   typedef void (*DrawSpanR8Func)(FragmentShaderImpl*, uint8_t* buf, int len);
@@ -89,20 +88,41 @@ struct FragmentShaderImpl : ShaderImpl {
   InitSpanFunc init_span_func = nullptr;
   RunFunc run_func = nullptr;
   SkipFunc skip_func = nullptr;
-  UseDiscardFunc use_discard_func = nullptr;
   DrawSpanRGBA8Func draw_span_RGBA8_func = nullptr;
   DrawSpanR8Func draw_span_R8_func = nullptr;
 
-  vec2 gl_FragCoordXY;
-  vec2_scalar gl_FragCoordZW;
+  enum FLAGS {
+    DISCARD = 1 << 0,
+    PERSPECTIVE = 1 << 1,
+  };
+  int flags = 0;
+  void enable_discard() { flags |= DISCARD; }
+  void enable_perspective() { flags |= PERSPECTIVE; }
+  ALWAYS_INLINE bool use_discard() const { return (flags & DISCARD) != 0; }
+  ALWAYS_INLINE bool use_perspective() const {
+    return (flags & PERSPECTIVE) != 0;
+  }
+
+  vec4 gl_FragCoord;
+  vec2_scalar stepZW;
   Bool isPixelDiscarded;
   vec4 gl_FragColor;
   vec4 gl_SecondaryFragColor;
 
-  ALWAYS_INLINE void step_fragcoord() { gl_FragCoordXY.x += 4; }
+  ALWAYS_INLINE void step_fragcoord() { gl_FragCoord.x += 4; }
 
   ALWAYS_INLINE void step_fragcoord(int chunks) {
-    gl_FragCoordXY.x += 4 * chunks;
+    gl_FragCoord.x += 4 * chunks;
+  }
+
+  ALWAYS_INLINE void step_perspective() {
+    gl_FragCoord.z += stepZW.x;
+    gl_FragCoord.w += stepZW.y;
+  }
+
+  ALWAYS_INLINE void step_perspective(int chunks) {
+    gl_FragCoord.z += stepZW.x * chunks;
+    gl_FragCoord.w += stepZW.y * chunks;
   }
 
   void init_batch(ProgramImpl* prog) { (*init_batch_func)(this, prog); }
@@ -119,8 +139,6 @@ struct FragmentShaderImpl : ShaderImpl {
   ALWAYS_INLINE void run() { (*run_func)(this); }
 
   ALWAYS_INLINE void skip(int chunks = 1) { (*skip_func)(this, chunks); }
-
-  ALWAYS_INLINE bool use_discard() { return (*use_discard_func)(this); }
 
   ALWAYS_INLINE void draw_span(uint32_t* buf, int len) {
     (*draw_span_RGBA8_func)(this, buf, len);
