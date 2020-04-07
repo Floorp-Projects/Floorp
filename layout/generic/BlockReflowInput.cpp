@@ -39,7 +39,8 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
       mContentArea(aReflowInput.GetWritingMode()),
       mPushedFloats(nullptr),
       mOverflowTracker(nullptr),
-      mBorderPadding(mReflowInput.ComputedLogicalBorderPadding()),
+      mBorderPadding(mReflowInput.ComputedLogicalBorderPadding().ApplySkipSides(
+          aFrame->GetLogicalSkipSides(&aReflowInput))),
       mPrevBEndMargin(),
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
@@ -48,10 +49,6 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
                "The consumed block-size should be constrained!");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-
-  nsIFrame::LogicalSides logicalSkipSides =
-      aFrame->GetLogicalSkipSides(&aReflowInput);
-  mBorderPadding.ApplySkipSides(logicalSkipSides);
 
   // Note that mContainerSize is the physical size, needed to
   // convert logical block-coordinates in vertical-rl writing mode
