@@ -215,7 +215,8 @@ async function addTestSuggestionsEngine(suggestionsFn = null) {
     resp.setHeader("Content-Type", "application/json", false);
     resp.write(JSON.stringify(data));
   });
-  return addTestEngine("engine-suggestions.xml", server);
+  let engine = await addTestEngine("engine-suggestions.xml", server);
+  return engine;
 }
 
 /**
