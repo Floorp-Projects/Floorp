@@ -26,7 +26,9 @@ class XRNativeOriginLocalFloor : public XRNativeOrigin {
   ~XRNativeOriginLocalFloor() = default;
   RefPtr<gfx::VRDisplayClient> mDisplay;
   gfx::PointDouble3D mInitialPosition;
+  gfx::Matrix4x4 mStandingTransform;
   bool mInitialPositionValid;
+  double mFloorRandom;
 };
 
 }  // namespace dom
