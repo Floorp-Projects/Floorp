@@ -132,7 +132,7 @@ SOURCES += [
     'hidePointer.cpp',
 ]
 
-if CONFIG['ENABLE_ION']:
+if not CONFIG['JS_CODEGEN_NONE']:
     UNIFIED_SOURCES += [
         'testJitDCEinGVN.cpp',
         'testJitFoldsTo.cpp',
