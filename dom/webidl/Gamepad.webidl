@@ -45,7 +45,7 @@ interface Gamepad {
    * The game port index for the device. Unique per device
    * attached to this system.
    */
-  readonly attribute unsigned long index;
+  readonly attribute long index;
 
   /**
    * The mapping in use for this device. The empty string

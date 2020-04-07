@@ -39,7 +39,7 @@ const int kRightStickYAxis = 3;
 
 class Gamepad final : public nsISupports, public nsWrapperCache {
  public:
-  Gamepad(nsISupports* aParent, const nsAString& aID, uint32_t aIndex,
+  Gamepad(nsISupports* aParent, const nsAString& aID, int32_t aIndex,
           uint32_t aHashKey, GamepadMappingType aMapping, GamepadHand aHand,
           uint32_t aDisplayID, uint32_t aNumButtons, uint32_t aNumAxes,
           uint32_t aNumHaptics, uint32_t aNumLightIndicator,
@@ -51,7 +51,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   void SetConnected(bool aConnected);
   void SetButton(uint32_t aButton, bool aPressed, bool aTouched, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
-  void SetIndex(uint32_t aIndex);
+  void SetIndex(int32_t aIndex);
   void SetPose(const GamepadPoseState& aPose);
   void SetLightIndicatorType(uint32_t aLightIndex,
                              GamepadLightIndicatorType aType);
@@ -82,7 +82,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
 
   bool Connected() const { return mConnected; }
 
-  uint32_t Index() const { return mIndex; }
+  int32_t Index() const { return mIndex; }
 
   uint32_t HashKey() const { return mHashKey; }
 
@@ -115,7 +115,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
  protected:
   nsCOMPtr<nsISupports> mParent;
   nsString mID;
-  uint32_t mIndex;
+  int32_t mIndex;
   // the gamepad hash key in GamepadManager
   uint32_t mHashKey;
   uint32_t mDisplayId;
