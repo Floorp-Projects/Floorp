@@ -206,7 +206,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::MozCellhighlighttext:
     case ColorID::MozHtmlCellhighlighttext:
     case ColorID::Highlighttext:
-      // text of selected item
+    case ColorID::Fieldtext:
       aColor = NS_RGB(0x1a, 0x1a, 0x1a);
       break;
     case ColorID::Inactiveborder:
@@ -242,7 +242,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
 
     case ColorID::Buttonhighlight:
+    case ColorID::Field:
     case ColorID::Threedhighlight:
+    case ColorID::MozCombobox:
+    case ColorID::MozEventreerow:
       aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
 
@@ -256,19 +259,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = BLACK_COLOR;
       break;
 
+    case ColorID::MozDialog:
     case ColorID::Window:
     case ColorID::Windowframe:
-      aColor = NS_RGB(0xef, 0xeb, 0xe7);
-      break;
-
-    case ColorID::MozEventreerow:
-    case ColorID::Field:
-      aColor = NS_RGB(0xef, 0xeb, 0xe7);
-      break;
-    case ColorID::Fieldtext:
-      aColor = NS_RGB(0x1a, 0x1a, 0x1a);
-      break;
-    case ColorID::MozDialog:
       aColor = NS_RGB(0xef, 0xeb, 0xe7);
       break;
     case ColorID::Buttontext:
@@ -301,9 +294,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
     case ColorID::MozNativehyperlinktext:
       aColor = NS_SAME_AS_FOREGROUND_COLOR;
-      break;
-    case ColorID::MozCombobox:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
     case ColorID::MozMenubartext:
       aColor = mSystemColors.colorForeground;
