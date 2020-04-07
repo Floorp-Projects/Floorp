@@ -137,7 +137,7 @@ class MediaMemoryTracker : public nsIMemoryReporter {
     }
 
     return resourceSizes->Promise()->Then(
-        SystemGroup::AbstractMainThreadFor(TaskCategory::Performance), __func__,
+        AbstractThread::MainThread(), __func__,
         [videoSize, audioSize](size_t resourceSize) {
           return MediaMemoryPromise::CreateAndResolve(
               MediaMemoryInfo(videoSize, audioSize, resourceSize), __func__);
@@ -1322,8 +1322,6 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
   nsCOMPtr<nsISupports> data = aData;
 
   resourceSizes->Promise()->Then(
-      // Don't use SystemGroup::AbstractMainThreadFor() for
-      // handleReport->Callback() will run scripts.
       AbstractThread::MainThread(), __func__,
       [handleReport, data](size_t size) {
         handleReport->Callback(
@@ -1403,7 +1401,7 @@ RefPtr<GenericPromise> MediaDecoder::RequestDebugInfo(
   return GetStateMachine()
       ->RequestDebugInfo(aInfo.mStateMachine)
       ->Then(
-          SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
+          AbstractThread::MainThread(), __func__,
           []() { return GenericPromise::CreateAndResolve(true, __func__); },
           []() {
             MOZ_ASSERT_UNREACHABLE("Unexpected RequestDebugInfo() rejection");
