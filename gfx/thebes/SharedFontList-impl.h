@@ -12,6 +12,7 @@
 #include "gfxFontUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
+#include "mozilla/UniquePtr.h"
 
 // This is split out from SharedFontList.h because that header is included
 // quite widely (via gfxPlatformFontList.h, gfxTextRun.h, etc), and other code
@@ -270,20 +271,20 @@ class FontList {
  private:
   struct ShmBlock {
     // Takes ownership of aShmem
-    ShmBlock(base::SharedMemory* aShmem, void* aAddr)
-        : mShmem(aShmem), mAddr(aAddr) {}
+    explicit ShmBlock(mozilla::UniquePtr<base::SharedMemory>&& aShmem)
+        : mShmem(std::move(aShmem)) {}
+
+    // Get pointer to the mapped memory.
+    void* Memory() const { return mShmem->memory(); }
 
     // The first 32-bit word of each block holds the current amount allocated
     // in that block; this is updated whenever a new record is stored in the
     // block.
     std::atomic<uint32_t>& Allocated() const {
-      return *static_cast<std::atomic<uint32_t>*>(mAddr);
+      return *static_cast<std::atomic<uint32_t>*>(Memory());
     }
 
     mozilla::UniquePtr<base::SharedMemory> mShmem;
-    void* mAddr;  // Address where the shared memory block is mapped in this
-                  // process; avoids virtual call to mShmem->memory() each time
-                  // we need to convert between Pointer and a real C++ pointer.
   };
 
   Header& GetHeader() {
