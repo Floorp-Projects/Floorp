@@ -10,7 +10,7 @@
 #include "jit/JitContext.h"
 #include "jit/MIR.h"
 #include "jit/MIRBuilderShared.h"
-#include "jit/WarpOracle.h"
+#include "jit/WarpSnapshot.h"
 #include "vm/Opcodes.h"
 
 namespace js {
