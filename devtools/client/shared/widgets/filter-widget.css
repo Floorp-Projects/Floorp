@@ -46,6 +46,8 @@
   width: 0;
   border-left: none;
   padding-left: 0;
+  /* To hide also element's children, not on only the element */
+  overflow: hidden;
 }
 
 #filter-container.show-presets .filters-list {
