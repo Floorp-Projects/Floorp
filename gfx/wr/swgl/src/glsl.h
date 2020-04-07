@@ -2691,11 +2691,6 @@ vec4 texture(sampler2DRect sampler, vec2 P) {
   }
 }
 
-vec4 texture(sampler2DArray sampler, vec3 P, Float layer) {
-  assert(0);
-  return vec4();
-}
-
 vec4 texture(sampler2DArray sampler, vec3 P) {
   if (sampler->filter == TextureFilter::LINEAR) {
     I32 zoffset =
@@ -2714,6 +2709,11 @@ vec4 texture(sampler2DArray sampler, vec3 P) {
                 roundeven(P.z, 1.0f));
     return texelFetch(sampler, coord, 0);
   }
+}
+
+vec4 texture(sampler2DArray sampler, vec3 P, float bias) {
+  assert(bias == 0.0);
+  return texture(sampler, P);
 }
 
 vec4 textureLod(sampler2DArray sampler, vec3 P, float lod) {
