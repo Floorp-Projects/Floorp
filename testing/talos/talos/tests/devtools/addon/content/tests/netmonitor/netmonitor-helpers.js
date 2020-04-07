@@ -5,6 +5,7 @@
 "use strict";
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
 const { getToolbox, runTest } = require("../head");
 
 /**
@@ -50,6 +51,48 @@ async function waitForAllRequestsFinished(expectedRequests) {
   });
 }
 
+function waitForDOMElement(target, selector, win) {
+  return new Promise(resolve => {
+    const observer = new win.MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        const element = mutation.target.querySelector(selector);
+        if (element !== null) {
+          observer.disconnect();
+          resolve(element);
+        }
+      });
+    });
+
+    observer.observe(target, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+  });
+}
+
+function waitForLoad(iframe) {
+  return new Promise(resolve => iframe.addEventListener("load", resolve));
+}
+
+function clickElement(el, win) {
+  const clickEvent = new win.MouseEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    view: win,
+  });
+  el.dispatchEvent(clickEvent);
+}
+
+function mouseDownElement(el, win) {
+  const mouseEvent = new win.MouseEvent("mousedown", {
+    bubbles: true,
+    cancelable: true,
+    view: win,
+  });
+  el.dispatchEvent(mouseEvent);
+}
+
 exports.waitForNetworkRequests = async function(
   label,
   toolbox,
@@ -67,4 +110,67 @@ exports.exportHar = async function(label, toolbox) {
   await toolbox.getHARFromNetMonitor();
 
   test.done();
+};
+
+exports.openResponseDetailsPanel = async function(label, toolbox) {
+  const win = toolbox.getCurrentPanel().panelWin;
+  const { document, store } = win;
+  const monitor = document.querySelector(".monitor-panel");
+
+  // html test
+  const testHtml = runTest(label + ".responsePanel.html");
+
+  store.dispatch(Actions.batchEnable(false));
+
+  const waitForDetailsBar = waitForDOMElement(
+    monitor,
+    ".network-details-bar",
+    win
+  );
+  store.dispatch(Actions.toggleNetworkDetails());
+  await waitForDetailsBar;
+
+  const sideBar = document.querySelector(".network-details-bar");
+  const iframeSelector = "#response-panel .html-preview iframe";
+  const waitForIframe = waitForDOMElement(sideBar, iframeSelector, win);
+
+  clickElement(document.querySelector("#response-tab"), win);
+
+  await waitForIframe;
+  await waitForLoad(document.querySelector(iframeSelector));
+
+  testHtml.done();
+
+  // close the sidebar
+  store.dispatch(Actions.toggleNetworkDetails());
+
+  // Sort the request list on the size column (in descending order)
+  // to make sure we use the largest response.
+  const sizeColumnHeader = document.querySelector(
+    "#requests-list-contentSize-button"
+  );
+  const waitForDesc = waitForDOMElement(
+    sizeColumnHeader.parentNode,
+    "#requests-list-contentSize-button[data-sorted='descending']",
+    win
+  );
+  // Click the size header twice to make sure the requests
+  // are sorted in descending order.
+  clickElement(sizeColumnHeader, win);
+  clickElement(sizeColumnHeader, win);
+  await waitForDesc;
+
+  // editor test
+  const testEditor = runTest(label + ".responsePanel.editor");
+  const request = document.querySelectorAll(".request-list-item")[0];
+  const waitForPre = waitForDOMElement(
+    monitor,
+    "#response-panel .responseTextContainer pre",
+    win
+  );
+  mouseDownElement(request, win);
+  await waitForPre;
+
+  testEditor.done();
+  store.dispatch(Actions.toggleNetworkDetails());
 };
