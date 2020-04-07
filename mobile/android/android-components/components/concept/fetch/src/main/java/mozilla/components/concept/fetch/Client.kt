@@ -9,6 +9,8 @@ import mozilla.components.concept.fetch.Response.Companion.CONTENT_LENGTH_HEADER
 import mozilla.components.concept.fetch.Response.Companion.CONTENT_TYPE_HEADER
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.net.URLDecoder
+import java.nio.charset.Charset
 
 /**
  * A generic [Client] for fetching resources via HTTP/s.
@@ -45,25 +47,33 @@ abstract class Client {
     abstract fun fetch(request: Request): Response
 
     /**
-     * Generates a [Response] by decoding a base64 encoded data URI.
+     * Generates a [Response] based on the provided [Request] for a data URI.
      *
      * @param request The [Request] for the data URI.
      * @return The generated [Response] including the decoded bytes as body.
      */
-    @Suppress("ThrowsCount", "TooGenericExceptionCaught")
+    @Suppress("ComplexMethod", "TooGenericExceptionCaught")
     protected fun fetchDataUri(request: Request): Response {
         if (!request.isDataUri()) {
             throw IOException("Not a data URI")
         }
-
-        val dataUri = request.url
-        if (!dataUri.contains(DATA_URI_BASE64_EXT)) {
-            throw IOException("Data URI must be base64 encoded")
-        }
-
         return try {
-            val contentType = dataUri.substringAfter(DATA_URI_SCHEME).substringBefore(DATA_URI_BASE64_EXT)
-            val bytes = Base64.decode(dataUri.substring(dataUri.lastIndexOf(',') + 1), Base64.DEFAULT)
+            val dataUri = request.url
+
+            val (contentType, bytes) = if (dataUri.contains(DATA_URI_BASE64_EXT)) {
+                dataUri.substringAfter(DATA_URI_SCHEME).substringBefore(DATA_URI_BASE64_EXT) to
+                    Base64.decode(dataUri.substring(dataUri.lastIndexOf(',') + 1), Base64.DEFAULT)
+            } else {
+                val contentType = dataUri.substringAfter(DATA_URI_SCHEME).substringBefore(",")
+                val charset = if (contentType.contains(DATA_URI_CHARSET)) {
+                    Charset.forName(contentType.substringAfter(DATA_URI_CHARSET).substringBefore(","))
+                } else {
+                    Charsets.UTF_8
+                }
+                contentType to
+                    URLDecoder.decode(dataUri.substring(dataUri.lastIndexOf(',') + 1), charset.name()).toByteArray()
+            }
+
             val headers = MutableHeaders().apply {
                 set(CONTENT_LENGTH_HEADER, bytes.size.toString())
                 if (contentType.isNotEmpty()) {
@@ -107,5 +117,6 @@ abstract class Client {
     companion object {
         const val DATA_URI_BASE64_EXT = ";base64"
         const val DATA_URI_SCHEME = "data:"
+        const val DATA_URI_CHARSET = "charset="
     }
 }
