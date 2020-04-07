@@ -72,6 +72,8 @@ class NetlinkService : public nsIRunnable {
 
   void TriggerNetworkIDCalculation();
   int GetPollWait();
+  void GetGWNeighboursForFamily(uint8_t aFamily,
+                                nsTArray<NetlinkNeighbor*>& aGwNeighbors);
   bool CalculateIDForFamily(uint8_t aFamily, mozilla::SHA1Sum* aSHA1);
   void CalculateNetworkID();
   void ComputeDNSSuffixList();
@@ -132,6 +134,18 @@ class NetlinkService : public nsIRunnable {
     // a non-local address associated with it.
     bool mIsUp;
   };
+
+  bool CalculateIDForEthernetLink(uint8_t aFamily,
+                                  NetlinkRoute* aRouteCheckResult,
+                                  uint32_t aRouteCheckIfIdx,
+                                  LinkInfo* aRouteCheckLinkInfo,
+                                  mozilla::SHA1Sum* aSHA1);
+  bool CalculateIDForNonEthernetLink(uint8_t aFamily,
+                                     NetlinkRoute* aRouteCheckResult,
+                                     nsTArray<nsCString>& aLinkNamesToHash,
+                                     uint32_t aRouteCheckIfIdx,
+                                     LinkInfo* aRouteCheckLinkInfo,
+                                     mozilla::SHA1Sum* aSHA1);
 
   nsClassHashtable<nsUint32HashKey, LinkInfo> mLinks;
 
